@@ -19,9 +19,9 @@ from tools.governance.tech_debt_budget import refresh_tech_debt_budgets  # noqa:
 
 
 def main() -> int:
-    governance_path = REPO_ROOT / "config" / "project" / "policy" / "governance.json"
-    if not governance_path.exists():
-        print(f"Missing config: {governance_path}", file=sys.stderr)
+    policy_pack_path = REPO_ROOT / "config" / "project" / "policy_pack.json"
+    if not policy_pack_path.exists():
+        print(f"Missing config: {policy_pack_path}", file=sys.stderr)
         return 1
 
     metrics_proc = subprocess.run(
@@ -37,16 +37,24 @@ def main() -> int:
         return metrics_proc.returncode
 
     metrics = json.loads(metrics_proc.stdout)
-    governance = json.loads(governance_path.read_text(encoding="utf-8"))
+    policy_pack = json.loads(policy_pack_path.read_text(encoding="utf-8"))
+    governance = policy_pack.get("governance", {})
+    if not isinstance(governance, dict):
+        print("Missing governance section in policy_pack.json", file=sys.stderr)
+        return 1
     gate_config = governance.get("tech_debt_budget")
     if not isinstance(gate_config, dict):
-        print("Missing tech_debt_budget section in governance.json", file=sys.stderr)
+        print(
+            "Missing governance.tech_debt_budget section in policy_pack.json",
+            file=sys.stderr,
+        )
         return 1
 
     updated = refresh_tech_debt_budgets(metrics, gate_config)
     governance["tech_debt_budget"] = updated
-    governance_path.write_text(
-        json.dumps(governance, indent=2) + "\n", encoding="utf-8"
+    policy_pack["governance"] = governance
+    policy_pack_path.write_text(
+        json.dumps(policy_pack, indent=2) + "\n", encoding="utf-8"
     )
     baseline = updated.get("baseline", {})
     if isinstance(baseline, dict):

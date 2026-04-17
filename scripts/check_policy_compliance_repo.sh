@@ -19,26 +19,32 @@ fi
 required_files=(
   "AGENTS.md"
   "CONTRIBUTING.md"
+  "docs/WORKFLOW_CODEX.md"
   "docs/policies/POLICY_NO_REINVENTING_WHEEL.md"
   "docs/policies/POLICY_STRING_SANITATION.md"
   "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
   "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
-  "config/project/policy/governance.json"
-  "config/project/policy/code_rules.json"
+  "config/project/policy_pack.json"
   "scripts/ci_preflight.sh"
   "scripts/verify.sh"
 )
 
 missing=0
+untracked=0
 
 for f in "${required_files[@]}"; do
   if [[ ! -f "$f" ]]; then
     echo "Missing required policy file: $f" >&2
     missing=1
+    continue
+  fi
+  if ! git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
+    echo "Required policy file must be tracked in git: $f" >&2
+    untracked=1
   fi
 done
 
-if [[ "$missing" -ne 0 ]]; then
+if [[ "$missing" -ne 0 || "$untracked" -ne 0 ]]; then
   exit 2
 fi
 

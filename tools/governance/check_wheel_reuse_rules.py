@@ -39,7 +39,7 @@ def _load_rules() -> dict[str, Any]:
         wheel_rules = unified.get("wheel_reuse")
         if isinstance(wheel_rules, dict):
             return wheel_rules
-    raise SystemExit("missing required file: config/project/policy/code_rules.json")
+    raise SystemExit("missing required file: config/project/policy_pack.json")
 
 
 def _tracked_python_files() -> list[str]:

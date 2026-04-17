@@ -11,16 +11,19 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 TARGET_SRC_ROOT = REPO_ROOT / "src/tet4d"
 SRC_LAYOUT_ROOT = REPO_ROOT / "src"
 FOLDER_BALANCE_BUDGETS_PATH = REPO_ROOT / "config/project/folder_balance_budgets.json"
-GOVERNANCE_PATH = REPO_ROOT / "config/project/policy/governance.json"
+POLICY_PACK_PATH = REPO_ROOT / "config/project/policy_pack.json"
 BACKLOG_DEBT_PATH = REPO_ROOT / "config/project/backlog_debt.json"
 MENU_STRUCTURE_PATH = REPO_ROOT / "config/menu/structure.json"
 
 
 def _initial_governance_payload() -> dict[str, Any] | None:
-    if not GOVERNANCE_PATH.exists():
+    if not POLICY_PACK_PATH.exists():
         return None
-    payload = json.loads(GOVERNANCE_PATH.read_text(encoding="utf-8"))
-    return payload if isinstance(payload, dict) else None
+    payload = json.loads(POLICY_PACK_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        return None
+    governance = payload.get("governance")
+    return governance if isinstance(governance, dict) else None
 
 
 def _initial_arch_stage() -> int:
@@ -532,7 +535,7 @@ def _folder_balance_gate_config() -> dict[str, Any] | None:
 
 
 def _tech_debt_gate_config() -> dict[str, Any] | None:
-    governance = _read_json_if_exists(GOVERNANCE_PATH)
+    governance = _initial_governance_payload()
     if isinstance(governance, dict):
         tech_debt_budget = governance.get("tech_debt_budget")
         if isinstance(tech_debt_budget, dict):
@@ -541,7 +544,7 @@ def _tech_debt_gate_config() -> dict[str, Any] | None:
 
 
 def _architecture_metrics_config() -> dict[str, Any]:
-    governance = _read_json_if_exists(GOVERNANCE_PATH)
+    governance = _initial_governance_payload()
     if isinstance(governance, dict):
         architecture = governance.get("architecture")
         if isinstance(architecture, dict):

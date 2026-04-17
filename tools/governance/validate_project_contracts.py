@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,11 +10,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
-GOVERNANCE_PATH = PROJECT_ROOT / "config/project/policy/governance.json"
-CODE_RULES_PATH = PROJECT_ROOT / "config/project/policy/code_rules.json"
-MANIFEST_PATH = (
-    PROJECT_ROOT / "config/project/policy/manifests/canonical_maintenance.json"
-)
+POLICY_PACK_REL = "config/project/policy_pack.json"
+POLICY_PACK_PATH = PROJECT_ROOT / POLICY_PACK_REL
 POLICY_INDEX_PATH = PROJECT_ROOT / "docs/policies/INDEX.md"
 POLICY_MANIFEST_DIR = PROJECT_ROOT / "config/project/policy/manifests"
 MENU_STRUCTURE_PATH = PROJECT_ROOT / "config/menu/structure.json"
@@ -34,6 +32,26 @@ class ValidationIssue:
     message: str
 
 
+def _git_tracked_paths(issues: list[ValidationIssue]) -> set[str] | None:
+    result = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or "unknown git error"
+        issues.append(
+            ValidationIssue(
+                "git",
+                f"git ls-files failed while checking required paths: {detail}",
+            )
+        )
+        return None
+    return {rel for rel in result.stdout.split("\0") if rel}
+
+
 def _load_json_payload(
     path: Path, rel: str, issues: list[ValidationIssue]
 ) -> object | None:
@@ -46,17 +64,37 @@ def _load_json_payload(
 
 def _load_manifest() -> dict[str, object]:
     try:
-        payload = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        payload = json.loads(POLICY_PACK_PATH.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise SystemExit(f"Missing manifest: {MANIFEST_PATH}") from exc
+        raise SystemExit(f"Missing policy pack: {POLICY_PACK_PATH}") from exc
     except json.JSONDecodeError as exc:
-        raise SystemExit(f"Invalid JSON in {MANIFEST_PATH}: {exc}") from exc
+        raise SystemExit(f"Invalid JSON in {POLICY_PACK_PATH}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise SystemExit(f"{POLICY_PACK_REL} must be a JSON object")
+    manifest = payload.get("maintenance_contract")
+    if not isinstance(manifest, dict):
+        raise SystemExit(f"{POLICY_PACK_REL} missing maintenance_contract object")
+    return manifest
+
+
+def _load_policy_pack_payload(
+    issues: list[ValidationIssue],
+) -> dict[str, object] | None:
+    payload = _load_json_payload(POLICY_PACK_PATH, POLICY_PACK_REL, issues)
+    if not isinstance(payload, dict):
+        issues.append(
+            ValidationIssue("json", f"{POLICY_PACK_REL} must be a JSON object")
+        )
+        return None
     return payload
 
 
 def _load_governance(issues: list[ValidationIssue]) -> dict[str, object] | None:
-    rel = "config/project/policy/governance.json"
-    payload = _load_json_payload(GOVERNANCE_PATH, rel, issues)
+    rel = f"{POLICY_PACK_REL}.governance"
+    policy_pack = _load_policy_pack_payload(issues)
+    if policy_pack is None:
+        return None
+    payload = policy_pack.get("governance")
     if not isinstance(payload, dict):
         issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
         return None
@@ -64,8 +102,25 @@ def _load_governance(issues: list[ValidationIssue]) -> dict[str, object] | None:
 
 
 def _load_code_rules(issues: list[ValidationIssue]) -> dict[str, object] | None:
-    rel = "config/project/policy/code_rules.json"
-    payload = _load_json_payload(CODE_RULES_PATH, rel, issues)
+    rel = f"{POLICY_PACK_REL}.code_rules"
+    policy_pack = _load_policy_pack_payload(issues)
+    if policy_pack is None:
+        return None
+    payload = policy_pack.get("code_rules")
+    if not isinstance(payload, dict):
+        issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
+        return None
+    return payload
+
+
+def _load_deprecated_authorities(
+    issues: list[ValidationIssue],
+) -> dict[str, object] | None:
+    rel = f"{POLICY_PACK_REL}.deprecated_authorities"
+    policy_pack = _load_policy_pack_payload(issues)
+    if policy_pack is None:
+        return None
+    payload = policy_pack.get("deprecated_authorities")
     if not isinstance(payload, dict):
         issues.append(ValidationIssue("json", f"{rel} must be a JSON object"))
         return None
@@ -78,6 +133,7 @@ def _validate_required_paths(manifest: dict[str, object]) -> list[ValidationIssu
     if not isinstance(required_paths, dict):
         return [ValidationIssue("schema", "'required_paths' must be an object")]
 
+    tracked_paths = _git_tracked_paths(issues)
     seen: set[str] = set()
     for group, rel_paths in required_paths.items():
         if not isinstance(rel_paths, list):
@@ -105,6 +161,17 @@ def _validate_required_paths(manifest: dict[str, object]) -> list[ValidationIssu
             if not path.exists():
                 issues.append(
                     ValidationIssue("missing", f"missing required path: {rel}")
+                )
+                continue
+            if (
+                tracked_paths is not None
+                and path.is_file()
+                and rel not in tracked_paths
+            ):
+                issues.append(
+                    ValidationIssue(
+                        "git", f"required path is not tracked in git: {rel}"
+                    )
                 )
     return issues
 
@@ -692,8 +759,11 @@ def _validate_contributor_directive_entry(
 
 def _validate_governance_directives() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
-    rel = "config/project/policy/governance.json"
-    payload = _load_json_payload(GOVERNANCE_PATH, rel, issues)
+    rel = f"{POLICY_PACK_REL}.governance"
+    policy_pack = _load_policy_pack_payload(issues)
+    if policy_pack is None:
+        return issues
+    payload = policy_pack.get("governance")
     if not isinstance(payload, dict):
         return issues
 
@@ -738,9 +808,7 @@ def _validate_policy_index_sync() -> list[ValidationIssue]:
     index_text = POLICY_INDEX_PATH.read_text(encoding="utf-8")
 
     required_tokens = [
-        "config/project/policy/governance.json",
-        "config/project/policy/code_rules.json",
-        "config/project/policy/manifests/canonical_maintenance.json",
+        "config/project/policy_pack.json",
         "config/project/policy/manifests/secret_scan.json",
         "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
         "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
@@ -783,10 +851,7 @@ def _iter_string_nodes(
 
 
 def _policy_manifest_rel_paths() -> list[str]:
-    rels = [
-        "config/project/policy/governance.json",
-        "config/project/policy/code_rules.json",
-    ]
+    rels = [POLICY_PACK_REL]
     if POLICY_MANIFEST_DIR.exists():
         rels.extend(
             sorted(
@@ -820,6 +885,107 @@ def _validate_policy_manifest_string_safety() -> list[ValidationIssue]:
                     )
                 )
                 break
+    return issues
+
+
+def _validate_blocked_authority_paths(
+    blocked_paths: object,
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    if not isinstance(blocked_paths, list):
+        return [
+            ValidationIssue(
+                "schema",
+                f"{POLICY_PACK_REL}.deprecated_authorities.blocked_paths must be a list",
+            )
+        ]
+
+    for rel in blocked_paths:
+        if not isinstance(rel, str):
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{POLICY_PACK_REL}.deprecated_authorities.blocked_paths includes non-string entry",
+                )
+            )
+            continue
+        if (PROJECT_ROOT / rel).exists():
+            issues.append(
+                ValidationIssue(
+                    "deprecated", f"deprecated authority path present: {rel}"
+                )
+            )
+    return issues
+
+
+def _validate_reference_check(
+    *, idx: int, raw: object, issues: list[ValidationIssue]
+) -> None:
+    if not isinstance(raw, dict):
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks[{idx}] must be an object",
+            )
+        )
+        return
+    rel = raw.get("file")
+    if not isinstance(rel, str) or not rel.strip():
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks[{idx}].file must be a non-empty string",
+            )
+        )
+        return
+    tokens = raw.get("must_not_contain", [])
+    if not isinstance(tokens, list) or any(
+        not isinstance(token, str) for token in tokens
+    ):
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks[{idx}].must_not_contain must be list[str]",
+            )
+        )
+        return
+    path = PROJECT_ROOT / rel
+    if not path.exists():
+        issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
+        return
+    text = path.read_text(encoding="utf-8")
+    for token in tokens:
+        if token in text:
+            issues.append(
+                ValidationIssue(
+                    "deprecated",
+                    f"{rel} still references deprecated authority token: {token}",
+                )
+            )
+
+
+def _validate_deprecated_authorities() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    deprecated = _load_deprecated_authorities(issues)
+    if deprecated is None:
+        return issues
+
+    issues.extend(
+        _validate_blocked_authority_paths(deprecated.get("blocked_paths", []))
+    )
+
+    reference_checks = deprecated.get("reference_checks", [])
+    if not isinstance(reference_checks, list):
+        issues.append(
+            ValidationIssue(
+                "schema",
+                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks must be a list",
+            )
+        )
+        return issues
+
+    for idx, raw in enumerate(reference_checks, start=1):
+        _validate_reference_check(idx=idx, raw=raw, issues=issues)
     return issues
 
 
@@ -896,7 +1062,7 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
         issues.append(
             ValidationIssue(
                 "schema",
-                "config/project/policy/governance.json.menu_simplification_manifest_rule must be an object",
+                f"{POLICY_PACK_REL}.governance.menu_simplification_manifest_rule must be an object",
             )
         )
         return issues
@@ -1223,6 +1389,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_governance_directives())
     issues.extend(_validate_policy_index_sync())
     issues.extend(_validate_policy_manifest_string_safety())
+    issues.extend(_validate_deprecated_authorities())
     issues.extend(_validate_menu_simplification_rule())
     issues.extend(_validate_menu_structure_single_source_of_truth())
     issues.extend(_validate_keybinding_single_source_of_truth())

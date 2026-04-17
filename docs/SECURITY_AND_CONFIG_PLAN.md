@@ -4,8 +4,7 @@ This file is retained as a compatibility redirect only.
 
 Current policy authority lives in:
 
-- `config/project/policy/governance.json`
-- `config/project/policy/code_rules.json`
+- `config/project/policy_pack.json`
 - `docs/policies/INDEX.md`
 
 Current domain contracts and tooling live in:

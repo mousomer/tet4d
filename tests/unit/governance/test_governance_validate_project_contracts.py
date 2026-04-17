@@ -14,47 +14,56 @@ def _write_json(path: Path, payload: object) -> None:
 def test_policy_index_sync_detects_missing_unified_contract_token(
     tmp_path: Path, monkeypatch
 ) -> None:
-    governance_path = tmp_path / "config" / "project" / "policy" / "governance.json"
+    policy_pack_path = tmp_path / "config" / "project" / "policy_pack.json"
     _write_json(
-        governance_path,
+        policy_pack_path,
         {
-            "contracts": {
-                "canonical_maintenance": "config/project/policy/manifests/canonical_maintenance.json",
-                "secret_scan": "config/project/policy/manifests/secret_scan.json",
+            "governance": {
+                "contracts": {
+                    "policy_pack": "config/project/policy_pack.json",
+                    "secret_scan": "config/project/policy/manifests/secret_scan.json",
+                }
             }
         },
     )
     index_path = tmp_path / "docs" / "policies" / "INDEX.md"
     index_path.parent.mkdir(parents=True, exist_ok=True)
     index_path.write_text(
-        "config/project/policy/governance.json\nconfig/project/policy/code_rules.json\n",
+        "docs/policies/CI_COMPLIANCE_RUNBOOK.md\n",
         encoding="utf-8",
     )
 
-    monkeypatch.setattr(contracts, "GOVERNANCE_PATH", governance_path)
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack_path)
     monkeypatch.setattr(contracts, "POLICY_INDEX_PATH", index_path)
 
     issues = contracts._validate_policy_index_sync()
 
     assert issues
-    assert any("canonical_maintenance.json" in issue.message for issue in issues)
+    assert any("policy_pack.json" in issue.message for issue in issues)
 
 
 def test_policy_manifest_string_safety_detects_path_like_literals(
     tmp_path: Path, monkeypatch
 ) -> None:
-    policy_root = tmp_path / "config" / "project" / "policy"
-    manifests_dir = policy_root / "manifests"
+    policy_root = tmp_path / "config" / "project"
+    manifests_dir = policy_root / "policy" / "manifests"
     path_like_literal = r"value:[ \t]*\n[ \t]*" + "C:" + r"\\temp"
-    _write_json(policy_root / "governance.json", {"schema_version": 1})
-    _write_json(policy_root / "code_rules.json", {"schema_version": 1})
+    _write_json(
+        policy_root / "policy_pack.json",
+        {
+            "governance": {"schema_version": 1},
+            "code_rules": {"schema_version": 1},
+            "maintenance_contract": {"schema_version": 1},
+            "maintenance_docs": {},
+            "deprecated_authorities": {},
+        },
+    )
     _write_json(
         manifests_dir / "help_assets_manifest.json",
         {"rules": [{"id": "test", "example": path_like_literal}]},
     )
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-    monkeypatch.setattr(contracts, "GOVERNANCE_PATH", policy_root / "governance.json")
-    monkeypatch.setattr(contracts, "CODE_RULES_PATH", policy_root / "code_rules.json")
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_root / "policy_pack.json")
     monkeypatch.setattr(contracts, "POLICY_MANIFEST_DIR", manifests_dir)
     issues = contracts._validate_policy_manifest_string_safety()
     assert issues
@@ -64,25 +73,67 @@ def test_policy_manifest_string_safety_detects_path_like_literals(
 def test_policy_manifest_string_safety_allows_clean_manifests(
     tmp_path: Path, monkeypatch
 ) -> None:
-    policy_root = tmp_path / "config" / "project" / "policy"
-    manifests_dir = policy_root / "manifests"
-    _write_json(policy_root / "governance.json", {"schema_version": 1})
-    _write_json(policy_root / "code_rules.json", {"schema_version": 1})
+    policy_root = tmp_path / "config" / "project"
+    manifests_dir = policy_root / "policy" / "manifests"
+    _write_json(
+        policy_root / "policy_pack.json",
+        {
+            "governance": {"schema_version": 1},
+            "code_rules": {"schema_version": 1},
+            "maintenance_contract": {"schema_version": 1},
+            "maintenance_docs": {},
+            "deprecated_authorities": {},
+        },
+    )
     _write_json(
         manifests_dir / "help_assets_manifest.json",
         {"rules": [{"id": "test", "forbidden_regex": [r"value:[ \t]*\n[ \t]*x"]}]},
     )
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-    monkeypatch.setattr(contracts, "GOVERNANCE_PATH", policy_root / "governance.json")
-    monkeypatch.setattr(contracts, "CODE_RULES_PATH", policy_root / "code_rules.json")
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_root / "policy_pack.json")
     monkeypatch.setattr(contracts, "POLICY_MANIFEST_DIR", manifests_dir)
     issues = contracts._validate_policy_manifest_string_safety()
     assert issues == []
 
 
+def test_required_paths_detect_untracked_file(
+    tmp_path: Path, monkeypatch
+) -> None:
+    rel = "docs/WORKFLOW_CODEX.md"
+    workflow_doc = tmp_path / rel
+    workflow_doc.parent.mkdir(parents=True, exist_ok=True)
+    workflow_doc.write_text("workflow", encoding="utf-8")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "_git_tracked_paths", lambda issues: set())
+
+    issues = contracts._validate_required_paths({"required_paths": {"root_docs": [rel]}})
+
+    assert any(
+        issue.message == f"required path is not tracked in git: {rel}"
+        for issue in issues
+    )
+
+
+def test_required_paths_accept_git_tracked_file(
+    tmp_path: Path, monkeypatch
+) -> None:
+    rel = "docs/WORKFLOW_CODEX.md"
+    workflow_doc = tmp_path / rel
+    workflow_doc.parent.mkdir(parents=True, exist_ok=True)
+    workflow_doc.write_text("workflow", encoding="utf-8")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "_git_tracked_paths", lambda issues: {rel})
+
+    issues = contracts._validate_required_paths({"required_paths": {"root_docs": [rel]}})
+
+    assert issues == []
+
+
 def test_governance_directives_include_staged_migration_contract() -> None:
-    payload = json.loads(contracts.GOVERNANCE_PATH.read_text(encoding="utf-8"))
-    directives = payload["contributor_directives"]["directives"]
+    payload = json.loads(contracts.POLICY_PACK_PATH.read_text(encoding="utf-8"))
+    directives = payload["governance"]["contributor_directives"]["directives"]
     directive_ids = {item["id"] for item in directives}
     assert {
         "staged_migration_honesty",
@@ -91,17 +142,40 @@ def test_governance_directives_include_staged_migration_contract() -> None:
     }.issubset(directive_ids)
 
 
-def test_rds_and_codex_rule_requires_control_contract_tokens() -> None:
+def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
     manifest = contracts._load_manifest()
     rules = manifest["content_rules"]
-    rds_rule = next(rule for rule in rules if rule["file"] == "docs/RDS_AND_CODEX.md")
-    must_contain = set(rds_rule["must_contain"])
-    assert "do not treat partial progress as completion" in must_contain
-    assert (
-        "add new modules first, route one flow to them, verify, and only then remove old paths"
-        in must_contain
+    workflow_rule = next(
+        rule for rule in rules if rule["file"] == "docs/WORKFLOW_CODEX.md"
     )
-    assert (
-        "provide a delta report with: files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers"
-        in must_contain
+    must_contain = set(workflow_rule["must_contain"])
+    assert "Workflow authority" in must_contain
+    assert "config/project/policy_pack.json" in must_contain
+    assert "Authority files must be tracked in Git" in must_contain
+    assert "CODEX_MODE=1 ./scripts/verify.sh" in must_contain
+
+
+def test_deprecated_authority_checks_detect_reintroduced_path(
+    tmp_path: Path, monkeypatch
+) -> None:
+    blocked = tmp_path / "docs" / "RDS_AND_CODEX.md"
+    blocked.parent.mkdir(parents=True, exist_ok=True)
+    blocked.write_text("stale redirect", encoding="utf-8")
+    policy_pack = tmp_path / "config" / "project" / "policy_pack.json"
+    _write_json(
+        policy_pack,
+        {
+            "deprecated_authorities": {
+                "blocked_paths": ["docs/RDS_AND_CODEX.md"],
+                "reference_checks": [],
+            }
+        },
     )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack)
+
+    issues = contracts._validate_deprecated_authorities()
+
+    assert issues
+    assert any("deprecated authority path present" in issue.message for issue in issues)

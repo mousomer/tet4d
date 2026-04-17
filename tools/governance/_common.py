@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-GOVERNANCE_PATH = REPO_ROOT / "config/project/policy/governance.json"
-CODE_RULES_PATH = REPO_ROOT / "config/project/policy/code_rules.json"
+POLICY_PACK_REL = "config/project/policy_pack.json"
+POLICY_PACK_PATH = REPO_ROOT / POLICY_PACK_REL
 
 
 def load_json_object(path: Path, rel: str) -> dict[str, Any]:
@@ -47,11 +47,34 @@ def load_optional_json_object(path: Path) -> dict[str, Any] | None:
     return payload
 
 
-def load_unified_governance(root: Path | None = None) -> dict[str, Any] | None:
-    target = (root or REPO_ROOT) / "config/project/policy/governance.json"
+def load_policy_pack(root: Path | None = None) -> dict[str, Any] | None:
+    target = (root or REPO_ROOT) / POLICY_PACK_REL
     return load_optional_json_object(target)
+
+
+def _load_policy_section(root: Path | None, section: str) -> dict[str, Any] | None:
+    payload = load_policy_pack(root)
+    if not isinstance(payload, dict):
+        return None
+    section_payload = payload.get(section)
+    return section_payload if isinstance(section_payload, dict) else None
+
+
+def load_unified_governance(root: Path | None = None) -> dict[str, Any] | None:
+    return _load_policy_section(root, "governance")
 
 
 def load_unified_code_rules(root: Path | None = None) -> dict[str, Any] | None:
-    target = (root or REPO_ROOT) / "config/project/policy/code_rules.json"
-    return load_optional_json_object(target)
+    return _load_policy_section(root, "code_rules")
+
+
+def load_maintenance_contract(root: Path | None = None) -> dict[str, Any] | None:
+    return _load_policy_section(root, "maintenance_contract")
+
+
+def load_maintenance_docs(root: Path | None = None) -> dict[str, Any] | None:
+    return _load_policy_section(root, "maintenance_docs")
+
+
+def load_deprecated_authorities(root: Path | None = None) -> dict[str, Any] | None:
+    return _load_policy_section(root, "deprecated_authorities")

@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-04-15  
-Branch: `codex/endgame-flow-slider-layout`  
+Last updated: 2026-04-17  
+Branch: `master`  
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -30,6 +30,21 @@ not a historical ledger. Long historical migration detail belongs in
 
 ## Active Batch Note
 
+- Maintenance-doc scope cleanup (2026-04-17): `CURRENT_STATE.md` now keeps
+  handoff-specific snapshots and live drift watch data only, while reusable
+  ownership, source-of-truth, and verification inventories stay generated in
+  `docs/PROJECT_STRUCTURE.md` instead of being duplicated here.
+- Governance tracked-authority closure (2026-04-17): repo policy and
+  project-contract validation now require
+  `config/project/policy_pack.json` and `docs/WORKFLOW_CODEX.md` to be
+  tracked Git paths, so Stage 1 governance can no longer pass from local-only
+  files.
+- Policy-pack authority consolidation (2026-04-16): repo governance now lives
+  in `config/project/policy_pack.json`, `AGENTS.md` is reduced to a thin
+  dispatcher, `docs/WORKFLOW_CODEX.md` owns repo workflow explanation,
+  generated maintenance docs read their static ownership/source-of-truth data
+  from the policy pack, and deprecated split-authority files are blocked from
+  re-entry by project-contract validation.
 - Release packaging hidden-import follow-up (2026-04-15): the canonical
   PyInstaller spec now explicitly includes the lazy `tet4d.ai.playbot.*`
   modules used by frozen launcher/setup flows, preventing packaged Windows
@@ -48,7 +63,13 @@ not a historical ledger. Long historical migration detail belongs in
   emission, and focused regression coverage now joins `project_config`
   frozen-path outputs to keybinding/runtime startup instead of testing those
   contracts only in separate suites.
-- Governance/planning layer consolidation (2026-03-29): documentation routing is now being compacted around `docs/DOCUMENTATION_MAP.md` as the only docs routing authority, `docs/README.md` is being reduced to a landing page, recent planning-adjacent audits are moving under `docs/plans/audits/`, and the older security/config policy plan is being retired to history while `config/project/policy/governance.json` plus `config/project/policy/code_rules.json` remain the compact top-level governance surface.
+- Governance/planning layer consolidation (2026-03-29): documentation routing
+  is now being compacted around `docs/DOCUMENTATION_MAP.md` as the only docs
+  routing authority, `docs/README.md` is being reduced to a landing page,
+  recent planning-adjacent audits are moving under `docs/plans/audits/`, and
+  the older security/config policy plan is being retired to history while the
+  repo's current machine-readable governance surface now resolves through
+  `config/project/policy_pack.json`.
 - Topology-playground doc authority alignment (2026-03-29): the accepted visible shell is now documented consistently across the active authority/spec/status/menu files. `Topology Playground` is the direct modern shell entry, the legacy topology editor remains reachable only through `Settings -> Legacy Topology Editor Menu`, the visible workspace model remains `Editor` / `Sandbox` / `Play`, the top bar stays limited to title/tabs/validity/dimension, the left sidebar stays limited to the accepted per-workspace inventories with diagnostics secondary, the right helper remains keys-first and diagnostics-free, and the next phase is shell-preserving implementation simplification centered on `src/tet4d/ui/pygame/topology_lab/controls_panel.py` and `src/tet4d/ui/pygame/topology_lab/scene_state.py`.
 - Topology-playground shell-layout + text-visibility guard pass (2026-03-29): the shell now computes top-bar, footer, and control-row text budgets through explicit internal layout helpers rather than only inline geometry, and focused visibility coverage now checks compact-window required text for the Topology Playground shell, pause/settings/help surfaces, tutorial overlays, and gameplay side-panel bounds without introducing screenshot-based tests or changing the frozen shell contract.
 - Topology-playground state/write seam cleanup follow-up (2026-03-29): preview compile/cache refresh now lives in a dedicated `scene_preview_state.py` helper instead of remaining mixed into `controls_panel.py`, and `scene_state.py` now routes canonical-state writes through a narrower shared runtime-state acquisition path so play-settings/profile/draft/selection/probe toggles keep one explicit fallback-versus-canonical mutation contract.
@@ -194,7 +215,11 @@ not a historical ledger. Long historical migration detail belongs in
   removed, and focused regression coverage was refreshed so the current
   topology preset-value text contract continues to include the explicit
   `[unsafe]` suffix when applicable.
-- Governance policy consolidation prune follow-up (2026-03-29): `config/project/policy/governance.json` and `config/project/policy/code_rules.json` are now the sole runtime policy sources for governance checks, `tools/governance/validate_governance.py` remains the unified policy gate used by `scripts/verify.sh`, and the older manifest pack is retained only as contract and inventory compatibility rather than as an execution fallback.
+- Governance policy consolidation prune follow-up (2026-03-29, refreshed
+  2026-04-16): `config/project/policy_pack.json` is now the sole runtime
+  policy source for governance checks, `tools/governance/validate_governance.py`
+  remains the unified policy gate used by `scripts/verify.sh`, and the older
+  split authority files are retired rather than kept as execution fallbacks.
 - Shared rotation animation mode is now a first-class shared gameplay setting rather than a hidden fallback.
 - Advanced gameplay now exposes the mode selector directly, and `2D`/`3D`/`4D` runtime loop construction all load the persisted mode through `menu_settings_state.mode_rotation_animation_mode(...)`.
 - Active `2D` animation overlays now clip seam-straddling cell boxes into topology-aware fragments, so rigid rotation and deliberate/cellwise tween paths both show partial geometry in each affected wrapped destination cell instead of one unsplit quad.
@@ -243,19 +268,6 @@ not a historical ledger. Long historical migration detail belongs in
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
 
-<!-- BEGIN GENERATED:current_state_architecture_snapshot -->
-## Current Architecture Snapshot
-
-- `arch_stage`: `900`
-- Canonical local gate: `CODEX_MODE=1 ./scripts/verify.sh`
-- CI wrapper: `./scripts/ci_check.sh`
-- Full local gate runs are serialized by `scripts/verify.sh`, use an isolated per-run state root via `TET4D_STATE_ROOT` when no explicit override is provided, and include the CI sanitation/policy checks (`scripts/check_policy_compliance.sh`, `scripts/check_policy_compliance_repo.sh`, `scripts/check_git_sanitation_repo.sh`) so local verification matches GitHub policy enforcement.
-- Dependency direction:
-  - `ui`, `ai`, `replay`, and `tools` may import engine modules directly
-  - `engine` must not import `ui`, `ai`, `replay`, or `tools`
-  - `engine/core` remains strict-pure
-<!-- END GENERATED:current_state_architecture_snapshot -->
-
 <!-- BEGIN GENERATED:current_state_metric_snapshot -->
 ## Current Metric Snapshot
 
@@ -274,49 +286,6 @@ Dominant remaining pressure:
 1. `delivery_size_pressure = 2.17`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
-
-<!-- BEGIN GENERATED:current_state_canonical_ownership -->
-## Canonical Ownership After This Batch
-
-### Engine
-
-- `src/tet4d/engine/core/piece_transform.py`
-- `src/tet4d/engine/core/rotation_kicks.py`
-- `src/tet4d/engine/core/rules/lifecycle.py`
-- `src/tet4d/engine/topology_explorer/*`
-- `src/tet4d/engine/gameplay/*`
-- `src/tet4d/engine/gameplay/api.py`
-- `src/tet4d/engine/runtime/*`
-- `src/tet4d/engine/runtime/api.py`
-- `src/tet4d/engine/tutorial/*`
-- `src/tet4d/engine/tutorial/api.py`
-- `src/tet4d/engine/api.py (small compatibility facade for replay/tests/tutorial payload exports)`
-
-### UI
-
-- `src/tet4d/ui/pygame/front2d_game.py`
-- `src/tet4d/ui/pygame/front2d_setup.py`
-- `src/tet4d/ui/pygame/front2d_loop.py`
-- `src/tet4d/ui/pygame/front2d_session.py`
-- `src/tet4d/ui/pygame/front2d_frame.py`
-- `src/tet4d/ui/pygame/front2d_results.py`
-- `src/tet4d/ui/pygame/frontend_nd_setup.py`
-- `src/tet4d/ui/pygame/frontend_nd_state.py`
-- `src/tet4d/ui/pygame/frontend_nd_input.py`
-- `src/tet4d/ui/pygame/front3d_game.py`
-- `src/tet4d/ui/pygame/front4d_game.py`
-- `src/tet4d/ui/pygame/front3d_render.py`
-- `src/tet4d/ui/pygame/front4d_render.py`
-- `src/tet4d/ui/pygame/topology_lab/*`
-- `src/tet4d/ui/pygame/runtime_ui/*`
-- `src/tet4d/ui/pygame/menu/*`
-- `src/tet4d/ui/pygame/launch/* (with settings_hub_model.py owning settings model/layout, settings_hub_actions.py owning settings mutations/text-entry, and launcher_settings.py owning orchestration/view)`
-- `src/tet4d/ui/pygame/render/*`
-
-### AI
-
-- `src/tet4d/ai/playbot/*`
-<!-- END GENERATED:current_state_canonical_ownership -->
 
 ## Transform Ownership Note
 
@@ -410,7 +379,11 @@ Dominant remaining pressure:
 26. Reduced the fixed 4D tutorial board profile to `8 x 20 x 7 x 6` and the fixed 4D exploration board profile to `8 x 9 x 7 x 6`.
 27. Unified tutorial instruction copy around one plain-language `Do this:` line, one optional `Tip:` line, and simpler `USE:` input prompts, with clearer layman wording across the 4D lesson pack.
 28. Added larger dedicated 4D piece-set options (`True 4D (7-cell)` and `True 4D (8-cell)`) plus regression coverage for the new 4D bag families.
-29. Added machine-checked drift protection via the `drift_protection` section in `config/project/policy/governance.json`, `tools/governance/check_drift_protection.py`, a generated `Live Drift Watch` section in `CURRENT_STATE.md`, and verify-time enforcement of thin-wrapper LOC budgets plus tutorial copy taxonomy.
+29. Added machine-checked drift protection via the `drift_protection` section
+in `config/project/policy_pack.json`,
+`tools/governance/check_drift_protection.py`, a generated `Live Drift Watch`
+section in `CURRENT_STATE.md`, and verify-time enforcement of thin-wrapper LOC
+budgets plus tutorial copy taxonomy.
 30. Fixed recurring GitHub CI parity drift by restoring the executable bit on `scripts/check_editable_install.sh` and teaching `scripts/check_git_sanitation_repo.sh` to fail if any direct-run shell entrypoint in the repo loses `100755` mode in git metadata.
 31. Split Topology Lab topology ownership by gameplay mode (`normal` vs `explorer`) for 3D/4D, with engine-owned validation rejecting wrapped `Y` boundaries in Normal Game while Explorer Mode persists separate topology profiles and allows bidirectional vertical traversal.
 32. Added explorer-only `move_up` / `move_down` keybinding groups and routing for 2D/3D/4D exploration, removed stale `move_y_*` gameplay naming from live help/control mappings, and hid 3D/4D topology-profile setup rows so advanced topology now flows through the mode-aware Topology Lab store.
@@ -456,18 +429,18 @@ Validation completed during this batch:
 <!-- BEGIN GENERATED:current_state_drift_watch -->
 ## Live Drift Watch
 
-Generated from `tools/governance/check_drift_protection.py` and `config/project/policy/governance.json`.
+Generated from `tools/governance/check_drift_protection.py` and `config/project/policy_pack.json`.
 
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3665` real LOC
 2. `src/tet4d/ui/pygame/endgame_animation.py`: `2145` real LOC
-3. `scripts/arch_metrics.py`: `1887` real LOC
+3. `scripts/arch_metrics.py`: `1890` real LOC
 4. `src/tet4d/ui/pygame/topology_lab/controls_panel.py`: `1540` real LOC
 5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `1313` real LOC
-7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1243` real LOC
-8. `tools/governance/validate_project_contracts.py`: `1105` real LOC
+7. `tools/governance/validate_project_contracts.py`: `1256` real LOC
+8. `src/tet4d/ui/pygame/render/gfx_game.py`: `1243` real LOC
 
 Thin-wrapper budgets:
 
@@ -503,7 +476,7 @@ Tutorial wording drift guard:
 2. `git status --short`
 3. Read:
    - `AGENTS.md`
-   - `docs/RDS_AND_CODEX.md`
+   - `docs/WORKFLOW_CODEX.md`
    - `docs/ARCHITECTURE_CONTRACT.md`
    - `CURRENT_STATE.md`
 4. Capture fresh metrics:

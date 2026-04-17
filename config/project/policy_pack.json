@@ -1,0 +1,1870 @@
+{
+  "schema_version": 1,
+  "project_name": "tet4d",
+  "description": "Single-source policy pack for governance, code rules, maintenance contracts, and generated maintenance docs.",
+  "authority_model": {
+    "machine_authority": "config/project/policy_pack.json",
+    "dispatch_file": "AGENTS.md",
+    "workflow_doc": "docs/WORKFLOW_CODEX.md",
+    "handoff_doc": "CURRENT_STATE.md",
+    "product_requirements_root": "docs/rds/",
+    "architecture_contract": "docs/ARCHITECTURE_CONTRACT.md",
+    "topology_current_authority": "docs/plans/topology_playground_current_authority.md"
+  },
+  "governance": {
+    "schema_version": 1,
+    "project_name": "tet4d",
+    "description": "Unified governance section nested inside the single-source policy pack.",
+    "verification_command": "./scripts/verify.sh",
+    "ci_entrypoint": "./scripts/ci_check.sh",
+    "design_sources": [
+      "docs/WORKFLOW_CODEX.md",
+      "docs/rds/"
+    ],
+    "contracts": {
+      "policy_pack": "config/project/policy_pack.json",
+      "secret_scan": "config/project/policy/manifests/secret_scan.json",
+      "replay_manifest": "config/project/policy/manifests/replay_manifest.json",
+      "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"
+    },
+    "menu_simplification_manifest_rule": {
+      "rule_id": "menu-simplification-common-settings",
+      "statement": "Menus must stay simple; any feature common to 2D/3D/4D menus must live in the shared settings menu unless a very strong mode-specific reason is documented, with custom topology editing owned by the Explorer Playground.",
+      "default_action": "centralize_common_features_in_settings_hub",
+      "exception_bar": "very_strong_documented_reason_required"
+    },
+    "contributor_directives": {
+      "required_ci_enforced_ids": [
+        "verification_required",
+        "loc_delta_preference",
+        "quiet_test_default"
+      ],
+      "directives": [
+        {
+          "id": "plan_with_acceptance",
+          "category": "process",
+          "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
+          "source_docs": [
+            "AGENTS.md",
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        },
+        {
+          "id": "rds_backlog_state_sync",
+          "category": "process",
+          "statement": "Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope or behavior changes.",
+          "source_docs": [
+            "AGENTS.md",
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        },
+        {
+          "id": "verification_required",
+          "category": "verification",
+          "statement": "Run verify locally before completion; CI entrypoint remains authoritative.",
+          "source_docs": [
+            "AGENTS.md",
+            "config/project/policy_pack.json"
+          ],
+          "enforced_by": [
+            "scripts/verify.sh",
+            "scripts/ci_check.sh"
+          ]
+        },
+        {
+          "id": "loc_delta_preference",
+          "category": "process",
+          "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
+          "source_docs": [
+            "AGENTS.md"
+          ],
+          "enforced_by": [
+            "code_review",
+            "tools/governance/validate_governance.py"
+          ]
+        },
+        {
+          "id": "quiet_test_default",
+          "category": "process",
+          "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
+          "source_docs": [
+            "AGENTS.md"
+          ],
+          "enforced_by": [
+            "code_review",
+            "scripts/verify.sh",
+            "tools/governance/validate_governance.py"
+          ]
+        },
+        {
+          "id": "medium_patch_preference",
+          "category": "process",
+          "statement": "Prefer medium-sized localized patches over ultra-narrow patch fragmentation; split only when a broader patch becomes hard to review or tool-rejected.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        },
+        {
+          "id": "edit_method_selection",
+          "category": "process",
+          "statement": "Use apply_patch only for localized code edits with fresh exact context. For broad doc rewrites, generated maintenance files, or files already edited in the current batch, prefer one deterministic scripted rewrite immediately instead of patch-first retries. Patch-tool rejection is a method switch signal, not a blocker.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        },
+        {
+          "id": "source_write_safety",
+          "category": "process",
+          "statement": "Do not use ad hoc multiline PowerShell -replace or BOM-producing Set-Content flows for source-file edits. Non-patch rewrites of source files must preserve UTF-8 without BOM and avoid literal escape-text insertion.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        },
+        {
+          "id": "post_write_hygiene",
+          "category": "verification",
+          "statement": "After any non-patch source rewrite, run a touched-file hygiene pass: encoding sanity, no literal escape artifacts, then focused lint before broader tests.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review",
+            "scripts/verify_focus.sh"
+          ]
+        },
+        {
+          "id": "serialized_full_gates",
+          "category": "verification",
+          "statement": "Never run verify.sh and ci_check.sh in parallel. Use focused checks first, then run the full gates sequentially.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review",
+            "scripts/verify.sh",
+            "scripts/ci_check.sh"
+          ]
+        },
+        {
+          "id": "current_venv_for_tests_and_ci",
+          "category": "verification",
+          "statement": "When running pytest, verify, or CI wrapper commands locally, use the current repository virtualenv interpreter when one is available instead of an ambient system Python.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md",
+            "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
+          ],
+          "enforced_by": [
+            "scripts/verify.sh",
+            "scripts/verify_focus.sh",
+            "scripts/ci_check.sh",
+            "code_review"
+          ]
+        },
+        {
+          "id": "single_patch_retry_limit",
+          "category": "process",
+          "statement": "Do not retry apply_patch repeatedly on the same file. After one rejected apply_patch attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        },
+        {
+          "id": "staged_migration_honesty",
+          "category": "process",
+          "statement": "For staged UI and architecture migrations, do not treat partial progress as completion. Do not mark complete until every stated acceptance criterion is explicitly satisfied.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        },
+        {
+          "id": "additive_migration_first",
+          "category": "process",
+          "statement": "Use additive migration first: add new modules, route one flow, verify, then remove old paths. Do not attempt broad destructive replacement in one step.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review",
+            "scripts/verify_focus.sh"
+          ]
+        },
+        {
+          "id": "delta_report_required",
+          "category": "process",
+          "statement": "At the end of staged migration work, provide a delta report listing files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.",
+          "source_docs": [
+            "docs/WORKFLOW_CODEX.md"
+          ],
+          "enforced_by": [
+            "code_review"
+          ]
+        }
+      ]
+    },
+    "risk_gates": {
+      "dependency_policy": {
+        "pyproject_path": "pyproject.toml",
+        "require_pip_check": true,
+        "blocked_dependencies": [
+          "pycrypto",
+          "python-jose"
+        ]
+      },
+      "security_ownership": {
+        "enabled": true,
+        "sensitive_globs": [
+          "tools/governance/scan_secrets.py",
+          "config/project/policy/manifests/secret_scan.json",
+          "scripts/check_policy_compliance.sh",
+          "scripts/check_git_sanitation.sh",
+          "tools/governance/validate_project_contracts.py"
+        ],
+        "min_sensitive_files": 5,
+        "min_distinct_authors_per_file": 1,
+        "max_files_below_min_authors": 0,
+        "target_min_distinct_authors_per_file": 2,
+        "max_files_below_target_authors_warn": 5
+      }
+    },
+    "architecture": {
+      "schema_version": 1,
+      "arch_stage": 900,
+      "source_roots": [
+        "src/tet4d",
+        "tests",
+        "tools",
+        "scripts"
+      ],
+      "boundary_scripts": [
+        "scripts/check_architecture_boundaries.sh",
+        "scripts/check_engine_core_purity.sh"
+      ],
+      "forbidden_reverse_imports": [
+        {
+          "from": "tet4d.engine",
+          "to": "tet4d.ui"
+        },
+        {
+          "from": "tet4d.engine",
+          "to": "tet4d.ai"
+        },
+        {
+          "from": "tet4d.engine",
+          "to": "tet4d.replay"
+        },
+        {
+          "from": "tet4d.engine",
+          "to": "tools"
+        }
+      ],
+      "zero_budgets": {
+        "engine_core_purity_violations": 0,
+        "engine_core_to_non_core_imports": 0,
+        "engine_to_ui_imports": 0,
+        "engine_to_ai_imports": 0,
+        "pygame_imports_in_non_test": 0
+      },
+      "classification": {
+        "non_code_segments": [
+          "docs",
+          "doc",
+          "assets",
+          "inputs",
+          "outputs",
+          "config",
+          "configs",
+          "notebooks",
+          "benchmarks",
+          "packaging",
+          "migrations",
+          "schema",
+          "scripts",
+          "tools",
+          "data"
+        ],
+        "test_segments": [
+          "test",
+          "tests"
+        ],
+        "class_overrides": {
+          "tests/unit/engine": "tests_lenient",
+          "src/tet4d/engine/core/rng": "micro_core_leaf",
+          "src/tet4d/engine/core/step": "micro_core_leaf",
+          "src/tet4d/replay": "micro_feature_leaf",
+          "src/tet4d/engine/runtime/menu_settings": "micro_feature_leaf",
+          "src/tet4d/engine/runtime/menu_structure": "micro_feature_leaf",
+          "src/tet4d/engine/runtime/score_analysis": "micro_feature_leaf"
+        },
+        "gate_overrides": {
+          "tests/unit/engine": true
+        }
+      },
+      "class_gate_eligibility": {
+        "code_default": true,
+        "tests_lenient": true,
+        "non_code_exempt": false,
+        "micro_core_leaf": true,
+        "micro_feature_leaf": true
+      },
+      "class_to_profile": {
+        "code_default": "default_leaf",
+        "tests_lenient": "tests_leaf",
+        "non_code_exempt": "non_code_exempt",
+        "micro_core_leaf": "micro_leaf",
+        "micro_feature_leaf": "micro_leaf"
+      },
+      "backlog": {
+        "mode": "tet4d_bkl",
+        "default_priority": "P2"
+      },
+      "long_term_goals": {
+        "keybinding_retention": {
+          "required_scopes": [
+            "general",
+            "2d",
+            "3d",
+            "4d",
+            "all"
+          ],
+          "target_pressure_max": 0.0
+        },
+        "menu_simplification": {
+          "target_simplification_score_min": 0.65
+        }
+      }
+    },
+    "tech_debt_budget": {
+      "schema_version": 1,
+      "gate_mode": "non_regression_baseline",
+      "score_epsilon": 0.03,
+      "status_order": {
+        "low": 0,
+        "moderate": 1,
+        "high": 2,
+        "critical": 3
+      },
+      "baseline": {
+        "arch_stage": 755,
+        "score": 15.06,
+        "status": "low"
+      },
+      "scoring": {
+        "component_weights": {
+          "backlog_priority": 0.27,
+          "backlog_bug": 0.16,
+          "ci_gate": 0.2,
+          "code_balance": 0.12,
+          "keybinding_retention": 0.2,
+          "menu_simplification": 0.05,
+          "delivery_size_pressure": 0.005
+        },
+        "priority_weights": {
+          "P1": 5,
+          "P2": 3,
+          "P3": 1
+        },
+        "normalization": {
+          "priority_points_cap": 40,
+          "bug_items_cap": 6,
+          "ci_issue_cap": 6
+        },
+        "delivery_size": {
+          "loc_unit": 12500,
+          "file_unit": 78,
+          "source_root_weights": {
+            "src/tet4d": 1.0,
+            "tests": 0.35,
+            "tools": 0.2,
+            "scripts": 0.2,
+            "other": 0.1
+          }
+        },
+        "bug_keywords": [
+          "bug",
+          "regression",
+          "correctness",
+          "broken",
+          "failure",
+          "ci",
+          "alert"
+        ]
+      }
+    },
+    "drift_protection": {
+      "schema_version": 1,
+      "manifest_id": "drift_protection",
+      "hotspot_scan": {
+        "roots": [
+          "src",
+          "cli",
+          "tests",
+          "tools",
+          "scripts"
+        ],
+        "top_n": 8
+      },
+      "thin_wrapper_budgets": [
+        {
+          "path": "cli/front.py",
+          "max_real_loc": 840,
+          "role": "compatibility launcher wrapper"
+        },
+        {
+          "path": "cli/front2d.py",
+          "max_real_loc": 24,
+          "role": "thin 2D launcher shim"
+        },
+        {
+          "path": "cli/front3d.py",
+          "max_real_loc": 24,
+          "role": "thin 3D launcher shim"
+        },
+        {
+          "path": "cli/front4d.py",
+          "max_real_loc": 24,
+          "role": "thin 4D launcher shim"
+        },
+        {
+          "path": "src/tet4d/engine/api.py",
+          "max_real_loc": 160,
+          "role": "small engine compatibility facade"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front2d_game.py",
+          "max_real_loc": 180,
+          "role": "2D orchestration entrypoint"
+        }
+      ],
+      "tutorial_copy_contract": {
+        "lessons_path": "config/tutorial/lessons.json",
+        "overlay_path": "src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py",
+        "forbidden_prefixes": [
+          "Goal:",
+          "Action:"
+        ],
+        "required_overlay_tokens": [
+          "Do this:",
+          "Tip:",
+          "USE:"
+        ]
+      }
+    }
+  },
+  "code_rules": {
+    "schema_version": 1,
+    "description": "Unified code rule manifest for sanitation, magic numbers, wheel reuse, dead code, and LOC guidance.",
+    "sanitation": {
+      "entrypoints": [
+        {
+          "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
+          "required_any_tokens": [
+            "sanitize_text_runtime",
+            "_sanitize_text("
+          ],
+          "required_all_tokens": [
+            "append_numeric_text",
+            "parse_numeric_text"
+          ],
+          "severity": "error"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/menu/keybindings_menu.py",
+          "required_any_tokens": [
+            "sanitize_text_runtime"
+          ],
+          "required_all_tokens": [
+            "_sanitize_profile_name"
+          ],
+          "severity": "warning"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
+          "required_any_tokens": [
+            "sanitize_text_runtime"
+          ],
+          "required_all_tokens": [
+            "_NAME_MAX_LENGTH"
+          ],
+          "severity": "warning"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/menu/numeric_text_input.py",
+          "required_any_tokens": [
+            "sanitize_text("
+          ],
+          "required_all_tokens": [
+            "sanitize_text: SanitizeTextFn"
+          ],
+          "severity": "error"
+        }
+      ]
+    },
+    "magic_numbers": {
+      "entrypoints": [
+        {
+          "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
+          "required_all_tokens": [
+            "clamp_game_seed",
+            "clamp_overlay_transparency",
+            "clamp_lines_per_level",
+            "GAME_SEED_STEP"
+          ],
+          "forbidden_regex": [
+            "\\b999_?999_?999\\b",
+            "\\b0\\.85\\b"
+          ],
+          "severity": "error"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/settings_schema.py",
+          "required_all_tokens": [
+            "OVERLAY_TRANSPARENCY_MIN",
+            "OVERLAY_TRANSPARENCY_MAX",
+            "GAME_SEED_MIN",
+            "GAME_SEED_MAX",
+            "LINES_PER_LEVEL_MIN",
+            "LINES_PER_LEVEL_MAX"
+          ],
+          "forbidden_regex": [],
+          "severity": "warning"
+        }
+      ]
+    },
+    "wheel_reuse": {
+      "exception_marker": "Wheel Exception:",
+      "rules": [
+        {
+          "id": "parsing_validation_reuse",
+          "description": "Prefer stdlib or existing repo helpers for parsing and validation rather than ad-hoc local variants.",
+          "scope_globs": [
+            "src/tet4d/ui/pygame/launch/*.py",
+            "src/tet4d/ui/pygame/menu/*.py",
+            "src/tet4d/engine/tutorial/*.py",
+            "tools/**/*.py",
+            "scripts/**/*.py"
+          ],
+          "forbidden_regex": [
+            "\\.strip\\(\\)\\.lower\\(\\)\\s+in\\s+\\([^)]+\\)",
+            "if\\s+[^\\n]+\\.isdigit\\(\\)\\s*:\\s*return\\s+int\\(",
+            "if\\s+[^\\n]+\\.isnumeric\\(\\)\\s*:\\s*return\\s+int\\("
+          ],
+          "ast_detectors": [
+            "custom_bool_parser",
+            "custom_numeric_text_parser"
+          ],
+          "prefer_symbols": [
+            "tet4d.engine.runtime.settings_schema",
+            "sanitize_text_runtime",
+            "append_numeric_text",
+            "parse_numeric_text",
+            "tet4d.engine.runtime.project_config"
+          ]
+        },
+        {
+          "id": "normalization_reuse",
+          "description": "Do not duplicate local sanitization and normalization pipelines where shared helpers exist.",
+          "scope_globs": [
+            "src/tet4d/ui/pygame/**/*.py",
+            "src/tet4d/engine/runtime/**/*.py",
+            "tools/governance/*.py"
+          ],
+          "forbidden_regex": [
+            "re\\.sub\\([^\\n]*[^\\n]*\\.strip\\(\\)",
+            "\\.replace\\([^\\n]*\\)\\.replace\\([^\\n]*\\)\\.strip\\(\\)"
+          ],
+          "ast_detectors": [],
+          "prefer_symbols": [
+            "sanitize_text",
+            "sanitize_text_runtime",
+            "sanitize_state_relative_path"
+          ]
+        },
+        {
+          "id": "path_and_config_reuse",
+          "description": "Use existing project config, path, and JSON helper flows before introducing custom wrappers.",
+          "scope_globs": [
+            "src/tet4d/ui/pygame/**/*.py",
+            "src/tet4d/engine/runtime/**/*.py",
+            "tools/governance/*.py",
+            "scripts/**/*.py"
+          ],
+          "forbidden_regex": [
+            "Path\\(__file__\\)\\.parent\\.parent\\.parent",
+            "open\\([^\\n]*\\)\\.read\\(\\)\\s*\\n\\s*json\\.loads\\("
+          ],
+          "ast_detectors": [],
+          "prefer_symbols": [
+            "project_path",
+            "state_relative_path",
+            "read_json_object_or_empty",
+            "atomic_write_json"
+          ]
+        },
+        {
+          "id": "algorithm_utility_reuse",
+          "description": "Prefer stdlib functional utilities over ad-hoc rewrites for common collection transforms.",
+          "scope_globs": [
+            "src/tet4d/engine/runtime/**/*.py",
+            "tools/governance/*.py"
+          ],
+          "forbidden_regex": [
+            "result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+not\\s+in\\s+result:[ \\t]*\\n[ \\t]*result\\.append\\(",
+            "for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*continue\\s*\\n[ \\t]*\\w+\\.append\\("
+          ],
+          "ast_detectors": [],
+          "prefer_symbols": [
+            "set(",
+            "dict.fromkeys",
+            "collections"
+          ]
+        }
+      ]
+    },
+    "dead_code": {
+      "forbidden_paths": [
+        "tetris_nd/"
+      ],
+      "todo_rule": {
+        "scope_globs": [
+          "src/**/*.py",
+          "tools/**/*.py",
+          "scripts/**/*.py"
+        ],
+        "ignore_globs": [
+          "tools/governance/check_dedup_dead_code_rules.py",
+          "tests/**/*.py"
+        ],
+        "token_regex": "\\b(?:TODO|FIXME)\\b",
+        "required_backlog_regex": "\\[BKL-[^\\]]+\\]"
+      },
+      "duplicate_functions": {
+        "enabled": true,
+        "strict_scope_globs": [
+          "tools/governance/*.py"
+        ],
+        "advisory_scope_globs": [
+          "src/tet4d/engine/runtime/*.py"
+        ],
+        "min_body_lines": 12,
+        "max_allowed_duplicates_per_signature": 1,
+        "exclude_function_names": [
+          "main"
+        ]
+      }
+    },
+    "loc_guidance": {
+      "mode": "soft_warning",
+      "default_batch_type": "mixed",
+      "batch_type_env_var": "LOC_GUIDANCE_BATCH_TYPE",
+      "include_extensions": [
+        ".py"
+      ],
+      "buckets": {
+        "src": "src/",
+        "tests": "tests/",
+        "tools_scripts": "tools/|scripts/"
+      },
+      "thresholds": {
+        "feature": {
+          "src": 500,
+          "tests": 250,
+          "tools_scripts": 150
+        },
+        "bugfix": {
+          "src": 250,
+          "tests": 150,
+          "tools_scripts": 120
+        },
+        "refactor_only": {
+          "src": 0,
+          "tests": 0,
+          "tools_scripts": 0
+        },
+        "mixed": {
+          "src": 300,
+          "tests": 180,
+          "tools_scripts": 120
+        },
+        "governance": {
+          "src": 0,
+          "tests": 80,
+          "tools_scripts": 200
+        }
+      }
+    }
+  },
+  "maintenance_contract": {
+    "schema_version": 1,
+    "title": "tet4d canonical maintenance contract",
+    "description": "Machine-checked source-of-truth rules for docs/tests/help/backlog/RDS/feature-map consistency.",
+    "required_paths": {
+      "root_docs": [
+        "README.md",
+        "docs/README.md",
+        "docs/PROJECT_STRUCTURE.md",
+        "docs/FEATURE_MAP.md",
+        "docs/CONFIGURATION_REFERENCE.md",
+        "docs/USER_SETTINGS_REFERENCE.md",
+        "docs/BACKLOG.md",
+        "docs/history/DONE_SUMMARIES.md",
+        "docs/CHANGELOG.md",
+        "docs/WORKFLOW_CODEX.md",
+        "docs/SECURITY_AND_CONFIG_PLAN.md"
+      ],
+      "rds_docs": [
+        "docs/rds/RDS_TETRIS_GENERAL.md",
+        "docs/rds/RDS_2D_TETRIS.md",
+        "docs/rds/RDS_3D_TETRIS.md",
+        "docs/rds/RDS_4D_TETRIS.md",
+        "docs/rds/RDS_KEYBINDINGS.md",
+        "docs/rds/RDS_MENU_STRUCTURE.md",
+        "docs/rds/RDS_PLAYBOT.md",
+        "docs/rds/RDS_SCORE_ANALYZER.md",
+        "docs/rds/RDS_PACKAGING.md"
+      ],
+      "help_assets": [
+        "src/tet4d/ui/pygame/render/control_icons.py",
+        "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
+      ],
+      "canonical_schemas": [
+        "config/schema/menu_settings.schema.json",
+        "config/schema/save_state.schema.json",
+        "config/schema/help_topics.schema.json",
+        "config/schema/help_action_map.schema.json",
+        "config/schema/help_runtime_content.schema.json",
+        "config/schema/help_runtime_layout.schema.json",
+        "config/schema/tutorial_lessons.schema.json",
+        "config/schema/tutorial_plan.schema.json"
+      ],
+      "migration_ledgers": [
+        "docs/migrations/menu_settings.md",
+        "docs/migrations/save_state.md"
+      ],
+      "replay_contract": [
+        "config/project/policy/manifests/replay_manifest.json",
+        "tests/replay/golden/.gitkeep"
+      ],
+      "help_contract": [
+        "docs/help/HELP_INDEX.md",
+        "config/project/policy/manifests/help_assets_manifest.json"
+      ],
+      "release_contract": [
+        "docs/RELEASE_CHECKLIST.md",
+        "docs/RELEASE_INSTALLERS.md"
+      ],
+      "core_tests": [
+        "tests/unit/engine/test_playbot.py",
+        "tests/unit/engine/test_score_analyzer.py",
+        "tests/unit/engine/test_runtime_config.py",
+        "tests/unit/engine/test_menu_policy.py",
+        "tests/unit/engine/test_project_config.py",
+        "tests/unit/engine/test_help_topics.py",
+        "tests/unit/engine/test_help_menu.py",
+        "tests/unit/engine/test_help_text.py"
+      ],
+      "canonical_configs": [
+        "config/menu/defaults.json",
+        "config/menu/structure.json",
+        "config/topology/designer_presets.json",
+        "config/topology/lab_menu.json",
+        "config/help/topics.json",
+        "config/help/action_map.json",
+        "config/help/icon_map.json",
+        "config/help/content/runtime_help_content.json",
+        "config/help/layout/runtime_help_layout.json",
+        "config/tutorial/lessons.json",
+        "config/tutorial/plan.json",
+        "config/gameplay/tuning.json",
+        "config/gameplay/piece_sets_nd.json",
+        "config/gameplay/score_analyzer.json",
+        "config/playbot/policy.json",
+        "config/audio/sfx.json",
+        "config/project/io_paths.json",
+        "config/project/constants.json",
+        "config/project/folder_balance_budgets.json",
+        "config/project/backlog_debt.json",
+        "config/project/policy/manifests/secret_scan.json"
+      ],
+      "ci_scripts": [
+        "scripts/bootstrap_env.sh",
+        "scripts/install_git_hooks.sh",
+        "scripts/ci_check.sh",
+        "scripts/verify.sh",
+        "scripts/verify_focus.sh",
+        "scripts/check_git_sanitation.sh",
+        "scripts/check_policy_compliance.sh",
+        "tools/governance/check_pygame_ce.py",
+        "tools/governance/scan_secrets.py",
+        "tools/governance/lint_menu_graph.py",
+        "tools/governance/architecture_metric_budget.py",
+        "tools/governance/tech_debt_budget.py",
+        "tools/governance/update_tech_debt_budgets.py",
+        "tools/governance/validate_project_contracts.py",
+        "tools/governance/generate_configuration_reference.py",
+        "tools/governance/generate_maintenance_docs.py",
+        "tools/governance/check_drift_protection.py",
+        "tools/governance/check_risk_gates.py",
+        "tools/governance/check_policy_runtime_rules.py",
+        "tools/governance/check_wheel_reuse_rules.py",
+        "tools/governance/check_loc_guidance.py",
+        "tools/governance/check_dedup_dead_code_rules.py",
+        ".github/workflows/ci.yml",
+        ".github/workflows/stability-watch.yml",
+        ".github/workflows/release-packaging.yml",
+        "scripts/check_policy_template_drift.sh",
+        "scripts/update_policy_template_hashes.sh",
+        "scripts/check_git_sanitation_repo.sh",
+        "scripts/check_policy_compliance_repo.sh",
+        "scripts/ci_preflight.sh",
+        "scripts/check_architecture_metrics_soft_gate.sh"
+      ],
+      "governance": [
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "docs/policies/INDEX.md",
+        "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+        "docs/policies/POLICY_STRING_SANITATION.md",
+        "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
+        "docs/policies/POLICY_FORMATTING.md",
+        "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
+        "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "config/project/policy_pack.json",
+        ".githooks/pre-push"
+      ],
+      "packaging_scripts": [
+        "packaging/pyinstaller/tet4d.spec",
+        "packaging/scripts/build_macos.sh",
+        "packaging/scripts/build_linux.sh",
+        "packaging/scripts/build_windows.ps1"
+      ]
+    },
+    "content_rules": [
+      {
+        "file": "docs/policies/INDEX.md",
+        "must_contain": [
+          "config/project/policy_pack.json",
+          "config/project/policy/manifests/secret_scan.json",
+          "config/project/policy/manifests/replay_manifest.json",
+          "config/project/policy/manifests/help_assets_manifest.json",
+          "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+          "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md"
+        ]
+      },
+      {
+        "file": "README.md",
+        "must_contain": [
+          "Documentation map",
+          "scripts/bootstrap_env.sh",
+          "config/gameplay/score_analyzer.json",
+          "scripts/ci_check.sh",
+          "tools/governance/check_pygame_ce.py",
+          "tools/governance/scan_secrets.py",
+          "config/project/io_paths.json",
+          "config/project/constants.json",
+          "config/project/policy/manifests/secret_scan.json",
+          "docs/RELEASE_INSTALLERS.md",
+          "packaging/scripts/build_macos.sh",
+          "docs/CONFIGURATION_REFERENCE.md",
+          "docs/USER_SETTINGS_REFERENCE.md"
+        ]
+      },
+      {
+        "file": "docs/FEATURE_MAP.md",
+        "must_contain": [
+          "## 4. Keybindings",
+          "## 6. Scoring and Assistance",
+          "## 9. Verification Coverage"
+        ]
+      },
+      {
+        "file": "docs/BACKLOG.md",
+        "must_contain": [
+          "## Current Authority",
+          "## Active Work",
+          "Current sub-batch",
+          "Acceptance bar:",
+          "## Governance Watchlist",
+          "## Recent Completed Work",
+          "## Historical Milestones"
+        ],
+        "must_not_contain": [
+          "No currently open gaps",
+          "126 passed"
+        ],
+        "must_not_match_regex": [
+          "\\b\\d+\\s+passed\\b",
+          "\\[[\\s\\d%]+\\]"
+        ]
+      },
+      {
+        "file": "docs/GUIDELINES_RESEARCH.md",
+        "must_contain": [
+          "## 3. Current issues (open backlog)",
+          "docs/BACKLOG.md"
+        ],
+        "must_not_contain": [
+          "No active open gaps",
+          "126 passed"
+        ],
+        "must_not_match_regex": [
+          "\\b\\d+\\s+passed\\b",
+          "\\[[\\s\\d%]+\\]"
+        ]
+      },
+      {
+        "file": "docs/WORKFLOW_CODEX.md",
+        "must_contain": [
+          "Workflow authority",
+          "config/project/policy_pack.json",
+          "Authority files must be tracked in Git",
+          "docs/rds/",
+          "CODEX_MODE=1 ./scripts/verify.sh",
+          "./scripts/ci_preflight.sh",
+          "prefer the current repo virtualenv interpreter when one is available",
+          "CURRENT_STATE.md",
+          "docs/BACKLOG.md"
+        ],
+        "must_not_match_regex": [
+          "\\b\\d+\\s+passed\\b",
+          "\\[[\\s\\d%]+\\]"
+        ]
+      },
+      {
+        "file": "scripts/ci_check.sh",
+        "must_contain": [
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "QUIET=\"${QUIET:-1}\"",
+          "CODEX_MODE=\"${CODEX_MODE:-0}\"",
+          "exec ./scripts/verify.sh"
+        ],
+        "must_not_contain": [
+          "run_module_or_command",
+          "require_module ruff ruff"
+        ]
+      },
+      {
+        "file": "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "must_contain": [
+          "./scripts/ci_preflight.sh",
+          "./scripts/ci_check.sh",
+          ".venv/bin/python -m pytest -q",
+          "config/project/policy_pack.json",
+          "Prefer the current repo virtualenv for local pytest, verify, and CI-style runs whenever it is available."
+        ]
+      },
+      {
+        "file": "AGENTS.md",
+        "must_contain": [
+          "config/project/policy_pack.json",
+          "docs/WORKFLOW_CODEX.md",
+          "CURRENT_STATE.md",
+          "docs/rds/",
+          "docs/ARCHITECTURE_CONTRACT.md",
+          "docs/plans/topology_playground_current_authority.md",
+          "CODEX_MODE=1 ./scripts/verify.sh"
+        ]
+      },
+      {
+        "file": "CONTRIBUTING.md",
+        "must_contain": [
+          "## Policies",
+          "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+          "docs/policies/POLICY_STRING_SANITATION.md",
+          "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
+        ]
+      },
+      {
+        "file": "scripts/verify.sh",
+        "must_contain": [
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "CODEX_MODE=\"${CODEX_MODE:-0}\"",
+          "run_step \"governance\"",
+          "run_step \"maintenance_docs\"",
+          "tools/governance/validate_governance.py",
+          "echo \"verify: OK\"",
+          "check_architecture_metrics_soft_gate.sh"
+        ]
+      },
+      {
+        "file": "scripts/install_git_hooks.sh",
+        "must_contain": [
+          "git config --local core.hooksPath .githooks",
+          "chmod +x .githooks/pre-push"
+        ]
+      },
+      {
+        "file": ".githooks/pre-push",
+        "must_contain": [
+          "./scripts/ci_check.sh",
+          "CODEX_MODE"
+        ]
+      },
+      {
+        "file": ".github/workflows/ci.yml",
+        "must_contain": [
+          "SDL_VIDEODRIVER: dummy",
+          "SDL_AUDIODRIVER: dummy",
+          "scripts/check_git_sanitation.sh",
+          "scripts/check_policy_compliance.sh",
+          "./scripts/ci_check.sh",
+          "scripts/check_policy_template_drift.sh",
+          "scripts/check_git_sanitation_repo.sh",
+          "scripts/check_policy_compliance_repo.sh"
+        ]
+      },
+      {
+        "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
+        "must_contain": [
+          "compatibility redirect only",
+          "config/project/policy_pack.json",
+          "config/project/policy/manifests/secret_scan.json",
+          "tools/governance/scan_secrets.py",
+          "config/project/io_paths.json",
+          "config/project/constants.json",
+          "docs/history/plans/security_and_config_externalization_plan.md"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_TETRIS_GENERAL.md",
+        "must_contain": [
+          "Target Runtime: Python 3.11-3.14 + `pygame-ce`",
+          "## 8. Testing Instructions",
+          "## 10. Backlog Status"
+        ]
+      },
+      {
+        "file": "docs/RELEASE_INSTALLERS.md",
+        "must_contain": [
+          "PyInstaller",
+          "packaging/scripts/build_macos.sh",
+          "packaging/scripts/build_linux.sh",
+          "packaging/scripts/build_windows.ps1",
+          ".github/workflows/release-packaging.yml"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_PACKAGING.md",
+        "must_contain": [
+          "Desktop Packaging RDS",
+          "packaging/pyinstaller/tet4d.spec",
+          ".github/workflows/release-packaging.yml"
+        ]
+      },
+      {
+        "file": "config/project/io_paths.json",
+        "must_contain": [
+          "\"paths\"",
+          "\"menu_settings_file\"",
+          "\"keybindings_dir\""
+        ]
+      },
+      {
+        "file": "config/project/constants.json",
+        "must_contain": [
+          "\"cache_limits\"",
+          "\"animation\"",
+          "\"rendering\""
+        ]
+      },
+      {
+        "file": "config/project/folder_balance_budgets.json",
+        "must_contain": [
+          "\"schema_version\"",
+          "\"gate_mode\"",
+          "\"scope\"",
+          "\"profiles\"",
+          "\"tracked_leaf_folders\"",
+          "\"score_epsilon\"",
+          "\"status_order\""
+        ]
+      },
+      {
+        "file": "config/project/backlog_debt.json",
+        "must_contain": [
+          "\"schema_version\"",
+          "\"active_debt_items\"",
+          "\"operational_watch_items\""
+        ]
+      },
+      {
+        "file": "scripts/check_architecture_metric_budgets.sh",
+        "must_contain": [
+          "evaluate_architecture_metric_budget_overages",
+          "evaluate_folder_balance_gate",
+          "evaluate_tech_debt_gate",
+          "config/project/policy_pack.json"
+        ]
+      },
+      {
+        "file": "config/project/policy/manifests/secret_scan.json",
+        "must_contain": [
+          "\"patterns\"",
+          "\"exclude_dirs\""
+        ]
+      },
+      {
+        "file": "config/schema/menu_settings.schema.json",
+        "must_contain": [
+          "\"$schema\"",
+          "\"title\": \"tet4d menu settings\"",
+          "\"settings\""
+        ]
+      },
+      {
+        "file": "config/schema/save_state.schema.json",
+        "must_contain": [
+          "\"$schema\"",
+          "\"title\": \"tet4d saved game state\"",
+          "\"active_piece\""
+        ]
+      },
+      {
+        "file": "config/schema/help_topics.schema.json",
+        "must_contain": [
+          "\"$schema\"",
+          "\"title\": \"tet4d help topics registry\"",
+          "\"topics\""
+        ]
+      },
+      {
+        "file": "config/schema/help_action_map.schema.json",
+        "must_contain": [
+          "\"$schema\"",
+          "\"title\": \"tet4d help action topic map\"",
+          "\"action_topics\""
+        ]
+      },
+      {
+        "file": "config/help/topics.json",
+        "must_contain": [
+          "\"version\"",
+          "\"topics\"",
+          "\"id\"",
+          "\"lane\"",
+          "\"sections\""
+        ]
+      },
+      {
+        "file": "config/help/action_map.json",
+        "must_contain": [
+          "\"version\"",
+          "\"default_topic\"",
+          "\"action_topics\"",
+          "\"move_x_neg\""
+        ]
+      },
+      {
+        "file": "config/help/icon_map.json",
+        "must_contain": [
+          "\"version\"",
+          "\"pack_root\"",
+          "\"action_map\"",
+          "\"rotate_xy_pos\"",
+          "\"rot_xy_pos\""
+        ]
+      },
+      {
+        "file": "docs/migrations/menu_settings.md",
+        "must_contain": [
+          "## Version 1",
+          "## Migration policy"
+        ]
+      },
+      {
+        "file": "docs/migrations/save_state.md",
+        "must_contain": [
+          "## Version 1 (planned)",
+          "## Migration policy"
+        ]
+      },
+      {
+        "file": "config/project/policy/manifests/replay_manifest.json",
+        "must_contain": [
+          "\"version\": 1",
+          "\"gameplay_replay_core\""
+        ]
+      },
+      {
+        "file": "docs/help/HELP_INDEX.md",
+        "must_contain": [
+          "## Control diagrams",
+          "## Maintenance rule"
+        ]
+      },
+      {
+        "file": "config/help/content/runtime_help_content.json",
+        "must_contain": [
+          "\"version\": 1",
+          "\"topic_blocks\"",
+          "\"fallback_topic\""
+        ]
+      },
+      {
+        "file": "config/help/layout/runtime_help_layout.json",
+        "must_contain": [
+          "\"version\": 1",
+          "\"topic_media_placement\"",
+          "\"controls_topic_id\""
+        ]
+      },
+      {
+        "file": "config/schema/help_runtime_content.schema.json",
+        "must_contain": [
+          "\"$schema\"",
+          "\"title\": \"tet4d runtime help content\"",
+          "\"topic_blocks\""
+        ]
+      },
+      {
+        "file": "config/schema/help_runtime_layout.schema.json",
+        "must_contain": [
+          "\"$schema\"",
+          "\"title\": \"tet4d runtime help layout rules\"",
+          "\"topic_media_placement\""
+        ]
+      },
+      {
+        "file": "config/project/policy/manifests/help_assets_manifest.json",
+        "must_contain": [
+          "\"translation_keys\"",
+          "\"rotation_keys\""
+        ]
+      },
+      {
+        "file": "docs/RELEASE_CHECKLIST.md",
+        "must_contain": [
+          "## Code and tests",
+          "## Documentation and RDS sync",
+          "## Artifacts and config"
+        ]
+      },
+      {
+        "file": "scripts/check_policy_compliance_repo.sh",
+        "must_contain": [
+          "AGENTS.md",
+          "docs/WORKFLOW_CODEX.md",
+          "config/project/policy_pack.json",
+          "python3 tools/governance/validate_project_contracts.py",
+          "python3 tools/governance/scan_secrets.py",
+          "scripts/check_engine_core_purity.sh",
+          "scripts/check_architecture_boundaries.sh",
+          "legacy 'tetris_nd' imports detected"
+        ]
+      },
+      {
+        "file": "scripts/check_git_sanitation_repo.sh",
+        "must_contain": [
+          "#!/usr/bin/env bash",
+          "Absolute filesystem paths detected.",
+          "Potential unsafe path traversal patterns detected in docs/ or config/.",
+          "Filenames with spaces detected:"
+        ]
+      },
+      {
+        "file": "config/project/policy/manifests/replay_manifest.json",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "config/project/policy/manifests/help_assets_manifest.json",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/help/HELP_INDEX.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/FEATURE_MAP.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/WORKFLOW_CODEX.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ],
+        "must_contain": [
+          "Workflow authority",
+          "config/project/policy_pack.json",
+          "docs/rds/",
+          "CODEX_MODE=1 ./scripts/verify.sh",
+          "./scripts/ci_preflight.sh",
+          "prefer the current repo virtualenv interpreter when one is available",
+          "CURRENT_STATE.md",
+          "docs/BACKLOG.md"
+        ]
+      },
+      {
+        "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ],
+        "must_contain": [
+          "compatibility redirect only",
+          "config/project/policy_pack.json",
+          "config/project/policy/manifests/secret_scan.json",
+          "tools/governance/scan_secrets.py",
+          "config/project/io_paths.json",
+          "config/project/constants.json",
+          "docs/history/plans/security_and_config_externalization_plan.md"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_TETRIS_GENERAL.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_2D_TETRIS.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_3D_TETRIS.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_4D_TETRIS.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_KEYBINDINGS.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_MENU_STRUCTURE.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_PLAYBOT.md",
+        "must_not_match_regex": [
+          "\\btetris_nd\\b"
+        ]
+      },
+      {
+        "file": "docs/CONFIGURATION_REFERENCE.md",
+        "must_contain": [
+          "Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.",
+          "config/project/constants.json",
+          "config/keybindings/catalog.json",
+          "config/keybindings/defaults.json",
+          "config/project/format_allowlist.txt"
+        ]
+      },
+      {
+        "file": "docs/USER_SETTINGS_REFERENCE.md",
+        "must_contain": [
+          "Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.",
+          "tet4d.engine.runtime.menu_config.default_settings_payload()",
+          "config/schema/menu_settings.schema.json",
+          "config/keybindings/defaults.json"
+        ]
+      },
+      {
+        "file": "CURRENT_STATE.md",
+        "must_contain": [
+          "tools/governance/generate_maintenance_docs.py",
+          "<!-- BEGIN GENERATED:current_state_metric_snapshot -->",
+          "<!-- BEGIN GENERATED:current_state_drift_watch -->"
+        ]
+      },
+      {
+        "file": "docs/PROJECT_STRUCTURE.md",
+        "must_contain": [
+          "tools/governance/generate_maintenance_docs.py",
+          "<!-- BEGIN GENERATED:project_structure_entry_points -->",
+          "<!-- BEGIN GENERATED:project_structure_runtime_owners -->",
+          "<!-- BEGIN GENERATED:project_structure_sources_of_truth -->",
+          "<!-- BEGIN GENERATED:project_structure_verification_contract -->"
+        ]
+      }
+    ],
+    "canonical_candidates": [
+      {
+        "name": "Settings schema and migration ledger",
+        "paths": [
+          "config/schema/menu_settings.schema.json",
+          "docs/migrations/menu_settings.md"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Saved-game/state schema",
+        "paths": [
+          "config/schema/save_state.schema.json",
+          "docs/migrations/save_state.md"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Replay golden fixtures manifest",
+        "paths": [
+          "config/project/policy/manifests/replay_manifest.json",
+          "tests/replay/golden/.gitkeep"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Help content index",
+        "paths": [
+          "docs/help/HELP_INDEX.md",
+          "config/help/content/runtime_help_content.json",
+          "config/help/layout/runtime_help_layout.json",
+          "config/project/policy/manifests/help_assets_manifest.json"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Help topic contract and schemas",
+        "paths": [
+          "config/help/topics.json",
+          "config/help/action_map.json",
+          "config/schema/help_topics.schema.json",
+          "config/schema/help_action_map.schema.json"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Runtime help content/layout contracts",
+        "paths": [
+          "config/help/content/runtime_help_content.json",
+          "config/help/layout/runtime_help_layout.json",
+          "config/schema/help_runtime_content.schema.json",
+          "config/schema/help_runtime_layout.schema.json"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Release checklist",
+        "paths": [
+          "docs/RELEASE_CHECKLIST.md"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Security and config policy",
+        "paths": [
+          "docs/SECURITY_AND_CONFIG_PLAN.md",
+          "config/project/io_paths.json",
+          "config/project/constants.json",
+          "config/project/policy/manifests/secret_scan.json",
+          "tools/governance/scan_secrets.py"
+        ],
+        "status": "connected"
+      },
+      {
+        "name": "Architecture debt budget gates",
+        "paths": [
+          "scripts/arch_metrics.py",
+          "scripts/check_architecture_metric_budgets.sh",
+          "config/project/folder_balance_budgets.json",
+          "config/project/policy_pack.json",
+          "tools/governance/folder_balance_budget.py",
+          "tools/governance/tech_debt_budget.py"
+        ],
+        "status": "connected"
+      }
+    ]
+  },
+  "maintenance_docs": {
+    "entry_points": [
+      {
+        "path": "cli/front.py",
+        "description": "unified launcher"
+      },
+      {
+        "path": "cli/front2d.py",
+        "description": "thin 2D shim"
+      },
+      {
+        "path": "cli/front3d.py",
+        "description": "thin 3D shim"
+      },
+      {
+        "path": "cli/front4d.py",
+        "description": "thin 4D shim"
+      }
+    ],
+    "runtime_owners": {
+      "Engine": [
+        {
+          "path": "src/tet4d/engine/api.py",
+          "description": "small compatibility facade used mainly by replay and explicit compatibility tests"
+        },
+        {
+          "path": "src/tet4d/engine/gameplay/api.py",
+          "description": "gameplay convenience exports"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/api.py",
+          "description": "runtime/help/menu convenience exports"
+        },
+        {
+          "path": "src/tet4d/engine/tutorial/api.py",
+          "description": "tutorial convenience exports"
+        },
+        {
+          "path": "src/tet4d/engine/core/piece_transform.py",
+          "description": "canonical piece-local transform math"
+        },
+        {
+          "path": "src/tet4d/engine/core/rotation_kicks.py",
+          "description": "canonical kick candidate generation and shared resolution"
+        },
+        {
+          "path": "src/tet4d/engine/core/rules/lifecycle.py",
+          "description": "shared lock/spawn/drop lifecycle orchestration"
+        },
+        {
+          "path": "src/tet4d/engine/topology_explorer/",
+          "description": "explorer-only general gluing kernel, validation, mapping, and movement graph helpers"
+        },
+        {
+          "path": "src/tet4d/engine/gameplay/game2d.py",
+          "description": "2D gameplay state/rules"
+        },
+        {
+          "path": "src/tet4d/engine/gameplay/game_nd.py",
+          "description": "3D/4D gameplay state/rules"
+        },
+        {
+          "path": "src/tet4d/engine/gameplay/lock_flow.py",
+          "description": "shared lock-and-analysis orchestration"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/menu_config.py",
+          "description": "menu/runtime config loading"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/keybinding_store.py",
+          "description": "runtime-owned keybinding profile/path/json storage"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/menu_settings_state.py",
+          "description": "stable persisted-settings facade over `runtime/menu_settings/`"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/menu_structure_schema.py",
+          "description": "stable menu-structure parsing facade over `runtime/menu_structure/`"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/score_analyzer.py",
+          "description": "stable score-analysis facade over `runtime/score_analysis/`"
+        },
+        {
+          "path": "src/tet4d/engine/tutorial/content.py",
+          "description": "tutorial content loader"
+        },
+        {
+          "path": "src/tet4d/engine/tutorial/runtime.py",
+          "description": "tutorial runtime session logic"
+        }
+      ],
+      "UI": [
+        {
+          "path": "src/tet4d/ui/pygame/front2d_game.py",
+          "description": "2D orchestration entry"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front2d_setup.py",
+          "description": "2D setup/menu owner"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front2d_loop.py",
+          "description": "2D runtime orchestration entrypoint"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front2d_session.py",
+          "description": "2D session/state owner"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front2d_frame.py",
+          "description": "2D per-frame/update owner"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front2d_results.py",
+          "description": "2D results/leaderboard owner"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/frontend_nd_setup.py",
+          "description": "shared ND setup/menu/config owner"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/frontend_nd_state.py",
+          "description": "shared ND state-construction owner"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/frontend_nd_input.py",
+          "description": "shared ND gameplay/input routing owner"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front3d_game.py",
+          "description": "3D frontend"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front4d_game.py",
+          "description": "4D frontend"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front3d_render.py",
+          "description": "3D render adapter"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/front4d_render.py",
+          "description": "4D render adapter"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/topology_lab",
+          "description": "explorer topology lab editor helpers"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/runtime_ui",
+          "description": "bootstrap, pause/help, tutorial overlay, shared loop helpers"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/launch",
+          "description": "launcher, settings, bot, leaderboard flows, including `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/menu",
+          "description": "shared menu/keybinding adapters, including `setup_menu_runner.py`"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/render",
+          "description": "render/layout/helper adapters"
+        }
+      ],
+      "AI": [
+        {
+          "path": "src/tet4d/ai/playbot/controller.py",
+          "description": "playbot runtime controller"
+        },
+        {
+          "path": "src/tet4d/ai/playbot/planner_2d.py",
+          "description": "2D planning"
+        },
+        {
+          "path": "src/tet4d/ai/playbot/planner_nd.py",
+          "description": "ND planning entry"
+        },
+        {
+          "path": "src/tet4d/ai/playbot/planner_nd_core.py",
+          "description": "shared ND candidate logic"
+        },
+        {
+          "path": "src/tet4d/ai/playbot/planner_nd_search.py",
+          "description": "ND search/budget logic"
+        },
+        {
+          "path": "src/tet4d/ai/playbot/dry_run.py",
+          "description": "stability/dry-run harness"
+        }
+      ]
+    },
+    "sources_of_truth": [
+      {
+        "path": "config/project/policy_pack.json",
+        "description": "single machine-readable governance authority"
+      },
+      {
+        "path": "AGENTS.md",
+        "description": "thin dispatch for contributor and agent entry"
+      },
+      {
+        "path": "docs/WORKFLOW_CODEX.md",
+        "description": "human workflow explainer for repo process and verification"
+      },
+      {
+        "path": "CURRENT_STATE.md",
+        "description": "restart handoff only"
+      },
+      {
+        "path": "docs/rds/",
+        "description": "durable product requirements"
+      },
+      {
+        "path": "docs/ARCHITECTURE_CONTRACT.md",
+        "description": "dependency contract"
+      },
+      {
+        "path": "docs/BACKLOG.md",
+        "description": "active backlog and current change footprint"
+      },
+      {
+        "path": "config/menu/structure.json",
+        "description": "launcher/pause/settings/help/menu graph and copy"
+      },
+      {
+        "path": "config/menu/defaults.json",
+        "description": "default persisted settings payload"
+      },
+      {
+        "path": "config/tutorial/lessons.json",
+        "description": "tutorial packs and board profiles"
+      },
+      {
+        "path": "config/gameplay/tuning.json",
+        "description": "scoring/kick/tuning defaults"
+      },
+      {
+        "path": "docs/CONFIGURATION_REFERENCE.md",
+        "description": "generated full config inventory"
+      },
+      {
+        "path": "docs/USER_SETTINGS_REFERENCE.md",
+        "description": "generated user-facing settings summary"
+      }
+    ],
+    "verification": {
+      "local_gate": "CODEX_MODE=1 ./scripts/verify.sh",
+      "ci_entrypoint": "./scripts/ci_check.sh",
+      "enforcers": [
+        "scripts/check_editable_install.sh",
+        "scripts/check_architecture_boundaries.sh",
+        "scripts/check_engine_core_purity.sh",
+        "scripts/arch_metrics.py",
+        "tools/governance/architecture_metric_budget.py"
+      ]
+    }
+  },
+  "deprecated_authorities": {
+    "description": "Retired governance and routing surfaces that must stay absent from live authority docs and policy files.",
+    "blocked_paths": [
+      "config/project/policy/governance.json",
+      "config/project/policy/code_rules.json",
+      "config/project/policy/manifests/canonical_maintenance.json",
+      "docs/RDS_AND_CODEX.md"
+    ],
+    "reference_checks": [
+      {
+        "file": "AGENTS.md",
+        "must_not_contain": [
+          "docs/RDS_AND_CODEX.md",
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json",
+          "config/project/policy/manifests/canonical_maintenance.json"
+        ]
+      },
+      {
+        "file": "README.md",
+        "must_not_contain": [
+          "docs/RDS_AND_CODEX.md",
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json",
+          "config/project/policy/manifests/canonical_maintenance.json"
+        ]
+      },
+      {
+        "file": "docs/README.md",
+        "must_not_contain": [
+          "docs/RDS_AND_CODEX.md",
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json"
+        ]
+      },
+      {
+        "file": "docs/DOCUMENTATION_MAP.md",
+        "must_not_contain": [
+          "docs/RDS_AND_CODEX.md",
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json"
+        ]
+      },
+      {
+        "file": "docs/BACKLOG.md",
+        "must_not_contain": [
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json"
+        ]
+      },
+      {
+        "file": "docs/policies/INDEX.md",
+        "must_not_contain": [
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json",
+          "config/project/policy/manifests/canonical_maintenance.json"
+        ]
+      },
+      {
+        "file": "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "must_not_contain": [
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json",
+          "config/project/policy/manifests/canonical_maintenance.json"
+        ]
+      },
+      {
+        "file": "CURRENT_STATE.md",
+        "must_not_contain": [
+          "docs/RDS_AND_CODEX.md",
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json"
+        ]
+      },
+      {
+        "file": "docs/FEATURE_MAP.md",
+        "must_not_contain": [
+          "config/project/policy/manifests/canonical_maintenance.json"
+        ]
+      },
+      {
+        "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
+        "must_not_contain": [
+          "config/project/policy/governance.json",
+          "config/project/policy/code_rules.json"
+        ]
+      },
+      {
+        "file": "scripts/check_architecture_metric_budgets.sh",
+        "must_not_contain": [
+          "config/project/policy/governance.json"
+        ]
+      },
+      {
+        "file": "scripts/check_architecture_metrics_soft_gate.sh",
+        "must_not_contain": [
+          "config/project/policy/governance.json"
+        ]
+      }
+    ]
+  }
+}

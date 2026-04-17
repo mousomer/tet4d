@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-15  
+Updated: 2026-04-17  
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -15,8 +15,7 @@ Scope: active open backlog, governance watchlist, and compact recent change foot
 - Documentation routing authority:
   `docs/DOCUMENTATION_MAP.md`
 - Governance/runtime policy authority:
-  `config/project/policy/governance.json`
-  and `config/project/policy/code_rules.json`
+  `config/project/policy_pack.json`
 
 Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
@@ -82,6 +81,16 @@ Parallel slider-row follow-up (2026-04-11): larger menu sliders now rely on a
 shared config-backed label/value/track allocation contract, so future slider
 size changes must keep launcher/setup/in-game compact-width text visibility
 aligned instead of reintroducing per-screen row geometry drift.
+
+Parallel policy-pack authority follow-up (2026-04-16, closure pass
+2026-04-17): repo governance is now consolidated under
+`config/project/policy_pack.json`, with `AGENTS.md` reduced to a dispatcher,
+`docs/WORKFLOW_CODEX.md` carrying repo workflow, deprecated split-authority
+files blocked from re-entry by contract checks, and Stage 1 closure requiring
+authority files to be Git-tracked so local-only copies fail repo policy and
+project-contract validation. Reusable generated
+ownership/source-of-truth/verification inventories belong in
+`docs/PROJECT_STRUCTURE.md`; `CURRENT_STATE.md` should stay handoff-only.
 
 - Open work:
   1. continue structural simplification of

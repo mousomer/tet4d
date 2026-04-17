@@ -106,15 +106,19 @@ The current rule is one-way:
 <!-- BEGIN GENERATED:project_structure_sources_of_truth -->
 ## Config And Docs Sources Of Truth
 
-1. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
-2. `config/menu/defaults.json`: default persisted settings payload
-3. `config/tutorial/lessons.json`: tutorial packs and board profiles
-4. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
-5. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
-6. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
-7. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
-8. `CURRENT_STATE.md`: restart handoff
-9. `docs/BACKLOG.md`: active backlog and current change footprint
+1. `config/project/policy_pack.json`: single machine-readable governance authority
+2. `AGENTS.md`: thin dispatch for contributor and agent entry
+3. `docs/WORKFLOW_CODEX.md`: human workflow explainer for repo process and verification
+4. `CURRENT_STATE.md`: restart handoff only
+5. `docs/rds/`: durable product requirements
+6. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
+7. `docs/BACKLOG.md`: active backlog and current change footprint
+8. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
+9. `config/menu/defaults.json`: default persisted settings payload
+10. `config/tutorial/lessons.json`: tutorial packs and board profiles
+11. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
+12. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
+13. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
 <!-- END GENERATED:project_structure_sources_of_truth -->
 
 ## Placement Rules

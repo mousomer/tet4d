@@ -34,10 +34,13 @@ from tools.governance.tech_debt_budget import evaluate_tech_debt_gate
 
 
 def _load_tech_debt_cfg() -> dict | None:
-    governance_path = Path("config/project/policy/governance.json")
-    if governance_path.exists():
-        governance = json.loads(governance_path.read_text(encoding="utf-8"))
-        if isinstance(governance, dict):
+    policy_pack_path = Path("config/project/policy_pack.json")
+    if policy_pack_path.exists():
+        policy_pack = json.loads(policy_pack_path.read_text(encoding="utf-8"))
+        if isinstance(policy_pack, dict):
+            governance = policy_pack.get("governance", {})
+            if not isinstance(governance, dict):
+                return None
             tech_debt_budget = governance.get("tech_debt_budget")
             if isinstance(tech_debt_budget, dict):
                 return tech_debt_budget

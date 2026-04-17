@@ -34,7 +34,7 @@ def _load_config() -> dict[str, Any]:
         loc_guidance = unified.get("loc_guidance")
         if isinstance(loc_guidance, dict):
             return loc_guidance
-    raise SystemExit("missing required file: config/project/policy/code_rules.json")
+    raise SystemExit("missing required file: config/project/policy_pack.json")
 
 
 def _git_numstat() -> list[tuple[int, int, str]]:

@@ -186,8 +186,8 @@ User-facing feature map for the shipped `tet4d` experience.
 
 ## 10. Canonical maintenance automation
 
-- Canonical maintenance contract file:
-  - `config/project/policy/manifests/canonical_maintenance.json`
+- Single machine-readable policy authority:
+  - `config/project/policy_pack.json`
 - Contract validator:
   - `tools/governance/validate_project_contracts.py`
 - Config reference generator/check:
@@ -197,7 +197,7 @@ User-facing feature map for the shipped `tet4d` experience.
 - CI runs this validator through:
   - `scripts/ci_check.sh`
 - `.github/workflows/stability-watch.yml`
-- Contract currently enforces synchronized maintenance of:
+- Policy pack validation currently enforces synchronized maintenance of:
   - documentation set (`README`,`docs`,`RDS`,`BACKLOG`,`FEATURE_MAP`),
   - help action-icon renderer (`src/tet4d/ui/pygame/render/control_icons.py`) and help manifest,
   - core tests and canonical runtime config files,

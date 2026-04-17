@@ -32,7 +32,7 @@ def _load_rules() -> dict[str, Any]:
     unified = load_unified_code_rules(ROOT)
     if isinstance(unified, dict):
         return unified
-    raise SystemExit("missing required file: config/project/policy/code_rules.json")
+    raise SystemExit("missing required file: config/project/policy_pack.json")
 
 
 def _validate_entry_shape(

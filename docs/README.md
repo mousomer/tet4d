@@ -9,7 +9,7 @@ Do not treat it as a second taxonomy or precedence map.
 ## Common starting points
 
 - Routing and ownership: `docs/DOCUMENTATION_MAP.md`
-- Contributor workflow and verification: `docs/RDS_AND_CODEX.md`
+- Contributor workflow and verification: `docs/WORKFLOW_CODEX.md`
 - Config-first keybinding editing: `docs/KEYBINDINGS_EDITING.md`
 - Short practical keybinding guide: `docs/SHORT_KEYBINDINGS_GUIDE.md`
 - Config-first menu editing: `docs/MENU_STRUCTURE_EDITING.md`
@@ -17,7 +17,7 @@ Do not treat it as a second taxonomy or precedence map.
 - Current execution state: `CURRENT_STATE.md`, `docs/BACKLOG.md`
 - Active planning: `docs/plans/README.md`
 - Durable product contracts: `docs/rds/README.md`
-- Policies and governance: `docs/policies/INDEX.md`, `config/project/policy/governance.json`, `config/project/policy/code_rules.json`
+- Policies and governance: `docs/policies/INDEX.md`, `config/project/policy_pack.json`
 - Generated references: `docs/CONFIGURATION_REFERENCE.md`, `docs/USER_SETTINGS_REFERENCE.md`
 - Release/help docs: `docs/RELEASE_CHECKLIST.md`, `docs/RELEASE_INSTALLERS.md`, `docs/help/HELP_INDEX.md`
 

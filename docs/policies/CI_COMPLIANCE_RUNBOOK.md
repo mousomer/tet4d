@@ -34,9 +34,8 @@ Run this from repo root before pushing:
 2. Local agent/worktree metadata (for example `.claude/` sandboxes or `.git` pointer files) is not project source and should be ignored by repo-content sanitation scans.
 3. Do not commit absolute filesystem paths in docs/config/manifests.
 4. Keep the unified policy sources synchronized:
-   - `config/project/policy/governance.json`
-   - `config/project/policy/code_rules.json`
-   - `config/project/policy/manifests/canonical_maintenance.json`
+   - `config/project/policy_pack.json`
+   - supporting manifests under `config/project/policy/manifests/`
 5. Prefer the current repo virtualenv for local pytest, verify, and CI-style runs whenever it is available.
 6. Treat policy warnings as debt to reduce in follow-up batches.
 

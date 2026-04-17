@@ -9,179 +9,71 @@ from typing import Iterable
 
 if __package__:
     from . import check_drift_protection as drift_guard
+    from ._common import load_maintenance_docs
 else:
     sys.path.append(str(Path(__file__).resolve().parent))
     import check_drift_protection as drift_guard
+    from _common import load_maintenance_docs
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CURRENT_STATE_PATH = PROJECT_ROOT / "CURRENT_STATE.md"
 PROJECT_STRUCTURE_PATH = PROJECT_ROOT / "docs" / "PROJECT_STRUCTURE.md"
 
-ENTRY_POINTS: tuple[tuple[str, str], ...] = (
-    ("cli/front.py", "unified launcher"),
-    ("cli/front2d.py", "thin 2D shim"),
-    ("cli/front3d.py", "thin 3D shim"),
-    ("cli/front4d.py", "thin 4D shim"),
-)
 
-CANONICAL_OWNERS: dict[str, tuple[tuple[str, str], ...]] = {
-    "Engine": (
-        (
-            "src/tet4d/engine/api.py",
-            "small compatibility facade used mainly by replay and explicit compatibility tests",
-        ),
-        ("src/tet4d/engine/gameplay/api.py", "gameplay convenience exports"),
-        ("src/tet4d/engine/runtime/api.py", "runtime/help/menu convenience exports"),
-        ("src/tet4d/engine/tutorial/api.py", "tutorial convenience exports"),
-        (
-            "src/tet4d/engine/core/piece_transform.py",
-            "canonical piece-local transform math",
-        ),
-        (
-            "src/tet4d/engine/core/rotation_kicks.py",
-            "canonical kick candidate generation and shared resolution",
-        ),
-        (
-            "src/tet4d/engine/core/rules/lifecycle.py",
-            "shared lock/spawn/drop lifecycle orchestration",
-        ),
-        (
-            "src/tet4d/engine/topology_explorer/",
-            "explorer-only general gluing kernel, validation, mapping, and movement graph helpers",
-        ),
-        ("src/tet4d/engine/gameplay/game2d.py", "2D gameplay state/rules"),
-        ("src/tet4d/engine/gameplay/game_nd.py", "3D/4D gameplay state/rules"),
-        (
-            "src/tet4d/engine/gameplay/lock_flow.py",
-            "shared lock-and-analysis orchestration",
-        ),
-        ("src/tet4d/engine/runtime/menu_config.py", "menu/runtime config loading"),
-        (
-            "src/tet4d/engine/runtime/keybinding_store.py",
-            "runtime-owned keybinding profile/path/json storage",
-        ),
-        (
-            "src/tet4d/engine/runtime/menu_settings_state.py",
-            "stable persisted-settings facade over `runtime/menu_settings/`",
-        ),
-        (
-            "src/tet4d/engine/runtime/menu_structure_schema.py",
-            "stable menu-structure parsing facade over `runtime/menu_structure/`",
-        ),
-        (
-            "src/tet4d/engine/runtime/score_analyzer.py",
-            "stable score-analysis facade over `runtime/score_analysis/`",
-        ),
-        ("src/tet4d/engine/tutorial/content.py", "tutorial content loader"),
-        ("src/tet4d/engine/tutorial/runtime.py", "tutorial runtime session logic"),
-    ),
-    "UI": (
-        ("src/tet4d/ui/pygame/front2d_game.py", "2D orchestration entry"),
-        ("src/tet4d/ui/pygame/front2d_setup.py", "2D setup/menu owner"),
-        ("src/tet4d/ui/pygame/front2d_loop.py", "2D runtime orchestration entrypoint"),
-        ("src/tet4d/ui/pygame/front2d_session.py", "2D session/state owner"),
-        ("src/tet4d/ui/pygame/front2d_frame.py", "2D per-frame/update owner"),
-        ("src/tet4d/ui/pygame/front2d_results.py", "2D results/leaderboard owner"),
-        (
-            "src/tet4d/ui/pygame/frontend_nd_setup.py",
-            "shared ND setup/menu/config owner",
-        ),
-        (
-            "src/tet4d/ui/pygame/frontend_nd_state.py",
-            "shared ND state-construction owner",
-        ),
-        (
-            "src/tet4d/ui/pygame/frontend_nd_input.py",
-            "shared ND gameplay/input routing owner",
-        ),
-        ("src/tet4d/ui/pygame/front3d_game.py", "3D frontend"),
-        ("src/tet4d/ui/pygame/front4d_game.py", "4D frontend"),
-        ("src/tet4d/ui/pygame/front3d_render.py", "3D render adapter"),
-        ("src/tet4d/ui/pygame/front4d_render.py", "4D render adapter"),
-        (
-            "src/tet4d/ui/pygame/topology_lab",
-            "explorer topology lab editor helpers",
-        ),
-        (
-            "src/tet4d/ui/pygame/runtime_ui",
-            "bootstrap, pause/help, tutorial overlay, shared loop helpers",
-        ),
-        (
-            "src/tet4d/ui/pygame/launch",
-            "launcher, settings, bot, leaderboard flows, including `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`",
-        ),
-        (
-            "src/tet4d/ui/pygame/menu",
-            "shared menu/keybinding adapters, including `setup_menu_runner.py`",
-        ),
-        ("src/tet4d/ui/pygame/render", "render/layout/helper adapters"),
-    ),
-    "AI": (
-        ("src/tet4d/ai/playbot/controller.py", "playbot runtime controller"),
-        ("src/tet4d/ai/playbot/planner_2d.py", "2D planning"),
-        ("src/tet4d/ai/playbot/planner_nd.py", "ND planning entry"),
-        ("src/tet4d/ai/playbot/planner_nd_core.py", "shared ND candidate logic"),
-        ("src/tet4d/ai/playbot/planner_nd_search.py", "ND search/budget logic"),
-        ("src/tet4d/ai/playbot/dry_run.py", "stability/dry-run harness"),
-    ),
-}
+def _load_maintenance_doc_contract() -> dict[str, object]:
+    payload = load_maintenance_docs(PROJECT_ROOT)
+    if isinstance(payload, dict):
+        return payload
+    raise SystemExit("missing required file: config/project/policy_pack.json")
 
-CANONICAL_OWNERS_FOR_CURRENT_STATE: dict[str, tuple[str, ...]] = {
-    "Engine": (
-        "src/tet4d/engine/core/piece_transform.py",
-        "src/tet4d/engine/core/rotation_kicks.py",
-        "src/tet4d/engine/core/rules/lifecycle.py",
-        "src/tet4d/engine/topology_explorer/*",
-        "src/tet4d/engine/gameplay/*",
-        "src/tet4d/engine/gameplay/api.py",
-        "src/tet4d/engine/runtime/*",
-        "src/tet4d/engine/runtime/api.py",
-        "src/tet4d/engine/tutorial/*",
-        "src/tet4d/engine/tutorial/api.py",
-        "src/tet4d/engine/api.py (small compatibility facade for replay/tests/tutorial payload exports)",
-    ),
-    "UI": (
-        "src/tet4d/ui/pygame/front2d_game.py",
-        "src/tet4d/ui/pygame/front2d_setup.py",
-        "src/tet4d/ui/pygame/front2d_loop.py",
-        "src/tet4d/ui/pygame/front2d_session.py",
-        "src/tet4d/ui/pygame/front2d_frame.py",
-        "src/tet4d/ui/pygame/front2d_results.py",
-        "src/tet4d/ui/pygame/frontend_nd_setup.py",
-        "src/tet4d/ui/pygame/frontend_nd_state.py",
-        "src/tet4d/ui/pygame/frontend_nd_input.py",
-        "src/tet4d/ui/pygame/front3d_game.py",
-        "src/tet4d/ui/pygame/front4d_game.py",
-        "src/tet4d/ui/pygame/front3d_render.py",
-        "src/tet4d/ui/pygame/front4d_render.py",
-        "src/tet4d/ui/pygame/topology_lab/*",
-        "src/tet4d/ui/pygame/runtime_ui/*",
-        "src/tet4d/ui/pygame/menu/*",
-        "src/tet4d/ui/pygame/launch/* (with settings_hub_model.py owning settings model/layout, settings_hub_actions.py owning settings mutations/text-entry, and launcher_settings.py owning orchestration/view)",
-        "src/tet4d/ui/pygame/render/*",
-    ),
-    "AI": ("src/tet4d/ai/playbot/*",),
-}
 
-SOURCE_OF_TRUTH_FILES: tuple[tuple[str, str], ...] = (
-    ("config/menu/structure.json", "launcher/pause/settings/help/menu graph and copy"),
-    ("config/menu/defaults.json", "default persisted settings payload"),
-    ("config/tutorial/lessons.json", "tutorial packs and board profiles"),
-    ("config/gameplay/tuning.json", "scoring/kick/tuning defaults"),
-    ("docs/CONFIGURATION_REFERENCE.md", "generated full config inventory"),
-    ("docs/USER_SETTINGS_REFERENCE.md", "generated user-facing settings summary"),
-    ("docs/ARCHITECTURE_CONTRACT.md", "dependency contract"),
-    ("CURRENT_STATE.md", "restart handoff"),
-    ("docs/BACKLOG.md", "active backlog and current change footprint"),
-)
+def _rows_from_entries(entries: object) -> tuple[tuple[str, str], ...]:
+    if not isinstance(entries, list):
+        return ()
+    rows: list[tuple[str, str]] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        path = entry.get("path")
+        description = entry.get("description")
+        if isinstance(path, str) and isinstance(description, str):
+            rows.append((path, description))
+    return tuple(rows)
 
-VERIFICATION_ENFORCERS: tuple[str, ...] = (
-    "scripts/check_editable_install.sh",
-    "scripts/check_architecture_boundaries.sh",
-    "scripts/check_engine_core_purity.sh",
-    "scripts/arch_metrics.py",
-    "tools/governance/architecture_metric_budget.py",
-)
+
+def _owner_rows(
+    contract: dict[str, object], section: str, heading: str
+) -> tuple[tuple[str, str], ...]:
+    owners = contract.get(section)
+    if not isinstance(owners, dict):
+        return ()
+    return _rows_from_entries(owners.get(heading))
+
+
+def _verification_contract(
+    contract: dict[str, object],
+) -> tuple[str, str, tuple[str, ...]]:
+    verification = contract.get("verification")
+    if not isinstance(verification, dict):
+        return (
+            "CODEX_MODE=1 ./scripts/verify.sh",
+            "./scripts/ci_check.sh",
+            (),
+        )
+    local_gate = verification.get("local_gate")
+    if not isinstance(local_gate, str) or not local_gate.strip():
+        local_gate = "CODEX_MODE=1 ./scripts/verify.sh"
+    ci_entrypoint = verification.get("ci_entrypoint")
+    if not isinstance(ci_entrypoint, str) or not ci_entrypoint.strip():
+        ci_entrypoint = "./scripts/ci_check.sh"
+    enforcers = verification.get("enforcers")
+    if not isinstance(enforcers, list):
+        return local_gate, ci_entrypoint, ()
+    return (
+        local_gate,
+        ci_entrypoint,
+        tuple(path for path in enforcers if isinstance(path, str)),
+    )
 
 
 def _arch_metrics_payload() -> dict[str, object]:
@@ -248,21 +140,6 @@ def render_current_state_sections(
     debt = payload["tech_debt"]
     sections: dict[str, str] = {}
 
-    sections["current_state_architecture_snapshot"] = "\n".join(
-        [
-            "## Current Architecture Snapshot",
-            "",
-            f"- `arch_stage`: `{payload['arch_stage']}`",
-            "- Canonical local gate: `CODEX_MODE=1 ./scripts/verify.sh`",
-            "- CI wrapper: `./scripts/ci_check.sh`",
-            "- Full local gate runs are serialized by `scripts/verify.sh`, use an isolated per-run state root via `TET4D_STATE_ROOT` when no explicit override is provided, and include the CI sanitation/policy checks (`scripts/check_policy_compliance.sh`, `scripts/check_policy_compliance_repo.sh`, `scripts/check_git_sanitation_repo.sh`) so local verification matches GitHub policy enforcement.",
-            "- Dependency direction:",
-            "  - `ui`, `ai`, `replay`, and `tools` may import engine modules directly",
-            "  - `engine` must not import `ui`, `ai`, `replay`, or `tools`",
-            "  - `engine/core` remains strict-pure",
-        ]
-    )
-
     metric_lines = [
         "## Current Metric Snapshot",
         "",
@@ -281,16 +158,6 @@ def render_current_state_sections(
     ]
     metric_lines.extend(_top_pressure_lines(payload))
     sections["current_state_metric_snapshot"] = "\n".join(metric_lines)
-
-    ownership_lines = ["## Canonical Ownership After This Batch", ""]
-    for heading in ("Engine", "UI", "AI"):
-        ownership_lines.append(f"### {heading}")
-        ownership_lines.append("")
-        ownership_lines.append(
-            _render_bullet_rows(CANONICAL_OWNERS_FOR_CURRENT_STATE[heading])
-        )
-        ownership_lines.append("")
-    sections["current_state_canonical_ownership"] = "\n".join(ownership_lines).rstrip()
     sections["current_state_drift_watch"] = _render_current_state_drift_watch(
         drift_manifest=drift_manifest
     )
@@ -328,7 +195,7 @@ def _render_current_state_drift_watch(*, drift_manifest: dict[str, object]) -> s
     lines = [
         "## Live Drift Watch",
         "",
-        "Generated from `tools/governance/check_drift_protection.py` and `config/project/policy/governance.json`.",
+        "Generated from `tools/governance/check_drift_protection.py` and `config/project/policy_pack.json`.",
         "",
         f"Top {top_n} live Python hotspots by real LOC:",
         "",
@@ -358,16 +225,28 @@ def _render_current_state_drift_watch(*, drift_manifest: dict[str, object]) -> s
 
 
 def render_project_structure_sections() -> dict[str, str]:
+    maintenance_contract = _load_maintenance_doc_contract()
+    local_gate, _, enforcers = _verification_contract(maintenance_contract)
     sections: dict[str, str] = {}
     sections["project_structure_entry_points"] = "\n".join(
-        ["## Canonical Entry Points", "", _render_numbered_rows(ENTRY_POINTS)]
+        [
+            "## Canonical Entry Points",
+            "",
+            _render_numbered_rows(
+                _rows_from_entries(maintenance_contract.get("entry_points"))
+            ),
+        ]
     )
 
     owner_lines = ["## Canonical Runtime Owners", ""]
     for heading in ("Engine", "UI", "AI"):
         owner_lines.append(f"### {heading}")
         owner_lines.append("")
-        owner_lines.append(_render_numbered_rows(CANONICAL_OWNERS[heading]))
+        owner_lines.append(
+            _render_numbered_rows(
+                _owner_rows(maintenance_contract, "runtime_owners", heading)
+            )
+        )
         owner_lines.append("")
     sections["project_structure_runtime_owners"] = "\n".join(owner_lines).rstrip()
 
@@ -375,7 +254,9 @@ def render_project_structure_sections() -> dict[str, str]:
         [
             "## Config And Docs Sources Of Truth",
             "",
-            _render_numbered_rows(SOURCE_OF_TRUTH_FILES),
+            _render_numbered_rows(
+                _rows_from_entries(maintenance_contract.get("sources_of_truth"))
+            ),
         ]
     )
 
@@ -386,15 +267,12 @@ def render_project_structure_sections() -> dict[str, str]:
             "Run:",
             "",
             "```bash",
-            "CODEX_MODE=1 ./scripts/verify.sh",
+            local_gate,
             "```",
             "",
             "Authoritative enforcement is backed by:",
             "",
-            *[
-                f"{index}. `{path}`"
-                for index, path in enumerate(VERIFICATION_ENFORCERS, start=1)
-            ],
+            *[f"{index}. `{path}`" for index, path in enumerate(enforcers, start=1)],
         ]
     )
     return sections

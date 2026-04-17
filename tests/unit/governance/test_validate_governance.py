@@ -15,24 +15,37 @@ def _write_json(path: Path, payload: object) -> None:
 def test_unified_manifest_shape_requires_core_sections(
     tmp_path: Path, monkeypatch
 ) -> None:
-    governance_path = tmp_path / "governance.json"
-    code_rules_path = tmp_path / "code_rules.json"
+    policy_pack_path = tmp_path / "policy_pack.json"
     _write_json(
-        governance_path,
+        policy_pack_path,
         {
-            "verification_command": "./scripts/verify.sh",
-            "ci_entrypoint": "./scripts/ci_check.sh",
+            "authority_model": {
+                "machine_authority": "config/project/policy_pack.json",
+                "dispatch_file": "AGENTS.md",
+                "workflow_doc": "docs/WORKFLOW_CODEX.md",
+                "handoff_doc": "CURRENT_STATE.md",
+                "product_requirements_root": "docs/rds/",
+            },
+            "governance": {
+                "verification_command": "./scripts/verify.sh",
+                "ci_entrypoint": "./scripts/ci_check.sh",
+            },
+            "code_rules": {"sanitation": {}},
         },
     )
-    _write_json(code_rules_path, {"sanitation": {}})
 
-    monkeypatch.setattr(validate_governance, "GOVERNANCE_PATH", governance_path)
-    monkeypatch.setattr(validate_governance, "CODE_RULES_PATH", code_rules_path)
+    monkeypatch.setattr(validate_governance, "POLICY_PACK_PATH", policy_pack_path)
 
     issues = validate_governance._validate_unified_manifest_shape()
     assert issues
-    assert any("governance.json missing required key: architecture" in issue for issue in issues)
-    assert any("code_rules.json missing required key: wheel_reuse" in issue for issue in issues)
+    assert any(
+        "policy_pack.json governance missing required key: architecture" in issue
+        for issue in issues
+    )
+    assert any(
+        "policy_pack.json code_rules missing required key: wheel_reuse" in issue
+        for issue in issues
+    )
 
 
 def test_risk_gates_accept_unified_required_ids() -> None:

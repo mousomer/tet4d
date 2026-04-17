@@ -25,7 +25,8 @@ else:
 
 
 ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_PATH = ROOT / "config/project/policy/governance.json"
+POLICY_PACK_PATH = ROOT / "config/project/policy_pack.json"
+MANIFEST_PATH = POLICY_PACK_PATH
 
 
 @dataclass(frozen=True)
@@ -35,14 +36,14 @@ class DriftIssue:
 
 
 def _load_manifest() -> dict[str, Any]:
-    if MANIFEST_PATH != ROOT / "config/project/policy/governance.json":
+    if MANIFEST_PATH != ROOT / "config/project/policy_pack.json":
         return load_json_object(MANIFEST_PATH, str(MANIFEST_PATH))
     unified = load_unified_governance(ROOT)
     if isinstance(unified, dict):
         drift_protection = unified.get("drift_protection")
         if isinstance(drift_protection, dict):
             return drift_protection
-    raise SystemExit("missing required file: config/project/policy/governance.json")
+    raise SystemExit("missing required file: config/project/policy_pack.json")
 
 
 def _comment_line_numbers(text: str) -> set[int]:

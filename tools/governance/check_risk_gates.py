@@ -331,7 +331,7 @@ def main() -> int:
         risk_payload = unified.get("risk_gates", {})
         directives_payload = unified.get("contributor_directives", {})
     else:
-        raise SystemExit("missing required file: config/project/policy/governance.json")
+        raise SystemExit("missing required file: config/project/policy_pack.json")
 
     issues: list[GateIssue] = []
     warnings: list[GateWarning] = []

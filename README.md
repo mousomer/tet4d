@@ -222,14 +222,15 @@ CODEX_MODE=1 ./scripts/verify.sh
 2. Usage:
 - `README.md`
 
-3. RDS and Codex guidance:
-- `docs/RDS_AND_CODEX.md`
+3. Workflow and product guidance:
+- `docs/WORKFLOW_CODEX.md`
 - `docs/rds/`
 
-## Canonical maintenance
+## Policy pack
 
-- Contract source: `config/project/policy/manifests/canonical_maintenance.json`
+- Contract source: `config/project/policy_pack.json`
 - Validator: `tools/governance/validate_project_contracts.py`
+- Generated maintenance docs source data: `config/project/policy_pack.json`
 - Generated config references: `docs/CONFIGURATION_REFERENCE.md` and `docs/USER_SETTINGS_REFERENCE.md` (`tools/governance/generate_configuration_reference.py`)
 - Secret scanning policy/runtime scanner: `config/project/policy/manifests/secret_scan.json` + `tools/governance/scan_secrets.py`
 

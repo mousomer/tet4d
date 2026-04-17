@@ -239,8 +239,8 @@ Cross-cutting requirements are defined in:
 19. `config/playbot/policy.json`
 20. `config/audio/sfx.json`
 21. User runtime overrides remain in `state/menu_settings.json`.
-22. Canonical maintenance contract rules are defined in:
-23. `config/project/policy/manifests/canonical_maintenance.json`
+22. Repo governance and maintenance contract rules are defined in:
+23. `config/project/policy_pack.json`
 24. Contract validation script is:
 25. `tools/governance/validate_project_contracts.py`
 26. Repository path/constant/secret policy configs are source-controlled:

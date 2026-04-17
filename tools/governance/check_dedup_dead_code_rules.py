@@ -42,7 +42,7 @@ def _load_rules() -> dict[str, Any]:
                 "todo_backlog_rule": dead_code.get("todo_rule", {}),
                 "duplicate_functions": dead_code.get("duplicate_functions", {}),
             }
-    raise SystemExit("missing required file: config/project/policy/code_rules.json")
+    raise SystemExit("missing required file: config/project/policy_pack.json")
 
 
 def _repo_files() -> list[str]:

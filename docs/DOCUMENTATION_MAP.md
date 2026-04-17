@@ -52,13 +52,13 @@ These files define durable behavior contracts and product requirements.
 
 These files define contributor process, policy, and verification workflow.
 
-- `docs/RDS_AND_CODEX.md`
+- `AGENTS.md`
+- `docs/WORKFLOW_CODEX.md`
 - `docs/KEYBINDINGS_EDITING.md`
 - `docs/SHORT_KEYBINDINGS_GUIDE.md`
 - `docs/MENU_STRUCTURE_EDITING.md`
 - `docs/policies/*`
-- top-level governance in `config/project/policy/governance.json` and
-  `config/project/policy/code_rules.json`
+- machine-readable governance in `config/project/policy_pack.json`
 - domain-specific contracts under `config/project/policy/manifests/`
 
 ### 7. Generated references
@@ -97,7 +97,8 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Current restart handoff | `CURRENT_STATE.md` |
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |
 | Durable product behavior contracts | `docs/rds/*.md` |
-| Contributor workflow and verification sequence | `docs/RDS_AND_CODEX.md` |
+| Contributor workflow and verification sequence | `docs/WORKFLOW_CODEX.md` |
+| Machine-readable governance and maintenance authority | `config/project/policy_pack.json` |
 | Config-first keybinding editing workflow | `docs/KEYBINDINGS_EDITING.md` |
 | Short practical keybinding editing checklist | `docs/SHORT_KEYBINDINGS_GUIDE.md` |
 | Config-first menu editing workflow | `docs/MENU_STRUCTURE_EDITING.md` |
@@ -108,13 +109,14 @@ These files preserve useful background, completed pass notes, and retired plans.
 When documents disagree, precedence is:
 
 1. newer task instruction
-2. owning active plan `authority` document for the domain
-3. owning active or frozen plan `spec` document for the domain
-4. this file for documentation routing and file ownership
-5. durable RDS contract for the topic
-6. architecture and structure docs
-7. current-state/backlog/generated references
-8. historical docs
+2. `config/project/policy_pack.json` for repo governance, validation, and generated maintenance automation
+3. owning active plan `authority` document for the domain
+4. owning active or frozen plan `spec` document for the domain
+5. this file for documentation routing and file ownership
+6. durable RDS contract for the topic
+7. architecture and structure docs
+8. current-state/backlog/generated references
+9. historical docs
 
 If a lower-precedence file conflicts with a higher-precedence file, update or
 move the lower-precedence file in the same batch.
@@ -159,6 +161,7 @@ It is not the product contract.
 - If you need the current topology-playground shell behavior: use
   `docs/plans/topology_playground_shell_redesign_spec.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
+- If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
 - If you need to edit keybinding structure or shipped defaults: use
   `docs/KEYBINDINGS_EDITING.md`.
 - If you need a short practical keybinding edit checklist: use

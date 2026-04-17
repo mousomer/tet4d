@@ -9,8 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-GOVERNANCE_PATH = ROOT / "config/project/policy/governance.json"
-CODE_RULES_PATH = ROOT / "config/project/policy/code_rules.json"
+POLICY_PACK_PATH = ROOT / "config/project/policy_pack.json"
 
 
 @dataclass(frozen=True)
@@ -19,41 +18,85 @@ class GovernanceCheck:
     runner: Callable[[], int]
 
 
+def _append_missing_keys(
+    payload: object, label: str, required_keys: tuple[str, ...], issues: list[str]
+) -> None:
+    if not isinstance(payload, dict):
+        issues.append(f"{label} must be an object")
+        return
+    for key in required_keys:
+        if key not in payload:
+            issues.append(f"{label} missing required key: {key}")
+
+
 def _validate_unified_manifest_shape() -> list[str]:
     from tools.governance._common import load_json_object
 
     issues: list[str] = []
-    governance = load_json_object(
-        GOVERNANCE_PATH, "config/project/policy/governance.json"
-    )
-    code_rules = load_json_object(
-        CODE_RULES_PATH, "config/project/policy/code_rules.json"
-    )
+    policy_pack = load_json_object(POLICY_PACK_PATH, "config/project/policy_pack.json")
 
-    required_governance_keys = (
-        "verification_command",
-        "ci_entrypoint",
-        "contributor_directives",
-        "risk_gates",
-        "architecture",
-        "tech_debt_budget",
-        "drift_protection",
-        "contracts",
+    required_pack_keys = (
+        "authority_model",
+        "governance",
+        "code_rules",
+        "maintenance_contract",
+        "maintenance_docs",
+        "deprecated_authorities",
     )
-    for key in required_governance_keys:
-        if key not in governance:
-            issues.append(f"governance.json missing required key: {key}")
+    for key in required_pack_keys:
+        if key not in policy_pack:
+            issues.append(f"policy_pack.json missing required key: {key}")
 
-    required_code_rule_keys = (
-        "sanitation",
-        "magic_numbers",
-        "wheel_reuse",
-        "dead_code",
-        "loc_guidance",
+    _append_missing_keys(
+        policy_pack.get("authority_model", {}),
+        "policy_pack.json authority_model",
+        (
+            "machine_authority",
+            "dispatch_file",
+            "workflow_doc",
+            "handoff_doc",
+            "product_requirements_root",
+        ),
+        issues,
     )
-    for key in required_code_rule_keys:
-        if key not in code_rules:
-            issues.append(f"code_rules.json missing required key: {key}")
+    _append_missing_keys(
+        policy_pack.get("governance", {}),
+        "policy_pack.json governance",
+        (
+            "verification_command",
+            "ci_entrypoint",
+            "contributor_directives",
+            "risk_gates",
+            "architecture",
+            "tech_debt_budget",
+            "drift_protection",
+            "contracts",
+        ),
+        issues,
+    )
+    _append_missing_keys(
+        policy_pack.get("code_rules", {}),
+        "policy_pack.json code_rules",
+        ("sanitation", "magic_numbers", "wheel_reuse", "dead_code", "loc_guidance"),
+        issues,
+    )
+    _append_missing_keys(
+        policy_pack.get("maintenance_docs", {}),
+        "policy_pack.json maintenance_docs",
+        (
+            "entry_points",
+            "runtime_owners",
+            "sources_of_truth",
+            "verification",
+        ),
+        issues,
+    )
+    _append_missing_keys(
+        policy_pack.get("deprecated_authorities", {}),
+        "policy_pack.json deprecated_authorities",
+        ("blocked_paths", "reference_checks"),
+        issues,
+    )
 
     return issues
 

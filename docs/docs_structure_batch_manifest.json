@@ -1,7 +1,7 @@
 {
   "replacements": [
     "docs/README.md",
-    "docs/RDS_AND_CODEX.md",
+    "docs/WORKFLOW_CODEX.md",
     "CURRENT_STATE.md",
     "docs/rds/RDS_MENU_STRUCTURE.md",
     "docs/rds/RDS_TETRIS_GENERAL.md"
