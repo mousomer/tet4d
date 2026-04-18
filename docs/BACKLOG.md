@@ -95,6 +95,11 @@ and `4D` gameplay renderers must keep board presentation frozen for the full
 active-piece tween, so helper marks, projected grid primitives, layer/board
 anchoring, and locked-cell projection stay stable while only active-piece
 geometry animates.
+Parallel projection-guide follow-up (2026-04-18): shared render-only
+`bottom_boundary` / `all_boundaries` modes must stay dimension-neutral across
+`2D` / `3D` / `4D`, deriving from animated active-piece render state against
+stable board presentation without reintroducing per-frame frozen-presentation
+rebuilds or gameplay/explorer legality drift.
 Parallel seam-animation hardening follow-up (2026-04-17): active-piece
 translation tweening must preserve gameplay-owned per-cell identity for
 ordinary moves and safe seam traversals, while non-safe seam traversals still
@@ -164,6 +169,12 @@ keeps `PieceRenderStateND` active-piece geometry on the opaque active-piece
 path instead of incorrectly routing in-flight tween cells through the
 translucent assist-overlay path, so deliberate translation timing remains
 visibly readable while the frozen board-presentation cache stays in place.
+Projection-guide rollout (2026-04-18): shared `bottom_boundary` /
+`all_boundaries` display modes now extend the grid-mode cycle across `2D` /
+`3D` / `4D`; `2D` projects onto board boundary lines, `3D` onto board
+planes, and `4D` onto basis-derived rendered layer-board planes while the
+guide follows animated piece geometry against frozen board presentation and
+keeps explorer/gameplay traversal semantics unchanged.
 
 - Open work:
   1. continue structural simplification of remaining

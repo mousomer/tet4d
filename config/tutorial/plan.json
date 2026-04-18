@@ -385,7 +385,7 @@
     {
       "stage_id": "toggle_grid",
       "title": "Toggle Grid",
-      "objective": "Toggle the guide grid once.",
+      "objective": "Cycle through the guide grid display modes.",
       "applies_to": [
         "2d",
         "3d",

@@ -101,7 +101,7 @@ Viewer-consistent translation requirement:
 ## 6. Rendering and UX
 
 1. Projection modes: orthographic, perspective, and projective.
-2. Grid can be toggled on/off.
+2. Grid can be toggled through the shared `off` / `bottom_boundary` / `edge` / `full` / `helper` / `all_boundaries` modes.
 3. When grid is off, a board shadow is still rendered.
 4. Cleared layers should animate with a temporary ghost effect.
 5. Default camera should fit the board view.
@@ -112,7 +112,9 @@ Viewer-consistent translation requirement:
 10. Board gridlines and board-box edges must resolve against the active piece per projected fragment from screen-space overlap plus projected depth; global whole-pass ordering is not sufficient.
 11. When a projected board line crosses the active-piece projection, the renderer must split it into under-piece and over-piece fragments before the final layered draw pass.
 12. Active-piece animation must consume a frozen board-presentation snapshot for the full tween; helper marks, projected grid primitives, board anchor, and locked-cell projection must remain stable while only active-piece geometry changes over tween time.
-13. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with box/frame shell fragments dying in finite board/render-space rupture while locked cube relics transition into deterministic bounded preset-driven full-3-axis motion fields (`wrap_all`, `invert_all`, `sphere`, or the generic fallback orbit preset) before projection and without live-board mutation.
+13. Shared render-only projection-guide modes must exist in 3D: `bottom_boundary` projects the active piece onto the gravity-axis bottom board plane, and `all_boundaries` projects it onto all relevant board planes.
+14. 3D projection guides must derive from active-piece render state against the frozen board presentation, follow animated piece motion in gameplay and explorer rendering, and remain visually distinct from ghost/locked/active cells.
+15. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with box/frame shell fragments dying in finite board/render-space rupture while locked cube relics transition into deterministic bounded preset-driven full-3-axis motion fields (`wrap_all`, `invert_all`, `sphere`, or the generic fallback orbit preset) before projection and without live-board mutation.
 
 ## 7. Scoring
 

@@ -33,7 +33,11 @@ def build_projected_grid_primitives(
     helper_cache_key: object | None = None,
     full_grid_cache_key: object | None = None,
 ) -> tuple[ProjectedLinePrimitive, ...]:
-    if grid_mode == GridMode.SHADOW:
+    if grid_mode in (
+        GridMode.SHADOW,
+        GridMode.BOTTOM_BOUNDARY,
+        GridMode.ALL_BOUNDARIES,
+    ):
         return ()
     if grid_mode == GridMode.EDGE:
         return project_box_edge_primitives(

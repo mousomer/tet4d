@@ -17,7 +17,14 @@ from .endgame_presets import (
 
 MODE_KEYS = ("2d", "3d", "4d")
 MODE_KEY_SET = set(MODE_KEYS)
-GRID_MODE_NAMES = ("off", "edge", "full", "helper")
+GRID_MODE_NAMES = (
+    "off",
+    "bottom_boundary",
+    "edge",
+    "full",
+    "helper",
+    "all_boundaries",
+)
 BOT_MODE_NAMES = ("off", "assist", "auto", "learn", "step")
 BOT_PROFILE_NAMES = ("fast", "balanced", "deep", "ultra")
 ROTATION_ANIMATION_MODE_NAMES = (

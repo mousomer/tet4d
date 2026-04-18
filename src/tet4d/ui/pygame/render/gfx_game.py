@@ -23,6 +23,12 @@ from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
     init_fonts as init_fonts_for_profile,
 )
+from tet4d.ui.pygame.render.active_piece_projection_guides import (
+    GuideCell2D,
+    build_boundary_projection_segments_2d,
+    draw_boundary_projection_segments_2d,
+    projection_guide_enabled,
+)
 from tet4d.ui.pygame.render.gfx_panel_2d import draw_side_panel_2d
 from tet4d.ui.pygame.render.panel_utils import draw_game_over_banner
 from tet4d.ui.pygame.ui_utils import (
@@ -744,7 +750,13 @@ def _draw_grid_variant(
     height_cells: int,
     grid_mode: GridMode,
 ) -> None:
-    if grid_mode in (GridMode.OFF, GridMode.SHADOW, GridMode.HELPER):
+    if grid_mode in (
+        GridMode.OFF,
+        GridMode.SHADOW,
+        GridMode.HELPER,
+        GridMode.BOTTOM_BOUNDARY,
+        GridMode.ALL_BOUNDARIES,
+    ):
         _draw_board_shadow(surface, board_rect)
     elif grid_mode == GridMode.EDGE:
         _draw_board_edges_only(surface, board_rect)
@@ -1142,6 +1154,92 @@ def _draw_active_piece_cells(
             _draw_cell(surface, x, y, shape_color, board_offset, outline=True)
 
 
+def _projection_guide_cells_2d(
+    state: GameState,
+    *,
+    overlay: ActiveOverlay2D | None,
+    width_cells: int,
+    height_cells: int,
+) -> tuple[tuple[GuideCell2D, ...], int | None]:
+    if isinstance(overlay, RigidPieceOverlay2D):
+        raw_cells = tuple(
+            (float(coord[0]), float(coord[1])) for coord in overlay.cells
+        )
+        color_id = int(overlay.color_id)
+    elif overlay is not None:
+        raw_cells = tuple(
+            (float(coord[0]), float(coord[1])) for coord in overlay[0]
+        )
+        color_id = int(overlay[1])
+    elif state.current_piece is not None:
+        raw_cells = tuple(
+            (float(coord[0]), float(coord[1]))
+            for coord in state.current_piece_cells_mapped(include_above=False)
+        )
+        color_id = int(state.current_piece.shape.color_id)
+    else:
+        return tuple(), None
+
+    if (
+        state.config.exploration_mode
+        and state.config.explorer_topology_profile is not None
+    ):
+        mapped_cells = raw_cells
+    else:
+        mapped_cells = tuple(
+            (
+                float(mapped[0]),
+                float(mapped[1]),
+            )
+            for mapped in map_overlay_cells_gameplay(
+                state.topology_policy,
+                raw_cells,
+                allow_above_gravity=False,
+            )
+        )
+
+    cells: list[GuideCell2D] = []
+    for x, y in mapped_cells:
+        if 0.0 <= float(x) < width_cells and 0.0 <= float(y) < height_cells:
+            cells.append(((float(x), float(y)), 1.0))
+    return tuple(cells), color_id
+
+
+def _draw_projection_guide_2d(
+    surface: pygame.Surface,
+    state: GameState,
+    board_offset: tuple[int, int],
+    *,
+    width_cells: int,
+    height_cells: int,
+    grid_mode: GridMode,
+    overlay: ActiveOverlay2D | None,
+) -> None:
+    if not projection_guide_enabled(grid_mode):
+        return
+    cells, color_id = _projection_guide_cells_2d(
+        state,
+        overlay=overlay,
+        width_cells=width_cells,
+        height_cells=height_cells,
+    )
+    if not cells or color_id is None:
+        return
+    segments = build_boundary_projection_segments_2d(
+        cells=cells,
+        dims=(width_cells, height_cells),
+        gravity_axis=int(state.config.gravity_axis),
+        grid_mode=grid_mode,
+        color=color_for_cell(int(color_id)),
+    )
+    draw_boundary_projection_segments_2d(
+        surface,
+        segments=segments,
+        board_offset=board_offset,
+        cell_size=CELL_SIZE,
+    )
+
+
 def _draw_rigid_piece_overlay(
     surface: pygame.Surface,
     state: GameState,
@@ -1294,6 +1392,15 @@ def draw_board(
         board_offset,
         w,
         h,
+        overlay=active_piece_overlay,
+    )
+    _draw_projection_guide_2d(
+        surface,
+        state,
+        board_offset,
+        width_cells=w,
+        height_cells=h,
+        grid_mode=grid_mode,
         overlay=active_piece_overlay,
     )
 

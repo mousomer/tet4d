@@ -32,7 +32,10 @@ class TestRuntimeConfig(unittest.TestCase):
         self.assertEqual(speed_curve_for_dimension(4), (1700, 140))
 
     def test_grid_mode_cycle_has_expected_order(self) -> None:
-        self.assertEqual(grid_mode_cycle_names(), ("off", "edge", "full", "helper"))
+        self.assertEqual(
+            grid_mode_cycle_names(),
+            ("off", "bottom_boundary", "edge", "full", "helper", "all_boundaries"),
+        )
 
     def test_clear_scoring_bonus_defaults_are_loaded(self) -> None:
         self.assertEqual(clear_scoring_multi_layer_bonus(0), 0)

@@ -16,7 +16,10 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.topology import TOPOLOGY_WRAP_ALL
-from tet4d.engine.gameplay.rotation_anim import _RotationTween, _screen_rotation_angle_deg
+from tet4d.engine.gameplay.rotation_anim import (
+    _RotationTween,
+    _screen_rotation_angle_deg,
+)
 from tet4d.ui.pygame import front2d_frame, front2d_loop
 from tet4d.ui.pygame.front2d_session import LoopContext2D
 from tet4d.ui.pygame.keybindings import KEYS_2D

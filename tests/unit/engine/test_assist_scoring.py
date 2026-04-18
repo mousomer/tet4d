@@ -27,6 +27,11 @@ class TestAssistScoring(unittest.TestCase):
         off = combined_score_multiplier(
             bot_mode=BotMode.OFF, grid_mode=GridMode.OFF, speed_level=10
         )
+        bottom_boundary = combined_score_multiplier(
+            bot_mode=BotMode.OFF,
+            grid_mode=GridMode.BOTTOM_BOUNDARY,
+            speed_level=10,
+        )
         edge = combined_score_multiplier(
             bot_mode=BotMode.OFF, grid_mode=GridMode.EDGE, speed_level=10
         )
@@ -36,9 +41,17 @@ class TestAssistScoring(unittest.TestCase):
         helper = combined_score_multiplier(
             bot_mode=BotMode.OFF, grid_mode=GridMode.HELPER, speed_level=10
         )
+        all_boundaries = combined_score_multiplier(
+            bot_mode=BotMode.OFF,
+            grid_mode=GridMode.ALL_BOUNDARIES,
+            speed_level=10,
+        )
+        self.assertGreater(off, bottom_boundary)
+        self.assertGreater(bottom_boundary, edge)
         self.assertGreater(off, edge)
         self.assertGreater(edge, full)
         self.assertGreater(full, helper)
+        self.assertGreater(helper, all_boundaries)
 
     def test_slower_speed_has_lower_multiplier(self) -> None:
         slow = combined_score_multiplier(
@@ -81,4 +94,3 @@ class TestAssistScoring(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

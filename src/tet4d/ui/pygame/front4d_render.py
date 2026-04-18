@@ -57,6 +57,12 @@ from tet4d.ui.pygame.render.grid_mode_render import (
     draw_projected_grid_mode,
     draw_projected_line_buckets,
 )
+from tet4d.ui.pygame.render.active_piece_projection_guides import (
+    GuideCell3D,
+    build_boundary_projection_face_primitives,
+    draw_boundary_projection_faces,
+    projection_guide_enabled,
+)
 from tet4d.ui.pygame.render.text_render_cache import render_text_cached
 from tet4d.engine.gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
@@ -1031,6 +1037,73 @@ def _active_layer_faces(
     return solid_faces, overlay_faces
 
 
+def _projection_guide_cells_4d(
+    *,
+    state: GameStateND,
+    layer_index: int,
+    basis: RenderBasis4D,
+    piece_render_state: PieceRenderStateND | None,
+) -> tuple[tuple[GuideCell3D, ...], int | None]:
+    if piece_render_state is None and state.current_piece is None:
+        return tuple(), None
+    color_id = (
+        int(piece_render_state.color_id)
+        if piece_render_state is not None
+        else int(state.current_piece.shape.color_id)
+    )
+    cells = tuple(
+        (
+            (float(coord3[0]), float(coord3[1]), float(coord3[2])),
+            float(scale),
+        )
+        for coord3, _cell_id, _is_active, _is_overlay, scale in _layer_active_cells(
+            state,
+            layer_index,
+            basis,
+            piece_render_state,
+        )
+    )
+    return cells, color_id
+
+
+def _projection_guide_faces_4d(
+    *,
+    state: GameStateND,
+    layer_index: int,
+    basis: RenderBasis4D,
+    view: LayerView3D,
+    presentation: LayerPresentation4D,
+    grid_mode: GridMode,
+    piece_render_state: PieceRenderStateND | None,
+) -> tuple[ProjectedFacePrimitive, ...]:
+    if not projection_guide_enabled(grid_mode):
+        return ()
+    cells, color_id = _projection_guide_cells_4d(
+        state=state,
+        layer_index=layer_index,
+        basis=basis,
+        piece_render_state=piece_render_state,
+    )
+    if not cells or color_id is None:
+        return ()
+    return build_boundary_projection_face_primitives(
+        cells=cells,
+        dims=basis.dims3,
+        gravity_axis=int(state.config.gravity_axis),
+        grid_mode=grid_mode,
+        project_raw=lambda raw: _project_raw_point(
+            raw,
+            basis.dims3,
+            view,
+            presentation.center_px,
+            presentation.zoom,
+        ),
+        transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
+        depth_denominator=_orthographic_depth_denominator,
+        color=color_for_cell(int(color_id), COLOR_MAP),
+    )
+
+
 def _draw_translucent_faces(
     surface: pygame.Surface,
     faces: list[Face],
@@ -1248,7 +1321,16 @@ def _draw_layer_board(
         presentation.zoom,
         piece_render_state=piece_render_state,
     )
-    if active_piece_faces and grid_mode != GridMode.SHADOW:
+    projection_guide_faces = _projection_guide_faces_4d(
+        state=state,
+        layer_index=layer_index,
+        basis=basis,
+        view=view,
+        presentation=presentation,
+        grid_mode=grid_mode,
+        piece_render_state=piece_render_state,
+    )
+    if active_piece_faces and presentation.board_line_primitives:
         occlusion_buckets = resolve_board_line_occlusion(
             presentation.board_line_primitives,
             active_piece_faces,
@@ -1295,6 +1377,10 @@ def _draw_layer_board(
             overlay_transparency=overlay_transparency,
             locked_faces=locked_faces,
         )
+    draw_boundary_projection_faces(
+        surface,
+        faces=projection_guide_faces,
+    )
     _draw_layer_clear_animation(
         surface,
         clear_anim,

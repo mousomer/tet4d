@@ -34,11 +34,16 @@ from tet4d.engine.topology_explorer.presets import twisted_y_profile_3d
 
 class TestPlaybot(unittest.TestCase):
     def test_grid_mode_cycle(self) -> None:
-        self.assertEqual(cycle_grid_mode(GridMode.OFF), GridMode.EDGE)
+        self.assertEqual(cycle_grid_mode(GridMode.OFF), GridMode.BOTTOM_BOUNDARY)
+        self.assertEqual(
+            cycle_grid_mode(GridMode.BOTTOM_BOUNDARY),
+            GridMode.EDGE,
+        )
         self.assertEqual(cycle_grid_mode(GridMode.EDGE), GridMode.FULL)
         self.assertEqual(cycle_grid_mode(GridMode.FULL), GridMode.HELPER)
-        self.assertEqual(cycle_grid_mode(GridMode.HELPER), GridMode.OFF)
-        self.assertEqual(cycle_grid_mode(GridMode.SHADOW), GridMode.EDGE)
+        self.assertEqual(cycle_grid_mode(GridMode.HELPER), GridMode.ALL_BOUNDARIES)
+        self.assertEqual(cycle_grid_mode(GridMode.ALL_BOUNDARIES), GridMode.OFF)
+        self.assertEqual(cycle_grid_mode(GridMode.SHADOW), GridMode.BOTTOM_BOUNDARY)
 
     def test_controller_can_place_one_piece_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)

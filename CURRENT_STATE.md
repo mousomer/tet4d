@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-04-17  
+Last updated: 2026-04-18  
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -35,14 +35,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   playability results when available, and queues deferred rigid analysis only
   for valid states whose rigid result is still unknown.
 - Current projected gameplay render contract is:
-  active-piece translation/rotation tweening in `3D` / `4D` must render
-  against a frozen board-presentation snapshot, so helper marks, projected
-  grid primitives, anchoring/fit, and locked-cell projection stay stable for
-  the full tween while only active-piece geometry animates; tweened
-  active-piece cells must stay on the opaque active-piece draw path rather
-  than dropping onto the translucent assist-overlay path, and `4D` now caches
-  that frozen layer presentation once per discrete move/tween start instead of
-  rebuilding stable layer presentation work every frame.
+  active-piece translation/rotation tweening must keep stable board
+  presentation frozen for the full move while only active-piece geometry
+  animates; in `3D` / `4D`, helper marks, projected grid primitives,
+  anchoring/fit, and locked-cell projection stay frozen against that cached
+  presentation, tweened active-piece cells stay on the opaque active-piece
+  draw path, and `4D` caches frozen per-layer presentation once per discrete
+  move/tween start instead of rebuilding it every frame. Shared
+  `bottom_boundary` / `all_boundaries` projection-guide modes now span `2D` /
+  `3D` / `4D` as render-only overlays driven by animated active-piece render
+  state against that stable presentation, with dimension-specific boundary
+  targets and no gameplay/explorer-legality mutation.
 - Current seam-translation animation contract is:
   translation tweening must keep gameplay-owned piece cell order as the stable
   source-to-destination correspondence, so ordinary moves and safe seam
@@ -113,15 +116,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 218` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 219` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 4.78` (`low`)
+- `tech_debt.score = 4.81` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.22`
+1. `delivery_size_pressure = 2.25`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -135,15 +138,15 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3667` real LOC
 2. `src/tet4d/ui/pygame/endgame_animation.py`: `2145` real LOC
 3. `scripts/arch_metrics.py`: `1890` real LOC
-4. `src/tet4d/ui/pygame/front4d_render.py`: `1647` real LOC
+4. `src/tet4d/ui/pygame/front4d_render.py`: `1729` real LOC
 5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 6. `tools/governance/validate_project_contracts.py`: `1368` real LOC
-7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1243` real LOC
+7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1344` real LOC
 8. `tools/governance/generate_configuration_reference.py`: `989` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 819/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 825/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

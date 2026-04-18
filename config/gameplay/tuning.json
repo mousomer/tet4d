@@ -28,9 +28,11 @@
     },
     "grid_factors": {
       "off": 1.0,
+      "bottom_boundary": 0.97,
       "edge": 0.94,
       "full": 0.88,
-      "helper": 0.78
+      "helper": 0.78,
+      "all_boundaries": 0.74
     },
     "speed": {
       "base": 0.55,
@@ -65,9 +67,11 @@
   "grid_modes": {
     "cycle": [
       "off",
+      "bottom_boundary",
       "edge",
       "full",
-      "helper"
+      "helper",
+      "all_boundaries"
     ],
     "fallback": "full"
   },

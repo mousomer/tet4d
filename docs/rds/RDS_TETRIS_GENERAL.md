@@ -114,36 +114,39 @@ Cross-cutting requirements are defined in:
 
 1. Menu/setup screen before starting each mode.
 2. In-game panel with score, cleared lines/layers, speed, controls, and game-over state.
-3. Toggleable grid in all modes.
-4. When grid is off, a board shadow/silhouette must still provide spatial context.
-5. Layer/line clear feedback should be animated.
-6. Setup and pause menus must expose equivalent controls/keybinding editing actions.
-7. A unified startup menu must allow choosing 2D/3D/4D and shared settings.
-8. Audio controls (master volume, SFX volume, mute) must be available in settings.
-9. Fullscreen/windowed toggle must be supported without layout corruption.
-10. Piece rotations must use a soft visual animation instead of a single-frame snap.
-11. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
-12. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
-13. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
-14. Terminal game-over presentation must use a dedicated post-terminal phase model `playing -> endgame_shatter -> endgame_relic_field`; the animation must render from a frozen endgame snapshot instead of mutating live gameplay entities.
-15. The frozen endgame snapshot must capture locked cells, board dimensions, ND board-space centers/coords for relic motion, the render/projection context needed to keep projection/camera stable, and a deterministic animation seed derived from stable inputs.
-16. During `endgame_shatter`, normal gameplay advancement stops, board/grid/box shell fragments are finite, and locked-cell debris transitions from a short burst impulse into organized capture motion rather than fading into empty space.
-17. During `endgame_relic_field`, locked-cell relics must remain indefinitely in deterministic bounded path families around the frozen scene anchor; the effect must stay screen-populating and must not devolve into unbounded straight-line ballistic drift.
-18. Persistent relic motion must evolve in the active ND gameplay/render space before final projection. `2D` stays planar, `3D` uses full 3-axis motion, and `4D` / higher internal ND paths must allow non-visible-dimension traversal instead of freezing hidden axes.
-19. The persistent relic phase must expose a real preset system with at least `wrap_all`, `invert_all`, and `sphere`, while keeping interaction semantics separate as `none` vs `collide`; collision support must not be encoded by multiplying preset ids, and the required presets must differ by ongoing ND boundary/field behavior rather than only by initial debris placement.
-19. When leaderboard registration is offered from the post-terminal path, it must open as a compact modal overlay on top of the existing endgame/post-game surface rather than navigating to a dedicated full-screen registration screen; the existing registration form state and submission authority must remain singular, and background gameplay/menu input must stay suppressed while the modal is open.
-14. Tutorial overlay panel must be enlarged for readability, present one clear plain-language primary action line plus one optional tip line, and in 3D/4D default to a side-panel-safe lane outside the active board/layers area.
-15. Tutorial progression must expose explicit segment order:
-16. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
-17. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
-18. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
-20. Settings keep persistent relic-field controls inside the scrolling `Settings -> Game` page as an `Endgame Effects` section, including the endgame preset selector, separate interaction-mode selector, persistent relic-field speed control, and shatter-speed control, while the same page also owns shared rotation animation mode, kick permissiveness (`kick_level`), and shared piece motion animation durations for rotation and deliberate translation tweens across 2D/3D/4D.
-21. Launcher, pause, settings, and keyboard bindings menu structure must derive from one canonical authored config tree in `config/menu/structure.json`, then normalize into the runtime graph consumed by rendering/navigation/input; oversized settings/keybindings pages must use the shared scrolling viewport and scrollbar path instead of clipping rows or defining page-local overflow behavior.
-20. Ordinary play launcher/setup surfaces must stay minimal for topology: safe preset selection only, plus launcher routes to `Play Last Custom Topology` and `Topology Playground` for custom topology work.
-21. Launcher learning/support IA must keep `Tutorials` first-class while leaving the internal split explicit: `Interactive Tutorials` for guided onboarding, `How to Play` for gameplay explanation, `Controls Reference` for shortcut/action legend, and `Help / FAQ` for broader support/troubleshooting.
-22. Launcher configuration IA must keep `Settings -> Keyboard Bindings` as persistent input configuration only; authored wrapper groups may exist in config, but one-item runtime pages must collapse away instead of surviving as visible structure. Controls reference/help content must not be folded into that settings destination.
-23. Launcher `Leaderboard` and `Bot` must not be root destinations or `Settings` entries in the visible-shell pass; they belong to play-adjacent flow instead.
-24. For topology-playground migration-state questions, `docs/plans/topology_playground_current_authority.md` is the current architecture authority. Older topology-playground manifests and stage plans are historical unless explicitly reactivated.
+3. Toggleable grid/projection-guide modes must exist in all modes.
+4. Shared grid mode cycle is `off`, `bottom_boundary`, `edge`, `full`, `helper`, `all_boundaries`.
+5. When grid is off, a board shadow/silhouette must still provide spatial context.
+6. `bottom_boundary` and `all_boundaries` are render-only active-piece projection-guide modes derived from the current active-piece render state plus stable board presentation; they must not change legality, lock, ghost behavior, board-fit logic, or explorer traversal permission.
+7. Layer/line clear feedback should be animated.
+8. Setup and pause menus must expose equivalent controls/keybinding editing actions.
+9. A unified startup menu must allow choosing 2D/3D/4D and shared settings.
+10. Audio controls (master volume, SFX volume, mute) must be available in settings.
+11. Fullscreen/windowed toggle must be supported without layout corruption.
+12. Piece rotations must use a soft visual animation instead of a single-frame snap.
+13. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
+14. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
+15. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
+16. Terminal game-over presentation must use a dedicated post-terminal phase model `playing -> endgame_shatter -> endgame_relic_field`; the animation must render from a frozen endgame snapshot instead of mutating live gameplay entities.
+17. The frozen endgame snapshot must capture locked cells, board dimensions, ND board-space centers/coords for relic motion, the render/projection context needed to keep projection/camera stable, and a deterministic animation seed derived from stable inputs.
+18. During `endgame_shatter`, normal gameplay advancement stops, board/grid/box shell fragments are finite, and locked-cell debris transitions from a short burst impulse into organized capture motion rather than fading into empty space.
+19. During `endgame_relic_field`, locked-cell relics must remain indefinitely in deterministic bounded path families around the frozen scene anchor; the effect must stay screen-populating and must not devolve into unbounded straight-line ballistic drift.
+20. Persistent relic motion must evolve in the active ND gameplay/render space before final projection. `2D` stays planar, `3D` uses full 3-axis motion, and `4D` / higher internal ND paths must allow non-visible-dimension traversal instead of freezing hidden axes.
+21. The persistent relic phase must expose a real preset system with at least `wrap_all`, `invert_all`, and `sphere`, while keeping interaction semantics separate as `none` vs `collide`; collision support must not be encoded by multiplying preset ids, and the required presets must differ by ongoing ND boundary/field behavior rather than only by initial debris placement.
+22. When leaderboard registration is offered from the post-terminal path, it must open as a compact modal overlay on top of the existing endgame/post-game surface rather than navigating to a dedicated full-screen registration screen; the existing registration form state and submission authority must remain singular, and background gameplay/menu input must stay suppressed while the modal is open.
+23. Tutorial overlay panel must be enlarged for readability, present one clear plain-language primary action line plus one optional tip line, and in 3D/4D default to a side-panel-safe lane outside the active board/layers area.
+24. Tutorial progression must expose explicit segment order:
+25. translations -> piece rotations -> camera rotations (3D/4D) -> camera controls (`toggle_grid`, transparency) -> goals (line/layer/full-board clear).
+26. System controls (`help`, `menu`, `restart`, `quit`) are guidance-only in tutorials and must not require dedicated interactive stages.
+27. Movement and rotation tutorial stages require repeated successful actions (`4` per direction stage) before progression.
+28. The tutorial `toggle_grid` stage must cover the full shared grid-mode cycle, including `bottom_boundary` and `all_boundaries`.
+29. Settings keep persistent relic-field controls inside the scrolling `Settings -> Game` page as an `Endgame Effects` section, including the endgame preset selector, separate interaction-mode selector, persistent relic-field speed control, and shatter-speed control, while the same page also owns shared rotation animation mode, kick permissiveness (`kick_level`), and shared piece motion animation durations for rotation and deliberate translation tweens across 2D/3D/4D.
+30. Launcher, pause, settings, and keyboard bindings menu structure must derive from one canonical authored config tree in `config/menu/structure.json`, then normalize into the runtime graph consumed by rendering/navigation/input; oversized settings/keybindings pages must use the shared scrolling viewport and scrollbar path instead of clipping rows or defining page-local overflow behavior.
+31. Ordinary play launcher/setup surfaces must stay minimal for topology: safe preset selection only, plus launcher routes to `Play Last Custom Topology` and `Topology Playground` for custom topology work.
+32. Launcher learning/support IA must keep `Tutorials` first-class while leaving the internal split explicit: `Interactive Tutorials` for guided onboarding, `How to Play` for gameplay explanation, `Controls Reference` for shortcut/action legend, and `Help / FAQ` for broader support/troubleshooting.
+33. Launcher configuration IA must keep `Settings -> Keyboard Bindings` as persistent input configuration only; authored wrapper groups may exist in config, but one-item runtime pages must collapse away instead of surviving as visible structure. Controls reference/help content must not be folded into that settings destination.
+34. Launcher `Leaderboard` and `Bot` must not be root destinations or `Settings` entries in the visible-shell pass; they belong to play-adjacent flow instead.
+35. For topology-playground migration-state questions, `docs/plans/topology_playground_current_authority.md` is the current architecture authority. Older topology-playground manifests and stage plans are historical unless explicitly reactivated.
 25. Explorer Topology Lab must use a scene-first graphical explorer shell for 2D/3D/4D, with direct seam selection, engine-backed probe traversal, explorer-only sandbox interaction, and play launch from the current draft topology. Live Explorer launch must enter that same shell directly rather than a separate detached explorer frontend.
 25. The Explorer Playground shell must expose an explicit controls/scene pane model, generated pane-aware helper text, mouse-adjustable +/- value controls, and synchronized 2D coordinate-plane projections as the default 3D/4D primary visualization: `3D` uses `xy/xz/yz`, `4D` uses `xy/xz/xw/yz/yw/zw`, all panels share one canonical selected-cell/topology/move-preview/seam-focus state, and hidden coordinates must stay explicit in every panel. Free-camera 3D/4D views may remain optional debug-only helpers, but they must not remain the primary Explorer Playground interface.
 26. The Explorer Playground shell must be able to compile and export a parallel experiment pack from the current draft plus the active dimension's preset family, persist that pack under `state/topology/`, and surface a recommended next topology directly in the shell.

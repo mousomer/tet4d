@@ -235,7 +235,7 @@
           "id": "toggle_grid",
           "ui": {
             "text": "Cycle through all grid modes.",
-            "hint": "Start from OFF and press Toggle Grid four times: EDGE, FULL, HELPER, then OFF again.",
+            "hint": "Start from OFF and press Toggle Grid six times: BOTTOM BOUNDARY, EDGE, FULL, HELPER, ALL BOUNDARIES, then OFF again.",
             "highlights": [
               "stats_panel"
             ],
@@ -260,7 +260,7 @@
             ],
             "predicates": [],
             "logic": "all",
-            "event_count_required": 4
+            "event_count_required": 6
           }
         },
         {
@@ -1349,7 +1349,7 @@
           "id": "toggle_grid",
           "ui": {
             "text": "Cycle through all grid modes.",
-            "hint": "Start from OFF and press Toggle Grid four times: EDGE, FULL, HELPER, then OFF again.",
+            "hint": "Start from OFF and press Toggle Grid six times: BOTTOM BOUNDARY, EDGE, FULL, HELPER, ALL BOUNDARIES, then OFF again.",
             "highlights": [
               "camera_axes"
             ],
@@ -1374,7 +1374,7 @@
             ],
             "predicates": [],
             "logic": "all",
-            "event_count_required": 4
+            "event_count_required": 6
           }
         },
         {
@@ -2677,7 +2677,7 @@
           "id": "toggle_grid",
           "ui": {
             "text": "Cycle through all grid modes.",
-            "hint": "Start from OFF and press Toggle Grid four times: EDGE, FULL, HELPER, then OFF again.",
+            "hint": "Start from OFF and press Toggle Grid six times: BOTTOM BOUNDARY, EDGE, FULL, HELPER, ALL BOUNDARIES, then OFF again.",
             "highlights": [
               "camera_axes"
             ],
@@ -2702,7 +2702,7 @@
             ],
             "predicates": [],
             "logic": "all",
-            "event_count_required": 4
+            "event_count_required": 6
           }
         },
         {

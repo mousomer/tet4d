@@ -50,6 +50,12 @@ from tet4d.ui.pygame.render.grid_mode_render import (
     draw_projected_grid_mode,
     draw_projected_line_buckets,
 )
+from tet4d.ui.pygame.render.active_piece_projection_guides import (
+    GuideCell3D,
+    build_boundary_projection_face_primitives,
+    draw_boundary_projection_faces,
+    projection_guide_enabled,
+)
 from tet4d.ui.pygame.render.panel_utils import (
     draw_game_over_banner,
     draw_unified_game_side_panel,
@@ -488,6 +494,82 @@ def _active_piece_face_primitives(
     return tuple(primitives)
 
 
+def _projection_guide_cells_3d(
+    state: GameStateND,
+    piece_render_state: PieceRenderStateND | None,
+) -> tuple[tuple[GuideCell3D, ...], int | None]:
+    if piece_render_state is None and state.current_piece is not None:
+        active_cells = tuple(
+            tuple(float(value) for value in coord)
+            for coord in state.current_piece_cells_mapped(include_above=False)
+        )
+        color_id = int(state.current_piece.shape.color_id)
+    elif piece_render_state is not None:
+        if (
+            state.config.exploration_mode
+            and state.config.explorer_topology_profile is not None
+        ):
+            active_cells = tuple(
+                tuple(float(value) for value in coord)
+                for coord in piece_render_state.active_cells
+            )
+        else:
+            active_cells = tuple(
+                tuple(float(value) for value in coord)
+                for coord in map_overlay_cells(
+                    state.topology_policy,
+                    piece_render_state.active_cells,
+                    allow_above_gravity=False,
+                )
+            )
+        color_id = int(piece_render_state.color_id)
+    else:
+        return tuple(), None
+
+    dims = state.config.dims
+    cells: list[GuideCell3D] = []
+    for x, y, z in active_cells:
+        if 0.0 <= x < dims[0] and 0.0 <= y < dims[1] and 0.0 <= z < dims[2]:
+            cells.append((((float(x), float(y), float(z))), 1.0))
+    return tuple(cells), color_id
+
+
+def _projection_guide_primitives_3d(
+    *,
+    state: GameStateND,
+    presentation: BoardPresentation3D,
+    grid_mode: GridMode,
+    piece_render_state: PieceRenderStateND | None,
+) -> tuple[ProjectedFacePrimitive, ...]:
+    if not projection_guide_enabled(grid_mode):
+        return ()
+    cells, color_id = _projection_guide_cells_3d(state, piece_render_state)
+    if not cells or color_id is None:
+        return ()
+    return build_boundary_projection_face_primitives(
+        cells=cells,
+        dims=presentation.dims,
+        gravity_axis=int(state.config.gravity_axis),
+        grid_mode=grid_mode,
+        project_raw=lambda raw: project_raw_point_helper(
+            raw,
+            presentation.dims,
+            presentation.params,
+            presentation.center_px,
+        ),
+        transform_raw=lambda raw: transform_raw_point_helper(
+            raw,
+            presentation.dims,
+            presentation.params,
+        ),
+        depth_denominator=lambda depth: depth_denominator_for_depth(
+            depth,
+            presentation.params,
+        ),
+        color=color_for_cell_3d(int(color_id)),
+    )
+
+
 def _draw_cells_with_occluding_board_lines(
     surface: pygame.Surface,
     *,
@@ -618,7 +700,13 @@ def _draw_board_3d(
         center_px=presentation.center_px,
         dims=presentation.dims,
     )
-    if active_piece_faces and grid_mode != GridMode.SHADOW:
+    projection_guide_faces = _projection_guide_primitives_3d(
+        state=state,
+        presentation=presentation,
+        grid_mode=grid_mode,
+        piece_render_state=piece_render_state,
+    )
+    if active_piece_faces and presentation.board_line_primitives:
         occlusion_buckets = resolve_board_line_occlusion(
             presentation.board_line_primitives,
             active_piece_faces,
@@ -632,6 +720,10 @@ def _draw_board_3d(
             board_lines_under_piece=occlusion_buckets.segments_under_piece,
             board_lines_over_piece=occlusion_buckets.segments_over_piece,
             overlay_transparency=overlay_transparency,
+        )
+        draw_boundary_projection_faces(
+            surface,
+            faces=projection_guide_faces,
         )
         _draw_clear_animation(
             surface,
@@ -683,6 +775,10 @@ def _draw_board_3d(
         center_px=presentation.center_px,
         dims=presentation.dims,
         overlay_transparency=overlay_transparency,
+    )
+    draw_boundary_projection_faces(
+        surface,
+        faces=projection_guide_faces,
     )
     _draw_clear_animation(
         surface,

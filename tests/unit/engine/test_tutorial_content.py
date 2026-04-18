@@ -314,11 +314,13 @@ class TutorialContentTests(unittest.TestCase):
         payload = content.load_tutorial_payload()
         for lesson in payload.lessons:
             grid_step = next(step for step in lesson.steps if step.step_id == "toggle_grid")
-            self.assertEqual(grid_step.complete_when.event_count_required, 4)
+            self.assertEqual(grid_step.complete_when.event_count_required, 6)
             hint = (grid_step.ui.hint or "").lower()
+            self.assertIn("bottom boundary", hint)
             self.assertIn("edge", hint)
             self.assertIn("full", hint)
             self.assertIn("helper", hint)
+            self.assertIn("all boundaries", hint)
             self.assertIn("off", hint)
 
     def test_nd_control_sequence_order_is_continuous(self) -> None:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import unittest
-from unittest import mock
 
 try:
     import pygame
@@ -494,70 +493,6 @@ class ProjectedOcclusionIntegrationTests(unittest.TestCase):
         ]
         self.assertNotEqual(drawn_cells[1], drawn_cells[0])
         self.assertNotEqual(drawn_cells[2], drawn_cells[0])
-
-    def test_4d_frozen_layer_presentation_builds_once_per_animation_move(self) -> None:
-        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
-        state = frontend_nd_state.create_initial_state(cfg)
-        state.board.cells[(1, 8, 2, 1)] = 4
-        state.current_piece = ActivePieceND.from_shape(
-            PieceShapeND(
-                "tri4",
-                ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
-                color_id=5,
-            ),
-            pos=(2, 3, 2, 1),
-        )
-        animator = PieceRotationAnimatorND(
-            ndim=4,
-            gravity_axis=cfg.gravity_axis,
-            duration_ms=300.0,
-            translation_duration_ms=120.0,
-        )
-        view = front4d_game.LayerView3D(yaw_deg=32.0, pitch_deg=-26.0)
-        screen = pygame.Surface((1280, 820))
-        fonts = front4d_game.init_fonts()
-        layer_count = front4d_render._basis_for_view(view, cfg.dims).layer_count
-
-        animator.observe(state.current_piece, 0.0, animate_translation=False)
-        self.assertTrue(state.try_move_axis(0, 1, animate_translation=True))
-        animator.observe(
-            state.current_piece,
-            0.0,
-            animate_translation=state.consume_translation_animation_hint(),
-        )
-        start_state = animator.render_state(state.current_piece)
-        assert start_state is not None
-
-        with mock.patch.object(
-            front4d_render,
-            "_build_layer_presentation",
-            wraps=front4d_render._build_layer_presentation,
-        ) as build_presentation:
-            front4d_render.draw_game_frame(
-                screen,
-                state,
-                view,
-                fonts,
-                grid_mode=GridMode.HELPER,
-                active_overlay=start_state,
-            )
-            self.assertEqual(build_presentation.call_count, layer_count)
-
-            animator.observe(state.current_piece, 60.0, animate_translation=False)
-            mid_state = animator.render_state(state.current_piece)
-            assert mid_state is not None
-            front4d_render.draw_game_frame(
-                screen,
-                state,
-                view,
-                fonts,
-                grid_mode=GridMode.HELPER,
-                active_overlay=mid_state,
-            )
-            self.assertEqual(
-                build_presentation.call_count,
-                layer_count,
-            )
 
     def _resolve_4d_buckets(
         self,

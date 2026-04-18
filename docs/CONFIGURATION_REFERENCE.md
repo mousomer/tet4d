@@ -156,6 +156,8 @@ Parameters:
 - `assist_scoring.bot_factors.step`: `0.48` (`float`)
 - `assist_scoring.combined.max`: `1.0` (`float`)
 - `assist_scoring.combined.min`: `0.2` (`float`)
+- `assist_scoring.grid_factors.all_boundaries`: `0.74` (`float`)
+- `assist_scoring.grid_factors.bottom_boundary`: `0.97` (`float`)
 - `assist_scoring.grid_factors.edge`: `0.94` (`float`)
 - `assist_scoring.grid_factors.full`: `0.88` (`float`)
 - `assist_scoring.grid_factors.helper`: `0.78` (`float`)
@@ -177,7 +179,7 @@ Parameters:
 - `clear_scoring.multi_layer_bonus.3`: `240` (`int`)
 - `clear_scoring.multi_layer_bonus.4`: `600` (`int`)
 - `clear_scoring.multi_layer_bonus.5_plus`: `900` (`int`)
-- `grid_modes.cycle[]`: array[`string`]; examples: `"off"`, `"edge"`, `"full"`
+- `grid_modes.cycle[]`: array[`string`]; examples: `"off"`, `"bottom_boundary"`, `"edge"`
 - `grid_modes.fallback`: `"full"` (`string`)
 - `rotation_kicks.candidate_offsets[]`: array[`array`]
 - `rotation_kicks.candidate_offsets[][]`: array[`int`]; examples: `1`, `0`, `-1`
@@ -1963,7 +1965,7 @@ Parameters:
 - `lessons[].lesson_id`: varies (`string`); examples: `"tutorial_2d_core"`, `"tutorial_3d_core"`, `"tutorial_4d_core"`
 - `lessons[].mode`: varies (`string`); examples: `"2d"`, `"3d"`, `"4d"`
 - `lessons[].steps[]`: array[`object`]
-- `lessons[].steps[].complete_when.event_count_required`: varies (`int`); examples: `4`
+- `lessons[].steps[].complete_when.event_count_required`: varies (`int`); examples: `4`, `6`
 - `lessons[].steps[].complete_when.event_span_min_ms`: varies (`int`); examples: `2000`
 - `lessons[].steps[].complete_when.events[]`: array[`string`]; examples: `"move_x_neg"`, `"move_x_pos"`, `"rotate_xy_pos"`
 - `lessons[].steps[].complete_when.logic`: varies (`string`); examples: `"all"`

@@ -63,9 +63,11 @@ Define requirements for the classic `(x, y)` mode implemented by:
 2. Soft drop, hard drop, and `x-y` rotation only.
 3. System controls: restart/menu/quit/toggle-grid.
 4. Grid off mode must keep a visible board shadow.
-5. Line clear should be animated.
-6. 2D keeps the simpler board-layering path; it must not depend on the projected-depth board-line occlusion machinery used by projected `3D` / `4D` renderers.
-7. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with split grid/edge shell segments dying in a finite rupture while locked-cell squares survive as deterministic bounded planar relic loops driven by the shared endgame preset system (`wrap_all`, `invert_all`, `sphere`, plus the generic fallback orbit preset) and the separate `none` / `collide` interaction mode.
+5. Shared render-only projection-guide modes must exist in 2D: `bottom_boundary` projects the active piece onto the bottom board boundary line, and `all_boundaries` projects it onto all board boundary lines.
+6. 2D projection guides must derive from active-piece render state only, follow animated piece motion while the board shadow stays stable, and remain visually distinct from ghost/locked/active cells.
+7. 2D keeps the simpler board-layering path; it must not depend on the projected-depth board-line occlusion machinery used by projected `3D` / `4D` renderers.
+8. Line clear should be animated.
+9. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with split grid/edge shell segments dying in a finite rupture while locked-cell squares survive as deterministic bounded planar relic loops driven by the shared endgame preset system (`wrap_all`, `invert_all`, `sphere`, plus the generic fallback orbit preset) and the separate `none` / `collide` interaction mode.
 
 ## 6. Scoring
 
