@@ -20,7 +20,11 @@ from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
-from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
+from tet4d.ui.pygame.menu.menu_runner import (
+    ActionRegistry,
+    MenuPointerTarget,
+    MenuRunner,
+)
 from tet4d.ui.pygame.ui_utils import (
     draw_corner_chip,
     draw_tron_menu_background,
@@ -97,13 +101,23 @@ def _draw_list_menu_panel(
     status: str,
     status_error: bool,
     panel_w: int = 660,
-) -> None:
+    hovered_target: MenuPointerTarget | None = None,
+    pressed_target: MenuPointerTarget | None = None,
+) -> tuple[MenuPointerTarget, ...]:
     draw_tron_menu_background(screen, top_color=_BG_TOP, bottom_color=_BG_BOTTOM)
     width, height = screen.get_size()
     title_surf = fonts.title_font.render(format_menu_title(title), True, _TEXT_COLOR)
     title_y = 40
     screen.blit(title_surf, ((width - title_surf.get_width()) // 2, title_y))
-    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
+    back_rect = draw_corner_chip(
+        screen,
+        font=fonts.hint_font,
+        text="Back",
+        x=18,
+        y=18,
+        hovered=hovered_target is not None and hovered_target.kind == "back",
+        pressed=pressed_target is not None and pressed_target.kind == "back",
+    )
 
     panel_w = min(panel_w, max(320, width - 40))
     line_h = fonts.hint_font.get_height() + 3
@@ -130,6 +144,9 @@ def _draw_list_menu_panel(
     option_bottom = panel_y + panel_h - 8
     label_left = panel_x + 20
     label_right = panel_x + panel_w - 20
+    targets: list[MenuPointerTarget] = [
+        MenuPointerTarget(kind="back", rect=back_rect.copy())
+    ]
     for idx, row in enumerate(rows):
         if y + fonts.menu_font.get_height() > option_bottom:
             break
@@ -158,6 +175,13 @@ def _draw_list_menu_panel(
         screen.blit(label, (label_left, y))
         if value_surf is not None:
             screen.blit(value_surf, (value_x, y))
+        targets.append(
+            MenuPointerTarget(
+                kind="item",
+                rect=pygame.Rect(panel_x + 14, y - 3, panel_w - 28, row_h),
+                item_index=idx,
+            )
+        )
         y += row_h
 
     _draw_clamped_hint_block(
@@ -169,6 +193,7 @@ def _draw_list_menu_panel(
         status=status,
         status_error=status_error,
     )
+    return tuple(targets)
 
 
 def _pause_menu_values(dimension: int) -> tuple[str, ...]:
@@ -195,8 +220,10 @@ def _draw_pause_menu(
     *,
     dimension: int,
     title: str,
-) -> None:
-    _draw_list_menu_panel(
+    hovered_target: MenuPointerTarget | None = None,
+    pressed_target: MenuPointerTarget | None = None,
+) -> tuple[MenuPointerTarget, ...]:
+    return _draw_list_menu_panel(
         screen,
         fonts,
         title=title,
@@ -206,6 +233,8 @@ def _draw_pause_menu(
         hints=_PAUSE_HINTS,
         status=state.status,
         status_error=state.status_error,
+        hovered_target=hovered_target,
+        pressed_target=pressed_target,
     )
 
 
@@ -541,16 +570,21 @@ def run_pause_menu(
         selected: int,
         _depth: int,
         _selected_action_indexes: dict[str, int],
-    ) -> None:
+        hovered_target: MenuPointerTarget | None,
+        pressed_target: MenuPointerTarget | None,
+    ) -> tuple[MenuPointerTarget, ...]:
         state.selected = selected
-        _draw_pause_menu(
+        targets = _draw_pause_menu(
             screen_ref[0],
             fonts,
             state,
             dimension=dimension,
             title=title,
+            hovered_target=hovered_target,
+            pressed_target=pressed_target,
         )
         pygame.display.flip()
+        return targets
 
     runner = MenuRunner(
         menus={

@@ -4,15 +4,24 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 import pygame
+
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
-from tet4d.ui.pygame.ui_utils import default_menu_back_chip_rect
 
 
 ActionHandler = Callable[[], bool]
 RouteHandler = Callable[[str], bool]
 RenderHandler = Callable[
-    [str, str, tuple[dict[str, Any], ...], int, int, dict[str, int]],
-    None,
+    [
+        str,
+        str,
+        tuple[dict[str, Any], ...],
+        int,
+        int,
+        dict[str, int],
+        "MenuPointerTarget | None",
+        "MenuPointerTarget | None",
+    ],
+    tuple["MenuPointerTarget", ...] | None,
 ]
 SimpleHandler = Callable[[], bool]
 KeydownHandler = Callable[[str, int, int], bool]
@@ -45,6 +54,15 @@ class _RunnerState:
     selected_by_menu: dict[str, int]
     selected_action_by_item: dict[str, int]
     running: bool = True
+
+
+@dataclass(frozen=True)
+class MenuPointerTarget:
+    kind: str
+    rect: pygame.Rect
+    item_index: int = -1
+    item_id: str = ""
+    action_index: int = -1
 
 
 def _action_group_actions(item: dict[str, Any]) -> tuple[dict[str, Any], ...]:
@@ -155,19 +173,168 @@ class MenuRunner:
             selected_action_by_item={},
         )
         clock = pygame.time.Clock()
+        hovered_target: MenuPointerTarget | None = None
+        pressed_target: MenuPointerTarget | None = None
+        pointer_targets: tuple[MenuPointerTarget, ...] = tuple()
 
-        while state.running:
-            _dt = clock.tick(self._fps)
+        def _current_menu_bundle() -> tuple[str, dict[str, object], tuple[dict[str, Any], ...]]:
             current_menu_id = state.stack[-1]
             current_menu = self._menus[current_menu_id]
             items_obj = current_menu.get("items")
             if not isinstance(items_obj, tuple) or not items_obj:
                 raise RuntimeError(f"menu '{current_menu_id}' has no items")
-            items = items_obj
+            return current_menu_id, current_menu, items_obj
 
-            selected = state.selected_by_menu.get(current_menu_id, 0)
+        def _clamp_selected(
+            menu_id: str,
+            items: tuple[dict[str, Any], ...],
+        ) -> int:
+            selected = state.selected_by_menu.get(menu_id, 0)
             selected = max(0, min(len(items) - 1, selected))
-            state.selected_by_menu[current_menu_id] = selected
+            state.selected_by_menu[menu_id] = selected
+            return selected
+
+        def _clear_pointer_state() -> None:
+            nonlocal hovered_target, pressed_target, pointer_targets
+            hovered_target = None
+            pressed_target = None
+            pointer_targets = tuple()
+
+        def _pointer_target_at_pos(pos: tuple[int, int]) -> MenuPointerTarget | None:
+            for target in reversed(pointer_targets):
+                if target.rect.collidepoint(pos):
+                    return target
+            return None
+
+        def _set_pointer_focus(
+            menu_id: str,
+            items: tuple[dict[str, Any], ...],
+            target: MenuPointerTarget | None,
+        ) -> bool:
+            if target is None:
+                return False
+            changed = False
+            if target.kind in {"item", "action_group_action"}:
+                selected = _clamp_selected(menu_id, items)
+                if selected != target.item_index:
+                    state.selected_by_menu[menu_id] = target.item_index
+                    changed = True
+            if target.kind == "action_group_action" and 0 <= target.item_index < len(items):
+                item = items[target.item_index]
+                if str(item.get("type", "")).strip().lower() == "action_group":
+                    state_key = _action_group_state_key(
+                        menu_id,
+                        str(item.get("id", "")),
+                    )
+                    selected_action = _selected_action_group_index(
+                        state,
+                        menu_id=menu_id,
+                        item=item,
+                    )
+                    if selected_action != target.action_index:
+                        state.selected_action_by_item[state_key] = target.action_index
+                        changed = True
+            return changed
+
+        def _dispatch_action(action_id: str) -> None:
+            try:
+                close = self._action_registry.dispatch(action_id)
+            except KeyError:
+                if self._handle_missing_action is None:
+                    close = False
+                else:
+                    close = bool(self._handle_missing_action(action_id))
+            if close:
+                state.running = False
+
+        def _activate_item(  # noqa: C901
+            menu_id: str,
+            item: dict[str, Any],
+            *,
+            action_index: int | None = None,
+        ) -> None:
+            item_type = str(item.get("type", "")).strip().lower()
+            if item_type == "submenu":
+                target_menu_id = str(item.get("menu_id", "")).strip().lower()
+                if target_menu_id in self._menus:
+                    state.stack.append(target_menu_id)
+                    _clear_pointer_state()
+                return
+            if item_type == "route":
+                if self._handle_route is None:
+                    return
+                route_id = str(item.get("route_id", "")).strip().lower()
+                if self._handle_route(route_id):
+                    state.running = False
+                    _clear_pointer_state()
+                return
+            if item_type == "action_group":
+                actions = _action_group_actions(item)
+                if not actions:
+                    return
+                if action_index is None:
+                    action_index = _selected_action_group_index(
+                        state,
+                        menu_id=menu_id,
+                        item=item,
+                    )
+                safe_action_index = max(0, min(len(actions) - 1, int(action_index)))
+                action = actions[safe_action_index]
+                action_id = str(action.get("action_id", "")).strip().lower()
+                _dispatch_action(action_id)
+                if not state.running:
+                    _clear_pointer_state()
+                return
+            if item_type != "action":
+                return
+
+            action_id = str(item.get("action_id", "")).strip().lower()
+            if action_id == "back":
+                if len(state.stack) > 1:
+                    state.stack.pop()
+                    _clear_pointer_state()
+                    if self._on_move is not None:
+                        self._on_move()
+                    return
+                close = False
+                if self._on_root_escape is not None:
+                    close = bool(self._on_root_escape())
+                if close:
+                    state.running = False
+                    _clear_pointer_state()
+                return
+            _dispatch_action(action_id)
+            if not state.running:
+                _clear_pointer_state()
+
+        def _render_current_menu() -> tuple[str, tuple[dict[str, Any], ...]]:
+            nonlocal pointer_targets
+            current_menu_id, current_menu, items = _current_menu_bundle()
+            selected = _clamp_selected(current_menu_id, items)
+            title = str(current_menu.get("title", current_menu_id))
+            rendered_targets = self._render_menu(
+                current_menu_id,
+                title,
+                items,
+                selected,
+                len(state.stack),
+                _current_menu_action_group_indexes(
+                    state,
+                    menu_id=current_menu_id,
+                    items=items,
+                ),
+                hovered_target,
+                pressed_target,
+            )
+            pointer_targets = tuple(rendered_targets or ())
+            return current_menu_id, items
+
+        current_menu_id, items = _render_current_menu()
+
+        while state.running:
+            _dt = clock.tick(self._fps)
+            current_menu_id, _current_menu, items = _current_menu_bundle()
+            selected = _clamp_selected(current_menu_id, items)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -178,23 +345,73 @@ class MenuRunner:
                         state.running = False
                         break
                     continue
+                if event.type == pygame.MOUSEMOTION:
+                    hovered_target = _pointer_target_at_pos(
+                        getattr(event, "pos", (-1, -1))
+                    )
+                    if _set_pointer_focus(current_menu_id, items, hovered_target):
+                        selected = _clamp_selected(current_menu_id, items)
+                        if self._on_move is not None:
+                            self._on_move()
+                    continue
                 if (
                     event.type == pygame.MOUSEBUTTONDOWN
                     and int(getattr(event, "button", 0)) == 1
-                    and default_menu_back_chip_rect().collidepoint(
+                ):
+                    hovered_target = _pointer_target_at_pos(
                         getattr(event, "pos", (-1, -1))
                     )
-                ):
-                    if len(state.stack) > 1:
-                        state.stack.pop()
+                    if _set_pointer_focus(current_menu_id, items, hovered_target):
+                        selected = _clamp_selected(current_menu_id, items)
                         if self._on_move is not None:
                             self._on_move()
-                        break
-                    close = False
-                    if self._on_root_escape is not None:
-                        close = bool(self._on_root_escape())
-                    if close:
-                        state.running = False
+                    pressed_target = hovered_target
+                    continue
+                if (
+                    event.type == pygame.MOUSEBUTTONUP
+                    and int(getattr(event, "button", 0)) == 1
+                ):
+                    hovered_target = _pointer_target_at_pos(
+                        getattr(event, "pos", (-1, -1))
+                    )
+                    clicked_target = (
+                        hovered_target
+                        if hovered_target is not None and hovered_target == pressed_target
+                        else None
+                    )
+                    pressed_target = None
+                    if clicked_target is None:
+                        continue
+                    if self._on_confirm is not None:
+                        self._on_confirm()
+                    if clicked_target.kind == "back":
+                        if len(state.stack) > 1:
+                            state.stack.pop()
+                            _clear_pointer_state()
+                            if self._on_move is not None:
+                                self._on_move()
+                            break
+                        close = False
+                        if self._on_root_escape is not None:
+                            close = bool(self._on_root_escape())
+                        if close:
+                            state.running = False
+                            _clear_pointer_state()
+                            break
+                        continue
+                    if clicked_target.kind not in {"item", "action_group_action"}:
+                        continue
+                    if 0 <= clicked_target.item_index < len(items):
+                        item = items[clicked_target.item_index]
+                        _activate_item(
+                            current_menu_id,
+                            item,
+                            action_index=(
+                                clicked_target.action_index
+                                if clicked_target.kind == "action_group_action"
+                                else None
+                            ),
+                        )
                         break
                     continue
                 if event.type != pygame.KEYDOWN:
@@ -219,6 +436,7 @@ class MenuRunner:
                 if key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
                     if len(state.stack) > 1:
                         state.stack.pop()
+                        _clear_pointer_state()
                         if self._on_move is not None:
                             self._on_move()
                         break
@@ -268,89 +486,11 @@ class MenuRunner:
 
                 if self._on_confirm is not None:
                     self._on_confirm()
-                selected = state.selected_by_menu.get(current_menu_id, 0)
-                selected = max(0, min(len(items) - 1, selected))
+                selected = _clamp_selected(current_menu_id, items)
                 item = items[selected]
-                item_type = str(item.get("type", "")).lower()
-                if item_type == "submenu":
-                    target_menu_id = str(item.get("menu_id", "")).strip().lower()
-                    if target_menu_id in self._menus:
-                        state.stack.append(target_menu_id)
-                    break
-                if item_type == "route":
-                    if self._handle_route is None:
-                        break
-                    route_id = str(item.get("route_id", "")).strip().lower()
-                    if self._handle_route(route_id):
-                        state.running = False
-                    break
-                if item_type == "action_group":
-                    actions = _action_group_actions(item)
-                    if not actions:
-                        break
-                    action = actions[
-                        _selected_action_group_index(
-                            state,
-                            menu_id=current_menu_id,
-                            item=item,
-                        )
-                    ]
-                    action_id = str(action.get("action_id", "")).strip().lower()
-                    try:
-                        close = self._action_registry.dispatch(action_id)
-                    except KeyError:
-                        if self._handle_missing_action is None:
-                            close = False
-                        else:
-                            close = bool(self._handle_missing_action(action_id))
-                    if close:
-                        state.running = False
-                    break
-                if item_type != "action":
-                    break
-
-                action_id = str(item.get("action_id", "")).strip().lower()
-                if action_id == "back":
-                    if len(state.stack) > 1:
-                        state.stack.pop()
-                        if self._on_move is not None:
-                            self._on_move()
-                        break
-                    close = False
-                    if self._on_root_escape is not None:
-                        close = bool(self._on_root_escape())
-                    if close:
-                        state.running = False
-                    break
-                try:
-                    close = self._action_registry.dispatch(action_id)
-                except KeyError:
-                    if self._handle_missing_action is None:
-                        close = False
-                    else:
-                        close = bool(self._handle_missing_action(action_id))
-                if close:
-                    state.running = False
+                _activate_item(current_menu_id, item)
                 break
 
             if not state.running:
                 break
-            current_menu_id = state.stack[-1]
-            current_menu = self._menus[current_menu_id]
-            items = current_menu["items"]
-            selected = state.selected_by_menu.get(current_menu_id, 0)
-            selected = max(0, min(len(items) - 1, selected))
-            state.selected_by_menu[current_menu_id] = selected
-            title = str(current_menu.get("title", current_menu_id))
-            self._render_menu(
-                current_menu_id,
-                title,
-                items,
-                selected,
-                len(state.stack),
-                _current_menu_action_group_indexes(
-                    state,
-                    menu_id=current_menu_id,
-                    items=items,
-                ),
-            )
+            current_menu_id, items = _render_current_menu()

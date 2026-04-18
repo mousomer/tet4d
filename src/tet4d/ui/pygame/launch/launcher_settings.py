@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import pygame
@@ -22,7 +23,6 @@ from tet4d.ui.pygame.ui_utils import (
     SliderRowLayout,
     compute_slider_row_layout,
     compute_vertical_scroll_metrics,
-    default_menu_back_chip_rect,
     draw_corner_chip,
     draw_fitted_text_line,
     draw_selection_highlight,
@@ -73,6 +73,13 @@ from .settings_hub_model import (
     current_settings_page_items,
     settings_title_for_page,
 )
+
+
+@dataclass(frozen=True)
+class _UnifiedPointerTarget:
+    kind: str
+    rect: pygame.Rect
+    selectable_index: int = -1
 
 
 def _draw_wrapped_settings_row(
@@ -387,6 +394,135 @@ def _draw_page_item(
     )
 
 
+def _current_unified_pointer_targets(
+    screen: pygame.Surface,
+    fonts,
+    state: _UnifiedSettingsState,
+) -> tuple[_UnifiedPointerTarget, ...]:
+    width, height = screen.get_size()
+    title_height = fonts.title_font.get_height()
+    line_h = fonts.hint_font.get_height() + 3
+    bottom_lines = 2 + (1 if state.status else 0)
+    panel_rect = standard_menu_panel_rect(
+        screen,
+        panel_w=min(width - 40, 820),
+        panel_h=max(
+            220,
+            height - (title_height + 44) - (bottom_lines * line_h) - 46,
+        ),
+        panel_top=44 + title_height + 18,
+        bottom_reserved=(bottom_lines * line_h) + 10,
+    )
+    viewport_rect = pygame.Rect(
+        panel_rect.x + 18,
+        panel_rect.y + 14,
+        panel_rect.width - 36,
+        panel_rect.height - 24,
+    )
+    items = _current_items(state)
+    selectable = _current_selectable_indexes(state)
+    layouts, content_height = _page_layouts(
+        fonts,
+        items=items,
+        content_width=viewport_rect.width,
+        state=state,
+    )
+    metrics = compute_vertical_scroll_metrics(
+        viewport_rect=viewport_rect,
+        content_height=content_height,
+        scroll_offset=state.scroll_offset,
+    )
+    if metrics.shows_scrollbar:
+        layouts, content_height = _page_layouts(
+            fonts,
+            items=items,
+            content_width=viewport_rect.width - metrics.reserved_width,
+            state=state,
+        )
+        metrics = compute_vertical_scroll_metrics(
+            viewport_rect=viewport_rect,
+            content_height=content_height,
+            scroll_offset=state.scroll_offset,
+        )
+    if selectable:
+        state.selected = max(0, min(len(selectable) - 1, int(state.selected)))
+        selected_layout = layouts[selectable[state.selected]]
+        state.scroll_offset = ensure_scroll_offset_visible(
+            metrics.scroll_offset,
+            item_top=int(selected_layout["top"]),
+            item_bottom=int(selected_layout["bottom"]),
+            viewport_height=metrics.viewport_height,
+            content_height=content_height,
+        )
+        metrics = compute_vertical_scroll_metrics(
+            viewport_rect=viewport_rect,
+            content_height=content_height,
+            scroll_offset=state.scroll_offset,
+        )
+    content_rect = viewport_rect.copy()
+    content_rect.width -= metrics.reserved_width
+    row_to_selectable = {
+        row_index: selectable_index
+        for selectable_index, row_index in enumerate(selectable)
+    }
+    targets: list[_UnifiedPointerTarget] = [
+        _UnifiedPointerTarget(
+            kind="back",
+            rect=pygame.Rect(
+                18,
+                18,
+                fonts.hint_font.size("Back")[0] + 18,
+                fonts.hint_font.get_height() + 10,
+            ),
+        )
+    ]
+    for idx, row in enumerate(layouts):
+        selectable_index = row_to_selectable.get(idx)
+        if selectable_index is None:
+            continue
+        top = int(row["top"]) - metrics.scroll_offset + content_rect.y
+        bottom = int(row["bottom"]) - metrics.scroll_offset + content_rect.y
+        if bottom < viewport_rect.y or top > viewport_rect.bottom:
+            continue
+        targets.append(
+            _UnifiedPointerTarget(
+                kind="item",
+                rect=pygame.Rect(
+                    content_rect.x,
+                    top,
+                    content_rect.width,
+                    int(row["bottom"]) - int(row["top"]),
+                ),
+                selectable_index=selectable_index,
+            )
+        )
+    return tuple(targets)
+
+
+def _unified_pointer_target_at_pos(
+    pointer_targets: tuple[_UnifiedPointerTarget, ...],
+    pos: tuple[int, int],
+) -> _UnifiedPointerTarget | None:
+    for target in reversed(pointer_targets):
+        if target.rect.collidepoint(pos):
+            return target
+    return None
+
+
+def _apply_unified_pointer_focus(
+    state: _UnifiedSettingsState,
+    target: _UnifiedPointerTarget | None,
+) -> bool:
+    if target is None or target.kind != "item":
+        return False
+    safe_selected = max(0, int(target.selectable_index))
+    if state.selected == safe_selected:
+        return False
+    state.selected = safe_selected
+    state.pending_reset_confirm = False
+    return True
+
+
 def _draw_unified_settings_menu(
     screen: pygame.Surface,
     fonts,
@@ -403,7 +539,15 @@ def _draw_unified_settings_menu(
         center_x=width // 2,
         y=44,
     )
-    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
+    draw_corner_chip(
+        screen,
+        font=fonts.hint_font,
+        text="Back",
+        x=18,
+        y=18,
+        hovered=bool(getattr(state, "hover_back", False)),
+        pressed=bool(getattr(state, "pressed_back", False)),
+    )
 
     line_h = fonts.hint_font.get_height() + 3
     bottom_lines = 2 + (1 if state.status else 0)
@@ -720,32 +864,65 @@ def _dispatch_unified_key(
     return screen
 
 
-def _handle_unified_non_key_event(
+def _handle_unified_non_key_event(  # noqa: C901
+    screen: pygame.Surface,
+    fonts,
     state: _UnifiedSettingsState,
     event: pygame.event.Event,
-) -> bool:
-    if (
-        event.type == pygame.MOUSEBUTTONDOWN
-        and int(getattr(event, "button", 0)) == 1
-        and default_menu_back_chip_rect().collidepoint(getattr(event, "pos", (-1, -1)))
-    ):
-        if not _pop_page(state):
-            state.running = False
-        return True
+    *,
+    pointer_targets: tuple[_UnifiedPointerTarget, ...],
+) -> tuple[pygame.Surface, bool]:
+    if event.type == pygame.MOUSEMOTION:
+        target = _unified_pointer_target_at_pos(
+            pointer_targets,
+            getattr(event, "pos", (-1, -1)),
+        )
+        setattr(state, "hover_back", target is not None and target.kind == "back")
+        _apply_unified_pointer_focus(state, target)
+        return screen, True
+    if event.type == pygame.MOUSEBUTTONDOWN and int(getattr(event, "button", 0)) == 1:
+        target = _unified_pointer_target_at_pos(
+            pointer_targets,
+            getattr(event, "pos", (-1, -1)),
+        )
+        setattr(state, "_pointer_pressed_target", target)
+        setattr(state, "hover_back", target is not None and target.kind == "back")
+        setattr(state, "pressed_back", target is not None and target.kind == "back")
+        _apply_unified_pointer_focus(state, target)
+        return screen, True
+    if event.type == pygame.MOUSEBUTTONUP and int(getattr(event, "button", 0)) == 1:
+        target = _unified_pointer_target_at_pos(
+            pointer_targets,
+            getattr(event, "pos", (-1, -1)),
+        )
+        pressed_target = getattr(state, "_pointer_pressed_target", None)
+        setattr(state, "_pointer_pressed_target", None)
+        setattr(state, "pressed_back", False)
+        setattr(state, "hover_back", target is not None and target.kind == "back")
+        if target is None or target != pressed_target:
+            return screen, True
+        if target.kind == "back":
+            if not _pop_page(state):
+                state.running = False
+            return screen, True
+        if target.kind == "item":
+            _apply_unified_pointer_focus(state, target)
+            return _handle_unified_enter(screen, fonts, state), True
+        return screen, True
     if event.type != pygame.TEXTINPUT:
-        return False
+        return screen, False
     if _is_unified_text_mode(state):
         _handle_unified_text_input(state, event.text)
-        return True
+        return screen, True
     item = _current_selected_item(state)
     if item is None:
-        return False
+        return screen, False
     item_id = menu_item_id(item)
     if item_id in _NUMERIC_TEXT_EDIT_ROWS:
         _start_unified_numeric_text_mode(state, item_id)
         _handle_unified_text_input(state, event.text)
-        return True
-    return False
+        return screen, True
+    return screen, False
 
 
 def _process_unified_events(
@@ -753,12 +930,20 @@ def _process_unified_events(
     fonts,
     state: _UnifiedSettingsState,
 ) -> tuple[pygame.Surface, bool]:
+    pointer_targets = _current_unified_pointer_targets(screen, fonts, state)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             state.running = False
             return screen, False
         if event.type != pygame.KEYDOWN:
-            if _handle_unified_non_key_event(state, event):
+            screen, handled = _handle_unified_non_key_event(
+                screen,
+                fonts,
+                state,
+                event,
+                pointer_targets=pointer_targets,
+            )
+            if handled:
                 if not state.running:
                     return screen, True
                 continue

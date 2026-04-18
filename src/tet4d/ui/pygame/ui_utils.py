@@ -778,12 +778,42 @@ def draw_corner_chip(
     border_color: tuple[int, int, int] = (92, 238, 255),
     text_color: Color3 = (212, 242, 255),
     border_radius: int = 10,
+    hovered: bool = False,
+    pressed: bool = False,
 ) -> pygame.Rect:
-    text_surf = font.render(text, True, text_color)
+    draw_fill = fill_color
+    draw_border = border_color
+    draw_text = text_color
+    if hovered:
+        draw_fill = (
+            min(255, fill_color[0] + 14),
+            min(255, fill_color[1] + 20),
+            min(255, fill_color[2] + 28),
+            min(255, fill_color[3] + 18),
+        )
+        draw_border = (
+            min(255, border_color[0] + 16),
+            min(255, border_color[1] + 12),
+            min(255, border_color[2]),
+        )
+    if pressed:
+        draw_fill = (
+            min(255, fill_color[0] + 24),
+            min(255, fill_color[1] + 32),
+            min(255, fill_color[2] + 40),
+            min(255, fill_color[3] + 28),
+        )
+        draw_border = (
+            min(255, border_color[0] + 22),
+            min(255, border_color[1] + 18),
+            min(255, border_color[2]),
+        )
+        draw_text = (255, 250, 234)
+    text_surf = font.render(text, True, draw_text)
     rect = pygame.Rect(x, y, text_surf.get_width() + 18, text_surf.get_height() + 10)
     chip = pygame.Surface(rect.size, pygame.SRCALPHA)
-    pygame.draw.rect(chip, fill_color, chip.get_rect(), border_radius=border_radius)
-    pygame.draw.rect(chip, border_color, chip.get_rect(), 1, border_radius=border_radius)
+    pygame.draw.rect(chip, draw_fill, chip.get_rect(), border_radius=border_radius)
+    pygame.draw.rect(chip, draw_border, chip.get_rect(), 1, border_radius=border_radius)
     surface.blit(chip, rect.topleft)
     surface.blit(text_surf, (rect.x + 9, rect.y + 5))
     return rect

@@ -65,6 +65,13 @@ class _BotMenuState:
     running: bool = True
 
 
+@dataclass(frozen=True)
+class _BotPointerTarget:
+    kind: str
+    rect: pygame.Rect
+    index: int = -1
+
+
 def _mode_key_from_dimension(dimension: int) -> str:
     safe_dimension = max(2, min(4, int(dimension)))
     return f"{safe_dimension}d"
@@ -179,7 +186,14 @@ def _draw_hints(
     _draw_status(screen, fonts, loop, y=y)
 
 
-def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -> None:
+def _draw_bot_options_menu(
+    screen: pygame.Surface,
+    fonts,
+    loop: _BotMenuState,
+    *,
+    hovered_target: _BotPointerTarget | None = None,
+    pressed_target: _BotPointerTarget | None = None,
+) -> tuple[_BotPointerTarget, ...]:
     draw_tron_menu_background(screen, top_color=_BG_TOP, bottom_color=_BG_BOTTOM)
     width, height = screen.get_size()
     title = fonts.title_font.render(
@@ -187,7 +201,15 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
     )
     title_y = 40
     screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
+    back_rect = draw_corner_chip(
+        screen,
+        font=fonts.hint_font,
+        text="Back",
+        x=18,
+        y=18,
+        hovered=hovered_target is not None and hovered_target.kind == "back",
+        pressed=pressed_target is not None and pressed_target.kind == "back",
+    )
 
     values = _bot_values(loop)
     hint_lines = tuple(_BOT_COPY["hints"])
@@ -233,6 +255,9 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
     )
     content_rect = viewport_rect.copy()
     content_rect.width -= metrics.reserved_width
+    targets: list[_BotPointerTarget] = [
+        _BotPointerTarget(kind="back", rect=back_rect.copy())
+    ]
     previous_clip = screen.get_clip()
     screen.set_clip(viewport_rect)
     for idx, row in enumerate(_BOT_MENU_ROWS):
@@ -272,6 +297,9 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
         screen.blit(label, (label_left, draw_rect.y))
         if value_surf is not None:
             screen.blit(value_surf, (value_x, draw_rect.y))
+        targets.append(
+            _BotPointerTarget(kind="item", rect=draw_rect.copy(), index=idx)
+        )
     screen.set_clip(previous_clip)
     draw_vertical_scrollbar(screen, metrics=metrics)
     _draw_hints(
@@ -281,6 +309,7 @@ def _draw_bot_options_menu(screen: pygame.Surface, fonts, loop: _BotMenuState) -
         hints=hint_lines,
         loop=loop,
     )
+    return tuple(targets)
 
 
 def _adjust_bot_value(loop: _BotMenuState, key: int) -> bool:
@@ -387,7 +416,7 @@ def _handle_bot_menu_key(loop: _BotMenuState, key: int) -> None:
         _handle_bot_menu_confirm(loop)
 
 
-def run_bot_options_menu(
+def run_bot_options_menu(  # noqa: C901
     screen: pygame.Surface,
     fonts,
     *,
@@ -398,6 +427,22 @@ def run_bot_options_menu(
         dimension=start_dimension if start_dimension in _BOT_DIMENSIONS else 2,
     )
     clock = pygame.time.Clock()
+    hovered_target: _BotPointerTarget | None = None
+    pressed_target: _BotPointerTarget | None = None
+    pointer_targets = _draw_bot_options_menu(
+        screen,
+        fonts,
+        loop,
+        hovered_target=hovered_target,
+        pressed_target=pressed_target,
+    )
+    pygame.display.flip()
+
+    def _pointer_target_at_pos(pos: tuple[int, int]) -> _BotPointerTarget | None:
+        for target in reversed(pointer_targets):
+            if target.rect.collidepoint(pos):
+                return target
+        return None
 
     while loop.running:
         _dt = clock.tick(60)
@@ -405,13 +450,71 @@ def run_bot_options_menu(
             if event.type == pygame.QUIT:
                 loop.running = False
                 break
+            if event.type == pygame.MOUSEMOTION:
+                hovered_target = _pointer_target_at_pos(
+                    getattr(event, "pos", (-1, -1))
+                )
+                if (
+                    hovered_target is not None
+                    and hovered_target.kind == "item"
+                    and loop.selected != hovered_target.index
+                ):
+                    loop.selected = hovered_target.index
+                    play_sfx("menu_move")
+                continue
+            if (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and int(getattr(event, "button", 0)) == 1
+            ):
+                hovered_target = _pointer_target_at_pos(
+                    getattr(event, "pos", (-1, -1))
+                )
+                if (
+                    hovered_target is not None
+                    and hovered_target.kind == "item"
+                    and loop.selected != hovered_target.index
+                ):
+                    loop.selected = hovered_target.index
+                    play_sfx("menu_move")
+                pressed_target = hovered_target
+                continue
+            if (
+                event.type == pygame.MOUSEBUTTONUP
+                and int(getattr(event, "button", 0)) == 1
+            ):
+                hovered_target = _pointer_target_at_pos(
+                    getattr(event, "pos", (-1, -1))
+                )
+                clicked_target = (
+                    hovered_target
+                    if hovered_target is not None and hovered_target == pressed_target
+                    else None
+                )
+                pressed_target = None
+                if clicked_target is None:
+                    continue
+                if clicked_target.kind == "back":
+                    loop.running = False
+                    break
+                if clicked_target.kind == "item":
+                    loop.selected = clicked_target.index
+                    _handle_bot_menu_confirm(loop)
+                    if not loop.running:
+                        break
+                continue
             if event.type != pygame.KEYDOWN:
                 continue
             _handle_bot_menu_key(loop, event.key)
             if not loop.running:
                 break
 
-        _draw_bot_options_menu(screen, fonts, loop)
+        pointer_targets = _draw_bot_options_menu(
+            screen,
+            fonts,
+            loop,
+            hovered_target=hovered_target,
+            pressed_target=pressed_target,
+        )
         pygame.display.flip()
 
     if loop.dirty:
@@ -419,5 +522,3 @@ def run_bot_options_menu(
     if loop.status:
         return (not loop.status_error), loop.status
     return True, "Bot options unchanged"
-
-

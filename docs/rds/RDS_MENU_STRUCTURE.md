@@ -170,6 +170,9 @@ Pause Menu
    shell treatment: title-cased headers, no rendered subtitle row, a visible
    `Back` chip in the upper-left corner, a framed central panel, and footer
    hints/status below the panel.
+6. Visible button-like controls in that shared shell must expose mouse
+   hitboxes aligned to their rendered bounds; hover, press, and release must
+   resolve against the same control instead of a stale keyboard-only row model.
 6. Shared shell backgrounds should keep the dark high-contrast base but add a
    restrained grid/glow treatment that reads as lightly Tron-inspired rather
    than a flat gradient.
@@ -233,6 +236,11 @@ Pause Menu
 5. `Tab`: next section when in multi-section settings.
 6. A visible `Back` affordance must be present anywhere `Esc`/cancel returns
    to the previous menu level.
+7. Mouse hover and click are required for controls that render as buttons or
+   actionable menu rows; click activation must reuse the same action dispatch
+   path as keyboard confirm for that control.
+8. Pointer release outside the pressed control must cancel activation unless a
+   screen explicitly opts into a different drag-back-inside behavior.
 
 ### 6.2 Consistency rules
 

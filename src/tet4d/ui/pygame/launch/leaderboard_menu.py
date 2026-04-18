@@ -36,6 +36,8 @@ _NAME_MAX_LENGTH = int(project_constant_int(("analytics", "leaderboard_name_max_
 class _LeaderboardState:
     page_index: int = 0
     running: bool = True
+    hover_back: bool = False
+    pressed_back: bool = False
 
 
 @dataclass
@@ -43,6 +45,8 @@ class _NamePromptState:
     name: str
     running: bool = True
     accepted: bool = False
+    hovered_button: str = ""
+    pressed_button: str = ""
 
 
 @dataclass(frozen=True)
@@ -52,6 +56,19 @@ class _NamePromptSummary:
     lines_cleared: int
     duration_seconds: float
     rank: int
+
+
+@dataclass(frozen=True)
+class _LeaderboardLayout:
+    back_rect: pygame.Rect
+
+
+@dataclass(frozen=True)
+class _NamePromptLayout:
+    panel_rect: pygame.Rect
+    input_rect: pygame.Rect
+    submit_rect: pygame.Rect
+    cancel_rect: pygame.Rect
 
 
 def _safe_int(value: object, *, default: int = 0) -> int:
@@ -174,12 +191,55 @@ def _entries_page(
     return tuple(entries[start:stop]), total_pages, start + 1
 
 
+def _name_prompt_layout(
+    screen: pygame.Surface,
+    fonts: Any,
+    *,
+    summary: _NamePromptSummary | None = None,
+) -> _NamePromptLayout:
+    width, height = screen.get_size()
+    panel_w = min(560, max(360, width - 48))
+    summary_rows = 0 if summary is None else 2
+    panel_h = 220 + (summary_rows * (fonts.hint_font.get_height() + 6))
+    panel_x = (width - panel_w) // 2
+    panel_y = max(72, (height - panel_h) // 2)
+    panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+
+    title_h = fonts.title_font.get_height()
+    subtitle_h = fonts.hint_font.get_height()
+    label_y = panel_y + 18 + title_h + 6 + subtitle_h + 14
+    if summary is not None:
+        label_y += 2 * (fonts.hint_font.get_height() + 6) + 10
+
+    input_rect = pygame.Rect(panel_x + 20, label_y + 26, panel_w - 40, 48)
+    button_y = input_rect.bottom + 18
+    submit_rect = pygame.Rect(panel_x + 20, button_y, 138, 34)
+    cancel_rect = pygame.Rect(submit_rect.right + 12, button_y, 138, 34)
+    return _NamePromptLayout(
+        panel_rect=panel_rect,
+        input_rect=input_rect,
+        submit_rect=submit_rect,
+        cancel_rect=cancel_rect,
+    )
+
+
+def _prompt_button_at_pos(
+    layout: _NamePromptLayout,
+    pos: tuple[int, int],
+) -> str:
+    if layout.submit_rect.collidepoint(pos):
+        return "submit"
+    if layout.cancel_rect.collidepoint(pos):
+        return "cancel"
+    return ""
+
+
 def _draw_leaderboard(
     screen: pygame.Surface,
     fonts: Any,
     state: _LeaderboardState,
     entries: tuple[dict[str, object], ...],
-) -> None:
+) -> _LeaderboardLayout:
     draw_tron_menu_background(screen, top_color=_BG_TOP, bottom_color=_BG_BOTTOM)
     width, height = screen.get_size()
 
@@ -190,7 +250,15 @@ def _draw_leaderboard(
     )
     title_y = 40
     screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    draw_corner_chip(screen, font=fonts.hint_font, text="Back", x=18, y=18)
+    back_rect = draw_corner_chip(
+        screen,
+        font=fonts.hint_font,
+        text="Back",
+        x=18,
+        y=18,
+        hovered=state.hover_back,
+        pressed=state.pressed_back,
+    )
 
     page_entries, total_pages, start_rank = _entries_page(entries, state.page_index)
     has_rows = bool(page_entries)
@@ -314,6 +382,7 @@ def _draw_leaderboard(
         hint_surf = fonts.hint_font.render(hint_draw, True, _MUTED_COLOR)
         screen.blit(hint_surf, ((width - hint_surf.get_width()) // 2, hint_y))
         hint_y += hint_surf.get_height() + 3
+    return _LeaderboardLayout(back_rect=back_rect.copy())
 
 
 def _handle_keydown(
@@ -344,6 +413,14 @@ def run_leaderboard_menu(
     state = _LeaderboardState()
     entries = leaderboard_top_entries(limit=200)
     clock = pygame.time.Clock()
+    layout = _LeaderboardLayout(
+        back_rect=pygame.Rect(
+            18,
+            18,
+            fonts.hint_font.size("Back")[0] + 18,
+            fonts.hint_font.get_height() + 10,
+        )
+    )
 
     while state.running:
         _dt = clock.tick(60)
@@ -353,12 +430,39 @@ def run_leaderboard_menu(
             if event.type == pygame.QUIT:
                 state.running = False
                 break
+            if event.type == pygame.MOUSEMOTION:
+                state.hover_back = layout.back_rect.collidepoint(
+                    getattr(event, "pos", (-1, -1))
+                )
+                continue
+            if (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and int(getattr(event, "button", 0)) == 1
+            ):
+                state.hover_back = layout.back_rect.collidepoint(
+                    getattr(event, "pos", (-1, -1))
+                )
+                state.pressed_back = state.hover_back
+                continue
+            if (
+                event.type == pygame.MOUSEBUTTONUP
+                and int(getattr(event, "button", 0)) == 1
+            ):
+                state.hover_back = layout.back_rect.collidepoint(
+                    getattr(event, "pos", (-1, -1))
+                )
+                pressed_back = state.pressed_back
+                state.pressed_back = False
+                if pressed_back and state.hover_back:
+                    state.running = False
+                    break
+                continue
             if event.type != pygame.KEYDOWN:
                 continue
             _handle_keydown(state, key=event.key, total_pages=total_pages)
             if not state.running:
                 break
-        _draw_leaderboard(screen, fonts, state, entries)
+        layout = _draw_leaderboard(screen, fonts, state, entries)
         pygame.display.flip()
     return screen
 
@@ -370,19 +474,15 @@ def _draw_name_prompt(
     state: _NamePromptState,
     rank: int,
     summary: _NamePromptSummary | None = None,
-) -> None:
+) -> _NamePromptLayout:
     width, height = screen.get_size()
     backdrop = pygame.Surface((width, height), pygame.SRCALPHA)
     backdrop.fill((4, 8, 18, 150))
     screen.blit(backdrop, (0, 0))
 
-    panel_w = min(560, max(360, width - 48))
-    summary_rows = 0 if summary is None else 2
-    panel_h = 220 + (summary_rows * (fonts.hint_font.get_height() + 6))
-    panel_x = (width - panel_w) // 2
-    panel_y = max(72, (height - panel_h) // 2)
-    panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
-    panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+    layout = _name_prompt_layout(screen, fonts, summary=summary)
+    panel_rect = layout.panel_rect
+    panel = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
     pygame.draw.rect(panel, (8, 12, 26, 228), panel.get_rect(), border_radius=18)
     pygame.draw.rect(panel, (116, 136, 188, 255), panel.get_rect(), 2, border_radius=18)
     screen.blit(panel, panel_rect.topleft)
@@ -390,14 +490,14 @@ def _draw_name_prompt(
     title = fonts.title_font.render("Leaderboard Entry", True, _TEXT_COLOR)
     subtitle_text = f"Rank #{rank} qualifies. Enter player name to save this run."
     subtitle = fonts.hint_font.render(
-        fit_text(fonts.hint_font, subtitle_text, panel_w - 40),
+        fit_text(fonts.hint_font, subtitle_text, panel_rect.width - 40),
         True,
         _MUTED_COLOR,
     )
-    title_y = panel_y + 18
+    title_y = panel_rect.y + 18
     subtitle_y = title_y + title.get_height() + 6
-    screen.blit(title, (panel_x + 20, title_y))
-    screen.blit(subtitle, (panel_x + 20, subtitle_y))
+    screen.blit(title, (panel_rect.x + 20, title_y))
+    screen.blit(subtitle, (panel_rect.x + 20, subtitle_y))
 
     label_y = subtitle_y + subtitle.get_height() + 14
     if summary is not None:
@@ -407,16 +507,22 @@ def _draw_name_prompt(
         )
         for index, line in enumerate(summary_lines):
             line_surf = fonts.hint_font.render(
-                fit_text(fonts.hint_font, line, panel_w - 40),
+                fit_text(fonts.hint_font, line, panel_rect.width - 40),
                 True,
                 (214, 220, 244),
             )
-            screen.blit(line_surf, (panel_x + 20, label_y + (index * (line_surf.get_height() + 6))))
+            screen.blit(
+                line_surf,
+                (
+                    panel_rect.x + 20,
+                    label_y + (index * (line_surf.get_height() + 6)),
+                ),
+            )
         label_y += len(summary_lines) * (fonts.hint_font.get_height() + 6) + 10
 
     label = fonts.hint_font.render("Name", True, _MUTED_COLOR)
-    screen.blit(label, (panel_x + 20, label_y))
-    input_rect = pygame.Rect(panel_x + 20, label_y + 26, panel_w - 40, 48)
+    screen.blit(label, (panel_rect.x + 20, label_y))
+    input_rect = layout.input_rect
     pygame.draw.rect(screen, (34, 44, 72), input_rect, border_radius=10)
     pygame.draw.rect(screen, (98, 116, 160), input_rect, 2, border_radius=10)
     input_text = state.name
@@ -425,13 +531,38 @@ def _draw_name_prompt(
     value = fonts.menu_font.render(content, True, _HIGHLIGHT_COLOR)
     screen.blit(value, (input_rect.x + 8, input_rect.y + 11))
 
-    button_y = input_rect.bottom + 18
-    submit_rect = pygame.Rect(panel_x + 20, button_y, 138, 34)
-    cancel_rect = pygame.Rect(submit_rect.right + 12, button_y, 138, 34)
-    pygame.draw.rect(screen, (50, 110, 88), submit_rect, border_radius=17)
-    pygame.draw.rect(screen, (100, 196, 158), submit_rect, 2, border_radius=17)
-    pygame.draw.rect(screen, (60, 50, 74), cancel_rect, border_radius=17)
-    pygame.draw.rect(screen, (132, 122, 156), cancel_rect, 2, border_radius=17)
+    submit_rect = layout.submit_rect
+    cancel_rect = layout.cancel_rect
+    submit_hovered = state.hovered_button == "submit"
+    submit_pressed = state.pressed_button == "submit"
+    cancel_hovered = state.hovered_button == "cancel"
+    cancel_pressed = state.pressed_button == "cancel"
+    submit_fill = (50, 110, 88)
+    if submit_hovered:
+        submit_fill = (60, 126, 102)
+    if submit_pressed:
+        submit_fill = (72, 140, 116)
+    cancel_fill = (60, 50, 74)
+    if cancel_hovered:
+        cancel_fill = (76, 64, 92)
+    if cancel_pressed:
+        cancel_fill = (88, 74, 106)
+    pygame.draw.rect(screen, submit_fill, submit_rect, border_radius=17)
+    pygame.draw.rect(
+        screen,
+        (100, 196, 158) if not submit_pressed else (122, 218, 180),
+        submit_rect,
+        2,
+        border_radius=17,
+    )
+    pygame.draw.rect(screen, cancel_fill, cancel_rect, border_radius=17)
+    pygame.draw.rect(
+        screen,
+        (132, 122, 156) if not cancel_pressed else (154, 142, 178),
+        cancel_rect,
+        2,
+        border_radius=17,
+    )
     submit_text = fonts.hint_font.render("Enter Submit", True, _TEXT_COLOR)
     cancel_text = fonts.hint_font.render("Esc Skip", True, _TEXT_COLOR)
     screen.blit(
@@ -453,18 +584,52 @@ def _draw_name_prompt(
         fit_text(
             fonts.hint_font,
             "Leaderboard registration is modal here; gameplay input stays locked behind the popup.",
-            panel_w - 40,
+            panel_rect.width - 40,
         ),
         True,
         _MUTED_COLOR,
     )
-    screen.blit(hint, (panel_x + 20, panel_rect.bottom - hint.get_height() - 16))
+    screen.blit(hint, (panel_rect.x + 20, panel_rect.bottom - hint.get_height() - 16))
+    return layout
 
 
-def _handle_name_prompt_event(event: pygame.event.Event, state: _NamePromptState) -> bool:
+def _handle_name_prompt_event(  # noqa: C901
+    event: pygame.event.Event,
+    state: _NamePromptState,
+    *,
+    layout: _NamePromptLayout,
+) -> bool:
     if event.type == pygame.QUIT:
         state.running = False
         return False
+    if event.type == pygame.MOUSEMOTION:
+        state.hovered_button = _prompt_button_at_pos(
+            layout,
+            getattr(event, "pos", (-1, -1)),
+        )
+        return True
+    if event.type == pygame.MOUSEBUTTONDOWN and int(getattr(event, "button", 0)) == 1:
+        state.hovered_button = _prompt_button_at_pos(
+            layout,
+            getattr(event, "pos", (-1, -1)),
+        )
+        state.pressed_button = state.hovered_button
+        return True
+    if event.type == pygame.MOUSEBUTTONUP and int(getattr(event, "button", 0)) == 1:
+        state.hovered_button = _prompt_button_at_pos(
+            layout,
+            getattr(event, "pos", (-1, -1)),
+        )
+        pressed_button = state.pressed_button
+        state.pressed_button = ""
+        if pressed_button == "submit" and state.hovered_button == "submit":
+            state.accepted = True
+            state.running = False
+            return False
+        if pressed_button == "cancel" and state.hovered_button == "cancel":
+            state.running = False
+            return False
+        return True
     if event.type == pygame.TEXTINPUT:
         combined = state.name + event.text
         state.name = sanitize_text(
@@ -497,12 +662,13 @@ def prompt_leaderboard_player_name(
 ) -> str | None:
     state = _NamePromptState(name="Player")
     clock = pygame.time.Clock()
+    layout = _name_prompt_layout(screen, fonts, summary=summary)
     pygame.key.start_text_input()
     try:
         while state.running:
             _dt = clock.tick(60)
             for event in pygame.event.get():
-                if not _handle_name_prompt_event(event, state):
+                if not _handle_name_prompt_event(event, state, layout=layout):
                     break
 
             if draw_background is not None:
@@ -513,7 +679,7 @@ def prompt_leaderboard_player_name(
                     top_color=_BG_TOP,
                     bottom_color=_BG_BOTTOM,
                 )
-            _draw_name_prompt(
+            layout = _draw_name_prompt(
                 screen,
                 fonts,
                 state=state,

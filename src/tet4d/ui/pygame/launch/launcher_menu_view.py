@@ -5,6 +5,7 @@ from typing import Any
 import pygame
 
 from tet4d.ui.pygame.keybindings import active_key_profile
+from tet4d.ui.pygame.menu.menu_runner import MenuPointerTarget
 from tet4d.ui.pygame.ui_utils import (
     draw_corner_chip,
     draw_tron_menu_background,
@@ -44,6 +45,7 @@ def _draw_action_group_row(
     *,
     fonts,
     item: dict[str, Any],
+    item_index: int,
     label: str,
     y: int,
     row_step: int,
@@ -54,7 +56,7 @@ def _draw_action_group_row(
     highlight_color: tuple[int, int, int],
     muted_color: tuple[int, int, int],
     selected_action_indexes: dict[str, int],
-) -> None:
+) -> tuple[MenuPointerTarget, ...]:
     raw_actions = item.get("actions", ())
     actions = raw_actions if isinstance(raw_actions, tuple) else tuple()
     active_index = _action_group_index(
@@ -88,9 +90,17 @@ def _draw_action_group_row(
     text = fonts.menu_font.render(label_text, True, color)
     text_y = y + max(0, (row_step - text.get_height()) // 2 - 2)
     screen.blit(text, (panel_x + row_margin, text_y))
+    targets: list[MenuPointerTarget] = [
+        MenuPointerTarget(
+            kind="item",
+            rect=pygame.Rect(panel_x + 16, y - 4, row_right - panel_x - 4, row_step - 4),
+            item_index=item_index,
+            item_id=str(item.get("id", "")).strip().lower(),
+        )
+    ]
 
     action_x = row_right - total_actions_width
-    for action_surface, action_rect, is_active in action_rects:
+    for action_idx, (action_surface, action_rect, is_active) in enumerate(action_rects):
         action_rect.topleft = (
             action_x,
             y + max(0, (row_step - action_rect.height) // 2 - 1),
@@ -113,7 +123,17 @@ def _draw_action_group_row(
                 action_rect.y + action_pad_y,
             ),
         )
+        targets.append(
+            MenuPointerTarget(
+                kind="action_group_action",
+                rect=action_rect.copy(),
+                item_index=item_index,
+                item_id=str(item.get("id", "")).strip().lower(),
+                action_index=action_idx,
+            )
+        )
         action_x += action_rect.width + action_gap
+    return tuple(targets)
 
 
 def _controls_hint_key(
@@ -167,18 +187,22 @@ def draw_main_menu(
     text_color: tuple[int, int, int],
     highlight_color: tuple[int, int, int],
     muted_color: tuple[int, int, int],
-) -> None:
+    hovered_target: MenuPointerTarget | None = None,
+    pressed_target: MenuPointerTarget | None = None,
+) -> tuple[MenuPointerTarget, ...]:
     draw_tron_menu_background(screen, top_color=bg_top, bottom_color=bg_bottom)
     width, height = screen.get_size()
     title = fonts.title_font.render(format_menu_title(menu_title), True, text_color)
     title_y = 40
     screen.blit(title, ((width - title.get_width()) // 2, title_y))
-    draw_corner_chip(
+    back_rect = draw_corner_chip(
         screen,
         font=fonts.hint_font,
         text="Back" if stack_depth > 1 else "Quit",
         x=18,
         y=18,
+        hovered=hovered_target is not None and hovered_target.kind == "back",
+        pressed=pressed_target is not None and pressed_target.kind == "back",
     )
 
     hint_line_h = fonts.hint_font.get_height() + 3
@@ -207,6 +231,9 @@ def draw_main_menu(
     y = panel_y + 20
     row_margin = 28
     row_right = panel_x + panel_w - row_margin
+    targets: list[MenuPointerTarget] = [
+        MenuPointerTarget(kind="back", rect=back_rect.copy())
+    ]
     for idx, item in enumerate(items):
         label = str(item.get("label", ""))
         item_type = str(item.get("type", "")).strip().lower()
@@ -217,10 +244,12 @@ def draw_main_menu(
             pygame.draw.rect(hi, (255, 255, 255, 38), hi.get_rect(), border_radius=9)
             screen.blit(hi, (panel_x + 16, y - 4))
         if item_type == "action_group":
-            _draw_action_group_row(
+            targets.extend(
+                _draw_action_group_row(
                 screen,
                 fonts=fonts,
                 item=item,
+                item_index=idx,
                 label=label,
                 y=y,
                 row_step=row_step,
@@ -231,6 +260,7 @@ def draw_main_menu(
                 highlight_color=highlight_color,
                 muted_color=muted_color,
                 selected_action_indexes=selected_action_indexes,
+                )
             )
             y += row_step
             continue
@@ -238,6 +268,14 @@ def draw_main_menu(
         text = fonts.menu_font.render(label_text, True, color)
         row_rect = text.get_rect(topleft=(panel_x + row_margin, y))
         screen.blit(text, row_rect.topleft)
+        targets.append(
+            MenuPointerTarget(
+                kind="item",
+                rect=pygame.Rect(panel_x + 16, y - 4, panel_w - 32, row_step - 6),
+                item_index=idx,
+                item_id=str(item.get("id", "")).strip().lower(),
+            )
+        )
         y += row_step
 
     has_action_groups = any(
@@ -287,3 +325,4 @@ def draw_main_menu(
         text = fonts.hint_font.render(line_draw, True, muted_color)
         screen.blit(text, ((width - text.get_width()) // 2, info_y))
         info_y += text.get_height() + 2
+    return tuple(targets)

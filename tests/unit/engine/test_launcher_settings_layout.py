@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 import pygame
 
@@ -345,12 +346,12 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         screen = pygame.Surface((640, 360), pygame.SRCALPHA)
         loop = bot_options_menu._BotMenuState(payload={}, selected=8)
         with (
-            unittest.mock.patch.object(
+            mock.patch.object(
                 bot_options_menu,
                 "draw_tron_panel",
                 wraps=bot_options_menu.draw_tron_panel,
             ) as draw_panel,
-            unittest.mock.patch.object(
+            mock.patch.object(
                 bot_options_menu,
                 "draw_corner_chip",
                 wraps=bot_options_menu.draw_corner_chip,
@@ -365,12 +366,12 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         fonts = self._fonts()
         screen = pygame.Surface((960, 640), pygame.SRCALPHA)
         with (
-            unittest.mock.patch.object(
+            mock.patch.object(
                 leaderboard_menu,
                 "draw_tron_panel",
                 wraps=leaderboard_menu.draw_tron_panel,
             ) as draw_panel,
-            unittest.mock.patch.object(
+            mock.patch.object(
                 leaderboard_menu,
                 "draw_corner_chip",
                 wraps=leaderboard_menu.draw_corner_chip,
@@ -408,7 +409,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             "escape_hint_back": "Esc back",
             "escape_hint_quit": "Q quit",
         }
-        with unittest.mock.patch.object(
+        with mock.patch.object(
             launcher_menu_view,
             "active_key_profile",
             return_value="default",

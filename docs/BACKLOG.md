@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-17  
+Updated: 2026-04-18
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -257,6 +257,15 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-04-18:
+
+- shared menu pointer-activation fix so `MenuRunner` now owns mouse
+  hover/press/release hit-testing for launcher and pause rows/action-group
+  chips, the leaderboard name-entry prompt buttons and leaderboard shell
+  `Back` chip now route through real pointer targets instead of keyboard-only
+  handling, and the bot-options shell `Back` affordance follows the same
+  visible-bounds click contract
 
 Completed on 2026-04-17:
 

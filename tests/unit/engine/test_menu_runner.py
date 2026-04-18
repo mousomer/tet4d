@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pygame
 
+from tet4d.ui.pygame.menu import menu_runner
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
 
 
@@ -94,7 +95,12 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
             menus=menus,
             start_menu_id="root",
             action_registry=registry,
-            render_menu=lambda *_args: None,
+            render_menu=lambda *_args: (
+                menu_runner.MenuPointerTarget(
+                    kind="back",
+                    rect=pygame.Rect(18, 18, 80, 34),
+                ),
+            ),
             on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
             or True,
         )
@@ -104,9 +110,17 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
             "get",
             return_value=[
                 pygame.event.Event(
+                    pygame.MOUSEMOTION,
+                    {"pos": (24, 24)},
+                ),
+                pygame.event.Event(
                     pygame.MOUSEBUTTONDOWN,
                     {"button": 1, "pos": (24, 24)},
-                )
+                ),
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONUP,
+                    {"button": 1, "pos": (24, 24)},
+                ),
             ],
         ):
             runner.run()

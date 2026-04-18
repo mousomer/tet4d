@@ -95,6 +95,7 @@ from tet4d.engine.runtime.topology_explorer_runtime import (
     load_runtime_explorer_topology_profile,
 )
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
+from tet4d.ui.pygame.menu.menu_runner import MenuPointerTarget
 
 
 BG_TOP = (14, 18, 44)
@@ -826,9 +827,11 @@ def run() -> None:
         selected: int,
         depth: int,
         selected_action_indexes: dict[str, int],
-    ) -> None:
+        hovered_target: MenuPointerTarget | None,
+        pressed_target: MenuPointerTarget | None,
+    ) -> tuple[MenuPointerTarget, ...]:
         pygame.display.set_caption(_GAME_TITLE)
-        draw_main_menu(
+        targets = draw_main_menu(
             session.screen,
             fonts_nd,
             menu_title=title,
@@ -847,8 +850,11 @@ def run() -> None:
             text_color=TEXT_COLOR,
             highlight_color=HIGHLIGHT_COLOR,
             muted_color=MUTED_COLOR,
+            hovered_target=hovered_target,
+            pressed_target=pressed_target,
         )
         pygame.display.flip()
+        return targets
 
     runner = MenuRunner(
         menus=_MENU_GRAPH,
