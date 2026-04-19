@@ -855,7 +855,8 @@ class TestMenuSettingsPersistence(unittest.TestCase):
         self.assertIn("topology_advanced", settings)
         self.assertIn("kick_level_index", settings)
         self.assertIn("endgame_preset_id", settings)
-        self.assertIn("endgame_interaction_mode", settings)
+        self.assertIn("endgame_boundary_response", settings)
+        self.assertIn("endgame_particle_collisions", settings)
         self.assertIn("rotation_animation_duration_ms_2d", settings)
         self.assertIn("rotation_animation_duration_ms_nd", settings)
         self.assertIn("translation_animation_duration_ms", settings)
@@ -868,7 +869,14 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             settings["endgame_preset_id"],
             ("default_orbit", "wrap_all", "invert_all", "sphere"),
         )
-        self.assertIn(settings["endgame_interaction_mode"], ("none", "collide"))
+        self.assertIn(
+            settings["endgame_boundary_response"],
+            ("escape", "bounce"),
+        )
+        self.assertIn(
+            settings["endgame_particle_collisions"],
+            ("off", "on"),
+        )
         self.assertGreaterEqual(settings["lines_per_level"], 1)
         self.assertIn(
             settings["rotation_animation_mode"],
@@ -884,7 +892,8 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             topology_advanced=1,
             kick_level_index=2,
             endgame_preset_id="sphere",
-            endgame_interaction_mode="collide",
+            endgame_boundary_response="bounce",
+            endgame_particle_collisions="on",
             auto_speedup_enabled=0,
             lines_per_level=17,
             rotation_animation_mode="cellwise_sliding",
@@ -900,7 +909,8 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             self.assertEqual(mode_settings["topology_advanced"], 1)
             self.assertEqual(mode_settings["kick_level_index"], 2)
             self.assertEqual(mode_settings["endgame_preset_id"], "sphere")
-            self.assertEqual(mode_settings["endgame_interaction_mode"], "collide")
+            self.assertEqual(mode_settings["endgame_boundary_response"], "bounce")
+            self.assertEqual(mode_settings["endgame_particle_collisions"], "on")
             self.assertEqual(mode_settings["auto_speedup_enabled"], 0)
             self.assertEqual(mode_settings["lines_per_level"], 17)
             self.assertEqual(

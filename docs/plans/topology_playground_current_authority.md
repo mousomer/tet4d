@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file
 Supersedes: older topology-playground manifests and stage plans
-Last updated: 2026-04-17
+Last updated: 2026-04-18
 
 ## Purpose
 
@@ -143,6 +143,15 @@ Transitional debt belongs in
   sandbox piece, and must remain visually distinct from sandbox piece cells.
 - Sandbox `Neighbors` and Editor `Probe Neighbors` are distinct overlays with
   distinct ownership and must stay documented and implemented separately.
+- The main launcher owns the true standalone `Explosion Simulator` surface.
+- Sandbox may explicitly launch the standalone locked-cell explosion simulator
+  from the current sandbox cell population. That explosion path is explorer-
+  owned, must consume current canonical topology/profile inputs, must open the
+  same dedicated simulator surface used by the launcher rather than an
+  in-scene overlay, must not inherit gameplay-only legality or lock-state
+  ownership, and must keep the simulator on the true board-native explosion
+  view path rather than regressing explorer launches back to projection-only
+  panes.
 
 ### Shell-level readability
 

@@ -159,7 +159,8 @@ def _advance_simulation(
 def _capture_endgame_snapshot_2d(loop: LoopContext2D):
     (
         preset_id,
-        interaction_mode,
+        boundary_response,
+        particle_collisions,
         relic_speed_percent,
         shatter_speed_percent,
     ) = mode_endgame_settings("2d")
@@ -179,9 +180,13 @@ def _capture_endgame_snapshot_2d(loop: LoopContext2D):
         base_seed=int(loop.cfg.rng_seed),
         render_context=EndgameRenderContext(mode_key="2d"),
         preset_id=preset_id,
-        interaction_mode=interaction_mode,
+        boundary_response=boundary_response,
+        particle_collisions=particle_collisions,
         relic_speed_scale=float(relic_speed_percent) / 100.0,
         shatter_speed_scale=float(shatter_speed_percent) / 100.0,
+        topology_edge_rules=loop.cfg.topology_edge_rules,
+        explorer_topology_profile=loop.cfg.explorer_topology_profile,
+        explorer_transport=loop.cfg.explorer_transport,
     )
 
 
@@ -212,6 +217,8 @@ def _update_feedback_and_animation(
             current_elapsed_ms=float(loop.endgame_animation.elapsed_ms),
             tuning=loop.endgame_animation.tuning,
         ):
+            play_sfx(event_name)
+        for event_name in loop.endgame_animation.consume_audio_events():
             play_sfx(event_name)
         loop.terminal_phase = loop.endgame_animation.phase
         loop.clear_anim_levels = ()

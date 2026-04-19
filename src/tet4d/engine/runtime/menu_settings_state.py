@@ -317,11 +317,12 @@ def mode_rotation_animation_mode(mode_key: str) -> str:
     return str(settings["rotation_animation_mode"])
 
 
-def mode_endgame_settings(mode_key: str) -> tuple[str, str, int, int]:
+def mode_endgame_settings(mode_key: str) -> tuple[str, str, str, int, int]:
     settings = mode_shared_gameplay_settings(mode_key)
     return (
         str(settings["endgame_preset_id"]),
-        str(settings["endgame_interaction_mode"]),
+        str(settings["endgame_boundary_response"]),
+        str(settings["endgame_particle_collisions"]),
         int(settings["endgame_relic_speed_percent"]),
         int(settings["endgame_shatter_speed_percent"]),
     )
@@ -345,7 +346,8 @@ def save_shared_gameplay_settings(
     topology_advanced: int,
     kick_level_index: int,
     endgame_preset_id: str,
-    endgame_interaction_mode: str,
+    endgame_boundary_response: str,
+    endgame_particle_collisions: str,
     auto_speedup_enabled: int,
     lines_per_level: int,
     rotation_animation_mode: str,
@@ -361,7 +363,8 @@ def save_shared_gameplay_settings(
         "topology_advanced": int(topology_advanced),
         "kick_level_index": int(kick_level_index),
         "endgame_preset_id": str(endgame_preset_id),
-        "endgame_interaction_mode": str(endgame_interaction_mode),
+        "endgame_boundary_response": str(endgame_boundary_response),
+        "endgame_particle_collisions": str(endgame_particle_collisions),
         "endgame_relic_speed_percent": int(
             clamp_endgame_speed_percent(endgame_relic_speed_percent, default=100)
         ),

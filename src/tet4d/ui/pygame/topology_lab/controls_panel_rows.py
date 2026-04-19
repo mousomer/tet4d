@@ -77,6 +77,7 @@ def _explorer_rows(state: TopologyLabState) -> tuple[_RowSpec, ...]:
             (
                 _RowSpec("piece_set", "Piece Set"),
                 _RowSpec("sandbox_neighbor_search", "Neighbors"),
+                _RowSpec("sandbox_explode", "Explode Cells"),
             )
         )
         return tuple(rows)
@@ -152,6 +153,7 @@ def _row_supports_step_adjustment(row: _RowSpec) -> bool:
             "analysis_transform",
             "apply_glue",
             "remove_glue",
+            "sandbox_explode",
             "save_profile",
             "export",
             "experiments",

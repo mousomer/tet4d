@@ -31,6 +31,7 @@ def draw_scene(
     sandbox_cells: tuple[tuple[int, ...], ...] | None = None,
     sandbox_valid: bool | None = None,
     sandbox_message: str = "",
+    explosion_particles=None,
     view: object | None = None,
 ) -> list[TopologyLabHitTarget]:
     del basis_arrows, view
@@ -56,6 +57,7 @@ def draw_scene(
         sandbox_cells=sandbox_cells,
         sandbox_valid=sandbox_valid,
         sandbox_message=sandbox_message,
+        explosion_particles=explosion_particles,
     )
 
 

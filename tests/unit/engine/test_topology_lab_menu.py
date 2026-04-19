@@ -36,6 +36,7 @@ from tet4d.ui.pygame.keybindings import KEYS_2D, KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
 from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_control_values
+from tet4d.ui.pygame.topology_lab import explosion as topology_lab_explosion
 from tet4d.ui.pygame.topology_lab import scene_preview_state as topology_lab_scene_preview_state
 from tet4d.ui.pygame.topology_lab import scene_state as topology_lab_scene_state
 from tet4d.ui.pygame.topology_lab import scene_state_canonical as topology_lab_scene_state_canonical
@@ -1152,6 +1153,67 @@ class TestTopologyLabMenu(unittest.TestCase):
         apply_sandbox_step.assert_not_called()
         handle_camera.assert_not_called()
         cycle_piece.assert_called_once_with(state, 1)
+
+    def test_sandbox_explosion_prepares_dedicated_surface_from_current_cells(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        topology_lab_menu.spawn_sandbox_piece(state)
+
+        ok, message = topology_lab_explosion.start_sandbox_explosion(state)
+
+        self.assertTrue(ok, message)
+        self.assertIn("launched", message)
+        self.assertIsNotNone(state.pending_explosion_surface_state)
+        pending = state.pending_explosion_surface_state
+        assert pending is not None
+        self.assertEqual(
+            pending.topology_profile_override,
+            topology_lab_menu._current_explorer_profile(state),
+        )
+        self.assertEqual(
+            pending.board_dims_override,
+            topology_lab_menu._board_dims_for_state(state),
+        )
+        self.assertTrue(pending.occupied_cells_override)
+
+    def test_sandbox_shortcut_x_routes_to_explosion_launch(self) -> None:
+        state = self._explorer_state(2)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        state.active_pane = topology_lab_menu.PANE_SCENE
+        with patch.object(
+            topology_lab_controls_panel,
+            "start_sandbox_explosion",
+            return_value=(True, "Sandbox explosion launched"),
+        ) as launch_explosion:
+            topology_lab_menu._dispatch_key(state, pygame.K_x)
+        launch_explosion.assert_called_once_with(state)
+
+    def test_pending_explosion_preview_runs_dedicated_simulator_surface(self) -> None:
+        state = self._explorer_state(2)
+        pending = SimpleNamespace(running=True)
+        state.pending_explosion_surface_state = pending
+        screen = object()
+        fonts = object()
+
+        with patch.object(
+            topology_lab_menu,
+            "run_standalone_explosion_launcher",
+            return_value=(True, "Explosion simulator closed"),
+        ) as run_launcher:
+            topology_lab_menu._handle_pending_explosion_preview(
+                state,
+                screen,
+                fonts,
+            )
+
+        run_launcher.assert_called_once_with(
+            screen,
+            fonts,
+            initial_state=pending,
+        )
+        self.assertIsNone(state.pending_explosion_surface_state)
+        self.assertEqual(state.status, "Explosion simulator closed")
+        self.assertFalse(state.status_error)
 
     def test_sandbox_right_click_boundary_stays_in_sandbox(self) -> None:
         state = self._explorer_state(3)

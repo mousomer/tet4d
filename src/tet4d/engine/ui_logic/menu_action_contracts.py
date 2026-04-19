@@ -31,6 +31,7 @@ LAUNCHER_ACTION_IDS: frozenset[str] = frozenset(
         "leaderboard",
         "bot_options",
         "topology_lab",
+        "locked_cell_explosion",
         "quit",
     }
 )

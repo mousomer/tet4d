@@ -52,7 +52,8 @@ Shared gameplay persistence including random type, seed, topology toggles, endga
 - `settings.2d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.2d.topology_profile_index`: `0`; integer; min: 0; default option: Bounded; choices: 0=Bounded, 1=Wrap X only, 2=Invert X only
 - `settings.2d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
-- `settings.2d.endgame_interaction_mode`: `"none"`; string; options: none, collide
+- `settings.2d.endgame_boundary_response`: `"escape"`; string; options: escape, bounce
+- `settings.2d.endgame_particle_collisions`: `"off"`; string; options: off, on
 - `settings.2d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
 - `settings.2d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
 - `settings.2d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
@@ -93,7 +94,8 @@ Shared gameplay persistence including random type, seed, topology toggles, endga
 - `settings.3d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.3d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.3d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
-- `settings.3d.endgame_interaction_mode`: `"none"`; string; options: none, collide
+- `settings.3d.endgame_boundary_response`: `"escape"`; string; options: escape, bounce
+- `settings.3d.endgame_particle_collisions`: `"off"`; string; options: off, on
 - `settings.3d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
 - `settings.3d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
 - `settings.3d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
@@ -136,7 +138,8 @@ Shared gameplay persistence including random type, seed, topology toggles, endga
 - `settings.4d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
 - `settings.4d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
 - `settings.4d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
-- `settings.4d.endgame_interaction_mode`: `"none"`; string; options: none, collide
+- `settings.4d.endgame_boundary_response`: `"escape"`; string; options: escape, bounce
+- `settings.4d.endgame_particle_collisions`: `"off"`; string; options: off, on
 - `settings.4d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
 - `settings.4d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
 - `settings.4d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On

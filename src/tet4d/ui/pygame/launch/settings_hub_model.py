@@ -10,7 +10,8 @@ from tet4d.engine.gameplay.rotation_anim import (
     ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
 )
 from tet4d.engine.runtime.endgame_presets import (
-    ENDGAME_INTERACTION_MODES,
+    ENDGAME_BOUNDARY_RESPONSES,
+    ENDGAME_PARTICLE_COLLISION_MODES,
     ENDGAME_PRESET_IDS,
 )
 from tet4d.engine.runtime.menu_config import (
@@ -50,8 +51,11 @@ _ROTATION_ANIMATION_MODE_LABELS = tuple(
     _SETTINGS_OPTION_LABELS["game_rotation_animation_mode"]
 )
 _ENDGAME_PRESET_LABELS = tuple(_SETTINGS_OPTION_LABELS["game_endgame_preset"])
-_ENDGAME_INTERACTION_LABELS = tuple(
-    _SETTINGS_OPTION_LABELS["game_endgame_interaction_mode"]
+_ENDGAME_BOUNDARY_RESPONSE_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["game_endgame_boundary_response"]
+)
+_ENDGAME_PARTICLE_COLLISION_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["game_endgame_particle_collisions"]
 )
 _ROTATION_ANIMATION_MODE_VALUES = (
     ROTATION_ANIMATION_MODE_CELLWISE_SLIDING,
@@ -70,8 +74,11 @@ _KICK_LEVEL_DEFAULT = int(_DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["kick_level_ind
 _ENDGAME_PRESET_DEFAULT = str(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_preset_id"]
 )
-_ENDGAME_INTERACTION_MODE_DEFAULT = str(
-    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_interaction_mode"]
+_ENDGAME_BOUNDARY_RESPONSE_DEFAULT = str(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_boundary_response"]
+)
+_ENDGAME_PARTICLE_COLLISIONS_DEFAULT = str(
+    _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_particle_collisions"]
 )
 _ENDGAME_RELIC_SPEED_DEFAULT = int(
     _DEFAULT_MODE_SHARED_GAMEPLAY_SETTINGS["endgame_relic_speed_percent"]
@@ -127,7 +134,8 @@ class _UnifiedSettingsState:
     topology_advanced: int
     kick_level_index: int
     endgame_preset_id: str
-    endgame_interaction_mode: str
+    endgame_boundary_response: str
+    endgame_particle_collisions: str
     endgame_relic_speed_percent: int
     endgame_shatter_speed_percent: int
     auto_speedup_enabled: int
@@ -145,7 +153,8 @@ class _UnifiedSettingsState:
     original_topology_advanced: int
     original_kick_level_index: int
     original_endgame_preset_id: str
-    original_endgame_interaction_mode: str
+    original_endgame_boundary_response: str
+    original_endgame_particle_collisions: str
     original_endgame_relic_speed_percent: int
     original_endgame_shatter_speed_percent: int
     original_auto_speedup_enabled: int
@@ -385,13 +394,24 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         return label_by_value.get(
             str(state.endgame_preset_id), str(state.endgame_preset_id)
         )
-    if row_key == "endgame_interaction_mode":
+    if row_key == "endgame_boundary_response":
         label_by_value = dict(
-            zip(ENDGAME_INTERACTION_MODES, _ENDGAME_INTERACTION_LABELS)
+            zip(ENDGAME_BOUNDARY_RESPONSES, _ENDGAME_BOUNDARY_RESPONSE_LABELS)
         )
         return label_by_value.get(
-            str(state.endgame_interaction_mode),
-            str(state.endgame_interaction_mode),
+            str(state.endgame_boundary_response),
+            str(state.endgame_boundary_response),
+        )
+    if row_key == "endgame_particle_collisions":
+        label_by_value = dict(
+            zip(
+                ENDGAME_PARTICLE_COLLISION_MODES,
+                _ENDGAME_PARTICLE_COLLISION_LABELS,
+            )
+        )
+        return label_by_value.get(
+            str(state.endgame_particle_collisions),
+            str(state.endgame_particle_collisions),
         )
     if row_key == "game_topology_advanced":
         return "ON" if int(state.topology_advanced) else "OFF"
@@ -422,7 +442,8 @@ def build_unified_settings_state(
     topology_advanced = int(mode_gameplay["topology_advanced"])
     kick_level_index = int(mode_gameplay["kick_level_index"])
     endgame_preset_id = str(mode_gameplay["endgame_preset_id"])
-    endgame_interaction_mode = str(mode_gameplay["endgame_interaction_mode"])
+    endgame_boundary_response = str(mode_gameplay["endgame_boundary_response"])
+    endgame_particle_collisions = str(mode_gameplay["endgame_particle_collisions"])
     endgame_relic_speed_percent = int(mode_gameplay["endgame_relic_speed_percent"])
     endgame_shatter_speed_percent = int(
         mode_gameplay["endgame_shatter_speed_percent"]
@@ -455,7 +476,8 @@ def build_unified_settings_state(
         topology_advanced=topology_advanced,
         kick_level_index=kick_level_index,
         endgame_preset_id=endgame_preset_id,
-        endgame_interaction_mode=endgame_interaction_mode,
+        endgame_boundary_response=endgame_boundary_response,
+        endgame_particle_collisions=endgame_particle_collisions,
         endgame_relic_speed_percent=endgame_relic_speed_percent,
         endgame_shatter_speed_percent=endgame_shatter_speed_percent,
         auto_speedup_enabled=auto_speedup_enabled,
@@ -473,7 +495,8 @@ def build_unified_settings_state(
         original_topology_advanced=topology_advanced,
         original_kick_level_index=kick_level_index,
         original_endgame_preset_id=endgame_preset_id,
-        original_endgame_interaction_mode=endgame_interaction_mode,
+        original_endgame_boundary_response=endgame_boundary_response,
+        original_endgame_particle_collisions=endgame_particle_collisions,
         original_endgame_relic_speed_percent=endgame_relic_speed_percent,
         original_endgame_shatter_speed_percent=endgame_shatter_speed_percent,
         original_auto_speedup_enabled=auto_speedup_enabled,

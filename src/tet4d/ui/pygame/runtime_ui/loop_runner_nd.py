@@ -224,6 +224,8 @@ def _update_loop_effects(
             tuning=loop.endgame_animation.tuning,
         ):
             play_endgame_sfx(event_name)
+        for event_name in loop.endgame_animation.consume_audio_events():
+            play_endgame_sfx(event_name)
         loop.terminal_phase = loop.endgame_animation.phase
         loop.clear_anim = None
         loop.last_lines_cleared = loop.state.lines_cleared

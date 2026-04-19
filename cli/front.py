@@ -3,7 +3,6 @@ import argparse
 import sys
 from pathlib import Path
 from dataclasses import dataclass
-from types import SimpleNamespace
 
 
 def _parse_cli_args(argv=None):
@@ -42,6 +41,9 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
 from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
+from tet4d.ui.pygame.locked_cell_explosion.launcher import (
+    run_standalone_explosion_launcher_action,
+)
 from tet4d.ui.pygame.topology_lab.entrypoint import (
     parse_topology_playground_dimension,
     run_direct_topology_playground,
@@ -547,13 +549,27 @@ def _menu_action_topology_lab(
         fonts_2d=fonts_2d,
         gameplay_mode="explorer",
         entry_source="launcher",
-        source_settings=_mode_settings_snapshot(mode),
+        source_settings=mode_settings_snapshot_for_dimension(int(mode[0])),
     )
     ok, msg = run_explorer_playground(session.screen, fonts_nd, launch=launch)
     _persist_session_status(state, session)
     state.status = msg
     state.status_error = not ok
     return not session.running
+
+
+def _menu_action_locked_cell_explosion(
+    state: MainMenuState,
+    session: _LauncherSession,
+    fonts_nd,
+) -> bool:
+    return run_standalone_explosion_launcher_action(
+        state,
+        session,
+        fonts_nd,
+        persist_session_status=_persist_session_status,
+    )
+
 
 def _menu_action_legacy_topology_editor(
     state: MainMenuState,
@@ -572,10 +588,6 @@ def _menu_action_legacy_topology_editor(
     state.status_error = not ok
     return not session.running
 
-def _mode_settings_snapshot(mode: str) -> SimpleNamespace:
-    return mode_settings_snapshot_for_dimension(int((mode if mode in {"2d", "3d", "4d"} else "2d")[0]))
-
-
 def _menu_action_play_last_custom_topology(
     state: MainMenuState,
     session: _LauncherSession,
@@ -591,7 +603,7 @@ def _menu_action_play_last_custom_topology(
         fonts_2d=fonts_2d,
         gameplay_mode="explorer",
         entry_source="explorer",
-        source_settings=_mode_settings_snapshot(mode),
+        source_settings=mode_settings_snapshot_for_dimension(int(mode[0])),
     )
     from tet4d.ui.pygame import front2d_game, front3d_game, front4d_game
 
@@ -706,6 +718,10 @@ def _build_action_registry(
     register(
         "topology_lab",
         lambda: _menu_action_topology_lab(state, session, fonts_nd, fonts_2d),
+    )
+    register(
+        "locked_cell_explosion",
+        lambda: _menu_action_locked_cell_explosion(state, session, fonts_nd),
     )
     register(
         "settings_legacy_topology_editor",

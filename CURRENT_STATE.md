@@ -54,6 +54,25 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   heuristics; explorer-mode traversal legality still allows those non-safe
   seam traversals, while gameplay-only rigid restrictions remain gameplay-
   owned.
+- Current locked-cell explosion contract is:
+  `src/tet4d/ui/pygame/locked_cell_explosion/` owns standalone particle-state,
+  seam/boundary transport, explicit `boundary_response` (`escape` / `bounce`)
+  plus `particle_collisions` (`off` / `on`) handling, engine-backed render
+  state projection, and class-prioritized aggregated audio; connected seams
+  must transport both position and velocity, non-connected boundaries must
+  obey only `boundary_response`, the main launcher now exposes a direct
+  standalone `Explosion Simulator` surface backed by the explorer topology
+  preset registry rather than a simulator-local topology list, topology-
+  playground `Sandbox` now launches that same dedicated simulator surface
+  seeded from current sandbox cells/topology instead of an in-scene overlay,
+  `3D` / `4D` simulator preview now defaults to true board-native views
+  instead of topology-playground projection panes, standalone/explorer source
+  selection now includes engine-backed `single_cell`, `single_piece`, and
+  deterministic `piece_change` snapshots plus inherited-state handoff,
+  shared simulation state now tracks live total kinetic energy, wrapped
+  simulator rows/footer text must remain unobscured, and game-end render/audio
+  handoff must route through the shared controller rather than gameplay
+  tetromino ownership.
 - Governance after the policy-pack migration stays locked to:
   `config/project/policy_pack.json` for machine-readable policy,
   `docs/WORKFLOW_CODEX.md` for human workflow, and `CURRENT_STATE.md` for
@@ -116,15 +135,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 219` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 234` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 4.81` (`low`)
+- `tech_debt.score = 4.91` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.25`
+1. `delivery_size_pressure = 2.35`
 2. `code_balance = 1.31`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -135,18 +154,18 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3667` real LOC
-2. `src/tet4d/ui/pygame/endgame_animation.py`: `2145` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3722` real LOC
+2. `src/tet4d/ui/pygame/endgame_animation.py`: `2237` real LOC
 3. `scripts/arch_metrics.py`: `1890` real LOC
 4. `src/tet4d/ui/pygame/front4d_render.py`: `1729` real LOC
 5. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 6. `tools/governance/validate_project_contracts.py`: `1368` real LOC
 7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1344` real LOC
-8. `tools/governance/generate_configuration_reference.py`: `989` real LOC
+8. `src/tet4d/ui/pygame/locked_cell_explosion/launcher.py`: `1238` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 825/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 840/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
@@ -201,5 +220,13 @@ CODEX_MODE=1 ./scripts/verify.sh
   non-safe seam traversals transport-derived instead of re-pairing cells from
   unordered destination sets while explorer-mode traversal legality still
   allows those non-safe crossings.
+- Keep the locked-cell explosion contract explicit: standalone simulator first,
+  explorer sandbox integration second, game-end handoff third; preserve
+  velocity-aware seam transport, split `boundary_response` /
+  `particle_collisions` semantics, keep true board-native `3D` / `4D`
+  simulator views plus engine-backed snapshot sources/kinetic-energy display,
+  and preserve class-prioritized aggregated audio
+  instead of reintroducing gameplay-object ownership or one-sound-per-event
+  playback.
 - Keep governance edits pack-driven and update workflow/backlog/current-state
   docs together when boundary rules change.

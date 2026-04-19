@@ -6,7 +6,7 @@
     "keybindings": "keybindings_root"
   },
   "launcher_subtitles": {
-    "launcher_root": "Play, continue, open Tutorials, or jump straight into the Topology Playground.",
+    "launcher_root": "Play, continue, open Tutorials, jump straight into the Topology Playground, or launch the Explosion Simulator directly.",
     "launcher_play": "Choose a dimension, use Left/Right to switch between Play and Setup, reopen the last custom topology, or use play-adjacent tools.",
     "launcher_tutorials": "Choose guided learning, controls reference, or support.",
     "launcher_tutorials_interactive": "Select an interactive tutorial pack.",
@@ -106,6 +106,12 @@
           "type": "action",
           "label": "Topology Playground",
           "action_id": "topology_lab"
+        },
+        {
+          "id": "launcher_locked_cell_explosion",
+          "type": "action",
+          "label": "Explosion Simulator",
+          "action_id": "locked_cell_explosion"
         },
         {
           "id": "launcher_settings",
@@ -410,10 +416,16 @@
           "setting_id": "endgame_preset_id"
         },
         {
-          "id": "endgame_interaction_mode",
+          "id": "endgame_boundary_response",
           "type": "selector",
-          "label": "Relic interaction",
-          "setting_id": "endgame_interaction_mode"
+          "label": "Boundary response",
+          "setting_id": "endgame_boundary_response"
+        },
+        {
+          "id": "endgame_particle_collisions",
+          "type": "selector",
+          "label": "Particle collisions",
+          "setting_id": "endgame_particle_collisions"
         },
         {
           "id": "endgame_relic_speed_percent",
@@ -983,9 +995,13 @@
       "Invert all",
       "Sphere"
     ],
-    "game_endgame_interaction_mode": [
-      "No collisions",
-      "Collide"
+    "game_endgame_boundary_response": [
+      "Escape",
+      "Bounce"
+    ],
+    "game_endgame_particle_collisions": [
+      "Off",
+      "On"
     ]
   },
   "bot_options_rows": [
@@ -1186,7 +1202,7 @@
     {
       "id": "endgame_effects",
       "label": "Endgame Effects",
-      "description": "Persistent post-shatter relic preset, interaction, and speed controls grouped inside the Game settings page."
+      "description": "Persistent post-shatter relic preset, boundary response, particle collision, and speed controls grouped inside the Game settings page."
     },
     {
       "id": "display",

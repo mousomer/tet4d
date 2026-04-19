@@ -67,7 +67,7 @@ Define requirements for the classic `(x, y)` mode implemented by:
 6. 2D projection guides must derive from active-piece render state only, follow animated piece motion while the board shadow stays stable, and remain visually distinct from ghost/locked/active cells.
 7. 2D keeps the simpler board-layering path; it must not depend on the projected-depth board-line occlusion machinery used by projected `3D` / `4D` renderers.
 8. Line clear should be animated.
-9. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with split grid/edge shell segments dying in a finite rupture while locked-cell squares survive as deterministic bounded planar relic loops driven by the shared endgame preset system (`wrap_all`, `invert_all`, `sphere`, plus the generic fallback orbit preset) and the separate `none` / `collide` interaction mode.
+9. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with split grid/edge shell segments dying in a finite rupture while locked-cell squares hand off to the dedicated seam-aware explosion subsystem as planar cell particles. Connected seams must transport both position and velocity, non-connected boundaries must obey `boundary_response` (`escape` / `bounce`), and particle-particle resolution must obey the separate `particle_collisions` (`off` / `on`) axis.
 
 ## 6. Scoring
 
@@ -97,7 +97,7 @@ Minimum required tests for 2D gameplay changes:
 5. scoring matrix checks,
 6. random/debug piece spawn stability checks.
 7. Bounded/wrap/invert kick-legality parity checks.
-8. Frozen-snapshot endgame animation tests covering deterministic shell/relic generation, gameplay-freeze handoff, shatter-to-relic-field transition, preset-specific persistent motion, bounded forever-field motion, collision determinism, and sparse/dense/near-full render-path regression.
+8. Frozen-snapshot endgame animation tests covering deterministic shell/explosion generation, gameplay-freeze handoff, shatter-to-relic-field transition, seam-aware particle transport, the full `boundary_response` / `particle_collisions` matrix, audio aggregation, and sparse/dense/near-full render-path regression.
 
 Relevant test files:
 - `tests/unit/engine/test_game2d.py`
@@ -113,4 +113,4 @@ Relevant test files:
 5. Random-cell 2D piece set is selectable and playable without crashes.
 6. Debug 2D piece set is selectable and supports easy line-fill validation.
 7. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
-8. Terminal animation stays simple and readable while remaining snapshot-driven, deterministic, and permanently populated by bounded planar relic motion after the shell dies.
+8. Terminal animation stays simple and readable while remaining snapshot-driven, deterministic, seam-aware, and visibly correct when planar particles bounce, traverse seams, or escape the board under `boundary_response=escape`.

@@ -253,6 +253,7 @@ def _handle_sandbox_shortcut(
     reset_sandbox_piece,
     rotate_sandbox_piece,
     rotate_sandbox_piece_action,
+    start_sandbox_explosion,
     set_status,
 ) -> bool:
     if (
@@ -296,6 +297,10 @@ def _handle_sandbox_shortcut(
             state,
             f"Sandbox trace {'shown' if state.sandbox.show_trace else 'hidden'}",
         )
+        return True
+    if key == pygame.K_x:
+        ok, message = start_sandbox_explosion(state)
+        set_status(state, message, is_error=not ok)
         return True
     return False
 
@@ -366,6 +371,7 @@ def handle_shortcut_key(
     rotate_sandbox_piece_action,
     run_export,
     save_profile,
+    start_sandbox_explosion,
     set_status,
 ) -> bool:
     return (
@@ -397,6 +403,7 @@ def handle_shortcut_key(
             reset_sandbox_piece=reset_sandbox_piece,
             rotate_sandbox_piece=rotate_sandbox_piece,
             rotate_sandbox_piece_action=rotate_sandbox_piece_action,
+            start_sandbox_explosion=start_sandbox_explosion,
             set_status=set_status,
         )
         or _handle_save_export_shortcut(
@@ -414,6 +421,41 @@ def handle_shortcut_key(
     )
 
 
+def _handle_enter_row_action(
+    state: TopologyLabState,
+    *,
+    row_key: str,
+    apply_explorer_glue,
+    remove_explorer_glue,
+    run_export,
+    run_experiments,
+    save_profile,
+    start_sandbox_explosion,
+) -> bool:
+    if row_key == "save_profile":
+        save_profile(state)
+        return True
+    if row_key == "export":
+        run_export(state)
+        return True
+    if row_key == "experiments":
+        run_experiments(state)
+        return True
+    if row_key == "apply_glue":
+        apply_explorer_glue(state)
+        return True
+    if row_key == "remove_glue":
+        remove_explorer_glue(state)
+        return True
+    if row_key == "sandbox_explode":
+        start_sandbox_explosion(state)
+        return True
+    if row_key == "back":
+        state.running = False
+        return True
+    return False
+
+
 def handle_enter_key(
     state: TopologyLabState,
     selectable: tuple[int, ...],
@@ -425,29 +467,23 @@ def handle_enter_key(
     run_export,
     run_experiments,
     save_profile,
+    start_sandbox_explosion,
 ) -> None:
     if scene_pane_active(state):
         if uses_general_explorer_editor(state) and state.active_tool == TOOL_PLAY:
             state.play_preview_requested = True
         return
     row = _rows_for_state(state)[selectable[state.selected]]
-    if row.key == "save_profile":
-        save_profile(state)
-        return
-    if row.key == "export":
-        run_export(state)
-        return
-    if row.key == "experiments":
-        run_experiments(state)
-        return
-    if row.key == "apply_glue":
-        apply_explorer_glue(state)
-        return
-    if row.key == "remove_glue":
-        remove_explorer_glue(state)
-        return
-    if row.key == "back":
-        state.running = False
+    if _handle_enter_row_action(
+        state,
+        row_key=row.key,
+        apply_explorer_glue=apply_explorer_glue,
+        remove_explorer_glue=remove_explorer_glue,
+        run_export=run_export,
+        run_experiments=run_experiments,
+        save_profile=save_profile,
+        start_sandbox_explosion=start_sandbox_explosion,
+    ):
         return
     if adjust_active_row(state, 1):
         play_sfx("menu_move")

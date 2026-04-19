@@ -122,6 +122,13 @@ from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
     _rows_for_state,
     _selectable_row_indexes,
 )
+from tet4d.ui.pygame.topology_lab.explosion import (
+    consume_pending_scene_explosion_launch,
+    step_scene_explosion,
+)
+from tet4d.ui.pygame.locked_cell_explosion.launcher import (
+    run_standalone_explosion_launcher,
+)
 from tet4d.ui.pygame.topology_lab.explorer_tools import draw_tool_ribbon
 from tet4d.ui.pygame.topology_lab.workspace_shell import (
     _action_buttons_for_state,
@@ -886,6 +893,7 @@ def _process_topology_lab_events(state: _TopologyLabState, dt_ms: float) -> None
         _process_single_topology_lab_event(state, event)
         if not state.running:
             return
+    step_scene_explosion(state, dt_ms=float(dt_ms), play_sfx=play_sfx)
     if _uses_general_explorer_editor(state):
         step_scene_camera(state.scene_camera, dt_ms)
         advance_pending_explorer_playability_analysis(state)
@@ -919,6 +927,23 @@ def _handle_pending_play_preview(
         display_settings=display_settings,
         exploration_mode=explore_requested,
     )
+
+
+def _handle_pending_explosion_preview(
+    state: _TopologyLabState,
+    screen: pygame.Surface,
+    fonts,
+) -> None:
+    pending_state = consume_pending_scene_explosion_launch(state)
+    if pending_state is None:
+        return
+    ok, message = run_standalone_explosion_launcher(
+        screen,
+        fonts,
+        initial_state=pending_state,
+    )
+    state.status = message
+    state.status_error = not ok
 
 
 def _finalize_topology_lab_result(state: _TopologyLabState) -> tuple[bool, str]:
@@ -965,6 +990,11 @@ def _run_playground_shell(
             fonts,
             fonts_2d=fonts_2d,
             display_settings=display_settings,
+        )
+        _handle_pending_explosion_preview(
+            state,
+            screen,
+            fonts,
         )
         _draw_menu(screen, fonts, state)
         pygame.display.flip()

@@ -27,6 +27,7 @@ from .piece_sandbox import (
     sandbox_cells,
     sandbox_validity,
 )
+from .explosion import scene_explosion_particles
 from .preview import build_preview_lines
 from .scene2d import draw_scene as draw_scene_2d
 from .scene3d import draw_scene as draw_scene_3d
@@ -351,6 +352,7 @@ def _draw_explorer_scene(
         sandbox_cells=sandbox_cells_payload,
         sandbox_valid=sandbox_ok,
         sandbox_message=sandbox_message,
+        explosion_particles=tuple(scene_explosion_particles(state)),
     )
     if state.dimension == 2:
         return draw_scene_2d(screen, fonts, **scene_kwargs)

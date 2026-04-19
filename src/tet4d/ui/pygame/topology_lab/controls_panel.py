@@ -92,6 +92,7 @@ from tet4d.ui.pygame.topology_lab.piece_sandbox import (
     rotate_sandbox_piece,
     rotate_sandbox_piece_action,
 )
+from tet4d.ui.pygame.topology_lab.explosion import start_sandbox_explosion
 from tet4d.ui.pygame.topology_lab.scene_state import (
     ExplorerPreviewCompileSignature,
     TOOL_EDIT,
@@ -611,6 +612,7 @@ def _handle_shortcut_key(state: _TopologyLabState, key: int, *, mod: int = 0) ->
         rotate_sandbox_piece_action=rotate_sandbox_piece_action,
         run_export=_run_export,
         save_profile=_save_profile,
+        start_sandbox_explosion=start_sandbox_explosion,
         set_status=_set_status,
     )
 
@@ -626,6 +628,7 @@ def _handle_enter_key(state: _TopologyLabState, selectable: tuple[int, ...]) -> 
         run_export=_run_export,
         run_experiments=_run_experiments,
         save_profile=_save_profile,
+        start_sandbox_explosion=start_sandbox_explosion,
     )
 
 

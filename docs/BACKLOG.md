@@ -105,6 +105,21 @@ translation tweening must preserve gameplay-owned per-cell identity for
 ordinary moves and safe seam traversals, while non-safe seam traversals still
 follow explicit transport semantics instead of rematching destination minos by
 set-based heuristics or shuffling cells across the board mid-tween.
+Parallel locked-cell explosion follow-up (2026-04-18): game-over and sandbox
+explosions now need to stay on the dedicated standalone-first particle
+subsystem, keep connected-seam transport transforming both position and
+velocity, preserve non-connected `boundary_response=escape` semantics instead
+of clamp/kill/reflect, split boundary response from particle collisions, and
+keep audio emission aggregated/rate-limited under dense scenes. Dedicated
+simulator follow-up (2026-04-18): keep the standalone/explorer simulator UI,
+but rebase it onto the existing explorer topology preset registry and native
+`2D` / `3D` / `4D` scene render paths instead of a simulator-local topology
+list and circle/scatterplot rendering. Board-view follow-up (2026-04-18):
+keep that dedicated simulator UI, but upgrade `3D` / `4D` to true board-native
+views, add engine-backed `single_cell` / `single_piece` / `piece_change`
+snapshot sources plus inherited-state handoff, expose shared-core kinetic
+energy in the simulator UI, and keep wrapped simulator text/layout from
+clipping or overlapping.
 
 Batch 3 progress (2026-04-17): topology-playground explorer row mutation and
 seam-edit helpers now live in
@@ -388,6 +403,27 @@ Completed on 2026-04-12:
   with `Gameplay`, `Board / Geometry`, `Movement / Rotation`,
   `Endgame Effects`, and `Difficulty / Pace` sections instead of a submenu
   forest
+
+Completed on 2026-04-18:
+
+- standalone-first locked-cell explosion subsystem landed under
+  `src/tet4d/ui/pygame/locked_cell_explosion/`, modeling frozen locked cells as
+  seam-aware particles with dedicated topology transport, explicit
+  `boundary_response` / `particle_collisions` axes, render projection helpers,
+  and class-prioritized seam/boundary/collision audio aggregation
+- topology-playground `Sandbox` can now launch that same standalone explosion
+  path directly from the current sandbox cell population for arbitrary explorer
+  topologies, while keeping the effect explorer-owned rather than gameplay-
+  legality-owned
+- game-end handoff now snapshots locked cells plus topology inputs into the
+  explosion subsystem, freezes gameplay progression, and routes locked-cell
+  render/audio ownership through the dedicated controller instead of live-board
+- regression correction (2026-04-18): the main launcher now exposes a direct
+  `Explosion Simulator` surface, the old collapsed interaction enum is retired,
+  explorer/game-end both route through the split `boundary_response` /
+  `particle_collisions` config, and particle-collision audio is heavily capped
+  so seam traversal stays readable under dense motion
+  movement code or tetromino ownership
 - menu normalization pass so runtime launcher/settings/keybindings consumers
   now read a compiled normalized graph rather than the raw authored menu tree,
   singleton wrappers are collapsed before render/input use, and the one-row

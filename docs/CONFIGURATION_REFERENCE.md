@@ -58,6 +58,21 @@ Parameters:
 - `events.endgame_pop.amplitude`: `0.1` (`float`)
 - `events.endgame_pop.duration_ms`: `68` (`int`)
 - `events.endgame_pop.frequency_hz`: `680.0` (`float`)
+- `events.explosion_bounce_dense.amplitude`: `0.07` (`float`)
+- `events.explosion_bounce_dense.duration_ms`: `56` (`int`)
+- `events.explosion_bounce_dense.frequency_hz`: `210.0` (`float`)
+- `events.explosion_bounce_soft.amplitude`: `0.05` (`float`)
+- `events.explosion_bounce_soft.duration_ms`: `40` (`int`)
+- `events.explosion_bounce_soft.frequency_hz`: `240.0` (`float`)
+- `events.explosion_collision_cluster.amplitude`: `0.03` (`float`)
+- `events.explosion_collision_cluster.duration_ms`: `42` (`int`)
+- `events.explosion_collision_cluster.frequency_hz`: `182.0` (`float`)
+- `events.explosion_seam_dense.amplitude`: `0.07` (`float`)
+- `events.explosion_seam_dense.duration_ms`: `52` (`int`)
+- `events.explosion_seam_dense.frequency_hz`: `610.0` (`float`)
+- `events.explosion_seam_soft.amplitude`: `0.05` (`float`)
+- `events.explosion_seam_soft.duration_ms`: `34` (`int`)
+- `events.explosion_seam_soft.frequency_hz`: `520.0` (`float`)
 - `events.game_over.amplitude`: `0.14` (`float`)
 - `events.game_over.duration_ms`: `220` (`int`)
 - `events.game_over.frequency_hz`: `130.0` (`float`)
@@ -997,7 +1012,8 @@ Parameters:
 - `settings.2d.bot_profile_index`: `1` (`int`)
 - `settings.2d.bot_speed_level`: `7` (`int`)
 - `settings.2d.challenge_layers`: `0` (`int`)
-- `settings.2d.endgame_interaction_mode`: `"none"` (`string`)
+- `settings.2d.endgame_boundary_response`: `"escape"` (`string`)
+- `settings.2d.endgame_particle_collisions`: `"off"` (`string`)
 - `settings.2d.endgame_preset_id`: `"default_orbit"` (`string`)
 - `settings.2d.endgame_relic_speed_percent`: `100` (`int`)
 - `settings.2d.endgame_shatter_speed_percent`: `100` (`int`)
@@ -1026,7 +1042,8 @@ Parameters:
 - `settings.3d.bot_speed_level`: `7` (`int`)
 - `settings.3d.challenge_layers`: `0` (`int`)
 - `settings.3d.depth`: `6` (`int`)
-- `settings.3d.endgame_interaction_mode`: `"none"` (`string`)
+- `settings.3d.endgame_boundary_response`: `"escape"` (`string`)
+- `settings.3d.endgame_particle_collisions`: `"off"` (`string`)
 - `settings.3d.endgame_preset_id`: `"default_orbit"` (`string`)
 - `settings.3d.endgame_relic_speed_percent`: `100` (`int`)
 - `settings.3d.endgame_shatter_speed_percent`: `100` (`int`)
@@ -1055,7 +1072,8 @@ Parameters:
 - `settings.4d.bot_speed_level`: `7` (`int`)
 - `settings.4d.challenge_layers`: `0` (`int`)
 - `settings.4d.depth`: `6` (`int`)
-- `settings.4d.endgame_interaction_mode`: `"none"` (`string`)
+- `settings.4d.endgame_boundary_response`: `"escape"` (`string`)
+- `settings.4d.endgame_particle_collisions`: `"off"` (`string`)
 - `settings.4d.endgame_preset_id`: `"default_orbit"` (`string`)
 - `settings.4d.endgame_relic_speed_percent`: `100` (`int`)
 - `settings.4d.endgame_shatter_speed_percent`: `100` (`int`)
@@ -1090,7 +1108,7 @@ Parameters:
 - `branding.signature_message`: `"Enjoy! Please contact me for criticisms, suggestions, requests, part...` (`string`)
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
 - `launcher_subtitles.launcher_play`: `"Choose a dimension, use Left/Right to switch between Play and Setup,...` (`string`)
-- `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, or jump straight into the Topology P...` (`string`)
+- `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, jump straight into the Topology Play...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Choose guided learning, controls reference, or support."` (`string`)
 - `launcher_subtitles.launcher_tutorials_interactive`: `"Select an interactive tutorial pack."` (`string`)
 - `menu_entrypoints.keybindings`: `"keybindings_root"` (`string`)
@@ -1161,7 +1179,7 @@ Parameters:
 - `menus.launcher_play.items[].type`: varies (`string`); examples: `"action_group"`, `"action"`
 - `menus.launcher_play.title`: `"Choose Mode"` (`string`)
 - `menus.launcher_root.items[]`: array[`object`]
-- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"topology_lab"`, `"settings"`
+- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"topology_lab"`, `"locked_cell_explosion"`
 - `menus.launcher_root.items[].id`: varies (`string`); examples: `"launcher_play"`, `"launcher_continue"`, `"launcher_tutorials"`
 - `menus.launcher_root.items[].label`: varies (`string`); examples: `"Play"`, `"Continue"`, `"Tutorials"`
 - `menus.launcher_root.items[].menu_id`: varies (`string`); examples: `"launcher_play"`, `"launcher_tutorials"`
@@ -1248,7 +1266,8 @@ Parameters:
 - `settings_category_metrics.legacy.field_count`: `0` (`int`)
 - `settings_category_metrics.legacy.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.legacy.top_level`: `false` (`bool`)
-- `settings_option_labels.game_endgame_interaction_mode[]`: array[`string`]; examples: `"No collisions"`, `"Collide"`
+- `settings_option_labels.game_endgame_boundary_response[]`: array[`string`]; examples: `"Escape"`, `"Bounce"`
+- `settings_option_labels.game_endgame_particle_collisions[]`: array[`string`]; examples: `"Off"`, `"On"`
 - `settings_option_labels.game_endgame_preset[]`: array[`string`]; examples: `"Orbit relic field"`, `"Wrap all"`, `"Invert all"`
 - `settings_option_labels.game_kick_level[]`: array[`string`]; examples: `"Off"`, `"Light"`, `"Standard"`
 - `settings_option_labels.game_random_mode[]`: array[`string`]; examples: `"Fixed seed"`, `"True random"`
@@ -1410,7 +1429,8 @@ Parameters:
 - `animation.endgame.collision_separation_bias`: `1.0` (`float`)
 - `animation.endgame.collision_velocity_sample_ms`: `18.0` (`float`)
 - `animation.endgame.crack_onset_duration_ms`: `220.0` (`float`)
-- `animation.endgame.default_interaction_mode`: `"none"` (`string`)
+- `animation.endgame.default_boundary_response`: `"escape"` (`string`)
+- `animation.endgame.default_particle_collisions`: `"off"` (`string`)
 - `animation.endgame.default_preset_id`: `"default_orbit"` (`string`)
 - `animation.endgame.enabled`: `true` (`bool`)
 - `animation.endgame.field_extent_multiplier`: `1.12` (`float`)

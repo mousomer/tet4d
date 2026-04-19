@@ -114,7 +114,7 @@ Viewer-consistent translation requirement:
 12. Active-piece animation must consume a frozen board-presentation snapshot for the full tween; helper marks, projected grid primitives, board anchor, and locked-cell projection must remain stable while only active-piece geometry changes over tween time.
 13. Shared render-only projection-guide modes must exist in 3D: `bottom_boundary` projects the active piece onto the gravity-axis bottom board plane, and `all_boundaries` projects it onto all relevant board planes.
 14. 3D projection guides must derive from active-piece render state against the frozen board presentation, follow animated piece motion in gameplay and explorer rendering, and remain visually distinct from ghost/locked/active cells.
-15. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with box/frame shell fragments dying in finite board/render-space rupture while locked cube relics transition into deterministic bounded preset-driven full-3-axis motion fields (`wrap_all`, `invert_all`, `sphere`, or the generic fallback orbit preset) before projection and without live-board mutation.
+15. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with box/frame shell fragments dying in finite board/render-space rupture while locked cubes hand off to the dedicated seam-aware explosion subsystem as full-3-axis cell particles before projection and without live-board mutation. Connected seams must transform both position and velocity, non-connected boundaries must obey `boundary_response` (`escape` / `bounce`), and particle-particle resolution must obey the separate `particle_collisions` (`off` / `on`) axis.
 
 ## 7. Scoring
 

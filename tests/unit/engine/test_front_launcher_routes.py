@@ -14,6 +14,7 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_NORMAL,
 )
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.ui.pygame.locked_cell_explosion import launcher as explosion_launcher
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry
 from tet4d.ui.pygame.topology_lab import entrypoint as topology_lab_entrypoint
@@ -137,7 +138,11 @@ class TestFrontLauncherRoutes(unittest.TestCase):
 
         with (
             patch.object(front, "_persist_session_status"),
-            patch.object(front, "_mode_settings_snapshot", return_value=SimpleNamespace()),
+            patch.object(
+                front,
+                "mode_settings_snapshot_for_dimension",
+                return_value=SimpleNamespace(),
+            ),
             patch.object(
                 front,
                 "load_runtime_explorer_topology_profile",
@@ -164,6 +169,56 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertEqual(launch.entry_source, "launcher")
         self.assertEqual(launch.gameplay_mode, GAMEPLAY_MODE_EXPLORER)
         self.assertEqual(launch.initial_tool, topology_lab_menu.TOOL_SANDBOX)
+
+    def test_standalone_explosion_surface_exposes_required_controls(self) -> None:
+        row_keys = set(explosion_launcher.launcher_row_keys())
+        self.assertTrue(
+            {
+                "dimension",
+                "view_mode",
+                "topology",
+                "snapshot_source",
+                "piece_set",
+                "piece_shape",
+                "boundary_response",
+                "particle_collisions",
+                "speed_preset",
+                "sound_enabled",
+                "seed",
+                "restart",
+                "back",
+            }.issubset(row_keys)
+        )
+
+    def test_standalone_explosion_launcher_action_routes_directly_to_surface(self) -> None:
+        state = front.MainMenuState(last_mode="4d")
+        session = SimpleNamespace(
+            screen=object(),
+            display_settings=object(),
+            audio_settings=object(),
+            running=True,
+        )
+
+        with (
+            patch.object(front, "_persist_session_status"),
+            patch.object(
+                explosion_launcher,
+                "run_standalone_explosion_launcher",
+                return_value=(True, "Explosion simulator closed"),
+            ) as run_launcher,
+        ):
+            close = front._menu_action_locked_cell_explosion(
+                state,
+                session,
+                object(),
+            )
+
+        self.assertFalse(close)
+        self.assertEqual(state.status, "Explosion simulator closed")
+        self.assertFalse(state.status_error)
+        run_launcher.assert_called_once()
+        launch_state = run_launcher.call_args.kwargs["initial_state"]
+        self.assertEqual(launch_state.dimension, 4)
 
     def test_legacy_topology_editor_action_is_settings_only_legacy_launch(self) -> None:
         state = front.MainMenuState(last_mode="4d")
@@ -301,7 +356,11 @@ class TestFrontLauncherRoutes(unittest.TestCase):
 
         with (
             patch.object(front, "_persist_session_status"),
-            patch.object(front, "_mode_settings_snapshot", return_value=SimpleNamespace()),
+            patch.object(
+                front,
+                "mode_settings_snapshot_for_dimension",
+                return_value=SimpleNamespace(),
+            ),
             patch.object(front, "load_runtime_explorer_topology_profile", return_value=object()),
             patch.object(front, "build_explorer_playground_launch", return_value=launch),
             patch.object(front, "build_explorer_playground_config", return_value=object()),

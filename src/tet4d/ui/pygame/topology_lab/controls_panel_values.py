@@ -353,6 +353,10 @@ def _sandbox_neighbor_search_value_text(state: TopologyLabState) -> str:
     return "On" if _sandbox_neighbor_search_enabled(state) else "Off"
 
 
+def _sandbox_explode_value_text(state: TopologyLabState) -> str:
+    return "Launch"
+
+
 def _editor_tool_value_text(state: TopologyLabState) -> str:
     if current_editor_tool(state) == TOOL_EDIT:
         return "Edit"
@@ -394,6 +398,7 @@ _EXPLORER_SCALAR_ROW_VALUE_GETTERS = {
     "speed_level": lambda state: str(_play_settings_or_defaults(state).speed_level),
     "rigid_play_mode": _rigid_play_mode_value_text,
     "sandbox_neighbor_search": _sandbox_neighbor_search_value_text,
+    "sandbox_explode": _sandbox_explode_value_text,
     "explorer_preset": _explorer_preset_value_text,
     "playability_summary": _playability_summary_value_text,
     "playability_validity": _playability_validity_value_text,

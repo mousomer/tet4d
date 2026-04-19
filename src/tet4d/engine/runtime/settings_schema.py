@@ -9,9 +9,11 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .endgame_presets import (
-    ENDGAME_INTERACTION_MODES,
+    ENDGAME_BOUNDARY_RESPONSES,
+    ENDGAME_PARTICLE_COLLISION_MODES,
     ENDGAME_PRESET_IDS,
-    normalize_endgame_interaction_mode,
+    normalize_endgame_boundary_response,
+    normalize_endgame_particle_collisions,
     normalize_endgame_preset_id,
 )
 
@@ -299,12 +301,20 @@ def _validated_mode_default_setting(
                 f"{setting_path} must be one of: " + ", ".join(ENDGAME_PRESET_IDS)
             )
         return normalized_preset
-    if attr_name == "endgame_interaction_mode":
-        normalized_mode = normalize_endgame_interaction_mode(value)
-        if normalized_mode not in ENDGAME_INTERACTION_MODES:
+    if attr_name == "endgame_boundary_response":
+        normalized_mode = normalize_endgame_boundary_response(value)
+        if normalized_mode not in ENDGAME_BOUNDARY_RESPONSES:
             raise RuntimeError(
                 f"{setting_path} must be one of: "
-                + ", ".join(ENDGAME_INTERACTION_MODES)
+                + ", ".join(ENDGAME_BOUNDARY_RESPONSES)
+            )
+        return normalized_mode
+    if attr_name == "endgame_particle_collisions":
+        normalized_mode = normalize_endgame_particle_collisions(value)
+        if normalized_mode not in ENDGAME_PARTICLE_COLLISION_MODES:
+            raise RuntimeError(
+                f"{setting_path} must be one of: "
+                + ", ".join(ENDGAME_PARTICLE_COLLISION_MODES)
             )
         return normalized_mode
     return require_int(value, path=setting_path)

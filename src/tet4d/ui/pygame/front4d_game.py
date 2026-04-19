@@ -358,7 +358,8 @@ def _capture_endgame_snapshot_4d(
 ) -> object:
     (
         preset_id,
-        interaction_mode,
+        boundary_response,
+        particle_collisions,
         relic_speed_percent,
         shatter_speed_percent,
     ) = mode_endgame_settings("4d")
@@ -396,9 +397,13 @@ def _capture_endgame_snapshot_4d(
             layer_sign=int(basis.layer_sign),
         ),
         preset_id=preset_id,
-        interaction_mode=interaction_mode,
+        boundary_response=boundary_response,
+        particle_collisions=particle_collisions,
         relic_speed_scale=float(relic_speed_percent) / 100.0,
         shatter_speed_scale=float(shatter_speed_percent) / 100.0,
+        topology_edge_rules=loop.cfg.topology_edge_rules,
+        explorer_topology_profile=loop.cfg.explorer_topology_profile,
+        explorer_transport=loop.cfg.explorer_transport,
     )
 
 

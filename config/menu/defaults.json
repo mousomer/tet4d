@@ -45,7 +45,8 @@
       "translation_animation_duration_ms": 120,
       "kick_level_index": 0,
       "endgame_preset_id": "default_orbit",
-      "endgame_interaction_mode": "none",
+      "endgame_boundary_response": "escape",
+      "endgame_particle_collisions": "off",
       "endgame_relic_speed_percent": 100,
       "endgame_shatter_speed_percent": 100
     },
@@ -76,7 +77,8 @@
       "translation_animation_duration_ms": 120,
       "kick_level_index": 0,
       "endgame_preset_id": "default_orbit",
-      "endgame_interaction_mode": "none",
+      "endgame_boundary_response": "escape",
+      "endgame_particle_collisions": "off",
       "endgame_relic_speed_percent": 100,
       "endgame_shatter_speed_percent": 100
     },
@@ -109,7 +111,8 @@
       "translation_animation_duration_ms": 120,
       "kick_level_index": 0,
       "endgame_preset_id": "default_orbit",
-      "endgame_interaction_mode": "none",
+      "endgame_boundary_response": "escape",
+      "endgame_particle_collisions": "off",
       "endgame_relic_speed_percent": 100,
       "endgame_shatter_speed_percent": 100
     }

@@ -11,6 +11,7 @@ from tet4d.engine.topology_explorer import (
     BoundaryRef,
     ExplorerTopologyProfile,
 )
+from tet4d.ui.pygame.render.gfx_game import color_for_cell
 from tet4d.ui.pygame.ui_utils import (
     draw_fitted_text_line,
     draw_panel_frame,
@@ -307,6 +308,38 @@ def _draw_sandbox_cells(
         )
         pygame.draw.rect(surface, fill, rect, border_radius=radius)
         pygame.draw.rect(surface, outline, rect, outline_width, border_radius=radius)
+
+
+def _draw_explosion_particles(
+    surface: pygame.Surface,
+    *,
+    area: pygame.Rect,
+    board_rect: pygame.Rect,
+    cell_size: int,
+    axes: tuple[int, int],
+    explosion_particles,
+) -> None:
+    if not explosion_particles:
+        return
+    clip_rect = area.inflate(36, 36)
+    for particle in explosion_particles:
+        coord = tuple(float(value) for value in tuple(getattr(particle, "position_nd", ())))
+        if len(coord) <= max(axes):
+            continue
+        center = (
+            int(round(board_rect.x + ((coord[axes[0]] + 0.5) * cell_size))),
+            int(round(board_rect.y + ((coord[axes[1]] + 0.5) * cell_size))),
+        )
+        size = max(5, int(round(cell_size * 0.46)))
+        rect = pygame.Rect(0, 0, size, size)
+        rect.center = center
+        if not clip_rect.colliderect(rect):
+            continue
+        color = color_for_cell(int(getattr(particle, "color_id", 0)))
+        glow = tuple(min(255, int((channel * 0.5) + 88)) for channel in color)
+        pygame.draw.rect(surface, glow, rect.inflate(4, 4), border_radius=4)
+        pygame.draw.rect(surface, color, rect, border_radius=3)
+        pygame.draw.rect(surface, (248, 250, 255), rect, 1, border_radius=3)
 
 
 def _boundary_edge_rect(
@@ -683,6 +716,7 @@ def _draw_projection_panel(
     neighbor_markers: Iterable[Sequence[int]] | None,
     sandbox_cells: tuple[tuple[int, ...], ...] | None,
     sandbox_valid: bool | None,
+    explosion_particles,
     slab_radius: int,
     focus_boundaries: tuple[BoundaryRef, ...],
     active_tool: str | None,
@@ -768,6 +802,14 @@ def _draw_projection_panel(
         sandbox_valid=sandbox_valid,
         slab_radius=slab_radius,
     )
+    _draw_explosion_particles(
+        surface,
+        area=panel.rect,
+        board_rect=board_rect,
+        cell_size=cell_size,
+        axes=panel.axes,
+        explosion_particles=explosion_particles,
+    )
     _draw_selected_cell(
         surface,
         board_rect=board_rect,
@@ -793,6 +835,7 @@ def _draw_projection_panels(
     sandbox_cells: tuple[tuple[int, ...], ...] | None,
     sandbox_valid: bool | None,
     sandbox_message: str,
+    explosion_particles,
     slab_radius: int,
     focus_boundaries: tuple[BoundaryRef, ...],
     active_tool: str | None,
@@ -811,6 +854,7 @@ def _draw_projection_panels(
             neighbor_markers=neighbor_markers,
             sandbox_cells=sandbox_cells,
             sandbox_valid=sandbox_valid,
+            explosion_particles=explosion_particles,
             slab_radius=slab_radius,
             focus_boundaries=focus_boundaries,
             active_tool=active_tool,
@@ -853,6 +897,7 @@ def draw_projection_scene(
     sandbox_cells: tuple[tuple[int, ...], ...] | None = None,
     sandbox_valid: bool | None = None,
     sandbox_message: str = "",
+    explosion_particles=None,
     slab_radius: int = 0,
 ) -> list[TopologyLabHitTarget]:
     dims = tuple(int(value) for value in preview_dims)
@@ -892,6 +937,7 @@ def draw_projection_scene(
             sandbox_cells=sandbox_cells,
             sandbox_valid=sandbox_valid,
             sandbox_message=sandbox_message,
+            explosion_particles=explosion_particles,
             slab_radius=slab_radius,
             focus_boundaries=_focus_boundaries_for_glue(
                 profile,

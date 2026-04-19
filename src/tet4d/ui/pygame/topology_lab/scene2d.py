@@ -3,6 +3,7 @@ from __future__ import annotations
 import pygame
 
 from tet4d.engine.topology_explorer import BoundaryRef
+from tet4d.ui.pygame.render.gfx_game import color_for_cell
 from tet4d.ui.pygame.topology_lab.arrow_overlay import draw_glue_arrows
 from tet4d.ui.pygame.topology_lab.common import (
     TopologyLabHitTarget,
@@ -169,6 +170,55 @@ def _draw_probe(
     draw_probe_center_glyph(surface, center=probe.center, cell_size=cell_size)
 
 
+def _particle_center(
+    board: pygame.Rect,
+    cell_size: int,
+    coord: tuple[float, ...],
+) -> tuple[int, int] | None:
+    if len(coord) < 2:
+        return None
+    return (
+        int(round(board.x + ((float(coord[0]) + 0.5) * cell_size))),
+        int(round(board.y + ((float(coord[1]) + 0.5) * cell_size))),
+    )
+
+
+def _particle_rect(
+    board: pygame.Rect,
+    cell_size: int,
+    coord: tuple[float, ...],
+) -> pygame.Rect | None:
+    center = _particle_center(board, cell_size, coord)
+    if center is None:
+        return None
+    size = max(6, int(round(cell_size * 0.58)))
+    rect = pygame.Rect(0, 0, size, size)
+    rect.center = center
+    return rect
+
+
+def _draw_explosion_particles(
+    surface: pygame.Surface,
+    *,
+    area: pygame.Rect,
+    board: pygame.Rect,
+    cell_size: int,
+    explosion_particles,
+) -> None:
+    if not explosion_particles:
+        return
+    clip_rect = area.inflate(48, 48)
+    for particle in explosion_particles:
+        rect = _particle_rect(board, cell_size, tuple(particle.position_nd))
+        if rect is None or not clip_rect.colliderect(rect):
+            continue
+        color = color_for_cell(int(getattr(particle, "color_id", 0)))
+        glow = tuple(min(255, int((channel * 0.55) + 92)) for channel in color)
+        pygame.draw.rect(surface, glow, rect.inflate(4, 4), border_radius=5)
+        pygame.draw.rect(surface, color, rect, border_radius=4)
+        pygame.draw.rect(surface, (245, 248, 255), rect, 1, border_radius=4)
+
+
 def _draw_boundary_edges(
     surface: pygame.Surface,
     fonts,
@@ -273,9 +323,11 @@ def draw_scene(
     sandbox_cells: tuple[tuple[int, ...], ...] | None = None,
     sandbox_valid: bool | None = None,
     sandbox_message: str = "",
+    explosion_particles=None,
+    panel_title: str = "Explorer board",
 ) -> list[TopologyLabHitTarget]:
     hits: list[TopologyLabHitTarget] = []
-    title = fonts.hint_font.render("Explorer board", True, (220, 228, 250))
+    title = fonts.hint_font.render(str(panel_title), True, (220, 228, 250))
     surface.blit(title, (area.x, area.y - title.get_height() - 4))
     board, cell_size = _board_rect(area, preview_dims)
     _draw_grid(surface, board, cell_size, preview_dims)
@@ -307,6 +359,13 @@ def draw_scene(
         cell_size=cell_size,
         preview_dims=preview_dims,
         probe_coord=probe_coord,
+    )
+    _draw_explosion_particles(
+        surface,
+        area=area,
+        board=board,
+        cell_size=cell_size,
+        explosion_particles=explosion_particles,
     )
 
     edge_rects = _edge_rects(board, max(18, min(28, cell_size)))

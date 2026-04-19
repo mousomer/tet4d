@@ -246,6 +246,7 @@ class TestMenuPolicy(unittest.TestCase):
                 "Continue",
                 "Tutorials",
                 "Topology Playground",
+                "Explosion Simulator",
                 "Settings",
                 "Quit",
             ],
@@ -621,8 +622,10 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(len(labels["game_rotation_animation_mode"]), 2)
         self.assertIn("game_endgame_preset", labels)
         self.assertEqual(len(labels["game_endgame_preset"]), 4)
-        self.assertIn("game_endgame_interaction_mode", labels)
-        self.assertEqual(len(labels["game_endgame_interaction_mode"]), 2)
+        self.assertIn("game_endgame_boundary_response", labels)
+        self.assertEqual(len(labels["game_endgame_boundary_response"]), 2)
+        self.assertIn("game_endgame_particle_collisions", labels)
+        self.assertEqual(len(labels["game_endgame_particle_collisions"]), 2)
 
     def test_build_unified_settings_state_uses_persisted_analytics_state(self) -> None:
         with (
@@ -744,7 +747,8 @@ class TestMenuPolicy(unittest.TestCase):
             display_settings=DisplaySettings(),
         )
         state.endgame_preset_id = "sphere"
-        state.endgame_interaction_mode = "collide"
+        state.endgame_boundary_response = "bounce"
+        state.endgame_particle_collisions = "on"
         state.endgame_relic_speed_percent = 145
         state.endgame_shatter_speed_percent = 85
         state.rotation_animation_mode = "rigid_piece_rotation"
@@ -759,8 +763,16 @@ class TestMenuPolicy(unittest.TestCase):
             "Sphere",
         )
         self.assertEqual(
-            settings_hub_model._unified_value_text(state, "endgame_interaction_mode"),
-            "Collide",
+            settings_hub_model._unified_value_text(
+                state, "endgame_boundary_response"
+            ),
+            "Bounce",
+        )
+        self.assertEqual(
+            settings_hub_model._unified_value_text(
+                state, "endgame_particle_collisions"
+            ),
+            "On",
         )
         self.assertEqual(
             settings_hub_model._unified_value_text(
@@ -799,7 +811,8 @@ class TestMenuPolicy(unittest.TestCase):
             topology_advanced=1,
             kick_level_index=2,
             endgame_preset_id="sphere",
-            endgame_interaction_mode="collide",
+            endgame_boundary_response="bounce",
+            endgame_particle_collisions="on",
             endgame_relic_speed_percent=140,
             endgame_shatter_speed_percent=80,
             auto_speedup_enabled=0,
@@ -862,8 +875,12 @@ class TestMenuPolicy(unittest.TestCase):
             settings_hub_model._ENDGAME_PRESET_DEFAULT,
         )
         self.assertEqual(
-            state.endgame_interaction_mode,
-            settings_hub_model._ENDGAME_INTERACTION_MODE_DEFAULT,
+            state.endgame_boundary_response,
+            settings_hub_model._ENDGAME_BOUNDARY_RESPONSE_DEFAULT,
+        )
+        self.assertEqual(
+            state.endgame_particle_collisions,
+            settings_hub_model._ENDGAME_PARTICLE_COLLISIONS_DEFAULT,
         )
         self.assertEqual(
             state.endgame_relic_speed_percent,
@@ -878,7 +895,8 @@ class TestMenuPolicy(unittest.TestCase):
         state = SimpleNamespace(
             kick_level_index=0,
             endgame_preset_id="default_orbit",
-            endgame_interaction_mode="none",
+            endgame_boundary_response="escape",
+            endgame_particle_collisions="off",
             endgame_relic_speed_percent=100,
             endgame_shatter_speed_percent=100,
             auto_speedup_enabled=1,
@@ -902,11 +920,19 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertTrue(
             settings_hub_actions._adjust_unified_gameplay_row(
                 state,
-                "endgame_interaction_mode",
+                "endgame_boundary_response",
                 1,
             )
         )
-        self.assertEqual(state.endgame_interaction_mode, "collide")
+        self.assertEqual(state.endgame_boundary_response, "bounce")
+        self.assertTrue(
+            settings_hub_actions._adjust_unified_gameplay_row(
+                state,
+                "endgame_particle_collisions",
+                1,
+            )
+        )
+        self.assertEqual(state.endgame_particle_collisions, "on")
         self.assertTrue(
             settings_hub_actions._adjust_unified_gameplay_row(
                 state,

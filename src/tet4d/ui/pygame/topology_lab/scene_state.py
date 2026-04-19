@@ -138,6 +138,8 @@ class TopologyPlaygroundState:
     scene_pending_playability_signature: ExplorerPreviewCompileSignature | None = None
     scene_pending_playability_delay_frames: int = 0
     experiment_batch: dict[str, object] | None = None
+    pending_explosion_surface_state: Any | None = None
+    scene_explosion: object | None = None
     interaction_audit: ExplorerInteractionAudit = field(
         default_factory=ExplorerInteractionAudit
     )

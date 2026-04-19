@@ -43,7 +43,8 @@ class TestEndgameAnimation(unittest.TestCase):
     def _sample_snapshot(
         *,
         preset_id: str = "default_orbit",
-        interaction_mode: str = "none",
+        boundary_response: str = "escape",
+        particle_collisions: str = "off",
     ) -> endgame_animation.EndgameSnapshot:
         return endgame_animation.create_snapshot(
             dimension=2,
@@ -64,14 +65,16 @@ class TestEndgameAnimation(unittest.TestCase):
             base_seed=1337,
             render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
             preset_id=preset_id,
-            interaction_mode=interaction_mode,
+            boundary_response=boundary_response,
+            particle_collisions=particle_collisions,
         )
 
     @staticmethod
     def _sample_snapshot_4d(
         *,
         preset_id: str = "wrap_all",
-        interaction_mode: str = "none",
+        boundary_response: str = "escape",
+        particle_collisions: str = "off",
         relic_speed_scale: float = 1.0,
     ) -> endgame_animation.EndgameSnapshot:
         return endgame_animation.create_snapshot(
@@ -100,7 +103,8 @@ class TestEndgameAnimation(unittest.TestCase):
                 layer_sign=1,
             ),
             preset_id=preset_id,
-            interaction_mode=interaction_mode,
+            boundary_response=boundary_response,
+            particle_collisions=particle_collisions,
             relic_speed_scale=relic_speed_scale,
         )
 
@@ -120,7 +124,7 @@ class TestEndgameAnimation(unittest.TestCase):
             patch.object(
                 front2d_frame,
                 "mode_endgame_settings",
-                return_value=("wrap_all", "collide", 140, 80),
+                return_value=("wrap_all", "bounce", "on", 140, 80),
             ),
         ):
             front2d_frame._update_feedback_and_animation(
@@ -142,7 +146,8 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(snapshot.locked_cells[1].source_coord, (4, 5))
         self.assertEqual(snapshot.render_context.mode_key, "2d")
         self.assertEqual(snapshot.preset_id, "wrap_all")
-        self.assertEqual(snapshot.interaction_mode, "collide")
+        self.assertEqual(snapshot.boundary_response, "bounce")
+        self.assertEqual(snapshot.particle_collisions, "on")
         self.assertAlmostEqual(snapshot.relic_speed_scale, 1.4)
         self.assertAlmostEqual(snapshot.shatter_speed_scale, 0.8)
 
@@ -157,14 +162,18 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(registry["invert_all"].field_kind, "invert")
         self.assertEqual(registry["sphere"].field_kind, "sphere")
 
-    def test_interaction_mode_stays_separate_from_preset_identity(self) -> None:
+    def test_boundary_and_collision_axes_normalize_without_changing_preset_identity(
+        self,
+    ) -> None:
         wrap_snapshot = self._sample_snapshot(
             preset_id="wrap_all",
-            interaction_mode="none",
+            boundary_response="escape",
+            particle_collisions="off",
         )
         collide_snapshot = self._sample_snapshot(
             preset_id="wrap_all",
-            interaction_mode="collide",
+            boundary_response="bounce",
+            particle_collisions="on",
         )
         wrap_animation = endgame_animation.build_endgame_animation_state(wrap_snapshot)
         collide_animation = endgame_animation.build_endgame_animation_state(
@@ -173,8 +182,10 @@ class TestEndgameAnimation(unittest.TestCase):
 
         self.assertEqual(wrap_animation.preset_id, "wrap_all")
         self.assertEqual(collide_animation.preset_id, "wrap_all")
-        self.assertEqual(wrap_animation.interaction_mode, "none")
-        self.assertEqual(collide_animation.interaction_mode, "collide")
+        self.assertEqual(wrap_animation.boundary_response, "escape")
+        self.assertEqual(wrap_animation.particle_collisions, "off")
+        self.assertEqual(collide_animation.boundary_response, "bounce")
+        self.assertEqual(collide_animation.particle_collisions, "on")
 
     def test_fragment_generation_is_deterministic_for_fixed_seed(self) -> None:
         snapshot = self._sample_snapshot()
@@ -379,7 +390,10 @@ class TestEndgameAnimation(unittest.TestCase):
     def test_4d_render_states_preserve_hidden_axis_layer_motion(self) -> None:
         snapshot = self._sample_snapshot_4d(preset_id="invert_all")
         animation = endgame_animation.build_endgame_animation_state(snapshot)
-        animation.elapsed_ms = animation.tuning.shatter_duration_ms + 3600.0
+        assert animation.explosion_controller is not None
+        particle = animation.explosion_controller.simulation.particles[0]
+        particle.position_nd = (1.0, 6.0, 2.0, 1.75)
+        particle.velocity_nd = (0.0, 0.0, 0.0, 0.0)
 
         render_states = endgame_animation.render_relics_for_animation(animation)
 
@@ -389,10 +403,7 @@ class TestEndgameAnimation(unittest.TestCase):
             sum(weight for _layer, weight in render_states[0].layer_weights),
             1.0,
         )
-        self.assertNotAlmostEqual(
-            render_states[0].position_nd[3],
-            float(animation.cell_relics[0].source_coord[3]),
-        )
+        self.assertEqual(render_states[0].position_nd[3], 1.75)
 
     def test_relic_speed_scale_changes_persistent_nd_motion_without_changing_preset(
         self,
@@ -534,11 +545,20 @@ class TestEndgameAnimation(unittest.TestCase):
         animation = endgame_animation.build_endgame_animation_state(
             self._sample_snapshot(
                 preset_id="wrap_all",
-                interaction_mode="collide",
+                boundary_response="bounce",
+                particle_collisions="on",
             )
         )
-        animation.elapsed_ms = animation.tuning.shatter_duration_ms + 5000.0
+        assert animation.explosion_controller is not None
+        particles = animation.explosion_controller.simulation.particles
+        particles[0].position_nd = (2.0, 2.0)
+        particles[0].velocity_nd = (1.0, 0.0)
+        particles[0].collision_radius = 0.5
+        particles[1].position_nd = (2.8, 2.0)
+        particles[1].velocity_nd = (-1.0, 0.0)
+        particles[1].collision_radius = 0.5
 
+        animation.step(200.0)
         transforms_a = endgame_animation.transform_relics_for_animation(animation)
         transforms_b = endgame_animation.transform_relics_for_animation(animation)
 
@@ -548,7 +568,8 @@ class TestEndgameAnimation(unittest.TestCase):
         animation = endgame_animation.build_endgame_animation_state(
             self._sample_snapshot(
                 preset_id="wrap_all",
-                interaction_mode="none",
+                boundary_response="escape",
+                particle_collisions="off",
             )
         )
         animation.elapsed_ms = animation.tuning.shatter_duration_ms + 5000.0
@@ -563,122 +584,71 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(len(transforms), len(animation.cell_relics))
         collision_pass.assert_not_called()
 
-    def test_selected_presets_change_persistent_relic_motion(self) -> None:
-        wrap_animation = endgame_animation.build_endgame_animation_state(
+    def test_game_end_render_tracks_explosion_controller_motion(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
             self._sample_snapshot(preset_id="wrap_all")
         )
-        sphere_animation = endgame_animation.build_endgame_animation_state(
-            self._sample_snapshot(preset_id="sphere")
-        )
-        elapsed_ms = wrap_animation.tuning.shatter_duration_ms + 3200.0
-        wrap_animation.elapsed_ms = elapsed_ms
-        sphere_animation.elapsed_ms = elapsed_ms
+        assert animation.explosion_controller is not None
+        before = endgame_animation.render_relics_for_animation(animation)
 
-        wrap_position, _rotation, _alpha = (
-            endgame_animation.transform_relics_for_animation(wrap_animation)[0]
-        )
-        sphere_position, _rotation_sphere, _alpha_sphere = (
-            endgame_animation.transform_relics_for_animation(sphere_animation)[0]
-        )
+        animation.step(180.0)
+        after = endgame_animation.render_relics_for_animation(animation)
 
-        self.assertNotEqual(wrap_position, sphere_position)
+        self.assertNotEqual(before[0].position_nd, after[0].position_nd)
 
-    def test_collision_mode_changes_behavior_without_changing_preset(self) -> None:
+    def test_particle_collision_axis_changes_behavior_without_changing_preset(self) -> None:
         wrap_none = endgame_animation.build_endgame_animation_state(
             self._sample_snapshot(
                 preset_id="wrap_all",
-                interaction_mode="none",
+                boundary_response="escape",
+                particle_collisions="off",
             )
         )
-        wrap_collide = endgame_animation.build_endgame_animation_state(
+        wrap_full = endgame_animation.build_endgame_animation_state(
             self._sample_snapshot(
                 preset_id="wrap_all",
-                interaction_mode="collide",
+                boundary_response="escape",
+                particle_collisions="on",
             )
         )
-        elapsed_ms = wrap_none.tuning.shatter_duration_ms + 6400.0
-        wrap_none.elapsed_ms = elapsed_ms
-        wrap_collide.elapsed_ms = elapsed_ms
-        base_relic = wrap_none.cell_relics[0]
-        overlapping_relics = (
-            replace(
-                base_relic,
-                source_coord=(1, 1),
-                initial_position=(3.0, 3.0, 0.0),
-                capture_anchor=(3.0, 3.0, 0.0),
-                orbit_radius_a=0.0,
-                orbit_radius_b=0.0,
-                depth_amplitude=0.0,
-                field_drift_velocity=(0.0, 0.0, 0.0),
-                collision_radius=0.7,
-            ),
-            replace(
-                base_relic,
-                source_coord=(2, 1),
-                initial_position=(3.2, 3.0, 0.0),
-                capture_anchor=(3.2, 3.0, 0.0),
-                orbit_radius_a=0.0,
-                orbit_radius_b=0.0,
-                depth_amplitude=0.0,
-                field_drift_velocity=(0.0, 0.0, 0.0),
-                collision_radius=0.7,
-            ),
-        )
-        wrap_none.relic_field = replace(
-            wrap_none.relic_field,
-            cell_relics=overlapping_relics,
-        )
-        wrap_collide.relic_field = replace(
-            wrap_collide.relic_field,
-            cell_relics=overlapping_relics,
-        )
+        assert wrap_none.explosion_controller is not None
+        assert wrap_full.explosion_controller is not None
+        for animation in (wrap_none, wrap_full):
+            particles = animation.explosion_controller.simulation.particles
+            particles[0].position_nd = (2.0, 2.0)
+            particles[0].velocity_nd = (1.0, 0.0)
+            particles[0].collision_radius = 0.55
+            particles[1].position_nd = (2.8, 2.0)
+            particles[1].velocity_nd = (-1.0, 0.0)
+            particles[1].collision_radius = 0.55
 
-        transforms_none = endgame_animation.transform_relics_for_animation(wrap_none)
-        transforms_collide = endgame_animation.transform_relics_for_animation(
-            wrap_collide
-        )
+        wrap_none.step(220.0)
+        wrap_full.step(220.0)
 
-        self.assertEqual(wrap_none.preset_id, wrap_collide.preset_id)
-        self.assertNotEqual(transforms_none, transforms_collide)
+        none_particles = wrap_none.explosion_controller.simulation.particles
+        full_particles = wrap_full.explosion_controller.simulation.particles
 
-    def test_collision_mode_uses_nd_positions_not_projected_screen_overlap(self) -> None:
+        self.assertEqual(wrap_none.preset_id, wrap_full.preset_id)
+        self.assertGreater(none_particles[0].velocity_nd[0], 0.0)
+        self.assertLess(none_particles[1].velocity_nd[0], 0.0)
+        self.assertLess(full_particles[0].velocity_nd[0], 0.0)
+        self.assertGreater(full_particles[1].velocity_nd[0], 0.0)
+
+    def test_render_states_preserve_nd_positions_not_projected_screen_overlap(
+        self,
+    ) -> None:
         snapshot = self._sample_snapshot_4d(
             preset_id="wrap_all",
-            interaction_mode="collide",
+            boundary_response="bounce",
+            particle_collisions="on",
         )
         animation = endgame_animation.build_endgame_animation_state(snapshot)
-        animation.elapsed_ms = animation.tuning.shatter_duration_ms + 2400.0
-        base_relic = animation.cell_relics[0]
-        separated_relics = (
-            replace(
-                base_relic,
-                source_coord=(1, 1, 1, 0),
-                initial_position=(2.0, 2.0, 2.0, 0.0),
-                capture_anchor=(2.0, 2.0, 2.0, 0.0),
-                orbit_radius_a=0.0,
-                orbit_radius_b=0.0,
-                depth_amplitude=0.0,
-                field_axis_amplitudes=(0.0, 0.0, 0.0, 0.0),
-                field_drift_velocity=(0.0, 0.0, 0.0, 0.0),
-                collision_radius=0.7,
-            ),
-            replace(
-                base_relic,
-                source_coord=(1, 1, 1, 2),
-                initial_position=(2.0, 2.0, 2.0, 2.0),
-                capture_anchor=(2.0, 2.0, 2.0, 2.0),
-                orbit_radius_a=0.0,
-                orbit_radius_b=0.0,
-                depth_amplitude=0.0,
-                field_axis_amplitudes=(0.0, 0.0, 0.0, 0.0),
-                field_drift_velocity=(0.0, 0.0, 0.0, 0.0),
-                collision_radius=0.7,
-            ),
-        )
-        animation.relic_field = replace(
-            animation.relic_field,
-            cell_relics=separated_relics,
-        )
+        assert animation.explosion_controller is not None
+        particles = animation.explosion_controller.simulation.particles
+        particles[0].position_nd = (2.0, 2.0, 2.0, 0.0)
+        particles[0].velocity_nd = (0.0, 0.0, 0.0, 0.0)
+        particles[1].position_nd = (2.0, 2.0, 2.0, 2.0)
+        particles[1].velocity_nd = (0.0, 0.0, 0.0, 0.0)
 
         render_states = endgame_animation.render_relics_for_animation(animation)
 

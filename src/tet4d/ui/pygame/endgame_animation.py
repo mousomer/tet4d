@@ -1,22 +1,30 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable
 import math
 import random
 
 from tet4d.engine.runtime.endgame_presets import (
-    ENDGAME_INTERACTION_COLLIDE,
-    ENDGAME_INTERACTION_NONE,
+    ENDGAME_BOUNDARY_RESPONSE_ESCAPE,
+    ENDGAME_PARTICLE_COLLISIONS_OFF,
+    ENDGAME_PARTICLE_COLLISIONS_ON,
     ENDGAME_PRESET_DEFAULT_ORBIT,
     ENDGAME_PRESET_IDS,
     ENDGAME_PRESET_INVERT_ALL,
     ENDGAME_PRESET_SPHERE,
     ENDGAME_PRESET_WRAP_ALL,
-    normalize_endgame_interaction_mode,
+    normalize_endgame_boundary_response,
+    normalize_endgame_particle_collisions,
     normalize_endgame_preset_id,
 )
 from tet4d.engine.runtime.project_config import constants_payload
+from tet4d.ui.pygame.locked_cell_explosion import (
+    ExplosionSeedCell,
+    ExplosionTopologyInput,
+    StandaloneExplosionConfig,
+    build_locked_cell_explosion,
+)
 
 Vec3 = tuple[float, float, float]
 VecN = tuple[float, ...]
@@ -124,7 +132,8 @@ class EndgameAnimationTuning:
     anchor_spread_radius: float
     path_family_weights: tuple[tuple[str, int], ...]
     default_preset_id: str
-    default_interaction_mode: str
+    default_boundary_response: str
+    default_particle_collisions: str
     field_extent_multiplier: float
     wrap_margin: float
     preset_registry: tuple[EndgamePresetConfig, ...]
@@ -358,9 +367,13 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
             payload.get("default_preset_id"),
             default=ENDGAME_PRESET_DEFAULT_ORBIT,
         ),
-        default_interaction_mode=normalize_endgame_interaction_mode(
-            payload.get("default_interaction_mode"),
-            default=ENDGAME_INTERACTION_NONE,
+        default_boundary_response=normalize_endgame_boundary_response(
+            payload.get("default_boundary_response"),
+            default=ENDGAME_BOUNDARY_RESPONSE_ESCAPE,
+        ),
+        default_particle_collisions=normalize_endgame_particle_collisions(
+            payload.get("default_particle_collisions"),
+            default=ENDGAME_PARTICLE_COLLISIONS_OFF,
         ),
         field_extent_multiplier=_clamp_float(
             payload.get("field_extent_multiplier"),
@@ -482,9 +495,15 @@ class EndgameSnapshot:
     rng_seed: int
     render_context: EndgameRenderContext
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
-    interaction_mode: str = ENDGAME_INTERACTION_NONE
+    boundary_response: str = ENDGAME_BOUNDARY_RESPONSE_ESCAPE
+    particle_collisions: str = ENDGAME_PARTICLE_COLLISIONS_OFF
     relic_speed_scale: float = 1.0
     shatter_speed_scale: float = 1.0
+    topology: ExplosionTopologyInput = field(
+        default_factory=lambda: ExplosionTopologyInput(board_dims=(1, 1)),
+        compare=False,
+    )
+    sound_enabled: bool = True
 
 
 @dataclass(frozen=True)
@@ -568,7 +587,8 @@ class EndgameShatterState:
 class EndgameRelicFieldState:
     cell_relics: tuple[CellRelic, ...]
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
-    interaction_mode: str = ENDGAME_INTERACTION_NONE
+    boundary_response: str = ENDGAME_BOUNDARY_RESPONSE_ESCAPE
+    particle_collisions: str = ENDGAME_PARTICLE_COLLISIONS_OFF
 
 
 @dataclass
@@ -579,6 +599,8 @@ class EndgameAnimationState:
     relic_field: EndgameRelicFieldState
     phase: str = TERMINAL_PHASE_ENDGAME_SHATTER
     elapsed_ms: float = 0.0
+    explosion_controller: object | None = None
+    _pending_audio_events: tuple[str, ...] = ()
 
     @property
     def shell_fragments(self) -> tuple[ShellFragment, ...]:
@@ -612,17 +634,30 @@ class EndgameAnimationState:
         return self.relic_field.preset_id
 
     @property
-    def interaction_mode(self) -> str:
-        return self.relic_field.interaction_mode
+    def boundary_response(self) -> str:
+        return self.relic_field.boundary_response
+
+    @property
+    def particle_collisions(self) -> str:
+        return self.relic_field.particle_collisions
 
     def step(self, dt_ms: float) -> None:
         if not self.animating:
             return
+        if self.explosion_controller is not None:
+            self._pending_audio_events = tuple(
+                self.explosion_controller.step(float(dt_ms))
+            )
         self.elapsed_ms = float(self.elapsed_ms + max(0.0, dt_ms))
         if self.elapsed_ms >= float(self.tuning.shatter_duration_ms):
             self.phase = TERMINAL_PHASE_ENDGAME_RELIC_FIELD
         else:
             self.phase = TERMINAL_PHASE_ENDGAME_SHATTER
+
+    def consume_audio_events(self) -> tuple[str, ...]:
+        events = tuple(self._pending_audio_events)
+        self._pending_audio_events = ()
+        return events
 
 
 def endgame_prompt_ready(animation: EndgameAnimationState | None) -> bool:
@@ -688,9 +723,14 @@ def create_snapshot(
     base_seed: int,
     render_context: EndgameRenderContext,
     preset_id: str | None = None,
-    interaction_mode: str | None = None,
+    boundary_response: str | None = None,
+    particle_collisions: str | None = None,
     relic_speed_scale: float = 1.0,
     shatter_speed_scale: float = 1.0,
+    topology_edge_rules: tuple[tuple[str, str], ...] | None = None,
+    explorer_topology_profile=None,
+    explorer_transport=None,
+    sound_enabled: bool = True,
     tuning: EndgameAnimationTuning | None = None,
 ) -> EndgameSnapshot:
     active_tuning = load_endgame_animation_tuning() if tuning is None else tuning
@@ -722,12 +762,30 @@ def create_snapshot(
             preset_id,
             default=active_tuning.default_preset_id,
         ),
-        interaction_mode=normalize_endgame_interaction_mode(
-            interaction_mode,
-            default=active_tuning.default_interaction_mode,
+        boundary_response=normalize_endgame_boundary_response(
+            boundary_response,
+            default=active_tuning.default_boundary_response,
+        ),
+        particle_collisions=normalize_endgame_particle_collisions(
+            particle_collisions,
+            default=active_tuning.default_particle_collisions,
         ),
         relic_speed_scale=max(0.05, float(relic_speed_scale)),
         shatter_speed_scale=max(0.05, float(shatter_speed_scale)),
+        topology=ExplosionTopologyInput(
+            board_dims=tuple(int(value) for value in board_dims),
+            topology_edge_rules=(
+                None
+                if topology_edge_rules is None
+                else tuple(
+                    (str(axis_rules[0]), str(axis_rules[1]))
+                    for axis_rules in topology_edge_rules
+                )
+            ),
+            explorer_topology_profile=explorer_topology_profile,
+            explorer_transport=explorer_transport,
+        ),
+        sound_enabled=bool(sound_enabled),
     )
 
 
@@ -1727,7 +1785,8 @@ def build_endgame_animation_state(
             relic_field=EndgameRelicFieldState(
                 cell_relics=tuple(),
                 preset_id=snapshot.preset_id,
-                interaction_mode=snapshot.interaction_mode,
+                boundary_response=snapshot.boundary_response,
+                particle_collisions=snapshot.particle_collisions,
             ),
             phase=TERMINAL_PHASE_GAME_OVER_COMPLETE,
             elapsed_ms=float(active_tuning.prompt_ready_ms),
@@ -1776,6 +1835,26 @@ def build_endgame_animation_state(
         )
         for index, (source_kind, layer_index, segment) in enumerate(shell_sources)
     )
+    explosion_controller = build_locked_cell_explosion(
+        StandaloneExplosionConfig(
+            dimension=int(snapshot.dimension),
+            topology=snapshot.topology,
+            occupied_cells=tuple(
+                ExplosionSeedCell(
+                    source_coord=tuple(int(value) for value in cell.source_coord),
+                    color_id=int(cell.color_id),
+                )
+                for cell in snapshot.locked_cells
+            ),
+            random_seed=int(snapshot.rng_seed),
+            boundary_response=str(snapshot.boundary_response),
+            particle_collisions=str(snapshot.particle_collisions),
+            speed_preset="normal",
+            sound_enabled=bool(snapshot.sound_enabled),
+            launch_speed_scale=float(snapshot.shatter_speed_scale),
+            time_scale=float(snapshot.relic_speed_scale),
+        )
+    )
     return EndgameAnimationState(
         snapshot=snapshot,
         tuning=active_tuning,
@@ -1783,8 +1862,10 @@ def build_endgame_animation_state(
         relic_field=EndgameRelicFieldState(
             cell_relics=cell_relics,
             preset_id=snapshot.preset_id,
-            interaction_mode=snapshot.interaction_mode,
+            boundary_response=snapshot.boundary_response,
+            particle_collisions=snapshot.particle_collisions,
         ),
+        explosion_controller=explosion_controller,
     )
 
 
@@ -2200,6 +2281,19 @@ def _apply_relic_collisions(
 def render_relics_for_animation(
     animation: EndgameAnimationState,
 ) -> tuple[EndgameRelicRenderState, ...]:
+    if animation.explosion_controller is not None:
+        return tuple(
+            EndgameRelicRenderState(
+                position_nd=state.position_nd,
+                render_position=state.render_position,
+                rotation_deg=state.rotation_deg,
+                alpha=state.alpha,
+                layer_weights=state.layer_weights,
+            )
+            for state in animation.explosion_controller.render_particles(
+                render_context=animation.snapshot.render_context
+            )
+        )
     motion_states = [
         motion_state_for_cell_relic(
             relic,
@@ -2210,7 +2304,7 @@ def render_relics_for_animation(
         )
         for relic in animation.cell_relics
     ]
-    if animation.interaction_mode == ENDGAME_INTERACTION_COLLIDE:
+    if animation.particle_collisions == ENDGAME_PARTICLE_COLLISIONS_ON:
         motion_states = list(
             _apply_relic_collisions(
                 animation.cell_relics,

@@ -7,10 +7,13 @@ from tet4d.engine.gameplay.rotation_anim import (
     ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION,
 )
 from tet4d.engine.runtime.endgame_presets import (
-    ENDGAME_INTERACTION_NONE,
+    ENDGAME_BOUNDARY_RESPONSE_ESCAPE,
+    ENDGAME_PARTICLE_COLLISIONS_OFF,
     ENDGAME_PRESET_DEFAULT_ORBIT,
-    normalize_endgame_interaction_mode,
+    normalize_endgame_boundary_response,
+    normalize_endgame_particle_collisions,
     normalize_endgame_preset_id,
+    resolve_endgame_interaction_axes,
 )
 
 from .. import settings_schema as _settings_schema
@@ -41,7 +44,8 @@ _SHARED_GAMEPLAY_SPECS: tuple[tuple[str, Any, Any], ...] = (
     ("topology_advanced", clamp_toggle_index, 0),
     ("kick_level_index", None, 0),
     ("endgame_preset_id", None, ENDGAME_PRESET_DEFAULT_ORBIT),
-    ("endgame_interaction_mode", None, ENDGAME_INTERACTION_NONE),
+    ("endgame_boundary_response", None, ENDGAME_BOUNDARY_RESPONSE_ESCAPE),
+    ("endgame_particle_collisions", None, ENDGAME_PARTICLE_COLLISIONS_OFF),
     ("endgame_relic_speed_percent", clamp_endgame_speed_percent, 100),
     ("endgame_shatter_speed_percent", clamp_endgame_speed_percent, 100),
     ("auto_speedup_enabled", clamp_toggle_index, 1),
@@ -101,6 +105,29 @@ def coerce_shared_gameplay_settings(
     defaults: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized: dict[str, Any] = {}
+    legacy_boundary_response, legacy_particle_collisions = (
+        resolve_endgame_interaction_axes(
+            boundary_response=raw.get("endgame_boundary_response"),
+            particle_collisions=raw.get("endgame_particle_collisions"),
+            legacy_mode=raw.get("endgame_interaction_mode"),
+            default_boundary_response=str(
+                defaults.get(
+                    "endgame_boundary_response",
+                    ENDGAME_BOUNDARY_RESPONSE_ESCAPE,
+                )
+            )
+            if defaults is not None
+            else ENDGAME_BOUNDARY_RESPONSE_ESCAPE,
+            default_particle_collisions=str(
+                defaults.get(
+                    "endgame_particle_collisions",
+                    ENDGAME_PARTICLE_COLLISIONS_OFF,
+                )
+            )
+            if defaults is not None
+            else ENDGAME_PARTICLE_COLLISIONS_OFF,
+        )
+    )
     for setting_name, clamp_fn, fallback in _SHARED_GAMEPLAY_SPECS:
         default_value = defaults[setting_name] if defaults is not None else fallback
         if setting_name == "kick_level_index":
@@ -114,9 +141,15 @@ def coerce_shared_gameplay_settings(
                 default=str(default_value),
             )
             continue
-        if setting_name == "endgame_interaction_mode":
-            normalized[setting_name] = normalize_endgame_interaction_mode(
-                raw.get(setting_name),
+        if setting_name == "endgame_boundary_response":
+            normalized[setting_name] = normalize_endgame_boundary_response(
+                legacy_boundary_response,
+                default=str(default_value),
+            )
+            continue
+        if setting_name == "endgame_particle_collisions":
+            normalized[setting_name] = normalize_endgame_particle_collisions(
+                legacy_particle_collisions,
                 default=str(default_value),
             )
             continue

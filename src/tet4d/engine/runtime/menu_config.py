@@ -6,7 +6,11 @@ from pathlib import Path
 from typing import Any
 
 from ..core.rng import RNG_MODE_OPTIONS
-from .endgame_presets import ENDGAME_INTERACTION_MODES, ENDGAME_PRESET_IDS
+from .endgame_presets import (
+    ENDGAME_BOUNDARY_RESPONSES,
+    ENDGAME_PARTICLE_COLLISION_MODES,
+    ENDGAME_PRESET_IDS,
+)
 from .menu_structure.graph import (
     collect_actions_for_menu_ids,
     collect_reachable_menu_ids,
@@ -85,16 +89,27 @@ def _structure_payload() -> dict[str, Any]:
         raise RuntimeError(
             "structure.settings_option_labels.game_endgame_preset must match configured endgame presets"
         )
-    interaction_labels = payload["settings_option_labels"].get(
-        "game_endgame_interaction_mode"
+    boundary_response_labels = payload["settings_option_labels"].get(
+        "game_endgame_boundary_response"
     )
-    if interaction_labels is None:
+    if boundary_response_labels is None:
         raise RuntimeError(
-            "structure.settings_option_labels must include game_endgame_interaction_mode labels"
+            "structure.settings_option_labels must include game_endgame_boundary_response labels"
         )
-    if len(interaction_labels) != len(ENDGAME_INTERACTION_MODES):
+    if len(boundary_response_labels) != len(ENDGAME_BOUNDARY_RESPONSES):
         raise RuntimeError(
-            "structure.settings_option_labels.game_endgame_interaction_mode must match configured endgame interaction modes"
+            "structure.settings_option_labels.game_endgame_boundary_response must match configured endgame boundary responses"
+        )
+    particle_collision_labels = payload["settings_option_labels"].get(
+        "game_endgame_particle_collisions"
+    )
+    if particle_collision_labels is None:
+        raise RuntimeError(
+            "structure.settings_option_labels must include game_endgame_particle_collisions labels"
+        )
+    if len(particle_collision_labels) != len(ENDGAME_PARTICLE_COLLISION_MODES):
+        raise RuntimeError(
+            "structure.settings_option_labels.game_endgame_particle_collisions must match configured endgame particle collision modes"
         )
     return payload
 

@@ -178,7 +178,8 @@
             "translation_animation_duration_ms",
             "kick_level_index",
             "endgame_preset_id",
-            "endgame_interaction_mode",
+            "endgame_boundary_response",
+            "endgame_particle_collisions",
             "endgame_relic_speed_percent",
             "endgame_shatter_speed_percent",
             "challenge_layers",
@@ -270,11 +271,18 @@
                 "sphere"
               ]
             },
-            "endgame_interaction_mode": {
+            "endgame_boundary_response": {
               "type": "string",
               "enum": [
-                "none",
-                "collide"
+                "escape",
+                "bounce"
+              ]
+            },
+            "endgame_particle_collisions": {
+              "type": "string",
+              "enum": [
+                "off",
+                "on"
               ]
             },
             "endgame_relic_speed_percent": {
@@ -315,7 +323,8 @@
             "translation_animation_duration_ms",
             "kick_level_index",
             "endgame_preset_id",
-            "endgame_interaction_mode",
+            "endgame_boundary_response",
+            "endgame_particle_collisions",
             "endgame_relic_speed_percent",
             "endgame_shatter_speed_percent",
             "challenge_layers",
@@ -407,11 +416,18 @@
                 "sphere"
               ]
             },
-            "endgame_interaction_mode": {
+            "endgame_boundary_response": {
               "type": "string",
               "enum": [
-                "none",
-                "collide"
+                "escape",
+                "bounce"
+              ]
+            },
+            "endgame_particle_collisions": {
+              "type": "string",
+              "enum": [
+                "off",
+                "on"
               ]
             },
             "endgame_relic_speed_percent": {
@@ -453,7 +469,8 @@
             "translation_animation_duration_ms",
             "kick_level_index",
             "endgame_preset_id",
-            "endgame_interaction_mode",
+            "endgame_boundary_response",
+            "endgame_particle_collisions",
             "endgame_relic_speed_percent",
             "endgame_shatter_speed_percent",
             "challenge_layers",
@@ -549,11 +566,18 @@
                 "sphere"
               ]
             },
-            "endgame_interaction_mode": {
+            "endgame_boundary_response": {
               "type": "string",
               "enum": [
-                "none",
-                "collide"
+                "escape",
+                "bounce"
+              ]
+            },
+            "endgame_particle_collisions": {
+              "type": "string",
+              "enum": [
+                "off",
+                "on"
               ]
             },
             "endgame_relic_speed_percent": {
