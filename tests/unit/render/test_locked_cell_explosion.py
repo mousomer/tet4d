@@ -20,12 +20,18 @@ from tet4d.ui.pygame.locked_cell_explosion import (
     EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
     EXPLOSION_PARTICLE_COLLISIONS_OFF,
     EXPLOSION_PARTICLE_COLLISIONS_ON,
+    EXPLOSION_TRAIL_MAX_LIFETIME_MS,
+    EXPLOSION_TRAIL_MAX_SAMPLES,
+    EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING,
+    EXPLOSION_TRAIL_MIN_TIME_SPACING_MS,
     ExplosionSeedCell,
+    ExplosionTrailSample,
     ExplosionTopologyInput,
     StandaloneExplosionConfig,
     build_locked_cell_explosion,
 )
 from tet4d.ui.pygame.locked_cell_explosion.audio import aggregate_audio_events
+from tet4d.ui.pygame.locked_cell_explosion import board_view as explosion_board_view
 from tet4d.ui.pygame.locked_cell_explosion import launcher as explosion_launcher
 from tet4d.ui.pygame.locked_cell_explosion.model import (
     ExplosionAudioEvent,
@@ -102,6 +108,75 @@ class TestLockedCellExplosion(unittest.TestCase):
                         for particle in controller_a.particles
                     )
                 )
+
+    def test_trail_sample_history_is_capped(self) -> None:
+        controller = build_locked_cell_explosion(
+            self._config(
+                dimension=2,
+                board_dims=(20, 20),
+                boundary_response=EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
+            )
+        )
+        particle = controller.simulation.particles[0]
+        particle.velocity_nd = (6.0, 0.0)
+        controller.simulation.particles[1].active = False
+
+        for _ in range(80):
+            controller.step(40.0)
+
+        self.assertLessEqual(len(particle.trail_samples), EXPLOSION_TRAIL_MAX_SAMPLES)
+
+    def test_old_trail_samples_expire(self) -> None:
+        controller = build_locked_cell_explosion(
+            self._config(
+                dimension=2,
+                board_dims=(20, 20),
+                boundary_response=EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
+            )
+        )
+        particle = controller.simulation.particles[0]
+        particle.velocity_nd = (6.0, 0.0)
+        controller.simulation.particles[1].active = False
+
+        for _ in range(30):
+            controller.step(40.0)
+
+        self.assertTrue(particle.trail_samples)
+        self.assertGreater(controller.elapsed_ms, EXPLOSION_TRAIL_MAX_LIFETIME_MS)
+        self.assertGreaterEqual(
+            min(sample.elapsed_ms for sample in particle.trail_samples),
+            controller.elapsed_ms - EXPLOSION_TRAIL_MAX_LIFETIME_MS,
+        )
+
+    def test_trail_sampling_respects_time_and_movement_spacing(self) -> None:
+        controller = build_locked_cell_explosion(
+            self._config(
+                dimension=2,
+                board_dims=(20, 20),
+                boundary_response=EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
+            )
+        )
+        particle = controller.simulation.particles[0]
+        controller.simulation.particles[1].active = False
+        particle.velocity_nd = (
+            (EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING * 0.05)
+            / (EXPLOSION_TRAIL_MIN_TIME_SPACING_MS / 1000.0),
+            0.0,
+        )
+
+        for _ in range(8):
+            controller.step(EXPLOSION_TRAIL_MIN_TIME_SPACING_MS)
+
+        self.assertEqual(len(particle.trail_samples), 1)
+
+        particle.velocity_nd = (
+            (EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING * 1.25)
+            / (EXPLOSION_TRAIL_MIN_TIME_SPACING_MS / 1000.0),
+            0.0,
+        )
+        controller.step(EXPLOSION_TRAIL_MIN_TIME_SPACING_MS)
+
+        self.assertGreater(len(particle.trail_samples), 1)
 
     def test_config_matrix_covers_all_boundary_and_collision_combinations(self) -> None:
         expected = {
@@ -189,6 +264,129 @@ class TestLockedCellExplosion(unittest.TestCase):
                 self.assertTrue(
                     any(event.startswith("explosion_seam_") for event in events)
                 )
+
+    def test_seam_crossing_inserts_trail_segment_break(self) -> None:
+        controller = build_locked_cell_explosion(
+            self._config(
+                dimension=2,
+                topology=ExplosionTopologyInput(
+                    board_dims=(4, 4),
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=2,
+                        wrapped_axes=(0,),
+                    ),
+                ),
+            )
+        )
+        particle = controller.simulation.particles[0]
+        particle.position_nd = (3.4, 1.5)
+        particle.velocity_nd = (2.0, 0.0)
+        particle.trail_samples = (
+            [
+                ExplosionTrailSample(
+                    position_nd=(3.4, 1.5),
+                    elapsed_ms=0.0,
+                )
+            ]
+        )
+        controller.simulation.particles[1].active = False
+
+        controller.step(200.0)
+
+        self.assertTrue(any(sample.segment_break for sample in particle.trail_samples))
+
+    def test_trail_primitives_are_projected_in_2d_3d_and_4d(self) -> None:
+        render_context_4d = SimpleNamespace(
+            basis_axis_map=((0, 1), (1, 1), (2, 1), (3, 1)),
+            layer_count=4,
+        )
+        for dimension in (2, 3, 4):
+            with self.subTest(dimension=dimension):
+                controller = build_locked_cell_explosion(
+                    self._config(
+                        dimension=dimension,
+                        board_dims=tuple(8 for _ in range(dimension)),
+                        boundary_response=EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
+                    )
+                )
+                particle = controller.simulation.particles[0]
+                controller.simulation.particles[1].active = False
+                particle.velocity_nd = tuple(
+                    4.0 if axis == 0 else 0.0 for axis in range(dimension)
+                )
+                for _ in range(4):
+                    controller.step(40.0)
+                rendered = controller.render_particles(
+                    render_context=(render_context_4d if dimension == 4 else None)
+                )
+
+                self.assertTrue(rendered[0].trail_segments)
+                self.assertEqual(
+                    rendered[0].trail_segments[-1].head_render_position,
+                    rendered[0].render_position,
+                )
+                if dimension == 4:
+                    self.assertTrue(rendered[0].trail_segments[-1].head_layer_weights)
+
+    def test_trail_taper_and_fade_increase_toward_head(self) -> None:
+        controller = build_locked_cell_explosion(
+            self._config(
+                dimension=2,
+                board_dims=(20, 20),
+                boundary_response=EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
+            )
+        )
+        particle = controller.simulation.particles[0]
+        controller.simulation.particles[1].active = False
+        particle.velocity_nd = (6.0, 0.0)
+
+        for _ in range(6):
+            controller.step(40.0)
+
+        rendered = controller.render_particles(render_context=None)[0]
+        alphas = [segment.alpha for segment in rendered.trail_segments]
+        widths = [segment.width for segment in rendered.trail_segments]
+
+        self.assertGreater(len(alphas), 1)
+        self.assertEqual(alphas, sorted(alphas))
+        self.assertEqual(widths, sorted(widths))
+
+    def test_trail_segments_do_not_span_wrap_seam_jumps(self) -> None:
+        controller = build_locked_cell_explosion(
+            self._config(
+                dimension=2,
+                topology=ExplosionTopologyInput(
+                    board_dims=(4, 4),
+                    explorer_topology_profile=axis_wrap_profile(
+                        dimension=2,
+                        wrapped_axes=(0,),
+                    ),
+                ),
+            )
+        )
+        particle = controller.simulation.particles[0]
+        particle.position_nd = (3.4, 1.5)
+        particle.velocity_nd = (2.0, 0.0)
+        particle.trail_samples = (
+            [
+                ExplosionTrailSample(
+                    position_nd=(3.4, 1.5),
+                    elapsed_ms=0.0,
+                )
+            ]
+        )
+        controller.simulation.particles[1].active = False
+
+        controller.step(200.0)
+
+        rendered = controller.render_particles(render_context=None)[0]
+        self.assertTrue(rendered.trail_segments)
+        self.assertTrue(
+            all(
+                abs(segment.head_position_nd[0] - segment.tail_position_nd[0]) < 2.0
+                for segment in rendered.trail_segments
+            )
+        )
 
     def test_non_connected_escape_boundary_does_not_reflect(self) -> None:
         controller = build_locked_cell_explosion(
@@ -412,6 +610,78 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         self.assertFalse(draw_native.called)
         self.assertTrue(draw_projection.called)
+
+    def test_trace_toggle_routes_to_native_board_preview(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.trace_enabled = True
+
+        with patch(
+            "tet4d.ui.pygame.locked_cell_explosion.launcher.draw_native_board_view"
+        ) as draw_board:
+            explosion_launcher._draw_native_board_preview(
+                pygame.Surface((640, 480)),
+                fonts=self._fonts(),
+                area=pygame.Rect(0, 0, 320, 240),
+                controller=None,
+                state=state,
+            )
+
+        self.assertTrue(draw_board.called)
+        self.assertTrue(draw_board.call_args.kwargs["show_trace"])
+
+    def test_trace_toggle_routes_to_projection_reference_scene(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+        state.trace_enabled = True
+
+        with patch.object(explosion_launcher, "_draw_scene_4d") as draw_scene:
+            explosion_launcher._draw_projection_reference_scene(
+                pygame.Surface((640, 480)),
+                fonts=self._fonts(),
+                area=pygame.Rect(0, 0, 320, 240),
+                controller=None,
+                state=state,
+            )
+
+        self.assertTrue(draw_scene.called)
+        self.assertTrue(draw_scene.call_args.kwargs["explosion_trace_enabled"])
+
+    def test_native_board_view_draws_trace_lines_only_when_enabled(self) -> None:
+        surface = pygame.Surface((320, 240), pygame.SRCALPHA)
+        particle = SimpleNamespace(
+            source_coord=(0, 0),
+            render_position=(1.25, 1.5, 0.0),
+            rotation_deg=(0.0, 0.0, 0.0),
+            color_id=2,
+        )
+        controller = SimpleNamespace(
+            render_particles=lambda *, render_context: (particle,),
+        )
+
+        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line") as draw_line:
+            explosion_board_view.draw_native_board_view(
+                surface,
+                rect=pygame.Rect(0, 0, 320, 240),
+                fonts=self._fonts(),
+                controller=controller,
+                dimension=2,
+                board_dims=(4, 4),
+                show_trace=False,
+            )
+            without_trace = draw_line.call_count
+
+        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line") as draw_line:
+            explosion_board_view.draw_native_board_view(
+                surface,
+                rect=pygame.Rect(0, 0, 320, 240),
+                fonts=self._fonts(),
+                controller=controller,
+                dimension=2,
+                board_dims=(4, 4),
+                show_trace=True,
+            )
+            with_trace = draw_line.call_count
+
+        self.assertGreater(with_trace, without_trace)
 
     def test_single_cell_snapshot_uses_explicit_coordinate(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)

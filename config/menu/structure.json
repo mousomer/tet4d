@@ -318,20 +318,24 @@
         },
         {
           "id": "game_seed",
-          "type": "slider",
+          "type": "stepper",
           "label": "Game seed (all modes)",
+          "semantic_type": "int",
           "setting_id": "game_seed"
         },
         {
           "id": "game_random_mode",
           "type": "selector",
           "label": "Random type (all modes)",
+          "semantic_type": "enum",
+          "options_key": "game_random_mode",
           "setting_id": "game_random_mode"
         },
         {
           "id": "analytics_score_logging",
           "type": "toggle",
           "label": "Score logging",
+          "semantic_type": "bool",
           "setting_id": "analytics_score_logging"
         },
         {
@@ -343,6 +347,7 @@
           "id": "game_topology_advanced",
           "type": "toggle",
           "label": "Advanced topology controls",
+          "semantic_type": "bool",
           "setting_id": "game_topology_advanced"
         },
         {
@@ -371,30 +376,37 @@
           "id": "rotation_animation_mode",
           "type": "selector",
           "label": "Rotation animation mode",
+          "semantic_type": "enum",
+          "options_key": "game_rotation_animation_mode",
           "setting_id": "rotation_animation_mode"
         },
         {
           "id": "kick_level_index",
           "type": "selector",
           "label": "Kick permissiveness",
+          "semantic_type": "enum",
+          "options_key": "game_kick_level",
           "setting_id": "kick_level_index"
         },
         {
           "id": "rotation_animation_duration_ms_2d",
           "type": "slider",
           "label": "2D rotation animation",
+          "semantic_type": "int",
           "setting_id": "rotation_animation_duration_ms_2d"
         },
         {
           "id": "rotation_animation_duration_ms_nd",
           "type": "slider",
           "label": "ND rotation animation",
+          "semantic_type": "int",
           "setting_id": "rotation_animation_duration_ms_nd"
         },
         {
           "id": "translation_animation_duration_ms",
           "type": "slider",
           "label": "Translation animation",
+          "semantic_type": "int",
           "setting_id": "translation_animation_duration_ms"
         },
         {
@@ -402,6 +414,7 @@
           "type": "slider",
           "label": "Locked-cell transparency",
           "description": "Overlay transparency for locked cells in gameplay views.",
+          "semantic_type": "float",
           "setting_id": "display_overlay_transparency"
         },
         {
@@ -413,30 +426,38 @@
           "id": "endgame_preset_id",
           "type": "selector",
           "label": "Relic-field preset",
+          "semantic_type": "enum",
+          "options_key": "game_endgame_preset",
           "setting_id": "endgame_preset_id"
         },
         {
           "id": "endgame_boundary_response",
           "type": "selector",
           "label": "Boundary response",
+          "semantic_type": "enum",
+          "options_key": "game_endgame_boundary_response",
           "setting_id": "endgame_boundary_response"
         },
         {
           "id": "endgame_particle_collisions",
           "type": "selector",
           "label": "Particle collisions",
+          "semantic_type": "enum",
+          "options_key": "game_endgame_particle_collisions",
           "setting_id": "endgame_particle_collisions"
         },
         {
           "id": "endgame_relic_speed_percent",
           "type": "slider",
           "label": "Relic field speed",
+          "semantic_type": "int",
           "setting_id": "endgame_relic_speed_percent"
         },
         {
           "id": "endgame_shatter_speed_percent",
           "type": "slider",
           "label": "Shatter speed",
+          "semantic_type": "int",
           "setting_id": "endgame_shatter_speed_percent"
         },
         {
@@ -453,12 +474,14 @@
           "id": "auto_speedup_enabled",
           "type": "toggle",
           "label": "Auto speed-up by clears",
+          "semantic_type": "bool",
           "setting_id": "auto_speedup_enabled"
         },
         {
           "id": "lines_per_level",
-          "type": "slider",
+          "type": "stepper",
           "label": "Lines per level",
+          "semantic_type": "int",
           "setting_id": "lines_per_level"
         },
         {
@@ -493,18 +516,21 @@
           "id": "display_fullscreen",
           "type": "toggle",
           "label": "Fullscreen",
+          "semantic_type": "bool",
           "setting_id": "display_fullscreen"
         },
         {
           "id": "display_width",
-          "type": "slider",
+          "type": "stepper",
           "label": "Window width",
+          "semantic_type": "int",
           "setting_id": "display_width"
         },
         {
           "id": "display_height",
-          "type": "slider",
+          "type": "stepper",
           "label": "Window height",
+          "semantic_type": "int",
           "setting_id": "display_height"
         },
         {
@@ -545,18 +571,21 @@
           "id": "audio_master",
           "type": "slider",
           "label": "Master volume",
+          "semantic_type": "float",
           "setting_id": "audio_master"
         },
         {
           "id": "audio_sfx",
           "type": "slider",
           "label": "SFX volume",
+          "semantic_type": "float",
           "setting_id": "audio_sfx"
         },
         {
           "id": "audio_mute",
           "type": "toggle",
           "label": "Mute",
+          "semantic_type": "bool",
           "setting_id": "audio_mute"
         },
         {
@@ -1049,36 +1078,50 @@
       {
         "label": "Board width",
         "attr": "width",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 6,
         "max": 16
       },
       {
         "label": "Board height",
         "attr": "height",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 6,
         "max": 30
       },
       {
         "label": "Piece set",
         "attr": "piece_set_index",
-        "min": 0,
-        "max": "piece_set_max"
+        "semantic_type": "enum",
+        "control": "selector",
+        "options_source": "piece_set_labels"
       },
       {
         "label": "Topology",
         "attr": "topology_mode",
-        "min": 0,
-        "max": 2
+        "semantic_type": "enum",
+        "control": "selector",
+        "options": [
+          "Bounded",
+          "Wrap all",
+          "Invert all"
+        ]
       },
       {
         "label": "Challenge layers",
         "attr": "challenge_layers",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 0,
         "max": 20
       },
       {
         "label": "Speed level",
         "attr": "speed_level",
+        "semantic_type": "int",
+        "control": "slider",
         "min": 1,
         "max": 10
       }
@@ -1087,42 +1130,58 @@
       {
         "label": "Board width",
         "attr": "width",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 4,
         "max": 12
       },
       {
         "label": "Board height",
         "attr": "height",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 6,
         "max": 30
       },
       {
         "label": "Board depth",
         "attr": "depth",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 4,
         "max": 12
       },
       {
         "label": "3D piece set",
         "attr": "piece_set_index",
-        "min": 0,
-        "max": "piece_set_max"
+        "semantic_type": "enum",
+        "control": "selector",
+        "options_source": "piece_set_labels"
       },
       {
         "label": "Topology",
         "attr": "topology_mode",
-        "min": 0,
-        "max": 2
+        "semantic_type": "enum",
+        "control": "selector",
+        "options": [
+          "Bounded",
+          "Wrap all",
+          "Invert all"
+        ]
       },
       {
         "label": "Challenge layers",
         "attr": "challenge_layers",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 0,
         "max": 20
       },
       {
         "label": "Speed level",
         "attr": "speed_level",
+        "semantic_type": "int",
+        "control": "slider",
         "min": 1,
         "max": 10
       }
@@ -1131,48 +1190,66 @@
       {
         "label": "Board width",
         "attr": "width",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 4,
         "max": 16
       },
       {
         "label": "Board height",
         "attr": "height",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 6,
         "max": 30
       },
       {
         "label": "Board depth (z)",
         "attr": "depth",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 4,
         "max": 12
       },
       {
         "label": "Board axis w",
         "attr": "fourth",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 4,
         "max": 10
       },
       {
         "label": "4D piece set",
         "attr": "piece_set_index",
-        "min": 0,
-        "max": "piece_set_max"
+        "semantic_type": "enum",
+        "control": "selector",
+        "options_source": "piece_set_labels"
       },
       {
         "label": "Topology",
         "attr": "topology_mode",
-        "min": 0,
-        "max": 2
+        "semantic_type": "enum",
+        "control": "selector",
+        "options": [
+          "Bounded",
+          "Wrap all",
+          "Invert all"
+        ]
       },
       {
         "label": "Challenge layers",
         "attr": "challenge_layers",
+        "semantic_type": "int",
+        "control": "stepper",
         "min": 0,
         "max": 20
       },
       {
         "label": "Speed level",
         "attr": "speed_level",
+        "semantic_type": "int",
+        "control": "slider",
         "min": 1,
         "max": 10
       }

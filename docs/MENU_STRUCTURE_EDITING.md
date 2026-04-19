@@ -60,15 +60,25 @@ Supported structural types:
 - `toggle`
 - `selector`
 - `slider`
+- `stepper`
 - `keybinding_group`
 - `legacy_dispatch`
+
+Control typing rule:
+
+- `toggle` is boolean-only and must declare `semantic_type: "bool"`
+- `selector` is categorical-only and must declare `semantic_type: "enum"`
+- `slider` is numeric-only and must declare `semantic_type: "int"` or `"float"`
+- `stepper` is numeric-only and must declare `semantic_type: "int"` or `"float"`
+- renderers must not infer selector-vs-slider from the count of possible values
 
 Use type-specific fields only where they apply:
 
 - `action` / `legacy_dispatch`: `action_id`
 - `action_group`: `default_action_id`, `actions`
 - `submenu`: `menu_id`
-- `toggle` / `selector` / `slider`: `setting_id`
+- `toggle` / `selector` / `slider` / `stepper`: `setting_id`, `semantic_type`
+- `selector`: `options_key`
 - `keybinding_group`: `binding_group`, `binding_dimension`, optional `binding_bucket`
 
 Optional shared metadata:
@@ -166,8 +176,10 @@ Example:
 ### Add a settings control
 
 1. Choose the owning settings page under `menus`.
-2. Add a typed `toggle`, `selector`, or `slider` item there.
+2. Add a typed `toggle`, `selector`, `slider`, or `stepper` item there.
 3. Reuse an existing `setting_id` already handled by the settings runtime unless this is a real new setting.
+4. Pick the control from semantic type first:
+   `bool -> toggle`, `enum -> selector`, `int/float -> slider` or `stepper`.
 
 Example:
 
@@ -176,7 +188,31 @@ Example:
   "id": "endgame_preset_id",
   "type": "selector",
   "label": "Relic-field preset",
+  "semantic_type": "enum",
+  "options_key": "game_endgame_preset",
   "setting_id": "endgame_preset_id"
+}
+```
+
+### Add or edit a setup field
+
+Setup fields in `setup_fields` are semantically typed too.
+
+- numeric setup fields must declare `semantic_type`, `control`, `min`, and `max`
+- categorical setup fields must declare `semantic_type: "enum"`, `control: "selector"`, and either literal `options` or `options_source`
+- boolean setup fields must declare `semantic_type: "bool"` and `control: "toggle"`
+- setup sliders are numeric-only; discrete counts such as board dimensions should use `stepper`
+
+Example:
+
+```json
+{
+  "label": "Board width",
+  "attr": "width",
+  "semantic_type": "int",
+  "control": "stepper",
+  "min": 6,
+  "max": 16
 }
 ```
 

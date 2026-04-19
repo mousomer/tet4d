@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pygame
 
+from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.ui.pygame.menu.menu_controls import apply_menu_actions, gather_menu_actions
 
 
@@ -54,7 +55,10 @@ def test_numeric_entry_commits_setup_value() -> None:
     pygame.init()
     try:
         state = _DummyState(settings=_DummySettings(width=8))
-        fields = [("Width", "width", 4, 40), ("Height", "height", 8, 60)]
+        fields = [
+            FieldSpec("Width", "width", "int", "stepper", min_value=4, max_value=40),
+            FieldSpec("Height", "height", "int", "stepper", min_value=8, max_value=60),
+        ]
         with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_2, '2')]):
             _collect_and_apply(state, fields)
         assert state.numeric_text_mode is True
@@ -74,7 +78,10 @@ def test_numeric_entry_backspace_and_cancel_preserves_value() -> None:
     pygame.init()
     try:
         state = _DummyState(settings=_DummySettings(width=18))
-        fields = [("Width", "width", 4, 40), ("Height", "height", 8, 60)]
+        fields = [
+            FieldSpec("Width", "width", "int", "stepper", min_value=4, max_value=40),
+            FieldSpec("Height", "height", "int", "stepper", min_value=8, max_value=60),
+        ]
         with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_2, '2')]):
             _collect_and_apply(state, fields)
         with patch.object(pygame.event, 'get', return_value=[_textinput('4')]):
@@ -95,7 +102,9 @@ def test_numeric_entry_clamps_nd_dimension_value() -> None:
     pygame.init()
     try:
         state = _DummyState(settings=_DummySettings(fourth=4), selected_index=0)
-        fields = [("Fourth", "fourth", 2, 8)]
+        fields = [
+            FieldSpec("Fourth", "fourth", "int", "stepper", min_value=2, max_value=8)
+        ]
         with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_9, '9')]):
             _collect_and_apply(state, fields)
         with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_RETURN)]):

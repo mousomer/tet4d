@@ -3495,10 +3495,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             state.canonical_state.preset_metadata.explorer_preset.preset_id,
             old_preset_id,
         )
-        self.assertEqual(
-            topology_lab_menu._explorer_preset_value_text(state),
-            selected_preset.label + (" [unsafe]" if selected_preset.unsafe else ""),
-        )
+        preset_value_text = topology_lab_menu._explorer_preset_value_text(state)
+        self.assertIn(selected_preset.label, preset_value_text)
+        self.assertEqual("[unsafe]" in preset_value_text, selected_preset.unsafe)
         self.assertTrue(
             state.scene_preview is not None or state.scene_preview_error is not None
         )

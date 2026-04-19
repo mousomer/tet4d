@@ -4,7 +4,7 @@ Role: rds
 Status: active
 Scope: launcher, settings, pause-menu, and topology-playground menu IA
 Canonical owner: this file
-Last verified: 2026-04-12
+Last verified: 2026-04-19
 
 ## 1. Scope
 
@@ -224,6 +224,15 @@ Pause Menu
 7. Overflowing settings/keybindings pages must show a shared vertical
    scrollbar only when content exceeds the viewport, and navigation must keep
    the focused row visible through auto-scroll.
+8. Control family must be chosen from semantic type first:
+   `bool -> toggle`, `enum -> categorical selector`, `int/float -> slider or stepper`,
+   `action -> button`, `submenu/picker -> navigation row`.
+9. Sliders are numeric-only. A categorical enum must never render as a slider.
+10. Exact discrete numeric counts should prefer stepper-style controls over
+    sliders when precision matters.
+11. Categorical selectors should prefer compact segmented or cycler-style rows
+    for 2-4 options, dropdown or cycler behavior for larger simple sets, and a
+    dedicated picker or submenu for richer option sets.
 
 ## 6. Navigation and Interaction Model
 
@@ -272,8 +281,8 @@ Pause Menu
 11. `Toggle Fullscreen`
 12. `Adjust Audio`
 13. `Toggle Score Logging`
-14. Bounded numeric settings should render with inline sliders in addition to
-    text values.
+14. Numeric settings may use inline sliders or steppers, but sliders remain
+    numeric-only and categorical settings must use selector controls instead.
 
 ### 7.2 Persistence model
 
@@ -357,6 +366,9 @@ Add persistent settings file:
 5. Launcher and pause menus must consume graph items; no hardcoded tree/picker lists in runtime modules.
 6. Menu graph lint contract lives in:
 7. `src/tet4d/engine/ui_logic/menu_graph_linter.py` + `tools/governance/lint_menu_graph.py`.
+8. Menu-control typing validation must fail fast when semantic type and
+   control family drift apart; selector rows require categorical option
+   metadata, and slider/toggle mismatches are invalid schema.
 
 ## 10. Testing Instructions
 

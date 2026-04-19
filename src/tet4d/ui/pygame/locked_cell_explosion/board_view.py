@@ -11,6 +11,8 @@ _BG = (16, 20, 40)
 _FRAME = (82, 96, 132)
 _GRID = (64, 78, 110)
 _LABEL = (216, 224, 244)
+_TRACE_ALPHA = 116
+_TRACE_WIDTH = 1
 
 
 @dataclass(frozen=True)
@@ -37,12 +39,33 @@ def _rotate_xy(point: tuple[float, float], angle_deg: float) -> tuple[float, flo
     )
 
 
+def _trace_color(color: tuple[int, int, int], *, alpha: float = 1.0) -> tuple[int, int, int, int]:
+    resolved_alpha = max(0, min(255, int(round(_TRACE_ALPHA * max(0.0, min(1.0, alpha))))))
+    return (*color, resolved_alpha)
+
+
+def _trace_width(base_width: float, width_scale: float) -> int:
+    return max(1, int(round(max(1.0, base_width) * max(0.35, float(width_scale)))))
+
+
+def _board_center_2d(
+    board_rect: pygame.Rect,
+    cell_size: float,
+    coord: tuple[float, ...],
+) -> tuple[float, float]:
+    return (
+        board_rect.x + ((float(coord[0]) + 0.5) * cell_size),
+        board_rect.y + ((float(coord[1]) + 0.5) * cell_size),
+    )
+
+
 def _draw_native_board_2d(
     surface: pygame.Surface,
     *,
     rect: pygame.Rect,
     controller: LockedCellExplosionController | None,
     board_dims: tuple[int, ...],
+    show_trace: bool,
 ) -> None:
     from tet4d.ui.pygame.render.gfx_game import color_for_cell
 
@@ -71,9 +94,54 @@ def _draw_native_board_2d(
     if controller is None:
         return
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    for particle in controller.render_particles(render_context=None):
-        center_x = board_rect.x + ((float(particle.render_position[0]) + 0.5) * cell_size)
-        center_y = board_rect.y + ((float(particle.render_position[1]) + 0.5) * cell_size)
+    rendered_particles = controller.render_particles(render_context=None)
+    if show_trace:
+        for particle in rendered_particles:
+            color = color_for_cell(int(particle.color_id))
+            trail_segments = tuple(getattr(particle, "trail_segments", ()))
+            if not trail_segments:
+                source = _board_center_2d(
+                    board_rect,
+                    cell_size,
+                    tuple(float(value) for value in getattr(particle, "source_coord", ())[:2]),
+                )
+                current = _board_center_2d(
+                    board_rect,
+                    cell_size,
+                    tuple(float(value) for value in particle.render_position[:2]),
+                )
+                pygame.draw.line(
+                    overlay,
+                    _trace_color(color),
+                    source,
+                    current,
+                    _TRACE_WIDTH,
+                )
+                continue
+            for segment in trail_segments:
+                tail = _board_center_2d(
+                    board_rect,
+                    cell_size,
+                    tuple(float(value) for value in segment.tail_render_position[:2]),
+                )
+                head = _board_center_2d(
+                    board_rect,
+                    cell_size,
+                    tuple(float(value) for value in segment.head_render_position[:2]),
+                )
+                pygame.draw.line(
+                    overlay,
+                    _trace_color(color, alpha=float(segment.alpha)),
+                    tail,
+                    head,
+                    _trace_width(cell_size * 0.08, float(segment.width)),
+                )
+    for particle in rendered_particles:
+        center_x, center_y = _board_center_2d(
+            board_rect,
+            cell_size,
+            tuple(float(value) for value in particle.render_position[:2]),
+        )
         corners = []
         for local in ((-0.42, -0.42), (0.42, -0.42), (0.42, 0.42), (-0.42, 0.42)):
             rotated = _rotate_xy(local, float(particle.rotation_deg[2]))
@@ -97,6 +165,7 @@ def _draw_native_board_3d(
     controller: LockedCellExplosionController | None,
     board_dims: tuple[int, ...],
     camera_3d,
+    show_trace: bool,
 ) -> None:
     from tet4d.ui.pygame.front3d_render import Camera3D, color_for_cell_3d
     from tet4d.ui.pygame.render.front3d_cell_render import draw_cells
@@ -105,6 +174,7 @@ def _draw_native_board_3d(
         build_cell_faces,
         draw_board_grid,
         fit_orthographic_zoom_for_rect,
+        project_raw_point,
     )
 
     camera = camera_3d if isinstance(camera_3d, Camera3D) else Camera3D()
@@ -147,6 +217,58 @@ def _draw_native_board_3d(
     if controller is None:
         return
     center_px = (board_rect.centerx, board_rect.centery)
+    rendered_particles = controller.render_particles(render_context=None)
+    if show_trace:
+        overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        for particle in rendered_particles:
+            color = color_for_cell_3d(int(particle.color_id))
+            trail_segments = tuple(getattr(particle, "trail_segments", ()))
+            if not trail_segments:
+                source = project_raw_point(
+                    tuple(float(value) + 0.5 for value in getattr(particle, "source_coord", ())[:3]),
+                    dims,
+                    params,
+                    center_px,
+                )
+                head = project_raw_point(
+                    tuple(float(value) + 0.5 for value in particle.render_position),
+                    dims,
+                    params,
+                    center_px,
+                )
+                if source is None or head is None:
+                    continue
+                pygame.draw.line(
+                    overlay,
+                    _trace_color(color),
+                    source,
+                    head,
+                    _TRACE_WIDTH,
+                )
+                continue
+            for segment in trail_segments:
+                tail = project_raw_point(
+                    tuple(float(value) + 0.5 for value in segment.tail_render_position),
+                    dims,
+                    params,
+                    center_px,
+                )
+                head = project_raw_point(
+                    tuple(float(value) + 0.5 for value in segment.head_render_position),
+                    dims,
+                    params,
+                    center_px,
+                )
+                if tail is None or head is None:
+                    continue
+                pygame.draw.line(
+                    overlay,
+                    _trace_color(color, alpha=float(segment.alpha)),
+                    tail,
+                    head,
+                    _trace_width(1.6, float(segment.width)),
+                )
+        surface.blit(overlay, (0, 0))
     visible_cells = [
         (
             tuple(float(value) for value in particle.render_position),
@@ -154,7 +276,7 @@ def _draw_native_board_3d(
             True,
             False,
         )
-        for particle in controller.render_particles(render_context=None)
+        for particle in rendered_particles
     ]
     draw_cells(
         surface,
@@ -191,6 +313,176 @@ def _render_context_for_4d(view, dims4: tuple[int, int, int, int]) -> _RenderCon
     )
 
 
+def _map_4d_coord_for_render(
+    coord: tuple[float, ...],
+    *,
+    board_dims: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+) -> tuple[float, float, float, float]:
+    mapped: list[float] = []
+    for axis, sign in render_context.basis_axis_map[:4]:
+        axis_index = int(axis)
+        value = float(coord[axis_index]) if 0 <= axis_index < len(coord) else 0.0
+        size = float(board_dims[axis_index]) if 0 <= axis_index < len(board_dims) else 1.0
+        mapped.append(value if int(sign) > 0 else (size - 1.0 - value))
+    while len(mapped) < 4:
+        mapped.append(0.0)
+    return (mapped[0], mapped[1], mapped[2], mapped[3])
+
+
+def _draw_native_board_4d_traces(
+    overlay: pygame.Surface,
+    *,
+    rendered_particles,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    color_for_cell,
+    color_map,
+) -> None:
+    for particle in rendered_particles:
+        color = color_for_cell(int(particle.color_id), color_map)
+        trail_segments = tuple(getattr(particle, "trail_segments", ()))
+        if not trail_segments:
+            layer_weight = next(
+                (
+                    float(weight)
+                    for candidate_layer, weight in getattr(particle, "layer_weights", ())
+                    if int(candidate_layer) == layer_index
+                ),
+                0.0,
+            )
+            if layer_weight <= 0.0:
+                continue
+            source_render = _map_4d_coord_for_render(
+                tuple(float(value) for value in getattr(particle, "source_coord", ())),
+                board_dims=dims4,
+                render_context=render_context,
+            )
+            source_point = project_raw_point(
+                tuple(float(value) + 0.5 for value in source_render[:3]),
+                basis.dims3,
+                view,
+                center_px,
+                zoom,
+            )
+            head_point = project_raw_point(
+                tuple(float(value) + 0.5 for value in particle.render_position),
+                basis.dims3,
+                view,
+                center_px,
+                zoom,
+            )
+            if source_point is None or head_point is None:
+                continue
+            pygame.draw.line(
+                overlay,
+                _trace_color(color, alpha=layer_weight),
+                source_point,
+                head_point,
+                _TRACE_WIDTH,
+            )
+            continue
+        for segment in trail_segments:
+            tail_layer_weight = next(
+                (
+                    float(weight)
+                    for candidate_layer, weight in segment.tail_layer_weights
+                    if int(candidate_layer) == layer_index
+                ),
+                0.0,
+            )
+            head_layer_weight = next(
+                (
+                    float(weight)
+                    for candidate_layer, weight in segment.head_layer_weights
+                    if int(candidate_layer) == layer_index
+                ),
+                0.0,
+            )
+            layer_weight = max(tail_layer_weight, head_layer_weight)
+            if layer_weight <= 0.0:
+                continue
+            tail_point = project_raw_point(
+                tuple(float(value) + 0.5 for value in segment.tail_render_position),
+                basis.dims3,
+                view,
+                center_px,
+                zoom,
+            )
+            head_point = project_raw_point(
+                tuple(float(value) + 0.5 for value in segment.head_render_position),
+                basis.dims3,
+                view,
+                center_px,
+                zoom,
+            )
+            if tail_point is None or head_point is None:
+                continue
+            pygame.draw.line(
+                overlay,
+                _trace_color(
+                    color,
+                    alpha=min(1.0, float(segment.alpha) * layer_weight),
+                ),
+                tail_point,
+                head_point,
+                _trace_width(1.5, float(segment.width)),
+            )
+
+
+def _collect_native_board_4d_faces(
+    *,
+    rendered_particles,
+    layer_index: int,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    transform_raw_point,
+    color_for_cell,
+    color_map,
+    build_oriented_cube_faces,
+) -> list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]]:
+    faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]] = []
+    for particle in rendered_particles:
+        layer_weight = next(
+            (
+                float(weight)
+                for candidate_layer, weight in particle.layer_weights
+                if int(candidate_layer) == layer_index
+            ),
+            0.0,
+        )
+        if layer_weight <= 0.0:
+            continue
+        particle_faces = build_oriented_cube_faces(
+            center=tuple(float(value) for value in particle.render_position),
+            color=color_for_cell(int(particle.color_id), color_map),
+            project_raw=lambda raw: project_raw_point(
+                raw,
+                basis.dims3,
+                view,
+                center_px,
+                zoom,
+            ),
+            transform_raw=lambda raw: transform_raw_point(raw, basis.dims3, view),
+            active=True,
+            rotation_deg=tuple(float(value) for value in particle.rotation_deg),
+        )
+        faces.extend(
+            (depth, polygon, color, min(1.0, float(particle.alpha) * layer_weight))
+            for depth, polygon, color, _active in particle_faces
+        )
+    return faces
+
+
 def _draw_native_board_4d(
     surface: pygame.Surface,
     *,
@@ -199,6 +491,7 @@ def _draw_native_board_4d(
     controller: LockedCellExplosionController | None,
     board_dims: tuple[int, ...],
     view_4d,
+    show_trace: bool,
 ) -> None:
     from tet4d.ui.pygame.front4d_render import (
         COLOR_MAP,
@@ -262,36 +555,34 @@ def _draw_native_board_4d(
             continue
         center_px = (draw_rect.centerx, draw_rect.centery)
         overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-        faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]] = []
-        for particle in rendered_particles:
-            layer_weight = next(
-                (
-                    float(weight)
-                    for candidate_layer, weight in particle.layer_weights
-                    if int(candidate_layer) == layer_index
-                ),
-                0.0,
+        if show_trace:
+            _draw_native_board_4d_traces(
+                overlay,
+                rendered_particles=rendered_particles,
+                layer_index=layer_index,
+                dims4=dims4,
+                render_context=render_context,
+                basis=basis,
+                view=view,
+                center_px=center_px,
+                zoom=zoom,
+                project_raw_point=_project_raw_point,
+                color_for_cell=color_for_cell,
+                color_map=COLOR_MAP,
             )
-            if layer_weight <= 0.0:
-                continue
-            particle_faces = build_oriented_cube_faces(
-                center=tuple(float(value) for value in particle.render_position),
-                color=color_for_cell(int(particle.color_id), COLOR_MAP),
-                project_raw=lambda raw: _project_raw_point(
-                    raw,
-                    basis.dims3,
-                    view,
-                    center_px,
-                    zoom,
-                ),
-                transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
-                active=True,
-                rotation_deg=tuple(float(value) for value in particle.rotation_deg),
-            )
-            faces.extend(
-                (depth, polygon, color, min(1.0, float(particle.alpha) * layer_weight))
-                for depth, polygon, color, _active in particle_faces
-            )
+        faces = _collect_native_board_4d_faces(
+            rendered_particles=rendered_particles,
+            layer_index=layer_index,
+            basis=basis,
+            view=view,
+            center_px=center_px,
+            zoom=zoom,
+            project_raw_point=_project_raw_point,
+            transform_raw_point=_transform_raw_point,
+            color_for_cell=color_for_cell,
+            color_map=COLOR_MAP,
+            build_oriented_cube_faces=build_oriented_cube_faces,
+        )
         faces.sort(key=lambda item: item[0], reverse=True)
         for _depth, polygon, color, alpha in faces:
             fill_alpha = max(0, min(255, int(round(255 * alpha))))
@@ -311,6 +602,7 @@ def draw_native_board_view(
     board_dims: tuple[int, ...],
     camera_3d=None,
     view_4d=None,
+    show_trace: bool = False,
 ) -> None:
     if int(dimension) == 2:
         _draw_native_board_2d(
@@ -318,6 +610,7 @@ def draw_native_board_view(
             rect=rect,
             controller=controller,
             board_dims=board_dims,
+            show_trace=show_trace,
         )
         return
     if int(dimension) == 3:
@@ -327,6 +620,7 @@ def draw_native_board_view(
             controller=controller,
             board_dims=board_dims,
             camera_3d=camera_3d,
+            show_trace=show_trace,
         )
         return
     _draw_native_board_4d(
@@ -336,6 +630,7 @@ def draw_native_board_view(
         controller=controller,
         board_dims=board_dims,
         view_4d=view_4d,
+        show_trace=show_trace,
     )
 
 

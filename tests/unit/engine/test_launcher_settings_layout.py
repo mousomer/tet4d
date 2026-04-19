@@ -136,20 +136,36 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             ),
         )
         total_width = panel_w - 48
-        for label, attr_name, min_value, max_value in setup_fields_for_settings(4):
-            if max_value <= min_value:
+        for field in setup_fields_for_settings(4):
+            if not field.uses_slider():
                 continue
-            value = getattr(settings, attr_name)
-            if not isinstance(value, int):
-                continue
-            value_text = _menu_value_text(4, attr_name, value)
-            with self.subTest(label=label):
+            value = getattr(settings, field.attr_name)
+            value_text = _menu_value_text(field, value)
+            with self.subTest(label=field.label):
                 self._assert_slider_layout_fits(
                     font=fonts.menu_font,
-                    label=label,
+                    label=field.label,
                     value=value_text,
                     total_width=total_width,
                 )
+
+    def test_setup_enum_rows_use_selector_controls_not_sliders(self) -> None:
+        fields = {field.attr_name: field for field in setup_fields_for_settings(4)}
+        self.assertEqual(fields["piece_set_index"].semantic_type, "enum")
+        self.assertEqual(fields["piece_set_index"].control_family, "selector")
+        self.assertFalse(fields["piece_set_index"].uses_slider())
+        self.assertEqual(fields["topology_mode"].semantic_type, "enum")
+        self.assertEqual(fields["topology_mode"].control_family, "selector")
+        self.assertFalse(fields["topology_mode"].uses_slider())
+
+    def test_setup_discrete_numeric_rows_prefer_steppers(self) -> None:
+        fields = {field.attr_name: field for field in setup_fields_for_settings(4)}
+        self.assertEqual(fields["width"].control_family, "stepper")
+        self.assertEqual(fields["height"].control_family, "stepper")
+        self.assertEqual(fields["depth"].control_family, "stepper")
+        self.assertEqual(fields["fourth"].control_family, "stepper")
+        self.assertEqual(fields["challenge_layers"].control_family, "stepper")
+        self.assertEqual(fields["speed_level"].control_family, "slider")
 
     def test_game_settings_slider_rows_fit_compact_supported_width(self) -> None:
         fonts = self._fonts()

@@ -410,7 +410,7 @@ class TestTopologyLabScenes(unittest.TestCase):
             (88, 170, 214),
             False,
             centers,
-            2,
+            4,
         )
         draw_circle.assert_not_called()
 

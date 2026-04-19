@@ -110,6 +110,7 @@
         "toggle",
         "selector",
         "slider",
+        "stepper",
         "keybinding_group",
         "legacy_dispatch",
         "info",
@@ -136,6 +137,30 @@
           "literal": "_TOP_LEVEL_HEADER_LABELS =",
           "message": "settings_hub_model.py must not hardcode top-level settings headers; use config/menu/structure.json"
         }
+      ]
+    },
+    "menu_control_typing_contract": {
+      "setting_semantic_types": [
+        "bool",
+        "enum",
+        "int",
+        "float"
+      ],
+      "menu_control_types": [
+        "toggle",
+        "selector",
+        "slider",
+        "stepper"
+      ],
+      "setup_control_types": [
+        "toggle",
+        "selector",
+        "slider",
+        "stepper"
+      ],
+      "selector_options_key_required": true,
+      "enum_setup_option_source_tokens": [
+        "piece_set_labels"
       ]
     },
     "contributor_directives": {

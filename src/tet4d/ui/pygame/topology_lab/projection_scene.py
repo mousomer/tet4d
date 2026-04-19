@@ -342,6 +342,64 @@ def _draw_explosion_particles(
         pygame.draw.rect(surface, (248, 250, 255), rect, 1, border_radius=3)
 
 
+def _trail_sample_style(
+    *,
+    sample_elapsed_ms: float,
+    current_elapsed_ms: float,
+) -> tuple[float, float]:
+    age_ratio = max(0.0, min(1.0, (current_elapsed_ms - sample_elapsed_ms) / 620.0))
+    strength = 1.0 - age_ratio
+    return 0.12 + (0.76 * strength), 0.22 + (0.88 * strength)
+
+
+def _draw_explosion_traces(
+    surface: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    cell_size: int,
+    axes: tuple[int, int],
+    explosion_particles,
+) -> None:
+    if not explosion_particles:
+        return
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    for particle in explosion_particles:
+        color = color_for_cell(int(getattr(particle, "color_id", 0)))
+        previous = None
+        current_elapsed_ms = float(getattr(particle, "trail_elapsed_ms", 0.0))
+        for sample in tuple(getattr(particle, "trail_samples", ())):
+            if getattr(sample, "segment_break", False):
+                previous = None
+                continue
+            coord = tuple(float(value) for value in tuple(getattr(sample, "position_nd", ())))
+            if len(coord) <= max(axes):
+                previous = None
+                continue
+            center = (
+                int(round(board_rect.x + ((coord[axes[0]] + 0.5) * cell_size))),
+                int(round(board_rect.y + ((coord[axes[1]] + 0.5) * cell_size))),
+            )
+            if previous is not None:
+                alpha, width = _trail_sample_style(
+                    sample_elapsed_ms=float(getattr(sample, "elapsed_ms", 0.0)),
+                    current_elapsed_ms=current_elapsed_ms,
+                )
+                pygame.draw.line(
+                    overlay,
+                    (
+                        color[0],
+                        color[1],
+                        color[2],
+                        max(0, min(255, int(round(112 * alpha)))),
+                    ),
+                    previous,
+                    center,
+                    max(1, int(round((cell_size * 0.08) * max(0.35, width)))),
+                )
+            previous = center
+    surface.blit(overlay, (0, 0))
+
+
 def _boundary_edge_rect(
     board_rect: pygame.Rect,
     boundary: BoundaryRef,
@@ -717,6 +775,7 @@ def _draw_projection_panel(
     sandbox_cells: tuple[tuple[int, ...], ...] | None,
     sandbox_valid: bool | None,
     explosion_particles,
+    explosion_trace_enabled: bool,
     slab_radius: int,
     focus_boundaries: tuple[BoundaryRef, ...],
     active_tool: str | None,
@@ -802,6 +861,14 @@ def _draw_projection_panel(
         sandbox_valid=sandbox_valid,
         slab_radius=slab_radius,
     )
+    if explosion_trace_enabled:
+        _draw_explosion_traces(
+            surface,
+            board_rect=board_rect,
+            cell_size=cell_size,
+            axes=panel.axes,
+            explosion_particles=explosion_particles,
+        )
     _draw_explosion_particles(
         surface,
         area=panel.rect,
@@ -836,6 +903,7 @@ def _draw_projection_panels(
     sandbox_valid: bool | None,
     sandbox_message: str,
     explosion_particles,
+    explosion_trace_enabled: bool,
     slab_radius: int,
     focus_boundaries: tuple[BoundaryRef, ...],
     active_tool: str | None,
@@ -855,6 +923,7 @@ def _draw_projection_panels(
             sandbox_cells=sandbox_cells,
             sandbox_valid=sandbox_valid,
             explosion_particles=explosion_particles,
+            explosion_trace_enabled=explosion_trace_enabled,
             slab_radius=slab_radius,
             focus_boundaries=focus_boundaries,
             active_tool=active_tool,
@@ -898,6 +967,7 @@ def draw_projection_scene(
     sandbox_valid: bool | None = None,
     sandbox_message: str = "",
     explosion_particles=None,
+    explosion_trace_enabled: bool = False,
     slab_radius: int = 0,
 ) -> list[TopologyLabHitTarget]:
     dims = tuple(int(value) for value in preview_dims)
@@ -938,6 +1008,7 @@ def draw_projection_scene(
             sandbox_valid=sandbox_valid,
             sandbox_message=sandbox_message,
             explosion_particles=explosion_particles,
+            explosion_trace_enabled=explosion_trace_enabled,
             slab_radius=slab_radius,
             focus_boundaries=_focus_boundaries_for_glue(
                 profile,

@@ -7,6 +7,7 @@ from typing import Any
 
 import pygame
 
+from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.engine.runtime.menu_settings_state import (
     load_menu_settings,
     reset_menu_settings_to_defaults,
@@ -34,9 +35,6 @@ from .menu_keybinding_shortcuts import (
     menu_binding_action_for_key,
 )
 from .numeric_text_input import append_numeric_text, parse_numeric_text
-
-FieldSpec = tuple[str, str, int, int]
-
 
 @dataclass(frozen=True)
 class RebindCapture:
@@ -145,7 +143,11 @@ def _start_numeric_text_mode(
     *,
     incoming_text: str = "",
 ) -> None:
-    label, attr_name, _min_val, _max_val = fields[state.selected_index]
+    field = fields[state.selected_index]
+    if not field.allows_numeric_text_input():
+        return
+    label = field.label
+    attr_name = field.attr_name
     current_value = int(getattr(state.settings, attr_name))
     _stop_numeric_text_mode(state)
     state.numeric_text_mode = True
@@ -168,7 +170,7 @@ def _start_numeric_text_mode(
 def _matching_field(state: Any, fields: Sequence[FieldSpec]) -> FieldSpec | None:
     attr_name = str(getattr(state, "numeric_text_attr_name", ""))
     for field in fields:
-        if field[1] == attr_name:
+        if field.attr_name == attr_name:
             return field
     return None
 
@@ -178,7 +180,8 @@ def _apply_numeric_text_value(state: Any, fields: Sequence[FieldSpec]) -> bool:
     if field is None:
         _stop_numeric_text_mode(state)
         return False
-    label, attr_name, min_val, max_val = field
+    label = field.label
+    attr_name = field.attr_name
     parsed = parse_numeric_text(
         str(getattr(state, "numeric_text_buffer", "")),
         max_length=_NUMERIC_TEXT_MAX_LENGTH,
@@ -188,7 +191,7 @@ def _apply_numeric_text_value(state: Any, fields: Sequence[FieldSpec]) -> bool:
         state.bindings_status = f"Invalid value for {label}"
         state.bindings_status_error = True
         return False
-    setattr(state.settings, attr_name, max(min_val, min(max_val, parsed)))
+    setattr(state.settings, attr_name, field.clamp_numeric_value(parsed))
     _stop_numeric_text_mode(state)
     state.bindings_status = f"Updated {label}"
     state.bindings_status_error = False
@@ -202,6 +205,9 @@ def _handle_numeric_text_input(
 ) -> bool:
     if isinstance(action, NumericTextAppend):
         if not _numeric_text_mode_enabled(state):
+            selected_field = fields[state.selected_index]
+            if not selected_field.allows_numeric_text_input():
+                return False
             _start_numeric_text_mode(state, fields, incoming_text=action.text)
             return True
         state.numeric_text_buffer, state.numeric_text_replace_on_type = append_numeric_text(
@@ -502,10 +508,15 @@ def _handle_profile_remove(state: Any, _dimension: int) -> None:
 
 
 def _handle_value_delta(state: Any, fields: Sequence[FieldSpec], delta: int) -> None:
-    _, attr_name, min_val, max_val = fields[state.selected_index]
-    current = getattr(state.settings, attr_name)
-    current = max(min_val, min(max_val, current + delta))
-    setattr(state.settings, attr_name, current)
+    field = fields[state.selected_index]
+    current = getattr(state.settings, field.attr_name)
+    if field.is_bool():
+        updated = field.toggle_value(current)
+    elif field.is_enum():
+        updated = field.cycle_enum_value(current, delta)
+    else:
+        updated = field.clamp_numeric_value(float(current) + float(delta))
+    setattr(state.settings, field.attr_name, updated)
 
 
 def _apply_state_only_action(state: Any, action: MenuAction) -> bool:

@@ -1056,7 +1056,7 @@ def _settings_menu_setting_ids(menu_payload: dict[str, object]) -> set[str]:
             if not isinstance(item, dict):
                 continue
             item_type = str(item.get("type", "")).strip().lower()
-            if item_type not in {"toggle", "selector", "slider"}:
+            if item_type not in {"toggle", "selector", "slider", "stepper"}:
                 continue
             setting_id = item.get("setting_id")
             if isinstance(setting_id, str) and setting_id:
@@ -1150,6 +1150,397 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
                 )
             )
     return issues
+
+
+def _validate_menu_control_typing() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    contract = _load_governance_subsection(issues, "menu_control_typing_contract")
+    if contract is None:
+        return issues
+
+    menu_payload = _load_json_payload(
+        MENU_STRUCTURE_PATH, "config/menu/structure.json", issues
+    )
+    if not isinstance(menu_payload, dict):
+        issues.append(
+            ValidationIssue("json", "config/menu/structure.json must be a JSON object")
+        )
+        return issues
+
+    semantic_types = set(
+        _as_string_list(contract.get("setting_semantic_types", [])) or []
+    )
+    menu_control_types = set(
+        _as_string_list(contract.get("menu_control_types", [])) or []
+    )
+    setup_control_types = set(
+        _as_string_list(contract.get("setup_control_types", [])) or []
+    )
+    selector_options_key_required = bool(
+        contract.get("selector_options_key_required", False)
+    )
+    allowed_option_sources = set(
+        _as_string_list(contract.get("enum_setup_option_source_tokens", [])) or []
+    )
+    settings_option_labels = menu_payload.get("settings_option_labels")
+    if not isinstance(settings_option_labels, dict):
+        settings_option_labels = {}
+
+    _validate_menu_item_control_typing(
+        menu_payload=menu_payload,
+        semantic_types=semantic_types,
+        menu_control_types=menu_control_types,
+        selector_options_key_required=selector_options_key_required,
+        settings_option_labels=settings_option_labels,
+        issues=issues,
+    )
+
+    setup_fields = menu_payload.get("setup_fields")
+    if not isinstance(setup_fields, dict):
+        return issues
+    _validate_setup_field_control_typing(
+        setup_fields=setup_fields,
+        semantic_types=semantic_types,
+        setup_control_types=setup_control_types,
+        allowed_option_sources=allowed_option_sources,
+        issues=issues,
+    )
+    return issues
+
+
+def _validate_menu_item_control_typing(
+    *,
+    menu_payload: dict[str, object],
+    semantic_types: set[str],
+    menu_control_types: set[str],
+    selector_options_key_required: bool,
+    settings_option_labels: dict[str, object],
+    issues: list[ValidationIssue],
+) -> None:
+    menus = menu_payload.get("menus")
+    if not isinstance(menus, dict):
+        return
+    for menu_id, raw_menu in menus.items():
+        if not isinstance(raw_menu, dict):
+            continue
+        items = raw_menu.get("items")
+        if not isinstance(items, list):
+            continue
+        for idx, raw_item in enumerate(items):
+            if not isinstance(raw_item, dict):
+                continue
+            item_type = str(raw_item.get("type", "")).strip().lower()
+            if item_type not in menu_control_types:
+                continue
+            _validate_menu_control_item(
+                menu_id=menu_id,
+                item_index=idx,
+                raw_item=raw_item,
+                semantic_types=semantic_types,
+                selector_options_key_required=selector_options_key_required,
+                settings_option_labels=settings_option_labels,
+                issues=issues,
+            )
+
+
+def _menu_control_prefix(
+    menu_id: str, item_index: int, raw_item: dict[str, object]
+) -> str:
+    item_id = str(raw_item.get("id", "")).strip().lower()
+    prefix = f"menus.{menu_id}.items[{item_index}]"
+    if item_id:
+        return f"{prefix} ({item_id})"
+    return prefix
+
+
+def _validate_menu_control_item(
+    *,
+    menu_id: str,
+    item_index: int,
+    raw_item: dict[str, object],
+    semantic_types: set[str],
+    selector_options_key_required: bool,
+    settings_option_labels: dict[str, object],
+    issues: list[ValidationIssue],
+) -> None:
+    prefix = _menu_control_prefix(menu_id, item_index, raw_item)
+    item_type = str(raw_item.get("type", "")).strip().lower()
+    semantic_type = str(raw_item.get("semantic_type", "")).strip().lower()
+    if semantic_type not in semantic_types:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} must declare semantic_type in {sorted(semantic_types)}",
+            )
+        )
+        return
+    options_key = str(raw_item.get("options_key", "")).strip().lower()
+    if item_type == "toggle":
+        if semantic_type != "bool":
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} toggle controls must use semantic_type=bool",
+                )
+            )
+        return
+    if item_type == "selector":
+        _validate_selector_control_item(
+            prefix=prefix,
+            semantic_type=semantic_type,
+            options_key=options_key,
+            selector_options_key_required=selector_options_key_required,
+            settings_option_labels=settings_option_labels,
+            issues=issues,
+        )
+        return
+    _validate_numeric_control_item(
+        prefix=prefix,
+        item_type=item_type,
+        semantic_type=semantic_type,
+        options_key=options_key,
+        issues=issues,
+    )
+
+
+def _validate_selector_control_item(
+    *,
+    prefix: str,
+    semantic_type: str,
+    options_key: str,
+    selector_options_key_required: bool,
+    settings_option_labels: dict[str, object],
+    issues: list[ValidationIssue],
+) -> None:
+    if semantic_type != "enum":
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} selector controls must use semantic_type=enum",
+            )
+        )
+    if selector_options_key_required and not options_key:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} selector controls must declare options_key",
+            )
+        )
+        return
+    if options_key and options_key not in settings_option_labels:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} options_key references unknown settings_option_labels entry: {options_key}",
+            )
+        )
+
+
+def _validate_numeric_control_item(
+    *,
+    prefix: str,
+    item_type: str,
+    semantic_type: str,
+    options_key: str,
+    issues: list[ValidationIssue],
+) -> None:
+    if semantic_type not in {"int", "float"}:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} {item_type} controls must use semantic_type=int or float",
+            )
+        )
+    if options_key:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} numeric controls must not declare options_key",
+            )
+        )
+
+
+def _validate_setup_field_control_typing(
+    *,
+    setup_fields: dict[str, object],
+    semantic_types: set[str],
+    setup_control_types: set[str],
+    allowed_option_sources: set[str],
+    issues: list[ValidationIssue],
+) -> None:
+    for mode_key, raw_fields in setup_fields.items():
+        if not isinstance(raw_fields, list):
+            continue
+        for idx, raw_field in enumerate(raw_fields):
+            if not isinstance(raw_field, dict):
+                continue
+            _validate_setup_control_field(
+                mode_key=mode_key,
+                field_index=idx,
+                raw_field=raw_field,
+                semantic_types=semantic_types,
+                setup_control_types=setup_control_types,
+                allowed_option_sources=allowed_option_sources,
+                issues=issues,
+            )
+
+
+def _setup_field_prefix(mode_key: str, field_index: int) -> str:
+    return f"setup_fields.{mode_key}[{field_index}]"
+
+
+def _validate_setup_control_field(
+    *,
+    mode_key: str,
+    field_index: int,
+    raw_field: dict[str, object],
+    semantic_types: set[str],
+    setup_control_types: set[str],
+    allowed_option_sources: set[str],
+    issues: list[ValidationIssue],
+) -> None:
+    prefix = _setup_field_prefix(mode_key, field_index)
+    semantic_type = str(raw_field.get("semantic_type", "")).strip().lower()
+    control = str(raw_field.get("control", "")).strip().lower()
+    if semantic_type not in semantic_types:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} must declare semantic_type in {sorted(semantic_types)}",
+            )
+        )
+        return
+    if control not in setup_control_types:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} must declare control in {sorted(setup_control_types)}",
+            )
+        )
+        return
+    if semantic_type == "enum":
+        _validate_enum_setup_field(
+            prefix=prefix,
+            control=control,
+            raw_field=raw_field,
+            allowed_option_sources=allowed_option_sources,
+            issues=issues,
+        )
+        return
+    if semantic_type == "bool":
+        _validate_bool_setup_field(
+            prefix=prefix, control=control, raw_field=raw_field, issues=issues
+        )
+        return
+    _validate_numeric_setup_field(
+        prefix=prefix, control=control, raw_field=raw_field, issues=issues
+    )
+
+
+def _validate_enum_setup_field(
+    *,
+    prefix: str,
+    control: str,
+    raw_field: dict[str, object],
+    allowed_option_sources: set[str],
+    issues: list[ValidationIssue],
+) -> None:
+    has_min = "min" in raw_field
+    has_max = "max" in raw_field
+    has_options = "options" in raw_field
+    has_options_source = "options_source" in raw_field
+    if control != "selector":
+        issues.append(
+            ValidationIssue(
+                "content", f"{prefix} enum fields must use control=selector"
+            )
+        )
+    if has_min or has_max:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} enum fields must not define numeric min/max bounds",
+            )
+        )
+    if has_options == has_options_source:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} enum fields must define exactly one of options or options_source",
+            )
+        )
+    if has_options:
+        options = raw_field.get("options")
+        if (
+            not isinstance(options, list)
+            or not options
+            or any(not isinstance(value, str) or not value.strip() for value in options)
+        ):
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} enum options must be a non-empty list[str]",
+                )
+            )
+    if has_options_source:
+        options_source = str(raw_field.get("options_source", "")).strip().lower()
+        if options_source not in allowed_option_sources:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} options_source must be one of {sorted(allowed_option_sources)}",
+                )
+            )
+
+
+def _validate_bool_setup_field(
+    *,
+    prefix: str,
+    control: str,
+    raw_field: dict[str, object],
+    issues: list[ValidationIssue],
+) -> None:
+    if control != "toggle":
+        issues.append(
+            ValidationIssue("content", f"{prefix} bool fields must use control=toggle")
+        )
+    if any(key in raw_field for key in ("min", "max", "options", "options_source")):
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} bool fields must not define numeric or enum metadata",
+            )
+        )
+
+
+def _validate_numeric_setup_field(
+    *,
+    prefix: str,
+    control: str,
+    raw_field: dict[str, object],
+    issues: list[ValidationIssue],
+) -> None:
+    if control not in {"slider", "stepper"}:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} numeric fields must use control=slider or stepper",
+            )
+        )
+    if not ("min" in raw_field and "max" in raw_field):
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} numeric fields must define min and max bounds",
+            )
+        )
+    if "options" in raw_field or "options_source" in raw_field:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} numeric fields must not define enum options",
+            )
+        )
 
 
 def _parse_menu_label_requirements(
@@ -1518,6 +1909,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_policy_index_sync())
     issues.extend(_validate_policy_manifest_string_safety())
     issues.extend(_validate_deprecated_authorities())
+    issues.extend(_validate_menu_control_typing())
     issues.extend(_validate_menu_simplification_rule())
     issues.extend(_validate_menu_structure_single_source_of_truth())
     issues.extend(_validate_keybinding_single_source_of_truth())

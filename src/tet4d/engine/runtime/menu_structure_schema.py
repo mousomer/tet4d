@@ -33,6 +33,24 @@ from .menu_structure.settings_parse import (
 from .settings_schema import string_tuple
 
 
+def _validate_setting_item_option_keys(
+    menus: dict[str, dict[str, Any]],
+    *,
+    option_labels: dict[str, tuple[str, ...]],
+) -> None:
+    for menu_id, menu in menus.items():
+        for idx, item in enumerate(menu["items"]):
+            if str(item.get("type", "")).strip().lower() != "selector":
+                continue
+            options_key = str(item.get("options_key", "")).strip().lower()
+            if options_key not in option_labels:
+                raise RuntimeError(
+                    "structure.menus."
+                    f"{menu_id}.items[{idx}] selector references unknown options_key: "
+                    f"{options_key}"
+                )
+
+
 def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
     authored_menus = parse_menus(payload.get("menus"))
     authored_entrypoints = parse_menu_entrypoints(payload, menus=authored_menus)
@@ -64,6 +82,8 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     settings_docs = parse_settings_category_docs(payload)
+    option_labels = parse_settings_option_labels(payload)
+    _validate_setting_item_option_keys(authored_menus, option_labels=option_labels)
     runtime_graph = compile_runtime_menu_graph(
         authored_menus,
         authored_entrypoints=authored_entrypoints,
@@ -93,7 +113,7 @@ def validate_structure_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "pause_copy": parse_pause_copy(payload),
         "setup_fields": parse_setup_fields(payload),
         "setup_hints": parse_setup_hints(payload),
-        "settings_option_labels": parse_settings_option_labels(payload),
+        "settings_option_labels": option_labels,
         "settings_category_docs": settings_docs,
         "settings_split_rules": parse_settings_split_rules(payload),
         "settings_category_metrics": parse_settings_category_metrics(

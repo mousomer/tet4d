@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..menu_field_spec import FieldControlFamily, FieldSemanticType
 from ..settings_schema import (
     MODE_KEYS,
     as_non_empty_string,
@@ -11,6 +12,176 @@ from ..settings_schema import (
     require_object,
 )
 from .parse_helpers import parse_mode_string_lists, parse_string_list
+
+_SETTING_SEMANTIC_TYPES: set[FieldSemanticType] = {"bool", "enum", "int", "float"}
+_SETUP_CONTROL_FAMILIES: set[FieldControlFamily] = {
+    "selector",
+    "slider",
+    "stepper",
+    "toggle",
+}
+
+
+def _parse_setup_field_semantics(
+    field: dict[str, Any],
+    *,
+    mode_key: str,
+    idx: int,
+) -> tuple[str, str]:
+    semantic_type = as_non_empty_string(
+        field.get("semantic_type"),
+        path=f"structure.setup_fields.{mode_key}[{idx}].semantic_type",
+    ).lower()
+    if semantic_type not in _SETTING_SEMANTIC_TYPES:
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}].semantic_type must be one of: "
+            + ", ".join(sorted(_SETTING_SEMANTIC_TYPES))
+        )
+    control = as_non_empty_string(
+        field.get("control"),
+        path=f"structure.setup_fields.{mode_key}[{idx}].control",
+    ).lower()
+    if control not in _SETUP_CONTROL_FAMILIES:
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}].control must be one of: "
+            + ", ".join(sorted(_SETUP_CONTROL_FAMILIES))
+        )
+    return semantic_type, control
+
+
+def _parse_enum_setup_field(
+    field: dict[str, Any],
+    *,
+    mode_key: str,
+    idx: int,
+    parsed_field: dict[str, Any],
+) -> dict[str, Any]:
+    raw_options = field.get("options")
+    raw_options_source = field.get("options_source")
+    has_options = raw_options is not None
+    has_options_source = raw_options_source is not None
+    if parsed_field["control"] != "selector":
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}] enum fields must use control='selector'"
+        )
+    if has_options == has_options_source:
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}] enum fields must define exactly one of "
+            "'options' or 'options_source'"
+        )
+    if "min" in field or "max" in field:
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}] enum fields must not define min/max bounds"
+        )
+    if has_options:
+        parsed_field["options"] = parse_string_list(
+            raw_options,
+            path=f"structure.setup_fields.{mode_key}[{idx}].options",
+        )
+    else:
+        parsed_field["options_source"] = as_non_empty_string(
+            raw_options_source,
+            path=f"structure.setup_fields.{mode_key}[{idx}].options_source",
+        ).lower()
+    return parsed_field
+
+
+def _parse_bool_setup_field(
+    field: dict[str, Any],
+    *,
+    mode_key: str,
+    idx: int,
+    parsed_field: dict[str, Any],
+) -> dict[str, Any]:
+    if parsed_field["control"] != "toggle":
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}] bool fields must use control='toggle'"
+        )
+    if any(key in field for key in ("min", "max", "options", "options_source")):
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}] bool fields must not define numeric or enum metadata"
+        )
+    return parsed_field
+
+
+def _parse_numeric_setup_field(
+    field: dict[str, Any],
+    *,
+    mode_key: str,
+    idx: int,
+    parsed_field: dict[str, Any],
+) -> dict[str, Any]:
+    if parsed_field["control"] not in {"slider", "stepper"}:
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}] numeric fields must use control='slider' or 'stepper'"
+        )
+    if "options" in field or "options_source" in field:
+        raise RuntimeError(
+            "structure.setup_fields."
+            f"{mode_key}[{idx}] numeric fields must not define enum options"
+        )
+    min_val = require_int(
+        field.get("min"),
+        path=f"structure.setup_fields.{mode_key}[{idx}].min",
+    )
+    raw_max = field.get("max")
+    if isinstance(raw_max, bool) or not isinstance(raw_max, (int, str)):
+        raise RuntimeError(
+            f"structure.setup_fields.{mode_key}[{idx}].max must be int or dynamic token"
+        )
+    parsed_field["min"] = min_val
+    parsed_field["max"] = raw_max
+    return parsed_field
+
+
+def _parse_setup_field(
+    raw_field: object,
+    *,
+    mode_key: str,
+    idx: int,
+) -> dict[str, Any]:
+    field = require_object(raw_field, path=f"structure.setup_fields.{mode_key}[{idx}]")
+    parsed_field = {
+        "label": as_non_empty_string(
+            field.get("label"),
+            path=f"structure.setup_fields.{mode_key}[{idx}].label",
+        ),
+        "attr": as_non_empty_string(
+            field.get("attr"),
+            path=f"structure.setup_fields.{mode_key}[{idx}].attr",
+        ),
+    }
+    semantic_type, control = _parse_setup_field_semantics(field, mode_key=mode_key, idx=idx)
+    parsed_field["semantic_type"] = semantic_type
+    parsed_field["control"] = control
+    if semantic_type == "enum":
+        return _parse_enum_setup_field(
+            field,
+            mode_key=mode_key,
+            idx=idx,
+            parsed_field=parsed_field,
+        )
+    if semantic_type == "bool":
+        return _parse_bool_setup_field(
+            field,
+            mode_key=mode_key,
+            idx=idx,
+            parsed_field=parsed_field,
+        )
+    return _parse_numeric_setup_field(
+        field,
+        mode_key=mode_key,
+        idx=idx,
+        parsed_field=parsed_field,
+    )
 
 
 def parse_pause_copy(payload: dict[str, Any]) -> dict[str, Any]:
@@ -41,37 +212,10 @@ def parse_setup_fields(payload: dict[str, Any]) -> dict[str, list[dict[str, Any]
         )
         if not raw_fields:
             raise RuntimeError(f"structure.setup_fields.{mode_key} must not be empty")
-        fields: list[dict[str, Any]] = []
-        for idx, raw_field in enumerate(raw_fields):
-            field = require_object(
-                raw_field, path=f"structure.setup_fields.{mode_key}[{idx}]"
-            )
-            label = as_non_empty_string(
-                field.get("label"),
-                path=f"structure.setup_fields.{mode_key}[{idx}].label",
-            )
-            attr = as_non_empty_string(
-                field.get("attr"),
-                path=f"structure.setup_fields.{mode_key}[{idx}].attr",
-            )
-            min_val = require_int(
-                field.get("min"),
-                path=f"structure.setup_fields.{mode_key}[{idx}].min",
-            )
-            raw_max = field.get("max")
-            if isinstance(raw_max, bool) or not isinstance(raw_max, (int, str)):
-                raise RuntimeError(
-                    f"structure.setup_fields.{mode_key}[{idx}].max must be int or dynamic token"
-                )
-            fields.append(
-                {
-                    "label": label,
-                    "attr": attr,
-                    "min": min_val,
-                    "max": raw_max,
-                }
-            )
-        setup_fields[mode_key] = fields
+        setup_fields[mode_key] = [
+            _parse_setup_field(raw_field, mode_key=mode_key, idx=idx)
+            for idx, raw_field in enumerate(raw_fields)
+        ]
     return setup_fields
 
 

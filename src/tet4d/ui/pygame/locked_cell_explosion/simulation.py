@@ -6,10 +6,15 @@ import random
 from .model import (
     EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
     EXPLOSION_PARTICLE_COLLISIONS_ON,
+    EXPLOSION_TRAIL_MAX_LIFETIME_MS,
+    EXPLOSION_TRAIL_MAX_SAMPLES,
+    EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING,
+    EXPLOSION_TRAIL_MIN_TIME_SPACING_MS,
     ExplosionAudioEvent,
     ExplosionParticle,
     ExplosionSeedCell,
     ExplosionSimulationState,
+    ExplosionTrailSample,
     StandaloneExplosionConfig,
     normalize_boundary_response,
     normalize_particle_collisions,
@@ -107,6 +112,109 @@ def _initial_particle(
         angular_velocity_deg=angular,
         collision_radius=randomizer.uniform(0.24, 0.36),
         collision_mass=randomizer.uniform(0.9, 1.1),
+        trail_samples=[
+            ExplosionTrailSample(
+                position_nd=origin,
+                elapsed_ms=0.0,
+            )
+        ],
+    )
+
+
+def _trim_trail_samples(
+    particle: ExplosionParticle,
+    *,
+    elapsed_ms: float,
+) -> None:
+    cutoff = float(elapsed_ms) - EXPLOSION_TRAIL_MAX_LIFETIME_MS
+    samples = [
+        sample
+        for sample in particle.trail_samples
+        if float(sample.elapsed_ms) >= cutoff
+    ]
+    if not samples:
+        samples = [
+            ExplosionTrailSample(
+                position_nd=tuple(float(value) for value in particle.position_nd),
+                elapsed_ms=float(elapsed_ms),
+            )
+        ]
+    if len(samples) > EXPLOSION_TRAIL_MAX_SAMPLES:
+        samples = samples[-EXPLOSION_TRAIL_MAX_SAMPLES :]
+    particle.trail_samples = samples
+    particle.trail_elapsed_ms = float(elapsed_ms)
+
+
+def _record_trail_sample(
+    particle: ExplosionParticle,
+    *,
+    elapsed_ms: float,
+    position_nd: tuple[float, ...] | None = None,
+    segment_break: bool = False,
+    force: bool = False,
+) -> None:
+    sample_position = tuple(
+        float(value)
+        for value in (
+            particle.position_nd if position_nd is None else tuple(position_nd)
+        )
+    )
+    particle.trail_elapsed_ms = float(elapsed_ms)
+    if not force and particle.trail_samples:
+        last_sample = next(
+            (
+                sample
+                for sample in reversed(particle.trail_samples)
+                if not sample.segment_break
+            ),
+            None,
+        )
+        if last_sample is not None:
+            elapsed_delta = float(elapsed_ms) - float(last_sample.elapsed_ms)
+            distance_delta = _vec_len(
+                _vec_sub(sample_position, tuple(last_sample.position_nd))
+            )
+            if (
+                elapsed_delta < EXPLOSION_TRAIL_MIN_TIME_SPACING_MS
+                or distance_delta < EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING
+            ):
+                _trim_trail_samples(particle, elapsed_ms=elapsed_ms)
+                return
+    particle.trail_samples.append(
+        ExplosionTrailSample(
+            position_nd=sample_position,
+            elapsed_ms=float(elapsed_ms),
+            segment_break=bool(segment_break),
+        )
+    )
+    _trim_trail_samples(particle, elapsed_ms=elapsed_ms)
+
+
+def _record_seam_break(
+    particle: ExplosionParticle,
+    *,
+    elapsed_ms: float,
+    pre_seam_position: tuple[float, ...],
+    post_seam_position: tuple[float, ...],
+) -> None:
+    _record_trail_sample(
+        particle,
+        elapsed_ms=elapsed_ms,
+        position_nd=pre_seam_position,
+        force=True,
+    )
+    _record_trail_sample(
+        particle,
+        elapsed_ms=elapsed_ms,
+        position_nd=post_seam_position,
+        segment_break=True,
+        force=True,
+    )
+    _record_trail_sample(
+        particle,
+        elapsed_ms=elapsed_ms,
+        position_nd=post_seam_position,
+        force=True,
     )
 
 
@@ -178,6 +286,7 @@ def _step_particle(
     dt_seconds: float,
     adapter: ExplosionTopologyAdapter,
     boundary_response: str,
+    elapsed_ms: float,
 ) -> tuple[ExplosionAudioEvent, ...]:
     if not particle.active:
         return tuple()
@@ -215,8 +324,17 @@ def _step_particle(
             )
         )
         if boundary is not None:
+            pre_seam_position = tuple(float(value) for value in particle.position_nd)
             particle.position_nd = boundary.transform_position(particle.position_nd)
             particle.velocity_nd = boundary.transform_velocity(particle.velocity_nd)
+            _record_seam_break(
+                particle,
+                elapsed_ms=elapsed_ms,
+                pre_seam_position=pre_seam_position,
+                post_seam_position=tuple(
+                    float(value) for value in particle.position_nd
+                ),
+            )
             particle.position_nd = _vec_add(
                 particle.position_nd,
                 _vec_mul(particle.velocity_nd, min(remaining, 0.001)),
@@ -328,9 +446,17 @@ def step_simulation(
                 dt_seconds=dt_seconds,
                 adapter=adapter,
                 boundary_response=state.boundary_response,
+                elapsed_ms=state.elapsed_ms,
             )
         )
     if state.particle_collisions == EXPLOSION_PARTICLE_COLLISIONS_ON:
         events.extend(_resolve_collisions(state.particles))
+    for particle in state.particles:
+        if not particle.active:
+            continue
+        _record_trail_sample(
+            particle,
+            elapsed_ms=state.elapsed_ms,
+        )
     state.total_kinetic_energy = total_kinetic_energy_for_particles(state.particles)
     return tuple(events)

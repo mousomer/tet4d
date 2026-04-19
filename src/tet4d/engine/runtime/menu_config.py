@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from ..core.rng import RNG_MODE_OPTIONS
+from .menu_field_spec import FieldOption, FieldSpec
 from .endgame_presets import (
     ENDGAME_BOUNDARY_RESPONSES,
     ENDGAME_PARTICLE_COLLISION_MODES,
@@ -25,8 +26,8 @@ from .settings_schema import (
     read_json_object_or_raise,
     validate_defaults_payload,
 )
-
-FieldSpec = tuple[str, str, int, int]
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
+from tet4d.engine.gameplay.pieces_nd import piece_set_label, piece_set_options_for_dimension
 
 CONFIG_DIR = project_root_path() / "config" / "menu"
 DEFAULTS_FILE = CONFIG_DIR / "defaults.json"
@@ -359,8 +360,56 @@ def setup_fields_for_dimension(
     raw_fields = _structure_payload()["setup_fields"][mode_key]
     fields: list[FieldSpec] = []
     for raw_field in raw_fields:
-        label = raw_field["label"]
-        attr_name = raw_field["attr"]
+        label = str(raw_field["label"])
+        attr_name = str(raw_field["attr"])
+        semantic_type = str(raw_field["semantic_type"])
+        control_family = str(raw_field["control"])
+        if semantic_type == "enum":
+            literal_options = tuple(str(option) for option in raw_field.get("options", ()))
+            options_source = str(raw_field.get("options_source", "")).strip().lower()
+            option_labels = literal_options
+            if options_source:
+                if options_source != "piece_set_labels":
+                    raise RuntimeError(
+                        f"Unknown setup field options_source for {mode_key}.{attr_name}: {options_source}"
+                    )
+                if dimension == 2:
+                    option_labels = tuple(
+                        piece_set_2d_label(piece_set_id)
+                        for piece_set_id in PIECE_SET_2D_OPTIONS
+                    )
+                else:
+                    option_labels = tuple(
+                        piece_set_label(piece_set_id)
+                        for piece_set_id in piece_set_options_for_dimension(dimension)
+                    )
+            if not option_labels:
+                raise RuntimeError(
+                    f"Enum setup field {mode_key}.{attr_name} must resolve at least one option"
+                )
+            fields.append(
+                FieldSpec(
+                    label=label,
+                    attr_name=attr_name,
+                    semantic_type="enum",
+                    control_family="selector",
+                    options=tuple(
+                        FieldOption(value=index, label=option_label)
+                        for index, option_label in enumerate(option_labels)
+                    ),
+                )
+            )
+            continue
+        if semantic_type == "bool":
+            fields.append(
+                FieldSpec(
+                    label=label,
+                    attr_name=attr_name,
+                    semantic_type="bool",
+                    control_family="toggle",
+                )
+            )
+            continue
         min_val = raw_field["min"]
         max_val = resolve_field_max(
             raw_field["max"],
@@ -374,7 +423,16 @@ def setup_fields_for_dimension(
                 f"Invalid field bounds for {mode_key}.{attr_name}: "
                 f"min {min_val} > max {max_val}"
             )
-        fields.append((label, attr_name, min_val, max_val))
+        fields.append(
+            FieldSpec(
+                label=label,
+                attr_name=attr_name,
+                semantic_type=str(semantic_type),
+                control_family=str(control_family),
+                min_value=min_val,
+                max_value=max_val,
+            )
+        )
     return fields
 
 
@@ -393,12 +451,12 @@ def setup_fields_for_settings(
     )
     if bool(exploration_mode):
         hidden = {"topology_mode", "topology_advanced", "topology_profile_index"}
-        return [field for field in fields if field[1] not in hidden]
+        return [field for field in fields if field.attr_name not in hidden]
     if dimension >= 3:
-        fields = [field for field in fields if field[1] != "topology_profile_index"]
+        fields = [field for field in fields if field.attr_name != "topology_profile_index"]
     if bool(topology_advanced):
         return fields
-    return [field for field in fields if field[1] != "topology_profile_index"]
+    return [field for field in fields if field.attr_name != "topology_profile_index"]
 
 
 def keybinding_category_docs() -> dict[str, Any]:

@@ -296,6 +296,141 @@ def test_menu_structure_single_source_reads_policy_pack_contract_data(
     assert any(issue.message == "custom drift" for issue in issues)
 
 
+def test_menu_control_typing_detects_mismatched_semantic_controls(
+    tmp_path: Path, monkeypatch
+) -> None:
+    policy_pack = tmp_path / "config" / "project" / "policy_pack.json"
+    menu_path = tmp_path / "config" / "menu" / "structure.json"
+    _write_json(
+        policy_pack,
+        {
+            "governance": {
+                "menu_control_typing_contract": {
+                    "setting_semantic_types": ["bool", "enum", "int", "float"],
+                    "menu_control_types": ["toggle", "selector", "slider", "stepper"],
+                    "setup_control_types": ["toggle", "selector", "slider", "stepper"],
+                    "selector_options_key_required": True,
+                    "enum_setup_option_source_tokens": ["piece_set_labels"],
+                }
+            }
+        },
+    )
+    _write_json(
+        menu_path,
+        {
+            "settings_option_labels": {"good_enum": ["A", "B"]},
+            "menus": {
+                "settings_game_root": {
+                    "items": [
+                        {
+                            "id": "bad_enum_slider",
+                            "type": "slider",
+                            "semantic_type": "enum",
+                            "setting_id": "bad_enum_slider",
+                        }
+                    ]
+                }
+            },
+            "setup_fields": {
+                "2d": [
+                    {
+                        "label": "Topology",
+                        "attr": "topology_mode",
+                        "semantic_type": "enum",
+                        "control": "slider",
+                        "min": 0,
+                        "max": 2,
+                    }
+                ]
+            },
+        },
+    )
+
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack)
+    monkeypatch.setattr(contracts, "MENU_STRUCTURE_PATH", menu_path)
+
+    issues = contracts._validate_menu_control_typing()
+
+    assert any("bad_enum_slider" in issue.message for issue in issues)
+    assert any("enum fields must use control=selector" in issue.message for issue in issues)
+
+
+def test_menu_control_typing_accepts_semantic_type_aligned_controls(
+    tmp_path: Path, monkeypatch
+) -> None:
+    policy_pack = tmp_path / "config" / "project" / "policy_pack.json"
+    menu_path = tmp_path / "config" / "menu" / "structure.json"
+    _write_json(
+        policy_pack,
+        {
+            "governance": {
+                "menu_control_typing_contract": {
+                    "setting_semantic_types": ["bool", "enum", "int", "float"],
+                    "menu_control_types": ["toggle", "selector", "slider", "stepper"],
+                    "setup_control_types": ["toggle", "selector", "slider", "stepper"],
+                    "selector_options_key_required": True,
+                    "enum_setup_option_source_tokens": ["piece_set_labels"],
+                }
+            }
+        },
+    )
+    _write_json(
+        menu_path,
+        {
+            "settings_option_labels": {"game_random_mode": ["Fixed seed", "True random"]},
+            "menus": {
+                "settings_game_root": {
+                    "items": [
+                        {
+                            "id": "game_random_mode",
+                            "type": "selector",
+                            "semantic_type": "enum",
+                            "options_key": "game_random_mode",
+                            "setting_id": "game_random_mode",
+                        },
+                        {
+                            "id": "game_seed",
+                            "type": "stepper",
+                            "semantic_type": "int",
+                            "setting_id": "game_seed",
+                        },
+                        {
+                            "id": "display_fullscreen",
+                            "type": "toggle",
+                            "semantic_type": "bool",
+                            "setting_id": "display_fullscreen",
+                        },
+                    ]
+                }
+            },
+            "setup_fields": {
+                "2d": [
+                    {
+                        "label": "Piece set",
+                        "attr": "piece_set_index",
+                        "semantic_type": "enum",
+                        "control": "selector",
+                        "options_source": "piece_set_labels",
+                    },
+                    {
+                        "label": "Board width",
+                        "attr": "width",
+                        "semantic_type": "int",
+                        "control": "stepper",
+                        "min": 6,
+                        "max": 16,
+                    },
+                ]
+            },
+        },
+    )
+
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack)
+    monkeypatch.setattr(contracts, "MENU_STRUCTURE_PATH", menu_path)
+
+    assert contracts._validate_menu_control_typing() == []
+
+
 def test_deprecated_authority_checks_detect_reintroduced_path(
     tmp_path: Path, monkeypatch
 ) -> None:

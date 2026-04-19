@@ -98,7 +98,8 @@ def draw_probe_path_glyphs(
     cell_size: int,
 ) -> None:
     if len(centers) >= 2:
-        pygame.draw.lines(surface, (88, 170, 214), False, centers, 2)
+        trace_width = max(3, int(round(max(12, cell_size) * 0.1)))
+        pygame.draw.lines(surface, (88, 170, 214), False, centers, trace_width)
 
 
 def _draw_probe_path(
@@ -195,6 +196,63 @@ def _particle_rect(
     rect = pygame.Rect(0, 0, size, size)
     rect.center = center
     return rect
+
+
+def _trail_sample_style(
+    *,
+    sample_elapsed_ms: float,
+    current_elapsed_ms: float,
+) -> tuple[float, float]:
+    age_ratio = max(0.0, min(1.0, (current_elapsed_ms - sample_elapsed_ms) / 620.0))
+    strength = 1.0 - age_ratio
+    return 0.12 + (0.76 * strength), 0.22 + (0.88 * strength)
+
+
+def _draw_explosion_traces(
+    surface: pygame.Surface,
+    *,
+    board: pygame.Rect,
+    cell_size: int,
+    explosion_particles,
+) -> None:
+    if not explosion_particles:
+        return
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    for particle in explosion_particles:
+        color = color_for_cell(int(getattr(particle, "color_id", 0)))
+        previous = None
+        current_elapsed_ms = float(getattr(particle, "trail_elapsed_ms", 0.0))
+        for sample in tuple(getattr(particle, "trail_samples", ())):
+            if getattr(sample, "segment_break", False):
+                previous = None
+                continue
+            center = _particle_center(
+                board,
+                cell_size,
+                tuple(getattr(sample, "position_nd", ())),
+            )
+            if center is None:
+                previous = None
+                continue
+            if previous is not None:
+                alpha, width = _trail_sample_style(
+                    sample_elapsed_ms=float(getattr(sample, "elapsed_ms", 0.0)),
+                    current_elapsed_ms=current_elapsed_ms,
+                )
+                pygame.draw.line(
+                    overlay,
+                    (
+                        color[0],
+                        color[1],
+                        color[2],
+                        max(0, min(255, int(round(112 * alpha)))),
+                    ),
+                    previous,
+                    center,
+                    max(1, int(round((cell_size * 0.08) * max(0.35, width)))),
+                )
+            previous = center
+    surface.blit(overlay, (0, 0))
 
 
 def _draw_explosion_particles(
@@ -324,6 +382,7 @@ def draw_scene(
     sandbox_valid: bool | None = None,
     sandbox_message: str = "",
     explosion_particles=None,
+    explosion_trace_enabled: bool = False,
     panel_title: str = "Explorer board",
 ) -> list[TopologyLabHitTarget]:
     hits: list[TopologyLabHitTarget] = []
@@ -360,6 +419,13 @@ def draw_scene(
         preview_dims=preview_dims,
         probe_coord=probe_coord,
     )
+    if explosion_trace_enabled:
+        _draw_explosion_traces(
+            surface,
+            board=board,
+            cell_size=cell_size,
+            explosion_particles=explosion_particles,
+        )
     _draw_explosion_particles(
         surface,
         area=area,

@@ -1208,6 +1208,7 @@ Parameters:
 - `menus.settings_audio.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
 - `menus.settings_audio.items[].id`: varies (`string`); examples: `"audio_section"`, `"audio_master"`, `"audio_sfx"`
 - `menus.settings_audio.items[].label`: varies (`string`); examples: `"Audio"`, `"Master volume"`, `"SFX volume"`
+- `menus.settings_audio.items[].semantic_type`: varies (`string`); examples: `"float"`, `"bool"`
 - `menus.settings_audio.items[].setting_id`: varies (`string`); examples: `"audio_master"`, `"audio_sfx"`, `"audio_mute"`
 - `menus.settings_audio.items[].type`: varies (`string`); examples: `"section"`, `"slider"`, `"toggle"`
 - `menus.settings_audio.title`: `"Audio"` (`string`)
@@ -1215,16 +1216,19 @@ Parameters:
 - `menus.settings_display.items[].action_id`: varies (`string`); examples: `"display_apply"`, `"save"`, `"reset"`
 - `menus.settings_display.items[].id`: varies (`string`); examples: `"display_section"`, `"display_fullscreen"`, `"display_width"`
 - `menus.settings_display.items[].label`: varies (`string`); examples: `"Display"`, `"Fullscreen"`, `"Window width"`
+- `menus.settings_display.items[].semantic_type`: varies (`string`); examples: `"bool"`, `"int"`
 - `menus.settings_display.items[].setting_id`: varies (`string`); examples: `"display_fullscreen"`, `"display_width"`, `"display_height"`
-- `menus.settings_display.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"slider"`
+- `menus.settings_display.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"stepper"`
 - `menus.settings_display.title`: `"Display"` (`string`)
 - `menus.settings_game_root.items[]`: array[`object`]
 - `menus.settings_game_root.items[].action_id`: varies (`string`); examples: `"topology_cache_measure"`, `"topology_cache_clear"`, `"save"`
 - `menus.settings_game_root.items[].description`: `"Overlay transparency for locked cells in gameplay views."` (`string`)
 - `menus.settings_game_root.items[].id`: varies (`string`); examples: `"gameplay_section"`, `"game_seed"`, `"game_random_mode"`
 - `menus.settings_game_root.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Game seed (all modes)"`, `"Random type (all modes)"`
+- `menus.settings_game_root.items[].options_key`: varies (`string`); examples: `"game_random_mode"`, `"game_rotation_animation_mode"`, `"game_kick_level"`
+- `menus.settings_game_root.items[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`, `"bool"`
 - `menus.settings_game_root.items[].setting_id`: varies (`string`); examples: `"game_seed"`, `"game_random_mode"`, `"analytics_score_logging"`
-- `menus.settings_game_root.items[].type`: varies (`string`); examples: `"section"`, `"slider"`, `"selector"`
+- `menus.settings_game_root.items[].type`: varies (`string`); examples: `"section"`, `"stepper"`, `"selector"`
 - `menus.settings_game_root.title`: `"Game"` (`string`)
 - `menus.settings_root.items[]`: array[`object`]
 - `menus.settings_root.items[].action_id`: varies (`string`); examples: `"keybindings"`, `"settings_legacy_topology_editor"`, `"back"`
@@ -1277,19 +1281,31 @@ Parameters:
 - `settings_split_rules.split_when_mode_specific`: `true` (`bool`)
 - `setup_fields.2d[]`: array[`object`]
 - `setup_fields.2d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"piece_set_index"`
+- `setup_fields.2d[].control`: varies (`string`); examples: `"stepper"`, `"selector"`, `"slider"`
 - `setup_fields.2d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Piece set"`
-- `setup_fields.2d[].max`: varies (`int, string`); examples: `16`, `30`, `"piece_set_max"`
+- `setup_fields.2d[].max`: varies (`int`); examples: `16`, `30`, `20`
 - `setup_fields.2d[].min`: varies (`int`); examples: `6`, `0`, `1`
+- `setup_fields.2d[].options[]`: array[`string`]; examples: `"Bounded"`, `"Wrap all"`, `"Invert all"`
+- `setup_fields.2d[].options_source`: `"piece_set_labels"` (`string`)
+- `setup_fields.2d[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`
 - `setup_fields.3d[]`: array[`object`]
 - `setup_fields.3d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"depth"`
+- `setup_fields.3d[].control`: varies (`string`); examples: `"stepper"`, `"selector"`, `"slider"`
 - `setup_fields.3d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Board depth"`
-- `setup_fields.3d[].max`: varies (`int, string`); examples: `12`, `30`, `"piece_set_max"`
+- `setup_fields.3d[].max`: varies (`int`); examples: `12`, `30`, `20`
 - `setup_fields.3d[].min`: varies (`int`); examples: `4`, `6`, `0`
+- `setup_fields.3d[].options[]`: array[`string`]; examples: `"Bounded"`, `"Wrap all"`, `"Invert all"`
+- `setup_fields.3d[].options_source`: `"piece_set_labels"` (`string`)
+- `setup_fields.3d[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`
 - `setup_fields.4d[]`: array[`object`]
 - `setup_fields.4d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"depth"`
+- `setup_fields.4d[].control`: varies (`string`); examples: `"stepper"`, `"selector"`, `"slider"`
 - `setup_fields.4d[].label`: varies (`string`); examples: `"Board width"`, `"Board height"`, `"Board depth (z)"`
-- `setup_fields.4d[].max`: varies (`int, string`); examples: `16`, `30`, `12`
+- `setup_fields.4d[].max`: varies (`int`); examples: `16`, `30`, `12`
 - `setup_fields.4d[].min`: varies (`int`); examples: `4`, `6`, `0`
+- `setup_fields.4d[].options[]`: array[`string`]; examples: `"Bounded"`, `"Wrap all"`, `"Invert all"`
+- `setup_fields.4d[].options_source`: `"piece_set_labels"` (`string`)
+- `setup_fields.4d[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`
 - `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
@@ -1578,7 +1594,7 @@ Parameters:
 - `status_order.skewed`: `2` (`int`)
 - `status_order.watch`: `1` (`int`)
 - `tracked_leaf_folders[]`: array[`object`]
-- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `1.0`, `0.97`
+- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `1.0`, `0.95`, `0.94`
 - `tracked_leaf_folders[].baseline_status`: varies (`string`); examples: `"balanced"`
 - `tracked_leaf_folders[].path`: varies (`string`); examples: `"src/tet4d/engine/runtime/menu_settings"`, `"src/tet4d/engine/runtime/menu_structure"`, `"src/tet4d/engine/runtime/score_analysis"`
 - `tracked_leaf_folders[].profile`: varies (`string`); examples: `"micro_leaf"`, `"tests_leaf"`
@@ -1784,6 +1800,11 @@ Parameters:
 - `governance.drift_protection.tutorial_copy_contract.lessons_path`: `"config/tutorial/lessons.json"` (`string`)
 - `governance.drift_protection.tutorial_copy_contract.overlay_path`: `"src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py"` (`string`)
 - `governance.drift_protection.tutorial_copy_contract.required_overlay_tokens[]`: array[`string`]; examples: `"Do this:"`, `"Tip:"`, `"USE:"`
+- `governance.menu_control_typing_contract.enum_setup_option_source_tokens[]`: array[`string`]; examples: `"piece_set_labels"`
+- `governance.menu_control_typing_contract.menu_control_types[]`: array[`string`]; examples: `"toggle"`, `"selector"`, `"slider"`
+- `governance.menu_control_typing_contract.selector_options_key_required`: `true` (`bool`)
+- `governance.menu_control_typing_contract.setting_semantic_types[]`: array[`string`]; examples: `"bool"`, `"enum"`, `"int"`
+- `governance.menu_control_typing_contract.setup_control_types[]`: array[`string`]; examples: `"toggle"`, `"selector"`, `"slider"`
 - `governance.menu_simplification_manifest_rule.default_action`: `"centralize_common_features_in_settings_hub"` (`string`)
 - `governance.menu_simplification_manifest_rule.exception_bar`: `"very_strong_documented_reason_required"` (`string`)
 - `governance.menu_simplification_manifest_rule.required_shared_row_keys[]`: array[`string`]; examples: `"game_seed"`, `"game_random_mode"`, `"rotation_animation_mode"`

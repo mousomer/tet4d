@@ -34,6 +34,10 @@ EXPLOSION_SPEED_PRESETS = (
     EXPLOSION_SPEED_NORMAL,
     EXPLOSION_SPEED_FAST,
 )
+EXPLOSION_TRAIL_MIN_TIME_SPACING_MS = 32.0
+EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING = 0.18
+EXPLOSION_TRAIL_MAX_LIFETIME_MS = 620.0
+EXPLOSION_TRAIL_MAX_SAMPLES = 18
 _SPEED_SCALE_BY_PRESET = {
     EXPLOSION_SPEED_SLOW: 0.72,
     EXPLOSION_SPEED_NORMAL: 1.0,
@@ -104,6 +108,15 @@ class ExplosionParticle:
     angular_velocity_deg: Vec3 = (0.0, 0.0, 0.0)
     collision_radius: float = 0.32
     collision_mass: float = 1.0
+    trail_elapsed_ms: float = 0.0
+    trail_samples: list["ExplosionTrailSample"] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class ExplosionTrailSample:
+    position_nd: VecN
+    elapsed_ms: float
+    segment_break: bool = False
 
 
 @dataclass(frozen=True)
@@ -127,6 +140,19 @@ class ExplosionRenderParticle:
     alpha: float
     color_id: int
     layer_weights: tuple[tuple[int, float], ...] = ()
+    trail_segments: tuple["ExplosionRenderTrailSegment", ...] = ()
+
+
+@dataclass(frozen=True)
+class ExplosionRenderTrailSegment:
+    tail_position_nd: VecN
+    head_position_nd: VecN
+    tail_render_position: Vec3
+    head_render_position: Vec3
+    tail_layer_weights: tuple[tuple[int, float], ...] = ()
+    head_layer_weights: tuple[tuple[int, float], ...] = ()
+    alpha: float = 1.0
+    width: float = 1.0
 
 
 @dataclass(frozen=True)

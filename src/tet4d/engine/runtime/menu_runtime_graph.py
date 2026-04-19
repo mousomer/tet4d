@@ -14,6 +14,7 @@ _ACTIONABLE_ITEM_TYPES = {
     "toggle",
     "selector",
     "slider",
+    "stepper",
     "keybinding_group",
     "legacy_dispatch",
 }
@@ -22,6 +23,7 @@ _INLINE_COLLAPSIBLE_ITEM_TYPES = {
     "toggle",
     "selector",
     "slider",
+    "stepper",
     "legacy_dispatch",
 }
 _EXEMPT_LAYOUT_ROLES = {
@@ -340,7 +342,8 @@ def _validate_runtime_menu_shape(
     setting_count = sum(
         1
         for item in nonutility
-        if str(item.get("type", "")).strip().lower() in {"toggle", "selector", "slider"}
+        if str(item.get("type", "")).strip().lower()
+        in {"toggle", "selector", "slider", "stepper"}
     )
     if submenu_count == 1 and len(nonutility) == 1:
         raise RuntimeError(f"runtime menu {menu_id} retains a unary submenu wrapper")
@@ -356,7 +359,7 @@ def _validate_runtime_setting_authority(
 ) -> None:
     for item in items:
         item_type = str(item.get("type", "")).strip().lower()
-        if item_type not in {"toggle", "selector", "slider"}:
+        if item_type not in {"toggle", "selector", "slider", "stepper"}:
             continue
         setting_id = str(item.get("setting_id", "")).strip().lower()
         owner = seen_setting_ids.get(setting_id)

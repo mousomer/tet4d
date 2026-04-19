@@ -81,8 +81,8 @@ class TestFront2DSetup(unittest.TestCase):
 
     def test_2d_menu_fields_keep_only_safe_topology_controls(self) -> None:
         attrs = {
-            attr_name
-            for _label, attr_name, _min_val, _max_val in front2d_setup.menu_fields(
+            field.attr_name
+            for field in front2d_setup.menu_fields(
                 front2d_setup.GameSettings(exploration_mode=0, topology_advanced=1)
             )
         }

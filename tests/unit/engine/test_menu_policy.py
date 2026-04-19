@@ -65,6 +65,7 @@ class TestMenuPolicy(unittest.TestCase):
                 "toggle",
                 "selector",
                 "slider",
+                "stepper",
                 "keybinding_group",
                 "legacy_dispatch",
             }.issubset(item_types)
@@ -154,7 +155,7 @@ class TestMenuPolicy(unittest.TestCase):
     def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
         for dimension in (2, 3, 4):
             fields = menu_config.setup_fields_for_dimension(dimension, piece_set_max=5)
-            attrs = {attr for _label, attr, _min_val, _max_val in fields}
+            attrs = {field.attr_name for field in fields}
             self.assertIn("topology_mode", attrs)
             self.assertNotIn("topology_profile_index", attrs)
             self.assertNotIn("exploration_mode", attrs)
@@ -171,7 +172,7 @@ class TestMenuPolicy(unittest.TestCase):
                 topology_advanced=True,
                 exploration_mode=True,
             )
-            attrs = {attr for _label, attr, _min_val, _max_val in fields}
+            attrs = {field.attr_name for field in fields}
             self.assertNotIn("topology_mode", attrs)
             self.assertNotIn("topology_advanced", attrs)
             self.assertNotIn("topology_profile_index", attrs)
@@ -483,6 +484,7 @@ class TestMenuPolicy(unittest.TestCase):
                     "toggle",
                     "selector",
                     "slider",
+                    "stepper",
                     "action",
                     "action_group",
                     "legacy_dispatch",
@@ -491,7 +493,9 @@ class TestMenuPolicy(unittest.TestCase):
             ]
             submenu_count = sum(1 for item in nonutility if item["type"] == "submenu")
             setting_count = sum(
-                1 for item in nonutility if item["type"] in {"toggle", "selector", "slider"}
+                1
+                for item in nonutility
+                if item["type"] in {"toggle", "selector", "slider", "stepper"}
             )
             if menu_id not in {
                 menu_config.launcher_menu_id(),
@@ -508,7 +512,7 @@ class TestMenuPolicy(unittest.TestCase):
                     msg=f"{menu_id} retained a single-setting wrapper",
                 )
             for item in items:
-                if item["type"] not in {"toggle", "selector", "slider"}:
+                if item["type"] not in {"toggle", "selector", "slider", "stepper"}:
                     continue
                 setting_id = item["setting_id"]
                 owner = seen_setting_ids.setdefault(setting_id, menu_id)
@@ -626,6 +630,48 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(len(labels["game_endgame_boundary_response"]), 2)
         self.assertIn("game_endgame_particle_collisions", labels)
         self.assertEqual(len(labels["game_endgame_particle_collisions"]), 2)
+
+    def test_setting_controls_declare_semantic_types(self) -> None:
+        authored = menu_config.authored_menu_graph()
+        for menu_id, menu in authored.items():
+            for item in menu["items"]:
+                if item["type"] not in {"toggle", "selector", "slider", "stepper"}:
+                    continue
+                self.assertIn(
+                    "semantic_type",
+                    item,
+                    msg=f"{menu_id}.{item['id']} is missing semantic_type",
+                )
+                if item["type"] == "toggle":
+                    self.assertEqual(item["semantic_type"], "bool")
+                elif item["type"] == "selector":
+                    self.assertEqual(item["semantic_type"], "enum")
+                    self.assertIn(
+                        "options_key",
+                        item,
+                        msg=f"{menu_id}.{item['id']} is missing options_key",
+                    )
+                else:
+                    self.assertIn(item["semantic_type"], {"int", "float"})
+
+    def test_runtime_menu_preserves_setting_semantic_types(self) -> None:
+        game_menu = menu_config.menu_definition("settings_game_root")
+        by_id = {item["id"]: item for item in game_menu["items"]}
+        self.assertEqual(by_id["game_random_mode"]["semantic_type"], "enum")
+        self.assertEqual(by_id["game_seed"]["type"], "stepper")
+        self.assertEqual(by_id["game_seed"]["semantic_type"], "int")
+        self.assertEqual(by_id["lines_per_level"]["type"], "stepper")
+
+    def test_setup_fields_preserve_semantic_types_and_control_families(self) -> None:
+        fields = {field.attr_name: field for field in menu_config.setup_fields_for_settings(4)}
+        self.assertEqual(fields["piece_set_index"].semantic_type, "enum")
+        self.assertEqual(fields["piece_set_index"].control_family, "selector")
+        self.assertEqual(fields["topology_mode"].semantic_type, "enum")
+        self.assertEqual(fields["topology_mode"].control_family, "selector")
+        self.assertEqual(fields["width"].semantic_type, "int")
+        self.assertEqual(fields["width"].control_family, "stepper")
+        self.assertEqual(fields["speed_level"].semantic_type, "int")
+        self.assertEqual(fields["speed_level"].control_family, "slider")
 
     def test_build_unified_settings_state_uses_persisted_analytics_state(self) -> None:
         with (

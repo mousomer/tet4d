@@ -11,6 +11,7 @@ from tet4d.engine.gameplay.api import (
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.rotation_anim import RigidPieceOverlay2D
 from tet4d.engine.runtime.menu_config import ui_copy_section
+from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.ui_logic.view_modes import GridMode
 from tet4d.ui.pygame.endgame_animation import (
@@ -232,23 +233,20 @@ def _draw_menu_header(
 def _menu_row_height(
     font: pygame.font.Font,
     *,
-    label: str,
+    field: FieldSpec,
     value_text: str,
-    value: object,
-    min_value: int,
-    max_value: int,
     total_width: int,
 ) -> int:
-    if max_value > min_value and isinstance(value, int):
+    if field.uses_slider():
         return compute_slider_row_layout(
             font,
-            label=label,
+            label=field.label,
             value=value_text,
             total_width=total_width,
         ).row_height
     return wrapped_label_value_layout(
         font,
-        label=label,
+        label=field.label,
         value=value_text,
         total_width=total_width,
     )[2]
@@ -261,11 +259,9 @@ def _draw_menu_setting_row(
     option_x: int,
     option_w: int,
     option_y: int,
-    label_text: str,
+    field: FieldSpec,
     value_text: str,
     raw_value: object,
-    min_val: int,
-    max_val: int,
     is_selected: bool,
     flash_frames: int,
     min_row_height: int,
@@ -274,17 +270,17 @@ def _draw_menu_setting_row(
     slider_layout = (
         compute_slider_row_layout(
             font,
-            label=label_text,
+            label=field.label,
             value=value_text,
             total_width=option_w,
         )
-        if max_val > min_val and isinstance(raw_value, int)
+        if field.uses_slider()
         else None
     )
     if slider_layout is None:
         label_lines, value_lines, row_height = wrapped_label_value_layout(
             font,
-            label=label_text,
+            label=field.label,
             value=value_text,
             total_width=option_w,
         )
@@ -353,8 +349,11 @@ def _draw_menu_setting_row(
                 0.0,
                 min(
                     1.0,
-                    (int(raw_value) - int(min_val))
-                    / max(1, int(max_val) - int(min_val)),
+                    (float(raw_value) - float(field.min_value or 0))
+                    / max(
+                        1.0,
+                        float(field.max_value or 0) - float(field.min_value or 0),
+                    ),
                 ),
             ),
             flash_strength=max(0.0, min(1.0, flash_frames / 12.0))
@@ -371,8 +370,8 @@ def _draw_menu_settings_panel(
     selected_index: int,
     panel_top: int,
     flash_frames: int = 0,
-    menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
-    value_formatter: Optional[Callable[[str, object], str]] = None,
+    menu_fields: Optional[Sequence[FieldSpec]] = None,
+    value_formatter: Optional[Callable[[FieldSpec, object], str]] = None,
 ) -> Tuple[int, int, int, int]:
     width, height = screen.get_size()
     panel_w = min(max(340, int(width * 0.6)), width - 24)
@@ -383,29 +382,26 @@ def _draw_menu_settings_panel(
         )
     if menu_fields:
         labels = [
-            f"{label}:  "
+            f"{field.label}:  "
             + (
-                value_formatter(attr_name, getattr(settings, attr_name))
+                value_formatter(field, getattr(settings, field.attr_name))
                 if value_formatter
-                else str(getattr(settings, attr_name))
+                else str(getattr(settings, field.attr_name))
             )
-            for label, attr_name, _min_val, _max_val in menu_fields
+            for field in menu_fields
         ]
         row_heights = [
             _menu_row_height(
                 fonts.menu_font,
-                label=label,
+                field=field,
                 value_text=(
-                    value_formatter(attr_name, getattr(settings, attr_name))
+                    value_formatter(field, getattr(settings, field.attr_name))
                     if value_formatter
-                    else str(getattr(settings, attr_name))
+                    else str(getattr(settings, field.attr_name))
                 ),
-                value=getattr(settings, attr_name),
-                min_value=min_val,
-                max_value=max_val,
                 total_width=panel_w - 56,
             )
-            for label, attr_name, min_val, max_val in menu_fields
+            for field in menu_fields
         ]
     else:
         labels = [
@@ -451,23 +447,25 @@ def _draw_menu_settings_panel(
         label_text, _separator, value_text = text.partition(":")
         value_text = value_text.strip()
         if menu_fields:
-            _label, _attr_name, min_val, max_val = menu_fields[i]
-            raw_value = getattr(settings, _attr_name)
+            field = menu_fields[i]
+            raw_value = getattr(settings, field.attr_name)
         else:
+            field = FieldSpec(
+                label=label_text.rstrip(":"),
+                attr_name="",
+                semantic_type="int",
+                control_family="stepper",
+            )
             raw_value = value_text
-            min_val = 0
-            max_val = 0
         option_y += _draw_menu_setting_row(
             screen,
             font=fonts.menu_font,
             option_x=option_x,
             option_w=option_w,
             option_y=option_y,
-            label_text=label_text.rstrip(":"),
+            field=field,
             value_text=value_text,
             raw_value=raw_value,
-            min_val=min_val,
-            max_val=max_val,
             is_selected=(i == selected_index),
             flash_frames=flash_frames,
             min_row_height=row_h,
@@ -584,8 +582,8 @@ def draw_menu(
     bindings_status: str = "",
     bindings_status_error: bool = False,
     flash_frames: int = 0,
-    menu_fields: Optional[Sequence[tuple[str, str, int, int]]] = None,
-    value_formatter: Optional[Callable[[str, object], str]] = None,
+    menu_fields: Optional[Sequence[FieldSpec]] = None,
+    value_formatter: Optional[Callable[[FieldSpec, object], str]] = None,
 ) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
     header_bottom = _draw_menu_header(
@@ -1331,6 +1329,35 @@ def _draw_endgame_board_2d(
         endgame_animation.cell_relics,
         relic_render_states,
     ):
+        color = color_for_cell(int(cell_relic.color_id))
+        for segment in tuple(getattr(relic_state, "trail_segments", ())):
+            line_points = _endgame_screen_points_2d(
+                board_offset,
+                (
+                    (
+                        segment.tail_render_position[0],
+                        segment.tail_render_position[1],
+                        0.0,
+                    ),
+                    (
+                        segment.head_render_position[0],
+                        segment.head_render_position[1],
+                        0.0,
+                    ),
+                ),
+            )
+            pygame.draw.line(
+                overlay,
+                (
+                    color[0],
+                    color[1],
+                    color[2],
+                    max(0, min(255, int(round(172 * float(segment.alpha))))),
+                ),
+                line_points[0],
+                line_points[1],
+                max(1, int(round(CELL_SIZE * 0.08 * max(0.35, float(segment.width))))),
+            )
         position = relic_state.render_position
         rotation_deg = relic_state.rotation_deg
         alpha = relic_state.alpha
@@ -1340,7 +1367,6 @@ def _draw_endgame_board_2d(
             board_offset,
             _endgame_cell_quad_points_2d(center=position, rotation_deg=rotation_deg),
         )
-        color = color_for_cell(int(cell_relic.color_id))
         fill_alpha = max(0, min(255, int(round(255 * alpha))))
         outline_alpha = max(0, min(255, int(round(220 * alpha))))
         shadow_points = tuple((x + 2.0, y + 2.0) for x, y in quad_points)

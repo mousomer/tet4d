@@ -560,6 +560,10 @@ class TopologyPlaygroundPresetSelection:
     description: str = ""
     source: PresetSource = PRESET_SOURCE_CUSTOM
     unsafe: bool = False
+    group: str | None = None
+    mathematical_status: str | None = None
+    recommended_for: str | None = None
+    gravity_safe: bool = True
 
     def __post_init__(self) -> None:
         source = str(self.source)
@@ -570,6 +574,16 @@ class TopologyPlaygroundPresetSelection:
         self.description = str(self.description)
         self.source = source
         self.unsafe = bool(self.unsafe)
+        self.group = None if self.group is None else str(self.group)
+        self.mathematical_status = (
+            None
+            if self.mathematical_status is None
+            else str(self.mathematical_status)
+        )
+        self.recommended_for = (
+            None if self.recommended_for is None else str(self.recommended_for)
+        )
+        self.gravity_safe = bool(self.gravity_safe)
 
 
 @dataclass

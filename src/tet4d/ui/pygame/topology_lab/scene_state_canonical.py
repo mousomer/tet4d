@@ -114,6 +114,10 @@ def _runtime_explorer_preset_selection_from_value(
                 description=preset.description,
                 source=PRESET_SOURCE_EXPLORER,
                 unsafe=preset.unsafe,
+                group=preset.group,
+                mathematical_status=preset.mathematical_status,
+                recommended_for=preset.recommended_for,
+                gravity_safe=preset.gravity_safe,
             )
     return RuntimeTopologyPlaygroundPresetSelection(source=PRESET_SOURCE_CUSTOM)
 
@@ -460,4 +464,3 @@ def set_selected_glue_id(
         state.selected_glue_id = glue_id
         return
     _replace_canonical_state(state, selected_gluing=glue_id)
-

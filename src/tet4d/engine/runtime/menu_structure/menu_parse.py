@@ -15,9 +15,11 @@ _MENU_ITEM_TYPES = {
     "toggle",
     "selector",
     "slider",
+    "stepper",
     "keybinding_group",
     "legacy_dispatch",
 }
+_SETTING_SEMANTIC_TYPES = {"bool", "enum", "int", "float"}
 _MENU_ENTRYPOINT_KEYS = ("launcher", "pause", "settings", "keybindings")
 _DEFAULT_MENU_ENTRYPOINTS = {
     "launcher": "launcher_root",
@@ -76,6 +78,70 @@ def _parse_action_group_item(item: dict[str, Any], *, path: str) -> dict[str, An
     }
 
 
+def _parse_setting_item(
+    item: dict[str, Any],
+    *,
+    item_type: str,
+    path: str,
+) -> dict[str, Any]:
+    setting_id = as_non_empty_string(
+        item.get("setting_id"),
+        path=f"{path}.setting_id",
+    ).lower()
+    semantic_type = as_non_empty_string(
+        item.get("semantic_type"),
+        path=f"{path}.semantic_type",
+    ).lower()
+    if semantic_type not in _SETTING_SEMANTIC_TYPES:
+        raise RuntimeError(
+            f"{path}.semantic_type must be one of: "
+            + ", ".join(sorted(_SETTING_SEMANTIC_TYPES))
+        )
+    parsed: dict[str, Any] = {
+        "setting_id": setting_id,
+        "semantic_type": semantic_type,
+    }
+    options_key = str(item.get("options_key", "")).strip().lower()
+    if item_type == "toggle":
+        if semantic_type != "bool":
+            raise RuntimeError(f"{path}.toggle rows must declare semantic_type='bool'")
+        if options_key:
+            raise RuntimeError(f"{path}.toggle rows must not define options_key")
+        return parsed
+    if item_type == "selector":
+        if semantic_type != "enum":
+            raise RuntimeError(f"{path}.selector rows must declare semantic_type='enum'")
+        parsed["options_key"] = as_non_empty_string(
+            item.get("options_key"),
+            path=f"{path}.options_key",
+        ).lower()
+        return parsed
+    if semantic_type not in {"int", "float"}:
+        raise RuntimeError(
+            f"{path}.{item_type} rows must declare semantic_type='int' or 'float'"
+        )
+    if options_key:
+        raise RuntimeError(f"{path}.{item_type} rows must not define options_key")
+    return parsed
+
+
+def _parse_keybinding_group_item(item: dict[str, Any], *, path: str) -> dict[str, Any]:
+    binding_group = as_non_empty_string(
+        item.get("binding_group"),
+        path=f"{path}.binding_group",
+    ).lower()
+    binding_dimension = as_non_empty_string(
+        item.get("binding_dimension"),
+        path=f"{path}.binding_dimension",
+    ).lower()
+    binding_bucket = str(item.get("binding_bucket", "all")).strip().lower()
+    return {
+        "binding_group": binding_group,
+        "binding_dimension": binding_dimension,
+        "binding_bucket": binding_bucket or "all",
+    }
+
+
 def parse_menu_item(raw: object, *, path: str) -> dict[str, Any]:
     item = require_object(raw, path=path)
     item_id = as_non_empty_string(item.get("id"), path=f"{path}.id").lower()
@@ -120,12 +186,8 @@ def parse_menu_item(raw: object, *, path: str) -> dict[str, Any]:
         return parsed
     if item_type in {"section", "info"}:
         return parsed
-    if item_type in {"toggle", "selector", "slider"}:
-        setting_id = as_non_empty_string(
-            item.get("setting_id"),
-            path=f"{path}.setting_id",
-        ).lower()
-        parsed["setting_id"] = setting_id
+    if item_type in {"toggle", "selector", "slider", "stepper"}:
+        parsed.update(_parse_setting_item(item, item_type=item_type, path=path))
         return parsed
     if item_type == "legacy_dispatch":
         action_id = as_non_empty_string(
@@ -134,18 +196,7 @@ def parse_menu_item(raw: object, *, path: str) -> dict[str, Any]:
         ).lower()
         parsed["action_id"] = action_id
         return parsed
-    binding_group = as_non_empty_string(
-        item.get("binding_group"),
-        path=f"{path}.binding_group",
-    ).lower()
-    binding_dimension = as_non_empty_string(
-        item.get("binding_dimension"),
-        path=f"{path}.binding_dimension",
-    ).lower()
-    binding_bucket = str(item.get("binding_bucket", "all")).strip().lower()
-    parsed["binding_group"] = binding_group
-    parsed["binding_dimension"] = binding_dimension
-    parsed["binding_bucket"] = binding_bucket or "all"
+    parsed.update(_parse_keybinding_group_item(item, path=path))
     return parsed
 
 

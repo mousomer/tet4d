@@ -88,6 +88,7 @@ _ALL_ROW_KEYS = (
     "cell_w",
     "boundary_response",
     "particle_collisions",
+    "trace_enabled",
     "speed_preset",
     "sound_enabled",
     "seed",
@@ -135,6 +136,7 @@ class StandaloneExplosionSurfaceState:
     cell_origin: tuple[int, int, int, int] = (-1, -1, -1, -1)
     boundary_response: str = EXPLOSION_BOUNDARY_RESPONSE_ESCAPE
     particle_collisions: str = EXPLOSION_PARTICLE_COLLISIONS_OFF
+    trace_enabled: bool = False
     speed_preset: str = EXPLOSION_SPEED_NORMAL
     sound_enabled: bool = True
     seed: int = 1337
@@ -287,6 +289,7 @@ def _dynamic_row_keys(
         (
             "boundary_response",
             "particle_collisions",
+            "trace_enabled",
             "speed_preset",
             "sound_enabled",
             "seed",
@@ -307,6 +310,7 @@ def _row_label_text(row_key: str) -> str:
         "piece_shape": "Piece Shape",
         "boundary_response": "Boundary Response",
         "particle_collisions": "Particle Collisions",
+        "trace_enabled": "Trace",
         "speed_preset": "Speed Preset",
         "sound_enabled": "Sound",
         "seed": "Seed",
@@ -683,7 +687,7 @@ def _cycle_option(current: str, values: tuple[str, ...], step: int) -> str:
 
 
 def _requires_restart_for_row(row_key: str) -> bool:
-    return row_key != "view_mode"
+    return row_key not in {"view_mode", "trace_enabled"}
 
 
 def _adjust_axis_row(
@@ -784,6 +788,9 @@ def _adjust_simulation_row(
             step,
         )
         return True
+    if row_key == "trace_enabled":
+        state.trace_enabled = not bool(state.trace_enabled)
+        return True
     if row_key == "sound_enabled":
         state.sound_enabled = not bool(state.sound_enabled)
         return True
@@ -823,29 +830,35 @@ def _activate_selected_row(state: StandaloneExplosionSurfaceState) -> bool:
     return False
 
 
+def _row_value_overrides(
+    state: StandaloneExplosionSurfaceState,
+) -> dict[str, str]:
+    return {
+        "dimension": f"{int(state.dimension)}D",
+        "view_mode": _VIEW_MODE_LABELS[str(state.view_mode)],
+        "topology": _topology_value_text(state),
+        "snapshot_source": _snapshot_value_text(state),
+        "piece_set": _piece_set_label_for_dimension(
+            int(state.dimension),
+            str(state.piece_set_id),
+        ),
+        "piece_shape": str(state.piece_shape_name),
+        "trace_enabled": "ON" if state.trace_enabled else "OFF",
+        "sound_enabled": "ON" if state.sound_enabled else "OFF",
+        "seed": str(int(state.seed)),
+    }
+
+
 def _dynamic_row_value_text(
     state: StandaloneExplosionSurfaceState,
     row_key: str,
 ) -> str:
-    if row_key == "dimension":
-        return f"{int(state.dimension)}D"
-    if row_key == "view_mode":
-        return _VIEW_MODE_LABELS[str(state.view_mode)]
-    if row_key == "topology":
-        return _topology_value_text(state)
-    if row_key == "snapshot_source":
-        return _snapshot_value_text(state)
-    if row_key == "piece_set":
-        return _piece_set_label_for_dimension(int(state.dimension), str(state.piece_set_id))
-    if row_key == "piece_shape":
-        return str(state.piece_shape_name)
     if row_key.startswith("cell_"):
         axis_index = _AXIS_LABELS.index(row_key.split("_", 1)[1].upper())
         return str(int(state.cell_origin[axis_index]))
-    if row_key == "sound_enabled":
-        return "ON" if state.sound_enabled else "OFF"
-    if row_key == "seed":
-        return str(int(state.seed))
+    overrides = _row_value_overrides(state)
+    if row_key in overrides:
+        return overrides[row_key]
     return str(getattr(state, row_key, "")).upper()
 
 
@@ -938,6 +951,7 @@ def _draw_native_board_preview(
         board_dims=_board_dims_for_state(state),
         camera_3d=state.camera_3d,
         view_4d=state.view_4d,
+        show_trace=bool(state.trace_enabled),
     )
 
 
@@ -966,13 +980,26 @@ def _draw_projection_reference_scene(
             screen,
             fonts,
             panel_title="Projection Reference",
+            explosion_trace_enabled=bool(state.trace_enabled),
             **base_kwargs,
         )
         return
     if int(state.dimension) == 4:
-        _draw_scene_4d(screen, fonts, profile=profile, **base_kwargs)
+        _draw_scene_4d(
+            screen,
+            fonts,
+            profile=profile,
+            explosion_trace_enabled=bool(state.trace_enabled),
+            **base_kwargs,
+        )
         return
-    _draw_scene_3d(screen, fonts, profile=profile, **base_kwargs)
+    _draw_scene_3d(
+        screen,
+        fonts,
+        profile=profile,
+        explosion_trace_enabled=bool(state.trace_enabled),
+        **base_kwargs,
+    )
 
 
 def _draw_simulation_scene(
@@ -1002,6 +1029,24 @@ def _draw_simulation_scene(
         controller=controller,
         state=state,
     )
+
+
+def _apply_nonrestart_row_status(
+    state: StandaloneExplosionSurfaceState,
+    *,
+    row_key: str,
+) -> None:
+    if row_key == "view_mode":
+        state.status = f"View mode switched to {_VIEW_MODE_LABELS[str(state.view_mode)]}"
+        state.status_error = False
+        return
+    if row_key == "trace_enabled":
+        state.status = (
+            "Trace overlay enabled"
+            if state.trace_enabled
+            else "Trace overlay disabled"
+        )
+        state.status_error = False
 
 
 def _subtitle_text(state: StandaloneExplosionSurfaceState) -> str:
@@ -1333,8 +1378,7 @@ def _restart_from_key(state: StandaloneExplosionSurfaceState, key: int) -> None:
             if _requires_restart_for_row(row_key):
                 restart_standalone_explosion(state)
             else:
-                state.status = f"View mode switched to {_VIEW_MODE_LABELS[str(state.view_mode)]}"
-                state.status_error = False
+                _apply_nonrestart_row_status(state, row_key=row_key)
             play_sfx("menu_move")
         return
     restart_standalone_explosion(state)

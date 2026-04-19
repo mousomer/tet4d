@@ -5,6 +5,7 @@ from typing import Any
 
 import pygame
 
+from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.engine.runtime.menu_settings_state import (
     load_menu_settings,
     save_menu_settings,
@@ -14,7 +15,6 @@ from tet4d.ui.pygame.keybindings import (
     set_active_key_profile,
 )
 from tet4d.ui.pygame.menu.menu_controls import (
-    FieldSpec,
     MenuAction,
     apply_menu_actions,
     gather_menu_actions,
@@ -46,7 +46,7 @@ def _update_selected_flash(
 ) -> None:
     if state.selected_index >= len(fields):
         state.selected_index = max(0, len(fields) - 1)
-    selected_attr = fields[state.selected_index][1] if fields else ""
+    selected_attr = fields[state.selected_index].attr_name if fields else ""
     before_value = getattr(state.settings, selected_attr) if selected_attr else None
     apply_menu_actions(
         state,

@@ -830,6 +830,34 @@ def _draw_endgame_board_3d(
         endgame_animation.cell_relics,
         relic_render_states,
     ):
+        color = color_for_cell_3d(cell_relic.color_id)
+        for segment in tuple(getattr(relic_state, "trail_segments", ())):
+            tail = project_raw_point_helper(
+                tuple(float(value) + 0.5 for value in segment.tail_render_position),
+                dims,
+                params,
+                center_px,
+            )
+            head = project_raw_point_helper(
+                tuple(float(value) + 0.5 for value in segment.head_render_position),
+                dims,
+                params,
+                center_px,
+            )
+            if tail is None or head is None:
+                continue
+            pygame.draw.line(
+                overlay,
+                (
+                    color[0],
+                    color[1],
+                    color[2],
+                    max(0, min(255, int(round(176 * float(segment.alpha))))),
+                ),
+                tail,
+                head,
+                max(1, int(round(1.6 * max(0.35, float(segment.width))))),
+            )
         position = relic_state.render_position
         rotation_deg = relic_state.rotation_deg
         alpha = relic_state.alpha
@@ -837,7 +865,7 @@ def _draw_endgame_board_3d(
             continue
         faces = build_oriented_cube_faces(
             center=position,
-            color=color_for_cell_3d(cell_relic.color_id),
+            color=color,
             project_raw=lambda raw: project_raw_point_helper(
                 raw,
                 dims,

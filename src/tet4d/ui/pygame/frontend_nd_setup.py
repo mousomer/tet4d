@@ -11,12 +11,11 @@ from tet4d.ui.pygame.render.font_profiles import (
 )
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.runtime.api import active_key_profile_runtime
-from tet4d.ui.pygame.menu.menu_controls import FieldSpec
+from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
     kick_level_name_for_index,
     random_mode_id_from_index,
-    random_mode_label_for_index,
     setup_fields_for_settings,
     setup_hints_for_dimension,
     ui_copy_section,
@@ -34,10 +33,9 @@ from tet4d.ai.playbot.types import (
     bot_planner_profile_from_index,
 )
 from tet4d.engine.gameplay.speed_curve import gravity_interval_ms
-from tet4d.engine.gameplay.topology import topology_mode_from_index, topology_mode_label
+from tet4d.engine.gameplay.topology import topology_mode_from_index
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_NORMAL,
-    designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,
     resolve_topology_designer_selection,
@@ -111,10 +109,6 @@ _PIECE_SET_CHOICES = {
     3: tuple(piece_set_options_for_dimension(3)),
     4: tuple(piece_set_options_for_dimension(4)),
 }
-_PIECE_SET_LABELS = {
-    dimension: tuple(piece_set_label(piece_set_id) for piece_set_id in choices)
-    for dimension, choices in _PIECE_SET_CHOICES.items()
-}
 _TOPOLOGY_PROFILE_LABELS = {
     dimension: tuple(
         profile.label for profile in designer_profiles_for_dimension(dimension)
@@ -133,16 +127,8 @@ def _random_mode_index_to_id(index: int) -> str:
     return random_mode_id_from_index(index)
 
 
-def _random_mode_label(index: int) -> str:
-    return random_mode_label_for_index(index)
-
-
 def _kick_level_name(index: int) -> str:
     return kick_level_name_for_index(index)
-
-
-def piece_set_4d_label(piece_set_4d: str) -> str:
-    return piece_set_label(piece_set_4d)
 
 
 @dataclass
@@ -195,46 +181,31 @@ def _play_menu_settings(settings: GameSettingsND) -> GameSettingsND:
     )
 
 
-def _menu_value_text(dimension: int, attr_name: str, value: object) -> str:
-    if attr_name == "piece_set_index":
-        labels = _PIECE_SET_LABELS.get(dimension, _PIECE_SET_LABELS[4])
-        safe_index = max(0, min(len(labels) - 1, int(value)))
-        return labels[safe_index]
-    if attr_name == "random_mode_index":
-        return _random_mode_label(int(value))
-    if attr_name == "game_seed":
+def _menu_value_text(field: FieldSpec, value: object) -> str:
+    if field.is_enum() or field.is_bool():
+        return field.format_value(value)
+    if field.attr_name == "game_seed":
         return str(max(0, int(value)))
-    if attr_name == "topology_mode":
-        return topology_mode_label(topology_mode_from_index(int(value)))
-    if attr_name == "topology_advanced":
-        return "ON" if int(value) else "OFF"
-    if attr_name == "topology_profile_index":
-        return designer_profile_label_for_index(dimension, int(value))
-    if attr_name == "exploration_mode":
-        return "ON" if int(value) else "OFF"
     return str(value)
 
 
 def _setup_row_height(
     font: pygame.font.Font,
     *,
-    label: str,
+    field: FieldSpec,
     value_text: str,
-    value: object,
-    min_value: int,
-    max_value: int,
     total_width: int,
 ) -> int:
-    if max_value > min_value and isinstance(value, int):
+    if field.uses_slider():
         return compute_slider_row_layout(
             font,
-            label=label,
+            label=field.label,
             value=value_text,
             total_width=total_width,
         ).row_height
     return wrapped_label_value_layout(
         font,
-        label=label,
+        label=field.label,
         value=value_text,
         total_width=total_width,
     )[2]
@@ -247,11 +218,9 @@ def _draw_setup_menu_row(
     option_x: int,
     option_w: int,
     line_y: int,
-    label: str,
+    field: FieldSpec,
     value: object,
     value_text: str,
-    min_value: int,
-    max_value: int,
     selected: bool,
     flash_frames: int,
     min_row_height: int,
@@ -260,17 +229,17 @@ def _draw_setup_menu_row(
     slider_layout = (
         compute_slider_row_layout(
             font,
-            label=label,
+            label=field.label,
             value=value_text,
             total_width=option_w,
         )
-        if max_value > min_value and isinstance(value, int)
+        if field.uses_slider()
         else None
     )
     if slider_layout is None:
         label_lines, value_lines, row_height = wrapped_label_value_layout(
             font,
-            label=label,
+            label=field.label,
             value=value_text,
             total_width=option_w,
         )
@@ -335,8 +304,8 @@ def _draw_setup_menu_row(
                 0.0,
                 min(
                     1.0,
-                    (int(value) - int(min_value))
-                    / max(1, int(max_value) - int(min_value)),
+                    (float(value) - float(field.min_value or 0))
+                    / max(1.0, float(field.max_value or 0) - float(field.min_value or 0)),
                 ),
             ),
             flash_strength=max(0.0, min(1.0, flash_frames / 12.0)) if selected else 0.0,
@@ -373,14 +342,11 @@ def draw_menu(
     slider_row_heights = [
         _setup_row_height(
             fonts.menu_font,
-            label=label,
-            value_text=_menu_value_text(dimension, attr_name, getattr(state.settings, attr_name)),
-            value=getattr(state.settings, attr_name),
-            min_value=min_value,
-            max_value=max_value,
+            field=field,
+            value_text=_menu_value_text(field, getattr(state.settings, field.attr_name)),
             total_width=max(1, panel_w - 48),
         )
-        for label, attr_name, min_value, max_value in fields
+        for setup_field in fields
     ]
     row_h = min(
         max(slider_row_heights) if slider_row_heights else 44,
@@ -408,22 +374,20 @@ def draw_menu(
     option_x = panel_x + 24
     option_w = panel_w - 48
     option_bottom = panel_y + panel_h - 10
-    for idx, (label, attr_name, min_value, max_value) in enumerate(fields):
+    for idx, setup_field in enumerate(fields):
         if y + fonts.menu_font.get_height() > option_bottom:
             break
-        value = getattr(state.settings, attr_name)
-        value_text = _menu_value_text(dimension, attr_name, value)
+        value = getattr(state.settings, setup_field.attr_name)
+        value_text = _menu_value_text(setup_field, value)
         y += _draw_setup_menu_row(
             screen,
             font=fonts.menu_font,
             option_x=option_x,
             option_w=option_w,
             line_y=y,
-            label=label,
+            field=setup_field,
             value=value,
             value_text=value_text,
-            min_value=min_value,
-            max_value=max_value,
             selected=(idx == state.selected_index),
             flash_frames=state.flash_selected_frames,
             min_row_height=row_h,
@@ -572,3 +536,7 @@ def build_play_menu_config(
 
 def gravity_interval_ms_from_config(cfg: GameConfigND) -> int:
     return gravity_interval_ms(cfg.speed_level, dimension=max(2, cfg.ndim))
+
+
+def piece_set_4d_label(piece_set_id: str) -> str:
+    return piece_set_label(piece_set_id)

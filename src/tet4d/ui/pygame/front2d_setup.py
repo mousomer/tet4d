@@ -18,11 +18,10 @@ from tet4d.engine.runtime.menu_settings_state import (
 )
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
 from tet4d.engine.gameplay.game2d import GameConfig
-from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
-from tet4d.engine.gameplay.topology import topology_mode_from_index, topology_mode_label
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_OPTIONS
+from tet4d.engine.gameplay.topology import topology_mode_from_index
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_NORMAL,
-    designer_profile_label_for_index,
     designer_profiles_for_dimension,
     export_resolved_topology_profile,
     resolve_topology_designer_selection,
@@ -38,12 +37,11 @@ from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
     kick_level_name_for_index,
     random_mode_id_from_index,
-    random_mode_label_for_index,
     setup_fields_for_settings,
     setup_hints_for_dimension,
 )
 from tet4d.engine.runtime.api import active_key_profile_runtime
-from tet4d.ui.pygame.menu.menu_controls import FieldSpec
+from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.ui.pygame.menu.setup_menu_runner import run_setup_menu_loop
 from tet4d.ui.pygame.render.gfx_game import GfxFonts, draw_menu
 
@@ -132,10 +130,6 @@ def random_mode_index_to_id(index: int) -> str:
     return random_mode_id_from_index(index)
 
 
-def random_mode_label(index: int) -> str:
-    return random_mode_label_for_index(index)
-
-
 def load_speedup_settings_for_mode(mode_key: str) -> tuple[int, int]:
     return mode_speedup_settings(mode_key)
 
@@ -152,24 +146,14 @@ def load_overlay_transparency_for_runtime_2d() -> float:
     return get_overlay_transparency()
 
 
-def menu_value_formatter(attr_name: str, value: object) -> str:
-    if attr_name == "piece_set_index":
-        return piece_set_2d_label(piece_set_index_to_id(int(value)))
-    if attr_name == "random_mode_index":
-        return random_mode_label(int(value))
-    if attr_name == "game_seed":
+def menu_value_formatter(field: FieldSpec, value: object) -> str:
+    if field.is_enum() or field.is_bool():
+        return field.format_value(value)
+    if field.attr_name == "game_seed":
         return str(max(0, int(value)))
-    if attr_name == "topology_mode":
-        return topology_mode_label(topology_mode_from_index(int(value)))
-    if attr_name == "topology_advanced":
-        return "ON" if int(value) else "OFF"
-    if attr_name == "topology_profile_index":
-        return designer_profile_label_for_index(2, int(value))
-    if attr_name == "challenge_layers":
+    if field.attr_name == "challenge_layers":
         return str(value)
-    if attr_name == "exploration_mode":
-        return "ON" if int(value) else "OFF"
-    if attr_name == "speed_level":
+    if field.attr_name == "speed_level":
         return f"{value}   (1 = slow, 10 = fast)"
     return str(value)
 

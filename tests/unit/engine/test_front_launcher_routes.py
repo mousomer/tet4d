@@ -182,6 +182,7 @@ class TestFrontLauncherRoutes(unittest.TestCase):
                 "piece_shape",
                 "boundary_response",
                 "particle_collisions",
+                "trace_enabled",
                 "speed_preset",
                 "sound_enabled",
                 "seed",

@@ -1475,6 +1475,75 @@ def _fit_zoom_from_context(
     return max(8.0, min(120.0, min(fit_x, fit_y)))
 
 
+def _draw_endgame_trail_segments_4d(
+    overlay: pygame.Surface,
+    *,
+    relic_render_state,
+    color: tuple[int, int, int],
+    layer_index: int,
+    dims3: Cell3,
+    context: EndgameRenderContext,
+    center_px: Point2,
+    zoom: float,
+) -> None:
+    for segment in tuple(getattr(relic_render_state, "trail_segments", ())):
+        tail_layer_alpha = next(
+            (
+                weight
+                for candidate_layer, weight in segment.tail_layer_weights
+                if candidate_layer == layer_index
+            ),
+            0.0,
+        )
+        head_layer_alpha = next(
+            (
+                weight
+                for candidate_layer, weight in segment.head_layer_weights
+                if candidate_layer == layer_index
+            ),
+            0.0,
+        )
+        trail_layer_alpha = max(tail_layer_alpha, head_layer_alpha)
+        if trail_layer_alpha <= 0.0:
+            continue
+        tail = _project_raw_point_from_context(
+            tuple(float(value) + 0.5 for value in segment.tail_render_position),
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        head = _project_raw_point_from_context(
+            tuple(float(value) + 0.5 for value in segment.head_render_position),
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        if tail is None or head is None:
+            continue
+        pygame.draw.line(
+            overlay,
+            (
+                color[0],
+                color[1],
+                color[2],
+                max(
+                    0,
+                    min(
+                        255,
+                        int(
+                            round(176 * float(segment.alpha) * float(trail_layer_alpha))
+                        ),
+                    ),
+                ),
+            ),
+            tail,
+            head,
+            max(1, int(round(1.5 * max(0.35, float(segment.width))))),
+        )
+
+
 def _draw_endgame_layer_board(
     surface: pygame.Surface,
     *,
@@ -1541,6 +1610,17 @@ def _draw_endgame_layer_board(
         endgame_animation.cell_relics,
         relic_render_states,
     ):
+        color = color_for_cell(cell_relic.color_id, COLOR_MAP)
+        _draw_endgame_trail_segments_4d(
+            overlay,
+            relic_render_state=relic_state,
+            color=color,
+            layer_index=layer_index,
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
         layer_alpha_scale = next(
             (
                 weight
@@ -1558,7 +1638,7 @@ def _draw_endgame_layer_board(
             continue
         faces = build_oriented_cube_faces(
             center=position,
-            color=color_for_cell(cell_relic.color_id, COLOR_MAP),
+            color=color,
             project_raw=lambda raw: _project_raw_point_from_context(
                 raw,
                 dims3=dims3,

@@ -20,6 +20,7 @@ from tet4d.engine.runtime.endgame_presets import (
 )
 from tet4d.engine.runtime.project_config import constants_payload
 from tet4d.ui.pygame.locked_cell_explosion import (
+    ExplosionRenderTrailSegment,
     ExplosionSeedCell,
     ExplosionTopologyInput,
     StandaloneExplosionConfig,
@@ -572,6 +573,7 @@ class EndgameRelicRenderState:
     rotation_deg: Vec3
     alpha: float
     layer_weights: tuple[tuple[int, float], ...] = ()
+    trail_segments: tuple[ExplosionRenderTrailSegment, ...] = ()
 
 
 # Compatibility alias retained for existing imports/tests.
@@ -1378,6 +1380,7 @@ def _render_state_from_motion_state(
             render_position=_pad_vec3(motion_state.position_nd),
             rotation_deg=motion_state.rotation_deg,
             alpha=motion_state.alpha,
+            trail_segments=(),
         )
 
     context = snapshot.render_context
@@ -1406,6 +1409,7 @@ def _render_state_from_motion_state(
             mapped[3],
             layer_count=max(1, int(context.layer_count)),
         ),
+        trail_segments=(),
     )
 
 
@@ -2289,6 +2293,7 @@ def render_relics_for_animation(
                 rotation_deg=state.rotation_deg,
                 alpha=state.alpha,
                 layer_weights=state.layer_weights,
+                trail_segments=state.trail_segments,
             )
             for state in animation.explosion_controller.render_particles(
                 render_context=animation.snapshot.render_context

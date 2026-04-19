@@ -567,8 +567,8 @@ class TestFront3DSetupDedup(unittest.TestCase):
 
     def test_nd_menu_fields_keep_only_safe_topology_controls(self) -> None:
         attrs = {
-            attr_name
-            for _label, attr_name, _min_val, _max_val in frontend_nd_setup.menu_fields_for_settings(
+            field.attr_name
+            for field in frontend_nd_setup.menu_fields_for_settings(
                 frontend_nd_setup.GameSettingsND(
                     exploration_mode=0, topology_advanced=1
                 ),

@@ -22,6 +22,7 @@ from tet4d.engine.topology_explorer import (
 from tet4d.engine.topology_explorer.presets import (
     ExplorerTopologyPreset,
     explorer_presets_for_dimension,
+    preset_display_label,
 )
 
 from .app import build_explorer_playground_settings
@@ -316,7 +317,11 @@ def _explorer_preset_index(state: TopologyLabState) -> int:
 def _explorer_preset_value_text(state: TopologyLabState) -> str:
     presets = _explorer_presets(state)
     preset = presets[_explorer_preset_index(state)]
-    return preset.label + (" [unsafe]" if preset.unsafe else "")
+    return preset_display_label(
+        preset,
+        include_group=True,
+        include_unsafe=True,
+    )
 
 
 def _explorer_piece_set_options(state: TopologyLabState) -> tuple[str, ...]:

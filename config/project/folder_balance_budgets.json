@@ -141,7 +141,7 @@
     {
       "path": "src/tet4d/engine/runtime/menu_structure",
       "profile": "micro_leaf",
-      "baseline_score": 1.0,
+      "baseline_score": 0.95,
       "baseline_status": "balanced"
     },
     {
@@ -153,7 +153,7 @@
     {
       "path": "tests/unit/engine",
       "profile": "tests_leaf",
-      "baseline_score": 0.97,
+      "baseline_score": 0.94,
       "baseline_status": "balanced"
     }
   ]

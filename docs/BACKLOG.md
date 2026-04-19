@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-18
+Updated: 2026-04-19
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -71,16 +71,26 @@ should stay sourced from the canonical `settings_root` subtree in
 `config/menu/structure.json` rather than older parallel section docs, and the
 focused keybinding contract script should continue covering every runtime-seam
 consumer moved off the pygame adapter.
+Parallel topology-preset classification follow-up (2026-04-19): the shared
+Explorer preset registry should keep one authority path, surface grouped
+quotient / sphere-like / experimental families with honest mathematical-status
+metadata, keep sphere-like transport presets selectable in Explorer, and avoid
+presenting transport heuristics as clean quotient spaces.
 
 Parallel menu-shell follow-up (2026-04-10): the shared launcher/setup/pause/
 settings/keybindings shell now has one aligned title/back/panel style, and
-future tweaks should stay incremental, keep subtitle-free headers, keep
-bounded numeric rows on sliders, and avoid drifting translation labels or the
-gameplay-owned transparency setting back toward the older split layout.
+future tweaks should stay incremental, keep subtitle-free headers, keep the
+numeric-only slider contract plus selector/toggle/stepper control split, and
+avoid drifting translation labels or the gameplay-owned transparency setting
+back toward the older split layout.
 Parallel slider-row follow-up (2026-04-11): larger menu sliders now rely on a
 shared config-backed label/value/track allocation contract, so future slider
 size changes must keep launcher/setup/in-game compact-width text visibility
 aligned instead of reintroducing per-screen row geometry drift.
+Menu typing hardening progress (2026-04-19): setup and settings controls now
+carry explicit semantic types, categorical setup fields use selector controls
+instead of numeric range sliders, discrete numeric rows can use `stepper`, and
+governance rejects semantic-type/control mismatches before runtime drift lands.
 
 Parallel policy-pack hardening follow-up (2026-04-17): repo governance now
 keeps policy data in `config/project/policy_pack.json`, keeps
@@ -110,7 +120,11 @@ explosions now need to stay on the dedicated standalone-first particle
 subsystem, keep connected-seam transport transforming both position and
 velocity, preserve non-connected `boundary_response=escape` semantics instead
 of clamp/kill/reflect, split boundary response from particle collisions, and
-keep audio emission aggregated/rate-limited under dense scenes. Dedicated
+keep audio emission aggregated/rate-limited under dense scenes. Shared render
+follow-up (2026-04-19): exploding-cell trails should come from capped shared
+per-particle center-history with seam-break markers, spacing/lifetime limits,
+post-escape continuation, and the existing `2D` / `3D` / `4D` projection path
+instead of ad hoc per-view source-to-current lines. Dedicated
 simulator follow-up (2026-04-18): keep the standalone/explorer simulator UI,
 but rebase it onto the existing explorer topology preset registry and native
 `2D` / `3D` / `4D` scene render paths instead of a simulator-local topology
@@ -118,8 +132,9 @@ list and circle/scatterplot rendering. Board-view follow-up (2026-04-18):
 keep that dedicated simulator UI, but upgrade `3D` / `4D` to true board-native
 views, add engine-backed `single_cell` / `single_piece` / `piece_change`
 snapshot sources plus inherited-state handoff, expose shared-core kinetic
-energy in the simulator UI, and keep wrapped simulator text/layout from
-clipping or overlapping.
+energy in the simulator UI, keep wrapped simulator text/layout from clipping
+or overlapping, and expose an optional thin `Trace` overlay in both board-
+native and projection-reference simulator views.
 
 Batch 3 progress (2026-04-17): topology-playground explorer row mutation and
 seam-edit helpers now live in

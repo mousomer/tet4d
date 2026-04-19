@@ -237,7 +237,7 @@ def _pop_page(state: _UnifiedSettingsState) -> bool:
 def _page_item_value_text(state: _UnifiedSettingsState, item: dict[str, Any]) -> str:
     item_type = str(item.get("type", "")).lower()
     item_id = menu_item_id(item)
-    if item_type in {"toggle", "selector", "slider"}:
+    if item_type in {"toggle", "selector", "slider", "stepper"}:
         return _unified_value_text(state, item_id)
     if item_type == "submenu":
         return "Open"
@@ -725,7 +725,7 @@ def _handle_unified_enter(
     if item_id in _NUMERIC_TEXT_EDIT_ROWS:
         _start_unified_numeric_text_mode(state, item_id)
         return screen
-    if item_type in {"toggle", "selector", "slider"}:
+    if item_type in {"toggle", "selector", "slider", "stepper"}:
         state.pending_reset_confirm = False
         _adjust_unified_with_arrows(state, pygame.K_RIGHT, row_key=item_id)
         return screen
@@ -853,7 +853,7 @@ def _dispatch_unified_key(
         return screen
     item_type = str(item.get("type", "")).lower()
     item_id = menu_item_id(item)
-    if item_type in {"toggle", "selector", "slider"} and _adjust_unified_with_arrows(
+    if item_type in {"toggle", "selector", "slider", "stepper"} and _adjust_unified_with_arrows(
         state,
         key,
         row_key=item_id,
