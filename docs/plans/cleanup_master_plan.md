@@ -4,7 +4,7 @@ Role: ledger
 Status: active
 Source of truth: this file for broad structural cleanup sequencing
 Supersedes: none
-Last updated: 2026-03-22
+Last updated: 2026-04-20
 
 ## Purpose
 
@@ -44,16 +44,16 @@ It does not own:
 
 | Domain | Canonical owner | Status | Exit condition |
 | --- | --- | --- | --- |
+| Topology-playground shell-preserving cleanup | `scene_state.py`, `scene_state_canonical.py`, `scene_state_probe.py`, `controls_panel.py` | active | remaining compatibility seams narrow further without reopening the frozen shell |
 | Gameplay orchestration dedup | `engine/core/rules/lifecycle.py`, `engine/gameplay/lock_flow.py` | active | duplicated lock/drop orchestration in mode files is reduced as far as net deletion justifies |
 | Runtime/settings ownership cleanup | `engine/runtime/menu_settings_state.py` facade over runtime submodules | active | facade pressure stays bounded or is narrowed further by real seam extraction |
 | Launcher/bootstrap drift watch | `front.py` compatibility wrapper plus `cli/front*.py` | watch | no material duplication returns |
 | Packaging/release drift watch | packaging scripts/workflows | watch | installer and release authority remain coherent |
-| Explorer topology engine cleanup | `engine/topology_explorer/` plus runtime store/preview/runtime owners | active | legacy bridge is removable without breaking explicit compatibility paths |
-| Docs/manifests sync discipline | code first, then state/backlog/generated docs/relevant RDS | active | drift checks remain green and narrative duplication is reduced |
+| Docs/authority sync discipline | state/backlog/generated docs plus relevant RDS | active | drift checks remain green and stale active-work or ownership wording is retired promptly |
 
-## Explorer topology engine note
+## Topology-playground cleanup note
 
-The explorer topology engine now has an established canonical owner set:
+Topology-playground cleanup now has an established canonical owner set:
 
 - pure gluing semantics in `src/tet4d/engine/topology_explorer/`
 - runtime-owned storage/preview/integration in the runtime explorer modules
@@ -61,7 +61,8 @@ The explorer topology engine now has an established canonical owner set:
 
 Remaining cleanup is limited to:
 
-- final compatibility-bridge deletion when justified,
+- narrower `scene_state.py` / `controls_panel.py` compatibility-seam cleanup
+  when justified,
 - narrower supporting-editor cleanup,
 - avoiding reintroduction of legacy edge-rule ownership.
 
@@ -72,7 +73,7 @@ These are not active redesign programs, but they still need drift monitoring:
 - launcher/bootstrap thin-wrapper discipline
 - packaging/release authority discipline
 - readability drift in operational code
-- doc/manifold duplication returning after future batches
+- doc/manifest duplication returning after future batches
 
 ## Completion rule
 

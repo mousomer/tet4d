@@ -4,7 +4,7 @@ Role: ledger
 Status: active
 Source of truth: this file for active topology-playground follow-up debt
 Supersedes: ad hoc transitional-debt sections previously embedded in authority notes
-Last updated: 2026-03-29
+Last updated: 2026-04-20
 
 ## Purpose
 
@@ -22,16 +22,20 @@ That belongs in `topology_playground_shell_redesign_spec.md`.
 | Debt | Primary location | Status | Exit condition |
 | --- | --- | --- | --- |
 | Compatibility-only shell projections remain in the migrated path | `src/tet4d/ui/pygame/topology_lab/scene_state.py` | active | all live readers move to canonical selectors or true caches only |
-| Remaining shell-owned cache classification is still concentrated and easy to misread | `scene_state.py`, `workspace_shell.py`, related shell helpers | active | cache/projection boundaries are explicit and narrow |
+| Retained compatibility/cache state is still concentrated in shell-facing modules | `scene_state.py`, `workspace_shell.py` | active | cache/projection boundaries are explicit and narrow |
 | `controls_panel.py` remains too large and mixed-responsibility | `src/tet4d/ui/pygame/topology_lab/controls_panel.py` | active | shell-preserving simplification narrows ownership without changing the frozen shell |
 | `scene_state.py` still carries compatibility and projection debt | `src/tet4d/ui/pygame/topology_lab/scene_state.py` | deferred | live shell consumes narrower canonical seams |
-| Some dimension-specific probe/camera behavior still relies on older helper layers | topology-lab scene/helper modules | active | all probe/camera behavior routes through stable canonical seams |
 | Unsafe-topology cross-surface drift still exists in some paths | sandbox / gameplay / preview integration | active | sandbox, preview, and gameplay contracts agree on supported vs unsupported cases |
 | Play drop-policy coverage remains incomplete for some topology families | gameplay tests | active | focused regressions pin remaining non-trivial families |
-| Historical docs may still mention removed legacy paths | docs layer | active | stale references are removed or moved to history |
 
 ## Recent progress
 
+- 2026-04-20: removed stale active-debt doc rows now that resolved probe/helper
+  ownership and legacy-doc cleanup no longer belong in the live debt ledger.
+- 2026-04-17: split canonical runtime sync/write and probe-state ownership out
+  of `scene_state.py`, and split routing/command/launch helpers out of
+  `controls_panel.py`, narrowing the remaining shell-preserving cleanup to the
+  still-live compatibility seams.
 - 2026-03-29: extracted shell layout / text-budget helpers for the current
   Topology Playground top bar, footer, and control rows in a shell-preserving
   pass; added deterministic compact-window text-visibility coverage for the
@@ -75,7 +79,6 @@ Use these rules when touching retained shell state:
 - keep retained caches/projections from drifting back into truth ownership
 - simplify `controls_panel.py` while preserving the frozen shell contract
 - simplify `scene_state.py` while preserving the frozen shell contract
-- remove stale legacy-path references from active docs
 
 ## Exit condition for this ledger
 

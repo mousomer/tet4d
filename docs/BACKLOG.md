@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-19
+Updated: 2026-04-20
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -22,189 +22,25 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Current sub-batch (2026-03-29): shell-preserving topology-playground cleanup.
+Current sub-batch (2026-04-20): docs-authority cleanup after the merged
+project-structure index batch.
 
-Parallel governance/runtime follow-up (2026-03-30): keybinding authority
-unification around `config/keybindings/catalog.json`, so help/editor/control
-group structure and keybindings section-menu copy no longer drift away from
-the live runtime binding map.
+Current active follow-ups:
 
-Parallel contract-hardening follow-up (2026-03-30): keybinding defaults and
-saved profile payloads now need one catalog-backed validator so direct config
-edits and persisted overrides fail fast on stale action/group/dimension
-references instead of degrading silently at runtime.
-
-Parallel runtime-ownership follow-up (2026-03-30): the remaining keybinding
-mutable-state seam needs to live under engine/runtime rather than the pygame
-adapter, while built-in defaults gain full required-action coverage checks,
-saved payloads gain explicit schema versioning, and config-only keybinding
-work gets a focused contract-check script.
-
-Parallel runtime-accessor follow-up (2026-03-30): UI callers that only need
-live grouped bindings or active-profile reads should consume narrow
-engine/runtime accessors instead of importing the broader pygame keybinding
-adapter.
-
-Parallel frozen-keybinding-path follow-up (2026-04-15): startup/profile
-cleanup must continue honoring the split-root contract where bundled defaults
-stay under the read-only packaged `keybindings/` tree and writable profile
-directories live under the per-user data root, without weakening the runtime
-path-containment guard for files outside those canonical roots.
-
-Parallel release-packaging smoke follow-up (2026-04-15): release packaging
-must continue exercising packaged runtime initialization on each target OS
-before emitting installers, and frozen writable-path regression coverage
-should keep the `project_config` / keybinding-store seam under direct test
-instead of only validating those contracts in isolation.
-
-Parallel topology-playground keybinding follow-up (2026-03-30): playground
-helper and shortcut surfaces should keep reading runtime binding groups rather
-than reintroducing direct adapter-global ownership in topology UI modules.
-
-Parallel topology-playground 4D binding cleanup follow-up (2026-03-30): the
-playground should not retain local fallback movement bindings that contradict
-the runtime 4D rotation contract, so keys like `N` must route only through
-the canonical runtime-backed gameplay binding map.
-
-Parallel help/menu-contract follow-up (2026-04-12): runtime settings help
-should stay sourced from the canonical `settings_root` subtree in
-`config/menu/structure.json` rather than older parallel section docs, and the
-focused keybinding contract script should continue covering every runtime-seam
-consumer moved off the pygame adapter.
-Parallel topology-preset classification follow-up (2026-04-19): the shared
-Explorer preset registry should keep one authority path, surface grouped
-quotient / sphere-like / experimental families with honest mathematical-status
-metadata, keep sphere-like transport presets selectable in Explorer, and avoid
-presenting transport heuristics as clean quotient spaces.
-
-Parallel menu-shell follow-up (2026-04-10): the shared launcher/setup/pause/
-settings/keybindings shell now has one aligned title/back/panel style, and
-future tweaks should stay incremental, keep subtitle-free headers, keep the
-numeric-only slider contract plus selector/toggle/stepper control split, and
-avoid drifting translation labels or the gameplay-owned transparency setting
-back toward the older split layout.
-Parallel slider-row follow-up (2026-04-11): larger menu sliders now rely on a
-shared config-backed label/value/track allocation contract, so future slider
-size changes must keep launcher/setup/in-game compact-width text visibility
-aligned instead of reintroducing per-screen row geometry drift.
-Menu typing hardening progress (2026-04-19): setup and settings controls now
-carry explicit semantic types, categorical setup fields use selector controls
-instead of numeric range sliders, discrete numeric rows can use `stepper`, and
-governance rejects semantic-type/control mismatches before runtime drift lands.
-
-Parallel policy-pack hardening follow-up (2026-04-17): repo governance now
-keeps policy data in `config/project/policy_pack.json`, keeps
-`docs/WORKFLOW_CODEX.md` as the human workflow explainer with explicit
-context-switch profiles, keeps `CURRENT_STATE.md` handoff-only, and keeps
-reusable generated ownership/source-of-truth/verification inventories in
-`docs/PROJECT_STRUCTURE.md` instead of duplicating them across validator code
-or restart docs.
-
-Parallel projected-animation hardening follow-up (2026-04-17): projected `3D`
-and `4D` gameplay renderers must keep board presentation frozen for the full
-active-piece tween, so helper marks, projected grid primitives, layer/board
-anchoring, and locked-cell projection stay stable while only active-piece
-geometry animates.
-Parallel projection-guide follow-up (2026-04-18): shared render-only
-`bottom_boundary` / `all_boundaries` modes must stay dimension-neutral across
-`2D` / `3D` / `4D`, deriving from animated active-piece render state against
-stable board presentation without reintroducing per-frame frozen-presentation
-rebuilds or gameplay/explorer legality drift.
-Parallel seam-animation hardening follow-up (2026-04-17): active-piece
-translation tweening must preserve gameplay-owned per-cell identity for
-ordinary moves and safe seam traversals, while non-safe seam traversals still
-follow explicit transport semantics instead of rematching destination minos by
-set-based heuristics or shuffling cells across the board mid-tween.
-Parallel locked-cell explosion follow-up (2026-04-18): game-over and sandbox
-explosions now need to stay on the dedicated standalone-first particle
-subsystem, keep connected-seam transport transforming both position and
-velocity, preserve non-connected `boundary_response=escape` semantics instead
-of clamp/kill/reflect, split boundary response from particle collisions, and
-keep audio emission aggregated/rate-limited under dense scenes. Shared render
-follow-up (2026-04-19): exploding-cell trails should come from capped shared
-per-particle center-history with seam-break markers, spacing/lifetime limits,
-post-escape continuation, and the existing `2D` / `3D` / `4D` projection path
-instead of ad hoc per-view source-to-current lines. Dedicated
-simulator follow-up (2026-04-18): keep the standalone/explorer simulator UI,
-but rebase it onto the existing explorer topology preset registry and native
-`2D` / `3D` / `4D` scene render paths instead of a simulator-local topology
-list and circle/scatterplot rendering. Board-view follow-up (2026-04-18):
-keep that dedicated simulator UI, but upgrade `3D` / `4D` to true board-native
-views, add engine-backed `single_cell` / `single_piece` / `piece_change`
-snapshot sources plus inherited-state handoff, expose shared-core kinetic
-energy in the simulator UI, keep wrapped simulator text/layout from clipping
-or overlapping, and expose an optional thin `Trace` overlay in both board-
-native and projection-reference simulator views.
-
-Batch 3 progress (2026-04-17): topology-playground explorer row mutation and
-seam-edit helpers now live in
-`src/tet4d/ui/pygame/topology_lab/controls_panel_actions.py`, keeping
-`controls_panel.py` focused on shell/input/launch orchestration while
-preserving deferred rigid playability analysis and same-signature cache reuse.
-
-Batch 4 progress (2026-04-17): topology-playground state ownership is now
-split so `scene_state.py` keeps the state model plus pane/tool/workspace
-routing, `scene_state_canonical.py` owns canonical runtime sync/write and
-fallback storage handling, and `scene_state_probe.py` owns probe selectors,
-probe mutations, and probe-state synchronization without moving deferred
-preview/playability work out of `scene_preview_state.py`.
-
-Batch 5 progress (2026-04-17): topology-playground control-shell cleanup now
-keeps navigation/pane/shortcut/enter routing in
-`src/tet4d/ui/pygame/topology_lab/controls_panel_routing.py`, save/export/
-experiment command execution in
-`src/tet4d/ui/pygame/topology_lab/controls_panel_commands.py`, and
-play-preview launch preparation/runtime handoff in
-`src/tet4d/ui/pygame/topology_lab/controls_panel_launch.py`, leaving
-`controls_panel.py` as a thinner visible-shell facade and compatibility seam.
-
-Batch 6 progress (2026-04-17): topology-playground latency/caching hardening
-now keeps the effective preview/playability signature limited to explorer
-topology plus resolved board dims, restores same-signature cached playability
-results in `scene_preview_state.py` when available, queues deferred rigid
-analysis only for valid unknown-rigid states, and keeps explicit play-preview
-launch forcing completion only when that valid rigid result is still pending.
-
-Batch 7 progress (2026-04-17): residual topology-playground compatibility seam
-cleanup now routes launcher/test access for row-mutation helpers directly to
-`src/tet4d/ui/pygame/topology_lab/controls_panel_actions.py`, routes
-boundary/glue selection helpers directly to
-`src/tet4d/ui/pygame/topology_lab/scene_state_canonical.py`, and routes
-highlight-glue helpers directly to
-`src/tet4d/ui/pygame/topology_lab/scene_state_probe.py`, leaving
-`controls_panel.py` and `scene_state.py` with fewer fake facade seams without
-changing the frozen shell or the Batch 6 preview/playability contract.
-
-Batch 8 progress (2026-04-17): projected `3D` / `4D` active-piece animation
-now routes through a shared ND piece render-state split so board presentation
-is built from a frozen per-move snapshot while animated piece geometry is
-rendered separately against that stable presentation; projected board-line
-occlusion now follows animated geometry without rebuilding board fit, helper
-marks, or locked-cell projection from transient tween state.
-
-Batch 9 progress (2026-04-17): translation tweening now keeps gameplay-owned
-piece cell order as the explicit source-to-destination mapping for seam moves,
-so projective/wrapped transport no longer re-pairs destination cells by
-nearest-position heuristics during interpolation; safe seam traversals stay
-coherent by that stable mapping, and non-safe traversals now remain explicitly
-transport-derived instead of drifting into accidental set-based shuffles.
-Regression correction (2026-04-17): `4D` projected gameplay now caches its
-frozen per-move layer presentation once per tween start so stable helper/grid/
-fit/locked-board work no longer rebuilds every tween frame, and explorer-mode
-gameplay once again ignores gameplay-only rigid-play gating for non-safe seam
-traversals while retaining explicit transport-derived animation endpoints.
-
-Regression correction (2026-04-17): projected `3D` / `4D` tween rendering now
-keeps `PieceRenderStateND` active-piece geometry on the opaque active-piece
-path instead of incorrectly routing in-flight tween cells through the
-translucent assist-overlay path, so deliberate translation timing remains
-visibly readable while the frozen board-presentation cache stays in place.
-Projection-guide rollout (2026-04-18): shared `bottom_boundary` /
-`all_boundaries` display modes now extend the grid-mode cycle across `2D` /
-`3D` / `4D`; `2D` projects onto board boundary lines, `3D` onto board
-planes, and `4D` onto basis-derived rendered layer-board planes while the
-guide follows animated piece geometry against frozen board presentation and
-keeps explorer/gameplay traversal semantics unchanged.
+- topology-playground shell-preserving cleanup remains centered on
+  `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
+  `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
+  `scene_state_canonical.py` / `scene_state_probe.py` and focused
+  control-helper splits kept intact
+- config-backed runtime-constants governance is the next policy/tooling lane;
+  repo-owned runtime defaults, thresholds, timings, layout constants, and
+  similar mutable values still need unified config-authority enforcement
+- the projected-render / locked-cell-explosion recovery batch remains deferred
+  to its own follow-up branch; do not mix that runtime restoration back into
+  documentation or governance passes
+- documentation cleanup should keep resolved project-structure work in recent
+  completed reporting instead of active implementation wording and should
+  retire stale debt rows promptly
 
 - Open work:
   1. continue structural simplification of remaining
@@ -217,13 +53,12 @@ keeps explorer/gameplay traversal semantics unchanged.
   3. keep the explicit preview/playability signature and deferred-analysis
      contract pinned so future UI-only or non-topological state changes do not
      regress into unnecessary preview/playability recompute
-  4. keep the shell-layout/text-visibility contract intact across Topology
-     Playground, pause/settings/help, tutorial overlays, and gameplay side
-     panels
-  5. keep diagnostics explicitly secondary rather than default-primary in any
-     future topology-playground shell follow-up
-  6. continue compatibility-debt reduction without reopening runtime authority,
-     launcher IA, or the frozen visible shell
+  4. land config-backed runtime-constants governance as a separate follow-up
+     branch, not as ad hoc local bans
+  5. restore the pending projected-render / locked-cell-explosion runtime
+     batch on its own branch with focused tests
+  6. keep documentation authorities synchronized without treating completed
+     project-structure index work as active implementation
 
 - Acceptance bar:
   1. `Topology Playground` remains the direct modern launcher entry
@@ -237,7 +72,8 @@ keeps explorer/gameplay traversal semantics unchanged.
   7. first-frame explorer startup no longer waits for the full rigid
      playability scan, and same-signature refreshes reuse cached playability
      results
-  8. `CODEX_MODE=1 ./scripts/verify.sh` stays green
+  8. follow-up branches stay single-concern and `CODEX_MODE=1 ./scripts/verify.sh`
+     stays green
 
 ## 3. Active Open Backlog / TODO
 
@@ -298,6 +134,14 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-04-20:
+
+- project-structure index batch landed on `master`, so generated
+  `docs/PROJECT_STRUCTURE.md` now carries symbol skim, likely-test hints, and
+  confidence labels backed by `tools/governance/generate_maintenance_docs.py`
+  plus focused indexing tests, and that work is no longer part of active
+  implementation wording
 
 Completed on 2026-04-18:
 
@@ -403,8 +247,6 @@ Completed on 2026-04-11:
   label/value/track allocation, preventing clipping in supported compact menu
   shells instead of relying on per-screen width guesses
 
-Completed on 2026-04-12:
-
 - canonical menu-source-of-truth pass so `config/menu/structure.json` now
   defines the launcher tree, pause tree, settings hierarchy, the flattened
   scrolling `Game` page, keyboard bindings placement, retained legacy
@@ -418,8 +260,6 @@ Completed on 2026-04-12:
   with `Gameplay`, `Board / Geometry`, `Movement / Rotation`,
   `Endgame Effects`, and `Difficulty / Pace` sections instead of a submenu
   forest
-
-Completed on 2026-04-18:
 
 - standalone-first locked-cell explosion subsystem landed under
   `src/tet4d/ui/pygame/locked_cell_explosion/`, modeling frozen locked cells as
@@ -437,8 +277,8 @@ Completed on 2026-04-18:
   `Explosion Simulator` surface, the old collapsed interaction enum is retired,
   explorer/game-end both route through the split `boundary_response` /
   `particle_collisions` config, and particle-collision audio is heavily capped
-  so seam traversal stays readable under dense motion
-  movement code or tetromino ownership
+  so seam traversal stays readable under dense motion instead of routing the
+  effect back through gameplay movement code or tetromino ownership
 - menu normalization pass so runtime launcher/settings/keybindings consumers
   now read a compiled normalized graph rather than the raw authored menu tree,
   singleton wrappers are collapsed before render/input use, and the one-row
@@ -638,40 +478,12 @@ Completed on 2026-03-29:
 
 Current batch:
 
-- runtime/UI split of immediate preview sync versus deferred rigid playability
-  analysis
-- signature-based playability cache reuse plus launch-time forced completion
-- movement-graph resolver reuse inside preview compilation
-- movement-graph interior/boundary fast path plus same-signature in-process
-  graph-row memoization
-- persistent topology cache coverage for preview payloads, movement-graph
-  rows, and rigid-playability analysis plus Advanced-menu cache
-  measure/clear actions
-- wrap-aware compact row rendering for Topology Playground controls and
-  Advanced gameplay settings plus a wider helper-lane budget
-- minimal structured helper-panel rendering sourced from live current
-  movement/rotation keybindings instead of a generic wrapped hint stack
-- shared wrapped-text primitives for compact rows and centered button labels
-  reused across launcher settings and Topology Playground surfaces
-- shared highlighted row renderer for launcher settings and Topology
-  Playground wrapped label/value rows
-- shared framed-card and centered fitted-text helpers reused by helper/preview
-  cards and launcher title/status/hint lines
-- shared centered chip helper reused by Topology Playground top-bar and footer
-  badge rendering
-- further adoption of shared fitted-text helpers across Topology Playground
-  shell title/header and compact control labels
-- replacement of remaining caller-local projection/transform panel helpers
-  with the existing shared pygame UI primitives
-- removal of dead shared-panel and explorer-workspace parameters confirmed by
-  `vulture`
-- launcher settings-hub category filtering plus launcher action routing for
-  separate `Game` / `Display` / `Audio` entry screens
-- retirement of the launcher `Advanced` submenu plus inlined advanced
-  gameplay rows directly inside the game settings screen
-- compact-shell layout rebalance for control rows and helper lane readability
-- profiler-script repair for the current topology-playground startup path
-- focused playability/menu tests plus authority/status doc synchronization
+- docs-authority cleanup in `docs/plans/topology_playground_debt_register.md`,
+  `docs/plans/cleanup_master_plan.md`, and `docs/BACKLOG.md`
+- stale active-debt and cleanup-domain wording removed so current ledgers match
+  the live repo state more closely
+- merged project-structure index work stays in recent-completed reporting
+  instead of the current-batch footprint
 
 ## Historical Milestones
 
