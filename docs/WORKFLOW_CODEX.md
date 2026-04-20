@@ -114,19 +114,22 @@ first, then widen only if the change proves cross-cutting.
 4. Authority files must be tracked in Git; untracked local-only copies do not
    satisfy the repo contract.
 5. Prefer existing helpers and APIs over new local reinventions.
-6. For staged refactors, add new modules first, route one flow, verify, and
+6. Before introducing a new repo-owned runtime constant, first identify the
+   config authority where it belongs; do not add direct code constants for
+   runtime/tuning/default/layout values.
+7. For staged refactors, add new modules first, route one flow, verify, and
    only then remove old paths.
-7. Do not treat partial progress as completion. Satisfy every stated
+8. Do not treat partial progress as completion. Satisfy every stated
    acceptance criterion before claiming the batch is done.
-8. Update docs in the same batch when scope or workflow changes:
+9. Update docs in the same batch when scope or workflow changes:
    - `docs/BACKLOG.md`
    - `CURRENT_STATE.md`
    - `docs/PROJECT_STRUCTURE.md` when generated ownership or source-of-truth
      sections change
    - relevant `docs/rds/*`
-9. Keep `CURRENT_STATE.md` as handoff-only; do not reintroduce it as a second
+10. Keep `CURRENT_STATE.md` as handoff-only; do not reintroduce it as a second
    workflow authority.
-10. At the end of staged migration work, provide a delta report with files
+11. At the end of staged migration work, provide a delta report with files
     added, files modified, files not touched, satisfied acceptance criteria,
     unsatisfied acceptance criteria, remaining old paths, and follow-up
     blockers.

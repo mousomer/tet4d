@@ -603,7 +603,7 @@
   },
   "code_rules": {
     "schema_version": 1,
-    "description": "Unified code rule manifest for sanitation, magic numbers, wheel reuse, dead code, and LOC guidance.",
+    "description": "Unified code rule manifest for sanitation, magic numbers, config-backed runtime constants, wheel reuse, dead code, and LOC guidance.",
     "sanitation": {
       "entrypoints": [
         {
@@ -680,6 +680,125 @@
           "severity": "warning"
         }
       ]
+    },
+    "config_backed_runtime_constants": {
+      "authoritative_sources": [
+        {
+          "path": "config/project/constants.json",
+          "description": "repo-owned runtime constants, UI/layout defaults, animation timings, and cache limits"
+        },
+        {
+          "path": "config/gameplay/tuning.json",
+          "description": "gameplay thresholds, scoring/tuning parameters, and other mutable runtime balance values"
+        },
+        {
+          "path": "config/menu/defaults.json",
+          "description": "persisted default settings payload"
+        }
+      ],
+      "source_roots": [
+        "src/tet4d",
+        "cli"
+      ],
+      "exclude_globs": [
+        "tests/**",
+        "**/test_*.py",
+        "**/*_test.py",
+        "**/conftest.py"
+      ],
+      "target_module_globs": [
+        "src/tet4d/engine/runtime/leaderboard.py",
+        "src/tet4d/engine/tutorial/runtime.py",
+        "src/tet4d/ui/pygame/front2d_loop.py",
+        "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
+        "src/tet4d/ui/pygame/projection3d.py",
+        "src/tet4d/ui/pygame/render/gfx_game.py",
+        "src/tet4d/ui/pygame/render/projected_occlusion.py",
+        "src/tet4d/ui/pygame/render/text_render_cache.py",
+        "src/tet4d/ui/pygame/runtime_ui/tutorial_loop_common.py",
+        "src/tet4d/ui/pygame/ui_utils.py"
+      ],
+      "allowed_loader_modules": [
+        "tet4d.engine.runtime.project_config",
+        "tet4d.engine.runtime.runtime_config",
+        "tet4d.engine.runtime.menu_config"
+      ],
+      "allowed_loader_symbols": [
+        "constants_payload",
+        "default_settings_payload",
+        "gameplay_tuning_payload",
+        "project_constant_color",
+        "project_constant_float",
+        "project_constant_int"
+      ],
+      "enforcement": {
+        "module_level_assignments_only": true,
+        "name_patterns": {
+          "constant_like": "^_?[A-Z][A-Z0-9_]*$",
+          "runtime_owned": "(?:DEFAULT|THRESH|LIMIT|CACHE|MARGIN|PADDING|WIDTH|HEIGHT|GAP|LAYOUT|ANIMATION|DURATION|DELAY|TIMING|TIMEOUT|SPEED|SCORE|TUNING|ROWS|ENTRIES|PAGE|PANEL|CELL|LAYER|RADIUS|SIZE|ALPHA|FPS|COUNT|MAX|MIN)"
+        },
+        "selected_file_bans": [
+          {
+            "path": "src/tet4d/engine/runtime/leaderboard.py",
+            "name_regex": "^_DEFAULT_MAX_ENTRIES$",
+            "message": "leaderboard max entries must come from config/project/constants.json via project_constant_int"
+          }
+        ]
+      },
+      "exception_categories": {
+        "third_party_constants_enums": {
+          "allowed_import_roots": [
+            "pygame",
+            "pathlib",
+            "typing",
+            "datetime",
+            "uuid",
+            "enum",
+            "collections",
+            "math",
+            "functools"
+          ]
+        },
+        "schema_versions": {
+          "allowed_name_regexes": [
+            "^_?SCHEMA_VERSION$",
+            "^_?FORMAT_VERSION$",
+            "^_?MANIFEST_VERSION$",
+            "^_?VERSION$"
+          ],
+          "allowed_module_globs": [
+            "src/tet4d/**/schema*.py",
+            "src/tet4d/**/manifest*.py",
+            "src/tet4d/**/validation*.py"
+          ]
+        },
+        "protocol_dunder": {
+          "allowed_name_regexes": [
+            "^__.*__$",
+            "^__all__$",
+            "^__slots__$"
+          ]
+        },
+        "sentinels": {
+          "allowed_name_regexes": [
+            "^_?[A-Z0-9_]*(MISSING|UNSET|SENTINEL|UNKNOWN)[A-Z0-9_]*$"
+          ]
+        },
+        "tests": {
+          "path_globs": [
+            "tests/**",
+            "**/test_*.py",
+            "**/*_test.py",
+            "**/conftest.py"
+          ]
+        },
+        "allowed_invariant_name_regex": [
+          "^_MAX_[A-Z0-9_]+_LENGTH$",
+          "^_?EPSILON$",
+          "^_?PI$"
+        ],
+        "allowed_invariant_module_globs": []
+      }
     },
     "wheel_reuse": {
       "exception_marker": "Wheel Exception:",

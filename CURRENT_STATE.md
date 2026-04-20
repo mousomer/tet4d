@@ -150,7 +150,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.39`
+1. `delivery_size_pressure = 2.40`
 2. `code_balance = 1.43`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

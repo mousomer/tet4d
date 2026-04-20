@@ -46,6 +46,11 @@ def test_unified_manifest_shape_requires_core_sections(
         "policy_pack.json code_rules missing required key: wheel_reuse" in issue
         for issue in issues
     )
+    assert any(
+        "policy_pack.json code_rules missing required key: config_backed_runtime_constants"
+        in issue
+        for issue in issues
+    )
 
 
 def test_risk_gates_accept_unified_required_ids() -> None:
@@ -60,3 +65,22 @@ def test_risk_gates_accept_unified_required_ids() -> None:
     }
     issues = risk_gates._check_contributor_directives({}, directives_payload)
     assert issues == []
+
+
+def test_main_executes_policy_runtime_rules_check(monkeypatch, capsys) -> None:
+    calls: list[str] = []
+
+    monkeypatch.setattr(validate_governance, "_validate_unified_manifest_shape", lambda: [])
+    monkeypatch.setattr(
+        validate_governance,
+        "_checks",
+        lambda: (
+            validate_governance.GovernanceCheck(
+                "policy_runtime_rules", lambda: calls.append("policy_runtime_rules") or 0
+            ),
+        ),
+    )
+
+    assert validate_governance.main() == 0
+    assert calls == ["policy_runtime_rules"]
+    assert "Unified governance validation passed." in capsys.readouterr().out
