@@ -1895,6 +1895,9 @@ Parameters:
 - `maintenance_docs.entry_points[]`: array[`object`]
 - `maintenance_docs.entry_points[].description`: varies (`string`); examples: `"unified launcher"`, `"thin 2D shim"`, `"thin 3D shim"`
 - `maintenance_docs.entry_points[].path`: varies (`string`); examples: `"cli/front.py"`, `"cli/front2d.py"`, `"cli/front3d.py"`
+- `maintenance_docs.likely_test_files.max_matches_per_file`: `4` (`int`)
+- `maintenance_docs.likely_test_files.source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"cli"`
+- `maintenance_docs.likely_test_files.test_roots[]`: array[`string`]; examples: `"tests"`
 - `maintenance_docs.runtime_owners.AI[]`: array[`object`]
 - `maintenance_docs.runtime_owners.AI[].description`: varies (`string`); examples: `"playbot runtime controller"`, `"2D planning"`, `"ND planning entry"`
 - `maintenance_docs.runtime_owners.AI[].path`: varies (`string`); examples: `"src/tet4d/ai/playbot/controller.py"`, `"src/tet4d/ai/playbot/planner_2d.py"`, `"src/tet4d/ai/playbot/planner_nd.py"`
@@ -1907,6 +1910,8 @@ Parameters:
 - `maintenance_docs.sources_of_truth[]`: array[`object`]
 - `maintenance_docs.sources_of_truth[].description`: varies (`string`); examples: `"single machine-readable governance authority"`, `"thin dispatch for contributor and agent entry"`, `"human workflow explainer for repo process and verification"`
 - `maintenance_docs.sources_of_truth[].path`: varies (`string`); examples: `"config/project/policy_pack.json"`, `"AGENTS.md"`, `"docs/WORKFLOW_CODEX.md"`
+- `maintenance_docs.symbol_index.max_symbols_per_file`: `12` (`int`)
+- `maintenance_docs.symbol_index.source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"cli"`
 - `maintenance_docs.verification.ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
 - `maintenance_docs.verification.enforcers[]`: array[`string`]; examples: `"scripts/check_editable_install.sh"`, `"scripts/check_architecture_boundaries.sh"`, `"scripts/check_engine_core_purity.sh"`
 - `maintenance_docs.verification.local_gate`: `"CODEX_MODE=1 ./scripts/verify.sh"` (`string`)

@@ -71,6 +71,15 @@ def _maintenance_contract() -> dict[str, object]:
                 "scripts/check_architecture_boundaries.sh",
             ],
         },
+        "symbol_index": {
+            "source_roots": ["src/tet4d", "cli"],
+            "max_symbols_per_file": 4,
+        },
+        "likely_test_files": {
+            "source_roots": ["src/tet4d", "cli"],
+            "test_roots": ["tests"],
+            "max_matches_per_file": 3,
+        },
     }
 
 
@@ -115,7 +124,44 @@ Manual midpoint.
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 stale
 <!-- END GENERATED:project_structure_verification_contract -->
+
+<!-- BEGIN GENERATED:project_structure_symbol_index -->
+stale
+<!-- END GENERATED:project_structure_symbol_index -->
+
+<!-- BEGIN GENERATED:project_structure_likely_test_files -->
+stale
+<!-- END GENERATED:project_structure_likely_test_files -->
 """
+
+
+def _seed_project_structure_index_inputs(root: Path) -> None:
+    _write_text(
+        root / "src" / "tet4d" / "engine" / "routing.py",
+        """def route_event(board, piece, *, strict=False):
+    return board, piece, strict
+
+
+class Router:
+    def __init__(self, board, *, strict=False):
+        self.board = board
+        self.strict = strict
+""",
+    )
+    _write_text(
+        root / "cli" / "front.py",
+        """def main(argv=None):
+    return argv
+""",
+    )
+    _write_text(
+        root / "tests" / "unit" / "engine" / "test_routing.py",
+        "def test_routing_exact():\n    assert True\n",
+    )
+    _write_text(
+        root / "tests" / "unit" / "engine" / "test_front_smoke.py",
+        "def test_front_prefix():\n    assert True\n",
+    )
 
 
 def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> None:
@@ -124,6 +170,7 @@ def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> Non
     project_structure = scratch_root / "docs" / "PROJECT_STRUCTURE.md"
     _write_text(current_state, _current_state_template())
     _write_text(project_structure, _project_structure_template())
+    _seed_project_structure_index_inputs(scratch_root)
 
     monkeypatch.setattr(maint_doc, "PROJECT_ROOT", scratch_root)
     monkeypatch.setattr(maint_doc, "CURRENT_STATE_PATH", current_state)
@@ -163,6 +210,15 @@ def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> Non
     assert "`cli/front2d.py`: thin 2D shim" in rendered_structure
     assert "## Verification Contract" in rendered_structure
     assert "`config/project/policy_pack.json`: single machine-readable governance authority" in rendered_structure
+    assert "## Public Symbol Skim" in rendered_structure
+    assert "routing aid" in rendered_structure
+    assert "`src/tet4d/engine/routing.py`: `route_event(board, piece, *, strict=...)`, `Router(board, *, strict=...)`" in rendered_structure
+    assert "## Likely Test Files" in rendered_structure
+    assert "heuristic links" in rendered_structure
+    assert "They are routing hints only, using tiered exact, prefix, then controlled fallback matching." in rendered_structure
+    assert "`src/tet4d/engine/routing.py`: `tests/unit/engine/test_routing.py` (exact)" in rendered_structure
+    assert "`cli/front.py`: `tests/unit/engine/test_front_smoke.py` (prefix)" in rendered_structure
+    assert "coverage" not in rendered_structure
     assert "Manual midpoint." in rendered_structure
 
 
@@ -172,6 +228,7 @@ def test_check_generated_docs_detects_stale_output(monkeypatch) -> None:
     project_structure = scratch_root / "docs" / "PROJECT_STRUCTURE.md"
     _write_text(current_state, _current_state_template())
     _write_text(project_structure, _project_structure_template())
+    _seed_project_structure_index_inputs(scratch_root)
 
     monkeypatch.setattr(maint_doc, "PROJECT_ROOT", scratch_root)
     monkeypatch.setattr(maint_doc, "CURRENT_STATE_PATH", current_state)
@@ -203,4 +260,9 @@ def test_check_generated_docs_detects_stale_output(monkeypatch) -> None:
     _write_text(current_state, maint_doc.render_current_state_doc())
     _write_text(project_structure, maint_doc.render_project_structure_doc())
 
+    rendered_structure = project_structure.read_text(encoding="utf-8")
+    assert "<!-- BEGIN GENERATED:project_structure_symbol_index -->" in rendered_structure
+    assert "<!-- BEGIN GENERATED:project_structure_likely_test_files -->" in rendered_structure
+    assert "## Public Symbol Skim" in rendered_structure
+    assert "## Likely Test Files" in rendered_structure
     assert maint_doc.check_generated_docs() == 0

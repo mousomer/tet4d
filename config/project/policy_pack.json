@@ -1546,7 +1546,9 @@
           "<!-- BEGIN GENERATED:project_structure_entry_points -->",
           "<!-- BEGIN GENERATED:project_structure_runtime_owners -->",
           "<!-- BEGIN GENERATED:project_structure_sources_of_truth -->",
-          "<!-- BEGIN GENERATED:project_structure_verification_contract -->"
+          "<!-- BEGIN GENERATED:project_structure_verification_contract -->",
+          "<!-- BEGIN GENERATED:project_structure_symbol_index -->",
+          "<!-- BEGIN GENERATED:project_structure_likely_test_files -->"
         ]
       }
     ],
@@ -1886,6 +1888,23 @@
         "description": "generated user-facing settings summary"
       }
     ],
+    "symbol_index": {
+      "source_roots": [
+        "src/tet4d",
+        "cli"
+      ],
+      "max_symbols_per_file": 12
+    },
+    "likely_test_files": {
+      "source_roots": [
+        "src/tet4d",
+        "cli"
+      ],
+      "test_roots": [
+        "tests"
+      ],
+      "max_matches_per_file": 4
+    },
     "verification": {
       "local_gate": "CODEX_MODE=1 ./scripts/verify.sh",
       "ci_entrypoint": "./scripts/ci_check.sh",
