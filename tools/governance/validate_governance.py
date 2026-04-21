@@ -80,7 +80,14 @@ def _validate_unified_manifest_shape() -> list[str]:
     _append_missing_keys(
         policy_pack.get("code_rules", {}),
         "policy_pack.json code_rules",
-        ("sanitation", "magic_numbers", "wheel_reuse", "dead_code", "loc_guidance"),
+        (
+            "sanitation",
+            "magic_numbers",
+            "config_backed_runtime_constants",
+            "wheel_reuse",
+            "dead_code",
+            "loc_guidance",
+        ),
         issues,
     )
     _append_missing_keys(

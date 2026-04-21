@@ -12,9 +12,6 @@ from .project_config import (
 from .settings_schema import atomic_write_json, read_json_object_or_empty, sanitize_text
 
 _SCHEMA_VERSION = 1
-_DEFAULT_MAX_ENTRIES = 10
-
-
 def _now_utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -22,7 +19,7 @@ def _now_utc_iso() -> str:
 def _max_entries_limit() -> int:
     return project_constant_int(
         ("analytics", "leaderboard_max_entries"),
-        _DEFAULT_MAX_ENTRIES,
+        10,
         min_value=1,
         max_value=10_000,
     )

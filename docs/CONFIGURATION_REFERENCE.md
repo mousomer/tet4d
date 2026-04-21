@@ -1678,6 +1678,29 @@ Parameters:
 - `authority_model.product_requirements_root`: `"docs/rds/"` (`string`)
 - `authority_model.topology_current_authority`: `"docs/plans/topology_playground_current_authority.md"` (`string`)
 - `authority_model.workflow_doc`: `"docs/WORKFLOW_CODEX.md"` (`string`)
+- `code_rules.config_backed_runtime_constants.allowed_loader_modules[]`: array[`string`]; examples: `"tet4d.engine.runtime.project_config"`, `"tet4d.engine.runtime.runtime_config"`, `"tet4d.engine.runtime.menu_config"`
+- `code_rules.config_backed_runtime_constants.allowed_loader_symbols[]`: array[`string`]; examples: `"constants_payload"`, `"default_settings_payload"`, `"gameplay_tuning_payload"`
+- `code_rules.config_backed_runtime_constants.authoritative_sources[]`: array[`object`]
+- `code_rules.config_backed_runtime_constants.authoritative_sources[].description`: varies (`string`); examples: `"repo-owned runtime constants, UI/layout defaults, animation timings,...`, `"gameplay thresholds, scoring/tuning parameters, and other mutable ru...`, `"persisted default settings payload"`
+- `code_rules.config_backed_runtime_constants.authoritative_sources[].path`: varies (`string`); examples: `"config/project/constants.json"`, `"config/gameplay/tuning.json"`, `"config/menu/defaults.json"`
+- `code_rules.config_backed_runtime_constants.enforcement.module_level_assignments_only`: `true` (`bool`)
+- `code_rules.config_backed_runtime_constants.enforcement.name_patterns.constant_like`: `"^_?[A-Z][A-Z0-9_]*$"` (`string`)
+- `code_rules.config_backed_runtime_constants.enforcement.name_patterns.runtime_owned`: `"(?:DEFAULT|THRESH|LIMIT|CACHE|MARGIN|PADDING|WIDTH|HEIGHT|GAP|LAYOUT...` (`string`)
+- `code_rules.config_backed_runtime_constants.enforcement.selected_file_bans[]`: array[`object`]
+- `code_rules.config_backed_runtime_constants.enforcement.selected_file_bans[].message`: `"leaderboard max entries must come from config/project/constants.json...` (`string`)
+- `code_rules.config_backed_runtime_constants.enforcement.selected_file_bans[].name_regex`: `"^_DEFAULT_MAX_ENTRIES$"` (`string`)
+- `code_rules.config_backed_runtime_constants.enforcement.selected_file_bans[].path`: `"src/tet4d/engine/runtime/leaderboard.py"` (`string`)
+- `code_rules.config_backed_runtime_constants.exception_categories.allowed_invariant_module_globs[]`: array[`empty`]
+- `code_rules.config_backed_runtime_constants.exception_categories.allowed_invariant_name_regex[]`: array[`string`]; examples: `"^_MAX_[A-Z0-9_]+_LENGTH$"`, `"^_?EPSILON$"`, `"^_?PI$"`
+- `code_rules.config_backed_runtime_constants.exception_categories.protocol_dunder.allowed_name_regexes[]`: array[`string`]; examples: `"^__.*__$"`, `"^__all__$"`, `"^__slots__$"`
+- `code_rules.config_backed_runtime_constants.exception_categories.schema_versions.allowed_module_globs[]`: array[`string`]; examples: `"src/tet4d/**/schema*.py"`, `"src/tet4d/**/manifest*.py"`, `"src/tet4d/**/validation*.py"`
+- `code_rules.config_backed_runtime_constants.exception_categories.schema_versions.allowed_name_regexes[]`: array[`string`]; examples: `"^_?SCHEMA_VERSION$"`, `"^_?FORMAT_VERSION$"`, `"^_?MANIFEST_VERSION$"`
+- `code_rules.config_backed_runtime_constants.exception_categories.sentinels.allowed_name_regexes[]`: array[`string`]; examples: `"^_?[A-Z0-9_]*(MISSING|UNSET|SENTINEL|UNKNOWN)[A-Z0-9_]*$"`
+- `code_rules.config_backed_runtime_constants.exception_categories.tests.path_globs[]`: array[`string`]; examples: `"tests/**"`, `"**/test_*.py"`, `"**/*_test.py"`
+- `code_rules.config_backed_runtime_constants.exception_categories.third_party_constants_enums.allowed_import_roots[]`: array[`string`]; examples: `"pygame"`, `"pathlib"`, `"typing"`
+- `code_rules.config_backed_runtime_constants.exclude_globs[]`: array[`string`]; examples: `"tests/**"`, `"**/test_*.py"`, `"**/*_test.py"`
+- `code_rules.config_backed_runtime_constants.source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"cli"`
+- `code_rules.config_backed_runtime_constants.target_module_globs[]`: array[`string`]; examples: `"src/tet4d/engine/runtime/leaderboard.py"`, `"src/tet4d/engine/tutorial/runtime.py"`, `"src/tet4d/ui/pygame/front2d_loop.py"`
 - `code_rules.dead_code.duplicate_functions.advisory_scope_globs[]`: array[`string`]; examples: `"src/tet4d/engine/runtime/*.py"`
 - `code_rules.dead_code.duplicate_functions.enabled`: `true` (`bool`)
 - `code_rules.dead_code.duplicate_functions.exclude_function_names[]`: array[`string`]; examples: `"main"`
@@ -1689,7 +1712,7 @@ Parameters:
 - `code_rules.dead_code.todo_rule.required_backlog_regex`: `"\\[BKL-[^\\]]+\\]"` (`string`)
 - `code_rules.dead_code.todo_rule.scope_globs[]`: array[`string`]; examples: `"src/**/*.py"`, `"tools/**/*.py"`, `"scripts/**/*.py"`
 - `code_rules.dead_code.todo_rule.token_regex`: `"\\b(?:TODO|FIXME)\\b"` (`string`)
-- `code_rules.description`: `"Unified code rule manifest for sanitation, magic numbers, wheel reus...` (`string`)
+- `code_rules.description`: `"Unified code rule manifest for sanitation, magic numbers, config-bac...` (`string`)
 - `code_rules.loc_guidance.batch_type_env_var`: `"LOC_GUIDANCE_BATCH_TYPE"` (`string`)
 - `code_rules.loc_guidance.buckets.src`: `"src/"` (`string`)
 - `code_rules.loc_guidance.buckets.tests`: `"tests/"` (`string`)
