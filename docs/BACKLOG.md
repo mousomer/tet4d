@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-20
+Updated: 2026-04-21
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -22,8 +22,9 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Current sub-batch (2026-04-20): docs-authority cleanup after the merged
-project-structure index batch.
+Current sub-batch (2026-04-21): topology-playground shell-preserving cleanup
+remains active after the workflow-profile follow-up landed as a separate docs
+branch.
 
 Current active follow-ups:
 
@@ -32,15 +33,12 @@ Current active follow-ups:
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
   `scene_state_canonical.py` / `scene_state_probe.py` and focused
   control-helper splits kept intact
-- config-backed runtime-constants governance is the next policy/tooling lane;
-  repo-owned runtime defaults, thresholds, timings, layout constants, and
-  similar mutable values still need unified config-authority enforcement
-- the projected-render / locked-cell-explosion recovery batch remains deferred
-  to its own follow-up branch; do not mix that runtime restoration back into
-  documentation or governance passes
-- documentation cleanup should keep resolved project-structure work in recent
-  completed reporting instead of active implementation wording and should
-  retire stale debt rows promptly
+- projected-render / locked-cell-explosion recovery is deferred unless an
+  external backup appears, or a later branch rebuilds that runtime/render lane
+  from current master without relying on a deleted git recovery branch
+- documentation authorities should stay synchronized without treating merged
+  project-structure-index, docs-authority-cleanup, or config-backed
+  runtime-constants work as active implementation
 
 - Open work:
   1. continue structural simplification of remaining
@@ -53,12 +51,12 @@ Current active follow-ups:
   3. keep the explicit preview/playability signature and deferred-analysis
      contract pinned so future UI-only or non-topological state changes do not
      regress into unnecessary preview/playability recompute
-  4. land config-backed runtime-constants governance as a separate follow-up
-     branch, not as ad hoc local bans
-  5. restore the pending projected-render / locked-cell-explosion runtime
-     batch on its own branch with focused tests
-  6. keep documentation authorities synchronized without treating completed
-     project-structure index work as active implementation
+  4. if projected-render / locked-cell-explosion work is revived later, rebuild
+     it on a fresh branch from current master or from an external backup
+     source instead of assuming a recoverable local git branch still exists
+  5. keep documentation authorities synchronized without treating completed
+     project-structure-index, docs-authority-cleanup, or config-backed
+     runtime-constants work as active implementation
 
 - Acceptance bar:
   1. `Topology Playground` remains the direct modern launcher entry
@@ -137,6 +135,23 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-20:
 
+- workflow-codex profile follow-up landed on its separate docs branch, so
+  every context-switch profile in `docs/WORKFLOW_CODEX.md` now carries an
+  explicit `Verify:` line and `Skip unless cross-cutting:` scope, a dedicated
+  `render` profile now covers large render/frontend hotspots, and the
+  `governance` profile now explicitly calls out
+  `tools/governance/generate_maintenance_docs.py`
+- docs-authority cleanup landed on `master`, so
+  `docs/plans/topology_playground_debt_register.md`,
+  `docs/plans/cleanup_master_plan.md`, and `docs/BACKLOG.md` now reflect the
+  current topology-playground debt/domain tables instead of keeping stale
+  resolved rows or duplicate completed-date headers in active reporting
+- config-backed runtime-constants governance landed on `master`, so
+  `config/project/policy_pack.json` now defines
+  `code_rules.config_backed_runtime_constants`, unified governance validation
+  enforces config-backed authority for targeted repo-owned runtime constants,
+  the loader-import bypass is covered by focused tests, and the duplicated
+  leaderboard fallback constant is gone
 - project-structure index batch landed on `master`, so generated
   `docs/PROJECT_STRUCTURE.md` now carries symbol skim, likely-test hints, and
   confidence labels backed by `tools/governance/generate_maintenance_docs.py`
