@@ -36,8 +36,17 @@ first, then widen only if the change proves cross-cutting.
 1. `AGENTS.md`
 2. `CURRENT_STATE.md`
 3. `docs/WORKFLOW_CODEX.md`
-4. the changed diff, touched tests, and the relevant authority for the changed
+4. `docs/DOCUMENTATION_MAP.md` to route to the current authority for the
+   changed area
+5. the changed diff, touched tests, and only the routed authority for that
    area
+
+Verify: for docs-only review, run the matching docs/governance check such as
+`.venv/bin/python tools/governance/validate_project_contracts.py`; for code
+review, keep validation to the touched tests or a focused
+`./scripts/verify_focus.sh --pytest ...` lane.
+Skip unless cross-cutting: `docs/BACKLOG.md`, `docs/ARCHITECTURE_CONTRACT.md`,
+topology-playground authority/spec docs.
 
 ### engine
 
@@ -47,6 +56,11 @@ first, then widen only if the change proves cross-cutting.
 4. relevant `docs/rds/*`
 5. touched engine/runtime modules plus their tests
 
+Verify: run focused engine checks such as `.venv/bin/ruff check <touched-engine-paths>`
+and `.venv/bin/python -m pytest -q <touched-engine-tests>`.
+Skip unless cross-cutting: full `docs/BACKLOG.md`, packaging docs,
+topology-playground authority/spec docs.
+
 ### menu_ui
 
 1. `AGENTS.md`
@@ -54,6 +68,11 @@ first, then widen only if the change proves cross-cutting.
 3. `docs/rds/RDS_MENU_STRUCTURE.md`
 4. `docs/MENU_STRUCTURE_EDITING.md`
 5. `config/menu/structure.json` and affected menu/render code
+
+Verify: run focused menu checks such as `.venv/bin/python -m pytest -q tests/unit/engine/test_menu_layout.py tests/unit/engine/test_menu_runner.py tests/unit/engine/test_menu_navigation_keys.py tests/unit/engine/test_menu_policy.py`
+plus touched menu-specific tests.
+Skip unless cross-cutting: `docs/ARCHITECTURE_CONTRACT.md`,
+`docs/RELEASE_CHECKLIST.md`, full `docs/BACKLOG.md`.
 
 ### topology_explorer
 
@@ -63,6 +82,29 @@ first, then widen only if the change proves cross-cutting.
 4. `docs/plans/topology_playground_shell_redesign_spec.md`
 5. `docs/BACKLOG.md` and the touched playground/runtime files
 
+Verify: run focused explorer checks such as `.venv/bin/python -m pytest -q tests/unit/engine/test_topology_explorer.py tests/unit/engine/test_topology_explorer_runtime.py tests/unit/engine/test_topology_explorer_preview.py tests/unit/topology_lab/test_topology_lab_app.py`
+plus touched explorer tests.
+Skip unless cross-cutting: unrelated `docs/rds/*`, packaging docs, large
+generated/reference docs.
+
+### render
+
+1. `AGENTS.md`
+2. `CURRENT_STATE.md`
+3. `docs/PROJECT_STRUCTURE.md` for current frontend/render ownership routing
+4. touched render/frontend hotspot files such as
+   `src/tet4d/ui/pygame/render/`, `src/tet4d/ui/pygame/front3d_render.py`,
+   `src/tet4d/ui/pygame/front4d_render.py`, and
+   `src/tet4d/ui/pygame/locked_cell_explosion/render.py`
+5. the relevant `docs/rds/*` contract when the render change carries product
+   behavior impact
+
+Verify: run focused render checks such as `.venv/bin/python -m pytest -q tests/unit/render/test_locked_cell_explosion.py tests/unit/render/test_active_piece_projection_guides.py tests/unit/render/test_projection_guide_animation.py tests/unit/engine/test_front4d_render.py tests/unit/engine/test_gfx_game_rotation_render.py`
+plus touched render/frontend tests.
+Skip unless cross-cutting: full `docs/BACKLOG.md`,
+`docs/plans/topology_playground_current_authority.md`,
+`docs/RELEASE_CHECKLIST.md`.
+
 ### packaging
 
 1. `AGENTS.md`
@@ -70,6 +112,11 @@ first, then widen only if the change proves cross-cutting.
 3. `docs/rds/RDS_PACKAGING.md`
 4. `docs/RELEASE_CHECKLIST.md`
 5. packaging scripts, workflow files, and targeted packaging tests
+
+Verify: run the targeted packaging lane first, such as
+`.venv/bin/python -m pytest -q tests/unit/engine/test_windows_packaging.py tests/unit/engine/test_frozen_runtime_paths.py tests/unit/engine/test_front_launcher_routes.py`.
+Skip unless cross-cutting: topology-playground authority/spec docs, full
+`docs/BACKLOG.md`, unrelated `docs/rds/*`.
 
 ### governance
 
@@ -80,6 +127,14 @@ first, then widen only if the change proves cross-cutting.
 5. `tools/governance/generate_maintenance_docs.py`
 6. `docs/BACKLOG.md`
 
+Verify: run `.venv/bin/python tools/governance/validate_project_contracts.py`,
+`.venv/bin/python tools/governance/generate_maintenance_docs.py --check`, and
+`.venv/bin/python tools/governance/generate_configuration_reference.py --check`;
+touch `tools/governance/generate_maintenance_docs.py` explicitly when the batch
+changes generated maintenance-doc expectations.
+Skip unless cross-cutting: unrelated `docs/rds/*`,
+`docs/RELEASE_CHECKLIST.md`, topology-playground authority/spec docs.
+
 ### handoff
 
 1. `AGENTS.md`
@@ -87,6 +142,13 @@ first, then widen only if the change proves cross-cutting.
 3. `docs/BACKLOG.md`
 4. `docs/PROJECT_STRUCTURE.md`
 5. `git branch --show-current` and `git status --short`
+
+Verify: run maintenance/doc drift checks such as
+`.venv/bin/python tools/governance/validate_project_contracts.py` and
+`.venv/bin/python tools/governance/generate_maintenance_docs.py --check` before
+handoff, plus `CODEX_MODE=1 ./scripts/verify.sh` if the batch changed code.
+Skip unless cross-cutting: unrelated `docs/rds/*`,
+`docs/ARCHITECTURE_CONTRACT.md`, packaging docs.
 
 ## Boundary model
 
