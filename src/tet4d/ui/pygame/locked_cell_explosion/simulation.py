@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 import random
 
+from tet4d.ui.pygame.render.board_boundary import board_boundary_coordinate, board_boundary_limits
+
 from .model import (
     EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
     EXPLOSION_PARTICLE_COLLISIONS_ON,
@@ -16,17 +18,21 @@ from .model import (
     ExplosionSimulationState,
     ExplosionTrailSample,
     StandaloneExplosionConfig,
+    clamp_trace_retention_ms,
     normalize_boundary_response,
     normalize_particle_collisions,
     speed_scale_for_preset,
+    trail_sample_budget_for_lifetime_ms,
 )
 from .topology import ExplosionTopologyAdapter, build_explosion_topology_adapter
 
 _EPSILON = 1e-6
 _MAX_BOUNDARY_EVENTS_PER_STEP = 12
-_BOUNDARY_RESTITUTION = 0.92
-_COLLISION_RESTITUTION = 0.88
-_COLLISION_DAMPING = 0.94
+_BOUNDARY_RESTITUTION = 1.0
+_COLLISION_RESTITUTION = 1.0
+_COLLISION_DAMPING = 1.0
+_POST_CONTACT_TIME_EPSILON = 1e-6
+_INTERIOR_POSITION_EPSILON = 1e-5
 
 
 def _vec_add(left, right):
@@ -86,6 +92,7 @@ def _initial_particle(
     board_center: tuple[float, ...],
     randomizer: random.Random,
     launch_speed_scale: float,
+    trace_retention_ms: float,
 ) -> ExplosionParticle:
     origin = tuple(float(value) for value in cell.source_coord)
     outward = _normalize(
@@ -112,6 +119,8 @@ def _initial_particle(
         angular_velocity_deg=angular,
         collision_radius=randomizer.uniform(0.24, 0.36),
         collision_mass=randomizer.uniform(0.9, 1.1),
+        trail_max_lifetime_ms=clamp_trace_retention_ms(trace_retention_ms),
+        trail_max_samples=trail_sample_budget_for_lifetime_ms(trace_retention_ms),
         trail_samples=[
             ExplosionTrailSample(
                 position_nd=origin,
@@ -126,7 +135,15 @@ def _trim_trail_samples(
     *,
     elapsed_ms: float,
 ) -> None:
-    cutoff = float(elapsed_ms) - EXPLOSION_TRAIL_MAX_LIFETIME_MS
+    max_lifetime_ms = max(
+        EXPLOSION_TRAIL_MIN_TIME_SPACING_MS,
+        float(getattr(particle, "trail_max_lifetime_ms", EXPLOSION_TRAIL_MAX_LIFETIME_MS)),
+    )
+    max_samples = max(
+        1,
+        int(getattr(particle, "trail_max_samples", EXPLOSION_TRAIL_MAX_SAMPLES)),
+    )
+    cutoff = float(elapsed_ms) - max_lifetime_ms
     samples = [
         sample
         for sample in particle.trail_samples
@@ -139,8 +156,8 @@ def _trim_trail_samples(
                 elapsed_ms=float(elapsed_ms),
             )
         ]
-    if len(samples) > EXPLOSION_TRAIL_MAX_SAMPLES:
-        samples = samples[-EXPLOSION_TRAIL_MAX_SAMPLES :]
+    if len(samples) > max_samples:
+        samples = samples[-max_samples:]
     particle.trail_samples = samples
     particle.trail_elapsed_ms = float(elapsed_ms)
 
@@ -235,6 +252,7 @@ def build_simulation(
             board_center=board_center,
             randomizer=randomizer,
             launch_speed_scale=launch_speed_scale,
+            trace_retention_ms=float(config.trace_retention_ms),
         )
         for index, cell in enumerate(config.occupied_cells)
     ]
@@ -255,11 +273,15 @@ def _boundary_time(position, velocity, board_dims):
     best_time = math.inf
     best_axis = -1
     best_side = ""
-    for axis, size in enumerate(board_dims):
+    for axis in range(len(board_dims)):
         component = float(velocity[axis])
         if abs(component) <= _EPSILON:
             continue
-        limit = -0.5 if component < 0.0 else float(size) - 0.5
+        limit = board_boundary_coordinate(
+            dims=board_dims,
+            axis=axis,
+            side="-" if component < 0.0 else "+",
+        )
         delta = limit - float(position[axis])
         candidate = delta / component
         if candidate < -_EPSILON or candidate >= best_time - _EPSILON:
@@ -278,6 +300,40 @@ def _advance_rotation(particle: ExplosionParticle, dt_seconds: float) -> None:
             particle.angular_velocity_deg,
         )
     )
+
+
+def _boundary_limit_for(axis: int, side: str, board_dims: tuple[int, ...]) -> float:
+    return board_boundary_coordinate(dims=board_dims, axis=axis, side=side)
+
+
+def _move_to_interior_boundary_position(
+    position: tuple[float, ...],
+    *,
+    axis: int,
+    side: str,
+    board_dims: tuple[int, ...],
+) -> tuple[float, ...]:
+    adjusted = list(float(value) for value in position)
+    limit = _boundary_limit_for(axis, side, board_dims)
+    adjusted[axis] = (
+        limit + _INTERIOR_POSITION_EPSILON
+        if side == "-"
+        else limit - _INTERIOR_POSITION_EPSILON
+    )
+    return tuple(adjusted)
+
+
+def _clamp_position_to_board_interior(
+    position: tuple[float, ...],
+    *,
+    board_dims: tuple[int, ...],
+) -> tuple[float, ...]:
+    clamped: list[float] = []
+    for axis, (low, high) in enumerate(board_boundary_limits(board_dims)):
+        low += _INTERIOR_POSITION_EPSILON
+        high -= _INTERIOR_POSITION_EPSILON
+        clamped.append(min(max(float(position[axis]), low), high))
+    return tuple(clamped)
 
 
 def _step_particle(
@@ -335,16 +391,13 @@ def _step_particle(
                     float(value) for value in particle.position_nd
                 ),
             )
-            particle.position_nd = _vec_add(
-                particle.position_nd,
-                _vec_mul(particle.velocity_nd, min(remaining, 0.001)),
-            )
             events.append(
                 ExplosionAudioEvent(
                     family="seam",
                     strength=max(0.6, _vec_len(particle.velocity_nd)),
                 )
             )
+            remaining = max(0.0, remaining - min(remaining, _POST_CONTACT_TIME_EPSILON))
             continue
         if boundary_response == EXPLOSION_BOUNDARY_RESPONSE_ESCAPE:
             particle.escaped = True
@@ -356,9 +409,11 @@ def _step_particle(
         velocity = list(particle.velocity_nd)
         velocity[axis] = -float(velocity[axis]) * _BOUNDARY_RESTITUTION
         particle.velocity_nd = tuple(velocity)
-        particle.position_nd = _vec_add(
+        particle.position_nd = _move_to_interior_boundary_position(
             particle.position_nd,
-            _vec_mul(particle.velocity_nd, min(remaining, 0.001)),
+            axis=axis,
+            side=side,
+            board_dims=adapter.board_dims,
         )
         events.append(
             ExplosionAudioEvent(
@@ -366,13 +421,18 @@ def _step_particle(
                 strength=max(0.4, abs(float(velocity[axis]))),
             )
         )
-        remaining = max(0.0, remaining - 0.001)
+        remaining = max(0.0, remaining - min(remaining, _POST_CONTACT_TIME_EPSILON))
         if remaining <= _EPSILON:
             return tuple(events)
     particle.position_nd = _vec_add(
         particle.position_nd,
         _vec_mul(particle.velocity_nd, remaining),
     )
+    if boundary_response != EXPLOSION_BOUNDARY_RESPONSE_ESCAPE:
+        particle.position_nd = _clamp_position_to_board_interior(
+            particle.position_nd,
+            board_dims=adapter.board_dims,
+        )
     return tuple(events)
 
 

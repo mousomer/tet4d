@@ -7,6 +7,8 @@ from dataclasses import dataclass
 
 import pygame
 
+from tet4d.ui.pygame.render.board_boundary import board_boundary_coordinate
+
 from tet4d.engine.runtime.project_config import project_constant_int
 
 from .ui_utils import draw_vertical_gradient
@@ -210,15 +212,21 @@ def projective_point(
 
 
 def box_raw_corners(dims: Cell3) -> list[Point3]:
+    min_x = board_boundary_coordinate(dims=dims, axis=0, side="-")
+    max_x = board_boundary_coordinate(dims=dims, axis=0, side="+")
+    min_y = board_boundary_coordinate(dims=dims, axis=1, side="-")
+    max_y = board_boundary_coordinate(dims=dims, axis=1, side="+")
+    min_z = board_boundary_coordinate(dims=dims, axis=2, side="-")
+    max_z = board_boundary_coordinate(dims=dims, axis=2, side="+")
     return [
-        (-0.5, -0.5, -0.5),
-        (dims[0] - 0.5, -0.5, -0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, -0.5),
-        (-0.5, dims[1] - 0.5, -0.5),
-        (-0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, -0.5, dims[2] - 0.5),
-        (dims[0] - 0.5, dims[1] - 0.5, dims[2] - 0.5),
-        (-0.5, dims[1] - 0.5, dims[2] - 0.5),
+        (min_x, min_y, min_z),
+        (max_x, min_y, min_z),
+        (max_x, max_y, min_z),
+        (min_x, max_y, min_z),
+        (min_x, min_y, max_z),
+        (max_x, min_y, max_z),
+        (max_x, max_y, max_z),
+        (min_x, max_y, max_z),
     ]
 
 
@@ -865,6 +873,154 @@ def project_box_edge_primitives(
     return tuple(
         _frame_line_primitives(dims, project_raw, transform_raw, depth_denominator)
     )
+
+
+def project_boundary_lattice_primitives(
+    dims: Cell3,
+    project_raw: ProjectRawFn,
+    transform_raw: TransformRawFn,
+    depth_denominator: DepthDenominatorFn,
+) -> tuple[ProjectedLinePrimitive, ...]:
+    boundary_segments: list[ProjectedLinePrimitive] = []
+    seen: set[tuple[tuple[float, float, float], tuple[float, float, float], str]] = set()
+
+    def append_segment(
+        raw_start: Point3,
+        raw_end: Point3,
+        *,
+        source_type: str,
+    ) -> None:
+        ordered = tuple(sorted((raw_start, raw_end)))
+        key = (ordered[0], ordered[1], source_type)
+        if key in seen:
+            return
+        seen.add(key)
+        segment = _project_line_primitive(
+            raw_start,
+            raw_end,
+            project_raw=project_raw,
+            transform_raw=transform_raw,
+            depth_denominator=depth_denominator,
+            source_type=source_type,
+        )
+        if segment is not None:
+            boundary_segments.append(segment)
+
+    _append_boundary_axis_segments(dims, append_segment)
+    return tuple(boundary_segments)
+
+
+def _append_boundary_axis_segments(
+    dims: Cell3,
+    append_segment,
+) -> None:
+    max_x, max_y, max_z = dims
+    _append_boundary_segments_for_axis(
+        range_a=range(max_x + 1),
+        range_b=range(max_z + 1),
+        max_a=max_x,
+        max_b=max_z,
+        endpoint_builder=lambda a, b: (
+            (
+                board_boundary_coordinate(dims=dims, axis=0, side="-" if a == 0 else "+")
+                if a in {0, max_x}
+                else a - 0.5,
+                board_boundary_coordinate(dims=dims, axis=1, side="-"),
+                board_boundary_coordinate(dims=dims, axis=2, side="-" if b == 0 else "+")
+                if b in {0, max_z}
+                else b - 0.5,
+            ),
+            (
+                board_boundary_coordinate(dims=dims, axis=0, side="-" if a == 0 else "+")
+                if a in {0, max_x}
+                else a - 0.5,
+                board_boundary_coordinate(dims=dims, axis=1, side="+"),
+                board_boundary_coordinate(dims=dims, axis=2, side="-" if b == 0 else "+")
+                if b in {0, max_z}
+                else b - 0.5,
+            ),
+        ),
+        append_segment=append_segment,
+    )
+    _append_boundary_segments_for_axis(
+        range_a=range(max_y + 1),
+        range_b=range(max_z + 1),
+        max_a=max_y,
+        max_b=max_z,
+        endpoint_builder=lambda a, b: (
+            (
+                board_boundary_coordinate(dims=dims, axis=0, side="-"),
+                board_boundary_coordinate(dims=dims, axis=1, side="-" if a == 0 else "+")
+                if a in {0, max_y}
+                else a - 0.5,
+                board_boundary_coordinate(dims=dims, axis=2, side="-" if b == 0 else "+")
+                if b in {0, max_z}
+                else b - 0.5,
+            ),
+            (
+                board_boundary_coordinate(dims=dims, axis=0, side="+"),
+                board_boundary_coordinate(dims=dims, axis=1, side="-" if a == 0 else "+")
+                if a in {0, max_y}
+                else a - 0.5,
+                board_boundary_coordinate(dims=dims, axis=2, side="-" if b == 0 else "+")
+                if b in {0, max_z}
+                else b - 0.5,
+            ),
+        ),
+        append_segment=append_segment,
+    )
+    _append_boundary_segments_for_axis(
+        range_a=range(max_x + 1),
+        range_b=range(max_y + 1),
+        max_a=max_x,
+        max_b=max_y,
+        endpoint_builder=lambda a, b: (
+            (
+                board_boundary_coordinate(dims=dims, axis=0, side="-" if a == 0 else "+")
+                if a in {0, max_x}
+                else a - 0.5,
+                board_boundary_coordinate(dims=dims, axis=1, side="-" if b == 0 else "+")
+                if b in {0, max_y}
+                else b - 0.5,
+                board_boundary_coordinate(dims=dims, axis=2, side="-"),
+            ),
+            (
+                board_boundary_coordinate(dims=dims, axis=0, side="-" if a == 0 else "+")
+                if a in {0, max_x}
+                else a - 0.5,
+                board_boundary_coordinate(dims=dims, axis=1, side="-" if b == 0 else "+")
+                if b in {0, max_y}
+                else b - 0.5,
+                board_boundary_coordinate(dims=dims, axis=2, side="+"),
+            ),
+        ),
+        append_segment=append_segment,
+    )
+
+
+def _append_boundary_segments_for_axis(
+    *,
+    range_a: range,
+    range_b: range,
+    max_a: int,
+    max_b: int,
+    endpoint_builder,
+    append_segment,
+) -> None:
+    for a in range_a:
+        for b in range_b:
+            if a not in {0, max_a} and b not in {0, max_b}:
+                continue
+            append_segment(
+                *endpoint_builder(a, b),
+                source_type=_boundary_segment_source_type(a, b, max_a=max_a, max_b=max_b),
+            )
+
+
+def _boundary_segment_source_type(a: int, b: int, *, max_a: int, max_b: int) -> str:
+    if a in {0, max_a} and b in {0, max_b}:
+        return "box_edge"
+    return "gridline"
 
 
 def draw_projected_line_fragments(

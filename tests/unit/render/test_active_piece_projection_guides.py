@@ -65,7 +65,7 @@ class TestActivePieceProjectionGuides(unittest.TestCase):
         self.assertEqual(len(targets), 1)
         self.assertEqual(targets[0].axis, 1)
         self.assertEqual(targets[0].side, "+")
-        self.assertEqual(targets[0].coordinate, 20.0)
+        self.assertEqual(targets[0].coordinate, 19.5)
 
     def test_all_boundary_targets_cover_every_axis_side(self) -> None:
         targets = boundary_targets_for_mode(
@@ -88,8 +88,8 @@ class TestActivePieceProjectionGuides(unittest.TestCase):
             color=(0, 255, 255),
         )
         self.assertEqual(len(segments), 1)
-        self.assertEqual(segments[0].start, (2.0, 20.0))
-        self.assertEqual(segments[0].end, (3.0, 20.0))
+        self.assertEqual(segments[0].start, (2.0, 19.5))
+        self.assertEqual(segments[0].end, (3.0, 19.5))
 
     def test_2d_all_boundary_segments_cover_all_board_edges(self) -> None:
         segments = build_boundary_projection_segments_2d(
@@ -104,10 +104,10 @@ class TestActivePieceProjectionGuides(unittest.TestCase):
             {(segment.axis, segment.side) for segment in segments},
             {(0, "-"), (0, "+"), (1, "-"), (1, "+")},
         )
-        self.assertTrue(any(segment.start[0] == 0.0 for segment in segments))
-        self.assertTrue(any(segment.start[0] == 10.0 for segment in segments))
-        self.assertTrue(any(segment.start[1] == 0.0 for segment in segments))
-        self.assertTrue(any(segment.start[1] == 20.0 for segment in segments))
+        self.assertTrue(any(segment.start[0] == -0.5 for segment in segments))
+        self.assertTrue(any(segment.start[0] == 9.5 for segment in segments))
+        self.assertTrue(any(segment.start[1] == -0.5 for segment in segments))
+        self.assertTrue(any(segment.start[1] == 19.5 for segment in segments))
 
     def test_3d_bottom_boundary_face_primitives_exist(self) -> None:
         faces = build_boundary_projection_face_primitives(

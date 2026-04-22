@@ -6,6 +6,11 @@ from typing import TypeAlias
 import pygame
 
 from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.ui.pygame.render.board_boundary import (
+    BoardBoundaryPlane,
+    board_boundary_coordinate,
+    board_boundary_planes,
+)
 from tet4d.ui.pygame.projection3d import (
     DepthDenominatorFn,
     Point2,
@@ -22,11 +27,7 @@ GuideCell2D: TypeAlias = tuple[Coord2F, float]
 GuideCell3D: TypeAlias = tuple[Coord3F, float]
 
 
-@dataclass(frozen=True)
-class BoundaryTarget:
-    axis: int
-    side: str
-    coordinate: float
+BoundaryTarget = BoardBoundaryPlane
 
 
 @dataclass(frozen=True)
@@ -53,13 +54,13 @@ def boundary_targets_for_mode(
     if grid_mode == GridMode.BOTTOM_BOUNDARY:
         axis = max(0, min(len(dims) - 1, int(gravity_axis)))
         return (
-            BoundaryTarget(axis=axis, side="+", coordinate=float(dims[axis])),
+            BoundaryTarget(
+                axis=axis,
+                side="+",
+                coordinate=board_boundary_coordinate(dims=dims, axis=axis, side="+"),
+            ),
         )
-    targets: list[BoundaryTarget] = []
-    for axis, size in enumerate(dims):
-        targets.append(BoundaryTarget(axis=axis, side="-", coordinate=0.0))
-        targets.append(BoundaryTarget(axis=axis, side="+", coordinate=float(size)))
-    return tuple(targets)
+    return tuple(board_boundary_planes(dims))
 
 
 def _clamp_scale(scale: float) -> float:

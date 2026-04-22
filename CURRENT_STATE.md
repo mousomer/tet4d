@@ -76,7 +76,19 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   deterministic `piece_change` snapshots plus inherited-state handoff,
   shared simulation state now tracks live total kinetic energy, simulator
   preview now supports an optional thin `Trace` overlay in both board-native
-  and projection-reference modes, wrapped
+  and projection-reference modes plus a bounded user-controlled text-editable
+  retention value, true-board preview now routes independent shared
+  `grid_mode` (`none` / `edge` / `full`) plus `shadow_mode` selection through
+  board-native rendering with projected board-line occlusion in `3D` / `4D`,
+  `4D` true-board preview now supports selectable `fade` / `box_size`
+  W-movement animation styles while reusing the gameplay layer-scale path,
+  shared ND camera input now reuses the existing gameplay/explorer
+  camera-control path, and
+  seam/bounce contact presentation must start on the actual board boundary
+  planes while bounce-mode post-contact state remains strictly inside the
+  board volume; the canonical rendered/simulated board boundary is the shared
+  cell-extent face box at `-0.5 .. size - 0.5` per axis reused by seam/bounce
+  contact, box/edge-grid rendering, and render-only boundary guides; wrapped
   simulator rows/footer text must remain unobscured, and game-end render/audio
   handoff must route through the shared controller rather than gameplay
   tetromino ownership.
@@ -142,16 +154,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 239` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 241` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.07` (`low`)
+- `tech_debt.score = 5.25` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.40`
-2. `code_balance = 1.43`
+1. `delivery_size_pressure = 2.45`
+2. `code_balance = 1.55`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -162,13 +174,13 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-2. `src/tet4d/ui/pygame/endgame_animation.py`: `2242` real LOC
-3. `scripts/arch_metrics.py`: `1890` real LOC
-4. `src/tet4d/ui/pygame/front4d_render.py`: `1807` real LOC
-5. `tools/governance/validate_project_contracts.py`: `1732` real LOC
-6. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
-7. `src/tet4d/ui/pygame/render/gfx_game.py`: `1370` real LOC
-8. `src/tet4d/ui/pygame/locked_cell_explosion/launcher.py`: `1278` real LOC
+2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2567` real LOC
+3. `src/tet4d/ui/pygame/endgame_animation.py`: `2242` real LOC
+4. `scripts/arch_metrics.py`: `1890` real LOC
+5. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
+6. `tools/governance/validate_project_contracts.py`: `1732` real LOC
+7. `tests/unit/render/test_locked_cell_explosion.py`: `1568` real LOC
+8. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 
 Thin-wrapper budgets:
 

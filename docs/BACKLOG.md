@@ -281,6 +281,10 @@ Completed on 2026-04-11:
   seam-aware particles with dedicated topology transport, explicit
   `boundary_response` / `particle_collisions` axes, render projection helpers,
   and class-prioritized seam/boundary/collision audio aggregation
+- keep the explosion launcher on shared UI/runtime paths: ND camera input must
+  keep reusing the existing scene-camera controls, trace retention stays a
+  bounded numeric control, and launcher rows must not drift away from
+  numeric-slider / categorical-selector typing discipline
 - topology-playground `Sandbox` can now launch that same standalone explosion
   path directly from the current sandbox cell population for arbitrary explorer
   topologies, while keeping the effect explorer-owned rather than gameplay-
@@ -294,6 +298,27 @@ Completed on 2026-04-11:
   `particle_collisions` config, and particle-collision audio is heavily capped
   so seam traversal stays readable under dense motion instead of routing the
   effect back through gameplay movement code or tetromino ownership
+- explosion-render polish pass (2026-04-21): simulator trace history is longer
+  but remains bounded and time/distance-gated, true-board `3D` / `4D` preview
+  now resolves board lines against explosion cells through the shared projected
+  occlusion path instead of painting cells over the box/grid, seam/bounce
+  contact presentation now starts on the exact board boundary plane with
+  bounce containment kept inside the board volume, the simulator now separates
+  `grid_mode` from `shadow_mode`, and topology preset presentation reuses the
+  shared explorer preset-section authority so sphere-like / experimental
+  families remain available without a simulator-local registry
+- explosion-simulator regression fix pass (2026-04-22): true-board trace draw
+  is now rendered with stronger stroke/alpha above board/grid layers so live
+  use stays readable in `2D` / `3D` / `4D`, simulator-local mouse dropdown
+  boundary alignment now reuses one canonical cell-extent face definition
+  (`-0.5 .. size - 0.5` per axis) across seam/bounce contact, the drawn
+  board box, edge-grid rendering, and render-only boundary/shadow guides, and
+  simulator-local mouse dropdown
+  interaction now opens/selects values without obscuring labels, simulator grid
+  options now expose explicit `none | edge | full` naming while shadow remains
+  independent, trace retention is text-editable with bounded parse/clamp
+  validation, and `4D` true-board preview now exposes selectable `fade` /
+  `box_size` W-movement animation using the existing gameplay layer-scale path
 - menu normalization pass so runtime launcher/settings/keybindings consumers
   now read a compiled normalized graph rather than the raw authored menu tree,
   singleton wrappers are collapsed before render/input use, and the one-row
