@@ -227,6 +227,51 @@ class TestTopologyLabScenes(unittest.TestCase):
             )
         )
 
+    def test_explorer_projection_scene_keeps_hidden_labels_probe_dot_and_ribbon(self) -> None:
+        surface = pygame.Surface((960, 760))
+        fonts = self._fonts()
+        profile = self._profile_3d()
+        boundaries = tuple(
+            BoundaryRef(dimension=3, axis=axis, side=side)
+            for axis in range(3)
+            for side in ("-", "+")
+        )
+        with (
+            mock.patch.object(
+                projection_scene,
+                "_draw_projection_ribbon",
+                wraps=projection_scene._draw_projection_ribbon,
+            ) as draw_ribbon,
+            mock.patch.object(
+                projection_scene,
+                "projection_hidden_label",
+                wraps=projection_hidden_label,
+            ) as hidden_label,
+            mock.patch.object(
+                projection_scene,
+                "draw_probe_center_glyph",
+                wraps=projection_scene.draw_probe_center_glyph,
+            ) as draw_probe_dot,
+        ):
+            draw_scene_3d(
+                surface,
+                fonts,
+                area=pygame.Rect(40, 80, 620, 360),
+                boundaries=boundaries,
+                source_boundary=boundaries[0],
+                target_boundary=boundaries[1],
+                active_glue_ids={boundary.label: "free" for boundary in boundaries},
+                basis_arrows=(),
+                preview_dims=(4, 5, 3),
+                profile=profile,
+                active_tool="probe",
+                probe_coord=(1, 2, 1),
+            )
+
+        self.assertTrue(draw_ribbon.called)
+        self.assertGreater(hidden_label.call_count, 0)
+        self.assertGreater(draw_probe_dot.call_count, 0)
+
     def test_wider_analysis_column_keeps_long_menu_labels_readable(self) -> None:
         menu_font = self._fonts().menu_font
         menu_w = 536

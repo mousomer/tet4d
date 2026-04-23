@@ -5,7 +5,11 @@ from dataclasses import dataclass, field
 from .audio import aggregate_audio_events
 from .model import ExplosionAudioState, ExplosionParticle, StandaloneExplosionConfig
 from .render import render_particles
-from .simulation import build_simulation, step_simulation
+from .simulation import (
+    build_simulation,
+    kinetic_energy_formula_text_for_particles,
+    step_simulation,
+)
 from .topology import ExplosionTopologyAdapter
 
 
@@ -28,6 +32,20 @@ class LockedCellExplosionController:
     @property
     def total_kinetic_energy(self) -> float:
         return float(self.simulation.total_kinetic_energy)
+
+    @property
+    def velocity_norm_sq_sum(self) -> float:
+        return float(self.simulation.velocity_norm_sq_sum)
+
+    @property
+    def diagnostics_summary(self):
+        return self.simulation.diagnostics_summary
+
+    def kinetic_energy_formula_text(self, *, max_terms: int = 4) -> str:
+        return kinetic_energy_formula_text_for_particles(
+            self.simulation.particles,
+            max_terms=max_terms,
+        )
 
     def step(self, dt_ms: float) -> tuple[str, ...]:
         raw_events = step_simulation(

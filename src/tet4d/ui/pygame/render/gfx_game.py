@@ -647,6 +647,16 @@ def _draw_board_shadow(surface: pygame.Surface, board_rect: pygame.Rect) -> None
 
 
 def _draw_board_edges_only(surface: pygame.Surface, board_rect: pygame.Rect) -> None:
+    for index in range(board_rect.width // CELL_SIZE):
+        left = board_rect.x + index * CELL_SIZE
+        right = left + CELL_SIZE
+        pygame.draw.line(surface, GRID_COLOR, (left, board_rect.y), (right, board_rect.y))
+        pygame.draw.line(surface, GRID_COLOR, (left, board_rect.bottom), (right, board_rect.bottom))
+    for index in range(board_rect.height // CELL_SIZE):
+        top = board_rect.y + index * CELL_SIZE
+        bottom = top + CELL_SIZE
+        pygame.draw.line(surface, GRID_COLOR, (board_rect.x, top), (board_rect.x, bottom))
+        pygame.draw.line(surface, GRID_COLOR, (board_rect.right, top), (board_rect.right, bottom))
     pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
 
 

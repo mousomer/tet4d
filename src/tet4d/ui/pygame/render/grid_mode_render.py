@@ -9,10 +9,9 @@ from tet4d.ui.pygame.projection3d import (
     ProjectedLineFragment,
     ProjectedLinePrimitive,
     draw_projected_line_fragments,
-    draw_projected_box_edges,
     draw_projected_box_shadow,
     draw_projected_helper_lattice,
-    project_box_edge_primitives,
+    project_boundary_lattice_primitives,
     project_helper_lattice_primitives,
     project_lattice_primitives,
 )
@@ -40,7 +39,7 @@ def build_projected_grid_primitives(
     ):
         return ()
     if grid_mode == GridMode.EDGE:
-        return project_box_edge_primitives(
+        return project_boundary_lattice_primitives(
             dims,
             project_raw,
             transform_raw,
@@ -112,14 +111,24 @@ def draw_projected_grid_mode(
         return
 
     if grid_mode == GridMode.EDGE:
-        draw_projected_box_edges(
+        draw_projected_line_fragments(
             surface,
-            dims,
-            project_raw,
-            transform_raw,
-            depth_denominator,
-            edge_color=frame_color,
-            edge_width=edge_width,
+            tuple(
+                ProjectedLineFragment(
+                    start=segment.start,
+                    end=segment.end,
+                    source_type=segment.source_type,
+                )
+                for segment in project_boundary_lattice_primitives(
+                    dims,
+                    project_raw,
+                    transform_raw,
+                    depth_denominator,
+                )
+            ),
+            inner_color=inner_color,
+            frame_color=frame_color,
+            frame_width=edge_width,
         )
         return
 

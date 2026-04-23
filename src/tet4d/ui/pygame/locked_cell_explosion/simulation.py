@@ -7,19 +7,30 @@ from tet4d.ui.pygame.render.board_boundary import board_boundary_coordinate, boa
 
 from .model import (
     EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
+    EXPLOSION_DIAGNOSTICS_MODE_FULL,
+    EXPLOSION_DIAGNOSTICS_MODE_OFF,
+    EXPLOSION_MASS_MODE_RANDOM,
     EXPLOSION_PARTICLE_COLLISIONS_ON,
     EXPLOSION_TRAIL_MAX_LIFETIME_MS,
     EXPLOSION_TRAIL_MAX_SAMPLES,
     EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING,
     EXPLOSION_TRAIL_MIN_TIME_SPACING_MS,
     ExplosionAudioEvent,
+    ExplosionDiagnosticsEvent,
+    ExplosionDiagnosticsSummary,
     ExplosionParticle,
+    ExplosionParticleDiagnostics,
     ExplosionSeedCell,
     ExplosionSimulationState,
     ExplosionTrailSample,
     StandaloneExplosionConfig,
     clamp_trace_retention_ms,
+    clamp_collision_elasticity,
+    clamp_mass_value,
+    normalize_mass_mode,
+    normalize_mass_range,
     normalize_boundary_response,
+    normalize_diagnostics_mode,
     normalize_particle_collisions,
     speed_scale_for_preset,
     trail_sample_budget_for_lifetime_ms,
@@ -29,10 +40,13 @@ from .topology import ExplosionTopologyAdapter, build_explosion_topology_adapter
 _EPSILON = 1e-6
 _MAX_BOUNDARY_EVENTS_PER_STEP = 12
 _BOUNDARY_RESTITUTION = 1.0
-_COLLISION_RESTITUTION = 1.0
 _COLLISION_DAMPING = 1.0
 _POST_CONTACT_TIME_EPSILON = 1e-6
 _INTERIOR_POSITION_EPSILON = 1e-5
+_DIAGNOSTIC_ENERGY_TOLERANCE = 1e-5
+_DIAGNOSTIC_SPEED_DROP_TOLERANCE = 0.25
+_DIAGNOSTIC_HEADING_DELTA_DEG = 2.0
+_DIAGNOSTIC_MAX_EVENTS = 12
 
 
 def _vec_add(left, right):
@@ -55,16 +69,89 @@ def _vec_len(value) -> float:
     return math.sqrt(sum(component * component for component in value))
 
 
+def _vec_unit(value):
+    length = _vec_len(value)
+    if length <= _EPSILON:
+        return None
+    return tuple(component / length for component in value)
+
+
+def _heading_delta_deg(before, after) -> float:
+    before_unit = _vec_unit(before)
+    after_unit = _vec_unit(after)
+    if before_unit is None or after_unit is None:
+        return 0.0
+    dot = max(-1.0, min(1.0, _vec_dot(before_unit, after_unit)))
+    return math.degrees(math.acos(dot))
+
+
 def total_kinetic_energy_for_particles(
     particles: list[ExplosionParticle] | tuple[ExplosionParticle, ...],
 ) -> float:
+    return float(0.5 * velocity_norm_sq_sum_for_particles(particles, weighted_by_mass=True))
+
+
+def _active_particles(
+    particles: list[ExplosionParticle] | tuple[ExplosionParticle, ...],
+) -> tuple[ExplosionParticle, ...]:
+    return tuple(particle for particle in particles if particle.active)
+
+
+def _speed_sq_for_particle(particle: ExplosionParticle) -> float:
+    return float(
+        sum(float(component) * float(component) for component in particle.velocity_nd)
+    )
+
+
+def velocity_norm_sq_sum_for_particles(
+    particles: list[ExplosionParticle] | tuple[ExplosionParticle, ...],
+    *,
+    weighted_by_mass: bool = False,
+) -> float:
     total = 0.0
-    for particle in particles:
-        if not particle.active:
-            continue
-        speed_sq = sum(float(component) * float(component) for component in particle.velocity_nd)
-        total += 0.5 * float(particle.collision_mass) * speed_sq
+    for particle in _active_particles(particles):
+        speed_sq = _speed_sq_for_particle(particle)
+        if weighted_by_mass:
+            total += float(particle.collision_mass) * speed_sq
+        else:
+            total += speed_sq
     return float(total)
+
+
+def kinetic_energy_formula_text_for_particles(
+    particles: list[ExplosionParticle] | tuple[ExplosionParticle, ...],
+    *,
+    max_terms: int = 4,
+) -> str:
+    active_particles = _active_particles(particles)
+    if not active_particles:
+        return "K = 0.00 = 1/2 m [0.00]"
+    speed_terms = tuple(_vec_len(tuple(float(value) for value in particle.velocity_nd)) for particle in active_particles)
+    masses = tuple(float(particle.collision_mass) for particle in active_particles)
+    energy = total_kinetic_energy_for_particles(active_particles)
+    shown_terms = max(1, int(max_terms))
+    uniform_mass = all(
+        abs(mass - masses[0]) <= _EPSILON
+        for mass in masses[1:]
+    )
+    if uniform_mass:
+        terms = [f"{speed_terms[index]:.2f}^2" for index in range(min(len(speed_terms), shown_terms))]
+        if len(speed_terms) > shown_terms:
+            terms.append("...")
+        return f"K = {energy:.2f} = 1/2 {masses[0]:.2f} [{ ' + '.join(terms) }]"
+    weighted_terms = [
+        f"{masses[index]:.2f}*{speed_terms[index]:.2f}^2"
+        for index in range(min(len(speed_terms), shown_terms))
+    ]
+    if len(speed_terms) > shown_terms:
+        weighted_terms.append("...")
+    return f"K = {energy:.2f} = 1/2 [{' + '.join(weighted_terms)}]"
+
+
+def weighted_speed_sq_sum_text_for_particles(
+    particles: list[ExplosionParticle] | tuple[ExplosionParticle, ...],
+) -> str:
+    return f"Σ(m_i||v_i||^2) = {velocity_norm_sq_sum_for_particles(particles, weighted_by_mass=True):.2f}"
 
 
 def _normalize(value, *, default):
@@ -93,6 +180,10 @@ def _initial_particle(
     randomizer: random.Random,
     launch_speed_scale: float,
     trace_retention_ms: float,
+    mass_mode: str,
+    base_mass: float,
+    random_mass_min: float,
+    random_mass_max: float,
 ) -> ExplosionParticle:
     origin = tuple(float(value) for value in cell.source_coord)
     outward = _normalize(
@@ -108,6 +199,11 @@ def _initial_particle(
     angular = _pad_rotation(
         tuple(randomizer.uniform(-220.0, 220.0) for _ in range(3))
     )
+    mass = (
+        randomizer.uniform(random_mass_min, random_mass_max)
+        if mass_mode == EXPLOSION_MASS_MODE_RANDOM
+        else base_mass
+    )
     return ExplosionParticle(
         particle_id=int(particle_id),
         source_coord=tuple(int(value) for value in cell.source_coord),
@@ -118,7 +214,7 @@ def _initial_particle(
         rotation_deg=(0.0, 0.0, 0.0),
         angular_velocity_deg=angular,
         collision_radius=randomizer.uniform(0.24, 0.36),
-        collision_mass=randomizer.uniform(0.9, 1.1),
+        collision_mass=mass,
         trail_max_lifetime_ms=clamp_trace_retention_ms(trace_retention_ms),
         trail_max_samples=trail_sample_budget_for_lifetime_ms(trace_retention_ms),
         trail_samples=[
@@ -128,6 +224,27 @@ def _initial_particle(
             )
         ],
     )
+
+
+def assign_particle_masses(
+    particles: list[ExplosionParticle] | tuple[ExplosionParticle, ...],
+    *,
+    random_seed: int,
+    mass_mode: str,
+    base_mass: float,
+    random_mass_min: float,
+    random_mass_max: float,
+) -> None:
+    resolved_mode = normalize_mass_mode(mass_mode)
+    resolved_base_mass = clamp_mass_value(base_mass)
+    resolved_min, resolved_max = normalize_mass_range(random_mass_min, random_mass_max)
+    randomizer = random.Random(int(random_seed))
+    for particle in particles:
+        particle.collision_mass = (
+            randomizer.uniform(resolved_min, resolved_max)
+            if resolved_mode == EXPLOSION_MASS_MODE_RANDOM
+            else resolved_base_mass
+        )
 
 
 def _trim_trail_samples(
@@ -235,11 +352,214 @@ def _record_seam_break(
     )
 
 
+def _record_boundary_bounce(
+    particle: ExplosionParticle,
+    *,
+    elapsed_ms: float,
+    contact_position: tuple[float, ...],
+) -> None:
+    _record_trail_sample(
+        particle,
+        elapsed_ms=elapsed_ms,
+        position_nd=contact_position,
+        force=True,
+    )
+
+
+def _set_position_velocity_snapshot(
+    diagnostics: dict[str, object] | None,
+    *,
+    position_key: str,
+    velocity_key: str,
+    position: tuple[float, ...],
+    velocity: tuple[float, ...],
+    overwrite: bool = True,
+) -> None:
+    if diagnostics is None:
+        return
+    if overwrite:
+        diagnostics[position_key] = tuple(float(value) for value in position)
+        diagnostics[velocity_key] = tuple(float(value) for value in velocity)
+        return
+    diagnostics.setdefault(position_key, tuple(float(value) for value in position))
+    diagnostics.setdefault(velocity_key, tuple(float(value) for value in velocity))
+
+
+def _particle_energy_for_velocity(
+    particle: ExplosionParticle,
+    velocity: tuple[float, ...],
+) -> float:
+    return 0.5 * float(particle.collision_mass) * _vec_dot(velocity, velocity)
+
+
+def _diagnostics_event(
+    events: list[ExplosionDiagnosticsEvent],
+    *,
+    step_index: int,
+    particle_id: int,
+    stage: str,
+    message: str,
+) -> None:
+    events.append(
+        ExplosionDiagnosticsEvent(
+            step_index=int(step_index),
+            particle_id=int(particle_id),
+            stage=str(stage),
+            message=str(message),
+        )
+    )
+
+
+def _k_for_particle(particle: ExplosionParticle) -> float:
+    return 0.5 * float(particle.collision_mass) * _speed_sq_for_particle(particle)
+
+
+def _finish_without_contact(
+    particle: ExplosionParticle,
+    *,
+    remaining: float,
+    elapsed_ms: float,
+    force_end_trail_sample: bool,
+    boundary_response: str,
+    board_dims: tuple[int, ...],
+    diagnostics: dict[str, object] | None,
+) -> tuple[ExplosionAudioEvent, ...]:
+    _finish_particle_step(
+        particle,
+        remaining=remaining,
+        elapsed_ms=elapsed_ms,
+        force_end_trail_sample=force_end_trail_sample,
+        boundary_response=boundary_response,
+        board_dims=board_dims,
+    )
+    _set_position_velocity_snapshot(
+        diagnostics,
+        position_key="after_free_flight_position",
+        velocity_key="after_free_flight_velocity",
+        position=particle.position_nd,
+        velocity=particle.velocity_nd,
+        overwrite=False,
+    )
+    _set_position_velocity_snapshot(
+        diagnostics,
+        position_key="after_finalize_position",
+        velocity_key="after_finalize_velocity",
+        position=particle.position_nd,
+        velocity=particle.velocity_nd,
+    )
+    return tuple()
+
+
+def _handle_seam_contact(
+    particle: ExplosionParticle,
+    *,
+    boundary,
+    elapsed_ms: float,
+    diagnostics: dict[str, object] | None,
+) -> ExplosionAudioEvent:
+    pre_seam_position = tuple(float(value) for value in particle.position_nd)
+    particle.position_nd = boundary.transform_position(particle.position_nd)
+    particle.velocity_nd = boundary.transform_velocity(particle.velocity_nd)
+    if diagnostics is not None:
+        diagnostics["contact_count"] = int(diagnostics.get("contact_count", 0)) + 1
+        diagnostics["last_contact_type"] = "seam"
+        diagnostics["last_contact_normal"] = None
+    _set_position_velocity_snapshot(
+        diagnostics,
+        position_key="after_seam_position",
+        velocity_key="after_seam_velocity",
+        position=particle.position_nd,
+        velocity=particle.velocity_nd,
+    )
+    _record_seam_break(
+        particle,
+        elapsed_ms=elapsed_ms,
+        pre_seam_position=pre_seam_position,
+        post_seam_position=tuple(float(value) for value in particle.position_nd),
+    )
+    return ExplosionAudioEvent(
+        family="seam",
+        strength=max(0.6, _vec_len(particle.velocity_nd)),
+    )
+
+
+def _handle_boundary_contact(
+    particle: ExplosionParticle,
+    *,
+    axis: int,
+    side: str,
+    remaining: float,
+    boundary_response: str,
+    board_dims: tuple[int, ...],
+    elapsed_ms: float,
+    diagnostics: dict[str, object] | None,
+) -> tuple[bool, ExplosionAudioEvent | None]:
+    if boundary_response == EXPLOSION_BOUNDARY_RESPONSE_ESCAPE:
+        particle.escaped = True
+        particle.position_nd = _vec_add(
+            particle.position_nd,
+            _vec_mul(particle.velocity_nd, remaining),
+        )
+        _set_position_velocity_snapshot(
+            diagnostics,
+            position_key="after_boundary_position",
+            velocity_key="after_boundary_velocity",
+            position=particle.position_nd,
+            velocity=particle.velocity_nd,
+        )
+        _set_position_velocity_snapshot(
+            diagnostics,
+            position_key="after_finalize_position",
+            velocity_key="after_finalize_velocity",
+            position=particle.position_nd,
+            velocity=particle.velocity_nd,
+        )
+        return True, None
+    contact_position = tuple(float(value) for value in particle.position_nd)
+    velocity = list(particle.velocity_nd)
+    velocity[axis] = -float(velocity[axis]) * _BOUNDARY_RESTITUTION
+    particle.velocity_nd = tuple(velocity)
+    _record_boundary_bounce(
+        particle,
+        elapsed_ms=elapsed_ms,
+        contact_position=contact_position,
+    )
+    particle.position_nd = _move_to_interior_boundary_position(
+        particle.position_nd,
+        axis=axis,
+        side=side,
+        board_dims=board_dims,
+    )
+    if diagnostics is not None:
+        normal = [0.0] * len(board_dims)
+        normal[axis] = -1.0 if side == "+" else 1.0
+        diagnostics["contact_count"] = int(diagnostics.get("contact_count", 0)) + 1
+        diagnostics["last_contact_type"] = "boundary"
+        diagnostics["last_contact_normal"] = tuple(normal)
+    _set_position_velocity_snapshot(
+        diagnostics,
+        position_key="after_boundary_position",
+        velocity_key="after_boundary_velocity",
+        position=particle.position_nd,
+        velocity=particle.velocity_nd,
+    )
+    return False, ExplosionAudioEvent(
+        family="bounce",
+        strength=max(0.4, abs(float(velocity[axis]))),
+    )
+
+
 def build_simulation(
     config: StandaloneExplosionConfig,
 ) -> tuple[ExplosionSimulationState, ExplosionTopologyAdapter]:
     boundary_response = normalize_boundary_response(config.boundary_response)
     particle_collisions = normalize_particle_collisions(config.particle_collisions)
+    mass_mode = normalize_mass_mode(config.mass_mode)
+    base_mass = clamp_mass_value(config.base_mass)
+    random_mass_min, random_mass_max = normalize_mass_range(
+        config.random_mass_min,
+        config.random_mass_max,
+    )
     topology = build_explosion_topology_adapter(config.topology)
     randomizer = random.Random(int(config.random_seed))
     preset_scale = speed_scale_for_preset(config.speed_preset)
@@ -253,17 +573,32 @@ def build_simulation(
             randomizer=randomizer,
             launch_speed_scale=launch_speed_scale,
             trace_retention_ms=float(config.trace_retention_ms),
+            mass_mode=mass_mode,
+            base_mass=base_mass,
+            random_mass_min=random_mass_min,
+            random_mass_max=random_mass_max,
         )
         for index, cell in enumerate(config.occupied_cells)
     ]
+    assign_particle_masses(
+        particles,
+        random_seed=int(config.random_seed),
+        mass_mode=mass_mode,
+        base_mass=base_mass,
+        random_mass_min=random_mass_min,
+        random_mass_max=random_mass_max,
+    )
     return (
         ExplosionSimulationState(
             dimension=int(config.dimension),
             board_dims=tuple(int(value) for value in config.topology.board_dims),
             boundary_response=boundary_response,
             particle_collisions=particle_collisions,
+            collision_elasticity=clamp_collision_elasticity(config.collision_elasticity),
             particles=particles,
+            velocity_norm_sq_sum=velocity_norm_sq_sum_for_particles(particles),
             total_kinetic_energy=total_kinetic_energy_for_particles(particles),
+            diagnostics_mode=normalize_diagnostics_mode(config.diagnostics_mode),
         ),
         topology,
     )
@@ -336,6 +671,32 @@ def _clamp_position_to_board_interior(
     return tuple(clamped)
 
 
+def _finish_particle_step(
+    particle: ExplosionParticle,
+    *,
+    remaining: float,
+    elapsed_ms: float,
+    force_end_trail_sample: bool,
+    boundary_response: str,
+    board_dims: tuple[int, ...],
+) -> None:
+    particle.position_nd = _vec_add(
+        particle.position_nd,
+        _vec_mul(particle.velocity_nd, remaining),
+    )
+    if boundary_response != EXPLOSION_BOUNDARY_RESPONSE_ESCAPE:
+        particle.position_nd = _clamp_position_to_board_interior(
+            particle.position_nd,
+            board_dims=board_dims,
+        )
+    if force_end_trail_sample:
+        _record_trail_sample(
+            particle,
+            elapsed_ms=elapsed_ms,
+            force=True,
+        )
+
+
 def _step_particle(
     particle: ExplosionParticle,
     *,
@@ -343,18 +704,41 @@ def _step_particle(
     adapter: ExplosionTopologyAdapter,
     boundary_response: str,
     elapsed_ms: float,
+    diagnostics: dict[str, object] | None = None,
 ) -> tuple[ExplosionAudioEvent, ...]:
     if not particle.active:
         return tuple()
+    _set_position_velocity_snapshot(
+        diagnostics,
+        position_key="before_position",
+        velocity_key="before_velocity",
+        position=particle.position_nd,
+        velocity=particle.velocity_nd,
+    )
     _advance_rotation(particle, dt_seconds)
     if particle.escaped:
         particle.position_nd = _vec_add(
             particle.position_nd,
             _vec_mul(particle.velocity_nd, dt_seconds),
         )
+        _set_position_velocity_snapshot(
+            diagnostics,
+            position_key="after_free_flight_position",
+            velocity_key="after_free_flight_velocity",
+            position=particle.position_nd,
+            velocity=particle.velocity_nd,
+        )
+        _set_position_velocity_snapshot(
+            diagnostics,
+            position_key="after_finalize_position",
+            velocity_key="after_finalize_velocity",
+            position=particle.position_nd,
+            velocity=particle.velocity_nd,
+        )
         return tuple()
     remaining = float(dt_seconds)
     events: list[ExplosionAudioEvent] = []
+    force_end_trail_sample = False
     for _ in range(_MAX_BOUNDARY_EVENTS_PER_STEP):
         hit_time, axis, side = _boundary_time(
             particle.position_nd,
@@ -362,14 +746,29 @@ def _step_particle(
             adapter.board_dims,
         )
         if axis < 0 or hit_time > remaining:
-            particle.position_nd = _vec_add(
-                particle.position_nd,
-                _vec_mul(particle.velocity_nd, remaining),
+            events.extend(
+                _finish_without_contact(
+                    particle,
+                    remaining=remaining,
+                    elapsed_ms=elapsed_ms,
+                    force_end_trail_sample=force_end_trail_sample,
+                    boundary_response=boundary_response,
+                    board_dims=adapter.board_dims,
+                    diagnostics=diagnostics,
+                )
             )
             return tuple(events)
         particle.position_nd = _vec_add(
             particle.position_nd,
             _vec_mul(particle.velocity_nd, hit_time),
+        )
+        _set_position_velocity_snapshot(
+            diagnostics,
+            position_key="after_free_flight_position",
+            velocity_key="after_free_flight_velocity",
+            position=particle.position_nd,
+            velocity=particle.velocity_nd,
+            overwrite=False,
         )
         remaining = max(0.0, remaining - hit_time)
         boundary = adapter.seam_for_boundary(
@@ -380,65 +779,57 @@ def _step_particle(
             )
         )
         if boundary is not None:
-            pre_seam_position = tuple(float(value) for value in particle.position_nd)
-            particle.position_nd = boundary.transform_position(particle.position_nd)
-            particle.velocity_nd = boundary.transform_velocity(particle.velocity_nd)
-            _record_seam_break(
-                particle,
-                elapsed_ms=elapsed_ms,
-                pre_seam_position=pre_seam_position,
-                post_seam_position=tuple(
-                    float(value) for value in particle.position_nd
-                ),
-            )
             events.append(
-                ExplosionAudioEvent(
-                    family="seam",
-                    strength=max(0.6, _vec_len(particle.velocity_nd)),
+                _handle_seam_contact(
+                    particle,
+                    boundary=boundary,
+                    elapsed_ms=elapsed_ms,
+                    diagnostics=diagnostics,
                 )
             )
             remaining = max(0.0, remaining - min(remaining, _POST_CONTACT_TIME_EPSILON))
             continue
-        if boundary_response == EXPLOSION_BOUNDARY_RESPONSE_ESCAPE:
-            particle.escaped = True
-            particle.position_nd = _vec_add(
-                particle.position_nd,
-                _vec_mul(particle.velocity_nd, remaining),
-            )
-            return tuple(events)
-        velocity = list(particle.velocity_nd)
-        velocity[axis] = -float(velocity[axis]) * _BOUNDARY_RESTITUTION
-        particle.velocity_nd = tuple(velocity)
-        particle.position_nd = _move_to_interior_boundary_position(
-            particle.position_nd,
+        done, boundary_event = _handle_boundary_contact(
+            particle,
             axis=axis,
             side=side,
+            remaining=remaining,
+            boundary_response=boundary_response,
             board_dims=adapter.board_dims,
+            elapsed_ms=elapsed_ms,
+            diagnostics=diagnostics,
         )
-        events.append(
-            ExplosionAudioEvent(
-                family="bounce",
-                strength=max(0.4, abs(float(velocity[axis]))),
-            )
-        )
+        if done:
+            return tuple(events)
+        force_end_trail_sample = True
+        if boundary_event is not None:
+            events.append(boundary_event)
         remaining = max(0.0, remaining - min(remaining, _POST_CONTACT_TIME_EPSILON))
         if remaining <= _EPSILON:
             return tuple(events)
-    particle.position_nd = _vec_add(
-        particle.position_nd,
-        _vec_mul(particle.velocity_nd, remaining),
-    )
-    if boundary_response != EXPLOSION_BOUNDARY_RESPONSE_ESCAPE:
-        particle.position_nd = _clamp_position_to_board_interior(
-            particle.position_nd,
+    events.extend(
+        _finish_without_contact(
+            particle,
+            remaining=remaining,
+            elapsed_ms=elapsed_ms,
+            force_end_trail_sample=force_end_trail_sample,
+            boundary_response=boundary_response,
             board_dims=adapter.board_dims,
+            diagnostics=diagnostics,
         )
+    )
     return tuple(events)
 
 
-def _resolve_collisions(particles: list[ExplosionParticle]) -> tuple[ExplosionAudioEvent, ...]:
+def _resolve_collisions(
+    particles: list[ExplosionParticle],
+    *,
+    collision_elasticity: float,
+    collided_particle_ids: set[int] | None = None,
+) -> tuple[ExplosionAudioEvent, ...]:
     if len(particles) < 2:
         return tuple()
+    restitution = clamp_collision_elasticity(collision_elasticity)
     events: list[ExplosionAudioEvent] = []
     ordered = sorted(particles, key=lambda particle: particle.particle_id)
     for left_index, left in enumerate(ordered):
@@ -463,7 +854,10 @@ def _resolve_collisions(particles: list[ExplosionParticle]) -> tuple[ExplosionAu
             right.position_nd = _vec_add(right.position_nd, _vec_mul(normal, overlap * right_share))
             relative_speed = _vec_dot(_vec_sub(right.velocity_nd, left.velocity_nd), normal)
             if relative_speed < 0.0:
-                impulse = -((1.0 + _COLLISION_RESTITUTION) * relative_speed) / total_mass
+                if collided_particle_ids is not None:
+                    collided_particle_ids.add(int(left.particle_id))
+                    collided_particle_ids.add(int(right.particle_id))
+                impulse = -((1.0 + restitution) * relative_speed) / total_mass
                 left.velocity_nd = _vec_mul(
                     _vec_sub(
                         left.velocity_nd,
@@ -487,6 +881,263 @@ def _resolve_collisions(particles: list[ExplosionParticle]) -> tuple[ExplosionAu
     return tuple(events)
 
 
+def _build_diagnostics_summary(
+    state: ExplosionSimulationState,
+    *,
+    before_energy: float,
+    before_weighted_sum: float,
+    particle_stage_data: dict[int, dict[str, object]],
+    before_collision_energy: float,
+    after_collision_energy: float,
+    collided_particle_ids: set[int],
+    seam_energy_before_after: dict[int, tuple[float, float]],
+    boundary_energy_before_after: dict[int, tuple[float, float]],
+    finalize_energy_before_after: dict[int, tuple[float, float]],
+) -> ExplosionDiagnosticsSummary:
+    mode = normalize_diagnostics_mode(state.diagnostics_mode)
+    if mode == EXPLOSION_DIAGNOSTICS_MODE_OFF:
+        return ExplosionDiagnosticsSummary(
+            diagnostics_mode=mode,
+            step_index=int(state.diagnostics_step_index),
+            kinetic_energy=float(state.total_kinetic_energy),
+            weighted_speed_sq_sum=float(state.velocity_norm_sq_sum),
+            delta_kinetic_energy=float(state.total_kinetic_energy - before_energy),
+            contact_count=0,
+            suspicious_count=0,
+        )
+    step_events: list[ExplosionDiagnosticsEvent] = []
+    particle_details: list[ExplosionParticleDiagnostics] = []
+    contact_count = 0
+    for particle in state.particles:
+        if not particle.active:
+            continue
+        detail, particle_events, particle_contacts = _particle_diagnostics_for_step(
+            state,
+            particle=particle,
+            data=particle_stage_data.get(particle.particle_id, {}),
+            collided_particle_ids=collided_particle_ids,
+            seam_energy_before_after=seam_energy_before_after,
+            boundary_energy_before_after=boundary_energy_before_after,
+            finalize_energy_before_after=finalize_energy_before_after,
+        )
+        particle_details.append(detail)
+        step_events.extend(particle_events)
+        contact_count += particle_contacts
+    restitution = clamp_collision_elasticity(state.collision_elasticity)
+    collision_delta = after_collision_energy - before_collision_energy
+    step_events.extend(
+        _collision_diagnostics_events(
+            state,
+            restitution=restitution,
+            collision_delta=collision_delta,
+        )
+    )
+    recent_events = (state.diagnostics_recent_events + step_events)[-_DIAGNOSTIC_MAX_EVENTS:]
+    state.diagnostics_recent_events = recent_events
+    focus_particle_id = next(
+        (detail.particle_id for detail in particle_details if detail.flagged_this_step),
+        particle_details[0].particle_id if particle_details else None,
+    )
+    return ExplosionDiagnosticsSummary(
+        diagnostics_mode=mode,
+        step_index=int(state.diagnostics_step_index),
+        kinetic_energy=float(state.total_kinetic_energy),
+        weighted_speed_sq_sum=float(velocity_norm_sq_sum_for_particles(state.particles, weighted_by_mass=True)),
+        delta_kinetic_energy=float(state.total_kinetic_energy - before_energy),
+        contact_count=int(contact_count),
+        suspicious_count=len(step_events),
+        particle_details=tuple(particle_details) if mode == EXPLOSION_DIAGNOSTICS_MODE_FULL else tuple(particle_details[:1]),
+        recent_events=tuple(recent_events),
+        focus_particle_id=focus_particle_id,
+    )
+
+
+def _particle_diagnostics_for_step(
+    state: ExplosionSimulationState,
+    *,
+    particle: ExplosionParticle,
+    data: dict[str, object],
+    collided_particle_ids: set[int],
+    seam_energy_before_after: dict[int, tuple[float, float]],
+    boundary_energy_before_after: dict[int, tuple[float, float]],
+    finalize_energy_before_after: dict[int, tuple[float, float]],
+) -> tuple[ExplosionParticleDiagnostics, list[ExplosionDiagnosticsEvent], int]:
+    step_events: list[ExplosionDiagnosticsEvent] = []
+    before_velocity = tuple(data.get("before_velocity", particle.velocity_nd))
+    after_velocity = tuple(data.get("after_finalize_velocity", particle.velocity_nd))
+    heading_delta = _heading_delta_deg(before_velocity, after_velocity)
+    speed_sq = _speed_sq_for_particle(particle)
+    previous_speed_sq = float(
+        state.diagnostics_previous_speed_sq_by_particle.get(particle.particle_id, speed_sq)
+    )
+    last_contact_type = str(data.get("last_contact_type", "none"))
+    if last_contact_type == "none" and particle.particle_id in collided_particle_ids:
+        last_contact_type = "collision"
+    last_contact_normal = data.get("last_contact_normal")
+    contact_count = int(data.get("contact_count", 0))
+    if particle.particle_id in collided_particle_ids:
+        contact_count += 1
+    before_speed_sq = _vec_dot(before_velocity, before_velocity)
+    flagged = _append_particle_motion_events(
+        step_events,
+        state=state,
+        particle=particle,
+        before_speed_sq=before_speed_sq,
+        previous_speed_sq=previous_speed_sq,
+        speed_sq=speed_sq,
+        heading_delta=heading_delta,
+        last_contact_type=last_contact_type,
+        contact_count=contact_count,
+        seam_energy_before_after=seam_energy_before_after,
+        boundary_energy_before_after=boundary_energy_before_after,
+        finalize_energy_before_after=finalize_energy_before_after,
+    )
+    state.diagnostics_previous_speed_sq_by_particle[particle.particle_id] = float(speed_sq)
+    if contact_count > 0:
+        state.diagnostics_last_contact_step_by_particle[particle.particle_id] = state.diagnostics_step_index
+    return (
+        ExplosionParticleDiagnostics(
+            particle_id=int(particle.particle_id),
+            mass=float(particle.collision_mass),
+            speed_sq=float(speed_sq),
+            previous_speed_sq=float(previous_speed_sq),
+            heading_delta_deg=float(heading_delta),
+            last_contact_type=last_contact_type,
+            last_contact_normal=last_contact_normal,
+            flagged_this_step=flagged,
+        ),
+        step_events,
+        contact_count,
+    )
+
+
+def _append_particle_motion_events(
+    events: list[ExplosionDiagnosticsEvent],
+    *,
+    state: ExplosionSimulationState,
+    particle: ExplosionParticle,
+    before_speed_sq: float,
+    previous_speed_sq: float,
+    speed_sq: float,
+    heading_delta: float,
+    last_contact_type: str,
+    contact_count: int,
+    seam_energy_before_after: dict[int, tuple[float, float]],
+    boundary_energy_before_after: dict[int, tuple[float, float]],
+    finalize_energy_before_after: dict[int, tuple[float, float]],
+) -> bool:
+    flagged = False
+    if heading_delta > _DIAGNOSTIC_HEADING_DELTA_DEG and last_contact_type == "none":
+        flagged = True
+        _diagnostics_event(
+            events,
+            step_index=state.diagnostics_step_index,
+            particle_id=particle.particle_id,
+            stage="finalize",
+            message=f"heading change without contact at step {state.diagnostics_step_index}",
+        )
+    if before_speed_sq - speed_sq > _DIAGNOSTIC_SPEED_DROP_TOLERANCE and last_contact_type == "none":
+        flagged = True
+        _diagnostics_event(
+            events,
+            step_index=state.diagnostics_step_index,
+            particle_id=particle.particle_id,
+            stage="free_flight",
+            message=f"speed drop without contact at step {state.diagnostics_step_index}",
+        )
+    last_contact_step = state.diagnostics_last_contact_step_by_particle.get(particle.particle_id)
+    if contact_count > 0 and last_contact_step == state.diagnostics_step_index - 1:
+        flagged = True
+        _diagnostics_event(
+            events,
+            step_index=state.diagnostics_step_index,
+            particle_id=particle.particle_id,
+            stage="boundary",
+            message=f"repeated boundary recontact / possible snagging at step {state.diagnostics_step_index}",
+        )
+    flagged |= _append_energy_stage_events(
+        events,
+        state=state,
+        particle_id=particle.particle_id,
+        seam_energy_before_after=seam_energy_before_after.get(particle.particle_id),
+        boundary_energy_before_after=boundary_energy_before_after.get(particle.particle_id),
+        finalize_energy_before_after=finalize_energy_before_after.get(particle.particle_id),
+    )
+    return flagged
+
+
+def _append_energy_stage_events(
+    events: list[ExplosionDiagnosticsEvent],
+    *,
+    state: ExplosionSimulationState,
+    particle_id: int,
+    seam_energy_before_after: tuple[float, float] | None,
+    boundary_energy_before_after: tuple[float, float] | None,
+    finalize_energy_before_after: tuple[float, float] | None,
+) -> bool:
+    flagged = False
+    if seam_energy_before_after is not None and abs(seam_energy_before_after[1] - seam_energy_before_after[0]) > _DIAGNOSTIC_ENERGY_TOLERANCE:
+        flagged = True
+        _diagnostics_event(
+            events,
+            step_index=state.diagnostics_step_index,
+            particle_id=particle_id,
+            stage="seam_transport",
+            message=f"energy change during seam transport at step {state.diagnostics_step_index}",
+        )
+    if (
+        boundary_energy_before_after is not None
+        and _BOUNDARY_RESTITUTION >= 1.0 - _EPSILON
+        and abs(boundary_energy_before_after[1] - boundary_energy_before_after[0]) > _DIAGNOSTIC_ENERGY_TOLERANCE
+    ):
+        flagged = True
+        _diagnostics_event(
+            events,
+            step_index=state.diagnostics_step_index,
+            particle_id=particle_id,
+            stage="boundary_resolution",
+            message=f"energy change during elastic boundary resolution at step {state.diagnostics_step_index}",
+        )
+    if finalize_energy_before_after is not None and abs(finalize_energy_before_after[1] - finalize_energy_before_after[0]) > _DIAGNOSTIC_ENERGY_TOLERANCE:
+        flagged = True
+        _diagnostics_event(
+            events,
+            step_index=state.diagnostics_step_index,
+            particle_id=particle_id,
+            stage="finalize",
+            message=f"energy change during finalize/nudge at step {state.diagnostics_step_index}",
+        )
+    return flagged
+
+
+def _collision_diagnostics_events(
+    state: ExplosionSimulationState,
+    *,
+    restitution: float,
+    collision_delta: float,
+) -> list[ExplosionDiagnosticsEvent]:
+    events: list[ExplosionDiagnosticsEvent] = []
+    if restitution >= 1.0 - _EPSILON:
+        if abs(collision_delta) > _DIAGNOSTIC_ENERGY_TOLERANCE:
+            _diagnostics_event(
+                events,
+                step_index=state.diagnostics_step_index,
+                particle_id=-1,
+                stage="collision_resolution",
+                message=f"energy drift in elastic collision stage at step {state.diagnostics_step_index}",
+            )
+        return events
+    if collision_delta > _DIAGNOSTIC_ENERGY_TOLERANCE:
+        _diagnostics_event(
+            events,
+            step_index=state.diagnostics_step_index,
+            particle_id=-1,
+            stage="collision_resolution",
+            message=f"energy increase in inelastic collision stage at step {state.diagnostics_step_index}",
+        )
+    return events
+
+
 def step_simulation(
     state: ExplosionSimulationState,
     *,
@@ -498,8 +1149,15 @@ def step_simulation(
     state.elapsed_ms += max(0.0, float(dt_ms))
     if dt_seconds <= 0.0:
         return tuple()
+    state.diagnostics_step_index += 1
+    before_energy = float(state.total_kinetic_energy)
+    before_weighted_sum = float(
+        velocity_norm_sq_sum_for_particles(state.particles, weighted_by_mass=True)
+    )
+    particle_stage_data: dict[int, dict[str, object]] = {}
     events: list[ExplosionAudioEvent] = []
     for particle in state.particles:
+        diagnostics = particle_stage_data.setdefault(particle.particle_id, {})
         events.extend(
             _step_particle(
                 particle,
@@ -507,10 +1165,58 @@ def step_simulation(
                 adapter=adapter,
                 boundary_response=state.boundary_response,
                 elapsed_ms=state.elapsed_ms,
+                diagnostics=diagnostics,
             )
         )
+    seam_energy_before_after: dict[int, tuple[float, float]] = {}
+    boundary_energy_before_after: dict[int, tuple[float, float]] = {}
+    finalize_energy_before_after: dict[int, tuple[float, float]] = {}
+    for particle in state.particles:
+        if not particle.active:
+            continue
+        data = particle_stage_data.get(particle.particle_id, {})
+        before_velocity = tuple(data.get("before_velocity", particle.velocity_nd))
+        after_seam_velocity = data.get("after_seam_velocity")
+        after_boundary_velocity = data.get("after_boundary_velocity")
+        after_finalize_velocity = tuple(data.get("after_finalize_velocity", particle.velocity_nd))
+        before_k = _particle_energy_for_velocity(particle, before_velocity)
+        if after_seam_velocity is not None:
+            seam_velocity = tuple(after_seam_velocity)
+            seam_k = _particle_energy_for_velocity(particle, seam_velocity)
+            seam_energy_before_after[particle.particle_id] = (before_k, seam_k)
+        if after_boundary_velocity is not None:
+            boundary_before_velocity = tuple(after_seam_velocity) if after_seam_velocity is not None else before_velocity
+            boundary_k_before = _particle_energy_for_velocity(particle, boundary_before_velocity)
+            boundary_velocity = tuple(after_boundary_velocity)
+            boundary_k_after = _particle_energy_for_velocity(particle, boundary_velocity)
+            boundary_energy_before_after[particle.particle_id] = (
+                boundary_k_before,
+                boundary_k_after,
+            )
+        finalize_before_velocity = (
+            tuple(after_boundary_velocity)
+            if after_boundary_velocity is not None
+            else tuple(after_seam_velocity)
+            if after_seam_velocity is not None
+            else before_velocity
+        )
+        finalize_k_before = _particle_energy_for_velocity(particle, finalize_before_velocity)
+        finalize_k_after = _particle_energy_for_velocity(particle, after_finalize_velocity)
+        finalize_energy_before_after[particle.particle_id] = (
+            finalize_k_before,
+            finalize_k_after,
+        )
+    before_collision_energy = total_kinetic_energy_for_particles(state.particles)
+    collided_particle_ids: set[int] = set()
     if state.particle_collisions == EXPLOSION_PARTICLE_COLLISIONS_ON:
-        events.extend(_resolve_collisions(state.particles))
+        events.extend(
+            _resolve_collisions(
+                state.particles,
+                collision_elasticity=float(getattr(state, "collision_elasticity", 1.0)),
+                collided_particle_ids=collided_particle_ids,
+            )
+        )
+    after_collision_energy = total_kinetic_energy_for_particles(state.particles)
     for particle in state.particles:
         if not particle.active:
             continue
@@ -518,5 +1224,18 @@ def step_simulation(
             particle,
             elapsed_ms=state.elapsed_ms,
         )
+    state.velocity_norm_sq_sum = velocity_norm_sq_sum_for_particles(state.particles)
     state.total_kinetic_energy = total_kinetic_energy_for_particles(state.particles)
+    state.diagnostics_summary = _build_diagnostics_summary(
+        state,
+        before_energy=before_energy,
+        before_weighted_sum=before_weighted_sum,
+        particle_stage_data=particle_stage_data,
+        before_collision_energy=before_collision_energy,
+        after_collision_energy=after_collision_energy,
+        collided_particle_ids=collided_particle_ids,
+        seam_energy_before_after=seam_energy_before_after,
+        boundary_energy_before_after=boundary_energy_before_after,
+        finalize_energy_before_after=finalize_energy_before_after,
+    )
     return tuple(events)

@@ -33,6 +33,7 @@ def draw_scene(
     sandbox_message: str = "",
     explosion_particles=None,
     explosion_trace_enabled: bool = False,
+    explorer_ui_enabled: bool = True,
     view: object | None = None,
 ) -> list[TopologyLabHitTarget]:
     del basis_arrows, view
@@ -60,6 +61,7 @@ def draw_scene(
         sandbox_message=sandbox_message,
         explosion_particles=explosion_particles,
         explosion_trace_enabled=explosion_trace_enabled,
+        explorer_ui_enabled=explorer_ui_enabled,
     )
 
 

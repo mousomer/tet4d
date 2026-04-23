@@ -57,6 +57,9 @@ from tet4d.ui.pygame.render.grid_mode_render import (
     draw_projected_grid_mode,
     draw_projected_line_buckets,
 )
+from tet4d.ui.pygame.render.w_movement_animation import (
+    layer_transition_scale_for_distance,
+)
 from tet4d.ui.pygame.render.active_piece_projection_guides import (
     GuideCell3D,
     build_boundary_projection_face_primitives,
@@ -589,7 +592,7 @@ def _active_layer_cells_from_piece_state(
         # At distance 0.0: scale = 1.0 (full size)
         # At distance 0.5: scale = 0.5 (half size)
         # At distance 1.0: scale = 0.0 (invisible, filtered out above)
-        scale = 1.0 - layer_distance
+        scale = layer_transition_scale_for_distance(layer_distance)
 
         if _in_bounds_layer_cell(layer_index, cell3, basis):
             cells.append(

@@ -48,6 +48,7 @@ _INVALID = (220, 92, 92)
 _PANEL_GAP = 10
 _RIBBON_GAP = 6
 _HEADER_HEIGHT = 22
+_TITLE_ONLY_HEADER_HEIGHT = 10
 _RIBBON_PADDING = 6
 _CELL_PICK_KIND = "projection_cell"
 _PANEL_KIND = "projection_panel"
@@ -107,12 +108,14 @@ def _panel_grid_rect(
     panel_rect: pygame.Rect,
     dims: tuple[int, ...],
     axes: tuple[int, int],
+    *,
+    header_height: int = _HEADER_HEIGHT,
 ) -> tuple[pygame.Rect, int]:
     cols = max(1, int(dims[axes[0]]))
     rows = max(1, int(dims[axes[1]]))
     content = panel_rect.inflate(-12, -12)
-    content.y += _HEADER_HEIGHT
-    content.height = max(44, content.height - (_HEADER_HEIGHT + 8))
+    content.y += int(header_height)
+    content.height = max(44, content.height - (int(header_height) + 8))
     cell = max(
         10,
         min(
@@ -779,6 +782,7 @@ def _draw_projection_panel(
     slab_radius: int,
     focus_boundaries: tuple[BoundaryRef, ...],
     active_tool: str | None,
+    explorer_ui_enabled: bool,
 ) -> list[TopologyLabHitTarget]:
     hits = [TopologyLabHitTarget(_PANEL_KIND, panel.label, panel.rect.copy())]
     draw_panel_frame(
@@ -796,21 +800,29 @@ def _draw_projection_panel(
         x=panel.rect.x + 8,
         y=panel.rect.y + 6,
     )
-    draw_fitted_text_line(
-        surface,
-        font=fonts.hint_font,
-        text=projection_hidden_label(
-            len(selected_coord),
-            panel.axes,
-            selected_coord,
-            slab_radius=slab_radius,
+    if explorer_ui_enabled:
+        draw_fitted_text_line(
+            surface,
+            font=fonts.hint_font,
+            text=projection_hidden_label(
+                len(selected_coord),
+                panel.axes,
+                selected_coord,
+                slab_radius=slab_radius,
+            ),
+            color=_MUTED,
+            max_width=panel.rect.width - 16,
+            x=panel.rect.x + 8,
+            y=panel.rect.y + 8 + title.get_height(),
+        )
+    board_rect, cell_size = _panel_grid_rect(
+        panel.rect,
+        dims,
+        panel.axes,
+        header_height=(
+            _HEADER_HEIGHT if explorer_ui_enabled else _TITLE_ONLY_HEADER_HEIGHT
         ),
-        color=_MUTED,
-        max_width=panel.rect.width - 16,
-        x=panel.rect.x + 8,
-        y=panel.rect.y + 8 + title.get_height(),
     )
-    board_rect, cell_size = _panel_grid_rect(panel.rect, dims, panel.axes)
     _draw_grid(
         surface,
         board_rect=board_rect,
@@ -877,14 +889,15 @@ def _draw_projection_panel(
         axes=panel.axes,
         explosion_particles=explosion_particles,
     )
-    _draw_selected_cell(
-        surface,
-        board_rect=board_rect,
-        cell_size=cell_size,
-        axes=panel.axes,
-        selected_coord=selected_coord,
-        active_tool=active_tool,
-    )
+    if explorer_ui_enabled:
+        _draw_selected_cell(
+            surface,
+            board_rect=board_rect,
+            cell_size=cell_size,
+            axes=panel.axes,
+            selected_coord=selected_coord,
+            active_tool=active_tool,
+        )
     return hits
 
 
@@ -908,6 +921,7 @@ def _draw_projection_panels(
     focus_boundaries: tuple[BoundaryRef, ...],
     active_tool: str | None,
     focused_glue_id: str | None,
+    explorer_ui_enabled: bool,
 ) -> list[TopologyLabHitTarget]:
     hits: list[TopologyLabHitTarget] = []
     for panel in panels:
@@ -927,6 +941,7 @@ def _draw_projection_panels(
             slab_radius=slab_radius,
             focus_boundaries=focus_boundaries,
             active_tool=active_tool,
+            explorer_ui_enabled=explorer_ui_enabled,
         )
         hits.extend(panel_hits)
     if info_rect is not None:
@@ -969,24 +984,27 @@ def draw_projection_scene(
     explosion_particles=None,
     explosion_trace_enabled: bool = False,
     slab_radius: int = 0,
+    explorer_ui_enabled: bool = True,
 ) -> list[TopologyLabHitTarget]:
     dims = tuple(int(value) for value in preview_dims)
     selected_coord = _selected_projection_coord(dimension, probe_coord)
-    header_height = 54 if dimension == 4 else 48
-    ribbon_rect = pygame.Rect(area.x, area.y, area.width, header_height)
-    hits = _draw_projection_ribbon(
-        surface,
-        fonts,
-        area=ribbon_rect,
-        boundaries=boundaries,
-        source_boundary=source_boundary,
-        target_boundary=target_boundary,
-        active_glue_ids=active_glue_ids,
-        hovered_boundary_index=hovered_boundary_index,
-        selected_boundary_index=selected_boundary_index,
-        selected_glue_id=selected_glue_id,
-        highlighted_glue_id=highlighted_glue_id,
-    )
+    header_height = (54 if dimension == 4 else 48) if explorer_ui_enabled else 0
+    hits: list[TopologyLabHitTarget] = []
+    if explorer_ui_enabled:
+        ribbon_rect = pygame.Rect(area.x, area.y, area.width, header_height)
+        hits = _draw_projection_ribbon(
+            surface,
+            fonts,
+            area=ribbon_rect,
+            boundaries=boundaries,
+            source_boundary=source_boundary,
+            target_boundary=target_boundary,
+            active_glue_ids=active_glue_ids,
+            hovered_boundary_index=hovered_boundary_index,
+            selected_boundary_index=selected_boundary_index,
+            selected_glue_id=selected_glue_id,
+            highlighted_glue_id=highlighted_glue_id,
+        )
     focused_glue_id = highlighted_glue_id or selected_glue_id
     panels, info_rect = _layout_projection_panels(
         area,
@@ -1016,6 +1034,7 @@ def draw_projection_scene(
             ),
             active_tool=active_tool,
             focused_glue_id=focused_glue_id,
+            explorer_ui_enabled=explorer_ui_enabled,
         )
     )
     return hits

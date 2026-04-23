@@ -15,6 +15,12 @@ class GridMode(str, Enum):
     ALL_BOUNDARIES = "all_boundaries"
 
 
+class ShadowMode(str, Enum):
+    OFF = "off"
+    BOTTOM_BOUNDARY = "bottom_boundary"
+    ALL_BOUNDARIES = "all_boundaries"
+
+
 def _grid_mode_from_name(mode_name: str) -> GridMode:
     normalized = mode_name.strip().lower()
     if normalized == GridMode.BOTTOM_BOUNDARY.value:
@@ -52,3 +58,11 @@ def grid_mode_label(mode: GridMode) -> str:
     if mode == GridMode.ALL_BOUNDARIES:
         return "ALL BOUNDARIES"
     return mode.value.upper()
+
+
+def shadow_mode_label(mode: ShadowMode) -> str:
+    if mode == ShadowMode.OFF:
+        return "OFF"
+    if mode == ShadowMode.BOTTOM_BOUNDARY:
+        return "BOTTOM BOUNDARY"
+    return "ALL BOUNDARIES"

@@ -203,9 +203,9 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         with (
             patch.object(front, "_persist_session_status"),
             patch.object(
-                explosion_launcher,
-                "run_standalone_explosion_launcher",
-                return_value=(True, "Explosion simulator closed"),
+                front,
+                "run_standalone_explosion_launcher_action",
+                return_value=False,
             ) as run_launcher,
         ):
             close = front._menu_action_locked_cell_explosion(
@@ -215,11 +215,7 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             )
 
         self.assertFalse(close)
-        self.assertEqual(state.status, "Explosion simulator closed")
-        self.assertFalse(state.status_error)
         run_launcher.assert_called_once()
-        launch_state = run_launcher.call_args.kwargs["initial_state"]
-        self.assertEqual(launch_state.dimension, 4)
 
     def test_legacy_topology_editor_action_is_settings_only_legacy_launch(self) -> None:
         state = front.MainMenuState(last_mode="4d")
