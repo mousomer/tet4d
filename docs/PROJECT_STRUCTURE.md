@@ -267,6 +267,9 @@ It is a public symbol skim for navigation, not full API documentation, and it do
 - `src/tet4d/replay/format.py`: `ReplayEvent2D`, `ReplayScript2D`, `ReplayTickScriptND`
 - `src/tet4d/shared/nd_coords.py`: `coord_from_column(column, lateral_axes, gravity_axis, gravity_value, ...)`
 - `src/tet4d/ui/pygame/__init__.py`: `run_2d()`, `run_3d()`, `run_4d()`
+- `src/tet4d/ui/pygame/controls/dropdown.py`: `open_dropdown(state, *, row_key)`, `close_dropdown(state)`, `dropdown_menu_rect(row_rect, *, option_count, viewport, font, ...)`, `dropdown_visible_slice(state, *, option_count, menu_rect, font, ...)`, `dropdown_option_rects(state, *, menu_rect, option_count, font, ...)`, `dropdown_option_index_at_position(state, *, row_layouts, row_rects, layout_viewport, ...)`, `update_dropdown_hover_index(state, *, row_layouts, row_rects, layout_viewport, ...)`, `update_dropdown_scroll(state, event, *, row_layouts, row_rects, ...)`, `select_dropdown_option_from_click(state, *, position, row_layouts, row_rects, ...)`
+- `src/tet4d/ui/pygame/controls/layout.py`: `ControlRowLayout`, `build_control_row_layouts(row_keys, *, font, panel_width, ...)`, `row_rects(*, viewport, row_layouts, scroll_offset)`, `slider_rect_for_row(row_rect, row_layout)`, `row_index_at_position(row_rects, *, position)`
+- `src/tet4d/ui/pygame/controls/numeric.py`: `NumericRowSpec`, `numeric_display_text(state, *, row_key, spec_for_row, value_for_row, ...)`, `start_numeric_text_mode(state, row_key, *, spec_for_row, value_for_row, ...)`, `stop_numeric_text_mode(state)`, `append_numeric_text_input(state, incoming_text, *, spec_for_row)`, `commit_numeric_text_mode(state, *, spec_for_row, set_value_for_row, ...)`, `handle_numeric_text_keydown(state, key, *, row_key, spec_for_row, ...)`, `slider_fraction_for_row(row_key, *, spec_for_row, value_for_row)`, `slider_fraction_from_pointer(slider_rect, pointer_x)`, `set_slider_value_from_pointer(row_key, *, pointer_x, slider_rect, spec_for_row, ...)`, `step_numeric_row(row_key, direction, *, spec_for_row, value_for_row, ...)`
 - `src/tet4d/ui/pygame/endgame_animation.py`: `EndgamePresetConfig`, `EndgameAnimationTuning`, `load_endgame_animation_tuning()`, `EndgameRenderContext`, `SnapshotCell`, `EndgameSnapshot`, `ShellFragment`, `CellRelic`, `CellRelicMotionState`, `EndgameRelicRenderState`, `EndgameShatterState`, `EndgameRelicFieldState`, ...
 - `src/tet4d/ui/pygame/front2d_game.py`: `run()`, `main(argv=...)`
 - `src/tet4d/ui/pygame/front2d_input.py`: `system_decision_for_key(key)`, `gameplay_action_for_key_2d(state, key)`, `overlay_action_for_key_2d(key)`, `apply_2d_gameplay_action(state, action)`, `dispatch_2d_gameplay_action(state, key)`, `handle_game_keydown(event, state, _cfg, *, allow_gameplay=..., ...)`
@@ -415,6 +418,7 @@ Match labels are shown inline as `(exact)`, `(prefix)`, or `(fallback)`.
 - `src/tet4d/engine/topology_explorer/transport_resolver.py`: `tests/unit/engine/test_explorer_transport_resolver.py` (fallback)
 - `src/tet4d/engine/tutorial/setup_apply.py`: `tests/unit/engine/test_tutorial_setup_apply.py` (fallback)
 - `src/tet4d/engine/ui_logic/menu_layout.py`: `tests/unit/engine/test_menu_layout.py` (exact)
+- `src/tet4d/ui/pygame/controls/numeric.py`: `tests/unit/engine/test_numeric_text_input.py` (prefix)
 - `src/tet4d/ui/pygame/endgame_animation.py`: `tests/unit/engine/test_endgame_animation.py` (exact)
 - `src/tet4d/ui/pygame/front2d_setup.py`: `tests/unit/engine/test_front2d_setup.py` (exact)
 - `src/tet4d/ui/pygame/front4d_render.py`: `tests/unit/engine/test_front4d_render.py` (exact)

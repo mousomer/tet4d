@@ -37,6 +37,15 @@ general planning redirection or repo-wide ownership notes.
 
 ## Domain-specific active files
 
+### `explosion_refactor_ownership_split.md`
+- Role: `authority`
+- Status: `active`
+- Owns:
+  - locked-cell explosion refactor ownership split
+  - current simulator/shared/endgame/explorer ownership inventory
+  - shared board presentation / shared controls / shared runtime boundaries
+  - staged extraction order for the explosion refactor
+
 ### `topology_playground_current_authority.md`
 - Role: `authority`
 - Status: `active`

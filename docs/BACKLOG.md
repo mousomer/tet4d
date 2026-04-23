@@ -53,8 +53,15 @@ Current active follow-ups:
   shared explosion runtime while using the saved `endgame_live_cell_fraction`
   subset adapter instead of releasing every locked cell into live simulation
   by default, keep legacy endgame settings from overriding saved shared
-  boundary/collision/default behavior, and avoid devolving into a decorative
-  final-energy readout
+  boundary/collision/default behavior, and follow
+  `docs/plans/explosion_refactor_ownership_split.md` so shared board
+  presentation, shared controls, shared runtime, and thin adapters are
+  extracted in that order instead of preserving simulator-owned shared logic;
+  Stage 2 shared-controls extraction is now the landed baseline, with generic
+  dropdown/numeric/row-layout/hit-testing ownership under
+  `src/tet4d/ui/pygame/controls/`, so follow-up work should not drift those
+  semantics back into `locked_cell_explosion/surface.py`; avoid devolving into
+  a decorative final-energy readout
 
 - Open work:
   1. continue structural simplification of remaining
@@ -151,6 +158,19 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-20:
 
+- locked-cell explosion Stage 2 shared-controls extraction is now finalized in
+  the project record: generic dropdown/numeric/row-layout/hit-testing
+  ownership lives under `src/tet4d/ui/pygame/controls/`, the simulator surface
+  remains the thinner adapter consumer, shared-layer regression coverage lives
+  in `tests/unit/engine/test_pygame_controls_shared.py`, and the Stage 2
+  closeout record now explicitly includes the supporting authority/doc updates
+  in `docs/plans/explosion_refactor_ownership_split.md`,
+  `docs/plans/README.md`, `docs/plans/plan_authority_map.md`, and
+  `docs/rds/RDS_TETRIS_GENERAL.md`; the earlier quoted tracked diffstat is now
+  understood to have excluded then-untracked additions
+  (`docs/plans/explosion_refactor_ownership_split.md`,
+  `src/tet4d/ui/pygame/controls/`, and
+  `tests/unit/engine/test_pygame_controls_shared.py`)
 - workflow-codex profile follow-up landed on its separate docs branch, so
   every context-switch profile in `docs/WORKFLOW_CODEX.md` now carries an
   explicit `Verify:` line and `Skip unless cross-cutting:` scope, a dedicated

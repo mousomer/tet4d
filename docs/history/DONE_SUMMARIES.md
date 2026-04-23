@@ -13,6 +13,28 @@ Canonical policy:
 
 ---
 
+`DONE` Locked-cell explosion Stage 2 shared-controls extraction closeout:
+- extracted generic dropdown, numeric text/slider/stepper, row-layout,
+  wrapping/spacing, and hit-testing behavior from
+  `src/tet4d/ui/pygame/locked_cell_explosion/surface.py` into
+  `src/tet4d/ui/pygame/controls/`.
+- kept `surface.py` as the thinner simulator adapter for row inventory,
+  row-to-domain mapping, simulator actions, and simulator-only preview/footer
+  composition.
+- added direct shared-layer regression coverage in
+  `tests/unit/engine/test_pygame_controls_shared.py` while preserving the
+  simulator-facing locked-cell explosion control tests.
+- synchronized the Stage 2 authority/doc footprint across
+  `CURRENT_STATE.md`, `docs/BACKLOG.md`,
+  `docs/plans/explosion_refactor_ownership_split.md`,
+  `docs/plans/README.md`, `docs/plans/plan_authority_map.md`, and
+  `docs/rds/RDS_TETRIS_GENERAL.md`.
+- corrected the Stage 2 reporting note so the earlier quoted diffstat is
+  explicitly understood to have excluded then-untracked additions:
+  `docs/plans/explosion_refactor_ownership_split.md`,
+  `src/tet4d/ui/pygame/controls/`, and
+  `tests/unit/engine/test_pygame_controls_shared.py`.
+
 ## Legacy Source Snapshot
 
 1. `P1`= user-facing correctness, consistency, and discoverability gaps.

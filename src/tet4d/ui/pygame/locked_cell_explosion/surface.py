@@ -28,16 +28,41 @@ from tet4d.engine.ui_logic.view_modes import (
     grid_mode_label,
     shadow_mode_label,
 )
+from tet4d.ui.pygame.controls import (
+    ControlRowLayout as _RowLayout,
+    NumericRowSpec as _NumericRowSpec,
+    append_numeric_text_input as _controls_append_numeric_text_input,
+    build_control_row_layouts,
+    close_dropdown as _close_dropdown,
+    commit_numeric_text_mode as _controls_commit_numeric_text_mode,
+    dropdown_menu_rect as _controls_dropdown_menu_rect,
+    dropdown_option_index_at_position as _controls_dropdown_option_index_at_position,
+    dropdown_option_rects as _controls_dropdown_option_rects,
+    dropdown_visible_slice as _controls_dropdown_visible_slice,
+    handle_numeric_text_keydown as _controls_handle_numeric_text_keydown,
+    numeric_display_text as _controls_numeric_display_text,
+    open_dropdown as _open_dropdown,
+    row_index_at_position as _controls_row_index_at_position,
+    row_rects as _controls_row_rects,
+    select_dropdown_option_from_click as _controls_select_dropdown_option_from_click,
+    set_slider_value_from_pointer as _controls_set_slider_value_from_pointer,
+    slider_fraction_for_row as _controls_slider_fraction_for_row,
+    slider_fraction_from_pointer as _controls_slider_fraction_from_pointer,
+    slider_rect_for_row as _controls_slider_rect_for_row,
+    start_numeric_text_mode as _controls_start_numeric_text_mode,
+    step_numeric_row as _controls_step_numeric_row,
+    stop_numeric_text_mode as _controls_stop_numeric_text_mode,
+    update_dropdown_hover_index as _controls_update_dropdown_hover_index,
+    update_dropdown_scroll as _controls_update_dropdown_scroll,
+)
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.ui_utils import (
-    compute_slider_row_layout,
     draw_panel_frame,
     draw_value_slider,
     draw_vertical_gradient,
     draw_wrapped_label_value_lines,
     fit_text,
     wrap_text_lines,
-    wrapped_label_value_layout,
 )
 
 from .board_view import draw_native_board_view
@@ -171,28 +196,6 @@ _STATIC_ROW_VALUE_TEXT = {
 }
 _AXIS_LABELS = ("X", "Y", "Z", "W")
 _COLOR_CYCLE = (1, 2, 3, 4, 5, 6, 7)
-
-
-@dataclass(frozen=True)
-class _RowLayout:
-    row_key: str
-    label_lines: tuple[str, ...]
-    value_lines: tuple[str, ...]
-    row_height: int
-    control_kind: str
-    value_right_padding: int = 12
-    slider_fraction: float | None = None
-    slider_layout: object | None = None
-
-
-@dataclass(frozen=True)
-class _NumericRowSpec:
-    row_key: str
-    minimum: float
-    maximum: float
-    step: float
-    decimals: int
-    unit_suffix: str = ""
 
 
 @dataclass(frozen=True)
@@ -623,7 +626,7 @@ def _normalize_selection_index(
         state.open_dropdown_row_key is not None
         and state.open_dropdown_row_key not in row_keys
     ):
-        state.open_dropdown_row_key = None
+        _close_dropdown(state)
     state.seed = max(0, int(state.seed))
 
 
@@ -1127,14 +1130,13 @@ def _numeric_display_text_for_row(
     state: StandaloneExplosionSurfaceState,
     row_key: str,
 ) -> str:
-    spec = _numeric_spec_for_row(state, row_key)
-    if spec is None:
-        return ""
-    if state.numeric_text_row_key == row_key:
-        return f"{state.numeric_text_buffer or ''}{spec.unit_suffix}"
-    if row_key == "trace_retention":
-        return f"{_trace_retention_input_text(state.trace_retention_ms)}{spec.unit_suffix}"
-    return f"{_format_numeric_value(_numeric_value_for_row(state, row_key), decimals=spec.decimals)}{spec.unit_suffix}"
+    return _controls_numeric_display_text(
+        state,
+        row_key=row_key,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+        value_for_row=lambda key: _numeric_value_for_row(state, key),
+        custom_formatters={"trace_retention": _trace_retention_input_text},
+    )
 
 
 def _set_numeric_value_for_row(
@@ -1198,49 +1200,32 @@ def _start_numeric_text_mode(
     *,
     incoming_text: str = "",
 ) -> bool:
-    spec = _numeric_spec_for_row(state, row_key)
-    if spec is None:
-        return False
-    state.numeric_text_row_key = row_key
-    state.numeric_text_buffer = _format_numeric_value(
-        _numeric_value_for_row(state, row_key)
-        / (1000.0 if row_key == "trace_retention" else 1.0),
-        decimals=spec.decimals,
+    return _controls_start_numeric_text_mode(
+        state,
+        row_key,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+        value_for_row=lambda key: _numeric_value_for_row(state, key),
+        display_value_for_edit=lambda key, value, spec: _format_numeric_value(
+            value / (1000.0 if key == "trace_retention" else 1.0),
+            decimals=spec.decimals,
+        ),
+        incoming_text=incoming_text,
     )
-    state.numeric_text_replace_on_type = True
-    if incoming_text:
-        return _append_numeric_text_input(state, incoming_text)
-    return True
 
 
 def _stop_numeric_text_mode(state: StandaloneExplosionSurfaceState) -> None:
-    state.numeric_text_row_key = ""
-    state.numeric_text_buffer = ""
-    state.numeric_text_replace_on_type = False
+    _controls_stop_numeric_text_mode(state)
 
 
 def _append_numeric_text_input(
     state: StandaloneExplosionSurfaceState,
     incoming_text: str,
 ) -> bool:
-    row_key = state.numeric_text_row_key
-    spec = _numeric_spec_for_row(state, row_key)
-    if spec is None:
-        return False
-    allowed_chars = "0123456789"
-    if spec.decimals > 0:
-        allowed_chars += "."
-    filtered = "".join(ch for ch in incoming_text if ch in allowed_chars)
-    if not filtered:
-        return False
-    next_buffer = "" if state.numeric_text_replace_on_type else state.numeric_text_buffer
-    for char in filtered:
-        if char == "." and "." in next_buffer:
-            continue
-        next_buffer += char
-    state.numeric_text_buffer = next_buffer[:12]
-    state.numeric_text_replace_on_type = False
-    return True
+    return _controls_append_numeric_text_input(
+        state,
+        incoming_text,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+    )
 
 
 def _commit_numeric_text_mode(
@@ -1248,34 +1233,14 @@ def _commit_numeric_text_mode(
     *,
     allow_partial: bool = False,
 ) -> bool:
-    row_key = state.numeric_text_row_key
-    spec = _numeric_spec_for_row(state, row_key)
-    if spec is None:
-        return False
-    raw = state.numeric_text_buffer.strip()
-    if not raw or raw == ".":
-        if allow_partial:
-            return False
-        state.status = f"{_row_label_text(row_key)} input must be numeric."
-        state.status_error = True
-        _stop_numeric_text_mode(state)
-        return False
-    try:
-        parsed = float(raw)
-    except ValueError:
-        if allow_partial:
-            return False
-        state.status = f"{_row_label_text(row_key)} input must be numeric."
-        state.status_error = True
-        _stop_numeric_text_mode(state)
-        return False
-    if row_key == "trace_retention":
-        parsed *= 1000.0
-    _set_numeric_value_for_row(state, row_key, parsed)
-    state.status = f"{_row_label_text(row_key)} updated."
-    state.status_error = False
-    _stop_numeric_text_mode(state)
-    return True
+    return _controls_commit_numeric_text_mode(
+        state,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+        set_value_for_row=lambda key, value: _set_numeric_value_for_row(state, key, value),
+        row_label_text=_row_label_text,
+        value_transformers={"trace_retention": lambda value: value * 1000.0},
+        allow_partial=allow_partial,
+    )
 
 
 def _commit_trace_retention_input(
@@ -1305,16 +1270,10 @@ def _slider_fraction_for_row(
     state: StandaloneExplosionSurfaceState,
     row_key: str,
 ) -> float | None:
-    spec = _numeric_spec_for_row(state, row_key)
-    if spec is None:
-        return None
-    span = max(1.0, float(spec.maximum) - float(spec.minimum))
-    return max(
-        0.0,
-        min(
-            1.0,
-            (float(_numeric_value_for_row(state, row_key)) - float(spec.minimum)) / span,
-        ),
+    return _controls_slider_fraction_for_row(
+        row_key,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+        value_for_row=lambda key: _numeric_value_for_row(state, key),
     )
 
 
@@ -1415,15 +1374,13 @@ def _step_numeric_row(
     row_key: str,
     direction: int,
 ) -> bool:
-    spec = _numeric_spec_for_row(state, row_key)
-    if spec is None:
-        return False
-    _set_numeric_value_for_row(
-        state,
+    return _controls_step_numeric_row(
         row_key,
-        _numeric_value_for_row(state, row_key) + (float(direction) * float(spec.step)),
+        direction,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+        value_for_row=lambda key: _numeric_value_for_row(state, key),
+        set_value_for_row=lambda key, value: _set_numeric_value_for_row(state, key, value),
     )
-    return True
 
 
 def _adjust_selection_row(
@@ -1617,11 +1574,10 @@ def _activate_selected_row(state: StandaloneExplosionSurfaceState) -> bool:
             return _commit_numeric_text_mode(state)
         return _start_numeric_text_mode(state, row_key)
     if _row_control_kind(row_key) == "dropdown" and row_key not in state.locked_rows:
-        state.open_dropdown_row_key = (
-            None if state.open_dropdown_row_key == row_key else row_key
-        )
-        state.dropdown_scroll_offset = 0
-        state.dropdown_hover_index = None
+        if state.open_dropdown_row_key == row_key:
+            _close_dropdown(state)
+        else:
+            _open_dropdown(state, row_key=row_key)
         return True
     if row_key == "restart":
         restart_standalone_explosion(state)
@@ -2038,50 +1994,16 @@ def _build_row_layouts(
     *,
     panel_width: int,
 ) -> tuple[_RowLayout, ...]:
-    layouts: list[_RowLayout] = []
-    for row_key in _dynamic_row_keys(state):
-        label = _row_label_text(row_key)
-        value = _row_value_text(state, row_key)
-        control_kind = _row_control_kind(row_key)
-        slider_fraction = _slider_fraction_for_row(state, row_key)
-        slider_layout = None
-        value_right_padding = (
-            12 + _DROPDOWN_AFFORDANCE_WIDTH if control_kind == "dropdown" else 12
-        )
-        if control_kind == "numeric" and slider_fraction is not None:
-            slider_layout = compute_slider_row_layout(
-                fonts.menu_font,
-                label=label,
-                value=value,
-                total_width=max(120, panel_width - 36),
-            )
-            label_lines = slider_layout.label_lines
-            value_lines = slider_layout.value_lines
-            row_height = slider_layout.row_height
-        else:
-            label_lines, value_lines, row_height = wrapped_label_value_layout(
-                fonts.menu_font,
-                label=label,
-                value=value,
-                total_width=max(120, panel_width - 36),
-                value_width_fraction=0.42,
-                min_label_width=92,
-                horizontal_padding=18 + value_right_padding,
-                column_gap=12,
-            )
-        layouts.append(
-            _RowLayout(
-                row_key=row_key,
-                label_lines=label_lines,
-                value_lines=value_lines,
-                row_height=row_height,
-                control_kind=control_kind,
-                value_right_padding=value_right_padding,
-                slider_fraction=slider_fraction,
-                slider_layout=slider_layout,
-            )
-        )
-    return tuple(layouts)
+    return build_control_row_layouts(
+        _dynamic_row_keys(state),
+        font=fonts.menu_font,
+        panel_width=panel_width,
+        dropdown_affordance_width=_DROPDOWN_AFFORDANCE_WIDTH,
+        label_for_row=_row_label_text,
+        value_for_row=lambda row_key: _row_value_text(state, row_key),
+        control_kind_for_row=_row_control_kind,
+        slider_fraction_for_row=lambda row_key: _slider_fraction_for_row(state, row_key),
+    )
 
 
 def _row_rects(
@@ -2095,34 +2017,15 @@ def _row_rects(
         selected_index=selected_index,
         viewport_height=layout.row_viewport.height,
     )
-    row_gap = 6
-    row_y = layout.row_viewport.y - scroll_offset
-    rects: list[pygame.Rect] = []
-    for row_layout in row_layouts:
-        rects.append(
-            pygame.Rect(
-                layout.row_viewport.x + 2,
-                row_y,
-                layout.row_viewport.width - 4,
-                row_layout.row_height,
-            )
-        )
-        row_y += row_layout.row_height + row_gap
-    return tuple(rects)
+    return _controls_row_rects(
+        viewport=layout.row_viewport,
+        row_layouts=row_layouts,
+        scroll_offset=scroll_offset,
+    )
 
 
 def _slider_rect_for_row(row_rect: pygame.Rect, row_layout: _RowLayout) -> pygame.Rect | None:
-    if row_layout.slider_layout is None:
-        return None
-    return pygame.Rect(
-        row_rect.right - 12 - row_layout.slider_layout.slider_width,
-        row_rect.y
-        + row_layout.row_height
-        - row_layout.slider_layout.row_bottom_padding
-        - row_layout.slider_layout.slider_height,
-        row_layout.slider_layout.slider_width,
-        row_layout.slider_layout.slider_height,
-    )
+    return _controls_slider_rect_for_row(row_rect, row_layout)
 
 
 def _dropdown_values_for_row(
@@ -2250,25 +2153,14 @@ def _dropdown_menu_rect(
     viewport: pygame.Rect,
     font: pygame.font.Font,
 ) -> pygame.Rect:
-    option_height = font.get_height() + _DROPDOWN_OPTION_VERTICAL_PADDING
-    max_visible_options = max(1, (viewport.height - 16) // option_height)
-    visible_count = min(option_count, max_visible_options)
-    height = max(option_height + 8, visible_count * option_height + 8)
-    width = min(
-        max(_DROPDOWN_MENU_WIDTH, row_rect.width // 2),
-        max(_DROPDOWN_MENU_WIDTH, viewport.width - 12),
+    return _controls_dropdown_menu_rect(
+        row_rect,
+        option_count=option_count,
+        viewport=viewport,
+        font=font,
+        menu_width=_DROPDOWN_MENU_WIDTH,
+        option_vertical_padding=_DROPDOWN_OPTION_VERTICAL_PADDING,
     )
-    rect = pygame.Rect(
-        row_rect.right - width - 8,
-        row_rect.bottom + 2,
-        width,
-        height,
-    )
-    if rect.right > viewport.right - 4:
-        rect.x = viewport.right - rect.width - 4
-    if rect.bottom > viewport.bottom - 4:
-        rect.y = max(viewport.y + 4, row_rect.y - rect.height - 2)
-    return rect
 
 
 def _dropdown_visible_slice(
@@ -2278,11 +2170,13 @@ def _dropdown_visible_slice(
     menu_rect: pygame.Rect,
     font: pygame.font.Font,
 ) -> tuple[int, int]:
-    option_height = font.get_height() + _DROPDOWN_OPTION_VERTICAL_PADDING
-    visible_count = max(1, (menu_rect.height - 8) // option_height)
-    max_offset = max(0, option_count - visible_count)
-    offset = max(0, min(max_offset, int(state.dropdown_scroll_offset)))
-    return offset, min(option_count, offset + visible_count)
+    return _controls_dropdown_visible_slice(
+        state,
+        option_count=option_count,
+        menu_rect=menu_rect,
+        font=font,
+        option_vertical_padding=_DROPDOWN_OPTION_VERTICAL_PADDING,
+    )
 
 
 def _dropdown_option_rects(
@@ -2292,27 +2186,13 @@ def _dropdown_option_rects(
     option_count: int,
     font: pygame.font.Font,
 ) -> tuple[tuple[int, pygame.Rect], ...]:
-    start, end = _dropdown_visible_slice(
+    return _controls_dropdown_option_rects(
         state,
-        option_count=option_count,
         menu_rect=menu_rect,
+        option_count=option_count,
         font=font,
+        option_vertical_padding=_DROPDOWN_OPTION_VERTICAL_PADDING,
     )
-    option_height = font.get_height() + _DROPDOWN_OPTION_VERTICAL_PADDING
-    rects: list[tuple[int, pygame.Rect]] = []
-    for visible_index, option_index in enumerate(range(start, end)):
-        rects.append(
-            (
-                option_index,
-                pygame.Rect(
-                    menu_rect.x + 4,
-                    menu_rect.y + 4 + visible_index * option_height,
-                    menu_rect.width - 8,
-                    option_height,
-                ),
-            )
-        )
-    return tuple(rects)
 
 
 def _surface_layout(
@@ -2669,7 +2549,7 @@ def _move_selected_row(state: StandaloneExplosionSurfaceState, step: int) -> Non
     previous_row = _dynamic_row_keys(state)[int(state.selected_index)]
     if state.numeric_text_row_key and previous_row == state.numeric_text_row_key:
         _commit_numeric_text_mode(state, allow_partial=False)
-    state.open_dropdown_row_key = None
+    _close_dropdown(state)
     row_keys = _dynamic_row_keys(state)
     state.selected_index = (int(state.selected_index) + int(step)) % len(row_keys)
     play_sfx("menu_move")
@@ -2733,7 +2613,7 @@ def _handle_escape_key(
         state.status_error = False
         return True
     if state.open_dropdown_row_key is not None:
-        state.open_dropdown_row_key = None
+        _close_dropdown(state)
         return True
     state.running = False
     return True
@@ -2758,31 +2638,15 @@ def _handle_numeric_text_keydown(
     *,
     row_key: str,
 ) -> bool:
-    if _numeric_spec_for_row(state, row_key) is None:
-        return False
-    if state.numeric_text_row_key != row_key and key not in (
-        pygame.K_BACKSPACE,
-        pygame.K_PERIOD,
-        pygame.K_KP_PERIOD,
-    ) and not (pygame.K_0 <= key <= pygame.K_9):
-        return False
-    if state.numeric_text_row_key != row_key:
-        _start_numeric_text_mode(state, row_key)
-    if key == pygame.K_BACKSPACE:
-        state.numeric_text_buffer = str(state.numeric_text_buffer)[:-1]
-        return True
-    if key in (pygame.K_PERIOD, pygame.K_KP_PERIOD):
-        spec = _numeric_spec_for_row(state, row_key)
-        if spec is not None and spec.decimals > 0 and "." not in str(state.numeric_text_buffer):
-            state.numeric_text_buffer = f"{state.numeric_text_buffer}."
-        return True
-    if pygame.K_0 <= key <= pygame.K_9:
-        _append_numeric_text_input(state, chr(key))
-        return True
-    if key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-        _commit_numeric_text_mode(state, allow_partial=False)
-        return True
-    return False
+    return _controls_handle_numeric_text_keydown(
+        state,
+        key,
+        row_key=row_key,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+        start_numeric_mode=lambda key: _start_numeric_text_mode(state, key),
+        append_input=lambda text: _append_numeric_text_input(state, text),
+        commit_mode=lambda: _commit_numeric_text_mode(state, allow_partial=False),
+    )
 
 
 def _scene_camera_for_state(state: StandaloneExplosionSurfaceState):
@@ -2812,10 +2676,7 @@ def _row_index_at_position(
         layout=layout,
         fonts=fonts,
     )
-    for index, row_rect in enumerate(row_rects):
-        if row_rect.collidepoint(position):
-            return index
-    return None
+    return _controls_row_index_at_position(row_rects, position=position)
 
 
 def _interactive_row_geometry(
@@ -2840,61 +2701,34 @@ def _open_dropdown_selection_from_click(
     fonts,
     position: tuple[int, int],
 ) -> bool:
-    if state.open_dropdown_row_key is None:
-        return False
     row_layouts, row_rects = _interactive_row_geometry(
         state,
         layout=layout,
         fonts=fonts,
     )
-    open_index = next(
-        (
-            idx
-            for idx, row_layout in enumerate(row_layouts)
-            if row_layout.row_key == state.open_dropdown_row_key
-        ),
-        None,
-    )
-    if open_index is None:
-        state.open_dropdown_row_key = None
-        return False
-    options = _dropdown_values_for_row(state, state.open_dropdown_row_key)
-    if not options:
-        state.open_dropdown_row_key = None
-        return False
-    menu_rect = _dropdown_menu_rect(
-        row_rects[open_index],
-        option_count=len(options),
-        viewport=layout.row_viewport,
-        font=fonts.menu_font,
-    )
-    if not menu_rect.collidepoint(position):
-        state.open_dropdown_row_key = None
-        return False
-    for option_index, option_rect in _dropdown_option_rects(
+    row_key, changed = _controls_select_dropdown_option_from_click(
         state,
-        menu_rect=menu_rect,
-        option_count=len(options),
+        position=position,
+        row_layouts=row_layouts,
+        row_rects=row_rects,
+        layout_viewport=layout.row_viewport,
         font=fonts.menu_font,
-    ):
-        if not option_rect.collidepoint(position):
-            continue
-        row_key = state.open_dropdown_row_key
-        changed = _apply_dropdown_value(
+        options_for_row=lambda key: _dropdown_values_for_row(state, key),
+        apply_value=lambda key, raw_value: _apply_dropdown_value(
             state,
-            row_key=row_key,
-            raw_value=options[int(option_index)][0],
-        )
-        state.open_dropdown_row_key = None
-        state.dropdown_hover_index = None
-        if changed:
-            if _requires_restart_for_row(row_key):
-                restart_standalone_explosion(state)
-            else:
-                _apply_nonrestart_row_status(state, row_key=row_key)
-            play_sfx("menu_confirm")
-            return True
-    state.open_dropdown_row_key = None
+            row_key=key,
+            raw_value=raw_value,
+        ),
+        menu_width=_DROPDOWN_MENU_WIDTH,
+        option_vertical_padding=_DROPDOWN_OPTION_VERTICAL_PADDING,
+    )
+    if changed and row_key is not None:
+        if _requires_restart_for_row(row_key):
+            restart_standalone_explosion(state)
+        else:
+            _apply_nonrestart_row_status(state, row_key=row_key)
+        play_sfx("menu_confirm")
+        return True
     return False
 
 
@@ -2918,11 +2752,16 @@ def _update_hover_state(
         if row_rect.collidepoint(position):
             state.hovered_row_key = row_layout.row_key
             break
-    state.dropdown_hover_index = _dropdown_option_index_at_position(
+    _controls_update_dropdown_hover_index(
         state,
-        layout=layout,
-        fonts=fonts,
+        row_layouts=row_layouts,
+        row_rects=row_rects,
+        layout_viewport=layout.row_viewport,
+        font=fonts.menu_font,
         position=position,
+        options_for_row=lambda key: _dropdown_values_for_row(state, key),
+        menu_width=_DROPDOWN_MENU_WIDTH,
+        option_vertical_padding=_DROPDOWN_OPTION_VERTICAL_PADDING,
     )
     return False
 
@@ -2934,41 +2773,22 @@ def _dropdown_option_index_at_position(
     fonts,
     position: tuple[int, int],
 ) -> int | None:
-    if state.open_dropdown_row_key is None:
-        return None
     row_layouts, row_rects = _interactive_row_geometry(
         state,
         layout=layout,
         fonts=fonts,
     )
-    open_index = next(
-        (
-            idx
-            for idx, row_layout in enumerate(row_layouts)
-            if row_layout.row_key == state.open_dropdown_row_key
-        ),
-        None,
-    )
-    if open_index is None:
-        return None
-    options = _dropdown_values_for_row(state, state.open_dropdown_row_key)
-    if not options:
-        return None
-    menu_rect = _dropdown_menu_rect(
-        row_rects[open_index],
-        option_count=len(options),
-        viewport=layout.row_viewport,
-        font=fonts.menu_font,
-    )
-    for option_index, option_rect in _dropdown_option_rects(
+    return _controls_dropdown_option_index_at_position(
         state,
-        menu_rect=menu_rect,
-        option_count=len(options),
+        row_layouts=row_layouts,
+        row_rects=row_rects,
+        layout_viewport=layout.row_viewport,
         font=fonts.menu_font,
-    ):
-        if option_rect.collidepoint(position):
-            return option_index
-    return None
+        position=position,
+        options_for_row=lambda key: _dropdown_values_for_row(state, key),
+        menu_width=_DROPDOWN_MENU_WIDTH,
+        option_vertical_padding=_DROPDOWN_OPTION_VERTICAL_PADDING,
+    )
 
 
 def _handle_dropdown_scroll(
@@ -2978,39 +2798,22 @@ def _handle_dropdown_scroll(
     layout: _SurfaceLayout,
     fonts,
 ) -> bool:
-    if event.type != pygame.MOUSEWHEEL or state.open_dropdown_row_key is None:
-        return False
     row_layouts, row_rects = _interactive_row_geometry(
         state,
         layout=layout,
         fonts=fonts,
     )
-    open_index = next(
-        (
-            idx
-            for idx, row_layout in enumerate(row_layouts)
-            if row_layout.row_key == state.open_dropdown_row_key
-        ),
-        None,
-    )
-    if open_index is None:
-        return False
-    options = _dropdown_values_for_row(state, state.open_dropdown_row_key)
-    menu_rect = _dropdown_menu_rect(
-        row_rects[open_index],
-        option_count=len(options),
-        viewport=layout.row_viewport,
-        font=fonts.menu_font,
-    )
-    start, end = _dropdown_visible_slice(
+    return _controls_update_dropdown_scroll(
         state,
-        option_count=len(options),
-        menu_rect=menu_rect,
+        event,
+        row_layouts=row_layouts,
+        row_rects=row_rects,
+        layout_viewport=layout.row_viewport,
         font=fonts.menu_font,
+        options_for_row=lambda key: _dropdown_values_for_row(state, key),
+        menu_width=_DROPDOWN_MENU_WIDTH,
+        option_vertical_padding=_DROPDOWN_OPTION_VERTICAL_PADDING,
     )
-    del start, end
-    state.dropdown_scroll_offset = max(0, int(state.dropdown_scroll_offset) - int(event.y))
-    return True
 
 
 def _handle_slider_pointer_event(
@@ -3044,16 +2847,18 @@ def _handle_slider_pointer_event(
     if row_index is None:
         return False
     slider_rect = _slider_rect_for_row(row_rects[row_index], row_layouts[row_index])
-    spec = _numeric_spec_for_row(state, candidate_row_key)
-    if slider_rect is None or spec is None:
+    if slider_rect is None:
         return False
-    fraction = _slider_fraction_from_pointer(slider_rect, position[0])
-    value = float(spec.minimum) + fraction * (float(spec.maximum) - float(spec.minimum))
-    if spec.decimals <= 0:
-        value = round(value / max(1.0, spec.step)) * spec.step
-    _set_numeric_value_for_row(state, candidate_row_key, value)
+    if not _controls_set_slider_value_from_pointer(
+        candidate_row_key,
+        pointer_x=position[0],
+        slider_rect=slider_rect,
+        spec_for_row=lambda key: _numeric_spec_for_row(state, key),
+        set_value_for_row=lambda key, value: _set_numeric_value_for_row(state, key, value),
+    ):
+        return False
     state.selected_index = row_index
-    state.open_dropdown_row_key = None
+    _close_dropdown(state)
     return True
 
 
@@ -3094,14 +2899,7 @@ def _row_index_for_key(
 
 
 def _slider_fraction_from_pointer(slider_rect: pygame.Rect, pointer_x: int) -> float:
-    return max(
-        0.0,
-        min(
-            1.0,
-            (float(pointer_x) - float(slider_rect.x))
-            / max(1.0, float(max(1, slider_rect.width - 1))),
-        ),
-    )
+    return _controls_slider_fraction_from_pointer(slider_rect, pointer_x)
 
 
 def _process_launcher_events(
@@ -3208,7 +3006,7 @@ def _handle_left_click(
         position=position,
     )
     if row_index is None:
-        state.open_dropdown_row_key = None
+        _close_dropdown(state)
         return False
     previous_row = _dynamic_row_keys(state)[int(state.selected_index)]
     if state.numeric_text_row_key and previous_row == state.numeric_text_row_key and row_index != int(state.selected_index):
@@ -3216,11 +3014,9 @@ def _handle_left_click(
     state.selected_index = int(row_index)
     row_key = _dynamic_row_keys(state)[int(state.selected_index)]
     if _row_control_kind(row_key) == "dropdown" and row_key not in state.locked_rows:
-        state.open_dropdown_row_key = row_key
-        state.dropdown_scroll_offset = 0
-        state.dropdown_hover_index = None
+        _open_dropdown(state, row_key=row_key)
     else:
-        state.open_dropdown_row_key = None
+        _close_dropdown(state)
     if _numeric_spec_for_row(state, row_key) is not None and state.hovered_row_key == row_key:
         _start_numeric_text_mode(state, row_key)
     if row_key in {"save", "restart", "back"}:

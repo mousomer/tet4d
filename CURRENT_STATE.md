@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-04-19  
+Last updated: 2026-04-23  
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -122,6 +122,16 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
   camera-control path, and
+  Stage 2 shared-controls extraction now routes generic dropdown behavior,
+  numeric text/slider/stepper state, row layout, wrapped label/value spacing,
+  hit-testing, and control-level pointer/keyboard semantics through
+  `src/tet4d/ui/pygame/controls/` so
+  `locked_cell_explosion/surface.py` stays focused on simulator row
+  inventory, row-to-domain mapping, simulator actions, and simulator-only
+  preview/footer composition; Stage 2 closeout also recorded the supporting
+  authority/doc scope in `docs/plans/explosion_refactor_ownership_split.md`,
+  `docs/plans/README.md`, `docs/plans/plan_authority_map.md`, and
+  `docs/rds/RDS_TETRIS_GENERAL.md`, and
   seam/bounce contact presentation must start on the actual board boundary
   planes while bounce-mode post-contact state remains strictly inside the
   board volume; the canonical rendered/simulated board boundary is the shared
@@ -129,7 +139,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   contact, box/edge-grid rendering, and render-only boundary guides; wrapped
   simulator rows/footer text must remain unobscured, and game-end render/audio
   handoff must route through the shared controller rather than gameplay
-  tetromino ownership.
+  tetromino ownership. The current refactor authority for splitting simulator
+  accumulation into shared board presentation, shared controls, shared
+  explosion runtime, and thin simulator/explorer/endgame/gameplay adapters is
+  `docs/plans/explosion_refactor_ownership_split.md`.
 - Governance after the policy-pack migration stays locked to:
   `config/project/policy_pack.json` for machine-readable policy,
   `docs/WORKFLOW_CODEX.md` for human workflow, and `CURRENT_STATE.md` for
@@ -196,11 +209,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.42` (`low`)
+- `tech_debt.score = 5.44` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.50`
+1. `delivery_size_pressure = 2.53`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -212,8 +225,8 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2969` real LOC
-3. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
+2. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
+3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2769` real LOC
 4. `src/tet4d/ui/pygame/endgame_animation.py`: `2398` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC

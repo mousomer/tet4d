@@ -20,6 +20,7 @@ planning redirection notes.
 | Planning-layer taxonomy, file roles, retirement rules | `README.md` |
 | Planning-document ownership and precedence | `plan_authority_map.md` |
 | Repo-wide structural cleanup sequencing | `cleanup_master_plan.md` |
+| Locked-cell explosion refactor ownership split and extraction order | `explosion_refactor_ownership_split.md` |
 | Topology-playground architecture, invariants, non-goals | `topology_playground_current_authority.md` |
 | Topology-playground visible shell contract | `topology_playground_shell_redesign_spec.md` |
 | Topology-playground transitional debt | `topology_playground_debt_register.md` |
