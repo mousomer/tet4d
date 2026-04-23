@@ -25,6 +25,9 @@ from tet4d.ui.pygame import (
 )
 from tet4d.ui.pygame.front2d_session import LoopContext2D
 from tet4d.ui.pygame.locked_cell_explosion import defaults_store as explosion_defaults_store
+from tet4d.ui.pygame.locked_cell_explosion import (
+    build_standalone_explosion_surface_state,
+)
 from tet4d.ui.pygame.render import gfx_game
 from tet4d.ui.pygame.runtime_ui import loop_runner_nd
 
@@ -154,6 +157,15 @@ class TestEndgameAnimation(unittest.TestCase):
         return replace(endgame_animation.load_endgame_animation_tuning(), **updates)
 
     def test_terminal_transition_creates_2d_endgame_snapshot(self) -> None:
+        self._temp_settings_root()
+        ok, msg = explosion_defaults_store.save_mode_explosion_defaults(
+            "2d",
+            explosion_defaults_store.ExplosionDefaults(
+                boundary_response="bounce",
+                particle_collisions="on",
+            ),
+        )
+        self.assertTrue(ok, msg)
         loop = LoopContext2D.create(GameConfig(width=6, height=8, speed_level=1))
         loop.state.board.cells.clear()
         loop.state.board.cells[(1, 6)] = 3
@@ -191,25 +203,55 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(snapshot.particle_collisions, "on")
         self.assertAlmostEqual(snapshot.relic_speed_scale, 1.4)
         self.assertAlmostEqual(snapshot.shatter_speed_scale, 0.8)
+        self.assertEqual(len(snapshot.live_locked_cells), 2)
 
     def test_saved_explosion_defaults_feed_endgame_snapshot_and_controller(self) -> None:
         self._temp_settings_root()
+        saved_defaults = explosion_defaults_store.ExplosionDefaults(
+            boundary_response="bounce",
+            particle_collisions="on",
+            mass_mode="random",
+            base_mass=1.6,
+            random_mass_min=0.8,
+            random_mass_max=2.4,
+            collision_elasticity=0.3,
+            diagnostics_mode="summary",
+            grid_mode="edge",
+            shadow_mode="all_boundaries",
+            trace_enabled=True,
+            trace_retention_ms=1800.0,
+            speed_preset="fast",
+            w_movement_animation_style="box_size",
+            endgame_live_cell_fraction=0.45,
+            sound_enabled=False,
+            seed=8080,
+        )
         ok, msg = explosion_defaults_store.save_mode_explosion_defaults(
             "2d",
-            explosion_defaults_store.ExplosionDefaults(
-                boundary_response="bounce",
-                particle_collisions="on",
-                mass_mode="random",
-                base_mass=1.6,
-                random_mass_min=0.8,
-                random_mass_max=2.4,
-                collision_elasticity=0.3,
-                speed_preset="fast",
-                sound_enabled=False,
-                seed=8080,
-            ),
+            saved_defaults,
         )
         self.assertTrue(ok, msg)
+        persisted = menu_settings_state.load_app_settings_payload()
+        persisted_defaults = persisted["explosion_defaults"]["2d"]
+        self.assertEqual(persisted_defaults["boundary_response"], "bounce")
+        self.assertEqual(persisted_defaults["particle_collisions"], "on")
+        self.assertEqual(persisted_defaults["mass_mode"], "random")
+        self.assertEqual(persisted_defaults["grid_mode"], "edge")
+        self.assertEqual(persisted_defaults["shadow_mode"], "all_boundaries")
+        self.assertTrue(persisted_defaults["trace_enabled"])
+        self.assertAlmostEqual(persisted_defaults["trace_retention_ms"], 1800.0)
+        self.assertEqual(persisted_defaults["w_movement_animation_style"], "box_size")
+
+        reloaded_defaults = explosion_defaults_store.mode_explosion_defaults("2d")
+        self.assertEqual(reloaded_defaults, saved_defaults)
+        simulator_state = build_standalone_explosion_surface_state(dimension=2)
+        self.assertEqual(simulator_state.boundary_response, "bounce")
+        self.assertEqual(simulator_state.particle_collisions, "on")
+        self.assertEqual(simulator_state.mass_mode, "random")
+        self.assertEqual(simulator_state.grid_mode.value, "edge")
+        self.assertEqual(simulator_state.shadow_mode.value, "all_boundaries")
+        self.assertTrue(simulator_state.trace_enabled)
+        self.assertAlmostEqual(simulator_state.trace_retention_ms, 1800.0)
         loop = LoopContext2D.create(GameConfig(width=6, height=8, speed_level=1))
         loop.state.board.cells.clear()
         loop.state.board.cells[(1, 6)] = 3
@@ -222,18 +264,27 @@ class TestEndgameAnimation(unittest.TestCase):
         ):
             snapshot = front2d_frame._capture_endgame_snapshot_2d(loop)
 
-        self.assertEqual(snapshot.boundary_response, "escape")
-        self.assertEqual(snapshot.particle_collisions, "off")
+        self.assertEqual(snapshot.boundary_response, "bounce")
+        self.assertEqual(snapshot.particle_collisions, "on")
         self.assertEqual(snapshot.mass_mode, "random")
         self.assertAlmostEqual(snapshot.base_mass, 1.6)
         self.assertAlmostEqual(snapshot.random_mass_min, 0.8)
         self.assertAlmostEqual(snapshot.random_mass_max, 2.4)
         self.assertAlmostEqual(snapshot.collision_elasticity, 0.3)
+        self.assertEqual(snapshot.diagnostics_mode, "summary")
+        self.assertEqual(snapshot.grid_mode, "edge")
+        self.assertEqual(snapshot.shadow_mode, "all_boundaries")
+        self.assertTrue(snapshot.trace_enabled)
+        self.assertAlmostEqual(snapshot.trace_retention_ms, 1800.0)
+        self.assertEqual(snapshot.w_movement_animation_style, "box_size")
         self.assertEqual(snapshot.speed_preset, "fast")
+        self.assertAlmostEqual(snapshot.endgame_live_cell_fraction, 0.45)
         self.assertFalse(snapshot.sound_enabled)
 
         animation = endgame_animation.build_endgame_animation_state(snapshot)
 
+        self.assertEqual(animation.explosion_controller.config.boundary_response, "bounce")
+        self.assertEqual(animation.explosion_controller.config.particle_collisions, "on")
         self.assertEqual(animation.explosion_controller.config.mass_mode, "random")
         self.assertAlmostEqual(animation.explosion_controller.config.base_mass, 1.6)
         self.assertAlmostEqual(
@@ -245,8 +296,150 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertAlmostEqual(
             animation.explosion_controller.config.collision_elasticity, 0.3
         )
+        self.assertEqual(animation.explosion_controller.config.diagnostics_mode, "summary")
+        self.assertAlmostEqual(
+            animation.explosion_controller.config.trace_retention_ms, 1800.0
+        )
         self.assertEqual(animation.explosion_controller.config.speed_preset, "fast")
         self.assertFalse(animation.explosion_controller.config.sound_enabled)
+
+    def test_endgame_live_cell_count_uses_fraction_floor_and_cap(self) -> None:
+        self.assertEqual(
+            endgame_animation.endgame_live_cell_count(
+                dimension=2,
+                board_dims=(10, 20),
+                available_locked_cells=17,
+                live_fraction=0.12,
+            ),
+            17,
+        )
+        self.assertEqual(
+            endgame_animation.endgame_live_cell_count(
+                dimension=2,
+                board_dims=(40, 20),
+                available_locked_cells=500,
+                live_fraction=0.12,
+            ),
+            96,
+        )
+        self.assertEqual(
+            endgame_animation.endgame_live_cell_count(
+                dimension=3,
+                board_dims=(4, 4, 4),
+                available_locked_cells=55,
+                live_fraction=0.01,
+            ),
+            40,
+        )
+        self.assertEqual(
+            endgame_animation.endgame_live_cell_count(
+                dimension=4,
+                board_dims=(4, 4, 4, 4),
+                available_locked_cells=48,
+                live_fraction=0.12,
+            ),
+            48,
+        )
+
+    def test_endgame_live_cell_selection_is_deterministic_and_order_stable(self) -> None:
+        locked_cells = (
+            endgame_animation.SnapshotCell(
+                source_coord=(3, 0, 1),
+                position=(3.0, 0.0, 1.0),
+                color_id=2,
+            ),
+            endgame_animation.SnapshotCell(
+                source_coord=(0, 2, 1),
+                position=(0.0, 2.0, 1.0),
+                color_id=5,
+            ),
+            endgame_animation.SnapshotCell(
+                source_coord=(1, 1, 1),
+                position=(1.0, 1.0, 1.0),
+                color_id=4,
+            ),
+            endgame_animation.SnapshotCell(
+                source_coord=(2, 3, 0),
+                position=(2.0, 3.0, 0.0),
+                color_id=1,
+            ),
+            endgame_animation.SnapshotCell(
+                source_coord=(0, 0, 3),
+                position=(0.0, 0.0, 3.0),
+                color_id=7,
+            ),
+        )
+
+        selected_a = endgame_animation.select_endgame_live_locked_cells(
+            locked_cells=locked_cells,
+            board_dims=(5, 5, 5),
+            dimension=3,
+            seed=1337,
+            live_fraction=0.03,
+        )
+        selected_b = endgame_animation.select_endgame_live_locked_cells(
+            locked_cells=tuple(reversed(locked_cells)),
+            board_dims=(5, 5, 5),
+            dimension=3,
+            seed=1337,
+            live_fraction=0.03,
+        )
+
+        self.assertEqual(selected_a, selected_b)
+
+    def test_endgame_snapshot_limits_live_explosion_subset(self) -> None:
+        locked_cells = tuple(
+            endgame_animation.SnapshotCell(
+                source_coord=(index % 5, index // 5),
+                position=(float(index % 5), float(index // 5), 0.0),
+                color_id=(index % 7) + 1,
+            )
+            for index in range(60)
+        )
+
+        snapshot = endgame_animation.create_snapshot(
+            dimension=2,
+            board_dims=(20, 20),
+            render_dims=(20, 20, 1),
+            locked_cells=locked_cells,
+            base_seed=2026,
+            render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+            endgame_live_cell_fraction=0.12,
+        )
+        animation = endgame_animation.build_endgame_animation_state(snapshot)
+
+        self.assertEqual(len(snapshot.locked_cells), 60)
+        self.assertEqual(len(snapshot.live_locked_cells), 48)
+        self.assertEqual(
+            len(animation.explosion_controller.simulation.particles),
+            len(snapshot.live_locked_cells),
+        )
+        self.assertLess(
+            len(snapshot.live_locked_cells),
+            len(snapshot.locked_cells),
+        )
+
+    def test_small_board_floor_prevents_empty_endgame_subset(self) -> None:
+        locked_cells = tuple(
+            endgame_animation.SnapshotCell(
+                source_coord=(index % 6, index // 6),
+                position=(float(index % 6), float(index // 6), 0.0),
+                color_id=1,
+            )
+            for index in range(24)
+        )
+
+        snapshot = endgame_animation.create_snapshot(
+            dimension=2,
+            board_dims=(6, 6),
+            render_dims=(6, 6, 1),
+            locked_cells=locked_cells,
+            base_seed=99,
+            render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+            endgame_live_cell_fraction=0.12,
+        )
+
+        self.assertEqual(len(snapshot.live_locked_cells), 20)
 
     def test_preset_registry_resolves_required_relic_field_presets(self) -> None:
         tuning = endgame_animation.load_endgame_animation_tuning()

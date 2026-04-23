@@ -273,6 +273,11 @@ def test_endgame_sessions_still_record_when_qualifying(monkeypatch) -> None:
     monkeypatch.setattr(leaderboard_menu, "leaderboard_entry_would_enter", _qualifies)
     monkeypatch.setattr(leaderboard_menu, "prompt_leaderboard_player_name", _prompt)
     monkeypatch.setattr(leaderboard_menu, "record_leaderboard_entry", _record)
+    monkeypatch.setattr(
+        leaderboard_menu,
+        "get_analytics_settings",
+        lambda: {"score_logging_enabled": True},
+    )
 
     recorded = leaderboard_menu.maybe_record_leaderboard_session(
         None,
@@ -296,6 +301,44 @@ def test_endgame_sessions_still_record_when_qualifying(monkeypatch) -> None:
     assert calls == ["rank", "prompt", "record"]
 
 
+def test_leaderboard_registration_setting_off_suppresses_prompt(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def _boom(*_args, **_kwargs):
+        calls.append("unexpected")
+        raise AssertionError("leaderboard registration should be disabled")
+
+    monkeypatch.setattr(
+        leaderboard_menu,
+        "get_analytics_settings",
+        lambda: {"score_logging_enabled": False},
+    )
+    monkeypatch.setattr(leaderboard_menu, "leaderboard_entry_would_enter", _boom)
+    monkeypatch.setattr(leaderboard_menu, "prompt_leaderboard_player_name", _boom)
+    monkeypatch.setattr(leaderboard_menu, "record_leaderboard_entry", _boom)
+
+    recorded = leaderboard_menu.maybe_record_leaderboard_session(
+        None,
+        None,
+        dimension=2,
+        score=999,
+        lines_cleared=0,
+        start_speed_level=1,
+        end_speed_level=1,
+        duration_seconds=1.0,
+        outcome="game_over",
+        bot_mode="off",
+        grid_mode="full",
+        random_mode="fixed_seed",
+        topology_mode="bounded",
+        kick_level="off",
+        exploration_mode=False,
+    )
+
+    assert recorded is False
+    assert calls == []
+
+
 def test_maybe_record_passes_modal_background_and_summary(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
@@ -310,6 +353,11 @@ def test_maybe_record_passes_modal_background_and_summary(monkeypatch) -> None:
     monkeypatch.setattr(leaderboard_menu, "leaderboard_entry_would_enter", _qualifies)
     monkeypatch.setattr(leaderboard_menu, "prompt_leaderboard_player_name", _prompt)
     monkeypatch.setattr(leaderboard_menu, "record_leaderboard_entry", lambda **_kwargs: None)
+    monkeypatch.setattr(
+        leaderboard_menu,
+        "get_analytics_settings",
+        lambda: {"score_logging_enabled": True},
+    )
 
     background_calls: list[str] = []
     recorded = leaderboard_menu.maybe_record_leaderboard_session(

@@ -109,7 +109,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   defaults model now seeds standalone startup, explorer-triggered simulator
   launches where relevant, and overlapping endgame explosion-controller
   defaults with transient runtime-only simulator state excluded from
-  serialization,
+  serialization; endgame snapshot capture must not let the legacy endgame
+  settings branch override saved shared boundary/collision/default behavior;
+  that shared saved profile now also owns
+  `endgame_live_cell_fraction` (default `0.12`), and endgame launch applies a
+  thin deterministic live-subset adapter before calling the shared explosion
+  runtime so only a readable fraction of locked gameplay cells enter live
+  simulation, using `max(dimension_floor, round(fraction * total_board_cells))`
+  with floors `20` / `40` / `60` for `2D` / `3D` / `4D` and capping by the
+  available locked-cell count,
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
@@ -184,11 +192,11 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 243` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 244` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.41` (`low`)
+- `tech_debt.score = 5.42` (`low`)
 
 Dominant remaining pressure:
 
@@ -204,9 +212,9 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2942` real LOC
-3. `tests/unit/render/test_locked_cell_explosion.py`: `2762` real LOC
-4. `src/tet4d/ui/pygame/endgame_animation.py`: `2265` real LOC
+2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2969` real LOC
+3. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
+4. `src/tet4d/ui/pygame/endgame_animation.py`: `2398` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
 7. `tools/governance/validate_project_contracts.py`: `1732` real LOC

@@ -30,10 +30,10 @@ def draw_game_over_banner(
     *,
     rect: pygame.Rect,
     fonts,
-    subtitle: str = "Final board snapshot breaking apart",
+    subtitle: str = "",
 ) -> None:
     banner_w = min(rect.width - 24, max(240, int(rect.width * 0.72)))
-    banner_h = max(72, fonts.title_font.get_height() + fonts.hint_font.get_height() + 24)
+    banner_h = max(56, fonts.title_font.get_height() + 24)
     banner_rect = pygame.Rect(0, 0, banner_w, banner_h)
     banner_rect.midtop = (rect.centerx, rect.y + 14)
     banner = pygame.Surface((banner_rect.width, banner_rect.height), pygame.SRCALPHA)
@@ -44,21 +44,11 @@ def draw_game_over_banner(
         text="GAME OVER",
         color=(255, 232, 236),
     )
-    subtitle_surf = render_text_cached(
-        font=fonts.hint_font,
-        text=str(subtitle),
-        color=(255, 188, 196),
-    )
     title_pos = (
         (banner_rect.width - title.get_width()) // 2,
-        8,
-    )
-    subtitle_pos = (
-        (banner_rect.width - subtitle_surf.get_width()) // 2,
-        title_pos[1] + title.get_height() - 2,
+        (banner_rect.height - title.get_height()) // 2,
     )
     banner.blit(title, title_pos)
-    banner.blit(subtitle_surf, subtitle_pos)
     surface.blit(banner, banner_rect.topleft)
 
 

@@ -164,12 +164,13 @@
         "grid_mode",
         "shadow_mode",
         "trace_enabled",
-        "trace_retention_ms",
-        "speed_preset",
-        "w_movement_animation_style",
-        "sound_enabled",
-        "seed"
-      ],
+            "trace_retention_ms",
+            "speed_preset",
+            "w_movement_animation_style",
+            "endgame_live_cell_fraction",
+            "sound_enabled",
+            "seed"
+          ],
       "properties": {
         "topology_preset_id": {
           "type": "string"
@@ -233,12 +234,15 @@
         "speed_preset": {
           "type": "string"
         },
-        "w_movement_animation_style": {
-          "type": "string"
-        },
-        "sound_enabled": {
-          "type": "boolean"
-        },
+            "w_movement_animation_style": {
+              "type": "string"
+            },
+            "endgame_live_cell_fraction": {
+              "type": "number"
+            },
+            "sound_enabled": {
+              "type": "boolean"
+            },
         "seed": {
           "type": "integer",
           "minimum": 0

@@ -43,7 +43,9 @@ from tet4d.ui.pygame.ui_utils import (
 from .board_view import draw_native_board_view
 from .controller import LockedCellExplosionController, build_locked_cell_explosion
 from .defaults_store import (
+    ENDGAME_LIVE_CELL_FRACTION_DEFAULT,
     ExplosionDefaults,
+    clamp_endgame_live_cell_fraction,
     mode_explosion_defaults,
     save_mode_explosion_defaults,
 )
@@ -231,6 +233,7 @@ class StandaloneExplosionSurfaceState:
     trace_retention_input_text: str = ""
     speed_preset: str = EXPLOSION_SPEED_NORMAL
     w_movement_animation_style: str = _W_MOVEMENT_ANIMATION_FADE
+    endgame_live_cell_fraction: float = ENDGAME_LIVE_CELL_FRACTION_DEFAULT
     sound_enabled: bool = True
     seed: int = 1337
     launch_speed_scale_override: float = 1.0
@@ -404,6 +407,7 @@ def _dynamic_row_keys(
             *(("w_movement_animation",) if int(state.dimension) == 4 else ()),
             "trace_enabled",
             "trace_retention",
+            "endgame_live_cell_fraction",
             "speed_preset",
             "sound_enabled",
             "seed",
@@ -436,6 +440,7 @@ def _row_label_text(row_key: str) -> str:
         "w_movement_animation": "W Movement",
         "trace_enabled": "Trace",
         "trace_retention": "Trace Retention",
+        "endgame_live_cell_fraction": "Endgame Live Fraction",
         "speed_preset": "Speed Preset",
         "sound_enabled": "Sound",
         "seed": "Seed",
@@ -576,6 +581,9 @@ def _normalize_simulation_settings(
     if str(state.w_movement_animation_style) not in _w_movement_animation_options():
         state.w_movement_animation_style = _W_MOVEMENT_ANIMATION_FADE
     state.trace_retention_ms = clamp_trace_retention_ms(state.trace_retention_ms)
+    state.endgame_live_cell_fraction = clamp_endgame_live_cell_fraction(
+        state.endgame_live_cell_fraction
+    )
     if not str(state.trace_retention_input_text).strip():
         state.trace_retention_input_text = _trace_retention_input_text(
             state.trace_retention_ms
@@ -659,6 +667,7 @@ def _apply_explosion_defaults(
     )
     state.speed_preset = str(defaults.speed_preset)
     state.w_movement_animation_style = str(defaults.w_movement_animation_style)
+    state.endgame_live_cell_fraction = float(defaults.endgame_live_cell_fraction)
     state.sound_enabled = bool(defaults.sound_enabled)
     state.seed = int(defaults.seed)
 
@@ -694,6 +703,7 @@ def _persistent_defaults_from_state(
         trace_retention_ms=float(state.trace_retention_ms),
         speed_preset=str(state.speed_preset),
         w_movement_animation_style=str(state.w_movement_animation_style),
+        endgame_live_cell_fraction=float(state.endgame_live_cell_fraction),
         sound_enabled=bool(state.sound_enabled),
         seed=int(state.seed),
     )
@@ -936,6 +946,7 @@ def build_explorer_explosion_surface_state(
         ),
         speed_preset=str(speed_preset or saved_defaults.speed_preset),
         w_movement_animation_style=str(saved_defaults.w_movement_animation_style),
+        endgame_live_cell_fraction=float(saved_defaults.endgame_live_cell_fraction),
         sound_enabled=bool(sound_enabled if sound_enabled is not None else saved_defaults.sound_enabled),
         seed=int(random_seed if random_seed is not None else saved_defaults.seed),
         launch_speed_scale_override=float(launch_speed_scale),
@@ -1041,6 +1052,14 @@ def _numeric_spec_for_row(
             decimals=2,
             unit_suffix=" s",
         )
+    if row_key == "endgame_live_cell_fraction":
+        return _NumericRowSpec(
+            row_key=row_key,
+            minimum=0.0,
+            maximum=1.0,
+            step=0.01,
+            decimals=2,
+        )
     if row_key == "seed":
         return _NumericRowSpec(
             row_key=row_key,
@@ -1084,6 +1103,8 @@ def _numeric_value_for_row(
         return float(state.collision_elasticity)
     if row_key == "trace_retention":
         return float(state.trace_retention_ms)
+    if row_key == "endgame_live_cell_fraction":
+        return float(state.endgame_live_cell_fraction)
     if row_key == "seed":
         return float(state.seed)
     if row_key.startswith("cell_"):
@@ -1131,6 +1152,9 @@ def _set_numeric_value_for_row(
             state.trace_retention_ms
         )
         _apply_live_trace_retention(state)
+        return
+    if row_key == "endgame_live_cell_fraction":
+        state.endgame_live_cell_fraction = clamp_endgame_live_cell_fraction(clamped)
         return
     if row_key == "seed":
         state.seed = int(round(clamped))
@@ -1297,7 +1321,7 @@ def _slider_fraction_for_row(
 def _row_control_kind(row_key: str) -> str:
     if row_key in {"save", "restart", "back"}:
         return "action"
-    if row_key in {"trace_retention", "seed", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"} or row_key.startswith("cell_"):
+    if row_key in {"trace_retention", "endgame_live_cell_fraction", "seed", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"} or row_key.startswith("cell_"):
         return "numeric"
     if row_key in {
         "dimension",
@@ -1550,7 +1574,7 @@ def _adjust_misc_simulation_row(
             step,
         )
         return True
-    if row_key in {"trace_retention", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"}:
+    if row_key in {"trace_retention", "endgame_live_cell_fraction", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"}:
         return _step_numeric_row(state, row_key=row_key, direction=step)
     if row_key == "trace_enabled":
         state.trace_enabled = not bool(state.trace_enabled)
@@ -1640,6 +1664,9 @@ def _row_value_overrides(
         ],
         "trace_enabled": "ON" if state.trace_enabled else "OFF",
         "trace_retention": _numeric_display_text_for_row(state, "trace_retention"),
+        "endgame_live_cell_fraction": _numeric_display_text_for_row(
+            state, "endgame_live_cell_fraction"
+        ),
         "base_mass": _numeric_display_text_for_row(state, "base_mass"),
         "random_mass_min": _numeric_display_text_for_row(state, "random_mass_min"),
         "random_mass_max": _numeric_display_text_for_row(state, "random_mass_max"),

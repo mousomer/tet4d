@@ -35,6 +35,15 @@ _SNAPSHOT_SOURCES = (
     "inherited_current_state",
 )
 _W_MOVEMENT_ANIMATION_STYLES = ("fade", "box_size")
+ENDGAME_LIVE_CELL_FRACTION_DEFAULT = 0.12
+
+
+def clamp_endgame_live_cell_fraction(value: object) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        numeric = float(ENDGAME_LIVE_CELL_FRACTION_DEFAULT)
+    else:
+        numeric = float(value)
+    return max(0.0, min(1.0, numeric))
 
 
 @dataclass(frozen=True)
@@ -59,6 +68,7 @@ class ExplosionDefaults:
     trace_retention_ms: float = EXPLOSION_TRAIL_MAX_LIFETIME_MS
     speed_preset: str = EXPLOSION_SPEED_NORMAL
     w_movement_animation_style: str = "fade"
+    endgame_live_cell_fraction: float = ENDGAME_LIVE_CELL_FRACTION_DEFAULT
     sound_enabled: bool = True
     seed: int = 1337
 
@@ -173,6 +183,12 @@ def coerce_explosion_defaults(
             allowed=_W_MOVEMENT_ANIMATION_STYLES,
             default=fallback.w_movement_animation_style,
         ),
+        endgame_live_cell_fraction=clamp_endgame_live_cell_fraction(
+            payload.get(
+                "endgame_live_cell_fraction",
+                fallback.endgame_live_cell_fraction,
+            )
+        ),
         sound_enabled=bool(payload.get("sound_enabled", fallback.sound_enabled)),
         seed=_coerce_seed(payload.get("seed", fallback.seed), default=fallback.seed),
     )
@@ -217,6 +233,8 @@ def save_mode_explosion_defaults(
 
 __all__ = [
     "ExplosionDefaults",
+    "ENDGAME_LIVE_CELL_FRACTION_DEFAULT",
+    "clamp_endgame_live_cell_fraction",
     "coerce_explosion_defaults",
     "default_explosion_defaults",
     "mode_explosion_defaults",

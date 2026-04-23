@@ -10,6 +10,7 @@ from tet4d.engine.runtime.leaderboard import (
     leaderboard_top_entries,
     record_leaderboard_entry,
 )
+from tet4d.engine.runtime.menu_settings_state import get_analytics_settings
 from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.runtime.settings_schema import sanitize_text
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
@@ -718,6 +719,8 @@ def maybe_record_leaderboard_session(
     exploration_mode: bool,
     draw_background: Callable[[], None] | None = None,
 ) -> bool:
+    if not bool(get_analytics_settings().get("score_logging_enabled", False)):
+        return False
     if not _session_is_recordable(
         outcome=outcome,
         exploration_mode=exploration_mode,

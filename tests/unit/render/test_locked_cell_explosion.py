@@ -1041,6 +1041,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             trace_retention_ms=1333.0,
             speed_preset="fast",
             w_movement_animation_style="box_size",
+            endgame_live_cell_fraction=0.27,
             sound_enabled=False,
             seed=4242,
         )
@@ -1076,6 +1077,7 @@ class TestLockedCellExplosion(unittest.TestCase):
                 trace_enabled=True,
                 trace_retention_ms=900.0,
                 speed_preset="slow",
+                endgame_live_cell_fraction=0.41,
                 sound_enabled=False,
                 seed=9090,
             ),
@@ -1098,6 +1100,7 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertTrue(state.trace_enabled)
         self.assertAlmostEqual(state.trace_retention_ms, 900.0)
         self.assertEqual(state.speed_preset, "slow")
+        self.assertAlmostEqual(state.endgame_live_cell_fraction, 0.41)
         self.assertFalse(state.sound_enabled)
         self.assertEqual(state.seed, 9090)
 
@@ -1127,6 +1130,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             loaded.trace_retention_ms, EXPLOSION_TRAIL_RETENTION_MAX_MS
         )
         self.assertEqual(loaded.seed, 0)
+        self.assertEqual(loaded.endgame_live_cell_fraction, 0.12)
 
     def test_save_action_persists_defaults_from_keyboard_and_mouse(self) -> None:
         self._temp_settings_root()
@@ -1140,6 +1144,7 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.collision_elasticity = 0.45
         state.grid_mode = GridMode.OFF
         state.trace_enabled = True
+        state.endgame_live_cell_fraction = 0.33
         state.seed = 5151
         save_index = explosion_launcher._dynamic_row_keys(state).index("save")
         state.selected_index = save_index
@@ -1149,6 +1154,7 @@ class TestLockedCellExplosion(unittest.TestCase):
         loaded = explosion_defaults_store.mode_explosion_defaults("3d")
         self.assertEqual(loaded.seed, 5151)
         self.assertEqual(loaded.boundary_response, "bounce")
+        self.assertAlmostEqual(loaded.endgame_live_cell_fraction, 0.33)
 
         screen = pygame.Surface((960, 720))
         fonts = self._fonts()
@@ -1181,6 +1187,26 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
 
         self.assertEqual(explosion_defaults_store.mode_explosion_defaults("3d").seed, 6161)
+
+    def test_endgame_live_fraction_row_is_available_and_clamped(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+
+        self.assertIn(
+            "endgame_live_cell_fraction",
+            explosion_launcher._dynamic_row_keys(state),
+        )
+        explosion_launcher._set_numeric_value_for_row(
+            state,
+            "endgame_live_cell_fraction",
+            1.7,
+        )
+        self.assertEqual(state.endgame_live_cell_fraction, 1.0)
+        explosion_launcher._set_numeric_value_for_row(
+            state,
+            "endgame_live_cell_fraction",
+            -5.0,
+        )
+        self.assertEqual(state.endgame_live_cell_fraction, 0.0)
 
     def test_elastic_free_flight_diagnostics_do_not_flag_false_energy_loss(self) -> None:
         controller = build_locked_cell_explosion(

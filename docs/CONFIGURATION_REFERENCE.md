@@ -1010,6 +1010,7 @@ Parameters:
 - `explosion_defaults.2d.cell_origin[]`: array[`int`]; examples: `-1`
 - `explosion_defaults.2d.collision_elasticity`: `1.0` (`float`)
 - `explosion_defaults.2d.diagnostics_mode`: `"off"` (`string`)
+- `explosion_defaults.2d.endgame_live_cell_fraction`: `0.12` (`float`)
 - `explosion_defaults.2d.grid_mode`: `"full"` (`string`)
 - `explosion_defaults.2d.mass_mode`: `"uniform"` (`string`)
 - `explosion_defaults.2d.particle_collisions`: `"off"` (`string`)
@@ -1032,6 +1033,7 @@ Parameters:
 - `explosion_defaults.3d.cell_origin[]`: array[`int`]; examples: `-1`
 - `explosion_defaults.3d.collision_elasticity`: `1.0` (`float`)
 - `explosion_defaults.3d.diagnostics_mode`: `"off"` (`string`)
+- `explosion_defaults.3d.endgame_live_cell_fraction`: `0.12` (`float`)
 - `explosion_defaults.3d.grid_mode`: `"full"` (`string`)
 - `explosion_defaults.3d.mass_mode`: `"uniform"` (`string`)
 - `explosion_defaults.3d.particle_collisions`: `"off"` (`string`)
@@ -1054,6 +1056,7 @@ Parameters:
 - `explosion_defaults.4d.cell_origin[]`: array[`int`]; examples: `-1`
 - `explosion_defaults.4d.collision_elasticity`: `1.0` (`float`)
 - `explosion_defaults.4d.diagnostics_mode`: `"off"` (`string`)
+- `explosion_defaults.4d.endgame_live_cell_fraction`: `0.12` (`float`)
 - `explosion_defaults.4d.grid_mode`: `"full"` (`string`)
 - `explosion_defaults.4d.mass_mode`: `"uniform"` (`string`)
 - `explosion_defaults.4d.particle_collisions`: `"off"` (`string`)

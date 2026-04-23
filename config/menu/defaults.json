@@ -40,6 +40,7 @@
       "trace_retention_ms": 2640.0,
       "speed_preset": "normal",
       "w_movement_animation_style": "fade",
+      "endgame_live_cell_fraction": 0.12,
       "sound_enabled": true,
       "seed": 1337
     },
@@ -64,6 +65,7 @@
       "trace_retention_ms": 2640.0,
       "speed_preset": "normal",
       "w_movement_animation_style": "fade",
+      "endgame_live_cell_fraction": 0.12,
       "sound_enabled": true,
       "seed": 1337
     },
@@ -88,6 +90,7 @@
       "trace_retention_ms": 2640.0,
       "speed_preset": "normal",
       "w_movement_animation_style": "fade",
+      "endgame_live_cell_fraction": 0.12,
       "sound_enabled": true,
       "seed": 1337
     }

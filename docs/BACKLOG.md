@@ -49,8 +49,12 @@ Current active follow-ups:
   motion path; new movement-diagnostics monitoring should stay non-mutating,
   keep substage energy/localization logic tied to live simulation state, keep
   the shared `explosion_defaults` persistence path as the single source for
-  standalone/explorer/endgame explosion defaults, and avoid devolving into a
-  decorative final-energy readout
+  standalone/explorer/endgame explosion defaults, keep endgame launch on the
+  shared explosion runtime while using the saved `endgame_live_cell_fraction`
+  subset adapter instead of releasing every locked cell into live simulation
+  by default, keep legacy endgame settings from overriding saved shared
+  boundary/collision/default behavior, and avoid devolving into a decorative
+  final-energy readout
 
 - Open work:
   1. continue structural simplification of remaining

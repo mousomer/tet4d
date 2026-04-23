@@ -53,6 +53,7 @@ Shared locked-cell explosion simulator and endgame default settings persisted pe
 - `explosion_defaults.2d.trace_retention_ms`: `2640.0`; number
 - `explosion_defaults.2d.speed_preset`: `"normal"`; string
 - `explosion_defaults.2d.w_movement_animation_style`: `"fade"`; string
+- `explosion_defaults.2d.endgame_live_cell_fraction`: `0.12`; number
 - `explosion_defaults.2d.sound_enabled`: `true`; boolean
 - `explosion_defaults.2d.seed`: `1337`; integer; min: 0
 - `explosion_defaults.3d.topology_preset_id`: `""`; string
@@ -75,6 +76,7 @@ Shared locked-cell explosion simulator and endgame default settings persisted pe
 - `explosion_defaults.3d.trace_retention_ms`: `2640.0`; number
 - `explosion_defaults.3d.speed_preset`: `"normal"`; string
 - `explosion_defaults.3d.w_movement_animation_style`: `"fade"`; string
+- `explosion_defaults.3d.endgame_live_cell_fraction`: `0.12`; number
 - `explosion_defaults.3d.sound_enabled`: `true`; boolean
 - `explosion_defaults.3d.seed`: `1337`; integer; min: 0
 - `explosion_defaults.4d.topology_preset_id`: `""`; string
@@ -97,6 +99,7 @@ Shared locked-cell explosion simulator and endgame default settings persisted pe
 - `explosion_defaults.4d.trace_retention_ms`: `2640.0`; number
 - `explosion_defaults.4d.speed_preset`: `"normal"`; string
 - `explosion_defaults.4d.w_movement_animation_style`: `"fade"`; string
+- `explosion_defaults.4d.endgame_live_cell_fraction`: `0.12`; number
 - `explosion_defaults.4d.sound_enabled`: `true`; boolean
 - `explosion_defaults.4d.seed`: `1337`; integer; min: 0
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 import pygame
 
@@ -9,6 +10,7 @@ from tet4d.ui.pygame.render.panel_utils import (
     _append_stats_group,
     _compute_controls_rect,
     _stats_group_rows,
+    draw_game_over_banner,
     _join_sections,
     _merge_summary_into_main_group,
 )
@@ -135,6 +137,36 @@ class TestPanelUtils(unittest.TestCase):
         for line in wrapped:
             with self.subTest(line=line):
                 self.assertTrue(text_fits(font, line, 130))
+
+    def test_game_over_banner_omits_explanatory_subtitle(self) -> None:
+        surface = pygame.Surface((420, 280), pygame.SRCALPHA)
+        fonts = type(
+            "Fonts",
+            (),
+            {
+                "title_font": pygame.font.Font(None, 42),
+                "hint_font": pygame.font.Font(None, 20),
+            },
+        )()
+        calls: list[str] = []
+
+        def record_text(*, font, text, color):
+            del font, color
+            calls.append(str(text))
+            return pygame.Surface((120, 30), pygame.SRCALPHA)
+
+        with patch(
+            "tet4d.ui.pygame.render.panel_utils.render_text_cached",
+            side_effect=record_text,
+        ):
+            draw_game_over_banner(
+                surface,
+                rect=pygame.Rect(0, 0, 420, 280),
+                fonts=fonts,
+                subtitle="This explanation should not render",
+            )
+
+        self.assertEqual(calls, ["GAME OVER"])
 
 
 if __name__ == "__main__":

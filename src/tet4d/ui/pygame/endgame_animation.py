@@ -26,6 +26,10 @@ from tet4d.ui.pygame.locked_cell_explosion import (
     StandaloneExplosionConfig,
     build_locked_cell_explosion,
 )
+from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
+    ENDGAME_LIVE_CELL_FRACTION_DEFAULT,
+    clamp_endgame_live_cell_fraction,
+)
 
 Vec3 = tuple[float, float, float]
 VecN = tuple[float, ...]
@@ -493,6 +497,7 @@ class EndgameSnapshot:
     board_center: VecN
     render_center: Vec3
     locked_cells: tuple[SnapshotCell, ...]
+    live_locked_cells: tuple[SnapshotCell, ...]
     rng_seed: int
     render_context: EndgameRenderContext
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
@@ -503,7 +508,14 @@ class EndgameSnapshot:
     random_mass_min: float = 0.75
     random_mass_max: float = 1.25
     collision_elasticity: float = 1.0
+    diagnostics_mode: str = "off"
+    trace_retention_ms: float = 2640.0
     speed_preset: str = "normal"
+    grid_mode: str = "full"
+    shadow_mode: str = "off"
+    trace_enabled: bool = False
+    w_movement_animation_style: str = "fade"
+    endgame_live_cell_fraction: float = ENDGAME_LIVE_CELL_FRACTION_DEFAULT
     relic_speed_scale: float = 1.0
     shatter_speed_scale: float = 1.0
     topology: ExplosionTopologyInput = field(
@@ -718,8 +730,112 @@ def derive_endgame_seed(
         accumulator = _stable_seed_mix(
             accumulator,
             int(-1 if cell.layer_index is None else cell.layer_index) + 1237,
-        )
+    )
     return accumulator
+
+
+_ENDGAME_LIVE_CELL_FLOORS = {
+    2: 20,
+    3: 40,
+    4: 60,
+}
+
+
+def endgame_live_cell_count(
+    *,
+    dimension: int,
+    board_dims: tuple[int, ...],
+    available_locked_cells: int,
+    live_fraction: float,
+) -> int:
+    available = max(0, int(available_locked_cells))
+    if available <= 0:
+        return 0
+    total_board_cell_count = 1
+    for size in board_dims:
+        total_board_cell_count *= max(0, int(size))
+    floor_count = _ENDGAME_LIVE_CELL_FLOORS.get(int(dimension), 0)
+    target_count = round(
+        clamp_endgame_live_cell_fraction(live_fraction) * float(total_board_cell_count)
+    )
+    return min(available, max(floor_count, int(target_count)))
+
+
+def _canonical_endgame_locked_cells(
+    locked_cells: tuple[SnapshotCell, ...],
+) -> tuple[SnapshotCell, ...]:
+    return tuple(
+        sorted(
+            locked_cells,
+            key=lambda cell: (
+                tuple(int(axis) for axis in cell.source_coord),
+                int(cell.color_id),
+                -1 if cell.layer_index is None else int(cell.layer_index),
+            ),
+        )
+    )
+
+
+def _cell_selection_score(
+    cell: SnapshotCell,
+    *,
+    seed: int,
+) -> int:
+    accumulator = _stable_seed_mix(1_469_598_103, int(seed))
+    for axis in cell.source_coord:
+        accumulator = _stable_seed_mix(accumulator, int(axis) + 431)
+    accumulator = _stable_seed_mix(accumulator, int(cell.color_id) + 977)
+    accumulator = _stable_seed_mix(
+        accumulator,
+        int(-1 if cell.layer_index is None else cell.layer_index) + 1597,
+    )
+    return accumulator
+
+
+def select_endgame_live_locked_cells(
+    *,
+    locked_cells: tuple[SnapshotCell, ...],
+    board_dims: tuple[int, ...],
+    dimension: int,
+    seed: int,
+    live_fraction: float,
+) -> tuple[SnapshotCell, ...]:
+    canonical_cells = _canonical_endgame_locked_cells(locked_cells)
+    target_count = endgame_live_cell_count(
+        dimension=dimension,
+        board_dims=board_dims,
+        available_locked_cells=len(canonical_cells),
+        live_fraction=live_fraction,
+    )
+    if target_count >= len(canonical_cells):
+        return canonical_cells
+    ranked_cells = [
+        (cell, _cell_selection_score(cell, seed=seed))
+        for cell in canonical_cells
+    ]
+    ranked_cells.sort(key=lambda item: (item[1], item[0].source_coord, item[0].color_id))
+    selected: list[tuple[SnapshotCell, int]] = [ranked_cells[0]]
+    remaining = ranked_cells[1:]
+    candidate_window = 16
+    while remaining and len(selected) < target_count:
+        best_index = 0
+        best_score = -1.0
+        window_limit = min(candidate_window, len(remaining))
+        for index in range(window_limit):
+            candidate, stable_score = remaining[index]
+            min_distance_sq = min(
+                sum(
+                    float(candidate.source_coord[axis] - chosen.source_coord[axis]) ** 2
+                    for axis in range(len(candidate.source_coord))
+                )
+                for chosen, _chosen_score in selected
+            )
+            composite_score = (min_distance_sq * 1_000_000.0) - float(stable_score)
+            if composite_score > best_score:
+                best_index = index
+                best_score = composite_score
+        selected.append(remaining.pop(best_index))
+    return tuple(cell for cell, _score in selected)
 
 
 def create_snapshot(
@@ -738,7 +854,14 @@ def create_snapshot(
     random_mass_min: float = 0.75,
     random_mass_max: float = 1.25,
     collision_elasticity: float = 1.0,
+    diagnostics_mode: str = "off",
+    trace_retention_ms: float = 2640.0,
     speed_preset: str = "normal",
+    grid_mode: str = "full",
+    shadow_mode: str = "off",
+    trace_enabled: bool = False,
+    w_movement_animation_style: str = "fade",
+    endgame_live_cell_fraction: float = ENDGAME_LIVE_CELL_FRACTION_DEFAULT,
     relic_speed_scale: float = 1.0,
     shatter_speed_scale: float = 1.0,
     topology_edge_rules: tuple[tuple[str, str], ...] | None = None,
@@ -758,17 +881,26 @@ def create_snapshot(
         (float(render_dims[1]) - 1.0) * 0.5,
         (float(render_dims[2]) - 1.0) * 0.5,
     )
+    canonical_locked_cells = _canonical_endgame_locked_cells(tuple(locked_cells))
+    live_locked_cells = select_endgame_live_locked_cells(
+        locked_cells=canonical_locked_cells,
+        board_dims=tuple(int(value) for value in board_dims),
+        dimension=int(dimension),
+        seed=int(base_seed),
+        live_fraction=float(endgame_live_cell_fraction),
+    )
     return EndgameSnapshot(
         dimension=int(dimension),
         board_dims=tuple(int(value) for value in board_dims),
         render_dims=tuple(int(value) for value in render_dims),
         board_center=board_center,
         render_center=render_center,
-        locked_cells=tuple(locked_cells),
+        locked_cells=canonical_locked_cells,
+        live_locked_cells=live_locked_cells,
         rng_seed=derive_endgame_seed(
             base_seed=int(base_seed),
             board_dims=tuple(int(value) for value in board_dims),
-            locked_cells=tuple(locked_cells),
+            locked_cells=canonical_locked_cells,
             salt=int(active_tuning.seed_salt),
         ),
         render_context=render_context,
@@ -789,7 +921,16 @@ def create_snapshot(
         random_mass_min=float(random_mass_min),
         random_mass_max=float(random_mass_max),
         collision_elasticity=float(collision_elasticity),
+        diagnostics_mode=str(diagnostics_mode),
+        trace_retention_ms=float(trace_retention_ms),
         speed_preset=str(speed_preset),
+        grid_mode=str(grid_mode),
+        shadow_mode=str(shadow_mode),
+        trace_enabled=bool(trace_enabled),
+        w_movement_animation_style=str(w_movement_animation_style),
+        endgame_live_cell_fraction=clamp_endgame_live_cell_fraction(
+            endgame_live_cell_fraction
+        ),
         relic_speed_scale=max(0.05, float(relic_speed_scale)),
         shatter_speed_scale=max(0.05, float(shatter_speed_scale)),
         topology=ExplosionTopologyInput(
@@ -1866,7 +2007,7 @@ def build_endgame_animation_state(
                     source_coord=tuple(int(value) for value in cell.source_coord),
                     color_id=int(cell.color_id),
                 )
-                for cell in snapshot.locked_cells
+                for cell in snapshot.live_locked_cells
             ),
             random_seed=int(snapshot.rng_seed),
             boundary_response=str(snapshot.boundary_response),
@@ -1876,10 +2017,12 @@ def build_endgame_animation_state(
             random_mass_min=float(snapshot.random_mass_min),
             random_mass_max=float(snapshot.random_mass_max),
             collision_elasticity=float(snapshot.collision_elasticity),
+            diagnostics_mode=str(snapshot.diagnostics_mode),
             speed_preset=str(snapshot.speed_preset),
             sound_enabled=bool(snapshot.sound_enabled),
             launch_speed_scale=float(snapshot.shatter_speed_scale),
             time_scale=float(snapshot.relic_speed_scale),
+            trace_retention_ms=float(snapshot.trace_retention_ms),
         )
     )
     return EndgameAnimationState(
