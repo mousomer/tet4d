@@ -46,7 +46,7 @@ from tet4d.ui.pygame.locked_cell_explosion import (
     build_locked_cell_explosion,
 )
 from tet4d.ui.pygame.locked_cell_explosion.audio import aggregate_audio_events
-from tet4d.ui.pygame.locked_cell_explosion import board_view as explosion_board_view
+from tet4d.ui.pygame.board_presentation import native_board as explosion_board_view
 from tet4d.ui.pygame.locked_cell_explosion import defaults_store as explosion_defaults_store
 from tet4d.ui.pygame.locked_cell_explosion import launcher as explosion_launcher
 from tet4d.ui.pygame.locked_cell_explosion import simulation as explosion_simulation
@@ -762,7 +762,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             line_calls.append((tuple(start), tuple(end)))
 
         with patch(
-            "tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line",
+            "tet4d.ui.pygame.board_presentation.native_board.pygame.draw.line",
             side_effect=record_line,
         ):
             explosion_board_view._draw_3d_traces(
@@ -1628,6 +1628,70 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
         )
 
+    def test_standalone_runtime_config_uses_shared_defaults_builder(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+
+        with patch.object(
+            explosion_surface,
+            "build_runtime_explosion_config",
+            wraps=explosion_surface.build_runtime_explosion_config,
+        ) as build_config:
+            config = explosion_launcher.build_standalone_explosion_config(state)
+
+        self.assertEqual(config.boundary_response, state.boundary_response)
+        self.assertEqual(config.trace_retention_ms, state.trace_retention_ms)
+        self.assertEqual(build_config.call_count, 1)
+        defaults = build_config.call_args.kwargs["defaults"]
+        launch = build_config.call_args.kwargs["launch"]
+        self.assertEqual(defaults.boundary_response, state.boundary_response)
+        self.assertEqual(defaults.grid_mode, state.grid_mode.value)
+        self.assertEqual(launch.dimension, state.dimension)
+        self.assertEqual(launch.random_seed, state.seed)
+
+    def test_explorer_surface_controller_uses_shared_defaults_builder(self) -> None:
+        profile = axis_wrap_profile(dimension=2, wrapped_axes=(0,))
+        seed_cells = (
+            explosion_launcher.ExplosionSeedCell(source_coord=(1, 1), color_id=2),
+        )
+
+        with patch.object(
+            explosion_surface,
+            "build_runtime_explosion_config",
+            wraps=explosion_surface.build_runtime_explosion_config,
+        ) as build_config:
+            state = explosion_launcher.build_explorer_explosion_surface_state(
+                dimension=2,
+                board_dims=(6, 8),
+                explorer_profile=profile,
+                occupied_cells=seed_cells,
+                random_seed=99,
+            )
+
+        self.assertEqual(build_config.call_count, 1)
+        defaults = build_config.call_args.kwargs["defaults"]
+        launch = build_config.call_args.kwargs["launch"]
+        self.assertEqual(defaults.boundary_response, state.boundary_response)
+        self.assertEqual(launch.occupied_cells, seed_cells)
+        self.assertEqual(launch.random_seed, 99)
+
+    def test_persistent_defaults_do_not_serialize_runtime_session_only_fields(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+        state.launch_speed_scale_override = 1.7
+        state.time_scale_override = 0.8
+        state.occupied_cells_override = (
+            explosion_launcher.ExplosionSeedCell(source_coord=(1, 1, 1, 1), color_id=3),
+        )
+        state.status = "transient"
+
+        ok, message = explosion_launcher.save_standalone_explosion_defaults(state)
+        self.assertTrue(ok, message)
+
+        payload = menu_settings_state.load_app_settings_payload()["explosion_defaults"]["4d"]
+        self.assertNotIn("launch_speed_scale_override", payload)
+        self.assertNotIn("time_scale_override", payload)
+        self.assertNotIn("occupied_cells_override", payload)
+        self.assertNotIn("status", payload)
+
     def test_simulator_scene_routes_true_board_view_by_default(self) -> None:
         controller = SimpleNamespace(
             particles=(SimpleNamespace(position_nd=(1.0, 1.0, 1.0, 1.0), color_id=2),)
@@ -1720,7 +1784,10 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.grid_mode = GridMode.FULL
         state.shadow_mode = ShadowMode.ALL_BOUNDARIES
 
-        with patch.object(explosion_surface, "draw_native_board_view") as draw_board:
+        with patch.object(
+            explosion_surface.board_presentation,
+            "draw_native_board_view",
+        ) as draw_board:
             explosion_surface._draw_native_board_preview(
                 pygame.Surface((640, 480)),
                 fonts=self._fonts(),
@@ -1738,7 +1805,10 @@ class TestLockedCellExplosion(unittest.TestCase):
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
         state.w_movement_animation_style = explosion_launcher._W_MOVEMENT_ANIMATION_BOX_SIZE
 
-        with patch.object(explosion_surface, "draw_native_board_view") as draw_board:
+        with patch.object(
+            explosion_surface.board_presentation,
+            "draw_native_board_view",
+        ) as draw_board:
             explosion_surface._draw_native_board_preview(
                 pygame.Surface((640, 480)),
                 fonts=self._fonts(),
@@ -1965,7 +2035,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             render_particles=lambda *, render_context: (particle,),
         )
 
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line") as draw_line:
+        with patch("tet4d.ui.pygame.board_presentation.native_board.pygame.draw.line") as draw_line:
             explosion_board_view.draw_native_board_view(
                 surface,
                 rect=pygame.Rect(0, 0, 320, 240),
@@ -1977,7 +2047,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
             without_trace = draw_line.call_count
 
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line") as draw_line:
+        with patch("tet4d.ui.pygame.board_presentation.native_board.pygame.draw.line") as draw_line:
             explosion_board_view.draw_native_board_view(
                 surface,
                 rect=pygame.Rect(0, 0, 320, 240),
@@ -2017,7 +2087,7 @@ class TestLockedCellExplosion(unittest.TestCase):
         )
 
         with patch(
-            "tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line",
+            "tet4d.ui.pygame.board_presentation.native_board.pygame.draw.line",
             side_effect=record_line,
         ):
             explosion_board_view._draw_3d_traces(
@@ -2223,7 +2293,7 @@ class TestLockedCellExplosion(unittest.TestCase):
         def record_line(_surface, _color, start, end, _width=1):
             line_calls.append((tuple(start), tuple(end)))
 
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line", side_effect=record_line):
+        with patch("tet4d.ui.pygame.board_presentation.native_board.pygame.draw.line", side_effect=record_line):
             explosion_board_view._draw_2d_grid(
                 surface,
                 board_rect=pygame.Rect(20, 20, 80, 80),
@@ -2234,7 +2304,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
         edge_calls = len(line_calls)
         line_calls.clear()
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line", side_effect=record_line):
+        with patch("tet4d.ui.pygame.board_presentation.native_board.pygame.draw.line", side_effect=record_line):
             explosion_board_view._draw_2d_grid(
                 surface,
                 board_rect=pygame.Rect(20, 20, 80, 80),
@@ -2481,7 +2551,7 @@ class TestLockedCellExplosion(unittest.TestCase):
                     render_particles=lambda *, render_context, _particle=particle: (_particle,),
                 )
                 with patch(
-                    "tet4d.ui.pygame.locked_cell_explosion.board_view.resolve_board_line_occlusion"
+                    "tet4d.ui.pygame.board_presentation.native_board.resolve_board_line_occlusion"
                 ) as resolve_occlusion:
                     explosion_board_view.draw_native_board_view(
                         surface,
@@ -2512,9 +2582,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                     render_particles=lambda *, render_context, _particle=particle: (_particle,),
                 )
                 patch_target = (
-                    "tet4d.ui.pygame.locked_cell_explosion.board_view.draw_boundary_projection_segments_2d"
+                    "tet4d.ui.pygame.board_presentation.native_board.draw_boundary_projection_segments_2d"
                     if dimension == 2
-                    else "tet4d.ui.pygame.locked_cell_explosion.board_view.draw_boundary_projection_faces"
+                    else "tet4d.ui.pygame.board_presentation.native_board.draw_boundary_projection_faces"
                 )
                 with patch(patch_target) as draw_projection:
                     explosion_board_view.draw_native_board_view(
@@ -2558,7 +2628,7 @@ class TestLockedCellExplosion(unittest.TestCase):
         )
 
         with patch(
-            "tet4d.ui.pygame.locked_cell_explosion.board_view.draw_boundary_projection_faces"
+            "tet4d.ui.pygame.board_presentation.native_board.draw_boundary_projection_faces"
         ) as draw_projection:
             explosion_board_view.draw_native_board_view(
                 surface,
@@ -2573,6 +2643,22 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
 
         self.assertFalse(draw_projection.called)
+
+    def test_surface_native_board_preview_uses_shared_board_presentation_entrypoint(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        with patch.object(
+            explosion_surface.board_presentation,
+            "draw_native_board_view",
+        ) as draw_board:
+            explosion_surface._draw_native_board_preview(
+                pygame.Surface((640, 480)),
+                fonts=self._fonts(),
+                area=pygame.Rect(0, 0, 320, 240),
+                controller=None,
+                state=state,
+            )
+
+        self.assertTrue(draw_board.called)
 
     def test_single_cell_snapshot_uses_explicit_coordinate(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)

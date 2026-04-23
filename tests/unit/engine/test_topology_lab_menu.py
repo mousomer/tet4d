@@ -1176,6 +1176,58 @@ class TestTopologyLabMenu(unittest.TestCase):
         )
         self.assertTrue(pending.occupied_cells_override)
 
+    def test_sandbox_explosion_launch_request_is_narrow_handoff_only(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        topology_lab_menu.spawn_sandbox_piece(state)
+
+        request = topology_lab_explosion.build_sandbox_explosion_launch_request(state)
+
+        self.assertIsNotNone(request)
+        assert request is not None
+        self.assertEqual(request.dimension, 3)
+        self.assertEqual(
+            request.board_dims,
+            topology_lab_menu._board_dims_for_state(state),
+        )
+        self.assertEqual(
+            request.explorer_profile,
+            topology_lab_menu._current_explorer_profile(state),
+        )
+        self.assertTrue(request.occupied_cells)
+        self.assertGreaterEqual(request.random_seed, 0)
+        self.assertGreater(request.launch_speed_scale, 0.0)
+        self.assertGreater(request.time_scale, 0.0)
+        self.assertFalse(hasattr(request, "boundary_response"))
+        self.assertFalse(hasattr(request, "particle_collisions"))
+        self.assertFalse(hasattr(request, "grid_mode"))
+
+    def test_sandbox_explosion_routes_through_shared_explorer_surface_builder(self) -> None:
+        state = self._explorer_state(3)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        topology_lab_menu.spawn_sandbox_piece(state)
+
+        with patch.object(
+            topology_lab_explosion,
+            "build_explorer_explosion_surface_state",
+            return_value=SimpleNamespace(status=""),
+        ) as build_surface:
+            ok, _message = topology_lab_explosion.start_sandbox_explosion(state)
+
+        self.assertTrue(ok)
+        build_surface.assert_called_once()
+        kwargs = build_surface.call_args.kwargs
+        self.assertIn("dimension", kwargs)
+        self.assertIn("board_dims", kwargs)
+        self.assertIn("explorer_profile", kwargs)
+        self.assertIn("occupied_cells", kwargs)
+        self.assertIn("random_seed", kwargs)
+        self.assertIn("launch_speed_scale", kwargs)
+        self.assertIn("time_scale", kwargs)
+        self.assertNotIn("boundary_response", kwargs)
+        self.assertNotIn("particle_collisions", kwargs)
+        self.assertNotIn("mass_mode", kwargs)
+
     def test_sandbox_shortcut_x_routes_to_explosion_launch(self) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)

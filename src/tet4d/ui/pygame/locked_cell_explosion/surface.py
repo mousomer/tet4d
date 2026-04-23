@@ -28,6 +28,7 @@ from tet4d.engine.ui_logic.view_modes import (
     grid_mode_label,
     shadow_mode_label,
 )
+from tet4d.ui.pygame import board_presentation
 from tet4d.ui.pygame.controls import (
     ControlRowLayout as _RowLayout,
     NumericRowSpec as _NumericRowSpec,
@@ -65,7 +66,6 @@ from tet4d.ui.pygame.ui_utils import (
     wrap_text_lines,
 )
 
-from .board_view import draw_native_board_view
 from .controller import LockedCellExplosionController, build_locked_cell_explosion
 from .defaults_store import (
     ENDGAME_LIVE_CELL_FRACTION_DEFAULT,
@@ -108,6 +108,10 @@ from .model import (
     normalize_mass_range,
     normalize_diagnostics_mode,
     trail_sample_budget_for_lifetime_ms,
+)
+from .runtime_config import (
+    ExplosionRuntimeLaunchInputs,
+    build_runtime_explosion_config,
 )
 
 if TYPE_CHECKING:
@@ -867,24 +871,16 @@ def build_standalone_explosion_config(
     _normalize_surface_state(state)
     topology = _topology_input_for_state(state)
     occupied_cells = _source_cells_for_state(state, board_dims=topology.board_dims)
-    return StandaloneExplosionConfig(
-        dimension=int(state.dimension),
-        topology=topology,
-        occupied_cells=occupied_cells,
-        random_seed=int(state.seed),
-        boundary_response=str(state.boundary_response),
-        particle_collisions=str(state.particle_collisions),
-        mass_mode=str(state.mass_mode),
-        base_mass=float(state.base_mass),
-        random_mass_min=float(state.random_mass_min),
-        random_mass_max=float(state.random_mass_max),
-        collision_elasticity=float(state.collision_elasticity),
-        diagnostics_mode=str(state.diagnostics_mode),
-        speed_preset=str(state.speed_preset),
-        sound_enabled=bool(state.sound_enabled),
-        launch_speed_scale=float(state.launch_speed_scale_override),
-        time_scale=float(state.time_scale_override),
-        trace_retention_ms=float(state.trace_retention_ms),
+    return build_runtime_explosion_config(
+        defaults=_persistent_defaults_from_state(state),
+        launch=ExplosionRuntimeLaunchInputs(
+            dimension=int(state.dimension),
+            topology=topology,
+            occupied_cells=occupied_cells,
+            random_seed=int(state.seed),
+            launch_speed_scale=float(state.launch_speed_scale_override),
+            time_scale=float(state.time_scale_override),
+        ),
     )
 
 
@@ -895,73 +891,25 @@ def build_explorer_explosion_surface_state(
     explorer_profile: ExplorerTopologyProfile | None,
     occupied_cells: tuple[ExplosionSeedCell, ...],
     random_seed: int,
-    boundary_response: str | None = None,
-    particle_collisions: str | None = None,
-    mass_mode: str | None = None,
-    base_mass: float | None = None,
-    random_mass_min: float | None = None,
-    random_mass_max: float | None = None,
-    collision_elasticity: float | None = None,
-    diagnostics_mode: str | None = None,
-    speed_preset: str | None = None,
-    sound_enabled: bool | None = None,
     launch_speed_scale: float = 1.0,
     time_scale: float = 1.0,
 ) -> StandaloneExplosionSurfaceState:
     saved_defaults = mode_explosion_defaults(f"{int(dimension)}d")
     preset_id, preset_label = _preset_metadata_for_profile(dimension, explorer_profile)
-    state = StandaloneExplosionSurfaceState(
-        dimension=int(dimension),
-        view_mode=str(saved_defaults.view_mode),
-        topology_preset_id=str(preset_id or saved_defaults.topology_preset_id),
-        snapshot_source_id=_SNAPSHOT_SOURCE_INHERITED,
-        piece_set_id=str(saved_defaults.piece_set_id),
-        piece_shape_name=str(saved_defaults.piece_shape_name),
-        cell_origin=tuple(int(value) for value in saved_defaults.cell_origin),
-        boundary_response=str(boundary_response or saved_defaults.boundary_response),
-        particle_collisions=str(
-            particle_collisions or saved_defaults.particle_collisions
-        ),
-        mass_mode=str(mass_mode or saved_defaults.mass_mode),
-        base_mass=float(base_mass if base_mass is not None else saved_defaults.base_mass),
-        random_mass_min=float(
-            random_mass_min
-            if random_mass_min is not None
-            else saved_defaults.random_mass_min
-        ),
-        random_mass_max=float(
-            random_mass_max
-            if random_mass_max is not None
-            else saved_defaults.random_mass_max
-        ),
-        collision_elasticity=float(
-            collision_elasticity
-            if collision_elasticity is not None
-            else saved_defaults.collision_elasticity
-        ),
-        diagnostics_mode=str(diagnostics_mode or saved_defaults.diagnostics_mode),
-        grid_mode=GridMode(str(saved_defaults.grid_mode)),
-        shadow_mode=ShadowMode(str(saved_defaults.shadow_mode)),
-        trace_enabled=bool(saved_defaults.trace_enabled),
-        trace_retention_ms=float(saved_defaults.trace_retention_ms),
-        trace_retention_input_text=_trace_retention_input_text(
-            float(saved_defaults.trace_retention_ms)
-        ),
-        speed_preset=str(speed_preset or saved_defaults.speed_preset),
-        w_movement_animation_style=str(saved_defaults.w_movement_animation_style),
-        endgame_live_cell_fraction=float(saved_defaults.endgame_live_cell_fraction),
-        sound_enabled=bool(sound_enabled if sound_enabled is not None else saved_defaults.sound_enabled),
-        seed=int(random_seed if random_seed is not None else saved_defaults.seed),
-        launch_speed_scale_override=float(launch_speed_scale),
-        time_scale_override=float(time_scale),
-        board_dims_override=tuple(int(value) for value in board_dims),
-        topology_profile_override=explorer_profile,
-        topology_label_override=preset_label or "Custom Explorer Topology",
-        snapshot_label_override="Inherited Current State",
-        occupied_cells_override=tuple(occupied_cells),
-        locked_rows=frozenset({"dimension", "topology", "snapshot_source", "seed"}),
-        status="Explorer launch inherits the current sandbox cells and topology.",
-    )
+    state = StandaloneExplosionSurfaceState(dimension=int(dimension))
+    _apply_explosion_defaults(state, saved_defaults)
+    state.topology_preset_id = str(preset_id or saved_defaults.topology_preset_id)
+    state.snapshot_source_id = _SNAPSHOT_SOURCE_INHERITED
+    state.seed = int(random_seed if random_seed is not None else saved_defaults.seed)
+    state.launch_speed_scale_override = float(launch_speed_scale)
+    state.time_scale_override = float(time_scale)
+    state.board_dims_override = tuple(int(value) for value in board_dims)
+    state.topology_profile_override = explorer_profile
+    state.topology_label_override = preset_label or "Custom Explorer Topology"
+    state.snapshot_label_override = "Inherited Current State"
+    state.occupied_cells_override = tuple(occupied_cells)
+    state.locked_rows = frozenset({"dimension", "topology", "snapshot_source", "seed"})
+    state.status = "Explorer launch inherits the current sandbox cells and topology."
     _ensure_view_state(state)
     _normalize_surface_state(state)
     state.controller = _build_controller(state)
@@ -1751,7 +1699,7 @@ def _draw_native_board_preview(
     controller: LockedCellExplosionController | None,
     state: StandaloneExplosionSurfaceState,
 ) -> None:
-    draw_native_board_view(
+    board_presentation.draw_native_board_view(
         screen,
         rect=area,
         fonts=fonts,

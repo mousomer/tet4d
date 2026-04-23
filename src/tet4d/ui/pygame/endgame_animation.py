@@ -23,12 +23,16 @@ from tet4d.ui.pygame.locked_cell_explosion import (
     ExplosionRenderTrailSegment,
     ExplosionSeedCell,
     ExplosionTopologyInput,
-    StandaloneExplosionConfig,
     build_locked_cell_explosion,
 )
 from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
     ENDGAME_LIVE_CELL_FRACTION_DEFAULT,
+    ExplosionDefaults,
     clamp_endgame_live_cell_fraction,
+)
+from tet4d.ui.pygame.locked_cell_explosion.runtime_config import (
+    ExplosionRuntimeLaunchInputs,
+    build_runtime_explosion_config,
 )
 
 Vec3 = tuple[float, float, float]
@@ -1999,30 +2003,40 @@ def build_endgame_animation_state(
         for index, (source_kind, layer_index, segment) in enumerate(shell_sources)
     )
     explosion_controller = build_locked_cell_explosion(
-        StandaloneExplosionConfig(
-            dimension=int(snapshot.dimension),
-            topology=snapshot.topology,
-            occupied_cells=tuple(
-                ExplosionSeedCell(
-                    source_coord=tuple(int(value) for value in cell.source_coord),
-                    color_id=int(cell.color_id),
-                )
-                for cell in snapshot.live_locked_cells
+        build_runtime_explosion_config(
+            defaults=ExplosionDefaults(
+                boundary_response=str(snapshot.boundary_response),
+                particle_collisions=str(snapshot.particle_collisions),
+                mass_mode=str(snapshot.mass_mode),
+                base_mass=float(snapshot.base_mass),
+                random_mass_min=float(snapshot.random_mass_min),
+                random_mass_max=float(snapshot.random_mass_max),
+                collision_elasticity=float(snapshot.collision_elasticity),
+                diagnostics_mode=str(snapshot.diagnostics_mode),
+                grid_mode=str(snapshot.grid_mode),
+                shadow_mode=str(snapshot.shadow_mode),
+                trace_enabled=bool(snapshot.trace_enabled),
+                trace_retention_ms=float(snapshot.trace_retention_ms),
+                speed_preset=str(snapshot.speed_preset),
+                w_movement_animation_style=str(snapshot.w_movement_animation_style),
+                endgame_live_cell_fraction=float(snapshot.endgame_live_cell_fraction),
+                sound_enabled=bool(snapshot.sound_enabled),
+                seed=int(snapshot.rng_seed),
             ),
-            random_seed=int(snapshot.rng_seed),
-            boundary_response=str(snapshot.boundary_response),
-            particle_collisions=str(snapshot.particle_collisions),
-            mass_mode=str(snapshot.mass_mode),
-            base_mass=float(snapshot.base_mass),
-            random_mass_min=float(snapshot.random_mass_min),
-            random_mass_max=float(snapshot.random_mass_max),
-            collision_elasticity=float(snapshot.collision_elasticity),
-            diagnostics_mode=str(snapshot.diagnostics_mode),
-            speed_preset=str(snapshot.speed_preset),
-            sound_enabled=bool(snapshot.sound_enabled),
-            launch_speed_scale=float(snapshot.shatter_speed_scale),
-            time_scale=float(snapshot.relic_speed_scale),
-            trace_retention_ms=float(snapshot.trace_retention_ms),
+            launch=ExplosionRuntimeLaunchInputs(
+                dimension=int(snapshot.dimension),
+                topology=snapshot.topology,
+                occupied_cells=tuple(
+                    ExplosionSeedCell(
+                        source_coord=tuple(int(value) for value in cell.source_coord),
+                        color_id=int(cell.color_id),
+                    )
+                    for cell in snapshot.live_locked_cells
+                ),
+                random_seed=int(snapshot.rng_seed),
+                launch_speed_scale=float(snapshot.shatter_speed_scale),
+                time_scale=float(snapshot.relic_speed_scale),
+            ),
         )
     )
     return EndgameAnimationState(

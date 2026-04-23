@@ -118,10 +118,25 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   simulation, using `max(dimension_floor, round(fraction * total_board_cells))`
   with floors `20` / `40` / `60` for `2D` / `3D` / `4D` and capping by the
   available locked-cell count,
+  Stage 4 runtime-default boundary extraction now routes simulator, explorer,
+  and endgame runtime-config assembly through
+  `src/tet4d/ui/pygame/locked_cell_explosion/runtime_config.py` so persistent
+  `ExplosionDefaults` remain the shared saved authority while runtime session
+  state stays in simulator/controller/endgame session objects rather than in
+  persisted defaults payloads, Stage 5 explorer-adapter thinning now limits
+  topology-lab explosion launch ownership to topology/profile extraction,
+  sandbox cell extraction, thin handoff data, and explorer-only lifecycle
+  status text via `topology_lab/explosion.py`, and
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
-  camera-control path, and
+  camera-control path, Stage 3 shared board-presentation extraction now routes
+  simulator true-board preview through
+  `src/tet4d/ui/pygame/board_presentation/native_board.py` as the canonical
+  owner for grid/shadow/boundary/edge-grid/occlusion/trace/W-movement and
+  dimensional board-view application while reusing existing
+  `front3d_render.Camera3D` / `front4d_render.LayerView3D` camera behavior
+  instead of a simulator-local camera stack, and
   Stage 2 shared-controls extraction now routes generic dropdown behavior,
   numeric text/slider/stepper state, row layout, wrapped label/value spacing,
   hit-testing, and control-level pointer/keyboard semantics through
@@ -209,12 +224,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.44` (`low`)
+- `tech_debt.score = 5.69` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.53`
-2. `code_balance = 1.67`
+1. `delivery_size_pressure = 2.54`
+2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -224,10 +239,10 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-2. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
-3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2769` real LOC
-4. `src/tet4d/ui/pygame/endgame_animation.py`: `2398` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3767` real LOC
+2. `tests/unit/render/test_locked_cell_explosion.py`: `2861` real LOC
+3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2717` real LOC
+4. `src/tet4d/ui/pygame/endgame_animation.py`: `2412` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
 7. `tools/governance/validate_project_contracts.py`: `1732` real LOC

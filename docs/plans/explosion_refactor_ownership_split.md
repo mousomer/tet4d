@@ -157,6 +157,12 @@ Current owners:
 
 Current split:
 
+- Stage 3 is now landed: `board_presentation/native_board.py` owns the shared
+  simulator-first native board preview facade, reuses existing `Camera3D` /
+  `LayerView3D` behavior from `front3d_render.py` and `front4d_render.py`,
+  and keeps grid/shadow/boundary/edge-grid/occlusion/trace/W-movement
+  application under `src/tet4d/ui/pygame/board_presentation/` rather than
+  simulator-local ownership.
 - Grid modes are defined in engine UI logic and rendered through a combination
   of `gfx_game.py`, `front3d_render.py`, `front4d_render.py`, and
   `grid_mode_render.py`.
@@ -547,14 +553,27 @@ Move or introduce:
 - camera/view conventions as presentation inputs.
 
 First consumer:
-- simulator `board_view.py`, with existing render helpers routed through the
-  new board-presentation authority.
+- simulator `surface.py`, routed through
+  `src/tet4d/ui/pygame/board_presentation/native_board.py` with
+  `locked_cell_explosion/board_view.py` reduced to a compatibility shim.
 
 Acceptance:
 - simulator true-board 2D/3D/4D behavior remains equivalent,
 - no control/runtime changes,
 - the new package is the authoritative application point for presentation
   behavior rather than a fake wrapper.
+
+Status:
+- complete as of 2026-04-23.
+- landed shared board-presentation package:
+  `src/tet4d/ui/pygame/board_presentation/`
+- landed first consumer:
+  `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`
+- existing camera/view reuse is explicit:
+  `front3d_render.Camera3D`, `front4d_render.LayerView3D`,
+  `topology_lab/camera_controls.py`, and `input/camera_mouse.py`
+- compatibility shim retained:
+  `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`
 
 ---
 
@@ -581,6 +600,17 @@ Acceptance:
 - no visual rewrites,
 - no adapter silently overrides shared defaults except documented runtime inputs.
 
+Status:
+- complete as of 2026-04-23.
+- landed shared runtime-default builder:
+  `src/tet4d/ui/pygame/locked_cell_explosion/runtime_config.py`
+- simulator, explorer, and endgame now route runtime config assembly through
+  `build_runtime_explosion_config(...)`
+- persistent defaults remain in `defaults_store.py`, while runtime session
+  state remains in `StandaloneExplosionSurfaceState`, `ExplosionSimulationState`,
+  controller state, and endgame animation state rather than in persisted
+  defaults payloads
+
 ---
 
 ## Stage 5: Explorer Adapter Thinning
@@ -596,6 +626,17 @@ Move or introduce:
 Acceptance:
 - sandbox explosion launch remains functionally equivalent,
 - explorer does not own shared board presentation or shared controls.
+
+Status:
+- complete as of 2026-04-23.
+- explorer launch ownership is now limited to topology/state extraction,
+  sandbox cell extraction, thin launch handoff, and explorer-only status text
+- explorer handoff is explicit in
+  `src/tet4d/ui/pygame/topology_lab/explosion.py` via
+  `ExplorerExplosionLaunchRequest`
+- explorer launch continues to route through
+  `build_explorer_explosion_surface_state(...)`, which in turn uses the shared
+  runtime-default builder and shared board-presentation/runtime layers
 
 ---
 

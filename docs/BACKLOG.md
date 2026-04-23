@@ -60,8 +60,19 @@ Current active follow-ups:
   Stage 2 shared-controls extraction is now the landed baseline, with generic
   dropdown/numeric/row-layout/hit-testing ownership under
   `src/tet4d/ui/pygame/controls/`, so follow-up work should not drift those
-  semantics back into `locked_cell_explosion/surface.py`; avoid devolving into
-  a decorative final-energy readout
+  semantics back into `locked_cell_explosion/surface.py`; Stage 3 shared
+  board-presentation extraction is now the landed baseline, with simulator
+  true-board preview routed through
+  `src/tet4d/ui/pygame/board_presentation/native_board.py` and existing
+  `Camera3D` / `LayerView3D` behavior explicitly reused rather than rewritten;
+  Stage 4 runtime-default boundary extraction is now the landed baseline, with
+  shared runtime-config assembly under
+  `src/tet4d/ui/pygame/locked_cell_explosion/runtime_config.py` and explorer/
+  endgame launch paths no longer assembling shared explosion defaults
+  independently; Stage 5 explorer-adapter thinning is now the landed baseline,
+  with topology-lab explosion launch reduced to topology/cell extraction,
+  narrow handoff data, and explorer-only lifecycle/status behavior;
+  avoid devolving into a decorative final-energy readout
 
 - Open work:
   1. continue structural simplification of remaining
@@ -158,6 +169,30 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-20:
 
+- locked-cell explosion Stage 5 explorer-adapter thinning is now finalized in
+  the project record: topology-lab explosion launch now builds a narrow
+  `ExplorerExplosionLaunchRequest`, explorer no longer carries duplicated
+  defaults/runtime assembly, and shared simulator/explorer launch reuse is
+  explicit through `build_explorer_explosion_surface_state(...)`
+- locked-cell explosion Stage 4 runtime-default/session-boundary extraction is
+  now finalized in the project record: persistent saved defaults remain under
+  `defaults_store.py`, shared runtime-config assembly now routes through
+  `locked_cell_explosion/runtime_config.py`, simulator/explorer/endgame reuse
+  that builder, and explorer launch now limits itself to launch-specific
+  topology/cells/seed plus speed/time inputs instead of silently rewriting
+  shared runtime defaults
+- locked-cell explosion Stage 3 shared-board-presentation extraction is now
+  finalized in the project record: simulator true-board preview routes through
+  `src/tet4d/ui/pygame/board_presentation/native_board.py`, the old
+  `locked_cell_explosion/board_view.py` path is now only a compatibility shim,
+  shared presentation ownership covers grid/shadow/boundary/edge-grid/
+  occlusion/trace/W-movement application while reusing existing
+  `front3d_render.Camera3D`, `front4d_render.LayerView3D`,
+  `topology_lab/camera_controls.py`, and `input/camera_mouse.py`, and the
+  supporting authority/docs were updated in `CURRENT_STATE.md`,
+  `docs/BACKLOG.md`, `docs/PROJECT_STRUCTURE.md`,
+  `docs/plans/explosion_refactor_ownership_split.md`, and
+  `docs/rds/RDS_TETRIS_GENERAL.md`
 - locked-cell explosion Stage 2 shared-controls extraction is now finalized in
   the project record: generic dropdown/numeric/row-layout/hit-testing
   ownership lives under `src/tet4d/ui/pygame/controls/`, the simulator surface

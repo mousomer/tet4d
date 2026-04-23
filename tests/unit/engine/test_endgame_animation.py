@@ -303,6 +303,32 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(animation.explosion_controller.config.speed_preset, "fast")
         self.assertFalse(animation.explosion_controller.config.sound_enabled)
 
+    def test_endgame_animation_uses_shared_runtime_defaults_builder(self) -> None:
+        snapshot = self._sample_snapshot()
+
+        with patch.object(
+            endgame_animation,
+            "build_runtime_explosion_config",
+            wraps=endgame_animation.build_runtime_explosion_config,
+        ) as build_config:
+            animation = endgame_animation.build_endgame_animation_state(snapshot)
+
+        self.assertEqual(build_config.call_count, 1)
+        defaults = build_config.call_args.kwargs["defaults"]
+        launch = build_config.call_args.kwargs["launch"]
+        self.assertEqual(defaults.boundary_response, snapshot.boundary_response)
+        self.assertEqual(defaults.trace_retention_ms, snapshot.trace_retention_ms)
+        self.assertEqual(launch.dimension, snapshot.dimension)
+        self.assertEqual(launch.random_seed, snapshot.rng_seed)
+        self.assertEqual(
+            tuple(cell.source_coord for cell in launch.occupied_cells),
+            tuple(cell.source_coord for cell in snapshot.live_locked_cells),
+        )
+        self.assertEqual(
+            animation.explosion_controller.config.boundary_response,
+            snapshot.boundary_response,
+        )
+
     def test_endgame_live_cell_count_uses_fraction_floor_and_cap(self) -> None:
         self.assertEqual(
             endgame_animation.endgame_live_cell_count(
