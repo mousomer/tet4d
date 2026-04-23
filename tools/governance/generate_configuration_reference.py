@@ -669,6 +669,14 @@ _GLOBAL_SETTINGS_BUCKETS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("analytics", ("analytics.score_logging_enabled",)),
 )
 
+_EXPLOSION_DEFAULTS_CATEGORY_DOC = {
+    "label": "Explosion defaults",
+    "description": (
+        "Shared locked-cell explosion simulator and endgame default settings "
+        "persisted per mode under `explosion_defaults`."
+    ),
+}
+
 _MODE_SETTINGS_BUCKETS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "gameplay_setup",
@@ -837,8 +845,18 @@ def _render_global_settings_section(
         if path_value[0] not in {"version", "last_mode"}
         and not path_value[0].startswith("settings.")
     ]
+    explosion_default_rows = [
+        path_value
+        for path_value in global_rows
+        if path_value[0].startswith("explosion_defaults.")
+    ]
+    standard_global_rows = [
+        path_value
+        for path_value in global_rows
+        if not path_value[0].startswith("explosion_defaults.")
+    ]
     global_bucket_rows = _bucket_rows_by_path(
-        global_rows,
+        standard_global_rows,
         bucket_defs=_GLOBAL_SETTINGS_BUCKETS,
         scope_name="global",
     )
@@ -849,6 +867,17 @@ def _render_global_settings_section(
                 category_doc=_category_doc(category_docs, bucket_id),
                 ordered_keys=ordered_paths,
                 row_values=dict(global_bucket_rows[bucket_id]),
+                path_builder=lambda key: key,
+                schema_payload=schema_payload,
+                option_labels=option_labels,
+            )
+        )
+    if explosion_default_rows:
+        lines.extend(
+            _render_settings_bucket(
+                category_doc=_EXPLOSION_DEFAULTS_CATEGORY_DOC,
+                ordered_keys=tuple(path for path, _value in explosion_default_rows),
+                row_values=dict(explosion_default_rows),
                 path_builder=lambda key: key,
                 schema_payload=schema_payload,
                 option_labels=option_labels,

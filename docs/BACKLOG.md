@@ -39,6 +39,18 @@ Current active follow-ups:
 - documentation authorities should stay synchronized without treating merged
   project-structure-index, docs-authority-cleanup, or config-backed
   runtime-constants work as active implementation
+- locked-cell explosion follow-up must keep the 3D true-board trace aligned
+  with real bounce contact points and keep kinetic-energy readout validation
+  pinned to live controller state rather than assumed visual behavior, with
+  the compact explicit kinetic-energy formula and live speed-squared terms
+  kept in sync with current particle velocities, keep seeded random-mass and
+  collision-elasticity controls wired through the live simulation state, and
+  keep bounce-frame trace continuity aligned with the rendered post-contact
+  motion path; new movement-diagnostics monitoring should stay non-mutating,
+  keep substage energy/localization logic tied to live simulation state, keep
+  the shared `explosion_defaults` persistence path as the single source for
+  standalone/explorer/endgame explosion defaults, and avoid devolving into a
+  decorative final-energy readout
 
 - Open work:
   1. continue structural simplification of remaining
@@ -312,7 +324,9 @@ Completed on 2026-04-11:
   use stays readable in `2D` / `3D` / `4D`, simulator-local mouse dropdown
   boundary alignment now reuses one canonical cell-extent face definition
   (`-0.5 .. size - 0.5` per axis) across seam/bounce contact, the drawn
-  board box, edge-grid rendering, and render-only boundary/shadow guides, and
+  board box, edge-grid rendering, and render-only boundary/shadow guides,
+  board-native `3D` / `4D` trace endpoints now project the actual particle
+  centers instead of a duplicated half-cell-offset point, and
   simulator-local mouse dropdown
   interaction now opens/selects values without obscuring labels, simulator grid
   options now expose explicit `none | edge | full` naming while shadow remains

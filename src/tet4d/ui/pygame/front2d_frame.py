@@ -20,6 +20,9 @@ from tet4d.ai.playbot.types import (
 from tet4d.engine.core.model import Action
 from tet4d.engine.gameplay.leveling import compute_speed_level
 from tet4d.engine.runtime.menu_settings_state import mode_endgame_settings
+from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
+    mode_explosion_defaults,
+)
 from tet4d.engine.tutorial.api import (
     tutorial_runtime_is_running_runtime,
     tutorial_runtime_sync_and_advance_runtime,
@@ -164,6 +167,7 @@ def _capture_endgame_snapshot_2d(loop: LoopContext2D):
         relic_speed_percent,
         shatter_speed_percent,
     ) = mode_endgame_settings("2d")
+    explosion_defaults = mode_explosion_defaults("2d")
     locked_cells = tuple(
         SnapshotCell(
             source_coord=(int(x), int(y)),
@@ -182,11 +186,18 @@ def _capture_endgame_snapshot_2d(loop: LoopContext2D):
         preset_id=preset_id,
         boundary_response=boundary_response,
         particle_collisions=particle_collisions,
+        mass_mode=explosion_defaults.mass_mode,
+        base_mass=explosion_defaults.base_mass,
+        random_mass_min=explosion_defaults.random_mass_min,
+        random_mass_max=explosion_defaults.random_mass_max,
+        collision_elasticity=explosion_defaults.collision_elasticity,
+        speed_preset=explosion_defaults.speed_preset,
         relic_speed_scale=float(relic_speed_percent) / 100.0,
         shatter_speed_scale=float(shatter_speed_percent) / 100.0,
         topology_edge_rules=loop.cfg.topology_edge_rules,
         explorer_topology_profile=loop.cfg.explorer_topology_profile,
         explorer_transport=loop.cfg.explorer_transport,
+        sound_enabled=explosion_defaults.sound_enabled,
     )
 
 

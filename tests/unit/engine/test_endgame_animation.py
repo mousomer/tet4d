@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 import math
+import shutil
 import unittest
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import pygame
 
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.runtime import menu_settings_state
+from tet4d.engine.runtime.project_config import state_dir_path
 from tet4d.ui.pygame import (
     endgame_animation,
     front2d_frame,
@@ -19,8 +24,38 @@ from tet4d.ui.pygame import (
     front4d_render,
 )
 from tet4d.ui.pygame.front2d_session import LoopContext2D
+from tet4d.ui.pygame.locked_cell_explosion import defaults_store as explosion_defaults_store
 from tet4d.ui.pygame.render import gfx_game
 from tet4d.ui.pygame.runtime_ui import loop_runner_nd
+
+
+def _new_workspace_temp_dir(prefix: str) -> Path:
+    root = state_dir_path() / "pytest_temp"
+    root.mkdir(parents=True, exist_ok=True)
+    candidate = root / f"{prefix}_{uuid4().hex}"
+    candidate.mkdir(parents=True, exist_ok=False)
+    return candidate
+
+
+class _TempMenuSettingsRoot:
+    def __init__(self) -> None:
+        self.root = _new_workspace_temp_dir("endgame_settings")
+        self.state_dir = self.root / "state"
+        self.patches = [
+            patch.object(menu_settings_state, "STATE_DIR", self.state_dir),
+            patch.object(
+                menu_settings_state, "STATE_FILE", self.state_dir / "menu_settings.json"
+            ),
+        ]
+
+    def start(self) -> None:
+        for active in self.patches:
+            active.start()
+
+    def stop(self) -> None:
+        for active in reversed(self.patches):
+            active.stop()
+        shutil.rmtree(self.root, ignore_errors=True)
 
 
 class TestEndgameAnimation(unittest.TestCase):
@@ -38,6 +73,12 @@ class TestEndgameAnimation(unittest.TestCase):
     @staticmethod
     def _surface_bytes(surface: pygame.Surface) -> bytes:
         return pygame.image.tobytes(surface, "RGBA")
+
+    def _temp_settings_root(self) -> _TempMenuSettingsRoot:
+        root = _TempMenuSettingsRoot()
+        root.start()
+        self.addCleanup(root.stop)
+        return root
 
     @staticmethod
     def _sample_snapshot(
@@ -150,6 +191,62 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(snapshot.particle_collisions, "on")
         self.assertAlmostEqual(snapshot.relic_speed_scale, 1.4)
         self.assertAlmostEqual(snapshot.shatter_speed_scale, 0.8)
+
+    def test_saved_explosion_defaults_feed_endgame_snapshot_and_controller(self) -> None:
+        self._temp_settings_root()
+        ok, msg = explosion_defaults_store.save_mode_explosion_defaults(
+            "2d",
+            explosion_defaults_store.ExplosionDefaults(
+                boundary_response="bounce",
+                particle_collisions="on",
+                mass_mode="random",
+                base_mass=1.6,
+                random_mass_min=0.8,
+                random_mass_max=2.4,
+                collision_elasticity=0.3,
+                speed_preset="fast",
+                sound_enabled=False,
+                seed=8080,
+            ),
+        )
+        self.assertTrue(ok, msg)
+        loop = LoopContext2D.create(GameConfig(width=6, height=8, speed_level=1))
+        loop.state.board.cells.clear()
+        loop.state.board.cells[(1, 6)] = 3
+        loop.state.board.cells[(4, 5)] = 6
+
+        with patch.object(
+            front2d_frame,
+            "mode_endgame_settings",
+            return_value=("wrap_all", "escape", "off", 100, 100),
+        ):
+            snapshot = front2d_frame._capture_endgame_snapshot_2d(loop)
+
+        self.assertEqual(snapshot.boundary_response, "escape")
+        self.assertEqual(snapshot.particle_collisions, "off")
+        self.assertEqual(snapshot.mass_mode, "random")
+        self.assertAlmostEqual(snapshot.base_mass, 1.6)
+        self.assertAlmostEqual(snapshot.random_mass_min, 0.8)
+        self.assertAlmostEqual(snapshot.random_mass_max, 2.4)
+        self.assertAlmostEqual(snapshot.collision_elasticity, 0.3)
+        self.assertEqual(snapshot.speed_preset, "fast")
+        self.assertFalse(snapshot.sound_enabled)
+
+        animation = endgame_animation.build_endgame_animation_state(snapshot)
+
+        self.assertEqual(animation.explosion_controller.config.mass_mode, "random")
+        self.assertAlmostEqual(animation.explosion_controller.config.base_mass, 1.6)
+        self.assertAlmostEqual(
+            animation.explosion_controller.config.random_mass_min, 0.8
+        )
+        self.assertAlmostEqual(
+            animation.explosion_controller.config.random_mass_max, 2.4
+        )
+        self.assertAlmostEqual(
+            animation.explosion_controller.config.collision_elasticity, 0.3
+        )
+        self.assertEqual(animation.explosion_controller.config.speed_preset, "fast")
+        self.assertFalse(animation.explosion_controller.config.sound_enabled)
 
     def test_preset_registry_resolves_required_relic_field_presets(self) -> None:
         tuning = endgame_animation.load_endgame_animation_tuning()

@@ -74,12 +74,42 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   instead of topology-playground projection panes, standalone/explorer source
   selection now includes engine-backed `single_cell`, `single_piece`, and
   deterministic `piece_change` snapshots plus inherited-state handoff,
-  shared simulation state now tracks live total kinetic energy, simulator
-  preview now supports an optional thin `Trace` overlay in both board-native
+  shared simulation state now tracks live kinetic energy plus live
+  compact speed-squared terms derived from current particle velocities,
+  default standalone launches keep a documented uniform particle-mass
+  assumption of `m = 1.0`, simulator diagnostics show a compact live
+  explicit kinetic-energy formula sourced from the current active particles,
+  simulator controls now include live `uniform` / deterministic `random`
+  mass modes with bounded mass-range controls plus numeric particle-collision
+  elasticity while boundary bounce stays on its separate elastic rule,
+  and the same shared state now also owns a non-mutating movement-
+  diagnostics monitor with `off` / `summary` / `full` modes that tracks
+  per-step/substage kinetic-energy deltas, contacts, suspicious events,
+  and focused particle drilldown from live particle state,
+  simulator projection-reference rendering now reuses the shared
+  topology-lab projection renderer with explorer-only chrome disabled so
+  hidden-slice labels, probe dots, and seam-pill ribbons stay out of the
+  simulator while remaining available in real explorer views,
+  simulator preview now supports an optional thin
+  `Trace` overlay in both board-native
   and projection-reference modes plus a bounded user-controlled text-editable
   retention value, true-board preview now routes independent shared
   `grid_mode` (`none` / `edge` / `full`) plus `shadow_mode` selection through
   board-native rendering with projected board-line occlusion in `3D` / `4D`,
+  and board-native trace projection in `3D` / `4D` must use the same actual
+  particle centers as the rendered explosion cells with no half-cell render
+  offset; bounce contacts in that shared trail history must record the true
+  boundary-plane contact point before any interior stabilization/nudge so the
+  rendered trace follows the simulated center path through boundary turns,
+  including the immediate same-frame post-bounce continuation instead of
+  implying a visible wall pause,
+  simulator defaults now persist through the shared `state/menu_settings.json`
+  `explosion_defaults.<mode>` authority via a real `Save Defaults` action
+  instead of simulator-local hardcoded startup values, and that same saved
+  defaults model now seeds standalone startup, explorer-triggered simulator
+  launches where relevant, and overlapping endgame explosion-controller
+  defaults with transient runtime-only simulator state excluded from
+  serialization,
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
@@ -154,16 +184,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 241` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 243` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.25` (`low`)
+- `tech_debt.score = 5.41` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.45`
-2. `code_balance = 1.55`
+1. `delivery_size_pressure = 2.50`
+2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -174,12 +204,12 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2567` real LOC
-3. `src/tet4d/ui/pygame/endgame_animation.py`: `2242` real LOC
-4. `scripts/arch_metrics.py`: `1890` real LOC
-5. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
-6. `tools/governance/validate_project_contracts.py`: `1732` real LOC
-7. `tests/unit/render/test_locked_cell_explosion.py`: `1568` real LOC
+2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2942` real LOC
+3. `tests/unit/render/test_locked_cell_explosion.py`: `2762` real LOC
+4. `src/tet4d/ui/pygame/endgame_animation.py`: `2265` real LOC
+5. `scripts/arch_metrics.py`: `1890` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
+7. `tools/governance/validate_project_contracts.py`: `1732` real LOC
 8. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 
 Thin-wrapper budgets:

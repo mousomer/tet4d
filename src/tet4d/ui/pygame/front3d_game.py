@@ -64,6 +64,9 @@ from tet4d.ui.pygame.endgame_animation import (
     TERMINAL_PHASE_PLAYING,
     create_snapshot,
 )
+from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
+    mode_explosion_defaults,
+)
 from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
     apply_mouse_orbit_event,
@@ -376,6 +379,7 @@ def _capture_endgame_snapshot_3d(
         relic_speed_percent,
         shatter_speed_percent,
     ) = mode_endgame_settings("3d")
+    explosion_defaults = mode_explosion_defaults("3d")
     locked_cells = tuple(
         SnapshotCell(
             source_coord=tuple(int(axis) for axis in coord),
@@ -404,11 +408,18 @@ def _capture_endgame_snapshot_3d(
         preset_id=preset_id,
         boundary_response=boundary_response,
         particle_collisions=particle_collisions,
+        mass_mode=explosion_defaults.mass_mode,
+        base_mass=explosion_defaults.base_mass,
+        random_mass_min=explosion_defaults.random_mass_min,
+        random_mass_max=explosion_defaults.random_mass_max,
+        collision_elasticity=explosion_defaults.collision_elasticity,
+        speed_preset=explosion_defaults.speed_preset,
         relic_speed_scale=float(relic_speed_percent) / 100.0,
         shatter_speed_scale=float(shatter_speed_percent) / 100.0,
         topology_edge_rules=loop.cfg.topology_edge_rules,
         explorer_topology_profile=loop.cfg.explorer_topology_profile,
         explorer_transport=loop.cfg.explorer_transport,
+        sound_enabled=explosion_defaults.sound_enabled,
     )
 
 

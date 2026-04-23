@@ -332,6 +332,7 @@ def validate_defaults_payload(
         "display",
         "audio",
         "analytics",
+        "explosion_defaults",
         "settings",
     }
     missing = sorted(required - set(payload))
@@ -389,6 +390,18 @@ def validate_defaults_payload(
         path="defaults.analytics.score_logging_enabled",
     )
 
+    explosion_defaults_raw = require_object(
+        payload["explosion_defaults"],
+        path="defaults.explosion_defaults",
+    )
+    explosion_defaults: dict[str, dict[str, Any]] = {}
+    for mode_key in MODE_KEYS:
+        mode_defaults = require_object(
+            explosion_defaults_raw.get(mode_key),
+            path=f"defaults.explosion_defaults.{mode_key}",
+        )
+        explosion_defaults[mode_key] = dict(mode_defaults)
+
     settings_raw = require_object(payload["settings"], path="defaults.settings")
     settings: dict[str, dict[str, Any]] = {}
     for mode_key in MODE_KEYS:
@@ -426,6 +439,7 @@ def validate_defaults_payload(
         "analytics": {
             "score_logging_enabled": score_logging_enabled,
         },
+        "explosion_defaults": explosion_defaults,
         "settings": settings,
     }
 

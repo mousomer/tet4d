@@ -169,10 +169,12 @@ def save_app_settings_payload(payload: dict[str, Any]) -> tuple[bool, str]:
         if key in payload:
             merged[key] = payload[key]
 
-    for section in ("display", "audio", "analytics"):
-        section_payload = payload.get(section)
-        if isinstance(section_payload, dict):
-            merged[section].update(section_payload)
+    _merge_payload_sections(
+        merged,
+        payload,
+        section_names=("display", "audio", "analytics"),
+    )
+    _merge_explosion_defaults_payload(merged, payload)
 
     settings = payload.get("settings")
     if isinstance(settings, dict):
@@ -181,6 +183,33 @@ def save_app_settings_payload(payload: dict[str, Any]) -> tuple[bool, str]:
                 merged["settings"][mode_key].update(mode_settings)
 
     return _sanitize_and_save_payload(merged)
+
+
+def _merge_payload_sections(
+    merged: dict[str, Any],
+    payload: dict[str, Any],
+    *,
+    section_names: tuple[str, ...],
+) -> None:
+    for section in section_names:
+        section_payload = payload.get(section)
+        if isinstance(section_payload, dict):
+            merged[section].update(section_payload)
+
+
+def _merge_explosion_defaults_payload(
+    merged: dict[str, Any],
+    payload: dict[str, Any],
+) -> None:
+    explosion_defaults = payload.get("explosion_defaults")
+    target_defaults = merged.get("explosion_defaults")
+    if not isinstance(explosion_defaults, dict) or not isinstance(
+        target_defaults, dict
+    ):
+        return
+    for mode_key, mode_defaults in explosion_defaults.items():
+        if mode_key in target_defaults and isinstance(mode_defaults, dict):
+            target_defaults[mode_key].update(mode_defaults)
 
 
 def get_display_settings() -> dict[str, Any]:

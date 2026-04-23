@@ -11,6 +11,7 @@
     "audio",
     "display",
     "analytics",
+    "explosion_defaults",
     "settings"
   ],
   "properties": {
@@ -100,6 +101,26 @@
         }
       }
     },
+    "explosion_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "2d",
+        "3d",
+        "4d"
+      ],
+      "properties": {
+        "2d": {
+          "$ref": "#/$defs/explosionDefaults"
+        },
+        "3d": {
+          "$ref": "#/$defs/explosionDefaults"
+        },
+        "4d": {
+          "$ref": "#/$defs/explosionDefaults"
+        }
+      }
+    },
     "settings": {
       "type": "object",
       "additionalProperties": false,
@@ -122,6 +143,108 @@
     }
   },
   "$defs": {
+    "explosionDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topology_preset_id",
+        "snapshot_source_id",
+        "piece_set_id",
+        "piece_shape_name",
+        "cell_origin",
+        "view_mode",
+        "boundary_response",
+        "particle_collisions",
+        "mass_mode",
+        "base_mass",
+        "random_mass_min",
+        "random_mass_max",
+        "collision_elasticity",
+        "diagnostics_mode",
+        "grid_mode",
+        "shadow_mode",
+        "trace_enabled",
+        "trace_retention_ms",
+        "speed_preset",
+        "w_movement_animation_style",
+        "sound_enabled",
+        "seed"
+      ],
+      "properties": {
+        "topology_preset_id": {
+          "type": "string"
+        },
+        "snapshot_source_id": {
+          "type": "string"
+        },
+        "piece_set_id": {
+          "type": "string"
+        },
+        "piece_shape_name": {
+          "type": "string"
+        },
+        "cell_origin": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "view_mode": {
+          "type": "string"
+        },
+        "boundary_response": {
+          "type": "string"
+        },
+        "particle_collisions": {
+          "type": "string"
+        },
+        "mass_mode": {
+          "type": "string"
+        },
+        "base_mass": {
+          "type": "number"
+        },
+        "random_mass_min": {
+          "type": "number"
+        },
+        "random_mass_max": {
+          "type": "number"
+        },
+        "collision_elasticity": {
+          "type": "number"
+        },
+        "diagnostics_mode": {
+          "type": "string"
+        },
+        "grid_mode": {
+          "type": "string"
+        },
+        "shadow_mode": {
+          "type": "string"
+        },
+        "trace_enabled": {
+          "type": "boolean"
+        },
+        "trace_retention_ms": {
+          "type": "number"
+        },
+        "speed_preset": {
+          "type": "string"
+        },
+        "w_movement_animation_style": {
+          "type": "string"
+        },
+        "sound_enabled": {
+          "type": "boolean"
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "sharedBot": {
       "type": "object",
       "required": [

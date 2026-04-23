@@ -31,6 +31,75 @@ Master volume, SFX volume, and mute.
 Score logging and related persisted analysis controls.
 - `analytics.score_logging_enabled`: `false`; boolean
 
+### Explosion defaults
+Shared locked-cell explosion simulator and endgame default settings persisted per mode under `explosion_defaults`.
+- `explosion_defaults.2d.topology_preset_id`: `""`; string
+- `explosion_defaults.2d.snapshot_source_id`: `"single_piece"`; string
+- `explosion_defaults.2d.piece_set_id`: `""`; string
+- `explosion_defaults.2d.piece_shape_name`: `""`; string
+- `explosion_defaults.2d.cell_origin`: `[-1, -1, -1, -1]`; array; items: 4
+- `explosion_defaults.2d.view_mode`: `"board_native"`; string
+- `explosion_defaults.2d.boundary_response`: `"escape"`; string
+- `explosion_defaults.2d.particle_collisions`: `"off"`; string
+- `explosion_defaults.2d.mass_mode`: `"uniform"`; string
+- `explosion_defaults.2d.base_mass`: `1.0`; number
+- `explosion_defaults.2d.random_mass_min`: `0.75`; number
+- `explosion_defaults.2d.random_mass_max`: `1.25`; number
+- `explosion_defaults.2d.collision_elasticity`: `1.0`; number
+- `explosion_defaults.2d.diagnostics_mode`: `"off"`; string
+- `explosion_defaults.2d.grid_mode`: `"full"`; string
+- `explosion_defaults.2d.shadow_mode`: `"off"`; string
+- `explosion_defaults.2d.trace_enabled`: `false`; boolean
+- `explosion_defaults.2d.trace_retention_ms`: `2640.0`; number
+- `explosion_defaults.2d.speed_preset`: `"normal"`; string
+- `explosion_defaults.2d.w_movement_animation_style`: `"fade"`; string
+- `explosion_defaults.2d.sound_enabled`: `true`; boolean
+- `explosion_defaults.2d.seed`: `1337`; integer; min: 0
+- `explosion_defaults.3d.topology_preset_id`: `""`; string
+- `explosion_defaults.3d.snapshot_source_id`: `"single_piece"`; string
+- `explosion_defaults.3d.piece_set_id`: `""`; string
+- `explosion_defaults.3d.piece_shape_name`: `""`; string
+- `explosion_defaults.3d.cell_origin`: `[-1, -1, -1, -1]`; array; items: 4
+- `explosion_defaults.3d.view_mode`: `"board_native"`; string
+- `explosion_defaults.3d.boundary_response`: `"escape"`; string
+- `explosion_defaults.3d.particle_collisions`: `"off"`; string
+- `explosion_defaults.3d.mass_mode`: `"uniform"`; string
+- `explosion_defaults.3d.base_mass`: `1.0`; number
+- `explosion_defaults.3d.random_mass_min`: `0.75`; number
+- `explosion_defaults.3d.random_mass_max`: `1.25`; number
+- `explosion_defaults.3d.collision_elasticity`: `1.0`; number
+- `explosion_defaults.3d.diagnostics_mode`: `"off"`; string
+- `explosion_defaults.3d.grid_mode`: `"full"`; string
+- `explosion_defaults.3d.shadow_mode`: `"off"`; string
+- `explosion_defaults.3d.trace_enabled`: `false`; boolean
+- `explosion_defaults.3d.trace_retention_ms`: `2640.0`; number
+- `explosion_defaults.3d.speed_preset`: `"normal"`; string
+- `explosion_defaults.3d.w_movement_animation_style`: `"fade"`; string
+- `explosion_defaults.3d.sound_enabled`: `true`; boolean
+- `explosion_defaults.3d.seed`: `1337`; integer; min: 0
+- `explosion_defaults.4d.topology_preset_id`: `""`; string
+- `explosion_defaults.4d.snapshot_source_id`: `"single_piece"`; string
+- `explosion_defaults.4d.piece_set_id`: `""`; string
+- `explosion_defaults.4d.piece_shape_name`: `""`; string
+- `explosion_defaults.4d.cell_origin`: `[-1, -1, -1, -1]`; array; items: 4
+- `explosion_defaults.4d.view_mode`: `"board_native"`; string
+- `explosion_defaults.4d.boundary_response`: `"escape"`; string
+- `explosion_defaults.4d.particle_collisions`: `"off"`; string
+- `explosion_defaults.4d.mass_mode`: `"uniform"`; string
+- `explosion_defaults.4d.base_mass`: `1.0`; number
+- `explosion_defaults.4d.random_mass_min`: `0.75`; number
+- `explosion_defaults.4d.random_mass_max`: `1.25`; number
+- `explosion_defaults.4d.collision_elasticity`: `1.0`; number
+- `explosion_defaults.4d.diagnostics_mode`: `"off"`; string
+- `explosion_defaults.4d.grid_mode`: `"full"`; string
+- `explosion_defaults.4d.shadow_mode`: `"off"`; string
+- `explosion_defaults.4d.trace_enabled`: `false`; boolean
+- `explosion_defaults.4d.trace_retention_ms`: `2640.0`; number
+- `explosion_defaults.4d.speed_preset`: `"normal"`; string
+- `explosion_defaults.4d.w_movement_animation_style`: `"fade"`; string
+- `explosion_defaults.4d.sound_enabled`: `true`; boolean
+- `explosion_defaults.4d.seed`: `1337`; integer; min: 0
+
 
 ## 2D settings
 ### Gameplay setup

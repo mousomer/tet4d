@@ -498,6 +498,12 @@ class EndgameSnapshot:
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
     boundary_response: str = ENDGAME_BOUNDARY_RESPONSE_ESCAPE
     particle_collisions: str = ENDGAME_PARTICLE_COLLISIONS_OFF
+    mass_mode: str = "uniform"
+    base_mass: float = 1.0
+    random_mass_min: float = 0.75
+    random_mass_max: float = 1.25
+    collision_elasticity: float = 1.0
+    speed_preset: str = "normal"
     relic_speed_scale: float = 1.0
     shatter_speed_scale: float = 1.0
     topology: ExplosionTopologyInput = field(
@@ -727,6 +733,12 @@ def create_snapshot(
     preset_id: str | None = None,
     boundary_response: str | None = None,
     particle_collisions: str | None = None,
+    mass_mode: str = "uniform",
+    base_mass: float = 1.0,
+    random_mass_min: float = 0.75,
+    random_mass_max: float = 1.25,
+    collision_elasticity: float = 1.0,
+    speed_preset: str = "normal",
     relic_speed_scale: float = 1.0,
     shatter_speed_scale: float = 1.0,
     topology_edge_rules: tuple[tuple[str, str], ...] | None = None,
@@ -772,6 +784,12 @@ def create_snapshot(
             particle_collisions,
             default=active_tuning.default_particle_collisions,
         ),
+        mass_mode=str(mass_mode),
+        base_mass=float(base_mass),
+        random_mass_min=float(random_mass_min),
+        random_mass_max=float(random_mass_max),
+        collision_elasticity=float(collision_elasticity),
+        speed_preset=str(speed_preset),
         relic_speed_scale=max(0.05, float(relic_speed_scale)),
         shatter_speed_scale=max(0.05, float(shatter_speed_scale)),
         topology=ExplosionTopologyInput(
@@ -1853,7 +1871,12 @@ def build_endgame_animation_state(
             random_seed=int(snapshot.rng_seed),
             boundary_response=str(snapshot.boundary_response),
             particle_collisions=str(snapshot.particle_collisions),
-            speed_preset="normal",
+            mass_mode=str(snapshot.mass_mode),
+            base_mass=float(snapshot.base_mass),
+            random_mass_min=float(snapshot.random_mass_min),
+            random_mass_max=float(snapshot.random_mass_max),
+            collision_elasticity=float(snapshot.collision_elasticity),
+            speed_preset=str(snapshot.speed_preset),
             sound_enabled=bool(snapshot.sound_enabled),
             launch_speed_scale=float(snapshot.shatter_speed_scale),
             time_scale=float(snapshot.relic_speed_scale),

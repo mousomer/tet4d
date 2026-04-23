@@ -39,7 +39,36 @@ def ensure_default_settings_payload(
         payload["analytics"] = {"score_logging_enabled": False}
     elif not isinstance(analytics.get("score_logging_enabled"), bool):
         analytics["score_logging_enabled"] = False
+    payload.setdefault("explosion_defaults", {})
     return payload
+
+
+def _merge_named_sections(
+    payload: dict[str, Any],
+    loaded: dict[str, Any],
+    *,
+    section_names: tuple[str, ...],
+) -> None:
+    for section in section_names:
+        target = payload.get(section)
+        incoming = loaded.get(section)
+        if isinstance(target, dict) and isinstance(incoming, dict):
+            target.update(incoming)
+
+
+def _merge_explosion_defaults(
+    payload: dict[str, Any],
+    loaded: dict[str, Any],
+) -> None:
+    incoming_explosion_defaults = loaded.get("explosion_defaults")
+    target_explosion_defaults = payload.get("explosion_defaults")
+    if not isinstance(target_explosion_defaults, dict) or not isinstance(
+        incoming_explosion_defaults, dict
+    ):
+        return
+    for mode_key, mode_payload in incoming_explosion_defaults.items():
+        if mode_key in target_explosion_defaults and isinstance(mode_payload, dict):
+            target_explosion_defaults[mode_key].update(mode_payload)
 
 
 def merge_loaded_payload(payload: dict[str, Any], loaded: dict[str, Any]) -> None:
@@ -47,12 +76,12 @@ def merge_loaded_payload(payload: dict[str, Any], loaded: dict[str, Any]) -> Non
         if key in loaded:
             payload[key] = loaded[key]
 
-    for section in ("display", "audio", "analytics"):
-        target = payload.get(section)
-        incoming = loaded.get(section)
-        if isinstance(target, dict) and isinstance(incoming, dict):
-            target.update(incoming)
-
+    _merge_named_sections(
+        payload,
+        loaded,
+        section_names=("display", "audio", "analytics"),
+    )
+    _merge_explosion_defaults(payload, loaded)
     loaded_settings = loaded.get("settings")
     if not isinstance(loaded_settings, dict):
         return
@@ -222,6 +251,89 @@ def _sanitize_mode_settings(
     payload["settings"] = sanitized_settings
 
 
+def _sanitize_explosion_default_list(
+    value: object,
+    default_value: list[Any],
+) -> list[Any]:
+    if not isinstance(value, list) or len(value) != len(default_value):
+        return list(default_value)
+    normalized_list: list[Any] = []
+    for index, item_default in enumerate(default_value):
+        item_value = value[index]
+        if isinstance(item_default, int):
+            if isinstance(item_value, bool) or not isinstance(item_value, int):
+                item_value = item_default
+        elif isinstance(item_default, float):
+            if isinstance(item_value, bool) or not isinstance(item_value, (int, float)):
+                item_value = item_default
+            else:
+                item_value = float(item_value)
+        elif not isinstance(item_value, type(item_default)):
+            item_value = item_default
+        normalized_list.append(item_value)
+    return normalized_list
+
+
+def _sanitize_explosion_default_scalar(
+    value: object,
+    default_value: Any,
+) -> Any:
+    if isinstance(default_value, bool):
+        return bool(value)
+    if isinstance(default_value, int):
+        if isinstance(value, bool) or not isinstance(value, int):
+            return default_value
+        return value
+    if isinstance(default_value, float):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return default_value
+        return float(value)
+    if not isinstance(value, type(default_value)):
+        return default_value
+    return value
+
+
+def _sanitize_explosion_defaults_mode(
+    incoming_mode: dict[str, Any],
+    mode_defaults: dict[str, Any],
+) -> dict[str, Any]:
+    sanitized_mode: dict[str, Any] = {}
+    for attr_name, default_value in mode_defaults.items():
+        value = incoming_mode.get(attr_name, default_value)
+        if isinstance(default_value, list):
+            sanitized_mode[attr_name] = _sanitize_explosion_default_list(
+                value, default_value
+            )
+        else:
+            sanitized_mode[attr_name] = _sanitize_explosion_default_scalar(
+                value, default_value
+            )
+    return sanitized_mode
+
+
+def _sanitize_explosion_defaults_section(
+    payload: dict[str, Any],
+    default_payload: dict[str, Any],
+) -> None:
+    explosion_defaults = payload.get("explosion_defaults")
+    if not isinstance(explosion_defaults, dict):
+        explosion_defaults = {}
+    default_section = default_payload.get("explosion_defaults")
+    if not isinstance(default_section, dict):
+        payload["explosion_defaults"] = {}
+        return
+    sanitized_section: dict[str, dict[str, Any]] = {}
+    for mode_key, mode_defaults in default_section.items():
+        incoming_mode = explosion_defaults.get(mode_key)
+        if not isinstance(incoming_mode, dict):
+            incoming_mode = {}
+        sanitized_section[mode_key] = _sanitize_explosion_defaults_mode(
+            incoming_mode,
+            mode_defaults,
+        )
+    payload["explosion_defaults"] = sanitized_section
+
+
 def sanitize_payload(
     payload: dict[str, Any],
     *,
@@ -232,6 +344,7 @@ def sanitize_payload(
     _sanitize_display_section(payload, default_payload, defaults=defaults)
     _sanitize_audio_section(payload, default_payload)
     _sanitize_analytics_section(payload, default_payload)
+    _sanitize_explosion_defaults_section(payload, default_payload)
     _sanitize_mode_settings(payload, default_payload, defaults=defaults)
 
 
