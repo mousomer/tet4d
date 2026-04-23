@@ -126,7 +126,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   persisted defaults payloads, Stage 5 explorer-adapter thinning now limits
   topology-lab explosion launch ownership to topology/profile extraction,
   sandbox cell extraction, thin handoff data, and explorer-only lifecycle
-  status text via `topology_lab/explosion.py`, and
+  status text via `topology_lab/explosion.py`, Stage 6 endgame thinning now
+  treats `src/tet4d/ui/pygame/endgame_animation.py` as a shell layer around
+  the shared explosion controller so rupture/message/outward-release remain
+  endgame-owned while the persistent readable residue uses the shared
+  simulator-authored runtime/view defaults with an explicit debris population
+  vs live simulation population split, and
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
@@ -242,7 +247,7 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3767` real LOC
 2. `tests/unit/render/test_locked_cell_explosion.py`: `2861` real LOC
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2717` real LOC
-4. `src/tet4d/ui/pygame/endgame_animation.py`: `2412` real LOC
+4. `src/tet4d/ui/pygame/endgame_animation.py`: `2446` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
 7. `tools/governance/validate_project_contracts.py`: `1732` real LOC

@@ -42,6 +42,10 @@ TERMINAL_PHASE_PLAYING = "playing"
 TERMINAL_PHASE_ENDGAME_SHATTER = "endgame_shatter"
 TERMINAL_PHASE_ENDGAME_RELIC_FIELD = "endgame_relic_field"
 TERMINAL_PHASE_GAME_OVER_COMPLETE = "game_over_complete"
+ENDGAME_SHELL_PHASE_RUPTURE = "rupture"
+ENDGAME_SHELL_PHASE_MESSAGE_NOISE = "message_noise"
+ENDGAME_SHELL_PHASE_OUTWARD_RELEASE = "outward_release"
+ENDGAME_SHELL_PHASE_PERSISTENT_RESIDUE = "persistent_residue"
 
 # Compatibility alias retained for existing callers/tests that still refer to the
 # pre-split endgame phase name.
@@ -608,11 +612,18 @@ class EndgameShatterState:
 
 
 @dataclass(frozen=True)
-class EndgameRelicFieldState:
-    cell_relics: tuple[CellRelic, ...]
+class EndgameDebrisReleaseState:
+    debris_cells: tuple[CellRelic, ...]
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
     boundary_response: str = ENDGAME_BOUNDARY_RESPONSE_ESCAPE
     particle_collisions: str = ENDGAME_PARTICLE_COLLISIONS_OFF
+
+    @property
+    def cell_relics(self) -> tuple[CellRelic, ...]:
+        return self.debris_cells
+
+
+EndgameRelicFieldState = EndgameDebrisReleaseState
 
 
 @dataclass
@@ -620,7 +631,7 @@ class EndgameAnimationState:
     snapshot: EndgameSnapshot
     tuning: EndgameAnimationTuning
     shatter: EndgameShatterState
-    relic_field: EndgameRelicFieldState
+    debris_release: EndgameDebrisReleaseState
     phase: str = TERMINAL_PHASE_ENDGAME_SHATTER
     elapsed_ms: float = 0.0
     explosion_controller: object | None = None
@@ -631,12 +642,28 @@ class EndgameAnimationState:
         return self.shatter.shell_fragments
 
     @property
+    def debris_cells(self) -> tuple[CellRelic, ...]:
+        return self.debris_release.debris_cells
+
+    @property
     def cell_relics(self) -> tuple[CellRelic, ...]:
-        return self.relic_field.cell_relics
+        return self.debris_release.debris_cells
 
     @property
     def cell_fragments(self) -> tuple[CellRelic, ...]:
-        return self.relic_field.cell_relics
+        return self.debris_release.debris_cells
+
+    @property
+    def persistent_live_cells(self) -> tuple[SnapshotCell, ...]:
+        return self.snapshot.live_locked_cells
+
+    @property
+    def debris_population_count(self) -> int:
+        return len(self.debris_cells)
+
+    @property
+    def persistent_population_count(self) -> int:
+        return len(self.persistent_live_cells)
 
     @property
     def frozen_render_active(self) -> bool:
@@ -655,15 +682,31 @@ class EndgameAnimationState:
 
     @property
     def preset_id(self) -> str:
-        return self.relic_field.preset_id
+        return self.debris_release.preset_id
 
     @property
     def boundary_response(self) -> str:
-        return self.relic_field.boundary_response
+        return self.debris_release.boundary_response
 
     @property
     def particle_collisions(self) -> str:
-        return self.relic_field.particle_collisions
+        return self.debris_release.particle_collisions
+
+    @property
+    def shell_phase(self) -> str:
+        if self.phase == TERMINAL_PHASE_GAME_OVER_COMPLETE:
+            return ENDGAME_SHELL_PHASE_PERSISTENT_RESIDUE
+        if self.elapsed_ms < float(self.tuning.crack_onset_duration_ms):
+            return ENDGAME_SHELL_PHASE_RUPTURE
+        if self.elapsed_ms < float(self.tuning.capture_start_ms):
+            return ENDGAME_SHELL_PHASE_MESSAGE_NOISE
+        if self.elapsed_ms < float(self.tuning.shatter_duration_ms):
+            return ENDGAME_SHELL_PHASE_OUTWARD_RELEASE
+        return ENDGAME_SHELL_PHASE_PERSISTENT_RESIDUE
+
+    @property
+    def relic_field(self) -> EndgameDebrisReleaseState:
+        return self.debris_release
 
     def step(self, dt_ms: float) -> None:
         if not self.animating:
@@ -1949,8 +1992,8 @@ def build_endgame_animation_state(
             snapshot=snapshot,
             tuning=active_tuning,
             shatter=EndgameShatterState(shell_fragments=tuple()),
-            relic_field=EndgameRelicFieldState(
-                cell_relics=tuple(),
+            debris_release=EndgameDebrisReleaseState(
+                debris_cells=tuple(),
                 preset_id=snapshot.preset_id,
                 boundary_response=snapshot.boundary_response,
                 particle_collisions=snapshot.particle_collisions,
@@ -1961,7 +2004,7 @@ def build_endgame_animation_state(
 
     randomizer = random.Random(snapshot.rng_seed)
     planar = snapshot.dimension == 2
-    cell_relics = tuple(
+    debris_cells = tuple(
         _cell_relic_from_snapshot_cell(
             cell,
             randomizer=randomizer,
@@ -2043,8 +2086,8 @@ def build_endgame_animation_state(
         snapshot=snapshot,
         tuning=active_tuning,
         shatter=EndgameShatterState(shell_fragments=shell_fragments),
-        relic_field=EndgameRelicFieldState(
-            cell_relics=cell_relics,
+        debris_release=EndgameDebrisReleaseState(
+            debris_cells=debris_cells,
             preset_id=snapshot.preset_id,
             boundary_response=snapshot.boundary_response,
             particle_collisions=snapshot.particle_collisions,
@@ -2487,12 +2530,12 @@ def render_relics_for_animation(
             snapshot=animation.snapshot,
             preset_id=animation.preset_id,
         )
-        for relic in animation.cell_relics
+        for relic in animation.debris_cells
     ]
     if animation.particle_collisions == ENDGAME_PARTICLE_COLLISIONS_ON:
         motion_states = list(
             _apply_relic_collisions(
-                animation.cell_relics,
+                animation.debris_cells,
                 motion_states=motion_states,
                 elapsed_ms=float(animation.elapsed_ms),
                 tuning=animation.tuning,

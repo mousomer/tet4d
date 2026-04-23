@@ -657,6 +657,10 @@ Acceptance:
 - endgame does not own any separate board-presentation config application path
 - endgame launches shared runtime plus shared board presentation rather than a
   parallel view path
+- endgame shell phases are explicit: rupture, message/noise, outward debris
+  release, then persistent readable residue on the shared runtime/view
+- the two-population split is intentional: endgame-owned debris spectacle vs
+  shared-runtime live simulation subset
 
 ---
 

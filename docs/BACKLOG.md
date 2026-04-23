@@ -71,7 +71,11 @@ Current active follow-ups:
   endgame launch paths no longer assembling shared explosion defaults
   independently; Stage 5 explorer-adapter thinning is now the landed baseline,
   with topology-lab explosion launch reduced to topology/cell extraction,
-  narrow handoff data, and explorer-only lifecycle/status behavior;
+  narrow handoff data, and explorer-only lifecycle/status behavior; Stage 6
+  endgame thinning is now the landed baseline, with endgame limited to
+  rupture/message/debris shell sequencing plus gameplay topology/locked-cell
+  capture while the persistent residue reuses the shared explosion runtime/view
+  path;
   avoid devolving into a decorative final-energy readout
 
 - Open work:

@@ -329,6 +329,94 @@ class TestEndgameAnimation(unittest.TestCase):
             snapshot.boundary_response,
         )
 
+    def test_endgame_animation_splits_debris_shell_from_persistent_live_subset(
+        self,
+    ) -> None:
+        locked_cells = tuple(
+            endgame_animation.SnapshotCell(
+                source_coord=(index % 8, index // 8),
+                position=(float(index % 8), float(index // 8), 0.0),
+                color_id=(index % 7) + 1,
+            )
+            for index in range(64)
+        )
+        snapshot = endgame_animation.create_snapshot(
+            dimension=2,
+            board_dims=(20, 20),
+            render_dims=(20, 20, 1),
+            locked_cells=locked_cells,
+            base_seed=2026,
+            render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+            endgame_live_cell_fraction=0.12,
+        )
+
+        animation = endgame_animation.build_endgame_animation_state(snapshot)
+
+        self.assertEqual(animation.debris_population_count, len(snapshot.locked_cells))
+        self.assertEqual(
+            animation.persistent_population_count,
+            len(snapshot.live_locked_cells),
+        )
+        self.assertLess(
+            animation.persistent_population_count,
+            animation.debris_population_count,
+        )
+        self.assertEqual(len(animation.debris_cells), len(snapshot.locked_cells))
+        self.assertEqual(
+            tuple(cell.source_coord for cell in animation.persistent_live_cells),
+            tuple(cell.source_coord for cell in snapshot.live_locked_cells),
+        )
+
+    def test_endgame_shell_phase_progression_is_explicit(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot()
+        )
+
+        self.assertEqual(
+            animation.shell_phase,
+            endgame_animation.ENDGAME_SHELL_PHASE_RUPTURE,
+        )
+        animation.step(animation.tuning.crack_onset_duration_ms)
+        self.assertEqual(
+            animation.shell_phase,
+            endgame_animation.ENDGAME_SHELL_PHASE_MESSAGE_NOISE,
+        )
+        animation.step(
+            animation.tuning.capture_start_ms - animation.elapsed_ms + 1.0
+        )
+        self.assertEqual(
+            animation.shell_phase,
+            endgame_animation.ENDGAME_SHELL_PHASE_OUTWARD_RELEASE,
+        )
+        animation.step(
+            animation.tuning.shatter_duration_ms - animation.elapsed_ms
+        )
+        self.assertEqual(
+            animation.shell_phase,
+            endgame_animation.ENDGAME_SHELL_PHASE_PERSISTENT_RESIDUE,
+        )
+
+    def test_endgame_persistent_render_path_uses_shared_runtime_particles(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot(preset_id="wrap_all")
+        )
+        assert animation.explosion_controller is not None
+
+        with patch.object(
+            animation.explosion_controller,
+            "render_particles",
+            wraps=animation.explosion_controller.render_particles,
+        ) as render_particles:
+            render_states = endgame_animation.render_relics_for_animation(animation)
+
+        render_particles.assert_called_once_with(
+            render_context=animation.snapshot.render_context
+        )
+        self.assertEqual(
+            len(render_states),
+            len(animation.explosion_controller.simulation.particles),
+        )
+
     def test_endgame_live_cell_count_uses_fraction_floor_and_cap(self) -> None:
         self.assertEqual(
             endgame_animation.endgame_live_cell_count(
@@ -444,6 +532,8 @@ class TestEndgameAnimation(unittest.TestCase):
             len(snapshot.live_locked_cells),
             len(snapshot.locked_cells),
         )
+        self.assertEqual(animation.persistent_population_count, 48)
+        self.assertEqual(animation.debris_population_count, 60)
 
     def test_small_board_floor_prevents_empty_endgame_subset(self) -> None:
         locked_cells = tuple(
