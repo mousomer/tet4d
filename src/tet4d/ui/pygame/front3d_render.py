@@ -6,6 +6,7 @@ from typing import Optional, Tuple
 
 import pygame
 
+from tet4d.ui.pygame import board_presentation
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
 from tet4d.ui.pygame.projection3d import (
     Cell3,
@@ -47,21 +48,17 @@ from tet4d.ui.pygame.render.front3d_projection_helpers import (
 )
 from tet4d.ui.pygame.render.grid_mode_render import (
     build_projected_grid_primitives,
-    draw_projected_grid_mode,
     draw_projected_line_buckets,
 )
 from tet4d.ui.pygame.render.active_piece_projection_guides import (
     GuideCell3D,
     build_boundary_projection_face_primitives,
-    draw_boundary_projection_faces,
     projection_guide_enabled,
 )
 from tet4d.ui.pygame.render.panel_utils import (
     draw_game_over_banner,
     draw_unified_game_side_panel,
 )
-from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
-
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.rotation_anim import PieceRenderStateND
 from .frontend_nd_setup import gravity_interval_ms_from_config
@@ -707,9 +704,15 @@ def _draw_board_3d(
         piece_render_state=piece_render_state,
     )
     if active_piece_faces and presentation.board_line_primitives:
-        occlusion_buckets = resolve_board_line_occlusion(
-            presentation.board_line_primitives,
-            active_piece_faces,
+        _under_piece, over_piece = (
+            board_presentation.resolve_and_draw_gameplay_occluded_board_lines(
+                surface,
+                board_line_primitives=presentation.board_line_primitives,
+                active_piece_faces=active_piece_faces,
+                frame_color=GRID_COLOR,
+                inner_color=(52, 64, 95),
+                frame_width=2,
+            )
         )
         _draw_cells_with_occluding_board_lines(
             surface,
@@ -717,11 +720,11 @@ def _draw_board_3d(
             board_rect=board_rect,
             camera=camera,
             dims=presentation.dims,
-            board_lines_under_piece=occlusion_buckets.segments_under_piece,
-            board_lines_over_piece=occlusion_buckets.segments_over_piece,
+            board_lines_under_piece=_under_piece,
+            board_lines_over_piece=over_piece,
             overlay_transparency=overlay_transparency,
         )
-        draw_boundary_projection_faces(
+        board_presentation.draw_gameplay_projection_faces(
             surface,
             faces=projection_guide_faces,
         )
@@ -734,7 +737,7 @@ def _draw_board_3d(
             overlay_transparency=overlay_transparency,
         )
         return
-    draw_projected_grid_mode(
+    board_presentation.draw_gameplay_projected_grid(
         surface=surface,
         dims=presentation.dims,
         grid_mode=grid_mode,
@@ -776,7 +779,7 @@ def _draw_board_3d(
         dims=presentation.dims,
         overlay_transparency=overlay_transparency,
     )
-    draw_boundary_projection_faces(
+    board_presentation.draw_gameplay_projection_faces(
         surface,
         faces=projection_guide_faces,
     )

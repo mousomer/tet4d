@@ -197,6 +197,13 @@ Completed on 2026-04-20:
   `docs/BACKLOG.md`, `docs/PROJECT_STRUCTURE.md`,
   `docs/plans/explosion_refactor_ownership_split.md`, and
   `docs/rds/RDS_TETRIS_GENERAL.md`
+- Stage 7A gameplay board-presentation reuse is now landed for the low-risk
+  seams only: `render/gfx_game.py`, `front3d_render.py`, and
+  `front4d_render.py` now route grid/shadow/boundary-box/edge-grid
+  application through `src/tet4d/ui/pygame/board_presentation/gameplay_board.py`,
+  Stage 7B is now also landed for gameplay 4D W-movement presentation, with
+  style dispatch routed through the shared gameplay board-presentation helper
+  and camera/view reuse remaining deferred to Stage 7C
 - locked-cell explosion Stage 2 shared-controls extraction is now finalized in
   the project record: generic dropdown/numeric/row-layout/hit-testing
   ownership lives under `src/tet4d/ui/pygame/controls/`, the simulator surface

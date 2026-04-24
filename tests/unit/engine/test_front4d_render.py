@@ -13,7 +13,14 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for 4D render tests")
 
-from tet4d.ui.pygame import front4d_render, frontend_nd_setup, frontend_nd_state
+from types import SimpleNamespace
+
+from tet4d.ui.pygame import (
+    board_presentation,
+    front4d_render,
+    frontend_nd_setup,
+    frontend_nd_state,
+)
 from tet4d.ui.pygame import front4d_game
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
@@ -101,6 +108,18 @@ class TestFront4DRender(unittest.TestCase):
             loop.rotation_anim.rotation_animation_mode,
             "rigid_piece_rotation",
         )
+
+    def test_loop_context_seeds_w_movement_style_from_shared_defaults(self) -> None:
+        cfg = GameConfigND(dims=(8, 20, 7, 6), gravity_axis=1, speed_level=1)
+
+        with patch.object(
+            front4d_game,
+            "mode_explosion_defaults",
+            return_value=SimpleNamespace(w_movement_animation_style="box_size"),
+        ):
+            loop = front4d_game.LoopContext4D.create(cfg)
+
+        self.assertEqual(loop.w_movement_animation_style, "box_size")
 
     def test_projection_cache_key_changes_when_w_size_changes(self) -> None:
         view = front4d_game.LayerView3D(xw_deg=90.0, zw_deg=270.0)
@@ -220,6 +239,64 @@ class TestFront4DRender(unittest.TestCase):
         self.assertTrue(faces_a)
         self.assertTrue(faces_b)
         self.assertNotEqual(faces_a[0][1][0], faces_b[0][1][0])
+
+    def test_active_layer_cells_route_w_movement_style_through_shared_board_presentation(
+        self,
+    ) -> None:
+        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd_state.create_initial_state(cfg)
+        basis = front4d_render._basis_for_view(front4d_game.LayerView3D(), cfg.dims)
+        piece_render_state = SimpleNamespace(
+            presentation_cells=((2.0, 3.0, 2.0, 1.5),),
+            active_cells=((2.0, 3.0, 2.0, 1.5),),
+            color_id=5,
+        )
+
+        with patch.object(
+            board_presentation,
+            "gameplay_w_movement_scale_for_layer",
+            wraps=board_presentation.gameplay_w_movement_scale_for_layer,
+        ) as scale_for_layer:
+            cells = front4d_render._active_layer_cells_from_piece_state(
+                state,
+                1,
+                piece_render_state,
+                basis,
+                w_movement_animation_style="fade",
+            )
+
+        self.assertTrue(cells)
+        scale_for_layer.assert_called()
+        self.assertEqual(scale_for_layer.call_args.kwargs["style"], "fade")
+
+    def test_box_size_w_movement_style_routes_through_shared_board_presentation(
+        self,
+    ) -> None:
+        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd_state.create_initial_state(cfg)
+        basis = front4d_render._basis_for_view(front4d_game.LayerView3D(), cfg.dims)
+        piece_render_state = SimpleNamespace(
+            presentation_cells=((2.0, 3.0, 2.0, 1.5),),
+            active_cells=((2.0, 3.0, 2.0, 1.5),),
+            color_id=5,
+        )
+
+        with patch.object(
+            board_presentation,
+            "gameplay_w_movement_scale_for_layer",
+            wraps=board_presentation.gameplay_w_movement_scale_for_layer,
+        ) as scale_for_layer:
+            cells = front4d_render._active_layer_cells_from_piece_state(
+                state,
+                1,
+                piece_render_state,
+                basis,
+                w_movement_animation_style="box_size",
+            )
+
+        self.assertTrue(cells)
+        scale_for_layer.assert_called()
+        self.assertEqual(scale_for_layer.call_args.kwargs["style"], "box_size")
 
     def test_layer_rect_mapping_uses_dynamic_layer_count(self) -> None:
         area = pygame.Rect(10, 20, 920, 620)

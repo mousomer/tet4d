@@ -48,6 +48,7 @@ from tet4d.engine.tutorial.api import (
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.ui.pygame import (
+    board_presentation,
     front4d_render,
     frontend_nd_input,
     frontend_nd_setup,
@@ -434,6 +435,7 @@ class LoopContext4D(PanelDragMixin):
     bot: PlayBotController
     rotation_anim: PieceRotationAnimatorND
     overlay_transparency: float
+    w_movement_animation_style: str = "fade"
     grid_mode: GridMode = GridMode.FULL
     clear_anim: Optional[ClearAnimation4D] = None
     last_lines_cleared: int = 0
@@ -476,6 +478,7 @@ class LoopContext4D(PanelDragMixin):
                 lesson_id=tutorial_lesson_id,
                 mode="4d",
             )
+        explosion_defaults = mode_explosion_defaults("4d")
         return cls(
             cfg=cfg,
             state=state,
@@ -510,6 +513,9 @@ class LoopContext4D(PanelDragMixin):
             overlay_transparency=clamp_overlay_transparency(
                 overlay_transparency,
                 default=overlay_default,
+            ),
+            w_movement_animation_style=board_presentation.normalize_gameplay_w_movement_style(
+                explosion_defaults.w_movement_animation_style
             ),
             last_lines_cleared=state.lines_cleared,
             was_game_over=state.game_over,
@@ -795,6 +801,7 @@ def run_game_loop(
             clear_anim=loop.clear_anim,
             active_overlay=active_overlay,
             overlay_transparency=loop.overlay_transparency,
+            w_movement_animation_style=loop.w_movement_animation_style,
             side_panel_offset=tuple(loop.helper_panel_offset),
             endgame_animation=loop.endgame_animation,
         ),

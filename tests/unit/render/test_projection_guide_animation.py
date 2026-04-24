@@ -20,7 +20,12 @@ from tet4d.engine.gameplay.rotation_anim import (
     PieceRotationAnimatorND,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode
-from tet4d.ui.pygame import front4d_game, front4d_render, frontend_nd_state
+from tet4d.ui.pygame import (
+    board_presentation,
+    front4d_game,
+    front4d_render,
+    frontend_nd_state,
+)
 from tet4d.ui.pygame.front2d_session import LoopContext2D
 from tet4d.ui.pygame.render import gfx_game
 
@@ -86,22 +91,26 @@ class TestProjectionGuideAnimation(unittest.TestCase):
         assert mid_overlay is not None
 
         board_offset, _panel_offset = gfx_game.compute_game_layout(screen, loop.cfg)
-        shadow_rects: list[pygame.Rect] = []
+        shadow_calls: list[tuple[pygame.Rect, str]] = []
         guide_segments: list[tuple[object, ...]] = []
-        original_shadow = gfx_game._draw_board_shadow
+        original_grid = board_presentation.draw_gameplay_board_grid_2d
 
-        def record_shadow(surface, board_rect):
-            shadow_rects.append(board_rect.copy())
-            return original_shadow(surface, board_rect)
+        def record_grid(*args, **kwargs):
+            shadow_calls.append((kwargs["board_rect"].copy(), kwargs["grid_mode"].value))
+            return original_grid(*args, **kwargs)
 
         def record_segments(*_args, segments, **_kwargs):
             guide_segments.append(tuple(segments))
 
         with (
-            mock.patch.object(gfx_game, "_draw_board_shadow", side_effect=record_shadow),
             mock.patch.object(
-                gfx_game,
-                "draw_boundary_projection_segments_2d",
+                board_presentation,
+                "draw_gameplay_board_grid_2d",
+                side_effect=record_grid,
+            ),
+            mock.patch.object(
+                board_presentation,
+                "draw_gameplay_projection_segments_2d",
                 side_effect=record_segments,
             ),
         ):
@@ -120,10 +129,40 @@ class TestProjectionGuideAnimation(unittest.TestCase):
                 active_piece_overlay=mid_overlay,
             )
 
-        self.assertEqual(len(shadow_rects), 2)
-        self.assertEqual(shadow_rects[0], shadow_rects[1])
+        self.assertEqual(len(shadow_calls), 2)
+        self.assertEqual(shadow_calls[0][0], shadow_calls[1][0])
+        self.assertEqual(shadow_calls[0][1], shadow_calls[1][1])
         self.assertEqual(len(guide_segments), 2)
         self.assertNotEqual(guide_segments[0], guide_segments[1])
+
+    def test_2d_gameplay_routes_grid_and_guides_through_shared_board_presentation(
+        self,
+    ) -> None:
+        screen = pygame.Surface((1024, 840), pygame.SRCALPHA)
+        loop = self._create_2d_loop()
+        board_offset, _panel_offset = gfx_game.compute_game_layout(screen, loop.cfg)
+
+        with (
+            mock.patch.object(
+                board_presentation,
+                "draw_gameplay_board_grid_2d",
+                wraps=board_presentation.draw_gameplay_board_grid_2d,
+            ) as draw_grid,
+            mock.patch.object(
+                board_presentation,
+                "draw_gameplay_projection_segments_2d",
+                wraps=board_presentation.draw_gameplay_projection_segments_2d,
+            ) as draw_segments,
+        ):
+            gfx_game.draw_board(
+                screen,
+                loop.state,
+                board_offset,
+                grid_mode=gfx_game.GridMode.ALL_BOUNDARIES,
+            )
+
+        draw_grid.assert_called_once()
+        draw_segments.assert_called_once()
 
     def test_4d_frozen_layer_presentation_builds_once_per_animation_move(self) -> None:
         view = front4d_game.LayerView3D(yaw_deg=32.0, pitch_deg=-26.0)
@@ -189,6 +228,47 @@ class TestProjectionGuideAnimation(unittest.TestCase):
                         active_overlay=mid_state,
                     )
                     self.assertEqual(build_presentation.call_count, layer_count)
+
+    def test_4d_gameplay_routes_grid_and_boundary_faces_through_shared_board_presentation(
+        self,
+    ) -> None:
+        cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
+        state = frontend_nd_state.create_initial_state(cfg)
+        state.board.cells[(1, 8, 2, 1)] = 4
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND(
+                "tri4",
+                ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)),
+                color_id=5,
+            ),
+            pos=(2, 3, 2, 1),
+        )
+        view = front4d_game.LayerView3D()
+        fonts = front4d_game.init_fonts()
+        screen = pygame.Surface((1400, 900), pygame.SRCALPHA)
+
+        with (
+            mock.patch.object(
+                board_presentation,
+                "draw_gameplay_projected_grid",
+                wraps=board_presentation.draw_gameplay_projected_grid,
+            ) as draw_grid,
+            mock.patch.object(
+                board_presentation,
+                "draw_gameplay_projection_faces",
+                wraps=board_presentation.draw_gameplay_projection_faces,
+            ) as draw_faces,
+        ):
+            front4d_render.draw_game_frame(
+                screen,
+                state,
+                view,
+                fonts,
+                grid_mode=GridMode.ALL_BOUNDARIES,
+            )
+
+        self.assertGreaterEqual(draw_grid.call_count, 1)
+        self.assertGreaterEqual(draw_faces.call_count, 1)
 
 
 if __name__ == "__main__":

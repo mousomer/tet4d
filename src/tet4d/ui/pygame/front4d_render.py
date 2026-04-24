@@ -7,6 +7,7 @@ from typing import Callable, Optional
 
 import pygame
 
+from tet4d.ui.pygame import board_presentation
 from .frontend_nd_setup import (
     GfxFonts,
     gravity_interval_ms_from_config,
@@ -54,24 +55,17 @@ from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
 from tet4d.engine.gameplay.rotation_anim import PieceRenderStateND
 from tet4d.ui.pygame.render.grid_mode_render import (
     build_projected_grid_primitives,
-    draw_projected_grid_mode,
     draw_projected_line_buckets,
-)
-from tet4d.ui.pygame.render.w_movement_animation import (
-    layer_transition_scale_for_distance,
 )
 from tet4d.ui.pygame.render.active_piece_projection_guides import (
     GuideCell3D,
     build_boundary_projection_face_primitives,
-    draw_boundary_projection_faces,
     projection_guide_enabled,
 )
 from tet4d.ui.pygame.render.text_render_cache import render_text_cached
 from tet4d.engine.gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
 from tet4d.engine.ui_logic.view_modes import GridMode, grid_mode_label
-from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
-
 
 MARGIN = project_constant_int(
     ("rendering", "4d", "margin"), 16, min_value=0, max_value=400
@@ -513,10 +507,20 @@ def _layer_cells(
     locked_by_layer: LockedLayerCells,
     basis: RenderBasis4D,
     piece_render_state: PieceRenderStateND | None = None,
+    *,
+    w_movement_animation_style: str = "fade",
 ) -> list[VisibleLayerCell]:
     return [
         *locked_by_layer.get(layer_index, ()),
-        *_layer_active_cells(state, layer_index, basis, piece_render_state),
+        *(
+            _layer_active_cells(
+                state,
+                layer_index,
+                basis,
+                piece_render_state,
+                w_movement_animation_style=w_movement_animation_style,
+            )
+        ),
     ]
 
 
@@ -541,6 +545,8 @@ def _layer_active_cells(
     layer_index: int,
     basis: RenderBasis4D,
     piece_render_state: PieceRenderStateND | None,
+    *,
+    w_movement_animation_style: str = "fade",
 ) -> list[VisibleLayerCell]:
     if piece_render_state is None:
         return _piece_active_layer_cells(state, layer_index, basis)
@@ -549,6 +555,7 @@ def _layer_active_cells(
         layer_index,
         piece_render_state,
         basis,
+        w_movement_animation_style=w_movement_animation_style,
     )
 
 
@@ -557,6 +564,8 @@ def _active_layer_cells_from_piece_state(
     layer_index: int,
     piece_render_state: PieceRenderStateND,
     basis: RenderBasis4D,
+    *,
+    w_movement_animation_style: str = "fade",
 ) -> list[VisibleLayerCell]:
     dims4 = state.config.dims
     is_overlay = not piece_render_state.presentation_cells
@@ -592,7 +601,10 @@ def _active_layer_cells_from_piece_state(
         # At distance 0.0: scale = 1.0 (full size)
         # At distance 0.5: scale = 0.5 (half size)
         # At distance 1.0: scale = 0.0 (invisible, filtered out above)
-        scale = layer_transition_scale_for_distance(layer_distance)
+        scale = board_presentation.gameplay_w_movement_scale_for_layer(
+            layer_distance=layer_distance,
+            style=w_movement_animation_style,
+        )
 
         if _in_bounds_layer_cell(layer_index, cell3, basis):
             cells.append(
@@ -612,6 +624,8 @@ def _overlay_active_layer_cells(
     layer_index: int,
     active_overlay: ActiveOverlay4D,
     basis: RenderBasis4D,
+    *,
+    w_movement_animation_style: str = "fade",
 ) -> list[VisibleLayerCell]:
     piece_render_state = PieceRenderStateND(
         presentation_cells=tuple(),
@@ -626,6 +640,7 @@ def _overlay_active_layer_cells(
         layer_index,
         piece_render_state,
         basis,
+        w_movement_animation_style=w_movement_animation_style,
     )
 
 
@@ -932,7 +947,7 @@ def _draw_layer_grid_or_shadow(
     presentation: LayerPresentation4D,
     grid_mode: GridMode,
 ) -> None:
-    draw_projected_grid_mode(
+    board_presentation.draw_gameplay_projected_grid(
         surface=surface,
         dims=dims3,
         grid_mode=grid_mode,
@@ -975,6 +990,7 @@ def _layer_faces(
     zoom: float,
     locked_by_layer: LockedLayerCells,
     piece_render_state: PieceRenderStateND | None = None,
+    w_movement_animation_style: str = "fade",
 ) -> tuple[list[Face], list[Face]]:
     solid_faces: list[Face] = []
     overlay_faces: list[Face] = []
@@ -984,6 +1000,7 @@ def _layer_faces(
         locked_by_layer,
         basis,
         piece_render_state,
+        w_movement_animation_style=w_movement_animation_style,
     ):
         cell_faces = _build_cell_faces(
             cell=coord3,
@@ -1012,6 +1029,7 @@ def _active_layer_faces(
     basis: RenderBasis4D,
     zoom: float,
     piece_render_state: PieceRenderStateND | None,
+    w_movement_animation_style: str = "fade",
 ) -> tuple[list[Face], list[Face]]:
     if piece_render_state is None:
         return [], []
@@ -1022,6 +1040,7 @@ def _active_layer_faces(
         layer_index,
         basis,
         piece_render_state,
+        w_movement_animation_style=w_movement_animation_style,
     ):
         cell_faces = _build_cell_faces(
             cell=coord3,
@@ -1145,6 +1164,7 @@ def _draw_layer_cells(
     board_lines_under_piece: tuple = (),
     board_lines_over_piece: tuple = (),
     locked_faces: tuple[Face, ...] | None = None,
+    w_movement_animation_style: str = "fade",
 ) -> None:
     piece_render_state = _coerce_piece_render_state_4d(active_overlay)
     if locked_faces is None:
@@ -1158,6 +1178,7 @@ def _draw_layer_cells(
             zoom,
             locked_by_layer,
             piece_render_state=piece_render_state,
+            w_movement_animation_style=w_movement_animation_style,
         )
         locked_faces_list = [face for face in solid_faces if not face[3]]
         active_faces = [face for face in solid_faces if face[3]]
@@ -1171,6 +1192,7 @@ def _draw_layer_cells(
             basis=basis,
             zoom=zoom,
             piece_render_state=piece_render_state,
+            w_movement_animation_style=w_movement_animation_style,
         )
         locked_faces_list = list(locked_faces)
     draw_projected_line_buckets(
@@ -1289,6 +1311,7 @@ def _draw_layer_board(
     side_panel_offset: tuple[int, int] = (0, 0),
     presentation: LayerPresentation4D | None = None,
     locked_faces: tuple[Face, ...] | None = None,
+    w_movement_animation_style: str = "fade",
 ) -> None:
     pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
     pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
@@ -1334,9 +1357,15 @@ def _draw_layer_board(
         piece_render_state=piece_render_state,
     )
     if active_piece_faces and presentation.board_line_primitives:
-        occlusion_buckets = resolve_board_line_occlusion(
-            presentation.board_line_primitives,
-            active_piece_faces,
+        under_piece, over_piece = (
+            board_presentation.resolve_and_draw_gameplay_occluded_board_lines(
+                surface,
+                board_line_primitives=presentation.board_line_primitives,
+                active_piece_faces=active_piece_faces,
+                frame_color=GRID_COLOR,
+                inner_color=(52, 64, 95),
+                frame_width=2,
+            )
         )
         _draw_layer_cells(
             surface,
@@ -1350,9 +1379,10 @@ def _draw_layer_board(
             locked_by_layer=locked_by_layer,
             active_overlay=piece_render_state,
             overlay_transparency=overlay_transparency,
-            board_lines_under_piece=occlusion_buckets.segments_under_piece,
-            board_lines_over_piece=occlusion_buckets.segments_over_piece,
+            board_lines_under_piece=under_piece,
+            board_lines_over_piece=over_piece,
             locked_faces=locked_faces,
+            w_movement_animation_style=w_movement_animation_style,
         )
     else:
         _draw_layer_grid_or_shadow(
@@ -1379,8 +1409,9 @@ def _draw_layer_board(
             active_overlay=piece_render_state,
             overlay_transparency=overlay_transparency,
             locked_faces=locked_faces,
+            w_movement_animation_style=w_movement_animation_style,
         )
-    draw_boundary_projection_faces(
+    board_presentation.draw_gameplay_projection_faces(
         surface,
         faces=projection_guide_faces,
     )
@@ -1754,6 +1785,7 @@ def draw_game_frame(
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
     endgame_animation: EndgameAnimationState | None = None,
+    w_movement_animation_style: str = "fade",
 ) -> None:
     draw_gradient_background(screen, BG_TOP, BG_BOTTOM)
     win_w, win_h = screen.get_size()
@@ -1853,6 +1885,7 @@ def draw_game_frame(
                 clear_anim=clear_anim,
                 active_overlay=piece_render_state,
                 overlay_transparency=overlay_transparency,
+                w_movement_animation_style=w_movement_animation_style,
                 presentation=(
                     None
                     if animation_cache is None

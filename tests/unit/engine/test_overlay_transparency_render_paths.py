@@ -4,7 +4,12 @@ import unittest
 
 import pygame
 
-from tet4d.ui.pygame import front3d_render, front4d_render, frontend_nd_state
+from tet4d.ui.pygame import (
+    board_presentation,
+    front3d_render,
+    front4d_render,
+    frontend_nd_state,
+)
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimatorND
@@ -218,6 +223,41 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         after_alpha_total = self._surface_alpha_total(after_surface)
         self.assertGreater(after_alpha_total, before_alpha_total)
 
+    def test_3d_gameplay_routes_grid_and_boundary_faces_through_shared_board_presentation(
+        self,
+    ) -> None:
+        cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, speed_level=1)
+        state = frontend_nd_state.create_initial_state(cfg)
+        state.board.cells[(2, 8, 2)] = 7
+        state.current_piece = ActivePieceND.from_shape(
+            PieceShapeND("tri3", ((0, 0, 0), (1, 0, 0), (0, 1, 0)), color_id=6),
+            pos=(2, 3, 2),
+        )
+        board_rect = pygame.Rect(20, 20, 600, 600)
+
+        with (
+            unittest.mock.patch.object(
+                board_presentation,
+                "draw_gameplay_projected_grid",
+                wraps=board_presentation.draw_gameplay_projected_grid,
+            ) as draw_grid,
+            unittest.mock.patch.object(
+                board_presentation,
+                "draw_gameplay_projection_faces",
+                wraps=board_presentation.draw_gameplay_projection_faces,
+            ) as draw_faces,
+        ):
+            front3d_render._draw_board_3d(
+                pygame.Surface((820, 720), pygame.SRCALPHA),
+                state,
+                front3d_game.Camera3D(),
+                board_rect,
+                grid_mode=front3d_render.GridMode.ALL_BOUNDARIES,
+            )
+
+        self.assertGreaterEqual(draw_grid.call_count, 1)
+        self.assertGreaterEqual(draw_faces.call_count, 1)
+
     def test_4d_overlay_keydown_changes_locked_cell_alpha(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
         loop = front4d_game.LoopContext4D.create(cfg)
@@ -282,4 +322,3 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

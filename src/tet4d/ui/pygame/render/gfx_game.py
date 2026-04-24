@@ -20,6 +20,7 @@ from tet4d.ui.pygame.endgame_animation import (
     rotate_point,
     transform_shell_geometry,
 )
+from tet4d.ui.pygame import board_presentation
 from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
     init_fonts as init_fonts_for_profile,
@@ -27,7 +28,6 @@ from tet4d.ui.pygame.render.font_profiles import (
 from tet4d.ui.pygame.render.active_piece_projection_guides import (
     GuideCell2D,
     build_boundary_projection_segments_2d,
-    draw_boundary_projection_segments_2d,
     projection_guide_enabled,
 )
 from tet4d.ui.pygame.render.gfx_panel_2d import draw_side_panel_2d
@@ -628,38 +628,6 @@ def compute_game_layout(
     return board_offset, panel_offset
 
 
-def _draw_board_shadow(surface: pygame.Surface, board_rect: pygame.Rect) -> None:
-    """
-    Draw a subtle board silhouette when grid lines are hidden.
-    """
-    shadow = pygame.Surface(board_rect.size, pygame.SRCALPHA)
-    pygame.draw.rect(shadow, (16, 24, 52, 170), shadow.get_rect())
-
-    step = max(6, CELL_SIZE)
-    for y in range(0, board_rect.height, step):
-        alpha = 20 if (y // step) % 2 == 0 else 10
-        pygame.draw.line(
-            shadow, (130, 150, 190, alpha), (0, y), (board_rect.width, y), 1
-        )
-
-    surface.blit(shadow, board_rect.topleft)
-    pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
-
-
-def _draw_board_edges_only(surface: pygame.Surface, board_rect: pygame.Rect) -> None:
-    for index in range(board_rect.width // CELL_SIZE):
-        left = board_rect.x + index * CELL_SIZE
-        right = left + CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (left, board_rect.y), (right, board_rect.y))
-        pygame.draw.line(surface, GRID_COLOR, (left, board_rect.bottom), (right, board_rect.bottom))
-    for index in range(board_rect.height // CELL_SIZE):
-        top = board_rect.y + index * CELL_SIZE
-        bottom = top + CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (board_rect.x, top), (board_rect.x, bottom))
-        pygame.draw.line(surface, GRID_COLOR, (board_rect.right, top), (board_rect.right, bottom))
-    pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
-
-
 def _helper_grid_marks_2d(
     state: GameState, width: int, height: int
 ) -> tuple[set[int], set[int]]:
@@ -672,31 +640,6 @@ def _helper_grid_marks_2d(
             y_marks.add(y)
             y_marks.add(y + 1)
     return x_marks, y_marks
-
-
-def _draw_helper_grid(
-    surface: pygame.Surface,
-    board_rect: pygame.Rect,
-    width_cells: int,
-    height_cells: int,
-    x_marks: set[int],
-    y_marks: set[int],
-) -> None:
-    for x in sorted(x_marks):
-        if not (0 <= x <= width_cells):
-            continue
-        x_px = board_rect.x + x * CELL_SIZE
-        pygame.draw.line(
-            surface, GRID_COLOR, (x_px, board_rect.y), (x_px, board_rect.bottom)
-        )
-    for y in sorted(y_marks):
-        if not (0 <= y <= height_cells):
-            continue
-        y_px = board_rect.y + y * CELL_SIZE
-        pygame.draw.line(
-            surface, GRID_COLOR, (board_rect.x, y_px), (board_rect.right, y_px)
-        )
-
 
 def _draw_clear_effect(
     surface: pygame.Surface,
@@ -733,21 +676,6 @@ def _draw_clear_effect(
         surface.blit(overlay, row_rect.topleft)
 
 
-def _draw_full_grid(
-    surface: pygame.Surface, ox: int, oy: int, width_cells: int, height_cells: int
-) -> None:
-    for x in range(width_cells + 1):
-        x_px = ox + x * CELL_SIZE
-        pygame.draw.line(
-            surface, GRID_COLOR, (x_px, oy), (x_px, oy + height_cells * CELL_SIZE)
-        )
-    for y in range(height_cells + 1):
-        y_px = oy + y * CELL_SIZE
-        pygame.draw.line(
-            surface, GRID_COLOR, (ox, y_px), (ox + width_cells * CELL_SIZE, y_px)
-        )
-
-
 def _draw_grid_variant(
     surface: pygame.Surface,
     board_rect: pygame.Rect,
@@ -758,24 +686,21 @@ def _draw_grid_variant(
     height_cells: int,
     grid_mode: GridMode,
 ) -> None:
-    if grid_mode in (
-        GridMode.OFF,
-        GridMode.SHADOW,
-        GridMode.HELPER,
-        GridMode.BOTTOM_BOUNDARY,
-        GridMode.ALL_BOUNDARIES,
-    ):
-        _draw_board_shadow(surface, board_rect)
-    elif grid_mode == GridMode.EDGE:
-        _draw_board_edges_only(surface, board_rect)
-
-    if grid_mode == GridMode.FULL:
-        _draw_full_grid(surface, ox, oy, width_cells, height_cells)
-    elif grid_mode == GridMode.HELPER:
-        x_marks, y_marks = _helper_grid_marks_2d(state, width_cells, height_cells)
-        _draw_helper_grid(
-            surface, board_rect, width_cells, height_cells, x_marks, y_marks
-        )
+    del ox, oy
+    helper_marks = (
+        _helper_grid_marks_2d(state, width_cells, height_cells)
+        if grid_mode == GridMode.HELPER
+        else None
+    )
+    board_presentation.draw_gameplay_board_grid_2d(
+        surface,
+        board_rect=board_rect,
+        cell_size=CELL_SIZE,
+        width_cells=width_cells,
+        height_cells=height_cells,
+        grid_mode=grid_mode,
+        helper_marks=helper_marks,
+    )
 
 
 def _draw_locked_cells(
@@ -1240,7 +1165,7 @@ def _draw_projection_guide_2d(
         grid_mode=grid_mode,
         color=color_for_cell(int(color_id)),
     )
-    draw_boundary_projection_segments_2d(
+    board_presentation.draw_gameplay_projection_segments_2d(
         surface,
         segments=segments,
         board_offset=board_offset,

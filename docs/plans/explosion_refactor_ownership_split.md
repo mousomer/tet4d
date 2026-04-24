@@ -675,10 +675,27 @@ Move or route:
 - W-movement style helpers,
 - visual-only camera conventions where appropriate.
 
+Stage split:
+- Stage 7A: route only low-risk gameplay grid/shadow/boundary-box/edge-grid
+  application through shared board presentation
+- Stage 7B: route gameplay W-movement presentation through shared board
+  presentation
+- Stage 7C: reuse presentation-only camera/view seams only where clearly
+  decoupled and low-risk
+
 Acceptance:
 - gameplay render behavior remains equivalent,
 - gameplay rules/state ownership does not move,
 - gameplay reuses presentation seams only.
+
+Stage 7A landed:
+- `render/gfx_game.py`, `front3d_render.py`, and `front4d_render.py` now route
+  low-risk grid/shadow/boundary-box/edge-grid application through
+  `src/tet4d/ui/pygame/board_presentation/gameplay_board.py`
+- Stage 7B now routes gameplay 4D W-movement style dispatch through that same
+  shared gameplay board-presentation helper instead of keeping the style
+  application branch in `front4d_render.py`
+- camera/view reuse remains deferred to Stage 7C
 
 ---
 

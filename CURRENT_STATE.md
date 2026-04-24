@@ -141,7 +141,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   owner for grid/shadow/boundary/edge-grid/occlusion/trace/W-movement and
   dimensional board-view application while reusing existing
   `front3d_render.Camera3D` / `front4d_render.LayerView3D` camera behavior
-  instead of a simulator-local camera stack, and
+  instead of a simulator-local camera stack, Stage 7A gameplay reuse now
+  routes low-risk gameplay grid/shadow/boundary-box/edge-grid application
+  through `src/tet4d/ui/pygame/board_presentation/gameplay_board.py` without
+  moving gameplay state/rules, Stage 7B now routes gameplay 4D W-movement
+  style selection/application through that same shared gameplay board-
+  presentation layer while preserving current render-time behavior, and leaves
+  camera/view reuse for Stage 7C, and
   Stage 2 shared-controls extraction now routes generic dropdown behavior,
   numeric text/slider/stepper state, row layout, wrapped label/value spacing,
   hit-testing, and control-level pointer/keyboard semantics through
@@ -225,15 +231,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 244` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 245` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.69` (`low`)
+- `tech_debt.score = 5.70` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.54`
+1. `delivery_size_pressure = 2.55`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -249,7 +255,7 @@ Top 8 live Python hotspots by real LOC:
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2717` real LOC
 4. `src/tet4d/ui/pygame/endgame_animation.py`: `2446` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `1844` real LOC
 7. `tools/governance/validate_project_contracts.py`: `1732` real LOC
 8. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 
