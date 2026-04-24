@@ -695,7 +695,15 @@ Stage 7A landed:
 - Stage 7B now routes gameplay 4D W-movement style dispatch through that same
   shared gameplay board-presentation helper instead of keeping the style
   application branch in `front4d_render.py`
-- camera/view reuse remains deferred to Stage 7C
+- Stage 7C now routes only the low-risk gameplay camera/view presentation
+  seams through that same shared gameplay board-presentation helper:
+  `front3d_render.py` now delegates orthographic zoom-fit application there,
+  and `front4d_render.py` now delegates frozen-view snapshot copying there
+- explicitly deferred as gameplay-local after Stage 7C:
+  `front4d_render.py` basis decomposition, projection extras/raw-point
+  transforms, layer-presentation orchestration, and gameplay camera/control
+  semantics because those seams remain entangled and are not yet clearly
+  presentation-only
 
 ---
 

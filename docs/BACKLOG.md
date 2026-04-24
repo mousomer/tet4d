@@ -202,8 +202,12 @@ Completed on 2026-04-20:
   `front4d_render.py` now route grid/shadow/boundary-box/edge-grid
   application through `src/tet4d/ui/pygame/board_presentation/gameplay_board.py`,
   Stage 7B is now also landed for gameplay 4D W-movement presentation, with
-  style dispatch routed through the shared gameplay board-presentation helper
-  and camera/view reuse remaining deferred to Stage 7C
+  style dispatch routed through the shared gameplay board-presentation helper,
+  and Stage 7C now lands the low-risk camera/view reuse seams only:
+  `front3d_render.py` routes orthographic zoom-fit application through the
+  shared gameplay board-presentation helper and `front4d_render.py` routes
+  frozen-view snapshot copying there, while the entangled 4D basis/projection
+  and camera-control paths remain explicitly deferred as gameplay-local
 - locked-cell explosion Stage 2 shared-controls extraction is now finalized in
   the project record: generic dropdown/numeric/row-layout/hit-testing
   ownership lives under `src/tet4d/ui/pygame/controls/`, the simulator surface

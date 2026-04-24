@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Callable
 
 import pygame
 
 from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    fit_orthographic_zoom_for_rect,
+)
 from tet4d.ui.pygame.render.active_piece_projection_guides import (
     draw_boundary_projection_faces,
     draw_boundary_projection_segments_2d,
@@ -297,6 +301,45 @@ def draw_gameplay_over_piece_board_lines(
         frame_color=frame_color,
         inner_color=inner_color,
         frame_width=frame_width,
+    )
+
+
+def apply_gameplay_orthographic_zoom_fit_3d(
+    camera,
+    *,
+    dims: tuple[int, int, int],
+    board_rect: pygame.Rect,
+) -> None:
+    if not getattr(camera, "auto_fit_once", False) and not camera.is_animating():
+        return
+    projection = getattr(camera, "projection", None)
+    if projection is None or getattr(projection, "name", None) != "ORTHOGRAPHIC":
+        return
+    camera.zoom = fit_orthographic_zoom_for_rect(
+        dims=dims,
+        yaw_deg=float(camera.yaw_deg),
+        pitch_deg=float(camera.pitch_deg),
+        rect=board_rect,
+        pad_x=18,
+        pad_y=18,
+        min_zoom=12.0,
+        max_zoom=140.0,
+    )
+    if not camera.is_animating():
+        camera.auto_fit_once = False
+
+
+def copy_gameplay_frozen_layer_view_4d(view):
+    frozen_xw_deg = float(view.hyper_start_xw if view.hyper_animating else view.xw_deg)
+    frozen_zw_deg = float(view.hyper_start_zw if view.hyper_animating else view.zw_deg)
+    return replace(
+        view,
+        yaw_deg=float(view.yaw_deg),
+        pitch_deg=float(view.pitch_deg),
+        anim_duration_ms=float(view.anim_duration_ms),
+        zoom_scale=float(view.zoom_scale),
+        xw_deg=frozen_xw_deg,
+        zw_deg=frozen_zw_deg,
     )
 
 

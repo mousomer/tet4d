@@ -42,7 +42,6 @@ from tet4d.ui.pygame.render.front3d_projection_helpers import (
     build_cell_faces as build_cell_faces_helper,
     depth_denominator_for_depth,
     draw_board_grid as draw_board_grid_helper,
-    fit_orthographic_zoom_for_rect,
     project_raw_point as project_raw_point_helper,
     transform_raw_point as transform_raw_point_helper,
 )
@@ -956,27 +955,11 @@ def _auto_fit_orthographic_zoom(
     dims: Tuple[int, int, int],
     board_rect: pygame.Rect,
 ) -> None:
-    """
-    One-shot fit so the entire board is visible for orthographic projection
-    at the current yaw/pitch.
-    """
-    if not camera.auto_fit_once and not camera.is_animating():
-        return
-    if camera.projection != ProjectionMode3D.ORTHOGRAPHIC:
-        return
-
-    camera.zoom = fit_orthographic_zoom_for_rect(
+    board_presentation.apply_gameplay_orthographic_zoom_fit_3d(
+        camera,
         dims=dims,
-        yaw_deg=camera.yaw_deg,
-        pitch_deg=camera.pitch_deg,
-        rect=board_rect,
-        pad_x=18,
-        pad_y=18,
-        min_zoom=12.0,
-        max_zoom=140.0,
+        board_rect=board_rect,
     )
-    if not camera.is_animating():
-        camera.auto_fit_once = False
 
 
 def draw_game_frame(

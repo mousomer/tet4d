@@ -258,6 +258,28 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         self.assertGreaterEqual(draw_grid.call_count, 1)
         self.assertGreaterEqual(draw_faces.call_count, 1)
 
+    def test_3d_gameplay_routes_orthographic_zoom_fit_through_shared_board_presentation(
+        self,
+    ) -> None:
+        cfg = GameConfigND(dims=(6, 12, 6), gravity_axis=1, speed_level=1)
+        state = frontend_nd_state.create_initial_state(cfg)
+        camera = front3d_game.Camera3D()
+
+        with unittest.mock.patch.object(
+            board_presentation,
+            "apply_gameplay_orthographic_zoom_fit_3d",
+            wraps=board_presentation.apply_gameplay_orthographic_zoom_fit_3d,
+        ) as apply_fit:
+            front3d_render.draw_game_frame(
+                pygame.Surface((820, 720), pygame.SRCALPHA),
+                state,
+                camera,
+                front3d_render.init_fonts(),
+                grid_mode=front3d_render.GridMode.OFF,
+            )
+
+        apply_fit.assert_called_once()
+
     def test_4d_overlay_keydown_changes_locked_cell_alpha(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
         loop = front4d_game.LoopContext4D.create(cfg)

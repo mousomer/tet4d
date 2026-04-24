@@ -1,4 +1,6 @@
 from .gameplay_board import (
+    apply_gameplay_orthographic_zoom_fit_3d,
+    copy_gameplay_frozen_layer_view_4d,
     draw_gameplay_board_grid_2d,
     draw_gameplay_over_piece_board_lines,
     draw_gameplay_projected_grid,
@@ -11,6 +13,8 @@ from .gameplay_board import (
 from .native_board import draw_native_board_view
 
 __all__ = [
+    "apply_gameplay_orthographic_zoom_fit_3d",
+    "copy_gameplay_frozen_layer_view_4d",
     "draw_gameplay_board_grid_2d",
     "draw_gameplay_over_piece_board_lines",
     "draw_gameplay_projected_grid",

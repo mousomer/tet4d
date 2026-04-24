@@ -146,8 +146,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   through `src/tet4d/ui/pygame/board_presentation/gameplay_board.py` without
   moving gameplay state/rules, Stage 7B now routes gameplay 4D W-movement
   style selection/application through that same shared gameplay board-
-  presentation layer while preserving current render-time behavior, and leaves
-  camera/view reuse for Stage 7C, and
+  presentation layer while preserving current render-time behavior, Stage 7C
+  now routes the low-risk gameplay camera/view presentation seams through that
+  same shared gameplay board-presentation layer for 3D orthographic zoom-fit
+  application and 4D frozen-view snapshot copying, and explicitly defers the
+  entangled 4D basis/projection/control stack as gameplay-local, and
   Stage 2 shared-controls extraction now routes generic dropdown behavior,
   numeric text/slider/stepper state, row layout, wrapped label/value spacing,
   hit-testing, and control-level pointer/keyboard semantics through
@@ -255,7 +258,7 @@ Top 8 live Python hotspots by real LOC:
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2717` real LOC
 4. `src/tet4d/ui/pygame/endgame_animation.py`: `2446` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `1844` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `1836` real LOC
 7. `tools/governance/validate_project_contracts.py`: `1732` real LOC
 8. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 

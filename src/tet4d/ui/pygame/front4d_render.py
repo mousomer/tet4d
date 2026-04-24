@@ -795,15 +795,7 @@ def _build_layer_presentation(
 
 
 def _copy_frozen_layer_view(view: LayerView3D) -> LayerView3D:
-    frozen_xw_deg, frozen_zw_deg = _effective_hyper_angles(view)
-    return LayerView3D(
-        yaw_deg=float(view.yaw_deg),
-        pitch_deg=float(view.pitch_deg),
-        anim_duration_ms=float(view.anim_duration_ms),
-        zoom_scale=float(view.zoom_scale),
-        xw_deg=float(frozen_xw_deg),
-        zw_deg=float(frozen_zw_deg),
-    )
+    return board_presentation.copy_gameplay_frozen_layer_view_4d(view)
 
 
 def _rect_token(rect: pygame.Rect) -> tuple[int, int, int, int]:

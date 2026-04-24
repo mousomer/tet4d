@@ -298,6 +298,32 @@ class TestFront4DRender(unittest.TestCase):
         scale_for_layer.assert_called()
         self.assertEqual(scale_for_layer.call_args.kwargs["style"], "box_size")
 
+    def test_frozen_layer_view_snapshot_routes_through_shared_board_presentation(
+        self,
+    ) -> None:
+        view = front4d_game.LayerView3D(
+            yaw_deg=15.0,
+            pitch_deg=-20.0,
+            zoom_scale=1.25,
+            xw_deg=180.0,
+            zw_deg=270.0,
+        )
+        view.hyper_animating = True
+        view.hyper_start_xw = 90.0
+        view.hyper_start_zw = 180.0
+
+        with patch.object(
+            board_presentation,
+            "copy_gameplay_frozen_layer_view_4d",
+            wraps=board_presentation.copy_gameplay_frozen_layer_view_4d,
+        ) as copy_view:
+            frozen = front4d_render._copy_frozen_layer_view(view)
+
+        copy_view.assert_called_once_with(view)
+        self.assertEqual(frozen.xw_deg, 90.0)
+        self.assertEqual(frozen.zw_deg, 180.0)
+        self.assertEqual(frozen.yaw_deg, view.yaw_deg)
+
     def test_layer_rect_mapping_uses_dynamic_layer_count(self) -> None:
         area = pygame.Rect(10, 20, 920, 620)
         rect_map_2 = front4d_render._layer_rects_by_layer(area=area, layer_count=2)
