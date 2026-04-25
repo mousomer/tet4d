@@ -22,6 +22,7 @@ from tet4d.engine.runtime.project_config import constants_payload
 from tet4d.ui.pygame.locked_cell_explosion import (
     ExplosionRenderTrailSegment,
     ExplosionSeedCell,
+    ExplosionTrailSample,
     ExplosionTopologyInput,
     build_locked_cell_explosion,
 )
@@ -45,7 +46,11 @@ TERMINAL_PHASE_GAME_OVER_COMPLETE = "game_over_complete"
 ENDGAME_SHELL_PHASE_RUPTURE = "rupture"
 ENDGAME_SHELL_PHASE_MESSAGE_NOISE = "message_noise"
 ENDGAME_SHELL_PHASE_OUTWARD_RELEASE = "outward_release"
+ENDGAME_SHELL_PHASE_CREAKING_THROUGH = "creaking_through"
 ENDGAME_SHELL_PHASE_PERSISTENT_RESIDUE = "persistent_residue"
+ENDGAME_POPULATION_ESCAPING_DEBRIS = "escaping_debris"
+ENDGAME_POPULATION_PERSISTENT_TRANSITION = "persistent_transition"
+ENDGAME_POPULATION_PERSISTENT_RUNTIME = "persistent_runtime"
 
 # Compatibility alias retained for existing callers/tests that still refer to the
 # pre-split endgame phase name.
@@ -157,6 +162,9 @@ class EndgameAnimationTuning:
     collision_separation_bias: float
     collision_max_relics: int
     collision_velocity_sample_ms: float
+    fixed_step_ms: float
+    max_frame_step_ms: float
+    max_simulation_substeps: int
     seed_salt: int
 
     @property
@@ -175,6 +183,14 @@ class EndgameAnimationTuning:
         return max(
             0.0,
             float(self.shell_fragment_lifetime_ms - self.shell_fade_duration_ms),
+        )
+
+    @property
+    def persistent_handoff_start_ms(self) -> float:
+        return min(
+            float(self.shatter_duration_ms),
+            float(self.capture_start_ms)
+            + (float(self.capture_transition_duration_ms) * 0.55),
         )
 
     def preset_config_for(self, preset_id: str) -> EndgamePresetConfig:
@@ -466,6 +482,21 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
             default=18.0,
             minimum=1.0,
         ),
+        fixed_step_ms=_clamp_float(
+            payload.get("fixed_step_ms"),
+            default=1000.0 / 60.0,
+            minimum=1.0,
+        ),
+        max_frame_step_ms=_clamp_float(
+            payload.get("max_frame_step_ms"),
+            default=50.0,
+            minimum=1.0,
+        ),
+        max_simulation_substeps=_clamp_int(
+            payload.get("max_simulation_substeps"),
+            default=4,
+            minimum=1,
+        ),
         seed_salt=_clamp_int(payload.get("seed_salt"), default=7919, minimum=0),
     )
 
@@ -506,9 +537,11 @@ class EndgameSnapshot:
     render_center: Vec3
     locked_cells: tuple[SnapshotCell, ...]
     live_locked_cells: tuple[SnapshotCell, ...]
+    escaping_locked_cells: tuple[SnapshotCell, ...]
     rng_seed: int
     render_context: EndgameRenderContext
     preset_id: str = ENDGAME_PRESET_DEFAULT_ORBIT
+    topology_mode: str | None = None
     boundary_response: str = ENDGAME_BOUNDARY_RESPONSE_ESCAPE
     particle_collisions: str = ENDGAME_PARTICLE_COLLISIONS_OFF
     mass_mode: str = "uniform"
@@ -582,6 +615,7 @@ class CellRelic:
     collision_radius: float = 0.38
     collision_mass: float = 1.0
     spin_handedness: float = 1.0
+    population_kind: str = ENDGAME_POPULATION_ESCAPING_DEBRIS
 
 
 @dataclass(frozen=True)
@@ -594,10 +628,13 @@ class CellRelicMotionState:
 
 @dataclass(frozen=True)
 class EndgameRelicRenderState:
+    source_coord: tuple[int, ...]
     position_nd: VecN
     render_position: Vec3
     rotation_deg: Vec3
     alpha: float
+    color_id: int
+    population_kind: str = ENDGAME_POPULATION_ESCAPING_DEBRIS
     layer_weights: tuple[tuple[int, float], ...] = ()
     trail_segments: tuple[ExplosionRenderTrailSegment, ...] = ()
 
@@ -635,6 +672,7 @@ class EndgameAnimationState:
     phase: str = TERMINAL_PHASE_ENDGAME_SHATTER
     elapsed_ms: float = 0.0
     explosion_controller: object | None = None
+    render_cache: dict[str, object] = field(default_factory=dict, repr=False)
     _pending_audio_events: tuple[str, ...] = ()
 
     @property
@@ -646,8 +684,19 @@ class EndgameAnimationState:
         return self.debris_release.debris_cells
 
     @property
+    def persistent_transition_cells(self) -> tuple[CellRelic, ...]:
+        cached = self.render_cache.get("compat_persistent_transition_cells")
+        if cached is None:
+            cached = _compat_persistent_transition_cells(
+                snapshot=self.snapshot,
+                tuning=self.tuning,
+            )
+            self.render_cache["compat_persistent_transition_cells"] = cached
+        return tuple(cached)
+
+    @property
     def cell_relics(self) -> tuple[CellRelic, ...]:
-        return self.debris_release.debris_cells
+        return self.debris_cells + self.persistent_transition_cells
 
     @property
     def cell_fragments(self) -> tuple[CellRelic, ...]:
@@ -658,12 +707,20 @@ class EndgameAnimationState:
         return self.snapshot.live_locked_cells
 
     @property
+    def escaping_locked_cells(self) -> tuple[SnapshotCell, ...]:
+        return self.snapshot.escaping_locked_cells
+
+    @property
     def debris_population_count(self) -> int:
         return len(self.debris_cells)
 
     @property
     def persistent_population_count(self) -> int:
         return len(self.persistent_live_cells)
+
+    @property
+    def persistent_transition_population_count(self) -> int:
+        return len(self.persistent_transition_cells)
 
     @property
     def frozen_render_active(self) -> bool:
@@ -700,9 +757,18 @@ class EndgameAnimationState:
             return ENDGAME_SHELL_PHASE_RUPTURE
         if self.elapsed_ms < float(self.tuning.capture_start_ms):
             return ENDGAME_SHELL_PHASE_MESSAGE_NOISE
-        if self.elapsed_ms < float(self.tuning.shatter_duration_ms):
+        if self.elapsed_ms < float(self.tuning.persistent_handoff_start_ms):
             return ENDGAME_SHELL_PHASE_OUTWARD_RELEASE
+        if self.elapsed_ms < float(self.tuning.shatter_duration_ms):
+            return ENDGAME_SHELL_PHASE_CREAKING_THROUGH
         return ENDGAME_SHELL_PHASE_PERSISTENT_RESIDUE
+
+    @property
+    def persistent_handoff_progress(self) -> float:
+        return _persistent_handoff_progress(
+            elapsed_ms=float(self.elapsed_ms),
+            tuning=self.tuning,
+        )
 
     @property
     def relic_field(self) -> EndgameDebrisReleaseState:
@@ -711,11 +777,13 @@ class EndgameAnimationState:
     def step(self, dt_ms: float) -> None:
         if not self.animating:
             return
+        step_chunks = _endgame_simulation_step_chunks(dt_ms, tuning=self.tuning)
         if self.explosion_controller is not None:
-            self._pending_audio_events = tuple(
-                self.explosion_controller.step(float(dt_ms))
-            )
-        self.elapsed_ms = float(self.elapsed_ms + max(0.0, dt_ms))
+            pending_events: list[str] = []
+            for step_ms in step_chunks:
+                pending_events.extend(self.explosion_controller.step(step_ms))
+            self._pending_audio_events = tuple(pending_events)
+        self.elapsed_ms = float(self.elapsed_ms + sum(step_chunks))
         if self.elapsed_ms >= float(self.tuning.shatter_duration_ms):
             self.phase = TERMINAL_PHASE_ENDGAME_RELIC_FIELD
         else:
@@ -733,6 +801,28 @@ def endgame_prompt_ready(animation: EndgameAnimationState | None) -> bool:
     if animation.phase == TERMINAL_PHASE_GAME_OVER_COMPLETE:
         return True
     return float(animation.elapsed_ms) >= float(animation.tuning.prompt_ready_ms)
+
+
+def _endgame_simulation_step_chunks(
+    dt_ms: float,
+    *,
+    tuning: EndgameAnimationTuning,
+) -> tuple[float, ...]:
+    if isinstance(dt_ms, bool) or not isinstance(dt_ms, (int, float)):
+        return tuple()
+    fixed_step_ms = max(1.0, float(tuning.fixed_step_ms))
+    max_steps = max(1, int(tuning.max_simulation_substeps))
+    max_frame_step_ms = min(
+        max(1.0, float(tuning.max_frame_step_ms)),
+        fixed_step_ms * float(max_steps),
+    )
+    remaining_ms = min(max(0.0, float(dt_ms)), max_frame_step_ms)
+    chunks: list[float] = []
+    while remaining_ms > 1e-6 and len(chunks) < max_steps:
+        step_ms = min(fixed_step_ms, remaining_ms)
+        chunks.append(float(step_ms))
+        remaining_ms -= step_ms
+    return tuple(chunks)
 
 
 def endgame_sfx_events_between(
@@ -885,6 +975,31 @@ def select_endgame_live_locked_cells(
     return tuple(cell for cell, _score in selected)
 
 
+def select_endgame_escaping_locked_cells(
+    *,
+    locked_cells: tuple[SnapshotCell, ...],
+    live_locked_cells: tuple[SnapshotCell, ...],
+) -> tuple[SnapshotCell, ...]:
+    selected_keys = {
+        (
+            tuple(int(axis) for axis in cell.source_coord),
+            int(cell.color_id),
+            -1 if cell.layer_index is None else int(cell.layer_index),
+        )
+        for cell in live_locked_cells
+    }
+    return tuple(
+        cell
+        for cell in _canonical_endgame_locked_cells(locked_cells)
+        if (
+            tuple(int(axis) for axis in cell.source_coord),
+            int(cell.color_id),
+            -1 if cell.layer_index is None else int(cell.layer_index),
+        )
+        not in selected_keys
+    )
+
+
 def create_snapshot(
     *,
     dimension: int,
@@ -894,6 +1009,7 @@ def create_snapshot(
     base_seed: int,
     render_context: EndgameRenderContext,
     preset_id: str | None = None,
+    topology_mode: str | None = None,
     boundary_response: str | None = None,
     particle_collisions: str | None = None,
     mass_mode: str = "uniform",
@@ -936,6 +1052,10 @@ def create_snapshot(
         seed=int(base_seed),
         live_fraction=float(endgame_live_cell_fraction),
     )
+    escaping_locked_cells = select_endgame_escaping_locked_cells(
+        locked_cells=canonical_locked_cells,
+        live_locked_cells=live_locked_cells,
+    )
     return EndgameSnapshot(
         dimension=int(dimension),
         board_dims=tuple(int(value) for value in board_dims),
@@ -944,6 +1064,7 @@ def create_snapshot(
         render_center=render_center,
         locked_cells=canonical_locked_cells,
         live_locked_cells=live_locked_cells,
+        escaping_locked_cells=escaping_locked_cells,
         rng_seed=derive_endgame_seed(
             base_seed=int(base_seed),
             board_dims=tuple(int(value) for value in board_dims),
@@ -955,6 +1076,7 @@ def create_snapshot(
             preset_id,
             default=active_tuning.default_preset_id,
         ),
+        topology_mode=str(topology_mode) if topology_mode is not None else None,
         boundary_response=normalize_endgame_boundary_response(
             boundary_response,
             default=active_tuning.default_boundary_response,
@@ -982,6 +1104,9 @@ def create_snapshot(
         shatter_speed_scale=max(0.05, float(shatter_speed_scale)),
         topology=ExplosionTopologyInput(
             board_dims=tuple(int(value) for value in board_dims),
+            topology_mode=(
+                str(topology_mode) if topology_mode is not None else None
+            ),
             topology_edge_rules=(
                 None
                 if topology_edge_rules is None
@@ -1043,6 +1168,20 @@ def _unit_axis(dimension: int, axis_index: int, *, sign: float = 1.0) -> VecN:
     return tuple(
         float(sign if idx == axis_index else 0.0) for idx in range(max(0, dimension))
     )
+
+
+def _min_distance_to_board_boundary(
+    position: VecN,
+    *,
+    board_dims: tuple[int, ...],
+) -> float:
+    if not position:
+        return 0.0
+    distances = []
+    for axis, value in enumerate(position):
+        size = float(board_dims[axis]) if axis < len(board_dims) else 1.0
+        distances.append(min(float(value) + 0.5, (size - 0.5) - float(value)))
+    return max(0.0, min(distances))
 
 
 def _random_signed(randomizer: random.Random) -> float:
@@ -1582,10 +1721,12 @@ def _render_state_from_motion_state(
 ) -> EndgameRelicRenderState:
     if snapshot is None or snapshot.dimension < 4:
         return EndgameRelicRenderState(
+            source_coord=tuple(),
             position_nd=motion_state.position_nd,
             render_position=_pad_vec3(motion_state.position_nd),
             rotation_deg=motion_state.rotation_deg,
             alpha=motion_state.alpha,
+            color_id=0,
             trail_segments=(),
         )
 
@@ -1607,10 +1748,12 @@ def _render_state_from_motion_state(
     while len(mapped) < 4:
         mapped.append(0.0)
     return EndgameRelicRenderState(
+        source_coord=tuple(),
         position_nd=motion_state.position_nd,
         render_position=(mapped[0], mapped[1], mapped[2]),
         rotation_deg=motion_state.rotation_deg,
         alpha=motion_state.alpha,
+        color_id=0,
         layer_weights=_layer_weights_for_value(
             mapped[3],
             layer_count=max(1, int(context.layer_count)),
@@ -1692,6 +1835,23 @@ def _relic_capture_progress(
     )
 
 
+def _persistent_handoff_progress(
+    *,
+    elapsed_ms: float,
+    tuning: EndgameAnimationTuning,
+) -> float:
+    if elapsed_ms <= float(tuning.persistent_handoff_start_ms):
+        return 0.0
+    handoff_window_ms = max(
+        1.0,
+        float(tuning.shatter_duration_ms - tuning.persistent_handoff_start_ms),
+    )
+    return _smoothstep01(
+        (float(elapsed_ms) - float(tuning.persistent_handoff_start_ms))
+        / handoff_window_ms
+    )
+
+
 def _shell_alpha(
     *,
     elapsed_ms: float,
@@ -1713,6 +1873,7 @@ def _cell_relic_from_snapshot_cell(
     snapshot: EndgameSnapshot,
     tuning: EndgameAnimationTuning,
     planar: bool,
+    population_kind: str = ENDGAME_POPULATION_ESCAPING_DEBRIS,
 ) -> CellRelic:
     dimension = len(cell.position)
     direction = _fragment_direction(
@@ -1747,6 +1908,33 @@ def _cell_relic_from_snapshot_cell(
         tuning.relic_field_speed_min,
         tuning.relic_field_speed_max,
     )
+    persistent_transition = (
+        str(population_kind) == ENDGAME_POPULATION_PERSISTENT_TRANSITION
+    )
+    burst_speed_min = float(tuning.relic_burst_speed_min)
+    burst_speed_max = float(tuning.relic_burst_speed_max)
+    detach_start_ms = float(tuning.crack_onset_duration_ms) + (
+        float(tuning.capture_transition_duration_ms) * 0.4 * randomizer.random()
+    )
+    capture_anchor = _field_anchor_for_cell(
+        cell,
+        randomizer=randomizer,
+        snapshot=snapshot,
+        direction=direction,
+        tuning=tuning,
+    )
+    jitter_scale = randomizer.uniform(0.12, 0.65)
+    if persistent_transition:
+        burst_speed_min *= 0.24
+        burst_speed_max *= 0.48
+        field_speed *= 0.82
+        detach_start_ms = max(
+            float(tuning.crack_onset_duration_ms),
+            float(tuning.capture_start_ms)
+            - (float(tuning.capture_transition_duration_ms) * 0.18 * randomizer.random()),
+        )
+        capture_anchor = _vec_lerp(cell.position, capture_anchor, 0.32)
+        jitter_scale *= 0.55
     collision_radius_max = max(
         tuning.collision_radius_min,
         tuning.collision_radius_max,
@@ -1758,8 +1946,8 @@ def _cell_relic_from_snapshot_cell(
         burst_velocity=_vec_mul(
             direction,
             randomizer.uniform(
-                tuning.relic_burst_speed_min,
-                tuning.relic_burst_speed_max,
+                burst_speed_min,
+                burst_speed_max,
             ),
         ),
         burst_acceleration=tuple(
@@ -1772,15 +1960,8 @@ def _cell_relic_from_snapshot_cell(
             minimum=tuning.burst_angular_velocity_deg_min,
             maximum=tuning.burst_angular_velocity_deg_max,
         ),
-        detach_start_ms=tuning.crack_onset_duration_ms
-        + (tuning.capture_transition_duration_ms * 0.4 * randomizer.random()),
-        capture_anchor=_field_anchor_for_cell(
-            cell,
-            randomizer=randomizer,
-            snapshot=snapshot,
-            direction=direction,
-            tuning=tuning,
-        ),
+        detach_start_ms=detach_start_ms,
+        capture_anchor=capture_anchor,
         path_family=_choose_path_family(
             randomizer=randomizer,
             tuning=tuning,
@@ -1816,7 +1997,7 @@ def _cell_relic_from_snapshot_cell(
         layer_index=cell.layer_index,
         jitter_offset=_vec_mul(
             _pad_vec3(_random_unit_vector(randomizer, dimension=3, planar=planar)),
-            randomizer.uniform(0.12, 0.65),
+            jitter_scale,
         ),
         preset_id=snapshot.preset_id,
         field_drift_velocity=_vec_mul(
@@ -1837,7 +2018,171 @@ def _cell_relic_from_snapshot_cell(
         ),
         collision_mass=randomizer.uniform(0.85, 1.25),
         spin_handedness=_random_signed(randomizer),
+        population_kind=str(population_kind),
     )
+
+
+def _refresh_explosion_controller_metrics(controller: object | None) -> None:
+    simulation = getattr(controller, "simulation", None)
+    particles = tuple(getattr(simulation, "particles", ()))
+    if simulation is None:
+        return
+    velocity_norm_sq_sum = 0.0
+    total_kinetic_energy = 0.0
+    for particle in particles:
+        if not bool(getattr(particle, "active", True)):
+            continue
+        speed_sq = sum(
+            float(component) * float(component)
+            for component in tuple(getattr(particle, "velocity_nd", ()))
+        )
+        mass = float(getattr(particle, "collision_mass", 1.0))
+        velocity_norm_sq_sum += speed_sq
+        total_kinetic_energy += 0.5 * mass * speed_sq
+    simulation.velocity_norm_sq_sum = float(velocity_norm_sq_sum)
+    simulation.total_kinetic_energy = float(total_kinetic_energy)
+    if hasattr(simulation, "diagnostics_previous_speed_sq_by_particle"):
+        simulation.diagnostics_previous_speed_sq_by_particle.clear()
+    if hasattr(simulation, "diagnostics_last_contact_step_by_particle"):
+        simulation.diagnostics_last_contact_step_by_particle.clear()
+    if hasattr(simulation, "diagnostics_recent_events"):
+        simulation.diagnostics_recent_events.clear()
+    if hasattr(simulation, "diagnostics_summary"):
+        simulation.diagnostics_summary = None
+
+
+def _compat_persistent_transition_cells(
+    *,
+    snapshot: EndgameSnapshot,
+    tuning: EndgameAnimationTuning,
+) -> tuple[CellRelic, ...]:
+    if not snapshot.live_locked_cells:
+        return tuple()
+    randomizer = random.Random(snapshot.rng_seed)
+    planar = snapshot.dimension == 2
+    for cell in snapshot.escaping_locked_cells:
+        _cell_relic_from_snapshot_cell(
+            cell,
+            randomizer=randomizer,
+            snapshot=snapshot,
+            tuning=tuning,
+            planar=planar,
+            population_kind=ENDGAME_POPULATION_ESCAPING_DEBRIS,
+        )
+    return tuple(
+        _cell_relic_from_snapshot_cell(
+            cell,
+            randomizer=randomizer,
+            snapshot=snapshot,
+            tuning=tuning,
+            planar=planar,
+            population_kind=ENDGAME_POPULATION_PERSISTENT_TRANSITION,
+        )
+        for cell in snapshot.live_locked_cells
+    )
+
+
+def _retune_endgame_survivor_runtime_particles(
+    *,
+    controller: object | None,
+    snapshot: EndgameSnapshot,
+    tuning: EndgameAnimationTuning,
+) -> None:
+    simulation = getattr(controller, "simulation", None)
+    particles = tuple(getattr(simulation, "particles", ()))
+    if simulation is None or not particles or not snapshot.live_locked_cells:
+        return
+    dimension = max(1, int(snapshot.dimension))
+    default_axis = 1 if dimension > 1 else 0
+    live_cells_by_coord = {
+        tuple(int(value) for value in cell.source_coord): cell
+        for cell in snapshot.live_locked_cells
+    }
+    for particle in particles:
+        source_coord = tuple(
+            int(value) for value in getattr(particle, "source_coord", ())
+        )
+        cell = live_cells_by_coord.get(source_coord)
+        if cell is None:
+            continue
+        seed = _stable_seed_mix(
+            0x4F1BBCDD ^ int(snapshot.rng_seed),
+            int(getattr(particle, "particle_id", 0)) + 17,
+        )
+        for axis in source_coord:
+            seed = _stable_seed_mix(seed, int(axis) + 4099)
+        randomizer = random.Random(seed)
+        origin = tuple(float(value) for value in cell.position)
+        outward = _normalize_or_default(
+            _vec_sub(origin, snapshot.board_center),
+            _unit_axis(dimension, default_axis, sign=-1.0),
+        )
+        basis_vectors = _field_basis_vectors(
+            randomizer=randomizer,
+            direction=outward,
+        )
+        tangent_primary = (
+            basis_vectors[1] if len(basis_vectors) > 1 else _unit_axis(dimension, 0)
+        )
+        tangent_secondary = (
+            basis_vectors[2] if len(basis_vectors) > 2 else _zero_vec(dimension)
+        )
+        direction = _normalize_or_default(
+            _vec_add(
+                _vec_mul(tangent_primary, randomizer.uniform(0.82, 1.08)),
+                _vec_add(
+                    _vec_mul(tangent_secondary, randomizer.uniform(-0.18, 0.18)),
+                    _vec_mul(
+                        _vec_mul(outward, -1.0),
+                        randomizer.uniform(0.28, 0.42),
+                    ),
+                ),
+            ),
+            tangent_primary,
+        )
+        continuity_window_seconds = max(
+            0.2,
+            float(tuning.shatter_duration_ms) / 1000.0,
+        )
+        continuity_speed_cap = max(
+            0.16,
+            (
+                _min_distance_to_board_boundary(
+                    origin,
+                    board_dims=snapshot.board_dims,
+                )
+                / continuity_window_seconds
+            )
+            * 0.82,
+        )
+        nominal_speed = randomizer.uniform(
+            max(0.18, float(tuning.relic_field_speed_min) * 0.55),
+            max(
+                max(0.18, float(tuning.relic_field_speed_min) * 0.55),
+                float(tuning.relic_field_speed_max) * 0.78,
+            ),
+        )
+        speed = min(
+            nominal_speed * max(0.75, min(1.25, float(snapshot.relic_speed_scale))),
+            continuity_speed_cap,
+        )
+        particle.position_nd = origin
+        particle.velocity_nd = _vec_mul(direction, speed)
+        particle.rotation_deg = (0.0, 0.0, 0.0)
+        particle.angular_velocity_deg = _random_angular_velocity(
+            randomizer,
+            planar=snapshot.dimension == 2,
+            minimum=max(18.0, float(tuning.relic_spin_deg_min) * 2.4),
+            maximum=max(18.0, float(tuning.relic_spin_deg_max) * 3.2),
+        )
+        particle.trail_elapsed_ms = 0.0
+        particle.trail_samples = [
+            ExplosionTrailSample(
+                position_nd=origin,
+                elapsed_ms=0.0,
+            )
+        ]
+    _refresh_explosion_controller_metrics(controller)
 
 
 def _shell_segment_center(segment: tuple[Vec3, Vec3]) -> Vec3:
@@ -2011,8 +2356,9 @@ def build_endgame_animation_state(
             snapshot=snapshot,
             tuning=active_tuning,
             planar=planar,
+            population_kind=ENDGAME_POPULATION_ESCAPING_DEBRIS,
         )
-        for cell in snapshot.locked_cells
+        for cell in snapshot.escaping_locked_cells
     )
 
     if snapshot.dimension == 2:
@@ -2081,6 +2427,11 @@ def build_endgame_animation_state(
                 time_scale=float(snapshot.relic_speed_scale),
             ),
         )
+    )
+    _retune_endgame_survivor_runtime_particles(
+        controller=explosion_controller,
+        snapshot=snapshot,
+        tuning=active_tuning,
     )
     return EndgameAnimationState(
         snapshot=snapshot,
@@ -2505,16 +2856,89 @@ def _apply_relic_collisions(
     return tuple(resolved)
 
 
+def _render_state_for_cell_relic(
+    relic: CellRelic,
+    *,
+    motion_state: CellRelicMotionState,
+    snapshot: EndgameSnapshot,
+    alpha_scale: float = 1.0,
+) -> EndgameRelicRenderState:
+    base_state = _render_state_from_motion_state(motion_state, snapshot=snapshot)
+    return EndgameRelicRenderState(
+        source_coord=tuple(int(value) for value in relic.source_coord),
+        position_nd=base_state.position_nd,
+        render_position=base_state.render_position,
+        rotation_deg=base_state.rotation_deg,
+        alpha=max(0.0, min(1.0, float(base_state.alpha) * float(alpha_scale))),
+        color_id=int(relic.color_id),
+        population_kind=str(relic.population_kind),
+        layer_weights=base_state.layer_weights,
+        trail_segments=base_state.trail_segments,
+    )
+
+
+def _render_states_for_cell_relics(
+    relics: tuple[CellRelic, ...],
+    *,
+    animation: EndgameAnimationState,
+    alpha_scale: float = 1.0,
+) -> tuple[EndgameRelicRenderState, ...]:
+    if not relics or alpha_scale <= 0.0:
+        return tuple()
+    return tuple(
+        _render_state_for_cell_relic(
+            relic,
+            motion_state=motion_state_for_cell_relic(
+                relic,
+                elapsed_ms=float(animation.elapsed_ms),
+                tuning=animation.tuning,
+                snapshot=animation.snapshot,
+                preset_id=animation.preset_id,
+            ),
+            snapshot=animation.snapshot,
+            alpha_scale=alpha_scale,
+        )
+        for relic in relics
+    )
+
+
+def render_supplemental_relics_for_animation(
+    animation: EndgameAnimationState,
+) -> tuple[EndgameRelicRenderState, ...]:
+    if animation.phase == TERMINAL_PHASE_GAME_OVER_COMPLETE:
+        return tuple()
+    return _render_states_for_cell_relics(
+        animation.debris_cells,
+        animation=animation,
+        alpha_scale=(
+            1.0
+            if float(animation.elapsed_ms) < float(animation.tuning.shatter_duration_ms)
+            else 0.0
+        ),
+    )
+
+
+def persistent_runtime_alpha_for_animation(
+    animation: EndgameAnimationState,
+) -> float:
+    if animation.explosion_controller is None:
+        return 0.0
+    return 1.0
+
+
 def render_relics_for_animation(
     animation: EndgameAnimationState,
 ) -> tuple[EndgameRelicRenderState, ...]:
     if animation.explosion_controller is not None:
         return tuple(
             EndgameRelicRenderState(
+                source_coord=tuple(int(value) for value in state.source_coord),
                 position_nd=state.position_nd,
                 render_position=state.render_position,
                 rotation_deg=state.rotation_deg,
                 alpha=state.alpha,
+                color_id=int(state.color_id),
+                population_kind=ENDGAME_POPULATION_PERSISTENT_RUNTIME,
                 layer_weights=state.layer_weights,
                 trail_segments=state.trail_segments,
             )
@@ -2522,6 +2946,7 @@ def render_relics_for_animation(
                 render_context=animation.snapshot.render_context
             )
         )
+    relics = animation.cell_relics
     motion_states = [
         motion_state_for_cell_relic(
             relic,
@@ -2530,12 +2955,12 @@ def render_relics_for_animation(
             snapshot=animation.snapshot,
             preset_id=animation.preset_id,
         )
-        for relic in animation.debris_cells
+        for relic in relics
     ]
     if animation.particle_collisions == ENDGAME_PARTICLE_COLLISIONS_ON:
         motion_states = list(
             _apply_relic_collisions(
-                animation.debris_cells,
+                relics,
                 motion_states=motion_states,
                 elapsed_ms=float(animation.elapsed_ms),
                 tuning=animation.tuning,
@@ -2544,8 +2969,24 @@ def render_relics_for_animation(
             )
         )
     return tuple(
-        _render_state_from_motion_state(state, snapshot=animation.snapshot)
-        for state in motion_states
+        EndgameRelicRenderState(
+            source_coord=tuple(int(value) for value in relic.source_coord),
+            position_nd=render_state.position_nd,
+            render_position=render_state.render_position,
+            rotation_deg=render_state.rotation_deg,
+            alpha=render_state.alpha,
+            color_id=int(relic.color_id),
+            population_kind=str(relic.population_kind),
+            layer_weights=render_state.layer_weights,
+            trail_segments=render_state.trail_segments,
+        )
+        for relic, render_state in zip(
+            relics,
+            (
+                _render_state_from_motion_state(state, snapshot=animation.snapshot)
+                for state in motion_states
+            ),
+        )
     )
 
 
@@ -2554,7 +2995,10 @@ def transform_relics_for_animation(
 ) -> tuple[tuple[Vec3, Vec3, float], ...]:
     return tuple(
         (state.render_position, state.rotation_deg, state.alpha)
-        for state in render_relics_for_animation(animation)
+        for state in (
+            render_supplemental_relics_for_animation(animation)
+            + render_relics_for_animation(animation)
+        )
     )
 
 
@@ -2656,6 +3100,13 @@ __all__ = [
     "TERMINAL_PHASE_GAME_OVER_ANIMATING",
     "TERMINAL_PHASE_GAME_OVER_COMPLETE",
     "TERMINAL_PHASE_PLAYING",
+    "ENDGAME_SHELL_PHASE_CREAKING_THROUGH",
+    "ENDGAME_SHELL_PHASE_OUTWARD_RELEASE",
+    "ENDGAME_SHELL_PHASE_PERSISTENT_RESIDUE",
+    "ENDGAME_SHELL_PHASE_RUPTURE",
+    "ENDGAME_POPULATION_ESCAPING_DEBRIS",
+    "ENDGAME_POPULATION_PERSISTENT_RUNTIME",
+    "ENDGAME_POPULATION_PERSISTENT_TRANSITION",
     "build_endgame_animation_state",
     "create_snapshot",
     "derive_endgame_seed",
@@ -2668,7 +3119,9 @@ __all__ = [
     "fragment_translation",
     "load_endgame_animation_tuning",
     "motion_state_for_cell_relic",
+    "persistent_runtime_alpha_for_animation",
     "render_relics_for_animation",
+    "render_supplemental_relics_for_animation",
     "relic_field_phase_radians",
     "resolve_endgame_preset_config",
     "rotate_point",

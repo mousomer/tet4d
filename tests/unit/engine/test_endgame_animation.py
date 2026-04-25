@@ -13,8 +13,11 @@ import pygame
 
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.gameplay.topology import TOPOLOGY_WRAP_ALL
 from tet4d.engine.runtime import menu_settings_state
 from tet4d.engine.runtime.project_config import state_dir_path
+from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.engine.topology_explorer.glue_model import BoundaryRef
 from tet4d.ui.pygame import (
     endgame_animation,
     front2d_frame,
@@ -153,8 +156,79 @@ class TestEndgameAnimation(unittest.TestCase):
         )
 
     @staticmethod
+    def _sample_snapshot_3d() -> endgame_animation.EndgameSnapshot:
+        return endgame_animation.create_snapshot(
+            dimension=3,
+            board_dims=(5, 8, 4),
+            render_dims=(5, 8, 4),
+            locked_cells=(
+                endgame_animation.SnapshotCell(
+                    source_coord=(1, 6, 2),
+                    position=(1.0, 6.0, 2.0),
+                    color_id=2,
+                ),
+                endgame_animation.SnapshotCell(
+                    source_coord=(3, 5, 1),
+                    position=(3.0, 5.0, 1.0),
+                    color_id=5,
+                ),
+            ),
+            base_seed=2026,
+            render_context=endgame_animation.EndgameRenderContext(
+                mode_key="3d",
+                projection_name="ORTHOGRAPHIC",
+                yaw_deg=26.0,
+                pitch_deg=-18.0,
+                zoom=48.0,
+                cam_dist=840.0,
+                projective_strength=0.3,
+                projective_bias=0.2,
+            ),
+            grid_mode="full",
+            shadow_mode="all_boundaries",
+            trace_enabled=True,
+        )
+
+    @staticmethod
     def _custom_tuning(**updates: float | bool | int | tuple[tuple[str, int], ...]):
         return replace(endgame_animation.load_endgame_animation_tuning(), **updates)
+
+    @staticmethod
+    def _advance_animation(
+        animation: endgame_animation.EndgameAnimationState,
+        total_ms: float,
+    ) -> None:
+        remaining_ms = max(0.0, float(total_ms))
+        while remaining_ms > 1e-6:
+            step_ms = min(remaining_ms, float(animation.tuning.max_frame_step_ms))
+            animation.step(step_ms)
+            remaining_ms -= step_ms
+
+    @staticmethod
+    def _unit_vector(value: tuple[float, ...]) -> tuple[float, ...]:
+        length = math.sqrt(
+            sum(float(component) * float(component) for component in value)
+        )
+        if length <= 1e-9:
+            return tuple(0.0 for _ in value)
+        return tuple(float(component) / length for component in value)
+
+    @classmethod
+    def _outward_alignment(
+        cls,
+        *,
+        position: tuple[float, ...],
+        board_center: tuple[float, ...],
+        velocity: tuple[float, ...],
+    ) -> float:
+        outward = cls._unit_vector(
+            tuple(
+                float(value) - float(center)
+                for value, center in zip(position, board_center)
+            )
+        )
+        travel = cls._unit_vector(tuple(float(value) for value in velocity))
+        return sum(left * right for left, right in zip(outward, travel))
 
     def test_terminal_transition_creates_2d_endgame_snapshot(self) -> None:
         self._temp_settings_root()
@@ -177,7 +251,7 @@ class TestEndgameAnimation(unittest.TestCase):
             patch.object(
                 front2d_frame,
                 "mode_endgame_settings",
-                return_value=("wrap_all", "bounce", "on", 140, 80),
+                return_value=("wrap_all", 140, 80),
             ),
         ):
             front2d_frame._update_feedback_and_animation(
@@ -260,7 +334,7 @@ class TestEndgameAnimation(unittest.TestCase):
         with patch.object(
             front2d_frame,
             "mode_endgame_settings",
-            return_value=("wrap_all", "escape", "off", 100, 100),
+            return_value=("wrap_all", 100, 100),
         ):
             snapshot = front2d_frame._capture_endgame_snapshot_2d(loop)
 
@@ -329,6 +403,311 @@ class TestEndgameAnimation(unittest.TestCase):
             snapshot.boundary_response,
         )
 
+    def test_endgame_snapshot_retains_topology_mode_when_edge_rules_missing(self) -> None:
+        snapshot = endgame_animation.create_snapshot(
+            dimension=2,
+            board_dims=(4, 4),
+            render_dims=(4, 4, 1),
+            locked_cells=(
+                endgame_animation.SnapshotCell(
+                    source_coord=(1, 1),
+                    position=(1.0, 1.0, 0.0),
+                    color_id=2,
+                ),
+            ),
+            base_seed=1337,
+            render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+            topology_mode=TOPOLOGY_WRAP_ALL,
+        )
+        animation = endgame_animation.build_endgame_animation_state(snapshot)
+
+        self.assertEqual(animation.snapshot.topology_mode, TOPOLOGY_WRAP_ALL)
+        seam = animation.explosion_controller.topology.seam_for_boundary(
+            BoundaryRef(dimension=2, axis=0, side="+")
+        )
+        self.assertIsNotNone(seam)
+
+    def test_saved_boundary_response_changes_live_endgame_motion(self) -> None:
+        self._temp_settings_root()
+        locked_cells = {
+            (0, 0): 1,
+            (1, 0): 2,
+            (0, 1): 3,
+        }
+
+        def _build_animation(boundary_response: str):
+            ok, msg = explosion_defaults_store.save_mode_explosion_defaults(
+                "2d",
+                explosion_defaults_store.ExplosionDefaults(
+                    boundary_response=boundary_response,
+                    particle_collisions="off",
+                    seed=1337,
+                ),
+            )
+            self.assertTrue(ok, msg)
+            simulator_state = build_standalone_explosion_surface_state(dimension=2)
+            self.assertEqual(simulator_state.boundary_response, boundary_response)
+            loop = LoopContext2D.create(GameConfig(width=6, height=8, speed_level=1))
+            loop.state.board.cells.clear()
+            loop.state.board.cells.update(locked_cells)
+            with patch.object(
+                front2d_frame,
+                "mode_endgame_settings",
+                return_value=("default_orbit", 100, 100),
+            ):
+                snapshot = front2d_frame._capture_endgame_snapshot_2d(loop)
+            self.assertEqual(snapshot.boundary_response, boundary_response)
+            return endgame_animation.build_endgame_animation_state(snapshot)
+
+        escape_animation = _build_animation("escape")
+        bounce_animation = _build_animation("bounce")
+
+        for _ in range(200):
+            escape_animation.step(50.0)
+            bounce_animation.step(50.0)
+
+        escape_positions = tuple(
+            state.position_nd for state in endgame_animation.render_relics_for_animation(escape_animation)
+        )
+        bounce_positions = tuple(
+            state.position_nd for state in endgame_animation.render_relics_for_animation(bounce_animation)
+        )
+
+        self.assertNotEqual(escape_positions, bounce_positions)
+        self.assertTrue(
+            any(position[0] < -0.5 or position[1] > 7.5 for position in escape_positions)
+        )
+        self.assertTrue(
+            all(-0.5 <= position[0] <= 5.5 and -0.5 <= position[1] <= 7.5 for position in bounce_positions)
+        )
+
+    def test_saved_grid_mode_changes_visible_endgame_render(self) -> None:
+        self._temp_settings_root()
+        locked_cells = {
+            (1, 6): 3,
+            (4, 5): 6,
+        }
+        loop = LoopContext2D.create(GameConfig(width=6, height=8, speed_level=1))
+        loop.grid_mode = GridMode.OFF
+        loop.state.board.cells.clear()
+        loop.state.board.cells.update(locked_cells)
+        loop.state.game_over = True
+
+        def _render_surface(grid_mode: str) -> bytes:
+            ok, msg = explosion_defaults_store.save_mode_explosion_defaults(
+                "2d",
+                explosion_defaults_store.ExplosionDefaults(
+                    grid_mode=grid_mode,
+                    shadow_mode="off",
+                    trace_enabled=False,
+                ),
+            )
+            self.assertTrue(ok, msg)
+            simulator_state = build_standalone_explosion_surface_state(dimension=2)
+            self.assertEqual(simulator_state.grid_mode.value, grid_mode)
+            with patch.object(
+                front2d_frame,
+                "mode_endgame_settings",
+                return_value=("default_orbit", 100, 100),
+            ):
+                snapshot = front2d_frame._capture_endgame_snapshot_2d(loop)
+            self.assertEqual(snapshot.grid_mode, grid_mode)
+            animation = endgame_animation.build_endgame_animation_state(snapshot)
+            surface = pygame.Surface((960, 720), pygame.SRCALPHA)
+            gfx_game.draw_game_frame(
+                surface,
+                loop.cfg,
+                loop.state,
+                self.fonts_2d,
+                grid_mode=loop.grid_mode,
+                endgame_animation=animation,
+            )
+            return self._surface_bytes(surface)
+
+        self.assertNotEqual(_render_surface("off"), _render_surface("edge"))
+
+    def test_4d_endgame_draw_uses_snapshot_presentation_settings(self) -> None:
+        snapshot = endgame_animation.create_snapshot(
+            dimension=4,
+            board_dims=(5, 8, 5, 3),
+            render_dims=(5, 8, 5),
+            locked_cells=(
+                endgame_animation.SnapshotCell(
+                    source_coord=(1, 6, 2, 0),
+                    position=(1.0, 6.0, 2.0, 0.0),
+                    color_id=2,
+                ),
+            ),
+            base_seed=1337,
+            render_context=endgame_animation.EndgameRenderContext(
+                mode_key="4d",
+                yaw_deg=21.0,
+                pitch_deg=-13.0,
+                zoom=1.25,
+                xw_deg=90.0,
+                zw_deg=180.0,
+                layer_axis_label="w",
+                layer_count=3,
+                basis_axis_map=((0, 1), (1, 1), (2, 1), (3, 1)),
+                layer_axis=3,
+                layer_sign=1,
+            ),
+            grid_mode="edge",
+            shadow_mode="all_boundaries",
+            trace_enabled=True,
+            w_movement_animation_style="box_size",
+        )
+        animation = endgame_animation.build_endgame_animation_state(snapshot)
+        screen = pygame.Surface((1320, 880), pygame.SRCALPHA)
+        state = front4d_game.LoopContext4D.create(
+            GameConfigND(dims=(5, 8, 5, 3), gravity_axis=1, speed_level=1)
+        ).state
+        view = front4d_render.LayerView3D()
+
+        with patch.object(
+            front4d_render.board_presentation,
+            "draw_native_board_view",
+            wraps=front4d_render.board_presentation.draw_native_board_view,
+        ) as draw_board:
+            front4d_render.draw_game_frame(
+                screen,
+                state,
+                view,
+                self.fonts_4d,
+                grid_mode=GridMode.OFF,
+                endgame_animation=animation,
+            )
+
+        self.assertEqual(draw_board.call_count, 1)
+        self.assertEqual(draw_board.call_args.kwargs["grid_mode"], GridMode.EDGE)
+        self.assertEqual(draw_board.call_args.kwargs["shadow_mode"].value, "all_boundaries")
+        self.assertTrue(draw_board.call_args.kwargs["show_trace"])
+        self.assertEqual(
+            draw_board.call_args.kwargs["w_movement_animation_style"],
+            "box_size",
+        )
+        self.assertFalse(draw_board.call_args.kwargs["occlusion_enabled"])
+
+    def test_endgame_step_clamps_spike_dt_into_bounded_substeps(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot()
+        )
+        assert animation.explosion_controller is not None
+        step_calls: list[float] = []
+
+        def _record_step(dt_ms: float) -> tuple[str, ...]:
+            step_calls.append(float(dt_ms))
+            return tuple()
+
+        with patch.object(animation.explosion_controller, "step", _record_step):
+            animation.step(250.0)
+
+        self.assertGreater(len(step_calls), 1)
+        self.assertLessEqual(max(step_calls), animation.tuning.fixed_step_ms + 1e-4)
+        self.assertLessEqual(
+            sum(step_calls),
+            animation.tuning.max_frame_step_ms + 1e-4,
+        )
+        self.assertAlmostEqual(animation.elapsed_ms, sum(step_calls))
+
+    def test_3d_endgame_render_reuses_frozen_camera_and_skips_occlusion(self) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot_3d()
+        )
+        screen = pygame.Surface((1120, 760), pygame.SRCALPHA)
+        state = front3d_game.LoopContext3D.create(
+            GameConfigND(dims=(5, 8, 4), gravity_axis=1, speed_level=1)
+        ).state
+        state.game_over = True
+        camera = front3d_render.Camera3D()
+
+        with patch.object(
+            front3d_render.board_presentation,
+            "draw_native_board_view",
+            wraps=front3d_render.board_presentation.draw_native_board_view,
+        ) as draw_board:
+            front3d_render.draw_game_frame(
+                screen,
+                state,
+                camera,
+                self.fonts_3d,
+                grid_mode=GridMode.FULL,
+                endgame_animation=animation,
+            )
+            cached_first = animation.render_cache["3d_camera"][1]
+            front3d_render.draw_game_frame(
+                screen,
+                state,
+                camera,
+                self.fonts_3d,
+                grid_mode=GridMode.FULL,
+                endgame_animation=animation,
+            )
+
+        self.assertIs(animation.render_cache["3d_camera"][1], cached_first)
+        self.assertEqual(draw_board.call_count, 2)
+        self.assertTrue(
+            all(call.kwargs["occlusion_enabled"] is False for call in draw_board.call_args_list)
+        )
+
+    def test_4d_endgame_skips_live_animation_cache_and_reuses_shell_layout(
+        self,
+    ) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._sample_snapshot_4d()
+        )
+        screen = pygame.Surface((1320, 880), pygame.SRCALPHA)
+        state = front4d_game.LoopContext4D.create(
+            GameConfigND(dims=(5, 8, 5, 4), gravity_axis=1, speed_level=1)
+        ).state
+        state.game_over = True
+        view = front4d_render.LayerView3D()
+
+        with (
+            patch.object(
+                front4d_render,
+                "_resolve_frozen_animation_presentation_4d",
+                wraps=front4d_render._resolve_frozen_animation_presentation_4d,
+            ) as resolve_animation_cache,
+            patch.object(
+                front4d_render.board_presentation,
+                "draw_native_board_view",
+                wraps=front4d_render.board_presentation.draw_native_board_view,
+            ) as draw_board,
+        ):
+            front4d_render.draw_game_frame(
+                screen,
+                state,
+                view,
+                self.fonts_4d,
+                grid_mode=GridMode.FULL,
+                endgame_animation=animation,
+            )
+
+        resolve_animation_cache.assert_not_called()
+        self.assertFalse(draw_board.call_args.kwargs["occlusion_enabled"])
+
+        layers_rect = pygame.Rect(16, 16, 900, 760)
+        with patch.object(
+            front4d_render,
+            "_layer_rects_by_layer",
+            wraps=front4d_render._layer_rects_by_layer,
+        ) as layer_rects:
+            front4d_render._draw_endgame_shell_overlay_4d(
+                screen,
+                layers_rect=layers_rect,
+                context=animation.snapshot.render_context,
+                endgame_animation=animation,
+            )
+            front4d_render._draw_endgame_shell_overlay_4d(
+                screen,
+                layers_rect=layers_rect,
+                context=animation.snapshot.render_context,
+                endgame_animation=animation,
+            )
+
+        self.assertEqual(layer_rects.call_count, 1)
+
     def test_endgame_animation_splits_debris_shell_from_persistent_live_subset(
         self,
     ) -> None:
@@ -352,19 +731,45 @@ class TestEndgameAnimation(unittest.TestCase):
 
         animation = endgame_animation.build_endgame_animation_state(snapshot)
 
-        self.assertEqual(animation.debris_population_count, len(snapshot.locked_cells))
+        self.assertEqual(
+            animation.debris_population_count,
+            len(snapshot.escaping_locked_cells),
+        )
         self.assertEqual(
             animation.persistent_population_count,
             len(snapshot.live_locked_cells),
         )
         self.assertLess(
             animation.persistent_population_count,
-            animation.debris_population_count,
+            len(snapshot.locked_cells),
         )
-        self.assertEqual(len(animation.debris_cells), len(snapshot.locked_cells))
+        self.assertEqual(len(animation.debris_cells), len(snapshot.escaping_locked_cells))
+        self.assertFalse(
+            hasattr(animation.debris_release, "persistent_transition_cells")
+        )
+        self.assertEqual(
+            animation.debris_release.cell_relics,
+            animation.debris_cells,
+        )
+        self.assertEqual(
+            len(animation.persistent_transition_cells),
+            len(snapshot.live_locked_cells),
+        )
+        self.assertEqual(
+            animation.persistent_transition_population_count,
+            len(snapshot.live_locked_cells),
+        )
         self.assertEqual(
             tuple(cell.source_coord for cell in animation.persistent_live_cells),
             tuple(cell.source_coord for cell in snapshot.live_locked_cells),
+        )
+        self.assertEqual(
+            tuple(cell.source_coord for cell in animation.escaping_locked_cells),
+            tuple(cell.source_coord for cell in snapshot.escaping_locked_cells),
+        )
+        self.assertEqual(
+            animation.debris_population_count + animation.persistent_population_count,
+            len(snapshot.locked_cells),
         )
 
     def test_endgame_shell_phase_progression_is_explicit(self) -> None:
@@ -376,19 +781,29 @@ class TestEndgameAnimation(unittest.TestCase):
             animation.shell_phase,
             endgame_animation.ENDGAME_SHELL_PHASE_RUPTURE,
         )
-        animation.step(animation.tuning.crack_onset_duration_ms)
+        self._advance_animation(animation, animation.tuning.crack_onset_duration_ms)
         self.assertEqual(
             animation.shell_phase,
             endgame_animation.ENDGAME_SHELL_PHASE_MESSAGE_NOISE,
         )
-        animation.step(
+        self._advance_animation(
+            animation,
             animation.tuning.capture_start_ms - animation.elapsed_ms + 1.0
         )
         self.assertEqual(
             animation.shell_phase,
             endgame_animation.ENDGAME_SHELL_PHASE_OUTWARD_RELEASE,
         )
-        animation.step(
+        self._advance_animation(
+            animation,
+            animation.tuning.persistent_handoff_start_ms - animation.elapsed_ms + 1.0,
+        )
+        self.assertEqual(
+            animation.shell_phase,
+            endgame_animation.ENDGAME_SHELL_PHASE_CREAKING_THROUGH,
+        )
+        self._advance_animation(
+            animation,
             animation.tuning.shatter_duration_ms - animation.elapsed_ms
         )
         self.assertEqual(
@@ -415,6 +830,226 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(
             len(render_states),
             len(animation.explosion_controller.simulation.particles),
+        )
+
+    def test_endgame_handoff_keeps_survivors_continuous_on_runtime_layer(self) -> None:
+        locked_cells = tuple(
+            endgame_animation.SnapshotCell(
+                source_coord=(index % 8, index // 8),
+                position=(float(index % 8), float(index // 8), 0.0),
+                color_id=(index % 7) + 1,
+            )
+            for index in range(64)
+        )
+        animation = endgame_animation.build_endgame_animation_state(
+            endgame_animation.create_snapshot(
+                dimension=2,
+                board_dims=(20, 20),
+                render_dims=(20, 20, 1),
+                locked_cells=locked_cells,
+                base_seed=2026,
+                render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+                endgame_live_cell_fraction=0.12,
+            )
+        )
+
+        early_supplemental = endgame_animation.render_supplemental_relics_for_animation(
+            animation
+        )
+        early_runtime = endgame_animation.render_relics_for_animation(animation)
+        self.assertEqual(
+            endgame_animation.persistent_runtime_alpha_for_animation(animation),
+            1.0,
+        )
+        self.assertTrue(
+            early_supplemental,
+            "escaping debris should remain visible as shell-owned overlay",
+        )
+        self.assertTrue(
+            all(
+                state.population_kind
+                == endgame_animation.ENDGAME_POPULATION_ESCAPING_DEBRIS
+                for state in early_supplemental
+            )
+        )
+        self.assertTrue(
+            early_runtime,
+            "survivors should be visible on the shared runtime layer immediately",
+        )
+        self.assertTrue(
+            all(
+                state.population_kind
+                == endgame_animation.ENDGAME_POPULATION_PERSISTENT_RUNTIME
+                for state in early_runtime
+            )
+        )
+
+        expected_escaping = {
+            tuple(cell.source_coord) for cell in animation.escaping_locked_cells
+        }
+        expected_survivors = {
+            tuple(cell.source_coord) for cell in animation.persistent_live_cells
+        }
+        self.assertEqual(
+            {state.source_coord for state in early_supplemental},
+            expected_escaping,
+        )
+        self.assertEqual(
+            {state.source_coord for state in early_runtime},
+            expected_survivors,
+        )
+
+        self._advance_animation(
+            animation,
+            animation.tuning.persistent_handoff_start_ms + 40.0,
+        )
+        mid_runtime = endgame_animation.render_relics_for_animation(animation)
+        self.assertEqual(
+            endgame_animation.persistent_runtime_alpha_for_animation(animation),
+            1.0,
+        )
+        self.assertEqual(
+            {state.source_coord for state in mid_runtime},
+            expected_survivors,
+        )
+
+        self._advance_animation(
+            animation,
+            animation.tuning.shatter_duration_ms - animation.elapsed_ms,
+        )
+        final_supplemental = endgame_animation.render_supplemental_relics_for_animation(
+            animation
+        )
+        self.assertAlmostEqual(
+            endgame_animation.persistent_runtime_alpha_for_animation(animation),
+            1.0,
+            places=3,
+        )
+        self.assertEqual(final_supplemental, tuple())
+        final_runtime = endgame_animation.render_relics_for_animation(animation)
+        self.assertEqual(
+            {state.source_coord for state in final_runtime},
+            expected_survivors,
+        )
+
+    def test_endgame_visible_populations_use_distinct_layers_and_trajectories(self) -> None:
+        locked_cells = tuple(
+            endgame_animation.SnapshotCell(
+                source_coord=(index % 8, index // 8),
+                position=(float(index % 8), float(index // 8), 0.0),
+                color_id=(index % 7) + 1,
+            )
+            for index in range(64)
+        )
+        animation = endgame_animation.build_endgame_animation_state(
+            endgame_animation.create_snapshot(
+                dimension=2,
+                board_dims=(12, 12),
+                render_dims=(12, 12, 1),
+                locked_cells=locked_cells,
+                base_seed=2027,
+                render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+                endgame_live_cell_fraction=0.25,
+            )
+        )
+
+        shell_states = endgame_animation.render_supplemental_relics_for_animation(
+            animation
+        )
+        runtime_states = endgame_animation.render_relics_for_animation(animation)
+        self.assertTrue(shell_states)
+        self.assertTrue(runtime_states)
+        self.assertTrue(
+            all(
+                state.population_kind
+                == endgame_animation.ENDGAME_POPULATION_ESCAPING_DEBRIS
+                for state in shell_states
+            )
+        )
+        self.assertTrue(
+            all(
+                state.population_kind
+                == endgame_animation.ENDGAME_POPULATION_PERSISTENT_RUNTIME
+                for state in runtime_states
+            )
+        )
+        self.assertTrue(
+            {state.source_coord for state in shell_states}.isdisjoint(
+                {state.source_coord for state in runtime_states}
+            )
+        )
+        debris_alignments = tuple(
+            self._outward_alignment(
+                position=tuple(float(value) for value in relic.initial_position),
+                board_center=animation.snapshot.board_center,
+                velocity=tuple(float(value) for value in relic.burst_velocity),
+            )
+            for relic in animation.debris_cells
+        )
+        live_cells_by_coord = {
+            tuple(int(value) for value in cell.source_coord): cell
+            for cell in animation.persistent_live_cells
+        }
+        runtime_alignments = tuple(
+            self._outward_alignment(
+                position=tuple(
+                    float(value)
+                    for value in live_cells_by_coord[
+                        tuple(particle.source_coord)
+                    ].position
+                ),
+                board_center=animation.snapshot.board_center,
+                velocity=tuple(float(value) for value in particle.velocity_nd),
+            )
+            for particle in animation.explosion_controller.simulation.particles
+        )
+        self.assertTrue(debris_alignments)
+        self.assertTrue(runtime_alignments)
+        self.assertGreater(
+            sum(debris_alignments) / len(debris_alignments),
+            0.45,
+        )
+        self.assertLess(
+            sum(runtime_alignments) / len(runtime_alignments),
+            0.2,
+        )
+
+    def test_endgame_runtime_survivors_remain_in_board_space_through_shatter_window(
+        self,
+    ) -> None:
+        locked_cells = tuple(
+            endgame_animation.SnapshotCell(
+                source_coord=(index % 8, index // 8),
+                position=(float(index % 8), float(index // 8), 0.0),
+                color_id=(index % 7) + 1,
+            )
+            for index in range(64)
+        )
+        animation = endgame_animation.build_endgame_animation_state(
+            endgame_animation.create_snapshot(
+                dimension=2,
+                board_dims=(12, 12),
+                render_dims=(12, 12, 1),
+                locked_cells=locked_cells,
+                base_seed=2028,
+                render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+                endgame_live_cell_fraction=0.25,
+                boundary_response="escape",
+            )
+        )
+
+        self._advance_animation(
+            animation,
+            animation.tuning.shatter_duration_ms - 40.0,
+        )
+        runtime_states = endgame_animation.render_relics_for_animation(animation)
+        self.assertTrue(runtime_states)
+        self.assertTrue(
+            all(
+                -0.5 <= state.position_nd[0] <= 11.5
+                and -0.5 <= state.position_nd[1] <= 11.5
+                for state in runtime_states
+            )
         )
 
     def test_endgame_live_cell_count_uses_fraction_floor_and_cap(self) -> None:
@@ -524,6 +1159,7 @@ class TestEndgameAnimation(unittest.TestCase):
 
         self.assertEqual(len(snapshot.locked_cells), 60)
         self.assertEqual(len(snapshot.live_locked_cells), 48)
+        self.assertEqual(len(snapshot.escaping_locked_cells), 12)
         self.assertEqual(
             len(animation.explosion_controller.simulation.particles),
             len(snapshot.live_locked_cells),
@@ -533,7 +1169,79 @@ class TestEndgameAnimation(unittest.TestCase):
             len(snapshot.locked_cells),
         )
         self.assertEqual(animation.persistent_population_count, 48)
-        self.assertEqual(animation.debris_population_count, 60)
+        self.assertEqual(animation.debris_population_count, 12)
+
+    def test_saved_live_fraction_changes_endgame_population_sizes(self) -> None:
+        self._temp_settings_root()
+        loop = LoopContext2D.create(GameConfig(width=10, height=12, speed_level=1))
+        loop.state.board.cells.clear()
+        loop.state.board.cells.update(
+            {
+                (x, y): ((x + y) % 7) + 1
+                for x in range(10)
+                for y in range(4, 12)
+            }
+        )
+
+        def _population_counts(live_fraction: float) -> tuple[int, int]:
+            ok, msg = explosion_defaults_store.save_mode_explosion_defaults(
+                "2d",
+                explosion_defaults_store.ExplosionDefaults(
+                    endgame_live_cell_fraction=live_fraction,
+                ),
+            )
+            self.assertTrue(ok, msg)
+            snapshot = front2d_frame._capture_endgame_snapshot_2d(loop)
+            animation = endgame_animation.build_endgame_animation_state(snapshot)
+            self.assertAlmostEqual(
+                snapshot.endgame_live_cell_fraction,
+                live_fraction,
+            )
+            return (
+                animation.persistent_population_count,
+                animation.debris_population_count,
+            )
+
+        lower_live, lower_debris = _population_counts(0.10)
+        higher_live, higher_debris = _population_counts(0.35)
+
+        self.assertGreater(higher_live, lower_live)
+        self.assertLess(higher_debris, lower_debris)
+
+    def test_snapshot_tracks_escaping_cells_as_live_subset_complement(self) -> None:
+        locked_cells = tuple(
+            endgame_animation.SnapshotCell(
+                source_coord=(index % 6, index // 6),
+                position=(float(index % 6), float(index // 6), 0.0),
+                color_id=(index % 7) + 1,
+            )
+            for index in range(30)
+        )
+        snapshot = endgame_animation.create_snapshot(
+            dimension=2,
+            board_dims=(8, 8),
+            render_dims=(8, 8, 1),
+            locked_cells=locked_cells,
+            base_seed=2026,
+            render_context=endgame_animation.EndgameRenderContext(mode_key="2d"),
+            endgame_live_cell_fraction=0.20,
+        )
+
+        self.assertEqual(
+            len(snapshot.live_locked_cells) + len(snapshot.escaping_locked_cells),
+            len(snapshot.locked_cells),
+        )
+        self.assertEqual(
+            {
+                cell.source_coord
+                for cell in snapshot.live_locked_cells
+            }
+            & {
+                cell.source_coord
+                for cell in snapshot.escaping_locked_cells
+            },
+            set(),
+        )
 
     def test_small_board_floor_prevents_empty_endgame_subset(self) -> None:
         locked_cells = tuple(
@@ -847,7 +1555,7 @@ class TestEndgameAnimation(unittest.TestCase):
             self._sample_snapshot()
         )
 
-        animation.step(animation.tuning.shatter_duration_ms - 1.0)
+        self._advance_animation(animation, animation.tuning.shatter_duration_ms - 1.0)
         self.assertEqual(
             animation.phase,
             endgame_animation.TERMINAL_PHASE_ENDGAME_SHATTER,
@@ -864,7 +1572,7 @@ class TestEndgameAnimation(unittest.TestCase):
             self._sample_snapshot()
         )
 
-        animation.step(animation.tuning.shatter_duration_ms)
+        self._advance_animation(animation, animation.tuning.shatter_duration_ms)
 
         self.assertEqual(
             animation.phase,

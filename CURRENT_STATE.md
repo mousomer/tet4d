@@ -109,8 +109,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   defaults model now seeds standalone startup, explorer-triggered simulator
   launches where relevant, and overlapping endgame explosion-controller
   defaults with transient runtime-only simulator state excluded from
-  serialization; endgame snapshot capture must not let the legacy endgame
-  settings branch override saved shared boundary/collision/default behavior;
+  serialization; the normal pause-menu Settings -> Game page exposes those
+  persistent shared explosion defaults in its `Explosion Defaults` section and
+  saves through the same authority instead of legacy endgame-only fields;
+  endgame snapshot capture must not let the legacy endgame settings branch
+  override saved shared boundary/collision/default behavior;
   that shared saved profile now also owns
   `endgame_live_cell_fraction` (default `0.12`), and endgame launch applies a
   thin deterministic live-subset adapter before calling the shared explosion
@@ -131,7 +134,22 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   the shared explosion controller so rupture/message/outward-release remain
   endgame-owned while the persistent readable residue uses the shared
   simulator-authored runtime/view defaults with an explicit debris population
-  vs live simulation population split, and
+  vs live simulation population split, saved
+  `endgame_live_cell_fraction` now directly controls the persistent
+  shared-runtime subset while the escaping debris population is the exact
+  complement, and the visible handoff now keeps survivors on the shared
+  runtime layer continuously from the initial rupture onward while the
+  shell-owned overlay is reserved for the escaping debris path, with the
+  endgame adapter only retuning the shared runtime survivors' initial launch
+  vectors into board-tied motion rather than running a second survivor path,
+  and any compatibility survivor-transition relics are now lazy derived data
+  rather than a stored second survivor layer,
+  dense `3D` /
+  `4D` frozen endgame skips the profiled-heavy projected
+  board-line occlusion pass while keeping shared
+  trace/grid/shadow/particle rendering, caches frozen endgame camera/view and
+  shell overlay layout state, and advances large frame spikes through bounded
+  config-backed substeps instead of one unstable raw `dt`, and
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
@@ -171,7 +189,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   tetromino ownership. The current refactor authority for splitting simulator
   accumulation into shared board presentation, shared controls, shared
   explosion runtime, and thin simulator/explorer/endgame/gameplay adapters is
-  `docs/plans/explosion_refactor_ownership_split.md`.
+  `docs/plans/explosion_refactor_ownership_split.md`. Stages 1 through 7 of
+  that refactor are now complete; remaining non-goals are explicitly deferred
+  there, including deep 4D camera/projection cleanup, broader camera-system /
+  projection redesign, and any presentation unification beyond the low-risk
+  seams already landed.
 - Governance after the policy-pack migration stays locked to:
   `config/project/policy_pack.json` for machine-readable policy,
   `docs/WORKFLOW_CODEX.md` for human workflow, and `CURRENT_STATE.md` for
@@ -234,15 +256,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 245` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 247` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.70` (`low`)
+- `tech_debt.score = 5.73` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.55`
+1. `delivery_size_pressure = 2.58`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -254,13 +276,13 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3767` real LOC
-2. `tests/unit/render/test_locked_cell_explosion.py`: `2861` real LOC
-3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2717` real LOC
-4. `src/tet4d/ui/pygame/endgame_animation.py`: `2446` real LOC
+2. `tests/unit/render/test_locked_cell_explosion.py`: `2956` real LOC
+3. `src/tet4d/ui/pygame/endgame_animation.py`: `2872` real LOC
+4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2717` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `1836` real LOC
-7. `tools/governance/validate_project_contracts.py`: `1732` real LOC
-8. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `1875` real LOC
+7. `tests/unit/engine/test_endgame_animation.py`: `1794` real LOC
+8. `tools/governance/validate_project_contracts.py`: `1732` real LOC
 
 Thin-wrapper budgets:
 

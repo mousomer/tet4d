@@ -4,7 +4,7 @@ Role: authority
 Status: active  
 Source of truth: this file for locked-cell explosion refactor ownership and staged extraction order  
 Supersedes: none  
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 
 ## Purpose
 
@@ -13,6 +13,11 @@ target split for simulator/shared presentation/shared controls/shared runtime,
 and the currently landed stage baseline.
 
 This is an extraction map only.
+
+Stages 1 through 7 are now complete.
+
+This document remains the closeout authority for the landed ownership split,
+the remaining follow-up risks, and the explicitly deferred non-goals.
 
 Stage 1 planning and inventory establishment must **not**:
 - move widgets,
@@ -68,6 +73,31 @@ Gameplay reuse must come last.
 
 ---
 
+## Closeout Status
+
+Stages completed:
+- Stage 1: inventory / authority / extraction plan establishment
+- Stage 2: shared controls extraction
+- Stage 3: shared board-presentation extraction
+- Stage 4: shared runtime-default builder and defaults/runtime boundary split
+- Stage 5: explorer thinning
+- Stage 6: endgame shell thinning
+- Stage 7A/7B/7C: low-risk gameplay presentation reuse
+
+Final landed architecture:
+- shared controls live under `src/tet4d/ui/pygame/controls/`
+- shared board presentation lives under
+  `src/tet4d/ui/pygame/board_presentation/`
+- shared explosion runtime/default application lives under
+  `src/tet4d/ui/pygame/locked_cell_explosion/`
+- simulator is the first adapter/authoring consumer of those shared layers
+- explorer is a thin topology/state injection adapter
+- endgame is a thin shell adapter around the shared runtime/view
+- gameplay now consumes shared board-presentation seams where the reuse is
+  low-risk and clearly presentation-only
+
+---
+
 ## Current Ownership Inventory
 
 ## Simulator Surface And UI Logic
@@ -97,13 +127,17 @@ Currently owned there:
 - simulator preview draw routing
 - simulator save action through `save_standalone_explosion_defaults`
 
-This file is the main monolith risk.
+This file remains the main closeout monolith risk by size, but not by the same
+ownership boundary as before.
 
-It currently mixes:
+At closeout it primarily mixes:
 - simulator adapter responsibilities,
-- generic control/widget behavior,
-- control layout behavior,
-- and shared board-presentation settings application.
+- simulator row inventory/domain mapping,
+- simulator launch/status/footer composition,
+- and simulator event plumbing over shared controls/runtime/presentation.
+
+It no longer owns the generic controls package, the shared board-presentation
+authority, or the shared runtime-default builder.
 
 ---
 
@@ -142,6 +176,8 @@ must not drift generic control behavior back into `surface.py`.
 
 Current owners:
 
+- `src/tet4d/ui/pygame/board_presentation/native_board.py`
+- `src/tet4d/ui/pygame/board_presentation/gameplay_board.py`
 - `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`
 - `src/tet4d/ui/pygame/locked_cell_explosion/render.py`
 - `src/tet4d/ui/pygame/front3d_render.py`
@@ -163,32 +199,37 @@ Current split:
   and keeps grid/shadow/boundary/edge-grid/occlusion/trace/W-movement
   application under `src/tet4d/ui/pygame/board_presentation/` rather than
   simulator-local ownership.
+- Stage 7 closeout is now landed: `board_presentation/gameplay_board.py` owns
+  the gameplay-facing shared presentation entrypoints for low-risk
+  grid/shadow/boundary-box/edge-grid seams, 4D W-movement style dispatch, 3D
+  orthographic zoom-fit application, and 4D frozen-view snapshot copying.
 - Grid modes are defined in engine UI logic and rendered through a combination
   of `gfx_game.py`, `front3d_render.py`, `front4d_render.py`, and
   `grid_mode_render.py`.
-- Shadow modes are defined in engine UI logic but simulator true-board shadow
-  routing is currently concentrated in `locked_cell_explosion/board_view.py`.
+- `locked_cell_explosion/board_view.py` is now only a compatibility shim that
+  re-exports `board_presentation.native_board.draw_native_board_view`.
 - The canonical board boundary box lives in `render/board_boundary.py`, while
-  individual box/edge drawing paths remain split across simulator board view
-  and front renderers.
-- Edge-grid and projected line occlusion are shared-ish render helpers in
-  `grid_mode_render.py` and `projected_occlusion.py`, but they are not yet a
-  single board-presentation authority.
+  board-presentation entry owns the application/routing of box/edge/grid
+  semantics for simulator and the low-risk gameplay seams.
+- Edge-grid and projected line occlusion still depend on lower-level render
+  helpers in `grid_mode_render.py` and `projected_occlusion.py`, but
+  application ownership now routes through `board_presentation/`.
 - Trace rendering for explosion particles is currently in
-  `locked_cell_explosion/board_view.py` for simulator board-native previews,
-  in `locked_cell_explosion/render.py` for projected explosion render state,
-  and in `front3d_render.py` / `front4d_render.py` for endgame traces.
+  `board_presentation/native_board.py` for simulator board-native previews, in
+  `locked_cell_explosion/render.py` for projected explosion render state, and
+  in `front3d_render.py` / `front4d_render.py` for endgame traces.
 - Camera behavior is split between gameplay render camera types
   (`Camera3D`, `LayerView3D`), topology-lab camera helpers, and mouse input
   helpers.
 - W-movement presentation has a small reusable scale helper in
-  `render/w_movement_animation.py`, but style selection and application are
-  still adapter-owned in simulator state and 4D rendering.
-- 2D/3D/4D board-view conventions are spread across `gfx_game.py`,
-  `front3d_render.py`, `front4d_render.py`, and simulator `board_view.py`.
+  `render/w_movement_animation.py`, with style selection/application now
+  routed through shared board-presentation helpers for simulator and gameplay.
+- 2D/3D/4D board-view conventions still rely on lower-level front-render
+  helpers, but the shared application seams now live under
+  `board_presentation/`.
 
-This is a wrong ownership state for presentation logic intended to be shared by
-simulator, explorer, endgame, and later gameplay.
+This is now the correct closeout ownership baseline. Remaining deeper camera /
+projection cleanup is intentionally deferred rather than half-migrated.
 
 ---
 
@@ -221,10 +262,20 @@ Current split:
   load, and save through `state/menu_settings.json`.
 - `endgame_animation.py` still owns endgame-specific shell/relic animation and
   live-subset selection, and calls the shared explosion controller for live
-  locked-cell particles. It must not become a second explosion runtime.
+  locked-cell particles. Saved shared `endgame_live_cell_fraction` is the
+  authority for the persistent live subset, the escaping debris population is
+  the exact complement, and the visible handoff must keep survivors on the
+  shared runtime layer continuously while the shell-owned overlay is limited to
+  the escaping debris path. The endgame adapter may retune only the shared
+  runtime's initial survivor seed so those particles stay board-tied through
+  the rupture instead of reusing the generic outward explosion launch class.
+  Any survivor-transition relics retained for compatibility must stay lazy/
+  derived and must not become a second stored survivor layer. It must not
+  become a second explosion runtime.
 
-The runtime is already mostly in the correct namespace, but the boundary between
-runtime, defaults, and adapters still needs tightening.
+The runtime/default boundary is now explicit via
+`locked_cell_explosion/runtime_config.py` and remains the correct closeout
+baseline.
 
 ---
 
@@ -658,9 +709,12 @@ Acceptance:
 - endgame launches shared runtime plus shared board presentation rather than a
   parallel view path
 - endgame shell phases are explicit: rupture, message/noise, outward debris
-  release, then persistent readable residue on the shared runtime/view
+  release, survivor continuity into the shared runtime/view, then persistent
+  readable residue on the shared runtime/view
 - the two-population split is intentional: endgame-owned debris spectacle vs
-  shared-runtime live simulation subset
+  shared-runtime live simulation subset, with saved shared
+  `endgame_live_cell_fraction` controlling the surviving subset and the debris
+  population defined as the complement
 
 ---
 
@@ -707,6 +761,46 @@ Stage 7A landed:
 
 ---
 
+## Deferred Work
+
+Intentionally not solved by Stages 1 through 7:
+- deep 4D camera/projection cleanup
+- broader camera-system redesign
+- broader projection-math redesign
+- presentation unification beyond the low-risk gameplay seams already landed
+- further size reduction of `surface.py`, `native_board.py`, and
+  `endgame_animation.py` beyond the ownership fixes already landed
+
+Deferred gameplay-local seams:
+- `front4d_render.py` basis decomposition and layer-axis semantics
+- `front4d_render.py` projection extras / raw-point transform pipeline
+- gameplay camera controls and input semantics in `front3d_game.py` and
+  `front4d_game.py`
+- any broad front3d/front4d orchestration cleanup that would amount to camera
+  or projection redesign
+
+## Closeout Audit Notes
+
+Documented follow-up risks after closeout:
+- `locked_cell_explosion/surface.py` is still large and remains the main thin-
+  adapter follow-up risk by size, even though shared controls/presentation/
+  runtime ownership is now extracted
+- `board_presentation/native_board.py` is now the main shared-presentation
+  hotspot and may need future internal decomposition if more presentation
+  seams are added there
+- `board_presentation/gameplay_board.py` is currently acceptable in scope, but
+  it should stay limited to shared gameplay-facing presentation entrypoints
+- `endgame_animation.py` remains large, but its persistent readable simulation
+  now routes through the shared runtime/view path rather than a parallel
+  runtime implementation
+- `front3d_render.py` and `front4d_render.py` still own lower-level gameplay
+  projection/orchestration code; after Stage 7C the remaining seams there are
+  explicitly deferred rather than architecturally ambiguous
+
+No new feature work is required for this closeout baseline.
+
+---
+
 ## Risks And Guards
 
 ### Monolith risk
@@ -729,7 +823,9 @@ simulator-only names.
 ### Config/default authority split risk
 `explosion_defaults.<mode>` is the shared config authority.
 Legacy endgame settings may only supply endgame-specific preset/speed/chrome
-inputs.
+inputs. The normal pause-menu Settings -> Game `Explosion Defaults` section
+must edit this same `explosion_defaults.<mode>` authority rather than
+reintroducing pause-only or endgame-only defaults branches.
 
 ### Engine/UI boundary risk
 Shared board presentation and shared controls remain pygame UI code.

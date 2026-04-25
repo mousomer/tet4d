@@ -53,7 +53,9 @@ Current active follow-ups:
   shared explosion runtime while using the saved `endgame_live_cell_fraction`
   subset adapter instead of releasing every locked cell into live simulation
   by default, keep legacy endgame settings from overriding saved shared
-  boundary/collision/default behavior, and follow
+  boundary/collision/default behavior, keep the normal pause-menu Settings ->
+  Game `Explosion Defaults` section routed into that same shared authority
+  rather than endgame-only branches, and follow
   `docs/plans/explosion_refactor_ownership_split.md` so shared board
   presentation, shared controls, shared runtime, and thin adapters are
   extracted in that order instead of preserving simulator-owned shared logic;
@@ -75,7 +77,19 @@ Current active follow-ups:
   endgame thinning is now the landed baseline, with endgame limited to
   rupture/message/debris shell sequencing plus gameplay topology/locked-cell
   capture while the persistent residue reuses the shared explosion runtime/view
-  path;
+  path; saved shared `endgame_live_cell_fraction` now directly controls the
+  persistent runtime subset while the escaping debris population is the exact
+  complement, and the visible split now reads through trajectory rather than a
+  survivor crossfade because the shared runtime survivor layer stays visible
+  continuously while the shell overlay is reserved for the escaping debris,
+  with endgame reseeding the shared runtime survivors into board-tied launch
+  vectors instead of generic outward explosion impulses and shrinking the old
+  shell survivor-transition path down to a lazy compatibility shim,
+  endgame runtime/view performance treats dense `3D` / `4D`
+  projected occlusion as an endgame-only reduction point, caches frozen
+  camera/view and shell overlay layout state, and clamps large frame `dt` into
+  bounded config-backed substeps so render spikes do not turn into visible
+  simulation jumps;
   avoid devolving into a decorative final-energy readout
 
 - Open work:
@@ -208,6 +222,15 @@ Completed on 2026-04-20:
   shared gameplay board-presentation helper and `front4d_render.py` routes
   frozen-view snapshot copying there, while the entangled 4D basis/projection
   and camera-control paths remain explicitly deferred as gameplay-local
+- explosion architecture Stages 1 through 7 are now closed out in the project
+  record: shared controls live under `src/tet4d/ui/pygame/controls/`, shared
+  board presentation lives under `src/tet4d/ui/pygame/board_presentation/`,
+  runtime/default application lives under
+  `src/tet4d/ui/pygame/locked_cell_explosion/runtime_config.py`, simulator /
+  explorer / endgame are thin adapters over those shared layers, gameplay
+  reuses the safe shared presentation seams, and the remaining deferred items
+  are explicitly limited to deeper 4D camera/projection cleanup and broader
+  camera/projection redesign rather than to any ambiguous duplicate path
 - locked-cell explosion Stage 2 shared-controls extraction is now finalized in
   the project record: generic dropdown/numeric/row-layout/hit-testing
   ownership lives under `src/tet4d/ui/pygame/controls/`, the simulator surface
