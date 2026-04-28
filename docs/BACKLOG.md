@@ -173,6 +173,10 @@ Completed on 2026-04-27:
   exclusions, projected shadow/W-movement settings are consumed in endgame
   render paths, and rupture timing uses a slower config-backed visible
   charge/breakaway/artifact window
+- endgame visual-tuning follow-up so rupture uses stronger config-backed flash,
+  shell, and crack intensity while capped grid-break marks plus static shell
+  state leave a low-alpha cracked-board residue behind survivor particles
+  without reviving all-cells relics or escaping-cell rendering
 
 Completed on 2026-04-20:
 

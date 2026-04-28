@@ -44,6 +44,8 @@ from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     EndgameRenderContext,
     EndgameShellArtifact,
+    board_shell_residue_alpha,
+    rupture_flash_alpha,
     transform_grid_break_mark,
     transform_shell_artifact,
     transform_shell_geometry,
@@ -1673,16 +1675,20 @@ def _draw_endgame_grid_break_marks_4d(
             zoom=zoom,
         )
         color = color_for_cell(int(mark.color_id), COLOR_MAP)
-        pygame.draw.line(
-            overlay,
-            (0, 0, 0, max(0, min(180, int(round(180 * alpha))))),
-            start,
-            end,
-            4,
+        base_width = max(
+            1,
+            int(round(float(endgame_animation.tuning.grid_break_line_width))),
         )
         pygame.draw.line(
             overlay,
-            (*color, max(0, min(255, int(round(225 * alpha))))),
+            (0, 0, 0, max(0, min(210, int(round(210 * alpha))))),
+            start,
+            end,
+            base_width,
+        )
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(250 * alpha))))),
             start,
             end,
             1,
@@ -1765,34 +1771,89 @@ def _draw_endgame_shadow_guides_4d(
     draw_boundary_projection_faces(overlay, faces=projection_faces)
 
 
-def _draw_endgame_layer_board(
-    surface: pygame.Surface,
+def _draw_endgame_board_shell_residue_4d(
+    overlay: pygame.Surface,
     *,
-    rect: pygame.Rect,
+    endgame_animation: EndgameAnimationState,
     layer_index: int,
-    snapshot,
+    dims3: Cell3,
     context: EndgameRenderContext,
-    fonts: GfxFonts,
+    center_px: Point2,
+    zoom: float,
+) -> None:
+    alpha = board_shell_residue_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
+    )
+    if alpha <= 0.0:
+        return
+    color = (*GRID_COLOR, max(0, min(255, int(round(255 * alpha)))))
+    for shell_fragment in endgame_animation.shell_fragments:
+        if shell_fragment.layer_index != layer_index:
+            continue
+        start_local, end_local = shell_fragment.base_geometry
+        start_point = (
+            shell_fragment.initial_position[0] + start_local[0],
+            shell_fragment.initial_position[1] + start_local[1],
+            shell_fragment.initial_position[2] + start_local[2],
+        )
+        end_point = (
+            shell_fragment.initial_position[0] + end_local[0],
+            shell_fragment.initial_position[1] + end_local[1],
+            shell_fragment.initial_position[2] + end_local[2],
+        )
+        start = _project_raw_point_from_context(
+            start_point,
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        end = _project_raw_point_from_context(
+            end_point,
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        pygame.draw.line(overlay, color, start, end, 1)
+
+
+def _draw_endgame_rupture_flash_4d(
+    overlay: pygame.Surface,
+    *,
+    draw_rect: pygame.Rect,
     endgame_animation: EndgameAnimationState,
 ) -> None:
-    pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
-    pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
-
-    label = render_text_cached(
-        font=fonts.hint_font,
-        text=f"{context.layer_axis_label or 'w'} = {layer_index}",
-        color=LAYER_LABEL,
+    flash_alpha = rupture_flash_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
     )
-    surface.blit(label, (rect.x + 8, rect.y + 6))
+    if flash_alpha <= 0.0:
+        return
+    pygame.draw.rect(
+        overlay,
+        (190, 225, 255, max(0, min(255, int(round(255 * flash_alpha))))),
+        draw_rect,
+        border_radius=6,
+    )
 
-    draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
-    dims3 = snapshot.render_dims
-    zoom = _fit_zoom_from_context(dims3, context, draw_rect) * float(context.zoom)
-    zoom = max(8.0, min(170.0, zoom))
-    center_px = (draw_rect.centerx, draw_rect.centery)
-    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+def _draw_endgame_shell_fragments_4d(
+    overlay: pygame.Surface,
+    *,
+    endgame_animation: EndgameAnimationState,
+    layer_index: int,
+    dims3: Cell3,
+    context: EndgameRenderContext,
+    center_px: Point2,
+    zoom: float,
+) -> None:
     drag = float(endgame_animation.tuning.burst_drag_per_second)
-
+    line_width = max(
+        1,
+        int(round(float(endgame_animation.tuning.shell_fragment_line_width))),
+    )
     for shell_fragment in endgame_animation.shell_fragments:
         if shell_fragment.layer_index != layer_index:
             continue
@@ -1819,11 +1880,63 @@ def _draw_endgame_layer_board(
         )
         pygame.draw.line(
             overlay,
-            (*GRID_COLOR, max(0, min(255, int(round(210 * alpha))))),
+            (*GRID_COLOR, max(0, min(255, int(round(245 * alpha))))),
             start,
             end,
-            2,
+            line_width,
         )
+
+
+def _draw_endgame_layer_board(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    layer_index: int,
+    snapshot,
+    context: EndgameRenderContext,
+    fonts: GfxFonts,
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
+    pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
+
+    label = render_text_cached(
+        font=fonts.hint_font,
+        text=f"{context.layer_axis_label or 'w'} = {layer_index}",
+        color=LAYER_LABEL,
+    )
+    surface.blit(label, (rect.x + 8, rect.y + 6))
+
+    draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
+    dims3 = snapshot.render_dims
+    zoom = _fit_zoom_from_context(dims3, context, draw_rect) * float(context.zoom)
+    zoom = max(8.0, min(170.0, zoom))
+    center_px = (draw_rect.centerx, draw_rect.centery)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+    _draw_endgame_rupture_flash_4d(
+        overlay,
+        draw_rect=draw_rect,
+        endgame_animation=endgame_animation,
+    )
+    _draw_endgame_board_shell_residue_4d(
+        overlay,
+        endgame_animation=endgame_animation,
+        layer_index=layer_index,
+        dims3=dims3,
+        context=context,
+        center_px=center_px,
+        zoom=zoom,
+    )
+    _draw_endgame_shell_fragments_4d(
+        overlay,
+        endgame_animation=endgame_animation,
+        layer_index=layer_index,
+        dims3=dims3,
+        context=context,
+        center_px=center_px,
+        zoom=zoom,
+    )
 
     _draw_endgame_grid_break_marks_4d(
         overlay,

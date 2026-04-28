@@ -114,13 +114,22 @@ class EndgameAnimationTuning:
     capture_transition_duration_ms: float
     shell_fragment_lifetime_ms: float
     shell_fade_duration_ms: float
+    shell_fragment_line_width: float
     shell_fragment_speed_min: float
     shell_fragment_speed_max: float
     shell_artifact_birth_spread_ms: float
     shell_artifact_lifetime_min_ms: float
     shell_artifact_lifetime_max_ms: float
+    shell_artifact_speed_min: float
+    shell_artifact_speed_max: float
+    shell_artifact_length_scale: float
     grid_break_birth_lead_ms: float
     grid_break_lifetime_ms: float
+    grid_break_residue_alpha: float
+    grid_break_line_width: float
+    board_shell_residue_alpha: float
+    rupture_flash_alpha: float
+    rupture_flash_duration_ms: float
     relic_burst_speed_min: float
     relic_burst_speed_max: float
     burst_angular_velocity_deg_min: float
@@ -239,14 +248,14 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
 
     shatter_duration_ms = _clamp_float(
         payload.get("shatter_duration_ms"),
-        default=1400.0,
+        default=1800.0,
         minimum=1.0,
     )
     capture_transition_duration_ms = min(
         shatter_duration_ms,
         _clamp_float(
             payload.get("capture_transition_duration_ms"),
-            default=620.0,
+            default=1100.0,
             minimum=0.0,
         ),
     )
@@ -254,7 +263,7 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
         shatter_duration_ms,
         _clamp_float(
             payload.get("shell_fragment_lifetime_ms"),
-            default=1320.0,
+            default=1700.0,
             minimum=0.0,
         ),
     )
@@ -262,7 +271,7 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
         enabled=_coerce_bool(payload.get("enabled"), default=True),
         crack_onset_duration_ms=_clamp_float(
             payload.get("crack_onset_duration_ms"),
-            default=220.0,
+            default=190.0,
             minimum=0.0,
         ),
         shatter_duration_ms=shatter_duration_ms,
@@ -270,17 +279,22 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
         shell_fragment_lifetime_ms=shell_fragment_lifetime_ms,
         shell_fade_duration_ms=_clamp_float(
             payload.get("shell_fade_duration_ms"),
-            default=380.0,
+            default=580.0,
             minimum=0.0,
+        ),
+        shell_fragment_line_width=_clamp_float(
+            payload.get("shell_fragment_line_width"),
+            default=3.0,
+            minimum=1.0,
         ),
         shell_fragment_speed_min=_clamp_float(
             payload.get("shell_fragment_speed_min"),
-            default=1.6,
+            default=1.9,
             minimum=0.0,
         ),
         shell_fragment_speed_max=_clamp_float(
             payload.get("shell_fragment_speed_max"),
-            default=4.9,
+            default=6.2,
             minimum=0.0,
         ),
         shell_artifact_birth_spread_ms=_clamp_float(
@@ -290,13 +304,28 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
         ),
         shell_artifact_lifetime_min_ms=_clamp_float(
             payload.get("shell_artifact_lifetime_min_ms"),
-            default=520.0,
+            default=720.0,
             minimum=1.0,
         ),
         shell_artifact_lifetime_max_ms=_clamp_float(
             payload.get("shell_artifact_lifetime_max_ms"),
-            default=860.0,
+            default=1180.0,
             minimum=1.0,
+        ),
+        shell_artifact_speed_min=_clamp_float(
+            payload.get("shell_artifact_speed_min"),
+            default=3.0,
+            minimum=0.0,
+        ),
+        shell_artifact_speed_max=_clamp_float(
+            payload.get("shell_artifact_speed_max"),
+            default=6.8,
+            minimum=0.0,
+        ),
+        shell_artifact_length_scale=_clamp_float(
+            payload.get("shell_artifact_length_scale"),
+            default=1.25,
+            minimum=0.1,
         ),
         grid_break_birth_lead_ms=_clamp_float(
             payload.get("grid_break_birth_lead_ms"),
@@ -305,6 +334,31 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
         ),
         grid_break_lifetime_ms=_clamp_float(
             payload.get("grid_break_lifetime_ms"),
+            default=860.0,
+            minimum=1.0,
+        ),
+        grid_break_residue_alpha=_clamp_float(
+            payload.get("grid_break_residue_alpha"),
+            default=0.18,
+            minimum=0.0,
+        ),
+        grid_break_line_width=_clamp_float(
+            payload.get("grid_break_line_width"),
+            default=5.0,
+            minimum=1.0,
+        ),
+        board_shell_residue_alpha=_clamp_float(
+            payload.get("board_shell_residue_alpha"),
+            default=0.12,
+            minimum=0.0,
+        ),
+        rupture_flash_alpha=_clamp_float(
+            payload.get("rupture_flash_alpha"),
+            default=0.22,
+            minimum=0.0,
+        ),
+        rupture_flash_duration_ms=_clamp_float(
+            payload.get("rupture_flash_duration_ms"),
             default=560.0,
             minimum=1.0,
         ),
@@ -330,12 +384,12 @@ def load_endgame_animation_tuning() -> EndgameAnimationTuning:
         ),
         outward_bias_strength=_clamp_float(
             payload.get("outward_bias_strength"),
-            default=1.0,
+            default=1.25,
             minimum=0.0,
         ),
         random_spread_strength=_clamp_float(
             payload.get("random_spread_strength"),
-            default=0.65,
+            default=0.78,
             minimum=0.0,
         ),
         burst_drag_per_second=_clamp_float(
@@ -587,6 +641,7 @@ class EndgameShellArtifact:
     birth_ms: float
     lifetime_ms: float
     kind: str
+    length_scale: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -599,6 +654,7 @@ class EndgameGridBreakMark:
     lifetime_ms: float
     length: float
     kind: str
+    residue_alpha: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -928,16 +984,25 @@ def build_endgame_shell_artifacts(
             randomizer.uniform(lifetime_min, lifetime_max),
             max(180.0, float(tuning.shatter_duration_ms - birth_ms - 40.0)),
         )
+        speed_min = min(
+            float(tuning.shell_artifact_speed_min),
+            float(tuning.shell_artifact_speed_max),
+        )
+        speed_max = max(
+            float(tuning.shell_artifact_speed_min),
+            float(tuning.shell_artifact_speed_max),
+        )
         artifacts.append(
             EndgameShellArtifact(
                 source_coord=tuple(int(axis) for axis in cell.source_coord),
                 start_position=tuple(float(value) for value in cell.position),
                 direction=direction,
-                speed=randomizer.uniform(2.2, 5.4),
+                speed=randomizer.uniform(speed_min, speed_max),
                 color_id=int(cell.color_id),
                 birth_ms=birth_ms,
                 lifetime_ms=float(lifetime_ms),
                 kind=kind,
+                length_scale=float(tuning.shell_artifact_length_scale),
             )
         )
     return tuple(artifacts)
@@ -999,6 +1064,10 @@ def build_endgame_grid_break_marks(
                 lifetime_ms=min(float(artifact.lifetime_ms), float(tuning.grid_break_lifetime_ms)),
                 length=randomizer.uniform(0.35, 0.72),
                 kind=_ENDGAME_GRID_BREAK_KINDS[index % len(_ENDGAME_GRID_BREAK_KINDS)],
+                residue_alpha=max(
+                    0.0,
+                    min(1.0, float(tuning.grid_break_residue_alpha)),
+                ),
             )
         )
     return tuple(marks)
@@ -1869,7 +1938,7 @@ def transform_shell_artifact(
     length_scale = {"streak": 0.5, "shard": 0.32, "spark": 0.18}.get(
         artifact.kind,
         0.28,
-    )
+    ) * max(0.1, float(artifact.length_scale))
     tail = _vec_sub(head, _vec_mul(artifact.direction, length_scale))
     fade_start = artifact.lifetime_ms * 0.45
     alpha = 1.0 if age_ms <= fade_start else 1.0 - (
@@ -1886,11 +1955,15 @@ def transform_grid_break_mark(
     if elapsed_ms < mark.birth_ms:
         return mark.center_position, mark.center_position, 0.0
     age_ms = float(elapsed_ms - mark.birth_ms)
-    if age_ms >= mark.lifetime_ms:
-        return mark.center_position, mark.center_position, 0.0
     progress = max(0.0, min(1.0, age_ms / max(1.0, mark.lifetime_ms)))
     length = float(mark.length) * (0.35 + (0.65 * _smoothstep01(progress)))
     half_vector = _vec_mul(mark.direction, length * 0.5)
+    if age_ms >= mark.lifetime_ms:
+        return (
+            _vec_sub(mark.center_position, half_vector),
+            _vec_add(mark.center_position, half_vector),
+            max(0.0, min(1.0, float(mark.residue_alpha))),
+        )
     alpha = 1.0 - _smoothstep01(max(0.0, (progress - 0.45) / 0.55))
     return (
         _vec_sub(mark.center_position, half_vector),
@@ -1926,6 +1999,30 @@ def transform_for_shell_fragment(
             lifetime_ms=fragment.lifetime_ms,
         ),
     )
+
+
+def board_shell_residue_alpha(
+    *,
+    elapsed_ms: float,
+    tuning: EndgameAnimationTuning,
+) -> float:
+    if elapsed_ms < tuning.capture_start_ms:
+        return 0.0
+    return max(0.0, min(1.0, float(tuning.board_shell_residue_alpha)))
+
+
+def rupture_flash_alpha(
+    *,
+    elapsed_ms: float,
+    tuning: EndgameAnimationTuning,
+) -> float:
+    start_ms = float(tuning.capture_start_ms)
+    duration_ms = max(1.0, float(tuning.rupture_flash_duration_ms))
+    if elapsed_ms < start_ms or elapsed_ms >= start_ms + duration_ms:
+        return 0.0
+    progress = (float(elapsed_ms) - start_ms) / duration_ms
+    peak = max(0.0, min(1.0, float(tuning.rupture_flash_alpha)))
+    return peak * (1.0 - _smoothstep01(progress))
 
 
 def rotate_point(point: Vec3, rotation_deg: Vec3) -> Vec3:
@@ -1981,6 +2078,7 @@ __all__ = [
     "TERMINAL_PHASE_GAME_OVER_ANIMATING",
     "TERMINAL_PHASE_GAME_OVER_COMPLETE",
     "TERMINAL_PHASE_PLAYING",
+    "board_shell_residue_alpha",
     "build_endgame_animation_state",
     "build_endgame_grid_break_marks",
     "build_endgame_shell_artifacts",
@@ -1996,6 +2094,7 @@ __all__ = [
     "load_endgame_animation_tuning",
     "resolve_endgame_preset_config",
     "rotate_point",
+    "rupture_flash_alpha",
     "split_endgame_locked_cells",
     "transform_for_shell_fragment",
     "transform_grid_break_mark",

@@ -16,7 +16,9 @@ from tet4d.engine.runtime.project_config import project_constant_int
 from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
+    board_shell_residue_alpha,
     rotate_point,
+    rupture_flash_alpha,
     transform_grid_break_mark,
     transform_shell_artifact,
     transform_shell_geometry,
@@ -1319,33 +1321,88 @@ def _draw_endgame_grid_break_marks_2d(
             ((tail[0], tail[1], 0.0), (head[0], head[1], 0.0)),
         )
         color = color_for_cell(int(mark.color_id))
-        pygame.draw.line(
-            overlay,
-            (0, 0, 0, max(0, min(190, int(round(190 * alpha))))),
-            line_points[0],
-            line_points[1],
-            4,
+        base_width = max(
+            1,
+            int(round(float(endgame_animation.tuning.grid_break_line_width))),
         )
         pygame.draw.line(
             overlay,
-            (*color, max(0, min(255, int(round(235 * alpha))))),
+            (0, 0, 0, max(0, min(210, int(round(210 * alpha))))),
+            line_points[0],
+            line_points[1],
+            base_width,
+        )
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(250 * alpha))))),
             line_points[0],
             line_points[1],
             1,
         )
 
 
-def _draw_endgame_board_2d(
-    surface: pygame.Surface,
+def _draw_endgame_board_shell_residue_2d(
+    overlay: pygame.Surface,
     *,
-    board_rect: pygame.Rect,
     board_offset: tuple[int, int],
     endgame_animation: EndgameAnimationState,
 ) -> None:
-    pygame.draw.rect(surface, (20, 20, 50), board_rect)
-    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    drag = float(endgame_animation.tuning.burst_drag_per_second)
+    alpha = board_shell_residue_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
+    )
+    if alpha <= 0.0:
+        return
+    color = (*GRID_COLOR, max(0, min(255, int(round(255 * alpha)))))
+    for shell_fragment in endgame_animation.shell_fragments:
+        start_local, end_local = shell_fragment.base_geometry
+        start_point = (
+            shell_fragment.initial_position[0] + start_local[0],
+            shell_fragment.initial_position[1] + start_local[1],
+            0.0,
+        )
+        end_point = (
+            shell_fragment.initial_position[0] + end_local[0],
+            shell_fragment.initial_position[1] + end_local[1],
+            0.0,
+        )
+        screen_points = _endgame_screen_points_2d(
+            board_offset,
+            (start_point, end_point),
+        )
+        pygame.draw.line(overlay, color, screen_points[0], screen_points[1], 1)
 
+
+def _draw_endgame_rupture_flash_2d(
+    overlay: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    flash_alpha = rupture_flash_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
+    )
+    if flash_alpha <= 0.0:
+        return
+    pygame.draw.rect(
+        overlay,
+        (190, 225, 255, max(0, min(255, int(round(255 * flash_alpha))))),
+        board_rect,
+    )
+
+
+def _draw_endgame_shell_fragments_2d(
+    overlay: pygame.Surface,
+    *,
+    board_offset: tuple[int, int],
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    drag = float(endgame_animation.tuning.burst_drag_per_second)
+    line_width = max(
+        1,
+        int(round(float(endgame_animation.tuning.shell_fragment_line_width))),
+    )
     for shell_fragment in endgame_animation.shell_fragments:
         transformed, alpha = transform_shell_geometry(
             shell_fragment,
@@ -1363,11 +1420,38 @@ def _draw_endgame_board_2d(
         )
         pygame.draw.line(
             overlay,
-            (*GRID_COLOR, max(0, min(255, int(round(220 * alpha))))),
+            (*GRID_COLOR, max(0, min(255, int(round(245 * alpha))))),
             screen_points[0],
             screen_points[1],
-            2,
+            line_width,
         )
+
+
+def _draw_endgame_board_2d(
+    surface: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    board_offset: tuple[int, int],
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    pygame.draw.rect(surface, (20, 20, 50), board_rect)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+    _draw_endgame_rupture_flash_2d(
+        overlay,
+        board_rect=board_rect,
+        endgame_animation=endgame_animation,
+    )
+    _draw_endgame_board_shell_residue_2d(
+        overlay,
+        board_offset=board_offset,
+        endgame_animation=endgame_animation,
+    )
+    _draw_endgame_shell_fragments_2d(
+        overlay,
+        board_offset=board_offset,
+        endgame_animation=endgame_animation,
+    )
 
     _draw_endgame_grid_break_marks_2d(
         overlay,

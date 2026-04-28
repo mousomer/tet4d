@@ -1038,7 +1038,7 @@ class TestEndgameAnimation(unittest.TestCase):
 
         self.assertEqual(animation_a.grid_break_marks, animation_b.grid_break_marks)
 
-    def test_grid_break_marks_expire_before_persistent_residue_phase(self) -> None:
+    def test_grid_break_marks_leave_low_alpha_persistent_residue(self) -> None:
         animation = endgame_animation.build_endgame_animation_state(
             self._artifact_snapshot(dimension=3, locked_count=150)
         )
@@ -1051,7 +1051,36 @@ class TestEndgameAnimation(unittest.TestCase):
                     mark,
                     elapsed_ms=elapsed_ms,
                 )[2]
-                == 0.0
+                == mark.residue_alpha
+                for mark in animation.grid_break_marks
+            )
+        )
+        self.assertTrue(
+            all(0.0 < mark.residue_alpha <= 0.25 for mark in animation.grid_break_marks)
+        )
+
+    def test_cracked_board_residue_remains_available_after_persistent_phase_starts(
+        self,
+    ) -> None:
+        animation = endgame_animation.build_endgame_animation_state(
+            self._artifact_snapshot(dimension=4, locked_count=180)
+        )
+        elapsed_ms = float(animation.tuning.shatter_duration_ms)
+
+        self.assertGreater(
+            endgame_animation.board_shell_residue_alpha(
+                elapsed_ms=elapsed_ms,
+                tuning=animation.tuning,
+            ),
+            0.0,
+        )
+        self.assertTrue(
+            any(
+                endgame_animation.transform_grid_break_mark(
+                    mark,
+                    elapsed_ms=elapsed_ms,
+                )[2]
+                > 0.0
                 for mark in animation.grid_break_marks
             )
         )
@@ -1079,6 +1108,7 @@ class TestEndgameAnimation(unittest.TestCase):
             all(
                 artifact.birth_ms == tuning.capture_start_ms
                 and artifact.lifetime_ms == 777.0
+                and artifact.length_scale == tuning.shell_artifact_length_scale
                 for artifact in animation.escaping_artifacts
             )
         )
@@ -1086,6 +1116,7 @@ class TestEndgameAnimation(unittest.TestCase):
             all(
                 mark.birth_ms == tuning.capture_start_ms - 123.0
                 and mark.lifetime_ms == 456.0
+                and mark.residue_alpha == tuning.grid_break_residue_alpha
                 for mark in animation.grid_break_marks
             )
         )
@@ -1099,6 +1130,16 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertGreaterEqual(animation.tuning.capture_start_ms, 350.0)
         self.assertLessEqual(animation.tuning.capture_start_ms, 700.0)
         self.assertGreaterEqual(animation.tuning.shell_fragment_lifetime_ms, 1700.0)
+        self.assertGreater(animation.tuning.rupture_flash_alpha, 0.0)
+        self.assertGreaterEqual(animation.tuning.rupture_flash_duration_ms, 400.0)
+        self.assertLessEqual(animation.tuning.rupture_flash_duration_ms, 700.0)
+        self.assertGreater(
+            endgame_animation.rupture_flash_alpha(
+                elapsed_ms=animation.tuning.capture_start_ms + 120.0,
+                tuning=animation.tuning,
+            ),
+            0.0,
+        )
         elapsed_ms = animation.tuning.capture_start_ms + 500.0
 
         self.assertTrue(

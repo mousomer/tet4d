@@ -126,7 +126,9 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   now feed the shared survivor runtime without gameplay drop/lock gravity-axis
   exclusions, trace and shadow defaults control projected endgame rendering,
   4D W-movement style reaches the actual layer draw path, and rupture timing
-  now uses a slower config-backed charge/breakaway/artifact-visibility window,
+  now uses a stronger config-backed charge/breakaway/artifact-visibility window
+  with low-alpha cracked-board residue derived from capped grid-break marks and
+  static shell state,
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
@@ -205,11 +207,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.42` (`low`)
+- `tech_debt.score = 5.43` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.50`
+1. `delivery_size_pressure = 2.51`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -223,11 +225,11 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
 2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2969` real LOC
 3. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
-4. `src/tet4d/ui/pygame/front4d_render.py`: `2045` real LOC
-5. `scripts/arch_metrics.py`: `1890` real LOC
-6. `src/tet4d/ui/pygame/endgame_animation.py`: `1810` real LOC
+4. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
+5. `src/tet4d/ui/pygame/endgame_animation.py`: `1905` real LOC
+6. `scripts/arch_metrics.py`: `1890` real LOC
 7. `tools/governance/validate_project_contracts.py`: `1732` real LOC
-8. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
+8. `src/tet4d/ui/pygame/render/gfx_game.py`: `1553` real LOC
 
 Thin-wrapper budgets:
 
