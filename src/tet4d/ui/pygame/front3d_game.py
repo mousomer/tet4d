@@ -30,6 +30,7 @@ from tet4d.engine.runtime.menu_settings_state import (
     mode_rotation_animation_mode,
 )
 from tet4d.engine.runtime.project_config import project_constant_int
+from tet4d.engine.gameplay.topology import default_edge_rules_for_mode
 from tet4d.engine.tutorial.api import (
     tutorial_apply_step_setup_nd_runtime,
     tutorial_board_dims_runtime,
@@ -204,6 +205,17 @@ _TUTORIAL_MIN_VISIBLE_LAYER = project_constant_int(
     min_value=0,
     max_value=10,
 )
+
+
+def _endgame_topology_edge_rules_3d(cfg: GameConfigND):
+    if cfg.explorer_topology_profile is not None:
+        return cfg.topology_edge_rules
+    return default_edge_rules_for_mode(
+        len(cfg.dims),
+        cfg.gravity_axis,
+        mode=cfg.topology_mode,
+        wrap_gravity_axis=True,
+    )
 
 
 def _tutorial_board_dims_3d() -> tuple[int, int, int]:
@@ -423,7 +435,7 @@ def _capture_endgame_snapshot_3d(
         endgame_live_cell_fraction=explosion_defaults.endgame_live_cell_fraction,
         relic_speed_scale=float(relic_speed_percent) / 100.0,
         shatter_speed_scale=float(shatter_speed_percent) / 100.0,
-        topology_edge_rules=loop.cfg.topology_edge_rules,
+        topology_edge_rules=_endgame_topology_edge_rules_3d(loop.cfg),
         explorer_topology_profile=loop.cfg.explorer_topology_profile,
         explorer_transport=loop.cfg.explorer_transport,
         sound_enabled=explosion_defaults.sound_enabled,

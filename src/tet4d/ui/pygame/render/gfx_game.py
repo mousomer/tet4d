@@ -13,11 +13,14 @@ from tet4d.engine.gameplay.rotation_anim import RigidPieceOverlay2D
 from tet4d.engine.runtime.menu_config import ui_copy_section
 from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.engine.runtime.project_config import project_constant_int
-from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
-    render_relics_for_animation,
+    board_shell_residue_alpha,
     rotate_point,
+    rupture_flash_alpha,
+    transform_grid_break_mark,
+    transform_shell_artifact,
     transform_shell_geometry,
 )
 from tet4d.ui.pygame.render.font_profiles import (
@@ -1300,17 +1303,106 @@ def _endgame_cell_quad_points_2d(
     )
 
 
-def _draw_endgame_board_2d(
-    surface: pygame.Surface,
+def _draw_endgame_grid_break_marks_2d(
+    overlay: pygame.Surface,
     *,
-    board_rect: pygame.Rect,
     board_offset: tuple[int, int],
     endgame_animation: EndgameAnimationState,
 ) -> None:
-    pygame.draw.rect(surface, (20, 20, 50), board_rect)
-    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    drag = float(endgame_animation.tuning.burst_drag_per_second)
+    for mark in endgame_animation.grid_break_marks:
+        tail, head, alpha = transform_grid_break_mark(
+            mark,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+        )
+        if alpha <= 0.0:
+            continue
+        line_points = _endgame_screen_points_2d(
+            board_offset,
+            ((tail[0], tail[1], 0.0), (head[0], head[1], 0.0)),
+        )
+        color = color_for_cell(int(mark.color_id))
+        base_width = max(
+            1,
+            int(round(float(endgame_animation.tuning.grid_break_line_width))),
+        )
+        pygame.draw.line(
+            overlay,
+            (0, 0, 0, max(0, min(210, int(round(210 * alpha))))),
+            line_points[0],
+            line_points[1],
+            base_width,
+        )
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(250 * alpha))))),
+            line_points[0],
+            line_points[1],
+            1,
+        )
 
+
+def _draw_endgame_board_shell_residue_2d(
+    overlay: pygame.Surface,
+    *,
+    board_offset: tuple[int, int],
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    alpha = board_shell_residue_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
+    )
+    if alpha <= 0.0:
+        return
+    color = (*GRID_COLOR, max(0, min(255, int(round(255 * alpha)))))
+    for shell_fragment in endgame_animation.shell_fragments:
+        start_local, end_local = shell_fragment.base_geometry
+        start_point = (
+            shell_fragment.initial_position[0] + start_local[0],
+            shell_fragment.initial_position[1] + start_local[1],
+            0.0,
+        )
+        end_point = (
+            shell_fragment.initial_position[0] + end_local[0],
+            shell_fragment.initial_position[1] + end_local[1],
+            0.0,
+        )
+        screen_points = _endgame_screen_points_2d(
+            board_offset,
+            (start_point, end_point),
+        )
+        pygame.draw.line(overlay, color, screen_points[0], screen_points[1], 1)
+
+
+def _draw_endgame_rupture_flash_2d(
+    overlay: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    flash_alpha = rupture_flash_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
+    )
+    if flash_alpha <= 0.0:
+        return
+    pygame.draw.rect(
+        overlay,
+        (190, 225, 255, max(0, min(255, int(round(255 * flash_alpha))))),
+        board_rect,
+    )
+
+
+def _draw_endgame_shell_fragments_2d(
+    overlay: pygame.Surface,
+    *,
+    board_offset: tuple[int, int],
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    drag = float(endgame_animation.tuning.burst_drag_per_second)
+    line_width = max(
+        1,
+        int(round(float(endgame_animation.tuning.shell_fragment_line_width))),
+    )
     for shell_fragment in endgame_animation.shell_fragments:
         transformed, alpha = transform_shell_geometry(
             shell_fragment,
@@ -1328,46 +1420,137 @@ def _draw_endgame_board_2d(
         )
         pygame.draw.line(
             overlay,
-            (*GRID_COLOR, max(0, min(255, int(round(220 * alpha))))),
+            (*GRID_COLOR, max(0, min(255, int(round(245 * alpha))))),
             screen_points[0],
             screen_points[1],
-            2,
+            line_width,
         )
 
-    relic_render_states = render_relics_for_animation(endgame_animation)
-    for cell_relic, relic_state in zip(
-        endgame_animation.cell_relics,
-        relic_render_states,
-    ):
-        color = color_for_cell(int(cell_relic.color_id))
-        for segment in tuple(getattr(relic_state, "trail_segments", ())):
-            line_points = _endgame_screen_points_2d(
-                board_offset,
-                (
+
+def _draw_endgame_board_2d(
+    surface: pygame.Surface,
+    *,
+    board_rect: pygame.Rect,
+    board_offset: tuple[int, int],
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    pygame.draw.rect(surface, (20, 20, 50), board_rect)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+    _draw_endgame_rupture_flash_2d(
+        overlay,
+        board_rect=board_rect,
+        endgame_animation=endgame_animation,
+    )
+    _draw_endgame_board_shell_residue_2d(
+        overlay,
+        board_offset=board_offset,
+        endgame_animation=endgame_animation,
+    )
+    _draw_endgame_shell_fragments_2d(
+        overlay,
+        board_offset=board_offset,
+        endgame_animation=endgame_animation,
+    )
+
+    _draw_endgame_grid_break_marks_2d(
+        overlay,
+        board_offset=board_offset,
+        endgame_animation=endgame_animation,
+    )
+
+    for artifact in endgame_animation.escaping_artifacts:
+        tail, head, alpha = transform_shell_artifact(
+            artifact,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+        )
+        if alpha <= 0.0:
+            continue
+        line_points = _endgame_screen_points_2d(
+            board_offset,
+            (
+                (tail[0], tail[1], 0.0),
+                (head[0], head[1], 0.0),
+            ),
+        )
+        color = color_for_cell(int(artifact.color_id))
+        width = 1 if artifact.kind == "spark" else 2
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(210 * alpha))))),
+            line_points[0],
+            line_points[1],
+            width,
+        )
+
+    assert endgame_animation.explosion_controller is not None
+    relic_render_states = endgame_animation.explosion_controller.render_particles(
+        render_context=endgame_animation.snapshot.render_context
+    )
+    shadow_mode = ShadowMode(str(endgame_animation.snapshot.shadow_mode))
+    if shadow_mode != ShadowMode.OFF:
+        shadow_segments = tuple(
+            segment
+            for relic_state in relic_render_states
+            for segment in build_boundary_projection_segments_2d(
+                cells=(
                     (
-                        segment.tail_render_position[0],
-                        segment.tail_render_position[1],
-                        0.0,
-                    ),
-                    (
-                        segment.head_render_position[0],
-                        segment.head_render_position[1],
-                        0.0,
+                        tuple(
+                            float(value)
+                            for value in relic_state.render_position[:2]
+                        ),
+                        0.82,
                     ),
                 ),
-            )
-            pygame.draw.line(
-                overlay,
-                (
-                    color[0],
-                    color[1],
-                    color[2],
-                    max(0, min(255, int(round(172 * float(segment.alpha))))),
+                dims=(
+                    int(endgame_animation.snapshot.board_dims[0]),
+                    int(endgame_animation.snapshot.board_dims[1]),
                 ),
-                line_points[0],
-                line_points[1],
-                max(1, int(round(CELL_SIZE * 0.08 * max(0.35, float(segment.width))))),
+                gravity_axis=1,
+                grid_mode=GridMode(shadow_mode.value),
+                color=color_for_cell(int(relic_state.color_id)),
             )
+        )
+        draw_boundary_projection_segments_2d(
+            overlay,
+            segments=shadow_segments,
+            board_offset=board_offset,
+            cell_size=CELL_SIZE,
+        )
+    for relic_state in relic_render_states:
+        color = color_for_cell(int(relic_state.color_id))
+        if endgame_animation.snapshot.trace_enabled:
+            for segment in tuple(getattr(relic_state, "trail_segments", ())):
+                line_points = _endgame_screen_points_2d(
+                    board_offset,
+                    (
+                        (
+                            segment.tail_render_position[0],
+                            segment.tail_render_position[1],
+                            0.0,
+                        ),
+                        (
+                            segment.head_render_position[0],
+                            segment.head_render_position[1],
+                            0.0,
+                        ),
+                    ),
+                )
+                pygame.draw.line(
+                    overlay,
+                    (
+                        color[0],
+                        color[1],
+                        color[2],
+                        max(0, min(255, int(round(172 * float(segment.alpha))))),
+                    ),
+                    line_points[0],
+                    line_points[1],
+                    max(
+                        1,
+                        int(round(CELL_SIZE * 0.08 * max(0.35, float(segment.width)))),
+                    ),
+                )
         position = relic_state.render_position
         rotation_deg = relic_state.rotation_deg
         alpha = relic_state.alpha

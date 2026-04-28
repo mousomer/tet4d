@@ -43,7 +43,11 @@ from tet4d.ui.pygame.projection3d import (
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     EndgameRenderContext,
-    render_relics_for_animation,
+    EndgameShellArtifact,
+    board_shell_residue_alpha,
+    rupture_flash_alpha,
+    transform_grid_break_mark,
+    transform_shell_artifact,
     transform_shell_geometry,
 )
 from tet4d.engine.runtime.project_config import (
@@ -69,7 +73,7 @@ from tet4d.ui.pygame.render.active_piece_projection_guides import (
 from tet4d.ui.pygame.render.text_render_cache import render_text_cached
 from tet4d.engine.gameplay.topology import map_overlay_cells
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
-from tet4d.engine.ui_logic.view_modes import GridMode, grid_mode_label
+from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode, grid_mode_label
 from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
 
 
@@ -1547,34 +1551,309 @@ def _draw_endgame_trail_segments_4d(
         )
 
 
-def _draw_endgame_layer_board(
-    surface: pygame.Surface,
+def _basis_axis_map_from_context(context: EndgameRenderContext) -> AxisMap4D:
+    raw_map = context.basis_axis_map or ((0, 1), (1, 1), (2, 1), (3, 1))
+    padded = tuple(raw_map) + ((0, 1), (1, 1), (2, 1), (3, 1))
+    return tuple((int(axis), int(sign)) for axis, sign in padded[:4])  # type: ignore[return-value]
+
+
+def _artifact_layer_index_4d(
+    artifact: EndgameShellArtifact,
     *,
-    rect: pygame.Rect,
+    snapshot,
+    context: EndgameRenderContext,
+) -> int:
+    axis_map = _basis_axis_map_from_context(context)
+    layer_axis, layer_sign = axis_map[3]
+    coord_value = float(artifact.source_coord[layer_axis])
+    if layer_sign < 0:
+        coord_value = float(snapshot.board_dims[layer_axis]) - 1.0 - coord_value
+    return int(round(coord_value))
+
+
+def _artifact_point3_from_context(
+    point: tuple[float, ...],
+    *,
+    snapshot,
+    context: EndgameRenderContext,
+) -> tuple[float, float, float]:
+    axis_map = _basis_axis_map_from_context(context)
+    values: list[float] = []
+    for axis, sign in axis_map[:3]:
+        value = float(point[axis]) if axis < len(point) else 0.0
+        if sign < 0:
+            value = float(snapshot.board_dims[axis]) - 1.0 - value
+        values.append(value)
+    return values[0], values[1], values[2]
+
+
+def _draw_endgame_escaping_artifacts_4d(
+    overlay: pygame.Surface,
+    *,
     layer_index: int,
     snapshot,
     context: EndgameRenderContext,
-    fonts: GfxFonts,
+    endgame_animation: EndgameAnimationState,
+    dims3: Cell3,
+    center_px: Point2,
+    zoom: float,
+) -> None:
+    for artifact in endgame_animation.escaping_artifacts:
+        if _artifact_layer_index_4d(
+            artifact,
+            snapshot=snapshot,
+            context=context,
+        ) != layer_index:
+            continue
+        tail, head, alpha = transform_shell_artifact(
+            artifact,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+        )
+        if alpha <= 0.0:
+            continue
+        start = _project_raw_point_from_context(
+            _artifact_point3_from_context(tail, snapshot=snapshot, context=context),
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        end = _project_raw_point_from_context(
+            _artifact_point3_from_context(head, snapshot=snapshot, context=context),
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        color = color_for_cell(int(artifact.color_id), COLOR_MAP)
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(200 * alpha))))),
+            start,
+            end,
+            1 if artifact.kind == "spark" else 2,
+        )
+
+
+def _draw_endgame_grid_break_marks_4d(
+    overlay: pygame.Surface,
+    *,
+    layer_index: int,
+    snapshot,
+    context: EndgameRenderContext,
+    endgame_animation: EndgameAnimationState,
+    dims3: Cell3,
+    center_px: Point2,
+    zoom: float,
+) -> None:
+    for mark in endgame_animation.grid_break_marks:
+        axis_map = _basis_axis_map_from_context(context)
+        layer_axis, layer_sign = axis_map[3]
+        coord_value = float(mark.source_coord[layer_axis])
+        if layer_sign < 0:
+            coord_value = float(snapshot.board_dims[layer_axis]) - 1.0 - coord_value
+        if int(round(coord_value)) != layer_index:
+            continue
+        tail, head, alpha = transform_grid_break_mark(
+            mark,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+        )
+        if alpha <= 0.0:
+            continue
+        start = _project_raw_point_from_context(
+            _artifact_point3_from_context(tail, snapshot=snapshot, context=context),
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        end = _project_raw_point_from_context(
+            _artifact_point3_from_context(head, snapshot=snapshot, context=context),
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        color = color_for_cell(int(mark.color_id), COLOR_MAP)
+        base_width = max(
+            1,
+            int(round(float(endgame_animation.tuning.grid_break_line_width))),
+        )
+        pygame.draw.line(
+            overlay,
+            (0, 0, 0, max(0, min(210, int(round(210 * alpha))))),
+            start,
+            end,
+            base_width,
+        )
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(250 * alpha))))),
+            start,
+            end,
+            1,
+        )
+
+
+def _endgame_layer_scale_for_particle(
+    relic_state,
+    *,
+    layer_index: int,
+    context: EndgameRenderContext,
+) -> float:
+    style = str(context.w_movement_animation_style).strip().lower()
+    source = (
+        tuple(getattr(relic_state, "layer_scales", ()))
+        if style == "box_size"
+        else tuple(getattr(relic_state, "layer_weights", ()))
+    )
+    return next(
+        (
+            float(scale)
+            for candidate_layer, scale in source
+            if int(candidate_layer) == int(layer_index)
+        ),
+        0.0,
+    )
+
+
+def _draw_endgame_shadow_guides_4d(
+    overlay: pygame.Surface,
+    *,
+    relic_render_states,
+    snapshot,
+    context: EndgameRenderContext,
+    layer_index: int,
+    dims3: Cell3,
+    center_px: Point2,
+    zoom: float,
+) -> None:
+    shadow_mode = ShadowMode(str(snapshot.shadow_mode))
+    if shadow_mode == ShadowMode.OFF:
+        return
+    projection_faces = tuple(
+        primitive
+        for relic_state in relic_render_states
+        for layer_scale in (
+            _endgame_layer_scale_for_particle(
+                relic_state,
+                layer_index=layer_index,
+                context=context,
+            ),
+        )
+        if layer_scale > 0.0
+        for primitive in build_boundary_projection_face_primitives(
+            cells=(
+                (
+                    tuple(float(value) for value in relic_state.render_position),
+                    0.9 * layer_scale,
+                ),
+            ),
+            dims=dims3,
+            gravity_axis=1,
+            grid_mode=GridMode(shadow_mode.value),
+            project_raw=lambda raw: _project_raw_point_from_context(
+                raw,
+                dims3=dims3,
+                context=context,
+                center_px=center_px,
+                zoom=zoom,
+            ),
+            transform_raw=lambda raw: _transform_raw_point_from_context(
+                raw,
+                dims3=dims3,
+                context=context,
+            ),
+            depth_denominator=_orthographic_depth_denominator,
+            color=color_for_cell(int(relic_state.color_id), COLOR_MAP),
+        )
+    )
+    draw_boundary_projection_faces(overlay, faces=projection_faces)
+
+
+def _draw_endgame_board_shell_residue_4d(
+    overlay: pygame.Surface,
+    *,
+    endgame_animation: EndgameAnimationState,
+    layer_index: int,
+    dims3: Cell3,
+    context: EndgameRenderContext,
+    center_px: Point2,
+    zoom: float,
+) -> None:
+    alpha = board_shell_residue_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
+    )
+    if alpha <= 0.0:
+        return
+    color = (*GRID_COLOR, max(0, min(255, int(round(255 * alpha)))))
+    for shell_fragment in endgame_animation.shell_fragments:
+        if shell_fragment.layer_index != layer_index:
+            continue
+        start_local, end_local = shell_fragment.base_geometry
+        start_point = (
+            shell_fragment.initial_position[0] + start_local[0],
+            shell_fragment.initial_position[1] + start_local[1],
+            shell_fragment.initial_position[2] + start_local[2],
+        )
+        end_point = (
+            shell_fragment.initial_position[0] + end_local[0],
+            shell_fragment.initial_position[1] + end_local[1],
+            shell_fragment.initial_position[2] + end_local[2],
+        )
+        start = _project_raw_point_from_context(
+            start_point,
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        end = _project_raw_point_from_context(
+            end_point,
+            dims3=dims3,
+            context=context,
+            center_px=center_px,
+            zoom=zoom,
+        )
+        pygame.draw.line(overlay, color, start, end, 1)
+
+
+def _draw_endgame_rupture_flash_4d(
+    overlay: pygame.Surface,
+    *,
+    draw_rect: pygame.Rect,
     endgame_animation: EndgameAnimationState,
 ) -> None:
-    pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
-    pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
-
-    label = render_text_cached(
-        font=fonts.hint_font,
-        text=f"{context.layer_axis_label or 'w'} = {layer_index}",
-        color=LAYER_LABEL,
+    flash_alpha = rupture_flash_alpha(
+        elapsed_ms=float(endgame_animation.elapsed_ms),
+        tuning=endgame_animation.tuning,
     )
-    surface.blit(label, (rect.x + 8, rect.y + 6))
+    if flash_alpha <= 0.0:
+        return
+    pygame.draw.rect(
+        overlay,
+        (190, 225, 255, max(0, min(255, int(round(255 * flash_alpha))))),
+        draw_rect,
+        border_radius=6,
+    )
 
-    draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
-    dims3 = snapshot.render_dims
-    zoom = _fit_zoom_from_context(dims3, context, draw_rect) * float(context.zoom)
-    zoom = max(8.0, min(170.0, zoom))
-    center_px = (draw_rect.centerx, draw_rect.centery)
-    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+def _draw_endgame_shell_fragments_4d(
+    overlay: pygame.Surface,
+    *,
+    endgame_animation: EndgameAnimationState,
+    layer_index: int,
+    dims3: Cell3,
+    context: EndgameRenderContext,
+    center_px: Point2,
+    zoom: float,
+) -> None:
     drag = float(endgame_animation.tuning.burst_drag_per_second)
-
+    line_width = max(
+        1,
+        int(round(float(endgame_animation.tuning.shell_fragment_line_width))),
+    )
     for shell_fragment in endgame_animation.shell_fragments:
         if shell_fragment.layer_index != layer_index:
             continue
@@ -1601,42 +1880,127 @@ def _draw_endgame_layer_board(
         )
         pygame.draw.line(
             overlay,
-            (*GRID_COLOR, max(0, min(255, int(round(210 * alpha))))),
+            (*GRID_COLOR, max(0, min(255, int(round(245 * alpha))))),
             start,
             end,
-            2,
+            line_width,
         )
 
+
+def _draw_endgame_layer_board(
+    surface: pygame.Surface,
+    *,
+    rect: pygame.Rect,
+    layer_index: int,
+    snapshot,
+    context: EndgameRenderContext,
+    fonts: GfxFonts,
+    endgame_animation: EndgameAnimationState,
+) -> None:
+    pygame.draw.rect(surface, (16, 20, 40), rect, border_radius=8)
+    pygame.draw.rect(surface, LAYER_FRAME, rect, 2, border_radius=8)
+
+    label = render_text_cached(
+        font=fonts.hint_font,
+        text=f"{context.layer_axis_label or 'w'} = {layer_index}",
+        color=LAYER_LABEL,
+    )
+    surface.blit(label, (rect.x + 8, rect.y + 6))
+
+    draw_rect = pygame.Rect(rect.x + 6, rect.y + 24, rect.width - 12, rect.height - 30)
+    dims3 = snapshot.render_dims
+    zoom = _fit_zoom_from_context(dims3, context, draw_rect) * float(context.zoom)
+    zoom = max(8.0, min(170.0, zoom))
+    center_px = (draw_rect.centerx, draw_rect.centery)
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+    _draw_endgame_rupture_flash_4d(
+        overlay,
+        draw_rect=draw_rect,
+        endgame_animation=endgame_animation,
+    )
+    _draw_endgame_board_shell_residue_4d(
+        overlay,
+        endgame_animation=endgame_animation,
+        layer_index=layer_index,
+        dims3=dims3,
+        context=context,
+        center_px=center_px,
+        zoom=zoom,
+    )
+    _draw_endgame_shell_fragments_4d(
+        overlay,
+        endgame_animation=endgame_animation,
+        layer_index=layer_index,
+        dims3=dims3,
+        context=context,
+        center_px=center_px,
+        zoom=zoom,
+    )
+
+    _draw_endgame_grid_break_marks_4d(
+        overlay,
+        layer_index=layer_index,
+        snapshot=snapshot,
+        context=context,
+        endgame_animation=endgame_animation,
+        dims3=dims3,
+        center_px=center_px,
+        zoom=zoom,
+    )
+
+    _draw_endgame_escaping_artifacts_4d(
+        overlay,
+        layer_index=layer_index,
+        snapshot=snapshot,
+        context=context,
+        endgame_animation=endgame_animation,
+        dims3=dims3,
+        center_px=center_px,
+        zoom=zoom,
+    )
+
     fragment_faces: list[tuple[float, list[Point2], tuple[int, int, int], float]] = []
-    relic_render_states = render_relics_for_animation(endgame_animation)
-    for cell_relic, relic_state in zip(
-        endgame_animation.cell_relics,
-        relic_render_states,
-    ):
-        color = color_for_cell(cell_relic.color_id, COLOR_MAP)
-        _draw_endgame_trail_segments_4d(
-            overlay,
-            relic_render_state=relic_state,
-            color=color,
+    assert endgame_animation.explosion_controller is not None
+    relic_render_states = endgame_animation.explosion_controller.render_particles(
+        render_context=endgame_animation.snapshot.render_context
+    )
+    w_style = str(context.w_movement_animation_style).strip().lower()
+    _draw_endgame_shadow_guides_4d(
+        overlay,
+        relic_render_states=relic_render_states,
+        snapshot=snapshot,
+        context=context,
+        layer_index=layer_index,
+        dims3=dims3,
+        center_px=center_px,
+        zoom=zoom,
+    )
+    for relic_state in relic_render_states:
+        color = color_for_cell(int(relic_state.color_id), COLOR_MAP)
+        if snapshot.trace_enabled:
+            _draw_endgame_trail_segments_4d(
+                overlay,
+                relic_render_state=relic_state,
+                color=color,
+                layer_index=layer_index,
+                dims3=dims3,
+                context=context,
+                center_px=center_px,
+                zoom=zoom,
+            )
+        layer_scale = _endgame_layer_scale_for_particle(
+            relic_state,
             layer_index=layer_index,
-            dims3=dims3,
             context=context,
-            center_px=center_px,
-            zoom=zoom,
         )
-        layer_alpha_scale = next(
-            (
-                weight
-                for candidate_layer, weight in relic_state.layer_weights
-                if candidate_layer == layer_index
-            ),
-            0.0,
-        )
-        if layer_alpha_scale <= 0.0:
+        if layer_scale <= 0.0:
             continue
         position = relic_state.render_position
         rotation_deg = relic_state.rotation_deg
-        alpha = relic_state.alpha * layer_alpha_scale
+        alpha = float(relic_state.alpha)
+        if w_style != "box_size":
+            alpha *= layer_scale
         if alpha <= 0.0:
             continue
         faces = build_oriented_cube_faces(
@@ -1656,6 +2020,7 @@ def _draw_endgame_layer_board(
             ),
             active=True,
             rotation_deg=rotation_deg,
+            scale=layer_scale if w_style == "box_size" else 1.0,
         )
         fragment_faces.extend(
             (depth, polygon, color, alpha) for depth, polygon, color, _active in faces
