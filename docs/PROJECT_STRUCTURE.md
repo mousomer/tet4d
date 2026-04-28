@@ -267,7 +267,7 @@ It is a public symbol skim for navigation, not full API documentation, and it do
 - `src/tet4d/replay/format.py`: `ReplayEvent2D`, `ReplayScript2D`, `ReplayTickScriptND`
 - `src/tet4d/shared/nd_coords.py`: `coord_from_column(column, lateral_axes, gravity_axis, gravity_value, ...)`
 - `src/tet4d/ui/pygame/__init__.py`: `run_2d()`, `run_3d()`, `run_4d()`
-- `src/tet4d/ui/pygame/endgame_animation.py`: `EndgamePresetConfig`, `EndgameAnimationTuning`, `load_endgame_animation_tuning()`, `EndgameRenderContext`, `SnapshotCell`, `EndgameSnapshot`, `ShellFragment`, `CellRelic`, `CellRelicMotionState`, `EndgameRelicRenderState`, `EndgameShatterState`, `EndgameRelicFieldState`, ...
+- `src/tet4d/ui/pygame/endgame_animation.py`: `EndgamePresetConfig`, `EndgameAnimationTuning`, `load_endgame_animation_tuning()`, `EndgameRenderContext`, `SnapshotCell`, `EndgameSnapshot`, `EndgameCellSplit`, `ShellFragment`, `EndgameShellArtifact`, `EndgameGridBreakMark`, `EndgameShatterState`, `EndgameAnimationState`, ...
 - `src/tet4d/ui/pygame/front2d_game.py`: `run()`, `main(argv=...)`
 - `src/tet4d/ui/pygame/front2d_input.py`: `system_decision_for_key(key)`, `gameplay_action_for_key_2d(state, key)`, `overlay_action_for_key_2d(key)`, `apply_2d_gameplay_action(state, action)`, `dispatch_2d_gameplay_action(state, key)`, `handle_game_keydown(event, state, _cfg, *, allow_gameplay=..., ...)`
 - `src/tet4d/ui/pygame/front2d_loop.py`: `run_game_loop(screen, cfg, fonts, display_settings, ...)`

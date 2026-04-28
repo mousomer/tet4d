@@ -21,7 +21,8 @@ from tet4d.ui.pygame.projection3d import (
 from tet4d.ui.pygame.endgame_animation import (
     EndgameAnimationState,
     EndgameRenderContext,
-    render_relics_for_animation,
+    transform_grid_break_mark,
+    transform_shell_artifact,
     transform_shell_geometry,
 )
 from tet4d.ui.pygame.render.font_profiles import (
@@ -72,7 +73,7 @@ from tet4d.engine.runtime.project_config import (
     project_constant_int,
 )
 from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
-from tet4d.engine.ui_logic.view_modes import GridMode, grid_mode_label
+from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode, grid_mode_label
 
 
 MARGIN = project_constant_int(
@@ -218,6 +219,142 @@ def _projection_params_from_context(
         projective_strength=float(context.projective_strength),
         projective_bias=float(context.projective_bias),
     )
+
+
+def _pad_artifact_point3(point: tuple[float, ...]) -> tuple[float, float, float]:
+    padded = tuple(float(value) for value in point) + (0.0, 0.0, 0.0)
+    return padded[0], padded[1], padded[2]
+
+
+def _draw_endgame_escaping_artifacts_3d(
+    overlay: pygame.Surface,
+    *,
+    endgame_animation: EndgameAnimationState,
+    dims: Cell3,
+    params: ProjectionParams3D,
+    center_px: Point2,
+) -> None:
+    for artifact in endgame_animation.escaping_artifacts:
+        tail, head, alpha = transform_shell_artifact(
+            artifact,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+        )
+        if alpha <= 0.0:
+            continue
+        start = project_raw_point_helper(
+            _pad_artifact_point3(tail),
+            dims,
+            params,
+            center_px,
+        )
+        end = project_raw_point_helper(
+            _pad_artifact_point3(head),
+            dims,
+            params,
+            center_px,
+        )
+        if start is None or end is None:
+            continue
+        color = color_for_cell_3d(int(artifact.color_id))
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(205 * alpha))))),
+            start,
+            end,
+            1 if artifact.kind == "spark" else 2,
+        )
+
+
+def _draw_endgame_grid_break_marks_3d(
+    overlay: pygame.Surface,
+    *,
+    endgame_animation: EndgameAnimationState,
+    dims: Cell3,
+    params: ProjectionParams3D,
+    center_px: Point2,
+) -> None:
+    for mark in endgame_animation.grid_break_marks:
+        tail, head, alpha = transform_grid_break_mark(
+            mark,
+            elapsed_ms=float(endgame_animation.elapsed_ms),
+        )
+        if alpha <= 0.0:
+            continue
+        start = project_raw_point_helper(
+            _pad_artifact_point3(tail),
+            dims,
+            params,
+            center_px,
+        )
+        end = project_raw_point_helper(
+            _pad_artifact_point3(head),
+            dims,
+            params,
+            center_px,
+        )
+        if start is None or end is None:
+            continue
+        color = color_for_cell_3d(int(mark.color_id))
+        pygame.draw.line(
+            overlay,
+            (0, 0, 0, max(0, min(180, int(round(180 * alpha))))),
+            start,
+            end,
+            4,
+        )
+        pygame.draw.line(
+            overlay,
+            (*color, max(0, min(255, int(round(230 * alpha))))),
+            start,
+            end,
+            1,
+        )
+
+
+def _draw_endgame_shadow_guides_3d(
+    overlay: pygame.Surface,
+    *,
+    relic_render_states,
+    snapshot,
+    dims: Cell3,
+    params: ProjectionParams3D,
+    center_px: Point2,
+) -> None:
+    shadow_mode = ShadowMode(str(snapshot.shadow_mode))
+    if shadow_mode == ShadowMode.OFF:
+        return
+    projection_faces = tuple(
+        primitive
+        for relic_state in relic_render_states
+        for primitive in build_boundary_projection_face_primitives(
+            cells=(
+                (
+                    tuple(float(value) for value in relic_state.render_position),
+                    0.88,
+                ),
+            ),
+            dims=dims,
+            gravity_axis=1,
+            grid_mode=GridMode(shadow_mode.value),
+            project_raw=lambda raw: project_raw_point_helper(
+                raw,
+                dims,
+                params,
+                center_px,
+            ),
+            transform_raw=lambda raw: transform_raw_point_helper(
+                raw,
+                dims,
+                params,
+            ),
+            depth_denominator=lambda depth: depth_denominator_for_depth(
+                depth,
+                params,
+            ),
+            color=color_for_cell_3d(int(relic_state.color_id)),
+        )
+    )
+    draw_boundary_projection_faces(overlay, faces=projection_faces)
 
 
 def _draw_board_grid(
@@ -824,40 +961,65 @@ def _draw_endgame_board_3d(
             2,
         )
 
+    _draw_endgame_grid_break_marks_3d(
+        overlay,
+        endgame_animation=endgame_animation,
+        dims=dims,
+        params=params,
+        center_px=center_px,
+    )
+
+    _draw_endgame_escaping_artifacts_3d(
+        overlay,
+        endgame_animation=endgame_animation,
+        dims=dims,
+        params=params,
+        center_px=center_px,
+    )
+
     fragment_faces: list[tuple[float, list[Point2], tuple[int, int, int], float]] = []
-    relic_render_states = render_relics_for_animation(endgame_animation)
-    for cell_relic, relic_state in zip(
-        endgame_animation.cell_relics,
-        relic_render_states,
-    ):
-        color = color_for_cell_3d(cell_relic.color_id)
-        for segment in tuple(getattr(relic_state, "trail_segments", ())):
-            tail = project_raw_point_helper(
-                tuple(float(value) + 0.5 for value in segment.tail_render_position),
-                dims,
-                params,
-                center_px,
-            )
-            head = project_raw_point_helper(
-                tuple(float(value) + 0.5 for value in segment.head_render_position),
-                dims,
-                params,
-                center_px,
-            )
-            if tail is None or head is None:
-                continue
-            pygame.draw.line(
-                overlay,
-                (
-                    color[0],
-                    color[1],
-                    color[2],
-                    max(0, min(255, int(round(176 * float(segment.alpha))))),
-                ),
-                tail,
-                head,
-                max(1, int(round(1.6 * max(0.35, float(segment.width))))),
-            )
+    assert endgame_animation.explosion_controller is not None
+    relic_render_states = endgame_animation.explosion_controller.render_particles(
+        render_context=endgame_animation.snapshot.render_context
+    )
+    _draw_endgame_shadow_guides_3d(
+        overlay,
+        relic_render_states=relic_render_states,
+        snapshot=snapshot,
+        dims=dims,
+        params=params,
+        center_px=center_px,
+    )
+    for relic_state in relic_render_states:
+        color = color_for_cell_3d(int(relic_state.color_id))
+        if snapshot.trace_enabled:
+            for segment in tuple(getattr(relic_state, "trail_segments", ())):
+                tail = project_raw_point_helper(
+                    tuple(float(value) + 0.5 for value in segment.tail_render_position),
+                    dims,
+                    params,
+                    center_px,
+                )
+                head = project_raw_point_helper(
+                    tuple(float(value) + 0.5 for value in segment.head_render_position),
+                    dims,
+                    params,
+                    center_px,
+                )
+                if tail is None or head is None:
+                    continue
+                pygame.draw.line(
+                    overlay,
+                    (
+                        color[0],
+                        color[1],
+                        color[2],
+                        max(0, min(255, int(round(176 * float(segment.alpha))))),
+                    ),
+                    tail,
+                    head,
+                    max(1, int(round(1.6 * max(0.35, float(segment.width))))),
+                )
         position = relic_state.render_position
         rotation_deg = relic_state.rotation_deg
         alpha = relic_state.alpha

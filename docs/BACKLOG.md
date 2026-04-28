@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-21
+Updated: 2026-04-27
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -148,6 +148,31 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-04-27:
+
+- clean-reset endgame deletion pass so active endgame moving-cell rendering now
+  depends only on the shared survivor-subset explosion controller, the old
+  relic fallback no longer reconstructs all locked cells as native-board moving
+  particles, and deferred escaping-cell shell artifacts remain intentionally
+  unimplemented for later follow-up
+- endgame survivor-only runtime contract pass so the live subset now uses
+  `endgame_live_cell_fraction` over available locked cells (not total board
+  capacity), snapshot state is split into deterministic
+  `persistent_live_cells` plus complementary `escaping_cells`, and the shared
+  explosion controller is seeded only from that persistent survivor subset
+- endgame shell-artifact pass so `escaping_cells` now produce capped,
+  deterministic, short-lived streak/shard/spark overlays while survivors remain
+  the only moving board cells in the shared explosion controller
+- endgame grid-break overlay pass so existing escaping shell artifacts now
+  drive capped short-lived tear/stress marks without introducing destructible
+  grid state or rendering escapers as cells/cubes
+- endgame manual-verification follow-up so survivor counts now directly follow
+  `endgame_live_cell_fraction` without high 3D/4D floors, full selected
+  topology seams reach survivor runtime without gameplay gravity-axis
+  exclusions, projected shadow/W-movement settings are consumed in endgame
+  render paths, and rupture timing uses a slower config-backed visible
+  charge/breakaway/artifact window
 
 Completed on 2026-04-20:
 

@@ -16,6 +16,7 @@ from tet4d.ai.playbot.types import (
 from tet4d.engine.gameplay.api import runtime_assist_combined_score_multiplier
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimatorND
+from tet4d.engine.gameplay.topology import default_edge_rules_for_mode
 from tet4d.engine.runtime.menu_settings_state import (
     DEFAULT_OVERLAY_TRANSPARENCY,
     OVERLAY_TRANSPARENCY_STEP,
@@ -228,6 +229,17 @@ _TUTORIAL_MIN_VISIBLE_LAYER = project_constant_int(
 )
 
 
+def _endgame_topology_edge_rules_4d(cfg: GameConfigND):
+    if cfg.explorer_topology_profile is not None:
+        return cfg.topology_edge_rules
+    return default_edge_rules_for_mode(
+        len(cfg.dims),
+        cfg.gravity_axis,
+        mode=cfg.topology_mode,
+        wrap_gravity_axis=True,
+    )
+
+
 def _tutorial_board_dims_4d() -> tuple[int, int, int, int]:
     dims = tutorial_board_dims_runtime("4d")
     return (int(dims[0]), int(dims[1]), int(dims[2]), int(dims[3]))
@@ -418,7 +430,7 @@ def _capture_endgame_snapshot_4d(
         endgame_live_cell_fraction=explosion_defaults.endgame_live_cell_fraction,
         relic_speed_scale=float(relic_speed_percent) / 100.0,
         shatter_speed_scale=float(shatter_speed_percent) / 100.0,
-        topology_edge_rules=loop.cfg.topology_edge_rules,
+        topology_edge_rules=_endgame_topology_edge_rules_4d(loop.cfg),
         explorer_topology_profile=loop.cfg.explorer_topology_profile,
         explorer_transport=loop.cfg.explorer_transport,
         sound_enabled=explosion_defaults.sound_enabled,

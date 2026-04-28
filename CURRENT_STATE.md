@@ -115,9 +115,18 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `endgame_live_cell_fraction` (default `0.12`), and endgame launch applies a
   thin deterministic live-subset adapter before calling the shared explosion
   runtime so only a readable fraction of locked gameplay cells enter live
-  simulation, using `max(dimension_floor, round(fraction * total_board_cells))`
-  with floors `20` / `40` / `60` for `2D` / `3D` / `4D` and capping by the
-  available locked-cell count,
+  simulation, using `0` when no locked cells exist and otherwise clamping
+  `round(fraction * available_locked_cells)` to `1..available_locked_cells`;
+  native-board endgame moving-cell rendering must
+  consume only that selected live subset, while non-selected or escaping cells
+  stay out of the board-native particle path; escaping cells are represented
+  only as capped deterministic short-lived shell artifacts plus bounded
+  grid-break overlay marks derived from those artifacts, not full cell/cube
+  render states or a destructible grid model, full selected topology seam rules
+  now feed the shared survivor runtime without gameplay drop/lock gravity-axis
+  exclusions, trace and shadow defaults control projected endgame rendering,
+  4D W-movement style reaches the actual layer draw path, and rupture timing
+  now uses a slower config-backed charge/breakaway/artifact-visibility window,
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
@@ -192,7 +201,7 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 244` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 247` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
@@ -214,9 +223,9 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
 2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2969` real LOC
 3. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
-4. `src/tet4d/ui/pygame/endgame_animation.py`: `2398` real LOC
+4. `src/tet4d/ui/pygame/front4d_render.py`: `2045` real LOC
 5. `scripts/arch_metrics.py`: `1890` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `1810` real LOC
+6. `src/tet4d/ui/pygame/endgame_animation.py`: `1810` real LOC
 7. `tools/governance/validate_project_contracts.py`: `1732` real LOC
 8. `src/tet4d/engine/tutorial/setup_apply.py`: `1496` real LOC
 
