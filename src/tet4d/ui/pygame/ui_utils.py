@@ -819,6 +819,45 @@ def draw_corner_chip(
     return rect
 
 
+def draw_side_button_stack(
+    surface: pygame.Surface,
+    *,
+    font: pygame.font.Font,
+    buttons: tuple[tuple[str, str], ...],
+    right_margin: int = 18,
+    top: int = 18,
+    gap: int = 8,
+    hovered_kind: str = "",
+    pressed_kind: str = "",
+    fill_color: tuple[int, int, int, int] = (2, 18, 34, 210),
+    border_color: tuple[int, int, int] = (92, 238, 255),
+    text_color: Color3 = (212, 242, 255),
+) -> dict[str, pygame.Rect]:
+    width, _height = surface.get_size()
+    y = int(top)
+    rects: dict[str, pygame.Rect] = {}
+    for kind, label in buttons:
+        clean_kind = str(kind).strip()
+        text = str(label)
+        text_width, _text_height = font.size(text)
+        x = int(width - right_margin - (text_width + 18))
+        rect = draw_corner_chip(
+            surface,
+            font=font,
+            text=text,
+            x=x,
+            y=y,
+            fill_color=fill_color,
+            border_color=border_color,
+            text_color=text_color,
+            hovered=hovered_kind == clean_kind,
+            pressed=pressed_kind == clean_kind,
+        )
+        rects[clean_kind] = rect.copy()
+        y += rect.height + int(gap)
+    return rects
+
+
 def draw_value_slider(
     surface: pygame.Surface,
     *,

@@ -8,6 +8,7 @@ from tet4d.ui.pygame.keybindings import active_key_profile
 from tet4d.ui.pygame.menu.menu_runner import MenuPointerTarget
 from tet4d.ui.pygame.ui_utils import (
     draw_corner_chip,
+    draw_side_button_stack,
     draw_tron_menu_background,
     draw_tron_panel,
     fit_text,
@@ -204,6 +205,17 @@ def draw_main_menu(
         hovered=hovered_target is not None and hovered_target.kind == "back",
         pressed=pressed_target is not None and pressed_target.kind == "back",
     )
+    side_rects = draw_side_button_stack(
+        screen,
+        font=fonts.hint_font,
+        buttons=(
+            ("side_back", "Backspace: Back"),
+            ("side_escape", "Esc: Exit"),
+            ("side_quit", "Q: Quit"),
+        ),
+        hovered_kind=hovered_target.kind if hovered_target is not None else "",
+        pressed_kind=pressed_target.kind if pressed_target is not None else "",
+    )
 
     hint_line_h = fonts.hint_font.get_height() + 3
     bottom_lines = 3 + (1 if status else 0)
@@ -231,9 +243,9 @@ def draw_main_menu(
     y = panel_y + 20
     row_margin = 28
     row_right = panel_x + panel_w - row_margin
-    targets: list[MenuPointerTarget] = [
-        MenuPointerTarget(kind="back", rect=back_rect.copy())
-    ]
+    targets: list[MenuPointerTarget] = [MenuPointerTarget(kind="back", rect=back_rect.copy())]
+    for kind, rect in side_rects.items():
+        targets.append(MenuPointerTarget(kind=kind, rect=rect.copy()))
     for idx, item in enumerate(items):
         label = str(item.get("label", ""))
         item_type = str(item.get("type", "")).strip().lower()

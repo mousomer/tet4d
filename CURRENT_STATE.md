@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-04-19  
+Last updated: 2026-04-29  
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -56,7 +56,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   includes `Replay Last`, `Leaderboard`, `Help / Tutorials`, and `Advanced`;
   `Advanced` owns `Settings`, `Topology Playground`, `Explosion Simulator`,
   `Bot`, and `Last Custom Topology`; `Quit` is no longer a visible root row
-  (shortcut behavior remains).
+  (shortcut behavior remains). Shared menu input semantics now use
+  `Backspace` as ordinary menu-up/back, `Esc` as exit-only from the current
+  menu root (after cancelling active modal/text input), and `Q` as global
+  quit; `Backspace` / `Esc` / `Q` are rendered as persistent clickable side
+  buttons in the shared menu shell.
 - Current seam-translation animation contract is:
   translation tweening must keep gameplay-owned piece cell order as the stable
   source-to-destination correspondence, so ordinary moves and safe seam

@@ -27,6 +27,7 @@ from tet4d.ui.pygame.menu.menu_runner import (
 )
 from tet4d.ui.pygame.ui_utils import (
     draw_corner_chip,
+    draw_side_button_stack,
     draw_tron_menu_background,
     draw_tron_panel,
     fit_text,
@@ -118,6 +119,17 @@ def _draw_list_menu_panel(
         hovered=hovered_target is not None and hovered_target.kind == "back",
         pressed=pressed_target is not None and pressed_target.kind == "back",
     )
+    side_rects = draw_side_button_stack(
+        screen,
+        font=fonts.hint_font,
+        buttons=(
+            ("side_back", "Backspace: Back"),
+            ("side_escape", "Esc: Exit"),
+            ("side_quit", "Q: Quit"),
+        ),
+        hovered_kind=hovered_target.kind if hovered_target is not None else "",
+        pressed_kind=pressed_target.kind if pressed_target is not None else "",
+    )
 
     panel_w = min(panel_w, max(320, width - 40))
     line_h = fonts.hint_font.get_height() + 3
@@ -144,9 +156,9 @@ def _draw_list_menu_panel(
     option_bottom = panel_y + panel_h - 8
     label_left = panel_x + 20
     label_right = panel_x + panel_w - 20
-    targets: list[MenuPointerTarget] = [
-        MenuPointerTarget(kind="back", rect=back_rect.copy())
-    ]
+    targets: list[MenuPointerTarget] = [MenuPointerTarget(kind="back", rect=back_rect.copy())]
+    for kind, rect in side_rects.items():
+        targets.append(MenuPointerTarget(kind=kind, rect=rect.copy()))
     for idx, row in enumerate(rows):
         if y + fonts.menu_font.get_height() > option_bottom:
             break
@@ -597,6 +609,10 @@ def run_pause_menu(
         action_registry=registry,
         render_menu=_render_pause_menu,
         on_root_escape=lambda: _pause_root_escape(
+            state,
+            on_escape_back=on_escape_back,
+        ),
+        on_root_backspace=lambda: _pause_root_escape(
             state,
             on_escape_back=on_escape_back,
         ),

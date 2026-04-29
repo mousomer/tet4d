@@ -375,7 +375,7 @@ def _handle_bot_menu_exit_key(loop: _BotMenuState, *, key: int, nav_key: int) ->
     if key == pygame.K_q:
         loop.running = False
         return True
-    if nav_key == pygame.K_ESCAPE:
+    if nav_key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
         loop.running = False
         return True
     return False

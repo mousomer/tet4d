@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-27
+Updated: 2026-04-29
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -55,8 +55,6 @@ Current active follow-ups:
   by default, keep legacy endgame settings from overriding saved shared
   boundary/collision/default behavior, and avoid devolving into a decorative
   final-energy readout
-- menu IA follow-up: add persistent shared shell side buttons for `Q` / `Esc` /
-  `Backspace` (clickable) without reintroducing a visible Quit row.
 - settings follow-up: reevaluate Settings and expose a complete Endgame /
   Explosion section for all persisted `explosion_defaults.*` fields.
 - persistence follow-up: migrate integer-backed categorical/bool fields toward
@@ -156,6 +154,13 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-04-29:
+
+- menu IA follow-up: shared menu input semantics now use `Backspace` for
+  ordinary menu-up/back and `Esc` as exit-only from the current menu root;
+  the shared menu shell now renders persistent clickable side buttons for
+  `Backspace` / `Esc` / `Q` without reintroducing a visible Quit row.
 
 Completed on 2026-04-27:
 

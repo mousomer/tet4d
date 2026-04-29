@@ -423,8 +423,8 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             "info_continue_mode_template": "Continue mode: {mode}",
             "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
             "controls_hint_template_tiny": "I/K select   Enter open   {escape_hint}",
-            "escape_hint_back": "Esc back",
-            "escape_hint_quit": "Q quit",
+            "escape_hint_back": "Backspace back",
+            "escape_hint_quit": "Esc exit   Q quit",
         }
         with mock.patch.object(
             launcher_menu_view,
@@ -451,3 +451,46 @@ class TestLauncherSettingsLayout(unittest.TestCase):
                 highlight_color=(255, 224, 128),
                 muted_color=(192, 200, 228),
             )
+
+    def test_settings_hub_escape_cancels_numeric_text_mode(self) -> None:
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_game_root",
+        )
+        launcher_settings._start_unified_numeric_text_mode(state, "display_width")
+        self.assertTrue(state.text_mode_row_key)
+        self.assertTrue(state.text_mode_buffer)
+
+        screen = pygame.Surface((640, 480))
+        out = launcher_settings._dispatch_unified_text_mode_key(screen, state, pygame.K_ESCAPE)
+        self.assertIs(out, screen)
+        self.assertEqual(state.text_mode_row_key, "")
+
+    def test_settings_hub_backspace_pops_page_stack_but_escape_does_not(self) -> None:
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_root",
+        )
+        launcher_settings._push_page(state, "settings_game_root")
+        self.assertEqual(len(state.page_stack), 2)
+
+        screen = pygame.Surface((640, 480))
+        out = launcher_settings._handle_unified_navigation_key(
+            screen,
+            state,
+            key=pygame.K_ESCAPE,
+            selectable_count=1,
+        )
+        self.assertIs(out, screen)
+        self.assertEqual(len(state.page_stack), 2)
+
+        out = launcher_settings._handle_unified_navigation_key(
+            screen,
+            state,
+            key=pygame.K_BACKSPACE,
+            selectable_count=1,
+        )
+        self.assertIs(out, screen)
+        self.assertEqual(len(state.page_stack), 1)

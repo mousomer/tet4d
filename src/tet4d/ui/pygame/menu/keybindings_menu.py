@@ -347,8 +347,6 @@ def _action_profile_delete(
 
 _MENU_KEY_HANDLERS = {
     pygame.K_q: _action_exit,
-    pygame.K_ESCAPE: _action_exit,
-    pygame.K_BACKSPACE: _action_exit,
     pygame.K_UP: _action_row_up,
     pygame.K_DOWN: _action_row_down,
     pygame.K_RETURN: _action_capture_start,
@@ -384,6 +382,31 @@ def _handle_text_mode_key(state: KeybindingsMenuState, key: int) -> None:
         state.text_buffer = state.text_buffer[:-1]
 
 
+def _handle_binding_mode_level_navigation(
+    state: KeybindingsMenuState,
+    *,
+    key: int,
+    nav_key: int,
+) -> bool | None:
+    if nav_key == pygame.K_BACKSPACE:
+        if not state.allow_scope_sections:
+            return True
+        state.section_mode = True
+        state.scroll_offset = 0
+        state.capture_mode = False
+        _set_status(state, True, "Returned to keybinding sections")
+        return False
+    if nav_key == pygame.K_ESCAPE and not state.allow_scope_sections:
+        return True
+    if key == pygame.K_TAB and state.allow_scope_sections:
+        state.section_mode = True
+        state.scroll_offset = 0
+        state.capture_mode = False
+        _set_status(state, True, "Opened keybinding sections")
+        return False
+    return None
+
+
 def _run_section_mode_action(
     state: KeybindingsMenuState, key: int, nav_key: int
 ) -> bool:
@@ -404,25 +427,14 @@ def _run_binding_mode_action(
         _handle_text_mode_key(state, key)
         return False
 
-    if _is_profile_prev_key(key):
-        _cycle_profile(state, -1)
-        return False
-    if _is_profile_next_key(key):
-        _cycle_profile(state, 1)
+    if _is_profile_prev_key(key) or _is_profile_next_key(key):
+        step = -1 if _is_profile_prev_key(key) else 1
+        _cycle_profile(state, step)
         return False
 
-    if nav_key == pygame.K_ESCAPE and state.allow_scope_sections:
-        state.section_mode = True
-        state.scroll_offset = 0
-        state.capture_mode = False
-        _set_status(state, True, "Returned to keybinding sections")
-        return False
-    if key == pygame.K_TAB and state.allow_scope_sections:
-        state.section_mode = True
-        state.scroll_offset = 0
-        state.capture_mode = False
-        _set_status(state, True, "Opened keybinding sections")
-        return False
+    level_nav = _handle_binding_mode_level_navigation(state, key=key, nav_key=nav_key)
+    if level_nav is not None:
+        return level_nav
 
     if key != pygame.K_F6:
         _clear_reset_confirmation(state)
@@ -453,9 +465,7 @@ def _draw_section_menu(
 def _handle_section_key(
     state: KeybindingsMenuState, key: int, nav_key: int
 ) -> bool:
-    if key == pygame.K_q:
-        return True
-    if nav_key == pygame.K_ESCAPE:
+    if key == pygame.K_q or nav_key in (pygame.K_BACKSPACE, pygame.K_ESCAPE):
         return True
     if nav_key == pygame.K_UP:
         state.selected_section = (state.selected_section - 1) % len(SECTION_MENU)

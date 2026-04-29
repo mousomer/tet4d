@@ -786,6 +786,28 @@ def _handle_unified_action_enter(
     return special_screen if special_screen is not None else screen
 
 
+def _handle_unified_exit_navigation_key(
+    screen: pygame.Surface,
+    state: _UnifiedSettingsState,
+    *,
+    key: int,
+    nav_key: int,
+) -> pygame.Surface | None:
+    if key == pygame.K_q:
+        state.running = False
+        return screen
+    if nav_key == pygame.K_BACKSPACE:
+        if not _pop_page(state):
+            state.running = False
+        return screen
+    if nav_key == pygame.K_ESCAPE:
+        # Esc is an exit-only key at the current settings root, not an ordinary "back".
+        if len(state.page_stack) <= 1:
+            state.running = False
+        return screen
+    return None
+
+
 def _handle_unified_navigation_key(
     screen: pygame.Surface,
     state: _UnifiedSettingsState,
@@ -794,13 +816,14 @@ def _handle_unified_navigation_key(
     selectable_count: int,
 ) -> pygame.Surface | None:
     nav_key = normalize_menu_navigation_key(key)
-    if key == pygame.K_q:
-        state.running = False
-        return screen
-    if nav_key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
-        if not _pop_page(state):
-            state.running = False
-        return screen
+    exit_screen = _handle_unified_exit_navigation_key(
+        screen,
+        state,
+        key=key,
+        nav_key=nav_key,
+    )
+    if exit_screen is not None:
+        return exit_screen
     if nav_key == pygame.K_UP:
         state.pending_reset_confirm = False
         state.selected = (state.selected - 1) % selectable_count
@@ -835,7 +858,7 @@ def _dispatch_unified_key(
 
     selectable = _current_selectable_indexes(state)
     if not selectable:
-        if normalize_menu_navigation_key(key) == pygame.K_ESCAPE:
+        if normalize_menu_navigation_key(key) == pygame.K_ESCAPE and len(state.page_stack) <= 1:
             state.running = False
         return screen
 

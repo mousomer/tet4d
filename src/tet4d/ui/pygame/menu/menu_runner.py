@@ -139,6 +139,7 @@ class MenuRunner:
         handle_route: RouteHandler | None = None,
         handle_missing_action: Callable[[str], bool] | None = None,
         on_root_escape: SimpleHandler | None = None,
+        on_root_backspace: SimpleHandler | None = None,
         on_quit_event: SimpleHandler | None = None,
         on_move: SimpleHandler | None = None,
         on_confirm: SimpleHandler | None = None,
@@ -156,6 +157,7 @@ class MenuRunner:
         self._handle_route = handle_route
         self._handle_missing_action = handle_missing_action
         self._on_root_escape = on_root_escape
+        self._on_root_backspace = on_root_backspace
         self._on_quit_event = on_quit_event
         self._on_move = on_move
         self._on_confirm = on_confirm
@@ -247,6 +249,51 @@ class MenuRunner:
             if close:
                 state.running = False
 
+        def _pop_stack() -> None:
+            if len(state.stack) <= 1:
+                return
+            state.stack.pop()
+            _clear_pointer_state()
+            if self._on_move is not None:
+                self._on_move()
+
+        def _handle_quit() -> bool:
+            close = True
+            if self._on_quit_event is not None:
+                close = bool(self._on_quit_event())
+            elif self._on_root_escape is not None:
+                close = bool(self._on_root_escape())
+            if close:
+                state.running = False
+                _clear_pointer_state()
+            return close
+
+        def _handle_root_escape() -> bool:
+            close = False
+            if self._on_root_escape is not None:
+                close = bool(self._on_root_escape())
+            if close:
+                state.running = False
+                _clear_pointer_state()
+            return close
+
+        def _handle_backspace() -> bool:
+            if len(state.stack) > 1:
+                _pop_stack()
+                return True
+            if self._on_root_backspace is None:
+                return False
+            close = bool(self._on_root_backspace())
+            if close:
+                state.running = False
+                _clear_pointer_state()
+            return close
+
+        def _handle_escape() -> bool:
+            if len(state.stack) > 1:
+                return False
+            return _handle_root_escape()
+
         def _activate_item(  # noqa: C901
             menu_id: str,
             item: dict[str, Any],
@@ -291,17 +338,9 @@ class MenuRunner:
             action_id = str(item.get("action_id", "")).strip().lower()
             if action_id == "back":
                 if len(state.stack) > 1:
-                    state.stack.pop()
-                    _clear_pointer_state()
-                    if self._on_move is not None:
-                        self._on_move()
+                    _pop_stack()
                     return
-                close = False
-                if self._on_root_escape is not None:
-                    close = bool(self._on_root_escape())
-                if close:
-                    state.running = False
-                    _clear_pointer_state()
+                _handle_root_escape()
                 return
             _dispatch_action(action_id)
             if not state.running:
@@ -386,17 +425,21 @@ class MenuRunner:
                         self._on_confirm()
                     if clicked_target.kind == "back":
                         if len(state.stack) > 1:
-                            state.stack.pop()
-                            _clear_pointer_state()
-                            if self._on_move is not None:
-                                self._on_move()
+                            _pop_stack()
                             break
-                        close = False
-                        if self._on_root_escape is not None:
-                            close = bool(self._on_root_escape())
-                        if close:
-                            state.running = False
-                            _clear_pointer_state()
+                        if _handle_root_escape():
+                            break
+                        continue
+                    if clicked_target.kind == "side_back":
+                        if _handle_backspace():
+                            break
+                        continue
+                    if clicked_target.kind == "side_escape":
+                        if _handle_escape():
+                            break
+                        continue
+                    if clicked_target.kind == "side_quit":
+                        if _handle_quit():
                             break
                         continue
                     if clicked_target.kind not in {"item", "action_group_action"}:
@@ -424,27 +467,15 @@ class MenuRunner:
                 ):
                     continue
                 if event.key == pygame.K_q:
-                    close = True
-                    if self._on_quit_event is not None:
-                        close = bool(self._on_quit_event())
-                    elif self._on_root_escape is not None:
-                        close = bool(self._on_root_escape())
-                    if close:
-                        state.running = False
+                    if _handle_quit():
                         break
                     continue
-                if key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
-                    if len(state.stack) > 1:
-                        state.stack.pop()
-                        _clear_pointer_state()
-                        if self._on_move is not None:
-                            self._on_move()
+                if key == pygame.K_BACKSPACE:
+                    if _handle_backspace():
                         break
-                    close = False
-                    if self._on_root_escape is not None:
-                        close = bool(self._on_root_escape())
-                    if close:
-                        state.running = False
+                    continue
+                if key == pygame.K_ESCAPE:
+                    if _handle_escape():
                         break
                     continue
                 if key == pygame.K_UP:

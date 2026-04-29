@@ -216,6 +216,49 @@ class TestMenuMouseInteraction(unittest.TestCase):
         self.assertIs(out_screen, screen)
         run_lb.assert_called_once()
 
+    def test_pause_menu_side_quit_button_click_exits_as_quit(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        preview_state = pause_menu._PauseState(selected=0)
+        targets = pause_menu._draw_pause_menu(
+            screen,
+            fonts,
+            preview_state,
+            dimension=3,
+            title="Pause Menu",
+        )
+        quit_target = next(target for target in targets if target.kind == "side_quit")
+
+        with (
+            patch.object(
+                pygame.event,
+                "get",
+                return_value=[
+                    pygame.event.Event(
+                        pygame.MOUSEMOTION,
+                        {"pos": quit_target.rect.center},
+                    ),
+                    pygame.event.Event(
+                        pygame.MOUSEBUTTONDOWN,
+                        {"button": 1, "pos": quit_target.rect.center},
+                    ),
+                    pygame.event.Event(
+                        pygame.MOUSEBUTTONUP,
+                        {"button": 1, "pos": quit_target.rect.center},
+                    ),
+                ],
+            ),
+            patch.object(pygame.display, "flip", return_value=None),
+        ):
+            decision, out_screen = pause_menu.run_pause_menu(
+                screen,
+                fonts,
+                dimension=3,
+            )
+
+        self.assertEqual(decision, "quit")
+        self.assertIs(out_screen, screen)
+
     def test_settings_hub_mouse_click_activates_hovered_row(self) -> None:
         fonts = self._fonts()
         screen = pygame.Surface((960, 640))

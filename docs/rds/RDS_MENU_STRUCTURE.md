@@ -4,7 +4,7 @@ Role: rds
 Status: active
 Scope: launcher, settings, pause-menu, and topology-playground menu IA
 Canonical owner: this file
-Last verified: 2026-04-19
+Last verified: 2026-04-29
 
 ## 1. Scope
 
@@ -112,7 +112,9 @@ Main Menu
 - No independent Play submenu.
 - No visible Quit row.
 - Q remains the global quit shortcut.
-- Side-button shell controls are planned for a later stage (not implemented here).
+- Backspace is the ordinary menu-up/back key.
+- Esc cancels active modal/text entry; otherwise it exits only from the current menu root.
+- Q/Esc/Backspace are rendered as persistent clickable side buttons in the shared menu shell.
 
 ### 4.2 In-game pause menu map
 
