@@ -1281,72 +1281,152 @@ Parameters:
 - `menus.settings_audio.items[].setting_id`: varies (`string`); examples: `"audio_master"`, `"audio_sfx"`, `"audio_mute"`
 - `menus.settings_audio.items[].type`: varies (`string`); examples: `"section"`, `"slider"`, `"toggle"`
 - `menus.settings_audio.title`: `"Audio"` (`string`)
+- `menus.settings_board_setup_defaults.items[]`: array[`object`]
+- `menus.settings_board_setup_defaults.items[].action_id`: varies (`string`); examples: `"topology_cache_measure"`, `"topology_cache_clear"`, `"settings_legacy_topology_editor"`
+- `menus.settings_board_setup_defaults.items[].description`: `"Compatibility-backed path for the older topology editor shell."` (`string`)
+- `menus.settings_board_setup_defaults.items[].id`: varies (`string`); examples: `"board_setup_section"`, `"game_topology_advanced"`, `"board_geometry_info"`
+- `menus.settings_board_setup_defaults.items[].label`: varies (`string`); examples: `"Board / Setup Defaults"`, `"Advanced topology controls"`, `"Board dimensions remain in each mode's setup screen; custom topology...`
+- `menus.settings_board_setup_defaults.items[].semantic_type`: `"bool"` (`string`)
+- `menus.settings_board_setup_defaults.items[].setting_id`: `"game_topology_advanced"` (`string`)
+- `menus.settings_board_setup_defaults.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"info"`
+- `menus.settings_board_setup_defaults.title`: `"Board / Setup Defaults"` (`string`)
+- `menus.settings_controls.items[]`: array[`object`]
+- `menus.settings_controls.items[].action_id`: varies (`string`); examples: `"keybindings"`, `"back"`
+- `menus.settings_controls.items[].description`: `"Keyboard bindings plus profile management and conflict handling."` (`string`)
+- `menus.settings_controls.items[].id`: varies (`string`); examples: `"controls_section"`, `"keybindings"`, `"back"`
+- `menus.settings_controls.items[].label`: varies (`string`); examples: `"Controls"`, `"Keyboard Bindings"`, `"Back"`
+- `menus.settings_controls.items[].type`: varies (`string`); examples: `"section"`, `"action"`
+- `menus.settings_controls.title`: `"Controls"` (`string`)
 - `menus.settings_display.items[]`: array[`object`]
 - `menus.settings_display.items[].action_id`: varies (`string`); examples: `"display_apply"`, `"save"`, `"reset"`
+- `menus.settings_display.items[].description`: `"Overlay transparency for locked cells in gameplay views."` (`string`)
 - `menus.settings_display.items[].id`: varies (`string`); examples: `"display_section"`, `"display_fullscreen"`, `"display_width"`
 - `menus.settings_display.items[].label`: varies (`string`); examples: `"Display"`, `"Fullscreen"`, `"Window width"`
-- `menus.settings_display.items[].semantic_type`: varies (`string`); examples: `"bool"`, `"int"`
+- `menus.settings_display.items[].semantic_type`: varies (`string`); examples: `"bool"`, `"int"`, `"float"`
 - `menus.settings_display.items[].setting_id`: varies (`string`); examples: `"display_fullscreen"`, `"display_width"`, `"display_height"`
 - `menus.settings_display.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"stepper"`
 - `menus.settings_display.title`: `"Display"` (`string`)
-- `menus.settings_game_root.items[]`: array[`object`]
-- `menus.settings_game_root.items[].action_id`: varies (`string`); examples: `"topology_cache_measure"`, `"topology_cache_clear"`, `"save"`
-- `menus.settings_game_root.items[].description`: `"Overlay transparency for locked cells in gameplay views."` (`string`)
-- `menus.settings_game_root.items[].id`: varies (`string`); examples: `"gameplay_section"`, `"game_seed"`, `"game_random_mode"`
-- `menus.settings_game_root.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Game seed (all modes)"`, `"Random type (all modes)"`
-- `menus.settings_game_root.items[].options_key`: varies (`string`); examples: `"game_random_mode"`, `"game_rotation_animation_mode"`, `"game_kick_level"`
-- `menus.settings_game_root.items[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`, `"bool"`
-- `menus.settings_game_root.items[].setting_id`: varies (`string`); examples: `"game_seed"`, `"game_random_mode"`, `"analytics_score_logging"`
-- `menus.settings_game_root.items[].type`: varies (`string`); examples: `"section"`, `"stepper"`, `"selector"`
-- `menus.settings_game_root.title`: `"Game"` (`string`)
+- `menus.settings_endgame_explosion.items[]`: array[`object`]
+- `menus.settings_endgame_explosion.items[].action_id`: `"back"` (`string`)
+- `menus.settings_endgame_explosion.items[].id`: varies (`string`); examples: `"endgame_explosion_section"`, `"settings_endgame_gameplay"`, `"settings_explosion_defaults_2d"`
+- `menus.settings_endgame_explosion.items[].label`: varies (`string`); examples: `"Endgame / Explosion"`, `"Shared Gameplay Endgame"`, `"2D Explosion Defaults"`
+- `menus.settings_endgame_explosion.items[].menu_id`: varies (`string`); examples: `"settings_endgame_gameplay"`, `"settings_explosion_defaults_2d"`, `"settings_explosion_defaults_3d"`
+- `menus.settings_endgame_explosion.items[].type`: varies (`string`); examples: `"section"`, `"submenu"`, `"action"`
+- `menus.settings_endgame_explosion.title`: `"Endgame / Explosion"` (`string`)
+- `menus.settings_endgame_gameplay.items[]`: array[`object`]
+- `menus.settings_endgame_gameplay.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
+- `menus.settings_endgame_gameplay.items[].id`: varies (`string`); examples: `"endgame_effects_section"`, `"endgame_preset_id"`, `"endgame_boundary_response"`
+- `menus.settings_endgame_gameplay.items[].label`: varies (`string`); examples: `"Endgame Effects"`, `"Relic-field preset"`, `"Boundary response"`
+- `menus.settings_endgame_gameplay.items[].options_key`: varies (`string`); examples: `"game_endgame_preset"`, `"game_endgame_boundary_response"`, `"game_endgame_particle_collisions"`
+- `menus.settings_endgame_gameplay.items[].semantic_type`: varies (`string`); examples: `"enum"`, `"int"`
+- `menus.settings_endgame_gameplay.items[].setting_id`: varies (`string`); examples: `"endgame_preset_id"`, `"endgame_boundary_response"`, `"endgame_particle_collisions"`
+- `menus.settings_endgame_gameplay.items[].type`: varies (`string`); examples: `"section"`, `"selector"`, `"slider"`
+- `menus.settings_endgame_gameplay.title`: `"Shared Gameplay Endgame"` (`string`)
+- `menus.settings_explosion_defaults_2d.items[]`: array[`object`]
+- `menus.settings_explosion_defaults_2d.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
+- `menus.settings_explosion_defaults_2d.items[].id`: varies (`string`); examples: `"explosion_2d_section"`, `"explosion_2d_topology_preset_id"`, `"explosion_2d_snapshot_source_id"`
+- `menus.settings_explosion_defaults_2d.items[].label`: varies (`string`); examples: `"2D Explosion Defaults"`, `"Topology preset"`, `"Snapshot source"`
+- `menus.settings_explosion_defaults_2d.items[].options_key`: varies (`string`); examples: `"explosion_topology_preset_2d"`, `"explosion_snapshot_source"`, `"explosion_piece_set_2d"`
+- `menus.settings_explosion_defaults_2d.items[].semantic_type`: varies (`string`); examples: `"enum"`, `"int"`, `"float"`
+- `menus.settings_explosion_defaults_2d.items[].setting_id`: varies (`string`); examples: `"explosion_defaults.2d.topology_preset_id"`, `"explosion_defaults.2d.snapshot_source_id"`, `"explosion_defaults.2d.piece_set_id"`
+- `menus.settings_explosion_defaults_2d.items[].type`: varies (`string`); examples: `"section"`, `"selector"`, `"stepper"`
+- `menus.settings_explosion_defaults_2d.title`: `"2D Explosion Defaults"` (`string`)
+- `menus.settings_explosion_defaults_3d.items[]`: array[`object`]
+- `menus.settings_explosion_defaults_3d.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
+- `menus.settings_explosion_defaults_3d.items[].id`: varies (`string`); examples: `"explosion_3d_section"`, `"explosion_3d_topology_preset_id"`, `"explosion_3d_snapshot_source_id"`
+- `menus.settings_explosion_defaults_3d.items[].label`: varies (`string`); examples: `"3D Explosion Defaults"`, `"Topology preset"`, `"Snapshot source"`
+- `menus.settings_explosion_defaults_3d.items[].options_key`: varies (`string`); examples: `"explosion_topology_preset_3d"`, `"explosion_snapshot_source"`, `"explosion_piece_set_3d"`
+- `menus.settings_explosion_defaults_3d.items[].semantic_type`: varies (`string`); examples: `"enum"`, `"int"`, `"float"`
+- `menus.settings_explosion_defaults_3d.items[].setting_id`: varies (`string`); examples: `"explosion_defaults.3d.topology_preset_id"`, `"explosion_defaults.3d.snapshot_source_id"`, `"explosion_defaults.3d.piece_set_id"`
+- `menus.settings_explosion_defaults_3d.items[].type`: varies (`string`); examples: `"section"`, `"selector"`, `"stepper"`
+- `menus.settings_explosion_defaults_3d.title`: `"3D Explosion Defaults"` (`string`)
+- `menus.settings_explosion_defaults_4d.items[]`: array[`object`]
+- `menus.settings_explosion_defaults_4d.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
+- `menus.settings_explosion_defaults_4d.items[].id`: varies (`string`); examples: `"explosion_4d_section"`, `"explosion_4d_topology_preset_id"`, `"explosion_4d_snapshot_source_id"`
+- `menus.settings_explosion_defaults_4d.items[].label`: varies (`string`); examples: `"4D Explosion Defaults"`, `"Topology preset"`, `"Snapshot source"`
+- `menus.settings_explosion_defaults_4d.items[].options_key`: varies (`string`); examples: `"explosion_topology_preset_4d"`, `"explosion_snapshot_source"`, `"explosion_piece_set_4d"`
+- `menus.settings_explosion_defaults_4d.items[].semantic_type`: varies (`string`); examples: `"enum"`, `"int"`, `"float"`
+- `menus.settings_explosion_defaults_4d.items[].setting_id`: varies (`string`); examples: `"explosion_defaults.4d.topology_preset_id"`, `"explosion_defaults.4d.snapshot_source_id"`, `"explosion_defaults.4d.piece_set_id"`
+- `menus.settings_explosion_defaults_4d.items[].type`: varies (`string`); examples: `"section"`, `"selector"`, `"stepper"`
+- `menus.settings_explosion_defaults_4d.title`: `"4D Explosion Defaults"` (`string`)
+- `menus.settings_gameplay.items[]`: array[`object`]
+- `menus.settings_gameplay.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
+- `menus.settings_gameplay.items[].id`: varies (`string`); examples: `"gameplay_section"`, `"game_seed"`, `"game_random_mode"`
+- `menus.settings_gameplay.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Game seed (all modes)"`, `"Random type (all modes)"`
+- `menus.settings_gameplay.items[].options_key`: varies (`string`); examples: `"game_random_mode"`, `"game_rotation_animation_mode"`, `"game_kick_level"`
+- `menus.settings_gameplay.items[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`, `"bool"`
+- `menus.settings_gameplay.items[].setting_id`: varies (`string`); examples: `"game_seed"`, `"game_random_mode"`, `"analytics_score_logging"`
+- `menus.settings_gameplay.items[].type`: varies (`string`); examples: `"section"`, `"stepper"`, `"selector"`
+- `menus.settings_gameplay.title`: `"Gameplay"` (`string`)
 - `menus.settings_root.items[]`: array[`object`]
-- `menus.settings_root.items[].action_id`: varies (`string`); examples: `"keybindings"`, `"settings_legacy_topology_editor"`, `"back"`
-- `menus.settings_root.items[].description`: varies (`string`); examples: `"One scrolling gameplay settings page with sections for rules, geomet...`, `"Fullscreen, window size, and display application."`, `"Master volume, SFX volume, and mute."`
-- `menus.settings_root.items[].id`: varies (`string`); examples: `"settings_game_root"`, `"settings_display"`, `"settings_audio"`
-- `menus.settings_root.items[].label`: varies (`string`); examples: `"Game"`, `"Display"`, `"Audio"`
-- `menus.settings_root.items[].menu_id`: varies (`string`); examples: `"settings_game_root"`, `"settings_display"`, `"settings_audio"`
-- `menus.settings_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`, `"legacy_dispatch"`
+- `menus.settings_root.items[].action_id`: `"back"` (`string`)
+- `menus.settings_root.items[].description`: varies (`string`); examples: `"Shared gameplay rules, animation timing, and pace controls."`, `"Topology setup defaults and related board helpers."`, `"Keyboard bindings plus profile management and conflict handling."`
+- `menus.settings_root.items[].id`: varies (`string`); examples: `"settings_gameplay"`, `"settings_board_setup_defaults"`, `"settings_controls"`
+- `menus.settings_root.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Board / Setup Defaults"`, `"Controls"`
+- `menus.settings_root.items[].menu_id`: varies (`string`); examples: `"settings_gameplay"`, `"settings_board_setup_defaults"`, `"settings_controls"`
+- `menus.settings_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
 - `menus.settings_root.title`: `"Settings"` (`string`)
 - `pause_copy.hints[]`: array[`string`]; examples: `"Up/Down select   Enter apply"`, `"Esc resume   Q quit"`
 - `pause_copy.subtitle_template`: `"{dimension}D in-game controls and settings"` (`string`)
 - `pause_menu_actions[]`: array[`string`]; examples: `"resume"`, `"restart"`, `"settings"`
 - `pause_menu_rows[]`: array[`string`]; examples: `"Resume"`, `"Restart Run"`, `"Settings"`
 - `settings_category_docs[]`: array[`object`]
-- `settings_category_docs[].description`: varies (`string`); examples: `"Persisted active keybinding profile selection and related profile de...`, `"One scrolling gameplay settings page with Gameplay, Board / Geometry...`, `"Per-mode board dimensions, piece sets, speed, and setup-only gamepla...`
-- `settings_category_docs[].id`: varies (`string`); examples: `"profiles"`, `"game_settings"`, `"gameplay_setup"`
-- `settings_category_docs[].label`: varies (`string`); examples: `"Keybinding profiles"`, `"Game"`, `"Gameplay setup"`
+- `settings_category_docs[].description`: varies (`string`); examples: `"Persisted active keybinding profile selection and related profile de...`, `"Shared gameplay rules, animation timing, and pace controls."`, `"Per-mode board dimensions, piece sets, speed, and setup-only gamepla...`
+- `settings_category_docs[].id`: varies (`string`); examples: `"profiles"`, `"gameplay"`, `"gameplay_setup"`
+- `settings_category_docs[].label`: varies (`string`); examples: `"Keybinding profiles"`, `"Gameplay"`, `"Gameplay setup"`
 - `settings_category_metrics.audio.action_count`: `3` (`int`)
 - `settings_category_metrics.audio.field_count`: `3` (`int`)
 - `settings_category_metrics.audio.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.audio.top_level`: `true` (`bool`)
-- `settings_category_metrics.controls.action_count`: `1` (`int`)
+- `settings_category_metrics.board_setup_defaults.action_count`: `6` (`int`)
+- `settings_category_metrics.board_setup_defaults.field_count`: `1` (`int`)
+- `settings_category_metrics.board_setup_defaults.mode_specific`: `false` (`bool`)
+- `settings_category_metrics.board_setup_defaults.top_level`: `true` (`bool`)
+- `settings_category_metrics.controls.action_count`: `2` (`int`)
 - `settings_category_metrics.controls.field_count`: `0` (`int`)
 - `settings_category_metrics.controls.mode_specific`: `false` (`bool`)
-- `settings_category_metrics.controls.top_level`: `false` (`bool`)
+- `settings_category_metrics.controls.top_level`: `true` (`bool`)
 - `settings_category_metrics.display.action_count`: `4` (`int`)
-- `settings_category_metrics.display.field_count`: `3` (`int`)
+- `settings_category_metrics.display.field_count`: `4` (`int`)
 - `settings_category_metrics.display.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.display.top_level`: `true` (`bool`)
-- `settings_category_metrics.endgame_effects.action_count`: `0` (`int`)
-- `settings_category_metrics.endgame_effects.field_count`: `4` (`int`)
-- `settings_category_metrics.endgame_effects.mode_specific`: `false` (`bool`)
-- `settings_category_metrics.endgame_effects.top_level`: `false` (`bool`)
-- `settings_category_metrics.game_settings.action_count`: `5` (`int`)
-- `settings_category_metrics.game_settings.field_count`: `16` (`int`)
-- `settings_category_metrics.game_settings.mode_specific`: `false` (`bool`)
-- `settings_category_metrics.game_settings.top_level`: `true` (`bool`)
+- `settings_category_metrics.endgame_explosion.action_count`: `1` (`int`)
+- `settings_category_metrics.endgame_explosion.field_count`: `0` (`int`)
+- `settings_category_metrics.endgame_explosion.mode_specific`: `false` (`bool`)
+- `settings_category_metrics.endgame_explosion.top_level`: `true` (`bool`)
+- `settings_category_metrics.gameplay.action_count`: `3` (`int`)
+- `settings_category_metrics.gameplay.field_count`: `10` (`int`)
+- `settings_category_metrics.gameplay.mode_specific`: `false` (`bool`)
+- `settings_category_metrics.gameplay.top_level`: `true` (`bool`)
 - `settings_category_metrics.legacy.action_count`: `1` (`int`)
 - `settings_category_metrics.legacy.field_count`: `0` (`int`)
 - `settings_category_metrics.legacy.mode_specific`: `false` (`bool`)
 - `settings_category_metrics.legacy.top_level`: `false` (`bool`)
+- `settings_option_labels.explosion_boundary_response[]`: array[`string`]; examples: `"Escape"`, `"Bounce"`
+- `settings_option_labels.explosion_diagnostics_mode[]`: array[`string`]; examples: `"Off"`, `"Summary"`, `"Full"`
+- `settings_option_labels.explosion_grid_mode[]`: array[`string`]; examples: `"Off"`, `"Bottom boundary"`, `"Edge"`
+- `settings_option_labels.explosion_mass_mode[]`: array[`string`]; examples: `"Uniform"`, `"Random"`
+- `settings_option_labels.explosion_particle_collisions[]`: array[`string`]; examples: `"Off"`, `"On"`
+- `settings_option_labels.explosion_piece_set_2d[]`: array[`string`]; examples: `"Default"`, `"Classic Tetrominoes"`, `"Random Cells"`
+- `settings_option_labels.explosion_piece_set_3d[]`: array[`string`]; examples: `"Default"`, `"True 3D"`, `"Embedded 2D"`
+- `settings_option_labels.explosion_piece_set_4d[]`: array[`string`]; examples: `"Default"`, `"True 4D (5-cell)"`, `"True 4D (6-cell)"`
+- `settings_option_labels.explosion_piece_shape[]`: array[`string`]; examples: `"Default"`
+- `settings_option_labels.explosion_shadow_mode[]`: array[`string`]; examples: `"Off"`, `"Bottom boundary"`, `"All boundaries"`
+- `settings_option_labels.explosion_snapshot_source[]`: array[`string`]; examples: `"Single piece"`, `"Single cell"`, `"On piece change"`
+- `settings_option_labels.explosion_speed_preset[]`: array[`string`]; examples: `"Slow"`, `"Normal"`, `"Fast"`
+- `settings_option_labels.explosion_topology_preset_2d[]`: array[`string`]; examples: `"Default"`, `"Empty"`, `"Cylinder"`
+- `settings_option_labels.explosion_topology_preset_3d[]`: array[`string`]; examples: `"Default"`, `"Empty"`, `"Wrap X"`
+- `settings_option_labels.explosion_topology_preset_4d[]`: array[`string`]; examples: `"Default"`, `"Empty"`, `"Wrap X"`
+- `settings_option_labels.explosion_view_mode[]`: array[`string`]; examples: `"Board native"`, `"Projection reference"`
+- `settings_option_labels.explosion_w_movement_animation_style[]`: array[`string`]; examples: `"Fade"`, `"Box size"`
 - `settings_option_labels.game_endgame_boundary_response[]`: array[`string`]; examples: `"Escape"`, `"Bounce"`
 - `settings_option_labels.game_endgame_particle_collisions[]`: array[`string`]; examples: `"Off"`, `"On"`
 - `settings_option_labels.game_endgame_preset[]`: array[`string`]; examples: `"Orbit relic field"`, `"Wrap all"`, `"Invert all"`
 - `settings_option_labels.game_kick_level[]`: array[`string`]; examples: `"Off"`, `"Light"`, `"Standard"`
 - `settings_option_labels.game_random_mode[]`: array[`string`]; examples: `"Fixed seed"`, `"True random"`
 - `settings_option_labels.game_rotation_animation_mode[]`: array[`string`]; examples: `"Cell sliding"`, `"Rigid piece rotation"`
-- `settings_split_rules.max_top_level_actions`: `4` (`int`)
-- `settings_split_rules.max_top_level_fields`: `5` (`int`)
+- `settings_split_rules.max_top_level_actions`: `6` (`int`)
+- `settings_split_rules.max_top_level_fields`: `12` (`int`)
 - `settings_split_rules.split_when_mode_specific`: `true` (`bool`)
 - `setup_fields.2d[]`: array[`object`]
 - `setup_fields.2d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"piece_set_index"`
@@ -1921,12 +2001,12 @@ Parameters:
 - `governance.menu_structure_single_source.banned_python_literals[].literal`: varies (`string`); examples: `"_CATEGORY_ID_BY_HEADER_LABEL ="`, `"_CATEGORY_IDS_BY_FILTER ="`, `"_FOOTER_ROW_KEYS ="`
 - `governance.menu_structure_single_source.banned_python_literals[].message`: varies (`string`); examples: `"settings_hub_model.py must not hardcode settings section header owne...`, `"settings_hub_model.py must not hardcode settings section filters; us...`, `"settings_hub_model.py must not hardcode settings footer row ownershi...`
 - `governance.menu_structure_single_source.required_item_labels[]`: array[`object`]
-- `governance.menu_structure_single_source.required_item_labels[].labels[]`: array[`string`]; examples: `"Keyboard Bindings"`, `"Legacy Topology Editor Menu"`, `"Gameplay"`
-- `governance.menu_structure_single_source.required_item_labels[].menu_id`: varies (`string`); examples: `"settings_root"`, `"settings_game_root"`
+- `governance.menu_structure_single_source.required_item_labels[].labels[]`: array[`string`]; examples: `"Keyboard Bindings"`, `"Legacy Topology Editor"`, `"Shared Gameplay Endgame"`
+- `governance.menu_structure_single_source.required_item_labels[].menu_id`: varies (`string`); examples: `"settings_controls"`, `"settings_board_setup_defaults"`, `"settings_endgame_explosion"`
 - `governance.menu_structure_single_source.required_item_types[]`: array[`string`]; examples: `"action"`, `"action_group"`, `"submenu"`
-- `governance.menu_structure_single_source.required_menus[]`: array[`string`]; examples: `"settings_root"`, `"settings_game_root"`, `"keybindings_root"`
+- `governance.menu_structure_single_source.required_menus[]`: array[`string`]; examples: `"settings_root"`, `"settings_gameplay"`, `"settings_board_setup_defaults"`
 - `governance.menu_structure_single_source.required_submenu_labels[]`: array[`object`]
-- `governance.menu_structure_single_source.required_submenu_labels[].labels[]`: array[`string`]; examples: `"Game"`, `"Display"`, `"Audio"`
+- `governance.menu_structure_single_source.required_submenu_labels[].labels[]`: array[`string`]; examples: `"Gameplay"`, `"Board / Setup Defaults"`, `"Controls"`
 - `governance.menu_structure_single_source.required_submenu_labels[].menu_id`: varies (`string`); examples: `"settings_root"`, `"keybindings_root"`
 - `governance.policy_index_contract.required_tokens[]`: array[`string`]; examples: `"config/project/policy_pack.json"`, `"config/project/policy/manifests/secret_scan.json"`, `"docs/policies/CI_COMPLIANCE_RUNBOOK.md"`
 - `governance.project_name`: `"tet4d"` (`string`)

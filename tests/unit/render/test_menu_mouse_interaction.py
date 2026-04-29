@@ -265,7 +265,7 @@ class TestMenuMouseInteraction(unittest.TestCase):
         preview_state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
-            initial_page_id="settings_game_root",
+            initial_page_id="settings_gameplay",
             initial_item_id="save",
         )
         launcher_settings._draw_unified_settings_menu(screen, fonts, preview_state)
@@ -320,7 +320,7 @@ class TestMenuMouseInteraction(unittest.TestCase):
                 fonts,
                 audio_settings=AudioSettings(),
                 display_settings=DisplaySettings(),
-                initial_page_id="settings_game_root",
+                initial_page_id="settings_gameplay",
                 initial_item_id="save",
             )
 

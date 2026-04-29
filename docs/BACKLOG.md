@@ -143,12 +143,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
   `scene_state_probe.py` split intact; do not drift canonical sync/write or
   probe normalization back into one mixed state file.
 - Keep the legacy topology editor isolated to
-  `Settings -> Legacy Topology Editor Menu`.
-- Keep the shared menu shell aligned across launcher, setup, pause, settings,
-  keybindings, leaderboard, and bot options; do not reintroduce subtitle-only
-  header variants or move `display_overlay_transparency` back out of gameplay
-  settings, and keep the launcher/pause input-config surface consistently
-  labeled `Keybindings`.
+  `Settings -> Board / Setup Defaults -> Legacy Topology Editor`.
+- Keep the shared menu shell aligned across launcher, setup, pause, keybindings,
+  leaderboard, and bot options; `Settings` still uses a custom loop and does not
+  yet render the shared side buttons (tracked follow-up). Do not reintroduce
+  subtitle-only header variants and keep the launcher/pause input-config surface
+  consistently labeled `Keybindings`.
 - Keep keyboard configuration inside the shared `Settings` flow, and do not
   reintroduce a parallel launcher-only keyboard-profiles submenu or revive the
   authored `Controls` wrapper as a visible one-item runtime page.
@@ -161,6 +161,11 @@ Completed on 2026-04-29:
   ordinary menu-up/back and `Esc` as exit-only from the current menu root;
   the shared menu shell now renders persistent clickable side buttons for
   `Backspace` / `Esc` / `Q` without reintroducing a visible Quit row.
+- settings reevaluation follow-up: Settings is now split into `Gameplay`,
+  `Board / Setup Defaults`, `Controls`, `Display`, `Audio`, and
+  `Endgame / Explosion`; `Controls` owns Keyboard Bindings; and
+  `Endgame / Explosion` exposes full per-dimension persisted
+  `explosion_defaults.<2d|3d|4d>.*` editing surfaces.
 
 Completed on 2026-04-27:
 

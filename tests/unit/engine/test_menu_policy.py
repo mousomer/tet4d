@@ -32,9 +32,12 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(
             [entry["label"] for entry in top_level],
             [
-                "Game",
+                "Gameplay",
+                "Board / Setup Defaults",
+                "Controls",
                 "Display",
                 "Audio",
+                "Endgame / Explosion",
             ],
         )
 
@@ -71,86 +74,60 @@ class TestMenuPolicy(unittest.TestCase):
             }.issubset(item_types)
         )
 
-    def test_authored_settings_root_declares_flat_game_page_and_direct_controls(self) -> None:
-        settings_menu = menu_config.authored_menu_definition(menu_config.settings_menu_id())
+    def test_authored_settings_root_declares_expected_categories(self) -> None:
+        settings_menu = menu_config.authored_menu_definition(
+            menu_config.settings_menu_id()
+        )
         self.assertEqual(
             [item["label"] for item in settings_menu["items"]],
             [
-                "Game",
+                "Gameplay",
+                "Board / Setup Defaults",
+                "Controls",
                 "Display",
                 "Audio",
-                "Keyboard Bindings",
-                "Legacy Topology Editor Menu",
+                "Endgame / Explosion",
                 "Back",
             ],
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
+            ["submenu", "submenu", "submenu", "submenu", "submenu", "submenu", "action"],
         )
 
-        game_menu = menu_config.authored_menu_definition("settings_game_root")
+        controls_menu = menu_config.authored_menu_definition("settings_controls")
+        controls_item_labels = [item["label"] for item in controls_menu["items"]]
+        self.assertIn("Keyboard Bindings", controls_item_labels)
+
+        explosion_root = menu_config.authored_menu_definition("settings_endgame_explosion")
         self.assertEqual(
-            game_menu["title"],
-            "Game",
-        )
-        self.assertEqual(
-            [item["label"] for item in game_menu["items"] if item["type"] == "section"],
+            [item["label"] for item in explosion_root["items"] if item["type"] == "submenu"],
             [
-                "Gameplay",
-                "Board / Geometry",
-                "Movement / Rotation",
-                "Endgame Effects",
-                "Difficulty / Pace",
+                "Shared Gameplay Endgame",
+                "2D Explosion Defaults",
+                "3D Explosion Defaults",
+                "4D Explosion Defaults",
             ],
         )
-        item_ids = [item["id"] for item in game_menu["items"]]
-        self.assertIn("display_overlay_transparency", item_ids)
-        self.assertIn("endgame_preset_id", item_ids)
-        self.assertIn("save", item_ids)
-        self.assertIn("reset", item_ids)
-        self.assertIn("back", item_ids)
-        self.assertNotIn(
-            "settings_game_gameplay",
-            menu_config.authored_menu_graph(),
-        )
-        self.assertNotIn(
-            "settings_endgame_effects",
-            menu_config.authored_menu_graph(),
-        )
 
-    def test_runtime_settings_root_collapses_singleton_wrappers(self) -> None:
+    def test_runtime_settings_root_matches_expected_categories(self) -> None:
         settings_menu = menu_config.menu_definition(menu_config.settings_menu_id())
         self.assertEqual(
             [item["label"] for item in settings_menu["items"]],
             [
-                "Game",
+                "Gameplay",
+                "Board / Setup Defaults",
+                "Controls",
                 "Display",
                 "Audio",
-                "Keyboard Bindings",
-                "Legacy Topology Editor Menu",
+                "Endgame / Explosion",
                 "Back",
             ],
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
+            ["submenu", "submenu", "submenu", "submenu", "submenu", "submenu", "action"],
         )
-        self.assertNotIn("settings_controls", menu_config.menu_graph())
-        self.assertNotIn("settings_legacy", menu_config.menu_graph())
-        self.assertNotIn("settings_game_visual_animation", menu_config.menu_graph())
-        self.assertNotIn("settings_game_gameplay", menu_config.menu_graph())
-        self.assertNotIn("settings_game_board_geometry", menu_config.menu_graph())
-        self.assertNotIn("settings_game_movement_rotation", menu_config.menu_graph())
-        self.assertNotIn("settings_game_difficulty_pace", menu_config.menu_graph())
-        self.assertNotIn("settings_endgame_effects", menu_config.menu_graph())
-
-        game_menu = menu_config.menu_definition("settings_game_root")
-        item_ids = [item["id"] for item in game_menu["items"]]
-        self.assertIn("display_overlay_transparency", item_ids)
-        self.assertIn("endgame_preset_id", item_ids)
-        self.assertIn("topology_cache_measure", item_ids)
-        self.assertIn("save", item_ids)
 
     def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
         for dimension in (2, 3, 4):
@@ -387,17 +364,18 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(
             labels,
             [
-                "Game",
+                "Gameplay",
+                "Board / Setup Defaults",
+                "Controls",
                 "Display",
                 "Audio",
-                "Keyboard Bindings",
-                "Legacy Topology Editor Menu",
+                "Endgame / Explosion",
                 "Back",
             ],
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "action", "legacy_dispatch", "action"],
+            ["submenu", "submenu", "submenu", "submenu", "submenu", "submenu", "action"],
         )
 
     def test_keybindings_scopes_are_declared_in_canonical_menu_config(self) -> None:
@@ -443,8 +421,14 @@ class TestMenuPolicy(unittest.TestCase):
             item for item in tutorials["items"] if item["label"] == "Controls Reference"
         )
         settings_menu = menu_config.menu_definition("settings_root")
+        controls_submenu = next(
+            item for item in settings_menu["items"] if item["label"] == "Controls"
+        )
+        controls_settings_menu = menu_config.menu_definition(controls_submenu["menu_id"])
         controls_settings = next(
-            item for item in settings_menu["items"] if item["label"] == "Keyboard Bindings"
+            item
+            for item in controls_settings_menu["items"]
+            if item["label"] == "Keyboard Bindings"
         )
         self.assertEqual(controls_reference["action_id"], "tutorial_controls_reference")
         self.assertEqual(controls_settings["action_id"], "keybindings")
@@ -458,21 +442,21 @@ class TestMenuPolicy(unittest.TestCase):
                 "settings_legacy",
                 item_id="settings_legacy_topology_editor",
             ),
-            "settings_root",
+            "settings_board_setup_defaults",
         )
         self.assertEqual(
             menu_config.resolve_runtime_menu_id(
                 "settings_game_movement_rotation",
                 item_id="rotation_animation_mode",
             ),
-            "settings_game_root",
+            "settings_gameplay",
         )
         self.assertEqual(
             menu_config.resolve_runtime_menu_id(
                 "settings_endgame_effects",
                 item_id="endgame_preset_id",
             ),
-            "settings_game_root",
+            "settings_endgame_gameplay",
         )
 
     def test_runtime_menu_graph_avoids_unary_wrappers_and_duplicate_setting_paths(
@@ -652,7 +636,7 @@ class TestMenuPolicy(unittest.TestCase):
                     self.assertIn(item["semantic_type"], {"int", "float"})
 
     def test_runtime_menu_preserves_setting_semantic_types(self) -> None:
-        game_menu = menu_config.menu_definition("settings_game_root")
+        game_menu = menu_config.menu_definition("settings_gameplay")
         by_id = {item["id"]: item for item in game_menu["items"]}
         self.assertEqual(by_id["game_random_mode"]["semantic_type"], "enum")
         self.assertEqual(by_id["game_seed"]["type"], "stepper")

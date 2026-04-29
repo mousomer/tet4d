@@ -1,12 +1,22 @@
 from __future__ import annotations
 
+import random
+from dataclasses import replace
+
 import pygame
 
+from tet4d.engine.gameplay.api import (
+    piece_set_2d_options_gameplay,
+    piece_set_options_for_dimension_gameplay,
+)
+from tet4d.engine.gameplay.pieces2d import get_piece_bag_2d
+from tet4d.engine.gameplay.pieces_nd import get_piece_shapes_nd
 from tet4d.engine.runtime.endgame_presets import (
     ENDGAME_BOUNDARY_RESPONSES,
     ENDGAME_PARTICLE_COLLISION_MODES,
     ENDGAME_PRESET_IDS,
 )
+from tet4d.engine.runtime.menu_config import explorer_default_board_dims
 from tet4d.engine.runtime.topology_cache import (
     clear_topology_cache,
     topology_cache_usage,
@@ -34,6 +44,7 @@ from tet4d.engine.runtime.settings_schema import (
     sanitize_text,
 )
 from tet4d.engine.topology_explorer import movement_graph as movement_graph_module
+from tet4d.engine.topology_explorer.presets import explorer_preset_sections_for_dimension
 from tet4d.engine.topology_explorer.transport_resolver import (
     build_explorer_transport_resolver,
 )
@@ -48,6 +59,22 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
     normalize_display_settings,
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx, set_audio_settings
+from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
+    coerce_explosion_defaults,
+    default_explosion_defaults,
+    save_mode_explosion_defaults,
+    serialize_explosion_defaults,
+)
+from tet4d.ui.pygame.locked_cell_explosion.model import (
+    EXPLOSION_BOUNDARY_RESPONSES,
+    EXPLOSION_DIAGNOSTICS_MODES,
+    EXPLOSION_MASS_MODES,
+    EXPLOSION_PARTICLE_COLLISION_MODES,
+    EXPLOSION_SPEED_PRESETS,
+    clamp_collision_elasticity,
+    clamp_mass_value,
+    clamp_trace_retention_ms,
+)
 
 from .settings_hub_model import (
     _AUTO_SPEEDUP_DEFAULT,
@@ -75,6 +102,8 @@ from .settings_hub_model import (
     _clone_display_settings,
     _display_defaults,
     _is_unified_text_mode,
+    _explosion_defaults_for_mode,
+    _explosion_mode_and_field,
     _mark_unified_dirty,
     _set_unified_status,
     _text_mode_numeric_value,
@@ -246,7 +275,28 @@ def _save_unified_settings(
         rotation_animation_duration_ms_nd=int(state.rotation_animation_duration_ms_nd),
         translation_animation_duration_ms=int(state.translation_animation_duration_ms),
     )
+    ok_explosion_2d = ok_explosion_3d = ok_explosion_4d = True
+    msg_explosion_2d = msg_explosion_3d = msg_explosion_4d = ""
     if ok_audio and ok_display and ok_analytics and ok_game_seed and ok_gameplay_shared:
+        ok_explosion_2d, msg_explosion_2d = save_mode_explosion_defaults(
+            "2d", state.explosion_defaults_2d
+        )
+        ok_explosion_3d, msg_explosion_3d = save_mode_explosion_defaults(
+            "3d", state.explosion_defaults_3d
+        )
+        ok_explosion_4d, msg_explosion_4d = save_mode_explosion_defaults(
+            "4d", state.explosion_defaults_4d
+        )
+    if (
+        ok_audio
+        and ok_display
+        and ok_analytics
+        and ok_game_seed
+        and ok_gameplay_shared
+        and ok_explosion_2d
+        and ok_explosion_3d
+        and ok_explosion_4d
+    ):
         state.original_audio = _clone_audio_settings(state.audio_settings)
         state.original_display = _clone_display_settings(state.display_settings)
         state.original_overlay_transparency = float(state.overlay_transparency)
@@ -280,8 +330,13 @@ def _save_unified_settings(
             state.translation_animation_duration_ms
         )
         state.original_score_logging_enabled = bool(state.score_logging_enabled)
+        state.original_explosion_defaults_2d = state.explosion_defaults_2d
+        state.original_explosion_defaults_3d = state.explosion_defaults_3d
+        state.original_explosion_defaults_4d = state.explosion_defaults_4d
         state.saved = True
-        _set_unified_status(state, "Saved audio/display/gameplay/analytics settings")
+        _set_unified_status(
+            state, "Saved audio/display/gameplay/analytics + explosion defaults"
+        )
         play_sfx("menu_confirm")
         return screen
 
@@ -294,6 +349,27 @@ def _save_unified_settings(
         error = msg_game_seed
     if ok_audio and ok_display and ok_analytics and ok_game_seed:
         error = msg_gameplay_shared
+    if ok_audio and ok_display and ok_analytics and ok_game_seed and ok_gameplay_shared:
+        error = msg_explosion_2d
+    if (
+        ok_audio
+        and ok_display
+        and ok_analytics
+        and ok_game_seed
+        and ok_gameplay_shared
+        and ok_explosion_2d
+    ):
+        error = msg_explosion_3d
+    if (
+        ok_audio
+        and ok_display
+        and ok_analytics
+        and ok_game_seed
+        and ok_gameplay_shared
+        and ok_explosion_2d
+        and ok_explosion_3d
+    ):
+        error = msg_explosion_4d
     _set_unified_status(state, error, is_error=True)
     return screen
 
@@ -321,6 +397,9 @@ def _reset_unified_settings(
     state.rotation_animation_duration_ms_nd = _ROTATION_ANIMATION_DURATION_ND_DEFAULT
     state.translation_animation_duration_ms = _TRANSLATION_ANIMATION_DURATION_DEFAULT
     state.score_logging_enabled = _analytics_defaults()
+    state.explosion_defaults_2d = default_explosion_defaults()
+    state.explosion_defaults_3d = default_explosion_defaults()
+    state.explosion_defaults_4d = default_explosion_defaults()
     state.pending_reset_confirm = False
     _mark_unified_dirty(state)
     _flash_row(state, "reset")
@@ -475,6 +554,296 @@ def _adjust_unified_analytics_row(state: _UnifiedSettingsState, row_key: str) ->
     return True
 
 
+def _set_explosion_defaults_for_mode(
+    state: _UnifiedSettingsState,
+    mode_key: str,
+    defaults,
+) -> None:
+    if mode_key == "2d":
+        state.explosion_defaults_2d = defaults
+        return
+    if mode_key == "3d":
+        state.explosion_defaults_3d = defaults
+        return
+    state.explosion_defaults_4d = defaults
+
+
+def _explode_piece_shape_options(
+    *,
+    dimension: int,
+    piece_set_id: str,
+    seed: int,
+) -> tuple[str, ...]:
+    dims = explorer_default_board_dims(int(dimension))
+    rng = random.Random(int(seed))
+    if int(dimension) == 2:
+        shapes = get_piece_bag_2d(
+            piece_set_id,
+            rng=rng,
+            board_dims=(int(dims[0]), int(dims[1])),
+        )
+        return tuple(str(shape.name) for shape in shapes)
+    shapes = get_piece_shapes_nd(
+        int(dimension),
+        piece_set_id=piece_set_id,
+        rng=rng,
+        board_dims=dims,
+    )
+    return tuple(str(shape.name) for shape in shapes)
+
+
+def _explosion_cycle_options_for_field(
+    state: _UnifiedSettingsState,
+    mode_key: str,
+    *,
+    field: str,
+) -> tuple[str, ...]:
+    dim = int(mode_key[0])
+
+    def _topology_preset_ids() -> tuple[str, ...]:
+        preset_ids = tuple(
+            str(preset.preset_id)
+            for section in explorer_preset_sections_for_dimension(dim)
+            for preset in section.presets
+        )
+        return ("",) + preset_ids
+
+    def _snapshot_sources() -> tuple[str, ...]:
+        return (
+            "single_piece",
+            "single_cell",
+            "piece_change",
+            "inherited_current_state",
+        )
+
+    def _piece_set_ids() -> tuple[str, ...]:
+        if dim == 2:
+            return ("",) + tuple(piece_set_2d_options_gameplay())
+        return ("",) + tuple(piece_set_options_for_dimension_gameplay(dim))
+
+    def _piece_shape_names() -> tuple[str, ...]:
+        defaults = _explosion_defaults_for_mode(state, mode_key)
+        piece_sets = _piece_set_ids()[1:]
+        default_piece_set = str(piece_sets[0]) if piece_sets else ""
+        active_piece_set = str(defaults.piece_set_id) or default_piece_set
+        shape_names = _explode_piece_shape_options(
+            dimension=dim,
+            piece_set_id=active_piece_set,
+            seed=int(defaults.seed),
+        )
+        return ("",) + shape_names
+
+    handlers = {
+        "topology_preset_id": _topology_preset_ids,
+        "snapshot_source_id": _snapshot_sources,
+        "piece_set_id": _piece_set_ids,
+        "piece_shape_name": _piece_shape_names,
+        "view_mode": lambda: ("board_native", "projection_reference"),
+        "boundary_response": lambda: tuple(EXPLOSION_BOUNDARY_RESPONSES),
+        "particle_collisions": lambda: tuple(EXPLOSION_PARTICLE_COLLISION_MODES),
+        "mass_mode": lambda: tuple(EXPLOSION_MASS_MODES),
+        "diagnostics_mode": lambda: tuple(EXPLOSION_DIAGNOSTICS_MODES),
+        "grid_mode": lambda: (
+            "off",
+            "bottom_boundary",
+            "edge",
+            "full",
+            "helper",
+            "all_boundaries",
+        ),
+        "shadow_mode": lambda: (
+            "off",
+            "bottom_boundary",
+            "all_boundaries",
+        ),
+        "speed_preset": lambda: tuple(EXPLOSION_SPEED_PRESETS),
+        "w_movement_animation_style": lambda: ("fade", "box_size"),
+    }
+    handler = handlers.get(field)
+    if handler is None:
+        return tuple()
+    return tuple(handler())
+
+
+def _adjust_unified_explosion_row(
+    state: _UnifiedSettingsState,
+    *,
+    row_key: str,
+    delta_sign: int,
+) -> bool:
+    parsed = _explosion_mode_and_field(row_key)
+    if parsed is None:
+        return False
+    mode_key, field = parsed
+    defaults = _explosion_defaults_for_mode(state, mode_key)
+    if _adjust_explosion_selector_field(
+        state,
+        mode_key=mode_key,
+        defaults=defaults,
+        field=field,
+        delta_sign=delta_sign,
+        row_key=row_key,
+    ):
+        return True
+    if _adjust_explosion_toggle_field(
+        state,
+        mode_key=mode_key,
+        defaults=defaults,
+        field=field,
+        row_key=row_key,
+    ):
+        return True
+    if _adjust_explosion_numeric_field(
+        state,
+        mode_key=mode_key,
+        defaults=defaults,
+        field=field,
+        delta_sign=delta_sign,
+        row_key=row_key,
+    ):
+        return True
+    return _adjust_explosion_cell_origin_field(
+        state,
+        mode_key=mode_key,
+        defaults=defaults,
+        field=field,
+        delta_sign=delta_sign,
+        row_key=row_key,
+    )
+
+
+def _adjust_explosion_selector_field(
+    state: _UnifiedSettingsState,
+    *,
+    mode_key: str,
+    defaults,
+    field: str,
+    delta_sign: int,
+    row_key: str,
+) -> bool:
+    selector_fields = {
+        "topology_preset_id",
+        "snapshot_source_id",
+        "piece_set_id",
+        "piece_shape_name",
+        "view_mode",
+        "boundary_response",
+        "particle_collisions",
+        "mass_mode",
+        "diagnostics_mode",
+        "grid_mode",
+        "shadow_mode",
+        "speed_preset",
+        "w_movement_animation_style",
+    }
+    if field not in selector_fields:
+        return False
+    options = _explosion_cycle_options_for_field(state, mode_key, field=field)
+    current = str(getattr(defaults, field))
+    next_value = _cycle_text_option(
+        current=current,
+        values=options,
+        delta_sign=delta_sign,
+    )
+    updated = replace(defaults, **{field: next_value})
+    if field == "piece_set_id":
+        updated = replace(updated, piece_shape_name="")
+    updated = coerce_explosion_defaults(serialize_explosion_defaults(updated))
+    _set_explosion_defaults_for_mode(state, mode_key, updated)
+    _flash_row(state, row_key)
+    return True
+
+
+def _adjust_explosion_toggle_field(
+    state: _UnifiedSettingsState,
+    *,
+    mode_key: str,
+    defaults,
+    field: str,
+    row_key: str,
+) -> bool:
+    if field not in {"trace_enabled", "sound_enabled"}:
+        return False
+    updated = replace(defaults, **{field: not bool(getattr(defaults, field))})
+    updated = coerce_explosion_defaults(serialize_explosion_defaults(updated))
+    _set_explosion_defaults_for_mode(state, mode_key, updated)
+    _flash_row(state, row_key)
+    return True
+
+
+def _adjust_explosion_numeric_field(
+    state: _UnifiedSettingsState,
+    *,
+    mode_key: str,
+    defaults,
+    field: str,
+    delta_sign: int,
+    row_key: str,
+) -> bool:
+    numeric_step_by_field = {
+        "base_mass": 0.05,
+        "random_mass_min": 0.05,
+        "random_mass_max": 0.05,
+        "collision_elasticity": 0.05,
+        "trace_retention_ms": 120.0,
+        "endgame_live_cell_fraction": 0.01,
+        "seed": 1,
+    }
+    if field not in numeric_step_by_field:
+        return False
+    step = float(numeric_step_by_field[field])
+    current_value = float(getattr(defaults, field))
+    next_value = current_value + (float(delta_sign) * step)
+    next_value = _clamped_explosion_numeric_value(field, next_value)
+    payload_value = next_value if field != "seed" else int(round(next_value))
+    updated = replace(defaults, **{field: payload_value})
+    updated = coerce_explosion_defaults(serialize_explosion_defaults(updated))
+    _set_explosion_defaults_for_mode(state, mode_key, updated)
+    _flash_row(state, row_key)
+    return True
+
+
+def _clamped_explosion_numeric_value(field: str, value: float) -> float:
+    if field in {"base_mass", "random_mass_min", "random_mass_max"}:
+        return float(clamp_mass_value(value))
+    if field == "collision_elasticity":
+        return float(clamp_collision_elasticity(value))
+    if field == "trace_retention_ms":
+        return float(clamp_trace_retention_ms(value))
+    if field == "endgame_live_cell_fraction":
+        return max(0.0, min(1.0, float(value)))
+    if field == "seed":
+        return float(max(0, min(9999, int(round(value)))))
+    return float(value)
+
+
+def _adjust_explosion_cell_origin_field(
+    state: _UnifiedSettingsState,
+    *,
+    mode_key: str,
+    defaults,
+    field: str,
+    delta_sign: int,
+    row_key: str,
+) -> bool:
+    if not field.startswith("cell_origin_"):
+        return False
+    axis = field.split("_")[-1]
+    axis_index = {"x": 0, "y": 1, "z": 2, "w": 3}.get(axis)
+    if axis_index is None:
+        return False
+    origin = list(defaults.cell_origin)
+    origin_value = int(origin[axis_index])
+    next_value = origin_value + int(delta_sign)
+    next_value = max(-1, min(9999, int(next_value)))
+    origin[axis_index] = next_value
+    updated = replace(defaults, cell_origin=tuple(int(value) for value in origin))
+    updated = coerce_explosion_defaults(serialize_explosion_defaults(updated))
+    _set_explosion_defaults_for_mode(state, mode_key, updated)
+    _flash_row(state, row_key)
+    return True
+
+
 def _adjust_unified_with_arrows(
     state: _UnifiedSettingsState,
     key: int,
@@ -490,6 +859,7 @@ def _adjust_unified_with_arrows(
         _adjust_unified_audio_row(state, row_key, delta_sign)
         or _adjust_unified_display_row(state, row_key, delta_sign)
         or _adjust_unified_gameplay_row(state, row_key, delta_sign)
+        or _adjust_unified_explosion_row(state, row_key=row_key, delta_sign=delta_sign)
         or _adjust_unified_analytics_row(state, row_key)
     )
     if not handled:

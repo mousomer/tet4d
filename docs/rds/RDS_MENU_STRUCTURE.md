@@ -144,13 +144,13 @@ Pause Menu
 9. Shared settings pages own `Random type`, the shared rotation animation mode selector, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; rigid `2D` rotation must use the same topology-aware overlay path in bounded and wrapped/custom-topology play rather than a bounded-only sprite fallback, and the settings tree must not advertise full custom-topology editing.
 10. `Last Custom Topology` and `Advanced -> Topology Playground` are the direct launcher routes into custom topology play/edit flows.
 11. `Topology Playground` launches the modern playground directly; it must not expose a legacy-editor submenu or gameplay-path chooser.
-12. `Legacy Topology Editor Menu` is a backward-compatibility surface reachable only through `Settings`.
+12. `Legacy Topology Editor` is a backward-compatibility surface reachable only through `Settings -> Board / Setup Defaults`.
 13. `Explorer` / `Path` UI must not expose or route to the legacy topology editor/menu.
 14. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
 15. `Help / Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
     `How to Play`, `Controls Reference`, and `Help / FAQ` must remain explicit
     sibling destinations.
-16. `Settings -> Keyboard Bindings` is for persistent input configuration
+16. `Settings -> Controls -> Keyboard Bindings` is for persistent input configuration
     only; controls reference/help content must stay under
     `Tutorials` or another explicit learning/reference surface.
 
@@ -335,9 +335,8 @@ Add persistent settings file:
 10. `Audio`and`Display`remain top-level in`Settings` while they stay below threshold.
 11. If either expands beyond threshold, promote that category into its own submenu and keep top-level rows as entry points.
 12. `display_overlay_transparency` is treated as a gameplay-facing readability
-    control and belongs under `Settings -> Game`; it should live as a
-    direct row on `Game` rather than behind a one-setting
-    `Visual / Animation` submenu.
+    control and belongs under `Settings -> Display` as a direct row (`Locked-cell transparency`)
+    rather than behind a one-setting submenu.
 
 ### 7.4 Reset-to-defaults policy
 
@@ -433,9 +432,10 @@ Manual tests:
 3. One canonical authored menu config now defines launcher, pause, settings,
    and keybindings structure through `config/menu/structure.json`, and runtime
    consumers read the compiled normalized graph rather than the raw tree.
-4. Settings uses one shared subtree with `Game`, `Display`, and `Audio`, plus
-   direct runtime `Keyboard Bindings` and `Legacy Topology Editor Menu`
-   entries after normalization.
+4. Settings uses one shared subtree with `Gameplay`, `Board / Setup Defaults`,
+   `Controls`, `Display`, `Audio`, and `Endgame / Explosion`; keyboard bindings
+   live under `Controls` and the legacy topology editor lives under
+   `Board / Setup Defaults`.
 5. `Play -> 2D/3D/4D` uses same-row `Play` / `Setup` action groups: `Play`
    launches directly from persisted settings and `Setup` opens the existing
    setup flow before using the same downstream gameplay launch path.
@@ -448,26 +448,31 @@ Manual tests:
 3. Profile actions are identical in main/setup and pause menus.
 4. Non-default profiles can be redefined, saved, and loaded.
 
-## 14. Implementation Status (2026-02-21)
+## 14. Implementation Status (2026-04-29)
 
 Implemented in code:
 1. Unified launcher added at `front.py`.
-2. Main menu root includes `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`, and `Quit`.
+2. Main menu root includes `2D`, `3D`, `4D`, `Replay Last`, `Leaderboard`,
+   `Help / Tutorials`, and `Advanced` (no independent `Play` submenu, no
+   visible `Quit` row; `Q` remains the global quit shortcut).
 3. `Tutorials` keeps separate learning/support destinations for interactive tutorials, how-to-play guidance, controls reference, and help/FAQ.
-4. `Settings` now routes into the canonical subtree `Game`, `Display`, and
-   `Audio`, plus direct runtime `Keyboard Bindings` and `Legacy Topology
-   Editor Menu` entries.
-5. `Settings -> Game` is one scrolling page with `Gameplay`,
-   `Board / Geometry`, `Movement / Rotation`, `Endgame Effects`, and
-   `Difficulty / Pace` sections; the old gameplay micro-pages and the one-row
-   `Visual / Animation` page are retired from authored config instead of
-   surviving for runtime collapse.
-6. Persistent relic-field preset, interaction-mode, relic-field speed, and
-   shatter-speed controls live in the `Endgame Effects` section inside
-   `Settings -> Game` rather than on a separate tiny settings page.
-7. `Play` rows for `2D` / `3D` / `4D` default to direct gameplay launch from
-   persisted settings while keeping `Setup` reachable on the same screen.
-8. `Bot` and `Leaderboard` are play-adjacent launcher destinations rather than `Settings` entries.
+4. `Advanced` owns `Settings`, `Topology Playground`, `Explosion Simulator`,
+   `Bot`, and `Last Custom Topology` (plus `Back`).
+5. `Settings` is organized as:
+   `Gameplay`, `Board / Setup Defaults`, `Controls`, `Display`, `Audio`,
+   `Endgame / Explosion`, and `Back`.
+6. `Endgame / Explosion` exposes:
+   `Shared Gameplay Endgame` plus complete per-dimension
+   `explosion_defaults.<2d|3d|4d>.*` editing surfaces (topology preset, snapshot source,
+   piece set/shape, cell origin, view mode, boundary response/collisions, mass/elasticity,
+   diagnostics/grid/shadow modes, trace + retention, speed preset, W-movement style,
+   endgame live fraction, sound toggle, seed).
+7. Root mode rows (`2D` / `3D` / `4D`) use same-row `Play` / `Setup` action
+   groups: `Play` launches from persisted settings while `Setup` routes
+   through the existing setup flow before using the same downstream gameplay
+   launch path.
+8. `Leaderboard` is root-level; `Bot` is advanced-level (not a `Settings`
+   submenu).
 9. 2D/3D/4D setup menus are dimension-specific only (shared controls removed).
 10. Controls setup is a dedicated screen (`src/tet4d/ui/pygame/menu/keybindings_menu.py`) with grouped actions and conflict mode controls.
 11. Defaults and menu structures are externalized:
@@ -515,14 +520,18 @@ Stabilization details:
 19. 4D helper-grid mode now highlights guide intersections across all visible layer boards, not only the active layer.
 20. Setup menus now include persisted topology presets (`bounded`,`wrap_all`,`invert_all`) per dimension.
 21. Launcher and pause menu trees now run through one generic graph runtime (`src/tet4d/ui/pygame/menu/menu_runner.py`) with per-surface action registries.
-22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from `config/menu/structure.json` (`menus.launcher_play`).
-23. Top-level IA is frozen to `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, and `Quit`.
+22. Hardcoded play-mode picker was removed from `front.py`; mode options now come from
+    `config/menu/structure.json` (`menus.launcher_root.items`).
+23. Top-level IA is frozen to `2D`, `3D`, `4D`, `Replay Last`, `Leaderboard`,
+    `Help / Tutorials`, and `Advanced`.
 24. `Tutorials` keeps `Interactive Tutorials`, `How to Play`, `Controls Reference`, and `Help / FAQ` as explicit siblings rather than collapsing help into tutorials.
-25. `Settings -> Keybindings` and `Tutorials -> Controls Reference` are distinct destinations and must not share one ambiguous configuration/reference label.
+25. `Settings -> Controls -> Keyboard Bindings` and `Help / Tutorials -> Controls Reference`
+    are distinct destinations and must not share one ambiguous configuration/reference label.
 26. Keyboard profile management now lives inside the dedicated keyboard
     bindings editor; the canonical settings tree must not reintroduce a
     parallel launcher-only `Keyboard Profiles` submenu.
-26. `Leaderboard` and `Bot` remain off the root layer and off `Settings`; they live in the play-adjacent launcher flow instead.
+26. `Bot` remains off the root layer and off `Settings`; it lives under `Advanced`.
+    `Leaderboard` is a root-level destination.
 27. Launcher subtitles and route-action mapping are config-driven in
     `config/menu/structure.json` (`launcher_subtitles`, `launcher_route_actions`);
     no launcher route-label mapping remains hardcoded in `front.py`, and the
@@ -611,17 +620,21 @@ Guideline basis (re-validated 2026-02-20):
 5. Game Accessibility Guidelines (`clear language`, `remember settings`, `easy start`) for player-facing friction reduction.
 
 Implemented IA delta:
-1. Replace broad top-level labels with intent labels:
-2. `Play`, `Continue`, `Tutorials`, `Topology Playground`, `Settings`, `Quit`.
-3. Keep dimension selection under `Play`, keep `Tutorials` as the learning/support umbrella, and keep custom-topology editing under `Topology Playground` without adding extra root clutter.
-4. Keep settings/reference separation explicit:
-5. `Settings -> Keyboard Bindings` means configuration,
-6. `Tutorials -> Controls Reference` means reference/help.
-7. Keep `Leaderboard` and `Bot` play-adjacent instead of pushing them into `Settings`.
-8. Keep mode-specific settings (`board`, `topology`, `piece set`, `challenge`) inside per-mode setup screens only.
+1. Root is direct mode launch:
+2. `2D`, `3D`, `4D`, `Replay Last`, `Leaderboard`, `Help / Tutorials`, `Advanced`.
+3. `Advanced` is tools/secondary routes:
+4. `Settings`, `Topology Playground`, `Explosion Simulator`, `Bot`,
+   `Last Custom Topology`, `Back`.
+5. Keep settings/reference separation explicit:
+6. `Settings -> Controls -> Keyboard Bindings` means configuration,
+7. `Help / Tutorials -> Controls Reference` means reference/help.
+8. Keep mode-specific settings (`board`, `topology`, `piece set`, `challenge`)
+   inside per-mode setup screens only.
+9. Keep the legacy topology editor reachable only through
+   `Settings -> Board / Setup Defaults`.
 
 Interaction and layout constraints:
-1. Max top-level rows: `6` (including contextual `Continue`).
+1. Max top-level rows: `7`.
 2. Max submenu depth: `2` (top-level -> section -> editor/action).
 3. One primary action per view (`Play` or `Apply`), destructive actions isolated at bottom (`Reset`, `Quit`).
 4. Always-visible status line for save/load/autosave feedback.
@@ -629,10 +642,10 @@ Interaction and layout constraints:
 
 Execution status:
 1. Completed (`R1`): IA and labels rewritten in `config/menu/structure.json`:
-2. launcher top-level actions now `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`,`Quit`.
-3. Completed (`R2` core): launcher and pause action lists were simplified to core, high-frequency flows.
-4. Completed (`R2` follow-up): Tutorials/help and controls-settings/controls-reference splits are now explicit in launcher wording and routing.
-5. Completed (`R3/R4`): help/controls discoverability and compact-window regression protections remain enforced by existing layout/help policy and tests.
+2. launcher top-level actions now `2D`,`3D`,`4D`,`Replay Last`,`Leaderboard`,`Help / Tutorials`,`Advanced`.
+3. Completed (`R2`): shared menu input semantics updated (`Backspace` back, `Esc` root-exit, `Q` quit) and side buttons rendered for MenuRunner-backed menus.
+4. Completed (`R3`): Settings IA reevaluated with explicit categories and full per-dimension explosion defaults surfaces.
+5. Completed (`R4`): help/controls discoverability and compact-window regression protections remain enforced by existing layout/help policy and tests.
 
 Execution artifact:
 1. Detailed execution plan lives in `docs/history/plans/PLAN_MENU_REHAUL_V2_2026-02-20.md`.
@@ -642,7 +655,7 @@ Execution artifact:
 
 1. `Topology Playground` is the direct modern playground route.
 2. The old menu-only topology editor is a legacy-only compatibility surface
-   reached through `Settings -> Legacy Topology Editor Menu`, not
+   reached through `Settings -> Board / Setup Defaults -> Legacy Topology Editor`, not
    through the modern playground entry.
 3. Visible and canonical top-level workspaces in the modern playground are
    `Editor`, `Sandbox`, and `Play`.

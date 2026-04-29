@@ -10,6 +10,14 @@ from tet4d.engine.runtime.settings_schema import (
     ENDGAME_SPEED_PERCENT_MAX,
     ENDGAME_SPEED_PERCENT_MIN,
 )
+from tet4d.ui.pygame.locked_cell_explosion.model import (
+    EXPLOSION_COLLISION_ELASTICITY_MAX,
+    EXPLOSION_COLLISION_ELASTICITY_MIN,
+    EXPLOSION_MASS_MAX,
+    EXPLOSION_MASS_MIN,
+    EXPLOSION_TRAIL_RETENTION_MAX_MS,
+    EXPLOSION_TRAIL_RETENTION_MIN_MS,
+)
 from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
@@ -65,6 +73,8 @@ from .settings_hub_model import (
     _NUMERIC_TEXT_EDIT_ROWS,
     _SETTINGS_HUB_COPY,
     _UnifiedSettingsState,
+    _explosion_defaults_for_mode,
+    _explosion_mode_and_field,
     _unified_value_text,
     _validate_unified_layout_against_policy,
     build_unified_settings_state,
@@ -139,36 +149,13 @@ def _draw_wrapped_settings_row(
 def _slider_fraction_for_row(
     state: _UnifiedSettingsState, row_key: str
 ) -> float | None:
-    def _percent_fraction(value: int, *, minimum: int, maximum: int) -> float:
-        span = max(1, maximum - minimum)
-        return min(1.0, max(0.0, (int(value) - minimum) / span))
+    duration_fraction = _duration_slider_fraction(state, row_key)
+    if duration_fraction is not None:
+        return duration_fraction
 
-    duration_values = {
-        "rotation_animation_duration_ms_2d": int(
-            state.rotation_animation_duration_ms_2d
-        ),
-        "rotation_animation_duration_ms_nd": int(
-            state.rotation_animation_duration_ms_nd
-        ),
-        "translation_animation_duration_ms": int(
-            state.translation_animation_duration_ms
-        ),
-    }
-    duration_value = duration_values.get(row_key)
-    if duration_value is not None:
-        return min(1.0, max(0.0, duration_value / 300.0))
-
-    percent_values = {
-        "endgame_relic_speed_percent": int(state.endgame_relic_speed_percent),
-        "endgame_shatter_speed_percent": int(state.endgame_shatter_speed_percent),
-    }
-    percent_value = percent_values.get(row_key)
-    if percent_value is not None:
-        return _percent_fraction(
-            percent_value,
-            minimum=ENDGAME_SPEED_PERCENT_MIN,
-            maximum=ENDGAME_SPEED_PERCENT_MAX,
-        )
+    percent_fraction = _percent_slider_fraction(state, row_key)
+    if percent_fraction is not None:
+        return percent_fraction
 
     if row_key == "audio_master":
         return float(state.audio_settings.master_volume)
@@ -178,6 +165,67 @@ def _slider_fraction_for_row(
         return float(state.overlay_transparency) / 0.9
     if row_key == "lines_per_level":
         return min(1.0, max(0.0, (int(state.lines_per_level) - 1) / 29.0))
+
+    return _explosion_slider_fraction(state, row_key)
+
+
+def _duration_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> float | None:
+    duration_values = {
+        "rotation_animation_duration_ms_2d": int(state.rotation_animation_duration_ms_2d),
+        "rotation_animation_duration_ms_nd": int(state.rotation_animation_duration_ms_nd),
+        "translation_animation_duration_ms": int(state.translation_animation_duration_ms),
+    }
+    duration_value = duration_values.get(row_key)
+    if duration_value is None:
+        return None
+    return min(1.0, max(0.0, int(duration_value) / 300.0))
+
+
+def _percent_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> float | None:
+    def _percent_fraction(value: int, *, minimum: int, maximum: int) -> float:
+        span = max(1, maximum - minimum)
+        return min(1.0, max(0.0, (int(value) - minimum) / span))
+
+    percent_values = {
+        "endgame_relic_speed_percent": int(state.endgame_relic_speed_percent),
+        "endgame_shatter_speed_percent": int(state.endgame_shatter_speed_percent),
+    }
+    percent_value = percent_values.get(row_key)
+    if percent_value is None:
+        return None
+    return _percent_fraction(
+        percent_value,
+        minimum=ENDGAME_SPEED_PERCENT_MIN,
+        maximum=ENDGAME_SPEED_PERCENT_MAX,
+    )
+
+
+def _explosion_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> float | None:
+    explosion = _explosion_mode_and_field(row_key)
+    if explosion is None:
+        return None
+    mode_key, field = explosion
+    defaults = _explosion_defaults_for_mode(state, mode_key)
+    if field in {"base_mass", "random_mass_min", "random_mass_max"}:
+        span = float(EXPLOSION_MASS_MAX) - float(EXPLOSION_MASS_MIN)
+        if span <= 0.0:
+            return None
+        value = float(getattr(defaults, field))
+        return min(1.0, max(0.0, (value - float(EXPLOSION_MASS_MIN)) / span))
+    if field == "collision_elasticity":
+        span = float(EXPLOSION_COLLISION_ELASTICITY_MAX) - float(EXPLOSION_COLLISION_ELASTICITY_MIN)
+        if span <= 0.0:
+            return None
+        value = float(defaults.collision_elasticity)
+        return min(1.0, max(0.0, (value - float(EXPLOSION_COLLISION_ELASTICITY_MIN)) / span))
+    if field == "trace_retention_ms":
+        span = float(EXPLOSION_TRAIL_RETENTION_MAX_MS) - float(EXPLOSION_TRAIL_RETENTION_MIN_MS)
+        if span <= 0.0:
+            return None
+        value = float(defaults.trace_retention_ms)
+        return min(1.0, max(0.0, (value - float(EXPLOSION_TRAIL_RETENTION_MIN_MS)) / span))
+    if field == "endgame_live_cell_fraction":
+        return min(1.0, max(0.0, float(defaults.endgame_live_cell_fraction)))
     return None
 
 

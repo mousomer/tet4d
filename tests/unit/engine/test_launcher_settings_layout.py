@@ -52,7 +52,11 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         menu_ids = (
             "settings_audio",
             "settings_display",
-            "settings_game_root",
+            "settings_gameplay",
+            "settings_endgame_gameplay",
+            "settings_explosion_defaults_2d",
+            "settings_explosion_defaults_3d",
+            "settings_explosion_defaults_4d",
         )
         for menu_id in menu_ids:
             for item in settings_hub_model.settings_page_items(menu_id):
@@ -167,7 +171,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertEqual(fields["challenge_layers"].control_family, "stepper")
         self.assertEqual(fields["speed_level"].control_family, "slider")
 
-    def test_game_settings_slider_rows_fit_compact_supported_width(self) -> None:
+    def test_gameplay_slider_rows_fit_compact_supported_width(self) -> None:
         fonts = self._fonts()
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
@@ -183,7 +187,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         )
         total_width = panel_w - 56
 
-        for item in settings_hub_model.settings_page_items("settings_game_root"):
+        for item in settings_hub_model.settings_page_items("settings_gameplay"):
             if item["type"] != "slider":
                 continue
             row_key = menu_item_id(item)
@@ -211,40 +215,72 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertNotIn("game_seed", row_keys)
         self.assertTrue({"save", "reset", "back"}.issubset(row_keys))
 
-    def test_game_settings_live_on_one_scrolling_page_with_sections(self) -> None:
-        game_root_keys = {
+    def test_settings_pages_split_gameplay_from_setup_and_endgame(self) -> None:
+        gameplay_keys = {
             menu_item_id(item)
-            for item in settings_hub_model.settings_page_items("settings_game_root")
+            for item in settings_hub_model.settings_page_items("settings_gameplay")
             if item["type"] != "section"
         }
-        self.assertIn("display_overlay_transparency", game_root_keys)
         self.assertTrue(
             {
                 "game_seed",
                 "game_random_mode",
                 "analytics_score_logging",
-                "game_topology_advanced",
-                "topology_cache_measure",
-                "topology_cache_clear",
                 "rotation_animation_mode",
                 "kick_level_index",
                 "rotation_animation_duration_ms_2d",
                 "rotation_animation_duration_ms_nd",
                 "translation_animation_duration_ms",
-                "endgame_preset_id",
-                "endgame_boundary_response",
-                "endgame_particle_collisions",
-                "endgame_relic_speed_percent",
-                "endgame_shatter_speed_percent",
                 "auto_speedup_enabled",
                 "lines_per_level",
                 "save",
                 "reset",
                 "back",
-            }.issubset(game_root_keys)
+            }.issubset(gameplay_keys)
         )
-        self.assertNotIn("audio_master", game_root_keys)
-        self.assertNotIn("display_fullscreen", game_root_keys)
+        self.assertNotIn("audio_master", gameplay_keys)
+        self.assertNotIn("display_fullscreen", gameplay_keys)
+        self.assertNotIn("endgame_preset_id", gameplay_keys)
+        self.assertNotIn("game_topology_advanced", gameplay_keys)
+
+        board_defaults_keys = {
+            menu_item_id(item)
+            for item in settings_hub_model.settings_page_items("settings_board_setup_defaults")
+            if item["type"] != "section"
+        }
+        self.assertTrue(
+            {
+                "game_topology_advanced",
+                "topology_cache_measure",
+                "topology_cache_clear",
+                "settings_legacy_topology_editor",
+                "save",
+                "reset",
+                "back",
+            }.issubset(board_defaults_keys)
+        )
+        self.assertNotIn("game_seed", board_defaults_keys)
+        self.assertNotIn("endgame_preset_id", board_defaults_keys)
+
+        endgame_keys = {
+            menu_item_id(item)
+            for item in settings_hub_model.settings_page_items("settings_endgame_gameplay")
+            if item["type"] != "section"
+        }
+        self.assertTrue(
+            {
+                "endgame_preset_id",
+                "endgame_boundary_response",
+                "endgame_particle_collisions",
+                "endgame_relic_speed_percent",
+                "endgame_shatter_speed_percent",
+                "save",
+                "reset",
+                "back",
+            }.issubset(endgame_keys)
+        )
+        self.assertNotIn("audio_master", endgame_keys)
+        self.assertNotIn("game_seed", endgame_keys)
 
     def test_overflow_metrics_hide_scrollbar_when_content_fits(self) -> None:
         metrics = compute_vertical_scroll_metrics(
@@ -280,7 +316,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
-            initial_page_id="settings_game_root",
+            initial_page_id="settings_explosion_defaults_4d",
             initial_item_id="back",
         )
         screen = pygame.Surface((640, 360), pygame.SRCALPHA)
@@ -456,7 +492,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
-            initial_page_id="settings_game_root",
+            initial_page_id="settings_display",
         )
         launcher_settings._start_unified_numeric_text_mode(state, "display_width")
         self.assertTrue(state.text_mode_row_key)
@@ -473,7 +509,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             display_settings=DisplaySettings(),
             initial_page_id="settings_root",
         )
-        launcher_settings._push_page(state, "settings_game_root")
+        launcher_settings._push_page(state, "settings_gameplay")
         self.assertEqual(len(state.page_stack), 2)
 
         screen = pygame.Surface((640, 480))

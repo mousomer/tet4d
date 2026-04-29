@@ -57,16 +57,29 @@
     "menu_structure_single_source": {
       "required_menus": [
         "settings_root",
-        "settings_game_root",
+        "settings_gameplay",
+        "settings_board_setup_defaults",
+        "settings_controls",
+        "settings_display",
+        "settings_audio",
+        "settings_endgame_explosion",
+        "settings_endgame_gameplay",
+        "settings_explosion_defaults_2d",
+        "settings_explosion_defaults_3d",
+        "settings_explosion_defaults_4d",
         "keybindings_root"
       ],
       "required_submenu_labels": [
         {
           "menu_id": "settings_root",
           "labels": [
-            "Game",
+            "Gameplay",
+            "Board / Setup Defaults",
+            "Controls",
             "Display",
             "Audio"
+            ,
+            "Endgame / Explosion"
           ]
         },
         {
@@ -82,23 +95,24 @@
       ],
       "required_item_labels": [
         {
-          "menu_id": "settings_root",
+          "menu_id": "settings_controls",
           "labels": [
-            "Keyboard Bindings",
-            "Legacy Topology Editor Menu"
+            "Keyboard Bindings"
           ]
         },
         {
-          "menu_id": "settings_game_root",
+          "menu_id": "settings_board_setup_defaults",
           "labels": [
-            "Gameplay",
-            "Board / Geometry",
-            "Movement / Rotation",
-            "Endgame Effects",
-            "Locked-cell transparency",
-            "Difficulty / Pace",
-            "Save",
-            "Reset defaults",
+            "Legacy Topology Editor"
+          ]
+        },
+        {
+          "menu_id": "settings_endgame_explosion",
+          "labels": [
+            "Shared Gameplay Endgame",
+            "2D Explosion Defaults",
+            "3D Explosion Defaults",
+            "4D Explosion Defaults",
             "Back"
           ]
         }

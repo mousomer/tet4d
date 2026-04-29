@@ -260,11 +260,25 @@
       "title": "Settings",
       "items": [
         {
-          "id": "settings_game_root",
+          "id": "settings_gameplay",
           "type": "submenu",
-          "label": "Game",
-          "description": "One scrolling gameplay settings page with sections for rules, geometry, animation, endgame effects, and pace.",
-          "menu_id": "settings_game_root"
+          "label": "Gameplay",
+          "description": "Shared gameplay rules, animation timing, and pace controls.",
+          "menu_id": "settings_gameplay"
+        },
+        {
+          "id": "settings_board_setup_defaults",
+          "type": "submenu",
+          "label": "Board / Setup Defaults",
+          "description": "Topology setup defaults and related board helpers.",
+          "menu_id": "settings_board_setup_defaults"
+        },
+        {
+          "id": "settings_controls",
+          "type": "submenu",
+          "label": "Controls",
+          "description": "Keyboard bindings plus profile management and conflict handling.",
+          "menu_id": "settings_controls"
         },
         {
           "id": "settings_display",
@@ -281,18 +295,11 @@
           "menu_id": "settings_audio"
         },
         {
-          "id": "keybindings",
-          "type": "action",
-          "label": "Keyboard Bindings",
-          "description": "Keyboard bindings plus profile management and conflict handling.",
-          "action_id": "keybindings"
-        },
-        {
-          "id": "settings_legacy_topology_editor",
-          "type": "legacy_dispatch",
-          "label": "Legacy Topology Editor Menu",
-          "description": "Compatibility-backed path for the older topology editor shell.",
-          "action_id": "settings_legacy_topology_editor"
+          "id": "settings_endgame_explosion",
+          "type": "submenu",
+          "label": "Endgame / Explosion",
+          "description": "Persistent endgame controls and per-dimension explosion defaults.",
+          "menu_id": "settings_endgame_explosion"
         },
         {
           "id": "back",
@@ -302,8 +309,8 @@
         }
       ]
     },
-    "settings_game_root": {
-      "title": "Game",
+    "settings_gameplay": {
+      "title": "Gameplay",
       "items": [
         {
           "id": "gameplay_section",
@@ -331,35 +338,6 @@
           "label": "Score logging",
           "semantic_type": "bool",
           "setting_id": "analytics_score_logging"
-        },
-        {
-          "id": "board_geometry_section",
-          "type": "section",
-          "label": "Board / Geometry"
-        },
-        {
-          "id": "game_topology_advanced",
-          "type": "toggle",
-          "label": "Advanced topology controls",
-          "semantic_type": "bool",
-          "setting_id": "game_topology_advanced"
-        },
-        {
-          "id": "board_geometry_info",
-          "type": "info",
-          "label": "Board dimensions remain in each mode's setup screen; custom topology editing remains in Topology Playground."
-        },
-        {
-          "id": "topology_cache_measure",
-          "type": "action",
-          "label": "Measure topology cache",
-          "action_id": "topology_cache_measure"
-        },
-        {
-          "id": "topology_cache_clear",
-          "type": "action",
-          "label": "Clear topology cache",
-          "action_id": "topology_cache_clear"
         },
         {
           "id": "movement_rotation_section",
@@ -404,13 +382,169 @@
           "setting_id": "translation_animation_duration_ms"
         },
         {
-          "id": "display_overlay_transparency",
-          "type": "slider",
-          "label": "Locked-cell transparency",
-          "description": "Overlay transparency for locked cells in gameplay views.",
-          "semantic_type": "float",
-          "setting_id": "display_overlay_transparency"
+          "id": "difficulty_pace_section",
+          "type": "section",
+          "label": "Difficulty / Pace"
         },
+        {
+          "id": "auto_speedup_enabled",
+          "type": "toggle",
+          "label": "Auto speed-up by clears",
+          "semantic_type": "bool",
+          "setting_id": "auto_speedup_enabled"
+        },
+        {
+          "id": "lines_per_level",
+          "type": "stepper",
+          "label": "Lines per level",
+          "semantic_type": "int",
+          "setting_id": "lines_per_level"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_board_setup_defaults": {
+      "title": "Board / Setup Defaults",
+      "items": [
+        {
+          "id": "board_setup_section",
+          "type": "section",
+          "label": "Board / Setup Defaults"
+        },
+        {
+          "id": "game_topology_advanced",
+          "type": "toggle",
+          "label": "Advanced topology controls",
+          "semantic_type": "bool",
+          "setting_id": "game_topology_advanced"
+        },
+        {
+          "id": "board_geometry_info",
+          "type": "info",
+          "label": "Board dimensions remain in each mode's setup screen; custom topology editing remains in Topology Playground."
+        },
+        {
+          "id": "topology_cache_measure",
+          "type": "action",
+          "label": "Measure topology cache",
+          "action_id": "topology_cache_measure"
+        },
+        {
+          "id": "topology_cache_clear",
+          "type": "action",
+          "label": "Clear topology cache",
+          "action_id": "topology_cache_clear"
+        },
+        {
+          "id": "settings_legacy_topology_editor",
+          "type": "legacy_dispatch",
+          "label": "Legacy Topology Editor",
+          "description": "Compatibility-backed path for the older topology editor shell.",
+          "action_id": "settings_legacy_topology_editor"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_controls": {
+      "title": "Controls",
+      "items": [
+        {
+          "id": "controls_section",
+          "type": "section",
+          "label": "Controls"
+        },
+        {
+          "id": "keybindings",
+          "type": "action",
+          "label": "Keyboard Bindings",
+          "description": "Keyboard bindings plus profile management and conflict handling.",
+          "action_id": "keybindings"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_endgame_explosion": {
+      "title": "Endgame / Explosion",
+      "items": [
+        {
+          "id": "endgame_explosion_section",
+          "type": "section",
+          "label": "Endgame / Explosion"
+        },
+        {
+          "id": "settings_endgame_gameplay",
+          "type": "submenu",
+          "label": "Shared Gameplay Endgame",
+          "menu_id": "settings_endgame_gameplay"
+        },
+        {
+          "id": "settings_explosion_defaults_2d",
+          "type": "submenu",
+          "label": "2D Explosion Defaults",
+          "menu_id": "settings_explosion_defaults_2d"
+        },
+        {
+          "id": "settings_explosion_defaults_3d",
+          "type": "submenu",
+          "label": "3D Explosion Defaults",
+          "menu_id": "settings_explosion_defaults_3d"
+        },
+        {
+          "id": "settings_explosion_defaults_4d",
+          "type": "submenu",
+          "label": "4D Explosion Defaults",
+          "menu_id": "settings_explosion_defaults_4d"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_endgame_gameplay": {
+      "title": "Shared Gameplay Endgame",
+      "items": [
         {
           "id": "endgame_effects_section",
           "type": "section",
@@ -460,23 +594,673 @@
           "label": "Board shatter stays finite; the preset governs persistent ND relic motion afterward, and speed stays independent from preset identity."
         },
         {
-          "id": "difficulty_pace_section",
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_explosion_defaults_2d": {
+      "title": "2D Explosion Defaults",
+      "items": [
+        {
+          "id": "explosion_2d_section",
           "type": "section",
-          "label": "Difficulty / Pace"
+          "label": "2D Explosion Defaults"
         },
         {
-          "id": "auto_speedup_enabled",
-          "type": "toggle",
-          "label": "Auto speed-up by clears",
-          "semantic_type": "bool",
-          "setting_id": "auto_speedup_enabled"
+          "id": "explosion_2d_topology_preset_id",
+          "type": "selector",
+          "label": "Topology preset",
+          "semantic_type": "enum",
+          "options_key": "explosion_topology_preset_2d",
+          "setting_id": "explosion_defaults.2d.topology_preset_id"
         },
         {
-          "id": "lines_per_level",
+          "id": "explosion_2d_snapshot_source_id",
+          "type": "selector",
+          "label": "Snapshot source",
+          "semantic_type": "enum",
+          "options_key": "explosion_snapshot_source",
+          "setting_id": "explosion_defaults.2d.snapshot_source_id"
+        },
+        {
+          "id": "explosion_2d_piece_set_id",
+          "type": "selector",
+          "label": "Piece set",
+          "semantic_type": "enum",
+          "options_key": "explosion_piece_set_2d",
+          "setting_id": "explosion_defaults.2d.piece_set_id"
+        },
+        {
+          "id": "explosion_2d_piece_shape_name",
+          "type": "selector",
+          "label": "Piece shape",
+          "semantic_type": "enum",
+          "options_key": "explosion_piece_shape",
+          "setting_id": "explosion_defaults.2d.piece_shape_name"
+        },
+        {
+          "id": "explosion_2d_cell_origin_x",
           "type": "stepper",
-          "label": "Lines per level",
+          "label": "Cell origin X",
           "semantic_type": "int",
-          "setting_id": "lines_per_level"
+          "setting_id": "explosion_defaults.2d.cell_origin[0]"
+        },
+        {
+          "id": "explosion_2d_cell_origin_y",
+          "type": "stepper",
+          "label": "Cell origin Y",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.2d.cell_origin[1]"
+        },
+        {
+          "id": "explosion_2d_cell_origin_z",
+          "type": "stepper",
+          "label": "Cell origin Z",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.2d.cell_origin[2]"
+        },
+        {
+          "id": "explosion_2d_cell_origin_w",
+          "type": "stepper",
+          "label": "Cell origin W",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.2d.cell_origin[3]"
+        },
+        {
+          "id": "explosion_2d_view_mode",
+          "type": "selector",
+          "label": "View mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_view_mode",
+          "setting_id": "explosion_defaults.2d.view_mode"
+        },
+        {
+          "id": "explosion_2d_boundary_response",
+          "type": "selector",
+          "label": "Boundary response",
+          "semantic_type": "enum",
+          "options_key": "explosion_boundary_response",
+          "setting_id": "explosion_defaults.2d.boundary_response"
+        },
+        {
+          "id": "explosion_2d_particle_collisions",
+          "type": "selector",
+          "label": "Particle collisions",
+          "semantic_type": "enum",
+          "options_key": "explosion_particle_collisions",
+          "setting_id": "explosion_defaults.2d.particle_collisions"
+        },
+        {
+          "id": "explosion_2d_mass_mode",
+          "type": "selector",
+          "label": "Mass mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_mass_mode",
+          "setting_id": "explosion_defaults.2d.mass_mode"
+        },
+        {
+          "id": "explosion_2d_base_mass",
+          "type": "slider",
+          "label": "Base mass",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.2d.base_mass"
+        },
+        {
+          "id": "explosion_2d_random_mass_min",
+          "type": "slider",
+          "label": "Random mass min",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.2d.random_mass_min"
+        },
+        {
+          "id": "explosion_2d_random_mass_max",
+          "type": "slider",
+          "label": "Random mass max",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.2d.random_mass_max"
+        },
+        {
+          "id": "explosion_2d_collision_elasticity",
+          "type": "slider",
+          "label": "Collision elasticity",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.2d.collision_elasticity"
+        },
+        {
+          "id": "explosion_2d_diagnostics_mode",
+          "type": "selector",
+          "label": "Diagnostics",
+          "semantic_type": "enum",
+          "options_key": "explosion_diagnostics_mode",
+          "setting_id": "explosion_defaults.2d.diagnostics_mode"
+        },
+        {
+          "id": "explosion_2d_grid_mode",
+          "type": "selector",
+          "label": "Grid mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_grid_mode",
+          "setting_id": "explosion_defaults.2d.grid_mode"
+        },
+        {
+          "id": "explosion_2d_shadow_mode",
+          "type": "selector",
+          "label": "Shadow mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_shadow_mode",
+          "setting_id": "explosion_defaults.2d.shadow_mode"
+        },
+        {
+          "id": "explosion_2d_trace_enabled",
+          "type": "toggle",
+          "label": "Trace enabled",
+          "semantic_type": "bool",
+          "setting_id": "explosion_defaults.2d.trace_enabled"
+        },
+        {
+          "id": "explosion_2d_trace_retention_ms",
+          "type": "slider",
+          "label": "Trace retention",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.2d.trace_retention_ms"
+        },
+        {
+          "id": "explosion_2d_speed_preset",
+          "type": "selector",
+          "label": "Speed preset",
+          "semantic_type": "enum",
+          "options_key": "explosion_speed_preset",
+          "setting_id": "explosion_defaults.2d.speed_preset"
+        },
+        {
+          "id": "explosion_2d_w_movement_animation_style",
+          "type": "selector",
+          "label": "W movement",
+          "semantic_type": "enum",
+          "options_key": "explosion_w_movement_animation_style",
+          "setting_id": "explosion_defaults.2d.w_movement_animation_style"
+        },
+        {
+          "id": "explosion_2d_endgame_live_cell_fraction",
+          "type": "slider",
+          "label": "Endgame live cell fraction",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.2d.endgame_live_cell_fraction"
+        },
+        {
+          "id": "explosion_2d_sound_enabled",
+          "type": "toggle",
+          "label": "Sound enabled",
+          "semantic_type": "bool",
+          "setting_id": "explosion_defaults.2d.sound_enabled"
+        },
+        {
+          "id": "explosion_2d_seed",
+          "type": "stepper",
+          "label": "Seed",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.2d.seed"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_explosion_defaults_3d": {
+      "title": "3D Explosion Defaults",
+      "items": [
+        {
+          "id": "explosion_3d_section",
+          "type": "section",
+          "label": "3D Explosion Defaults"
+        },
+        {
+          "id": "explosion_3d_topology_preset_id",
+          "type": "selector",
+          "label": "Topology preset",
+          "semantic_type": "enum",
+          "options_key": "explosion_topology_preset_3d",
+          "setting_id": "explosion_defaults.3d.topology_preset_id"
+        },
+        {
+          "id": "explosion_3d_snapshot_source_id",
+          "type": "selector",
+          "label": "Snapshot source",
+          "semantic_type": "enum",
+          "options_key": "explosion_snapshot_source",
+          "setting_id": "explosion_defaults.3d.snapshot_source_id"
+        },
+        {
+          "id": "explosion_3d_piece_set_id",
+          "type": "selector",
+          "label": "Piece set",
+          "semantic_type": "enum",
+          "options_key": "explosion_piece_set_3d",
+          "setting_id": "explosion_defaults.3d.piece_set_id"
+        },
+        {
+          "id": "explosion_3d_piece_shape_name",
+          "type": "selector",
+          "label": "Piece shape",
+          "semantic_type": "enum",
+          "options_key": "explosion_piece_shape",
+          "setting_id": "explosion_defaults.3d.piece_shape_name"
+        },
+        {
+          "id": "explosion_3d_cell_origin_x",
+          "type": "stepper",
+          "label": "Cell origin X",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.3d.cell_origin[0]"
+        },
+        {
+          "id": "explosion_3d_cell_origin_y",
+          "type": "stepper",
+          "label": "Cell origin Y",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.3d.cell_origin[1]"
+        },
+        {
+          "id": "explosion_3d_cell_origin_z",
+          "type": "stepper",
+          "label": "Cell origin Z",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.3d.cell_origin[2]"
+        },
+        {
+          "id": "explosion_3d_cell_origin_w",
+          "type": "stepper",
+          "label": "Cell origin W",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.3d.cell_origin[3]"
+        },
+        {
+          "id": "explosion_3d_view_mode",
+          "type": "selector",
+          "label": "View mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_view_mode",
+          "setting_id": "explosion_defaults.3d.view_mode"
+        },
+        {
+          "id": "explosion_3d_boundary_response",
+          "type": "selector",
+          "label": "Boundary response",
+          "semantic_type": "enum",
+          "options_key": "explosion_boundary_response",
+          "setting_id": "explosion_defaults.3d.boundary_response"
+        },
+        {
+          "id": "explosion_3d_particle_collisions",
+          "type": "selector",
+          "label": "Particle collisions",
+          "semantic_type": "enum",
+          "options_key": "explosion_particle_collisions",
+          "setting_id": "explosion_defaults.3d.particle_collisions"
+        },
+        {
+          "id": "explosion_3d_mass_mode",
+          "type": "selector",
+          "label": "Mass mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_mass_mode",
+          "setting_id": "explosion_defaults.3d.mass_mode"
+        },
+        {
+          "id": "explosion_3d_base_mass",
+          "type": "slider",
+          "label": "Base mass",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.3d.base_mass"
+        },
+        {
+          "id": "explosion_3d_random_mass_min",
+          "type": "slider",
+          "label": "Random mass min",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.3d.random_mass_min"
+        },
+        {
+          "id": "explosion_3d_random_mass_max",
+          "type": "slider",
+          "label": "Random mass max",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.3d.random_mass_max"
+        },
+        {
+          "id": "explosion_3d_collision_elasticity",
+          "type": "slider",
+          "label": "Collision elasticity",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.3d.collision_elasticity"
+        },
+        {
+          "id": "explosion_3d_diagnostics_mode",
+          "type": "selector",
+          "label": "Diagnostics",
+          "semantic_type": "enum",
+          "options_key": "explosion_diagnostics_mode",
+          "setting_id": "explosion_defaults.3d.diagnostics_mode"
+        },
+        {
+          "id": "explosion_3d_grid_mode",
+          "type": "selector",
+          "label": "Grid mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_grid_mode",
+          "setting_id": "explosion_defaults.3d.grid_mode"
+        },
+        {
+          "id": "explosion_3d_shadow_mode",
+          "type": "selector",
+          "label": "Shadow mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_shadow_mode",
+          "setting_id": "explosion_defaults.3d.shadow_mode"
+        },
+        {
+          "id": "explosion_3d_trace_enabled",
+          "type": "toggle",
+          "label": "Trace enabled",
+          "semantic_type": "bool",
+          "setting_id": "explosion_defaults.3d.trace_enabled"
+        },
+        {
+          "id": "explosion_3d_trace_retention_ms",
+          "type": "slider",
+          "label": "Trace retention",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.3d.trace_retention_ms"
+        },
+        {
+          "id": "explosion_3d_speed_preset",
+          "type": "selector",
+          "label": "Speed preset",
+          "semantic_type": "enum",
+          "options_key": "explosion_speed_preset",
+          "setting_id": "explosion_defaults.3d.speed_preset"
+        },
+        {
+          "id": "explosion_3d_w_movement_animation_style",
+          "type": "selector",
+          "label": "W movement",
+          "semantic_type": "enum",
+          "options_key": "explosion_w_movement_animation_style",
+          "setting_id": "explosion_defaults.3d.w_movement_animation_style"
+        },
+        {
+          "id": "explosion_3d_endgame_live_cell_fraction",
+          "type": "slider",
+          "label": "Endgame live cell fraction",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.3d.endgame_live_cell_fraction"
+        },
+        {
+          "id": "explosion_3d_sound_enabled",
+          "type": "toggle",
+          "label": "Sound enabled",
+          "semantic_type": "bool",
+          "setting_id": "explosion_defaults.3d.sound_enabled"
+        },
+        {
+          "id": "explosion_3d_seed",
+          "type": "stepper",
+          "label": "Seed",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.3d.seed"
+        },
+        {
+          "id": "save",
+          "type": "action",
+          "label": "Save",
+          "action_id": "save"
+        },
+        {
+          "id": "reset",
+          "type": "action",
+          "label": "Reset defaults",
+          "action_id": "reset"
+        },
+        {
+          "id": "back",
+          "type": "action",
+          "label": "Back",
+          "action_id": "back"
+        }
+      ]
+    },
+    "settings_explosion_defaults_4d": {
+      "title": "4D Explosion Defaults",
+      "items": [
+        {
+          "id": "explosion_4d_section",
+          "type": "section",
+          "label": "4D Explosion Defaults"
+        },
+        {
+          "id": "explosion_4d_topology_preset_id",
+          "type": "selector",
+          "label": "Topology preset",
+          "semantic_type": "enum",
+          "options_key": "explosion_topology_preset_4d",
+          "setting_id": "explosion_defaults.4d.topology_preset_id"
+        },
+        {
+          "id": "explosion_4d_snapshot_source_id",
+          "type": "selector",
+          "label": "Snapshot source",
+          "semantic_type": "enum",
+          "options_key": "explosion_snapshot_source",
+          "setting_id": "explosion_defaults.4d.snapshot_source_id"
+        },
+        {
+          "id": "explosion_4d_piece_set_id",
+          "type": "selector",
+          "label": "Piece set",
+          "semantic_type": "enum",
+          "options_key": "explosion_piece_set_4d",
+          "setting_id": "explosion_defaults.4d.piece_set_id"
+        },
+        {
+          "id": "explosion_4d_piece_shape_name",
+          "type": "selector",
+          "label": "Piece shape",
+          "semantic_type": "enum",
+          "options_key": "explosion_piece_shape",
+          "setting_id": "explosion_defaults.4d.piece_shape_name"
+        },
+        {
+          "id": "explosion_4d_cell_origin_x",
+          "type": "stepper",
+          "label": "Cell origin X",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.4d.cell_origin[0]"
+        },
+        {
+          "id": "explosion_4d_cell_origin_y",
+          "type": "stepper",
+          "label": "Cell origin Y",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.4d.cell_origin[1]"
+        },
+        {
+          "id": "explosion_4d_cell_origin_z",
+          "type": "stepper",
+          "label": "Cell origin Z",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.4d.cell_origin[2]"
+        },
+        {
+          "id": "explosion_4d_cell_origin_w",
+          "type": "stepper",
+          "label": "Cell origin W",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.4d.cell_origin[3]"
+        },
+        {
+          "id": "explosion_4d_view_mode",
+          "type": "selector",
+          "label": "View mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_view_mode",
+          "setting_id": "explosion_defaults.4d.view_mode"
+        },
+        {
+          "id": "explosion_4d_boundary_response",
+          "type": "selector",
+          "label": "Boundary response",
+          "semantic_type": "enum",
+          "options_key": "explosion_boundary_response",
+          "setting_id": "explosion_defaults.4d.boundary_response"
+        },
+        {
+          "id": "explosion_4d_particle_collisions",
+          "type": "selector",
+          "label": "Particle collisions",
+          "semantic_type": "enum",
+          "options_key": "explosion_particle_collisions",
+          "setting_id": "explosion_defaults.4d.particle_collisions"
+        },
+        {
+          "id": "explosion_4d_mass_mode",
+          "type": "selector",
+          "label": "Mass mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_mass_mode",
+          "setting_id": "explosion_defaults.4d.mass_mode"
+        },
+        {
+          "id": "explosion_4d_base_mass",
+          "type": "slider",
+          "label": "Base mass",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.4d.base_mass"
+        },
+        {
+          "id": "explosion_4d_random_mass_min",
+          "type": "slider",
+          "label": "Random mass min",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.4d.random_mass_min"
+        },
+        {
+          "id": "explosion_4d_random_mass_max",
+          "type": "slider",
+          "label": "Random mass max",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.4d.random_mass_max"
+        },
+        {
+          "id": "explosion_4d_collision_elasticity",
+          "type": "slider",
+          "label": "Collision elasticity",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.4d.collision_elasticity"
+        },
+        {
+          "id": "explosion_4d_diagnostics_mode",
+          "type": "selector",
+          "label": "Diagnostics",
+          "semantic_type": "enum",
+          "options_key": "explosion_diagnostics_mode",
+          "setting_id": "explosion_defaults.4d.diagnostics_mode"
+        },
+        {
+          "id": "explosion_4d_grid_mode",
+          "type": "selector",
+          "label": "Grid mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_grid_mode",
+          "setting_id": "explosion_defaults.4d.grid_mode"
+        },
+        {
+          "id": "explosion_4d_shadow_mode",
+          "type": "selector",
+          "label": "Shadow mode",
+          "semantic_type": "enum",
+          "options_key": "explosion_shadow_mode",
+          "setting_id": "explosion_defaults.4d.shadow_mode"
+        },
+        {
+          "id": "explosion_4d_trace_enabled",
+          "type": "toggle",
+          "label": "Trace enabled",
+          "semantic_type": "bool",
+          "setting_id": "explosion_defaults.4d.trace_enabled"
+        },
+        {
+          "id": "explosion_4d_trace_retention_ms",
+          "type": "slider",
+          "label": "Trace retention",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.4d.trace_retention_ms"
+        },
+        {
+          "id": "explosion_4d_speed_preset",
+          "type": "selector",
+          "label": "Speed preset",
+          "semantic_type": "enum",
+          "options_key": "explosion_speed_preset",
+          "setting_id": "explosion_defaults.4d.speed_preset"
+        },
+        {
+          "id": "explosion_4d_w_movement_animation_style",
+          "type": "selector",
+          "label": "W movement",
+          "semantic_type": "enum",
+          "options_key": "explosion_w_movement_animation_style",
+          "setting_id": "explosion_defaults.4d.w_movement_animation_style"
+        },
+        {
+          "id": "explosion_4d_endgame_live_cell_fraction",
+          "type": "slider",
+          "label": "Endgame live cell fraction",
+          "semantic_type": "float",
+          "setting_id": "explosion_defaults.4d.endgame_live_cell_fraction"
+        },
+        {
+          "id": "explosion_4d_sound_enabled",
+          "type": "toggle",
+          "label": "Sound enabled",
+          "semantic_type": "bool",
+          "setting_id": "explosion_defaults.4d.sound_enabled"
+        },
+        {
+          "id": "explosion_4d_seed",
+          "type": "stepper",
+          "label": "Seed",
+          "semantic_type": "int",
+          "setting_id": "explosion_defaults.4d.seed"
         },
         {
           "id": "save",
@@ -526,6 +1310,14 @@
           "label": "Window height",
           "semantic_type": "int",
           "setting_id": "display_height"
+        },
+        {
+          "id": "display_overlay_transparency",
+          "type": "slider",
+          "label": "Locked-cell transparency",
+          "description": "Overlay transparency for locked cells in gameplay views.",
+          "semantic_type": "float",
+          "setting_id": "display_overlay_transparency"
         },
         {
           "id": "display_apply",
@@ -1025,6 +1817,112 @@
     "game_endgame_particle_collisions": [
       "Off",
       "On"
+    ],
+    "explosion_topology_preset_2d": [
+      "Default",
+      "Empty",
+      "Cylinder",
+      "Torus",
+      "Mobius Strip",
+      "Klein Bottle",
+      "Projective Plane",
+      "Sphere-Like Transport"
+    ],
+    "explosion_topology_preset_3d": [
+      "Default",
+      "Empty",
+      "Wrap X",
+      "3-Torus",
+      "Twist Y",
+      "Projective Space",
+      "Sphere-Like Transport",
+      "Swap X- to Z+"
+    ],
+    "explosion_topology_preset_4d": [
+      "Default",
+      "Empty",
+      "Wrap X",
+      "4-Torus",
+      "Twist Y",
+      "Projective Space",
+      "Sphere-Like Transport",
+      "Swap X- to W+"
+    ],
+    "explosion_snapshot_source": [
+      "Single piece",
+      "Single cell",
+      "On piece change",
+      "Inherited current state"
+    ],
+    "explosion_piece_set_2d": [
+      "Default",
+      "Classic Tetrominoes",
+      "Random Cells",
+      "Debug Rectangles"
+    ],
+    "explosion_piece_set_3d": [
+      "Default",
+      "True 3D",
+      "Embedded 2D",
+      "Random Cells 3D",
+      "Debug Rectangles 3D"
+    ],
+    "explosion_piece_set_4d": [
+      "Default",
+      "True 4D (5-cell)",
+      "True 4D (6-cell)",
+      "True 4D (7-cell)",
+      "True 4D (8-cell)",
+      "Embedded 3D",
+      "Embedded 2D",
+      "Random Cells 4D",
+      "Debug Rectangles 4D"
+    ],
+    "explosion_piece_shape": [
+      "Default"
+    ],
+    "explosion_view_mode": [
+      "Board native",
+      "Projection reference"
+    ],
+    "explosion_boundary_response": [
+      "Escape",
+      "Bounce"
+    ],
+    "explosion_particle_collisions": [
+      "Off",
+      "On"
+    ],
+    "explosion_mass_mode": [
+      "Uniform",
+      "Random"
+    ],
+    "explosion_diagnostics_mode": [
+      "Off",
+      "Summary",
+      "Full"
+    ],
+    "explosion_grid_mode": [
+      "Off",
+      "Bottom boundary",
+      "Edge",
+      "Full",
+      "Helper",
+      "All boundaries"
+    ],
+    "explosion_shadow_mode": [
+      "Off",
+      "Bottom boundary",
+      "All boundaries"
+    ],
+    "explosion_speed_preset": [
+      "Slow",
+      "Normal",
+      "Fast"
+    ],
+    "explosion_w_movement_animation_style": [
+      "Fade",
+      "Box size"
     ]
   },
   "bot_options_rows": [
@@ -1256,9 +2154,9 @@
       "description": "Persisted active keybinding profile selection and related profile defaults."
     },
     {
-      "id": "game_settings",
-      "label": "Game",
-      "description": "One scrolling gameplay settings page with Gameplay, Board / Geometry, Movement / Rotation, Endgame Effects, and Difficulty / Pace sections."
+      "id": "gameplay",
+      "label": "Gameplay",
+      "description": "Shared gameplay rules, animation timing, and pace controls."
     },
     {
       "id": "gameplay_setup",
@@ -1266,14 +2164,14 @@
       "description": "Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults."
     },
     {
-      "id": "gameplay",
-      "label": "Gameplay",
-      "description": "Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness."
+      "id": "board_setup_defaults",
+      "label": "Board / Setup Defaults",
+      "description": "Topology setup defaults, cache tools, and legacy topology editing access."
     },
     {
-      "id": "endgame_effects",
-      "label": "Endgame Effects",
-      "description": "Persistent post-shatter relic preset, boundary response, particle collision, and speed controls grouped inside the Game settings page."
+      "id": "controls",
+      "label": "Controls",
+      "description": "Keyboard bindings plus profile management and conflict handling."
     },
     {
       "id": "display",
@@ -1291,41 +2189,47 @@
       "description": "Score logging and related persisted analysis controls."
     },
     {
+      "id": "endgame_explosion",
+      "label": "Endgame / Explosion",
+      "description": "Persistent endgame controls plus per-dimension explosion defaults."
+    },
+    {
       "id": "bot",
       "label": "Bot",
       "description": "Bot mode, algorithm, profile, speed, and budget defaults."
     },
     {
-      "id": "controls",
-      "label": "Keyboard Bindings",
-      "description": "Persistent keyboard bindings plus profile management and conflict handling."
-    },
-    {
       "id": "legacy",
-      "label": "Legacy Topology Editor Menu",
-      "description": "Compatibility-backed path for the older topology editor shell."
+      "label": "Legacy Topology Editor",
+      "description": "Compatibility-backed path for the older topology editor surface."
     }
   ],
   "settings_split_rules": {
-    "max_top_level_fields": 5,
-    "max_top_level_actions": 4,
+    "max_top_level_fields": 12,
+    "max_top_level_actions": 6,
     "split_when_mode_specific": true
   },
-    "settings_category_metrics": {
-      "game_settings": {
-        "field_count": 16,
-        "action_count": 5,
-        "mode_specific": false,
-        "top_level": true
-      },
-      "endgame_effects": {
-        "field_count": 4,
-        "action_count": 0,
-        "mode_specific": false,
-        "top_level": false
-      },
+  "settings_category_metrics": {
+    "gameplay": {
+      "field_count": 10,
+      "action_count": 3,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "board_setup_defaults": {
+      "field_count": 1,
+      "action_count": 6,
+      "mode_specific": false,
+      "top_level": true
+    },
+    "controls": {
+      "field_count": 0,
+      "action_count": 2,
+      "mode_specific": false,
+      "top_level": true
+    },
     "display": {
-      "field_count": 3,
+      "field_count": 4,
       "action_count": 4,
       "mode_specific": false,
       "top_level": true
@@ -1336,11 +2240,11 @@
       "mode_specific": false,
       "top_level": true
     },
-    "controls": {
+    "endgame_explosion": {
       "field_count": 0,
       "action_count": 1,
       "mode_specific": false,
-      "top_level": false
+      "top_level": true
     },
     "legacy": {
       "field_count": 0,

@@ -117,7 +117,7 @@ Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.2d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
-Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness.
+Shared gameplay rules, animation timing, and pace controls.
 - `settings.2d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.2d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.2d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
@@ -160,7 +160,7 @@ Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.3d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
-Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness.
+Shared gameplay rules, animation timing, and pace controls.
 - `settings.3d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.3d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.3d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
@@ -204,7 +204,7 @@ Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.4d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
-Shared gameplay persistence including random type, seed, topology toggles, endgame options, animation timing, and kick permissiveness.
+Shared gameplay rules, animation timing, and pace controls.
 - `settings.4d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.4d.game_seed`: `1337`; integer; range: 0..999999999
 - `settings.4d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all

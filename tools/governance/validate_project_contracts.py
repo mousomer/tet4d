@@ -1064,6 +1064,28 @@ def _settings_menu_setting_ids(menu_payload: dict[str, object]) -> set[str]:
     return setting_ids
 
 
+def _menu_action_ids(menu_payload: dict[str, object]) -> set[str]:
+    action_ids: set[str] = set()
+    menus = menu_payload.get("menus")
+    if not isinstance(menus, dict):
+        return action_ids
+    for menu in menus.values():
+        if not isinstance(menu, dict):
+            continue
+        items = menu.get("items")
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("type", "")).strip().lower() != "action":
+                continue
+            action_id = str(item.get("action_id", "")).strip().lower()
+            if action_id:
+                action_ids.add(action_id)
+    return action_ids
+
+
 def _setup_field_attrs(menu_payload: dict[str, object]) -> set[str]:
     attrs: set[str] = set()
     setup_fields = menu_payload.get("setup_fields")
@@ -1120,12 +1142,7 @@ def _validate_menu_simplification_rule() -> list[ValidationIssue]:
         return issues
 
     settings_keys = _settings_menu_setting_ids(menu_payload)
-    action_ids = {
-        str(item.get("action_id", "")).strip().lower()
-        for menu_id in ("settings_game_root",)
-        for item in _menu_items(menu_payload, menu_id)
-        if str(item.get("type", "")).strip().lower() == "action"
-    }
+    action_ids = _menu_action_ids(menu_payload)
     setup_attrs = _setup_field_attrs(menu_payload)
 
     for row_key in sorted(required_shared_row_keys):

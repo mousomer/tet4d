@@ -56,7 +56,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   includes `Replay Last`, `Leaderboard`, `Help / Tutorials`, and `Advanced`;
   `Advanced` owns `Settings`, `Topology Playground`, `Explosion Simulator`,
   `Bot`, and `Last Custom Topology`; `Quit` is no longer a visible root row
-  (shortcut behavior remains). Shared menu input semantics now use
+  (shortcut behavior remains). `Settings` is now split into `Gameplay`,
+  `Board / Setup Defaults`, `Controls`, `Display`, `Audio`, and
+  `Endgame / Explosion` (including full per-dimension `explosion_defaults.*`
+  editing surfaces); Settings still uses its custom loop and does not yet
+  render the shared menu side buttons (tracked follow-up). Shared menu input
+  semantics now use
   `Backspace` as ordinary menu-up/back, `Esc` as exit-only from the current
   menu root (after cancelling active modal/text input), and `Q` as global
   quit; `Backspace` / `Esc` / `Q` are rendered as persistent clickable side
@@ -213,15 +218,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 247` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 255` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.43` (`low`)
+- `tech_debt.score = 5.20` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.51`
+1. `delivery_size_pressure = 2.53`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -238,7 +243,7 @@ Top 8 live Python hotspots by real LOC:
 4. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
 5. `src/tet4d/ui/pygame/endgame_animation.py`: `1905` real LOC
 6. `scripts/arch_metrics.py`: `1890` real LOC
-7. `tools/governance/validate_project_contracts.py`: `1732` real LOC
+7. `tools/governance/validate_project_contracts.py`: `1747` real LOC
 8. `src/tet4d/ui/pygame/render/gfx_game.py`: `1553` real LOC
 
 Thin-wrapper budgets:
