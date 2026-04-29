@@ -6,7 +6,6 @@ PARITY_ACTION_IDS: frozenset[str] = frozenset(
         "help",
         "leaderboard",
         "bot_options",
-        "quit",
     }
 )
 

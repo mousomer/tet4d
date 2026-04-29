@@ -226,11 +226,12 @@ More specifically:
 The accepted shell contract is satisfied only when all of the following remain
 true:
 
-- launcher root is `Play`, `Continue`, `Tutorials`, `Topology Playground`,
-  `Settings`, `Quit`
-- `Topology Playground` is a direct modern entry
-- legacy topology editor placement is only `Settings -> Legacy
-  Topology Editor Menu`
+- launcher root is `2D`, `3D`, `4D`, `Replay Last`, `Leaderboard`,
+  `Help / Tutorials`, `Advanced` (no visible Quit row)
+- `Topology Playground` remains a direct modern entry via
+  `Advanced -> Topology Playground` (no modern-vs-legacy submenu split)
+- legacy topology editor placement is only
+  `Advanced -> Settings -> Legacy Topology Editor Menu`
 - top bar contains only title, tabs, validity chip, and dimension chip
 - no default prose header is visible
 - no default-primary diagnostics rows are visible

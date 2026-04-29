@@ -51,6 +51,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   normalization, and rendering; `toggle` is boolean-only, `selector` is
   categorical-only, `slider` is numeric-only, and discrete numeric setup or
   settings rows may use `stepper` instead of a slider.
+- Current launcher root IA is:
+  root launches `2D` / `3D` / `4D` directly (same-row `Play` / `Setup`),
+  includes `Replay Last`, `Leaderboard`, `Help / Tutorials`, and `Advanced`;
+  `Advanced` owns `Settings`, `Topology Playground`, `Explosion Simulator`,
+  `Bot`, and `Last Custom Topology`; `Quit` is no longer a visible root row
+  (shortcut behavior remains).
 - Current seam-translation animation contract is:
   translation tweening must keep gameplay-owned piece cell order as the stable
   source-to-destination correspondence, so ordinary moves and safe seam
@@ -233,7 +239,7 @@ Top 8 live Python hotspots by real LOC:
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 840/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 800/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

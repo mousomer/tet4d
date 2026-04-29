@@ -177,16 +177,6 @@ def _sync_launcher_profile_actions(
         )
 
 
-def _play_menu_id() -> str | None:
-    for item in _menu_items(_LAUNCHER_ROOT_MENU_ID):
-        if item.get("type") != "submenu":
-            continue
-        label = str(item.get("label", "")).strip().lower()
-        if label == "play":
-            return str(item.get("menu_id", "")).strip().lower() or None
-    return None
-
-
 def _persist_global_state(
     *,
     display_settings: DisplaySettings,
@@ -220,53 +210,20 @@ def _mode_from_last_mode(raw_last_mode: object) -> str:
     return "2d"
 
 
-def _menu_index_for_root_action(action: str, fallback: int = 0) -> int:
+def _menu_index_for_root_mode_row(mode: str, fallback: int = 0) -> int:
+    target_action_id = f"play_{mode}"
     for idx, item in enumerate(_menu_items(_LAUNCHER_ROOT_MENU_ID)):
-        if item.get("type") != "action":
+        if str(item.get("type", "")).strip().lower() != "action_group":
             continue
-        if str(item.get("action_id", "")).strip().lower() == action:
-            return idx
-    return fallback
-
-
-def _menu_index_for_root_play_submenu(fallback: int = 0) -> int:
-    for idx, item in enumerate(_menu_items(_LAUNCHER_ROOT_MENU_ID)):
-        if item.get("type") != "submenu":
-            continue
-        label = str(item.get("label", "")).strip().lower()
-        if label == "play":
-            return idx
+        for action in item.get("actions", ()):
+            action_id = str(action.get("action_id", "")).strip().lower()
+            if action_id == target_action_id:
+                return idx
     return fallback
 
 
 def _menu_index_for_mode(mode: str) -> int:
-    continue_index = _menu_index_for_root_action("continue", -1)
-    if continue_index >= 0:
-        return continue_index
-    play_index = _menu_index_for_root_play_submenu(-1)
-    if play_index >= 0:
-        return play_index
-    return _menu_index_for_root_action(f"play_{mode}", 0)
-
-
-def _menu_index_for_play_mode(mode: str, fallback: int = 0) -> int:
-    play_menu_id = _play_menu_id()
-    if not play_menu_id:
-        return fallback
-    target_actions = {f"play_{mode}", f"setup_{mode}"}
-    for idx, item in enumerate(_menu_items(play_menu_id)):
-        item_type = str(item.get("type", "")).strip().lower()
-        if item_type == "action":
-            if str(item.get("action_id", "")).strip().lower() != f"play_{mode}":
-                continue
-            return idx
-        if item_type != "action_group":
-            continue
-        for action in item.get("actions", ()):
-            action_id = str(action.get("action_id", "")).strip().lower()
-            if action_id in target_actions:
-                return idx
-    return fallback
+    return _menu_index_for_root_mode_row(mode, fallback=0)
 
 
 def _restore_active_profile(payload: dict[str, object]) -> None:
@@ -832,10 +789,6 @@ def run() -> None:
     initial_selected = {
         _LAUNCHER_ROOT_MENU_ID: _menu_index_for_mode(state.last_mode),
     }
-    play_menu_id = _play_menu_id()
-    if play_menu_id:
-        initial_selected[play_menu_id] = _menu_index_for_play_mode(state.last_mode)
-
     def _render_launcher_menu(
         menu_id: str,
         title: str,

@@ -87,16 +87,12 @@ This design is based on:
 
 ```text
 Main Menu
-|-- Play
-|   |-- 2D [Play] [Setup]
-|   |-- 3D [Play] [Setup]
-|   |-- 4D [Play] [Setup]
-|   |-- Last Custom Topology
-|   |-- Auto Bot Play
-|   |-- Leaderboard
-|   `-- Back
-|-- Continue
-|-- Tutorials
+|-- 2D [Play] [Setup]
+|-- 3D [Play] [Setup]
+|-- 4D [Play] [Setup]
+|-- Replay Last
+|-- Leaderboard
+|-- Help / Tutorials
 |   |-- Interactive Tutorials
 |   |   |-- Play 2D Tutorial
 |   |   |-- Play 3D Tutorial
@@ -104,20 +100,19 @@ Main Menu
 |   |-- How to Play
 |   |-- Controls Reference
 |   `-- Help / FAQ
-|-- Topology Playground
-|-- Settings
-|   |-- Game
-|   |   |-- Gameplay
-|   |   |-- Board / Geometry
-|   |   |-- Movement / Rotation
-|   |   |-- Endgame Effects
-|   |   `-- Difficulty / Pace
-|   |-- Display
-|   |-- Audio
-|   |-- Keyboard Bindings
-|   `-- Legacy Topology Editor Menu
-`-- Quit
+`-- Advanced
+    |-- Settings
+    |-- Topology Playground
+    |-- Explosion Simulator
+    |-- Bot
+    |-- Last Custom Topology
+    `-- Back
 ```
+
+- No independent Play submenu.
+- No visible Quit row.
+- Q remains the global quit shortcut.
+- Side-button shell controls are planned for a later stage (not implemented here).
 
 ### 4.2 In-game pause menu map
 
@@ -145,12 +140,12 @@ Pause Menu
 7. `bounded`,`wrap_all`,`invert_all`.
 8. Ordinary play setup screens keep only minimal safe topology selection for the migrated path; they do not own custom topology profile editing.
 9. Shared settings pages own `Random type`, the shared rotation animation mode selector, kick permissiveness (`kick_level`), separate `2D`/`ND` rotation animation durations plus shared translation animation duration, and other shared gameplay controls; rigid `2D` rotation must use the same topology-aware overlay path in bounded and wrapped/custom-topology play rather than a bounded-only sprite fallback, and the settings tree must not advertise full custom-topology editing.
-10. `Play Last Custom Topology` and the root `Topology Playground` action are the direct launcher routes into custom topology play/edit flows.
+10. `Last Custom Topology` and `Advanced -> Topology Playground` are the direct launcher routes into custom topology play/edit flows.
 11. `Topology Playground` launches the modern playground directly; it must not expose a legacy-editor submenu or gameplay-path chooser.
 12. `Legacy Topology Editor Menu` is a backward-compatibility surface reachable only through `Settings`.
 13. `Explorer` / `Path` UI must not expose or route to the legacy topology editor/menu.
 14. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
-15. `Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
+15. `Help / Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
     `How to Play`, `Controls Reference`, and `Help / FAQ` must remain explicit
     sibling destinations.
 16. `Settings -> Keyboard Bindings` is for persistent input configuration

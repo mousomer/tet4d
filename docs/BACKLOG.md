@@ -55,6 +55,14 @@ Current active follow-ups:
   by default, keep legacy endgame settings from overriding saved shared
   boundary/collision/default behavior, and avoid devolving into a decorative
   final-energy readout
+- menu IA follow-up: add persistent shared shell side buttons for `Q` / `Esc` /
+  `Backspace` (clickable) without reintroducing a visible Quit row.
+- settings follow-up: reevaluate Settings and expose a complete Endgame /
+  Explosion section for all persisted `explosion_defaults.*` fields.
+- persistence follow-up: migrate integer-backed categorical/bool fields toward
+  named ids and booleans where feasible (keep semantic/storage typing explicit).
+- governance follow-up: validate the new launcher root IA and tighten
+  semantic/storage typing gates (`semantic_type` vs stored int indices).
 
 - Open work:
   1. continue structural simplification of remaining

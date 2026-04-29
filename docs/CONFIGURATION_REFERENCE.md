@@ -1177,7 +1177,7 @@ Parameters:
 - `branding.signature_message`: `"Enjoy! Please contact me for criticisms, suggestions, requests, part...` (`string`)
 - `launcher_subtitles.default`: `"Up/Down select and Enter open actions."` (`string`)
 - `launcher_subtitles.launcher_play`: `"Choose a dimension, use Left/Right to switch between Play and Setup,...` (`string`)
-- `launcher_subtitles.launcher_root`: `"Play, continue, open Tutorials, jump straight into the Topology Play...` (`string`)
+- `launcher_subtitles.launcher_root`: `"Start 2D, 3D, or 4D directly, replay the last persisted mode, open h...` (`string`)
 - `launcher_subtitles.launcher_tutorials`: `"Choose guided learning, controls reference, or support."` (`string`)
 - `launcher_subtitles.launcher_tutorials_interactive`: `"Select an interactive tutorial pack."` (`string`)
 - `menu_entrypoints.keybindings`: `"keybindings_root"` (`string`)
@@ -1236,23 +1236,23 @@ Parameters:
 - `menus.keybindings_scope_general.items[].label`: `"General / System"` (`string`)
 - `menus.keybindings_scope_general.items[].type`: `"keybinding_group"` (`string`)
 - `menus.keybindings_scope_general.title`: `"General"` (`string`)
-- `menus.launcher_play.items[]`: array[`object`]
-- `menus.launcher_play.items[].action_id`: varies (`string`); examples: `"play_last_custom_topology"`, `"bot_options"`, `"leaderboard"`
-- `menus.launcher_play.items[].actions[]`: array[`object`]
-- `menus.launcher_play.items[].actions[].action_id`: varies (`string`); examples: `"play_2d"`, `"setup_2d"`, `"play_3d"`
-- `menus.launcher_play.items[].actions[].id`: varies (`string`); examples: `"play"`, `"setup"`
-- `menus.launcher_play.items[].actions[].label`: varies (`string`); examples: `"Play"`, `"Setup"`
-- `menus.launcher_play.items[].default_action_id`: varies (`string`); examples: `"play"`
-- `menus.launcher_play.items[].id`: varies (`string`); examples: `"play_2d_row"`, `"play_3d_row"`, `"play_4d_row"`
-- `menus.launcher_play.items[].label`: varies (`string`); examples: `"2D"`, `"3D"`, `"4D"`
-- `menus.launcher_play.items[].type`: varies (`string`); examples: `"action_group"`, `"action"`
-- `menus.launcher_play.title`: `"Choose Mode"` (`string`)
+- `menus.launcher_advanced.items[]`: array[`object`]
+- `menus.launcher_advanced.items[].action_id`: varies (`string`); examples: `"settings"`, `"topology_lab"`, `"locked_cell_explosion"`
+- `menus.launcher_advanced.items[].id`: varies (`string`); examples: `"advanced_settings"`, `"advanced_topology_lab"`, `"advanced_locked_cell_explosion"`
+- `menus.launcher_advanced.items[].label`: varies (`string`); examples: `"Settings"`, `"Topology Playground"`, `"Explosion Simulator"`
+- `menus.launcher_advanced.items[].type`: varies (`string`); examples: `"action"`
+- `menus.launcher_advanced.title`: `"Advanced"` (`string`)
 - `menus.launcher_root.items[]`: array[`object`]
-- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"topology_lab"`, `"locked_cell_explosion"`
-- `menus.launcher_root.items[].id`: varies (`string`); examples: `"launcher_play"`, `"launcher_continue"`, `"launcher_tutorials"`
-- `menus.launcher_root.items[].label`: varies (`string`); examples: `"Play"`, `"Continue"`, `"Tutorials"`
-- `menus.launcher_root.items[].menu_id`: varies (`string`); examples: `"launcher_play"`, `"launcher_tutorials"`
-- `menus.launcher_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
+- `menus.launcher_root.items[].action_id`: varies (`string`); examples: `"continue"`, `"leaderboard"`
+- `menus.launcher_root.items[].actions[]`: array[`object`]
+- `menus.launcher_root.items[].actions[].action_id`: varies (`string`); examples: `"play_2d"`, `"setup_2d"`, `"play_3d"`
+- `menus.launcher_root.items[].actions[].id`: varies (`string`); examples: `"play"`, `"setup"`
+- `menus.launcher_root.items[].actions[].label`: varies (`string`); examples: `"Play"`, `"Setup"`
+- `menus.launcher_root.items[].default_action_id`: varies (`string`); examples: `"play"`
+- `menus.launcher_root.items[].id`: varies (`string`); examples: `"play_2d_row"`, `"play_3d_row"`, `"play_4d_row"`
+- `menus.launcher_root.items[].label`: varies (`string`); examples: `"2D"`, `"3D"`, `"4D"`
+- `menus.launcher_root.items[].menu_id`: varies (`string`); examples: `"launcher_tutorials"`, `"launcher_advanced"`
+- `menus.launcher_root.items[].type`: varies (`string`); examples: `"action_group"`, `"action"`, `"submenu"`
 - `menus.launcher_root.title`: `"Multi Dimensional Tetris Game"` (`string`)
 - `menus.launcher_tutorials.items[]`: array[`object`]
 - `menus.launcher_tutorials.items[].action_id`: varies (`string`); examples: `"tutorial_how_to_play"`, `"tutorial_controls_reference"`, `"help"`

@@ -6,7 +6,7 @@
     "keybindings": "keybindings_root"
   },
   "launcher_subtitles": {
-    "launcher_root": "Play, continue, open Tutorials, jump straight into the Topology Playground, or launch the Explosion Simulator directly.",
+    "launcher_root": "Start 2D, 3D, or 4D directly, replay the last persisted mode, open help, view scores, or enter Advanced tools.",
     "launcher_play": "Choose a dimension, use Left/Right to switch between Play and Setup, reopen the last custom topology, or use play-adjacent tools.",
     "launcher_tutorials": "Choose guided learning, controls reference, or support.",
     "launcher_tutorials_interactive": "Select an interactive tutorial pack.",
@@ -84,53 +84,6 @@
       "title": "Multi Dimensional Tetris Game",
       "items": [
         {
-          "id": "launcher_play",
-          "type": "submenu",
-          "label": "Play",
-          "menu_id": "launcher_play"
-        },
-        {
-          "id": "launcher_continue",
-          "type": "action",
-          "label": "Continue",
-          "action_id": "continue"
-        },
-        {
-          "id": "launcher_tutorials",
-          "type": "submenu",
-          "label": "Tutorials",
-          "menu_id": "launcher_tutorials"
-        },
-        {
-          "id": "launcher_topology_lab",
-          "type": "action",
-          "label": "Topology Playground",
-          "action_id": "topology_lab"
-        },
-        {
-          "id": "launcher_locked_cell_explosion",
-          "type": "action",
-          "label": "Explosion Simulator",
-          "action_id": "locked_cell_explosion"
-        },
-        {
-          "id": "launcher_settings",
-          "type": "action",
-          "label": "Settings",
-          "action_id": "settings"
-        },
-        {
-          "id": "launcher_quit",
-          "type": "action",
-          "label": "Quit",
-          "action_id": "quit"
-        }
-      ]
-    },
-    "launcher_play": {
-      "title": "Choose Mode",
-      "items": [
-        {
           "id": "play_2d_row",
           "type": "action_group",
           "label": "2D",
@@ -185,22 +138,63 @@
           ]
         },
         {
-          "id": "play_last_custom_topology",
+          "id": "launcher_replay_last",
           "type": "action",
-          "label": "Last Custom Topology",
-          "action_id": "play_last_custom_topology"
+          "label": "Replay Last",
+          "action_id": "continue"
         },
         {
-          "id": "bot_options",
-          "type": "action",
-          "label": "Auto Bot Play",
-          "action_id": "bot_options"
-        },
-        {
-          "id": "leaderboard",
+          "id": "launcher_leaderboard",
           "type": "action",
           "label": "Leaderboard",
           "action_id": "leaderboard"
+        },
+        {
+          "id": "launcher_help_tutorials",
+          "type": "submenu",
+          "label": "Help / Tutorials",
+          "menu_id": "launcher_tutorials"
+        },
+        {
+          "id": "launcher_advanced",
+          "type": "submenu",
+          "label": "Advanced",
+          "menu_id": "launcher_advanced"
+        }
+      ]
+    },
+    "launcher_advanced": {
+      "title": "Advanced",
+      "items": [
+        {
+          "id": "advanced_settings",
+          "type": "action",
+          "label": "Settings",
+          "action_id": "settings"
+        },
+        {
+          "id": "advanced_topology_lab",
+          "type": "action",
+          "label": "Topology Playground",
+          "action_id": "topology_lab"
+        },
+        {
+          "id": "advanced_locked_cell_explosion",
+          "type": "action",
+          "label": "Explosion Simulator",
+          "action_id": "locked_cell_explosion"
+        },
+        {
+          "id": "advanced_bot_options",
+          "type": "action",
+          "label": "Bot",
+          "action_id": "bot_options"
+        },
+        {
+          "id": "advanced_last_custom_topology",
+          "type": "action",
+          "label": "Last Custom Topology",
+          "action_id": "play_last_custom_topology"
         },
         {
           "id": "back",
