@@ -51,6 +51,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   normalization, and rendering; `toggle` is boolean-only, `selector` is
   categorical-only, `slider` is numeric-only, and discrete numeric setup or
   settings rows may use `stepper` instead of a slider.
+- Current menu anti-redundancy contract is:
+  single-option pages are forbidden unless they use an exempt `layout_role`
+  or an explicit `allow_single_option: true` plus a documented reason; the
+  existing `Controls` and general keybinding landing pages are deliberate
+  exemptions, not silent shims.
 - Current launcher root IA is:
   root launches `2D` / `3D` / `4D` directly (same-row `Play` / `Setup`),
   includes `Replay Last`, `Leaderboard`, `Help / Tutorials`, and `Advanced`;
@@ -226,7 +231,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.55`
+1. `delivery_size_pressure = 2.56`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -241,9 +246,9 @@ Top 8 live Python hotspots by real LOC:
 2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2969` real LOC
 3. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
 4. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
-5. `src/tet4d/ui/pygame/endgame_animation.py`: `1905` real LOC
-6. `scripts/arch_metrics.py`: `1890` real LOC
-7. `tools/governance/validate_project_contracts.py`: `1884` real LOC
+5. `tools/governance/validate_project_contracts.py`: `1914` real LOC
+6. `src/tet4d/ui/pygame/endgame_animation.py`: `1905` real LOC
+7. `scripts/arch_metrics.py`: `1890` real LOC
 8. `src/tet4d/ui/pygame/render/gfx_game.py`: `1553` real LOC
 
 Thin-wrapper budgets:

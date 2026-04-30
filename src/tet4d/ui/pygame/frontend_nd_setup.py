@@ -314,11 +314,20 @@ def _draw_setup_menu_row(
 
 
 def draw_menu(
-    screen: pygame.Surface, fonts: GfxFonts, state: MenuState, dimension: int
+    screen: pygame.Surface,
+    fonts: GfxFonts,
+    state: MenuState,
+    dimension: int,
+    *,
+    menu_fields: list[FieldSpec] | None = None,
 ) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
     width, height = screen.get_size()
-    fields = menu_fields_for_settings(state.settings, dimension)
+    fields = (
+        menu_fields
+        if menu_fields is not None
+        else menu_fields_for_settings(state.settings, dimension)
+    )
 
     title_text = format_menu_title(
         _SETUP_MENU_COPY["title_template"].format(dimension=dimension)
@@ -342,8 +351,11 @@ def draw_menu(
     slider_row_heights = [
         _setup_row_height(
             fonts.menu_font,
-            field=field,
-            value_text=_menu_value_text(field, getattr(state.settings, field.attr_name)),
+            field=setup_field,
+            value_text=_menu_value_text(
+                setup_field,
+                getattr(state.settings, setup_field.attr_name),
+            ),
             total_width=max(1, panel_w - 48),
         )
         for setup_field in fields
@@ -443,17 +455,26 @@ def run_menu(
     screen: pygame.Surface, fonts: GfxFonts, dimension: int
 ) -> Optional[GameSettingsND]:
     state = MenuState()
+
+    def _draw_frame(
+        current_screen: pygame.Surface,
+        current_state: MenuState,
+        fields: list[FieldSpec],
+    ) -> None:
+        draw_menu(
+            current_screen,
+            fonts,
+            current_state,
+            dimension,
+            menu_fields=fields,
+        )
+
     return run_setup_menu_loop(
         screen=screen,
         state=state,
         dimension=dimension,
         fields_for_state=lambda settings: menu_fields_for_settings(settings, dimension),
-        draw_frame=lambda current_screen, current_state, _fields: draw_menu(
-            current_screen,
-            fonts,
-            current_state,
-            dimension,
-        ),
+        draw_frame=_draw_frame,
         run_dry_run=lambda current_state: _run_dry_run(current_state, dimension),
         on_start_saved=lambda current_state: _export_topology_profile(
             current_state, dimension

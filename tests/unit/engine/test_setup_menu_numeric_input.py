@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pygame
@@ -110,5 +111,86 @@ def test_numeric_entry_clamps_nd_dimension_value() -> None:
         with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_RETURN)]):
             _collect_and_apply(state, fields)
         assert state.settings.fourth == 8
+    finally:
+        pygame.quit()
+
+
+def test_nd_setup_draw_menu_renders_one_frame_for_3d_and_4d() -> None:
+    pygame.init()
+    try:
+        from tet4d.ui.pygame import frontend_nd_setup
+
+        fonts = frontend_nd_setup.init_fonts()
+        screen = pygame.Surface((960, 720), pygame.SRCALPHA)
+        state = frontend_nd_setup.MenuState()
+        for dimension in (3, 4):
+            fields = frontend_nd_setup.menu_fields_for_settings(state.settings, dimension)
+            assert fields
+            assert all(isinstance(field, FieldSpec) for field in fields)
+            frontend_nd_setup.draw_menu(
+                screen,
+                fonts,
+                state,
+                dimension,
+                menu_fields=fields,
+            )
+    finally:
+        pygame.quit()
+
+
+def test_setup_menu_runner_forwards_fields_to_draw_frame() -> None:
+    pygame.init()
+    try:
+        from tet4d.ui.pygame.menu import setup_menu_runner
+
+        screen = pygame.Surface((320, 200), pygame.SRCALPHA)
+        sentinel_fields = [
+            FieldSpec(
+                "Foo",
+                "foo",
+                "int",
+                "stepper",
+                min_value=0,
+                max_value=10,
+            )
+        ]
+        state = SimpleNamespace(
+            settings=SimpleNamespace(foo=1),
+            selected_index=0,
+            running=True,
+            start_game=False,
+            bindings_status="",
+            bindings_status_error=False,
+            active_profile="small",
+            run_dry_run=False,
+        )
+        captured = {}
+
+        def _fields_for_state(_settings):
+            return sentinel_fields
+
+        def _draw_frame(_screen, current_state, fields):
+            captured["fields"] = fields
+            current_state.running = False
+
+        with (
+            patch.object(setup_menu_runner, "load_active_profile_bindings"),
+            patch.object(setup_menu_runner, "load_menu_settings", return_value=(False, "nope")),
+            patch.object(setup_menu_runner, "set_active_key_profile"),
+            patch.object(setup_menu_runner, "save_menu_settings", return_value=(True, "")),
+            patch.object(setup_menu_runner, "gather_menu_actions", return_value=()),
+            patch.object(setup_menu_runner, "apply_menu_actions"),
+            patch.object(setup_menu_runner.pygame.display, "flip"),
+        ):
+            result = setup_menu_runner.run_setup_menu_loop(
+                screen=screen,
+                state=state,
+                dimension=3,
+                fields_for_state=_fields_for_state,
+                draw_frame=_draw_frame,
+            )
+
+        assert result is None
+        assert captured.get("fields") is sentinel_fields
     finally:
         pygame.quit()
