@@ -115,6 +115,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
     from tools.governance import check_dedup_dead_code_rules
     from tools.governance import check_drift_protection
     from tools.governance import check_loc_guidance
+    from tools.governance import lint_menu_graph
     from tools.governance import check_policy_runtime_rules
     from tools.governance import check_risk_gates
     from tools.governance import check_wheel_reuse_rules
@@ -122,6 +123,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
 
     return (
         GovernanceCheck("contracts", validate_project_contracts.main),
+        GovernanceCheck("menu_graph", lint_menu_graph.main),
         GovernanceCheck("risk_gates", check_risk_gates.main),
         GovernanceCheck("policy_runtime_rules", check_policy_runtime_rules.main),
         GovernanceCheck("wheel_reuse_rules", check_wheel_reuse_rules.main),

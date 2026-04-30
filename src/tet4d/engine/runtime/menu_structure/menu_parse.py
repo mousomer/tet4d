@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..settings_schema import as_non_empty_string, require_object
+from ..settings_schema import (
+    as_non_empty_string,
+    require_object,
+    validate_setting_storage_metadata,
+)
 from .parse_helpers import parse_copy_fields
 
 _MENU_ITEM_TYPES = {
@@ -185,6 +189,12 @@ def _parse_setting_item(
         "semantic_type": semantic_type,
     }
     parsed.update(_parse_setting_storage_metadata(item, path=path))
+    validate_setting_storage_metadata(
+        parsed,
+        semantic_type=semantic_type,
+        item_type=item_type,
+        path=path,
+    )
     options_key = str(item.get("options_key", "")).strip().lower()
     if item_type == "toggle":
         return _finish_toggle_setting_item(

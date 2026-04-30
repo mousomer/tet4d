@@ -4,21 +4,23 @@ User-facing feature map for the shipped `tet4d` experience.
 
 ## 1. Launcher and Menus
 
-- Unified launcher root: `Play`,`Continue`,`Tutorials`,`Topology Playground`,`Settings`,`Quit`.
-- `Play` keeps `2D`,`3D`,`4D` on one screen with same-row `Play` / `Setup` actions; `Play` launches from persisted settings and `Setup` opens the existing setup flow.
-- `Tutorials` is the learning/support branch: `Interactive Tutorials`,`How to Play`,`Controls Reference`,`Help / FAQ`.
-- `Settings` is the configuration branch: `Game`,`Display`,`Audio`,`Keyboard Bindings`,`Legacy Topology Editor Menu`.
-- `Game` is one scrolling page with `Gameplay`,`Board / Geometry`,`Movement / Rotation`,`Endgame Effects`, and `Difficulty / Pace` sections.
+- Unified launcher root: `2D`,`3D`,`4D`,`Replay Last`,`Leaderboard`,`Help / Tutorials`,`Advanced` (no independent Play submenu; no visible Quit row).
+- `2D/3D/4D` are action-group rows with same-row `Play` / `Setup` actions; `Play` launches from persisted settings and `Setup` opens the existing setup flow.
+- `Replay Last` resumes the last played mode/setup (when resumable state exists).
+- `Advanced` owns play-adjacent tools: `Settings`, `Topology Playground`, `Explosion Simulator`, `Bot`, `Last Custom Topology`, and `Back`.
+- `Help / Tutorials` is the learning/support branch: `Interactive Tutorials`,`How to Play`,`Controls Reference`,`Help / FAQ`.
+- `Settings` is the configuration branch: `Gameplay`, `Board / Setup Defaults`, `Controls` (owns Keyboard Bindings), `Display`, `Audio`, and `Endgame / Explosion` (owns persisted explosion defaults).
+- The legacy topology editor is reachable only via `Settings -> Board / Setup Defaults` and is explicitly labeled legacy.
 - `Controls Reference` is a help/reference surface, while `Settings -> Keyboard Bindings` is persistent input configuration.
-- `Leaderboard` and `Bot` are play-adjacent launcher entries under `Play`, not root destinations and not `Settings` entries.
+- `Leaderboard` is a root destination; `Bot` is an Advanced entry (not a Settings root category).
 - Pause `Settings` reuses the same canonical settings tree as launcher.
 - Menu structure is fully config-driven from `config/menu/structure.json` (`menu_entrypoints` + `menus`).
 - Oversized settings, keybindings, and bot-options pages use one shared scrolling viewport with an automatic vertical scrollbar.
 - Launcher/play, settings, keybindings, pause, leaderboard, and bot-options now share the same framed menu shell treatment.
+- Shared input semantics are contract-enforced: `Backspace` is ordinary back, `Esc` cancels capture then exits only at the current menu root, and `Q` quits via the global quit path; side buttons mirror these keys across launcher/pause/settings.
 - Shared `Settings` pages (non-dimension-specific):
   - Audio: master volume, SFX volume, mute, save/reset.
   - Display: fullscreen toggle, windowed size capture, overlay transparency, apply/save/reset.
-  - Game: seed, random type, topology advanced, animation, locked-cell transparency, endgame effects, kick, pace, analytics, and topology-cache tools on one scrolling page.
   - Keyboard Bindings: direct settings entry; profile management stays inside the keyboard bindings editor.
   - Legacy Topology Editor Menu: compatibility-backed topology editor entry.
 - Setup menus are dimension-specific and only show per-mode gameplay options.

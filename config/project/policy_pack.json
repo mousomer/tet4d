@@ -1623,6 +1623,17 @@
         ]
       },
       {
+        "file": "config/menu/structure.json",
+        "must_contain": [
+          "Backspace back",
+          "Esc exit",
+          "Q quit"
+        ],
+        "must_not_match_regex": [
+          "(?i)esc\\s+back"
+        ]
+      },
+      {
         "file": "docs/rds/RDS_PLAYBOT.md",
         "must_not_match_regex": [
           "\\btetris_nd\\b"

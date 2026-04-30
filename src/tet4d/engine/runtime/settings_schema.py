@@ -132,6 +132,63 @@ def require_number(
     return num
 
 
+def validate_setting_storage_metadata(  # noqa: C901
+    parsed: dict[str, Any],
+    *,
+    semantic_type: str,
+    item_type: str,
+    path: str,
+) -> None:
+    storage_type = str(parsed.get("storage_type", "")).strip().lower() or ""
+    legacy_storage_type = (
+        str(parsed.get("legacy_storage_type", "")).strip().lower() or ""
+    )
+
+    if storage_type:
+        if storage_type in {"int_index", "string_id"} and semantic_type != "enum":
+            raise RuntimeError(
+                f"{path}.storage_type={storage_type!r} requires semantic_type='enum'"
+            )
+        if storage_type == "bool" and semantic_type != "bool":
+            raise RuntimeError(
+                f"{path}.storage_type='bool' requires semantic_type='bool'"
+            )
+        if storage_type in {"int", "float"} and semantic_type not in {"int", "float"}:
+            raise RuntimeError(
+                f"{path}.storage_type={storage_type!r} requires semantic_type='int' or 'float'"
+            )
+        if item_type == "toggle" and storage_type != "bool":
+            raise RuntimeError(
+                f"{path}.storage_type must be 'bool' for toggle rows (got {storage_type!r})"
+            )
+        if item_type == "selector" and storage_type not in {"int_index", "string_id"}:
+            raise RuntimeError(
+                f"{path}.storage_type must be 'int_index' or 'string_id' for selector rows (got {storage_type!r})"
+            )
+        if item_type in {"slider", "stepper"} and storage_type not in {"int", "float"}:
+            raise RuntimeError(
+                f"{path}.storage_type must be 'int' or 'float' for {item_type} rows (got {storage_type!r})"
+            )
+
+    if legacy_storage_type:
+        if legacy_storage_type == "int_bool" and semantic_type != "bool":
+            raise RuntimeError(
+                f"{path}.legacy_storage_type='int_bool' requires semantic_type='bool'"
+            )
+        if legacy_storage_type == "int_index" and semantic_type != "enum":
+            raise RuntimeError(
+                f"{path}.legacy_storage_type='int_index' requires semantic_type='enum'"
+            )
+        if item_type == "toggle" and legacy_storage_type != "int_bool":
+            raise RuntimeError(
+                f"{path}.legacy_storage_type must be 'int_bool' for toggle rows (got {legacy_storage_type!r})"
+            )
+        if item_type == "selector" and legacy_storage_type != "int_index":
+            raise RuntimeError(
+                f"{path}.legacy_storage_type must be 'int_index' for selector rows (got {legacy_storage_type!r})"
+            )
+
+
 def string_tuple(
     raw_values: object,
     *,

@@ -222,11 +222,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.21` (`low`)
+- `tech_debt.score = 5.22` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.54`
+1. `delivery_size_pressure = 2.55`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
