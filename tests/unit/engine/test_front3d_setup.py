@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
@@ -11,6 +14,7 @@ from tet4d.engine.gameplay.pieces_nd import (
     get_piece_shapes_nd,
     piece_set_options_for_dimension,
 )
+from tet4d.engine.runtime.project_config import state_dir_path
 from tet4d.ui.pygame import front2d_setup, front3d_game, frontend_nd_setup
 from tet4d.ui.pygame.launch import launcher_play
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
@@ -474,7 +478,17 @@ class TestFront3DSetupDedup(unittest.TestCase):
             fourth=8,
             exploration_mode=1,
         )
-        cfg = frontend_nd_setup.build_config(settings, 4)
+        # Ensure the test isn't sensitive to an existing on-disk explorer topology profile.
+        with tempfile.TemporaryDirectory(
+            dir=str(state_dir_path()),
+            prefix="pytest_state_root_",
+        ) as override_root:
+            # Avoid warnings from missing state files.
+            topology_dir = Path(override_root) / "topology"
+            topology_dir.mkdir(parents=True, exist_ok=True)
+            (topology_dir / "explorer_profiles.json").write_text("{}", encoding="utf-8")
+            with mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}):
+                cfg = frontend_nd_setup.build_config(settings, 4)
         self.assertEqual(cfg.dims, (8, 9, 7, 6))
 
     def test_nd_build_config_uses_mode_specific_topology_profiles(self) -> None:

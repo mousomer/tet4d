@@ -157,6 +157,12 @@ def apply_mode_settings_to_state(state: Any, mode_settings: dict[str, Any]) -> N
         if not hasattr(state.settings, attr_name):
             continue
         current = getattr(state.settings, attr_name)
+        if isinstance(current, bool):
+            if isinstance(value, bool):
+                setattr(state.settings, attr_name, value)
+            elif isinstance(value, int) and not isinstance(value, bool):
+                setattr(state.settings, attr_name, bool(value))
+            continue
         if isinstance(current, int):
             if isinstance(value, bool) or not isinstance(value, int):
                 continue

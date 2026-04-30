@@ -330,7 +330,10 @@
           "label": "Random type (all modes)",
           "semantic_type": "enum",
           "options_key": "game_random_mode",
-          "setting_id": "game_random_mode"
+          "setting_id": "random_mode_id",
+          "storage_type": "string_id",
+          "legacy_setting_id": "random_mode_index",
+          "legacy_storage_type": "int_index"
         },
         {
           "id": "analytics_score_logging",
@@ -358,7 +361,10 @@
           "label": "Kick permissiveness",
           "semantic_type": "enum",
           "options_key": "game_kick_level",
-          "setting_id": "kick_level_index"
+          "setting_id": "kick_level_id",
+          "storage_type": "string_id",
+          "legacy_setting_id": "kick_level_index",
+          "legacy_storage_type": "int_index"
         },
         {
           "id": "rotation_animation_duration_ms_2d",
@@ -391,7 +397,9 @@
           "type": "toggle",
           "label": "Auto speed-up by clears",
           "semantic_type": "bool",
-          "setting_id": "auto_speedup_enabled"
+          "setting_id": "auto_speedup_enabled",
+          "storage_type": "bool",
+          "legacy_storage_type": "int_bool"
         },
         {
           "id": "lines_per_level",
@@ -433,7 +441,9 @@
           "type": "toggle",
           "label": "Advanced topology controls",
           "semantic_type": "bool",
-          "setting_id": "game_topology_advanced"
+          "setting_id": "topology_advanced",
+          "storage_type": "bool",
+          "legacy_storage_type": "int_bool"
         },
         {
           "id": "board_geometry_info",
@@ -1988,6 +1998,7 @@
         "attr": "piece_set_index",
         "semantic_type": "enum",
         "control": "selector",
+        "storage_type": "int_index",
         "options_source": "piece_set_labels"
       },
       {
@@ -1995,6 +2006,7 @@
         "attr": "topology_mode",
         "semantic_type": "enum",
         "control": "selector",
+        "storage_type": "int_index",
         "options": [
           "Bounded",
           "Wrap all",
@@ -2048,6 +2060,7 @@
         "attr": "piece_set_index",
         "semantic_type": "enum",
         "control": "selector",
+        "storage_type": "int_index",
         "options_source": "piece_set_labels"
       },
       {
@@ -2055,6 +2068,7 @@
         "attr": "topology_mode",
         "semantic_type": "enum",
         "control": "selector",
+        "storage_type": "int_index",
         "options": [
           "Bounded",
           "Wrap all",
@@ -2116,6 +2130,7 @@
         "attr": "piece_set_index",
         "semantic_type": "enum",
         "control": "selector",
+        "storage_type": "int_index",
         "options_source": "piece_set_labels"
       },
       {
@@ -2123,6 +2138,7 @@
         "attr": "topology_mode",
         "semantic_type": "enum",
         "control": "selector",
+        "storage_type": "int_index",
         "options": [
           "Bounded",
           "Wrap all",

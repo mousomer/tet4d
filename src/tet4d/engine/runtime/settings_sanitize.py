@@ -2,13 +2,144 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..core.rng import RNG_MODE_OPTIONS
+from ..gameplay.topology import TOPOLOGY_MODE_OPTIONS
+from .runtime_config import kick_level_names
 from .settings_schema import (
+    BOT_ALGORITHM_NAMES,
+    BOT_MODE_NAMES,
+    BOT_PROFILE_NAMES,
     MODE_KEY_SET,
     PROFILE_NAME_RE,
     RuntimeSettingDefaults,
     clamp_game_seed,
     clamp_overlay_transparency,
 )
+
+
+def _normalized_id(value: object) -> str:
+    if isinstance(value, str):
+        return value.strip().lower()
+    return ""
+
+
+def _safe_index_from_id(value: object, options: tuple[str, ...]) -> int | None:
+    normalized = _normalized_id(value)
+    if not normalized:
+        return None
+    try:
+        return options.index(normalized)
+    except ValueError:
+        return None
+
+
+def _normalize_semantic_id_pair(
+    merged_mode: dict[str, Any],
+    *,
+    index_key: str,
+    id_key: str,
+    options: tuple[str, ...],
+    default_index: int,
+    default_id: str,
+    prefer_id: bool,
+) -> None:
+    """
+    Canonical persisted field is the semantic id_key.
+    Legacy index_key remains as a compatibility shadow and runtime-facing index.
+    """
+
+    id_value = merged_mode.get(id_key)
+    index_value = merged_mode.get(index_key)
+
+    if prefer_id:
+        resolved_index = _safe_index_from_id(id_value, options)
+        if resolved_index is not None:
+            merged_mode[index_key] = resolved_index
+            merged_mode[id_key] = options[resolved_index]
+            return
+
+    raw_index = (
+        int(index_value)
+        if isinstance(index_value, int) and not isinstance(index_value, bool)
+        else int(default_index)
+    )
+    if options:
+        safe_index = max(0, min(len(options) - 1, raw_index))
+        merged_mode[index_key] = safe_index
+        merged_mode[id_key] = options[safe_index]
+        return
+
+    merged_mode[index_key] = raw_index
+    merged_mode[id_key] = default_id
+
+
+def _normalize_mode_attr_value(
+    attr_name: str,
+    *,
+    value: object,
+    default_value: object,
+    defaults: RuntimeSettingDefaults,
+) -> object:
+    if isinstance(default_value, bool):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, int) and not isinstance(value, bool):
+            return bool(value)
+        return bool(default_value)
+    if isinstance(default_value, int) and not isinstance(default_value, bool):
+        if isinstance(value, bool) or not isinstance(value, int):
+            return default_value
+        if attr_name == "game_seed":
+            return clamp_game_seed(value, default=defaults.game_seed)
+        return value
+    if not isinstance(value, type(default_value)):
+        return default_value
+    return value
+
+
+def _should_prefer_semantic_id(
+    merged_mode: dict[str, Any],
+    *,
+    index_key: str,
+    id_key: str,
+    default_id: str,
+    default_index: int,
+) -> bool:
+    raw_id = merged_mode.get(id_key)
+    if isinstance(raw_id, str) and raw_id.strip():
+        return raw_id.strip().lower() != default_id
+    raw_index = merged_mode.get(index_key)
+    if isinstance(raw_index, int) and not isinstance(raw_index, bool):
+        return int(raw_index) == default_index
+    return False
+
+
+def _normalize_semantic_pairs_for_mode(
+    merged_mode: dict[str, Any],
+    mode_defaults: dict[str, Any],
+    *,
+    pairs: tuple[tuple[str, str, tuple[str, ...]], ...],
+) -> None:
+    for index_key, id_key, options in pairs:
+        if index_key not in merged_mode and id_key not in merged_mode:
+            continue
+        default_index = int(mode_defaults.get(index_key, 0))
+        default_id = str(mode_defaults.get(id_key, options[0] if options else ""))
+        _normalize_semantic_id_pair(
+            merged_mode,
+            index_key=index_key,
+            id_key=id_key,
+            options=options,
+            default_index=default_index,
+            default_id=default_id,
+            prefer_id=_should_prefer_semantic_id(
+                merged_mode,
+                index_key=index_key,
+                id_key=id_key,
+                default_id=str(default_id).strip().lower(),
+                default_index=default_index,
+            ),
+        )
 
 
 def ensure_default_settings_payload(
@@ -232,6 +363,12 @@ def _sanitize_mode_settings(
         settings = {}
     sanitized_settings: dict[str, dict[str, Any]] = {}
     default_settings = default_payload["settings"]
+    random_mode_options = tuple(str(mode_id) for mode_id in RNG_MODE_OPTIONS)
+    topology_mode_options = tuple(str(mode_id) for mode_id in TOPOLOGY_MODE_OPTIONS)
+    kick_level_options = tuple(str(level_id) for level_id in kick_level_names())
+    bot_mode_options = tuple(str(mode_id) for mode_id in BOT_MODE_NAMES)
+    bot_algorithm_options = tuple(str(mode_id) for mode_id in BOT_ALGORITHM_NAMES)
+    bot_profile_options = tuple(str(mode_id) for mode_id in BOT_PROFILE_NAMES)
     for mode_key, mode_defaults in default_settings.items():
         mode_payload = settings.get(mode_key, {})
         if not isinstance(mode_payload, dict):
@@ -239,14 +376,25 @@ def _sanitize_mode_settings(
         merged_mode: dict[str, Any] = {}
         for attr_name, default_value in mode_defaults.items():
             value = mode_payload.get(attr_name, default_value)
-            if isinstance(default_value, int):
-                if isinstance(value, bool) or not isinstance(value, int):
-                    value = default_value
-                elif attr_name == "game_seed":
-                    value = clamp_game_seed(value, default=defaults.game_seed)
-            elif not isinstance(value, type(default_value)):
-                value = default_value
-            merged_mode[attr_name] = value
+            merged_mode[attr_name] = _normalize_mode_attr_value(
+                attr_name,
+                value=value,
+                default_value=default_value,
+                defaults=defaults,
+            )
+
+        _normalize_semantic_pairs_for_mode(
+            merged_mode,
+            mode_defaults,
+            pairs=(
+                ("random_mode_index", "random_mode_id", random_mode_options),
+                ("topology_mode", "topology_mode_id", topology_mode_options),
+                ("kick_level_index", "kick_level_id", kick_level_options),
+                ("bot_mode_index", "bot_mode_id", bot_mode_options),
+                ("bot_algorithm_index", "bot_algorithm_id", bot_algorithm_options),
+                ("bot_profile_index", "bot_profile_id", bot_profile_options),
+            ),
+        )
         sanitized_settings[mode_key] = merged_mode
     payload["settings"] = sanitized_settings
 

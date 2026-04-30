@@ -113,33 +113,39 @@ Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.2d.explorer_height`: `8`
 - `settings.2d.piece_set_index`: `0`; integer; min: 0; default option: Classic Tetrominoes; choices: 0=Classic Tetrominoes, 1=Random Cells, 2=Debug Rectangles
 - `settings.2d.challenge_layers`: `0`; integer; min: 0
-- `settings.2d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.2d.exploration_mode`: `false`; choices: 0=Off, 1=On
 - `settings.2d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
 Shared gameplay rules, animation timing, and pace controls.
+- `settings.2d.random_mode_id`: `"fixed_seed"`; string; options: fixed_seed, true_random; default option: Fixed seed; choices: fixed_seed=Fixed seed, true_random=True random
 - `settings.2d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.2d.game_seed`: `1337`; integer; range: 0..999999999
+- `settings.2d.topology_mode_id`: `"bounded"`; string; options: bounded, wrap_all, invert_all; default option: Bounded; choices: bounded=Bounded, wrap_all=Wrap all, invert_all=Invert all
 - `settings.2d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
-- `settings.2d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.2d.topology_advanced`: `false`; choices: 0=Off, 1=On
 - `settings.2d.topology_profile_index`: `0`; integer; min: 0; default option: Bounded; choices: 0=Bounded, 1=Wrap X only, 2=Invert X only
 - `settings.2d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
 - `settings.2d.endgame_boundary_response`: `"escape"`; string; options: escape, bounce
 - `settings.2d.endgame_particle_collisions`: `"off"`; string; options: off, on
 - `settings.2d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
 - `settings.2d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
-- `settings.2d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
+- `settings.2d.auto_speedup_enabled`: `true`; choices: 0=Off, 1=On
 - `settings.2d.lines_per_level`: `10`
 - `settings.2d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
 - `settings.2d.rotation_animation_duration_ms_2d`: `300`; integer; range: 0..600
 - `settings.2d.rotation_animation_duration_ms_nd`: `300`; integer; range: 0..600
 - `settings.2d.translation_animation_duration_ms`: `120`; integer; range: 0..600
+- `settings.2d.kick_level_id`: `"off"`; string; options: off, light, standard, forgiving; default option: Off; choices: off=Off, light=Light, standard=Standard, forgiving=Forgiving
 - `settings.2d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
 
 ### Bot
 Bot mode, algorithm, profile, speed, and budget defaults.
+- `settings.2d.bot_mode_id`: `"off"`; string; options: off, assist, auto, learn, step; default option: OFF; choices: off=OFF, assist=ASSIST, auto=AUTO, learn=LEARN, step=STEP
 - `settings.2d.bot_mode_index`: `0`; integer; min: 0; default option: OFF; choices: 0=OFF, 1=ASSIST, 2=AUTO, 3=LEARN, 4=STEP
+- `settings.2d.bot_algorithm_id`: `"auto"`; string; options: auto, heuristic, greedy_layer; default option: AUTO; choices: auto=AUTO, heuristic=HEURISTIC, greedy_layer=GREEDY_LAYER
 - `settings.2d.bot_algorithm_index`: `0`; integer; min: 0; default option: AUTO; choices: 0=AUTO, 1=HEURISTIC, 2=GREEDY_LAYER
+- `settings.2d.bot_profile_id`: `"balanced"`; string; options: fast, balanced, deep, ultra; default option: BALANCED; choices: fast=FAST, balanced=BALANCED, deep=DEEP, ultra=ULTRA
 - `settings.2d.bot_profile_index`: `1`; integer; min: 0; default option: BALANCED; choices: 0=FAST, 1=BALANCED, 2=DEEP, 3=ULTRA
 - `settings.2d.bot_speed_level`: `7`; integer; range: 1..10
 - `settings.2d.bot_budget_ms`: `10`; integer; min: 1
@@ -156,32 +162,38 @@ Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.3d.explorer_depth`: `8`
 - `settings.3d.piece_set_index`: `0`; integer; min: 0; default option: True 3D; choices: 0=True 3D, 1=Embedded 2D, 2=Random Cells 3D, 3=Debug Rectangles 3D
 - `settings.3d.challenge_layers`: `0`; integer; min: 0
-- `settings.3d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.3d.exploration_mode`: `false`; choices: 0=Off, 1=On
 - `settings.3d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
 Shared gameplay rules, animation timing, and pace controls.
+- `settings.3d.random_mode_id`: `"fixed_seed"`; string; options: fixed_seed, true_random; default option: Fixed seed; choices: fixed_seed=Fixed seed, true_random=True random
 - `settings.3d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.3d.game_seed`: `1337`; integer; range: 0..999999999
+- `settings.3d.topology_mode_id`: `"bounded"`; string; options: bounded, wrap_all, invert_all; default option: Bounded; choices: bounded=Bounded, wrap_all=Wrap all, invert_all=Invert all
 - `settings.3d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
-- `settings.3d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.3d.topology_advanced`: `false`; choices: 0=Off, 1=On
 - `settings.3d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
 - `settings.3d.endgame_boundary_response`: `"escape"`; string; options: escape, bounce
 - `settings.3d.endgame_particle_collisions`: `"off"`; string; options: off, on
 - `settings.3d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
 - `settings.3d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
-- `settings.3d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
+- `settings.3d.auto_speedup_enabled`: `true`; choices: 0=Off, 1=On
 - `settings.3d.lines_per_level`: `10`
 - `settings.3d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
 - `settings.3d.rotation_animation_duration_ms_2d`: `300`; integer; range: 0..600
 - `settings.3d.rotation_animation_duration_ms_nd`: `300`; integer; range: 0..600
 - `settings.3d.translation_animation_duration_ms`: `120`; integer; range: 0..600
+- `settings.3d.kick_level_id`: `"off"`; string; options: off, light, standard, forgiving; default option: Off; choices: off=Off, light=Light, standard=Standard, forgiving=Forgiving
 - `settings.3d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
 
 ### Bot
 Bot mode, algorithm, profile, speed, and budget defaults.
+- `settings.3d.bot_mode_id`: `"off"`; string; options: off, assist, auto, learn, step; default option: OFF; choices: off=OFF, assist=ASSIST, auto=AUTO, learn=LEARN, step=STEP
 - `settings.3d.bot_mode_index`: `0`; integer; min: 0; default option: OFF; choices: 0=OFF, 1=ASSIST, 2=AUTO, 3=LEARN, 4=STEP
+- `settings.3d.bot_algorithm_id`: `"auto"`; string; options: auto, heuristic, greedy_layer; default option: AUTO; choices: auto=AUTO, heuristic=HEURISTIC, greedy_layer=GREEDY_LAYER
 - `settings.3d.bot_algorithm_index`: `0`; integer; min: 0; default option: AUTO; choices: 0=AUTO, 1=HEURISTIC, 2=GREEDY_LAYER
+- `settings.3d.bot_profile_id`: `"balanced"`; string; options: fast, balanced, deep, ultra; default option: BALANCED; choices: fast=FAST, balanced=BALANCED, deep=DEEP, ultra=ULTRA
 - `settings.3d.bot_profile_index`: `1`; integer; min: 0; default option: BALANCED; choices: 0=FAST, 1=BALANCED, 2=DEEP, 3=ULTRA
 - `settings.3d.bot_speed_level`: `7`; integer; range: 1..10
 - `settings.3d.bot_budget_ms`: `20`; integer; min: 1
@@ -200,32 +212,38 @@ Per-mode board dimensions, piece sets, speed, and setup-only gameplay defaults.
 - `settings.4d.explorer_fourth`: `8`
 - `settings.4d.piece_set_index`: `0`; integer; min: 0; default option: True 4D (5-cell); choices: 0=True 4D (5-cell), 1=True 4D (6-cell), 2=True 4D (7-cell), 3=True 4D (8-cell), 4=Embedded 3D, 5=Embedded 2D, 6=Random Cells 4D, 7=Debug Rectangles 4D
 - `settings.4d.challenge_layers`: `0`; integer; min: 0
-- `settings.4d.exploration_mode`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.4d.exploration_mode`: `false`; choices: 0=Off, 1=On
 - `settings.4d.speed_level`: `1`; integer; range: 1..10
 
 ### Gameplay
 Shared gameplay rules, animation timing, and pace controls.
+- `settings.4d.random_mode_id`: `"fixed_seed"`; string; options: fixed_seed, true_random; default option: Fixed seed; choices: fixed_seed=Fixed seed, true_random=True random
 - `settings.4d.random_mode_index`: `0`; integer; range: 0..1; default option: Fixed seed; choices: 0=Fixed seed, 1=True random
 - `settings.4d.game_seed`: `1337`; integer; range: 0..999999999
+- `settings.4d.topology_mode_id`: `"bounded"`; string; options: bounded, wrap_all, invert_all; default option: Bounded; choices: bounded=Bounded, wrap_all=Wrap all, invert_all=Invert all
 - `settings.4d.topology_mode`: `0`; integer; range: 0..2; default option: Bounded; choices: 0=Bounded, 1=Wrap all, 2=Invert all
-- `settings.4d.topology_advanced`: `0`; integer; range: 0..1; default option: Off; choices: 0=Off, 1=On
+- `settings.4d.topology_advanced`: `false`; choices: 0=Off, 1=On
 - `settings.4d.endgame_preset_id`: `"default_orbit"`; string; options: default_orbit, wrap_all, invert_all, sphere
 - `settings.4d.endgame_boundary_response`: `"escape"`; string; options: escape, bounce
 - `settings.4d.endgame_particle_collisions`: `"off"`; string; options: off, on
 - `settings.4d.endgame_relic_speed_percent`: `100`; integer; range: 25..200
 - `settings.4d.endgame_shatter_speed_percent`: `100`; integer; range: 25..200
-- `settings.4d.auto_speedup_enabled`: `1`; default option: On; choices: 0=Off, 1=On
+- `settings.4d.auto_speedup_enabled`: `true`; choices: 0=Off, 1=On
 - `settings.4d.lines_per_level`: `10`
 - `settings.4d.rotation_animation_mode`: `"rigid_piece_rotation"`; string; options: cellwise_sliding, rigid_piece_rotation
 - `settings.4d.rotation_animation_duration_ms_2d`: `300`; integer; range: 0..600
 - `settings.4d.rotation_animation_duration_ms_nd`: `300`; integer; range: 0..600
 - `settings.4d.translation_animation_duration_ms`: `120`; integer; range: 0..600
+- `settings.4d.kick_level_id`: `"off"`; string; options: off, light, standard, forgiving; default option: Off; choices: off=Off, light=Light, standard=Standard, forgiving=Forgiving
 - `settings.4d.kick_level_index`: `0`; integer; min: 0; default option: Off; choices: 0=Off, 1=Light, 2=Standard, 3=Forgiving
 
 ### Bot
 Bot mode, algorithm, profile, speed, and budget defaults.
+- `settings.4d.bot_mode_id`: `"off"`; string; options: off, assist, auto, learn, step; default option: OFF; choices: off=OFF, assist=ASSIST, auto=AUTO, learn=LEARN, step=STEP
 - `settings.4d.bot_mode_index`: `0`; integer; min: 0; default option: OFF; choices: 0=OFF, 1=ASSIST, 2=AUTO, 3=LEARN, 4=STEP
+- `settings.4d.bot_algorithm_id`: `"auto"`; string; options: auto, heuristic, greedy_layer; default option: AUTO; choices: auto=AUTO, heuristic=HEURISTIC, greedy_layer=GREEDY_LAYER
 - `settings.4d.bot_algorithm_index`: `0`; integer; min: 0; default option: AUTO; choices: 0=AUTO, 1=HEURISTIC, 2=GREEDY_LAYER
+- `settings.4d.bot_profile_id`: `"balanced"`; string; options: fast, balanced, deep, ultra; default option: BALANCED; choices: fast=FAST, balanced=BALANCED, deep=DEEP, ultra=ULTRA
 - `settings.4d.bot_profile_index`: `1`; integer; min: 0; default option: BALANCED; choices: 0=FAST, 1=BALANCED, 2=DEEP, 3=ULTRA
 - `settings.4d.bot_speed_level`: `7`; integer; range: 1..10
 - `settings.4d.bot_budget_ms`: `32`; integer; min: 1

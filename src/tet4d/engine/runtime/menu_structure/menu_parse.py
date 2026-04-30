@@ -20,6 +20,8 @@ _MENU_ITEM_TYPES = {
     "legacy_dispatch",
 }
 _SETTING_SEMANTIC_TYPES = {"bool", "enum", "int", "float"}
+_STORAGE_TYPES = {"bool", "float", "int", "int_index", "string_id"}
+_LEGACY_STORAGE_TYPES = {"int_bool", "int_index"}
 _MENU_ENTRYPOINT_KEYS = ("launcher", "pause", "settings", "keybindings")
 _DEFAULT_MENU_ENTRYPOINTS = {
     "launcher": "launcher_root",
@@ -78,6 +80,87 @@ def _parse_action_group_item(item: dict[str, Any], *, path: str) -> dict[str, An
     }
 
 
+def _parse_setting_storage_metadata(item: dict[str, Any], *, path: str) -> dict[str, Any]:
+    parsed: dict[str, Any] = {}
+    raw_storage_type = item.get("storage_type")
+    if raw_storage_type is not None:
+        storage_type = as_non_empty_string(
+            raw_storage_type,
+            path=f"{path}.storage_type",
+        ).lower()
+        if storage_type not in _STORAGE_TYPES:
+            raise RuntimeError(
+                f"{path}.storage_type must be one of: " + ", ".join(sorted(_STORAGE_TYPES))
+            )
+        parsed["storage_type"] = storage_type
+    raw_legacy_setting_id = item.get("legacy_setting_id")
+    if raw_legacy_setting_id is not None:
+        parsed["legacy_setting_id"] = as_non_empty_string(
+            raw_legacy_setting_id,
+            path=f"{path}.legacy_setting_id",
+        ).lower()
+    raw_legacy_storage_type = item.get("legacy_storage_type")
+    if raw_legacy_storage_type is not None:
+        legacy_storage_type = as_non_empty_string(
+            raw_legacy_storage_type,
+            path=f"{path}.legacy_storage_type",
+        ).lower()
+        if legacy_storage_type not in _LEGACY_STORAGE_TYPES:
+            raise RuntimeError(
+                f"{path}.legacy_storage_type must be one of: "
+                + ", ".join(sorted(_LEGACY_STORAGE_TYPES))
+            )
+        parsed["legacy_storage_type"] = legacy_storage_type
+    return parsed
+
+
+def _finish_toggle_setting_item(
+    parsed: dict[str, Any],
+    *,
+    semantic_type: str,
+    options_key: str,
+    path: str,
+) -> dict[str, Any]:
+    if semantic_type != "bool":
+        raise RuntimeError(f"{path}.toggle rows must declare semantic_type='bool'")
+    if options_key:
+        raise RuntimeError(f"{path}.toggle rows must not define options_key")
+    return parsed
+
+
+def _finish_selector_setting_item(
+    parsed: dict[str, Any],
+    *,
+    semantic_type: str,
+    item: dict[str, Any],
+    path: str,
+) -> dict[str, Any]:
+    if semantic_type != "enum":
+        raise RuntimeError(f"{path}.selector rows must declare semantic_type='enum'")
+    parsed["options_key"] = as_non_empty_string(
+        item.get("options_key"),
+        path=f"{path}.options_key",
+    ).lower()
+    return parsed
+
+
+def _finish_numeric_setting_item(
+    parsed: dict[str, Any],
+    *,
+    semantic_type: str,
+    options_key: str,
+    item_type: str,
+    path: str,
+) -> dict[str, Any]:
+    if semantic_type not in {"int", "float"}:
+        raise RuntimeError(
+            f"{path}.{item_type} rows must declare semantic_type='int' or 'float'"
+        )
+    if options_key:
+        raise RuntimeError(f"{path}.{item_type} rows must not define options_key")
+    return parsed
+
+
 def _parse_setting_item(
     item: dict[str, Any],
     *,
@@ -101,28 +184,26 @@ def _parse_setting_item(
         "setting_id": setting_id,
         "semantic_type": semantic_type,
     }
+    parsed.update(_parse_setting_storage_metadata(item, path=path))
     options_key = str(item.get("options_key", "")).strip().lower()
     if item_type == "toggle":
-        if semantic_type != "bool":
-            raise RuntimeError(f"{path}.toggle rows must declare semantic_type='bool'")
-        if options_key:
-            raise RuntimeError(f"{path}.toggle rows must not define options_key")
-        return parsed
-    if item_type == "selector":
-        if semantic_type != "enum":
-            raise RuntimeError(f"{path}.selector rows must declare semantic_type='enum'")
-        parsed["options_key"] = as_non_empty_string(
-            item.get("options_key"),
-            path=f"{path}.options_key",
-        ).lower()
-        return parsed
-    if semantic_type not in {"int", "float"}:
-        raise RuntimeError(
-            f"{path}.{item_type} rows must declare semantic_type='int' or 'float'"
+        return _finish_toggle_setting_item(
+            parsed, semantic_type=semantic_type, options_key=options_key, path=path
         )
-    if options_key:
-        raise RuntimeError(f"{path}.{item_type} rows must not define options_key")
-    return parsed
+    if item_type == "selector":
+        return _finish_selector_setting_item(
+            parsed,
+            semantic_type=semantic_type,
+            item=item,
+            path=path,
+        )
+    return _finish_numeric_setting_item(
+        parsed,
+        semantic_type=semantic_type,
+        options_key=options_key,
+        item_type=item_type,
+        path=path,
+    )
 
 
 def _parse_keybinding_group_item(item: dict[str, Any], *, path: str) -> dict[str, Any]:

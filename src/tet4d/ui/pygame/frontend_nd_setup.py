@@ -93,7 +93,7 @@ class GameSettingsND:
     game_seed: int = _DEFAULT_MODE_4D["game_seed"]
     piece_set_index: int = _DEFAULT_MODE_4D["piece_set_index"]
     topology_mode: int = _DEFAULT_MODE_4D["topology_mode"]
-    topology_advanced: int = _DEFAULT_MODE_4D["topology_advanced"]
+    topology_advanced: bool = bool(_DEFAULT_MODE_4D["topology_advanced"])
     topology_profile_index: int = _DEFAULT_MODE_4D.get("topology_profile_index", 0)
     kick_level_index: int = _DEFAULT_MODE_4D["kick_level_index"]
     bot_mode_index: int = _DEFAULT_MODE_4D["bot_mode_index"]
@@ -102,7 +102,7 @@ class GameSettingsND:
     bot_speed_level: int = _DEFAULT_MODE_4D["bot_speed_level"]
     bot_budget_ms: int = _DEFAULT_MODE_4D["bot_budget_ms"]
     challenge_layers: int = _DEFAULT_MODE_4D["challenge_layers"]
-    exploration_mode: int = _DEFAULT_MODE_4D["exploration_mode"]
+    exploration_mode: bool = bool(_DEFAULT_MODE_4D["exploration_mode"])
 
 
 _PIECE_SET_CHOICES = {
@@ -169,14 +169,14 @@ def menu_fields_for_settings(
 
 
 def _freeze_play_menu_state(state: MenuState) -> None:
-    state.settings.exploration_mode = 0
+    state.settings.exploration_mode = False
 
 
 def _play_menu_settings(settings: GameSettingsND) -> GameSettingsND:
     return replace(
         settings,
-        exploration_mode=0,
-        topology_advanced=0,
+        exploration_mode=False,
+        topology_advanced=False,
         topology_profile_index=0,
     )
 

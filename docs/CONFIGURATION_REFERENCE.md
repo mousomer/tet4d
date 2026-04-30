@@ -1075,9 +1075,12 @@ Parameters:
 - `explosion_defaults.4d.view_mode`: `"board_native"` (`string`)
 - `explosion_defaults.4d.w_movement_animation_style`: `"fade"` (`string`)
 - `last_mode`: `"2d"` (`string`)
-- `settings.2d.auto_speedup_enabled`: `1` (`int`)
+- `settings.2d.auto_speedup_enabled`: `true` (`bool`)
+- `settings.2d.bot_algorithm_id`: `"auto"` (`string`)
 - `settings.2d.bot_algorithm_index`: `0` (`int`)
+- `settings.2d.bot_mode_id`: `"off"` (`string`)
 - `settings.2d.bot_mode_index`: `0` (`int`)
+- `settings.2d.bot_profile_id`: `"balanced"` (`string`)
 - `settings.2d.bot_profile_index`: `1` (`int`)
 - `settings.2d.bot_speed_level`: `7` (`int`)
 - `settings.2d.challenge_layers`: `0` (`int`)
@@ -1086,27 +1089,33 @@ Parameters:
 - `settings.2d.endgame_preset_id`: `"default_orbit"` (`string`)
 - `settings.2d.endgame_relic_speed_percent`: `100` (`int`)
 - `settings.2d.endgame_shatter_speed_percent`: `100` (`int`)
-- `settings.2d.exploration_mode`: `0` (`int`)
+- `settings.2d.exploration_mode`: `false` (`bool`)
 - `settings.2d.explorer_height`: `8` (`int`)
 - `settings.2d.explorer_width`: `8` (`int`)
 - `settings.2d.game_seed`: `1337` (`int`)
 - `settings.2d.height`: `20` (`int`)
+- `settings.2d.kick_level_id`: `"off"` (`string`)
 - `settings.2d.kick_level_index`: `0` (`int`)
 - `settings.2d.lines_per_level`: `10` (`int`)
 - `settings.2d.piece_set_index`: `0` (`int`)
+- `settings.2d.random_mode_id`: `"fixed_seed"` (`string`)
 - `settings.2d.random_mode_index`: `0` (`int`)
 - `settings.2d.rotation_animation_duration_ms_2d`: `300` (`int`)
 - `settings.2d.rotation_animation_duration_ms_nd`: `300` (`int`)
 - `settings.2d.rotation_animation_mode`: `"rigid_piece_rotation"` (`string`)
 - `settings.2d.speed_level`: `1` (`int`)
-- `settings.2d.topology_advanced`: `0` (`int`)
+- `settings.2d.topology_advanced`: `false` (`bool`)
 - `settings.2d.topology_mode`: `0` (`int`)
+- `settings.2d.topology_mode_id`: `"bounded"` (`string`)
 - `settings.2d.topology_profile_index`: `0` (`int`)
 - `settings.2d.translation_animation_duration_ms`: `120` (`int`)
 - `settings.2d.width`: `10` (`int`)
-- `settings.3d.auto_speedup_enabled`: `1` (`int`)
+- `settings.3d.auto_speedup_enabled`: `true` (`bool`)
+- `settings.3d.bot_algorithm_id`: `"auto"` (`string`)
 - `settings.3d.bot_algorithm_index`: `0` (`int`)
+- `settings.3d.bot_mode_id`: `"off"` (`string`)
 - `settings.3d.bot_mode_index`: `0` (`int`)
+- `settings.3d.bot_profile_id`: `"balanced"` (`string`)
 - `settings.3d.bot_profile_index`: `1` (`int`)
 - `settings.3d.bot_speed_level`: `7` (`int`)
 - `settings.3d.challenge_layers`: `0` (`int`)
@@ -1116,27 +1125,33 @@ Parameters:
 - `settings.3d.endgame_preset_id`: `"default_orbit"` (`string`)
 - `settings.3d.endgame_relic_speed_percent`: `100` (`int`)
 - `settings.3d.endgame_shatter_speed_percent`: `100` (`int`)
-- `settings.3d.exploration_mode`: `0` (`int`)
+- `settings.3d.exploration_mode`: `false` (`bool`)
 - `settings.3d.explorer_depth`: `8` (`int`)
 - `settings.3d.explorer_height`: `8` (`int`)
 - `settings.3d.explorer_width`: `8` (`int`)
 - `settings.3d.game_seed`: `1337` (`int`)
 - `settings.3d.height`: `18` (`int`)
+- `settings.3d.kick_level_id`: `"off"` (`string`)
 - `settings.3d.kick_level_index`: `0` (`int`)
 - `settings.3d.lines_per_level`: `10` (`int`)
 - `settings.3d.piece_set_index`: `0` (`int`)
+- `settings.3d.random_mode_id`: `"fixed_seed"` (`string`)
 - `settings.3d.random_mode_index`: `0` (`int`)
 - `settings.3d.rotation_animation_duration_ms_2d`: `300` (`int`)
 - `settings.3d.rotation_animation_duration_ms_nd`: `300` (`int`)
 - `settings.3d.rotation_animation_mode`: `"rigid_piece_rotation"` (`string`)
 - `settings.3d.speed_level`: `1` (`int`)
-- `settings.3d.topology_advanced`: `0` (`int`)
+- `settings.3d.topology_advanced`: `false` (`bool`)
 - `settings.3d.topology_mode`: `0` (`int`)
+- `settings.3d.topology_mode_id`: `"bounded"` (`string`)
 - `settings.3d.translation_animation_duration_ms`: `120` (`int`)
 - `settings.3d.width`: `6` (`int`)
-- `settings.4d.auto_speedup_enabled`: `1` (`int`)
+- `settings.4d.auto_speedup_enabled`: `true` (`bool`)
+- `settings.4d.bot_algorithm_id`: `"auto"` (`string`)
 - `settings.4d.bot_algorithm_index`: `0` (`int`)
+- `settings.4d.bot_mode_id`: `"off"` (`string`)
 - `settings.4d.bot_mode_index`: `0` (`int`)
+- `settings.4d.bot_profile_id`: `"balanced"` (`string`)
 - `settings.4d.bot_profile_index`: `1` (`int`)
 - `settings.4d.bot_speed_level`: `7` (`int`)
 - `settings.4d.challenge_layers`: `0` (`int`)
@@ -1146,7 +1161,7 @@ Parameters:
 - `settings.4d.endgame_preset_id`: `"default_orbit"` (`string`)
 - `settings.4d.endgame_relic_speed_percent`: `100` (`int`)
 - `settings.4d.endgame_shatter_speed_percent`: `100` (`int`)
-- `settings.4d.exploration_mode`: `0` (`int`)
+- `settings.4d.exploration_mode`: `false` (`bool`)
 - `settings.4d.explorer_depth`: `8` (`int`)
 - `settings.4d.explorer_fourth`: `8` (`int`)
 - `settings.4d.explorer_height`: `8` (`int`)
@@ -1154,16 +1169,19 @@ Parameters:
 - `settings.4d.fourth`: `4` (`int`)
 - `settings.4d.game_seed`: `1337` (`int`)
 - `settings.4d.height`: `20` (`int`)
+- `settings.4d.kick_level_id`: `"off"` (`string`)
 - `settings.4d.kick_level_index`: `0` (`int`)
 - `settings.4d.lines_per_level`: `10` (`int`)
 - `settings.4d.piece_set_index`: `0` (`int`)
+- `settings.4d.random_mode_id`: `"fixed_seed"` (`string`)
 - `settings.4d.random_mode_index`: `0` (`int`)
 - `settings.4d.rotation_animation_duration_ms_2d`: `300` (`int`)
 - `settings.4d.rotation_animation_duration_ms_nd`: `300` (`int`)
 - `settings.4d.rotation_animation_mode`: `"rigid_piece_rotation"` (`string`)
 - `settings.4d.speed_level`: `1` (`int`)
-- `settings.4d.topology_advanced`: `0` (`int`)
+- `settings.4d.topology_advanced`: `false` (`bool`)
 - `settings.4d.topology_mode`: `0` (`int`)
+- `settings.4d.topology_mode_id`: `"bounded"` (`string`)
 - `settings.4d.translation_animation_duration_ms`: `120` (`int`)
 - `settings.4d.width`: `10` (`int`)
 - `version`: `1` (`int`)
@@ -1286,8 +1304,10 @@ Parameters:
 - `menus.settings_board_setup_defaults.items[].description`: `"Compatibility-backed path for the older topology editor shell."` (`string`)
 - `menus.settings_board_setup_defaults.items[].id`: varies (`string`); examples: `"board_setup_section"`, `"game_topology_advanced"`, `"board_geometry_info"`
 - `menus.settings_board_setup_defaults.items[].label`: varies (`string`); examples: `"Board / Setup Defaults"`, `"Advanced topology controls"`, `"Board dimensions remain in each mode's setup screen; custom topology...`
+- `menus.settings_board_setup_defaults.items[].legacy_storage_type`: `"int_bool"` (`string`)
 - `menus.settings_board_setup_defaults.items[].semantic_type`: `"bool"` (`string`)
-- `menus.settings_board_setup_defaults.items[].setting_id`: `"game_topology_advanced"` (`string`)
+- `menus.settings_board_setup_defaults.items[].setting_id`: `"topology_advanced"` (`string`)
+- `menus.settings_board_setup_defaults.items[].storage_type`: `"bool"` (`string`)
 - `menus.settings_board_setup_defaults.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"info"`
 - `menus.settings_board_setup_defaults.title`: `"Board / Setup Defaults"` (`string`)
 - `menus.settings_controls.items[]`: array[`object`]
@@ -1353,9 +1373,12 @@ Parameters:
 - `menus.settings_gameplay.items[].action_id`: varies (`string`); examples: `"save"`, `"reset"`, `"back"`
 - `menus.settings_gameplay.items[].id`: varies (`string`); examples: `"gameplay_section"`, `"game_seed"`, `"game_random_mode"`
 - `menus.settings_gameplay.items[].label`: varies (`string`); examples: `"Gameplay"`, `"Game seed (all modes)"`, `"Random type (all modes)"`
+- `menus.settings_gameplay.items[].legacy_setting_id`: varies (`string`); examples: `"random_mode_index"`, `"kick_level_index"`
+- `menus.settings_gameplay.items[].legacy_storage_type`: varies (`string`); examples: `"int_index"`, `"int_bool"`
 - `menus.settings_gameplay.items[].options_key`: varies (`string`); examples: `"game_random_mode"`, `"game_rotation_animation_mode"`, `"game_kick_level"`
 - `menus.settings_gameplay.items[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`, `"bool"`
-- `menus.settings_gameplay.items[].setting_id`: varies (`string`); examples: `"game_seed"`, `"game_random_mode"`, `"analytics_score_logging"`
+- `menus.settings_gameplay.items[].setting_id`: varies (`string`); examples: `"game_seed"`, `"random_mode_id"`, `"analytics_score_logging"`
+- `menus.settings_gameplay.items[].storage_type`: varies (`string`); examples: `"string_id"`, `"bool"`
 - `menus.settings_gameplay.items[].type`: varies (`string`); examples: `"section"`, `"stepper"`, `"selector"`
 - `menus.settings_gameplay.title`: `"Gameplay"` (`string`)
 - `menus.settings_root.items[]`: array[`object`]
@@ -1437,6 +1460,7 @@ Parameters:
 - `setup_fields.2d[].options[]`: array[`string`]; examples: `"Bounded"`, `"Wrap all"`, `"Invert all"`
 - `setup_fields.2d[].options_source`: `"piece_set_labels"` (`string`)
 - `setup_fields.2d[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`
+- `setup_fields.2d[].storage_type`: varies (`string`); examples: `"int_index"`
 - `setup_fields.3d[]`: array[`object`]
 - `setup_fields.3d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"depth"`
 - `setup_fields.3d[].control`: varies (`string`); examples: `"stepper"`, `"selector"`, `"slider"`
@@ -1446,6 +1470,7 @@ Parameters:
 - `setup_fields.3d[].options[]`: array[`string`]; examples: `"Bounded"`, `"Wrap all"`, `"Invert all"`
 - `setup_fields.3d[].options_source`: `"piece_set_labels"` (`string`)
 - `setup_fields.3d[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`
+- `setup_fields.3d[].storage_type`: varies (`string`); examples: `"int_index"`
 - `setup_fields.4d[]`: array[`object`]
 - `setup_fields.4d[].attr`: varies (`string`); examples: `"width"`, `"height"`, `"depth"`
 - `setup_fields.4d[].control`: varies (`string`); examples: `"stepper"`, `"selector"`, `"slider"`
@@ -1455,6 +1480,7 @@ Parameters:
 - `setup_fields.4d[].options[]`: array[`string`]; examples: `"Bounded"`, `"Wrap all"`, `"Invert all"`
 - `setup_fields.4d[].options_source`: `"piece_set_labels"` (`string`)
 - `setup_fields.4d[].semantic_type`: varies (`string`); examples: `"int"`, `"enum"`
+- `setup_fields.4d[].storage_type`: varies (`string`); examples: `"int_index"`
 - `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
@@ -1993,7 +2019,7 @@ Parameters:
 - `governance.menu_control_typing_contract.setup_control_types[]`: array[`string`]; examples: `"toggle"`, `"selector"`, `"slider"`
 - `governance.menu_simplification_manifest_rule.default_action`: `"centralize_common_features_in_settings_hub"` (`string`)
 - `governance.menu_simplification_manifest_rule.exception_bar`: `"very_strong_documented_reason_required"` (`string`)
-- `governance.menu_simplification_manifest_rule.required_shared_row_keys[]`: array[`string`]; examples: `"game_seed"`, `"game_random_mode"`, `"rotation_animation_mode"`
+- `governance.menu_simplification_manifest_rule.required_shared_row_keys[]`: array[`string`]; examples: `"game_seed"`, `"random_mode_id"`, `"rotation_animation_mode"`
 - `governance.menu_simplification_manifest_rule.rule_id`: `"menu-simplification-common-settings"` (`string`)
 - `governance.menu_simplification_manifest_rule.statement`: `"Menus must stay simple; any feature common to 2D/3D/4D menus must li...` (`string`)
 - `governance.menu_structure_single_source.banned_python_literals[]`: array[`object`]

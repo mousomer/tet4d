@@ -20,6 +20,7 @@ _SETUP_CONTROL_FAMILIES: set[FieldControlFamily] = {
     "stepper",
     "toggle",
 }
+_STORAGE_TYPES = {"bool", "float", "int", "int_index", "string_id"}
 
 
 def _parse_setup_field_semantics(
@@ -159,6 +160,19 @@ def _parse_setup_field(
             path=f"structure.setup_fields.{mode_key}[{idx}].attr",
         ),
     }
+    raw_storage_type = field.get("storage_type")
+    if raw_storage_type is not None:
+        storage_type = as_non_empty_string(
+            raw_storage_type,
+            path=f"structure.setup_fields.{mode_key}[{idx}].storage_type",
+        ).lower()
+        if storage_type not in _STORAGE_TYPES:
+            raise RuntimeError(
+                "structure.setup_fields."
+                f"{mode_key}[{idx}].storage_type must be one of: "
+                + ", ".join(sorted(_STORAGE_TYPES))
+            )
+        parsed_field["storage_type"] = storage_type
     semantic_type, control = _parse_setup_field_semantics(field, mode_key=mode_key, idx=idx)
     parsed_field["semantic_type"] = semantic_type
     parsed_field["control"] = control

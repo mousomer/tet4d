@@ -222,11 +222,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.20` (`low`)
+- `tech_debt.score = 5.21` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.53`
+1. `delivery_size_pressure = 2.54`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -243,7 +243,7 @@ Top 8 live Python hotspots by real LOC:
 4. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
 5. `src/tet4d/ui/pygame/endgame_animation.py`: `1905` real LOC
 6. `scripts/arch_metrics.py`: `1890` real LOC
-7. `tools/governance/validate_project_contracts.py`: `1747` real LOC
+7. `tools/governance/validate_project_contracts.py`: `1884` real LOC
 8. `src/tet4d/ui/pygame/render/gfx_game.py`: `1553` real LOC
 
 Thin-wrapper budgets:

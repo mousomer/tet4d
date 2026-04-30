@@ -322,6 +322,17 @@ def random_mode_id_from_index(index: int) -> str:
     return mode_ids[safe_index]
 
 
+def random_mode_index_from_id(mode_id: object) -> int:
+    if not isinstance(mode_id, str):
+        return 0
+    normalized = mode_id.strip().lower()
+    mode_ids = random_mode_ids()
+    try:
+        return mode_ids.index(normalized)
+    except ValueError:
+        return 0
+
+
 def random_mode_label_for_index(index: int) -> str:
     labels = tuple(settings_option_labels()["game_random_mode"])
     safe_index = max(0, min(len(labels) - 1, int(index)))

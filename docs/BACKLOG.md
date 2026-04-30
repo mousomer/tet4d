@@ -155,6 +155,15 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 ## Recent Completed Work
 
+Completed on 2026-04-30:
+
+- semantic persistence migration follow-up: migrated key categorical fields to
+  canonical semantic IDs (`*_id`) with legacy `*_index` compatibility shadows,
+  migrated int-backed toggles to real booleans, added `storage_type` /
+  `legacy_storage_type` metadata to prevent enum/bool slider regressions, and
+  tightened governance + generated settings/config references to reflect the new
+  semantic persistence contract.
+
 Completed on 2026-04-29:
 
 - menu IA follow-up: shared menu input semantics now use `Backspace` for

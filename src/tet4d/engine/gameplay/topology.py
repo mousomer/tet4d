@@ -48,6 +48,16 @@ def topology_mode_from_index(index: int) -> str:
     return TOPOLOGY_MODE_OPTIONS[safe_index]
 
 
+def topology_mode_index_from_id(mode: object) -> int:
+    if not isinstance(mode, str):
+        return 0
+    normalized = mode.strip().lower()
+    try:
+        return TOPOLOGY_MODE_OPTIONS.index(normalized)
+    except ValueError:
+        return 0
+
+
 def topology_mode_label(mode: str | None) -> str:
     normalized = normalize_topology_mode(mode)
     return _TOPOLOGY_LABELS.get(normalized, normalized)

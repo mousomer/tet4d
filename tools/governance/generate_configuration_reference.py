@@ -555,11 +555,49 @@ def _format_index_labels(labels: tuple[str, ...] | None) -> str:
     return f"choices: {rendered}"
 
 
-def _format_selected_option(value: object, labels: tuple[str, ...] | None) -> str:
+def _format_choice_labels(
+    value: object,
+    labels: tuple[str, ...] | None,
+    *,
+    schema_node: dict[str, object] | None,
+) -> str:
+    if not labels:
+        return ""
+    if isinstance(value, str) and schema_node:
+        enum = schema_node.get("enum")
+        if (
+            isinstance(enum, list)
+            and enum
+            and all(isinstance(item, str) for item in enum)
+            and len(enum) == len(labels)
+        ):
+            rendered = ", ".join(
+                f"{mode_id}={label}" for mode_id, label in zip(enum, labels)
+            )
+            return f"choices: {rendered}"
+    return _format_index_labels(labels)
+
+
+def _format_selected_option(
+    value: object,
+    labels: tuple[str, ...] | None,
+    *,
+    schema_node: dict[str, object] | None,
+) -> str:
     if not labels:
         return ""
     if isinstance(value, bool):
         return ""
+    if isinstance(value, str) and schema_node:
+        enum = schema_node.get("enum")
+        if (
+            isinstance(enum, list)
+            and enum
+            and all(isinstance(item, str) for item in enum)
+            and len(enum) == len(labels)
+            and value in enum
+        ):
+            return f"default option: {labels[enum.index(value)]}"
     if isinstance(value, int) and 0 <= value < len(labels):
         return f"default option: {labels[value]}"
     return ""
@@ -603,11 +641,17 @@ def _suffix_option_labels_for_path(
 ) -> tuple[str, ...] | None:
     suffix_pairs = (
         (".random_mode_index", labels.random_mode_labels),
+        (".random_mode_id", labels.random_mode_labels),
         (".kick_level_index", labels.kick_level_labels),
+        (".kick_level_id", labels.kick_level_labels),
         (".topology_mode", labels.topology_mode_labels),
+        (".topology_mode_id", labels.topology_mode_labels),
         (".bot_mode_index", labels.bot_mode_labels),
         (".bot_profile_index", labels.bot_profile_labels),
         (".bot_algorithm_index", labels.bot_algorithm_labels),
+        (".bot_mode_id", labels.bot_mode_labels),
+        (".bot_profile_id", labels.bot_profile_labels),
+        (".bot_algorithm_id", labels.bot_algorithm_labels),
     )
     for suffix, option_labels in suffix_pairs:
         if path.endswith(suffix):
@@ -645,10 +689,12 @@ def _render_user_setting_line(
     schema_text = _format_schema_constraints(schema_node)
     if schema_text:
         details.append(schema_text)
-    selected_text = _format_selected_option(value, option_labels)
+    selected_text = _format_selected_option(
+        value, option_labels, schema_node=schema_node
+    )
     if selected_text:
         details.append(selected_text)
-    option_text = _format_index_labels(option_labels)
+    option_text = _format_choice_labels(value, option_labels, schema_node=schema_node)
     if option_text:
         details.append(option_text)
     detail_text = f"; {'; '.join(details)}" if details else ""
@@ -698,8 +744,10 @@ _MODE_SETTINGS_BUCKETS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "gameplay",
         (
+            "random_mode_id",
             "random_mode_index",
             "game_seed",
+            "topology_mode_id",
             "topology_mode",
             "topology_advanced",
             "topology_profile_index",
@@ -714,14 +762,18 @@ _MODE_SETTINGS_BUCKETS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "rotation_animation_duration_ms_2d",
             "rotation_animation_duration_ms_nd",
             "translation_animation_duration_ms",
+            "kick_level_id",
             "kick_level_index",
         ),
     ),
     (
         "bot",
         (
+            "bot_mode_id",
             "bot_mode_index",
+            "bot_algorithm_id",
             "bot_algorithm_index",
+            "bot_profile_id",
             "bot_profile_index",
             "bot_speed_level",
             "bot_budget_ms",

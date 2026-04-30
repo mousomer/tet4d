@@ -1270,6 +1270,120 @@ def _menu_control_prefix(
     return prefix
 
 
+def _validate_menu_control_storage_type(
+    *,
+    prefix: str,
+    item_type: str,
+    semantic_type: str,
+    storage_type: str,
+    issues: list[ValidationIssue],
+) -> None:
+    if storage_type in {"int", "float"}:
+        if semantic_type not in {"int", "float"}:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} storage_type={storage_type} requires semantic_type=int or float",
+                )
+            )
+    elif storage_type == "bool":
+        if semantic_type != "bool":
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} storage_type=bool requires semantic_type=bool",
+                )
+            )
+    elif storage_type in {"int_index", "string_id"}:
+        if semantic_type != "enum":
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} storage_type={storage_type} requires semantic_type=enum",
+                )
+            )
+
+    if item_type in {"slider", "stepper"} and storage_type not in {"int", "float"}:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} {item_type} controls must use storage_type=int or float",
+            )
+        )
+    if item_type == "toggle" and storage_type != "bool":
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} toggle controls must use storage_type=bool",
+            )
+        )
+    if item_type == "selector" and storage_type not in {"int_index", "string_id"}:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} selector controls must use storage_type=string_id or int_index",
+            )
+        )
+
+
+def _validate_menu_control_legacy_storage_type(
+    *,
+    prefix: str,
+    semantic_type: str,
+    legacy_storage_type: str,
+    issues: list[ValidationIssue],
+) -> None:
+    if legacy_storage_type == "int_bool" and semantic_type != "bool":
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} legacy_storage_type=int_bool requires semantic_type=bool",
+            )
+        )
+    if legacy_storage_type == "int_index" and semantic_type != "enum":
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} legacy_storage_type=int_index requires semantic_type=enum",
+            )
+        )
+
+
+def _validate_menu_control_storage_contract(
+    *,
+    prefix: str,
+    item_type: str,
+    semantic_type: str,
+    raw_item: dict[str, object],
+    issues: list[ValidationIssue],
+) -> None:
+    storage_type = str(raw_item.get("storage_type", "")).strip().lower()
+    legacy_storage_type = str(raw_item.get("legacy_storage_type", "")).strip().lower()
+    legacy_setting_id = str(raw_item.get("legacy_setting_id", "")).strip().lower()
+    if legacy_setting_id and not legacy_storage_type:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} legacy_setting_id requires legacy_storage_type",
+            )
+        )
+    if storage_type:
+        _validate_menu_control_storage_type(
+            prefix=prefix,
+            item_type=item_type,
+            semantic_type=semantic_type,
+            storage_type=storage_type,
+            issues=issues,
+        )
+    if legacy_storage_type:
+        _validate_menu_control_legacy_storage_type(
+            prefix=prefix,
+            semantic_type=semantic_type,
+            legacy_storage_type=legacy_storage_type,
+            issues=issues,
+        )
+
+
 def _validate_menu_control_item(
     *,
     menu_id: str,
@@ -1291,6 +1405,13 @@ def _validate_menu_control_item(
             )
         )
         return
+    _validate_menu_control_storage_contract(
+        prefix=prefix,
+        item_type=item_type,
+        semantic_type=semantic_type,
+        raw_item=raw_item,
+        issues=issues,
+    )
     options_key = str(raw_item.get("options_key", "")).strip().lower()
     if item_type == "toggle":
         if semantic_type != "bool":
@@ -1435,6 +1556,29 @@ def _validate_setup_control_field(
             )
         )
         return
+    storage_type = str(raw_field.get("storage_type", "")).strip().lower()
+    if storage_type:
+        if storage_type == "bool" and semantic_type != "bool":
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} storage_type=bool requires semantic_type=bool",
+                )
+            )
+        elif storage_type in {"int", "float"} and semantic_type != storage_type:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} storage_type={storage_type} requires semantic_type={storage_type}",
+                )
+            )
+        elif storage_type in {"int_index", "string_id"} and semantic_type != "enum":
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{prefix} storage_type={storage_type} requires semantic_type=enum",
+                )
+            )
     if semantic_type == "enum":
         _validate_enum_setup_field(
             prefix=prefix,

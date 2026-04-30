@@ -17,6 +17,8 @@ from .endgame_presets import (
     normalize_endgame_preset_id,
 )
 
+from ..core.rng import RNG_MODE_OPTIONS
+from ..gameplay.topology import TOPOLOGY_MODE_OPTIONS
 MODE_KEYS = ("2d", "3d", "4d")
 MODE_KEY_SET = set(MODE_KEYS)
 GRID_MODE_NAMES = (
@@ -29,10 +31,14 @@ GRID_MODE_NAMES = (
 )
 BOT_MODE_NAMES = ("off", "assist", "auto", "learn", "step")
 BOT_PROFILE_NAMES = ("fast", "balanced", "deep", "ultra")
+BOT_ALGORITHM_NAMES = ("auto", "heuristic", "greedy_layer")
+KICK_LEVEL_IDS = ("off", "light", "standard", "forgiving")
 ROTATION_ANIMATION_MODE_NAMES = (
     "cellwise_sliding",
     "rigid_piece_rotation",
 )
+RNG_MODE_NAMES = tuple(str(mode_id) for mode_id in RNG_MODE_OPTIONS)
+TOPOLOGY_MODE_IDS = tuple(str(mode_id) for mode_id in TOPOLOGY_MODE_OPTIONS)
 
 OVERLAY_TRANSPARENCY_MIN = 0.0
 OVERLAY_TRANSPARENCY_MAX = 0.90
@@ -279,21 +285,42 @@ def sync_runtime_bot_budget(
             mode_settings["bot_budget_ms"] = int(runtime_budget_for_mode_fn(mode_key))
 
 
+_MODE_BOOL_DEFAULTS = {"topology_advanced", "exploration_mode", "auto_speedup_enabled"}
+_MODE_ENUM_ID_DEFAULTS: dict[str, tuple[str, ...]] = {
+    "random_mode_id": RNG_MODE_NAMES,
+    "topology_mode_id": TOPOLOGY_MODE_IDS,
+    "kick_level_id": KICK_LEVEL_IDS,
+    "bot_mode_id": BOT_MODE_NAMES,
+    "bot_algorithm_id": BOT_ALGORITHM_NAMES,
+    "bot_profile_id": BOT_PROFILE_NAMES,
+    "rotation_animation_mode": ROTATION_ANIMATION_MODE_NAMES,
+}
+
+
+def _require_enum_id(
+    value: object,
+    *,
+    setting_path: str,
+    allowed: tuple[str, ...],
+) -> str:
+    normalized = as_non_empty_string(value, path=setting_path).lower()
+    if normalized not in allowed:
+        raise RuntimeError(f"{setting_path} must be one of: " + ", ".join(sorted(allowed)))
+    return normalized
+
+
 def _validated_mode_default_setting(
     *,
     mode_key: str,
     attr_name: str,
     value: object,
-) -> str | int:
+) -> str | int | bool:
     setting_path = f"defaults.settings.{mode_key}.{attr_name}"
-    if attr_name == "rotation_animation_mode":
-        normalized_mode = as_non_empty_string(value, path=setting_path).lower()
-        if normalized_mode not in ROTATION_ANIMATION_MODE_NAMES:
-            raise RuntimeError(
-                f"{setting_path} must be one of: "
-                + ", ".join(ROTATION_ANIMATION_MODE_NAMES)
-            )
-        return normalized_mode
+    if attr_name in _MODE_BOOL_DEFAULTS:
+        return require_bool(value, path=setting_path)
+    allowed = _MODE_ENUM_ID_DEFAULTS.get(attr_name)
+    if allowed is not None:
+        return _require_enum_id(value, setting_path=setting_path, allowed=allowed)
     if attr_name == "endgame_preset_id":
         normalized_preset = normalize_endgame_preset_id(value)
         if normalized_preset not in ENDGAME_PRESET_IDS:

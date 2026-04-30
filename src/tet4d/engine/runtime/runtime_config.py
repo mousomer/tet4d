@@ -111,6 +111,15 @@ def normalize_kick_level_name(level_name: object) -> str:
     return kick_default_level()
 
 
+def kick_level_index_from_id(level_name: object) -> int:
+    names = kick_level_names()
+    normalized = normalize_kick_level_name(level_name)
+    try:
+        return names.index(normalized)
+    except ValueError:
+        return 0
+
+
 def assist_kick_factor(level_name: str) -> float:
     factors = _gameplay_tuning()["assist_scoring"]["kick_factors"]
     normalized = normalize_kick_level_name(level_name)

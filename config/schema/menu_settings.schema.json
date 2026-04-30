@@ -263,6 +263,16 @@
           "type": "integer",
           "minimum": 0
         },
+        "bot_mode_id": {
+          "type": "string",
+          "enum": [
+            "off",
+            "assist",
+            "auto",
+            "learn",
+            "step"
+          ]
+        },
         "bot_speed_level": {
           "type": "integer",
           "minimum": 1,
@@ -272,9 +282,26 @@
           "type": "integer",
           "minimum": 0
         },
+        "bot_algorithm_id": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "heuristic",
+            "greedy_layer"
+          ]
+        },
         "bot_profile_index": {
           "type": "integer",
           "minimum": 0
+        },
+        "bot_profile_id": {
+          "type": "string",
+          "enum": [
+            "fast",
+            "balanced",
+            "deep",
+            "ultra"
+          ]
         },
         "bot_budget_ms": {
           "type": "integer",
@@ -335,6 +362,13 @@
               "minimum": 0,
               "maximum": 1
             },
+            "random_mode_id": {
+              "type": "string",
+              "enum": [
+                "fixed_seed",
+                "true_random"
+              ]
+            },
             "game_seed": {
               "type": "integer",
               "minimum": 0,
@@ -345,10 +379,25 @@
               "minimum": 0,
               "maximum": 2
             },
+            "topology_mode_id": {
+              "type": "string",
+              "enum": [
+                "bounded",
+                "wrap_all",
+                "invert_all"
+              ]
+            },
             "topology_advanced": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 1
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
             },
             "topology_profile_index": {
               "type": "integer",
@@ -381,13 +430,29 @@
               "minimum": 0
             },
             "exploration_mode": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 1
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
             },
             "kick_level_index": {
               "type": "integer",
               "minimum": 0
+            },
+            "kick_level_id": {
+              "type": "string",
+              "enum": [
+                "off",
+                "light",
+                "standard",
+                "forgiving"
+              ]
             },
             "endgame_preset_id": {
               "type": "string",
@@ -484,6 +549,13 @@
               "minimum": 0,
               "maximum": 1
             },
+            "random_mode_id": {
+              "type": "string",
+              "enum": [
+                "fixed_seed",
+                "true_random"
+              ]
+            },
             "game_seed": {
               "type": "integer",
               "minimum": 0,
@@ -494,10 +566,25 @@
               "minimum": 0,
               "maximum": 2
             },
+            "topology_mode_id": {
+              "type": "string",
+              "enum": [
+                "bounded",
+                "wrap_all",
+                "invert_all"
+              ]
+            },
             "topology_advanced": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 1
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
             },
             "rotation_animation_mode": {
               "type": "string",
@@ -526,13 +613,29 @@
               "minimum": 0
             },
             "exploration_mode": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 1
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
             },
             "kick_level_index": {
               "type": "integer",
               "minimum": 0
+            },
+            "kick_level_id": {
+              "type": "string",
+              "enum": [
+                "off",
+                "light",
+                "standard",
+                "forgiving"
+              ]
             },
             "endgame_preset_id": {
               "type": "string",
@@ -634,6 +737,13 @@
               "minimum": 0,
               "maximum": 1
             },
+            "random_mode_id": {
+              "type": "string",
+              "enum": [
+                "fixed_seed",
+                "true_random"
+              ]
+            },
             "game_seed": {
               "type": "integer",
               "minimum": 0,
@@ -644,10 +754,25 @@
               "minimum": 0,
               "maximum": 2
             },
+            "topology_mode_id": {
+              "type": "string",
+              "enum": [
+                "bounded",
+                "wrap_all",
+                "invert_all"
+              ]
+            },
             "topology_advanced": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 1
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
             },
             "rotation_animation_mode": {
               "type": "string",
@@ -676,13 +801,29 @@
               "minimum": 0
             },
             "exploration_mode": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 1
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
             },
             "kick_level_index": {
               "type": "integer",
               "minimum": 0
+            },
+            "kick_level_id": {
+              "type": "string",
+              "enum": [
+                "off",
+                "light",
+                "standard",
+                "forgiving"
+              ]
             },
             "endgame_preset_id": {
               "type": "string",

@@ -4,7 +4,7 @@ Role: rds
 Status: active
 Scope: launcher, settings, pause-menu, and topology-playground menu IA
 Canonical owner: this file
-Last verified: 2026-04-29
+Last verified: 2026-04-30
 
 ## 1. Scope
 
@@ -224,10 +224,13 @@ Pause Menu
 8. Control family must be chosen from semantic type first:
    `bool -> toggle`, `enum -> categorical selector`, `int/float -> slider or stepper`,
    `action -> button`, `submenu/picker -> navigation row`.
-9. Sliders are numeric-only. A categorical enum must never render as a slider.
-10. Exact discrete numeric counts should prefer stepper-style controls over
+9. `semantic_type` drives control choice. `storage_type` describes persistence only.
+   `int_index` is categorical (never numeric) and `int_bool` is boolean (never numeric).
+   Do not render enums/bools as sliders just because persistence uses integers.
+10. Sliders are numeric-only. A categorical enum must never render as a slider.
+11. Exact discrete numeric counts should prefer stepper-style controls over
     sliders when precision matters.
-11. Categorical selectors should prefer compact segmented or cycler-style rows
+12. Categorical selectors should prefer compact segmented or cycler-style rows
     for 2-4 options, dropdown or cycler behavior for larger simple sets, and a
     dedicated picker or submenu for richer option sets.
 
@@ -238,14 +241,16 @@ Pause Menu
 1. `Up/Down`: move focus between rows.
 2. `Left/Right`: change current setting value or switch the active sub-action on an `action_group` row.
 3. `Enter`: activate focused action.
-4. `Esc`: back/cancel (never destructive).
-5. `Tab`: next section when in multi-section settings.
-6. A visible `Back` affordance must be present anywhere `Esc`/cancel returns
+4. `Backspace`: move one menu level up (ordinary menu-up/back).
+5. `Esc`: cancel active modal/text entry; otherwise it exits only from the current menu root.
+6. `Q`: global quit (only where quitting is legal).
+7. `Tab`: next section when in multi-section settings.
+8. A visible `Back` affordance must be present anywhere `Backspace`/cancel returns
    to the previous menu level.
-7. Mouse hover and click are required for controls that render as buttons or
+9. Mouse hover and click are required for controls that render as buttons or
    actionable menu rows; click activation must reuse the same action dispatch
    path as keyboard confirm for that control.
-8. Pointer release outside the pressed control must cancel activation unless a
+10. Pointer release outside the pressed control must cancel activation unless a
    screen explicitly opts into a different drag-back-inside behavior.
 
 ### 6.2 Consistency rules

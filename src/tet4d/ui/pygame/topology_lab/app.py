@@ -312,8 +312,8 @@ def build_explorer_playground_config(
         settings.speed_level = int(snapshot.speed_level)
         settings.random_mode_index = int(snapshot.random_mode_index)
         settings.game_seed = int(snapshot.game_seed)
-        settings.exploration_mode = 1
-        settings.topology_advanced = 1
+        settings.exploration_mode = True
+        settings.topology_advanced = True
         cfg = front2d_setup.config_from_settings(
             settings,
             explorer_topology_profile_override=explorer_profile,
@@ -349,8 +349,8 @@ def build_explorer_playground_config(
     settings.speed_level = int(snapshot.speed_level)
     settings.random_mode_index = int(snapshot.random_mode_index)
     settings.game_seed = int(snapshot.game_seed)
-    settings.exploration_mode = 1
-    settings.topology_advanced = 1
+    settings.exploration_mode = True
+    settings.topology_advanced = True
     cfg = frontend_nd_setup.build_config(
         settings,
         int(dimension),

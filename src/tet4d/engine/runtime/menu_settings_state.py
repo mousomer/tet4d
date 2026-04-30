@@ -133,7 +133,7 @@ def save_menu_settings(state: Any, dimension: int) -> tuple[bool, str]:
     mode_settings = payload.setdefault("settings", {}).setdefault(mode_key, {})
     for attr_name, value in vars(state.settings).items():
         mode_settings[attr_name] = value
-    return _save_payload(payload)
+    return _sanitize_and_save_payload(payload)
 
 
 def load_menu_settings(

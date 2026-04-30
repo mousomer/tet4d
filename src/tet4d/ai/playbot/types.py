@@ -120,6 +120,20 @@ def bot_mode_from_index(index: int) -> BotMode:
     return _option_from_index(BOT_MODE_OPTIONS, index)
 
 
+def bot_mode_id_from_index(index: int) -> str:
+    return str(bot_mode_from_index(index).value)
+
+
+def bot_mode_index_from_id(mode_id: object) -> int:
+    if not isinstance(mode_id, str):
+        return 0
+    normalized = mode_id.strip().lower()
+    values = tuple(str(mode.value) for mode in BOT_MODE_OPTIONS)
+    try:
+        return values.index(normalized)
+    except ValueError:
+        return 0
+
 def bot_planner_profile_label(profile: BotPlannerProfile) -> str:
     return _enum_label(profile)
 
@@ -128,6 +142,20 @@ def bot_planner_profile_from_index(index: int) -> BotPlannerProfile:
     return _option_from_index(BOT_PLANNER_PROFILE_OPTIONS, index)
 
 
+def bot_planner_profile_id_from_index(index: int) -> str:
+    return str(bot_planner_profile_from_index(index).value)
+
+
+def bot_planner_profile_index_from_id(profile_id: object) -> int:
+    if not isinstance(profile_id, str):
+        return 0
+    normalized = profile_id.strip().lower()
+    values = tuple(str(mode.value) for mode in BOT_PLANNER_PROFILE_OPTIONS)
+    try:
+        return values.index(normalized)
+    except ValueError:
+        return 0
+
 def bot_planner_algorithm_label(algorithm: BotPlannerAlgorithm) -> str:
     return _enum_label(algorithm)
 
@@ -135,6 +163,20 @@ def bot_planner_algorithm_label(algorithm: BotPlannerAlgorithm) -> str:
 def bot_planner_algorithm_from_index(index: int) -> BotPlannerAlgorithm:
     return _option_from_index(BOT_PLANNER_ALGORITHM_OPTIONS, index)
 
+
+def bot_planner_algorithm_id_from_index(index: int) -> str:
+    return str(bot_planner_algorithm_from_index(index).value)
+
+
+def bot_planner_algorithm_index_from_id(algorithm_id: object) -> int:
+    if not isinstance(algorithm_id, str):
+        return 0
+    normalized = algorithm_id.strip().lower()
+    values = tuple(str(mode.value) for mode in BOT_PLANNER_ALGORITHM_OPTIONS)
+    try:
+        return values.index(normalized)
+    except ValueError:
+        return 0
 
 def _board_size_scale(ndim: int, dims: tuple[int, ...] | None) -> float:
     if not dims:
