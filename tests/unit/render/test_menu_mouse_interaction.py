@@ -327,6 +327,250 @@ class TestMenuMouseInteraction(unittest.TestCase):
         self.assertTrue(result.keep_running)
         save_settings.assert_called_once()
 
+    def test_settings_hub_pointer_targets_include_side_buttons(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_gameplay",
+        )
+
+        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        kinds = {target.kind for target in targets}
+        self.assertTrue({"side_back", "side_escape", "side_quit"}.issubset(kinds))
+
+    def test_settings_hub_side_back_click_pops_nested_page(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_root",
+        )
+        launcher_settings._push_page(state, "settings_gameplay")
+        self.assertEqual(len(state.page_stack), 2)
+
+        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        side_back = next(target for target in targets if target.kind == "side_back")
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN,
+                {"button": 1, "pos": side_back.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP,
+                {"button": 1, "pos": side_back.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+
+        self.assertTrue(state.running)
+        self.assertTrue(state.keep_running)
+        self.assertEqual(len(state.page_stack), 1)
+
+    def test_settings_hub_side_back_click_at_root_exits_settings(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_gameplay",
+        )
+        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        side_back = next(target for target in targets if target.kind == "side_back")
+
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN,
+                {"button": 1, "pos": side_back.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP,
+                {"button": 1, "pos": side_back.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+
+        self.assertFalse(state.running)
+        self.assertTrue(state.keep_running)
+
+    def test_settings_hub_side_escape_click_cancels_numeric_text_mode(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_display",
+        )
+        launcher_settings._start_unified_numeric_text_mode(state, "display_width")
+        self.assertTrue(state.text_mode_row_key)
+
+        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        side_escape = next(target for target in targets if target.kind == "side_escape")
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN,
+                {"button": 1, "pos": side_escape.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP,
+                {"button": 1, "pos": side_escape.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+
+        self.assertTrue(state.running)
+        self.assertEqual(state.text_mode_row_key, "")
+
+    def test_settings_hub_side_escape_click_does_not_pop_nested_page(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_root",
+        )
+        launcher_settings._push_page(state, "settings_gameplay")
+        self.assertEqual(len(state.page_stack), 2)
+
+        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        side_escape = next(target for target in targets if target.kind == "side_escape")
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN,
+                {"button": 1, "pos": side_escape.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP,
+                {"button": 1, "pos": side_escape.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+
+        self.assertTrue(state.running)
+        self.assertTrue(state.keep_running)
+        self.assertEqual(len(state.page_stack), 2)
+
+    def test_settings_hub_side_escape_click_at_root_exits_settings(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_gameplay",
+        )
+        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        side_escape = next(target for target in targets if target.kind == "side_escape")
+
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN,
+                {"button": 1, "pos": side_escape.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP,
+                {"button": 1, "pos": side_escape.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+
+        self.assertFalse(state.running)
+        self.assertTrue(state.keep_running)
+
+    def test_settings_hub_side_quit_click_matches_q_key_quit_path(self) -> None:
+        fonts = self._fonts()
+        screen = pygame.Surface((960, 640))
+        state_click = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_gameplay",
+        )
+        targets = launcher_settings._current_unified_pointer_targets(
+            screen,
+            fonts,
+            state_click,
+        )
+        side_quit = next(target for target in targets if target.kind == "side_quit")
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state_click,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN,
+                {"button": 1, "pos": side_quit.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+        screen, _handled = launcher_settings._handle_unified_non_key_event(
+            screen,
+            fonts,
+            state_click,
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP,
+                {"button": 1, "pos": side_quit.rect.center},
+            ),
+            pointer_targets=targets,
+        )
+
+        self.assertFalse(state_click.running)
+        self.assertFalse(state_click.keep_running)
+
+        state_key = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_gameplay",
+        )
+        out = launcher_settings._dispatch_unified_key(screen, fonts, state_key, pygame.K_q)
+        self.assertIs(out, screen)
+        self.assertFalse(state_key.running)
+        self.assertFalse(state_key.keep_running)
+
     def test_name_prompt_mouse_hover_tracks_button_hitbox(self) -> None:
         fonts = self._fonts()
         screen = pygame.Surface((960, 640))

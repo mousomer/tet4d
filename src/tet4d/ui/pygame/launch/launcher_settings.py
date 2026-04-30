@@ -34,6 +34,7 @@ from tet4d.ui.pygame.ui_utils import (
     draw_corner_chip,
     draw_fitted_text_line,
     draw_selection_highlight,
+    draw_side_button_stack,
     draw_tron_menu_background,
     draw_tron_panel,
     draw_value_slider,
@@ -90,6 +91,38 @@ class _UnifiedPointerTarget:
     kind: str
     rect: pygame.Rect
     selectable_index: int = -1
+
+
+_SETTINGS_SIDE_BUTTONS: tuple[tuple[str, str], ...] = (
+    ("side_back", "Backspace: Back"),
+    ("side_escape", "Esc: Exit"),
+    ("side_quit", "Q: Quit"),
+)
+_SIDE_BUTTON_RIGHT_MARGIN = 18
+_SIDE_BUTTON_TOP = 18
+_SIDE_BUTTON_GAP = 8
+
+
+def _side_button_stack_rects(
+    screen: pygame.Surface,
+    font: pygame.font.Font,
+    *,
+    buttons: tuple[tuple[str, str], ...] = _SETTINGS_SIDE_BUTTONS,
+    right_margin: int = _SIDE_BUTTON_RIGHT_MARGIN,
+    top: int = _SIDE_BUTTON_TOP,
+    gap: int = _SIDE_BUTTON_GAP,
+) -> dict[str, pygame.Rect]:
+    width, _height = screen.get_size()
+    y = int(top)
+    rects: dict[str, pygame.Rect] = {}
+    for kind, label in buttons:
+        clean_kind = str(kind).strip()
+        text = str(label)
+        text_width, text_height = font.size(text)
+        x = int(width - int(right_margin) - (text_width + 18))
+        rects[clean_kind] = pygame.Rect(x, y, text_width + 18, text_height + 10)
+        y += rects[clean_kind].height + int(gap)
+    return rects
 
 
 def _draw_wrapped_settings_row(
@@ -524,6 +557,12 @@ def _current_unified_pointer_targets(
             ),
         )
     ]
+    side_rects = _side_button_stack_rects(
+        screen,
+        fonts.hint_font,
+    )
+    for kind, rect in side_rects.items():
+        targets.append(_UnifiedPointerTarget(kind=kind, rect=rect.copy()))
     for idx, row in enumerate(layouts):
         selectable_index = row_to_selectable.get(idx)
         if selectable_index is None:
@@ -595,6 +634,16 @@ def _draw_unified_settings_menu(
         y=18,
         hovered=bool(getattr(state, "hover_back", False)),
         pressed=bool(getattr(state, "pressed_back", False)),
+    )
+    draw_side_button_stack(
+        screen,
+        font=fonts.hint_font,
+        buttons=_SETTINGS_SIDE_BUTTONS,
+        right_margin=_SIDE_BUTTON_RIGHT_MARGIN,
+        top=_SIDE_BUTTON_TOP,
+        gap=_SIDE_BUTTON_GAP,
+        hovered_kind=str(getattr(state, "hovered_target_kind", "")),
+        pressed_kind=str(getattr(state, "pressed_target_kind", "")),
     )
 
     line_h = fonts.hint_font.get_height() + 3
@@ -787,6 +836,11 @@ def _dispatch_unified_text_mode_key(
 ) -> pygame.Surface | None:
     if not _is_unified_text_mode(state):
         return None
+    if key == pygame.K_q:
+        _stop_unified_text_mode(state)
+        state.keep_running = False
+        state.running = False
+        return screen
     if key == pygame.K_ESCAPE:
         _stop_unified_text_mode(state)
         _set_unified_status(state, "Value edit cancelled")
@@ -842,6 +896,7 @@ def _handle_unified_exit_navigation_key(
     nav_key: int,
 ) -> pygame.Surface | None:
     if key == pygame.K_q:
+        state.keep_running = False
         state.running = False
         return screen
     if nav_key == pygame.K_BACKSPACE:
@@ -948,6 +1003,7 @@ def _handle_unified_non_key_event(  # noqa: C901
             pointer_targets,
             getattr(event, "pos", (-1, -1)),
         )
+        setattr(state, "hovered_target_kind", target.kind if target is not None else "")
         setattr(state, "hover_back", target is not None and target.kind == "back")
         _apply_unified_pointer_focus(state, target)
         return screen, True
@@ -957,6 +1013,7 @@ def _handle_unified_non_key_event(  # noqa: C901
             getattr(event, "pos", (-1, -1)),
         )
         setattr(state, "_pointer_pressed_target", target)
+        setattr(state, "pressed_target_kind", target.kind if target is not None else "")
         setattr(state, "hover_back", target is not None and target.kind == "back")
         setattr(state, "pressed_back", target is not None and target.kind == "back")
         _apply_unified_pointer_focus(state, target)
@@ -969,6 +1026,8 @@ def _handle_unified_non_key_event(  # noqa: C901
         pressed_target = getattr(state, "_pointer_pressed_target", None)
         setattr(state, "_pointer_pressed_target", None)
         setattr(state, "pressed_back", False)
+        setattr(state, "pressed_target_kind", "")
+        setattr(state, "hovered_target_kind", target.kind if target is not None else "")
         setattr(state, "hover_back", target is not None and target.kind == "back")
         if target is None or target != pressed_target:
             return screen, True
@@ -976,6 +1035,12 @@ def _handle_unified_non_key_event(  # noqa: C901
             if not _pop_page(state):
                 state.running = False
             return screen, True
+        if target.kind == "side_back":
+            return _dispatch_unified_key(screen, fonts, state, pygame.K_BACKSPACE), True
+        if target.kind == "side_escape":
+            return _dispatch_unified_key(screen, fonts, state, pygame.K_ESCAPE), True
+        if target.kind == "side_quit":
+            return _dispatch_unified_key(screen, fonts, state, pygame.K_q), True
         if target.kind == "item":
             _apply_unified_pointer_focus(state, target)
             return _handle_unified_enter(screen, fonts, state), True
@@ -1005,6 +1070,7 @@ def _process_unified_events(
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             state.running = False
+            state.keep_running = False
             return screen, False
         if event.type != pygame.KEYDOWN:
             screen, handled = _handle_unified_non_key_event(
@@ -1016,7 +1082,7 @@ def _process_unified_events(
             )
             if handled:
                 if not state.running:
-                    return screen, True
+                    return screen, bool(state.keep_running)
                 continue
             continue
         screen = _dispatch_unified_key(screen, fonts, state, event.key)
@@ -1027,7 +1093,7 @@ def _process_unified_events(
         if state.flash_frames <= 0:
             state.flash_frames = 0
             state.flash_row_key = ""
-    return screen, True
+    return screen, bool(state.keep_running)
 
 
 def run_settings_hub_menu(

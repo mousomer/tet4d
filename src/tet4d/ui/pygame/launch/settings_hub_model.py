@@ -296,6 +296,7 @@ class _UnifiedSettingsState:
     flash_frames: int = 0
     saved: bool = False
     running: bool = True
+    keep_running: bool = True
     dispatched_action_id: str = ""
     topology_cache_file_count: int = 0
     topology_cache_size_bytes: int | None = None

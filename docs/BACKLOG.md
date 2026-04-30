@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-29
+Updated: 2026-04-30
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -57,6 +57,9 @@ Current active follow-ups:
   final-energy readout
 - settings follow-up: reevaluate Settings and expose a complete Endgame /
   Explosion section for all persisted `explosion_defaults.*` fields.
+- settings follow-up: optional future cleanup to unify the Settings custom loop
+  with `MenuRunner` if/when it becomes a small, safe change (no rewrite, no
+  duplicated row models, preserve numeric text mode).
 - persistence follow-up: migrate integer-backed categorical/bool fields toward
   named ids and booleans where feasible (keep semantic/storage typing explicit).
 - governance follow-up: validate the new launcher root IA and tighten
@@ -145,10 +148,10 @@ stays synchronized, and the contract validator accepts the backlog shape.
 - Keep the legacy topology editor isolated to
   `Settings -> Board / Setup Defaults -> Legacy Topology Editor`.
 - Keep the shared menu shell aligned across launcher, setup, pause, keybindings,
-  leaderboard, and bot options; `Settings` still uses a custom loop and does not
-  yet render the shared side buttons (tracked follow-up). Do not reintroduce
-  subtitle-only header variants and keep the launcher/pause input-config surface
-  consistently labeled `Keybindings`.
+  leaderboard, and bot options; `Settings` still uses a custom loop but now
+  renders the shared side buttons. Do not reintroduce subtitle-only header
+  variants and keep the launcher/pause input-config surface consistently
+  labeled `Keybindings`.
 - Keep keyboard configuration inside the shared `Settings` flow, and do not
   reintroduce a parallel launcher-only keyboard-profiles submenu or revive the
   authored `Controls` wrapper as a visible one-item runtime page.
@@ -157,6 +160,10 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 Completed on 2026-04-30:
 
+- settings shell parity follow-up: `Settings` now renders the shared side
+  buttons (`Backspace` back, `Esc` exit-only at settings root after cancelling
+  text entry, `Q` global quit) while retaining its existing custom loop; full
+  Settings/MenuRunner unification remains optional future cleanup.
 - semantic persistence migration follow-up: migrated key categorical fields to
   canonical semantic IDs (`*_id`) with legacy `*_index` compatibility shadows,
   migrated int-backed toggles to real booleans, added `storage_type` /

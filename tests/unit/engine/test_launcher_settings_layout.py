@@ -503,6 +503,42 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertIs(out, screen)
         self.assertEqual(state.text_mode_row_key, "")
 
+    def test_settings_hub_backspace_in_numeric_text_mode_edits_buffer_not_navigation(self) -> None:
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_root",
+        )
+        launcher_settings._push_page(state, "settings_display")
+        launcher_settings._start_unified_numeric_text_mode(state, "display_width")
+        self.assertTrue(state.text_mode_row_key)
+        original_stack_depth = len(state.page_stack)
+        original_buffer = state.text_mode_buffer
+        self.assertGreater(len(original_buffer), 1)
+
+        screen = pygame.Surface((640, 480))
+        out = launcher_settings._dispatch_unified_key(screen, self._fonts(), state, pygame.K_BACKSPACE)
+        self.assertIs(out, screen)
+        self.assertEqual(len(state.page_stack), original_stack_depth)
+        self.assertTrue(state.running)
+        self.assertEqual(state.text_mode_buffer, original_buffer[:-1])
+
+    def test_settings_hub_q_exits_application_loop_even_in_numeric_text_mode(self) -> None:
+        state = settings_hub_model.build_unified_settings_state(
+            audio_settings=AudioSettings(),
+            display_settings=DisplaySettings(),
+            initial_page_id="settings_display",
+        )
+        launcher_settings._start_unified_numeric_text_mode(state, "display_width")
+        self.assertTrue(state.text_mode_row_key)
+
+        screen = pygame.Surface((640, 480))
+        out = launcher_settings._dispatch_unified_key(screen, self._fonts(), state, pygame.K_q)
+        self.assertIs(out, screen)
+        self.assertFalse(state.running)
+        self.assertFalse(state.keep_running)
+        self.assertEqual(state.text_mode_row_key, "")
+
     def test_settings_hub_backspace_pops_page_stack_but_escape_does_not(self) -> None:
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),

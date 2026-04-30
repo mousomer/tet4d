@@ -114,8 +114,8 @@ Main Menu
 - Q remains the global quit shortcut.
 - Backspace is the ordinary menu-up/back key.
 - Esc cancels active modal/text entry; otherwise it exits only from the current menu root.
-- Q/Esc/Backspace are rendered as persistent clickable side buttons in MenuRunner-backed menus; `Settings`
-  still uses a custom loop and does not yet render the shared side buttons (tracked follow-up).
+- Q/Esc/Backspace are rendered as persistent clickable side buttons in MenuRunner-backed menus and in
+  the `Settings` hub (which still uses its custom loop).
 
 ### 4.2 In-game pause menu map
 
@@ -649,7 +649,7 @@ Interaction and layout constraints:
 Execution status:
 1. Completed (`R1`): IA and labels rewritten in `config/menu/structure.json`:
 2. launcher top-level actions now `2D`,`3D`,`4D`,`Replay Last`,`Leaderboard`,`Help / Tutorials`,`Advanced`.
-3. Completed (`R2`): shared menu input semantics updated (`Backspace` back, `Esc` root-exit, `Q` quit) and side buttons rendered for MenuRunner-backed menus.
+3. Completed (`R2`): shared menu input semantics updated (`Backspace` back, `Esc` root-exit, `Q` quit) and side buttons rendered for MenuRunner-backed menus and the `Settings` hub shell.
 4. Completed (`R3`): Settings IA reevaluated with explicit categories and full per-dimension explosion defaults surfaces.
 5. Completed (`R4`): help/controls discoverability and compact-window regression protections remain enforced by existing layout/help policy and tests.
 

@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-04-29  
+Last updated: 2026-04-30  
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -59,8 +59,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   (shortcut behavior remains). `Settings` is now split into `Gameplay`,
   `Board / Setup Defaults`, `Controls`, `Display`, `Audio`, and
   `Endgame / Explosion` (including full per-dimension `explosion_defaults.*`
-  editing surfaces); Settings still uses its custom loop and does not yet
-  render the shared menu side buttons (tracked follow-up). Shared menu input
+  editing surfaces); Settings still uses its custom loop but now renders the
+  shared menu side buttons for `Backspace` / `Esc` / `Q`. Shared menu input
   semantics now use
   `Backspace` as ordinary menu-up/back, `Esc` as exit-only from the current
   menu root (after cancelling active modal/text input), and `Q` as global
