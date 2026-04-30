@@ -217,6 +217,15 @@ Primary local gate:
 CODEX_MODE=1 ./scripts/verify.sh
 ```
 
+Menu IA/settings migrations must include smoke coverage (automated or manual) for:
+- root launch
+- 2D setup
+- 3D setup
+- 4D setup
+- Settings root
+- Endgame / Explosion page
+- Back/Esc/Q behavior
+
 Focused validation during a batch:
 
 ```bash
