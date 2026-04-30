@@ -116,6 +116,9 @@ Main Menu
 - Esc cancels active modal/text entry; otherwise it exits only from the current menu root.
 - Q/Esc/Backspace are rendered as persistent clickable side buttons in MenuRunner-backed menus and in
   the `Settings` hub (which still uses its custom loop).
+- Redundant single-option menus are forbidden unless they carry an explicit
+  `allow_single_option: true` exemption with a documented reason or use one
+  of the existing exempt `layout_role` values.
 
 ### 4.2 In-game pause menu map
 
@@ -234,6 +237,9 @@ Pause Menu
 12. Categorical selectors should prefer compact segmented or cycler-style rows
     for 2-4 options, dropdown or cycler behavior for larger simple sets, and a
     dedicated picker or submenu for richer option sets.
+13. Single-option pages must justify themselves with multiple meaningful rows
+    or an explicit `allow_single_option` exemption; `Settings` categories and
+    keybinding scopes must not remain as redundant one-item wrappers.
 
 ## 6. Navigation and Interaction Model
 

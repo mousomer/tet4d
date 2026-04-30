@@ -491,6 +491,8 @@
     },
     "settings_controls": {
       "title": "Controls",
+      "allow_single_option": true,
+      "allow_single_option_reason": "Single landing page for the keyboard bindings editor.",
       "items": [
         {
           "id": "controls_section",
@@ -1446,6 +1448,8 @@
     },
     "keybindings_scope_general": {
       "title": "General",
+      "allow_single_option": true,
+      "allow_single_option_reason": "Single landing page for the general/system keybinding group.",
       "items": [
         {
           "id": "general_system",

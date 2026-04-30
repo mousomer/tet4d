@@ -88,6 +88,7 @@ Optional shared metadata:
 - `visibility`
 - `enabled`
 - `layout_role`
+- `allow_single_option` and `allow_single_option_reason` for intentionally exempt single-option pages
 
 ## Current structure
 
@@ -140,6 +141,9 @@ Notable normalized outcomes:
   instead of a submenu forest
 - runtime compilation still removes hidden rows, unary wrappers, and direct
   forward shims before UI consumers read the graph
+- redundant single-option menus are forbidden unless the menu uses an
+  existing exempt `layout_role` or sets `allow_single_option: true` with a
+  documented reason
 - `config/topology/lab_menu.json` remains copy-only for the specialized
   Topology Playground shell and is not a parallel visible structure authority
 

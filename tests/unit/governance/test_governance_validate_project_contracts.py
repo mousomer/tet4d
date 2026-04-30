@@ -296,6 +296,60 @@ def test_menu_structure_single_source_reads_policy_pack_contract_data(
     assert any(issue.message == "custom drift" for issue in issues)
 
 
+def test_menu_structure_single_option_policy_detects_redundant_pages() -> None:
+    payload = {
+        "menus": {
+            "submenu_wrapper": {
+                "items": [
+                    {"type": "submenu", "label": "Child", "menu_id": "child"}
+                ]
+            },
+            "action_back": {
+                "items": [
+                    {"type": "action", "label": "Open", "action_id": "open"},
+                    {"type": "action", "label": "Back", "action_id": "back"},
+                ]
+            },
+            "setting_back": {
+                "items": [
+                    {
+                        "type": "toggle",
+                        "label": "Enabled",
+                        "semantic_type": "bool",
+                        "setting_id": "enabled",
+                    },
+                    {"type": "action", "label": "Back", "action_id": "back"},
+                ]
+            },
+            "capture_exempt": {
+                "layout_role": "capture",
+                "items": [
+                    {"type": "action", "label": "Confirm", "action_id": "confirm"}
+                ],
+            },
+            "allow_exempt": {
+                "allow_single_option": True,
+                "allow_single_option_reason": "Intentional landing page.",
+                "items": [
+                    {"type": "action", "label": "Open", "action_id": "open"}
+                ],
+            },
+        }
+    }
+
+    issues = contracts._validate_menu_structure_single_option_menus(
+        "config/menu/structure.json",
+        payload,
+    )
+
+    messages = "\n".join(issue.message for issue in issues)
+    assert "submenu_wrapper" in messages
+    assert "action_back" in messages
+    assert "setting_back" in messages
+    assert "capture_exempt" not in messages
+    assert "allow_exempt" not in messages
+
+
 def test_menu_control_typing_detects_mismatched_semantic_controls(
     tmp_path: Path, monkeypatch
 ) -> None:

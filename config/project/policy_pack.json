@@ -1623,6 +1623,20 @@
         ]
       },
       {
+        "file": "docs/MENU_STRUCTURE_EDITING.md",
+        "must_contain": [
+          "allow_single_option",
+          "redundant single-option menus are forbidden"
+        ]
+      },
+      {
+        "file": "docs/rds/RDS_MENU_STRUCTURE.md",
+        "must_contain": [
+          "allow_single_option",
+          "Redundant single-option menus are forbidden"
+        ]
+      },
+      {
         "file": "config/menu/structure.json",
         "must_contain": [
           "Backspace back",

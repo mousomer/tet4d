@@ -53,7 +53,10 @@ def _reachable_menu_ids(
 
 
 def lint_menu_graph() -> list[MenuGraphIssue]:
-    menus = menu_graph()
+    try:
+        menus = menu_graph()
+    except RuntimeError as exc:
+        return [MenuGraphIssue("schema", str(exc))]
     launch_root = launcher_menu_id()
     pause_root = pause_menu_id()
     issues: list[MenuGraphIssue] = []

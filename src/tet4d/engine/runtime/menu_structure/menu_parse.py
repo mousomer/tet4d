@@ -5,6 +5,7 @@ from typing import Any
 from ..settings_schema import (
     as_non_empty_string,
     require_object,
+    require_bool,
     validate_setting_storage_metadata,
 )
 from .parse_helpers import parse_copy_fields
@@ -340,11 +341,31 @@ def parse_menus(raw: object) -> dict[str, dict[str, Any]]:
             menu.get("title"),
             path=f"structure.menus.{menu_id}.title",
         )
+        allow_single_option_raw = menu.get("allow_single_option")
+        allow_single_option = False
+        if allow_single_option_raw is not None:
+            allow_single_option = require_bool(
+                allow_single_option_raw,
+                path=f"structure.menus.{menu_id}.allow_single_option",
+            )
+        allow_single_option_reason = str(
+            menu.get("allow_single_option_reason", "")
+        ).strip()
+        if allow_single_option and not allow_single_option_reason:
+            raise RuntimeError(
+                f"structure.menus.{menu_id}.allow_single_option requires allow_single_option_reason"
+            )
+        if allow_single_option_reason and not allow_single_option:
+            raise RuntimeError(
+                f"structure.menus.{menu_id}.allow_single_option_reason requires allow_single_option=true"
+            )
         items = _parse_menu_items(menu_id, menu)
         menus[menu_id] = {
             "title": title,
             "subtitle": str(menu.get("subtitle", "")).strip(),
             "layout_role": str(menu.get("layout_role", "menu")).strip().lower(),
+            "allow_single_option": allow_single_option,
+            "allow_single_option_reason": allow_single_option_reason,
             "items": items,
         }
 

@@ -1961,6 +1961,39 @@ def _append_missing_item_label_issue(
         )
 
 
+def _validate_menu_structure_single_option_menus(
+    menu_rel: str,
+    menu_payload: dict[str, object],
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    menus = menu_payload.get("menus")
+    if not isinstance(menus, dict):
+        issues.append(
+            ValidationIssue("schema", f"{menu_rel} must define menus as an object")
+        )
+        return issues
+
+    try:
+        from tet4d.engine.runtime.menu_runtime_graph import (
+            detect_redundant_single_option_menus,
+        )
+    except Exception as exc:
+        issues.append(
+            ValidationIssue(
+                "import",
+                f"failed loading single-option menu validator: {exc}",
+            )
+        )
+        return issues
+
+    for message in detect_redundant_single_option_menus(
+        menus,
+        source_label="authored",
+    ):
+        issues.append(ValidationIssue("content", f"{menu_rel} {message}"))
+    return issues
+
+
 def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     contract = _load_menu_structure_single_source_contract(issues)
@@ -1971,6 +2004,8 @@ def _validate_menu_structure_single_source_of_truth() -> list[ValidationIssue]:
     menu_payload = _load_json_payload(MENU_STRUCTURE_PATH, menu_rel, issues)
     if not isinstance(menu_payload, dict):
         return issues
+
+    issues.extend(_validate_menu_structure_single_option_menus(menu_rel, menu_payload))
 
     menus = menu_payload.get("menus")
     if not isinstance(menus, dict):

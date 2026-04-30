@@ -7,7 +7,7 @@ import unittest
 from unittest import mock
 
 from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
-from tet4d.engine.runtime import menu_config
+from tet4d.engine.runtime import menu_config, menu_runtime_graph
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
@@ -459,6 +459,100 @@ class TestMenuPolicy(unittest.TestCase):
             "settings_endgame_gameplay",
         )
 
+    def test_runtime_single_option_policy_rejects_unexempt_one_item_pages(self) -> None:
+        with self.assertRaises(RuntimeError):
+            menu_runtime_graph.validate_runtime_menu_graph(
+                {
+                    "submenu_wrapper": {
+                        "title": "Wrapper",
+                        "layout_role": "menu",
+                        "items": (
+                            {
+                                "id": "child",
+                                "type": "submenu",
+                                "label": "Child",
+                                "menu_id": "child",
+                            },
+                        ),
+                    }
+                },
+                runtime_entrypoints={},
+            )
+
+        with self.assertRaises(RuntimeError):
+            menu_runtime_graph.validate_runtime_menu_graph(
+                {
+                    "action_back": {
+                        "title": "Action",
+                        "layout_role": "menu",
+                        "items": (
+                            {
+                                "id": "open",
+                                "type": "action",
+                                "label": "Open",
+                                "action_id": "open",
+                            },
+                            {"id": "back", "type": "action", "label": "Back", "action_id": "back"},
+                        ),
+                    }
+                },
+                runtime_entrypoints={},
+            )
+
+        with self.assertRaises(RuntimeError):
+            menu_runtime_graph.validate_runtime_menu_graph(
+                {
+                    "setting_back": {
+                        "title": "Setting",
+                        "layout_role": "menu",
+                        "items": (
+                            {
+                                "id": "enabled",
+                                "type": "toggle",
+                                "label": "Enabled",
+                                "semantic_type": "bool",
+                                "setting_id": "enabled",
+                            },
+                            {"id": "back", "type": "action", "label": "Back", "action_id": "back"},
+                        ),
+                    }
+                },
+                runtime_entrypoints={},
+            )
+
+    def test_runtime_single_option_policy_allows_explicit_exemptions(self) -> None:
+        menu_runtime_graph.validate_runtime_menu_graph(
+            {
+                "modal_capture": {
+                    "title": "Confirm",
+                    "layout_role": "capture",
+                    "items": (
+                        {
+                            "id": "confirm",
+                            "type": "action",
+                            "label": "Confirm",
+                            "action_id": "confirm",
+                        },
+                    ),
+                },
+                "allow_exempt": {
+                    "title": "Landing",
+                    "layout_role": "menu",
+                    "allow_single_option": True,
+                    "allow_single_option_reason": "Intentional landing page.",
+                    "items": (
+                        {
+                            "id": "open",
+                            "type": "action",
+                            "label": "Open",
+                            "action_id": "open",
+                        },
+                    ),
+                },
+            },
+            runtime_entrypoints={},
+        )
+
     def test_runtime_menu_graph_avoids_unary_wrappers_and_duplicate_setting_paths(
         self,
     ) -> None:
@@ -512,6 +606,13 @@ class TestMenuPolicy(unittest.TestCase):
                     menu_id,
                     msg=f"{setting_id} drifted into multiple runtime pages",
                 )
+
+    def test_runtime_menu_graph_has_no_unexempt_single_option_menus(self) -> None:
+        issues = menu_runtime_graph.detect_redundant_single_option_menus(
+            menu_config.menu_graph(),
+            source_label="runtime",
+        )
+        self.assertEqual(issues, [])
 
     def test_runtime_menu_depth_stays_shallow(self) -> None:
         runtime_graph = menu_config.menu_graph()

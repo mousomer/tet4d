@@ -5,7 +5,14 @@ from typing import Any
 
 
 _HIDDEN_VISIBILITY_VALUES = {"hidden", "never", "false", "0"}
-_UTILITY_ACTION_IDS = {"back", "save", "reset", "display_apply"}
+_UTILITY_ACTION_IDS = {
+    "back",
+    "save",
+    "reset",
+    "cancel",
+    "apply",
+    "display_apply",
+}
 _ACTIONABLE_ITEM_TYPES = {
     "action",
     "action_group",
@@ -62,6 +69,17 @@ def _is_utility_action(item: dict[str, Any]) -> bool:
         return False
     action_id = str(item.get("action_id", "")).strip().lower()
     return action_id in _UTILITY_ACTION_IDS
+
+
+def _is_meaningful_menu_item(item: dict[str, Any]) -> bool:
+    item_type = str(item.get("type", "")).strip().lower()
+    if item_type in {"section", "info"}:
+        return False
+    if not _is_visible_item(item):
+        return False
+    if item_type == "action" and _is_utility_action(item):
+        return False
+    return _is_actionable_item(item)
 
 
 def _has_semantic_metadata(item: dict[str, Any]) -> bool:
@@ -157,6 +175,49 @@ def _menu_has_meaningful_context(menu: dict[str, Any]) -> bool:
     return layout_role not in {"", "menu"}
 
 
+def _menu_allows_single_option(menu: dict[str, Any]) -> bool:
+    layout_role = str(menu.get("layout_role", "menu")).strip().lower()
+    if layout_role in _EXEMPT_LAYOUT_ROLES:
+        return True
+    return bool(menu.get("allow_single_option", False))
+
+
+def detect_redundant_single_option_menus(
+    menus: dict[str, dict[str, Any]],
+    *,
+    source_label: str,
+) -> list[str]:
+    issues: list[str] = []
+    for menu_id, menu in menus.items():
+        allow_single_option = bool(menu.get("allow_single_option", False))
+        allow_reason = str(menu.get("allow_single_option_reason", "")).strip()
+        if allow_single_option and not allow_reason:
+            issues.append(
+                f"{source_label} menu {menu_id} sets allow_single_option without allow_single_option_reason"
+            )
+        if allow_reason and not allow_single_option:
+            issues.append(
+                f"{source_label} menu {menu_id} sets allow_single_option_reason without allow_single_option"
+            )
+        items = tuple(menu.get("items", ()))
+        meaningful_items = tuple(
+            item for item in items if isinstance(item, dict) and _is_meaningful_menu_item(item)
+        )
+        if len(meaningful_items) != 1:
+            continue
+        if _menu_allows_single_option(menu):
+            continue
+        item = meaningful_items[0]
+        item_type = str(item.get("type", "")).strip().lower()
+        label = str(item.get("label", "")).strip()
+        details = item_type if not label else f"{item_type} {label!r}"
+        issues.append(
+            f"{source_label} menu {menu_id} contains exactly one meaningful actionable item "
+            f"({details}); add allow_single_option + reason or use an exempt layout_role"
+        )
+    return issues
+
+
 def _inline_items_for_single_leaf(
     items: tuple[dict[str, Any], ...],
 ) -> tuple[dict[str, Any], ...]:
@@ -189,6 +250,10 @@ def _compile_keep_result(
             "title": str(menu.get("title", "")),
             "subtitle": str(menu.get("subtitle", "")).strip(),
             "layout_role": str(menu.get("layout_role", "menu")).strip().lower(),
+            "allow_single_option": bool(menu.get("allow_single_option", False)),
+            "allow_single_option_reason": str(
+                menu.get("allow_single_option_reason", "")
+            ).strip(),
             "items": items,
         },
     )
@@ -307,6 +372,13 @@ def validate_runtime_menu_graph(
 ) -> None:
     entrypoint_ids = set(runtime_entrypoints.values())
     seen_setting_ids: dict[str, str] = {}
+
+    single_option_issues = detect_redundant_single_option_menus(
+        runtime_menus,
+        source_label="runtime",
+    )
+    if single_option_issues:
+        raise RuntimeError("; ".join(single_option_issues))
 
     for menu_id, menu in runtime_menus.items():
         items = tuple(menu.get("items", ()))

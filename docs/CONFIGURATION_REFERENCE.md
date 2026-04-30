@@ -1245,6 +1245,8 @@ Parameters:
 - `menus.keybindings_scope_all.items[].label`: varies (`string`); examples: `"General / System (shared)"`, `"2D Gameplay / Translation"`, `"2D Gameplay / Rotation"`
 - `menus.keybindings_scope_all.items[].type`: varies (`string`); examples: `"keybinding_group"`
 - `menus.keybindings_scope_all.title`: `"All"` (`string`)
+- `menus.keybindings_scope_general.allow_single_option`: `true` (`bool`)
+- `menus.keybindings_scope_general.allow_single_option_reason`: `"Single landing page for the general/system keybinding group."` (`string`)
 - `menus.keybindings_scope_general.items[]`: array[`object`]
 - `menus.keybindings_scope_general.items[].binding_bucket`: `"all"` (`string`)
 - `menus.keybindings_scope_general.items[].binding_dimension`: `"2d"` (`string`)
@@ -1310,6 +1312,8 @@ Parameters:
 - `menus.settings_board_setup_defaults.items[].storage_type`: `"bool"` (`string`)
 - `menus.settings_board_setup_defaults.items[].type`: varies (`string`); examples: `"section"`, `"toggle"`, `"info"`
 - `menus.settings_board_setup_defaults.title`: `"Board / Setup Defaults"` (`string`)
+- `menus.settings_controls.allow_single_option`: `true` (`bool`)
+- `menus.settings_controls.allow_single_option_reason`: `"Single landing page for the keyboard bindings editor."` (`string`)
 - `menus.settings_controls.items[]`: array[`object`]
 - `menus.settings_controls.items[].action_id`: varies (`string`); examples: `"keybindings"`, `"back"`
 - `menus.settings_controls.items[].description`: `"Keyboard bindings plus profile management and conflict handling."` (`string`)
