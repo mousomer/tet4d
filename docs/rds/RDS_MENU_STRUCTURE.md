@@ -114,7 +114,8 @@ Main Menu
 - Q remains the global quit shortcut.
 - Backspace is the ordinary menu-up/back key.
 - Esc cancels active modal/text entry; otherwise it exits only from the current menu root.
-- Q/Esc/Backspace are rendered as persistent clickable side buttons in the shared menu shell.
+- Q/Esc/Backspace are rendered as persistent clickable side buttons in MenuRunner-backed menus; `Settings`
+  still uses a custom loop and does not yet render the shared side buttons (tracked follow-up).
 
 ### 4.2 In-game pause menu map
 
