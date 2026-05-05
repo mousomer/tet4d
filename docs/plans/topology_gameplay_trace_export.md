@@ -10,11 +10,15 @@ Stage 2 records the frozen Python topology/gameplay behavior as deterministic
 JSON traces for future engine replay. The traces are migration artifacts, not a
 new gameplay authority, and they must be generated from the existing runtime.
 
+Stage 3 extends this migration oracle with locked-cell endgame traces. Endgame
+trace detail lives in `docs/plans/endgame_trace_export.md`.
+
 ## Locations
 
 - Trace helpers and CLIs: `tools/migration/`
 - Topology goldens: `migration/golden_traces/topology/`
 - Gameplay goldens: `migration/golden_traces/gameplay/`
+- Endgame goldens: `migration/golden_traces/endgame/`
 - Regeneration/drift check: `tools/migration/compare_trace.py`
 
 ## Contract
@@ -29,13 +33,11 @@ new gameplay authority, and they must be generated from the existing runtime.
   policy, active/locked cell snapshots, score/line state, and launch topology
   parity.
 - `compare_trace.py` regenerates known traces and fails on byte/canonical JSON
-  drift.
+  drift across topology, gameplay, and endgame trace sets.
 
 ## Migration Rule
 
-Unity, Godot, C#, C++, or other engine work must replay the Stage 2 traces
-before implementing independent topology transport or gameplay drop/lock logic.
-Python remains authoritative until a replacement core passes trace parity.
-
-Endgame traces are out of Stage 2 scope and remain deferred to Stage 3 or a
-later endgame rescue/export task.
+Unity, Godot, C#, C++, or other engine work must replay the Stage 2 topology /
+gameplay traces and Stage 3 endgame traces before implementing independent
+topology transport, gameplay drop/lock logic, or endgame simulation. Python
+remains authoritative until a replacement core passes trace parity.

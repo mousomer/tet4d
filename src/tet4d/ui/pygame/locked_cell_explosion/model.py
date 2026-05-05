@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
     from tet4d.engine.topology_explorer.glue_model import ExplorerTopologyProfile
@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 Vec3 = tuple[float, float, float]
 VecN = tuple[float, ...]
+_CellT = TypeVar("_CellT")
 
 EXPLOSION_BOUNDARY_RESPONSE_ESCAPE = "escape"
 EXPLOSION_BOUNDARY_RESPONSE_BOUNCE = "bounce"
@@ -175,6 +176,161 @@ class ExplosionSeedCell:
     source_group_id: str | None = None
 
 
+@dataclass(frozen=True)
+class EndgameCellSelectionSplit:
+    persistent_live_cells: tuple[object, ...]
+    escaping_cells: tuple[object, ...]
+
+
+@dataclass(frozen=True)
+class EndgameModelEvent:
+    step_index: int
+    particle_id: int
+    kind: str
+    axis: int | None = None
+    side: str | None = None
+    glue_id: str | None = None
+    source_boundary: str | None = None
+    target_boundary: str | None = None
+    other_particle_id: int | None = None
+
+
+def _stable_seed_mix(accumulator: int, value: int) -> int:
+    mixed = ((int(accumulator) ^ int(value)) * 16_777_619) & 0xFFFFFFFF
+    return mixed or 1
+
+
+def _cell_coord(cell: object) -> tuple[int, ...]:
+    return tuple(int(value) for value in getattr(cell, "source_coord"))
+
+
+def _cell_color(cell: object) -> int:
+    return int(getattr(cell, "color_id"))
+
+
+def _cell_layer(cell: object) -> int | None:
+    layer = getattr(cell, "layer_index", None)
+    if layer is not None:
+        return int(layer)
+    group = getattr(cell, "source_group_id", None)
+    if group is None:
+        return None
+    accumulator = 2_166_136_261
+    for character in str(group):
+        accumulator = _stable_seed_mix(accumulator, ord(character))
+    return int(accumulator)
+
+
+def canonical_endgame_cell_order(cells: tuple[_CellT, ...]) -> tuple[_CellT, ...]:
+    return tuple(
+        sorted(
+            cells,
+            key=lambda cell: (
+                _cell_coord(cell),
+                _cell_color(cell),
+                -1 if _cell_layer(cell) is None else int(_cell_layer(cell)),
+            ),
+        )
+    )
+
+
+def endgame_live_cell_count(
+    *,
+    dimension: int,
+    available_locked_cells: int,
+    live_fraction: float,
+) -> int:
+    del dimension
+    available = max(0, int(available_locked_cells))
+    if available <= 0:
+        return 0
+    bounded_fraction = max(0.0, min(1.0, float(live_fraction)))
+    target_count = round(bounded_fraction * float(available))
+    return min(available, max(1, int(target_count)))
+
+
+def _cell_selection_score(cell: object, *, seed: int) -> int:
+    accumulator = _stable_seed_mix(1_469_598_103, int(seed))
+    for axis in _cell_coord(cell):
+        accumulator = _stable_seed_mix(accumulator, int(axis) + 431)
+    accumulator = _stable_seed_mix(accumulator, _cell_color(cell) + 977)
+    layer = _cell_layer(cell)
+    accumulator = _stable_seed_mix(
+        accumulator,
+        int(-1 if layer is None else layer) + 1597,
+    )
+    return accumulator
+
+
+def select_endgame_live_cells(
+    *,
+    locked_cells: tuple[_CellT, ...],
+    dimension: int,
+    seed: int,
+    live_fraction: float,
+) -> tuple[_CellT, ...]:
+    canonical_cells = canonical_endgame_cell_order(tuple(locked_cells))
+    target_count = endgame_live_cell_count(
+        dimension=int(dimension),
+        available_locked_cells=len(canonical_cells),
+        live_fraction=float(live_fraction),
+    )
+    if target_count >= len(canonical_cells):
+        return canonical_cells
+    ranked_cells = [
+        (cell, _cell_selection_score(cell, seed=int(seed)))
+        for cell in canonical_cells
+    ]
+    ranked_cells.sort(key=lambda item: (item[1], _cell_coord(item[0]), _cell_color(item[0])))
+    selected: list[tuple[_CellT, int]] = [ranked_cells[0]]
+    remaining = ranked_cells[1:]
+    candidate_window = 16
+    while remaining and len(selected) < target_count:
+        best_index = 0
+        best_score = -1.0
+        window_limit = min(candidate_window, len(remaining))
+        for index in range(window_limit):
+            candidate, stable_score = remaining[index]
+            candidate_coord = _cell_coord(candidate)
+            min_distance_sq = min(
+                sum(
+                    float(candidate_coord[axis] - _cell_coord(chosen)[axis]) ** 2
+                    for axis in range(len(candidate_coord))
+                )
+                for chosen, _chosen_score in selected
+            )
+            composite_score = (min_distance_sq * 1_000_000.0) - float(stable_score)
+            if composite_score > best_score:
+                best_index = index
+                best_score = composite_score
+        selected.append(remaining.pop(best_index))
+    return tuple(cell for cell, _score in selected)
+
+
+def split_endgame_cells(
+    *,
+    locked_cells: tuple[_CellT, ...],
+    dimension: int,
+    seed: int,
+    live_fraction: float,
+) -> EndgameCellSelectionSplit:
+    canonical_cells = canonical_endgame_cell_order(tuple(locked_cells))
+    persistent_live_cells = select_endgame_live_cells(
+        locked_cells=canonical_cells,
+        dimension=int(dimension),
+        seed=int(seed),
+        live_fraction=float(live_fraction),
+    )
+    persistent_lookup = set(persistent_live_cells)
+    escaping_cells = tuple(
+        cell for cell in canonical_cells if cell not in persistent_lookup
+    )
+    return EndgameCellSelectionSplit(
+        persistent_live_cells=tuple(persistent_live_cells),
+        escaping_cells=escaping_cells,
+    )
+
+
 @dataclass
 class ExplosionParticle:
     particle_id: int
@@ -314,6 +470,7 @@ class ExplosionSimulationState:
     particle_collisions: str
     collision_elasticity: float
     particles: list[ExplosionParticle]
+    topology: ExplosionTopologyInput | None = field(default=None, compare=False)
     elapsed_ms: float = 0.0
     velocity_norm_sq_sum: float = 0.0
     total_kinetic_energy: float = 0.0
@@ -323,3 +480,4 @@ class ExplosionSimulationState:
     diagnostics_previous_speed_sq_by_particle: dict[int, float] = field(default_factory=dict)
     diagnostics_recent_events: list[ExplosionDiagnosticsEvent] = field(default_factory=list)
     diagnostics_summary: ExplosionDiagnosticsSummary | None = None
+    last_step_events: tuple[EndgameModelEvent, ...] = ()

@@ -52,6 +52,26 @@ class GameplayTraceCase:
     notes: tuple[str, ...] = field(default_factory=tuple)
 
 
+@dataclass(frozen=True)
+class EndgameTraceCase:
+    case_id: str
+    dimension: int
+    topology_id: str
+    dims: tuple[int, ...]
+    seed: int
+    locked_cells: tuple[tuple[tuple[int, ...], int, str | None], ...]
+    frame_count: int = 8
+    dt_ms: float = 160.0
+    topology_profile_factory: ProfileFactory | None = None
+    preset: str = "classic"
+    collision_mode: str = "no_collision"
+    speed_preset: str = "normal"
+    live_fraction: float = 1.0
+    boundary_response: str = "bounce"
+    particle_overrides: tuple[dict[str, Any], ...] = ()
+    notes: tuple[str, ...] = field(default_factory=tuple)
+
+
 def _plain_profile(dimension: int) -> ProfileFactory:
     return lambda: ExplorerTopologyProfile(dimension=dimension, gluings=())
 
@@ -393,5 +413,182 @@ GAMEPLAY_TRACE_CASES: tuple[GameplayTraceCase, ...] = (
 )
 
 
+ENDGAME_TRACE_CASES: tuple[EndgameTraceCase, ...] = (
+    EndgameTraceCase(
+        "endgame_2d_classic",
+        2,
+        "classic",
+        (4, 4),
+        3101,
+        (
+            ((0, 1), 2, "L"),
+            ((1, 1), 3, "L"),
+            ((2, 2), 4, "T"),
+            ((3, 2), 5, "T"),
+        ),
+        particle_overrides=(
+            {"particle_id": 0, "position": [0.0, 1.0], "velocity": [-1.4, 0.2]},
+        ),
+    ),
+    EndgameTraceCase(
+        "endgame_3d_classic",
+        3,
+        "classic",
+        (4, 4, 4),
+        3102,
+        (
+            ((0, 1, 1), 2, "I3"),
+            ((1, 1, 1), 3, "I3"),
+            ((2, 2, 2), 4, "L3"),
+            ((3, 2, 2), 5, "L3"),
+        ),
+        particle_overrides=(
+            {
+                "particle_id": 0,
+                "position": [0.0, 1.0, 1.0],
+                "velocity": [-1.2, 0.1, 0.3],
+            },
+        ),
+    ),
+    EndgameTraceCase(
+        "endgame_4d_classic",
+        4,
+        "classic",
+        (4, 4, 4, 4),
+        3103,
+        (
+            ((0, 1, 1, 1), 2, "I4"),
+            ((1, 1, 1, 1), 3, "I4"),
+            ((2, 2, 2, 2), 4, "L4"),
+            ((3, 2, 2, 3), 5, "L4"),
+        ),
+        particle_overrides=(
+            {
+                "particle_id": 0,
+                "position": [1.0, 1.0, 1.0, 1.0],
+                "velocity": [0.0, 0.0, 0.0, 1.1],
+            },
+        ),
+    ),
+    EndgameTraceCase(
+        "endgame_4d_wrap_all",
+        4,
+        "wrap_all",
+        (4, 4, 4, 4),
+        3104,
+        (
+            ((1, 1, 1, 3), 2, "W"),
+            ((2, 1, 1, 3), 3, "W"),
+            ((1, 2, 2, 0), 4, "W"),
+        ),
+        topology_profile_factory=full_wrap_profile_4d,
+        preset="wrap_all",
+        particle_overrides=(
+            {
+                "particle_id": 0,
+                "position": [1.0, 1.0, 1.0, 3.45],
+                "velocity": [0.0, 0.0, 0.0, 1.2],
+            },
+        ),
+        notes=("W-axis seam transport is represented in the moving particle path.",),
+    ),
+    EndgameTraceCase(
+        "endgame_4d_invert_all",
+        4,
+        "invert_all",
+        (4, 4, 4, 4),
+        3105,
+        (
+            ((0, 1, 1, 1), 2, "P"),
+            ((0, 2, 1, 2), 3, "P"),
+            ((1, 2, 2, 3), 4, "P"),
+        ),
+        topology_profile_factory=projective_space_profile_4d,
+        preset="invert_all",
+        particle_overrides=(
+            {
+                "particle_id": 0,
+                "position": [-0.45, 1.0, 1.0, 1.0],
+                "velocity": [-1.2, 0.2, 0.3, 0.4],
+            },
+        ),
+    ),
+    EndgameTraceCase(
+        "endgame_4d_sphere_like",
+        4,
+        "sphere_like",
+        (4, 4, 4, 4),
+        3106,
+        (
+            ((1, 1, 0, 1), 2, "S"),
+            ((1, 1, 1, 1), 3, "S"),
+            ((2, 2, 2, 2), 4, "S"),
+        ),
+        topology_profile_factory=sphere_profile_4d,
+        preset="sphere_like",
+        particle_overrides=(
+            {
+                "particle_id": 0,
+                "position": [1.0, 1.0, -0.45, 1.0],
+                "velocity": [0.2, 0.3, -1.2, 0.4],
+            },
+        ),
+        notes=("Sphere-like cross-axis transport maps position and velocity.",),
+    ),
+    EndgameTraceCase(
+        "endgame_4d_no_collision",
+        4,
+        "classic",
+        (4, 4, 4, 4),
+        3107,
+        (
+            ((1, 1, 1, 1), 2, "N"),
+            ((2, 1, 1, 1), 3, "N"),
+        ),
+        collision_mode="no_collision",
+        particle_overrides=(
+            {
+                "particle_id": 0,
+                "position": [1.2, 1.0, 1.0, 1.0],
+                "velocity": [0.9, 0.0, 0.0, 0.0],
+            },
+            {
+                "particle_id": 1,
+                "position": [1.6, 1.0, 1.0, 1.0],
+                "velocity": [-0.9, 0.0, 0.0, 0.0],
+            },
+        ),
+    ),
+    EndgameTraceCase(
+        "endgame_4d_elastic_if_stable",
+        4,
+        "classic",
+        (4, 4, 4, 4),
+        3108,
+        (
+            ((1, 1, 1, 1), 2, "E"),
+            ((2, 1, 1, 1), 3, "E"),
+        ),
+        collision_mode="elastic",
+        particle_overrides=(
+            {
+                "particle_id": 0,
+                "position": [1.2, 1.0, 1.0, 1.0],
+                "velocity": [0.9, 0.0, 0.0, 0.0],
+            },
+            {
+                "particle_id": 1,
+                "position": [1.6, 1.0, 1.0, 1.0],
+                "velocity": [-0.9, 0.0, 0.0, 0.0],
+            },
+        ),
+        notes=(
+            "Elastic collision trace is kept deterministic; exact conservation remains diagnostic-covered.",
+        ),
+    ),
+)
+
+
 TOPOLOGY_CASES_BY_ID = {case.case_id: case for case in TOPOLOGY_TRACE_CASES}
 GAMEPLAY_CASES_BY_ID = {case.case_id: case for case in GAMEPLAY_TRACE_CASES}
+ENDGAME_CASES_BY_ID = {case.case_id: case for case in ENDGAME_TRACE_CASES}

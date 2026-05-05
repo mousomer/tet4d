@@ -12,7 +12,7 @@ tet4d/
 |- cli/                         thin entrypoint shims
 |- config/                      source-controlled runtime/config assets
 |- docs/                        RDS, policies, handoff, and release docs
-|- migration/                   checked-in golden traces for migration replay
+|- migration/                   checked-in topology/gameplay/endgame golden traces for migration replay
 |- packaging/                   PyInstaller spec and OS packaging scripts
 |- scripts/                     local verification and architecture checks
 |- src/tet4d/
@@ -132,8 +132,9 @@ The current rule is one-way:
 6. Prefer reusing an existing canonical owner over adding wrappers.
 7. Do not reintroduce reverse imports from engine into UI or AI.
 8. Put migration replay/export tooling in `tools/migration/` and checked-in
-   small replay artifacts in `migration/golden_traces/`; these artifacts are
-   migration oracles, not gameplay authority.
+   small topology, gameplay, and endgame replay artifacts in
+   `migration/golden_traces/`; these artifacts are migration oracles, not
+   gameplay or renderer authority.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract
@@ -308,7 +309,7 @@ It is a public symbol skim for navigation, not full API documentation, and it do
 - `src/tet4d/ui/pygame/locked_cell_explosion/endgame_preview.py`: `PreviewSourceCell`, `ShellPreviewEscapingCellState`, `EndgamePreviewCache`, `EndgamePreviewFrame`, `default_shell_preview_time_scale(tuning=...)`, `shell_preview_phase_for_elapsed(elapsed_ms, tuning=...)`, `shell_preview_timeline_progress(elapsed_ms, *, phase, tuning=...)`, `scaled_shell_preview_elapsed(state, dt_ms, tuning=...)`, `preview_source_cell_map(cache)`, `reset_shell_preview_state(state)`, `advance_shell_preview_elapsed(state, dt_ms)`, `ensure_shell_preview_cache(state, *, source_cells, board_dims)`, ...
 - `src/tet4d/ui/pygame/locked_cell_explosion/model.py`: `normalize_boundary_response(value, *, default=...)`, `normalize_particle_collisions(value, *, default=...)`, `normalize_mass_mode(value, *, default=...)`, `normalize_diagnostics_mode(value, *, default=...)`, `normalize_speed_preset(value, *, default=...)`, `speed_scale_for_preset(value, *, default=...)`, `clamp_trace_retention_ms(value)`, `clamp_mass_value(value)`, `normalize_mass_range(min_value, max_value)`, `clamp_collision_elasticity(value)`, `trail_sample_budget_for_lifetime_ms(value)`, `ExplosionSeedCell`, ...
 - `src/tet4d/ui/pygame/locked_cell_explosion/render.py`: `project_particle_for_render(particle, *, dimension, board_dims, render_context)`, `render_particles(particles, *, dimension, board_dims, render_context)`
-- `src/tet4d/ui/pygame/locked_cell_explosion/simulation.py`: `total_kinetic_energy_for_particles(particles)`, `velocity_norm_sq_sum_for_particles(particles, *, weighted_by_mass=...)`, `kinetic_energy_formula_text_for_particles(particles, *, max_terms=...)`, `weighted_speed_sq_sum_text_for_particles(particles)`, `assign_particle_masses(particles, *, random_seed, mass_mode, base_mass, ...)`, `build_simulation(config)`, `step_simulation(state, *, adapter, dt_ms, time_scale)`
+- `src/tet4d/ui/pygame/locked_cell_explosion/simulation.py`: `total_kinetic_energy_for_particles(particles)`, `velocity_norm_sq_sum_for_particles(particles, *, weighted_by_mass=...)`, `kinetic_energy_formula_text_for_particles(particles, *, max_terms=...)`, `weighted_speed_sq_sum_text_for_particles(particles)`, `assign_particle_masses(particles, *, random_seed, mass_mode, base_mass, ...)`, `build_simulation(config)`, `step_simulation(state, *, adapter, dt_ms, time_scale)`, `build_endgame_state(*, locked_cells, board_shape, dimension, ...)`, `step_endgame_state(state, *, dt_ms, topology=..., time_scale=...)`
 - `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `StandaloneExplosionSurfaceState`, `build_standalone_explosion_surface_state(*, dimension=...)`, `launcher_row_keys()`, `save_standalone_explosion_defaults(state)`, `build_standalone_explosion_config(state)`, `build_explorer_explosion_surface_state(*, dimension, board_dims, explorer_profile, ...)`, `restart_standalone_explosion(state)`, `run_standalone_explosion_launcher(screen, fonts, *, initial_state=...)`, `run_standalone_explosion_launcher_action(state, session, fonts, *, persist_session_status)`
 - `src/tet4d/ui/pygame/locked_cell_explosion/topology.py`: `ExplosionSeam`, `ExplosionTopologyAdapter`, `build_explosion_topology_adapter(topology)`
 - `src/tet4d/ui/pygame/menu/keybindings_menu.py`: `KeybindingsMenuState`, `run_keybindings_menu(screen, fonts, dimension=..., *, scope=...)`

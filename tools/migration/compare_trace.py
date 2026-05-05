@@ -10,8 +10,13 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.migration.export_gameplay_trace import export_cases as export_gameplay_cases
+from tools.migration.export_endgame_trace import export_cases as export_endgame_cases
 from tools.migration.export_topology_trace import export_cases as export_topology_cases
-from tools.migration.trace_cases import GAMEPLAY_TRACE_CASES, TOPOLOGY_TRACE_CASES
+from tools.migration.trace_cases import (
+    ENDGAME_TRACE_CASES,
+    GAMEPLAY_TRACE_CASES,
+    TOPOLOGY_TRACE_CASES,
+)
 from tools.migration.trace_schema import canonical_json, read_json, trace_file_name
 
 
@@ -20,14 +25,18 @@ def _trace_targets(path: Path) -> list[tuple[str, Path]]:
         return [("topology", path)]
     if path.name == "gameplay":
         return [("gameplay", path)]
+    if path.name == "endgame":
+        return [("endgame", path)]
     targets: list[tuple[str, Path]] = []
     if (path / "topology").exists():
         targets.append(("topology", path / "topology"))
     if (path / "gameplay").exists():
         targets.append(("gameplay", path / "gameplay"))
+    if (path / "endgame").exists():
+        targets.append(("endgame", path / "endgame"))
     if targets:
         return targets
-    raise SystemExit(f"no topology/gameplay traces found under {path}")
+    raise SystemExit(f"no topology/gameplay/endgame traces found under {path}")
 
 
 def _expected_file_names(trace_type: str) -> list[str]:
@@ -35,6 +44,8 @@ def _expected_file_names(trace_type: str) -> list[str]:
         return [trace_file_name(case.case_id) for case in TOPOLOGY_TRACE_CASES]
     if trace_type == "gameplay":
         return [trace_file_name(case.case_id) for case in GAMEPLAY_TRACE_CASES]
+    if trace_type == "endgame":
+        return [trace_file_name(case.case_id) for case in ENDGAME_TRACE_CASES]
     raise ValueError(f"unknown trace type: {trace_type}")
 
 
@@ -44,6 +55,9 @@ def _regenerate(trace_type: str, out_dir: Path) -> None:
         return
     if trace_type == "gameplay":
         export_gameplay_cases(list(GAMEPLAY_TRACE_CASES), out_dir)
+        return
+    if trace_type == "endgame":
+        export_endgame_cases(list(ENDGAME_TRACE_CASES), out_dir)
         return
     raise ValueError(f"unknown trace type: {trace_type}")
 

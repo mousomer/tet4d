@@ -5,14 +5,20 @@ import subprocess
 import sys
 from pathlib import Path
 
+from tools.migration.export_endgame_trace import export_cases as export_endgame_cases
 from tools.migration.export_gameplay_trace import export_cases as export_gameplay_cases
 from tools.migration.export_topology_trace import export_cases as export_topology_cases
-from tools.migration.trace_cases import GAMEPLAY_TRACE_CASES, TOPOLOGY_TRACE_CASES
+from tools.migration.trace_cases import (
+    ENDGAME_TRACE_CASES,
+    GAMEPLAY_TRACE_CASES,
+    TOPOLOGY_TRACE_CASES,
+)
 
 
 def _write_temp_golden(root: Path) -> None:
     export_topology_cases(list(TOPOLOGY_TRACE_CASES), root / "topology")
     export_gameplay_cases(list(GAMEPLAY_TRACE_CASES), root / "gameplay")
+    export_endgame_cases(list(ENDGAME_TRACE_CASES), root / "endgame")
 
 
 def test_compare_trace_passes_when_traces_match(tmp_path: Path) -> None:
@@ -60,6 +66,24 @@ def test_compare_trace_accepts_single_topology_directory(tmp_path: Path) -> None
             sys.executable,
             "tools/migration/compare_trace.py",
             str(tmp_path / "topology"),
+        ],
+        check=False,
+        cwd=Path.cwd(),
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_compare_trace_accepts_single_endgame_directory(tmp_path: Path) -> None:
+    _write_temp_golden(tmp_path)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/migration/compare_trace.py",
+            str(tmp_path / "endgame"),
         ],
         check=False,
         cwd=Path.cwd(),

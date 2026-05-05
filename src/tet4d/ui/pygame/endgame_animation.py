@@ -24,6 +24,12 @@ from tet4d.ui.pygame.locked_cell_explosion import (
     StandaloneExplosionConfig,
     build_locked_cell_explosion,
 )
+from tet4d.ui.pygame.locked_cell_explosion.model import (
+    canonical_endgame_cell_order,
+    endgame_live_cell_count as model_endgame_live_cell_count,
+    select_endgame_live_cells,
+    split_endgame_cells,
+)
 from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
     ENDGAME_LIVE_CELL_FRACTION_DEFAULT,
     clamp_endgame_live_cell_fraction,
@@ -784,28 +790,17 @@ def endgame_live_cell_count(
     available_locked_cells: int,
     live_fraction: float,
 ) -> int:
-    available = max(0, int(available_locked_cells))
-    if available <= 0:
-        return 0
-    target_count = round(
-        clamp_endgame_live_cell_fraction(live_fraction) * float(available)
+    return model_endgame_live_cell_count(
+        dimension=int(dimension),
+        available_locked_cells=int(available_locked_cells),
+        live_fraction=clamp_endgame_live_cell_fraction(live_fraction),
     )
-    return min(available, max(1, int(target_count)))
 
 
 def _canonical_endgame_locked_cells(
     locked_cells: tuple[SnapshotCell, ...],
 ) -> tuple[SnapshotCell, ...]:
-    return tuple(
-        sorted(
-            locked_cells,
-            key=lambda cell: (
-                tuple(int(axis) for axis in cell.source_coord),
-                int(cell.color_id),
-                -1 if cell.layer_index is None else int(cell.layer_index),
-            ),
-        )
-    )
+    return canonical_endgame_cell_order(tuple(locked_cells))
 
 
 def _cell_selection_score(
@@ -842,41 +837,12 @@ def select_endgame_live_locked_cells(
     seed: int,
     live_fraction: float,
 ) -> tuple[SnapshotCell, ...]:
-    canonical_cells = _canonical_endgame_locked_cells(locked_cells)
-    target_count = endgame_live_cell_count(
-        dimension=dimension,
-        available_locked_cells=len(canonical_cells),
-        live_fraction=live_fraction,
+    return select_endgame_live_cells(
+        locked_cells=tuple(locked_cells),
+        dimension=int(dimension),
+        seed=int(seed),
+        live_fraction=clamp_endgame_live_cell_fraction(live_fraction),
     )
-    if target_count >= len(canonical_cells):
-        return canonical_cells
-    ranked_cells = [
-        (cell, _cell_selection_score(cell, seed=seed))
-        for cell in canonical_cells
-    ]
-    ranked_cells.sort(key=lambda item: (item[1], item[0].source_coord, item[0].color_id))
-    selected: list[tuple[SnapshotCell, int]] = [ranked_cells[0]]
-    remaining = ranked_cells[1:]
-    candidate_window = 16
-    while remaining and len(selected) < target_count:
-        best_index = 0
-        best_score = -1.0
-        window_limit = min(candidate_window, len(remaining))
-        for index in range(window_limit):
-            candidate, stable_score = remaining[index]
-            min_distance_sq = min(
-                sum(
-                    float(candidate.source_coord[axis] - chosen.source_coord[axis]) ** 2
-                    for axis in range(len(candidate.source_coord))
-                )
-                for chosen, _chosen_score in selected
-            )
-            composite_score = (min_distance_sq * 1_000_000.0) - float(stable_score)
-            if composite_score > best_score:
-                best_index = index
-                best_score = composite_score
-        selected.append(remaining.pop(best_index))
-    return tuple(cell for cell, _score in selected)
 
 
 def split_endgame_locked_cells(
@@ -886,20 +852,15 @@ def split_endgame_locked_cells(
     seed: int,
     live_fraction: float,
 ) -> EndgameCellSplit:
-    canonical_cells = _canonical_endgame_locked_cells(locked_cells)
-    persistent_live_cells = select_endgame_live_locked_cells(
-        locked_cells=canonical_cells,
-        dimension=dimension,
-        seed=seed,
-        live_fraction=live_fraction,
-    )
-    persistent_lookup = set(persistent_live_cells)
-    escaping_cells = tuple(
-        cell for cell in canonical_cells if cell not in persistent_lookup
+    split = split_endgame_cells(
+        locked_cells=tuple(locked_cells),
+        dimension=int(dimension),
+        seed=int(seed),
+        live_fraction=clamp_endgame_live_cell_fraction(live_fraction),
     )
     return EndgameCellSplit(
-        persistent_live_cells=persistent_live_cells,
-        escaping_cells=escaping_cells,
+        persistent_live_cells=tuple(split.persistent_live_cells),
+        escaping_cells=tuple(split.escaping_cells),
     )
 
 

@@ -9,6 +9,7 @@ from tools.migration.trace_schema import (
     canonical_json,
     stable_hash,
 )
+from tools.migration.export_endgame_trace import ENDGAME_FLOAT_PRECISION
 
 
 def test_canonical_json_sorts_keys_and_ends_with_newline() -> None:
@@ -25,6 +26,10 @@ def test_stable_hash_uses_canonical_payload_not_python_hash() -> None:
 
     assert stable_hash(left) == stable_hash(right)
     assert stable_hash(left) != stable_hash({"a": {"x": False}, "b": [2, 1]})
+
+
+def test_endgame_trace_precision_is_fixed() -> None:
+    assert ENDGAME_FLOAT_PRECISION == 6
 
 
 def test_trace_hygiene_rejects_timestamps_paths_and_memory_reprs() -> None:

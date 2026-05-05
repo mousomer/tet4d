@@ -23,11 +23,13 @@ background only unless reactivated by a future task.
 ## Active Work
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
-migration, and Stage 2 topology/gameplay golden trace export now records that
-behavior as the Python-authoritative migration oracle. Follow-up work should
-treat topology/gameplay behavior as frozen and replay
+migration, Stage 2 topology/gameplay golden trace export records that behavior
+as the Python-authoritative migration oracle, and Stage 3 endgame golden trace
+export now records locked-cell explosion model behavior. Follow-up work should
+treat topology/gameplay/endgame behavior as frozen and replay
 `migration/golden_traces/` before any Unity/Godot/C#/C++ implementation;
-shell-preserving cleanup remains structural-only and must not reopen semantics.
+shell-preserving cleanup and endgame visual polish remain non-blocking and
+must not reopen semantics.
 
 Current active follow-ups:
 
@@ -36,10 +38,10 @@ Current active follow-ups:
   `Play` owns gameplay launch plus stricter drop/lock legality; wrap /
   invert / sphere-like choices remain transport presets rather than UI themes
 - Stage 2 exports golden topology/gameplay traces from the Python authority;
-  any Unity/Godot migration must replay those traces before implementing
-  independent transport or gravity/drop logic
-- endgame golden traces are intentionally deferred to Stage 3 or a later
-  endgame rescue/export task
+  Stage 3 exports golden endgame traces from the headless locked-cell
+  explosion model; any Unity/Godot migration must replay those traces before
+  implementing independent transport, gravity/drop, or endgame simulation
+  logic
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -145,10 +147,11 @@ stays synchronized, and the contract validator accepts the backlog shape.
    lab under `migration/golden_traces/`, and
    `tools/migration/compare_trace.py` regenerates and compares them before
    engine migration work implements independent transport or drop/lock logic.
-4. `NEXT` `[BKL-P3-011]` Endgame trace/export or engine replay spike:
-   either rescue the endgame model and add endgame golden traces, or run a
-   Unity/Godot trace replay spike against the Stage 2 topology/gameplay oracle
-   while keeping endgame behavior deferred.
+4. `DONE` `[BKL-P3-011]` Stage 3 endgame trace/export:
+   locked-cell endgame motion now has a headless deterministic model API,
+   checked-in golden traces under `migration/golden_traces/endgame/`, and
+   `tools/migration/compare_trace.py` drift coverage alongside topology and
+   gameplay traces.
 
 ## Governance Watchlist
 

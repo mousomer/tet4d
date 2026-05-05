@@ -1,13 +1,4 @@
 from .controller import LockedCellExplosionController, build_locked_cell_explosion
-from .launcher import (
-    StandaloneExplosionSurfaceState,
-    build_explorer_explosion_surface_state,
-    build_standalone_explosion_config,
-    build_standalone_explosion_surface_state,
-    launcher_row_keys,
-    restart_standalone_explosion,
-    run_standalone_explosion_launcher,
-)
 from .model import (
     EXPLOSION_BOUNDARY_RESPONSES,
     EXPLOSION_BOUNDARY_RESPONSE_BOUNCE,
@@ -44,7 +35,32 @@ from .model import (
     normalize_speed_preset,
     speed_scale_for_preset,
 )
-from .simulation import velocity_norm_sq_sum_for_particles
+from .simulation import (
+    build_endgame_state,
+    step_endgame_state,
+    velocity_norm_sq_sum_for_particles,
+)
+
+_LAZY_LAUNCHER_EXPORTS = {
+    "StandaloneExplosionSurfaceState",
+    "build_explorer_explosion_surface_state",
+    "build_standalone_explosion_config",
+    "build_standalone_explosion_surface_state",
+    "launcher_row_keys",
+    "restart_standalone_explosion",
+    "run_standalone_explosion_launcher",
+}
+
+
+def __getattr__(name: str):
+    if name in _LAZY_LAUNCHER_EXPORTS:
+        from . import launcher
+
+        value = getattr(launcher, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "EXPLOSION_BOUNDARY_RESPONSES",
@@ -80,6 +96,7 @@ __all__ = [
     "StandaloneExplosionSurfaceState",
     "StandaloneExplosionConfig",
     "build_explorer_explosion_surface_state",
+    "build_endgame_state",
     "build_locked_cell_explosion",
     "build_standalone_explosion_config",
     "build_standalone_explosion_surface_state",
@@ -90,5 +107,6 @@ __all__ = [
     "restart_standalone_explosion",
     "run_standalone_explosion_launcher",
     "speed_scale_for_preset",
+    "step_endgame_state",
     "velocity_norm_sq_sum_for_particles",
 ]
