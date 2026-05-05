@@ -1,0 +1,718 @@
+{
+  "authority": {
+    "config_authority_root": "config/",
+    "exported_bundle_is_authority": false,
+    "python_semantic_oracle": true,
+    "runtime_semantics_authority": "src/",
+    "trace_authority_root": "migration/golden_traces/"
+  },
+  "bundle_type": "tet4d_migration_bundle",
+  "bundle_version": 1,
+  "config": {
+    "bundle_path": "config/tet4d_config_bundle.json",
+    "combined_digest": "e48ac20bde7321eb6254e26a0b05b73b6be1682112313668afd2fd108da4a332",
+    "files": [
+      {
+        "category": "audio_defaults",
+        "path": "config/audio/sfx.json",
+        "sha256": "51fe79da76d6bd5207e1c791b9a9dccf56884d3937d7a71591276f028290e7f3"
+      },
+      {
+        "category": "gameplay_defaults",
+        "path": "config/gameplay/piece_sets_nd.json",
+        "sha256": "f92033f5b00b45f06d46c29a15cb9699e148faf6d11a1eb40e4219119af08242"
+      },
+      {
+        "category": "gameplay_defaults",
+        "path": "config/gameplay/score_analyzer.json",
+        "sha256": "eb720c5a9c7b1b2f7f0dce635a82eecbf62a88559437ee990c6828f42610fe42"
+      },
+      {
+        "category": "gameplay_defaults",
+        "path": "config/gameplay/tuning.json",
+        "sha256": "e239eee4afa6076f7eb53dacb3eaf58854f204c91a3b1265560b13625784c647"
+      },
+      {
+        "category": "help_defaults",
+        "path": "config/help/action_map.json",
+        "sha256": "c95a3cecfb31ff31af61645f4fdbcd846c1a0df6f26415d60aa5a15d05c2ab0d"
+      },
+      {
+        "category": "help_defaults",
+        "path": "config/help/content/runtime_help_content.json",
+        "sha256": "0fd5cb6001813c51f232dfc7f04c03e2eabca99ce4edf0bcec2382cf8871c585"
+      },
+      {
+        "category": "help_defaults",
+        "path": "config/help/icon_map.json",
+        "sha256": "8d058312c076281af70703e6182fa9c1952cf585dd6c8d8fe23e10e8ebdce362"
+      },
+      {
+        "category": "help_defaults",
+        "path": "config/help/layout/runtime_help_layout.json",
+        "sha256": "490d986c7fdf4e9104b35411a3e283caa6b71c1f4415bbcbc2ceed728fd71ab1"
+      },
+      {
+        "category": "help_defaults",
+        "path": "config/help/topics.json",
+        "sha256": "a5cde33fc950107e2e84a15c4cb45e9919d7d6a7ae8f4f9d8ad35d9b79703ad8"
+      },
+      {
+        "category": "keybinding_defaults",
+        "path": "config/keybindings/catalog.json",
+        "sha256": "87db3ab8e71e64676fedfdd54804b69ed2c83dc1c227a0b7745ac9885af7b71f"
+      },
+      {
+        "category": "keybinding_defaults",
+        "path": "config/keybindings/defaults.json",
+        "sha256": "f5990e2a9c46a09570217ddc5b8aaea73fca1280a6a88f7002b9b0a8769e9100"
+      },
+      {
+        "category": "menu_defaults",
+        "path": "config/menu/defaults.json",
+        "sha256": "8efca9c309300eaa16a80b42c0a795fecce70971dabfa2b5ad815736f5341979"
+      },
+      {
+        "category": "menu_defaults",
+        "path": "config/menu/structure.json",
+        "sha256": "b9b4f81f026f94b10c2d90550dc6eb5b2c7e31adfb0125abdc1bc850676db6e4"
+      },
+      {
+        "category": "playbot_defaults",
+        "path": "config/playbot/policy.json",
+        "sha256": "8b3aa9f093e7123ca7dcbf68d0d4d484fafe7b30c816bbbf9d8141e990ba45ea"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/backlog_debt.json",
+        "sha256": "b5837703b4190a1f7fd149f6ae0f52653282f95663b495a0de2ba1584d329581"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/constants.json",
+        "sha256": "40b3fb2f1847a2be04eb0667a1162b44534af3c65984f34dc77b87fa8a7b3a22"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/folder_balance_budgets.json",
+        "sha256": "3aa7d986f51f282d67eda41a9fc049e2e7b500300af3a113e4940b190738ca29"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/format_allowlist.txt",
+        "sha256": "8cf5def88437d157738243eea6c4ee69cb9c18cc5c8402daa4a66977fa5631c0"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/io_paths.json",
+        "sha256": "c1d3f5a8a5b53f0f73cb0c91bf565bbddb4eaa6691b2031ce5c03a9e61b1d40e"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/policy/manifests/help_assets_manifest.json",
+        "sha256": "f65301e28c585cc61f6662b86b22c491f29b4adce604bf07fedb643cfbdf95e7"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/policy/manifests/replay_manifest.json",
+        "sha256": "04bd5feb7c312f94043585b09eb62d5707075861c13660697f4599b14ae81395"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/policy/manifests/secret_scan.json",
+        "sha256": "047a6c0cbd75fb8f8ee3874f2193b6b9f3ca618eef34af2a5b8586c6a37d127f"
+      },
+      {
+        "category": "project_governance",
+        "path": "config/project/policy_pack.json",
+        "sha256": "eb4be9f9adc90da98a444333121e79dc1c7b47f825fb11a7e20767417e90c9e8"
+      },
+      {
+        "category": "topology_defaults",
+        "path": "config/topology/designer_presets.json",
+        "sha256": "aa580530ae440285615e6f4d27f168a637efd481dfe688de4580fdfd16957a6a"
+      },
+      {
+        "category": "topology_defaults",
+        "path": "config/topology/lab_menu.json",
+        "sha256": "66dca73fdd7d141d6d2d001c1af0da6a5718b5cde6bd01d471502089b468110c"
+      },
+      {
+        "category": "tutorial_defaults",
+        "path": "config/tutorial/lessons.json",
+        "sha256": "5623e0313d97a399f8eab713bb51884faf2b3ec4e8d1043acc74225f3ab1f024"
+      },
+      {
+        "category": "tutorial_defaults",
+        "path": "config/tutorial/plan.json",
+        "sha256": "a51aca8ad29fad28c8fcfbd99f03ea3092a7bbcc2cea841db02c998214a8615c"
+      },
+      {
+        "category": "ui_defaults",
+        "path": "config/ui/theme.json",
+        "sha256": "064415967548a3fe02c85d50ac303557fdd919c393d4ff31058c00f5e442c216"
+      }
+    ]
+  },
+  "docs": {
+    "authority_files": [
+      {
+        "purpose": "Current migration and handoff state.",
+        "role": "restart_handoff",
+        "sha256": "8986f6646b29355016960d9978ae27501cf40a31b24fd63452358d604ef53294",
+        "source_path": "CURRENT_STATE.md"
+      },
+      {
+        "purpose": "Active migration follow-up tracker.",
+        "role": "backlog",
+        "sha256": "68b5dc6af1f21cdc898164df0e05ff9f107823203f85aa5b6a460ce0fe70f133",
+        "source_path": "docs/BACKLOG.md"
+      },
+      {
+        "purpose": "Generated package layout and source-of-truth inventory.",
+        "role": "project_structure",
+        "sha256": "fe2cd0d6c238128ac556d22707c9ef5bde11acb7350a952a3de142a690f500e3",
+        "source_path": "docs/PROJECT_STRUCTURE.md"
+      },
+      {
+        "purpose": "Shared topology/gameplay/endgame product requirements.",
+        "role": "product_requirements",
+        "sha256": "f8487b03e025d0e033bbf9d065c7e196712d7973f6178b0b0181711c59c20e56",
+        "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
+      },
+      {
+        "purpose": "Menu/config authority for launcher, settings, and keybindings.",
+        "role": "menu_requirements",
+        "sha256": "2043696bfc42b93e6ed0ffefda45b5ae77edc71f51303c716e1555e46bb352b8",
+        "source_path": "docs/rds/RDS_MENU_STRUCTURE.md"
+      },
+      {
+        "purpose": "Frozen topology lab semantics and migration boundary.",
+        "role": "topology_authority",
+        "sha256": "bd06973ac662349f98497127adbaa6d82d192291f064ff677aa05e08128287ab",
+        "source_path": "docs/plans/topology_playground_current_authority.md"
+      },
+      {
+        "purpose": "Stage 2 topology/gameplay trace oracle contract.",
+        "role": "trace_authority",
+        "sha256": "8d01fe09d570147d139ff6aef13eb4b8f16d969cf62472639698d5b94b031b63",
+        "source_path": "docs/plans/topology_gameplay_trace_export.md"
+      },
+      {
+        "purpose": "Stage 3 endgame trace oracle contract.",
+        "role": "endgame_trace_authority",
+        "sha256": "d977497e4213d7e9bb0862afb117a1e5f65095351c5c819feae01f25089cd748",
+        "source_path": "docs/plans/endgame_trace_export.md"
+      },
+      {
+        "purpose": "Stage 4 generated config bundle and packaging boundary contract.",
+        "role": "migration_bundle_authority",
+        "sha256": "a1f0ca2e4becec1b7e85215ac6153c99d0958b4114281e5f5adbccc5ebd6cfff",
+        "source_path": "docs/plans/migration_config_bundle.md"
+      }
+    ],
+    "index_path": "docs/authority_index.json"
+  },
+  "generator": {
+    "name": "export_config_bundle",
+    "schema_version": 1
+  },
+  "project": {
+    "name": "tet4d"
+  },
+  "schemas": {
+    "files": [
+      {
+        "purpose": "help action map.schema JSON schema",
+        "sha256": "acb29a4b1b7d1aa7dd7e337e19667a057bee166008319aec88e7b97c6edc54fe",
+        "source_path": "config/schema/help_action_map.schema.json"
+      },
+      {
+        "purpose": "help runtime content.schema JSON schema",
+        "sha256": "f2e6a5f6e0611fabb55a2cbcc482b6b42c745db9c2dd718dead8f0bbd8b15250",
+        "source_path": "config/schema/help_runtime_content.schema.json"
+      },
+      {
+        "purpose": "help runtime layout.schema JSON schema",
+        "sha256": "98898d48418c60d04e1bcbe43aae42090ab1b6a8a40b4c34731818d1ac4f9552",
+        "source_path": "config/schema/help_runtime_layout.schema.json"
+      },
+      {
+        "purpose": "help topics.schema JSON schema",
+        "sha256": "3da0099eb1088b0d2c79baebc07cd4d9ff38a5ce1e6cdd68467c2ec4383ab502",
+        "source_path": "config/schema/help_topics.schema.json"
+      },
+      {
+        "purpose": "menu settings.schema JSON schema",
+        "sha256": "91fd8efacb866515fd422a429ecaf38f53b568a4e0cb5cd8d3a36efe8a705db8",
+        "source_path": "config/schema/menu_settings.schema.json"
+      },
+      {
+        "purpose": "save state.schema JSON schema",
+        "sha256": "8d0fa14c6c05d818c51ca4a8297d0fcd2af6f1ec72b432508e3e7d27d4ddc42c",
+        "source_path": "config/schema/save_state.schema.json"
+      },
+      {
+        "purpose": "tutorial lessons.schema JSON schema",
+        "sha256": "7caebcfc21e806fc941fadf7d92ee8eca791cbf102877b3674ff1a97c3927be8",
+        "source_path": "config/schema/tutorial_lessons.schema.json"
+      },
+      {
+        "purpose": "tutorial plan.schema JSON schema",
+        "sha256": "f461bc2ba76bd78c5faaa8df31f07605a7722ca840f4a9783512325f403e9eae",
+        "source_path": "config/schema/tutorial_plan.schema.json"
+      }
+    ],
+    "index_path": "schemas/schema_index.json",
+    "trace_schema": {
+      "purpose": "Code-defined canonical trace schema helpers.",
+      "schema_version": 1,
+      "sha256": "7b3fdaf35495ac05f4f11deb925ee21455ccc7a5013ff07b7d99a7f46a1b2960",
+      "source_path": "tools/migration/trace_schema.py",
+      "trace_version": 1
+    }
+  },
+  "traces": {
+    "endgame": [
+      {
+        "case_id": "endgame_2d_classic",
+        "dimension": 2,
+        "final_state_hash": "d4937733f6bc832c33dee09734d7edfddcb72ac5d4e476ad9a225544f63edf75",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_2d_classic.json",
+        "sha256": "b94b7c75cb2e5ff2de05dd5a6ad746b4d017c84e888848e2dd007b51586b2905",
+        "source_path": "migration/golden_traces/endgame/endgame_2d_classic.json",
+        "topology_id": "classic",
+        "topology_preset": "classic",
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      {
+        "case_id": "endgame_3d_classic",
+        "dimension": 3,
+        "final_state_hash": "844d6726ddbdc75b0575ca9dc7d1d47528a7c30d0b7254b18df22ad37d0bbd35",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_3d_classic.json",
+        "sha256": "b478412a5f88c28c0135e66921e74f2a6357a0763d228c5ea6dd323dfa97bb7a",
+        "source_path": "migration/golden_traces/endgame/endgame_3d_classic.json",
+        "topology_id": "classic",
+        "topology_preset": "classic",
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      {
+        "case_id": "endgame_4d_classic",
+        "dimension": 4,
+        "final_state_hash": "f0d2aec6d6b9a70d34ac287e2b0a1cf846b7d69f36f371c544d1e9cebc3d57d4",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_4d_classic.json",
+        "sha256": "22cda35742dc63382bb50cddbc67e68b7aa91aa278ad3e803bd7770723539469",
+        "source_path": "migration/golden_traces/endgame/endgame_4d_classic.json",
+        "topology_id": "classic",
+        "topology_preset": "classic",
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      {
+        "case_id": "endgame_4d_elastic_if_stable",
+        "dimension": 4,
+        "final_state_hash": "d8a55e0ba78ecc2aaba892909bd2bbd29ed7f190f152fd4154a73c32a8ff69a8",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_4d_elastic_if_stable.json",
+        "sha256": "7bdb8f10bf8d9dd30a29474b62f427dadfe640c363fcf229728fc6c27749890e",
+        "source_path": "migration/golden_traces/endgame/endgame_4d_elastic_if_stable.json",
+        "topology_id": "classic",
+        "topology_preset": "classic",
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      {
+        "case_id": "endgame_4d_invert_all",
+        "dimension": 4,
+        "final_state_hash": "8a05a9d3f5965ea1e894d5eec5fe6c014ee774574c294f6353ba6dbd9989851d",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_4d_invert_all.json",
+        "sha256": "eed3a5b8db9fa8889d8f00eca519c17918025c7739a7aead2439bdc4cfda1e0e",
+        "source_path": "migration/golden_traces/endgame/endgame_4d_invert_all.json",
+        "topology_id": "invert_all",
+        "topology_preset": "invert_all",
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      {
+        "case_id": "endgame_4d_no_collision",
+        "dimension": 4,
+        "final_state_hash": "737d2f73723772136c6917ec9c7046fe134162c2dd23373906e777f3d800ffad",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_4d_no_collision.json",
+        "sha256": "ba131de72b46e011b9c896ea6bcc1b0ec9392959de4ad2944c2317817035a5dd",
+        "source_path": "migration/golden_traces/endgame/endgame_4d_no_collision.json",
+        "topology_id": "classic",
+        "topology_preset": "classic",
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      {
+        "case_id": "endgame_4d_sphere_like",
+        "dimension": 4,
+        "final_state_hash": "0865a565bcab873134345eec4349d157be857285e075a4b755b8b02f90b64d31",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_4d_sphere_like.json",
+        "sha256": "9f1da146cb9b232470e536bdc7203257796b9aa39be6d81fe742c4d1ba977838",
+        "source_path": "migration/golden_traces/endgame/endgame_4d_sphere_like.json",
+        "topology_id": "sphere_like",
+        "topology_preset": "sphere_like",
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      {
+        "case_id": "endgame_4d_wrap_all",
+        "dimension": 4,
+        "final_state_hash": "e12c6ae6853bac48a136a70784dbb984124ff2196abec888d175fdbc5dfabada",
+        "frame_count": 8,
+        "path": "traces/endgame/endgame_4d_wrap_all.json",
+        "sha256": "e1737ca09760389373283c164039e20dad2b7d6c5d9da576e1f074a1f4e4f26f",
+        "source_path": "migration/golden_traces/endgame/endgame_4d_wrap_all.json",
+        "topology_id": "wrap_all",
+        "topology_preset": "wrap_all",
+        "trace_type": "endgame",
+        "trace_version": 1
+      }
+    ],
+    "gameplay": [
+      {
+        "case_id": "gameplay_invert_short",
+        "dimension": 3,
+        "final_state_hash": "d648590b9f537d71620568918d964166fec2410212defc17ae148589c99f8fab",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_invert_short.json",
+        "sha256": "32875e2d781502dd1c1402af1b906f89ae6230eb25649312578298e5b117cb0b",
+        "source_path": "migration/golden_traces/gameplay/gameplay_invert_short.json",
+        "topology_id": "invert",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_launch_topology_parity",
+        "dimension": 4,
+        "final_state_hash": "a0d28e8d698144c9664a165db46daf8cc2a14759fc0e0e61cbc1cd4b0a8553ac",
+        "frame_count": 2,
+        "path": "traces/gameplay/gameplay_launch_topology_parity.json",
+        "sha256": "620dae344942f9d958addb778644ae92f6ddfdc06f627775c11ae546662faf6b",
+        "source_path": "migration/golden_traces/gameplay/gameplay_launch_topology_parity.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_2d_short",
+        "dimension": 2,
+        "final_state_hash": "2d3a6eb2744d46bc147ae7d21855036e1ff241a99261ab5324b20958ec353139",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_plain_2d_short.json",
+        "sha256": "3908cf6abb24e3a7e314fbf0279039d444bc56ed8016bf055c1bc96158bb5d85",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_3d_short",
+        "dimension": 3,
+        "final_state_hash": "9e183b178d0badec86b59a833782702d581b13a72d75bddeeda7f88333826dd7",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_plain_3d_short.json",
+        "sha256": "995401db4066ebe362a104d465967706eb3e6af838df5b081f6e6f9b92e1d531",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_3d_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_4d_short",
+        "dimension": 4,
+        "final_state_hash": "d34d21da0a1c4aa6e947230e68e8b16a3e212b40bb7da1ccaef24200e7f80449",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_plain_4d_short.json",
+        "sha256": "7f820fb2d3070bd1055d8f3da278be50c7ce9e0be95b06740ea6309169d55cd3",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_4d_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_sphere_like_short",
+        "dimension": 3,
+        "final_state_hash": "b24eaf4840978a8a401db56bc0f857f039bdf3e82c453d5c29a04016c8365a4f",
+        "frame_count": 2,
+        "path": "traces/gameplay/gameplay_sphere_like_short.json",
+        "sha256": "75aadd289e52dc3b481ba6b1397b1958f35fe21999588bc435e77ff8022ca80d",
+        "source_path": "migration/golden_traces/gameplay/gameplay_sphere_like_short.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_wrap_2d_short",
+        "dimension": 2,
+        "final_state_hash": "a04d0363cd04116d1630bbf988177e81e2cce035a5173cddfaabc536a117b03d",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_wrap_2d_short.json",
+        "sha256": "704313d8fbfde36df21397531f79edf83b516f75a7de85ec37078f3d5559f90a",
+        "source_path": "migration/golden_traces/gameplay/gameplay_wrap_2d_short.json",
+        "topology_id": "wrap",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_wrap_3d_short",
+        "dimension": 3,
+        "final_state_hash": "123e0abc399ccd543d198290743829780aa31a33fa32990ab2c826fd2f19cc03",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_wrap_3d_short.json",
+        "sha256": "1848b84d963531c988662a94f445021b08f9f689e2458e983f18f716162b4da7",
+        "source_path": "migration/golden_traces/gameplay/gameplay_wrap_3d_short.json",
+        "topology_id": "wrap",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_wrap_4d_short",
+        "dimension": 4,
+        "final_state_hash": "359c5bf4a99c1211ce834e2169531c9be4e6c26e04af87282be76b9e4959a3d8",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_wrap_4d_short.json",
+        "sha256": "ae9775af2e493b7b4c8cc5316501eaaadd6605ab2a8ad97ba5137d24115c8075",
+        "source_path": "migration/golden_traces/gameplay/gameplay_wrap_4d_short.json",
+        "topology_id": "wrap",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_y_axis_drop_policy",
+        "dimension": 3,
+        "final_state_hash": "4883def06ab4994da0f4a81512a9e6378c28d84686208209fc6350103fda6f0a",
+        "frame_count": 3,
+        "path": "traces/gameplay/gameplay_y_axis_drop_policy.json",
+        "sha256": "5fd76317c58365cf5d22801ba93465724db81f23bc96288243b2b478ee734746",
+        "source_path": "migration/golden_traces/gameplay/gameplay_y_axis_drop_policy.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      }
+    ],
+    "topology": [
+      {
+        "case_id": "topology_false_lock_regression_sphere_like",
+        "dimension": 3,
+        "final_state_hash": "2797ad40e5f49fe7198c8dac6f55a0f2f9527618559e90b44fea3e529d7a8d33",
+        "frame_count": 1,
+        "path": "traces/topology/topology_false_lock_regression_sphere_like.json",
+        "sha256": "2ba182a100e1ad0d44601d8190693b666cad214c18e902c69860955840c3fe39",
+        "source_path": "migration/golden_traces/topology/topology_false_lock_regression_sphere_like.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_invert_2d",
+        "dimension": 2,
+        "final_state_hash": "b11e414a3ee5204303be87fc0097134a9ad36ae99e9352ae9368f9d33b35fc07",
+        "frame_count": 2,
+        "path": "traces/topology/topology_invert_2d.json",
+        "sha256": "790d2556fdc9fd6e65d458b48d64646ee3ab1f49f6e361281a8eee8ab6907fc0",
+        "source_path": "migration/golden_traces/topology/topology_invert_2d.json",
+        "topology_id": "invert",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_invert_3d",
+        "dimension": 3,
+        "final_state_hash": "22b16ffda2e7de8781c31299104aec1b6ad5ee59b42715168f056fdead936566",
+        "frame_count": 2,
+        "path": "traces/topology/topology_invert_3d.json",
+        "sha256": "36f3d1cff7ba3d165b965d78460b758fedc5ac94a2893fc19c2af88436cbc628",
+        "source_path": "migration/golden_traces/topology/topology_invert_3d.json",
+        "topology_id": "invert",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_invert_4d",
+        "dimension": 4,
+        "final_state_hash": "7f086a795d08c5d181bea92f88c428511565ff97c2f8109157a26ff7e76c75f2",
+        "frame_count": 2,
+        "path": "traces/topology/topology_invert_4d.json",
+        "sha256": "3e02aed511204f08b3c46ffd1c5c7456afb1cccea5cac92c851df0affee1721a",
+        "source_path": "migration/golden_traces/topology/topology_invert_4d.json",
+        "topology_id": "invert",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_plain_2d",
+        "dimension": 2,
+        "final_state_hash": "d796c28f4f059ceccf698c8dfaa479f52992fe26d29f8267b3062fb98948786d",
+        "frame_count": 2,
+        "path": "traces/topology/topology_plain_2d.json",
+        "sha256": "bc23c83d5eb70e0f31fc9fe70fa638470b5470b5be48184f00a3c6b2ecc87018",
+        "source_path": "migration/golden_traces/topology/topology_plain_2d.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_plain_3d",
+        "dimension": 3,
+        "final_state_hash": "d3818e2ac7bfd5aaccc378ccb25d15da340d87d663ad5ec8abf371900b22d552",
+        "frame_count": 2,
+        "path": "traces/topology/topology_plain_3d.json",
+        "sha256": "2b06109d9cf199b795f15abf02d1679075c6869c370c37c5a3c953cd799dd7ec",
+        "source_path": "migration/golden_traces/topology/topology_plain_3d.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_plain_4d",
+        "dimension": 4,
+        "final_state_hash": "14b1c1ce28744655379b34db402153317f1433a6ac3ba1b49c652dedc470a65c",
+        "frame_count": 2,
+        "path": "traces/topology/topology_plain_4d.json",
+        "sha256": "a116356f84383dac54424b253177891225a7691485e43582f83bb8eeaa3e2491",
+        "source_path": "migration/golden_traces/topology/topology_plain_4d.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_play_vs_sandbox_y_axis",
+        "dimension": 3,
+        "final_state_hash": "d256feccebfd8a18bb34f272690a206cd9d17c02593d83016332509bc091b322",
+        "frame_count": 1,
+        "path": "traces/topology/topology_play_vs_sandbox_y_axis.json",
+        "sha256": "1af493a58ed8f6ba875898f361e9dad9397c060628a679d6e337d97f7e73f8b5",
+        "source_path": "migration/golden_traces/topology/topology_play_vs_sandbox_y_axis.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_playability_diagnostics_stable",
+        "dimension": 2,
+        "final_state_hash": "061487069a4e284bc08d7c70d3b56e5d04731f49f0caa5f3862ccea355972448",
+        "frame_count": 0,
+        "path": "traces/topology/topology_playability_diagnostics_stable.json",
+        "sha256": "c63cd8143ec2de44ea87c222d9025de9492c49699a9378a5affb48e1849cf0ed",
+        "source_path": "migration/golden_traces/topology/topology_playability_diagnostics_stable.json",
+        "topology_id": "sphere_like_invalid_dims",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_sphere_like_2d",
+        "dimension": 2,
+        "final_state_hash": "81fa1b56dfe08fb8a664a0ca9cb3fac84eeba806bbc56f61d2bb883d2adb8353",
+        "frame_count": 2,
+        "path": "traces/topology/topology_sphere_like_2d.json",
+        "sha256": "cf7d1f4ae747fbee4c0f890841811526a335784e46306296ba079b26c618171e",
+        "source_path": "migration/golden_traces/topology/topology_sphere_like_2d.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_sphere_like_3d",
+        "dimension": 3,
+        "final_state_hash": "08c575a08ec922299a196b4a6a0fd4f9bcac0461a2d53349ebdc342c7e92b4c6",
+        "frame_count": 2,
+        "path": "traces/topology/topology_sphere_like_3d.json",
+        "sha256": "7c0359dab91ff89a8509969a095039453b2cd4e06b55e828e91b692d4079d310",
+        "source_path": "migration/golden_traces/topology/topology_sphere_like_3d.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_sphere_like_4d",
+        "dimension": 4,
+        "final_state_hash": "e8c7e684ed7e46676eddc8dec0c5e309fdd44fec849d64c16aacaf9daf729518",
+        "frame_count": 2,
+        "path": "traces/topology/topology_sphere_like_4d.json",
+        "sha256": "c36789675640d774d1c177072afa79596c1d8874a70b3689172e1d82af5f2928",
+        "source_path": "migration/golden_traces/topology/topology_sphere_like_4d.json",
+        "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_wrap_2d",
+        "dimension": 2,
+        "final_state_hash": "e887b6043635e31b35606dd55b617bb528283c5c60c4970c65e1df6767aff75b",
+        "frame_count": 2,
+        "path": "traces/topology/topology_wrap_2d.json",
+        "sha256": "33a7be1f80e15fd335d51c48c83773e3c0a7c6194ec787b61bafbe2ab649ba74",
+        "source_path": "migration/golden_traces/topology/topology_wrap_2d.json",
+        "topology_id": "wrap",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_wrap_3d",
+        "dimension": 3,
+        "final_state_hash": "aaa00347ad4afb978afe80be5242eb62c92902597c0c137c7449851951e9995c",
+        "frame_count": 2,
+        "path": "traces/topology/topology_wrap_3d.json",
+        "sha256": "2a73c3c06f5f23f6e894389e82932d25f9755259ff412524f3efa3bb75971303",
+        "source_path": "migration/golden_traces/topology/topology_wrap_3d.json",
+        "topology_id": "wrap",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      },
+      {
+        "case_id": "topology_wrap_4d",
+        "dimension": 4,
+        "final_state_hash": "9370357ef64d085c420b35c671706a29d6dd03a3a5a26688316247ab652c81cc",
+        "frame_count": 2,
+        "path": "traces/topology/topology_wrap_4d.json",
+        "sha256": "b2e69eb78aedbabb025f6abf32bf044ebdd214d48ade47f7c832e3c7fa8b7d0a",
+        "source_path": "migration/golden_traces/topology/topology_wrap_4d.json",
+        "topology_id": "wrap",
+        "topology_preset": null,
+        "trace_type": "topology",
+        "trace_version": 1
+      }
+    ]
+  },
+  "verification": {
+    "bundle_check_command": "PYTHONPATH=src .venv/bin/python tools/migration/export_config_bundle.py --check",
+    "compare_trace_required": true,
+    "config_bundle_check_required": true,
+    "trace_compare_command": "PYTHONPATH=src .venv/bin/python tools/migration/compare_trace.py migration/golden_traces"
+  }
+}

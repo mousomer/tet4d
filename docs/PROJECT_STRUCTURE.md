@@ -12,7 +12,7 @@ tet4d/
 |- cli/                         thin entrypoint shims
 |- config/                      source-controlled runtime/config assets
 |- docs/                        RDS, policies, handoff, and release docs
-|- migration/                   checked-in topology/gameplay/endgame golden traces for migration replay
+|- migration/                   checked-in migration traces plus generated engine-consumption bundle
 |- packaging/                   PyInstaller spec and OS packaging scripts
 |- scripts/                     local verification and architecture checks
 |- src/tet4d/
@@ -135,6 +135,9 @@ The current rule is one-way:
    small topology, gameplay, and endgame replay artifacts in
    `migration/golden_traces/`; these artifacts are migration oracles, not
    gameplay or renderer authority.
+9. Keep `migration/exported_bundle/` generated from
+   `tools/migration/export_config_bundle.py`; it is a disposable engine-spike
+   input package, not a config, trace, docs, or runtime authority.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

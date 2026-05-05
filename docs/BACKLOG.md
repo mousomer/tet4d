@@ -24,12 +24,12 @@ background only unless reactivated by a future task.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior
-as the Python-authoritative migration oracle, and Stage 3 endgame golden trace
-export now records locked-cell explosion model behavior. Follow-up work should
-treat topology/gameplay/endgame behavior as frozen and replay
-`migration/golden_traces/` before any Unity/Godot/C#/C++ implementation;
-shell-preserving cleanup and endgame visual polish remain non-blocking and
-must not reopen semantics.
+as the Python-authoritative migration oracle, Stage 3 endgame golden trace
+export records locked-cell explosion model behavior, and Stage 4 exports the
+generated migration config bundle under `migration/exported_bundle/`. Follow-up
+work should consume the bundle and replay `migration/golden_traces/` before any
+Unity/Godot/C#/C++ implementation; shell-preserving cleanup and endgame visual
+polish remain non-blocking and must not reopen semantics.
 
 Current active follow-ups:
 
@@ -39,9 +39,11 @@ Current active follow-ups:
   invert / sphere-like choices remain transport presets rather than UI themes
 - Stage 2 exports golden topology/gameplay traces from the Python authority;
   Stage 3 exports golden endgame traces from the headless locked-cell
-  explosion model; any Unity/Godot migration must replay those traces before
-  implementing independent transport, gravity/drop, or endgame simulation
-  logic
+  explosion model; Stage 4 exports a generated, non-authoritative config bundle
+  with trace copies/indexes, config snapshots, schema metadata, and authority
+  doc indexes; any Unity/Godot migration must consume the bundle and replay
+  those traces before implementing independent transport, gravity/drop, or
+  endgame simulation logic
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -152,6 +154,13 @@ stays synchronized, and the contract validator accepts the backlog shape.
    checked-in golden traces under `migration/golden_traces/endgame/`, and
    `tools/migration/compare_trace.py` drift coverage alongside topology and
    gameplay traces.
+5. `DONE` `[BKL-P3-012]` Stage 4 config bundle/export:
+   the generated migration bundle under `migration/exported_bundle/` packages
+   manifest metadata, config snapshots, trace copies/indexes, schema metadata,
+   authority-doc indexes, and README guidance;
+   `tools/migration/export_config_bundle.py` and
+   `tools/migration/compare_config_bundle.py` enforce deterministic drift checks
+   without moving config, trace, or Python semantic authority.
 
 ## Governance Watchlist
 

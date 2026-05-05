@@ -29,6 +29,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   engine migration must replay those traces before introducing independent
   transport, drop/lock, or endgame simulation logic. Pygame shell and endgame
   visual polish are not the blocking items for that migration.
+- Stage 4 migration packaging now exports a generated, disposable bundle under
+  `migration/exported_bundle/` using `tools/migration/export_config_bundle.py`.
+  The bundle includes a manifest, config snapshot, trace copies/indexes, schema
+  index, authority-doc index, and README for future Unity/Godot replay spikes.
+  It is not a source of truth: config remains authoritative in `config/`,
+  Python semantics remain authoritative in `src/`, and trace authority remains
+  in `migration/golden_traces/`.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -200,6 +207,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 - For repo workflow, verification sequencing, and context-switch guidance, use
   `docs/WORKFLOW_CODEX.md`.
 - For active open work and current change footprint, use `docs/BACKLOG.md`.
+- For the generated migration bundle and packaging boundary, use
+  `docs/plans/migration_config_bundle.md`.
 - For historical detail only, use `docs/history/DONE_SUMMARIES.md` and
   `docs/history/topology_playground/current_state_archive_2026-03-31.md`.
 
@@ -250,11 +259,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.31` (`low`)
+- `tech_debt.score = 5.32` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.64`
+1. `delivery_size_pressure = 2.65`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

@@ -1,0 +1,476 @@
+{
+  "case_id": "topology_invert_3d",
+  "commands": [
+    {
+      "id": "invert_x_neg",
+      "step": "x-"
+    },
+    {
+      "id": "roundtrip_x_pos",
+      "step": "x+"
+    }
+  ],
+  "dimension": 3,
+  "final": {
+    "diagnostics_hash": "653a1b0d0bb77bb4895157d0e4cf6828f918bb698afef8f147e6526417a8f236",
+    "frame_count": 2,
+    "state_hash": "22b16ffda2e7de8781c31299104aec1b6ad5ee59b42715168f056fdead936566"
+  },
+  "frames": [
+    {
+      "after": {
+        "probe_coord": [
+          3,
+          2,
+          1
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            -1,
+            -1,
+            -1
+          ]
+        }
+      },
+      "attempted_move": {
+        "axis": 0,
+        "delta": -1,
+        "label": "x-"
+      },
+      "before": {
+        "probe_coord": [
+          0,
+          1,
+          2
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "command_id": "invert_x_neg",
+      "diagnostics": {
+        "errors": [],
+        "explorer_reason": "Explorer/probe remains available because it follows single-cell traversal rather than rigid-piece transport.",
+        "explorer_usability": "cellwise_explorable",
+        "movement_summary": {
+          "boundary_traversal_count": 96,
+          "cell_count": 64,
+          "component_count": 1,
+          "directed_edge_count": 384
+        },
+        "recommended_next_preset": null,
+        "rigid_playability": "not_rigid_playable",
+        "rigid_reason": "Rigid transport fails when a two-cell piece partly crosses projective_0 (x- -> x+) during x-.",
+        "status": "warning",
+        "summary": "Valid. Cellwise explorable. Not rigid-playable.",
+        "validity": "valid",
+        "validity_reason": "Current topology validates for the active board dimensions.",
+        "warnings": [
+          "Contains orientation-reversing seam transforms.",
+          "Rigid transport fails when a two-cell piece partly crosses projective_0 (x- -> x+) during x-."
+        ]
+      },
+      "frame_index": 0,
+      "legal": true,
+      "piece_transport": {
+        "cell_steps": [
+          {
+            "blocked": false,
+            "frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                -1,
+                -1,
+                -1
+              ],
+              "translation": [
+                3,
+                3,
+                3
+              ]
+            },
+            "from": [
+              0,
+              1,
+              2
+            ],
+            "piece_frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                1,
+                -1,
+                -1
+              ],
+              "translation": [
+                3,
+                3,
+                3
+              ]
+            },
+            "to": [
+              3,
+              2,
+              1
+            ],
+            "traversal": {
+              "destination_boundary": "x+",
+              "glue_id": "projective_0",
+              "source_boundary": "x-"
+            }
+          }
+        ],
+        "frame_transform": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            1,
+            -1,
+            -1
+          ],
+          "translation": [
+            3,
+            3,
+            3
+          ]
+        },
+        "kind": "rigid_transform",
+        "moved_cells": [
+          [
+            3,
+            2,
+            1
+          ]
+        ],
+        "rigidly_coherent": true
+      },
+      "probe_result": {
+        "blocked": false,
+        "frame_permutation": [
+          0,
+          1,
+          2
+        ],
+        "frame_signs": [
+          -1,
+          -1,
+          -1
+        ],
+        "message": "x-: x- -> x+ to [3, 2, 1]",
+        "step": "x-",
+        "traversal": {
+          "glue_id": "projective_0",
+          "source_boundary": "x-",
+          "target_boundary": "x+"
+        }
+      },
+      "state_hash": "b4a502f5b7bd54738ef1ffdca80fa83e2e383eb52b890083a70623705a3bc540"
+    },
+    {
+      "after": {
+        "probe_coord": [
+          2,
+          2,
+          1
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            -1,
+            -1,
+            -1
+          ]
+        }
+      },
+      "attempted_move": {
+        "axis": 0,
+        "delta": 1,
+        "label": "x+"
+      },
+      "before": {
+        "probe_coord": [
+          3,
+          2,
+          1
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            -1,
+            -1,
+            -1
+          ]
+        }
+      },
+      "command_id": "roundtrip_x_pos",
+      "diagnostics": {
+        "errors": [],
+        "explorer_reason": "Explorer/probe remains available because it follows single-cell traversal rather than rigid-piece transport.",
+        "explorer_usability": "cellwise_explorable",
+        "movement_summary": {
+          "boundary_traversal_count": 96,
+          "cell_count": 64,
+          "component_count": 1,
+          "directed_edge_count": 384
+        },
+        "recommended_next_preset": null,
+        "rigid_playability": "not_rigid_playable",
+        "rigid_reason": "Rigid transport fails when a two-cell piece partly crosses projective_0 (x- -> x+) during x-.",
+        "status": "warning",
+        "summary": "Valid. Cellwise explorable. Not rigid-playable.",
+        "validity": "valid",
+        "validity_reason": "Current topology validates for the active board dimensions.",
+        "warnings": [
+          "Contains orientation-reversing seam transforms.",
+          "Rigid transport fails when a two-cell piece partly crosses projective_0 (x- -> x+) during x-."
+        ]
+      },
+      "frame_index": 1,
+      "legal": true,
+      "piece_transport": {
+        "cell_steps": [
+          {
+            "blocked": false,
+            "frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                -1,
+                -1,
+                -1
+              ],
+              "translation": [
+                3,
+                3,
+                3
+              ]
+            },
+            "from": [
+              3,
+              2,
+              1
+            ],
+            "piece_frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                1,
+                -1,
+                -1
+              ],
+              "translation": [
+                -3,
+                3,
+                3
+              ]
+            },
+            "to": [
+              0,
+              1,
+              2
+            ],
+            "traversal": {
+              "destination_boundary": "x-",
+              "glue_id": "projective_0",
+              "source_boundary": "x+"
+            }
+          }
+        ],
+        "frame_transform": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            1,
+            -1,
+            -1
+          ],
+          "translation": [
+            -3,
+            3,
+            3
+          ]
+        },
+        "kind": "rigid_transform",
+        "moved_cells": [
+          [
+            0,
+            1,
+            2
+          ]
+        ],
+        "rigidly_coherent": true
+      },
+      "probe_result": {
+        "blocked": false,
+        "frame_permutation": [
+          0,
+          1,
+          2
+        ],
+        "frame_signs": [
+          -1,
+          -1,
+          -1
+        ],
+        "message": "x+: [3, 2, 1] -> [2, 2, 1]",
+        "step": "x+",
+        "traversal": null
+      },
+      "state_hash": "60b355942c52f6a899c79ec49064d500bc092452bd0538e1b3b653c31f352acd"
+    }
+  ],
+  "generator": {
+    "name": "export_topology_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "axis_sizes": [
+      4,
+      4,
+      4
+    ],
+    "diagnostics": {
+      "errors": [],
+      "explorer_reason": "Explorer/probe remains available because it follows single-cell traversal rather than rigid-piece transport.",
+      "explorer_usability": "cellwise_explorable",
+      "movement_summary": {
+        "boundary_traversal_count": 96,
+        "cell_count": 64,
+        "component_count": 1,
+        "directed_edge_count": 384
+      },
+      "recommended_next_preset": null,
+      "rigid_playability": "not_rigid_playable",
+      "rigid_reason": "Rigid transport fails when a two-cell piece partly crosses projective_0 (x- -> x+) during x-.",
+      "status": "warning",
+      "summary": "Valid. Cellwise explorable. Not rigid-playable.",
+      "validity": "valid",
+      "validity_reason": "Current topology validates for the active board dimensions.",
+      "warnings": [
+        "Contains orientation-reversing seam transforms.",
+        "Rigid transport fails when a two-cell piece partly crosses projective_0 (x- -> x+) during x-."
+      ]
+    },
+    "glue_count": 3,
+    "gluings": [
+      {
+        "enabled": true,
+        "glue_id": "projective_0",
+        "source": "x-",
+        "target": "x+",
+        "transform": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            -1,
+            -1
+          ]
+        }
+      },
+      {
+        "enabled": true,
+        "glue_id": "projective_1",
+        "source": "y-",
+        "target": "y+",
+        "transform": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            -1,
+            -1
+          ]
+        }
+      },
+      {
+        "enabled": true,
+        "glue_id": "projective_2",
+        "source": "z-",
+        "target": "z+",
+        "transform": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            -1,
+            -1
+          ]
+        }
+      }
+    ],
+    "notes": [],
+    "preview_error": null,
+    "preview_summary": {
+      "boundary_traversal_count": 96,
+      "component_count": 1,
+      "directed_edge_count": 384
+    },
+    "probe_coord": [
+      0,
+      1,
+      2
+    ],
+    "probe_frame": {
+      "permutation": [
+        0,
+        1,
+        2
+      ],
+      "signs": [
+        1,
+        1,
+        1
+      ]
+    },
+    "resolver_error": null
+  },
+  "seed": null,
+  "topology_id": "invert",
+  "trace_type": "topology",
+  "trace_version": 1
+}

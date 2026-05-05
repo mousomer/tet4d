@@ -1,0 +1,419 @@
+{
+  "case_id": "topology_sphere_like_2d",
+  "commands": [
+    {
+      "id": "cross_axis_y_pos",
+      "step": "y+"
+    },
+    {
+      "id": "roundtrip_y_neg",
+      "step": "y-"
+    }
+  ],
+  "dimension": 2,
+  "final": {
+    "diagnostics_hash": "a3137550e139868142807bfd61180a5df3f434336840203c53dc671a0beade87",
+    "frame_count": 2,
+    "state_hash": "81fa1b56dfe08fb8a664a0ca9cb3fac84eeba806bbc56f61d2bb883d2adb8353"
+  },
+  "frames": [
+    {
+      "after": {
+        "probe_coord": [
+          7,
+          0
+        ],
+        "probe_frame": {
+          "permutation": [
+            1,
+            0
+          ],
+          "signs": [
+            -1,
+            -1
+          ]
+        }
+      },
+      "attempted_move": {
+        "axis": 1,
+        "delta": 1,
+        "label": "y+"
+      },
+      "before": {
+        "probe_coord": [
+          7,
+          7
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            1,
+            1
+          ]
+        }
+      },
+      "command_id": "cross_axis_y_pos",
+      "diagnostics": {
+        "errors": [],
+        "explorer_reason": "Explorer/probe remains available because it follows single-cell traversal rather than rigid-piece transport.",
+        "explorer_usability": "cellwise_explorable",
+        "movement_summary": {
+          "boundary_traversal_count": 32,
+          "cell_count": 64,
+          "component_count": 1,
+          "directed_edge_count": 256
+        },
+        "recommended_next_preset": null,
+        "rigid_playability": "not_rigid_playable",
+        "rigid_reason": "Rigid transport fails when a two-cell piece partly crosses sphere_01 (x- -> y-) during x-.",
+        "status": "warning",
+        "summary": "Valid. Cellwise explorable. Not rigid-playable.",
+        "validity": "valid",
+        "validity_reason": "Current topology validates for the active board dimensions.",
+        "warnings": [
+          "Contains orientation-reversing seam transforms.",
+          "Contains cross-axis seam pairings.",
+          "Rigid transport fails when a two-cell piece partly crosses sphere_01 (x- -> y-) during x-."
+        ]
+      },
+      "frame_index": 0,
+      "legal": true,
+      "piece_transport": {
+        "cell_steps": [
+          {
+            "blocked": false,
+            "frame_transform": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                -1,
+                -1
+              ],
+              "translation": [
+                14,
+                7
+              ]
+            },
+            "from": [
+              7,
+              7
+            ],
+            "piece_frame_transform": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                -1,
+                -1
+              ],
+              "translation": [
+                14,
+                7
+              ]
+            },
+            "to": [
+              7,
+              0
+            ],
+            "traversal": {
+              "destination_boundary": "x+",
+              "glue_id": "sphere_02",
+              "source_boundary": "y+"
+            }
+          }
+        ],
+        "frame_transform": {
+          "permutation": [
+            1,
+            0
+          ],
+          "signs": [
+            -1,
+            -1
+          ],
+          "translation": [
+            14,
+            7
+          ]
+        },
+        "kind": "rigid_transform",
+        "moved_cells": [
+          [
+            7,
+            0
+          ]
+        ],
+        "rigidly_coherent": true
+      },
+      "probe_result": {
+        "blocked": false,
+        "frame_permutation": [
+          1,
+          0
+        ],
+        "frame_signs": [
+          -1,
+          -1
+        ],
+        "message": "y+: y+ -> x+ to [7, 0]",
+        "step": "y+",
+        "traversal": {
+          "glue_id": "sphere_02",
+          "source_boundary": "y+",
+          "target_boundary": "x+"
+        }
+      },
+      "state_hash": "9bc5f06fb6e3603a2667f846a2a0b7d0ec52eb8541d55e66a7dc1a67a9a836f8"
+    },
+    {
+      "after": {
+        "probe_coord": [
+          7,
+          7
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            1,
+            1
+          ]
+        }
+      },
+      "attempted_move": {
+        "axis": 1,
+        "delta": -1,
+        "label": "y-"
+      },
+      "before": {
+        "probe_coord": [
+          7,
+          0
+        ],
+        "probe_frame": {
+          "permutation": [
+            1,
+            0
+          ],
+          "signs": [
+            -1,
+            -1
+          ]
+        }
+      },
+      "command_id": "roundtrip_y_neg",
+      "diagnostics": {
+        "errors": [],
+        "explorer_reason": "Explorer/probe remains available because it follows single-cell traversal rather than rigid-piece transport.",
+        "explorer_usability": "cellwise_explorable",
+        "movement_summary": {
+          "boundary_traversal_count": 32,
+          "cell_count": 64,
+          "component_count": 1,
+          "directed_edge_count": 256
+        },
+        "recommended_next_preset": null,
+        "rigid_playability": "not_rigid_playable",
+        "rigid_reason": "Rigid transport fails when a two-cell piece partly crosses sphere_01 (x- -> y-) during x-.",
+        "status": "warning",
+        "summary": "Valid. Cellwise explorable. Not rigid-playable.",
+        "validity": "valid",
+        "validity_reason": "Current topology validates for the active board dimensions.",
+        "warnings": [
+          "Contains orientation-reversing seam transforms.",
+          "Contains cross-axis seam pairings.",
+          "Rigid transport fails when a two-cell piece partly crosses sphere_01 (x- -> y-) during x-."
+        ]
+      },
+      "frame_index": 1,
+      "legal": true,
+      "piece_transport": {
+        "cell_steps": [
+          {
+            "blocked": false,
+            "frame_transform": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                -1,
+                -1
+              ],
+              "translation": [
+                0,
+                7
+              ]
+            },
+            "from": [
+              7,
+              0
+            ],
+            "piece_frame_transform": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                -1,
+                -1
+              ],
+              "translation": [
+                0,
+                7
+              ]
+            },
+            "to": [
+              0,
+              0
+            ],
+            "traversal": {
+              "destination_boundary": "x-",
+              "glue_id": "sphere_01",
+              "source_boundary": "y-"
+            }
+          }
+        ],
+        "frame_transform": {
+          "permutation": [
+            1,
+            0
+          ],
+          "signs": [
+            -1,
+            -1
+          ],
+          "translation": [
+            0,
+            7
+          ]
+        },
+        "kind": "rigid_transform",
+        "moved_cells": [
+          [
+            0,
+            0
+          ]
+        ],
+        "rigidly_coherent": true
+      },
+      "probe_result": {
+        "blocked": false,
+        "frame_permutation": [
+          0,
+          1
+        ],
+        "frame_signs": [
+          1,
+          1
+        ],
+        "message": "y-: x+ -> y+ to [7, 7]",
+        "step": "y-",
+        "traversal": {
+          "glue_id": "sphere_02",
+          "source_boundary": "x+",
+          "target_boundary": "y+"
+        }
+      },
+      "state_hash": "a9d274e8d9436094708b1186a415c037e0333751e3908d2bb62d20b96f9fc83d"
+    }
+  ],
+  "generator": {
+    "name": "export_topology_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "axis_sizes": [
+      8,
+      8
+    ],
+    "diagnostics": {
+      "errors": [],
+      "explorer_reason": "Explorer/probe remains available because it follows single-cell traversal rather than rigid-piece transport.",
+      "explorer_usability": "cellwise_explorable",
+      "movement_summary": {
+        "boundary_traversal_count": 32,
+        "cell_count": 64,
+        "component_count": 1,
+        "directed_edge_count": 256
+      },
+      "recommended_next_preset": null,
+      "rigid_playability": "not_rigid_playable",
+      "rigid_reason": "Rigid transport fails when a two-cell piece partly crosses sphere_01 (x- -> y-) during x-.",
+      "status": "warning",
+      "summary": "Valid. Cellwise explorable. Not rigid-playable.",
+      "validity": "valid",
+      "validity_reason": "Current topology validates for the active board dimensions.",
+      "warnings": [
+        "Contains orientation-reversing seam transforms.",
+        "Contains cross-axis seam pairings.",
+        "Rigid transport fails when a two-cell piece partly crosses sphere_01 (x- -> y-) during x-."
+      ]
+    },
+    "glue_count": 2,
+    "gluings": [
+      {
+        "enabled": true,
+        "glue_id": "sphere_01",
+        "source": "x-",
+        "target": "y-",
+        "transform": {
+          "permutation": [
+            0
+          ],
+          "signs": [
+            -1
+          ]
+        }
+      },
+      {
+        "enabled": true,
+        "glue_id": "sphere_02",
+        "source": "x+",
+        "target": "y+",
+        "transform": {
+          "permutation": [
+            0
+          ],
+          "signs": [
+            -1
+          ]
+        }
+      }
+    ],
+    "notes": [],
+    "preview_error": null,
+    "preview_summary": {
+      "boundary_traversal_count": 32,
+      "component_count": 1,
+      "directed_edge_count": 256
+    },
+    "probe_coord": [
+      7,
+      7
+    ],
+    "probe_frame": {
+      "permutation": [
+        0,
+        1
+      ],
+      "signs": [
+        1,
+        1
+      ]
+    },
+    "resolver_error": null
+  },
+  "seed": null,
+  "topology_id": "sphere_like",
+  "trace_type": "topology",
+  "trace_version": 1
+}

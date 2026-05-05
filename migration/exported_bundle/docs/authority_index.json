@@ -1,0 +1,59 @@
+{
+  "bundle_version": 1,
+  "files": [
+    {
+      "purpose": "Current migration and handoff state.",
+      "role": "restart_handoff",
+      "sha256": "8986f6646b29355016960d9978ae27501cf40a31b24fd63452358d604ef53294",
+      "source_path": "CURRENT_STATE.md"
+    },
+    {
+      "purpose": "Active migration follow-up tracker.",
+      "role": "backlog",
+      "sha256": "68b5dc6af1f21cdc898164df0e05ff9f107823203f85aa5b6a460ce0fe70f133",
+      "source_path": "docs/BACKLOG.md"
+    },
+    {
+      "purpose": "Generated package layout and source-of-truth inventory.",
+      "role": "project_structure",
+      "sha256": "fe2cd0d6c238128ac556d22707c9ef5bde11acb7350a952a3de142a690f500e3",
+      "source_path": "docs/PROJECT_STRUCTURE.md"
+    },
+    {
+      "purpose": "Shared topology/gameplay/endgame product requirements.",
+      "role": "product_requirements",
+      "sha256": "f8487b03e025d0e033bbf9d065c7e196712d7973f6178b0b0181711c59c20e56",
+      "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
+    },
+    {
+      "purpose": "Menu/config authority for launcher, settings, and keybindings.",
+      "role": "menu_requirements",
+      "sha256": "2043696bfc42b93e6ed0ffefda45b5ae77edc71f51303c716e1555e46bb352b8",
+      "source_path": "docs/rds/RDS_MENU_STRUCTURE.md"
+    },
+    {
+      "purpose": "Frozen topology lab semantics and migration boundary.",
+      "role": "topology_authority",
+      "sha256": "bd06973ac662349f98497127adbaa6d82d192291f064ff677aa05e08128287ab",
+      "source_path": "docs/plans/topology_playground_current_authority.md"
+    },
+    {
+      "purpose": "Stage 2 topology/gameplay trace oracle contract.",
+      "role": "trace_authority",
+      "sha256": "8d01fe09d570147d139ff6aef13eb4b8f16d969cf62472639698d5b94b031b63",
+      "source_path": "docs/plans/topology_gameplay_trace_export.md"
+    },
+    {
+      "purpose": "Stage 3 endgame trace oracle contract.",
+      "role": "endgame_trace_authority",
+      "sha256": "d977497e4213d7e9bb0862afb117a1e5f65095351c5c819feae01f25089cd748",
+      "source_path": "docs/plans/endgame_trace_export.md"
+    },
+    {
+      "purpose": "Stage 4 generated config bundle and packaging boundary contract.",
+      "role": "migration_bundle_authority",
+      "sha256": "a1f0ca2e4becec1b7e85215ac6153c99d0958b4114281e5f5adbccc5ebd6cfff",
+      "source_path": "docs/plans/migration_config_bundle.md"
+    }
+  ]
+}
