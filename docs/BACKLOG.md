@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-04-30
+Updated: 2026-05-05
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -22,12 +22,24 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Current sub-batch (2026-04-21): topology-playground shell-preserving cleanup
-remains active after the workflow-profile follow-up landed as a separate docs
-branch.
+Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
+migration, and Stage 2 topology/gameplay golden trace export now records that
+behavior as the Python-authoritative migration oracle. Follow-up work should
+treat topology/gameplay behavior as frozen and replay
+`migration/golden_traces/` before any Unity/Godot/C#/C++ implementation;
+shell-preserving cleanup remains structural-only and must not reopen semantics.
 
 Current active follow-ups:
 
+- topology semantics are now the migration-blocking authority: `Editor` owns
+  construction/validation/launch eligibility, `Sandbox` owns free probing, and
+  `Play` owns gameplay launch plus stricter drop/lock legality; wrap /
+  invert / sphere-like choices remain transport presets rather than UI themes
+- Stage 2 exports golden topology/gameplay traces from the Python authority;
+  any Unity/Godot migration must replay those traces before implementing
+  independent transport or gravity/drop logic
+- endgame golden traces are intentionally deferred to Stage 3 or a later
+  endgame rescue/export task
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -93,16 +105,19 @@ Current active follow-ups:
 - Acceptance bar:
   1. `Topology Playground` remains the direct modern launcher entry
   2. visible workspaces remain `Editor` / `Sandbox` / `Play`
-  3. top bar remains limited to title, workspace tabs, validity chip, and the
+  3. topology/gameplay semantics remain frozen: sandbox probing may exceed
+     play drop legality, launched gameplay preserves canonical topology
+     transport semantics, and unsafe/playability diagnostics stay deterministic
+  4. top bar remains limited to title, workspace tabs, validity chip, and the
      current dimension chip
-  4. left sidebar remains limited to the accepted `Editor` / `Sandbox` /
+  5. left sidebar remains limited to the accepted `Editor` / `Sandbox` /
      `Play` inventories, with diagnostics collapsed or secondary
-  5. helper stays minimal and external, diagnostics stay secondary
-  6. required UI text remains visible and unobscured at supported compact sizes
-  7. first-frame explorer startup no longer waits for the full rigid
+  6. helper stays minimal and external, diagnostics stay secondary
+  7. required UI text remains visible and unobscured at supported compact sizes
+  8. first-frame explorer startup no longer waits for the full rigid
      playability scan, and same-signature refreshes reuse cached playability
      results
-  8. follow-up branches stay single-concern and `CODEX_MODE=1 ./scripts/verify.sh`
+  9. follow-up branches stay single-concern and `CODEX_MODE=1 ./scripts/verify.sh`
      stays green
 
 ## 3. Active Open Backlog / TODO
@@ -125,6 +140,15 @@ stays synchronized, and the contract validator accepts the backlog shape.
    preserve deferred rigid playability analysis, signature-based cache reuse,
    and launch-time forced completion without reopening the frozen shell
    contract.
+3. `DONE` `[BKL-P3-010]` Stage 2 golden trace export:
+   authoritative topology/gameplay traces are exported from the frozen Python
+   lab under `migration/golden_traces/`, and
+   `tools/migration/compare_trace.py` regenerates and compares them before
+   engine migration work implements independent transport or drop/lock logic.
+4. `NEXT` `[BKL-P3-011]` Endgame trace/export or engine replay spike:
+   either rescue the endgame model and add endgame golden traces, or run a
+   Unity/Godot trace replay spike against the Stage 2 topology/gameplay oracle
+   while keeping endgame behavior deferred.
 
 ## Governance Watchlist
 

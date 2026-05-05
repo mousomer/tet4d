@@ -4,7 +4,7 @@ Role: spec
 Status: frozen
 Source of truth: this file for the accepted visible-shell contract
 Supersedes: older shell-cleanup wording and playground shell notes
-Last updated: 2026-03-29
+Last updated: 2026-05-05
 
 ## Purpose
 
@@ -28,6 +28,11 @@ This spec must preserve:
 - direct playground entry opening in `Sandbox`
 - canonical runtime selectors as the only explorer-path input authority
 - current Play drop-policy semantics
+- the migration-blocking topology semantic freeze; visual shell polish is not
+  the blocker
+- Stage 2 topology/gameplay golden traces as the migration replay oracle;
+  future engine work must replay those traces before implementing independent
+  topology or gameplay logic
 - the legacy topology editor as a legacy-only path outside `Topology
   Playground`, `Explorer`, and `Path`
 - the frozen probe/sandbox render distinction
@@ -256,6 +261,10 @@ The visible-shell redesign and panel-correction work are landed.
 
 The next phase is implementation simplification around the frozen shell,
 without changing the accepted shell contract above.
+
+Stage 2 topology/gameplay golden trace export now exists. Any Unity/Godot
+migration must replay those traces before implementing independent transport
+or drop/lock logic. Endgame trace export remains deferred.
 
 Primary refactor targets:
 

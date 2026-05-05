@@ -13,6 +13,9 @@ from tet4d.engine.topology_explorer.presets import (
     mobius_strip_profile_2d,
     projective_plane_profile_2d,
     projective_space_profile_3d,
+    sphere_profile_2d,
+    sphere_profile_3d,
+    sphere_profile_4d,
     swap_xw_profile_4d,
     swapped_xz_profile_3d,
 )
@@ -175,6 +178,82 @@ class TestExplorerTransportResolver(unittest.TestCase):
             result.frame_transform.apply_absolute((0, 1, 2, 1)),
             (1, 1, 1, 3),
         )
+
+    def test_sphere_like_transport_routes_cross_axis_seams_consistently(self) -> None:
+        cases = (
+            (
+                "sphere_2d",
+                sphere_profile_2d(),
+                (8, 8),
+                (7, 7),
+                MoveStep(axis=1, delta=1),
+                (7, 0),
+                "y+",
+                "x+",
+                (1, 0),
+                (-1, -1),
+            ),
+            (
+                "sphere_3d",
+                sphere_profile_3d(),
+                (4, 4, 4),
+                (3, 3, 0),
+                MoveStep(axis=1, delta=1),
+                (3, 3, 0),
+                "y+",
+                "x+",
+                (2, 0, 1),
+                (-1, -1, -1),
+            ),
+            (
+                "sphere_4d",
+                sphere_profile_4d(),
+                (4, 4, 4, 4),
+                (3, 3, 1, 0),
+                MoveStep(axis=1, delta=1),
+                (3, 3, 2, 0),
+                "y+",
+                "x+",
+                (3, 0, 2, 1),
+                (-1, -1, -1, -1),
+            ),
+        )
+
+        for (
+            label,
+            profile,
+            dims,
+            coord,
+            step,
+            expected_target,
+            expected_source,
+            expected_dest,
+            expected_permutation,
+            expected_signs,
+        ) in cases:
+            with self.subTest(case=label):
+                resolver = build_explorer_transport_resolver(profile, dims)
+
+                forward = resolver.resolve_cell_step(coord, step)
+
+                self.assertEqual(forward.target, expected_target)
+                self.assertIsNotNone(forward.traversal)
+                self.assertEqual(forward.traversal.source_boundary.label, expected_source)
+                self.assertEqual(forward.traversal.target_boundary.label, expected_dest)
+                self.assertIsNotNone(forward.frame_transform)
+                self.assertEqual(
+                    forward.frame_transform.permutation,
+                    expected_permutation,
+                )
+                self.assertEqual(forward.frame_transform.signs, expected_signs)
+
+                reverse = resolver.resolve_cell_step(
+                    forward.target,
+                    _reverse_exit_step(forward.traversal),
+                )
+                self.assertEqual(reverse.target, coord)
+                self.assertIsNotNone(reverse.traversal)
+                self.assertEqual(reverse.traversal.glue_id, forward.traversal.glue_id)
 
     def test_roundtrip_seam_consistency(self) -> None:
         cases = (

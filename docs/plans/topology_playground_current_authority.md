@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file
 Supersedes: older topology-playground manifests and stage plans
-Last updated: 2026-04-18
+Last updated: 2026-05-05
 
 ## Purpose
 
@@ -52,6 +52,8 @@ Transitional debt belongs in
   flow.
 - Legacy `inspect_boundary` is accepted only at narrow compatibility
   boundaries, where it must normalize to canonical `probe`.
+- Editor owns topology construction, boundary gluing, preset selection,
+  validation, validity status, and launch eligibility.
 - Editor movement is always non-mutating, even when an edit-capable Editor tool
   is active.
 - Probe movement, trace, and edit targeting must derive from the same canonical
@@ -62,8 +64,16 @@ Transitional debt belongs in
 - `Neighbors` is a Sandbox-owned contextual control.
 - Sandbox is a separate piece-experimentation workspace. It does not implicitly
   mean neighbor-search.
+- Sandbox owns free probe/piece exploration, seam visibility, and movement
+  diagnostics even when that exploratory movement is broader than Play
+  legality.
 - Play is a separate gameplay workspace. Translation legality and drop legality
   are distinct on non-trivial `Y`-seam topologies.
+- Play launch must preserve the exact canonical explorer profile and transport
+  semantics selected in the lab. No silent fallback, partial reconstruction,
+  or default-topology substitution is allowed on the `Play This Topology` path.
+- Wrap / invert / sphere-like selections are model-level transport presets.
+  They are not visual-only presets, spawn presets, or renderer hints.
 - Topology-playground-launched `Explore This Topology` uses the gameplay
   `menu` action as a direct return-to-playground transition rather than
   opening the generic independent gameplay pause menu.
@@ -73,6 +83,9 @@ Transitional debt belongs in
 - Play groundedness and lock are based on whether one legal drop continuation
   exists under the Play drop policy, not on generic seam adjacency or generic
   transport reachability.
+- Sandbox/Explorer may traverse `Y` seams cellwise for exploration, but Play
+  gravity, soft drop, and hard drop must not treat a `Y`-seam traversal as an
+  ordinary drop continuation.
 - Hard drop must match repeated legal drop continuation.
 - Canonical runtime selectors are the only accepted explorer-path input
   authority.
@@ -211,6 +224,19 @@ It must not reopen the accepted `Editor` / `Sandbox` / `Play` workspace model,
 the accepted sandbox-first entry path, the current helper/diagnostics contract,
 the canonical runtime-selector authority, the probe rendering contract, or the
 settled Play drop-policy contract.
+
+The current migration boundary is now explicit:
+
+- topology semantics are frozen and are migration-blocking authority
+- Pygame shell polish is not migration-blocking
+- Stage 2 topology/gameplay golden trace export exists under
+  `tools/migration/` with checked-in traces in `migration/golden_traces/`
+- those traces are the Python-authoritative migration oracle for topology
+  transport, Sandbox/Play distinction, Y-axis drop policy, gameplay state, and
+  `Play This Topology` launch parity
+- Unity/Godot or other engine migration work must replay exported traces
+  before implementing independent transport or drop/lock logic
+- endgame trace export is intentionally deferred beyond Stage 2
 
 ## Current active priorities
 

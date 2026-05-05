@@ -12,6 +12,7 @@ tet4d/
 |- cli/                         thin entrypoint shims
 |- config/                      source-controlled runtime/config assets
 |- docs/                        RDS, policies, handoff, and release docs
+|- migration/                   checked-in golden traces for migration replay
 |- packaging/                   PyInstaller spec and OS packaging scripts
 |- scripts/                     local verification and architecture checks
 |- src/tet4d/
@@ -25,7 +26,7 @@ tet4d/
 |  |- replay/                   replay schema/playback helpers
 |  `- ui/pygame/                pygame adapters and frontends
 |- tests/                       top-level test tree
-`- tools/                       governance, stability, benchmark tooling
+`- tools/                       governance, migration traces, stability, benchmark tooling
 ```
 
 ## Dependency Direction
@@ -130,6 +131,9 @@ The current rule is one-way:
 5. Keep CLI files as thin shims over package code.
 6. Prefer reusing an existing canonical owner over adding wrappers.
 7. Do not reintroduce reverse imports from engine into UI or AI.
+8. Put migration replay/export tooling in `tools/migration/` and checked-in
+   small replay artifacts in `migration/golden_traces/`; these artifacts are
+   migration oracles, not gameplay authority.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

@@ -169,6 +169,66 @@ class TestTopologyPlayabilitySignal(unittest.TestCase):
         )
         self.assertTrue(analysis.errors)
 
+    def test_repeated_analysis_is_deterministic_for_valid_warning_and_invalid_states(
+        self,
+    ) -> None:
+        cases = (
+            (
+                "bounded",
+                self._state(
+                    2,
+                    axis_sizes=(4, 4),
+                    explorer_profile=ExplorerTopologyProfile(dimension=2, gluings=()),
+                ),
+                True,
+            ),
+            (
+                "projective_warning",
+                self._state(
+                    2,
+                    axis_sizes=(4, 4),
+                    explorer_profile=projective_plane_profile_2d(),
+                ),
+                True,
+            ),
+            (
+                "invalid_sphere",
+                self._state(
+                    2,
+                    axis_sizes=(5, 4),
+                    explorer_profile=sphere_profile_2d(),
+                ),
+                False,
+            ),
+        )
+
+        for label, state, compile_preview in cases:
+            with self.subTest(case=label):
+                if compile_preview:
+                    preview_one = compile_explorer_topology_preview(
+                        state.explorer_profile,
+                        dims=state.axis_sizes,
+                        source="playability_signal_test",
+                    )
+                    preview_two = compile_explorer_topology_preview(
+                        state.explorer_profile,
+                        dims=state.axis_sizes,
+                        source="playability_signal_test",
+                    )
+                    analysis_one = derive_topology_playability_analysis(
+                        state,
+                        preview=preview_one,
+                    )
+                    analysis_two = derive_topology_playability_analysis(
+                        state,
+                        preview=preview_two,
+                    )
+                else:
+                    analysis_one = derive_topology_playability_analysis(state)
+                    analysis_two = derive_topology_playability_analysis(state)
+
+                self.assertEqual(analysis_one, analysis_two)
+
 
 if __name__ == "__main__":
     unittest.main()

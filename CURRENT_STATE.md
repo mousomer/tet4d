@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-04-30  
+Last updated: 2026-05-05  
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -14,6 +14,20 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 - Primary product cleanup still routes through
   `docs/plans/topology_playground_current_authority.md` and
   `docs/BACKLOG.md`.
+- Topology Lab semantic freeze is now the migration-blocking gameplay
+  authority: `Editor` owns topology construction, gluing, preset selection,
+  validation, and launch eligibility; `Sandbox` owns free probe/piece
+  exploration and seam diagnostics; `Play` owns launched gameplay with its
+  stricter drop/lock legality. Wrap / invert / sphere-like selections are
+  transport presets, not visual presets or spawn presets.
+- Stage 2 topology/gameplay golden trace export now exists under
+  `tools/migration/` with checked-in traces in `migration/golden_traces/`.
+  Those traces are the Python-authoritative migration oracle for topology
+  transport, Sandbox-vs-Play movement distinction, gameplay drop/lock policy,
+  and `Play This Topology` launch parity. Unity, Godot, C#, C++, or any other
+  engine migration must replay those traces before introducing independent
+  transport or drop/lock logic. Endgame traces remain out of Stage 2 scope.
+  Pygame shell polish is not the blocking item for that migration.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -235,12 +249,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.39` (`low`)
+- `tech_debt.score = 5.29` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.60`
-2. `code_balance = 1.79`
+1. `delivery_size_pressure = 2.62`
+2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->

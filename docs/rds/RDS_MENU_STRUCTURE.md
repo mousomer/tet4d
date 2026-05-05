@@ -150,6 +150,12 @@ Pause Menu
 11. `Topology Playground` launches the modern playground directly; it must not expose a legacy-editor submenu or gameplay-path chooser.
 12. `Legacy Topology Editor` is a backward-compatibility surface reachable only through `Settings -> Board / Setup Defaults`.
 13. `Explorer` / `Path` UI must not expose or route to the legacy topology editor/menu.
+- Within `Topology Playground`, `Editor` owns topology construction and
+  validation, `Sandbox` owns free probing/experimentation, and `Play` owns
+  gameplay launch plus play-specific legality.
+- `Play This Topology` must launch the exact currently selected and validated
+  topology transport semantics from the lab; menu routing must not silently
+  swap in a default topology or a partially reconstructed fallback.
 14. `kick_level` is a shared gameplay rule, not a per-mode setup field, and persists in `state/menu_settings.json`.
 15. `Help / Tutorials` is the learning/support umbrella, but `Interactive Tutorials`,
     `How to Play`, `Controls Reference`, and `Help / FAQ` must remain explicit
