@@ -49,6 +49,7 @@ from .defaults_store import (
     mode_explosion_defaults,
     save_mode_explosion_defaults,
 )
+from . import endgame_preview
 from .simulation import (
     assign_particle_masses,
     total_kinetic_energy_for_particles,
@@ -132,6 +133,7 @@ _W_MOVEMENT_ANIMATION_LABELS = {
     _W_MOVEMENT_ANIMATION_FADE: "Fade",
     _W_MOVEMENT_ANIMATION_BOX_SIZE: "Box Size",
 }
+_SHELL_PREVIEW_TIME_SCALES = (0.25, 0.5, 1.0, 2.0)
 
 _ALL_ROW_KEYS = (
     "dimension",
@@ -157,6 +159,8 @@ _ALL_ROW_KEYS = (
     "w_movement_animation",
     "trace_enabled",
     "trace_retention",
+    "shell_preview_enabled",
+    "shell_preview_time_scale",
     "speed_preset",
     "sound_enabled",
     "seed",
@@ -231,6 +235,11 @@ class StandaloneExplosionSurfaceState:
     trace_enabled: bool = False
     trace_retention_ms: float = EXPLOSION_TRAIL_MAX_LIFETIME_MS
     trace_retention_input_text: str = ""
+    shell_preview_enabled: bool = False
+    shell_preview_time_scale: float = 1.0
+    shell_preview_elapsed_ms: float = 0.0
+    shell_preview_signature: tuple[object, ...] | None = None
+    shell_preview_cache: object | None = None
     speed_preset: str = EXPLOSION_SPEED_NORMAL
     w_movement_animation_style: str = _W_MOVEMENT_ANIMATION_FADE
     endgame_live_cell_fraction: float = ENDGAME_LIVE_CELL_FRACTION_DEFAULT
@@ -269,6 +278,7 @@ def build_standalone_explosion_surface_state(
     resolved_dimension = int(dimension) if int(dimension) in _DIMENSIONS else 2
     state = StandaloneExplosionSurfaceState(
         dimension=resolved_dimension,
+        shell_preview_time_scale=endgame_preview.default_shell_preview_time_scale(),
     )
     _apply_persisted_explosion_defaults(state)
     _ensure_view_state(state)
@@ -407,6 +417,8 @@ def _dynamic_row_keys(
             *(("w_movement_animation",) if int(state.dimension) == 4 else ()),
             "trace_enabled",
             "trace_retention",
+            "shell_preview_enabled",
+            "shell_preview_time_scale",
             "endgame_live_cell_fraction",
             "speed_preset",
             "sound_enabled",
@@ -440,6 +452,8 @@ def _row_label_text(row_key: str) -> str:
         "w_movement_animation": "W Movement",
         "trace_enabled": "Trace",
         "trace_retention": "Trace Retention",
+        "shell_preview_enabled": "Endgame Shell Preview",
+        "shell_preview_time_scale": "Shell Preview Time Scale",
         "endgame_live_cell_fraction": "Endgame Live Fraction",
         "speed_preset": "Speed Preset",
         "sound_enabled": "Sound",
@@ -560,6 +574,7 @@ def _normalize_piece_selection(
 def _normalize_simulation_settings(
     state: StandaloneExplosionSurfaceState,
 ) -> None:
+    default_preview_scale = endgame_preview.default_shell_preview_time_scale()
     if str(state.boundary_response) not in EXPLOSION_BOUNDARY_RESPONSES:
         state.boundary_response = EXPLOSION_BOUNDARY_RESPONSES[0]
     if str(state.particle_collisions) not in EXPLOSION_PARTICLE_COLLISION_MODES:
@@ -584,6 +599,9 @@ def _normalize_simulation_settings(
     state.endgame_live_cell_fraction = clamp_endgame_live_cell_fraction(
         state.endgame_live_cell_fraction
     )
+    if float(state.shell_preview_time_scale) not in _SHELL_PREVIEW_TIME_SCALES:
+        nearest = min(_SHELL_PREVIEW_TIME_SCALES, key=lambda value: abs(float(value) - float(state.shell_preview_time_scale or default_preview_scale)))
+        state.shell_preview_time_scale = float(nearest)
     if not str(state.trace_retention_input_text).strip():
         state.trace_retention_input_text = _trace_retention_input_text(
             state.trace_retention_ms
@@ -864,6 +882,11 @@ def build_standalone_explosion_config(
     _normalize_surface_state(state)
     topology = _topology_input_for_state(state)
     occupied_cells = _source_cells_for_state(state, board_dims=topology.board_dims)
+    occupied_cells = endgame_preview.preview_survivor_cells_for_state(
+        state,
+        source_cells=occupied_cells,
+        board_dims=topology.board_dims,
+    )
     return StandaloneExplosionConfig(
         dimension=int(state.dimension),
         topology=topology,
@@ -988,6 +1011,7 @@ def _post_restart_status(state: StandaloneExplosionSurfaceState) -> str:
 def restart_standalone_explosion(
     state: StandaloneExplosionSurfaceState,
 ) -> LockedCellExplosionController:
+    endgame_preview.reset_shell_preview_state(state)
     state.controller = _build_controller(state)
     state.status = _post_restart_status(state)
     state.status_error = False
@@ -1012,6 +1036,7 @@ def _requires_restart_for_row(row_key: str) -> bool:
         "random_mass_max",
         "collision_elasticity",
         "diagnostics_mode",
+        "shell_preview_time_scale",
     }
 
 
@@ -1338,6 +1363,8 @@ def _row_control_kind(row_key: str) -> str:
         "shadow_mode",
         "w_movement_animation",
         "trace_enabled",
+        "shell_preview_enabled",
+        "shell_preview_time_scale",
         "speed_preset",
         "sound_enabled",
     }:
@@ -1493,7 +1520,7 @@ def _adjust_simulation_row(
         return _adjust_option_cycle_row(state, row_key=row_key, step=step)
     if row_key == "diagnostics_mode":
         return _adjust_option_cycle_row(state, row_key=row_key, step=step)
-    if row_key in {"speed_preset", "trace_retention", "trace_enabled", "sound_enabled", "w_movement_animation", "seed", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"}:
+    if row_key in {"speed_preset", "trace_retention", "trace_enabled", "shell_preview_enabled", "shell_preview_time_scale", "sound_enabled", "w_movement_animation", "seed", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"}:
         return _adjust_misc_simulation_row(state, row_key=row_key, step=step)
     return False
 
@@ -1579,6 +1606,18 @@ def _adjust_misc_simulation_row(
     if row_key == "trace_enabled":
         state.trace_enabled = not bool(state.trace_enabled)
         return True
+    if row_key == "shell_preview_enabled":
+        state.shell_preview_enabled = not bool(state.shell_preview_enabled)
+        return True
+    if row_key == "shell_preview_time_scale":
+        state.shell_preview_time_scale = float(
+            _cycle_option(
+                f"{float(state.shell_preview_time_scale):g}",
+                tuple(f"{value:g}" for value in _SHELL_PREVIEW_TIME_SCALES),
+                step,
+            )
+        )
+        return True
     if row_key == "sound_enabled":
         state.sound_enabled = not bool(state.sound_enabled)
         return True
@@ -1663,6 +1702,8 @@ def _row_value_overrides(
             str(state.w_movement_animation_style)
         ],
         "trace_enabled": "ON" if state.trace_enabled else "OFF",
+        "shell_preview_enabled": "ON" if state.shell_preview_enabled else "OFF",
+        "shell_preview_time_scale": f"{float(state.shell_preview_time_scale):g}x",
         "trace_retention": _numeric_display_text_for_row(state, "trace_retention"),
         "endgame_live_cell_fraction": _numeric_display_text_for_row(
             state, "endgame_live_cell_fraction"
@@ -1713,6 +1754,8 @@ def _dropdown_current_value(
         "shadow_mode": str(state.shadow_mode.value),
         "w_movement_animation": str(state.w_movement_animation_style),
         "trace_enabled": "on" if state.trace_enabled else "off",
+        "shell_preview_enabled": "on" if state.shell_preview_enabled else "off",
+        "shell_preview_time_scale": f"{float(state.shell_preview_time_scale):g}",
         "speed_preset": str(state.speed_preset),
         "sound_enabled": "on" if state.sound_enabled else "off",
     }
@@ -1795,19 +1838,26 @@ def _draw_native_board_preview(
     controller: LockedCellExplosionController | None,
     state: StandaloneExplosionSurfaceState,
 ) -> None:
+    board_dims = _board_dims_for_state(state)
+    source_cells = _source_cells_for_state(state, board_dims=board_dims)
     draw_native_board_view(
         screen,
         rect=area,
         fonts=fonts,
         controller=controller,
         dimension=int(state.dimension),
-        board_dims=_board_dims_for_state(state),
+        board_dims=board_dims,
         camera_3d=state.camera_3d,
         view_4d=state.view_4d,
         show_trace=bool(state.trace_enabled),
         grid_mode=state.grid_mode,
         shadow_mode=state.shadow_mode,
         w_movement_animation_style=state.w_movement_animation_style,
+        shell_preview=endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        ),
     )
 
 
@@ -1930,7 +1980,12 @@ def _preview_header_text(state: StandaloneExplosionSurfaceState) -> str:
     mode_label = _VIEW_MODE_LABELS[str(state.view_mode)]
     if int(state.dimension) == 2:
         mode_label = "Board View"
-    return f"{mode_label}: {_topology_value_text(state)}"
+    preview = (
+        f" | Shell Preview {float(state.shell_preview_time_scale):g}x"
+        if state.shell_preview_enabled
+        else ""
+    )
+    return f"{mode_label}: {_topology_value_text(state)}{preview}"
 
 
 def _footer_lines(state: StandaloneExplosionSurfaceState, *, fonts, max_width: int) -> tuple[str, ...]:
@@ -2158,6 +2213,8 @@ def _dropdown_values_for_row(
             for value in _w_movement_animation_options()
         ),
         "trace_enabled": (("off", "OFF"), ("on", "ON")),
+        "shell_preview_enabled": (("off", "OFF"), ("on", "ON")),
+        "shell_preview_time_scale": tuple((f"{value:g}", f"{value:g}x") for value in _SHELL_PREVIEW_TIME_SCALES),
         "speed_preset": tuple((value, value.upper()) for value in EXPLOSION_SPEED_PRESETS),
         "sound_enabled": (("off", "OFF"), ("on", "ON")),
     }
@@ -2195,19 +2252,6 @@ def _apply_dropdown_value(
     row_key: str,
     raw_value: str,
 ) -> bool:
-    simple_setters = {
-        "view_mode": ("view_mode", str(raw_value)),
-        "topology": ("topology_preset_id", str(raw_value)),
-        "piece_shape": ("piece_shape_name", str(raw_value)),
-        "boundary_response": ("boundary_response", str(raw_value)),
-        "particle_collisions": ("particle_collisions", str(raw_value)),
-        "mass_mode": ("mass_mode", str(raw_value)),
-        "diagnostics_mode": ("diagnostics_mode", str(raw_value)),
-        "speed_preset": ("speed_preset", str(raw_value)),
-        "w_movement_animation": ("w_movement_animation_style", str(raw_value)),
-        "trace_enabled": ("trace_enabled", str(raw_value) == "on"),
-        "sound_enabled": ("sound_enabled", str(raw_value) == "on"),
-    }
     if row_key == "dimension":
         state.dimension = int(raw_value)
         _normalize_surface_state(state)
@@ -2226,6 +2270,33 @@ def _apply_dropdown_value(
     if row_key == "shadow_mode":
         state.shadow_mode = ShadowMode(str(raw_value))
         return True
+    if row_key == "shell_preview_time_scale":
+        state.shell_preview_time_scale = float(raw_value)
+        _normalize_surface_state(state)
+        return True
+    return _apply_simple_dropdown_value(state, row_key=row_key, raw_value=raw_value)
+
+
+def _apply_simple_dropdown_value(
+    state: StandaloneExplosionSurfaceState,
+    *,
+    row_key: str,
+    raw_value: str,
+) -> bool:
+    simple_setters = {
+        "view_mode": ("view_mode", str(raw_value)),
+        "topology": ("topology_preset_id", str(raw_value)),
+        "piece_shape": ("piece_shape_name", str(raw_value)),
+        "boundary_response": ("boundary_response", str(raw_value)),
+        "particle_collisions": ("particle_collisions", str(raw_value)),
+        "mass_mode": ("mass_mode", str(raw_value)),
+        "diagnostics_mode": ("diagnostics_mode", str(raw_value)),
+        "speed_preset": ("speed_preset", str(raw_value)),
+        "w_movement_animation": ("w_movement_animation_style", str(raw_value)),
+        "trace_enabled": ("trace_enabled", str(raw_value) == "on"),
+        "shell_preview_enabled": ("shell_preview_enabled", str(raw_value) == "on"),
+        "sound_enabled": ("sound_enabled", str(raw_value) == "on"),
+    }
     if row_key in simple_setters:
         attribute, value = simple_setters[row_key]
         setattr(state, attribute, value)
@@ -2660,6 +2731,7 @@ def run_standalone_explosion_launcher(
         if state.controller is not None:
             for event_name in state.controller.step(dt_ms):
                 play_sfx(event_name)
+        endgame_preview.advance_shell_preview_elapsed(state, dt_ms)
         _draw_surface(screen, fonts, state)
         pygame.display.flip()
     return True, "Explosion simulator closed"

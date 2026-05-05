@@ -60,6 +60,13 @@ Current active follow-ups:
 - settings follow-up: optional future cleanup to unify the Settings custom loop
   with `MenuRunner` if/when it becomes a small, safe change (no rewrite, no
   duplicated row models, preserve numeric text mode).
+- endgame shell follow-up: keep the staged simulator preview harness as the
+  fast tuning surface for hold/rupture/shard/residue timing and future actual
+  gameplay wiring, while continuing to keep escaping cells out of live
+  particles and using only capped short-lived rupture proxies for preview-only
+  source-to-boundary escape visualization; keep the new escape-event /
+  data-only sound model in `endgame_shell_effects.py` as the single causal
+  owner while renderer/audio adoption stays staged.
 - persistence follow-up: migrate integer-backed categorical/bool fields toward
   named ids and booleans where feasible (keep semantic/storage typing explicit).
 - governance follow-up: validate the new launcher root IA and tighten

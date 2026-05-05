@@ -148,7 +148,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   4D W-movement style reaches the actual layer draw path, and rupture timing
   now uses a stronger config-backed charge/breakaway/artifact-visibility window
   with low-alpha cracked-board residue derived from capped grid-break marks and
-  static shell state,
+  static shell state; the standalone simulator now also owns a preview-only
+  staged shell harness with config-backed hold/rupture/shard/residue timing,
+  a preview-only time-scale control, frozen source-cell hold rendering before
+  rupture, capped short-lived cell-shaped rupture proxies that launch from
+  those exact frozen source cells toward the selected boundary impacts, and
+  impact/shard/residue overlays that keep escaping cells out of the shared
+  controller/native-board survivor particle path; shell-preview model causality
+  now also routes through `endgame_shell_effects.py` escape-event chains plus
+  data-only sound-event generation before any later renderer/audio adoption,
   `4D` true-board preview now supports selectable `fade` / `box_size`
   W-movement animation styles while reusing the gameplay layer-scale path,
   shared ND camera input now reuses the existing gameplay/explorer
@@ -223,16 +231,16 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 255` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 256` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.22` (`low`)
+- `tech_debt.score = 5.39` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.56`
-2. `code_balance = 1.67`
+1. `delivery_size_pressure = 2.60`
+2. `code_balance = 1.79`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -243,13 +251,13 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-2. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `2969` real LOC
-3. `tests/unit/render/test_locked_cell_explosion.py`: `2786` real LOC
+2. `tests/unit/render/test_locked_cell_explosion.py`: `3466` real LOC
+3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3039` real LOC
 4. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
 5. `tools/governance/validate_project_contracts.py`: `1914` real LOC
 6. `src/tet4d/ui/pygame/endgame_animation.py`: `1905` real LOC
 7. `scripts/arch_metrics.py`: `1890` real LOC
-8. `src/tet4d/ui/pygame/render/gfx_game.py`: `1553` real LOC
+8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1691` real LOC
 
 Thin-wrapper budgets:
 

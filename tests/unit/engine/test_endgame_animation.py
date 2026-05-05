@@ -15,9 +15,10 @@ from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_INVERT, EDGE_WRAP
 from tet4d.engine.runtime import menu_settings_state
-from tet4d.engine.runtime.project_config import state_dir_path
+from tet4d.engine.runtime.project_config import constants_payload, state_dir_path
 from tet4d.ui.pygame import (
     endgame_animation,
+    endgame_shell_effects,
     front2d_frame,
     front3d_game,
     front3d_render,
@@ -1426,6 +1427,89 @@ class TestEndgameAnimation(unittest.TestCase):
             len(loop_3d.endgame_animation.snapshot.persistent_live_cells),
         )
         self.assertGreater(len(loop_3d.endgame_animation.shell_fragments), 0)
+
+
+def _shell_tuning() -> dict[str, object]:
+    return constants_payload()["animation"]["endgame"]
+
+
+def _shell_cells(dims: tuple[int, ...], count: int) -> tuple[endgame_animation.SnapshotCell, ...]:
+    cells: list[endgame_animation.SnapshotCell] = []
+    for index in range(count):
+        rem, coord = index, []
+        for size in dims:
+            coord.append(rem % size)
+            rem //= size
+        cells.append(endgame_animation.SnapshotCell(tuple(coord), tuple(float(v) for v in coord), (index % 7) + 1, coord[3] if len(coord) == 4 else None))
+    return tuple(cells)
+
+
+def _shell_escaping(dims: tuple[int, ...], count: int) -> tuple[endgame_animation.SnapshotCell, ...]:
+    return endgame_animation.split_endgame_locked_cells(
+        locked_cells=_shell_cells(dims, count), dimension=len(dims), seed=2026, live_fraction=0.12
+    ).escaping_cells
+
+
+def _shell_impacts(dims: tuple[int, ...], seed: int = 43) -> tuple[endgame_shell_effects.EndgameBoundaryImpact, ...]:
+    return endgame_shell_effects.build_boundary_impacts(
+        escaping_cells=_shell_escaping(dims, 300), board_dims=dims, rng_seed=seed, dimension=len(dims), tuning=_shell_tuning()
+    )
+
+
+def test_shell_impacts_derive_from_escaping_cells_and_are_capped() -> None:
+    escaping = _shell_escaping((12, 12, 8), 120)
+    impacts = endgame_shell_effects.build_boundary_impacts(
+        escaping_cells=escaping, board_dims=(12, 12, 8), rng_seed=17, dimension=3, tuning=_shell_tuning()
+    )
+    assert {impact.source_coord for impact in impacts}.issubset({cell.source_coord for cell in escaping})
+    for dims in ((20, 20), (12, 12, 8), (8, 8, 6, 4)):
+        assert len(_shell_impacts(dims)) <= endgame_shell_effects.boundary_impact_cap_for_dimension(len(dims), _shell_tuning())
+
+
+def test_shell_impacts_hit_boundary_planes_and_are_reversed_input_stable() -> None:
+    dims = (12, 12, 8)
+    for impact in _shell_impacts(dims):
+        assert impact.impact_position[impact.axis] in {-0.5, float(dims[impact.axis]) - 0.5}
+        assert impact.side in {-1, 1}
+    escaping, tuning = _shell_escaping((8, 8, 6, 4), 260), _shell_tuning()
+    kwargs = {"board_dims": (8, 8, 6, 4), "rng_seed": 43, "dimension": 4, "tuning": tuning}
+    forward = endgame_shell_effects.build_boundary_impacts(escaping_cells=escaping, **kwargs)
+    backward = endgame_shell_effects.build_boundary_impacts(escaping_cells=tuple(reversed(escaping)), **kwargs)
+    assert forward == backward
+
+
+def test_shell_board_shards_derive_from_impacts_and_are_capped() -> None:
+    for dims in ((20, 20), (12, 12, 8), (8, 8, 6, 4)):
+        impacts = _shell_impacts(dims, seed=47)
+        shards = endgame_shell_effects.build_board_shards(
+            impacts=impacts, rng_seed=47, dimension=len(dims), tuning=_shell_tuning()
+        )
+        assert len(shards) <= endgame_shell_effects.board_shard_cap_for_dimension(len(dims), _shell_tuning())
+        assert {shard.source_impact_index for shard in shards}.issubset(set(range(len(impacts))))
+
+
+def test_shell_transforms_expire_and_return_plain_draw_state() -> None:
+    tuning, impacts = _shell_tuning(), _shell_impacts((12, 12, 8), seed=53)
+    shard = endgame_shell_effects.build_board_shards(
+        impacts=impacts, rng_seed=53, dimension=3, tuning=tuning
+    )[0]
+    impact_state = endgame_shell_effects.transform_boundary_impact(
+        impacts[0], elapsed_ms=impacts[0].birth_ms + 1.0, tuning=tuning
+    )
+    shard_state = endgame_shell_effects.transform_board_shard(
+        shard, elapsed_ms=shard.birth_ms + 1.0, tuning=tuning
+    )
+    assert isinstance(impact_state, endgame_shell_effects.EndgameImpactDrawState)
+    assert isinstance(shard_state, endgame_shell_effects.EndgameShardDrawState)
+    expired_ms = shard.birth_ms + shard.lifetime_ms + 1.0
+    assert endgame_shell_effects.transform_board_shard(shard, elapsed_ms=expired_ms, tuning=tuning) is None
+
+
+def test_shell_model_has_no_pygame_or_shared_explosion_dependency() -> None:
+    module_globals = endgame_shell_effects.__dict__
+    assert "pygame" not in module_globals
+    assert "build_locked_cell_explosion" not in module_globals
+    assert "ExplosionRenderParticle" not in module_globals
 
 
 if __name__ == "__main__":

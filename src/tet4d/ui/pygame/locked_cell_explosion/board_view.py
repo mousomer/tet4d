@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
+from types import SimpleNamespace
 
 import pygame
 from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode
@@ -60,6 +61,10 @@ def _trace_color(color: tuple[int, int, int], *, alpha: float = 1.0) -> tuple[in
 
 def _trace_width(base_width: float, width_scale: float) -> int:
     return max(2, int(round(max(1.5, base_width) * max(0.85, float(width_scale)))))
+
+
+def _overlay_color(color: tuple[int, int, int], alpha: float) -> tuple[int, int, int, int]:
+    return (*color, max(0, min(255, int(round(255 * max(0.0, min(1.0, alpha)))))))
 
 
 def _board_center_2d(
@@ -200,19 +205,100 @@ def _draw_2d_particles(
             cell_size,
             tuple(float(value) for value in particle.render_position[:2]),
         )
+        alpha = max(0.0, min(1.0, float(getattr(particle, "alpha", 1.0))))
+        scale = max(0.52, float(getattr(particle, "size_scale", 1.0)))
         corners = []
         for local in ((-0.42, -0.42), (0.42, -0.42), (0.42, 0.42), (-0.42, 0.42)):
             rotated = _rotate_xy(local, float(particle.rotation_deg[2]))
             corners.append(
                 (
-                    center_x + (rotated[0] * cell_size),
-                    center_y + (rotated[1] * cell_size),
+                    center_x + (rotated[0] * cell_size * scale),
+                    center_y + (rotated[1] * cell_size * scale),
                 )
             )
         color = color_for_cell(int(particle.color_id))
-        pygame.draw.polygon(overlay, (0, 0, 0, 90), tuple((x + 2.0, y + 2.0) for x, y in corners))
-        pygame.draw.polygon(overlay, (*color, 244), corners)
-        pygame.draw.polygon(overlay, (255, 255, 255, 210), corners, 2)
+        pygame.draw.polygon(overlay, (0, 0, 0, max(0, min(255, int(round(90 * alpha))))), tuple((x + 2.0, y + 2.0) for x, y in corners))
+        pygame.draw.polygon(overlay, (*color, max(0, min(255, int(round(244 * alpha))))), corners)
+        pygame.draw.polygon(overlay, (255, 255, 255, max(0, min(255, int(round(210 * alpha))))), corners, 2)
+
+
+def _draw_shell_preview_2d(
+    overlay: pygame.Surface,
+    *,
+    shell_preview,
+    board_rect: pygame.Rect,
+    cell_size: float,
+    color_for_cell,
+) -> None:
+    if shell_preview is None:
+        return
+    for impact, draw_state in shell_preview.impact_frames:
+        color = color_for_cell(int(impact.color_id))
+        start = _board_center_2d(board_rect, cell_size, impact.start_position)
+        end = _board_center_2d(board_rect, cell_size, draw_state.position)
+        pygame.draw.line(overlay, _overlay_color(color, draw_state.alpha), start, end, max(2, int(round(draw_state.streak_width))))
+        pygame.draw.circle(overlay, _overlay_color((255, 255, 255), draw_state.alpha), (int(round(end[0])), int(round(end[1]))), max(2, int(round(draw_state.radius))))
+    preview_particles = tuple(
+        SimpleNamespace(
+            render_position=tuple(float(value) for value in cell.render_position[:2]),
+            rotation_deg=tuple(float(value) for value in cell.rotation_deg),
+            color_id=int(cell.color_id),
+            alpha=float(cell.alpha),
+        )
+        for cell in getattr(shell_preview, "escaping_proxy_cells", ())
+        if float(getattr(cell, "alpha", 0.0)) > 0.0
+    )
+    _draw_2d_particles(
+        overlay,
+        board_rect=board_rect,
+        cell_size=cell_size,
+        rendered_particles=preview_particles,
+        color_for_cell=color_for_cell,
+    )
+    for impact, _shard, draw_state in shell_preview.shard_frames:
+        color = color_for_cell(int(impact.color_id))
+        center = _board_center_2d(board_rect, cell_size, draw_state.position)
+        size = max(3.0, cell_size * max(0.18, float(draw_state.size)))
+        corners = []
+        for local in ((0.9, 0.0), (-0.45, 0.55), (-0.45, -0.55)):
+            rotated = _rotate_xy(local, float(draw_state.rotation_deg))
+            corners.append((center[0] + rotated[0] * size, center[1] + rotated[1] * size))
+        pygame.draw.polygon(overlay, _overlay_color(color, draw_state.alpha), corners)
+        pygame.draw.polygon(overlay, _overlay_color((255, 255, 255), draw_state.alpha), corners, 1)
+    for impact, alpha in getattr(shell_preview, "residue_frames", ()):
+        center = _board_center_2d(board_rect, cell_size, impact.impact_position)
+        pygame.draw.circle(
+            overlay,
+            _overlay_color(color_for_cell(int(impact.color_id)), alpha),
+            (int(round(center[0])), int(round(center[1]))),
+            max(3, int(round(cell_size * 0.24))),
+            2,
+        )
+
+
+def _draw_frozen_preview_cells_2d(
+    overlay: pygame.Surface,
+    *,
+    frozen_cells,
+    board_rect: pygame.Rect,
+    cell_size: float,
+    color_for_cell,
+) -> None:
+    preview_particles = tuple(
+        SimpleNamespace(
+            render_position=tuple(float(value) for value in cell.position[:2]),
+            rotation_deg=(0.0, 0.0, 0.0),
+            color_id=int(cell.color_id),
+        )
+        for cell in frozen_cells
+    )
+    _draw_2d_particles(
+        overlay,
+        board_rect=board_rect,
+        cell_size=cell_size,
+        rendered_particles=preview_particles,
+        color_for_cell=color_for_cell,
+    )
 
 
 def _draw_grid_mode_3d(
@@ -302,6 +388,93 @@ def _draw_3d_traces(
             )
 
 
+def _draw_shell_preview_3d(
+    overlay: pygame.Surface,
+    *,
+    shell_preview,
+    dims: tuple[int, int, int],
+    params,
+    center_px: tuple[int, int],
+    project_raw_point,
+    color_for_cell_3d,
+) -> None:
+    if shell_preview is None:
+        return
+    for impact, draw_state in shell_preview.impact_frames:
+        start = project_raw_point(tuple(float(v) for v in impact.start_position[:3]), dims, params, center_px)
+        end = project_raw_point(tuple(float(v) for v in draw_state.position[:3]), dims, params, center_px)
+        if start is None or end is None:
+            continue
+        color = color_for_cell_3d(int(impact.color_id))
+        pygame.draw.line(overlay, _overlay_color(color, draw_state.alpha), start, end, max(2, int(round(draw_state.streak_width))))
+        pygame.draw.circle(overlay, _overlay_color((255, 255, 255), draw_state.alpha), (int(round(end[0])), int(round(end[1]))), max(2, int(round(draw_state.radius))))
+    for impact, _shard, draw_state in shell_preview.shard_frames:
+        color = color_for_cell_3d(int(impact.color_id))
+        center = tuple(float(v) for v in draw_state.position[:3])
+        size = max(0.14, float(draw_state.size))
+        points = []
+        for local in ((0.9, 0.0), (-0.45, 0.55), (-0.45, -0.55)):
+            rotated = _rotate_xy(local, float(draw_state.rotation_deg))
+            projected = project_raw_point((center[0] + rotated[0] * size, center[1] + rotated[1] * size, center[2]), dims, params, center_px)
+            if projected is not None:
+                points.append(projected)
+        if len(points) == 3:
+            pygame.draw.polygon(overlay, _overlay_color(color, draw_state.alpha), points)
+            pygame.draw.polygon(overlay, _overlay_color((255, 255, 255), draw_state.alpha), points, 1)
+    for impact, alpha in getattr(shell_preview, "residue_frames", ()):
+        center = project_raw_point(tuple(float(v) for v in impact.impact_position[:3]), dims, params, center_px)
+        if center is None:
+            continue
+        pygame.draw.circle(
+            overlay,
+            _overlay_color(color_for_cell_3d(int(impact.color_id)), alpha),
+            (int(round(center[0])), int(round(center[1]))),
+            5,
+            2,
+        )
+
+
+def _draw_escaping_proxy_cells_3d(
+    overlay: pygame.Surface,
+    *,
+    shell_preview,
+    dims: tuple[int, int, int],
+    params,
+    center_px: tuple[int, int],
+    color_for_cell_3d,
+    draw_cells,
+    build_cell_faces,
+) -> None:
+    proxy_cells = [
+        (
+            tuple(float(value) for value in cell.render_position[:3]),
+            int(cell.color_id),
+            True,
+            True,
+        )
+        for cell in getattr(shell_preview, "escaping_proxy_cells", ())
+        if float(getattr(cell, "alpha", 0.0)) > 0.0
+    ]
+    if not proxy_cells:
+        return
+    opacity = max(0.0, min(1.0, max(float(cell.alpha) for cell in getattr(shell_preview, "escaping_proxy_cells", ()))))
+    draw_cells(
+        overlay,
+        cells=proxy_cells,
+        build_faces_fn=lambda coord, color, active: build_cell_faces(
+            cell=coord,
+            color=color,
+            params=params,
+            center_px=center_px,
+            dims=dims,
+            active=active,
+        ),
+        color_for_cell_fn=color_for_cell_3d,
+        overlay_transparency=0.0,
+        assist_overlay_opacity_scale=opacity,
+    )
+
+
 def _shadow_faces_for_particles_3d(
     *,
     rendered_particles,
@@ -341,6 +514,7 @@ def _draw_native_board_2d(
     show_trace: bool,
     grid_mode: GridMode,
     shadow_mode: ShadowMode,
+    shell_preview=None,
 ) -> None:
     from tet4d.ui.pygame.render.gfx_game import color_for_cell
 
@@ -369,7 +543,8 @@ def _draw_native_board_2d(
     if controller is None:
         return
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    rendered_particles = controller.render_particles(render_context=None)
+    hold_preview = shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    rendered_particles = tuple() if hold_preview else controller.render_particles(render_context=None)
     _draw_2d_shadow_guides(
         surface,
         board_rect=board_rect,
@@ -379,7 +554,7 @@ def _draw_native_board_2d(
         color_for_cell=color_for_cell,
         shadow_mode=shadow_mode,
     )
-    if show_trace:
+    if show_trace and not hold_preview:
         _draw_2d_traces(
             overlay,
             board_rect=board_rect,
@@ -387,6 +562,21 @@ def _draw_native_board_2d(
             rendered_particles=rendered_particles,
             color_for_cell=color_for_cell,
         )
+    if hold_preview:
+        _draw_frozen_preview_cells_2d(
+            overlay,
+            frozen_cells=getattr(shell_preview, "frozen_cells", ()),
+            board_rect=board_rect,
+            cell_size=cell_size,
+            color_for_cell=color_for_cell,
+        )
+    _draw_shell_preview_2d(
+        overlay,
+        shell_preview=shell_preview,
+        board_rect=board_rect,
+        cell_size=cell_size,
+        color_for_cell=color_for_cell,
+    )
     _draw_2d_particles(
         overlay,
         board_rect=board_rect,
@@ -407,6 +597,7 @@ def _draw_native_board_3d(
     show_trace: bool,
     grid_mode: GridMode,
     shadow_mode: ShadowMode,
+    shell_preview=None,
 ) -> None:
     from tet4d.ui.pygame.front3d_render import Camera3D, color_for_cell_3d
     from tet4d.ui.pygame.render.front3d_cell_render import draw_cells
@@ -472,8 +663,11 @@ def _draw_native_board_3d(
         )
         return
     rendered_particles = controller.render_particles(render_context=None)
+    hold_preview = shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    if hold_preview:
+        rendered_particles = tuple()
     trace_overlay = None
-    if show_trace:
+    if show_trace and not hold_preview:
         trace_overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
         _draw_3d_traces(
             trace_overlay,
@@ -484,6 +678,26 @@ def _draw_native_board_3d(
             project_raw_point=project_raw_point,
             color_for_cell_3d=color_for_cell_3d,
         )
+    preview_overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    _draw_shell_preview_3d(
+        preview_overlay,
+        shell_preview=shell_preview,
+        dims=dims,
+        params=params,
+        center_px=center_px,
+        project_raw_point=project_raw_point,
+        color_for_cell_3d=color_for_cell_3d,
+    )
+    _draw_escaping_proxy_cells_3d(
+        preview_overlay,
+        shell_preview=shell_preview,
+        dims=dims,
+        params=params,
+        center_px=center_px,
+        color_for_cell_3d=color_for_cell_3d,
+        draw_cells=draw_cells,
+        build_cell_faces=build_cell_faces,
+    )
     visible_cells = [
         (
             tuple(float(value) for value in particle.render_position),
@@ -505,6 +719,28 @@ def _draw_native_board_3d(
             active=True,
         )
     )
+    if hold_preview:
+        visible_cells = [
+            (
+                tuple(float(value) for value in cell.position[:3]),
+                int(cell.color_id),
+                True,
+                False,
+            )
+            for cell in getattr(shell_preview, "frozen_cells", ())
+        ]
+        active_piece_faces = tuple(
+            primitive
+            for coord, color_id, _active, _overlay in visible_cells
+            for primitive in build_cell_face_primitives(
+                cell=coord,
+                color=color_for_cell_3d(int(color_id)),
+                params=params,
+                center_px=center_px,
+                dims=dims,
+                active=True,
+            )
+        )
     projection_faces = _shadow_faces_for_particles_3d(
         rendered_particles=rendered_particles,
         dims=dims,
@@ -568,6 +804,7 @@ def _draw_native_board_3d(
         draw_boundary_projection_faces(surface, faces=projection_faces)
     if trace_overlay is not None:
         surface.blit(trace_overlay, (0, 0))
+    surface.blit(preview_overlay, (0, 0))
 
 
 def _render_context_for_4d(view, dims4: tuple[int, int, int, int]) -> _RenderContext4D:
@@ -712,6 +949,168 @@ def _draw_native_board_4d_traces(
             )
 
 
+def _layer_alpha_for_preview(mapped_coord: tuple[float, float, float, float], layer_index: int) -> float:
+    return max(0.0, 1.0 - abs(float(mapped_coord[3]) - float(layer_index)))
+
+
+def _draw_shell_preview_4d_impacts(
+    overlay: pygame.Surface,
+    *,
+    shell_preview,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    color_for_cell,
+    color_map,
+) -> None:
+    for impact, draw_state in shell_preview.impact_frames:
+        start_render = _map_4d_coord_for_render(tuple(float(v) for v in impact.start_position[:4]), board_dims=dims4, render_context=render_context)
+        end_render = _map_4d_coord_for_render(tuple(float(v) for v in draw_state.position[:4]), board_dims=dims4, render_context=render_context)
+        alpha_scale = _layer_alpha_for_preview(start_render, layer_index)
+        if alpha_scale <= 0.0:
+            continue
+        start = project_raw_point(tuple(float(v) for v in start_render[:3]), basis.dims3, view, center_px, zoom)
+        end = project_raw_point(tuple(float(v) for v in end_render[:3]), basis.dims3, view, center_px, zoom)
+        if start is None or end is None:
+            continue
+        color = color_for_cell(int(impact.color_id), color_map)
+        alpha = float(draw_state.alpha) * alpha_scale
+        pygame.draw.line(overlay, _overlay_color(color, alpha), start, end, max(2, int(round(draw_state.streak_width))))
+        pygame.draw.circle(overlay, _overlay_color((255, 255, 255), alpha), (int(round(end[0])), int(round(end[1]))), max(2, int(round(draw_state.radius))))
+
+
+def _draw_shell_preview_4d_shards(
+    overlay: pygame.Surface,
+    *,
+    shell_preview,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    color_for_cell,
+    color_map,
+) -> None:
+    for impact, _shard, draw_state in shell_preview.shard_frames:
+        color = color_for_cell(int(impact.color_id), color_map)
+        center_render = _map_4d_coord_for_render(tuple(float(v) for v in draw_state.position[:4]), board_dims=dims4, render_context=render_context)
+        alpha = float(draw_state.alpha) * _layer_alpha_for_preview(center_render, layer_index)
+        if alpha <= 0.0:
+            continue
+        center = tuple(float(v) for v in center_render[:3])
+        size = max(0.14, float(draw_state.size))
+        points = []
+        for local in ((0.9, 0.0), (-0.45, 0.55), (-0.45, -0.55)):
+            rotated = _rotate_xy(local, float(draw_state.rotation_deg))
+            projected = project_raw_point((center[0] + rotated[0] * size, center[1] + rotated[1] * size, center[2]), basis.dims3, view, center_px, zoom)
+            if projected is not None:
+                points.append(projected)
+        if len(points) == 3:
+            pygame.draw.polygon(overlay, _overlay_color(color, alpha), points)
+            pygame.draw.polygon(overlay, _overlay_color((255, 255, 255), alpha), points, 1)
+
+
+def _draw_shell_preview_4d_residue(
+    overlay: pygame.Surface,
+    *,
+    shell_preview,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    color_for_cell,
+    color_map,
+) -> None:
+    for impact, alpha in getattr(shell_preview, "residue_frames", ()):
+        center_render = _map_4d_coord_for_render(tuple(float(v) for v in impact.impact_position[:4]), board_dims=dims4, render_context=render_context)
+        resolved_alpha = float(alpha) * _layer_alpha_for_preview(center_render, layer_index)
+        if resolved_alpha <= 0.0:
+            continue
+        center = project_raw_point(tuple(float(v) for v in center_render[:3]), basis.dims3, view, center_px, zoom)
+        if center is None:
+            continue
+        pygame.draw.circle(
+            overlay,
+            _overlay_color(color_for_cell(int(impact.color_id), color_map), resolved_alpha),
+            (int(round(center[0])), int(round(center[1]))),
+            5,
+            2,
+        )
+
+
+def _draw_shell_preview_4d(
+    overlay: pygame.Surface,
+    *,
+    shell_preview,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    color_for_cell,
+    color_map,
+) -> None:
+    if shell_preview is None:
+        return
+    _draw_shell_preview_4d_impacts(
+        overlay,
+        shell_preview=shell_preview,
+        layer_index=layer_index,
+        dims4=dims4,
+        render_context=render_context,
+        basis=basis,
+        view=view,
+        center_px=center_px,
+        zoom=zoom,
+        project_raw_point=project_raw_point,
+        color_for_cell=color_for_cell,
+        color_map=color_map,
+    )
+    _draw_shell_preview_4d_shards(
+        overlay,
+        shell_preview=shell_preview,
+        layer_index=layer_index,
+        dims4=dims4,
+        render_context=render_context,
+        basis=basis,
+        view=view,
+        center_px=center_px,
+        zoom=zoom,
+        project_raw_point=project_raw_point,
+        color_for_cell=color_for_cell,
+        color_map=color_map,
+    )
+    _draw_shell_preview_4d_residue(
+        overlay,
+        shell_preview=shell_preview,
+        layer_index=layer_index,
+        dims4=dims4,
+        render_context=render_context,
+        basis=basis,
+        view=view,
+        center_px=center_px,
+        zoom=zoom,
+        project_raw_point=project_raw_point,
+        color_for_cell=color_for_cell,
+        color_map=color_map,
+    )
+
+
 def _collect_native_board_4d_faces(
     *,
     rendered_particles,
@@ -761,6 +1160,295 @@ def _collect_native_board_4d_faces(
     return faces
 
 
+def _active_preview_faces_for_particles_4d(
+    *,
+    rendered_particles,
+    layer_index: int,
+    center_px: tuple[int, int],
+    zoom: float,
+    basis,
+    view,
+    build_cell_face_primitives,
+    color_for_cell,
+    color_map,
+) -> tuple:
+    return tuple(
+        primitive
+        for particle in rendered_particles
+        for candidate_layer, weight in getattr(particle, "layer_weights", ())
+        if int(candidate_layer) == layer_index and float(weight) > 0.0
+        for primitive in build_cell_face_primitives(
+            cell=tuple(float(value) for value in particle.render_position),
+            color=color_for_cell(int(particle.color_id), color_map),
+            view=view,
+            center_px=center_px,
+            dims3=basis.dims3,
+            zoom=zoom,
+            active=True,
+        )
+    )
+
+
+def _hold_preview_faces_4d(
+    *,
+    shell_preview,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    transform_raw_point,
+    build_oriented_cube_faces,
+    build_cell_face_primitives,
+    color_for_cell,
+    color_map,
+) -> tuple[list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list]:
+    faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]] = []
+    active_piece_faces: list = []
+    for cell in getattr(shell_preview, "frozen_cells", ()):
+        mapped = _map_4d_coord_for_render(tuple(float(value) for value in cell.position[:4]), board_dims=dims4, render_context=render_context)
+        layer_weight = _layer_alpha_for_preview(mapped, layer_index)
+        if layer_weight <= 0.0:
+            continue
+        cell_color = color_for_cell(int(cell.color_id), color_map)
+        faces.extend(
+            (depth, polygon, color, layer_weight)
+            for depth, polygon, color, _active in build_oriented_cube_faces(
+                center=tuple(float(value) for value in mapped[:3]),
+                color=cell_color,
+                project_raw=lambda raw: project_raw_point(raw, basis.dims3, view, center_px, zoom),
+                transform_raw=lambda raw: transform_raw_point(raw, basis.dims3, view),
+                active=True,
+                rotation_deg=(0.0, 0.0, 0.0),
+                scale=max(0.4, layer_weight),
+            )
+        )
+        active_piece_faces.extend(
+            build_cell_face_primitives(
+                cell=tuple(float(value) for value in mapped[:3]),
+                color=cell_color,
+                view=view,
+                center_px=center_px,
+                dims3=basis.dims3,
+                zoom=zoom,
+                active=True,
+            )
+    )
+    return faces, active_piece_faces
+
+
+def _proxy_preview_faces_4d(
+    *,
+    shell_preview,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    transform_raw_point,
+    build_oriented_cube_faces,
+    build_cell_face_primitives,
+    color_for_cell,
+    color_map,
+) -> tuple[list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list]:
+    faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]] = []
+    active_piece_faces: list = []
+    for cell in getattr(shell_preview, "escaping_proxy_cells", ()):
+        mapped_source = _map_4d_coord_for_render(
+            tuple(float(value) for value in cell.source_position[:4]),
+            board_dims=dims4,
+            render_context=render_context,
+        )
+        if _layer_alpha_for_preview(mapped_source, layer_index) <= 0.0:
+            continue
+        alpha = max(0.0, min(1.0, float(cell.alpha)))
+        if alpha <= 0.0:
+            continue
+        mapped = _map_4d_coord_for_render(
+            tuple(float(value) for value in cell.render_position[:4]),
+            board_dims=dims4,
+            render_context=render_context,
+        )
+        cell_color = color_for_cell(int(cell.color_id), color_map)
+        scale = max(0.54, 0.92 - (0.16 * float(getattr(cell, "progress", 0.0))))
+        faces.extend(
+            (depth, polygon, color, alpha)
+            for depth, polygon, color, _active in build_oriented_cube_faces(
+                center=tuple(float(value) for value in mapped[:3]),
+                color=cell_color,
+                project_raw=lambda raw: project_raw_point(raw, basis.dims3, view, center_px, zoom),
+                transform_raw=lambda raw: transform_raw_point(raw, basis.dims3, view),
+                active=True,
+                rotation_deg=tuple(float(value) for value in cell.rotation_deg),
+                scale=scale,
+            )
+        )
+        active_piece_faces.extend(
+            build_cell_face_primitives(
+                cell=tuple(float(value) for value in mapped[:3]),
+                color=cell_color,
+                view=view,
+                center_px=center_px,
+                dims3=basis.dims3,
+                zoom=zoom,
+                active=True,
+            )
+    )
+    return faces, active_piece_faces
+
+
+def _preview_faces_for_layer_4d(
+    *,
+    shell_preview,
+    hold_preview: bool,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    transform_raw_point,
+    build_oriented_cube_faces,
+    build_cell_face_primitives,
+    color_for_cell,
+    color_map,
+    faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]],
+    active_piece_faces: list,
+) -> tuple[list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list]:
+    if hold_preview:
+        return _hold_preview_faces_4d(
+            shell_preview=shell_preview,
+            layer_index=layer_index,
+            dims4=dims4,
+            render_context=render_context,
+            basis=basis,
+            view=view,
+            center_px=center_px,
+            zoom=zoom,
+            project_raw_point=project_raw_point,
+            transform_raw_point=transform_raw_point,
+            build_oriented_cube_faces=build_oriented_cube_faces,
+            build_cell_face_primitives=build_cell_face_primitives,
+            color_for_cell=color_for_cell,
+            color_map=color_map,
+        )
+    if shell_preview is None:
+        return faces, active_piece_faces
+    proxy_faces, proxy_active_piece_faces = _proxy_preview_faces_4d(
+        shell_preview=shell_preview,
+        layer_index=layer_index,
+        dims4=dims4,
+        render_context=render_context,
+        basis=basis,
+        view=view,
+        center_px=center_px,
+        zoom=zoom,
+        project_raw_point=project_raw_point,
+        transform_raw_point=transform_raw_point,
+        build_oriented_cube_faces=build_oriented_cube_faces,
+        build_cell_face_primitives=build_cell_face_primitives,
+        color_for_cell=color_for_cell,
+        color_map=color_map,
+    )
+    return faces + proxy_faces, active_piece_faces + proxy_active_piece_faces
+
+
+def _draw_empty_native_board_4d_layer(
+    surface: pygame.Surface,
+    *,
+    basis,
+    dims4: tuple[int, int, int, int],
+    layer_index: int,
+    view,
+    draw_rect: pygame.Rect,
+    center_px: tuple[int, int],
+    zoom: float,
+    grid_mode: GridMode,
+    draw_board_grid,
+    project_raw_point,
+    transform_raw_point,
+    orthographic_depth_denominator,
+) -> None:
+    draw_projected_grid_mode(
+        surface=surface,
+        dims=basis.dims3,
+        grid_mode=grid_mode,
+        draw_full_grid=lambda: draw_board_grid(
+            surface,
+            basis.dims3,
+            dims4,
+            layer_index,
+            basis,
+            view,
+            draw_rect,
+            zoom,
+        ),
+        project_raw=lambda raw: project_raw_point(raw, basis.dims3, view, center_px, zoom),
+        transform_raw=lambda raw: transform_raw_point(raw, basis.dims3, view),
+        depth_denominator=orthographic_depth_denominator,
+        helper_marks=(set(), set(), set()),
+    )
+
+
+def _native_board_4d_overlay(
+    surface: pygame.Surface,
+    *,
+    rendered_particles,
+    show_trace: bool,
+    hold_preview: bool,
+    shell_preview,
+    layer_index: int,
+    dims4: tuple[int, int, int, int],
+    render_context: _RenderContext4D,
+    basis,
+    view,
+    center_px: tuple[int, int],
+    zoom: float,
+    project_raw_point,
+    color_for_cell,
+    color_map,
+) -> pygame.Surface:
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    if show_trace and not hold_preview:
+        _draw_native_board_4d_traces(
+            overlay,
+            rendered_particles=rendered_particles,
+            layer_index=layer_index,
+            dims4=dims4,
+            render_context=render_context,
+            basis=basis,
+            view=view,
+            center_px=center_px,
+            zoom=zoom,
+            project_raw_point=project_raw_point,
+            color_for_cell=color_for_cell,
+            color_map=color_map,
+        )
+    _draw_shell_preview_4d(
+        overlay,
+        shell_preview=shell_preview,
+        layer_index=layer_index,
+        dims4=dims4,
+        render_context=render_context,
+        basis=basis,
+        view=view,
+        center_px=center_px,
+        zoom=zoom,
+        project_raw_point=project_raw_point,
+        color_for_cell=color_for_cell,
+        color_map=color_map,
+    )
+    return overlay
+
+
 def _draw_native_board_4d(
     surface: pygame.Surface,
     *,
@@ -773,6 +1461,7 @@ def _draw_native_board_4d(
     grid_mode: GridMode,
     shadow_mode: ShadowMode,
     w_movement_animation_style: str,
+    shell_preview=None,
 ) -> None:
     from tet4d.ui.pygame.front4d_render import (
         COLOR_MAP,
@@ -817,6 +1506,9 @@ def _draw_native_board_4d(
         if controller is None
         else controller.render_particles(render_context=render_context)
     )
+    hold_preview = shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    if hold_preview:
+        rendered_particles = tuple()
     for layer_index in range(max(1, basis.layer_count)):
         layer_rect = layer_rects.get(layer_index)
         if layer_rect is None:
@@ -846,48 +1538,39 @@ def _draw_native_board_4d(
             depth_denominator=_orthographic_depth_denominator,
         )
         if controller is None:
-            draw_projected_grid_mode(
-                surface=surface,
-                dims=basis.dims3,
-                grid_mode=grid_mode,
-                draw_full_grid=lambda: _draw_board_grid(
-                    surface,
-                    basis.dims3,
-                    dims4,
-                    layer_index,
-                    basis,
-                    view,
-                    draw_rect,
-                    zoom,
-                ),
-                project_raw=lambda raw: _project_raw_point(
-                    raw,
-                    basis.dims3,
-                    view,
-                    center_px,
-                    zoom,
-                ),
-                transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
-                depth_denominator=_orthographic_depth_denominator,
-                helper_marks=(set(), set(), set()),
-            )
-            continue
-        overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-        if show_trace:
-            _draw_native_board_4d_traces(
-                overlay,
-                rendered_particles=rendered_particles,
-                layer_index=layer_index,
-                dims4=dims4,
-                render_context=render_context,
+            _draw_empty_native_board_4d_layer(
+                surface,
                 basis=basis,
+                dims4=dims4,
+                layer_index=layer_index,
                 view=view,
+                draw_rect=draw_rect,
                 center_px=center_px,
                 zoom=zoom,
+                grid_mode=grid_mode,
+                draw_board_grid=_draw_board_grid,
                 project_raw_point=_project_raw_point,
-                color_for_cell=color_for_cell,
-                color_map=COLOR_MAP,
+                transform_raw_point=_transform_raw_point,
+                orthographic_depth_denominator=_orthographic_depth_denominator,
             )
+            continue
+        overlay = _native_board_4d_overlay(
+            surface,
+            rendered_particles=rendered_particles,
+            show_trace=show_trace,
+            hold_preview=hold_preview,
+            shell_preview=shell_preview,
+            layer_index=layer_index,
+            dims4=dims4,
+            render_context=render_context,
+            basis=basis,
+            view=view,
+            center_px=center_px,
+            zoom=zoom,
+            project_raw_point=_project_raw_point,
+            color_for_cell=color_for_cell,
+            color_map=COLOR_MAP,
+        )
         faces = _collect_native_board_4d_faces(
             rendered_particles=rendered_particles,
             layer_index=layer_index,
@@ -901,20 +1584,35 @@ def _draw_native_board_4d(
             color_map=COLOR_MAP,
             build_oriented_cube_faces=build_oriented_cube_faces,
         )
-        active_piece_faces = tuple(
-            primitive
-            for particle in rendered_particles
-            for candidate_layer, weight in getattr(particle, "layer_weights", ())
-            if int(candidate_layer) == layer_index and float(weight) > 0.0
-            for primitive in _build_cell_face_primitives(
-                cell=tuple(float(value) for value in particle.render_position),
-                color=color_for_cell(int(particle.color_id), COLOR_MAP),
-                view=view,
-                center_px=center_px,
-                dims3=basis.dims3,
-                zoom=zoom,
-                active=True,
-            )
+        active_piece_faces = _active_preview_faces_for_particles_4d(
+            rendered_particles=rendered_particles,
+            layer_index=layer_index,
+            center_px=center_px,
+            zoom=zoom,
+            basis=basis,
+            view=view,
+            build_cell_face_primitives=_build_cell_face_primitives,
+            color_for_cell=color_for_cell,
+            color_map=COLOR_MAP,
+        )
+        faces, active_piece_faces = _preview_faces_for_layer_4d(
+            shell_preview=shell_preview,
+            hold_preview=hold_preview,
+            layer_index=layer_index,
+            dims4=dims4,
+            render_context=render_context,
+            basis=basis,
+            view=view,
+            center_px=center_px,
+            zoom=zoom,
+            project_raw_point=_project_raw_point,
+            transform_raw_point=_transform_raw_point,
+            build_oriented_cube_faces=build_oriented_cube_faces,
+            build_cell_face_primitives=_build_cell_face_primitives,
+            color_for_cell=color_for_cell,
+            color_map=COLOR_MAP,
+            faces=faces,
+            active_piece_faces=list(active_piece_faces),
         )
         if active_piece_faces and board_line_primitives:
             occlusion_buckets = resolve_board_line_occlusion(
@@ -1030,6 +1728,7 @@ def draw_native_board_view(
     grid_mode: GridMode = GridMode.FULL,
     shadow_mode: ShadowMode = ShadowMode.OFF,
     w_movement_animation_style: str = "fade",
+    shell_preview=None,
 ) -> None:
     if int(dimension) == 2:
         _draw_native_board_2d(
@@ -1040,6 +1739,7 @@ def draw_native_board_view(
             show_trace=show_trace,
             grid_mode=grid_mode,
             shadow_mode=shadow_mode,
+            shell_preview=shell_preview,
         )
         return
     if int(dimension) == 3:
@@ -1052,6 +1752,7 @@ def draw_native_board_view(
             show_trace=show_trace,
             grid_mode=grid_mode,
             shadow_mode=shadow_mode,
+            shell_preview=shell_preview,
         )
         return
     _draw_native_board_4d(
@@ -1065,6 +1766,7 @@ def draw_native_board_view(
         grid_mode=grid_mode,
         shadow_mode=shadow_mode,
         w_movement_animation_style=w_movement_animation_style,
+        shell_preview=shell_preview,
     )
 
 

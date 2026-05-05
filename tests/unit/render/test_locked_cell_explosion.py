@@ -48,9 +48,11 @@ from tet4d.ui.pygame.locked_cell_explosion import (
 from tet4d.ui.pygame.locked_cell_explosion.audio import aggregate_audio_events
 from tet4d.ui.pygame.locked_cell_explosion import board_view as explosion_board_view
 from tet4d.ui.pygame.locked_cell_explosion import defaults_store as explosion_defaults_store
+from tet4d.ui.pygame.locked_cell_explosion import endgame_preview as explosion_endgame_preview
 from tet4d.ui.pygame.locked_cell_explosion import launcher as explosion_launcher
 from tet4d.ui.pygame.locked_cell_explosion import simulation as explosion_simulation
 from tet4d.ui.pygame.locked_cell_explosion import surface as explosion_surface
+from tet4d.ui.pygame import endgame_shell_effects
 from tet4d.ui.pygame.topology_lab import projection_scene as topology_projection_scene
 from tet4d.ui.pygame.front3d_render import Camera3D
 from tet4d.ui.pygame.render.front3d_projection_helpers import (
@@ -175,6 +177,7 @@ class TestLockedCellExplosion(unittest.TestCase):
     def _build_i3_bounce_controller_3d(self):
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
         state.board_dims_override = (4, 4, 4)
+        state.topology_preset_id = "empty_3d"
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         state.piece_set_id = "native_3d"
         state.piece_shape_name = "I3"
@@ -1752,6 +1755,731 @@ class TestLockedCellExplosion(unittest.TestCase):
             explosion_launcher._W_MOVEMENT_ANIMATION_BOX_SIZE,
         )
 
+    def test_shell_preview_toggle_and_cache_build_use_escaping_complement(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        self.assertFalse(state.shell_preview_enabled)
+        self.assertIn("shell_preview_enabled", explosion_launcher._dynamic_row_keys(state))
+        self.assertIn("shell_preview_time_scale", explosion_launcher._dynamic_row_keys(state))
+        self.assertEqual(explosion_launcher._row_control_kind("shell_preview_enabled"), "dropdown")
+        self.assertEqual(explosion_launcher._row_control_kind("shell_preview_time_scale"), "dropdown")
+        self.assertTrue(explosion_launcher._adjust_simulation_row(state, row_key="shell_preview_enabled", step=1))
+        self.assertTrue(state.shell_preview_enabled)
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "O"
+        state.endgame_live_cell_fraction = 0.25
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        assert cache is not None
+        self.assertEqual(len(cache.source_cells), len(cache.survivor_cells) + len(cache.escaping_cells))
+        self.assertTrue({impact.source_coord for impact in cache.impacts}.issubset({cell.source_coord for cell in cache.escaping_cells}))
+        self.assertTrue({shard.source_impact_index for shard in cache.shards}.issubset(set(range(len(cache.impacts)))))
+
+    def test_shell_preview_source_map_binds_hold_cells_and_escaping_impacts(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "O"
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+
+        assert cache is not None
+        source_map = explosion_endgame_preview.preview_source_cell_map(cache)
+        self.assertEqual({cell.source_coord for cell in cache.source_cells}, set(source_map))
+        self.assertTrue({cell.source_coord for cell in cache.escaping_source_cells}.issubset(set(source_map)))
+        for impact in cache.impacts:
+            self.assertEqual(impact.start_position, source_map[impact.source_coord].position)
+
+    def test_shell_preview_cache_builds_escape_events_and_event_linked_shards(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert cache is not None
+        self.assertEqual(len(cache.escape_events), len(cache.impacts))
+        for event, impact in zip(cache.escape_events, cache.impacts, strict=False):
+            self.assertEqual(event.source_coord, impact.source_coord)
+            self.assertEqual(event.source_position, impact.start_position)
+            self.assertEqual(event.impact_position, impact.impact_position)
+            for shard_index in event.shard_indices:
+                shard = cache.shards[shard_index]
+                self.assertEqual(shard.event_index, event.event_index)
+                self.assertEqual(shard.source_coord, event.source_coord)
+                self.assertEqual(shard.start_position, event.impact_position)
+
+    def test_shell_preview_hold_phase_keeps_frozen_source_cells_without_overlay(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+
+        frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert frame is not None
+        self.assertEqual(frame.phase, "hold")
+        self.assertEqual(tuple(cell.source_coord for cell in frame.frozen_cells), tuple(cell.source_coord for cell in source_cells))
+        self.assertEqual(frame.escaping_proxy_cells, ())
+        self.assertEqual(frame.impact_frames, ())
+        self.assertEqual(frame.shard_frames, ())
+        self.assertEqual(frame.residue_frames, ())
+
+    def test_shell_preview_proxy_states_derive_from_impacts_and_escaping_sources_only(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "O"
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        tuning = explosion_endgame_preview._tuning()
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.4)
+        frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert cache is not None
+        assert frame is not None
+        self.assertEqual(
+            {cell.source_coord for cell in frame.escaping_proxy_cells},
+            {impact.source_coord for impact, _draw_state in frame.impact_frames},
+        )
+        self.assertTrue(
+            {cell.source_coord for cell in frame.escaping_proxy_cells}.issubset(
+                {cell.source_coord for cell in cache.escaping_source_cells}
+            )
+        )
+
+    def test_shell_preview_proxy_count_is_capped_by_boundary_impact_cap(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+        state.shell_preview_enabled = True
+        state.endgame_live_cell_fraction = 0.1
+        board_dims = (5, 5, 5, 5)
+        source_cells = tuple(
+            ExplosionSeedCell(source_coord=(x, y, z, w), color_id=((x + y + z + w) % 7) + 1)
+            for x in range(3)
+            for y in range(3)
+            for z in range(3)
+            for w in range(3)
+        )
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        tuning = explosion_endgame_preview._tuning()
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.4)
+        frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert cache is not None
+        assert frame is not None
+        self.assertEqual(len(frame.escaping_proxy_cells), len(cache.impacts))
+        self.assertEqual(len(frame.escaping_proxy_cells), 40)
+
+    def test_escape_event_frame_tracks_continuous_source_proxy_impact_shard_and_residue_states(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        tuning = explosion_endgame_preview._tuning()
+        timeline = endgame_shell_effects.load_shell_timeline(tuning)
+
+        assert cache is not None
+        event = cache.escape_events[0]
+        hold_frame = endgame_shell_effects.evaluate_escape_event(
+            event,
+            elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms) - 1.0,
+            timeline=timeline,
+            shards=cache.shards,
+            tuning=tuning,
+        )
+        rupture_frame = endgame_shell_effects.evaluate_escape_event(
+            event,
+            elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms) + (event.proxy_lifetime_ms * 0.5),
+            timeline=timeline,
+            shards=cache.shards,
+            tuning=tuning,
+        )
+        aftermath_frame = endgame_shell_effects.evaluate_escape_event(
+            event,
+            elapsed_ms=event.impact_ms + 220.0,
+            timeline=timeline,
+            shards=cache.shards,
+            tuning=tuning,
+        )
+
+        self.assertTrue(hold_frame.source_cell_visible)
+        self.assertIsNone(hold_frame.proxy)
+        self.assertIsNone(hold_frame.impact_flash)
+        self.assertEqual(hold_frame.shards, ())
+
+        self.assertFalse(rupture_frame.source_cell_visible)
+        assert rupture_frame.proxy is not None
+        assert rupture_frame.streak is not None
+        self.assertEqual(rupture_frame.proxy.source_coord, event.source_coord)
+        self.assertEqual(rupture_frame.streak.source_coord, event.source_coord)
+        self.assertNotEqual(rupture_frame.proxy.render_position, event.source_position)
+        self.assertNotEqual(rupture_frame.proxy.render_position, event.impact_position)
+
+        self.assertIsNone(aftermath_frame.proxy)
+        assert aftermath_frame.impact_flash is not None
+        self.assertEqual(aftermath_frame.impact_flash.source_coord, event.source_coord)
+        self.assertEqual(len(aftermath_frame.residue), 1)
+        self.assertEqual(aftermath_frame.residue[0].source_coord, event.source_coord)
+        self.assertTrue(aftermath_frame.shards)
+
+    def test_shell_sound_events_trigger_once_when_time_crosses_release_and_impact(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "I"
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        tuning = explosion_endgame_preview._tuning()
+        timeline = endgame_shell_effects.load_shell_timeline(tuning)
+
+        assert cache is not None
+        event = cache.escape_events[0]
+        charge = endgame_shell_effects.shell_sound_events_for_frame(
+            tuple(cache.escape_events),
+            previous_elapsed_ms=-1.0,
+            elapsed_ms=0.0,
+            timeline=timeline,
+            max_release_sounds=8,
+            max_impact_sounds=10,
+            run_key="test",
+        )
+        rupture = endgame_shell_effects.shell_sound_events_for_frame(
+            tuple(cache.escape_events),
+            previous_elapsed_ms=timeline.hold_ms - 1.0,
+            elapsed_ms=timeline.hold_ms + 1.0,
+            timeline=timeline,
+            max_release_sounds=8,
+            max_impact_sounds=10,
+            run_key="test",
+        )
+        release = endgame_shell_effects.shell_sound_events_for_frame(
+            tuple(cache.escape_events),
+            previous_elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms) - 1.0,
+            elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms) + 1.0,
+            timeline=timeline,
+            max_release_sounds=8,
+            max_impact_sounds=10,
+            run_key="test",
+        )
+        repeat_release = endgame_shell_effects.shell_sound_events_for_frame(
+            tuple(cache.escape_events),
+            previous_elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms) + 1.0,
+            elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms) + 2.0,
+            timeline=timeline,
+            max_release_sounds=8,
+            max_impact_sounds=10,
+            run_key="test",
+        )
+        impact = endgame_shell_effects.shell_sound_events_for_frame(
+            tuple(cache.escape_events),
+            previous_elapsed_ms=event.impact_ms - 1.0,
+            elapsed_ms=event.impact_ms + 1.0,
+            timeline=timeline,
+            max_release_sounds=8,
+            max_impact_sounds=10,
+            run_key="test",
+        )
+
+        self.assertEqual([item.sound_id for item in charge], ["endgame_charge_rumble"])
+        self.assertEqual([item.sound_id for item in rupture], ["endgame_rupture_thump"])
+        self.assertEqual([item.sound_id for item in release], ["endgame_cell_release"])
+        self.assertEqual(repeat_release, ())
+        self.assertIn("endgame_glass_shatter", [item.sound_id for item in impact])
+        self.assertIn("endgame_boundary_crack", [item.sound_id for item in impact])
+        self.assertEqual(
+            {item.event_key for item in impact},
+            {item.event_key for item in impact},
+        )
+
+    def test_shell_sound_events_respect_release_and_impact_caps(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+        state.shell_preview_enabled = True
+        state.endgame_live_cell_fraction = 0.1
+        board_dims = (5, 5, 5, 5)
+        source_cells = tuple(
+            ExplosionSeedCell(source_coord=(x, y, z, w), color_id=((x + y + z + w) % 7) + 1)
+            for x in range(3)
+            for y in range(3)
+            for z in range(3)
+            for w in range(3)
+        )
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        tuning = explosion_endgame_preview._tuning()
+        timeline = endgame_shell_effects.load_shell_timeline(tuning)
+
+        assert cache is not None
+        elapsed_ms = max(event.impact_ms for event in cache.escape_events) + 1.0
+        sound_events = endgame_shell_effects.shell_sound_events_for_frame(
+            tuple(cache.escape_events),
+            previous_elapsed_ms=timeline.hold_ms - 1.0,
+            elapsed_ms=elapsed_ms,
+            timeline=timeline,
+            max_release_sounds=2,
+            max_impact_sounds=3,
+            run_key="cap",
+        )
+
+        self.assertEqual(
+            sum(1 for item in sound_events if item.sound_id == "endgame_cell_release"),
+            2,
+        )
+        self.assertEqual(
+            sum(1 for item in sound_events if item.sound_id == "endgame_boundary_crack"),
+            3,
+        )
+
+    def test_shell_preview_2d_rupture_starts_from_frozen_source_positions(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "I"
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        hold_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        tuning = explosion_endgame_preview._tuning()
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.35)
+        rupture_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert hold_frame is not None
+        assert rupture_frame is not None
+        frozen_map = {cell.source_coord: cell.position for cell in hold_frame.frozen_cells}
+        for impact, _draw_state in rupture_frame.impact_frames:
+            self.assertEqual(impact.start_position, frozen_map[impact.source_coord])
+
+    def test_shell_preview_proxy_position_equals_source_at_rupture_start(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "I"
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        tuning = explosion_endgame_preview._tuning()
+        explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"])
+        frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert frame is not None
+        self.assertEqual(frame.phase, "rupture")
+        self.assertTrue(frame.escaping_proxy_cells)
+        for proxy in frame.escaping_proxy_cells:
+            self.assertEqual(proxy.render_position, proxy.source_position)
+            self.assertEqual(proxy.progress, 0.0)
+
+    def test_shell_preview_3d_rupture_starts_from_frozen_source_positions(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        hold_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        tuning = explosion_endgame_preview._tuning()
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.35)
+        rupture_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert hold_frame is not None
+        assert rupture_frame is not None
+        frozen_map = {cell.source_coord: cell.position for cell in hold_frame.frozen_cells}
+        for impact, _draw_state in rupture_frame.impact_frames:
+            self.assertEqual(impact.start_position, frozen_map[impact.source_coord])
+
+    def test_shell_preview_rupture_progress_is_partial_midway(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "I"
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        tuning = explosion_endgame_preview._tuning()
+        hold_ms = float(tuning["shell_preview_hold_ms"])
+        rupture_ms = float(tuning["shell_preview_rupture_ms"])
+        state.shell_preview_elapsed_ms = hold_ms + (rupture_ms * 0.5)
+
+        frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert frame is not None
+        self.assertEqual(frame.phase, "rupture")
+        self.assertTrue(frame.impact_frames)
+        impact, draw_state = frame.impact_frames[0]
+        self.assertNotEqual(tuple(draw_state.position), tuple(impact.start_position))
+        self.assertNotEqual(tuple(draw_state.position), tuple(impact.impact_position))
+        proxy = frame.escaping_proxy_cells[0]
+        self.assertNotEqual(tuple(proxy.render_position), tuple(proxy.source_position))
+        self.assertLess(
+            sum((float(a) - float(b)) ** 2 for a, b in zip(proxy.source_position, proxy.render_position)),
+            sum((float(a) - float(b)) ** 2 for a, b in zip(proxy.source_position, impact.impact_position)),
+        )
+        self.assertEqual(frame.shard_frames, ())
+
+    def test_shell_preview_shards_begin_after_rupture_onset_not_at_time_zero(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        tuning = explosion_endgame_preview._tuning()
+        hold_ms = float(tuning["shell_preview_hold_ms"])
+        rupture_ms = float(tuning["shell_preview_rupture_ms"])
+
+        start_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        state.shell_preview_elapsed_ms = hold_ms + rupture_ms + 120.0
+        shard_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        state.shell_preview_elapsed_ms = hold_ms + rupture_ms + (float(tuning["shell_preview_shard_drift_ms"]) * 0.6)
+        residue_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert start_frame is not None
+        assert shard_frame is not None
+        assert residue_frame is not None
+        self.assertEqual(start_frame.escaping_proxy_cells, ())
+        self.assertEqual(shard_frame.escaping_proxy_cells, ())
+        self.assertEqual(residue_frame.escaping_proxy_cells, ())
+        self.assertEqual(start_frame.shard_frames, ())
+        self.assertEqual(start_frame.residue_frames, ())
+        self.assertEqual(shard_frame.phase, "shard_drift")
+        self.assertTrue(shard_frame.shard_frames)
+        self.assertTrue(residue_frame.residue_frames)
+
+    def test_shell_preview_4d_rupture_uses_source_cell_layer_binding(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        hold_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        tuning = explosion_endgame_preview._tuning()
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.35)
+        rupture_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+
+        assert hold_frame is not None
+        assert rupture_frame is not None
+        render_context = explosion_board_view._render_context_for_4d(state.view_4d, tuple(int(v) for v in board_dims))
+        frozen_map = {cell.source_coord: cell for cell in hold_frame.frozen_cells}
+        for impact, _draw_state in rupture_frame.impact_frames:
+            source_cell = frozen_map[impact.source_coord]
+            mapped_source = explosion_board_view._map_4d_coord_for_render(
+                tuple(float(v) for v in source_cell.position[:4]),
+                board_dims=tuple(int(v) for v in board_dims),
+                render_context=render_context,
+            )
+            mapped_start = explosion_board_view._map_4d_coord_for_render(
+                tuple(float(v) for v in impact.start_position[:4]),
+                board_dims=tuple(int(v) for v in board_dims),
+                render_context=render_context,
+            )
+            self.assertEqual(mapped_start, mapped_source)
+        for proxy in rupture_frame.escaping_proxy_cells:
+            self.assertEqual(proxy.layer_index, frozen_map[proxy.source_coord].layer_index)
+
+    def test_shell_preview_source_binding_is_stable_under_reversed_input(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        forward = explosion_endgame_preview.ensure_shell_preview_cache(
+            state,
+            source_cells=source_cells,
+            board_dims=board_dims,
+        )
+        reversed_cache = explosion_endgame_preview._build_cache(
+            tuple(reversed(source_cells)),
+            tuple(int(v) for v in board_dims),
+            int(state.dimension),
+            int(state.seed),
+            float(state.endgame_live_cell_fraction),
+        )
+
+        assert forward is not None
+        self.assertEqual(
+            sorted((impact.source_coord, impact.start_position) for impact in forward.impacts),
+            sorted((impact.source_coord, impact.start_position) for impact in reversed_cache.impacts),
+        )
+
+    def test_shell_preview_time_scale_changes_elapsed_only_for_preview(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        self.assertEqual(state.shell_preview_time_scale, 1.0)
+        self.assertTrue(
+            explosion_launcher._apply_dropdown_value(
+                state,
+                row_key="shell_preview_time_scale",
+                raw_value="0.25",
+            )
+        )
+        self.assertEqual(state.shell_preview_time_scale, 0.25)
+        state.shell_preview_enabled = True
+
+        explosion_endgame_preview.advance_shell_preview_elapsed(state, 400.0)
+
+        self.assertEqual(state.shell_preview_elapsed_ms, 100.0)
+
+    def test_shell_preview_uses_survivors_for_controller_and_restart_reset(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
+        state.shell_preview_enabled = True
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "classic"
+        state.piece_shape_name = "O"
+        state.endgame_live_cell_fraction = 0.25
+        controller = explosion_launcher.restart_standalone_explosion(state)
+        board_dims = explosion_launcher._board_dims_for_state(state)
+        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        config = explosion_launcher.build_standalone_explosion_config(state)
+        assert cache is not None
+        self.assertEqual(config.occupied_cells, cache.survivor_cells)
+        self.assertEqual(len(controller.simulation.particles), len(cache.survivor_cells))
+        self.assertTrue({particle.source_coord for particle in controller.simulation.particles}.isdisjoint({cell.source_coord for cell in cache.escaping_cells}))
+        first = state.shell_preview_cache
+        state.shell_preview_elapsed_ms = 125.0
+        first_signature = state.shell_preview_signature
+        state.seed += 1
+        explosion_launcher.restart_standalone_explosion(state)
+        self.assertEqual(state.shell_preview_elapsed_ms, 0.0)
+        self.assertIsNotNone(state.shell_preview_cache)
+        self.assertNotEqual(state.shell_preview_signature, first_signature)
+        self.assertIsNot(state.shell_preview_cache, first)
+
+    def test_shell_preview_draw_path_runs_headless_for_2d_3d_and_4d(self) -> None:
+        fonts = self._fonts()
+        for dimension in (2, 3, 4):
+            with self.subTest(dimension=dimension):
+                state = explosion_launcher.build_standalone_explosion_surface_state(dimension=dimension)
+                state.shell_preview_enabled = True
+                state.endgame_live_cell_fraction = 0.25
+                explosion_launcher.restart_standalone_explosion(state)
+                screen = pygame.Surface((960, 720), pygame.SRCALPHA)
+                explosion_surface._draw_native_board_preview(screen, fonts=fonts, area=pygame.Rect(0, 0, 640, 420), controller=state.controller, state=state)
+                self.assertIsNotNone(state.shell_preview_cache)
+
+    def test_shell_preview_surface_route_delegates_to_preview_helper(self) -> None:
+        state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.shell_preview_enabled = True
+        preview_frame = SimpleNamespace(
+            phase="hold",
+            frozen_cells=(),
+            escaping_proxy_cells=(),
+            impact_frames=(),
+            shard_frames=(),
+            residue_frames=(),
+        )
+
+        with (
+            patch.object(
+                explosion_surface.endgame_preview,
+                "build_shell_preview_frame_for_state",
+                return_value=preview_frame,
+            ) as build_preview,
+            patch.object(explosion_surface, "draw_native_board_view") as draw_board,
+        ):
+            explosion_surface._draw_native_board_preview(
+                pygame.Surface((640, 480)),
+                fonts=self._fonts(),
+                area=pygame.Rect(0, 0, 320, 240),
+                controller=state.controller,
+                state=state,
+            )
+
+        self.assertTrue(build_preview.called)
+        self.assertIs(draw_board.call_args.kwargs["shell_preview"], preview_frame)
+
+    def test_shell_preview_2d_draw_path_renders_proxies_without_controller_particles(self) -> None:
+        preview_frame = SimpleNamespace(
+            phase="rupture",
+            frozen_cells=(),
+            escaping_proxy_cells=(
+                SimpleNamespace(
+                    source_coord=(1, 1),
+                    source_position=(1.0, 1.0),
+                    render_position=(1.6, 1.2),
+                    rotation_deg=(0.0, 0.0, 18.0),
+                    alpha=0.9,
+                    color_id=3,
+                    progress=0.4,
+                    layer_index=None,
+                ),
+            ),
+            impact_frames=(),
+            shard_frames=(),
+            residue_frames=(),
+        )
+        controller = SimpleNamespace(render_particles=lambda *, render_context: tuple())
+
+        with patch.object(explosion_board_view, "_draw_2d_particles") as draw_particles:
+            explosion_board_view.draw_native_board_view(
+                pygame.Surface((640, 480), pygame.SRCALPHA),
+                rect=pygame.Rect(0, 0, 320, 240),
+                fonts=self._fonts(),
+                controller=controller,
+                dimension=2,
+                board_dims=(10, 20),
+                show_trace=False,
+                grid_mode=GridMode.FULL,
+                shadow_mode=ShadowMode.OFF,
+                shell_preview=preview_frame,
+            )
+
+        proxy_calls = [
+            call.kwargs["rendered_particles"]
+            for call in draw_particles.call_args_list
+            if call.kwargs["rendered_particles"]
+        ]
+        self.assertEqual(len(proxy_calls), 1)
+        self.assertEqual(proxy_calls[0][0].render_position, preview_frame.escaping_proxy_cells[0].render_position)
+        self.assertEqual(draw_particles.call_args_list[-1].kwargs["rendered_particles"], ())
+
+    def test_shell_preview_3d_draw_path_renders_proxies_without_controller_particles(self) -> None:
+        preview_frame = SimpleNamespace(
+            phase="rupture",
+            frozen_cells=(),
+            escaping_proxy_cells=(
+                SimpleNamespace(
+                    source_coord=(1, 1, 1),
+                    source_position=(1.0, 1.0, 1.0),
+                    render_position=(1.5, 1.25, 1.75),
+                    rotation_deg=(6.0, 12.0, 18.0),
+                    alpha=0.88,
+                    color_id=5,
+                    progress=0.5,
+                    layer_index=None,
+                ),
+            ),
+            impact_frames=(),
+            shard_frames=(),
+            residue_frames=(),
+        )
+        controller = SimpleNamespace(render_particles=lambda *, render_context: tuple())
+
+        with patch("tet4d.ui.pygame.render.front3d_cell_render.draw_cells") as draw_cells:
+            explosion_board_view.draw_native_board_view(
+                pygame.Surface((800, 600), pygame.SRCALPHA),
+                rect=pygame.Rect(0, 0, 420, 320),
+                fonts=self._fonts(),
+                controller=controller,
+                dimension=3,
+                board_dims=(6, 6, 6),
+                show_trace=False,
+                grid_mode=GridMode.FULL,
+                shadow_mode=ShadowMode.OFF,
+                shell_preview=preview_frame,
+            )
+
+        proxy_calls = [
+            call.kwargs["cells"]
+            for call in draw_cells.call_args_list
+            if call.kwargs["cells"]
+        ]
+        self.assertEqual(len(proxy_calls), 1)
+        self.assertTrue(all(cell[3] for cell in proxy_calls[0]))
+        self.assertEqual(draw_cells.call_args_list[-1].kwargs["cells"], [])
+
+    def test_shell_effect_model_stays_pygame_free_for_preview_overlay(self) -> None:
+        self.assertNotIn("pygame", endgame_shell_effects.__dict__)
+
     def test_trace_toggle_routes_to_projection_reference_scene(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
         state.trace_enabled = True
@@ -2451,6 +3179,7 @@ class TestLockedCellExplosion(unittest.TestCase):
 
     def test_4d_w_movement_animation_row_is_available_and_cycles(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
+        state.w_movement_animation_style = explosion_launcher._W_MOVEMENT_ANIMATION_FADE
 
         self.assertIn("w_movement_animation", explosion_launcher._dynamic_row_keys(state))
         changed = explosion_launcher._adjust_simulation_row(
@@ -2785,6 +3514,11 @@ class TestLockedCellExplosion(unittest.TestCase):
 
     def test_mass_mode_switching_updates_live_masses_and_formula(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.topology_preset_id = "empty_3d"
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "native_3d"
+        state.piece_shape_name = "I3"
+        explosion_launcher.restart_standalone_explosion(state)
         controller = state.controller
         assert controller is not None
         left = controller.simulation.particles[0]
@@ -2813,16 +3547,11 @@ class TestLockedCellExplosion(unittest.TestCase):
         explosion_launcher._set_numeric_value_for_row(state, "random_mass_min", 0.5)
         explosion_launcher._set_numeric_value_for_row(state, "random_mass_max", 1.5)
         expected_random = build_locked_cell_explosion(
-            self._config(
-                dimension=3,
-                mass_mode=EXPLOSION_MASS_MODE_RANDOM,
-                random_mass_min=0.5,
-                random_mass_max=1.5,
-            )
+            explosion_launcher.build_standalone_explosion_config(state)
         )
         self.assertEqual(
             tuple(p.collision_mass for p in state.controller.simulation.particles[:2]),
-            tuple(p.collision_mass for p in expected_random.simulation.particles),
+            tuple(p.collision_mass for p in expected_random.simulation.particles[:2]),
         )
         self.assertIn(
             "K = ",
@@ -2849,6 +3578,11 @@ class TestLockedCellExplosion(unittest.TestCase):
 
     def test_footer_formula_uses_actual_masses(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
+        state.topology_preset_id = "empty_3d"
+        state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
+        state.piece_set_id = "native_3d"
+        state.piece_shape_name = "I3"
+        explosion_launcher.restart_standalone_explosion(state)
         controller = state.controller
         assert controller is not None
         left = controller.simulation.particles[0]
