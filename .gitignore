@@ -42,6 +42,15 @@ unity/**/UserSettings/
 unity/**/.vs/
 unity/**/TestResults*.xml
 unity/**/TestResults/
+godot/**/.godot/
+godot/**/imported/
+godot/**/.import/
+godot/**/export_presets.cfg
+godot/**/*.translation
+godot/**/mono/
+godot/**/.mono/
+godot/**/builds/
+godot/**/exports/
 
 # Removed local asset source packs / legacy compatibility files
 assets/transform_icons_full_pack/

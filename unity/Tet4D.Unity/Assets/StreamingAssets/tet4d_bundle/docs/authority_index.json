@@ -4,13 +4,13 @@
     {
       "purpose": "Current migration and handoff state.",
       "role": "restart_handoff",
-      "sha256": "c3f5d6c38d4996594412fac5a0a47defe9e00672bc658b38f8f25ebf8f2299fc",
+      "sha256": "21d144d7c07082b34338df7d6f35804a3bc940a98684edbd81d5fe9eed063331",
       "source_path": "CURRENT_STATE.md"
     },
     {
       "purpose": "Active migration follow-up tracker.",
       "role": "backlog",
-      "sha256": "1a1883ecfe56e4c058348faff786959ea50ece51d14bdbd94ac7f1d2f994c930",
+      "sha256": "ad05cbeb57478e135205c6f038ad79a68f03b4e86a59d09b3299448dbd999612",
       "source_path": "docs/BACKLOG.md"
     },
     {
@@ -22,13 +22,13 @@
     {
       "purpose": "Shared topology/gameplay/endgame product requirements.",
       "role": "product_requirements",
-      "sha256": "5ed94b9d00e7b56f0aaeb10a993bccc397f773f13976f1c424c2f131663db7ea",
+      "sha256": "71d012001ce80e468520ac6b3b7112bb524c7675d3510e8d3ea3f9c5004df1d9",
       "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
     },
     {
       "purpose": "Menu/config authority for launcher, settings, and keybindings.",
       "role": "menu_requirements",
-      "sha256": "2043696bfc42b93e6ed0ffefda45b5ae77edc71f51303c716e1555e46bb352b8",
+      "sha256": "5e933d296a89ab1f7ce9af39475e98c773ff13b60b3ace1f63cada8a56e6453c",
       "source_path": "docs/rds/RDS_MENU_STRUCTURE.md"
     },
     {
@@ -52,7 +52,7 @@
     {
       "purpose": "Stage 4 generated config bundle and packaging boundary contract.",
       "role": "migration_bundle_authority",
-      "sha256": "8987c9d0c571ff2668037967061958512e1e7860af92c5e124a555064f50f253",
+      "sha256": "2b60c8727c6111edff667370f88998510592506c30b990b5c45297d9c27593a7",
       "source_path": "docs/plans/migration_config_bundle.md"
     }
   ]

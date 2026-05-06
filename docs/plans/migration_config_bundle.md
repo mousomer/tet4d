@@ -2,7 +2,7 @@
 
 Role: migration packaging boundary  
 Status: active  
-Last updated: 2026-05-05
+Last updated: 2026-05-06
 
 ## Purpose
 
@@ -21,6 +21,7 @@ validate those sources.
 - Exporter: `tools/migration/export_config_bundle.py`
 - Drift checker: `tools/migration/compare_config_bundle.py`
 - Unity bundle sync: `tools/migration/sync_unity_bundle.py`
+- Godot bundle sync: `tools/migration/sync_godot_bundle.py`
 - Generated bundle: `migration/exported_bundle/`
 - Trace authority: `migration/golden_traces/`
 
@@ -51,6 +52,9 @@ validate those sources.
   scene, inspector, or project defaults must not become config authority.
 - Unity runtime must consume a copied `StreamingAssets` bundle rather than
   reading `migration/exported_bundle/` directly from the repository root.
+- Godot runtime must consume a copied `res://assets/tet4d_bundle/` bundle
+  rather than reading `migration/exported_bundle/` directly from the
+  repository root.
 
 ## Regeneration
 
@@ -60,6 +64,8 @@ PYTHONPATH=src .venv/bin/python tools/migration/export_config_bundle.py --check
 PYTHONPATH=src .venv/bin/python tools/migration/compare_config_bundle.py migration/exported_bundle
 PYTHONPATH=src .venv/bin/python tools/migration/sync_unity_bundle.py --bundle migration/exported_bundle --unity-assets unity/Tet4D.Unity/Assets/StreamingAssets/tet4d_bundle
 PYTHONPATH=src .venv/bin/python tools/migration/sync_unity_bundle.py --bundle migration/exported_bundle --unity-assets unity/Tet4D.Unity/Assets/StreamingAssets/tet4d_bundle --check
+PYTHONPATH=src .venv/bin/python tools/migration/sync_godot_bundle.py --bundle migration/exported_bundle --godot-assets godot/Tet4D.Godot/assets/tet4d_bundle
+PYTHONPATH=src .venv/bin/python tools/migration/sync_godot_bundle.py --bundle migration/exported_bundle --godot-assets godot/Tet4D.Godot/assets/tet4d_bundle --check
 ```
 
 Trace freshness remains covered separately by:

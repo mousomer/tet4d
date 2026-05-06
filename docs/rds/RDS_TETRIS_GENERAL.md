@@ -159,6 +159,24 @@ Cross-cutting requirements are defined in:
    presentation only. They must not become gameplay, topology, config, or
    endgame semantic authority.
 
+### 3.2f Godot replay spike rules
+
+1. Stage 6 Godot replay lives under `godot/Tet4D.Godot/` and consumes only the
+   copied bundle under `res://assets/tet4d_bundle/` at runtime.
+2. Godot may parse traces, extract renderable snapshots, render frame data,
+   browse cases, animate playback, and display diagnostics/config metadata.
+3. The purpose of the Godot spike is product-shell evaluation: menus, settings
+   UX, display clarity, diagnostics panels, and replay readability. It is not
+   a semantic core port.
+4. Godot must not call Python at runtime, read repo-root
+   `migration/exported_bundle/` directly, or scrape `src/`, `config/`,
+   `tools/`, `tests/`, or `docs/` at runtime.
+5. Godot must not implement gameplay rules, topology transport, score/lock
+   logic, or endgame particle simulation semantics in GDScript for this stage.
+6. Inspector, scene, and project settings may control replay presentation
+   only. They must not become gameplay, topology, config, or endgame semantic
+   authority.
+
 ### 3.3 Shared piece-local transform rules
 
 1. Piece-local coordinates are occupied-cell offsets from a deterministic piece origin, not a fixed pivot cell.

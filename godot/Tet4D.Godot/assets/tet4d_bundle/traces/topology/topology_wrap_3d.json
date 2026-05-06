@@ -1,0 +1,471 @@
+{
+  "case_id": "topology_wrap_3d",
+  "commands": [
+    {
+      "id": "wrap_x_neg",
+      "step": "x-"
+    },
+    {
+      "id": "wrap_z_pos",
+      "step": "z+"
+    }
+  ],
+  "dimension": 3,
+  "final": {
+    "diagnostics_hash": "a857915f6740cd2424fe6bc9d03ed9236af20e3b0134879a2c9248b86dc1f136",
+    "frame_count": 2,
+    "state_hash": "aaa00347ad4afb978afe80be5242eb62c92902597c0c137c7449851951e9995c"
+  },
+  "frames": [
+    {
+      "after": {
+        "probe_coord": [
+          3,
+          2,
+          3
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            -1,
+            1,
+            1
+          ]
+        }
+      },
+      "attempted_move": {
+        "axis": 0,
+        "delta": -1,
+        "label": "x-"
+      },
+      "before": {
+        "probe_coord": [
+          0,
+          2,
+          3
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "command_id": "wrap_x_neg",
+      "diagnostics": {
+        "errors": [],
+        "explorer_reason": "Explorer/probe follows the validated single-cell traversal graph.",
+        "explorer_usability": "cellwise_explorable",
+        "movement_summary": {
+          "boundary_traversal_count": 96,
+          "cell_count": 64,
+          "component_count": 1,
+          "directed_edge_count": 384
+        },
+        "recommended_next_preset": null,
+        "rigid_playability": "rigid_playable",
+        "rigid_reason": "Current rigid transport analysis did not find an adjacent-cell deformation case.",
+        "status": "playable",
+        "summary": "Valid. Cellwise explorable. Rigid-playable.",
+        "validity": "valid",
+        "validity_reason": "Current topology validates for the active board dimensions.",
+        "warnings": []
+      },
+      "frame_index": 0,
+      "legal": true,
+      "piece_transport": {
+        "cell_steps": [
+          {
+            "blocked": false,
+            "frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                -1,
+                1,
+                1
+              ],
+              "translation": [
+                3,
+                0,
+                0
+              ]
+            },
+            "from": [
+              0,
+              2,
+              3
+            ],
+            "piece_frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                1,
+                1,
+                1
+              ],
+              "translation": [
+                3,
+                0,
+                0
+              ]
+            },
+            "to": [
+              3,
+              2,
+              3
+            ],
+            "traversal": {
+              "destination_boundary": "x+",
+              "glue_id": "wrap_0",
+              "source_boundary": "x-"
+            }
+          }
+        ],
+        "frame_transform": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            1,
+            1,
+            1
+          ],
+          "translation": [
+            3,
+            0,
+            0
+          ]
+        },
+        "kind": "plain_translation",
+        "moved_cells": [
+          [
+            3,
+            2,
+            3
+          ]
+        ],
+        "rigidly_coherent": true
+      },
+      "probe_result": {
+        "blocked": false,
+        "frame_permutation": [
+          0,
+          1,
+          2
+        ],
+        "frame_signs": [
+          -1,
+          1,
+          1
+        ],
+        "message": "x-: x- -> x+ to [3, 2, 3]",
+        "step": "x-",
+        "traversal": {
+          "glue_id": "wrap_0",
+          "source_boundary": "x-",
+          "target_boundary": "x+"
+        }
+      },
+      "state_hash": "e40366439e881d20e4bafefc5b4a04b26570f90e71bd8ac45f0c6d8cec9b58af"
+    },
+    {
+      "after": {
+        "probe_coord": [
+          3,
+          2,
+          0
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            -1,
+            1,
+            -1
+          ]
+        }
+      },
+      "attempted_move": {
+        "axis": 2,
+        "delta": 1,
+        "label": "z+"
+      },
+      "before": {
+        "probe_coord": [
+          3,
+          2,
+          3
+        ],
+        "probe_frame": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            -1,
+            1,
+            1
+          ]
+        }
+      },
+      "command_id": "wrap_z_pos",
+      "diagnostics": {
+        "errors": [],
+        "explorer_reason": "Explorer/probe follows the validated single-cell traversal graph.",
+        "explorer_usability": "cellwise_explorable",
+        "movement_summary": {
+          "boundary_traversal_count": 96,
+          "cell_count": 64,
+          "component_count": 1,
+          "directed_edge_count": 384
+        },
+        "recommended_next_preset": null,
+        "rigid_playability": "rigid_playable",
+        "rigid_reason": "Current rigid transport analysis did not find an adjacent-cell deformation case.",
+        "status": "playable",
+        "summary": "Valid. Cellwise explorable. Rigid-playable.",
+        "validity": "valid",
+        "validity_reason": "Current topology validates for the active board dimensions.",
+        "warnings": []
+      },
+      "frame_index": 1,
+      "legal": true,
+      "piece_transport": {
+        "cell_steps": [
+          {
+            "blocked": false,
+            "frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                1,
+                1,
+                -1
+              ],
+              "translation": [
+                0,
+                0,
+                3
+              ]
+            },
+            "from": [
+              3,
+              2,
+              3
+            ],
+            "piece_frame_transform": {
+              "permutation": [
+                0,
+                1,
+                2
+              ],
+              "signs": [
+                1,
+                1,
+                1
+              ],
+              "translation": [
+                0,
+                0,
+                -3
+              ]
+            },
+            "to": [
+              3,
+              2,
+              0
+            ],
+            "traversal": {
+              "destination_boundary": "z-",
+              "glue_id": "wrap_2",
+              "source_boundary": "z+"
+            }
+          }
+        ],
+        "frame_transform": {
+          "permutation": [
+            0,
+            1,
+            2
+          ],
+          "signs": [
+            1,
+            1,
+            1
+          ],
+          "translation": [
+            0,
+            0,
+            -3
+          ]
+        },
+        "kind": "plain_translation",
+        "moved_cells": [
+          [
+            3,
+            2,
+            0
+          ]
+        ],
+        "rigidly_coherent": true
+      },
+      "probe_result": {
+        "blocked": false,
+        "frame_permutation": [
+          0,
+          1,
+          2
+        ],
+        "frame_signs": [
+          -1,
+          1,
+          -1
+        ],
+        "message": "z+: z+ -> z- to [3, 2, 0]",
+        "step": "z+",
+        "traversal": {
+          "glue_id": "wrap_2",
+          "source_boundary": "z+",
+          "target_boundary": "z-"
+        }
+      },
+      "state_hash": "9c23ec846d71524c7e7b8f9e7bee0401f5d0d1e11d1a2058defea7cd2796e26e"
+    }
+  ],
+  "generator": {
+    "name": "export_topology_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "axis_sizes": [
+      4,
+      4,
+      4
+    ],
+    "diagnostics": {
+      "errors": [],
+      "explorer_reason": "Explorer/probe follows the validated single-cell traversal graph.",
+      "explorer_usability": "cellwise_explorable",
+      "movement_summary": {
+        "boundary_traversal_count": 96,
+        "cell_count": 64,
+        "component_count": 1,
+        "directed_edge_count": 384
+      },
+      "recommended_next_preset": null,
+      "rigid_playability": "rigid_playable",
+      "rigid_reason": "Current rigid transport analysis did not find an adjacent-cell deformation case.",
+      "status": "playable",
+      "summary": "Valid. Cellwise explorable. Rigid-playable.",
+      "validity": "valid",
+      "validity_reason": "Current topology validates for the active board dimensions.",
+      "warnings": []
+    },
+    "glue_count": 3,
+    "gluings": [
+      {
+        "enabled": true,
+        "glue_id": "wrap_0",
+        "source": "x-",
+        "target": "x+",
+        "transform": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "enabled": true,
+        "glue_id": "wrap_1",
+        "source": "y-",
+        "target": "y+",
+        "transform": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "enabled": true,
+        "glue_id": "wrap_2",
+        "source": "z-",
+        "target": "z+",
+        "transform": {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            1,
+            1
+          ]
+        }
+      }
+    ],
+    "notes": [],
+    "preview_error": null,
+    "preview_summary": {
+      "boundary_traversal_count": 96,
+      "component_count": 1,
+      "directed_edge_count": 384
+    },
+    "probe_coord": [
+      0,
+      2,
+      3
+    ],
+    "probe_frame": {
+      "permutation": [
+        0,
+        1,
+        2
+      ],
+      "signs": [
+        1,
+        1,
+        1
+      ]
+    },
+    "resolver_error": null
+  },
+  "seed": null,
+  "topology_id": "wrap",
+  "trace_type": "topology",
+  "trace_version": 1
+}

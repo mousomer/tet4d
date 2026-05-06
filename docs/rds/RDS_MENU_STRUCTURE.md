@@ -4,7 +4,7 @@ Role: rds
 Status: active
 Scope: launcher, settings, pause-menu, and topology-playground menu IA
 Canonical owner: this file
-Last verified: 2026-04-30
+Last verified: 2026-05-06
 
 ## 1. Scope
 
@@ -19,6 +19,9 @@ Define a unified, readable, and keyboard/controller-first menu structure for:
 8. Audio, display, and analytics settings (including fullscreen/windowed mode)
 9. Helper panel information hierarchy and control-guide visuals, including the
    frozen topology-playground visible shell
+10. Migration-shell evaluation constraints for replay-only Unity/Godot spikes
+    where engine UI may be assessed for menu, settings, diagnostics, and
+    display quality without becoming gameplay or config authority
 
 Primary implementation and maintenance files:
 1. `src/tet4d/ui/pygame/front2d_game.py`

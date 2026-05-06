@@ -1,0 +1,20 @@
+; Engine configuration file.
+; Replay-only Godot spike. Runtime authority remains in Python traces/config.
+
+config_version=5
+
+[application]
+
+config/name="Tet4D.Godot"
+run/main_scene="res://scenes/trace_replay.tscn"
+config/features=PackedStringArray("4.2")
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=960
+window/stretch/mode="canvas_items"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"

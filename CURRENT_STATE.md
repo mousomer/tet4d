@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-05-05  
+Last updated: 2026-05-06
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -36,12 +36,20 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   It is not a source of truth: config remains authoritative in `config/`,
   Python semantics remain authoritative in `src/`, and trace authority remains
   in `migration/golden_traces/`.
-- Stage 5 now adds a Unity replay spike under `unity/Tet4D.Unity/` plus
+- Stage 5 adds a Unity replay spike under `unity/Tet4D.Unity/` plus
   `tools/migration/sync_unity_bundle.py` to copy the generated bundle into
-  Unity `StreamingAssets`. The Unity spike loads copied topology/gameplay/
-  endgame traces, browses cases, steps frames, and renders diagnostics, but it
-  does not call Python at runtime or implement gameplay, topology transport, or
-  endgame simulation semantics.
+  Unity `StreamingAssets`. The Unity spike remains a replay-only comparison
+  artifact: it loads copied topology/gameplay/endgame traces, browses cases,
+  steps frames, and renders diagnostics, but it does not call Python at
+  runtime or implement gameplay, topology transport, or endgame simulation
+  semantics.
+- Stage 6 now adds the primary engine-shell spike under `godot/Tet4D.Godot/`
+  plus `tools/migration/sync_godot_bundle.py` to copy the generated bundle
+  into `res://assets/tet4d_bundle/`. The Godot spike is replay-only and exists
+  to evaluate menus, diagnostics panels, display clarity, playback controls,
+  simple animation polish, and 4D trace readability. It does not call Python
+  at runtime or implement gameplay, topology transport, or endgame simulation
+  semantics.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -217,6 +225,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `docs/plans/migration_config_bundle.md`.
 - For the Unity replay spike boundary, use
   `docs/plans/unity_trace_replay_spike.md`.
+- For the Godot replay spike boundary, use
+  `docs/plans/godot_trace_replay_spike.md`.
 - For historical detail only, use `docs/history/DONE_SUMMARIES.md` and
   `docs/history/topology_playground/current_state_archive_2026-03-31.md`.
 

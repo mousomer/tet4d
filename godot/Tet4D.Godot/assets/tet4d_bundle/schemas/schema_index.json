@@ -1,0 +1,52 @@
+{
+  "bundle_version": 1,
+  "files": [
+    {
+      "purpose": "help action map.schema JSON schema",
+      "sha256": "acb29a4b1b7d1aa7dd7e337e19667a057bee166008319aec88e7b97c6edc54fe",
+      "source_path": "config/schema/help_action_map.schema.json"
+    },
+    {
+      "purpose": "help runtime content.schema JSON schema",
+      "sha256": "f2e6a5f6e0611fabb55a2cbcc482b6b42c745db9c2dd718dead8f0bbd8b15250",
+      "source_path": "config/schema/help_runtime_content.schema.json"
+    },
+    {
+      "purpose": "help runtime layout.schema JSON schema",
+      "sha256": "98898d48418c60d04e1bcbe43aae42090ab1b6a8a40b4c34731818d1ac4f9552",
+      "source_path": "config/schema/help_runtime_layout.schema.json"
+    },
+    {
+      "purpose": "help topics.schema JSON schema",
+      "sha256": "3da0099eb1088b0d2c79baebc07cd4d9ff38a5ce1e6cdd68467c2ec4383ab502",
+      "source_path": "config/schema/help_topics.schema.json"
+    },
+    {
+      "purpose": "menu settings.schema JSON schema",
+      "sha256": "91fd8efacb866515fd422a429ecaf38f53b568a4e0cb5cd8d3a36efe8a705db8",
+      "source_path": "config/schema/menu_settings.schema.json"
+    },
+    {
+      "purpose": "save state.schema JSON schema",
+      "sha256": "8d0fa14c6c05d818c51ca4a8297d0fcd2af6f1ec72b432508e3e7d27d4ddc42c",
+      "source_path": "config/schema/save_state.schema.json"
+    },
+    {
+      "purpose": "tutorial lessons.schema JSON schema",
+      "sha256": "7caebcfc21e806fc941fadf7d92ee8eca791cbf102877b3674ff1a97c3927be8",
+      "source_path": "config/schema/tutorial_lessons.schema.json"
+    },
+    {
+      "purpose": "tutorial plan.schema JSON schema",
+      "sha256": "f461bc2ba76bd78c5faaa8df31f07605a7722ca840f4a9783512325f403e9eae",
+      "source_path": "config/schema/tutorial_plan.schema.json"
+    }
+  ],
+  "trace_schema": {
+    "purpose": "Code-defined canonical trace schema helpers.",
+    "schema_version": 1,
+    "sha256": "7b3fdaf35495ac05f4f11deb925ee21455ccc7a5013ff07b7d99a7f46a1b2960",
+    "source_path": "tools/migration/trace_schema.py",
+    "trace_version": 1
+  }
+}
