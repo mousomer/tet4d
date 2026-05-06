@@ -145,6 +145,20 @@ Cross-cutting requirements are defined in:
    simulation. Engine scene or inspector defaults must not replace the Python
    and config authorities.
 
+### 3.2e Unity replay spike rules
+
+1. Stage 5 Unity replay lives under `unity/Tet4D.Unity/` and consumes only the
+   copied bundle under `Assets/StreamingAssets/tet4d_bundle/` at runtime.
+2. Unity may parse traces, extract renderable snapshots, render frame data,
+   browse cases, and display diagnostics/config metadata.
+3. Unity must not call Python at runtime, read repo-root `migration/exported_bundle/`
+   directly, or scrape `src/`, `config/`, `tools/`, `tests/`, or `docs/` at runtime.
+4. Unity must not implement gameplay rules, topology transport, score/lock
+   logic, or endgame particle simulation semantics in C# for this stage.
+5. Inspector, prefab, ScriptableObject, and scene values may control replay
+   presentation only. They must not become gameplay, topology, config, or
+   endgame semantic authority.
+
 ### 3.3 Shared piece-local transform rules
 
 1. Piece-local coordinates are occupied-cell offsets from a deterministic piece origin, not a fixed pivot cell.

@@ -1,0 +1,21 @@
+{
+  "name": "Tet4D.UnityReplay.EditModeTests",
+  "rootNamespace": "Tet4D.UnityReplay.Tests",
+  "references": [
+    "Tet4D.UnityReplay.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "case_id": "topology_playability_diagnostics_stable",
+  "commands": [],
+  "dimension": 2,
+  "final": {
+    "diagnostics_hash": "2e0370c50db546f1dd28eab99621703e45ce2f214f666c6408031a0db91bb667",
+    "frame_count": 0,
+    "state_hash": "061487069a4e284bc08d7c70d3b56e5d04731f49f0caa5f3862ccea355972448"
+  },
+  "frames": [],
+  "generator": {
+    "name": "export_topology_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "axis_sizes": [
+      5,
+      4
+    ],
+    "diagnostics": {
+      "errors": [
+        "unsupported for current board dimensions (5, 4): gluing transform is not bijective for the board dimensions (glue sphere_01 x- -> y-, source extents (4,), target extents (5,), permutation (0,))"
+      ],
+      "explorer_reason": "Explorer/probe is unavailable until the current topology validates for these board dimensions.",
+      "explorer_usability": "not_explorable",
+      "movement_summary": {
+        "boundary_traversal_count": null,
+        "cell_count": null,
+        "component_count": null,
+        "directed_edge_count": null
+      },
+      "recommended_next_preset": null,
+      "rigid_playability": "not_rigid_playable",
+      "rigid_reason": "Play launch stays restricted because runtime validation already rejects this topology.",
+      "status": "blocked",
+      "summary": "Invalid for current board dimensions.",
+      "validity": "invalid",
+      "validity_reason": "unsupported for current board dimensions (5, 4): gluing transform is not bijective for the board dimensions (glue sphere_01 x- -> y-, source extents (4,), target extents (5,), permutation (0,))",
+      "warnings": []
+    },
+    "glue_count": 2,
+    "gluings": [
+      {
+        "enabled": true,
+        "glue_id": "sphere_01",
+        "source": "x-",
+        "target": "y-",
+        "transform": {
+          "permutation": [
+            0
+          ],
+          "signs": [
+            -1
+          ]
+        }
+      },
+      {
+        "enabled": true,
+        "glue_id": "sphere_02",
+        "source": "x+",
+        "target": "y+",
+        "transform": {
+          "permutation": [
+            0
+          ],
+          "signs": [
+            -1
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "Invalid sphere-like dimensions must produce repeatable diagnostics."
+    ],
+    "playability_repeat": {
+      "first_hash": "2e0370c50db546f1dd28eab99621703e45ce2f214f666c6408031a0db91bb667",
+      "repeat_hash": "2e0370c50db546f1dd28eab99621703e45ce2f214f666c6408031a0db91bb667",
+      "stable": true
+    },
+    "preview_error": "unsupported for current board dimensions (5, 4): gluing transform is not bijective for the board dimensions (glue sphere_01 x- -> y-, source extents (4,), target extents (5,), permutation (0,))",
+    "preview_summary": null,
+    "probe_coord": [
+      2,
+      2
+    ],
+    "probe_frame": {
+      "permutation": [
+        0,
+        1
+      ],
+      "signs": [
+        1,
+        1
+      ]
+    },
+    "resolver_error": "unsupported for current board dimensions (5, 4): gluing transform is not bijective for the board dimensions (glue sphere_01 x- -> y-, source extents (4,), target extents (5,), permutation (0,))"
+  },
+  "seed": null,
+  "topology_id": "sphere_like_invalid_dims",
+  "trace_type": "topology",
+  "trace_version": 1
+}

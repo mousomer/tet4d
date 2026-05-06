@@ -20,6 +20,7 @@ validate those sources.
 
 - Exporter: `tools/migration/export_config_bundle.py`
 - Drift checker: `tools/migration/compare_config_bundle.py`
+- Unity bundle sync: `tools/migration/sync_unity_bundle.py`
 - Generated bundle: `migration/exported_bundle/`
 - Trace authority: `migration/golden_traces/`
 
@@ -48,6 +49,8 @@ validate those sources.
   docs authority.
 - Unity/Godot replay spikes may consume the bundle as input data, but engine
   scene, inspector, or project defaults must not become config authority.
+- Unity runtime must consume a copied `StreamingAssets` bundle rather than
+  reading `migration/exported_bundle/` directly from the repository root.
 
 ## Regeneration
 
@@ -55,6 +58,8 @@ validate those sources.
 PYTHONPATH=src .venv/bin/python tools/migration/export_config_bundle.py --out migration/exported_bundle
 PYTHONPATH=src .venv/bin/python tools/migration/export_config_bundle.py --check
 PYTHONPATH=src .venv/bin/python tools/migration/compare_config_bundle.py migration/exported_bundle
+PYTHONPATH=src .venv/bin/python tools/migration/sync_unity_bundle.py --bundle migration/exported_bundle --unity-assets unity/Tet4D.Unity/Assets/StreamingAssets/tet4d_bundle
+PYTHONPATH=src .venv/bin/python tools/migration/sync_unity_bundle.py --bundle migration/exported_bundle --unity-assets unity/Tet4D.Unity/Assets/StreamingAssets/tet4d_bundle --check
 ```
 
 Trace freshness remains covered separately by:

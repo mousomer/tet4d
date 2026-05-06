@@ -1,0 +1,374 @@
+{
+  "case_id": "gameplay_launch_topology_parity",
+  "commands": [
+    {
+      "action": "move_axis",
+      "axis": 1,
+      "delta": 1,
+      "id": "launched_transport_y_seam"
+    },
+    {
+      "action": "gravity_step",
+      "id": "gravity_policy"
+    }
+  ],
+  "dimension": 4,
+  "final": {
+    "locked_cell_count": 1,
+    "locked_cell_digest": "ab4fe7564c5021abb039da9ab6e71dde0b59204a67c2c36ccb854bd50b8a8315",
+    "score": 5,
+    "state_hash": "a0d28e8d698144c9664a165db46daf8cc2a14759fc0e0e61cbc1cd4b0a8553ac"
+  },
+  "frames": [
+    {
+      "active_piece": {
+        "cells": [
+          [
+            3,
+            3,
+            2,
+            0
+          ]
+        ],
+        "color_id": 8,
+        "last_rotation_plane": null,
+        "last_rotation_steps": 0,
+        "pos": [
+          3,
+          3,
+          2,
+          0
+        ],
+        "rel_blocks": [
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "shape": "TRACE_4D"
+      },
+      "command": {
+        "action": "move_axis",
+        "axis": 1,
+        "delta": 1,
+        "id": "launched_transport_y_seam"
+      },
+      "command_id": "launched_transport_y_seam",
+      "command_result": {
+        "active_cells_before": [
+          [
+            3,
+            3,
+            1,
+            0
+          ]
+        ],
+        "locked_cell_delta": 0,
+        "return_value": true
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 0,
+        "locked_cell_delta": 0,
+        "soft_drop_legal_after": false
+      },
+      "frame_index": 0,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "0:-1": true,
+          "0:1": true,
+          "1:-1": true,
+          "1:1": true,
+          "2:-1": true,
+          "2:1": true,
+          "3:-1": true,
+          "3:1": true,
+          "soft_drop": false
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "locked_cells": [],
+      "score": 0,
+      "state_hash": "ffb7befb5b5e851d3876942ba69065fdbc84d4d9b0f47142b591cd12c5a2732d",
+      "topology_event": {
+        "crosses_gravity_seam": true,
+        "intent": "translation",
+        "kind": "rigid_transform",
+        "moved_cells": [
+          [
+            3,
+            3,
+            2,
+            0
+          ]
+        ],
+        "rigidly_coherent": true,
+        "source_cells": [
+          [
+            3,
+            3,
+            1,
+            0
+          ]
+        ],
+        "step": {
+          "axis": 1,
+          "delta": 1,
+          "label": "y+"
+        },
+        "traversals": [
+          {
+            "destination_boundary": "x+",
+            "glue_id": "sphere_02",
+            "source_boundary": "y+"
+          }
+        ]
+      }
+    },
+    {
+      "active_piece": {
+        "cells": [
+          [
+            0,
+            -2,
+            1,
+            1
+          ],
+          [
+            1,
+            -2,
+            1,
+            1
+          ],
+          [
+            1,
+            -1,
+            2,
+            1
+          ],
+          [
+            1,
+            -1,
+            2,
+            2
+          ],
+          [
+            2,
+            -2,
+            1,
+            1
+          ]
+        ],
+        "color_id": 4,
+        "last_rotation_plane": null,
+        "last_rotation_steps": 0,
+        "pos": [
+          1,
+          -2,
+          1,
+          1
+        ],
+        "rel_blocks": [
+          [
+            -1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            0,
+            0
+          ]
+        ],
+        "shape": "TEE4"
+      },
+      "command": {
+        "action": "gravity_step",
+        "id": "gravity_policy"
+      },
+      "command_id": "gravity_policy",
+      "command_result": {
+        "active_cells_before": [
+          [
+            3,
+            3,
+            2,
+            0
+          ]
+        ],
+        "locked_cell_delta": 1,
+        "return_value": null
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 1,
+        "locked_cell_delta": 1,
+        "soft_drop_legal_after": true
+      },
+      "frame_index": 1,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "0:-1": false,
+          "0:1": true,
+          "1:-1": true,
+          "1:1": true,
+          "2:-1": true,
+          "2:1": true,
+          "3:-1": true,
+          "3:1": true,
+          "soft_drop": true
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "ab4fe7564c5021abb039da9ab6e71dde0b59204a67c2c36ccb854bd50b8a8315",
+      "locked_cells": [
+        {
+          "coord": [
+            3,
+            3,
+            2,
+            0
+          ],
+          "value": 8
+        }
+      ],
+      "score": 5,
+      "state_hash": "dfc9bab03bdf2f8ede4b58df8d6afd5025c590621568c57ef5768efe266ebaba",
+      "topology_event": {
+        "crosses_gravity_seam": true,
+        "intent": "gravity_step",
+        "kind": "rigid_transform",
+        "moved_cells": [
+          [
+            3,
+            3,
+            1,
+            0
+          ]
+        ],
+        "rigidly_coherent": true,
+        "source_cells": [
+          [
+            3,
+            3,
+            2,
+            0
+          ]
+        ],
+        "step": {
+          "axis": 1,
+          "delta": 1,
+          "label": "y+"
+        },
+        "traversals": [
+          {
+            "destination_boundary": "x+",
+            "glue_id": "sphere_02",
+            "source_boundary": "y+"
+          }
+        ]
+      }
+    }
+  ],
+  "generator": {
+    "name": "export_gameplay_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "active_piece": {
+      "cells": [
+        [
+          3,
+          3,
+          1,
+          0
+        ]
+      ],
+      "color_id": 8,
+      "last_rotation_plane": null,
+      "last_rotation_steps": 0,
+      "pos": [
+        3,
+        3,
+        1,
+        0
+      ],
+      "rel_blocks": [
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "shape": "TRACE_4D"
+    },
+    "board_shape": [
+      4,
+      4,
+      4,
+      4
+    ],
+    "launch_parity": {
+      "config_profile_digest": "f26602497ded54a70f9a6c44852ccd3f73c91a0871724f05c39b95d03df0a705",
+      "configured_transport_dims": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "first_transport_equal": true,
+      "playground_profile_digest": "f26602497ded54a70f9a6c44852ccd3f73c91a0871724f05c39b95d03df0a705",
+      "profile_digest_equal": true
+    },
+    "locked_cells": [],
+    "notes": [
+      "Config is built by Play This Topology launch path before gameplay runs."
+    ],
+    "settings": {
+      "axis_sizes": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "exploration_mode": false,
+      "explorer_profile_digest": "f26602497ded54a70f9a6c44852ccd3f73c91a0871724f05c39b95d03df0a705",
+      "explorer_rigid_play_enabled": false,
+      "gravity_axis": 1,
+      "piece_set": "standard_4d_5",
+      "topology_mode": "bounded",
+      "wrap_gravity_axis": true
+    },
+    "settings_digest": "c33cca6e545f02bf3886e6c837725f9f308b1a39e6405e1f695549bb6fc0cbff"
+  },
+  "seed": 2010,
+  "topology_id": "sphere_like",
+  "trace_type": "gameplay",
+  "trace_version": 1
+}

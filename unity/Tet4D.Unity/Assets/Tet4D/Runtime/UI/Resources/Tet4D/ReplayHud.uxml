@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="hud-root" class="hud-root">
+        <ui:Label name="status-label" class="status-label" text="Bundle status: loading" />
+        <ui:VisualElement class="row">
+            <ui:DropdownField name="trace-type-dropdown" label="Trace Type" />
+            <ui:DropdownField name="case-dropdown" label="Case" />
+        </ui:VisualElement>
+        <ui:VisualElement class="row">
+            <ui:Button name="prev-button" text="Prev" />
+            <ui:Button name="play-button" text="Play" />
+            <ui:Button name="next-button" text="Next" />
+            <ui:Button name="reset-button" text="Reset" />
+        </ui:VisualElement>
+        <ui:VisualElement class="row">
+            <ui:Slider name="speed-slider" label="Speed" low-value="1" high-value="20" />
+            <ui:Toggle name="diagnostics-toggle" label="Diagnostics" value="true" />
+        </ui:VisualElement>
+        <ui:Label name="frame-label" class="frame-label" text="Frame 0 / 0" />
+        <ui:Label name="metadata-label" class="text-block" text="Metadata" />
+        <ui:ScrollView name="diagnostics-scroll" class="diagnostics-scroll">
+            <ui:Label name="diagnostics-text" class="text-block" text="Diagnostics" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

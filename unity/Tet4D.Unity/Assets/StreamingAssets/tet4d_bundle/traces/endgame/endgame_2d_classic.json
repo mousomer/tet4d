@@ -1,0 +1,1019 @@
+{
+  "board_shape": [
+    4,
+    4
+  ],
+  "case_id": "endgame_2d_classic",
+  "collision_mode": "no_collision",
+  "dimension": 2,
+  "final": {
+    "energy": {
+      "kinetic_energy": 25.722072,
+      "speed_sq_sum": 51.444143,
+      "weighted_speed_sq_sum": 51.444143
+    },
+    "particle_count": 4,
+    "state_hash": "d4937733f6bc832c33dee09734d7edfddcb72ac5d4e476ad9a225544f63edf75"
+  },
+  "float_precision": 6,
+  "frames": [
+    {
+      "elapsed_ms": 160.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [],
+      "frame_index": 0,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            -0.224,
+            1.032
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.875731,
+            0.297925
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            -4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            2.517778,
+            2.17083
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            2.810369,
+            2.651293
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            4.070578
+          ]
+        }
+      ],
+      "state_hash": "4f2bb1ce9fa4a0ba7868ead2844b6bfb361ab9aba9bffd6786058ae3cea2e428"
+    },
+    {
+      "elapsed_ms": 320.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [],
+      "frame_index": 1,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            -0.448,
+            1.064
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.751462,
+            -0.40415
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            -4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            3.035555,
+            2.341661
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            2.620739,
+            3.302585
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            4.070578
+          ]
+        }
+      ],
+      "state_hash": "3437ebebe850e7d27e9f20d806c0f6e5d501a0de43e3243167c24f47b56d12fa"
+    },
+    {
+      "elapsed_ms": 480.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [
+        {
+          "axis": 0,
+          "glue_id": null,
+          "kind": "boundary_bounce",
+          "other_particle_id": null,
+          "particle_id": 0,
+          "side": "-",
+          "source_boundary": null,
+          "step_index": 3,
+          "target_boundary": null
+        },
+        {
+          "axis": 1,
+          "glue_id": null,
+          "kind": "boundary_bounce",
+          "other_particle_id": null,
+          "particle_id": 1,
+          "side": "-",
+          "source_boundary": null,
+          "step_index": 3,
+          "target_boundary": null
+        },
+        {
+          "axis": 0,
+          "glue_id": null,
+          "kind": "boundary_bounce",
+          "other_particle_id": null,
+          "particle_id": 2,
+          "side": "+",
+          "source_boundary": null,
+          "step_index": 3,
+          "target_boundary": null
+        },
+        {
+          "axis": 1,
+          "glue_id": null,
+          "kind": "boundary_bounce",
+          "other_particle_id": null,
+          "particle_id": 3,
+          "side": "+",
+          "source_boundary": null,
+          "step_index": 3,
+          "target_boundary": null
+        }
+      ],
+      "frame_index": 2,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            -0.327991,
+            1.096
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.627194,
+            0.10623
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            3.446661,
+            2.51249
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            2.431109,
+            3.046116
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            -4.070578
+          ]
+        }
+      ],
+      "state_hash": "b3856a537efce5efa6feee127561c1df160d5383b70ec5b233a4cf0721de6236"
+    },
+    {
+      "elapsed_ms": 640.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [],
+      "frame_index": 3,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            -0.103991,
+            1.128
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.502925,
+            0.808305
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            2.928883,
+            2.683321
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            2.241479,
+            2.394824
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            -4.070578
+          ]
+        }
+      ],
+      "state_hash": "a3e68f7f9dc598fc633358b1171cd385d2dc02e059ab90d2c2e52180416c1f19"
+    },
+    {
+      "elapsed_ms": 800.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [],
+      "frame_index": 4,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            0.120009,
+            1.16
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.378656,
+            1.510379
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            2.411106,
+            2.854151
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            2.051848,
+            1.743531
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            -4.070578
+          ]
+        }
+      ],
+      "state_hash": "8ca6a875979ee1b50181c2a1956d2af5831246a597060ff5276cd3ec6f15579a"
+    },
+    {
+      "elapsed_ms": 960.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [],
+      "frame_index": 5,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            0.344009,
+            1.192
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.254387,
+            2.212454
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            1.893328,
+            3.024981
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            1.862218,
+            1.092239
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            -4.070578
+          ]
+        }
+      ],
+      "state_hash": "efcfa3fc582fe9ef20a589cae7a50a903330b719255b6a1c3662e89db713ceaf"
+    },
+    {
+      "elapsed_ms": 1120.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [],
+      "frame_index": 6,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            0.568009,
+            1.224
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.130118,
+            2.914529
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            1.375551,
+            3.195812
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            1.672587,
+            0.440946
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            -4.070578
+          ]
+        }
+      ],
+      "state_hash": "c0f2fc12f8abb7c25c2fa34d4145179b4825492fab523950ba72a933bfdd155f"
+    },
+    {
+      "elapsed_ms": 1280.0,
+      "energy": {
+        "kinetic_energy": 25.722072,
+        "speed_sq_sum": 51.444143,
+        "weighted_speed_sq_sum": 51.444143
+      },
+      "events": [
+        {
+          "axis": 1,
+          "glue_id": null,
+          "kind": "boundary_bounce",
+          "other_particle_id": null,
+          "particle_id": 1,
+          "side": "+",
+          "source_boundary": null,
+          "step_index": 8,
+          "target_boundary": null
+        }
+      ],
+      "frame_index": 7,
+      "particles": [
+        {
+          "active": true,
+          "color_id": 2,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 0,
+          "position": [
+            0.792009,
+            1.256
+          ],
+          "radius": 0.359497,
+          "source_coord": [
+            0,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            1.4,
+            0.2
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 3,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 1,
+          "position": [
+            0.00585,
+            3.383391
+          ],
+          "radius": 0.242325,
+          "source_coord": [
+            1,
+            1
+          ],
+          "source_group_id": "L",
+          "velocity": [
+            -0.776681,
+            -4.387967
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 4,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 2,
+          "position": [
+            0.857773,
+            3.366642
+          ],
+          "radius": 0.309116,
+          "source_coord": [
+            2,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -3.236109,
+            1.06769
+          ]
+        },
+        {
+          "active": true,
+          "color_id": 5,
+          "escaped": false,
+          "mass": 1.0,
+          "particle_id": 3,
+          "position": [
+            1.482956,
+            -0.210346
+          ],
+          "radius": 0.28323,
+          "source_coord": [
+            3,
+            2
+          ],
+          "source_group_id": "T",
+          "velocity": [
+            -1.185191,
+            -4.070578
+          ]
+        }
+      ],
+      "state_hash": "a571b0ead2c5d91fe1fbf2ded3c43698b573fb0b2026676b77e4e61e2d130189"
+    }
+  ],
+  "generator": {
+    "name": "export_endgame_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "energy": {
+      "kinetic_energy": 25.722072,
+      "speed_sq_sum": 51.444143,
+      "weighted_speed_sq_sum": 51.444143
+    },
+    "full_locked_cells": [
+      {
+        "color_id": 2,
+        "source_coord": [
+          0,
+          1
+        ],
+        "source_group_id": "L"
+      },
+      {
+        "color_id": 3,
+        "source_coord": [
+          1,
+          1
+        ],
+        "source_group_id": "L"
+      },
+      {
+        "color_id": 4,
+        "source_coord": [
+          2,
+          2
+        ],
+        "source_group_id": "T"
+      },
+      {
+        "color_id": 5,
+        "source_coord": [
+          3,
+          2
+        ],
+        "source_group_id": "T"
+      }
+    ],
+    "particle_count": 4,
+    "particles": [
+      {
+        "active": true,
+        "color_id": 2,
+        "escaped": false,
+        "mass": 1.0,
+        "particle_id": 0,
+        "position": [
+          0.0,
+          1.0
+        ],
+        "radius": 0.359497,
+        "source_coord": [
+          0,
+          1
+        ],
+        "source_group_id": "L",
+        "velocity": [
+          -1.4,
+          0.2
+        ]
+      },
+      {
+        "active": true,
+        "color_id": 3,
+        "escaped": false,
+        "mass": 1.0,
+        "particle_id": 1,
+        "position": [
+          1.0,
+          1.0
+        ],
+        "radius": 0.242325,
+        "source_coord": [
+          1,
+          1
+        ],
+        "source_group_id": "L",
+        "velocity": [
+          -0.776681,
+          -4.387967
+        ]
+      },
+      {
+        "active": true,
+        "color_id": 4,
+        "escaped": false,
+        "mass": 1.0,
+        "particle_id": 2,
+        "position": [
+          2.0,
+          2.0
+        ],
+        "radius": 0.309116,
+        "source_coord": [
+          2,
+          2
+        ],
+        "source_group_id": "T",
+        "velocity": [
+          3.236109,
+          1.06769
+        ]
+      },
+      {
+        "active": true,
+        "color_id": 5,
+        "escaped": false,
+        "mass": 1.0,
+        "particle_id": 3,
+        "position": [
+          3.0,
+          2.0
+        ],
+        "radius": 0.28323,
+        "source_coord": [
+          3,
+          2
+        ],
+        "source_group_id": "T",
+        "velocity": [
+          -1.185191,
+          4.070578
+        ]
+      }
+    ],
+    "selected_live_cells": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        2
+      ]
+    ],
+    "state_hash": "5f7572bb4520359c48fba4e772081355a6c53ba0950522e50e2358c2f127c908"
+  },
+  "notes": [],
+  "seed": 3101,
+  "speed_preset": "normal",
+  "topology": {
+    "board_shape": [
+      4,
+      4
+    ],
+    "profile_digest": null,
+    "topology_id": "classic"
+  },
+  "topology_preset": "classic",
+  "trace_type": "endgame",
+  "trace_version": 1
+}

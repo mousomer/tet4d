@@ -15,6 +15,7 @@ tet4d/
 |- migration/                   checked-in migration traces plus generated engine-consumption bundle
 |- packaging/                   PyInstaller spec and OS packaging scripts
 |- scripts/                     local verification and architecture checks
+|- unity/                       replay-only Unity spike project consuming copied migration bundle assets
 |- src/tet4d/
 |  |- ai/playbot/               playbot ownership
 |  |- engine/                   reusable engine lower layer
@@ -138,6 +139,9 @@ The current rule is one-way:
 9. Keep `migration/exported_bundle/` generated from
    `tools/migration/export_config_bundle.py`; it is a disposable engine-spike
    input package, not a config, trace, docs, or runtime authority.
+10. Keep Unity replay code under `unity/Tet4D.Unity/` and load only the copied
+    `Assets/StreamingAssets/tet4d_bundle/` payload at runtime; Unity is a
+    replay/browser surface here, not a gameplay/topology/endgame semantic owner.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

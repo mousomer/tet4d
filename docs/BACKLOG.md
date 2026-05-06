@@ -27,9 +27,12 @@ migration, Stage 2 topology/gameplay golden trace export records that behavior
 as the Python-authoritative migration oracle, Stage 3 endgame golden trace
 export records locked-cell explosion model behavior, and Stage 4 exports the
 generated migration config bundle under `migration/exported_bundle/`. Follow-up
-work should consume the bundle and replay `migration/golden_traces/` before any
-Unity/Godot/C#/C++ implementation; shell-preserving cleanup and endgame visual
-polish remain non-blocking and must not reopen semantics.
+work now includes the Stage 5 Unity replay spike under `unity/Tet4D.Unity/`,
+which consumes the copied bundle from `StreamingAssets` and replays frames
+without adding C# semantics. Follow-up work should still consume the bundle and
+replay `migration/golden_traces/` before any Unity/Godot/C#/C++ implementation;
+shell-preserving cleanup and endgame visual polish remain non-blocking and must
+not reopen semantics.
 
 Current active follow-ups:
 
@@ -41,9 +44,11 @@ Current active follow-ups:
   Stage 3 exports golden endgame traces from the headless locked-cell
   explosion model; Stage 4 exports a generated, non-authoritative config bundle
   with trace copies/indexes, config snapshots, schema metadata, and authority
-  doc indexes; any Unity/Godot migration must consume the bundle and replay
-  those traces before implementing independent transport, gravity/drop, or
-  endgame simulation logic
+  doc indexes; Stage 5 adds a Unity replay-only spike that loads the copied
+  bundle from `StreamingAssets`, renders frame data, and exposes case/frame
+  browsing without implementing independent transport, gravity/drop, or endgame
+  simulation logic; any Unity/Godot migration must stay on that replay-first
+  boundary until an explicit core-port plan is chosen
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -161,6 +166,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
    `tools/migration/export_config_bundle.py` and
    `tools/migration/compare_config_bundle.py` enforce deterministic drift checks
    without moving config, trace, or Python semantic authority.
+6. `DONE` `[BKL-P3-013]` Stage 5 Unity replay spike:
+   `unity/Tet4D.Unity/` now consumes a copied Stage 4 bundle from
+   `Assets/StreamingAssets/tet4d_bundle/`, exposes replay-only loading for
+   topology/gameplay/endgame traces, and keeps Unity on a renderer/browser
+   boundary via `tools/migration/sync_unity_bundle.py` rather than direct repo
+   reads or runtime Python calls.
 
 ## Governance Watchlist
 

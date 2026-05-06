@@ -36,6 +36,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   It is not a source of truth: config remains authoritative in `config/`,
   Python semantics remain authoritative in `src/`, and trace authority remains
   in `migration/golden_traces/`.
+- Stage 5 now adds a Unity replay spike under `unity/Tet4D.Unity/` plus
+  `tools/migration/sync_unity_bundle.py` to copy the generated bundle into
+  Unity `StreamingAssets`. The Unity spike loads copied topology/gameplay/
+  endgame traces, browses cases, steps frames, and renders diagnostics, but it
+  does not call Python at runtime or implement gameplay, topology transport, or
+  endgame simulation semantics.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -209,6 +215,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 - For active open work and current change footprint, use `docs/BACKLOG.md`.
 - For the generated migration bundle and packaging boundary, use
   `docs/plans/migration_config_bundle.md`.
+- For the Unity replay spike boundary, use
+  `docs/plans/unity_trace_replay_spike.md`.
 - For historical detail only, use `docs/history/DONE_SUMMARIES.md` and
   `docs/history/topology_playground/current_state_archive_2026-03-31.md`.
 

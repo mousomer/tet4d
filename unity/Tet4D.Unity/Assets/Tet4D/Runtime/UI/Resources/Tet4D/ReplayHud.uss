@@ -1,0 +1,45 @@
+.hud-root {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 420px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background-color: rgba(18, 22, 28, 0.88);
+    color: rgb(235, 238, 244);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(70, 77, 87);
+    border-right-color: rgb(70, 77, 87);
+    border-top-color: rgb(70, 77, 87);
+    border-bottom-color: rgb(70, 77, 87);
+}
+
+.row {
+    flex-direction: row;
+    margin-top: 8px;
+    gap: 8px;
+}
+
+.status-label {
+    unity-font-style: bold;
+}
+
+.frame-label {
+    margin-top: 8px;
+    unity-font-style: bold;
+}
+
+.text-block {
+    margin-top: 8px;
+    white-space: normal;
+}
+
+.diagnostics-scroll {
+    margin-top: 8px;
+    max-height: 260px;
+}

@@ -34,6 +34,14 @@ wheelhouse/
 build/
 dist/
 artifacts/installers/
+unity/**/Library/
+unity/**/Temp/
+unity/**/Obj/
+unity/**/Logs/
+unity/**/UserSettings/
+unity/**/.vs/
+unity/**/TestResults*.xml
+unity/**/TestResults/
 
 # Removed local asset source packs / legacy compatibility files
 assets/transform_icons_full_pack/
