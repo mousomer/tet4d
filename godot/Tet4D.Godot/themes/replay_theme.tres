@@ -1,0 +1,6 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[ext_resource type="Theme" path="res://themes/replay_diagnostic_theme.tres" id="1"]
+
+[resource]
+base_theme = ExtResource("1")

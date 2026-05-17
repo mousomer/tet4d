@@ -4,13 +4,13 @@
     {
       "purpose": "Current migration and handoff state.",
       "role": "restart_handoff",
-      "sha256": "21d144d7c07082b34338df7d6f35804a3bc940a98684edbd81d5fe9eed063331",
+      "sha256": "47ef1946731fc37700745bf78ab5df652ff0ade523a82d8231fda9cf4cf207e6",
       "source_path": "CURRENT_STATE.md"
     },
     {
       "purpose": "Active migration follow-up tracker.",
       "role": "backlog",
-      "sha256": "ad05cbeb57478e135205c6f038ad79a68f03b4e86a59d09b3299448dbd999612",
+      "sha256": "352015a9676bfd6ba2f97f980fa5019113c1806435d78caa70f17e819db7e886",
       "source_path": "docs/BACKLOG.md"
     },
     {

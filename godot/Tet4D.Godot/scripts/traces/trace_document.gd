@@ -14,9 +14,10 @@ var initial: Dictionary = {}
 var final: Dictionary = {}
 var frames: Array = []
 var board_shape: Array = []
+var expected_frame_count := -1
 
 
-static func from_dictionary(data: Dictionary, trace_path: String = "") -> TraceDocument:
+static func from_dictionary(data: Dictionary, trace_path: String = "", expected_frame_count: int = -1) -> TraceDocument:
 	var document := TraceDocument.new()
 	document.root = data
 	document.trace_type = str(data.get("trace_type", ""))
@@ -29,6 +30,7 @@ static func from_dictionary(data: Dictionary, trace_path: String = "") -> TraceD
 	document.initial = data.get("initial", {})
 	document.final = data.get("final", {})
 	document.frames = data.get("frames", [])
+	document.expected_frame_count = expected_frame_count
 	document.board_shape = data.get("board_shape", [])
 	if document.board_shape.is_empty():
 		document.board_shape = document.initial.get("board_shape", [])

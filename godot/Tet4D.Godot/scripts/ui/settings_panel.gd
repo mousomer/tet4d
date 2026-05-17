@@ -2,17 +2,19 @@ extends PanelContainer
 
 class_name SettingsPanel
 
+const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+
 signal playback_speed_changed(value: float)
 signal diagnostics_visibility_changed(visible: bool)
+signal display_mode_changed(mode: String)
 
-var _speed_slider: HSlider
-var _speed_value: Label
 var _diagnostics_toggle: CheckBox
+var _display_mode_select: OptionButton
 
 
 func _ready() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	custom_minimum_size = Vector2(320, 120)
+	custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -21,42 +23,45 @@ func _ready() -> void:
 	title.text = "Replay Settings"
 	layout.add_child(title)
 
-	var speed_row := HBoxContainer.new()
-	layout.add_child(speed_row)
-	var speed_label := Label.new()
-	speed_label.text = "Speed"
-	speed_row.add_child(speed_label)
-	_speed_slider = HSlider.new()
-	_speed_slider.min_value = 1.0
-	_speed_slider.max_value = 20.0
-	_speed_slider.step = 1.0
-	_speed_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_speed_slider.value_changed.connect(_on_speed_changed)
-	speed_row.add_child(_speed_slider)
-	_speed_value = Label.new()
-	_speed_value.text = "1x"
-	speed_row.add_child(_speed_value)
+	var display_mode_label := Label.new()
+	display_mode_label.text = "Display Mode"
+	display_mode_label.theme_type_variation = "SecondaryLabel"
+	layout.add_child(display_mode_label)
+
+	_display_mode_select = OptionButton.new()
+	for display_mode in ReplayVisuals.DISPLAY_MODES:
+		_display_mode_select.add_item(ReplayVisuals.display_mode_label(display_mode))
+	_display_mode_select.item_selected.connect(_on_display_mode_selected)
+	layout.add_child(_display_mode_select)
 
 	_diagnostics_toggle = CheckBox.new()
 	_diagnostics_toggle.text = "Show diagnostics"
 	_diagnostics_toggle.button_pressed = true
 	_diagnostics_toggle.toggled.connect(_on_diagnostics_toggled)
 	layout.add_child(_diagnostics_toggle)
-
-
-func set_speed(value: float) -> void:
-	_speed_slider.set_value_no_signal(value)
-	_speed_value.text = "%sx" % int(value)
+	var note := Label.new()
+	note.text = "Presentation controls only. Python remains authoritative. Diagnostic is the startup readability mode."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.theme_type_variation = "DimLabel"
+	layout.add_child(note)
 
 
 func set_diagnostics_visible(visible: bool) -> void:
 	_diagnostics_toggle.set_pressed_no_signal(visible)
 
 
-func _on_speed_changed(value: float) -> void:
-	_speed_value.text = "%sx" % int(value)
-	playback_speed_changed.emit(value)
+func set_display_mode(mode: String) -> void:
+	var normalized := ReplayVisuals.normalize_display_mode(mode)
+	var index := ReplayVisuals.DISPLAY_MODES.find(normalized)
+	if index >= 0:
+		_display_mode_select.select(index)
 
 
 func _on_diagnostics_toggled(visible: bool) -> void:
 	diagnostics_visibility_changed.emit(visible)
+
+
+func _on_display_mode_selected(index: int) -> void:
+	if index < 0 or index >= ReplayVisuals.DISPLAY_MODES.size():
+		return
+	display_mode_changed.emit(ReplayVisuals.DISPLAY_MODES[index])

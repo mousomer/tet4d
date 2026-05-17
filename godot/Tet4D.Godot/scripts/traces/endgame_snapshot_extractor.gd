@@ -5,12 +5,21 @@ class_name EndgameSnapshotExtractor
 
 static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictionary) -> void:
 	for cell in document.initial.get("full_locked_cells", []):
-		var position := cell
+		var position: Array = cell if cell is Array else []
 		var color_id := 0
+		var metadata: Dictionary = {"position": position}
 		if cell is Dictionary:
 			position = cell.get("coord", [])
 			color_id = int(cell.get("color_id", 0))
-		TraceSnapshotExtractor.append_cell(snapshot["locked_cells"], "Locked", color_id, position, true)
+			metadata = cell.duplicate(true)
+			metadata["position"] = position
+		TraceSnapshotExtractor.append_cell(
+			snapshot["locked_cells"],
+			"Locked",
+			color_id,
+			metadata,
+			true
+		)
 
 	for particle_dict in frame.get("particles", []):
 		var particle := {
@@ -24,6 +33,7 @@ static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictio
 			"velocity": particle_dict.get("velocity", []),
 			"source_coord": particle_dict.get("source_coord", []),
 			"label": str(particle_dict.get("source_group_id", "")),
+			"entity_id": int(particle_dict.get("particle_id", -1)),
 		}
 		snapshot["particles"].append(particle)
 
@@ -40,7 +50,7 @@ static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictio
 		)
 		snapshot["event_lines"].append(TraceSnapshotExtractor._summary_of(event_dict))
 
-	var energy := frame.get("energy", {})
+	var energy: Variant = frame.get("energy", {})
 	if energy is Dictionary:
 		for key in ["kinetic_energy", "speed_sq_sum", "weighted_speed_sq_sum"]:
 			if energy.has(key):

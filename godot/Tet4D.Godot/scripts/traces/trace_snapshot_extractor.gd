@@ -22,6 +22,11 @@ static func extract(document: TraceDocument, frame_index: int) -> Dictionary:
 		"metadata_lines": [],
 		"diagnostics_lines": [],
 		"energy_lines": [],
+		"trace_name": document.case_id,
+		"entity_count": 0,
+		"expected_frame_count": document.expected_frame_count,
+		"frame_count_matches_metadata": document.expected_frame_count < 0 or document.expected_frame_count == frame_total,
+		"entity_count_matches_metadata": true,
 	}
 	if frame_total == 0:
 		snapshot["metadata_lines"] = ["No frames in trace."]
@@ -45,6 +50,22 @@ static func extract(document: TraceDocument, frame_index: int) -> Dictionary:
 				"state_hash: %s" % snapshot.get("state_hash", ""),
 			]
 			snapshot["diagnostics_lines"] = [_summary_of(frame)]
+	snapshot["entity_count"] = (
+		snapshot.get("active_cells", []).size()
+		+ snapshot.get("locked_cells", []).size()
+		+ snapshot.get("particles", []).size()
+		+ snapshot.get("probe_markers", []).size()
+		+ snapshot.get("event_markers", []).size()
+	)
+	snapshot["metadata_lines"].append("trace_name: %s" % snapshot.get("trace_name", ""))
+	snapshot["metadata_lines"].append(
+		"frame_count: %d expected %s match=%s" % [
+			frame_total,
+			"n/a" if document.expected_frame_count < 0 else str(document.expected_frame_count),
+			str(snapshot.get("frame_count_matches_metadata", false)),
+		]
+	)
+	snapshot["metadata_lines"].append("entity_count: %d" % int(snapshot.get("entity_count", 0)))
 	return snapshot
 
 
@@ -68,17 +89,38 @@ static func nested_array(source, path: Array) -> Array:
 	return value if value is Array else []
 
 
-static func append_cell(target: Array, label: String, color_id: int, position: Array, locked: bool) -> void:
+static func append_cell(
+	target: Array,
+	label: String,
+	color_id: int,
+	metadata: Dictionary,
+	locked: bool
+) -> void:
+	var position_value: Variant = metadata.get("position", [])
+	var position: Array = _cell_position(position_value)
 	if position.is_empty():
 		return
-	target.append(
-		{
-			"label": label,
-			"color_id": color_id,
-			"position": position.duplicate(),
-			"locked": locked,
-		}
-	)
+	var cell_payload := metadata.duplicate(true)
+	cell_payload["label"] = label
+	cell_payload["color_id"] = color_id
+	cell_payload["position"] = position.duplicate()
+	cell_payload["locked"] = locked
+	for key in ["entity_id", "cell_id", "id"]:
+		if metadata.has(key):
+			cell_payload["entity_id"] = metadata.get(key)
+			break
+	target.append(cell_payload)
+
+
+static func _cell_position(value: Variant) -> Array:
+	if value is Array:
+		return value
+	if value is Dictionary:
+		for key in ["position", "coord", "cell", "coords"]:
+			var nested: Variant = value.get(key, [])
+			if nested is Array:
+				return nested
+	return []
 
 
 static func append_marker(target: Array, kind: String, label: String, position: Array) -> void:

@@ -54,7 +54,8 @@ static func load_trace_document(bundle_root: String, case_entry: Dictionary) -> 
 		"ok": true,
 		"document": TraceDocument.from_dictionary(
 			json_result.get("value", {}),
-			relative_path
+			relative_path,
+			int(case_entry.get("frame_count", -1))
 		),
 	}
 

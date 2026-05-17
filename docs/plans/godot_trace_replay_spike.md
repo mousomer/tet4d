@@ -2,13 +2,13 @@
 
 Role: migration replay spike  
 Status: active  
-Last updated: 2026-05-06
+Last updated: 2026-05-08
 
 ## Purpose
 
-Stage 6 adds a small Godot 4.x + GDScript project that consumes the copied
-Stage 4 migration bundle and replays topology, gameplay, and endgame traces
-frame-by-frame.
+Stage 6 adds a small Godot 4.6.2-stable + GDScript project that consumes the
+copied Stage 4 migration bundle and replays topology, gameplay, and endgame
+traces frame-by-frame.
 
 This spike answers a shell-quality question: can tet4d get better menus,
 display clarity, diagnostics panels, replay readability, and simple animation
@@ -42,6 +42,53 @@ polish in Godot without porting gameplay or simulation semantics?
 - 2D/3D rendering plus 4D W-slice visibility
 - Endgame particle rendering from trace data
 - Product-shell oriented panels for status, settings, diagnostics, and events
+- Minimal screen-based shell navigation with Main Menu, Trace Replay Browser,
+  Replay Viewer, Settings, Controls / Keyboard Hints, and Diagnostics screens;
+  panels are contained inside those screens rather than being the top-level
+  navigation model
+- Startup opens the Main Menu; opening a copied trace from the Trace Replay
+  Browser switches to the Replay Viewer without becoming playable gameplay
+- Visual-only interpolation between current and next exported trace frames:
+  endgame particles use `particle_id`, while gameplay cells currently snap to
+  the discrete exported frame because they do not carry stable per-cell
+  identity
+- Short secondary particle trails and event marker pulses/fades derived only
+  from trace frame data
+- Timeline status shows playing/paused replay state plus current and next
+  frame, with fixed replay speed presets (`0.25x`, `0.5x`, `1x`, `2x`, `4x`)
+- Cells, particles, trails, events, probes, W slices, and labels share one
+  trace-to-world coordinate mapper based on the existing Python/Pygame
+  centered board display convention so trails and event markers stay attached
+  to their trace-owned positions
+- Visible shell controls include `Fit View`, `Quit Replay`, and a replay-only
+  keyboard hint strip (`Space`, arrows, `1`/`2`/`3`, `F`, `H`, `Q`)
+- Shared replay theme plus centralized visual constants for shell spacing,
+  panel hierarchy, timeline controls, and 4D W-slice presentation
+- Reusable Godot Theme resources under `godot/Tet4D.Godot/themes/` for
+  Diagnostic High Contrast and Tron UI styling; render materials remain
+  separate, role-based, and replay-geometry specific
+- Diagnostic-first viewport polish with labeled W slices, quieter side panels,
+  stronger case selection, and secondary state-hash/raw-value treatment
+- Bright default replay materials and higher-contrast slice/grid presentation
+  so boards, pieces, particles, and event markers remain legible in the
+  default camera/light setup
+- Default startup display mode `Diagnostic High Contrast` plus optional
+  `Tron`, with centralized role-based opaque materials for active cells,
+  locked cells, probes, particles, event markers, board outlines, and W-slice
+  cards so readability does not depend on trace colors, lighting, or bloom
+- Replay object colors follow the existing Python/Pygame tetromino trace color
+  IDs, with Godot only increasing opacity/emission for shell readability
+- Brighter scene baseline so the replay surface stays readable without relying
+  on dim default lighting
+- Explicit replay-only shell messaging so users do not mistake the spike for
+  playable Godot gameplay
+- Transition checkpoint: projection readability has passed; trace fidelity
+  previously failed because path visuals could detach from replay entities and
+  is repaired here with shared mapped trail positions plus frame/entity
+  metadata diagnostics; right-panel clipping is repaired by a single
+  container-owned Replay Viewer layout where the `SubViewport` game surface is
+  constrained inside `GameArea`, the right inspector is a fixed-width sibling
+  inside the same body container, and inspector overflow scrolls vertically
 
 ## Non-Goals
 
@@ -69,6 +116,6 @@ PYTHONPATH=src .venv/bin/python tools/migration/sync_godot_bundle.py \
 
 - Python-side sync/export/bundle tests remain authoritative in this repo.
 - Godot headless checks and the lightweight GDScript test runner should be run
-  locally when a Godot CLI is available.
+  locally when a Godot 4.6.2-stable CLI is available.
 - If Godot CLI is unavailable, the spike remains a code-and-asset bootstrap
   plus Python-side verification surface.

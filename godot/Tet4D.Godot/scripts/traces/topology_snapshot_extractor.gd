@@ -10,7 +10,13 @@ static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictio
 	TraceSnapshotExtractor.append_marker(snapshot["probe_markers"], "probe_after", "Probe After", after_probe)
 
 	for moved_cell in TraceSnapshotExtractor.nested_array(frame, ["piece_transport", "moved_cells"]):
-		TraceSnapshotExtractor.append_cell(snapshot["active_cells"], "Transport", 1, moved_cell, false)
+		TraceSnapshotExtractor.append_cell(
+			snapshot["active_cells"],
+			"Transport",
+			1,
+			{"position": moved_cell},
+			false
+		)
 
 	var traversal := TraceSnapshotExtractor.nested_dict(frame, ["probe_result", "traversal"])
 	if not traversal.is_empty():
@@ -23,7 +29,8 @@ static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictio
 		snapshot["event_lines"].append(TraceSnapshotExtractor._summary_of(traversal))
 
 	for cell_step in TraceSnapshotExtractor.nested_array(frame, ["piece_transport", "cell_steps"]):
-		var cell_traversal := cell_step.get("traversal", {})
+		var cell_traversal_value: Variant = cell_step.get("traversal", {})
+		var cell_traversal: Dictionary = cell_traversal_value if cell_traversal_value is Dictionary else {}
 		if cell_traversal.is_empty():
 			continue
 		TraceSnapshotExtractor.append_marker(
@@ -44,7 +51,7 @@ static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictio
 			["state_hash", snapshot.get("state_hash", "")],
 		]
 	)
-	var diagnostics := frame.get("diagnostics", document.initial.get("diagnostics", {}))
+	var diagnostics: Variant = frame.get("diagnostics", document.initial.get("diagnostics", {}))
 	if diagnostics is Dictionary:
 		if diagnostics.has("summary"):
 			snapshot["diagnostics_lines"].append("summary: %s" % diagnostics.get("summary"))

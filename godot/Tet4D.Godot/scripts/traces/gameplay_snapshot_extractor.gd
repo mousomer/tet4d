@@ -8,13 +8,25 @@ static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictio
 	var active_cells: Array = active_piece.get("cells", [])
 	var active_color_id := int(active_piece.get("color_id", 1))
 	for cell in active_cells:
-		TraceSnapshotExtractor.append_cell(snapshot["active_cells"], "Active", active_color_id, cell, false)
+		TraceSnapshotExtractor.append_cell(
+			snapshot["active_cells"],
+			"Active",
+			active_color_id,
+			{"position": cell},
+			false
+		)
 
 	for cell in frame.get("locked_cells", []):
-		TraceSnapshotExtractor.append_cell(snapshot["locked_cells"], "Locked", 0, cell, true)
+		TraceSnapshotExtractor.append_cell(
+			snapshot["locked_cells"],
+			"Locked",
+			0,
+			{"position": cell},
+			true
+		)
 
 	var event_position := TraceSnapshotExtractor.first_position(snapshot["active_cells"])
-	var topology_event = frame.get("topology_event", null)
+	var topology_event: Variant = frame.get("topology_event", null)
 	if topology_event is Dictionary:
 		for traversal in topology_event.get("traversals", []):
 			TraceSnapshotExtractor.append_marker(
@@ -40,12 +52,12 @@ static func extract(document: TraceDocument, frame: Dictionary, snapshot: Dictio
 		]
 	)
 	var diagnostics_lines: Array = []
-	var drop_lock_status := frame.get("drop_lock_status", {})
+	var drop_lock_status: Variant = frame.get("drop_lock_status", {})
 	if drop_lock_status is Dictionary:
 		for key in ["game_over", "locked_cell_count", "soft_drop_legal_after"]:
 			if drop_lock_status.has(key):
 				diagnostics_lines.append("%s: %s" % [key, drop_lock_status.get(key)])
-	var legal_moves := frame.get("legal_moves", {})
+	var legal_moves: Variant = frame.get("legal_moves", {})
 	if legal_moves is Dictionary and legal_moves.has("moves"):
 		diagnostics_lines.append("legal_moves: %s" % TraceSnapshotExtractor._summary_of(legal_moves.get("moves")))
 	if topology_event != null and snapshot["event_lines"].is_empty():

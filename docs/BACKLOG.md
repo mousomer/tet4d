@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-05-06
+Updated: 2026-05-08
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -178,7 +178,23 @@ stays synchronized, and the contract validator accepts the backlog shape.
 7. `DONE` `[BKL-P3-014]` Stage 6 Godot replay spike:
    `godot/Tet4D.Godot/` now consumes a copied Stage 4 bundle from
    `res://assets/tet4d_bundle/`, exposes replay-only loading for
-   topology/gameplay/endgame traces plus diagnostic-first product-shell UI,
+   topology/gameplay/endgame traces plus a themed diagnostic-first
+   product-shell UI with labeled 4D W-slice cards, clearer timeline controls,
+   quieter side panels, centralized replay-shell visual constants, explicit
+   replay-only status messaging, startup-default `Diagnostic High Contrast`
+   display mode, centralized role-based opaque replay materials, and
+   higher-contrast board/glyph presentation, now with startup autoplay on a
+   dynamic copied endgame trace superseded by a minimal screen shell (Main
+   Menu, Trace Replay Browser, Replay Viewer, Settings, Controls / Keyboard
+   Hints, Diagnostics), visual-only identity-safe frame interpolation,
+   discrete gameplay-cell updates when identity is absent, shared
+   Python/Pygame-aligned trace-to-world coordinate mapping, Python trace color
+   IDs for replay object materials, attached particle trails, frame/entity
+   metadata diagnostics, a single container-owned Replay Viewer layout that
+   constrains the replay `SubViewport` inside `GameArea` and keeps the
+   scrollable right inspector as a fixed-width body sibling, event pulses/fades,
+   replay state timeline copy, fixed replay speed presets, and visible
+   fit/quit/help replay controls,
    and keeps Godot on a renderer/browser boundary via
    `tools/migration/sync_godot_bundle.py` rather than direct repo reads or
    runtime Python calls.

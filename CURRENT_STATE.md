@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-05-06
+Last updated: 2026-05-08
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -49,7 +49,32 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   to evaluate menus, diagnostics panels, display clarity, playback controls,
   simple animation polish, and 4D trace readability. It does not call Python
   at runtime or implement gameplay, topology transport, or endgame simulation
-  semantics.
+  semantics. The current Godot shell now also uses a shared replay theme and
+  centralized visual constants so the case browser, diagnostics column,
+  viewport framing, timeline, and 4D W-slice cards read as a deliberate tool
+  shell instead of a raw debug layout; replay-only status must be explicit in
+  the top bar and controls, and default board/glyph contrast must be high
+  enough that the shell cannot be mistaken for a dim unplayable placeholder.
+  Startup now defaults to `Diagnostic High Contrast` display mode with
+  centralized role-based opaque materials for cells, probes, particles, event
+  markers, board outlines, and W-slice cards; optional `Tron` styling remains
+  presentation-only and must not reduce baseline replay readability. The shell
+  now starts at a real Main Menu and routes through Trace Replay Browser,
+  Replay Viewer, Settings, Controls / Keyboard Hints, and Diagnostics screens;
+  opening a copied trace switches to the viewer with visual-only interpolation
+  between current and next exported frames only when stable trace identity
+  exists (`particle_id` for endgame particles), discrete gameplay cell updates
+  when stable identity is absent, short particle trails attached to their
+  mapped particle positions, event marker pulse/fade, fixed replay speed
+  presets, a shared trace-to-world coordinate mapper aligned with the
+  Python/Pygame centered board display convention, Python trace color IDs for
+  replay object materials, frame/entity metadata diagnostics, a single
+  container-owned Replay Viewer layout that constrains the replay `SubViewport`
+  inside `GameArea`, keeps the scrollable right inspector as a fixed-width body
+  sibling, exposes geometry diagnostics, visible `Fit View` / `Quit Replay`
+  controls, and a replay-only keyboard hint strip; those effects are renderer
+  presentation only and must not become gameplay, topology transport, or
+  endgame simulation logic.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
