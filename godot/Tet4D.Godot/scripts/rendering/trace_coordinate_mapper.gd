@@ -46,6 +46,15 @@ func slice_bounds(w_index: int = 0) -> Dictionary:
 	return {"ok": true, "min": min_pos, "max": max_pos}
 
 
+func slice_label_position(w_index: int = 0) -> Vector3:
+	var bounds := slice_bounds(w_index)
+	if not bounds.get("ok", false):
+		return Vector3.ZERO
+	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
+	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
+	return Vector3((min_pos.x + max_pos.x) * 0.5, max_pos.y + 0.9, (min_pos.z + max_pos.z) * 0.5)
+
+
 func board_bounds(board_shape: Array, dimension: int) -> Dictionary:
 	configure(board_shape)
 	if _board_shape.is_empty():

@@ -13,12 +13,19 @@ func run() -> Array:
 		Vector3(5.5, -0.0, 0.0),
 		"4D centered coordinate mapping"
 	)
+	_assert_vector(
+		failures,
+		mapper.world_position([0, 0, 0], 3),
+		Vector3(-1.5, 2.0, -1.0),
+		"3D cell center follows Python raw_to_world"
+	)
 	var bounds: Dictionary = mapper.board_bounds([4, 5, 3, 2], 4)
 	if not bounds.get("ok", false):
 		failures.append("bounds should be available")
 		return failures
 	_assert_vector(failures, bounds.get("min", Vector3.ZERO), Vector3(-2.0, -2.5, -1.5), "bounds min")
 	_assert_vector(failures, bounds.get("max", Vector3.ZERO), Vector3(8.0, 2.5, 1.5), "bounds max")
+	_assert_vector(failures, mapper.slice_label_position(1), Vector3(6.0, 3.4, 0.0), "W label position")
 	return failures
 
 

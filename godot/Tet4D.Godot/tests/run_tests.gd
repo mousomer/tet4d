@@ -12,12 +12,18 @@ func _run_all() -> void:
 		"res://tests/test_trace_snapshot_extractor.gd",
 		"res://tests/test_replay_visuals.gd",
 		"res://tests/test_coordinate_mapper.gd",
+		"res://tests/test_camera_rig.gd",
+		"res://tests/test_trace_scene_renderer.gd",
 		"res://tests/test_scene_integrity.gd",
 		"res://tests/test_replay_viewer_layout.gd",
 		"res://tests/test_particle_renderer.gd",
 	]:
 		var test_case = load(script_path).new()
-		if script_path == "res://tests/test_replay_viewer_layout.gd":
+		if script_path in [
+			"res://tests/test_camera_rig.gd",
+			"res://tests/test_trace_scene_renderer.gd",
+			"res://tests/test_replay_viewer_layout.gd",
+		]:
 			failures.append_array(await test_case.run())
 		else:
 			failures.append_array(test_case.run())

@@ -11,18 +11,15 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String) -
 
 	if board_shape.is_empty():
 		return
-
-	var y_size := float(board_shape[1]) if board_shape.size() > 1 else 1.0
 	var w_size := int(board_shape[3]) if dimension >= 4 and board_shape.size() > 3 else 1
 
 	for w_index in range(w_size):
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
 		if not slice_bounds.get("ok", false):
 			continue
-		var x_offset: float = mapper.w_offset(float(w_index))
 		_add_outline_box(slice_bounds, display_mode)
 		if dimension >= 4:
-			_add_w_label(w_index, x_offset, y_size, display_mode)
+			_add_w_label(w_index, mapper.slice_label_position(w_index), display_mode)
 
 
 func _add_outline_box(slice_bounds: Dictionary, display_mode: String) -> void:
@@ -62,12 +59,12 @@ func _add_line(position: Vector3, scale_value: Vector3, material: Material) -> v
 	add_child(mesh_instance)
 
 
-func _add_w_label(w_index: int, x_offset: float, y_size: float, display_mode: String) -> void:
+func _add_w_label(w_index: int, label_position: Vector3, display_mode: String) -> void:
 	var label := Label3D.new()
 	label.text = "W=%d" % w_index
 	label.font_size = 42
 	label.modulate = ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
 	label.outline_size = 14
-	label.position = Vector3(x_offset, 1.2, 0.0)
+	label.position = label_position
 	add_child(label)

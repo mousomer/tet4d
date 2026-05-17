@@ -22,9 +22,13 @@ claim that Godot should own tet4d gameplay semantics.
 
 Current transition status:
 
-- Projection readability: passed for the diagnostic replay shell.
-- Trace fidelity: previously failed due to detached presentation trails; this
-  pass repairs trail attachment and adds frame/entity metadata diagnostics.
+- Stage 6b display alignment: the replay renderer now follows the
+  Python/Pygame centered board display convention, uses orthographic fit
+  against projected bounds, and keeps W labels/boards/cells/particles/trails
+  on one mapper-owned coordinate basis.
+- Trace fidelity: repaired for previously detached presentation trails and
+  guarded by frame/entity metadata diagnostics plus identity-safe interpolation
+  policy.
 - Menu-screen architecture: introduced with Main Menu, Trace Replay Browser,
   Replay Viewer, Settings, Controls / Keyboard Hints, and Diagnostics screens.
 - Right-panel layout: repaired with responsive containers so the inspector
@@ -84,6 +88,9 @@ presentation from trace frames only; Godot still does not simulate gameplay,
 topology transport, or endgame physics. Cells, particles, trails, events,
 probes, W slices, and labels share one trace-to-world coordinate mapper based
 on that Python display reference so visual attachments stay aligned.
+Fit View uses the same Python-informed orthographic yaw/pitch and projected
+board bounds every time a trace loads, resets, or changes display geometry, so
+startup does not depend on a drifting manual camera pose.
 
 ## Opening In Godot
 
@@ -125,18 +132,18 @@ size while checking resize behavior.
 If a Godot 4.6.2-stable CLI is installed locally, run a syntax check with:
 
 ```bash
-godot4 --headless --path godot/Tet4D.Godot --check-only
+godot --headless --path godot/Tet4D.Godot --check-only
 ```
 
 Run the lightweight replay tests with:
 
 ```bash
-godot4 --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
+godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 ```
 
-The GDScript tests cover bundle loading and sample trace parsing. They were
-written but may not be executable in this environment if a Godot 4.6.2-stable
-binary is unavailable.
+The GDScript tests cover bundle loading, sample trace parsing, centralized
+coordinate mapping, deterministic camera fit, replay-viewer layout containment,
+and gameplay-cell snap policy when stable identity is absent.
 
 ## Known Limitations
 

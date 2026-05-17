@@ -2,7 +2,7 @@
 
 Role: migration replay spike  
 Status: active  
-Last updated: 2026-05-08
+Last updated: 2026-05-17
 
 ## Purpose
 
@@ -60,6 +60,13 @@ polish in Godot without porting gameplay or simulation semantics?
   trace-to-world coordinate mapper based on the existing Python/Pygame
   centered board display convention so trails and event markers stay attached
   to their trace-owned positions
+- Stage 6b aligns the default Godot view with the Python display reference:
+  orthographic projection, Python-like yaw/pitch, projected-bounds Fit View,
+  half-cell board boundaries, and mapper-owned W label positions
+- Stage 6b keeps replay motion honest: endgame particles may interpolate only
+  by stable `particle_id`; gameplay active cells snap to the current exported
+  frame unless future traces add stable identity; topology probe movement is
+  rendered only from explicit trace positions
 - Visible shell controls include `Fit View`, `Quit Replay`, and a replay-only
   keyboard hint strip (`Space`, arrows, `1`/`2`/`3`, `F`, `H`, `Q`)
 - Shared replay theme plus centralized visual constants for shell spacing,
@@ -84,11 +91,26 @@ polish in Godot without porting gameplay or simulation semantics?
   playable Godot gameplay
 - Transition checkpoint: projection readability has passed; trace fidelity
   previously failed because path visuals could detach from replay entities and
-  is repaired here with shared mapped trail positions plus frame/entity
-  metadata diagnostics; right-panel clipping is repaired by a single
+  is repaired here with shared mapped trail positions, deterministic camera fit,
+  Python-informed coordinate mapping, plus frame/entity metadata diagnostics;
+  right-panel clipping is repaired by a single
   container-owned Replay Viewer layout where the `SubViewport` game surface is
   constrained inside `GameArea`, the right inspector is a fixed-width sibling
   inside the same body container, and inspector overflow scrolls vertically
+
+## Python Display Reference Used For Stage 6b
+
+- `src/tet4d/ui/pygame/projection3d.py`: centered `raw_to_world` mapping,
+  inverted visual Y, half-cell board bounds, and fit-to-projected-corners
+  behavior.
+- `src/tet4d/ui/pygame/front3d_render.py`: orthographic default, yaw/pitch
+  reset, board panel fit, side-panel containment, and trail rendering through
+  the same projection helper as particles.
+- `src/tet4d/ui/pygame/render/active_piece_projection_guides.py`: cell-center
+  and board-boundary display conventions for guides and boundary planes.
+- `src/tet4d/ui/pygame/render/gfx_game.py` and
+  `src/tet4d/ui/pygame/front4d_render.py`: role/color language for active and
+  locked tetromino cells, grid lines, and projected board presentation.
 
 ## Non-Goals
 

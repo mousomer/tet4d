@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-05-08
+Last updated: 2026-05-17
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -68,7 +68,9 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   mapped particle positions, event marker pulse/fade, fixed replay speed
   presets, a shared trace-to-world coordinate mapper aligned with the
   Python/Pygame centered board display convention, Python trace color IDs for
-  replay object materials, frame/entity metadata diagnostics, a single
+  replay object materials, deterministic Python-informed orthographic Fit View
+  using projected board bounds and immediate camera snapping, mapper-owned W
+  label positions, frame/entity metadata diagnostics, a single
   container-owned Replay Viewer layout that constrains the replay `SubViewport`
   inside `GameArea`, keeps the scrollable right inspector as a fixed-width body
   sibling, exposes geometry diagnostics, visible `Fit View` / `Quit Replay`

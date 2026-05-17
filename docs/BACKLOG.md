@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-05-08
+Updated: 2026-05-17
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -32,7 +32,9 @@ work now includes the Stage 5 Unity replay comparison spike under
 `godot/Tet4D.Godot/`. Both consume copied bundle assets and replay frames
 without adding engine-owned semantics. Follow-up work should still consume the
 bundle and replay `migration/golden_traces/` before any Unity/Godot/C#/C++
-implementation; shell-preserving cleanup and endgame visual polish remain
+implementation; Stage 6b aligns the Godot replay display with existing
+Python/Pygame projection, board, color, and trail conventions while keeping
+Godot replay-only; shell-preserving cleanup and endgame visual polish remain
 non-blocking and must not reopen semantics.
 
 Current active follow-ups:
@@ -189,7 +191,9 @@ stays synchronized, and the contract validator accepts the backlog shape.
    Hints, Diagnostics), visual-only identity-safe frame interpolation,
    discrete gameplay-cell updates when identity is absent, shared
    Python/Pygame-aligned trace-to-world coordinate mapping, Python trace color
-   IDs for replay object materials, attached particle trails, frame/entity
+   IDs for replay object materials, deterministic Python-informed orthographic
+   Fit View using projected board bounds, mapper-owned W label positions,
+   attached particle trails, frame/entity
    metadata diagnostics, a single container-owned Replay Viewer layout that
    constrains the replay `SubViewport` inside `GameArea` and keeps the
    scrollable right inspector as a fixed-width body sibling, event pulses/fades,
