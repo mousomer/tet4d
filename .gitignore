@@ -51,6 +51,24 @@ godot/**/mono/
 godot/**/.mono/
 godot/**/builds/
 godot/**/exports/
+godot/**/addons/tet4d_core/bin/
+
+# Native/GDExtension build outputs
+native/**/.sconsign.dblite
+native/tet4d_core/build/
+native/tet4d_core/**/*.o
+native/tet4d_core/**/*.os
+native/tet4d_core/**/*.obj
+native/tet4d_core/**/*.a
+native/tet4d_core/**/*.dylib
+native/tet4d_core/**/*.so
+native/tet4d_core/**/*.dll
+native/tet4d_core/**/*.framework/
+native/tet4d_core/**/*.xcframework/
+native/third_party/godot-cpp/bin/
+native/third_party/godot-cpp/gen/
+native/third_party/godot-cpp/**/*.o
+native/third_party/godot-cpp/**/*.obj
 
 # Removed local asset source packs / legacy compatibility files
 assets/transform_icons_full_pack/

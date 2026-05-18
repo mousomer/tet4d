@@ -88,6 +88,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   GDExtension scaffolding, gameplay, topology, endgame, trace, config, or
   runtime changes. Stage 8 may start only with a C++ GDExtension skeleton,
   build/test scaffolding, and no gameplay port.
+- Stage 8 adds that C++ GDExtension skeleton under `native/tet4d_core/` with
+  the official `godot-cpp` repository as `native/third_party/godot-cpp`. The
+  native plain-C++ helper layer is independent of Godot types, the Godot-facing
+  wrapper is `Tet4DCoreApi`, and the only exposed calls are version/status,
+  echo, stable text hash, and integer addition. The Godot bridge lives under
+  `godot/Tet4D.Godot/scripts/native/`, and the smoke test is wired into the
+  Godot test runner. This is native integration proof only and must not be
+  extended into gameplay, topology, endgame, trace parity, config authority,
+  Python runtime, C#, Steam, or console implementation in Stage 8.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

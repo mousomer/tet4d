@@ -29,6 +29,7 @@ search_repo_text() {
       --glob '!**/state/**' \
       --glob '!**/dist/**' \
       --glob '!**/build/**' \
+      --glob '!native/third_party/**' \
       --glob '!**/artifacts/**' \
       --glob '!**/context-*.instructions.md' \
       --glob '!**/check_git_sanitation.sh' \
@@ -52,6 +53,7 @@ search_repo_text() {
     --exclude-dir=state \
     --exclude-dir=dist \
     --exclude-dir=build \
+    --exclude-dir=third_party \
     --exclude-dir=artifacts \
     --exclude='context-*.instructions.md' \
     --exclude=check_git_sanitation.sh \

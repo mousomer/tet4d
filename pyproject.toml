@@ -23,3 +23,8 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["tet4d*"]
+
+[tool.ruff]
+extend-exclude = [
+  "native/third_party",
+]

@@ -14,6 +14,7 @@ tet4d/
 |- docs/                        RDS, policies, handoff, and release docs
 |- godot/                       Godot product-shell direction and replay spike
 |- migration/                   checked-in migration traces plus generated engine-consumption bundle
+|- native/                      C++ GDExtension skeleton and third-party native dependencies
 |- packaging/                   PyInstaller spec and OS packaging scripts
 |- scripts/                     local verification and architecture checks
 |- unity/                       replay-only Unity spike project consuming copied migration bundle assets
@@ -152,6 +153,11 @@ The current rule is one-way:
     and Stage 8+ core-port order. The recommended future core path is C++
     GDExtension; do not add C++, C#, GDExtension, gameplay, topology, or
     endgame implementation as part of Stage 7 documentation work.
+13. Keep Stage 8 native code under `native/tet4d_core/`, with the official
+    `godot-cpp` dependency isolated as `native/third_party/godot-cpp`. The
+    Stage 8 API is native integration proof only and must not grow gameplay,
+    topology, endgame, trace parity, Python runtime, C#, Steam, or console
+    responsibilities.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

@@ -92,6 +92,22 @@ Fit View uses the same Python-informed orthographic yaw/pitch and projected
 board bounds every time a trace loads, resets, or changes display geometry, so
 startup does not depend on a drifting manual camera pose.
 
+Stage 8 adds a native C++ GDExtension skeleton only. It proves Godot can load
+and call `Tet4DCoreApi`, but it does not implement gameplay, topology,
+endgame, trace parity, Python runtime calls, C#, Steam packaging, or console
+packaging. On a fresh checkout, initialize submodules and build the native
+library before running the Godot tests:
+
+```bash
+git submodule update --init --recursive
+./scripts/build_godot_tet4d_core.sh
+godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
+```
+
+The native extension test will fail until `native/third_party/godot-cpp` is
+initialized and the compiled library exists under
+`res://addons/tet4d_core/bin/`.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -143,7 +159,10 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 
 The GDScript tests cover bundle loading, sample trace parsing, centralized
 coordinate mapping, deterministic camera fit, replay-viewer layout containment,
-and gameplay-cell snap policy when stable identity is absent.
+gameplay-cell snap policy when stable identity is absent, and the Stage 8
+native extension smoke test. On a fresh checkout, run the Stage 8 submodule and
+native build commands above first; the extension smoke test intentionally fails
+if Godot cannot load the native library.
 
 ## Known Limitations
 
@@ -156,5 +175,5 @@ and gameplay-cell snap policy when stable identity is absent.
   gameplay semantics.
 - 4D is displayed as visible W-separated board slices rather than a final 4D
   presentation.
-- GDScript is used only for the replay/UI spike. A future core-port language
-  remains undecided between C++ GDExtension and C# if Godot is chosen.
+- GDScript is used only for shell/UI work. Stage 7 recommends C++ GDExtension
+  for the deterministic core, and Stage 8 adds only the native skeleton.

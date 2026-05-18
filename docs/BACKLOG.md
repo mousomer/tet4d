@@ -36,9 +36,11 @@ implementation; Stage 6b aligns the Godot replay display with existing
 Python/Pygame projection, board, color, and trail conventions while keeping
 Godot replay-only; Stage 7 records Godot as the conditional primary product
 shell direction and recommends C++ GDExtension for the future deterministic
-core while keeping Python as oracle until trace parity passes; shell-preserving
-cleanup and endgame visual polish remain non-blocking and must not reopen
-semantics.
+core while keeping Python as oracle until trace parity passes; Stage 8 adds
+only the C++ GDExtension skeleton/native-call smoke test and still does not
+open gameplay, topology, endgame, trace, config, Python runtime, C#, Steam, or
+console implementation; shell-preserving cleanup and endgame visual polish
+remain non-blocking and must not reopen semantics.
 
 Current active follow-ups:
 
@@ -59,6 +61,10 @@ Current active follow-ups:
   primary shell, keeps GDScript shell-only, recommends C++ GDExtension for the
   deterministic core, and defers implementation to Stage 8+ behind trace
   parity gates
+- Stage 8 adds a minimal C++ GDExtension skeleton only: plain C++ helper layer,
+  `Tet4DCoreApi` wrapper, GDScript bridge, build script, and Godot smoke test
+  for version/status/echo/stable-hash/addition calls; gameplay/topology/endgame
+  implementation remains blocked until later parity stages
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -216,6 +222,13 @@ stays synchronized, and the contract validator accepts the backlog shape.
    endgame trace parity passes. Stage 7 is docs/governance only and does not
    add C++, C#, GDExtension, gameplay, topology, endgame, trace, config, or
    runtime implementation.
+9. `ACTIVE` `[BKL-P3-016]` Stage 8 C++ GDExtension skeleton:
+   add only the native integration proof: official `godot-cpp` submodule,
+   `native/tet4d_core/` source tree, plain C++ helper layer, `Tet4DCoreApi`
+   wrapper, `.gdextension` addon, GDScript bridge, build script, and Godot
+   smoke test for version/status/echo/stable-hash/addition calls. This stage
+   must not add gameplay, topology, endgame, trace parity, Python runtime, C#,
+   Steam, console, or config authority implementation.
 
 ## Governance Watchlist
 

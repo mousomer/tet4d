@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+env = SConscript("../third_party/godot-cpp/SConstruct")
+env = env.Clone()
+
+env.Append(CPPPATH=["include", "src/core", "src/godot"])
+
+sources = Glob("src/core/*.cpp") + Glob("src/godot/*.cpp")
+
+if env["platform"] == "macos":
+    library = env.SharedLibrary(
+        "../../godot/Tet4D.Godot/addons/tet4d_core/bin/libtet4d_core.{}.{}.framework/libtet4d_core.{}.{}".format(
+            env["platform"], env["target"], env["platform"], env["target"]
+        ),
+        source=sources,
+    )
+elif env["platform"] == "ios":
+    suffix = "{}.{}".format(env["platform"], env["target"])
+    if env["ios_simulator"]:
+        suffix += ".simulator"
+    library = env.StaticLibrary(
+        "../../godot/Tet4D.Godot/addons/tet4d_core/bin/libtet4d_core.{}.a".format(suffix),
+        source=sources,
+    )
+else:
+    library = env.SharedLibrary(
+        "../../godot/Tet4D.Godot/addons/tet4d_core/bin/libtet4d_core{}{}".format(
+            env["suffix"], env["SHLIBSUFFIX"]
+        ),
+        source=sources,
+    )
+
+env.NoCache(library)
+Default(library)

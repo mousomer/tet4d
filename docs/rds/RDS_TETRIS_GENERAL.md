@@ -198,6 +198,11 @@ Cross-cutting requirements are defined in:
    gameplay, topology, endgame, trace, config, or runtime implementation.
 9. Stage 8 may start with a C++ GDExtension skeleton, build/test scaffolding,
    and a narrow Godot API boundary, but no gameplay port.
+10. The Stage 8 skeleton may expose only native integration proof calls:
+    version, status, echo, stable text hash, and integer addition.
+11. Stage 8 must not expose gameplay stepping, piece movement, rotation, drop,
+    lock, topology, endgame simulation, trace parity, Python runtime, C#,
+    Steam, or console packaging APIs.
 
 ### 3.3 Shared piece-local transform rules
 

@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
-Role: migration architecture plan  
-Status: planned  
-Last updated: 2026-05-17
+Role: migration architecture plan
+Status: active skeleton integration
+Last updated: 2026-05-18
 
 ## 1. Decision Summary
 
@@ -92,8 +92,8 @@ The expected benefits are:
 - a natural place to expose a compact Godot-facing API while preserving
   headless tests around the core.
 
-The C++ core must start small. Stage 8 should create only a skeleton extension
-and contract tests, not port gameplay.
+The C++ core starts small. Stage 8 creates only a skeleton extension and
+contract tests, not gameplay.
 
 ## 6. C# Alternative And Decision Criteria
 
@@ -245,7 +245,9 @@ feature porting starts.
 ## 14. Port Order: Stage 8 Onward
 
 1. Stage 8: create the C++ GDExtension skeleton, build scripts, minimal Godot
-   binding, and a headless smoke test. No gameplay port.
+   binding, and a headless smoke test. No gameplay port. The only exposed API
+   is `get_core_version()`, `get_core_status()`, `echo_text(text)`,
+   `stable_hash_text(text)`, and `add_integers(a, b)`.
 2. Stage 9: port plain 2D data models and deterministic reducer skeleton.
 3. Stage 10: pass plain 2D gameplay trace parity for movement, lock, line
    clear, scoring, spawn, and game-over.
@@ -336,3 +338,37 @@ Implementation may start only when all of these are true:
 - C# is documented only as an alternative with explicit decision criteria.
 - Stage 8 is limited to C++ GDExtension skeleton/build/test scaffolding.
 - Governance and repo verification pass.
+
+## 20. Stage 8 Skeleton
+
+Stage 8 adds the minimum native integration proof:
+
+- `native/tet4d_core/` owns the local extension source.
+- `native/tet4d_core/src/core/` contains a plain C++ helper layer independent
+  of Godot types.
+- `native/tet4d_core/src/godot/` contains the `Tet4DCoreApi` GDExtension
+  wrapper.
+- `native/third_party/godot-cpp` is the official `godot-cpp` submodule. It is
+  a dependency, not project-owned code.
+- `godot/Tet4D.Godot/addons/tet4d_core/tet4d_core.gdextension` declares the
+  extension for Godot.
+- `godot/Tet4D.Godot/scripts/native/tet4d_core_bridge.gd` is the GDScript
+  bridge used by tests and future shell code.
+- `godot/Tet4D.Godot/tests/test_tet4d_core_extension.gd` verifies Godot can
+  instantiate and call the native wrapper.
+
+Fresh-checkout build/test sequence:
+
+```bash
+git submodule update --init --recursive
+./scripts/build_godot_tet4d_core.sh
+godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
+```
+
+The native extension smoke test depends on the `godot-cpp` submodule and the
+compiled local library under `godot/Tet4D.Godot/addons/tet4d_core/bin/`; it is
+expected to fail on a fresh checkout until both are present.
+
+Stage 8 still must not expose or implement gameplay stepping, piece movement,
+rotation, drop, lock, topology transport, endgame simulation, trace parity
+APIs, Python runtime calls, C#, Steam packaging, or console packaging.

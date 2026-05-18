@@ -157,3 +157,8 @@ step, if Stage 6/6b manual visual acceptance passes, is a C++ GDExtension
 skeleton with build/test scaffolding and a narrow Godot API boundary. Plain 2D
 gameplay porting begins only after that skeleton proves the native-core
 integration path.
+
+Stage 8 now adds only that skeleton: `Tet4DCoreApi` exposes version/status,
+echo, stable text hashing, and integer addition so Godot can prove native
+loading and calls. It still does not expose gameplay, topology, endgame, trace
+parity, Python runtime, C#, Steam, or console implementation.

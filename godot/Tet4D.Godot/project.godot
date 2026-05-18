@@ -15,6 +15,10 @@ config/name="Tet4D.Godot"
 run/main_scene="res://scenes/trace_replay.tscn"
 config/features=PackedStringArray("4.6")
 
+[native_extensions]
+
+paths=["res://addons/tet4d_core/tet4d_core.gdextension"]
+
 [display]
 
 window/size/viewport_width=1600
