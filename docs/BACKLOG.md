@@ -34,8 +34,11 @@ without adding engine-owned semantics. Follow-up work should still consume the
 bundle and replay `migration/golden_traces/` before any Unity/Godot/C#/C++
 implementation; Stage 6b aligns the Godot replay display with existing
 Python/Pygame projection, board, color, and trail conventions while keeping
-Godot replay-only; shell-preserving cleanup and endgame visual polish remain
-non-blocking and must not reopen semantics.
+Godot replay-only; Stage 7 records Godot as the conditional primary product
+shell direction and recommends C++ GDExtension for the future deterministic
+core while keeping Python as oracle until trace parity passes; shell-preserving
+cleanup and endgame visual polish remain non-blocking and must not reopen
+semantics.
 
 Current active follow-ups:
 
@@ -52,8 +55,10 @@ Current active follow-ups:
   only primary shell spike that loads the copied bundle from
   `res://assets/tet4d_bundle/`; both render frame data and expose case/frame
   browsing without implementing independent transport, gravity/drop, or
-  endgame simulation logic; any Unity/Godot migration must stay on that
-  replay-first boundary until an explicit core-port plan is chosen
+  endgame simulation logic; Stage 7 now chooses Godot as the conditional
+  primary shell, keeps GDScript shell-only, recommends C++ GDExtension for the
+  deterministic core, and defers implementation to Stage 8+ behind trace
+  parity gates
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -202,6 +207,15 @@ stays synchronized, and the contract validator accepts the backlog shape.
    and keeps Godot on a renderer/browser boundary via
    `tools/migration/sync_godot_bundle.py` rather than direct repo reads or
    runtime Python calls.
+8. `DONE` `[BKL-P3-015]` Stage 7 Godot core-port plan:
+   `docs/plans/godot_core_port_plan.md` records Godot as the conditional
+   primary product shell after Stage 6/6b manual visual acceptance, GDScript as
+   the shell language, C++ GDExtension as the recommended deterministic core
+   path, C# as an alternative only when port speed outweighs export/console
+   concerns, and Python as the oracle/reference until topology, gameplay, and
+   endgame trace parity passes. Stage 7 is docs/governance only and does not
+   add C++, C#, GDExtension, gameplay, topology, endgame, trace, config, or
+   runtime implementation.
 
 ## Governance Watchlist
 

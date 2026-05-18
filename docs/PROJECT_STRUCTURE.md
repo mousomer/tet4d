@@ -12,6 +12,7 @@ tet4d/
 |- cli/                         thin entrypoint shims
 |- config/                      source-controlled runtime/config assets
 |- docs/                        RDS, policies, handoff, and release docs
+|- godot/                       Godot product-shell direction and replay spike
 |- migration/                   checked-in migration traces plus generated engine-consumption bundle
 |- packaging/                   PyInstaller spec and OS packaging scripts
 |- scripts/                     local verification and architecture checks
@@ -142,6 +143,15 @@ The current rule is one-way:
 10. Keep Unity replay code under `unity/Tet4D.Unity/` and load only the copied
     `Assets/StreamingAssets/tet4d_bundle/` payload at runtime; Unity is a
     replay/browser surface here, not a gameplay/topology/endgame semantic owner.
+11. Keep Godot shell code under `godot/Tet4D.Godot/` and load only the copied
+    `res://assets/tet4d_bundle/` payload for the current replay spike. Godot is
+    the conditional primary product shell direction after Stage 7, with
+    GDScript owning shell/UI/rendering and no gameplay/topology/endgame
+    semantics until a native core passes trace parity.
+12. Use `docs/plans/godot_core_port_plan.md` for the Stage 7 engine decision
+    and Stage 8+ core-port order. The recommended future core path is C++
+    GDExtension; do not add C++, C#, GDExtension, gameplay, topology, or
+    endgame implementation as part of Stage 7 documentation work.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

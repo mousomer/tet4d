@@ -4,25 +4,25 @@
     {
       "purpose": "Current migration and handoff state.",
       "role": "restart_handoff",
-      "sha256": "75eea2a3cf808834c7ff40c602847f58f670600b2c79f369139c55d5ac91821a",
+      "sha256": "6beb42724b8f27c57837b7ae93d48a5d2c51e1d2f686944a705245baafb3af14",
       "source_path": "CURRENT_STATE.md"
     },
     {
       "purpose": "Active migration follow-up tracker.",
       "role": "backlog",
-      "sha256": "35e5c6f23501cca9c790d93a924c77b18f6d31c5c4782cc513a76af34da0fb60",
+      "sha256": "a94789b4f6d82ed000870855868cfc42a008497440b14ce3a82f8ff8e45afe95",
       "source_path": "docs/BACKLOG.md"
     },
     {
       "purpose": "Generated package layout and source-of-truth inventory.",
       "role": "project_structure",
-      "sha256": "ffa1e81d1c7a1496927bcca0fde39619f44ffc83cfe35d8eebf9c603548609a2",
+      "sha256": "7e110d535d50841309ef47b77b0d44db2642e15989238027f1c3aea24308c905",
       "source_path": "docs/PROJECT_STRUCTURE.md"
     },
     {
       "purpose": "Shared topology/gameplay/endgame product requirements.",
       "role": "product_requirements",
-      "sha256": "71d012001ce80e468520ac6b3b7112bb524c7675d3510e8d3ea3f9c5004df1d9",
+      "sha256": "1fab32c2ef6b31352edfaa7b8f0f402f2c5b47656e3ba1d5da312eebb5d7f807",
       "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
     },
     {

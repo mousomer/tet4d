@@ -177,6 +177,28 @@ Cross-cutting requirements are defined in:
    only. They must not become gameplay, topology, config, or endgame semantic
    authority.
 
+### 3.2g Godot core-port decision rules
+
+1. Stage 7 accepts Godot as the primary product shell direction, conditional on
+   completed manual visual acceptance of the Stage 6/6b replay viewer.
+2. The migration reason is UI/product-shell quality: menus, settings,
+   diagnostics, controls, replay readability, and future packaging surfaces.
+   It is not a claim that Godot owns stronger gameplay semantics or that
+   rendering alone justifies the migration.
+3. GDScript is the Godot shell language. It may own menus, settings, rendering,
+   replay views, camera/layout behavior, input routing, and diagnostics.
+4. GDScript must not own the deterministic gameplay, topology, scoring,
+   locking, line-clear, spawn, or endgame particle simulation core.
+5. The recommended future core language is C++ through Godot GDExtension.
+6. C# is an alternative core language only if port speed clearly outweighs
+   export, console, and long-term dependency concerns.
+7. Python remains the semantic oracle/reference until a replacement core passes
+   topology, gameplay, launch-parity, and endgame trace parity.
+8. Stage 7 is planning/governance only. It must not add C++, C#, GDExtension,
+   gameplay, topology, endgame, trace, config, or runtime implementation.
+9. Stage 8 may start with a C++ GDExtension skeleton, build/test scaffolding,
+   and a narrow Godot API boundary, but no gameplay port.
+
 ### 3.3 Shared piece-local transform rules
 
 1. Piece-local coordinates are occupied-cell offsets from a deterministic piece origin, not a fixed pivot cell.

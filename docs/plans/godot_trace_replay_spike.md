@@ -1,7 +1,7 @@
 # Godot Trace Replay Spike
 
 Role: migration replay spike  
-Status: active  
+Status: complete, pending manual visual acceptance
 Last updated: 2026-05-17
 
 ## Purpose
@@ -14,6 +14,13 @@ This spike answers a shell-quality question: can tet4d get better menus,
 display clarity, diagnostics panels, replay readability, and simple animation
 polish in Godot without porting gameplay or simulation semantics?
 
+Stage 7 records the follow-on engine decision in
+`docs/plans/godot_core_port_plan.md`: Godot is the conditional primary product
+shell direction after manual visual acceptance, GDScript remains shell-only,
+C++ GDExtension is the recommended future deterministic core path, C# is an
+alternative only under explicit criteria, and Python remains the oracle until
+trace parity passes.
+
 ## Boundaries
 
 - Python remains the semantic oracle.
@@ -24,7 +31,8 @@ polish in Godot without porting gameplay or simulation semantics?
   endgame simulation.
 - Inspector, scene, and project settings are presentation-only.
 - GDScript is acceptable for this replay/UI spike, but it is not the final
-  semantic-core language decision.
+  semantic-core language decision. Stage 7 recommends C++ GDExtension for that
+  future core while keeping this replay spike free of core implementation.
 
 ## Locations
 
@@ -141,3 +149,11 @@ PYTHONPATH=src .venv/bin/python tools/migration/sync_godot_bundle.py \
   locally when a Godot 4.6.2-stable CLI is available.
 - If Godot CLI is unavailable, the spike remains a code-and-asset bootstrap
   plus Python-side verification surface.
+
+## Follow-On Decision
+
+Stage 8 must not start gameplay implementation directly. The next engineering
+step, if Stage 6/6b manual visual acceptance passes, is a C++ GDExtension
+skeleton with build/test scaffolding and a narrow Godot API boundary. Plain 2D
+gameplay porting begins only after that skeleton proves the native-core
+integration path.

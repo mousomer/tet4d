@@ -77,6 +77,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   controls, and a replay-only keyboard hint strip; those effects are renderer
   presentation only and must not become gameplay, topology transport, or
   endgame simulation logic.
+- Stage 7 records the Godot engine decision and core-port plan in
+  `docs/plans/godot_core_port_plan.md`. Godot is accepted as the primary
+  product shell direction, conditional on completed manual visual acceptance of
+  the Stage 6/6b replay viewer. The shell language remains GDScript. The
+  recommended core language is C++ GDExtension; C# remains an alternative only
+  if port speed clearly outweighs export, console, and long-term dependency
+  concerns. Python remains the oracle/reference until trace parity passes.
+  Stage 7 is documentation/governance only: it does not add C++, C#,
+  GDExtension scaffolding, gameplay, topology, endgame, trace, config, or
+  runtime changes. Stage 8 may start only with a C++ GDExtension skeleton,
+  build/test scaffolding, and no gameplay port.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -254,6 +265,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `docs/plans/unity_trace_replay_spike.md`.
 - For the Godot replay spike boundary, use
   `docs/plans/godot_trace_replay_spike.md`.
+- For the Godot core-port decision and Stage 8+ migration order, use
+  `docs/plans/godot_core_port_plan.md`.
 - For historical detail only, use `docs/history/DONE_SUMMARIES.md` and
   `docs/history/topology_playground/current_state_archive_2026-03-31.md`.
 
