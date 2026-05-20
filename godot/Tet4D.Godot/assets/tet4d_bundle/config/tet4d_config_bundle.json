@@ -12355,6 +12355,45 @@
         "trace_version": 1
       },
       {
+        "case_id": "gameplay_plain_2d_hard_drop_lock",
+        "dimension": 2,
+        "final_state_hash": "05a15c901374c974d167774aacbd53bc56662ee9a10556b86acbeb94158b95a9",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_2d_hard_drop_lock.json",
+        "sha256": "a3aa630b39b2bed6684c7ae720475930b23ba8d56ab98cea6789179cb96067aa",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_hard_drop_lock.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_2d_line_clear_short",
+        "dimension": 2,
+        "final_state_hash": "b12eb245dc55563078b0342123f3bc519549b3eb75b40c5fd691e41536c95fc1",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_2d_line_clear_short.json",
+        "sha256": "3853e176088038e16843406e8bd43471a34604043772bd13eeb046946d35b5e0",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_line_clear_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_2d_rotation_short",
+        "dimension": 2,
+        "final_state_hash": "8f2941eb755e7474ef5a43f35ed70ead49e3625dc8c22521b70227873838ce19",
+        "frame_count": 2,
+        "path": "traces/gameplay/gameplay_plain_2d_rotation_short.json",
+        "sha256": "f44ebf27e8941ccbfb44bbec227a3b18ae1119255cb3261f2e160201c1d39943",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_rotation_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
         "case_id": "gameplay_plain_2d_short",
         "dimension": 2,
         "final_state_hash": "2d3a6eb2744d46bc147ae7d21855036e1ff241a99261ab5324b20958ec353139",

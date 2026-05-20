@@ -108,12 +108,13 @@ The native extension test will fail until `native/third_party/godot-cpp` is
 initialized and the compiled library exists under
 `res://addons/tet4d_core/bin/`.
 
-Stage 10 keeps the narrow native plain-2D parity surface for
-`gameplay_plain_2d_short`: `run_builtin_plain_2d_smoke_case()`,
-`get_plain_2d_parity_status()`, `export_plain_2d_trace_json()`, and
-`get_plain_2d_required_field_parity()`. These calls are for migration parity
-and smoke tests only. They do not expose playable Godot movement, rotation,
-drop, lock, topology, endgame, or Python runtime behavior.
+Stage 11 keeps the native plain-2D surface parity-only while broadening it
+beyond `gameplay_plain_2d_short`. The allowed calls are
+`run_builtin_plain_2d_smoke_case()`, `list_plain_2d_parity_cases()`,
+`get_plain_2d_parity_status()`, `export_plain_2d_trace_json(case_id)`, and
+`get_plain_2d_required_field_parity(case_id)`. These calls are for migration
+parity and smoke tests only. They do not expose playable Godot movement,
+rotation, drop, lock, topology, endgame, or Python runtime behavior.
 
 ## Opening In Godot
 

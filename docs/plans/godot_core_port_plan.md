@@ -1,7 +1,7 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D snapshot/hash parity integration
+Status: active broadened plain 2D parity integration
 Last updated: 2026-05-20
 
 ## 1. Decision Summary
@@ -252,13 +252,16 @@ feature porting starts.
    surface needed to match `gameplay_plain_2d_short` on required trace fields.
 3. Stage 10: complete canonical snapshot and `state_hash` parity for
    `gameplay_plain_2d_short` before broadening plain 2D coverage.
-4. Stage 11: connect Godot playable 2D shell to the native core behind a narrow
-   API.
-5. Stage 12: port 3D gameplay and parity tests.
-6. Stage 13: port 4D gameplay and parity tests.
-7. Stage 14: port topology transport and Topology Lab launch semantics.
-8. Stage 15: port locked-cell endgame particle simulation.
-9. Stage 16: retire Python as semantic oracle only after trace parity,
+4. Stage 11: broaden plain bounded 2D trace parity with small Python golden
+   traces for rotation, hard-drop lock, and line clear. Keep Godot APIs
+   parity-only.
+5. Stage 12: connect Godot playable 2D shell to the native core behind a
+   narrow API only after Stage 11 parity is stable.
+6. Stage 13: port 3D gameplay and parity tests.
+7. Stage 14: port 4D gameplay and parity tests.
+8. Stage 15: port topology transport and Topology Lab launch semantics.
+9. Stage 16: port locked-cell endgame particle simulation.
+10. Stage 17: retire Python as semantic oracle only after trace parity,
    product acceptance, and authority-doc updates explicitly allow it.
 
 Stages may be split smaller if a parity gate is too broad.
@@ -420,3 +423,32 @@ This stage still must not expose live `step_game`, move, rotate, drop, lock,
 topology, endgame, C#, Python runtime, Steam, or console APIs. It also does not
 add new golden traces; the sole C++ parity target remains
 `gameplay_plain_2d_short`.
+
+## 23. Stage 11 Broadened Plain 2D Parity
+
+Stage 11 broadens the native plain bounded 2D parity foundation before any
+live Godot gameplay controls are added. The Python oracle now exports these
+small deterministic golden traces:
+
+- `gameplay_plain_2d_short`;
+- `gameplay_plain_2d_rotation_short`;
+- `gameplay_plain_2d_hard_drop_lock`;
+- `gameplay_plain_2d_line_clear_short`.
+
+The native C++ core adds only the behavior needed to match those traces:
+rotation in the existing 2D piece model, hard-drop lock/spawn parity, starting
+locked cells for the line-clear case, and single-line clear scoring. The
+comparison tool supports `--all-plain-2d` and checks required fields plus
+per-frame/final `state_hash` values.
+
+The Godot-facing API remains parity-only:
+
+- `run_builtin_plain_2d_smoke_case()`;
+- `list_plain_2d_parity_cases()`;
+- `get_plain_2d_parity_status()`;
+- `export_plain_2d_trace_json(case_id)`;
+- `get_plain_2d_required_field_parity(case_id)`.
+
+Stage 11 still must not expose live `step_game`, `move_left`, `move_right`,
+`rotate`, `soft_drop`, `hard_drop`, topology, endgame, Python runtime, C#,
+Steam, or console APIs.

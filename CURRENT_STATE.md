@@ -116,6 +116,16 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   field-level diffs. The Godot-facing surface remains parity/smoke-only with
   `get_plain_2d_required_field_parity`; no live gameplay, topology, 3D, 4D,
   endgame, Python runtime, C#, Steam, or console API is added.
+- Stage 11 broadens the plain bounded 2D parity foundation with three new
+  Python golden traces: `gameplay_plain_2d_rotation_short`,
+  `gameplay_plain_2d_hard_drop_lock`, and
+  `gameplay_plain_2d_line_clear_short`. The native C++ core now matches all
+  Stage 11 plain 2D traces on required fields plus per-frame/final
+  `state_hash`, and the Godot-facing surface remains parity-only by case id:
+  `list_plain_2d_parity_cases`, `export_plain_2d_trace_json(case_id)`, and
+  `get_plain_2d_required_field_parity(case_id)`. This still does not expose
+  live gameplay controls, topology, 3D, 4D, endgame, Python runtime, C#,
+  Steam, or console APIs.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -436,3 +446,6 @@ CODEX_MODE=1 ./scripts/verify.sh
   playback.
 - Keep governance edits pack-driven and update workflow/backlog/current-state
   docs together when boundary rules change.
+- Next migration task after Stage 11 verification is Stage 12: decide whether
+  to wire a narrow playable plain-2D Godot shell to the native core or expand
+  parity first if any manual/native acceptance gap remains.

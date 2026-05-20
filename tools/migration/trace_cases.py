@@ -49,6 +49,7 @@ class GameplayTraceCase:
     launch_from_playground: bool = False
     piece_blocks: tuple[tuple[int, ...], ...] = ((0, 0),)
     piece_pos: tuple[int, ...] | None = None
+    initial_locked_cells: tuple[tuple[tuple[int, ...], int], ...] = ()
     notes: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -261,6 +262,50 @@ GAMEPLAY_TRACE_CASES: tuple[GameplayTraceCase, ...] = (
         ),
         piece_blocks=((0, 0), (1, 0)),
         piece_pos=(2, 3),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_2d_rotation_short",
+        2,
+        "plain",
+        (6, 6),
+        2011,
+        (
+            {"id": "rotate_cw", "action": "rotate", "delta": 1},
+            {"id": "soft_drop_after_rotate", "action": "soft_drop"},
+        ),
+        piece_blocks=((-1, 0), (0, 0), (1, 0), (0, 1)),
+        piece_pos=(2, 2),
+        notes=("Stage 11 plain 2D rotation parity trace.",),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_2d_hard_drop_lock",
+        2,
+        "plain",
+        (6, 6),
+        2012,
+        ({"id": "hard_drop_from_above", "action": "hard_drop"},),
+        piece_blocks=((0, 0),),
+        piece_pos=(2, -1),
+        notes=("Stage 11 plain 2D hard-drop lock parity trace.",),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_2d_line_clear_short",
+        2,
+        "plain",
+        (6, 6),
+        2013,
+        ({"id": "hard_drop_line_clear", "action": "hard_drop"},),
+        piece_blocks=((0, 0),),
+        piece_pos=(5, 4),
+        initial_locked_cells=(
+            ((0, 5), 2),
+            ((1, 5), 2),
+            ((2, 5), 2),
+            ((3, 5), 2),
+            ((4, 5), 2),
+            ((0, 4), 9),
+        ),
+        notes=("Stage 11 plain 2D single-line clear parity trace.",),
     ),
     GameplayTraceCase(
         "gameplay_plain_3d_short",

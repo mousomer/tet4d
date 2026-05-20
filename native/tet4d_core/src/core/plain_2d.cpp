@@ -1,9 +1,72 @@
 #include "tet4d_core/plain_2d.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <set>
 
 namespace tet4d::core {
+namespace {
+
+std::vector<Coord2D> rotate_blocks_2d(std::vector<Coord2D> blocks, int rotation) {
+	const int turns = ((rotation % 4) + 4) % 4;
+	for (int step = 0; step < turns; ++step) {
+		int min_x = blocks.front().x;
+		int max_x = blocks.front().x;
+		int min_y = blocks.front().y;
+		int max_y = blocks.front().y;
+		for (const Coord2D &coord : blocks) {
+			min_x = std::min(min_x, coord.x);
+			max_x = std::max(max_x, coord.x);
+			min_y = std::min(min_y, coord.y);
+			max_y = std::max(max_y, coord.y);
+		}
+
+		const int span_x = max_x - min_x;
+		const int span_y = max_y - min_y;
+		double pivot_x = static_cast<double>(min_x + max_x) / 2.0;
+		double pivot_y = static_cast<double>(min_y + max_y) / 2.0;
+		if ((span_x % 2) != (span_y % 2)) {
+			double center_x = 0.0;
+			double center_y = 0.0;
+			for (const Coord2D &coord : blocks) {
+				center_x += coord.x;
+				center_y += coord.y;
+			}
+			center_x /= static_cast<double>(blocks.size());
+			center_y /= static_cast<double>(blocks.size());
+			double best_dist = 0.0;
+			Coord2D best = blocks.front();
+			bool first = true;
+			for (const Coord2D &coord : blocks) {
+				const double dx = static_cast<double>(coord.x) - center_x;
+				const double dy = static_cast<double>(coord.y) - center_y;
+				const double dist = dx * dx + dy * dy;
+				if (first || dist < best_dist) {
+					first = false;
+					best_dist = dist;
+					best = coord;
+				}
+			}
+			pivot_x = static_cast<double>(best.x);
+			pivot_y = static_cast<double>(best.y);
+		}
+
+		std::vector<Coord2D> next;
+		next.reserve(blocks.size());
+		for (const Coord2D &coord : blocks) {
+			const double rel_x = static_cast<double>(coord.x) - pivot_x;
+			const double rel_y = static_cast<double>(coord.y) - pivot_y;
+			next.push_back({
+				static_cast<int>(std::lround(rel_y + pivot_x)),
+				static_cast<int>(std::lround(-rel_x + pivot_y)),
+			});
+		}
+		blocks = next;
+	}
+	return blocks;
+}
+
+} // namespace
 
 bool Coord2D::operator<(const Coord2D &other) const {
 	if (x != other.x) {
@@ -19,8 +82,7 @@ bool Coord2D::operator==(const Coord2D &other) const {
 std::vector<Coord2D> ActivePiece2D::cells() const {
 	std::vector<Coord2D> result;
 	result.reserve(shape.blocks.size());
-	for (const Coord2D &block : shape.blocks) {
-		// Stage 9 only needs rotation=0 for gameplay_plain_2d_short.
+	for (const Coord2D &block : rotate_blocks_2d(shape.blocks, rotation)) {
 		result.push_back({pos.x + block.x, pos.y + block.y});
 	}
 	std::sort(result.begin(), result.end());
@@ -31,6 +93,15 @@ ActivePiece2D ActivePiece2D::moved(int dx, int dy) const {
 	ActivePiece2D result = *this;
 	result.pos.x += dx;
 	result.pos.y += dy;
+	return result;
+}
+
+ActivePiece2D ActivePiece2D::rotated(int delta_steps) const {
+	ActivePiece2D result = *this;
+	result.rotation = (result.rotation + delta_steps) % 4;
+	if (result.rotation < 0) {
+		result.rotation += 4;
+	}
 	return result;
 }
 
@@ -130,11 +201,23 @@ bool GameState2D::try_soft_drop() {
 	return try_move(0, 1);
 }
 
+void GameState2D::try_rotate(int delta_steps) {
+	if (!active_piece.has_value()) {
+		return;
+	}
+	const ActivePiece2D rotated = active_piece->rotated(delta_steps);
+	if (can_exist(rotated)) {
+		active_piece = rotated;
+	}
+}
+
 void GameState2D::hard_drop() {
 	while (try_move(0, 1)) {
 	}
 	lock_current_piece();
-	spawn_i_piece();
+	if (!game_over) {
+		spawn_piece(post_lock_spawn_shape.value_or(classic_i_shape_2d()));
+	}
 }
 
 int GameState2D::lock_current_piece() {
@@ -152,14 +235,25 @@ int GameState2D::lock_current_piece() {
 
 	const int cleared = board.clear_full_lines();
 	lines += cleared;
-	score += lock_piece_points;
-	// gameplay_plain_2d_short does not clear a line. Later stages should port
-	// Python's full score table before expanding the trace surface.
+	int clear_score = 0;
+	if (cleared == 1) {
+		clear_score = 40;
+	} else if (cleared == 2) {
+		clear_score = 100 + 80;
+	} else if (cleared == 3) {
+		clear_score = 300 + 240;
+	} else if (cleared == 4) {
+		clear_score = 1200 + 600;
+	} else if (cleared > 4) {
+		clear_score = 1200 + (cleared - 4) * 400 + 900;
+	}
+	const int board_clear_bonus = (cleared > 0 && board.cells().empty()) ? 1500 : 0;
+	score += lock_piece_points + clear_score + board_clear_bonus;
 	return cleared;
 }
 
-void GameState2D::spawn_i_piece() {
-	active_piece = ActivePiece2D{classic_i_shape_2d(), {2, -2}, 0};
+void GameState2D::spawn_piece(const PieceShape2D &shape) {
+	active_piece = ActivePiece2D{shape, {2, -2}, 0};
 	if (!can_exist(*active_piece)) {
 		game_over = true;
 	}
@@ -176,6 +270,9 @@ CommandResult2D GameStepper2D::apply(GameState2D &state, const GameCommand2D &co
 	} else if (command.kind == GameCommandKind2D::HardDrop) {
 		state.hard_drop();
 		result.return_value = std::nullopt;
+	} else if (command.kind == GameCommandKind2D::Rotate) {
+		state.try_rotate(command.dx);
+		result.return_value = std::nullopt;
 	}
 	const int locked_after = static_cast<int>(state.board.cells().size());
 	result.locked_cell_delta = locked_after - locked_before;
@@ -186,8 +283,20 @@ PieceShape2D trace_domino_shape_2d() {
 	return {"TRACE_2D", {{0, 0}, {1, 0}}, 8};
 }
 
+PieceShape2D trace_dot_shape_2d() {
+	return {"TRACE_2D", {{0, 0}}, 8};
+}
+
+PieceShape2D trace_t_shape_2d() {
+	return {"TRACE_2D", {{-1, 0}, {0, 0}, {1, 0}, {0, 1}}, 8};
+}
+
 PieceShape2D classic_i_shape_2d() {
 	return {"I", {{-1, 0}, {0, 0}, {1, 0}, {2, 0}}, 1};
+}
+
+PieceShape2D classic_s_shape_2d() {
+	return {"S", {{0, 0}, {1, 0}, {-1, 1}, {0, 1}}, 4};
 }
 
 GameState2D make_builtin_plain_2d_initial_state() {

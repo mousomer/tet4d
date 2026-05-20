@@ -28,9 +28,10 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("stable_hash_text", "text"), &Tet4DCoreApi::stable_hash_text);
 	ClassDB::bind_method(D_METHOD("add_integers", "a", "b"), &Tet4DCoreApi::add_integers);
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
+	ClassDB::bind_method(D_METHOD("list_plain_2d_parity_cases"), &Tet4DCoreApi::list_plain_2d_parity_cases);
 	ClassDB::bind_method(D_METHOD("get_plain_2d_parity_status"), &Tet4DCoreApi::get_plain_2d_parity_status);
-	ClassDB::bind_method(D_METHOD("export_plain_2d_trace_json"), &Tet4DCoreApi::export_plain_2d_trace_json);
-	ClassDB::bind_method(D_METHOD("get_plain_2d_required_field_parity"), &Tet4DCoreApi::get_plain_2d_required_field_parity);
+	ClassDB::bind_method(D_METHOD("export_plain_2d_trace_json", "case_id"), &Tet4DCoreApi::export_plain_2d_trace_json);
+	ClassDB::bind_method(D_METHOD("get_plain_2d_required_field_parity", "case_id"), &Tet4DCoreApi::get_plain_2d_required_field_parity);
 }
 
 String Tet4DCoreApi::get_core_version() const {
@@ -57,16 +58,24 @@ bool Tet4DCoreApi::run_builtin_plain_2d_smoke_case() const {
 	return tet4d::core::run_builtin_plain_2d_smoke_case();
 }
 
+PackedStringArray Tet4DCoreApi::list_plain_2d_parity_cases() const {
+	PackedStringArray result;
+	for (const std::string &case_id : tet4d::core::list_plain_2d_parity_cases()) {
+		result.push_back(to_godot_string(case_id));
+	}
+	return result;
+}
+
 String Tet4DCoreApi::get_plain_2d_parity_status() const {
 	return to_godot_string(tet4d::core::get_plain_2d_parity_status());
 }
 
-String Tet4DCoreApi::export_plain_2d_trace_json() const {
-	return to_godot_string(tet4d::core::export_plain_2d_trace_json());
+String Tet4DCoreApi::export_plain_2d_trace_json(const String &case_id) const {
+	return to_godot_string(tet4d::core::export_plain_2d_trace_json(to_std_string(case_id)));
 }
 
-bool Tet4DCoreApi::get_plain_2d_required_field_parity() const {
-	return tet4d::core::get_plain_2d_required_field_parity();
+bool Tet4DCoreApi::get_plain_2d_required_field_parity(const String &case_id) const {
+	return tet4d::core::get_plain_2d_required_field_parity(to_std_string(case_id));
 }
 
 } // namespace godot

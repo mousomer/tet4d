@@ -285,6 +285,8 @@ def _build_state(
         )
         state.current_piece = ActivePieceND.from_shape(shape=shape, pos=tuple(pos))
     state.board.cells.clear()
+    for coord, value in case.initial_locked_cells:
+        state.board.cells[tuple(int(axis) for axis in coord)] = int(value)
     state.game_over = False
     return state
 

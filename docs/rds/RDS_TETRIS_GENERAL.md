@@ -211,6 +211,11 @@ Cross-cutting requirements are defined in:
 13. Stage 10 may add canonical snapshot serialization and `state_hash` parity
     for `gameplay_plain_2d_short` only. It must keep the Godot API parity-only
     and must not broaden into live gameplay controls or non-plain-2D semantics.
+14. Stage 11 may broaden plain bounded 2D parity with small Python golden
+    traces for rotation, hard-drop lock, and line clear. It may expose only
+    case-list, case-export, status, and parity-check APIs through Godot and
+    must not expose live gameplay controls, topology, 3D, 4D, endgame, Python
+    runtime, C#, Steam, or console packaging APIs.
 
 ### 3.3 Shared piece-local transform rules
 

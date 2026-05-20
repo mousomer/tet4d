@@ -1,6 +1,6 @@
 # Plain 2D Core Parity Contract
 
-Role: Stage 10 native core snapshot/hash parity contract
+Role: Stage 11 native core plain 2D parity contract
 Status: active
 Last updated: 2026-05-20
 
@@ -8,21 +8,32 @@ Last updated: 2026-05-20
 
 Stage 9 ported enough deterministic C++ gameplay core behavior to reproduce the
 Python-authored `gameplay_plain_2d_short` trace on required fields. Stage 10
-strengthens that parity to include canonical snapshot serialization and
-Python-compatible `state_hash` values. The scope remains intentionally narrow:
+strengthened that parity to include canonical snapshot serialization and
+Python-compatible `state_hash` values. Stage 11 broadens that same plain
+bounded 2D parity surface with three additional small Python golden traces.
+The scope remains intentionally narrow:
 
 - plain bounded 2D only;
 - board size `6 x 6`;
-- seed metadata `2001`;
-- one synthetic `TRACE_2D` two-cell active piece at `(2, 3)`;
-- commands: move right, soft drop, hard drop;
-- hard drop locks the synthetic piece at `(3, 5)` and `(4, 5)`;
-- lock score is `5`;
-- no line clear occurs;
-- the post-lock spawn is the classic `I` piece at `(2, -2)`.
+- synthetic `TRACE_2D` active pieces only;
+- authored trace commands only;
+- rotation, hard drop/lock, and single-line clear coverage;
+- post-lock spawn state exactly as exported by the Python oracle.
 
 This contract does not authorize 3D, 4D, topology transport, endgame
 simulation, playable Godot controls, or Python runtime calls from Godot.
+
+## Stage 11 Trace Definitions
+
+- `gameplay_plain_2d_short`: two-cell `TRACE_2D` domino at `(2, 3)` with move
+  right, soft drop, hard drop; locks two cells with score `5`.
+- `gameplay_plain_2d_rotation_short`: four-cell `TRACE_2D` T-like shape at
+  `(2, 2)` with clockwise rotation and soft drop; no lock.
+- `gameplay_plain_2d_hard_drop_lock`: one-cell `TRACE_2D` piece at `(2, -1)`
+  with hard drop; locks one cell with score `5`.
+- `gameplay_plain_2d_line_clear_short`: one-cell `TRACE_2D` piece at `(5, 4)`
+  with authored starting locked cells; hard drop completes one row, clears it,
+  leaves one survivor cell, and scores `45`.
 
 ## Canonical Snapshot And Hash Contract
 
@@ -46,18 +57,21 @@ Final hash is computed over:
 }
 ```
 
-For `gameplay_plain_2d_short`, Stage 10 requires these hashes:
+Stage 11 requires frame/final hashes to match these Python golden traces:
 
-- frame 0: `d02e1823a320d5a4c3203a3cb6d103518c5f5168a67f2ebffc193c23a0e80ced`;
-- frame 1: `1f07ea939bcd495c97b21501b14fe1cd7a4e44b73e4ad4fad14dfd0ddb381847`;
-- frame 2: `f1eed6ec35fc8d5aae39ededd81df9eff3bb9148b9def9c8b0d7e5b8e1d59e5a`;
-- final: `2d3a6eb2744d46bc147ae7d21855036e1ff241a99261ab5324b20958ec353139`.
+- `gameplay_plain_2d_short`: final
+  `2d3a6eb2744d46bc147ae7d21855036e1ff241a99261ab5324b20958ec353139`.
+- `gameplay_plain_2d_rotation_short`: final
+  `8f2941eb755e7474ef5a43f35ed70ead49e3625dc8c22521b70227873838ce19`.
+- `gameplay_plain_2d_hard_drop_lock`: final
+  `05a15c901374c974d167774aacbd53bc56662ee9a10556b86acbeb94158b95a9`.
+- `gameplay_plain_2d_line_clear_short`: final
+  `b12eb245dc55563078b0342123f3bc519549b3eb75b40c5fd691e41536c95fc1`.
 
 ## Compared Fields
 
-`tools/migration/compare_cpp_gameplay_trace.py --case gameplay_plain_2d_short`
-compares these C++ trace fields against
-`migration/golden_traces/gameplay/gameplay_plain_2d_short.json`:
+`tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d` compares these
+C++ trace fields against the Stage 11 Python golden traces:
 
 - `case_id`, `dimension`, `seed`, `topology_id`, `trace_type`,
   `trace_version`;
@@ -74,12 +88,13 @@ compares these C++ trace fields against
 
 ## Native API Boundary
 
-The Godot-facing Stage 10 API remains parity/smoke-only:
+The Godot-facing Stage 11 API remains parity/smoke-only:
 
 - `run_builtin_plain_2d_smoke_case()`;
+- `list_plain_2d_parity_cases()`;
 - `get_plain_2d_parity_status()`;
-- `export_plain_2d_trace_json()`.
-- `get_plain_2d_required_field_parity()`.
+- `export_plain_2d_trace_json(case_id)`;
+- `get_plain_2d_required_field_parity(case_id)`.
 
 It must not expose live gameplay APIs such as `step_game`, `move_piece`,
 `rotate_piece`, `drop`, `lock`, topology APIs, or endgame APIs.
@@ -90,7 +105,7 @@ Run:
 
 ```bash
 ./scripts/test_godot_tet4d_core.sh
-PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --case gameplay_plain_2d_short
+PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
 ./scripts/build_godot_tet4d_core.sh
 godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 ```

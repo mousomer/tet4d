@@ -4,7 +4,9 @@ Stage 8 proved that the Godot shell can load and call a native C++
 GDExtension. Stage 9 added the smallest plain bounded 2D deterministic core
 needed to match `gameplay_plain_2d_short` on required trace fields. Stage 10
 adds Python-compatible snapshot serialization and `state_hash` parity for that
-same short trace. It is not playable Godot gameplay.
+same short trace. Stage 11 broadens the same plain bounded 2D parity surface to
+small rotation, hard-drop/lock, and line-clear traces. It is not playable Godot
+gameplay.
 
 The native source tree has two layers:
 
@@ -40,20 +42,24 @@ Allowed Stage 8 API:
 - `stable_hash_text(text)`
 - `add_integers(a, b)`
 
-Allowed Stage 10 parity/smoke API:
+Allowed Stage 11 parity/smoke API:
 
 - `run_builtin_plain_2d_smoke_case()`
+- `list_plain_2d_parity_cases()`
 - `get_plain_2d_parity_status()`
-- `export_plain_2d_trace_json()`
-- `get_plain_2d_required_field_parity()`
+- `export_plain_2d_trace_json(case_id)`
+- `get_plain_2d_required_field_parity(case_id)`
 
 Run native C++ tests and trace parity with:
 
 ```bash
 ./scripts/test_godot_tet4d_core.sh
-PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --case gameplay_plain_2d_short
+PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
 ```
 
-Stage 10 compares required trace fields plus frame/final `state_hash` values.
+Stage 11 compares required trace fields plus frame/final `state_hash` values
+for `gameplay_plain_2d_short`, `gameplay_plain_2d_rotation_short`,
+`gameplay_plain_2d_hard_drop_lock`, and
+`gameplay_plain_2d_line_clear_short`.
 This core must not expose live gameplay, topology, endgame, or Python runtime
 APIs.

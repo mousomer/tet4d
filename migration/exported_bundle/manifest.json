@@ -159,25 +159,25 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "fdd2c9ba32ba956c9f1bb5f501940d0a5c735686d73a91bea5c09bdfb2b281f8",
+        "sha256": "e4d8f518d288d3ddaa3155bec7185798b2bb6cffa5518a331a4d478ff0ee7d56",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "58f63e6f37ba9dce80a39417c9b574a3a87b59a7d4e7524f80f6785cbbec95aa",
+        "sha256": "5aef2f39ae09e28e1ca48b3c7f35fcbbf72026b027003a3d7da0642b2a39c59b",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "146f76b5482abb77d5b5e03b8b88f19bf45c3de2b2ed3ae859880cd055fe387c",
+        "sha256": "ca9a667937717c0d57ee9b9b26dd7145fc465f099983333ad386440e9f86a526",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
         "purpose": "Shared topology/gameplay/endgame product requirements.",
         "role": "product_requirements",
-        "sha256": "bdc0031174205362c0917e6fbf37bad523106fb986cbe5136df01847d24bc64e",
+        "sha256": "393590a1ae6445f615a7dc89b30d35c72c8a1fdbe56d6d94967d6dfa84dc0b88",
         "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
       },
       {
@@ -402,6 +402,45 @@
         "sha256": "620dae344942f9d958addb778644ae92f6ddfdc06f627775c11ae546662faf6b",
         "source_path": "migration/golden_traces/gameplay/gameplay_launch_topology_parity.json",
         "topology_id": "sphere_like",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_2d_hard_drop_lock",
+        "dimension": 2,
+        "final_state_hash": "05a15c901374c974d167774aacbd53bc56662ee9a10556b86acbeb94158b95a9",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_2d_hard_drop_lock.json",
+        "sha256": "a3aa630b39b2bed6684c7ae720475930b23ba8d56ab98cea6789179cb96067aa",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_hard_drop_lock.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_2d_line_clear_short",
+        "dimension": 2,
+        "final_state_hash": "b12eb245dc55563078b0342123f3bc519549b3eb75b40c5fd691e41536c95fc1",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_2d_line_clear_short.json",
+        "sha256": "3853e176088038e16843406e8bd43471a34604043772bd13eeb046946d35b5e0",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_line_clear_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_2d_rotation_short",
+        "dimension": 2,
+        "final_state_hash": "8f2941eb755e7474ef5a43f35ed70ead49e3625dc8c22521b70227873838ce19",
+        "frame_count": 2,
+        "path": "traces/gameplay/gameplay_plain_2d_rotation_short.json",
+        "sha256": "f44ebf27e8941ccbfb44bbec227a3b18ae1119255cb3261f2e160201c1d39943",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_rotation_short.json",
+        "topology_id": "plain",
         "topology_preset": null,
         "trace_type": "gameplay",
         "trace_version": 1

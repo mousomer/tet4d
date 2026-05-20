@@ -28,6 +28,7 @@ struct ActivePiece2D {
 
 	std::vector<Coord2D> cells() const;
 	ActivePiece2D moved(int dx, int dy) const;
+	ActivePiece2D rotated(int delta_steps) const;
 };
 
 class Board2D {
@@ -50,6 +51,7 @@ private:
 struct GameState2D {
 	Board2D board;
 	std::optional<ActivePiece2D> active_piece;
+	std::optional<PieceShape2D> post_lock_spawn_shape;
 	int score = 0;
 	int lines = 0;
 	bool game_over = false;
@@ -60,15 +62,17 @@ struct GameState2D {
 	bool can_exist(const ActivePiece2D &piece) const;
 	bool try_move(int dx, int dy);
 	bool try_soft_drop();
+	void try_rotate(int delta_steps);
 	void hard_drop();
 	int lock_current_piece();
-	void spawn_i_piece();
+	void spawn_piece(const PieceShape2D &shape);
 };
 
 enum class GameCommandKind2D {
 	Move,
 	SoftDrop,
 	HardDrop,
+	Rotate,
 };
 
 struct GameCommand2D {
@@ -90,7 +94,10 @@ public:
 };
 
 PieceShape2D trace_domino_shape_2d();
+PieceShape2D trace_dot_shape_2d();
+PieceShape2D trace_t_shape_2d();
 PieceShape2D classic_i_shape_2d();
+PieceShape2D classic_s_shape_2d();
 GameState2D make_builtin_plain_2d_initial_state();
 std::vector<GameCommand2D> builtin_plain_2d_commands();
 

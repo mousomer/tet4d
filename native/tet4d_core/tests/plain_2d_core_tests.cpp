@@ -61,16 +61,37 @@ void test_trace_export_smoke() {
 	require(tet4d::core::sha256_hex("tet4d") == "512f04b84d4f239afca4c01d057bafa4fe3a8df37cfe355da2458cbedf3ff821", "sha256 smoke mismatch");
 }
 
+void test_stage11_trace_exports() {
+	const std::vector<std::string> cases = tet4d::core::list_plain_2d_parity_cases();
+	require(cases.size() == 4, "Stage 11 should expose four plain 2D parity cases");
+	for (const std::string &case_id : cases) {
+		const std::string trace = tet4d::core::export_plain_2d_trace_json(case_id);
+		require(trace.find("\"case_id\":\"" + case_id + "\"") != std::string::npos, "Stage 11 trace case id missing");
+		require(trace.find("\"state_hash\"") != std::string::npos, "Stage 11 trace hash missing");
+		require(tet4d::core::get_plain_2d_required_field_parity(case_id), "Stage 11 required field parity API should pass");
+	}
+	require(
+		tet4d::core::export_plain_2d_trace_json("gameplay_plain_2d_rotation_short").find("\"rotation\":1") != std::string::npos,
+		"rotation trace should record rotation=1"
+	);
+	require(
+		tet4d::core::export_plain_2d_trace_json("gameplay_plain_2d_line_clear_short").find("\"lines\":1") != std::string::npos,
+		"line clear trace should record one cleared line"
+	);
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
-	if (argc == 2 && std::string(argv[1]) == "--export-plain-2d-trace") {
-		std::cout << tet4d::core::export_plain_2d_trace_json() << "\n";
+	if (argc >= 2 && std::string(argv[1]) == "--export-plain-2d-trace") {
+		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "gameplay_plain_2d_short";
+		std::cout << tet4d::core::export_plain_2d_trace_json(case_id) << "\n";
 		return 0;
 	}
 	test_board_and_piece_cells();
 	test_command_replay();
 	test_trace_export_smoke();
+	test_stage11_trace_exports();
 	std::cout << "tet4d_core native plain 2D tests passed\n";
 	return 0;
 }

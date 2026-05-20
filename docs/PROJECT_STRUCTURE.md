@@ -157,9 +157,10 @@ The current rule is one-way:
     `godot-cpp` dependency isolated as `native/third_party/godot-cpp`. Stage 8
     is native integration proof; Stage 9 adds only the plain bounded 2D
     `gameplay_plain_2d_short` parity slice; Stage 10 adds canonical snapshot
-    and `state_hash` parity for that same short trace. Godot may call
-    parity/smoke APIs only until broader trace parity stages explicitly
-    authorize live gameplay.
+    and `state_hash` parity for that same short trace; Stage 11 broadens
+    plain bounded 2D parity to rotation, hard-drop lock, and line-clear golden
+    traces. Godot may call parity/smoke APIs only until a later stage
+    explicitly authorizes live gameplay.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

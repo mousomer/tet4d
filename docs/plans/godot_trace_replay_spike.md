@@ -171,3 +171,8 @@ and shell behavior remain separate from the native core.
 Stage 10 strengthens that same short-trace slice with canonical snapshot and
 `state_hash` parity. The replay spike still remains a replay/product shell, not
 a playable gameplay surface.
+
+Stage 11 broadens the plain bounded 2D native parity surface with additional
+Python golden traces for rotation, hard-drop lock, and a single-line clear.
+Godot still receives only parity/smoke APIs by case id; no live gameplay
+controls or semantic authority move into the replay shell.
