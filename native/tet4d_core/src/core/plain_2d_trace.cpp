@@ -1,6 +1,7 @@
 #include "tet4d_core/plain_2d_trace.hpp"
 
 #include "tet4d_core/plain_2d.hpp"
+#include "tet4d_core/sha256.hpp"
 
 #include <sstream>
 #include <vector>
@@ -8,9 +9,9 @@
 namespace tet4d::core {
 namespace {
 
-constexpr const char *EMPTY_LOCKED_DIGEST = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945";
-constexpr const char *FINAL_LOCKED_DIGEST = "fb9ba70f4dd66a15981efdb41ff9afc393df725af09c9d338143ff8fa2164b5b";
-constexpr const char *SETTINGS_DIGEST = "aa6722b481630cfe0e3c3098691eec6411118e07083dbedfe050e9b4e98d954d";
+std::string stable_hash(std::string_view compact_canonical_json) {
+	return sha256_hex(compact_canonical_json);
+}
 
 std::string bool_json(bool value) {
 	return value ? "true" : "false";
@@ -35,16 +36,12 @@ std::string coords_json(const std::vector<Coord2D> &coords) {
 	return out.str();
 }
 
-std::string blocks_json(const PieceShape2D &shape) {
-	return coords_json(shape.blocks);
-}
-
 std::string active_piece_json(const std::optional<ActivePiece2D> &piece) {
 	if (!piece.has_value()) {
 		return "null";
 	}
 	std::ostringstream out;
-	out << "{\"blocks\":" << blocks_json(piece->shape)
+	out << "{\"blocks\":" << coords_json(piece->shape.blocks)
 		<< ",\"cells\":" << coords_json(piece->cells())
 		<< ",\"color_id\":" << piece->shape.color_id
 		<< ",\"pos\":" << coord_json(piece->pos)
@@ -69,13 +66,7 @@ std::string locked_cells_json(const Board2D &board) {
 }
 
 std::string locked_cell_digest(const Board2D &board) {
-	if (board.cells().empty()) {
-		return EMPTY_LOCKED_DIGEST;
-	}
-	if (board.cells().size() == 2 && board.has_cell({3, 5}) && board.has_cell({4, 5})) {
-		return FINAL_LOCKED_DIGEST;
-	}
-	return "stage9_hash_deferred";
+	return stable_hash(locked_cells_json(board));
 }
 
 std::string legal_moves_json(const GameState2D &state) {
@@ -115,21 +106,9 @@ std::string return_value_json(const std::optional<bool> &value) {
 	return bool_json(*value);
 }
 
-std::string frame_json(
-		int frame_index,
-		const GameCommand2D &command,
-		const CommandResult2D &result,
-		const GameState2D &state) {
+std::string drop_lock_status_json(const CommandResult2D &result, const GameState2D &state) {
 	std::ostringstream out;
-	const std::string legal_moves = legal_moves_json(state);
-	const std::string locked_digest = locked_cell_digest(state.board);
-	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
-		<< ",\"command\":" << command_json(command)
-		<< ",\"command_id\":\"" << command.id << "\""
-		<< ",\"command_result\":{\"active_cells_before\":" << coords_json(result.active_cells_before)
-		<< ",\"locked_cell_delta\":" << result.locked_cell_delta
-		<< ",\"return_value\":" << return_value_json(result.return_value) << "}"
-		<< ",\"drop_lock_status\":{\"game_over\":" << bool_json(state.game_over)
+	out << "{\"game_over\":" << bool_json(state.game_over)
 		<< ",\"locked_cell_count\":" << state.board.cells().size()
 		<< ",\"locked_cell_delta\":" << result.locked_cell_delta
 		<< ",\"soft_drop_legal_after\":";
@@ -139,14 +118,40 @@ std::string frame_json(
 	} else {
 		out << "null";
 	}
-	out << "}"
+	out << "}";
+	return out.str();
+}
+
+std::string command_result_json(const CommandResult2D &result) {
+	std::ostringstream out;
+	out << "{\"active_cells_before\":" << coords_json(result.active_cells_before)
+		<< ",\"locked_cell_delta\":" << result.locked_cell_delta
+		<< ",\"return_value\":" << return_value_json(result.return_value) << "}";
+	return out.str();
+}
+
+std::string frame_payload_json(
+		int frame_index,
+		const GameCommand2D &command,
+		const CommandResult2D &result,
+		const GameState2D &state,
+		const std::string *state_hash = nullptr) {
+	std::ostringstream out;
+	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
+		<< ",\"command\":" << command_json(command)
+		<< ",\"command_id\":\"" << command.id << "\""
+		<< ",\"command_result\":" << command_result_json(result)
+		<< ",\"drop_lock_status\":" << drop_lock_status_json(result, state)
 		<< ",\"frame_index\":" << frame_index
-		<< ",\"legal_moves\":" << legal_moves
+		<< ",\"legal_moves\":" << legal_moves_json(state)
 		<< ",\"lines\":" << state.lines
-		<< ",\"locked_cell_digest\":\"" << locked_digest << "\""
+		<< ",\"locked_cell_digest\":\"" << locked_cell_digest(state.board) << "\""
 		<< ",\"locked_cells\":" << locked_cells_json(state.board)
-		<< ",\"score\":" << state.score
-		<< ",\"topology_event\":null}";
+		<< ",\"score\":" << state.score;
+	if (state_hash != nullptr) {
+		out << ",\"state_hash\":\"" << *state_hash << "\"";
+	}
+	out << ",\"topology_event\":null}";
 	return out.str();
 }
 
@@ -163,21 +168,58 @@ std::string commands_json(const std::vector<GameCommand2D> &commands) {
 	return out.str();
 }
 
+std::string settings_json() {
+	return "{\"axis_sizes\":[6,6],\"exploration_mode\":false"
+		",\"explorer_profile_digest\":null"
+		",\"explorer_rigid_play_enabled\":null"
+		",\"gravity_axis\":1"
+		",\"piece_set\":\"classic\""
+		",\"topology_mode\":\"bounded\""
+		",\"wrap_gravity_axis\":false}";
+}
+
 std::string initial_json(const GameState2D &state) {
+	const std::string settings = settings_json();
 	std::ostringstream out;
 	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
 		<< ",\"board_shape\":[6,6]"
 		<< ",\"launch_parity\":null"
 		<< ",\"locked_cells\":[]"
 		<< ",\"notes\":[]"
-		<< ",\"settings\":{\"axis_sizes\":[6,6],\"exploration_mode\":false"
-		<< ",\"explorer_profile_digest\":null"
-		<< ",\"explorer_rigid_play_enabled\":null"
-		<< ",\"gravity_axis\":1"
-		<< ",\"piece_set\":\"classic\""
-		<< ",\"topology_mode\":\"bounded\""
-		<< ",\"wrap_gravity_axis\":false}"
-		<< ",\"settings_digest\":\"" << SETTINGS_DIGEST << "\"}";
+		<< ",\"settings\":" << settings
+		<< ",\"settings_digest\":\"" << stable_hash(settings) << "\"}";
+	return out.str();
+}
+
+std::string final_snapshot_json(const GameState2D &state) {
+	std::ostringstream out;
+	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
+		<< ",\"game_over\":" << bool_json(state.game_over)
+		<< ",\"legal_moves\":" << legal_moves_json(state)
+		<< ",\"level\":null"
+		<< ",\"lines\":" << state.lines
+		<< ",\"locked_cell_count\":" << state.board.cells().size()
+		<< ",\"locked_cell_digest\":\"" << locked_cell_digest(state.board) << "\""
+		<< ",\"locked_cells\":" << locked_cells_json(state.board)
+		<< ",\"score\":" << state.score << "}";
+	return out.str();
+}
+
+std::string final_hash_input_json(
+		const std::string &case_id,
+		const std::string &final_snapshot,
+		const std::vector<std::string> &frames) {
+	std::ostringstream out;
+	out << "{\"case_id\":\"" << case_id << "\""
+		<< ",\"final_snapshot\":" << final_snapshot
+		<< ",\"frames\":[";
+	for (std::size_t index = 0; index < frames.size(); ++index) {
+		if (index != 0) {
+			out << ",";
+		}
+		out << frames[index];
+	}
+	out << "]}";
 	return out.str();
 }
 
@@ -191,8 +233,25 @@ std::string export_plain_2d_trace_json() {
 	frames.reserve(commands.size());
 	for (std::size_t index = 0; index < commands.size(); ++index) {
 		CommandResult2D result = GameStepper2D::apply(state, commands[index]);
-		frames.push_back(frame_json(static_cast<int>(index), commands[index], result, state));
+		const std::string frame_without_hash = frame_payload_json(
+			static_cast<int>(index),
+			commands[index],
+			result,
+			state
+		);
+		const std::string frame_hash = stable_hash(frame_without_hash);
+		frames.push_back(frame_payload_json(
+			static_cast<int>(index),
+			commands[index],
+			result,
+			state,
+			&frame_hash
+		));
 	}
+	const std::string final_snapshot = final_snapshot_json(state);
+	const std::string final_state_hash = stable_hash(
+		final_hash_input_json("gameplay_plain_2d_short", final_snapshot, frames)
+	);
 
 	std::ostringstream out;
 	out << "{\"case_id\":\"gameplay_plain_2d_short\""
@@ -200,7 +259,8 @@ std::string export_plain_2d_trace_json() {
 		<< ",\"dimension\":2"
 		<< ",\"final\":{\"locked_cell_count\":" << state.board.cells().size()
 		<< ",\"locked_cell_digest\":\"" << locked_cell_digest(state.board) << "\""
-		<< ",\"score\":" << state.score << "}"
+		<< ",\"score\":" << state.score
+		<< ",\"state_hash\":\"" << final_state_hash << "\"}"
 		<< ",\"frames\":[";
 	for (std::size_t index = 0; index < frames.size(); ++index) {
 		if (index != 0) {
@@ -209,7 +269,7 @@ std::string export_plain_2d_trace_json() {
 		out << frames[index];
 	}
 	out << "]"
-		<< ",\"generator\":{\"name\":\"tet4d_core_plain_2d\",\"schema_version\":1}"
+		<< ",\"generator\":{\"name\":\"export_gameplay_trace\",\"schema_version\":1}"
 		<< ",\"initial\":" << initial_json(initial_state)
 		<< ",\"seed\":2001"
 		<< ",\"topology_id\":\"plain\""
@@ -240,7 +300,11 @@ std::string get_plain_2d_parity_status() {
 	if (!run_builtin_plain_2d_smoke_case()) {
 		return "plain_2d parity smoke failed";
 	}
-	return "plain_2d gameplay_plain_2d_short required fields match; state_hash parity deferred";
+	return "plain_2d gameplay_plain_2d_short required fields and state_hash match";
+}
+
+bool get_plain_2d_required_field_parity() {
+	return run_builtin_plain_2d_smoke_case();
 }
 
 } // namespace tet4d::core

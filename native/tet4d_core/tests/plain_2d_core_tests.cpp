@@ -1,5 +1,6 @@
 #include "tet4d_core/core_api.hpp"
 #include "tet4d_core/plain_2d.hpp"
+#include "tet4d_core/sha256.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -51,7 +52,13 @@ void test_trace_export_smoke() {
 	const std::string trace = tet4d::core::export_plain_2d_trace_json();
 	require(trace.find("\"case_id\":\"gameplay_plain_2d_short\"") != std::string::npos, "trace case id missing");
 	require(trace.find("\"locked_cell_digest\":\"fb9ba70f4dd66a15981efdb41ff9afc393df725af09c9d338143ff8fa2164b5b\"") != std::string::npos, "final locked digest missing");
+	require(trace.find("\"state_hash\":\"d02e1823a320d5a4c3203a3cb6d103518c5f5168a67f2ebffc193c23a0e80ced\"") != std::string::npos, "frame 0 state hash missing");
+	require(trace.find("\"state_hash\":\"1f07ea939bcd495c97b21501b14fe1cd7a4e44b73e4ad4fad14dfd0ddb381847\"") != std::string::npos, "frame 1 state hash missing");
+	require(trace.find("\"state_hash\":\"f1eed6ec35fc8d5aae39ededd81df9eff3bb9148b9def9c8b0d7e5b8e1d59e5a\"") != std::string::npos, "frame 2 state hash missing");
+	require(trace.find("\"state_hash\":\"2d3a6eb2744d46bc147ae7d21855036e1ff241a99261ab5324b20958ec353139\"") != std::string::npos, "final state hash missing");
 	require(tet4d::core::run_builtin_plain_2d_smoke_case(), "plain 2D smoke API should pass");
+	require(tet4d::core::get_plain_2d_required_field_parity(), "required field parity API should pass");
+	require(tet4d::core::sha256_hex("tet4d") == "512f04b84d4f239afca4c01d057bafa4fe3a8df37cfe355da2458cbedf3ff821", "sha256 smoke mismatch");
 }
 
 } // namespace

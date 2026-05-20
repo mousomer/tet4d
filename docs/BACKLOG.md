@@ -37,12 +37,13 @@ Python/Pygame projection, board, color, and trail conventions while keeping
 Godot replay-only; Stage 7 records Godot as the conditional primary product
 shell direction and recommends C++ GDExtension for the future deterministic
 core while keeping Python as oracle until trace parity passes; Stage 8 adds
-only the C++ GDExtension skeleton/native-call smoke test, and Stage 9 starts
-the semantic port with the smallest plain bounded 2D core needed to match
-`gameplay_plain_2d_short` on required fields while deferring `state_hash`
-parity; it still does not open 3D, 4D, topology, endgame, live Godot gameplay,
-Python runtime, C#, Steam, or console implementation; shell-preserving cleanup
-and endgame visual polish remain non-blocking and must not reopen semantics.
+only the C++ GDExtension skeleton/native-call smoke test, Stage 9 starts the
+semantic port with the smallest plain bounded 2D core needed to match
+`gameplay_plain_2d_short`, and Stage 10 completes that short trace's canonical
+snapshot and `state_hash` parity; it still does not open 3D, 4D, topology,
+endgame, live Godot gameplay, Python runtime, C#, Steam, or console
+implementation; shell-preserving cleanup and endgame visual polish remain
+non-blocking and must not reopen semantics.
 
 Current active follow-ups:
 
@@ -72,6 +73,9 @@ Current active follow-ups:
   `GameState2D`, `GameCommand2D`, `GameStepper2D`, native tests, and
   `tools/migration/compare_cpp_gameplay_trace.py`; Godot exposes only
   parity/smoke calls and remains non-playable
+- Stage 10 adds Python-compatible compact canonical JSON SHA-256 hashing and
+  now matches `gameplay_plain_2d_short` per-frame/final `state_hash` values;
+  the compare tool reports field-level diffs and checks hashes
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -236,12 +240,17 @@ stays synchronized, and the contract validator accepts the backlog shape.
    smoke test for version/status/echo/stable-hash/addition calls. This stage
    must not add gameplay, topology, endgame, trace parity, Python runtime, C#,
    Steam, console, or config authority implementation.
-10. `ACTIVE` `[BKL-P3-017]` Stage 9 plain 2D deterministic core parity:
+10. `DONE` `[BKL-P3-017]` Stage 9 plain 2D deterministic core parity:
     port only enough C++ core behavior to match
     `gameplay_plain_2d_short` required fields, expose only parity/smoke APIs
     through Godot, keep state-hash parity deferred, and do not add live
     gameplay controls, topology, 3D, 4D, endgame, Python runtime, C#, Steam, or
     console implementation.
+11. `ACTIVE` `[BKL-P3-018]` Stage 10 plain 2D snapshot/hash parity:
+    complete canonical snapshot and `state_hash` parity for
+    `gameplay_plain_2d_short`, keep Godot API parity-only, and defer broader
+    2D traces, live gameplay controls, topology, 3D, 4D, endgame, Python
+    runtime, C#, Steam, and console implementation.
 
 ## Governance Watchlist
 

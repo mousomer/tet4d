@@ -1,14 +1,15 @@
 # Plain 2D Core Parity Contract
 
-Role: Stage 9 native core parity contract
+Role: Stage 10 native core snapshot/hash parity contract
 Status: active
-Last updated: 2026-05-18
+Last updated: 2026-05-20
 
 ## Scope
 
-Stage 9 ports only enough deterministic C++ gameplay core behavior to reproduce
-the Python-authored `gameplay_plain_2d_short` trace. This is the first semantic
-port stage, but it is still intentionally narrow:
+Stage 9 ported enough deterministic C++ gameplay core behavior to reproduce the
+Python-authored `gameplay_plain_2d_short` trace on required fields. Stage 10
+strengthens that parity to include canonical snapshot serialization and
+Python-compatible `state_hash` values. The scope remains intentionally narrow:
 
 - plain bounded 2D only;
 - board size `6 x 6`;
@@ -23,7 +24,36 @@ port stage, but it is still intentionally narrow:
 This contract does not authorize 3D, 4D, topology transport, endgame
 simulation, playable Godot controls, or Python runtime calls from Godot.
 
-## Required Compared Fields
+## Canonical Snapshot And Hash Contract
+
+The Python trace authority uses `tools/migration/trace_schema.py`:
+
+- canonical JSON text: `json.dumps(payload, indent=2, sort_keys=True) + "\n"`;
+- compact canonical JSON for hashes:
+  `json.dumps(payload, sort_keys=True, separators=(",", ":"))`;
+- stable hash: SHA-256 of the compact canonical JSON UTF-8 bytes.
+
+Frame hashes are computed by `frame_payload(...)` over the complete frame
+payload before adding that frame's `state_hash` key.
+
+Final hash is computed over:
+
+```text
+{
+  "case_id": "gameplay_plain_2d_short",
+  "final_snapshot": <full final state snapshot>,
+  "frames": <frames including each frame state_hash>
+}
+```
+
+For `gameplay_plain_2d_short`, Stage 10 requires these hashes:
+
+- frame 0: `d02e1823a320d5a4c3203a3cb6d103518c5f5168a67f2ebffc193c23a0e80ced`;
+- frame 1: `1f07ea939bcd495c97b21501b14fe1cd7a4e44b73e4ad4fad14dfd0ddb381847`;
+- frame 2: `f1eed6ec35fc8d5aae39ededd81df9eff3bb9148b9def9c8b0d7e5b8e1d59e5a`;
+- final: `2d3a6eb2744d46bc147ae7d21855036e1ff241a99261ab5324b20958ec353139`.
+
+## Compared Fields
 
 `tools/migration/compare_cpp_gameplay_trace.py --case gameplay_plain_2d_short`
 compares these C++ trace fields against
@@ -38,20 +68,18 @@ compares these C++ trace fields against
   legal moves, lines, locked-cell digest, locked cells, score, and topology
   event;
 - final locked-cell count, locked-cell digest, and score.
-
-Frame and final `state_hash` values are intentionally excluded in Stage 9.
-Those hashes are Python canonical-JSON SHA-256 values over complete trace
-payloads; the native core currently proves field parity and defers full hash
-parity until the native trace serializer owns the same canonical JSON hashing
-surface.
+- per-frame and final `state_hash`;
+- generator metadata, so the compact trace projection matches the Python
+  golden trace exactly for this case.
 
 ## Native API Boundary
 
-The Godot-facing Stage 9 API remains parity/smoke-only:
+The Godot-facing Stage 10 API remains parity/smoke-only:
 
 - `run_builtin_plain_2d_smoke_case()`;
 - `get_plain_2d_parity_status()`;
 - `export_plain_2d_trace_json()`.
+- `get_plain_2d_required_field_parity()`.
 
 It must not expose live gameplay APIs such as `step_game`, `move_piece`,
 `rotate_piece`, `drop`, `lock`, topology APIs, or endgame APIs.

@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D parity integration
-Last updated: 2026-05-18
+Status: active plain 2D snapshot/hash parity integration
+Last updated: 2026-05-20
 
 ## 1. Decision Summary
 
@@ -250,8 +250,8 @@ feature porting starts.
    `stable_hash_text(text)`, and `add_integers(a, b)`.
 2. Stage 9: port the smallest plain 2D data model and deterministic reducer
    surface needed to match `gameplay_plain_2d_short` on required trace fields.
-3. Stage 10: expand plain 2D gameplay trace parity beyond the short smoke case
-   toward movement, lock, line clear, scoring, spawn, and game-over coverage.
+3. Stage 10: complete canonical snapshot and `state_hash` parity for
+   `gameplay_plain_2d_short` before broadening plain 2D coverage.
 4. Stage 11: connect Godot playable 2D shell to the native core behind a narrow
    API.
 5. Stage 12: port 3D gameplay and parity tests.
@@ -400,6 +400,23 @@ Stage 9 does not expose live gameplay controls, does not make Godot playable,
 does not call Python at runtime, and does not port topology, 3D, 4D, or
 endgame behavior. Field parity against the Python golden trace is enforced by
 `tools/migration/compare_cpp_gameplay_trace.py --case gameplay_plain_2d_short`.
-Frame/final `state_hash` parity is explicitly deferred until the native trace
-serializer owns Python-compatible canonical JSON SHA-256 hashing for full trace
-payloads.
+Stage 10 completes the deferred `state_hash` work for this short trace.
+
+## 22. Stage 10 Plain 2D Snapshot/Hash Parity
+
+Stage 10 strengthens `gameplay_plain_2d_short` parity by adding
+Python-compatible compact canonical JSON SHA-256 hashing in the native core and
+by comparing per-frame and final `state_hash` values through
+`tools/migration/compare_cpp_gameplay_trace.py`.
+
+The Godot-facing API remains parity/smoke-only:
+
+- `run_builtin_plain_2d_smoke_case()`;
+- `get_plain_2d_parity_status()`;
+- `export_plain_2d_trace_json()`;
+- `get_plain_2d_required_field_parity()`.
+
+This stage still must not expose live `step_game`, move, rotate, drop, lock,
+topology, endgame, C#, Python runtime, Steam, or console APIs. It also does not
+add new golden traces; the sole C++ parity target remains
+`gameplay_plain_2d_short`.

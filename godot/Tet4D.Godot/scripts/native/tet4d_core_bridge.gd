@@ -43,6 +43,10 @@ func export_plain_2d_trace_json() -> String:
 	return _api().export_plain_2d_trace_json()
 
 
+func get_plain_2d_required_field_parity() -> bool:
+	return bool(_api().get_plain_2d_required_field_parity())
+
+
 func _api() -> RefCounted:
 	_ensure_extension_loaded()
 	var instance := ClassDB.instantiate(CORE_CLASS) as RefCounted

@@ -20,6 +20,7 @@ public:
 	bool run_builtin_plain_2d_smoke_case() const;
 	String get_plain_2d_parity_status() const;
 	String export_plain_2d_trace_json() const;
+	bool get_plain_2d_required_field_parity() const;
 };
 
 } // namespace godot

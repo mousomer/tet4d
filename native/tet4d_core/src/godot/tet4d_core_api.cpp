@@ -30,6 +30,7 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
 	ClassDB::bind_method(D_METHOD("get_plain_2d_parity_status"), &Tet4DCoreApi::get_plain_2d_parity_status);
 	ClassDB::bind_method(D_METHOD("export_plain_2d_trace_json"), &Tet4DCoreApi::export_plain_2d_trace_json);
+	ClassDB::bind_method(D_METHOD("get_plain_2d_required_field_parity"), &Tet4DCoreApi::get_plain_2d_required_field_parity);
 }
 
 String Tet4DCoreApi::get_core_version() const {
@@ -62,6 +63,10 @@ String Tet4DCoreApi::get_plain_2d_parity_status() const {
 
 String Tet4DCoreApi::export_plain_2d_trace_json() const {
 	return to_godot_string(tet4d::core::export_plain_2d_trace_json());
+}
+
+bool Tet4DCoreApi::get_plain_2d_required_field_parity() const {
+	return tet4d::core::get_plain_2d_required_field_parity();
 }
 
 } // namespace godot

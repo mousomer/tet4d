@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from tools.migration.trace_schema import canonical_json
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_DIR = ROOT / "migration" / "golden_traces" / "gameplay"
@@ -32,31 +38,61 @@ def _cpp_trace() -> dict[str, Any]:
     return json.loads(result.stdout)
 
 
-def _without_state_hash(value: Any) -> Any:
-    if isinstance(value, dict):
-        return {
-            key: _without_state_hash(item)
-            for key, item in value.items()
-            if key != "state_hash"
-        }
-    if isinstance(value, list):
-        return [_without_state_hash(item) for item in value]
-    return value
-
-
 def _contract_projection(trace: dict[str, Any]) -> dict[str, Any]:
     return {
         "case_id": trace["case_id"],
         "commands": trace["commands"],
         "dimension": trace["dimension"],
-        "final": _without_state_hash(trace["final"]),
-        "frames": [_without_state_hash(frame) for frame in trace["frames"]],
+        "final": trace["final"],
+        "frames": trace["frames"],
+        "generator": trace["generator"],
         "initial": trace["initial"],
         "seed": trace["seed"],
         "topology_id": trace["topology_id"],
         "trace_type": trace["trace_type"],
         "trace_version": trace["trace_version"],
     }
+
+
+def _field_diffs(expected: Any, actual: Any, path: str = "$") -> list[str]:
+    if type(expected) is not type(actual):
+        return [
+            f"{path}: type mismatch expected {type(expected).__name__}, got {type(actual).__name__}"
+        ]
+    if isinstance(expected, dict):
+        diffs: list[str] = []
+        expected_keys = set(expected)
+        actual_keys = set(actual)
+        for key in sorted(expected_keys - actual_keys):
+            diffs.append(f"{path}.{key}: missing from C++ trace")
+        for key in sorted(actual_keys - expected_keys):
+            diffs.append(f"{path}.{key}: unexpected in C++ trace")
+        for key in sorted(expected_keys & actual_keys):
+            diffs.extend(_field_diffs(expected[key], actual[key], f"{path}.{key}"))
+        return diffs
+    if isinstance(expected, list):
+        diffs = []
+        if len(expected) != len(actual):
+            diffs.append(
+                f"{path}: length mismatch expected {len(expected)}, got {len(actual)}"
+            )
+        for index, (expected_item, actual_item) in enumerate(zip(expected, actual)):
+            diffs.extend(_field_diffs(expected_item, actual_item, f"{path}[{index}]"))
+        return diffs
+    if expected != actual:
+        return [f"{path}: expected {expected!r}, got {actual!r}"]
+    return []
+
+
+def _canonical_diff(expected: Any, actual: Any) -> str:
+    return "".join(
+        difflib.unified_diff(
+            canonical_json(expected).splitlines(keepends=True),
+            canonical_json(actual).splitlines(keepends=True),
+            fromfile="python-golden",
+            tofile="cpp-native",
+        )
+    )
 
 
 def compare_case(case_id: str, golden_dir: Path) -> list[str]:
@@ -68,13 +104,9 @@ def compare_case(case_id: str, golden_dir: Path) -> list[str]:
     cpp_contract = _contract_projection(cpp)
     if cpp_contract != golden_contract:
         return [
+            *_field_diffs(golden_contract, cpp_contract)[0:40],
             "C++ gameplay trace contract mismatch for gameplay_plain_2d_short",
-            "state_hash is intentionally excluded; all other projected fields must match",
-            json.dumps(
-                {"expected": golden_contract, "actual": cpp_contract},
-                indent=2,
-                sort_keys=True,
-            ),
+            _canonical_diff(golden_contract, cpp_contract),
         ]
     return []
 
@@ -92,7 +124,7 @@ def main(argv: list[str] | None = None) -> int:
         for failure in failures:
             print(failure, file=sys.stderr)
         return 1
-    print(f"C++ gameplay parity passed for {args.case} (state_hash deferred)")
+    print(f"C++ gameplay parity passed for {args.case} (including state_hash)")
     return 0
 
 

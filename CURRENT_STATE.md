@@ -108,6 +108,14 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   not expose playable controls or implement topology, 3D, 4D, endgame,
   Python runtime calls, or live gameplay APIs. Required trace fields match the
   Python golden trace; frame/final `state_hash` parity is explicitly deferred.
+- Stage 10 completes that deferred short-trace hash work: the native C++ core
+  now computes Python-compatible SHA-256 over compact canonical JSON, emits
+  per-frame and final `state_hash` values matching
+  `gameplay_plain_2d_short`, and strengthens
+  `tools/migration/compare_cpp_gameplay_trace.py` to compare hashes and report
+  field-level diffs. The Godot-facing surface remains parity/smoke-only with
+  `get_plain_2d_required_field_parity`; no live gameplay, topology, 3D, 4D,
+  endgame, Python runtime, C#, Steam, or console API is added.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

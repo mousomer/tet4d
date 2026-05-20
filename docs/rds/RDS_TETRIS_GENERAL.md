@@ -207,8 +207,10 @@ Cross-cutting requirements are defined in:
     `gameplay_plain_2d_short` required trace fields. It may expose only
     parity/smoke APIs through Godot and must not expose live gameplay controls,
     topology, 3D, 4D, endgame, Python runtime, C#, Steam, or console packaging
-    APIs. Full `state_hash` parity may remain deferred if the compared
-    required fields are exact and the deferral is documented.
+    APIs.
+13. Stage 10 may add canonical snapshot serialization and `state_hash` parity
+    for `gameplay_plain_2d_short` only. It must keep the Godot API parity-only
+    and must not broaden into live gameplay controls or non-plain-2D semantics.
 
 ### 3.3 Shared piece-local transform rules
 

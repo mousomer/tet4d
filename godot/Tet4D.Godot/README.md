@@ -108,12 +108,12 @@ The native extension test will fail until `native/third_party/godot-cpp` is
 initialized and the compiled library exists under
 `res://addons/tet4d_core/bin/`.
 
-Stage 9 adds a narrow native plain-2D parity surface for
+Stage 10 keeps the narrow native plain-2D parity surface for
 `gameplay_plain_2d_short`: `run_builtin_plain_2d_smoke_case()`,
-`get_plain_2d_parity_status()`, and `export_plain_2d_trace_json()`. These calls
-are for migration parity and smoke tests only. They do not expose playable
-Godot movement, rotation, drop, lock, topology, endgame, or Python runtime
-behavior.
+`get_plain_2d_parity_status()`, `export_plain_2d_trace_json()`, and
+`get_plain_2d_required_field_parity()`. These calls are for migration parity
+and smoke tests only. They do not expose playable Godot movement, rotation,
+drop, lock, topology, endgame, or Python runtime behavior.
 
 ## Opening In Godot
 
@@ -182,5 +182,5 @@ Godot cannot load the native library.
   gameplay semantics.
 - 4D is displayed as visible W-separated board slices rather than a final 4D
   presentation.
-- GDScript is used only for shell/UI work. Stage 9 exposes only a native
+- GDScript is used only for shell/UI work. Stage 10 exposes only a native
   parity/smoke surface for the short plain-2D trace; it is not live gameplay.
