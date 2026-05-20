@@ -162,3 +162,12 @@ Stage 8 now adds only that skeleton: `Tet4DCoreApi` exposes version/status,
 echo, stable text hashing, and integer addition so Godot can prove native
 loading and calls. It still does not expose gameplay, topology, endgame, trace
 parity, Python runtime, C#, Steam, or console implementation.
+
+Stage 9 now adds the first semantic native slice under the core-port plan:
+plain bounded 2D parity for `gameplay_plain_2d_short` only. Godot receives only
+parity/smoke calls for that trace and remains non-playable; replay rendering
+and shell behavior remain separate from the native core.
+
+Stage 10 strengthens that same short-trace slice with canonical snapshot and
+`state_hash` parity. The replay spike still remains a replay/product shell, not
+a playable gameplay surface.

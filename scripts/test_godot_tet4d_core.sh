@@ -23,6 +23,7 @@ mkdir -p "$BUILD_DIR"
   "$CORE_DIR/src/core/core_api.cpp" \
   "$CORE_DIR/src/core/plain_2d.cpp" \
   "$CORE_DIR/src/core/plain_2d_trace.cpp" \
+  "$CORE_DIR/src/core/sha256.cpp" \
   "$CORE_DIR/tests/plain_2d_core_tests.cpp" \
   -o "$TEST_BIN"
 
