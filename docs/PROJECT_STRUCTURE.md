@@ -153,11 +153,11 @@ The current rule is one-way:
     and Stage 8+ core-port order. The recommended future core path is C++
     GDExtension; do not add C++, C#, GDExtension, gameplay, topology, or
     endgame implementation as part of Stage 7 documentation work.
-13. Keep Stage 8 native code under `native/tet4d_core/`, with the official
-    `godot-cpp` dependency isolated as `native/third_party/godot-cpp`. The
-    Stage 8 API is native integration proof only and must not grow gameplay,
-    topology, endgame, trace parity, Python runtime, C#, Steam, or console
-    responsibilities.
+13. Keep native core code under `native/tet4d_core/`, with the official
+    `godot-cpp` dependency isolated as `native/third_party/godot-cpp`. Stage 8
+    is native integration proof; Stage 9 adds only the plain bounded 2D
+    `gameplay_plain_2d_short` parity slice. Godot may call parity/smoke APIs
+    only until broader trace parity stages explicitly authorize live gameplay.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

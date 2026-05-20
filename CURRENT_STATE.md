@@ -97,6 +97,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Godot test runner. This is native integration proof only and must not be
   extended into gameplay, topology, endgame, trace parity, config authority,
   Python runtime, C#, Steam, or console implementation in Stage 8.
+- Stage 9 starts the semantic native port with the smallest plain bounded 2D
+  core needed for `gameplay_plain_2d_short` parity. The contract is
+  `docs/plans/plain_2d_core_parity_contract.md`. C++ now owns `Board2D`,
+  `PieceShape2D` / `ActivePiece2D`, `GameState2D`, `GameCommand2D`, and
+  `GameStepper2D` for that short trace only, plus deterministic trace export
+  used by `tools/migration/compare_cpp_gameplay_trace.py`. Godot exposes only
+  parity/smoke calls (`run_builtin_plain_2d_smoke_case`,
+  `get_plain_2d_parity_status`, `export_plain_2d_trace_json`); it still does
+  not expose playable controls or implement topology, 3D, 4D, endgame,
+  Python runtime calls, or live gameplay APIs. Required trace fields match the
+  Python golden trace; frame/final `state_hash` parity is explicitly deferred.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -330,7 +341,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.65`
+1. `delivery_size_pressure = 2.66`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

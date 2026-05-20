@@ -24,11 +24,11 @@ std::string to_fixed_hex(std::uint64_t value) {
 } // namespace
 
 std::string get_core_version() {
-	return "0.1.0-stage8";
+	return "0.2.0-stage9";
 }
 
 std::string get_core_status() {
-	return "native tet4d core skeleton loaded; gameplay not implemented";
+	return "native tet4d core loaded; plain 2D parity smoke available";
 }
 
 std::string echo_text(std::string_view text) {

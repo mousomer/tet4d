@@ -1,7 +1,9 @@
-# tet4d native core skeleton
+# tet4d native core
 
-Stage 8 proves that the Godot shell can load and call a native C++
-GDExtension. It is not gameplay implementation.
+Stage 8 proved that the Godot shell can load and call a native C++
+GDExtension. Stage 9 adds the smallest plain bounded 2D deterministic core
+needed to match `gameplay_plain_2d_short` on required trace fields. It is not
+playable Godot gameplay.
 
 The native source tree has two layers:
 
@@ -37,5 +39,19 @@ Allowed Stage 8 API:
 - `stable_hash_text(text)`
 - `add_integers(a, b)`
 
-This skeleton must not expose gameplay, topology, endgame, trace parity, or
-Python runtime APIs.
+Allowed Stage 9 parity/smoke API:
+
+- `run_builtin_plain_2d_smoke_case()`
+- `get_plain_2d_parity_status()`
+- `export_plain_2d_trace_json()`
+
+Run native C++ tests and trace parity with:
+
+```bash
+./scripts/test_godot_tet4d_core.sh
+PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --case gameplay_plain_2d_short
+```
+
+Stage 9 compares required trace fields exactly and defers frame/final
+`state_hash` parity. This core must not expose live gameplay, topology,
+endgame, or Python runtime APIs.

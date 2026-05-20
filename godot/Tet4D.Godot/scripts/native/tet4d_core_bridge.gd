@@ -31,6 +31,18 @@ func add_integers(a: int, b: int) -> int:
 	return int(_api().add_integers(a, b))
 
 
+func run_builtin_plain_2d_smoke_case() -> bool:
+	return bool(_api().run_builtin_plain_2d_smoke_case())
+
+
+func get_plain_2d_parity_status() -> String:
+	return _api().get_plain_2d_parity_status()
+
+
+func export_plain_2d_trace_json() -> String:
+	return _api().export_plain_2d_trace_json()
+
+
 func _api() -> RefCounted:
 	_ensure_extension_loaded()
 	var instance := ClassDB.instantiate(CORE_CLASS) as RefCounted

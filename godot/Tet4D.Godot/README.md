@@ -108,6 +108,13 @@ The native extension test will fail until `native/third_party/godot-cpp` is
 initialized and the compiled library exists under
 `res://addons/tet4d_core/bin/`.
 
+Stage 9 adds a narrow native plain-2D parity surface for
+`gameplay_plain_2d_short`: `run_builtin_plain_2d_smoke_case()`,
+`get_plain_2d_parity_status()`, and `export_plain_2d_trace_json()`. These calls
+are for migration parity and smoke tests only. They do not expose playable
+Godot movement, rotation, drop, lock, topology, endgame, or Python runtime
+behavior.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -159,10 +166,10 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 
 The GDScript tests cover bundle loading, sample trace parsing, centralized
 coordinate mapping, deterministic camera fit, replay-viewer layout containment,
-gameplay-cell snap policy when stable identity is absent, and the Stage 8
-native extension smoke test. On a fresh checkout, run the Stage 8 submodule and
-native build commands above first; the extension smoke test intentionally fails
-if Godot cannot load the native library.
+gameplay-cell snap policy when stable identity is absent, and the native
+extension smoke/parity API. On a fresh checkout, run the submodule and native
+build commands above first; the extension smoke test intentionally fails if
+Godot cannot load the native library.
 
 ## Known Limitations
 
@@ -175,5 +182,5 @@ if Godot cannot load the native library.
   gameplay semantics.
 - 4D is displayed as visible W-separated board slices rather than a final 4D
   presentation.
-- GDScript is used only for shell/UI work. Stage 7 recommends C++ GDExtension
-  for the deterministic core, and Stage 8 adds only the native skeleton.
+- GDScript is used only for shell/UI work. Stage 9 exposes only a native
+  parity/smoke surface for the short plain-2D trace; it is not live gameplay.

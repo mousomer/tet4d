@@ -1,7 +1,7 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active skeleton integration
+Status: active plain 2D parity integration
 Last updated: 2026-05-18
 
 ## 1. Decision Summary
@@ -248,9 +248,10 @@ feature porting starts.
    binding, and a headless smoke test. No gameplay port. The only exposed API
    is `get_core_version()`, `get_core_status()`, `echo_text(text)`,
    `stable_hash_text(text)`, and `add_integers(a, b)`.
-2. Stage 9: port plain 2D data models and deterministic reducer skeleton.
-3. Stage 10: pass plain 2D gameplay trace parity for movement, lock, line
-   clear, scoring, spawn, and game-over.
+2. Stage 9: port the smallest plain 2D data model and deterministic reducer
+   surface needed to match `gameplay_plain_2d_short` on required trace fields.
+3. Stage 10: expand plain 2D gameplay trace parity beyond the short smoke case
+   toward movement, lock, line clear, scoring, spawn, and game-over coverage.
 4. Stage 11: connect Godot playable 2D shell to the native core behind a narrow
    API.
 5. Stage 12: port 3D gameplay and parity tests.
@@ -372,3 +373,33 @@ expected to fail on a fresh checkout until both are present.
 Stage 8 still must not expose or implement gameplay stepping, piece movement,
 rotation, drop, lock, topology transport, endgame simulation, trace parity
 APIs, Python runtime calls, C#, Steam packaging, or console packaging.
+
+## 21. Stage 9 Plain 2D Parity
+
+Stage 9 introduces the first semantic native port, scoped to
+`gameplay_plain_2d_short` only. The detailed contract lives in
+`docs/plans/plain_2d_core_parity_contract.md`.
+
+The C++ core now owns a minimal plain bounded 2D model under
+`native/tet4d_core/src/core/`:
+
+- `Board2D`;
+- `PieceShape2D` / `ActivePiece2D`;
+- `GameState2D`;
+- `GameCommand2D`;
+- `GameStepper2D`;
+- deterministic JSON export for the built-in short trace.
+
+The Godot-facing API remains parity/smoke-only:
+
+- `run_builtin_plain_2d_smoke_case()`;
+- `get_plain_2d_parity_status()`;
+- `export_plain_2d_trace_json()`.
+
+Stage 9 does not expose live gameplay controls, does not make Godot playable,
+does not call Python at runtime, and does not port topology, 3D, 4D, or
+endgame behavior. Field parity against the Python golden trace is enforced by
+`tools/migration/compare_cpp_gameplay_trace.py --case gameplay_plain_2d_short`.
+Frame/final `state_hash` parity is explicitly deferred until the native trace
+serializer owns Python-compatible canonical JSON SHA-256 hashing for full trace
+payloads.

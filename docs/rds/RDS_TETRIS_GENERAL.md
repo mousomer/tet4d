@@ -203,6 +203,12 @@ Cross-cutting requirements are defined in:
 11. Stage 8 must not expose gameplay stepping, piece movement, rotation, drop,
     lock, topology, endgame simulation, trace parity, Python runtime, C#,
     Steam, or console packaging APIs.
+12. Stage 9 may port only the plain bounded 2D behavior needed to match
+    `gameplay_plain_2d_short` required trace fields. It may expose only
+    parity/smoke APIs through Godot and must not expose live gameplay controls,
+    topology, 3D, 4D, endgame, Python runtime, C#, Steam, or console packaging
+    APIs. Full `state_hash` parity may remain deferred if the compared
+    required fields are exact and the deferral is documented.
 
 ### 3.3 Shared piece-local transform rules
 
