@@ -5,7 +5,7 @@ class_name GridRenderer
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 
-func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String) -> void:
+func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, live_2d: bool = false) -> void:
 	for child in get_children():
 		child.queue_free()
 
@@ -17,6 +17,9 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String) -
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
 		if not slice_bounds.get("ok", false):
 			continue
+		if live_2d and dimension == 2:
+			_add_live_board_fill(slice_bounds, display_mode)
+			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(slice_bounds, display_mode)
 		if dimension >= 4:
 			_add_w_label(w_index, mapper.slice_label_position(w_index), display_mode)
@@ -57,6 +60,42 @@ func _add_line(position: Vector3, scale_value: Vector3, material: Material) -> v
 	mesh_instance.material_override = material
 	mesh_instance.position = position
 	add_child(mesh_instance)
+
+
+func _add_live_board_fill(slice_bounds: Dictionary, display_mode: String) -> void:
+	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
+	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
+	var size := max_pos - min_pos
+	_add_line(
+		Vector3((min_pos.x + max_pos.x) * 0.5, (min_pos.y + max_pos.y) * 0.5, -0.055),
+		Vector3(size.x, size.y, 0.024),
+		ReplayVisuals.live_board_fill_material(display_mode)
+	)
+
+
+func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: String) -> void:
+	if board_shape.size() < 2:
+		return
+	var width := int(board_shape[0])
+	var height := int(board_shape[1])
+	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
+	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
+	var thickness := ReplayVisuals.GRID_LINE_THICKNESS * 0.55
+	var material := ReplayVisuals.live_board_grid_material(display_mode)
+	for x in range(width + 1):
+		var x_pos := min_pos.x + float(x)
+		_add_line(
+			Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, -0.02),
+			Vector3(thickness, max_pos.y - min_pos.y, thickness),
+			material
+		)
+	for y in range(height + 1):
+		var y_pos := min_pos.y + float(y)
+		_add_line(
+			Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, -0.018),
+			Vector3(max_pos.x - min_pos.x, thickness, thickness),
+			material
+		)
 
 
 func _add_w_label(w_index: int, label_position: Vector3, display_mode: String) -> void:

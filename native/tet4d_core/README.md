@@ -6,7 +6,14 @@ needed to match `gameplay_plain_2d_short` on required trace fields. Stage 10
 adds Python-compatible snapshot serialization and `state_hash` parity for that
 same short trace. Stage 11 broadens the same plain bounded 2D parity surface to
 small rotation, hard-drop/lock, and line-clear traces. It is not playable Godot
-gameplay.
+gameplay. Stage 12 adds the first live plain bounded 2D session. Godot sends
+command strings and renders returned snapshots; C++ owns movement, rotation,
+gravity tick, hard drop, lock, line clear, scoring, spawn, status, and hash.
+Stage 12b keeps live piece selection in C++ with a deterministic fixed classic
+sequence (`I, O, T, S, Z, J, L`) separate from the Stage 11 parity fixtures.
+The live session also owns game-over detection and command rejection: snapshots
+include `game_over`, `game_over_reason`, `paused`, and `state_hash`, and
+gameplay commands after game-over are rejected until reset/new game.
 
 The native source tree has two layers:
 
@@ -50,6 +57,15 @@ Allowed Stage 11 parity/smoke API:
 - `export_plain_2d_trace_json(case_id)`
 - `get_plain_2d_required_field_parity(case_id)`
 
+Allowed Stage 12 live plain-2D API:
+
+- `live_2d_reset()`
+- `live_2d_apply_command(command)`
+- `live_2d_tick()`
+- `live_2d_snapshot_json()`
+- `live_2d_status()`
+- `live_2d_state_hash()`
+
 Run native C++ tests and trace parity with:
 
 ```bash
@@ -61,5 +77,8 @@ Stage 11 compares required trace fields plus frame/final `state_hash` values
 for `gameplay_plain_2d_short`, `gameplay_plain_2d_rotation_short`,
 `gameplay_plain_2d_hard_drop_lock`, and
 `gameplay_plain_2d_line_clear_short`.
-This core must not expose live gameplay, topology, endgame, or Python runtime
-APIs.
+The live API is plain bounded 2D only. It exposes the current piece name in
+live status/snapshot data plus native game-over fields, but Godot must not
+choose or mutate the piece sequence, compute legality, or synthesize
+game-over. It must not expose 3D, 4D, topology, endgame, Python runtime, C#,
+Steam, or console behavior.

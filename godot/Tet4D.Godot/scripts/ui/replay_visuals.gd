@@ -38,6 +38,11 @@ const EVENTS_MIN_HEIGHT := 170
 const SETTINGS_MIN_HEIGHT := 112
 
 const CELL_SCALE := 0.9
+const ACTIVE_GAMEPLAY_CELL_SCALE := 0.72
+const LIVE_ACTIVE_CELL_SCALE := 0.86
+const LIVE_LOCKED_CELL_SCALE := 0.82
+const LIVE_CELL_DEPTH := 0.08
+const LIVE_CELL_BORDER_DELTA := 0.055
 const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
 const SLICE_PADDING := 2.0
@@ -55,6 +60,10 @@ const ROLE_PARTICLE_ESCAPED := "particle_escaped"
 const ROLE_PARTICLE_CORE := "particle_core"
 const ROLE_PARTICLE_CORE_ESCAPED := "particle_core_escaped"
 const ROLE_BOARD_OUTLINE := "board_outline"
+const ROLE_LIVE_CELL_ACTIVE_BORDER := "live_cell_active_border"
+const ROLE_LIVE_CELL_LOCKED_BORDER := "live_cell_locked_border"
+const ROLE_LIVE_BOARD_FILL := "live_board_fill"
+const ROLE_LIVE_BOARD_GRID := "live_board_grid"
 const ROLE_W_SLICE_OUTLINE := "w_slice_outline"
 const ROLE_W_SLICE_LABEL := "w_slice_label"
 const ROLE_EVENT_MARKER := "event_marker"
@@ -123,8 +132,41 @@ static func active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_i
 	return _make_material(_trace_color(color_id, false), _role_emission(ROLE_ACTIVE_CELL, mode), false)
 
 
+static func gameplay_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	return _role_material(ROLE_ACTIVE_CELL, mode, _role_emission(ROLE_ACTIVE_CELL, mode))
+
+
+static func live_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.08)
+	return _make_material(base, _role_emission(ROLE_ACTIVE_CELL, mode) + 0.1, false)
+
+
 static func locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
 	return _role_material(ROLE_LOCKED_CELL, mode, _role_emission(ROLE_LOCKED_CELL, mode))
+
+
+static func live_locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+	var base := _trace_color(color_id, false).darkened(0.22).lerp(color_for_role(ROLE_LOCKED_CELL, mode), 0.18)
+	return _make_material(base, _role_emission(ROLE_LOCKED_CELL, mode), false)
+
+
+static func live_active_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	return _role_material(ROLE_LIVE_CELL_ACTIVE_BORDER, mode, _role_emission(ROLE_LIVE_CELL_ACTIVE_BORDER, mode))
+
+
+static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	return _role_material(ROLE_LIVE_CELL_LOCKED_BORDER, mode, _role_emission(ROLE_LIVE_CELL_LOCKED_BORDER, mode))
+
+
+static func live_board_fill_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	var material := _role_material(ROLE_LIVE_BOARD_FILL, mode, _role_emission(ROLE_LIVE_BOARD_FILL, mode))
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = _with_alpha(material.albedo_color, 0.88)
+	return material
+
+
+static func live_board_grid_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	return _role_material(ROLE_LIVE_BOARD_GRID, mode, _role_emission(ROLE_LIVE_BOARD_GRID, mode))
 
 
 static func probe_before_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
@@ -218,6 +260,10 @@ static func _palette(mode: String) -> Dictionary:
 			ROLE_PARTICLE_CORE: TRACE_COLOR_PALETTE[0].lerp(Color.WHITE, 0.32),
 			ROLE_PARTICLE_CORE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.55),
 			ROLE_BOARD_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
+			ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.95, 0.98, 1.0, 1.0),
+			ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.04, 0.06, 0.09, 1.0),
+			ROLE_LIVE_BOARD_FILL: _html("081322"),
+			ROLE_LIVE_BOARD_GRID: _html("283B55"),
 			ROLE_W_SLICE_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
 			ROLE_W_SLICE_LABEL: Color(0.86, 0.89, 0.94, 1.0),
 			ROLE_VIEWPORT_FRAME: _html("0D1720"),
@@ -246,6 +292,10 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_PARTICLE_CORE: TRACE_COLOR_PALETTE[0].lerp(Color.WHITE, 0.32),
 		ROLE_PARTICLE_CORE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.55),
 		ROLE_BOARD_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
+		ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.95, 0.98, 1.0, 1.0),
+		ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.04, 0.06, 0.09, 1.0),
+		ROLE_LIVE_BOARD_FILL: _html("080E18"),
+		ROLE_LIVE_BOARD_GRID: _html("26364F"),
 		ROLE_W_SLICE_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
 		ROLE_W_SLICE_LABEL: Color(0.86, 0.89, 0.94, 1.0),
 		ROLE_VIEWPORT_FRAME: _html("111820"),
@@ -274,6 +324,14 @@ static func _role_emission(role: String, mode: String) -> float:
 			return 1.08 + tron_boost
 		ROLE_BOARD_OUTLINE, ROLE_W_SLICE_OUTLINE:
 			return 0.72 + tron_boost
+		ROLE_LIVE_CELL_ACTIVE_BORDER:
+			return 1.0 + tron_boost
+		ROLE_LIVE_CELL_LOCKED_BORDER:
+			return 0.5 + tron_boost
+		ROLE_LIVE_BOARD_FILL:
+			return 0.2 + tron_boost
+		ROLE_LIVE_BOARD_GRID:
+			return 0.58 + tron_boost
 		_:
 			return 0.9 + tron_boost
 

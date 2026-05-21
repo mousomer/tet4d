@@ -1,5 +1,6 @@
 #include "tet4d_core/core_api.hpp"
 #include "tet4d_core/plain_2d.hpp"
+#include "tet4d_core/plain_2d_session.hpp"
 #include "tet4d_core/sha256.hpp"
 
 #include <cstdlib>
@@ -80,6 +81,64 @@ void test_stage11_trace_exports() {
 	);
 }
 
+void test_live_plain_2d_session() {
+	tet4d::core::Plain2DSession session;
+	const std::string initial_hash = session.state_hash();
+	std::string snapshot = session.snapshot_json();
+	require(snapshot.find("\"trace_type\":\"live_2d\"") != std::string::npos, "live session snapshot should be renderer-shaped");
+	require(snapshot.find("\"case_id\":\"live_plain_2d\"") != std::string::npos, "live session case id missing");
+	require(snapshot.find("\"active_cells\"") != std::string::npos, "live session active cells missing");
+	require(snapshot.find("\"current_piece\":\"I\"") != std::string::npos, "live session should start with deterministic I piece");
+
+	session.apply_command("soft_drop");
+	require(session.state_hash() != initial_hash, "soft_drop should change live state hash");
+	session.apply_command("hard_drop");
+	snapshot = session.snapshot_json();
+	require(snapshot.find("\"score: 5\"") != std::string::npos, "hard_drop should score live session");
+	require(snapshot.find("\"locked_count: 4\"") != std::string::npos, "hard_drop should lock I piece cells");
+	require(snapshot.find("\"current_piece\":\"O\"") != std::string::npos, "first live lock should spawn O piece");
+	session.apply_command("hard_drop");
+	snapshot = session.snapshot_json();
+	require(snapshot.find("\"current_piece\":\"T\"") != std::string::npos, "second live lock should spawn T piece");
+
+	session.reset();
+	require(session.state_hash() == initial_hash, "reset should restore initial live state hash");
+	require(session.snapshot_json().find("\"current_piece\":\"I\"") != std::string::npos, "reset should restore deterministic initial piece");
+	session.apply_command("tick");
+	require(session.snapshot_json().find("\"last_command: tick\"") != std::string::npos, "tick command should update live diagnostics");
+}
+
+void test_game_over_spawn_blocked_and_rejected_commands() {
+	tet4d::core::GameState2D blocked_state(6, 6);
+	blocked_state.active_piece = tet4d::core::ActivePiece2D{tet4d::core::trace_dot_shape_2d(), {0, 5}, 0};
+	blocked_state.post_lock_spawn_shape = tet4d::core::classic_i_shape_2d();
+	for (int x = 1; x <= 4; ++x) {
+		blocked_state.board.set_cell({x, 0}, 2);
+	}
+
+	blocked_state.hard_drop();
+	require(blocked_state.game_over, "spawn-blocked fixture should set game_over");
+	require(blocked_state.game_over_reason == "spawn_blocked", "spawn-blocked fixture should record reason");
+
+	tet4d::core::Plain2DSession session;
+	for (int step = 0; step < 40 && session.snapshot_json().find("\"game_over\":true") == std::string::npos; ++step) {
+		session.apply_command("hard_drop");
+	}
+	std::string snapshot = session.snapshot_json();
+	require(snapshot.find("\"game_over\":true") != std::string::npos, "live session should eventually reach game_over");
+	require(snapshot.find("\"game_over_reason\":\"") != std::string::npos, "live game_over snapshot should include reason");
+	const std::string game_over_hash = session.state_hash();
+	const std::string status = session.apply_command("move_left");
+	require(status.find("last_command=rejected:move_left") != std::string::npos, "game_over command should be rejected");
+	require(session.state_hash() == game_over_hash, "rejected game_over command should not change state hash");
+
+	session.reset();
+	snapshot = session.snapshot_json();
+	require(snapshot.find("\"game_over\":false") != std::string::npos, "reset should clear game_over");
+	require(snapshot.find("\"game_over_reason\":\"\"") != std::string::npos, "reset should clear game_over reason");
+	require(session.state_hash() == tet4d::core::Plain2DSession().state_hash(), "reset game_over session should restore deterministic hash");
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -92,6 +151,8 @@ int main(int argc, char **argv) {
 	test_command_replay();
 	test_trace_export_smoke();
 	test_stage11_trace_exports();
+	test_live_plain_2d_session();
+	test_game_over_spawn_blocked_and_rejected_commands();
 	std::cout << "tet4d_core native plain 2D tests passed\n";
 	return 0;
 }

@@ -55,6 +55,7 @@ struct GameState2D {
 	int score = 0;
 	int lines = 0;
 	bool game_over = false;
+	std::string game_over_reason;
 	int lock_piece_points = 5;
 
 	GameState2D(int width, int height);

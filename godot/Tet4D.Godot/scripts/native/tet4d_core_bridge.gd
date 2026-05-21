@@ -5,6 +5,8 @@ class_name Tet4DCoreBridge
 const CORE_CLASS := &"Tet4DCoreApi"
 const EXTENSION_PATH := "res://addons/tet4d_core/tet4d_core.gdextension"
 
+var _api_instance: RefCounted
+
 
 func is_available() -> bool:
 	_ensure_extension_loaded()
@@ -51,12 +53,37 @@ func get_plain_2d_required_field_parity(case_id: String = "gameplay_plain_2d_sho
 	return bool(_api().get_plain_2d_required_field_parity(case_id))
 
 
+func live_2d_reset() -> void:
+	_api().live_2d_reset()
+
+
+func live_2d_apply_command(command: String) -> String:
+	return _api().live_2d_apply_command(command)
+
+
+func live_2d_tick() -> String:
+	return _api().live_2d_tick()
+
+
+func live_2d_snapshot_json() -> String:
+	return _api().live_2d_snapshot_json()
+
+
+func live_2d_status() -> String:
+	return _api().live_2d_status()
+
+
+func live_2d_state_hash() -> String:
+	return _api().live_2d_state_hash()
+
+
 func _api() -> RefCounted:
 	_ensure_extension_loaded()
-	var instance := ClassDB.instantiate(CORE_CLASS) as RefCounted
-	if instance == null:
+	if _api_instance == null:
+		_api_instance = ClassDB.instantiate(CORE_CLASS) as RefCounted
+	if _api_instance == null:
 		push_error("Tet4DCoreApi is unavailable. Build the Stage 8 GDExtension before running native bridge tests.")
-	return instance
+	return _api_instance
 
 
 func _ensure_extension_loaded() -> void:

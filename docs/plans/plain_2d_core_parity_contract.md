@@ -21,7 +21,16 @@ The scope remains intentionally narrow:
 - post-lock spawn state exactly as exported by the Python oracle.
 
 This contract does not authorize 3D, 4D, topology transport, endgame
-simulation, playable Godot controls, or Python runtime calls from Godot.
+simulation, or Python runtime calls from Godot. Stage 12 adds a separate live
+plain bounded 2D shell that must keep C++ as the gameplay authority and must
+not alter the Stage 11 trace parity contract.
+
+Stage 12b live sequencing and game-over lifecycle are explicitly separate from
+this parity fixture path. Live mode may use a deterministic fixed classic
+sequence owned by `Plain2DSession`, and its snapshots may expose live-only
+fields such as `game_over`, `game_over_reason`, `paused`, current piece, and
+last command. Parity cases continue to use the synthetic active piece, authored
+command list, and post-lock spawn shape recorded below.
 
 ## Stage 11 Trace Definitions
 
@@ -98,6 +107,10 @@ The Godot-facing Stage 11 API remains parity/smoke-only:
 
 It must not expose live gameplay APIs such as `step_game`, `move_piece`,
 `rotate_piece`, `drop`, `lock`, topology APIs, or endgame APIs.
+
+Stage 12 live plain 2D APIs are documented in
+`docs/plans/godot_core_port_plan.md`. They are allowed only for plain bounded
+2D and must not be used to mutate or reinterpret golden traces.
 
 ## Verification
 

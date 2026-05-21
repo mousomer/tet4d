@@ -255,8 +255,8 @@ feature porting starts.
 4. Stage 11: broaden plain bounded 2D trace parity with small Python golden
    traces for rotation, hard-drop lock, and line clear. Keep Godot APIs
    parity-only.
-5. Stage 12: connect Godot playable 2D shell to the native core behind a
-   narrow API only after Stage 11 parity is stable.
+5. Stage 12: connect a narrow live plain bounded 2D Godot shell to the native
+   core. Godot sends commands and renders C++ snapshots only.
 6. Stage 13: port 3D gameplay and parity tests.
 7. Stage 14: port 4D gameplay and parity tests.
 8. Stage 15: port topology transport and Topology Lab launch semantics.
@@ -452,3 +452,68 @@ The Godot-facing API remains parity-only:
 Stage 11 still must not expose live `step_game`, `move_left`, `move_right`,
 `rotate`, `soft_drop`, `hard_drop`, topology, endgame, Python runtime, C#,
 Steam, or console APIs.
+
+## 24. Stage 12 Narrow Live Plain 2D Shell
+
+Stage 12 adds the first live Godot milestone, scoped to plain bounded 2D only.
+The native C++ core owns gameplay state transitions through `Plain2DSession`.
+Godot owns only the shell: mode switching, input routing, HUD labels, and
+rendering the snapshot JSON returned by the extension.
+
+Allowed live commands:
+
+- `move_left`;
+- `move_right`;
+- `rotate_cw`;
+- `rotate_ccw`;
+- `soft_drop`;
+- `hard_drop`;
+- `tick`;
+- `reset`.
+
+The Godot-facing live API is intentionally narrow:
+
+- `live_2d_reset()`;
+- `live_2d_apply_command(command)`;
+- `live_2d_tick()`;
+- `live_2d_snapshot_json()`;
+- `live_2d_status()`;
+- `live_2d_state_hash()`.
+
+Godot must not perform collision checks, movement legality, rotation
+resolution, lock, line clear, scoring, spawn, or state hashing. Replay mode
+remains intact and continues to consume copied bundle traces.
+
+Stage 12 still does not authorize 3D, 4D, topology, endgame, Python runtime
+calls from Godot, C#, Steam, or console work. The live 2D shell is a proving
+surface for the native API boundary, not a complete game product.
+
+## 25. Stage 12b Live Plain 2D Playability Surface
+
+Stage 12b keeps the Stage 12 boundary and improves only the plain bounded 2D
+live surface. The native `Plain2DSession` owns a deterministic fixed sequence
+using the Python classic tetromino definitions in classic order
+`I, O, T, S, Z, J, L`. This is intentionally not the Python shuffled bag yet;
+full seed/bag parity remains a later gameplay-parity task. The Stage 11 parity
+fixtures keep their synthetic `TRACE_2D` initialization and must not consume
+the live sequence path.
+
+Godot still must not choose piece types or compute legality. It may display
+the current C++ piece name, status, score, lines, state hash, last command,
+mode-specific control hints, and render the returned live snapshot through the
+existing replay visual/material role system.
+
+The Stage 12 defect-closure acceptance bar also requires live game-over state
+to stay native-owned. `Plain2DSession` snapshots expose `game_over`,
+`game_over_reason`, `paused`, and `state_hash`; native gameplay commands after
+`game_over` are rejected except reset/new game. Godot must stop automatic
+gravity ticks once the native snapshot reports game-over, render `GAME OVER`
+with the native reason, and continue to route reset back through C++.
+
+The always-visible viewer hint strip is mode-specific. Live 2D shows:
+`A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · Tab Replay · Q/Esc Quit`.
+Replay shows:
+`Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit`.
+Live cells must remain in the shared replay renderer/material system while
+using Python-like colored tetromino cells, crisp borders, readable locked
+cells, and a visible board grid/bounds rather than flat diagnostic blocks.

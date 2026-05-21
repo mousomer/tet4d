@@ -126,6 +126,28 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `get_plain_2d_required_field_parity(case_id)`. This still does not expose
   live gameplay controls, topology, 3D, 4D, endgame, Python runtime, C#,
   Steam, or console APIs.
+- Manual Stage 11 replay acceptance should inspect post-command snapshots, not
+  invented hard-drop animation. Gameplay active cells render with the replay
+  active role color and a smaller cell scale so synthetic trace color IDs do
+  not produce a green merged blob.
+- Stage 12 adds a narrow live plain bounded 2D Godot shell. Godot captures
+  input and renders C++ snapshot JSON through the existing renderer; the native
+  `Plain2DSession` owns movement, rotation, gravity tick, hard drop, lock,
+  line clear, scoring, spawn, status, and state hash. Replay mode remains
+  separate. This does not authorize 3D, 4D, topology, endgame, Python runtime,
+  C#, Steam, or console work.
+- Stage 12b keeps that boundary and makes the live surface acceptable enough
+  for manual playability checks: the live session uses a C++-owned fixed
+  classic sequence (`I, O, T, S, Z, J, L`) separate from Stage 11 parity
+  fixtures, exposes the current piece in live snapshots/status, and Godot shows
+  live-specific controls/status while rendering cells through the shared visual
+  role system. The remaining Stage 12 defect closure keeps game-over semantics
+  native-owned: snapshots expose `game_over`, `game_over_reason`, `paused`, and
+  `state_hash`, gameplay commands are rejected after game-over except reset,
+  Godot stops only its automatic gravity ticks when native game-over is true,
+  the live hint strip is always visible and mode-specific, and live cells use
+  Python-like colored tetromino styling with crisp borders and a readable board
+  grid through the shared renderer.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
@@ -446,6 +468,6 @@ CODEX_MODE=1 ./scripts/verify.sh
   playback.
 - Keep governance edits pack-driven and update workflow/backlog/current-state
   docs together when boundary rules change.
-- Next migration task after Stage 11 verification is Stage 12: decide whether
-  to wire a narrow playable plain-2D Godot shell to the native core or expand
-  parity first if any manual/native acceptance gap remains.
+- Next migration task after Stage 12 verification is to harden the live plain
+  2D shell against Python behavior with additional parity traces before
+  expanding to 3D/4D/topology.

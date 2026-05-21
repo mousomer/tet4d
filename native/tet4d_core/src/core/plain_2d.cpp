@@ -186,7 +186,12 @@ bool GameState2D::can_exist(const ActivePiece2D &piece) const {
 }
 
 bool GameState2D::try_move(int dx, int dy) {
+	if (game_over) {
+		return false;
+	}
 	if (!active_piece.has_value()) {
+		game_over = true;
+		game_over_reason = "no_active_piece";
 		return false;
 	}
 	const ActivePiece2D moved = active_piece->moved(dx, dy);
@@ -202,7 +207,12 @@ bool GameState2D::try_soft_drop() {
 }
 
 void GameState2D::try_rotate(int delta_steps) {
+	if (game_over) {
+		return;
+	}
 	if (!active_piece.has_value()) {
+		game_over = true;
+		game_over_reason = "no_active_piece";
 		return;
 	}
 	const ActivePiece2D rotated = active_piece->rotated(delta_steps);
@@ -212,6 +222,9 @@ void GameState2D::try_rotate(int delta_steps) {
 }
 
 void GameState2D::hard_drop() {
+	if (game_over) {
+		return;
+	}
 	while (try_move(0, 1)) {
 	}
 	lock_current_piece();
@@ -222,16 +235,22 @@ void GameState2D::hard_drop() {
 
 int GameState2D::lock_current_piece() {
 	if (!active_piece.has_value()) {
+		game_over = true;
+		game_over_reason = "no_active_piece";
 		return 0;
 	}
 
+	const int color_id = active_piece->shape.color_id;
 	for (const Coord2D &cell : active_piece->cells()) {
 		if (cell.y < 0) {
 			game_over = true;
-			continue;
+			game_over_reason = "out_of_bounds";
+			active_piece.reset();
+			return 0;
 		}
-		board.set_cell(cell, active_piece->shape.color_id);
+		board.set_cell(cell, color_id);
 	}
+	active_piece.reset();
 
 	const int cleared = board.clear_full_lines();
 	lines += cleared;
@@ -253,10 +272,40 @@ int GameState2D::lock_current_piece() {
 }
 
 void GameState2D::spawn_piece(const PieceShape2D &shape) {
+	if (game_over) {
+		return;
+	}
 	active_piece = ActivePiece2D{shape, {2, -2}, 0};
 	if (!can_exist(*active_piece)) {
 		game_over = true;
+		game_over_reason = "spawn_blocked";
+		active_piece.reset();
+		return;
 	}
+	ActivePiece2D entry_probe = *active_piece;
+	for (int step = 0; step <= board.height(); ++step) {
+		bool has_visible_cell = false;
+		for (const Coord2D &cell : entry_probe.cells()) {
+			if (cell.y >= 0) {
+				has_visible_cell = true;
+				break;
+			}
+		}
+		if (has_visible_cell) {
+			return;
+		}
+		const ActivePiece2D next_probe = entry_probe.moved(0, 1);
+		if (!can_exist(next_probe)) {
+			game_over = true;
+			game_over_reason = "spawn_blocked";
+			active_piece.reset();
+			return;
+		}
+		entry_probe = next_probe;
+	}
+	game_over = true;
+	game_over_reason = "spawn_blocked";
+	active_piece.reset();
 }
 
 CommandResult2D GameStepper2D::apply(GameState2D &state, const GameCommand2D &command) {

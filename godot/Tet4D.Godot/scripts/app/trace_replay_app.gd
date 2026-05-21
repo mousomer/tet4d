@@ -14,6 +14,11 @@ const REPLAY_BASE_FPS := 4.0
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
+const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
+
+const MODE_REPLAY := "replay"
+const MODE_LIVE_2D := "live_2d"
+const LIVE_TICK_SECONDS := 0.7
 
 var _bundle: Dictionary = {}
 var _state := TracePlaybackState.new()
@@ -24,6 +29,10 @@ var _playback_accumulator := 0.0
 var _mouse_orbiting := false
 var _mouse_panning := false
 var _pending_fit_view := false
+var _mode := MODE_REPLAY
+var _live_2d_paused := false
+var _live_tick_accumulator := 0.0
+var _live_bridge := Tet4DCoreBridgeScript.new()
 
 var _world_root: Node3D
 var _renderer: TraceSceneRenderer
@@ -47,6 +56,13 @@ func _deferred_ready() -> void:
 func _process(delta: float) -> void:
 	if _pending_fit_view:
 		_fit_view()
+	if _mode == MODE_LIVE_2D:
+		if not _live_2d_paused and not _live_snapshot_game_over():
+			_live_tick_accumulator += delta
+			if _live_tick_accumulator >= LIVE_TICK_SECONDS:
+				_live_tick_accumulator = 0.0
+				_live_2d_command("tick")
+		return
 	if _current_document == null or not _state.is_playing:
 		return
 	_playback_accumulator += delta * REPLAY_BASE_FPS * _state.playback_speed
@@ -63,6 +79,14 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _mode == MODE_LIVE_2D:
+		if _handle_live_2d_input(event):
+			return
+		_handle_camera_input(event)
+		return
+	if event.is_action_pressed("mode_toggle_replay_live"):
+		_enter_live_2d_mode()
+		return
 	if event.is_action_pressed("replay_prev_frame"):
 		_step_frame(-1)
 	elif event.is_action_pressed("replay_next_frame"):
@@ -85,9 +109,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		_fit_view()
 	elif event.is_action_pressed("replay_toggle_help"):
 		_hud.toggle_help()
-	elif event.is_action_pressed("replay_quit"):
+	elif _event_action_pressed(event, ["quit", "replay_quit"]):
 		get_tree().quit()
 
+	_handle_camera_input(event)
+
+
+func _handle_camera_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_mouse_orbiting = event.pressed and not Input.is_key_pressed(KEY_SHIFT)
@@ -105,6 +133,46 @@ func _unhandled_input(event: InputEvent) -> void:
 			_camera_rig.orbit(event.relative)
 		elif _mouse_panning:
 			_camera_rig.pan(event.relative)
+
+
+func _handle_live_2d_input(event: InputEvent) -> bool:
+	if event.is_action_pressed("mode_toggle_replay_live"):
+		_enter_replay_mode()
+		return true
+	if _event_action_pressed(event, ["live_move_left", "live_2d_move_left"]):
+		_live_2d_command("move_left")
+		return true
+	if _event_action_pressed(event, ["live_move_right", "live_2d_move_right"]):
+		_live_2d_command("move_right")
+		return true
+	if _event_action_pressed(event, ["live_rotate_cw", "live_2d_rotate_cw"]):
+		_live_2d_command("rotate_cw")
+		return true
+	if _event_action_pressed(event, ["live_rotate_ccw", "live_2d_rotate_ccw"]):
+		_live_2d_command("rotate_ccw")
+		return true
+	if _event_action_pressed(event, ["live_soft_drop", "live_2d_soft_drop"]):
+		_live_2d_command("soft_drop")
+		return true
+	if _event_action_pressed(event, ["live_hard_drop", "live_2d_hard_drop"]):
+		_live_2d_command("hard_drop")
+		return true
+	if _event_action_pressed(event, ["live_pause", "live_2d_pause"]):
+		_toggle_live_2d_pause()
+		return true
+	if _event_action_pressed(event, ["live_reset", "replay_reset"]):
+		_reset_live_2d()
+		return true
+	if event.is_action_pressed("replay_fit_view"):
+		_fit_view()
+		return true
+	if event.is_action_pressed("replay_toggle_help"):
+		_hud.toggle_help()
+		return true
+	if _event_action_pressed(event, ["quit", "replay_quit"]):
+		get_tree().quit()
+		return true
+	return false
 
 
 func _wire_hud() -> void:
@@ -143,6 +211,8 @@ func _wire_hud() -> void:
 	_hud.quit_requested.connect(func() -> void:
 		get_tree().quit()
 	)
+	_hud.live_2d_requested.connect(_enter_live_2d_mode)
+	_hud.replay_mode_requested.connect(_enter_replay_mode)
 
 
 func _load_bundle() -> void:
@@ -165,6 +235,7 @@ func _load_bundle() -> void:
 func _select_trace_family(trace_type: String, preferred_case_id: String = "", start_playing: bool = false, open_case: bool = true) -> void:
 	if _bundle.is_empty():
 		return
+	_mode = MODE_REPLAY
 	_state.selected_trace_type = trace_type
 	_current_cases = _bundle.get("cases_by_type", {}).get(trace_type, [])
 	_hud.set_cases(_current_cases, "")
@@ -183,6 +254,7 @@ func _select_trace_family(trace_type: String, preferred_case_id: String = "", st
 func _select_case(case_id: String, start_playing: bool = false) -> void:
 	if case_id.is_empty():
 		return
+	_mode = MODE_REPLAY
 	for case_entry in _current_cases:
 		if str(case_entry.get("case_id", "")) != case_id:
 			continue
@@ -244,6 +316,9 @@ func _set_frame(frame_index: int) -> void:
 
 
 func _toggle_play_pause() -> void:
+	if _mode == MODE_LIVE_2D:
+		_toggle_live_2d_pause()
+		return
 	if _current_document == null:
 		return
 	_state.is_playing = not _state.is_playing
@@ -251,6 +326,9 @@ func _toggle_play_pause() -> void:
 
 
 func _reset_playback() -> void:
+	if _mode == MODE_LIVE_2D:
+		_reset_live_2d()
+		return
 	_state.reset(_state.is_playing)
 	_playback_accumulator = 0.0
 	_refresh_snapshot()
@@ -266,6 +344,10 @@ func _refresh_snapshot() -> void:
 
 
 func _refresh_render() -> void:
+	if _mode == MODE_LIVE_2D:
+		if not _current_snapshot.is_empty():
+			_renderer.render_snapshot(_current_snapshot)
+		return
 	if _current_document == null or _current_snapshot.is_empty():
 		return
 	var next_snapshot := _next_snapshot()
@@ -336,7 +418,11 @@ func _build_world_in_game_viewport() -> void:
 
 
 func _refresh_hud() -> void:
-	_hud.set_playback_state(_state.is_playing, _state.playback_speed, _state.diagnostics_visible)
+	if _mode == MODE_LIVE_2D:
+		var game_over := _live_snapshot_game_over()
+		_hud.set_live_2d_mode(_live_2d_paused, game_over, _live_snapshot_last_command(), _live_snapshot_game_over_reason())
+	else:
+		_hud.set_replay_mode_labels(_state.is_playing, _state.playback_speed, _state.diagnostics_visible)
 	if _current_snapshot.is_empty():
 		return
 	_hud.set_summary(
@@ -349,6 +435,120 @@ func _refresh_hud() -> void:
 		str(_current_snapshot.get("state_hash", ""))
 	)
 	_hud.set_snapshot(_current_snapshot, _state.diagnostics_visible)
+
+
+func _enter_live_2d_mode() -> void:
+	_mode = MODE_LIVE_2D
+	_current_document = null
+	_state.is_playing = false
+	_live_2d_paused = false
+	_live_tick_accumulator = 0.0
+	_live_bridge.live_2d_reset()
+	_refresh_live_2d_snapshot()
+	_fit_view()
+	_hud.show_replay_viewer()
+
+
+func _enter_replay_mode() -> void:
+	_mode = MODE_REPLAY
+	_live_2d_paused = true
+	if _current_document == null:
+		var trace_type := _state.selected_trace_type if not _state.selected_trace_type.is_empty() else STARTUP_TRACE_TYPE
+		_select_trace_family(trace_type, _choose_startup_case_id(trace_type), false, true)
+	else:
+		_refresh_snapshot()
+		_fit_view()
+		_hud.show_replay_viewer()
+
+
+func _live_2d_command(command: String) -> void:
+	if command != "tick":
+		_live_tick_accumulator = 0.0
+	_live_bridge.live_2d_apply_command(command)
+	_refresh_live_2d_snapshot()
+
+
+func _reset_live_2d() -> void:
+	_live_bridge.live_2d_reset()
+	_live_tick_accumulator = 0.0
+	_live_2d_paused = false
+	_refresh_live_2d_snapshot()
+	_fit_view()
+
+
+func _toggle_live_2d_pause() -> void:
+	_live_2d_paused = not _live_2d_paused
+	_refresh_hud()
+
+
+func _refresh_live_2d_snapshot() -> void:
+	var parsed = JSON.parse_string(_live_bridge.live_2d_snapshot_json())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		_current_snapshot = {
+			"trace_type": "live_2d",
+			"case_id": "live_plain_2d",
+			"dimension": 2,
+			"frame_index": 0,
+			"frame_count": 1,
+			"state_hash": _live_bridge.live_2d_state_hash(),
+			"board_shape": [6, 6],
+			"active_cells": [],
+			"locked_cells": [],
+			"probe_markers": [],
+			"event_markers": [],
+			"particles": [],
+			"event_lines": [],
+			"metadata_lines": ["Failed to parse native live snapshot."],
+			"diagnostics_lines": [_live_bridge.live_2d_status()],
+			"energy_lines": [],
+			"game_over": false,
+			"game_over_reason": "",
+			"paused": _live_2d_paused,
+			"trace_name": "live_plain_2d",
+			"entity_count": 0,
+			"frame_count_matches_metadata": true,
+			"entity_count_matches_metadata": true,
+		}
+	else:
+		_current_snapshot = parsed
+		_current_snapshot["paused"] = _live_2d_paused
+	_refresh_render()
+	_refresh_hud()
+
+
+func _live_snapshot_last_command() -> String:
+	for line in _current_snapshot.get("diagnostics_lines", []):
+		var text := str(line)
+		if text.begins_with("last_command: "):
+			return text.substr("last_command: ".length())
+	return ""
+
+
+func _live_snapshot_game_over() -> bool:
+	if _current_snapshot.has("game_over"):
+		return bool(_current_snapshot.get("game_over", false))
+	for line in _current_snapshot.get("diagnostics_lines", []):
+		if str(line) == "game_over: true":
+			return true
+	return false
+
+
+func _live_snapshot_game_over_reason() -> String:
+	var reason := str(_current_snapshot.get("game_over_reason", ""))
+	if not reason.is_empty():
+		return reason
+	for line in _current_snapshot.get("diagnostics_lines", []):
+		var text := str(line)
+		if text.begins_with("game_over_reason: "):
+			return text.substr("game_over_reason: ".length())
+	return ""
+
+
+func _event_action_pressed(event: InputEvent, action_names: Array) -> bool:
+	for action_name in action_names:
+		if event.is_action_pressed(str(action_name)):
+			return true
+	return false
 
 
 func _next_snapshot() -> Dictionary:
@@ -393,6 +593,29 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("replay_toggle_help", KEY_H)
 	_ensure_key_action("replay_quit", KEY_Q)
 	_ensure_key_action("replay_quit", KEY_ESCAPE)
+	_ensure_key_action("quit", KEY_Q)
+	_ensure_key_action("quit", KEY_ESCAPE)
+	_ensure_key_action("mode_toggle_replay_live", KEY_TAB)
+	_ensure_key_action("live_move_left", KEY_LEFT)
+	_ensure_key_action("live_move_left", KEY_A)
+	_ensure_key_action("live_move_right", KEY_RIGHT)
+	_ensure_key_action("live_move_right", KEY_D)
+	_ensure_key_action("live_rotate_cw", KEY_UP)
+	_ensure_key_action("live_rotate_cw", KEY_W)
+	_ensure_key_action("live_rotate_cw", KEY_X)
+	_ensure_key_action("live_rotate_ccw", KEY_Z)
+	_ensure_key_action("live_soft_drop", KEY_DOWN)
+	_ensure_key_action("live_soft_drop", KEY_S)
+	_ensure_key_action("live_hard_drop", KEY_SPACE)
+	_ensure_key_action("live_pause", KEY_P)
+	_ensure_key_action("live_reset", KEY_R)
+	_ensure_key_action("live_2d_move_left", KEY_LEFT)
+	_ensure_key_action("live_2d_move_right", KEY_RIGHT)
+	_ensure_key_action("live_2d_rotate_cw", KEY_UP)
+	_ensure_key_action("live_2d_rotate_ccw", KEY_Z)
+	_ensure_key_action("live_2d_soft_drop", KEY_DOWN)
+	_ensure_key_action("live_2d_hard_drop", KEY_SPACE)
+	_ensure_key_action("live_2d_pause", KEY_P)
 	_ensure_mouse_action("camera_orbit", MOUSE_BUTTON_LEFT)
 	_ensure_mouse_action("camera_zoom", MOUSE_BUTTON_WHEEL_UP)
 

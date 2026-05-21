@@ -32,6 +32,12 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_plain_2d_parity_status"), &Tet4DCoreApi::get_plain_2d_parity_status);
 	ClassDB::bind_method(D_METHOD("export_plain_2d_trace_json", "case_id"), &Tet4DCoreApi::export_plain_2d_trace_json);
 	ClassDB::bind_method(D_METHOD("get_plain_2d_required_field_parity", "case_id"), &Tet4DCoreApi::get_plain_2d_required_field_parity);
+	ClassDB::bind_method(D_METHOD("live_2d_reset"), &Tet4DCoreApi::live_2d_reset);
+	ClassDB::bind_method(D_METHOD("live_2d_apply_command", "command"), &Tet4DCoreApi::live_2d_apply_command);
+	ClassDB::bind_method(D_METHOD("live_2d_tick"), &Tet4DCoreApi::live_2d_tick);
+	ClassDB::bind_method(D_METHOD("live_2d_snapshot_json"), &Tet4DCoreApi::live_2d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_2d_status"), &Tet4DCoreApi::live_2d_status);
+	ClassDB::bind_method(D_METHOD("live_2d_state_hash"), &Tet4DCoreApi::live_2d_state_hash);
 }
 
 String Tet4DCoreApi::get_core_version() const {
@@ -76,6 +82,30 @@ String Tet4DCoreApi::export_plain_2d_trace_json(const String &case_id) const {
 
 bool Tet4DCoreApi::get_plain_2d_required_field_parity(const String &case_id) const {
 	return tet4d::core::get_plain_2d_required_field_parity(to_std_string(case_id));
+}
+
+void Tet4DCoreApi::live_2d_reset() {
+	live_2d_session_.reset();
+}
+
+String Tet4DCoreApi::live_2d_apply_command(const String &command) {
+	return to_godot_string(live_2d_session_.apply_command(to_std_string(command)));
+}
+
+String Tet4DCoreApi::live_2d_tick() {
+	return to_godot_string(live_2d_session_.tick());
+}
+
+String Tet4DCoreApi::live_2d_snapshot_json() const {
+	return to_godot_string(live_2d_session_.snapshot_json());
+}
+
+String Tet4DCoreApi::live_2d_status() const {
+	return to_godot_string(live_2d_session_.status());
+}
+
+String Tet4DCoreApi::live_2d_state_hash() const {
+	return to_godot_string(live_2d_session_.state_hash());
 }
 
 } // namespace godot

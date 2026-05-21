@@ -20,6 +20,8 @@ signal diagnostics_visibility_changed(visible: bool)
 signal display_mode_changed(mode: String)
 signal fit_view_requested()
 signal quit_requested()
+signal replay_mode_requested()
+signal live_2d_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -27,6 +29,10 @@ const SCREEN_VIEWER := "viewer"
 const SCREEN_SETTINGS := "settings"
 const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
+const REPLAY_HINT_TEXT := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
+const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
+const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · Tab Replay · Q/Esc Quit"
+const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, Tab returns to Replay, and Q/Esc quits. Godot sends commands only."
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -39,6 +45,11 @@ var _event_screen_panel: EventListPanel
 var _settings_panel: SettingsPanel
 var _settings_screen_panel: SettingsPanel
 var _play_button: Button
+var _reset_button: Button
+var _hint_label: Label
+var _mode_hint_strip: Label
+var _viewport_title: Label
+var _viewport_hint: Label
 var _frame_slider: HSlider
 var _frame_label: Label
 var _hash_label: Label
@@ -64,9 +75,20 @@ var _screens: Dictionary = {}
 var _replay_note: Label
 var _help_panel: PanelContainer
 var _trace_integrity_label: Label
+var _help_label: Label
 var _current_display_mode := ReplayVisuals.default_display_mode()
 var _current_screen := SCREEN_MAIN_MENU
 var _geometry_diagnostics_enabled := false
+var _live_2d_paused := false
+var _live_2d_game_over := false
+
+
+static func replay_hint_text() -> String:
+	return REPLAY_HINT_TEXT
+
+
+static func live_2d_hint_text() -> String:
+	return LIVE_2D_HINT_TEXT
 
 
 func _ready() -> void:
@@ -115,6 +137,20 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 	if _event_screen_panel != null:
 		_event_screen_panel.set_events(snapshot.get("event_lines", []))
 	if _trace_integrity_label != null:
+		if str(snapshot.get("trace_type", "")) == "live_2d":
+			var game_over := bool(snapshot.get("game_over", false))
+			var state_label := "GAME OVER" if game_over else ("paused" if bool(snapshot.get("paused", _live_2d_paused)) else "running")
+			var reason := str(snapshot.get("game_over_reason", ""))
+			_trace_integrity_label.text = "LIVE 2D · C++ CORE · piece %s · score %d · lines %d · state_hash %s · last command %s · %s%s" % [
+				str(snapshot.get("current_piece", "none")),
+				int(snapshot.get("score", 0)),
+				int(snapshot.get("lines", 0)),
+				str(snapshot.get("state_hash", "")).left(12),
+				str(snapshot.get("last_command", "none")),
+				state_label,
+				(" · reason " + reason) if reason != "" else "",
+			]
+			return
 		_trace_integrity_label.text = "Trace %s · frame %d/%d · entities %d · frame metadata %s · entity metadata %s" % [
 			str(snapshot.get("trace_name", snapshot.get("case_id", ""))),
 			int(snapshot.get("frame_index", 0)),
@@ -132,6 +168,58 @@ func set_playback_state(is_playing: bool, speed: float, diagnostics_visible: boo
 		_settings_screen_panel.set_diagnostics_visible(diagnostics_visible)
 	_select_speed_no_signal(speed)
 	_speed_value.text = "%s Replay" % ("Playing" if is_playing else "Paused")
+
+
+func set_live_2d_mode(paused: bool, game_over: bool, last_command: String, game_over_reason: String = "") -> void:
+	_live_2d_paused = paused
+	_live_2d_game_over = game_over
+	_play_button.text = "Resume Live" if paused else "Pause Live"
+	if _reset_button != null:
+		_reset_button.text = "Reset Live"
+	_speed_value.text = "Game Over" if game_over else ("Paused Live" if paused else "Running Live")
+	if _authority_label != null:
+		_authority_label.text = "LIVE 2D · C++ CORE"
+	if _viewport_title != null:
+		_viewport_title.text = "Live Plain 2D"
+	if _viewport_hint != null:
+		_viewport_hint.text = "Native C++ owns movement, lock, clear, score, and hash"
+	if _mode_hint_strip != null:
+		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
+		_mode_hint_strip.text = ("GAME OVER · %s · %s" % [reason_text, LIVE_2D_HINT_TEXT]) if game_over else LIVE_2D_HINT_TEXT
+		_mode_hint_strip.theme_type_variation = "WarningLabel" if game_over else "AccentLabel"
+	if _replay_note != null:
+		_replay_note.text = "GAME OVER: %s. R resets Live 2D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 2D. Godot sends commands only; C++ owns gameplay state."
+	if _hint_label != null:
+		_hint_label.text = LIVE_2D_HINT_TEXT
+	if _help_label != null:
+		_help_label.text = LIVE_2D_HELP_TEXT
+	if _trace_integrity_label != null:
+		_trace_integrity_label.text = "LIVE 2D · C++ CORE · last command %s · %s%s" % [
+			last_command,
+			"game over" if game_over else ("paused" if paused else "running"),
+			(" · reason " + game_over_reason) if game_over_reason != "" else "",
+		]
+
+
+func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
+	set_playback_state(is_playing, speed, diagnostics_visible)
+	if _authority_label != null:
+		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
+	if _reset_button != null:
+		_reset_button.text = "Reset Replay"
+	if _viewport_title != null:
+		_viewport_title.text = "Trace Replay View"
+	if _viewport_hint != null:
+		_viewport_hint.text = "Replay-only viewport with diagnostic-first 4D W slices"
+	if _mode_hint_strip != null:
+		_mode_hint_strip.text = REPLAY_HINT_TEXT
+		_mode_hint_strip.theme_type_variation = "DimLabel"
+	if _replay_note != null:
+		_replay_note.text = "Replay shell only. Diagnostic display is the default readability mode; Godot does not implement gameplay."
+	if _hint_label != null:
+		_hint_label.text = REPLAY_HINT_TEXT
+	if _help_label != null:
+		_help_label.text = REPLAY_HELP_TEXT
 
 
 func set_display_mode(mode: String) -> void:
@@ -228,20 +316,38 @@ func _build_layout() -> void:
 	outer.add_child(top_bar)
 
 	var viewer_nav := VBoxContainer.new()
-	viewer_nav.custom_minimum_size = Vector2(120, ReplayVisuals.TOP_BAR_HEIGHT)
+	viewer_nav.custom_minimum_size = Vector2(220, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_child(viewer_nav)
+	var nav_row_a := HBoxContainer.new()
+	nav_row_a.add_theme_constant_override("separation", 6)
+	viewer_nav.add_child(nav_row_a)
+	var nav_row_b := HBoxContainer.new()
+	nav_row_b.add_theme_constant_override("separation", 6)
+	viewer_nav.add_child(nav_row_b)
 	var menu_button := Button.new()
 	menu_button.text = "Main Menu"
 	menu_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_MAIN_MENU)
 	)
-	viewer_nav.add_child(menu_button)
+	nav_row_a.add_child(menu_button)
 	var browser_button := Button.new()
 	browser_button.text = "Browser"
 	browser_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_BROWSER)
 	)
-	viewer_nav.add_child(browser_button)
+	nav_row_a.add_child(browser_button)
+	var replay_button := Button.new()
+	replay_button.text = "Replay"
+	replay_button.pressed.connect(func() -> void:
+		replay_mode_requested.emit()
+	)
+	nav_row_b.add_child(replay_button)
+	var live_button := Button.new()
+	live_button.text = "Live 2D"
+	live_button.pressed.connect(func() -> void:
+		live_2d_requested.emit()
+	)
+	nav_row_b.add_child(live_button)
 
 	_top_status_panel = PanelContainer.new()
 	_top_status_panel.custom_minimum_size = Vector2(ReplayVisuals.TOP_STATUS_PANEL_WIDTH, ReplayVisuals.TOP_BAR_HEIGHT)
@@ -331,13 +437,19 @@ func _build_layout() -> void:
 	viewport_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	viewport_inner.add_child(viewport_box)
-	var viewport_title := Label.new()
-	viewport_title.text = "Trace Replay View"
-	viewport_box.add_child(viewport_title)
-	var viewport_hint := Label.new()
-	viewport_hint.text = "Replay-only viewport with diagnostic-first 4D W slices"
-	viewport_hint.theme_type_variation = "SecondaryLabel"
-	viewport_box.add_child(viewport_hint)
+	_viewport_title = Label.new()
+	_viewport_title.text = "Trace Replay View"
+	viewport_box.add_child(_viewport_title)
+	_viewport_hint = Label.new()
+	_viewport_hint.text = "Replay-only viewport with diagnostic-first 4D W slices"
+	_viewport_hint.theme_type_variation = "SecondaryLabel"
+	viewport_box.add_child(_viewport_hint)
+	_mode_hint_strip = Label.new()
+	_mode_hint_strip.text = REPLAY_HINT_TEXT
+	_mode_hint_strip.theme_type_variation = "DimLabel"
+	_mode_hint_strip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_mode_hint_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	viewport_box.add_child(_mode_hint_strip)
 	_game_viewport_container = SubViewportContainer.new()
 	_game_viewport_container.name = "GameViewportContainer"
 	_game_viewport_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -433,12 +545,12 @@ func _build_layout() -> void:
 	)
 	control_group.add_child(next_button)
 
-	var reset_button := Button.new()
-	reset_button.text = "Reset Replay"
-	reset_button.pressed.connect(func() -> void:
+	_reset_button = Button.new()
+	_reset_button.text = "Reset Replay"
+	_reset_button.pressed.connect(func() -> void:
 		reset_requested.emit()
 	)
-	control_group.add_child(reset_button)
+	control_group.add_child(_reset_button)
 	var fit_button := Button.new()
 	fit_button.text = "Fit View"
 	fit_button.pressed.connect(func() -> void:
@@ -499,18 +611,18 @@ func _build_layout() -> void:
 	_frame_label.text = "Frame 0 / 0"
 	_frame_label.theme_type_variation = "AccentLabel"
 	bottom.add_child(_frame_label)
-	var hint := Label.new()
-	hint.text = "Space Play/Pause  ·  <-/-> Frame  ·  Up/Down Case  ·  1/2/3 Family  ·  F Fit  ·  H Help  ·  Q Quit"
-	hint.theme_type_variation = "DimLabel"
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	bottom_stack.add_child(hint)
+	_hint_label = Label.new()
+	_hint_label.text = REPLAY_HINT_TEXT
+	_hint_label.theme_type_variation = "DimLabel"
+	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bottom_stack.add_child(_hint_label)
 	_help_panel = PanelContainer.new()
 	_help_panel.visible = false
-	var help_text := Label.new()
-	help_text.text = "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
-	help_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	help_text.theme_type_variation = "SecondaryLabel"
-	_help_panel.add_child(help_text)
+	_help_label = Label.new()
+	_help_label.text = REPLAY_HELP_TEXT
+	_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_help_label.theme_type_variation = "SecondaryLabel"
+	_help_panel.add_child(_help_label)
 	bottom_stack.add_child(_help_panel)
 	_settings_panel.set_display_mode(_current_display_mode)
 
@@ -581,6 +693,14 @@ func _build_main_menu_screen(screen: Control) -> void:
 		show_screen(SCREEN_BROWSER)
 	)
 	layout.add_child(browser_button)
+	var live_button := Button.new()
+	live_button.text = "Start Live Plain 2D"
+	live_button.custom_minimum_size = Vector2(420, 54)
+	live_button.add_theme_font_size_override("font_size", 18)
+	live_button.pressed.connect(func() -> void:
+		live_2d_requested.emit()
+	)
+	layout.add_child(live_button)
 	var controls_button := Button.new()
 	controls_button.text = "Controls / Keyboard Hints"
 	controls_button.custom_minimum_size = Vector2(420, 50)
@@ -661,7 +781,10 @@ func _build_controls_screen(screen: Control) -> void:
 	layout.add_child(panel)
 	var text := Label.new()
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.text = "Space Play/Pause · Left/Right Frame · Up/Down Case · 1/2/3 Family · F Fit View · H Help · Q/Esc Quit. These are replay controls only; they do not move gameplay pieces or invoke topology rules."
+	text.text = "Replay: %s. Live 2D: %s. Godot routes live commands only; C++ owns gameplay state." % [
+		REPLAY_HINT_TEXT,
+		LIVE_2D_HINT_TEXT,
+	]
 	text.theme_type_variation = "SecondaryLabel"
 	panel.add_child(text)
 
@@ -710,6 +833,12 @@ func _screen_nav(title_text: String) -> HBoxContainer:
 		show_screen(SCREEN_VIEWER)
 	)
 	nav.add_child(viewer_button)
+	var live_button := Button.new()
+	live_button.text = "Live 2D"
+	live_button.pressed.connect(func() -> void:
+		live_2d_requested.emit()
+	)
+	nav.add_child(live_button)
 	var diagnostics_button := Button.new()
 	diagnostics_button.text = "Diagnostics"
 	diagnostics_button.pressed.connect(func() -> void:

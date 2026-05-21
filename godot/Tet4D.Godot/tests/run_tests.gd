@@ -15,6 +15,7 @@ func _run_all() -> void:
 		"res://tests/test_camera_rig.gd",
 		"res://tests/test_trace_scene_renderer.gd",
 		"res://tests/test_tet4d_core_extension.gd",
+		"res://tests/test_live_2d_shell.gd",
 		"res://tests/test_scene_integrity.gd",
 		"res://tests/test_replay_viewer_layout.gd",
 		"res://tests/test_particle_renderer.gd",
@@ -23,6 +24,7 @@ func _run_all() -> void:
 		if script_path in [
 			"res://tests/test_camera_rig.gd",
 			"res://tests/test_trace_scene_renderer.gd",
+			"res://tests/test_live_2d_shell.gd",
 			"res://tests/test_replay_viewer_layout.gd",
 		]:
 			failures.append_array(await test_case.run())

@@ -216,6 +216,15 @@ Cross-cutting requirements are defined in:
     case-list, case-export, status, and parity-check APIs through Godot and
     must not expose live gameplay controls, topology, 3D, 4D, endgame, Python
     runtime, C#, Steam, or console packaging APIs.
+15. Stage 12 may add live plain bounded 2D controls only through a native C++
+    session API. Godot may capture input and render returned snapshots, but it
+    must not own collision checks, movement legality, rotation resolution,
+    lock, line clear, scoring, spawn, or state hashing.
+16. Stage 12b may improve the live plain bounded 2D surface with a C++-owned
+    deterministic fixed classic sequence and mode-specific Godot HUD/input
+    presentation, but it must keep Stage 11 parity fixtures separate and must
+    not broaden into 3D, 4D, topology, endgame, Python runtime calls, or
+    Godot-owned gameplay legality.
 
 ### 3.3 Shared piece-local transform rules
 

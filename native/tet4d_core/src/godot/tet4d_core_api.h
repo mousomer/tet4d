@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tet4d_core/plain_2d_session.hpp"
+
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/variant/string.hpp>
@@ -23,6 +25,15 @@ public:
 	String get_plain_2d_parity_status() const;
 	String export_plain_2d_trace_json(const String &case_id) const;
 	bool get_plain_2d_required_field_parity(const String &case_id) const;
+	void live_2d_reset();
+	String live_2d_apply_command(const String &command);
+	String live_2d_tick();
+	String live_2d_snapshot_json() const;
+	String live_2d_status() const;
+	String live_2d_state_hash() const;
+
+private:
+	mutable tet4d::core::Plain2DSession live_2d_session_;
 };
 
 } // namespace godot

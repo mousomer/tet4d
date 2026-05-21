@@ -81,7 +81,21 @@ Current active follow-ups:
 - Stage 11 broadens plain bounded 2D parity to
   `gameplay_plain_2d_rotation_short`, `gameplay_plain_2d_hard_drop_lock`, and
   `gameplay_plain_2d_line_clear_short`; the native/Godot API remains
-  parity-only by case id and does not expose live gameplay controls
+  parity-only by case id and does not expose live gameplay controls; manual
+  replay inspection should treat these as post-command snapshots, with active
+  gameplay cells rendered using role color rather than synthetic trace green
+- Stage 12 adds the first live plain bounded 2D Godot shell: Godot routes
+  input and renders native snapshots, while C++ owns all gameplay state
+  transitions and hashes. Replay mode remains intact and separate.
+- Stage 12b hardens that live plain bounded 2D shell without broadening scope:
+  C++ owns a deterministic fixed classic sequence, Godot displays mode-specific
+  live controls/status and renders live cells through the shared visual role
+  system, and Stage 11 parity fixtures remain unchanged. Remaining Stage 12
+  defect closure adds native-owned game-over reason/status fields, rejects
+  gameplay commands after game-over except reset, stops Godot gravity ticks
+  only after the native snapshot reports game-over, makes live/replay hint
+  strips always-visible and mode-specific, and aligns live cell/grid styling
+  with the Python colored board language.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -257,12 +271,17 @@ stays synchronized, and the contract validator accepts the backlog shape.
     `gameplay_plain_2d_short`, keep Godot API parity-only, and defer broader
     2D traces, live gameplay controls, topology, 3D, 4D, endgame, Python
     runtime, C#, Steam, and console implementation.
-12. `ACTIVE` `[BKL-P3-019]` Stage 11 broaden plain 2D gameplay parity:
+12. `DONE` `[BKL-P3-019]` Stage 11 broaden plain 2D gameplay parity:
     add small deterministic Python golden traces for rotation, hard-drop lock,
     and line clear; extend the native C++ parity model and case-id APIs only
     enough to match required fields plus `state_hash`; keep Godot non-playable
     and do not expose player movement, topology, 3D, 4D, endgame, Python
     runtime, C#, Steam, or console implementation.
+13. `ACTIVE` `[BKL-P3-020]` Stage 12 narrow playable plain-2D Godot shell:
+    add a Live 2D mode where Godot captures input and renders snapshots while
+    native C++ owns movement, rotation, tick, hard drop, lock, line clear,
+    scoring, spawn, and state hash. Keep replay mode intact and do not expose
+    topology, 3D, 4D, endgame, Python runtime, C#, Steam, or console work.
 
 ## Governance Watchlist
 

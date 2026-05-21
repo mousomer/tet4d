@@ -116,6 +116,23 @@ beyond `gameplay_plain_2d_short`. The allowed calls are
 parity and smoke tests only. They do not expose playable Godot movement,
 rotation, drop, lock, topology, endgame, or Python runtime behavior.
 
+Gameplay replay frames are post-command snapshots. A hard-drop trace shows the
+resulting locked cells, score, and respawned active piece for that exported
+frame; it does not animate the piece falling. The replay renderer uses a
+role-based active-cell material for gameplay snapshots so synthetic trace
+`color_id` values do not turn the active piece into a same-color blob.
+
+Stage 12 adds `Live 2D`, the first playable Godot shell milestone. It is plain
+bounded 2D only. Godot captures input and renders the native snapshot JSON;
+the C++ GDExtension owns movement, rotation, gravity tick, hard drop, lock,
+line clear, scoring, spawn, and state hash. Replay mode remains separate.
+Stage 12b keeps live sequencing in C++ with a deterministic fixed classic
+piece order (`I, O, T, S, Z, J, L`). This is not the later shuffled Python bag
+parity path, and it does not alter Stage 11 golden trace fixtures. Native
+snapshots also expose `game_over`, `game_over_reason`, `paused`, and
+`state_hash`; Godot renders those fields, stops automatic gravity ticks after
+native game-over, and routes reset/new game back to C++.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -143,7 +160,23 @@ These are replay controls only. They are not gameplay controls and they are
 not final keybinding authority.
 
 The same controls are visible in the `Controls / Keyboard Hints` screen and in
-the Replay Viewer bottom status strip.
+the Replay Viewer hint strip. Replay mode does not show live movement/drop
+hints.
+
+Live 2D controls:
+
+- `A` / `D` or `Left` / `Right`: move active piece
+- `W` / `Up` / `X`: rotate clockwise
+- `Z`: rotate counter-clockwise
+- `S` / `Down`: soft drop
+- `Space`: hard drop
+- `P`: pause / resume gravity tick
+- `R`: reset live 2D
+- `Tab`: return to Replay
+- `Q` / `Esc`: quit shell
+
+Live mode keeps this hint strip visible above the viewport and does not show
+replay frame/case controls except `Tab` back to Replay.
 
 The Replay Viewer uses one container-owned layout: the game renders through a
 `SubViewport` inside `GameArea`, while the right inspector is a fixed-width

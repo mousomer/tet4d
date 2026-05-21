@@ -216,3 +216,5 @@ DimLabel/base_type = &"Label"
 DimLabel/colors/font_color = Color(0.494118, 0.65098, 0.705882, 1)
 AccentLabel/base_type = &"Label"
 AccentLabel/colors/font_color = Color(0.0980392, 0.843137, 1, 1)
+WarningLabel/base_type = &"Label"
+WarningLabel/colors/font_color = Color(1, 0.819608, 0.4, 1)
