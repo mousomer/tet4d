@@ -96,6 +96,11 @@ Current active follow-ups:
   only after the native snapshot reports game-over, makes live/replay hint
   strips always-visible and mode-specific, and aligns live cell/grid styling
   with the Python colored board language.
+- Stage 13 follows with plain bounded 2D gameplay polish only: shell-owned
+  gravity timing, movement/soft-drop input repeat, pause/reset/mode-switch
+  cleanup, next-piece/status HUD display, and tests. C++ remains the sole
+  gameplay authority; 3D, 4D, topology, endgame, C#, Python runtime, and
+  packaging work stay out of scope.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the

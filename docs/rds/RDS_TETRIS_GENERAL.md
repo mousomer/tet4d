@@ -225,6 +225,12 @@ Cross-cutting requirements are defined in:
     presentation, but it must keep Stage 11 parity fixtures separate and must
     not broaden into 3D, 4D, topology, endgame, Python runtime calls, or
     Godot-owned gameplay legality.
+17. Stage 13 may polish only the same live plain bounded 2D slice. Godot may
+    own elapsed-time accumulation, held-key repeat detection, HUD labels,
+    mode switching, and rendering, but it may only send command strings to the
+    native session. C++ remains authoritative for gravity tick results,
+    movement/rotation legality, collision, lock, line clear, scoring, piece
+    sequence, game-over, current/next piece reporting, and state hashing.
 
 ### 3.3 Shared piece-local transform rules
 

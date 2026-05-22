@@ -159,13 +159,13 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "434d1ea2a0c18800bc277ed373755ac91a40b662e27a4aca8b54c4cb70c732bb",
+        "sha256": "e2c6145371df1531546a099d64b619e50bb0e15cc390f1fee4cf683e4e09a15d",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "7943663531aa64484cd85a62c4251c88f2f6dcdd75662413abae842064da6da8",
+        "sha256": "a9243953bc66d30780391c2d6e961270ac389a8721b3cd22d54c4831cd2c9d7e",
         "source_path": "docs/BACKLOG.md"
       },
       {
@@ -177,7 +177,7 @@
       {
         "purpose": "Shared topology/gameplay/endgame product requirements.",
         "role": "product_requirements",
-        "sha256": "a111c4ca000d32d91d41f08d890b4e67de9b814a9854e3604a3348216fbf0371",
+        "sha256": "25c6667c74535f57363ce92c9ad904e6274df5b0b958f56dcbd030f12fcc7efb",
         "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
       },
       {

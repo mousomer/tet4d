@@ -114,7 +114,7 @@ static func display_mode_label(mode: String) -> String:
 
 
 static func authority_label(mode: String) -> String:
-	return "REPLAY ONLY · PYTHON ORACLE · %s DISPLAY" % normalize_display_mode(mode).to_upper()
+	return "REPLAY · PYTHON ORACLE · %s DISPLAY" % normalize_display_mode(mode).to_upper()
 
 
 static func color_for_role(role: String, mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Color:

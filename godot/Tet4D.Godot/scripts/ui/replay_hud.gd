@@ -31,8 +31,8 @@ const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
 const REPLAY_HINT_TEXT := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
-const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · Tab Replay · Q/Esc Quit"
-const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, Tab returns to Replay, and Q/Esc quits. Godot sends commands only."
+const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Replay · Q/Esc Quit"
+const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab returns to Replay, and Q/Esc quits. Godot sends commands only."
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -141,12 +141,14 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 			var game_over := bool(snapshot.get("game_over", false))
 			var state_label := "GAME OVER" if game_over else ("paused" if bool(snapshot.get("paused", _live_2d_paused)) else "running")
 			var reason := str(snapshot.get("game_over_reason", ""))
-			_trace_integrity_label.text = "LIVE 2D · C++ CORE · piece %s · score %d · lines %d · state_hash %s · last command %s · %s%s" % [
+			_trace_integrity_label.text = "LIVE 2D · C++ CORE · piece %s · next %s · score %d · lines %d · state_hash %s · last command %s/%s · %s%s" % [
 				str(snapshot.get("current_piece", "none")),
+				str(snapshot.get("next_piece", "none")),
 				int(snapshot.get("score", 0)),
 				int(snapshot.get("lines", 0)),
 				str(snapshot.get("state_hash", "")).left(12),
 				str(snapshot.get("last_command", "none")),
+				str(snapshot.get("last_command_status", "unknown")),
 				state_label,
 				(" · reason " + reason) if reason != "" else "",
 			]
@@ -170,7 +172,13 @@ func set_playback_state(is_playing: bool, speed: float, diagnostics_visible: boo
 	_speed_value.text = "%s Replay" % ("Playing" if is_playing else "Paused")
 
 
-func set_live_2d_mode(paused: bool, game_over: bool, last_command: String, game_over_reason: String = "") -> void:
+func set_live_2d_mode(
+	paused: bool,
+	game_over: bool,
+	last_command: String,
+	game_over_reason: String = "",
+	gravity_interval_seconds: float = 0.5
+) -> void:
 	_live_2d_paused = paused
 	_live_2d_game_over = game_over
 	_play_button.text = "Resume Live" if paused else "Pause Live"
@@ -182,13 +190,13 @@ func set_live_2d_mode(paused: bool, game_over: bool, last_command: String, game_
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 2D"
 	if _viewport_hint != null:
-		_viewport_hint.text = "Native C++ owns movement, lock, clear, score, and hash"
+		_viewport_hint.text = "Native C++ owns movement, lock, clear, score, and hash · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
 		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
 		_mode_hint_strip.text = ("GAME OVER · %s · %s" % [reason_text, LIVE_2D_HINT_TEXT]) if game_over else LIVE_2D_HINT_TEXT
 		_mode_hint_strip.theme_type_variation = "WarningLabel" if game_over else "AccentLabel"
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER: %s. R resets Live 2D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 2D. Godot sends commands only; C++ owns gameplay state."
+		_replay_note.text = "GAME OVER: %s. R resets Live 2D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 2D. Godot sends commands only; C++ owns gameplay state. P pauses; paused mode blocks gameplay commands."
 	if _hint_label != null:
 		_hint_label.text = LIVE_2D_HINT_TEXT
 	if _help_label != null:

@@ -18,7 +18,11 @@ const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd
 
 const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
-const LIVE_TICK_SECONDS := 0.7
+const LIVE_GRAVITY_INTERVAL_SECONDS := 0.5
+const LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS := 0.22
+const LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS := 0.08
+const LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS := 0.08
+const LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS := 0.055
 
 var _bundle: Dictionary = {}
 var _state := TracePlaybackState.new()
@@ -31,7 +35,23 @@ var _mouse_panning := false
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
 var _live_2d_paused := false
+var _live_2d_session_started := false
 var _live_tick_accumulator := 0.0
+var _live_repeat_elapsed := {
+	"move_left": 0.0,
+	"move_right": 0.0,
+	"soft_drop": 0.0,
+}
+var _live_repeat_next := {
+	"move_left": LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
+	"move_right": LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
+	"soft_drop": LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
+}
+var _live_repeat_held := {
+	"move_left": false,
+	"move_right": false,
+	"soft_drop": false,
+}
 var _live_bridge := Tet4DCoreBridgeScript.new()
 
 var _world_root: Node3D
@@ -58,8 +78,9 @@ func _process(delta: float) -> void:
 		_fit_view()
 	if _mode == MODE_LIVE_2D:
 		if not _live_2d_paused and not _live_snapshot_game_over():
+			_process_live_input_repeat(delta)
 			_live_tick_accumulator += delta
-			if _live_tick_accumulator >= LIVE_TICK_SECONDS:
+			if _live_tick_accumulator >= LIVE_GRAVITY_INTERVAL_SECONDS:
 				_live_tick_accumulator = 0.0
 				_live_2d_command("tick")
 		return
@@ -139,24 +160,6 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("mode_toggle_replay_live"):
 		_enter_replay_mode()
 		return true
-	if _event_action_pressed(event, ["live_move_left", "live_2d_move_left"]):
-		_live_2d_command("move_left")
-		return true
-	if _event_action_pressed(event, ["live_move_right", "live_2d_move_right"]):
-		_live_2d_command("move_right")
-		return true
-	if _event_action_pressed(event, ["live_rotate_cw", "live_2d_rotate_cw"]):
-		_live_2d_command("rotate_cw")
-		return true
-	if _event_action_pressed(event, ["live_rotate_ccw", "live_2d_rotate_ccw"]):
-		_live_2d_command("rotate_ccw")
-		return true
-	if _event_action_pressed(event, ["live_soft_drop", "live_2d_soft_drop"]):
-		_live_2d_command("soft_drop")
-		return true
-	if _event_action_pressed(event, ["live_hard_drop", "live_2d_hard_drop"]):
-		_live_2d_command("hard_drop")
-		return true
 	if _event_action_pressed(event, ["live_pause", "live_2d_pause"]):
 		_toggle_live_2d_pause()
 		return true
@@ -171,6 +174,26 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed(event, ["quit", "replay_quit"]):
 		get_tree().quit()
+		return true
+	if _live_2d_paused or _live_snapshot_game_over():
+		return _event_action_pressed(event, _live_gameplay_action_names())
+	if _event_action_pressed_once(event, ["live_move_left", "live_2d_move_left"]):
+		_dispatch_live_gameplay_command("move_left")
+		return true
+	if _event_action_pressed_once(event, ["live_move_right", "live_2d_move_right"]):
+		_dispatch_live_gameplay_command("move_right")
+		return true
+	if _event_action_pressed_once(event, ["live_rotate_cw", "live_2d_rotate_cw"]):
+		_dispatch_live_gameplay_command("rotate_cw")
+		return true
+	if _event_action_pressed_once(event, ["live_rotate_ccw", "live_2d_rotate_ccw"]):
+		_dispatch_live_gameplay_command("rotate_ccw")
+		return true
+	if _event_action_pressed_once(event, ["live_soft_drop", "live_2d_soft_drop"]):
+		_dispatch_live_gameplay_command("soft_drop")
+		return true
+	if _event_action_pressed_once(event, ["live_hard_drop", "live_2d_hard_drop"]):
+		_dispatch_live_gameplay_command("hard_drop")
 		return true
 	return false
 
@@ -420,7 +443,13 @@ func _build_world_in_game_viewport() -> void:
 func _refresh_hud() -> void:
 	if _mode == MODE_LIVE_2D:
 		var game_over := _live_snapshot_game_over()
-		_hud.set_live_2d_mode(_live_2d_paused, game_over, _live_snapshot_last_command(), _live_snapshot_game_over_reason())
+		_hud.set_live_2d_mode(
+			_live_2d_paused,
+			game_over,
+			_live_snapshot_last_command(),
+			_live_snapshot_game_over_reason(),
+			LIVE_GRAVITY_INTERVAL_SECONDS
+		)
 	else:
 		_hud.set_replay_mode_labels(_state.is_playing, _state.playback_speed, _state.diagnostics_visible)
 	if _current_snapshot.is_empty():
@@ -439,11 +468,13 @@ func _refresh_hud() -> void:
 
 func _enter_live_2d_mode() -> void:
 	_mode = MODE_LIVE_2D
-	_current_document = null
 	_state.is_playing = false
-	_live_2d_paused = false
+	if not _live_2d_session_started:
+		_live_bridge.live_2d_reset()
+		_live_2d_session_started = true
+		_live_2d_paused = false
 	_live_tick_accumulator = 0.0
-	_live_bridge.live_2d_reset()
+	_reset_live_repeat_state()
 	_refresh_live_2d_snapshot()
 	_fit_view()
 	_hud.show_replay_viewer()
@@ -452,6 +483,7 @@ func _enter_live_2d_mode() -> void:
 func _enter_replay_mode() -> void:
 	_mode = MODE_REPLAY
 	_live_2d_paused = true
+	_reset_live_repeat_state()
 	if _current_document == null:
 		var trace_type := _state.selected_trace_type if not _state.selected_trace_type.is_empty() else STARTUP_TRACE_TYPE
 		_select_trace_family(trace_type, _choose_startup_case_id(trace_type), false, true)
@@ -462,23 +494,101 @@ func _enter_replay_mode() -> void:
 
 
 func _live_2d_command(command: String) -> void:
-	if command != "tick":
+	if command == "hard_drop" or command == "soft_drop":
 		_live_tick_accumulator = 0.0
 	_live_bridge.live_2d_apply_command(command)
 	_refresh_live_2d_snapshot()
 
 
+func _dispatch_live_gameplay_command(command: String) -> bool:
+	if _live_2d_paused or _live_snapshot_game_over():
+		return false
+	_live_2d_command(command)
+	return true
+
+
 func _reset_live_2d() -> void:
 	_live_bridge.live_2d_reset()
+	_live_2d_session_started = true
 	_live_tick_accumulator = 0.0
 	_live_2d_paused = false
+	_reset_live_repeat_state()
 	_refresh_live_2d_snapshot()
 	_fit_view()
 
 
 func _toggle_live_2d_pause() -> void:
 	_live_2d_paused = not _live_2d_paused
+	_reset_live_repeat_state()
 	_refresh_hud()
+
+
+func _process_live_input_repeat(delta: float) -> void:
+	var left_held := _any_action_pressed(["live_move_left", "live_2d_move_left"])
+	var right_held := _any_action_pressed(["live_move_right", "live_2d_move_right"])
+	if left_held and right_held:
+		_reset_live_repeat_action("move_left")
+		_reset_live_repeat_action("move_right")
+	else:
+		_process_live_repeat_action(
+			"move_left",
+			left_held,
+			"move_left",
+			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
+			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
+			delta
+		)
+		_process_live_repeat_action(
+			"move_right",
+			right_held,
+			"move_right",
+			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
+			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
+			delta
+		)
+	_process_live_repeat_action(
+		"soft_drop",
+		_any_action_pressed(["live_soft_drop", "live_2d_soft_drop"]),
+		"soft_drop",
+		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
+		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
+		delta
+	)
+
+
+func _process_live_repeat_action(
+	key: String,
+	held: bool,
+	command: String,
+	initial_delay: float,
+	repeat_interval: float,
+	delta: float
+) -> void:
+	if not held:
+		_reset_live_repeat_action(key)
+		return
+	if not bool(_live_repeat_held.get(key, false)):
+		_live_repeat_held[key] = true
+		_live_repeat_elapsed[key] = 0.0
+		_live_repeat_next[key] = initial_delay
+		return
+	_live_repeat_elapsed[key] = float(_live_repeat_elapsed.get(key, 0.0)) + delta
+	if float(_live_repeat_elapsed[key]) < float(_live_repeat_next[key]):
+		return
+	_live_repeat_elapsed[key] = 0.0
+	_live_repeat_next[key] = repeat_interval
+	_dispatch_live_gameplay_command(command)
+
+
+func _reset_live_repeat_state() -> void:
+	for key in _live_repeat_held.keys():
+		_reset_live_repeat_action(str(key))
+
+
+func _reset_live_repeat_action(key: String) -> void:
+	_live_repeat_held[key] = false
+	_live_repeat_elapsed[key] = 0.0
+	_live_repeat_next[key] = LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS if key == "soft_drop" else LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS
 
 
 func _refresh_live_2d_snapshot() -> void:
@@ -517,6 +627,9 @@ func _refresh_live_2d_snapshot() -> void:
 
 
 func _live_snapshot_last_command() -> String:
+	var last_command := str(_current_snapshot.get("last_command", ""))
+	if not last_command.is_empty():
+		return last_command
 	for line in _current_snapshot.get("diagnostics_lines", []):
 		var text := str(line)
 		if text.begins_with("last_command: "):
@@ -549,6 +662,36 @@ func _event_action_pressed(event: InputEvent, action_names: Array) -> bool:
 		if event.is_action_pressed(str(action_name)):
 			return true
 	return false
+
+
+func _event_action_pressed_once(event: InputEvent, action_names: Array) -> bool:
+	if event is InputEventKey and (event as InputEventKey).echo:
+		return false
+	return _event_action_pressed(event, action_names)
+
+
+func _any_action_pressed(action_names: Array) -> bool:
+	for action_name in action_names:
+		if Input.is_action_pressed(str(action_name)):
+			return true
+	return false
+
+
+func _live_gameplay_action_names() -> Array:
+	return [
+		"live_move_left",
+		"live_2d_move_left",
+		"live_move_right",
+		"live_2d_move_right",
+		"live_rotate_cw",
+		"live_2d_rotate_cw",
+		"live_rotate_ccw",
+		"live_2d_rotate_ccw",
+		"live_soft_drop",
+		"live_2d_soft_drop",
+		"live_hard_drop",
+		"live_2d_hard_drop",
+	]
 
 
 func _next_snapshot() -> Dictionary:

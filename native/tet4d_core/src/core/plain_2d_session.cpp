@@ -152,6 +152,7 @@ void Plain2DSession::reset() {
 	next_piece_index_ = 0;
 	spawn_next_piece();
 	last_command_ = "reset";
+	last_command_status_ = "reset";
 	command_count_ = 0;
 }
 
@@ -162,6 +163,7 @@ std::string Plain2DSession::apply_command(const std::string &command) {
 	}
 	if (state_.game_over) {
 		last_command_ = "rejected:" + command;
+		last_command_status_ = "rejected";
 		return command_status(command);
 	}
 
@@ -183,10 +185,12 @@ std::string Plain2DSession::apply_command(const std::string &command) {
 		return command_status(command);
 	} else {
 		last_command_ = "unsupported:" + command;
+		last_command_status_ = "unsupported";
 		return command_status(command);
 	}
 
 	last_command_ = command;
+	last_command_status_ = "accepted";
 	++command_count_;
 	return command_status(command);
 }
@@ -202,6 +206,7 @@ std::string Plain2DSession::tick() {
 		}
 	}
 	last_command_ = "tick";
+	last_command_status_ = state_.game_over ? "game_over" : "accepted";
 	++command_count_;
 	return command_status("tick");
 }
@@ -228,7 +233,9 @@ std::string Plain2DSession::snapshot_json() const {
 		<< "\"game_over_reason: " << state_.game_over_reason << "\","
 		<< "\"paused: false\","
 		<< "\"current_piece: " << current_piece_name() << "\","
+		<< "\"next_piece: " << next_piece_name() << "\","
 		<< "\"last_command: " << last_command_ << "\","
+		<< "\"last_command_status: " << last_command_status_ << "\","
 		<< "\"locked_count: " << state_.board.cells().size() << "\""
 		<< "]"
 		<< ",\"dimension\":2"
@@ -245,6 +252,7 @@ std::string Plain2DSession::snapshot_json() const {
 		<< "\"mode: Live 2D\","
 		<< "\"authority: C++ GDExtension\","
 		<< "\"current_piece: " << current_piece_name() << "\","
+		<< "\"next_piece: " << next_piece_name() << "\","
 		<< "\"last_command: " << last_command_ << "\","
 		<< "\"state_hash: " << hash << "\""
 		<< "]"
@@ -253,7 +261,9 @@ std::string Plain2DSession::snapshot_json() const {
 		<< ",\"game_over\":" << bool_json(state_.game_over)
 		<< ",\"game_over_reason\":\"" << state_.game_over_reason << "\""
 		<< ",\"last_command\":\"" << last_command_ << "\""
+		<< ",\"last_command_status\":\"" << last_command_status_ << "\""
 		<< ",\"lines\":" << state_.lines
+		<< ",\"next_piece\":\"" << next_piece_name() << "\""
 		<< ",\"paused\":false"
 		<< ",\"score\":" << state_.score
 		<< ",\"state_hash\":\"" << hash << "\""
@@ -268,10 +278,12 @@ std::string Plain2DSession::status() const {
 	out << "live_plain_2d score=" << state_.score
 		<< " lines=" << state_.lines
 		<< " current_piece=" << current_piece_name()
+		<< " next_piece=" << next_piece_name()
 		<< " game_over=" << bool_json(state_.game_over)
 		<< " game_over_reason=" << state_.game_over_reason
 		<< " paused=false"
-		<< " last_command=" << last_command_;
+		<< " last_command=" << last_command_
+		<< " last_command_status=" << last_command_status_;
 	return out.str();
 }
 
@@ -295,6 +307,11 @@ std::string Plain2DSession::current_piece_name() const {
 		return "none";
 	}
 	return state_.active_piece->shape.name;
+}
+
+std::string Plain2DSession::next_piece_name() const {
+	const std::vector<PieceShape2D> &sequence = live_piece_sequence();
+	return sequence[next_piece_index_ % sequence.size()].name;
 }
 
 std::string Plain2DSession::command_status(const std::string &command) const {

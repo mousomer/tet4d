@@ -25,12 +25,13 @@ simulation, or Python runtime calls from Godot. Stage 12 adds a separate live
 plain bounded 2D shell that must keep C++ as the gameplay authority and must
 not alter the Stage 11 trace parity contract.
 
-Stage 12b live sequencing and game-over lifecycle are explicitly separate from
-this parity fixture path. Live mode may use a deterministic fixed classic
-sequence owned by `Plain2DSession`, and its snapshots may expose live-only
-fields such as `game_over`, `game_over_reason`, `paused`, current piece, and
-last command. Parity cases continue to use the synthetic active piece, authored
-command list, and post-lock spawn shape recorded below.
+Stage 12b/13 live sequencing, game-over lifecycle, next-piece display, and
+shell repeat timing are explicitly separate from this parity fixture path.
+Live mode may use a deterministic fixed classic sequence owned by
+`Plain2DSession`, and its snapshots may expose live-only fields such as
+`game_over`, `game_over_reason`, `paused`, current piece, next piece, last
+command, and last command status. Parity cases continue to use the synthetic
+active piece, authored command list, and post-lock spawn shape recorded below.
 
 ## Stage 11 Trace Definitions
 

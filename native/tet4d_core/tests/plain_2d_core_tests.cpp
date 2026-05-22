@@ -89,6 +89,7 @@ void test_live_plain_2d_session() {
 	require(snapshot.find("\"case_id\":\"live_plain_2d\"") != std::string::npos, "live session case id missing");
 	require(snapshot.find("\"active_cells\"") != std::string::npos, "live session active cells missing");
 	require(snapshot.find("\"current_piece\":\"I\"") != std::string::npos, "live session should start with deterministic I piece");
+	require(snapshot.find("\"next_piece\":\"O\"") != std::string::npos, "live session should expose next piece");
 
 	session.apply_command("soft_drop");
 	require(session.state_hash() != initial_hash, "soft_drop should change live state hash");
@@ -97,6 +98,8 @@ void test_live_plain_2d_session() {
 	require(snapshot.find("\"score: 5\"") != std::string::npos, "hard_drop should score live session");
 	require(snapshot.find("\"locked_count: 4\"") != std::string::npos, "hard_drop should lock I piece cells");
 	require(snapshot.find("\"current_piece\":\"O\"") != std::string::npos, "first live lock should spawn O piece");
+	require(snapshot.find("\"next_piece\":\"T\"") != std::string::npos, "post-lock live snapshot should expose next piece");
+	require(snapshot.find("\"last_command_status\":\"accepted\"") != std::string::npos, "live hard drop should mark command accepted");
 	session.apply_command("hard_drop");
 	snapshot = session.snapshot_json();
 	require(snapshot.find("\"current_piece\":\"T\"") != std::string::npos, "second live lock should spawn T piece");
@@ -106,6 +109,25 @@ void test_live_plain_2d_session() {
 	require(session.snapshot_json().find("\"current_piece\":\"I\"") != std::string::npos, "reset should restore deterministic initial piece");
 	session.apply_command("tick");
 	require(session.snapshot_json().find("\"last_command: tick\"") != std::string::npos, "tick command should update live diagnostics");
+}
+
+void test_live_plain_2d_gravity_tick_sequence() {
+	tet4d::core::Plain2DSession session;
+	const std::string initial_hash = session.state_hash();
+	session.tick();
+	require(session.state_hash() != initial_hash, "gravity tick should change state hash when active piece can fall");
+	require(session.snapshot_json().find("\"current_piece\":\"I\"") != std::string::npos, "first gravity tick should keep I active");
+
+	for (int step = 0; step < 8 && session.snapshot_json().find("\"current_piece\":\"O\"") == std::string::npos; ++step) {
+		session.tick();
+	}
+	std::string snapshot = session.snapshot_json();
+	require(snapshot.find("\"current_piece\":\"O\"") != std::string::npos, "gravity ticks should eventually lock I and spawn O");
+	require(snapshot.find("\"score: 5\"") != std::string::npos, "gravity lock should score through C++");
+	require(snapshot.find("\"last_command_status\":\"accepted\"") != std::string::npos, "gravity tick should report accepted status");
+
+	session.reset();
+	require(session.state_hash() == initial_hash, "reset after gravity sequence should restore deterministic initial hash");
 }
 
 void test_game_over_spawn_blocked_and_rejected_commands() {
@@ -130,6 +152,7 @@ void test_game_over_spawn_blocked_and_rejected_commands() {
 	const std::string game_over_hash = session.state_hash();
 	const std::string status = session.apply_command("move_left");
 	require(status.find("last_command=rejected:move_left") != std::string::npos, "game_over command should be rejected");
+	require(status.find("last_command_status=rejected") != std::string::npos, "game_over command should report rejected status");
 	require(session.state_hash() == game_over_hash, "rejected game_over command should not change state hash");
 
 	session.reset();
@@ -152,6 +175,7 @@ int main(int argc, char **argv) {
 	test_trace_export_smoke();
 	test_stage11_trace_exports();
 	test_live_plain_2d_session();
+	test_live_plain_2d_gravity_tick_sequence();
 	test_game_over_spawn_blocked_and_rejected_commands();
 	std::cout << "tet4d_core native plain 2D tests passed\n";
 	return 0;

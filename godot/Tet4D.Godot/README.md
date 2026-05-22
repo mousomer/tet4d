@@ -133,6 +133,12 @@ snapshots also expose `game_over`, `game_over_reason`, `paused`, and
 `state_hash`; Godot renders those fields, stops automatic gravity ticks after
 native game-over, and routes reset/new game back to C++.
 
+Stage 13 keeps that same plain 2D scope and polishes the shell loop. Godot
+owns elapsed-time accumulation with a visible `0.50s` gravity interval,
+left/right and soft-drop held-key repeat, pause-mode command gating, and
+live/replay mode switching. C++ still owns every gameplay result and now
+exposes `next_piece` and `last_command_status` for HUD display.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -172,11 +178,16 @@ Live 2D controls:
 - `Space`: hard drop
 - `P`: pause / resume gravity tick
 - `R`: reset live 2D
+- `F`: fit live board view
 - `Tab`: return to Replay
 - `Q` / `Esc`: quit shell
 
 Live mode keeps this hint strip visible above the viewport and does not show
 replay frame/case controls except `Tab` back to Replay.
+Switching to Replay pauses live ticking but preserves the native live session;
+use `R` / Reset Live for a fresh deterministic new game. While paused, Godot
+blocks gameplay command dispatch except pause/resume, reset, fit, mode switch,
+help, and quit.
 
 The Replay Viewer uses one container-owned layout: the game renders through a
 `SubViewport` inside `GameArea`, while the right inspector is a fixed-width

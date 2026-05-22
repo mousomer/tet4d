@@ -257,11 +257,13 @@ feature porting starts.
    parity-only.
 5. Stage 12: connect a narrow live plain bounded 2D Godot shell to the native
    core. Godot sends commands and renders C++ snapshots only.
-6. Stage 13: port 3D gameplay and parity tests.
-7. Stage 14: port 4D gameplay and parity tests.
-8. Stage 15: port topology transport and Topology Lab launch semantics.
-9. Stage 16: port locked-cell endgame particle simulation.
-10. Stage 17: retire Python as semantic oracle only after trace parity,
+6. Stage 13: polish the existing live plain bounded 2D slice into a minimally
+   usable first playable loop. Keep Godot as input/HUD/render shell only.
+7. Stage 14: port 3D gameplay and parity tests.
+8. Stage 15: port 4D gameplay and parity tests.
+9. Stage 16: port topology transport and Topology Lab launch semantics.
+10. Stage 17: port locked-cell endgame particle simulation.
+11. Stage 18: retire Python as semantic oracle only after trace parity,
    product acceptance, and authority-doc updates explicitly allow it.
 
 Stages may be split smaller if a parity gate is too broad.
@@ -511,9 +513,41 @@ gravity ticks once the native snapshot reports game-over, render `GAME OVER`
 with the native reason, and continue to route reset back through C++.
 
 The always-visible viewer hint strip is mode-specific. Live 2D shows:
-`A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · Tab Replay · Q/Esc Quit`.
+`A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Replay · Q/Esc Quit`.
 Replay shows:
 `Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit`.
 Live cells must remain in the shared replay renderer/material system while
 using Python-like colored tetromino cells, crisp borders, readable locked
 cells, and a visible board grid/bounds rather than flat diagnostic blocks.
+
+## 26. Stage 13 Plain 2D Gameplay Polish
+
+Stage 13 keeps the Stage 12/12b semantic boundary and broadens only the
+plain bounded 2D live shell quality. It does not port 3D, 4D, topology,
+endgame, Python runtime, C#, Steam, or console behavior.
+
+Godot may own live presentation timing and input repeat:
+
+- gravity accumulator interval: `0.50s` by default;
+- left/right hold repeat: shell detects held keys and sends repeated
+  `move_left` / `move_right` command strings after a short initial delay;
+- soft-drop hold repeat: shell detects held keys and sends repeated
+  `soft_drop` command strings at a faster presentation cadence;
+- rotation and hard drop remain press-triggered commands;
+- paused live mode blocks gameplay command dispatch in Godot except
+  pause/resume, reset/new game, mode switch, fit view, help, and quit.
+
+C++ still owns every result of those commands: movement legality, rotation
+legality, gravity tick outcome, lock, line clear, scoring, piece sequence,
+game-over, and state hash. The live snapshot/status may expose additional
+display-only fields such as `next_piece` and `last_command_status`, but Godot
+must only display them.
+
+Live/replay mode switching must preserve authority separation. Switching to
+Replay pauses live ticking without destroying the live session. Switching back
+to Live 2D shows the current native live session, or creates one if no live
+session exists yet. Reset/New Game is the explicit action that creates a fresh
+deterministic live session.
+
+Ghost/drop preview remains deferred unless C++ computes and exposes it in a
+future snapshot field. Godot must not compute hard-drop landing cells.

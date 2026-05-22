@@ -13,7 +13,11 @@ Stage 12b keeps live piece selection in C++ with a deterministic fixed classic
 sequence (`I, O, T, S, Z, J, L`) separate from the Stage 11 parity fixtures.
 The live session also owns game-over detection and command rejection: snapshots
 include `game_over`, `game_over_reason`, `paused`, and `state_hash`, and
-gameplay commands after game-over are rejected until reset/new game.
+gameplay commands after game-over are rejected until reset/new game. Stage 13
+adds display-only `next_piece` and `last_command_status` fields for the Godot
+HUD; Godot may time gravity and input repeat, but C++ owns the result of every
+`tick`, movement, rotation, soft drop, hard drop, lock, line clear, score,
+piece sequence, game-over, and hash update.
 
 The native source tree has two layers:
 
@@ -78,7 +82,7 @@ for `gameplay_plain_2d_short`, `gameplay_plain_2d_rotation_short`,
 `gameplay_plain_2d_hard_drop_lock`, and
 `gameplay_plain_2d_line_clear_short`.
 The live API is plain bounded 2D only. It exposes the current piece name in
-live status/snapshot data plus native game-over fields, but Godot must not
-choose or mutate the piece sequence, compute legality, or synthesize
-game-over. It must not expose 3D, 4D, topology, endgame, Python runtime, C#,
-Steam, or console behavior.
+live status/snapshot data plus native next-piece and game-over fields, but
+Godot must not choose or mutate the piece sequence, compute legality, or
+synthesize game-over. It must not expose 3D, 4D, topology, endgame, Python
+runtime, C#, Steam, or console behavior.

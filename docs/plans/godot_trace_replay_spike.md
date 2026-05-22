@@ -176,3 +176,11 @@ Stage 11 broadens the plain bounded 2D native parity surface with additional
 Python golden traces for rotation, hard-drop lock, and a single-line clear.
 Godot still receives only parity/smoke APIs by case id; no live gameplay
 controls or semantic authority move into the replay shell.
+
+Stage 12/12b add a narrow live plain bounded 2D shell beside replay mode. The
+live shell sends command strings to C++ and renders returned snapshots; C++
+owns movement, rotation, lock, line clear, scoring, piece sequence,
+game-over, and state hash. Stage 13 polishes only that same plain 2D live
+slice with shell-owned gravity timing, input repeat, mode switching, and HUD
+presentation. Replay remains the Python-oracle trace browser and must not
+receive live gameplay controls.

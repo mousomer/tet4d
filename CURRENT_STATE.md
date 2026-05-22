@@ -148,6 +148,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   the live hint strip is always visible and mode-specific, and live cells use
   Python-like colored tetromino styling with crisp borders and a readable board
   grid through the shared renderer.
+- Stage 13 is a plain bounded 2D live polish stage, not the old 3D-port slot.
+  Godot may own elapsed-time accumulation, held-key detection, HUD labels, and
+  mode switching, but it only sends command strings. C++ still owns gravity
+  tick results, movement/rotation legality, lock, line clear, score, piece
+  sequence, next/current piece reporting, game-over, and state hash. Live
+  replay switching preserves the native session unless Reset/New Game is used.
+  Ghost/drop preview remains deferred until C++ computes it.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

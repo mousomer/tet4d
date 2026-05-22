@@ -9,11 +9,11 @@ func run() -> Array:
 	if not bridge.is_available():
 		failures.append("Tet4DCoreApi should be registered by the Stage 8 GDExtension")
 		return failures
-	_assert_equal(failures, bridge.get_core_version(), "0.5.0-stage12", "core version")
+	_assert_equal(failures, bridge.get_core_version(), "0.6.0-stage13", "core version")
 	_assert_equal(
 		failures,
 		bridge.get_core_status(),
-		"native tet4d core loaded; Stage 12 live plain 2D session available",
+		"native tet4d core loaded; Stage 13 polished live plain 2D session available",
 		"core status"
 	)
 	_assert_equal(failures, bridge.echo_text("oracle-check"), "oracle-check", "echo text")
@@ -73,6 +73,7 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, snapshot.get("trace_type"), "live_2d", "live 2D trace type")
 	_assert_equal(failures, snapshot.get("case_id"), "live_plain_2d", "live 2D case")
 	_assert_equal(failures, snapshot.get("current_piece", ""), "I", "live 2D deterministic initial piece")
+	_assert_equal(failures, snapshot.get("next_piece", ""), "O", "live 2D deterministic next piece")
 	_assert_equal(failures, snapshot.get("game_over", true), false, "live 2D initial game_over")
 	_assert_equal(failures, snapshot.get("game_over_reason", "unexpected"), "", "live 2D initial game_over_reason")
 	_assert_equal(failures, snapshot.get("paused", true), false, "live 2D initial paused")
@@ -94,7 +95,9 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 	if not after_drop.has("lines"):
 		failures.append("live snapshot exposes lines")
 	_assert_equal(failures, after_drop.get("current_piece", ""), "O", "live 2D first post-lock piece")
+	_assert_equal(failures, after_drop.get("next_piece", ""), "T", "live 2D first post-lock next piece")
 	_assert_equal(failures, after_drop.get("last_command", ""), "hard_drop", "live snapshot exposes last command")
+	_assert_equal(failures, after_drop.get("last_command_status", ""), "accepted", "live snapshot exposes last command status")
 	bridge.live_2d_apply_command("hard_drop")
 	var second_drop = JSON.parse_string(bridge.live_2d_snapshot_json())
 	if typeof(second_drop) == TYPE_DICTIONARY:
@@ -127,3 +130,5 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 	bridge.live_2d_tick()
 	if bridge.live_2d_status().find("last_command=tick") < 0:
 		failures.append("live_2d_tick should update native status")
+	if bridge.live_2d_status().find("next_piece=") < 0:
+		failures.append("live_2d_status should expose next piece")
