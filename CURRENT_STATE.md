@@ -155,6 +155,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   sequence, next/current piece reporting, game-over, and state hash. Live
   replay switching preserves the native session unless Reset/New Game is used.
   Ghost/drop preview remains deferred until C++ computes it.
+- Stage 14 is planning/governance only for extending the native core from the
+  accepted plain bounded 2D baseline to plain bounded 3D/4D trace parity. The
+  plan is `docs/plans/plain_nd_core_parity_plan.md` and chooses a conservative
+  sidecar ND path: preserve `Plain2DSession` and Stage 11/13 2D behavior, then
+  target `gameplay_plain_3d_short` and `gameplay_plain_4d_short` as native
+  trace parity work. Python remains the oracle until C++ matches those traces,
+  including `state_hash`; no 3D/4D live Godot gameplay, topology, endgame, C#,
+  Python runtime calls from Godot, or Godot-side gameplay legality is
+  authorized by Stage 14.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

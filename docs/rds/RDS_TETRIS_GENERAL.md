@@ -231,6 +231,18 @@ Cross-cutting requirements are defined in:
     native session. C++ remains authoritative for gravity tick results,
     movement/rotation legality, collision, lock, line clear, scoring, piece
     sequence, game-over, current/next piece reporting, and state hashing.
+18. Stage 14 is planning/governance only for plain bounded 3D/4D native
+    parity. It must preserve the accepted plain 2D C++/Godot boundary and must
+    not implement 3D, 4D, topology transport, endgame simulation, live Godot
+    3D/4D gameplay, C#, Python runtime calls from Godot, or Godot-side
+    gameplay legality.
+19. The next native ND parity target is trace-first:
+    `gameplay_plain_3d_short` and `gameplay_plain_4d_short`. Python remains
+    the oracle until the C++ core matches those traces, including
+    per-frame/final `state_hash`.
+20. The preferred Stage 15+ strategy is to add a minimal sidecar plain-ND path
+    beside the accepted 2D core, then migrate shared helpers only after
+    3D/4D trace parity is proven.
 
 ### 3.3 Shared piece-local transform rules
 

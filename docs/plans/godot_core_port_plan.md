@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active broadened plain 2D parity integration
-Last updated: 2026-05-20
+Status: active plain 2D accepted; planning plain ND native parity
+Last updated: 2026-05-23
 
 ## 1. Decision Summary
 
@@ -259,11 +259,18 @@ feature porting starts.
    core. Godot sends commands and renders C++ snapshots only.
 6. Stage 13: polish the existing live plain bounded 2D slice into a minimally
    usable first playable loop. Keep Godot as input/HUD/render shell only.
-7. Stage 14: port 3D gameplay and parity tests.
-8. Stage 15: port 4D gameplay and parity tests.
-9. Stage 16: port topology transport and Topology Lab launch semantics.
-10. Stage 17: port locked-cell endgame particle simulation.
-11. Stage 18: retire Python as semantic oracle only after trace parity,
+7. Stage 14: plan the plain bounded 3D/4D native parity path. No 3D/4D code.
+8. Stage 15: add native plain-ND trace contract scaffolding and a minimal ND
+   data model beside the accepted 2D core.
+9. Stage 16: pass `gameplay_plain_3d_short` native trace parity.
+10. Stage 17: pass `gameplay_plain_4d_short` native trace parity.
+11. Stage 18: add explicit ND rotation/clear/game-over trace planning and
+   implementation only where golden traces exist.
+12. Stage 19: prototype live Godot 3D/4D shell only after native plain-ND trace
+   parity is stable.
+13. Stage 20: plan topology transport and Topology Lab launch semantics.
+14. Stage 21: port locked-cell endgame particle simulation.
+15. Stage 22: retire Python as semantic oracle only after trace parity,
    product acceptance, and authority-doc updates explicitly allow it.
 
 Stages may be split smaller if a parity gate is too broad.
@@ -551,3 +558,30 @@ deterministic live session.
 
 Ghost/drop preview remains deferred unless C++ computes and exposes it in a
 future snapshot field. Godot must not compute hard-drop landing cells.
+
+## 27. Stage 14 Plain ND Core Parity Plan
+
+Stage 14 is documentation/governance only. The detailed plan lives in
+`docs/plans/plain_nd_core_parity_plan.md`.
+
+The next native parity targets are:
+
+- `gameplay_plain_3d_short`;
+- `gameplay_plain_4d_short`.
+
+The plan chooses a conservative sidecar strategy: preserve the accepted plain
+2D core and live `Plain2DSession`, then add a minimal runtime-dimensional
+plain-ND parity path beside it. The first ND implementation stage should use
+fixture-driven trace parity, lexicographically sorted coordinate arrays, and
+the existing compact canonical JSON/SHA-256 parity machinery. It should not
+template-refactor the accepted 2D live path.
+
+The existing target traces cover only `move_axis`, `soft_drop`, and
+`hard_drop` in plain bounded 3D/4D. They do not cover ND rotation, plane
+clears, topology, game-over, RNG/bag parity, or live Godot 3D/4D controls.
+Those behaviors require later explicit traces before native code becomes
+authoritative for them.
+
+Stage 14 forbids 3D/4D implementation, topology transport, endgame simulation,
+live Godot 3D/4D gameplay, C#, Python runtime calls from Godot, and
+Godot-side gameplay legality.

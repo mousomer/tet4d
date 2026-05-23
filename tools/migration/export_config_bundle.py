@@ -88,6 +88,26 @@ AUTHORITY_DOCS: tuple[tuple[str, str, str], ...] = (
         "migration_bundle_authority",
         "Stage 4 generated config bundle and packaging boundary contract.",
     ),
+    (
+        "docs/plans/godot_trace_replay_spike.md",
+        "godot_replay_authority",
+        "Stage 6 Godot replay shell and runtime bundle boundary contract.",
+    ),
+    (
+        "docs/plans/godot_core_port_plan.md",
+        "godot_core_port_authority",
+        "Stage 7+ Godot shell and native core-port ordering authority.",
+    ),
+    (
+        "docs/plans/plain_2d_core_parity_contract.md",
+        "plain_2d_core_parity_authority",
+        "Accepted plain bounded 2D native trace parity contract.",
+    ),
+    (
+        "docs/plans/plain_nd_core_parity_plan.md",
+        "plain_nd_core_parity_authority",
+        "Stage 14 plain bounded 3D/4D native trace parity plan.",
+    ),
 )
 
 CONFIG_CATEGORY_PREFIXES: tuple[tuple[str, str], ...] = (

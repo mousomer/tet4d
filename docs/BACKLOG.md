@@ -44,8 +44,11 @@ snapshot and `state_hash` parity. Stage 11 broadens plain bounded 2D parity
 with small Python golden traces for rotation, hard-drop lock, and line clear;
 it still does not open 3D, 4D, topology, endgame, live Godot gameplay, Python
 runtime, C#, Steam, or console
-implementation; shell-preserving cleanup and endgame visual polish remain
-non-blocking and must not reopen semantics.
+implementation; Stage 12/12b and Stage 13 have accepted the narrow live plain
+bounded 2D Godot shell with C++ as gameplay authority; Stage 14 is now the
+planning-only gate for plain bounded 3D/4D native trace parity. Shell-
+preserving cleanup and endgame visual polish remain non-blocking and must not
+reopen semantics.
 
 Current active follow-ups:
 
@@ -101,6 +104,13 @@ Current active follow-ups:
   cleanup, next-piece/status HUD display, and tests. C++ remains the sole
   gameplay authority; 3D, 4D, topology, endgame, C#, Python runtime, and
   packaging work stay out of scope.
+- Stage 14 is planning/governance only for plain bounded 3D/4D native parity.
+  `docs/plans/plain_nd_core_parity_plan.md` records the Python ND oracle
+  surfaces, existing `gameplay_plain_3d_short` /
+  `gameplay_plain_4d_short` trace coverage, and the conservative sidecar ND
+  strategy. Stage 14 does not implement 3D/4D code, live Godot 3D/4D gameplay,
+  topology transport, endgame simulation, C#, Python runtime calls from
+  Godot, or Godot-side gameplay legality.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -282,11 +292,22 @@ stays synchronized, and the contract validator accepts the backlog shape.
     enough to match required fields plus `state_hash`; keep Godot non-playable
     and do not expose player movement, topology, 3D, 4D, endgame, Python
     runtime, C#, Steam, or console implementation.
-13. `ACTIVE` `[BKL-P3-020]` Stage 12 narrow playable plain-2D Godot shell:
+13. `DONE` `[BKL-P3-020]` Stage 12 narrow playable plain-2D Godot shell:
     add a Live 2D mode where Godot captures input and renders snapshots while
     native C++ owns movement, rotation, tick, hard drop, lock, line clear,
     scoring, spawn, and state hash. Keep replay mode intact and do not expose
     topology, 3D, 4D, endgame, Python runtime, C#, Steam, or console work.
+14. `DONE` `[BKL-P3-021]` Stage 13 plain 2D gameplay polish:
+    polish only the accepted live plain bounded 2D slice with shell-owned
+    gravity timing, held-key repeat, pause/reset, mode switching, HUD cleanup,
+    and replay preservation while C++ remains gameplay authority.
+15. `ACTIVE` `[BKL-P3-022]` Stage 14 plain ND core parity plan:
+    document the path from accepted native plain 2D to plain bounded 3D/4D
+    trace parity. The plan targets `gameplay_plain_3d_short` and
+    `gameplay_plain_4d_short`, keeps Python as oracle, preserves the accepted
+    2D live path, chooses sidecar ND implementation before any broad
+    generalization, and forbids topology, endgame, live Godot 3D/4D gameplay,
+    C#, Python runtime calls from Godot, and Godot-side gameplay legality.
 
 ## Governance Watchlist
 

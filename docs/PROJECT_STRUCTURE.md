@@ -161,8 +161,11 @@ The current rule is one-way:
     plain bounded 2D parity to rotation, hard-drop lock, and line-clear golden
     traces. Stage 12 adds a narrow live plain bounded 2D shell where Godot
     routes input and renders C++ snapshots while native code owns gameplay
-    state transitions. No 3D, 4D, topology, endgame, Python runtime, C#,
-    Steam, or console implementation is authorized here.
+    state transitions. Stage 13 polishes only that accepted live 2D slice.
+    Stage 14 adds `docs/plans/plain_nd_core_parity_plan.md` as the planning
+    gate for plain bounded 3D/4D native parity and does not implement ND
+    gameplay. No topology, endgame, Python runtime, C#, Steam, or console
+    implementation is authorized here.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

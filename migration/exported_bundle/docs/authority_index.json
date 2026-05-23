@@ -4,25 +4,25 @@
     {
       "purpose": "Current migration and handoff state.",
       "role": "restart_handoff",
-      "sha256": "e2c6145371df1531546a099d64b619e50bb0e15cc390f1fee4cf683e4e09a15d",
+      "sha256": "ceadb7ed5255e4e4cbc4feb310a764a0a32af31acf9d9fe3eb6519899bb50bde",
       "source_path": "CURRENT_STATE.md"
     },
     {
       "purpose": "Active migration follow-up tracker.",
       "role": "backlog",
-      "sha256": "a9243953bc66d30780391c2d6e961270ac389a8721b3cd22d54c4831cd2c9d7e",
+      "sha256": "c9f25ced5027a9c53fc3fd75f152489f8932c0ba93104df73c8a407e0c663ade",
       "source_path": "docs/BACKLOG.md"
     },
     {
       "purpose": "Generated package layout and source-of-truth inventory.",
       "role": "project_structure",
-      "sha256": "b87bb7e7a1f4f512a530df37550fc86f02dfb3d20c3c603890c3ce569a87406e",
+      "sha256": "bd412f3e457c40a407967134d9797b329422d86c6b15e2e647f823885e1a62ca",
       "source_path": "docs/PROJECT_STRUCTURE.md"
     },
     {
       "purpose": "Shared topology/gameplay/endgame product requirements.",
       "role": "product_requirements",
-      "sha256": "25c6667c74535f57363ce92c9ad904e6274df5b0b958f56dcbd030f12fcc7efb",
+      "sha256": "946d84e35f6d4baf4db750298d1d0e3072fd71677282d210e3a66d9afb1b0f3e",
       "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
     },
     {
@@ -54,6 +54,30 @@
       "role": "migration_bundle_authority",
       "sha256": "2b60c8727c6111edff667370f88998510592506c30b990b5c45297d9c27593a7",
       "source_path": "docs/plans/migration_config_bundle.md"
+    },
+    {
+      "purpose": "Stage 6 Godot replay shell and runtime bundle boundary contract.",
+      "role": "godot_replay_authority",
+      "sha256": "d6f19dab7614de586a4fe53328604da782abf483ff7658c976d4fae8a822a114",
+      "source_path": "docs/plans/godot_trace_replay_spike.md"
+    },
+    {
+      "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
+      "role": "godot_core_port_authority",
+      "sha256": "3c3fc32cd18f98a8e082a767dff8026e70c0aa528f803fef6e1a54ad62ef176c",
+      "source_path": "docs/plans/godot_core_port_plan.md"
+    },
+    {
+      "purpose": "Accepted plain bounded 2D native trace parity contract.",
+      "role": "plain_2d_core_parity_authority",
+      "sha256": "b7cf7e723325f806a33065c1fa617a06df1dedd47981fed7f408e9592d4a5750",
+      "source_path": "docs/plans/plain_2d_core_parity_contract.md"
+    },
+    {
+      "purpose": "Stage 14 plain bounded 3D/4D native trace parity plan.",
+      "role": "plain_nd_core_parity_authority",
+      "sha256": "14fcf2b1620194ff0f980665a41a73d77550b0dd9e0bc71fa8ede51f42103d0c",
+      "source_path": "docs/plans/plain_nd_core_parity_plan.md"
     }
   ]
 }
