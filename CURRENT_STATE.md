@@ -164,6 +164,14 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   including `state_hash`; no 3D/4D live Godot gameplay, topology, endgame, C#,
   Python runtime calls from Godot, or Godot-side gameplay legality is
   authorized by Stage 14.
+- Stage 15 implements that sidecar path as trace parity infrastructure only.
+  The native C++ core now has a separate plain-ND model and trace exporter for
+  `gameplay_plain_3d_short` and `gameplay_plain_4d_short`, with
+  `tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd` checking the
+  Python golden traces including frame/final `state_hash`. Godot exposes only
+  parity/list/export/status methods for these ND traces. This does not
+  authorize live Godot 3D/4D gameplay, topology transport, endgame simulation,
+  C#, Python runtime calls from Godot, or Godot-side gameplay legality.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

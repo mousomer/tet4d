@@ -16,12 +16,17 @@ from tools.migration.trace_cases import GAMEPLAY_TRACE_CASES
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_DIR = ROOT / "migration" / "golden_traces" / "gameplay"
-SUPPORTED_CASES = {
+PLAIN_2D_CASES = {
     "gameplay_plain_2d_short",
     "gameplay_plain_2d_rotation_short",
     "gameplay_plain_2d_hard_drop_lock",
     "gameplay_plain_2d_line_clear_short",
 }
+PLAIN_ND_CASES = {
+    "gameplay_plain_3d_short",
+    "gameplay_plain_4d_short",
+}
+SUPPORTED_CASES = PLAIN_2D_CASES | PLAIN_ND_CASES
 
 
 def _load_json(path: Path) -> Any:
@@ -29,9 +34,14 @@ def _load_json(path: Path) -> Any:
 
 
 def _cpp_trace(case_id: str) -> dict[str, Any]:
+    export_flag = (
+        "--export-plain-nd-trace"
+        if case_id in PLAIN_ND_CASES
+        else "--export-plain-2d-trace"
+    )
     command = [
         str(ROOT / "scripts" / "test_godot_tet4d_core.sh"),
-        "--export-plain-2d-trace",
+        export_flag,
         case_id,
     ]
     result = subprocess.run(
@@ -102,6 +112,20 @@ def _canonical_diff(expected: Any, actual: Any) -> str:
     )
 
 
+def _first_frame_mismatch(diffs: list[str]) -> str | None:
+    for diff in diffs:
+        marker = "$.frames["
+        if not diff.startswith(marker):
+            continue
+        end = diff.find("]", len(marker))
+        if end < 0:
+            continue
+        frame_index = diff[len(marker) : end]
+        field_path = "$.frames[" + frame_index + "]" + diff[end + 1 :].split(": ", 1)[0]
+        return f"first mismatching frame: {frame_index}; field path: {field_path}"
+    return None
+
+
 def compare_case(case_id: str, golden_dir: Path) -> list[str]:
     if case_id not in SUPPORTED_CASES:
         return [f"unsupported C++ gameplay parity case: {case_id}"]
@@ -110,8 +134,20 @@ def compare_case(case_id: str, golden_dir: Path) -> list[str]:
     golden_contract = _contract_projection(golden)
     cpp_contract = _contract_projection(cpp)
     if cpp_contract != golden_contract:
+        diffs = _field_diffs(golden_contract, cpp_contract)
+        frame_mismatch = _first_frame_mismatch(diffs)
+        hash_diffs = [
+            diff
+            for diff in diffs
+            if "state_hash" in diff or "locked_cell_digest" in diff
+        ]
+        summary = []
+        if frame_mismatch is not None:
+            summary.append(frame_mismatch)
+        summary.extend(hash_diffs[:10])
         return [
-            *_field_diffs(golden_contract, cpp_contract)[0:40],
+            *diffs[0:40],
+            *summary,
             f"C++ gameplay trace contract mismatch for {case_id}",
             _canonical_diff(golden_contract, cpp_contract),
         ]
@@ -120,7 +156,13 @@ def compare_case(case_id: str, golden_dir: Path) -> list[str]:
 
 def plain_2d_cases() -> list[str]:
     return [
-        case.case_id for case in GAMEPLAY_TRACE_CASES if case.case_id in SUPPORTED_CASES
+        case.case_id for case in GAMEPLAY_TRACE_CASES if case.case_id in PLAIN_2D_CASES
+    ]
+
+
+def plain_nd_cases() -> list[str]:
+    return [
+        case.case_id for case in GAMEPLAY_TRACE_CASES if case.case_id in PLAIN_ND_CASES
     ]
 
 
@@ -135,10 +177,20 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="compare every Stage 11 plain 2D C++ parity case",
     )
+    group.add_argument(
+        "--all-plain-nd",
+        action="store_true",
+        help="compare every Stage 15 plain bounded 3D/4D C++ parity case",
+    )
     parser.add_argument("--golden-dir", type=Path, default=DEFAULT_GOLDEN_DIR)
     args = parser.parse_args(argv)
 
-    case_ids = plain_2d_cases() if args.all_plain_2d else [args.case]
+    if args.all_plain_2d:
+        case_ids = plain_2d_cases()
+    elif args.all_plain_nd:
+        case_ids = plain_nd_cases()
+    else:
+        case_ids = [args.case]
     failures: list[str] = []
     for case_id in case_ids:
         failures.extend(compare_case(case_id, args.golden_dir))

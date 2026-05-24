@@ -9,11 +9,11 @@ func run() -> Array:
 	if not bridge.is_available():
 		failures.append("Tet4DCoreApi should be registered by the Stage 8 GDExtension")
 		return failures
-	_assert_equal(failures, bridge.get_core_version(), "0.6.0-stage13", "core version")
+	_assert_equal(failures, bridge.get_core_version(), "0.7.0-stage15", "core version")
 	_assert_equal(
 		failures,
 		bridge.get_core_status(),
-		"native tet4d core loaded; Stage 13 polished live plain 2D session available",
+		"native tet4d core loaded; Stage 15 plain ND trace scaffold available beside live plain 2D",
 		"core status"
 	)
 	_assert_equal(failures, bridge.echo_text("oracle-check"), "oracle-check", "echo text")
@@ -54,6 +54,7 @@ func run() -> Array:
 			"b12eb245dc55563078b0342123f3bc519549b3eb75b40c5fd691e41536c95fc1",
 			"line-clear final state hash"
 		)
+	_assert_plain_nd_parity_api(failures, bridge)
 	_assert_live_2d_session(failures, bridge)
 	return failures
 
@@ -61,6 +62,42 @@ func run() -> Array:
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:
 	if actual != expected:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:
+	_assert_equal(failures, bridge.run_builtin_plain_nd_smoke_case(), true, "plain ND smoke")
+	_assert_equal(
+		failures,
+		bridge.get_plain_nd_parity_status(),
+		"plain_nd Stage 15 3D/4D trace scaffold exports required fields and state_hash",
+		"plain ND parity status"
+	)
+	var cases: PackedStringArray = bridge.list_plain_nd_parity_cases()
+	_assert_equal(failures, cases.size(), 2, "plain ND parity case count")
+	for case_id in cases:
+		_assert_equal(failures, bridge.get_plain_nd_required_field_parity(case_id), true, "plain ND required field parity %s" % case_id)
+	var trace_3d = JSON.parse_string(bridge.export_plain_nd_trace_json("gameplay_plain_3d_short"))
+	if typeof(trace_3d) != TYPE_DICTIONARY:
+		failures.append("plain 3D exported trace should parse as JSON dictionary")
+	else:
+		_assert_equal(failures, trace_3d.get("dimension"), 3, "plain 3D trace dimension")
+		_assert_equal(
+			failures,
+			trace_3d.get("final", {}).get("state_hash"),
+			"9e183b178d0badec86b59a833782702d581b13a72d75bddeeda7f88333826dd7",
+			"plain 3D final state hash"
+		)
+	var trace_4d = JSON.parse_string(bridge.export_plain_nd_trace_json("gameplay_plain_4d_short"))
+	if typeof(trace_4d) != TYPE_DICTIONARY:
+		failures.append("plain 4D exported trace should parse as JSON dictionary")
+	else:
+		_assert_equal(failures, trace_4d.get("dimension"), 4, "plain 4D trace dimension")
+		_assert_equal(
+			failures,
+			trace_4d.get("final", {}).get("state_hash"),
+			"d34d21da0a1c4aa6e947230e68e8b16a3e212b40bb7da1ccaef24200e7f80449",
+			"plain 4D final state hash"
+		)
 
 
 func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:

@@ -45,10 +45,11 @@ with small Python golden traces for rotation, hard-drop lock, and line clear;
 it still does not open 3D, 4D, topology, endgame, live Godot gameplay, Python
 runtime, C#, Steam, or console
 implementation; Stage 12/12b and Stage 13 have accepted the narrow live plain
-bounded 2D Godot shell with C++ as gameplay authority; Stage 14 is now the
-planning-only gate for plain bounded 3D/4D native trace parity. Shell-
-preserving cleanup and endgame visual polish remain non-blocking and must not
-reopen semantics.
+bounded 2D Godot shell with C++ as gameplay authority; Stage 14 was the
+planning-only gate for plain bounded 3D/4D native trace parity, and Stage 15
+adds the sidecar native plain-ND trace scaffold for the short 3D/4D golden
+traces only. Shell-preserving cleanup and endgame visual polish remain
+non-blocking and must not reopen semantics.
 
 Current active follow-ups:
 
@@ -111,6 +112,13 @@ Current active follow-ups:
   strategy. Stage 14 does not implement 3D/4D code, live Godot 3D/4D gameplay,
   topology transport, endgame simulation, C#, Python runtime calls from
   Godot, or Godot-side gameplay legality.
+- Stage 15 adds native plain-ND trace scaffolding beside the accepted 2D core:
+  runtime-dimensional coordinates/board/piece/state/command types, export
+  support for `gameplay_plain_3d_short` and `gameplay_plain_4d_short`,
+  `compare_cpp_gameplay_trace.py --all-plain-nd`, native tests, and
+  parity-only Godot bridge smoke coverage. It still does not add live 3D/4D
+  Godot gameplay, topology, endgame, C#, Python runtime, or Godot-side
+  gameplay legality.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the

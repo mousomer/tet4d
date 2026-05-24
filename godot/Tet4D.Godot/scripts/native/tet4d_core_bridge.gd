@@ -53,6 +53,26 @@ func get_plain_2d_required_field_parity(case_id: String = "gameplay_plain_2d_sho
 	return bool(_api().get_plain_2d_required_field_parity(case_id))
 
 
+func run_builtin_plain_nd_smoke_case() -> bool:
+	return bool(_api().run_builtin_plain_nd_smoke_case())
+
+
+func list_plain_nd_parity_cases() -> PackedStringArray:
+	return _api().list_plain_nd_parity_cases()
+
+
+func get_plain_nd_parity_status() -> String:
+	return _api().get_plain_nd_parity_status()
+
+
+func export_plain_nd_trace_json(case_id: String = "gameplay_plain_3d_short") -> String:
+	return _api().export_plain_nd_trace_json(case_id)
+
+
+func get_plain_nd_required_field_parity(case_id: String = "gameplay_plain_3d_short") -> bool:
+	return bool(_api().get_plain_nd_required_field_parity(case_id))
+
+
 func live_2d_reset() -> void:
 	_api().live_2d_reset()
 

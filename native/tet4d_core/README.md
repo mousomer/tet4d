@@ -17,7 +17,10 @@ gameplay commands after game-over are rejected until reset/new game. Stage 13
 adds display-only `next_piece` and `last_command_status` fields for the Godot
 HUD; Godot may time gravity and input repeat, but C++ owns the result of every
 `tick`, movement, rotation, soft drop, hard drop, lock, line clear, score,
-piece sequence, game-over, and hash update.
+piece sequence, game-over, and hash update. Stage 15 adds a sidecar plain-ND
+trace scaffold for `gameplay_plain_3d_short` and
+`gameplay_plain_4d_short`; it is parity infrastructure only and does not add
+live Godot 3D/4D gameplay.
 
 The native source tree has two layers:
 
@@ -70,11 +73,20 @@ Allowed Stage 12 live plain-2D API:
 - `live_2d_status()`
 - `live_2d_state_hash()`
 
+Allowed Stage 15 plain-ND parity API:
+
+- `run_builtin_plain_nd_smoke_case()`
+- `list_plain_nd_parity_cases()`
+- `get_plain_nd_parity_status()`
+- `export_plain_nd_trace_json(case_id)`
+- `get_plain_nd_required_field_parity(case_id)`
+
 Run native C++ tests and trace parity with:
 
 ```bash
 ./scripts/test_godot_tet4d_core.sh
 PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
+PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
 ```
 
 Stage 11 compares required trace fields plus frame/final `state_hash` values
@@ -84,5 +96,6 @@ for `gameplay_plain_2d_short`, `gameplay_plain_2d_rotation_short`,
 The live API is plain bounded 2D only. It exposes the current piece name in
 live status/snapshot data plus native next-piece and game-over fields, but
 Godot must not choose or mutate the piece sequence, compute legality, or
-synthesize game-over. It must not expose 3D, 4D, topology, endgame, Python
-runtime, C#, Steam, or console behavior.
+synthesize game-over. The plain-ND API is trace export/list/status only for
+the two short bounded 3D/4D golden traces. It must not expose live 3D/4D,
+topology, endgame, Python runtime, C#, Steam, or console behavior.

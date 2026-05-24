@@ -139,6 +139,12 @@ left/right and soft-drop held-key repeat, pause-mode command gating, and
 live/replay mode switching. C++ still owns every gameplay result and now
 exposes `next_piece` and `last_command_status` for HUD display.
 
+Stage 15 adds native plain-ND trace parity scaffolding only. Godot can call
+parity/list/export/status methods for `gameplay_plain_3d_short` and
+`gameplay_plain_4d_short`, but there is still no live Godot 3D/4D session,
+no topology gameplay API, no endgame API, and no Godot-side gameplay
+legality.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -211,10 +217,11 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 
 The GDScript tests cover bundle loading, sample trace parsing, centralized
 coordinate mapping, deterministic camera fit, replay-viewer layout containment,
-gameplay-cell snap policy when stable identity is absent, and the native
-extension smoke/parity API. On a fresh checkout, run the submodule and native
-build commands above first; the extension smoke test intentionally fails if
-Godot cannot load the native library.
+gameplay-cell snap policy when stable identity is absent, live 2D native
+status, and the native extension smoke/parity API including Stage 15 plain-ND
+trace exports. On a fresh checkout, run the submodule and native build
+commands above first; the extension smoke test intentionally fails if Godot
+cannot load the native library.
 
 ## Known Limitations
 
@@ -227,5 +234,5 @@ Godot cannot load the native library.
   gameplay semantics.
 - 4D is displayed as visible W-separated board slices rather than a final 4D
   presentation.
-- GDScript is used only for shell/UI work. Stage 10 exposes only a native
-  parity/smoke surface for the short plain-2D trace; it is not live gameplay.
+- GDScript is used only for shell/UI work. Native ND APIs are parity export
+  surfaces only; they are not live 3D/4D gameplay.

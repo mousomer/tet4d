@@ -1,13 +1,14 @@
 # Plain ND Core Parity Plan
 
 Role: Stage 14 migration architecture plan  
-Status: active planning authority for plain bounded 3D/4D native parity  
+Status: active planning authority; Stage 15 scaffold is tracked by `plain_nd_core_parity_contract.md`
 Last updated: 2026-05-23
 
 ## 1. Decision summary
 
-Stage 14 is planning-only. It does not implement 3D, 4D, topology transport,
-endgame simulation, or live Godot 3D/4D gameplay.
+Stage 14 was planning-only. Stage 15 begins the selected sidecar
+implementation path with trace-parity scaffolding only; it still does not add
+live Godot 3D/4D gameplay, topology transport, or endgame simulation.
 
 The next native target is plain bounded 3D/4D gameplay trace parity against
 the Python oracle:
@@ -17,9 +18,11 @@ the Python oracle:
 
 The implementation strategy is conservative: preserve the accepted C++ plain
 2D core and live `Plain2DSession`, then add a minimal plain-ND parity path
-beside it. Shared helpers may be migrated only after 3D/4D parity is proven.
-The C++ core does not become authoritative for 3D/4D until it matches the
-Python golden traces, including `state_hash`.
+beside it. Stage 15 codifies that path in
+`docs/plans/plain_nd_core_parity_contract.md`. Shared helpers may be migrated
+only after 3D/4D parity is proven. The C++ core does not become authoritative
+for broader 3D/4D semantics until explicit Python traces match, including
+`state_hash`.
 
 ## 2. Current accepted baseline
 
@@ -384,10 +387,10 @@ Coordinate serialization rules:
 - use compact canonical JSON with sorted object keys for `state_hash`;
 - emit `null` for absent rotation plane and topology events.
 
-`tools/migration/compare_cpp_gameplay_trace.py` should add explicit supported
-cases for `gameplay_plain_3d_short` and `gameplay_plain_4d_short` only after
-the native exporter exists. Until then, `--all-plain-2d` remains the accepted
-2D gate.
+Stage 15 adds explicit supported cases for `gameplay_plain_3d_short` and
+`gameplay_plain_4d_short` in `tools/migration/compare_cpp_gameplay_trace.py`.
+`--all-plain-2d` remains the accepted 2D gate and `--all-plain-nd` is the
+native sidecar ND gate for the two short traces.
 
 ## 14. Trace coverage gaps
 
@@ -422,9 +425,10 @@ Native tests for Stage 15:
   is introduced;
 - verify existing Stage 11 plain 2D parity cases still pass.
 
-Godot tests for Stage 15 should remain parity/smoke oriented only:
+Godot tests for Stage 15 remain parity/smoke oriented only:
 
 - native extension still loads;
+- parity-only ND trace export/list/status methods are exposed;
 - plain 2D live bridge still exposes accepted fields;
 - replay loader still loads 3D/4D golden traces from the copied bundle;
 - no live 3D/4D command dispatch exists.
@@ -450,19 +454,19 @@ Live 3D/4D shell work belongs after native trace parity is complete.
 
 ## 17. Implementation stages after Stage 14
 
-Recommended sequence:
+Recommended sequence after Stage 15:
 
-1. Stage 15: add native plain-ND trace contract scaffolding and a minimal ND
-   data model beside the accepted 2D core; target only fixture construction,
-   coordinate serialization, hashes, and explicit unsupported branches.
-2. Stage 16: pass `gameplay_plain_3d_short` native trace parity.
-3. Stage 17: pass `gameplay_plain_4d_short` native trace parity using the
-   same sidecar ND path.
-4. Stage 18: add explicit ND rotation/clear/game-over trace planning and then
-   implementation only where golden traces exist.
-5. Stage 19: prototype live Godot 3D/4D shell only after native plain-ND trace
-   parity is stable.
-6. Stage 20: plan topology transport parity separately before any wrap,
+1. Stage 16: add explicit ND trace coverage planning for rotation, plane
+   clear/scoring, and spawn-blocked game-over before broadening native ND
+   behavior.
+2. Stage 17: implement only the next explicit plain-ND golden-trace target
+   selected by Stage 16, keeping the sidecar path and existing 2D behavior
+   stable.
+3. Stage 18: broaden native ND parity incrementally across 3D/4D rotation,
+   clear, and game-over traces only where Python golden traces exist.
+4. Stage 19: prototype live Godot 3D/4D shell only after native plain-ND trace
+   parity is stable beyond the short movement/drop traces.
+5. Stage 20: plan topology transport parity separately before any wrap,
    invert, sphere-like, Topology Lab, or launch semantics are ported.
 
 The stage numbers may be split smaller if a parity gate grows.

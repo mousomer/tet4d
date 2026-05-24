@@ -261,11 +261,14 @@ feature porting starts.
    usable first playable loop. Keep Godot as input/HUD/render shell only.
 7. Stage 14: plan the plain bounded 3D/4D native parity path. No 3D/4D code.
 8. Stage 15: add native plain-ND trace contract scaffolding and a minimal ND
-   data model beside the accepted 2D core.
-9. Stage 16: pass `gameplay_plain_3d_short` native trace parity.
-10. Stage 17: pass `gameplay_plain_4d_short` native trace parity.
-11. Stage 18: add explicit ND rotation/clear/game-over trace planning and
-   implementation only where golden traces exist.
+   data model beside the accepted 2D core, with parity exports for
+   `gameplay_plain_3d_short` and `gameplay_plain_4d_short`.
+9. Stage 16: plan the next explicit ND trace coverage for rotation,
+   plane-clear/scoring, and spawn-blocked game-over.
+10. Stage 17: implement the next explicit plain-ND golden-trace target selected
+   by Stage 16.
+11. Stage 18: add broader ND rotation/clear/game-over implementation only
+   where golden traces exist.
 12. Stage 19: prototype live Godot 3D/4D shell only after native plain-ND trace
    parity is stable.
 13. Stage 20: plan topology transport and Topology Lab launch semantics.
@@ -585,3 +588,41 @@ authoritative for them.
 Stage 14 forbids 3D/4D implementation, topology transport, endgame simulation,
 live Godot 3D/4D gameplay, C#, Python runtime calls from Godot, and
 Godot-side gameplay legality.
+
+## 28. Stage 15 Native Plain ND Trace Scaffolding
+
+Stage 15 implements the Stage 14 sidecar strategy without touching the
+accepted live plain 2D session. The detailed contract lives in
+`docs/plans/plain_nd_core_parity_contract.md`.
+
+The native C++ core adds a separate runtime-dimensional plain-ND model:
+
+- `CoordND`;
+- `BoardShapeND`;
+- `BoardND`;
+- `PieceShapeND`;
+- `ActivePieceND`;
+- `GameStateND`;
+- `GameCommandND`;
+- `GameStepperND`.
+
+The scaffold implements only the commands present in the target traces:
+`move_axis`, `soft_drop`, and `hard_drop`. It exports Python-compatible trace
+JSON and compact canonical SHA-256 hashes for:
+
+- `gameplay_plain_3d_short`;
+- `gameplay_plain_4d_short`.
+
+The comparison tool supports `--all-plain-nd` beside the existing
+`--all-plain-2d` gate. Godot receives parity/smoke methods only:
+
+- `run_builtin_plain_nd_smoke_case()`;
+- `list_plain_nd_parity_cases()`;
+- `get_plain_nd_parity_status()`;
+- `export_plain_nd_trace_json(case_id)`;
+- `get_plain_nd_required_field_parity(case_id)`.
+
+Stage 15 still forbids live Godot 3D/4D sessions or controls, topology
+transport, ND rotation beyond explicit trace coverage, plane-clear
+generalization beyond the target no-clear traces, endgame simulation, C#,
+Python runtime calls from Godot, and Godot-side gameplay legality.

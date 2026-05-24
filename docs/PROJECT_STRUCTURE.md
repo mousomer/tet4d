@@ -163,9 +163,12 @@ The current rule is one-way:
     routes input and renders C++ snapshots while native code owns gameplay
     state transitions. Stage 13 polishes only that accepted live 2D slice.
     Stage 14 adds `docs/plans/plain_nd_core_parity_plan.md` as the planning
-    gate for plain bounded 3D/4D native parity and does not implement ND
-    gameplay. No topology, endgame, Python runtime, C#, Steam, or console
-    implementation is authorized here.
+    gate for plain bounded 3D/4D native parity. Stage 15 adds a sidecar
+    plain-ND trace scaffold under `native/tet4d_core/` plus
+    `docs/plans/plain_nd_core_parity_contract.md`; it exports only parity
+    traces for `gameplay_plain_3d_short` and `gameplay_plain_4d_short`.
+    Live 3D/4D, topology, endgame, Python runtime, C#, Steam, or console
+    implementation is not authorized here.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

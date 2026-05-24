@@ -25,6 +25,11 @@ public:
 	String get_plain_2d_parity_status() const;
 	String export_plain_2d_trace_json(const String &case_id) const;
 	bool get_plain_2d_required_field_parity(const String &case_id) const;
+	bool run_builtin_plain_nd_smoke_case() const;
+	PackedStringArray list_plain_nd_parity_cases() const;
+	String get_plain_nd_parity_status() const;
+	String export_plain_nd_trace_json(const String &case_id) const;
+	bool get_plain_nd_required_field_parity(const String &case_id) const;
 	void live_2d_reset();
 	String live_2d_apply_command(const String &command);
 	String live_2d_tick();

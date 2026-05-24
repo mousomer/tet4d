@@ -243,6 +243,13 @@ Cross-cutting requirements are defined in:
 20. The preferred Stage 15+ strategy is to add a minimal sidecar plain-ND path
     beside the accepted 2D core, then migrate shared helpers only after
     3D/4D trace parity is proven.
+21. Stage 15 may implement only native plain-ND trace scaffolding beside the
+    accepted 2D core. The allowed Stage 15 commands are the target trace
+    commands `move_axis`, `soft_drop`, and `hard_drop`; the allowed Godot API
+    surface is parity/list/export/status only. Stage 15 must not expose live
+    Godot 3D/4D gameplay, topology transport, endgame simulation, ND rotation
+    beyond explicit golden trace coverage, C#, Python runtime calls from
+    Godot, or Godot-side gameplay legality.
 
 ### 3.3 Shared piece-local transform rules
 
