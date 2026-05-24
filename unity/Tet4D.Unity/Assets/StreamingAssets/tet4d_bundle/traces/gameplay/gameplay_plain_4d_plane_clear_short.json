@@ -1,0 +1,204 @@
+{
+  "case_id": "gameplay_plain_4d_plane_clear_short",
+  "commands": [
+    {
+      "action": "lock_current_piece",
+      "id": "lock_hyperplane_clear"
+    }
+  ],
+  "dimension": 4,
+  "final": {
+    "locked_cell_count": 1,
+    "locked_cell_digest": "06d0e35d7aea4e8c938561bdda9e42e377b77b3a09281e7ffdfd03e30e84fb4b",
+    "score": 45,
+    "state_hash": "7b18f81b698dd0638fc1a11db4a896273f6d3bf3e5e31ded6241af3b6d1bee1f"
+  },
+  "frames": [
+    {
+      "active_piece": {
+        "cells": [
+          [
+            0,
+            2,
+            0,
+            0
+          ]
+        ],
+        "color_id": 8,
+        "last_rotation_plane": null,
+        "last_rotation_steps": 0,
+        "pos": [
+          0,
+          2,
+          0,
+          0
+        ],
+        "rel_blocks": [
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "shape": "TRACE_4D"
+      },
+      "command": {
+        "action": "lock_current_piece",
+        "id": "lock_hyperplane_clear"
+      },
+      "command_id": "lock_hyperplane_clear",
+      "command_result": {
+        "active_cells_before": [
+          [
+            0,
+            2,
+            0,
+            0
+          ]
+        ],
+        "locked_cell_delta": -3,
+        "return_value": 1
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 1,
+        "locked_cell_delta": -3,
+        "soft_drop_legal_after": false
+      },
+      "frame_index": 0,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "0:-1": false,
+          "0:1": true,
+          "1:-1": true,
+          "1:1": false,
+          "2:-1": false,
+          "2:1": false,
+          "3:-1": false,
+          "3:1": true,
+          "soft_drop": false
+        }
+      },
+      "lines": 1,
+      "locked_cell_digest": "06d0e35d7aea4e8c938561bdda9e42e377b77b3a09281e7ffdfd03e30e84fb4b",
+      "locked_cells": [
+        {
+          "coord": [
+            1,
+            2,
+            0,
+            1
+          ],
+          "value": 2
+        }
+      ],
+      "score": 45,
+      "state_hash": "6a6506b6f88f177570acac30881d5e17d6cbbc24a86143a22018a4e1164fec2b",
+      "topology_event": null
+    }
+  ],
+  "generator": {
+    "name": "export_gameplay_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "active_piece": {
+      "cells": [
+        [
+          0,
+          2,
+          0,
+          0
+        ]
+      ],
+      "color_id": 8,
+      "last_rotation_plane": null,
+      "last_rotation_steps": 0,
+      "pos": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "rel_blocks": [
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "shape": "TRACE_4D"
+    },
+    "board_shape": [
+      2,
+      3,
+      1,
+      2
+    ],
+    "launch_parity": null,
+    "locked_cells": [
+      {
+        "coord": [
+          0,
+          2,
+          0,
+          1
+        ],
+        "value": 1
+      },
+      {
+        "coord": [
+          1,
+          1,
+          0,
+          1
+        ],
+        "value": 2
+      },
+      {
+        "coord": [
+          1,
+          2,
+          0,
+          0
+        ],
+        "value": 1
+      },
+      {
+        "coord": [
+          1,
+          2,
+          0,
+          1
+        ],
+        "value": 1
+      }
+    ],
+    "notes": [
+      "Stage 17 plain 4D single-hyperplane clear oracle trace."
+    ],
+    "settings": {
+      "axis_sizes": [
+        2,
+        3,
+        1,
+        2
+      ],
+      "exploration_mode": false,
+      "explorer_profile_digest": null,
+      "explorer_rigid_play_enabled": null,
+      "gravity_axis": 1,
+      "piece_set": "embedded_2d",
+      "topology_mode": "bounded",
+      "wrap_gravity_axis": false
+    },
+    "settings_digest": "e3c4d8c236a0e12950148e00ea9ceab6384e29874d7259d5a9e05229338f42ce"
+  },
+  "seed": 2024,
+  "topology_id": "plain",
+  "trace_type": "gameplay",
+  "trace_version": 1
+}

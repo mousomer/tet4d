@@ -47,8 +47,11 @@ class GameplayTraceCase:
     legacy_topology_mode: str = "bounded"
     wrap_gravity_axis: bool = False
     launch_from_playground: bool = False
+    piece_set_id: str | None = None
     piece_blocks: tuple[tuple[int, ...], ...] = ((0, 0),)
     piece_pos: tuple[int, ...] | None = None
+    current_piece_enabled: bool = True
+    next_piece_blocks: tuple[tuple[int, ...], ...] | None = None
     initial_locked_cells: tuple[tuple[tuple[int, ...], int], ...] = ()
     notes: tuple[str, ...] = field(default_factory=tuple)
 
@@ -334,6 +337,111 @@ GAMEPLAY_TRACE_CASES: tuple[GameplayTraceCase, ...] = (
         ),
         piece_blocks=((0, 0, 0, 0), (1, 0, 0, 0)),
         piece_pos=(2, 2, 1, 1),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_3d_rotation_short",
+        3,
+        "plain",
+        (5, 5, 5),
+        2021,
+        (
+            {
+                "id": "rotate_xz_cw",
+                "action": "rotate",
+                "axis_a": 0,
+                "axis_b": 2,
+                "delta": 1,
+            },
+        ),
+        piece_blocks=((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)),
+        piece_pos=(2, 2, 2),
+        notes=("Stage 17 plain 3D rotation oracle trace.",),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_4d_rotation_short",
+        4,
+        "plain",
+        (5, 5, 5, 5),
+        2022,
+        (
+            {
+                "id": "rotate_xw_cw",
+                "action": "rotate",
+                "axis_a": 0,
+                "axis_b": 3,
+                "delta": 1,
+            },
+        ),
+        piece_blocks=(
+            (0, 0, 0, 0),
+            (1, 0, 0, 0),
+            (0, 1, 0, 0),
+            (0, 0, 1, 0),
+        ),
+        piece_pos=(2, 2, 2, 2),
+        notes=("Stage 17 plain 4D rotation oracle trace.",),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_3d_plane_clear_short",
+        3,
+        "plain",
+        (2, 3, 2),
+        2023,
+        ({"id": "lock_plane_clear", "action": "lock_current_piece"},),
+        piece_blocks=((0, 0, 0),),
+        piece_pos=(0, 2, 0),
+        initial_locked_cells=(
+            ((1, 2, 0), 1),
+            ((0, 2, 1), 1),
+            ((1, 2, 1), 1),
+            ((1, 1, 1), 2),
+        ),
+        notes=("Stage 17 plain 3D single-plane clear oracle trace.",),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_4d_plane_clear_short",
+        4,
+        "plain",
+        (2, 3, 1, 2),
+        2024,
+        ({"id": "lock_hyperplane_clear", "action": "lock_current_piece"},),
+        piece_set_id="embedded_2d",
+        piece_blocks=((0, 0, 0, 0),),
+        piece_pos=(0, 2, 0, 0),
+        initial_locked_cells=(
+            ((1, 2, 0, 0), 1),
+            ((0, 2, 0, 1), 1),
+            ((1, 2, 0, 1), 1),
+            ((1, 1, 0, 1), 2),
+        ),
+        notes=("Stage 17 plain 4D single-hyperplane clear oracle trace.",),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_3d_spawn_blocked_game_over",
+        3,
+        "plain",
+        (5, 5, 5),
+        2025,
+        ({"id": "spawn_blocked", "action": "spawn_new_piece"},),
+        piece_blocks=((0, 0, 0),),
+        current_piece_enabled=False,
+        next_piece_blocks=((0, 0, 0), (0, 2, 0)),
+        initial_locked_cells=(((2, 0, 2), 9),),
+        notes=("Stage 17 plain 3D spawn-blocked game-over oracle trace.",),
+    ),
+    GameplayTraceCase(
+        "gameplay_plain_4d_spawn_blocked_game_over",
+        4,
+        "plain",
+        (5, 5, 5, 5),
+        2026,
+        ({"id": "spawn_blocked", "action": "spawn_new_piece"},),
+        piece_set_id="embedded_2d",
+        piece_blocks=((0, 0, 0, 0),),
+        current_piece_enabled=False,
+        next_piece_blocks=((0, 0, 0, 0), (0, 2, 0, 0)),
+        initial_locked_cells=(((2, 0, 2, 2), 9),),
+        notes=("Stage 17 plain 4D spawn-blocked game-over oracle trace.",),
     ),
     GameplayTraceCase(
         "gameplay_wrap_2d_short",

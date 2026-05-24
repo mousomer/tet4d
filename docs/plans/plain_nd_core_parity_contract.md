@@ -116,11 +116,24 @@ Native hashes must match Python `tools/migration/trace_schema.py`:
 
 ## Unsupported Or Deferred Semantics
 
-Stage 15 does not implement or claim parity for:
+Stage 17 adds Python-oracle golden traces for the following deferred semantics:
+
+- `gameplay_plain_3d_rotation_short`
+- `gameplay_plain_4d_rotation_short`
+- `gameplay_plain_3d_plane_clear_short`
+- `gameplay_plain_4d_plane_clear_short`
+- `gameplay_plain_3d_spawn_blocked_game_over`
+- `gameplay_plain_4d_spawn_blocked_game_over`
+
+These traces are oracle-only in Stage 17. The native C++ parity gate remains
+limited to `gameplay_plain_3d_short` and `gameplay_plain_4d_short` until later
+stages implement the broader ND semantics.
+
+Stage 15/17 native C++ does not implement or claim parity for:
 
 - ND rotation
-- plane clears beyond the target no-clear traces
-- spawn-blocked ND game-over fixtures
+- plane clears beyond Python oracle trace generation
+- spawn-blocked ND game-over fixtures in C++
 - seeded RNG/bag parity beyond fixture-driven post-lock respawn
 - topology transport
 - live Godot 3D/4D commands

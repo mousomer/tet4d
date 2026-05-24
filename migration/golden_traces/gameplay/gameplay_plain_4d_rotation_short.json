@@ -1,0 +1,256 @@
+{
+  "case_id": "gameplay_plain_4d_rotation_short",
+  "commands": [
+    {
+      "action": "rotate",
+      "axis_a": 0,
+      "axis_b": 3,
+      "delta": 1,
+      "id": "rotate_xw_cw"
+    }
+  ],
+  "dimension": 4,
+  "final": {
+    "locked_cell_count": 0,
+    "locked_cell_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "score": 0,
+    "state_hash": "c3ccf55ccbac1998e7973ba4dc5e163398f2e32a6999cc933a3e4065dd71d34c"
+  },
+  "frames": [
+    {
+      "active_piece": {
+        "cells": [
+          [
+            2,
+            2,
+            2,
+            1
+          ],
+          [
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            3,
+            2
+          ],
+          [
+            2,
+            3,
+            2,
+            2
+          ]
+        ],
+        "color_id": 8,
+        "last_rotation_plane": [
+          0,
+          3
+        ],
+        "last_rotation_steps": 1,
+        "pos": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "rel_blocks": [
+          [
+            0,
+            0,
+            0,
+            -1
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ]
+        ],
+        "shape": "TRACE_4D"
+      },
+      "command": {
+        "action": "rotate",
+        "axis_a": 0,
+        "axis_b": 3,
+        "delta": 1,
+        "id": "rotate_xw_cw"
+      },
+      "command_id": "rotate_xw_cw",
+      "command_result": {
+        "active_cells_before": [
+          [
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            3,
+            2
+          ],
+          [
+            2,
+            3,
+            2,
+            2
+          ],
+          [
+            3,
+            2,
+            2,
+            2
+          ]
+        ],
+        "locked_cell_delta": 0,
+        "return_value": true
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 0,
+        "locked_cell_delta": 0,
+        "soft_drop_legal_after": true
+      },
+      "frame_index": 0,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "0:-1": true,
+          "0:1": true,
+          "1:-1": true,
+          "1:1": true,
+          "2:-1": true,
+          "2:1": true,
+          "3:-1": true,
+          "3:1": true,
+          "soft_drop": true
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "locked_cells": [],
+      "score": 0,
+      "state_hash": "0910d159c061826ae492aca543c28bae8d7a8d7ca430282afa7de23e62cbdcc0",
+      "topology_event": null
+    }
+  ],
+  "generator": {
+    "name": "export_gameplay_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "active_piece": {
+      "cells": [
+        [
+          2,
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          3,
+          2
+        ],
+        [
+          2,
+          3,
+          2,
+          2
+        ],
+        [
+          3,
+          2,
+          2,
+          2
+        ]
+      ],
+      "color_id": 8,
+      "last_rotation_plane": null,
+      "last_rotation_steps": 0,
+      "pos": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "rel_blocks": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0
+        ]
+      ],
+      "shape": "TRACE_4D"
+    },
+    "board_shape": [
+      5,
+      5,
+      5,
+      5
+    ],
+    "launch_parity": null,
+    "locked_cells": [],
+    "notes": [
+      "Stage 17 plain 4D rotation oracle trace."
+    ],
+    "settings": {
+      "axis_sizes": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "exploration_mode": false,
+      "explorer_profile_digest": null,
+      "explorer_rigid_play_enabled": null,
+      "gravity_axis": 1,
+      "piece_set": "standard_4d_5",
+      "topology_mode": "bounded",
+      "wrap_gravity_axis": false
+    },
+    "settings_digest": "769b5a5b6bc760b1e84458a4f22eb87fa6b6384979d51f4cca12c905bc8160ee"
+  },
+  "seed": 2022,
+  "topology_id": "plain",
+  "trace_type": "gameplay",
+  "trace_version": 1
+}

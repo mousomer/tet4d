@@ -266,8 +266,8 @@ feature porting starts.
 9. Stage 16: document the next explicit ND trace coverage expansion in
    `docs/plans/plain_nd_coverage_expansion_plan.md`, including rotation,
    plane-clear/scoring, and spawn-blocked game-over cases.
-10. Stage 17: implement the next explicit plain-ND golden-trace target selected
-   by Stage 16.
+10. Stage 17: add the explicit Python-oracle plain-ND golden traces selected
+   by Stage 16 while keeping C++ parity scoped to implemented cases.
 11. Stage 18: add broader ND rotation/clear/game-over implementation only
    where golden traces exist.
 12. Stage 19: prototype live Godot 3D/4D shell only after native plain-ND trace
@@ -627,3 +627,21 @@ Stage 15 still forbids live Godot 3D/4D sessions or controls, topology
 transport, ND rotation beyond explicit trace coverage, plane-clear
 generalization beyond the target no-clear traces, endgame simulation, C#,
 Python runtime calls from Godot, and Godot-side gameplay legality.
+
+## 29. Stage 17 Plain ND Oracle Traces
+
+Stage 17 adds Python-authoritative plain bounded ND traces for rotation,
+plane-clear/scoring, and spawn-blocked game-over:
+
+- `gameplay_plain_3d_rotation_short`
+- `gameplay_plain_4d_rotation_short`
+- `gameplay_plain_3d_plane_clear_short`
+- `gameplay_plain_4d_plane_clear_short`
+- `gameplay_plain_3d_spawn_blocked_game_over`
+- `gameplay_plain_4d_spawn_blocked_game_over`
+
+These are oracle traces only. Native C++ parity for them is deferred to later
+stages; `compare_cpp_gameplay_trace.py --all-plain-nd` remains limited to the
+implemented Stage 15 short traces. Stage 17 does not add live Godot 3D/4D,
+topology, endgame, C#, Python runtime calls from Godot, or Godot-side gameplay
+legality.

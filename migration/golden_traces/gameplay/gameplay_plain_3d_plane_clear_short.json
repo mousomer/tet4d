@@ -1,0 +1,188 @@
+{
+  "case_id": "gameplay_plain_3d_plane_clear_short",
+  "commands": [
+    {
+      "action": "lock_current_piece",
+      "id": "lock_plane_clear"
+    }
+  ],
+  "dimension": 3,
+  "final": {
+    "locked_cell_count": 1,
+    "locked_cell_digest": "5e9f3e56cd4891c7e96d954d52ed20072b2a62d12ac347db608cf8f630d4bd8b",
+    "score": 45,
+    "state_hash": "9c1737872582996818277166c9b8d900a2362868315f15d1a8f9338e7afa6d57"
+  },
+  "frames": [
+    {
+      "active_piece": {
+        "cells": [
+          [
+            0,
+            2,
+            0
+          ]
+        ],
+        "color_id": 8,
+        "last_rotation_plane": null,
+        "last_rotation_steps": 0,
+        "pos": [
+          0,
+          2,
+          0
+        ],
+        "rel_blocks": [
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "shape": "TRACE_3D"
+      },
+      "command": {
+        "action": "lock_current_piece",
+        "id": "lock_plane_clear"
+      },
+      "command_id": "lock_plane_clear",
+      "command_result": {
+        "active_cells_before": [
+          [
+            0,
+            2,
+            0
+          ]
+        ],
+        "locked_cell_delta": -3,
+        "return_value": 1
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 1,
+        "locked_cell_delta": -3,
+        "soft_drop_legal_after": false
+      },
+      "frame_index": 0,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "0:-1": false,
+          "0:1": true,
+          "1:-1": true,
+          "1:1": false,
+          "2:-1": false,
+          "2:1": true,
+          "soft_drop": false
+        }
+      },
+      "lines": 1,
+      "locked_cell_digest": "5e9f3e56cd4891c7e96d954d52ed20072b2a62d12ac347db608cf8f630d4bd8b",
+      "locked_cells": [
+        {
+          "coord": [
+            1,
+            2,
+            1
+          ],
+          "value": 2
+        }
+      ],
+      "score": 45,
+      "state_hash": "40af964de14050ef5d068e95d559385a6880450998b76d230da5450b7e2528d3",
+      "topology_event": null
+    }
+  ],
+  "generator": {
+    "name": "export_gameplay_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "active_piece": {
+      "cells": [
+        [
+          0,
+          2,
+          0
+        ]
+      ],
+      "color_id": 8,
+      "last_rotation_plane": null,
+      "last_rotation_steps": 0,
+      "pos": [
+        0,
+        2,
+        0
+      ],
+      "rel_blocks": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "shape": "TRACE_3D"
+    },
+    "board_shape": [
+      2,
+      3,
+      2
+    ],
+    "launch_parity": null,
+    "locked_cells": [
+      {
+        "coord": [
+          0,
+          2,
+          1
+        ],
+        "value": 1
+      },
+      {
+        "coord": [
+          1,
+          1,
+          1
+        ],
+        "value": 2
+      },
+      {
+        "coord": [
+          1,
+          2,
+          0
+        ],
+        "value": 1
+      },
+      {
+        "coord": [
+          1,
+          2,
+          1
+        ],
+        "value": 1
+      }
+    ],
+    "notes": [
+      "Stage 17 plain 3D single-plane clear oracle trace."
+    ],
+    "settings": {
+      "axis_sizes": [
+        2,
+        3,
+        2
+      ],
+      "exploration_mode": false,
+      "explorer_profile_digest": null,
+      "explorer_rigid_play_enabled": null,
+      "gravity_axis": 1,
+      "piece_set": "native_3d",
+      "topology_mode": "bounded",
+      "wrap_gravity_axis": false
+    },
+    "settings_digest": "82dcddb2ef91730f5b4e578465b75c3d4aace813cea88127d6dcbc793aa81b86"
+  },
+  "seed": 2023,
+  "topology_id": "plain",
+  "trace_type": "gameplay",
+  "trace_version": 1
+}

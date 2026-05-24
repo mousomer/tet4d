@@ -169,7 +169,9 @@ The current rule is one-way:
     traces for `gameplay_plain_3d_short` and `gameplay_plain_4d_short`.
     Stage 16 adds `docs/plans/plain_nd_coverage_expansion_plan.md` as the
     next coverage-planning authority for rotation, clear/scoring, and
-    spawn-blocked game-over before any broader ND implementation.
+    spawn-blocked game-over before any broader ND implementation. Stage 17
+    adds those Python-oracle golden traces under `migration/golden_traces/`
+    while native C++ parity remains scoped to the implemented short ND traces.
     Live 3D/4D, topology, endgame, Python runtime, C#, Steam, or console
     implementation is not authorized here.
 

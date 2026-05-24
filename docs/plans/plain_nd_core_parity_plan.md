@@ -9,8 +9,8 @@ Last updated: 2026-05-23
 Stage 14 was planning-only. Stage 15 began the selected sidecar
 implementation path with trace-parity scaffolding only; it still does not add
 live Godot 3D/4D gameplay, topology transport, or endgame simulation. Stage 16
-now plans the next explicit ND trace coverage before any broader native ND
-implementation begins.
+planned the next explicit ND trace coverage, and Stage 17 adds those
+Python-oracle traces before any broader native ND implementation begins.
 
 The next native target is plain bounded 3D/4D gameplay trace parity against
 the Python oracle:
@@ -396,14 +396,13 @@ native sidecar ND gate for the two short traces.
 
 ## 14. Trace coverage gaps
 
-Current plain-ND gaps:
+Current plain-ND gaps after Stage 17:
 
-- no ND rotation trace;
-- no ND gravity-step trace in plain topology;
-- no 3D plane clear trace;
-- no 4D hyperplane clear trace;
-- no spawn-blocked/game-over trace;
-- no RNG/bag sequence parity trace;
+- no native C++ parity for the Stage 17 ND rotation traces;
+- no native C++ parity for the Stage 17 plane-clear/scoring traces;
+- no native C++ parity for the Stage 17 spawn-blocked/game-over traces;
+- no ND gravity-step edge trace in plain topology;
+- no RNG/bag sequence parity trace beyond fixture-controlled oracle cases;
 - no topology transport in the plain-ND target;
 - no live Godot 3D/4D path;
 - no ghost/drop-target snapshot.

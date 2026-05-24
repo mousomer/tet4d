@@ -254,6 +254,11 @@ Cross-cutting requirements are defined in:
     trace expansion for rotation, clear/scoring, and spawn-blocked game-over in
     `docs/plans/plain_nd_coverage_expansion_plan.md`; it still does not
     authorize live Godot ND gameplay or broad ND rule implementation.
+23. Stage 17 may add Python-oracle plain-ND golden traces for rotation,
+    plane-clear/scoring, and spawn-blocked game-over. These traces are future
+    C++ parity targets only; Stage 17 must not broaden native ND gameplay,
+    expose live Godot ND commands, add topology/endgame behavior, or move
+    gameplay legality into Godot.
 
 ### 3.3 Shared piece-local transform rules
 

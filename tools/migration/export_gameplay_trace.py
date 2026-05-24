@@ -249,6 +249,7 @@ def _build_config(case: GameplayTraceCase) -> GameConfig | GameConfigND:
         topology_mode=case.legacy_topology_mode,
         wrap_gravity_axis=case.wrap_gravity_axis,
         rng_seed=case.seed,
+        piece_set_id=case.piece_set_id,
     )
 
 
@@ -268,7 +269,11 @@ def _build_state(
             color_id=8,
         )
         pos = case.piece_pos if case.piece_pos is not None else (config.width // 2, 1)
-        state.current_piece = ActivePiece2D(shape=shape, pos=tuple(pos), rotation=0)
+        state.current_piece = (
+            ActivePiece2D(shape=shape, pos=tuple(pos), rotation=0)
+            if case.current_piece_enabled
+            else None
+        )
     else:
         state = GameStateND(config=config, board=BoardND(config.dims), rng=rng)
         shape = PieceShapeND(
@@ -283,7 +288,21 @@ def _build_state(
             if case.piece_pos is not None
             else tuple(size // 2 for size in config.dims)
         )
-        state.current_piece = ActivePieceND.from_shape(shape=shape, pos=tuple(pos))
+        state.current_piece = (
+            ActivePieceND.from_shape(shape=shape, pos=tuple(pos))
+            if case.current_piece_enabled
+            else None
+        )
+        if case.next_piece_blocks is not None:
+            next_shape = PieceShapeND(
+                name=f"TRACE_{case.dimension}D_NEXT",
+                blocks=tuple(
+                    tuple(int(value) for value in block)
+                    for block in case.next_piece_blocks
+                ),
+                color_id=7,
+            )
+            state.next_bag = [next_shape]
     state.board.cells.clear()
     for coord, value in case.initial_locked_cells:
         state.board.cells[tuple(int(axis) for axis in coord)] = int(value)
@@ -349,6 +368,11 @@ def _apply_nd_command(
         return None
     if action == "gravity_step":
         state.step_gravity()
+        return None
+    if action == "lock_current_piece":
+        return state.lock_current_piece()
+    if action == "spawn_new_piece":
+        state.spawn_new_piece()
         return None
     if action == "rotate":
         return state.try_rotate(

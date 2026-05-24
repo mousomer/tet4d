@@ -1,0 +1,230 @@
+{
+  "case_id": "gameplay_plain_3d_rotation_short",
+  "commands": [
+    {
+      "action": "rotate",
+      "axis_a": 0,
+      "axis_b": 2,
+      "delta": 1,
+      "id": "rotate_xz_cw"
+    }
+  ],
+  "dimension": 3,
+  "final": {
+    "locked_cell_count": 0,
+    "locked_cell_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "score": 0,
+    "state_hash": "2d2ada3b5b425bf649c66cd8e6b2c3c2e24a57c4f8a7dc8aab26ac72a33a7e4d"
+  },
+  "frames": [
+    {
+      "active_piece": {
+        "cells": [
+          [
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            3
+          ],
+          [
+            2,
+            3,
+            3
+          ],
+          [
+            3,
+            2,
+            3
+          ]
+        ],
+        "color_id": 8,
+        "last_rotation_plane": [
+          0,
+          2
+        ],
+        "last_rotation_steps": 1,
+        "pos": [
+          2,
+          2,
+          2
+        ],
+        "rel_blocks": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "shape": "TRACE_3D"
+      },
+      "command": {
+        "action": "rotate",
+        "axis_a": 0,
+        "axis_b": 2,
+        "delta": 1,
+        "id": "rotate_xz_cw"
+      },
+      "command_id": "rotate_xz_cw",
+      "command_result": {
+        "active_cells_before": [
+          [
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            3
+          ],
+          [
+            2,
+            3,
+            2
+          ],
+          [
+            3,
+            2,
+            2
+          ]
+        ],
+        "locked_cell_delta": 0,
+        "return_value": true
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 0,
+        "locked_cell_delta": 0,
+        "soft_drop_legal_after": true
+      },
+      "frame_index": 0,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "0:-1": true,
+          "0:1": true,
+          "1:-1": true,
+          "1:1": true,
+          "2:-1": true,
+          "2:1": true,
+          "soft_drop": true
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "locked_cells": [],
+      "score": 0,
+      "state_hash": "6e9736bfeeff1119a014150e839556f02743b5ae6dcd10309dbd57d61370cee1",
+      "topology_event": null
+    }
+  ],
+  "generator": {
+    "name": "export_gameplay_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "active_piece": {
+      "cells": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          2
+        ],
+        [
+          3,
+          2,
+          2
+        ]
+      ],
+      "color_id": 8,
+      "last_rotation_plane": null,
+      "last_rotation_steps": 0,
+      "pos": [
+        2,
+        2,
+        2
+      ],
+      "rel_blocks": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "shape": "TRACE_3D"
+    },
+    "board_shape": [
+      5,
+      5,
+      5
+    ],
+    "launch_parity": null,
+    "locked_cells": [],
+    "notes": [
+      "Stage 17 plain 3D rotation oracle trace."
+    ],
+    "settings": {
+      "axis_sizes": [
+        5,
+        5,
+        5
+      ],
+      "exploration_mode": false,
+      "explorer_profile_digest": null,
+      "explorer_rigid_play_enabled": null,
+      "gravity_axis": 1,
+      "piece_set": "native_3d",
+      "topology_mode": "bounded",
+      "wrap_gravity_axis": false
+    },
+    "settings_digest": "117cf01d0694e86cd5fb7d9e3727411a4568fdb7442d8cfcbd122a902929f46e"
+  },
+  "seed": 2021,
+  "topology_id": "plain",
+  "trace_type": "gameplay",
+  "trace_version": 1
+}

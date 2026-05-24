@@ -1,7 +1,7 @@
 # Plain ND Coverage Expansion Plan
 
 Role: Stage 16 planning authority for broadening plain-ND parity beyond the short traces  
-Status: planning only  
+Status: Stage 17 oracle traces added; C++ parity for those traces is future work
 Last updated: 2026-05-24
 
 ## 1. Decision Summary
@@ -22,7 +22,7 @@ Recommended direction:
 
 Recommended next implementation sequence:
 
-1. Stage 17: add explicit ND trace cases and compare-tool coverage.
+1. Stage 17: add explicit Python-oracle ND trace cases and migration coverage.
 2. Stage 18: implement ND rotation parity against the new rotation traces.
 3. Stage 19: implement ND clear/scoring parity against the new plane-clear traces.
 4. Stage 20: implement ND spawn-blocked game-over parity and command rejection.
@@ -117,7 +117,7 @@ catch-all trace that mixes unrelated behaviors.
 
 ## 6. Proposed New Trace Cases
 
-Recommended Stage 17 trace set:
+Stage 17 trace set:
 
 - `gameplay_plain_3d_rotation_short`
 - `gameplay_plain_4d_rotation_short`
@@ -298,16 +298,16 @@ Default recommendation:
 - do not port broad RNG/bag parity yet
 - do not let piece-sequence breadth block rotation/clear/game-over coverage
 
-The Stage 17 traces should use explicit, deterministic fixtures and post-lock
-spawn shapes where needed. Broader RNG/bag parity can wait until the movement,
-rotation, clear, and game-over semantics are already stable.
+The Stage 17 traces use explicit, deterministic fixtures and fixed spawn shapes
+where needed. Broader RNG/bag parity can wait until the movement, rotation,
+clear, and game-over semantics are already stable.
 
 ## 12. C++ Implementation Sequence
 
 Recommended next implementation order:
 
-1. Stage 17: add the explicit ND traces and compare-tool coverage for the new
-   case ids.
+1. Stage 17: add the explicit Python-oracle ND traces and migration coverage
+   for the new case ids.
 2. Stage 18: implement ND rotation parity to satisfy the new rotation traces.
 3. Stage 19: implement ND clear/scoring parity to satisfy the new plane-clear
    traces.
@@ -334,21 +334,21 @@ path, then verify the exported JSON only after the semantics are stable.
 
 ## 14. Compare-Tool Plan
 
-Current compare tooling already supports `--all-plain-nd` for the short traces.
-The next plan adds support for the new explicit cases without disturbing the
-existing 2D gate.
+Current compare tooling supports `--all-plain-nd` for the implemented native
+short traces. Stage 17 leaves that gate scoped to implemented C++ parity cases
+so oracle-only future traces do not fail prematurely.
 
-Needed compare-tool updates:
+Compare-tool policy:
 
-- extend the supported ND case set with the new trace ids
+- keep `--all-plain-nd` limited to implemented native ND cases
 - keep `--all-plain-2d` unchanged
-- keep `--all-plain-nd` as the broad ND gate
 - preserve first-mismatch reporting by frame/field path
 - keep hash mismatch summaries visible
+- add future explicit C++ case support only as semantics are implemented
 
-If new trace cases are added in Stage 17, the compare tool should fail clearly
-when a case is not yet supported rather than silently passing an incomplete
-set.
+If a new oracle-only trace is requested through `--case` before C++ support is
+implemented, the compare tool should fail clearly as unsupported rather than
+silently passing an incomplete set.
 
 ## 15. Godot API Boundary
 

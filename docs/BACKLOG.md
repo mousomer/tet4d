@@ -117,11 +117,12 @@ Current active follow-ups:
   support for `gameplay_plain_3d_short` and `gameplay_plain_4d_short`,
   `compare_cpp_gameplay_trace.py --all-plain-nd`, native tests, and
   parity-only Godot bridge smoke coverage. Stage 16 then documents the next
-  explicit ND trace expansion in `docs/plans/plain_nd_coverage_expansion_plan.md`
-  so rotation, clear/scoring, and spawn-blocked game-over can be added later
-  without weakening the accepted 2D or ND trace scaffold. It still does not
-  add live 3D/4D Godot gameplay, topology, endgame, C#, Python runtime, or
-  Godot-side gameplay legality.
+  explicit ND trace expansion in `docs/plans/plain_nd_coverage_expansion_plan.md`.
+  Stage 17 adds the corresponding Python-oracle golden traces for plain 3D/4D
+  rotation, plane clear, and spawn-blocked game-over while keeping native C++
+  parity scoped to the implemented short ND cases. It still does not add live
+  3D/4D Godot gameplay, topology, endgame, C#, Python runtime, or Godot-side
+  gameplay legality.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the

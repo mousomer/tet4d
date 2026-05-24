@@ -12407,6 +12407,32 @@
         "trace_version": 1
       },
       {
+        "case_id": "gameplay_plain_3d_plane_clear_short",
+        "dimension": 3,
+        "final_state_hash": "9c1737872582996818277166c9b8d900a2362868315f15d1a8f9338e7afa6d57",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_3d_plane_clear_short.json",
+        "sha256": "aaa33e2347dd293dbae51c8f0fc09040fdb8f9465a99da9bd2deca255a090848",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_3d_plane_clear_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_3d_rotation_short",
+        "dimension": 3,
+        "final_state_hash": "2d2ada3b5b425bf649c66cd8e6b2c3c2e24a57c4f8a7dc8aab26ac72a33a7e4d",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_3d_rotation_short.json",
+        "sha256": "1cb306028994b5905829b9e6b5c4dae453bf3a18b07b6c3afa11d8557b52e192",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_3d_rotation_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
         "case_id": "gameplay_plain_3d_short",
         "dimension": 3,
         "final_state_hash": "9e183b178d0badec86b59a833782702d581b13a72d75bddeeda7f88333826dd7",
@@ -12420,6 +12446,45 @@
         "trace_version": 1
       },
       {
+        "case_id": "gameplay_plain_3d_spawn_blocked_game_over",
+        "dimension": 3,
+        "final_state_hash": "a950c1badd7dd47dda27d140b7aef5097e9331a890c145419076f1e938317619",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_3d_spawn_blocked_game_over.json",
+        "sha256": "694a8d496a3a0217b104af363848e76c766a64dae57d317a9283e2ac44311f92",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_3d_spawn_blocked_game_over.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_4d_plane_clear_short",
+        "dimension": 4,
+        "final_state_hash": "7b18f81b698dd0638fc1a11db4a896273f6d3bf3e5e31ded6241af3b6d1bee1f",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_4d_plane_clear_short.json",
+        "sha256": "5940c24f4fb302f5f5a4081211a13d3a9187f4540cc9e45e5cc7e0036302d810",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_4d_plane_clear_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_4d_rotation_short",
+        "dimension": 4,
+        "final_state_hash": "c3ccf55ccbac1998e7973ba4dc5e163398f2e32a6999cc933a3e4065dd71d34c",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_4d_rotation_short.json",
+        "sha256": "3c7f0fa8c6a7d8bb8511c10ddf535dc88edcbfcb15228238d83fc1cc12a74218",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_4d_rotation_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
         "case_id": "gameplay_plain_4d_short",
         "dimension": 4,
         "final_state_hash": "d34d21da0a1c4aa6e947230e68e8b16a3e212b40bb7da1ccaef24200e7f80449",
@@ -12427,6 +12492,19 @@
         "path": "traces/gameplay/gameplay_plain_4d_short.json",
         "sha256": "7f820fb2d3070bd1055d8f3da278be50c7ce9e0be95b06740ea6309169d55cd3",
         "source_path": "migration/golden_traces/gameplay/gameplay_plain_4d_short.json",
+        "topology_id": "plain",
+        "topology_preset": null,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_4d_spawn_blocked_game_over",
+        "dimension": 4,
+        "final_state_hash": "ee8f825bce34feb8fa7f9bdd15157f699bba9c34a650a582de6a6a3ee81d8ad6",
+        "frame_count": 1,
+        "path": "traces/gameplay/gameplay_plain_4d_spawn_blocked_game_over.json",
+        "sha256": "bbb13e7eb76a9da0f26f1277e62332e1656d48fb556a54c212d3d862b3d607f7",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_4d_spawn_blocked_game_over.json",
         "topology_id": "plain",
         "topology_preset": null,
         "trace_type": "gameplay",

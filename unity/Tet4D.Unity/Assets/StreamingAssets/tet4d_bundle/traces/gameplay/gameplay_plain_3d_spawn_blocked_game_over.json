@@ -1,0 +1,144 @@
+{
+  "case_id": "gameplay_plain_3d_spawn_blocked_game_over",
+  "commands": [
+    {
+      "action": "spawn_new_piece",
+      "id": "spawn_blocked"
+    }
+  ],
+  "dimension": 3,
+  "final": {
+    "locked_cell_count": 1,
+    "locked_cell_digest": "79dc09f39b5262ff1799fcca6103cf58a19393a8a08595aedbc926820a1e086b",
+    "score": 0,
+    "state_hash": "a950c1badd7dd47dda27d140b7aef5097e9331a890c145419076f1e938317619"
+  },
+  "frames": [
+    {
+      "active_piece": {
+        "cells": [
+          [
+            2,
+            -2,
+            2
+          ],
+          [
+            2,
+            0,
+            2
+          ]
+        ],
+        "color_id": 7,
+        "last_rotation_plane": null,
+        "last_rotation_steps": 0,
+        "pos": [
+          2,
+          -2,
+          2
+        ],
+        "rel_blocks": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0
+          ]
+        ],
+        "shape": "TRACE_3D_NEXT"
+      },
+      "command": {
+        "action": "spawn_new_piece",
+        "id": "spawn_blocked"
+      },
+      "command_id": "spawn_blocked",
+      "command_result": {
+        "active_cells_before": [],
+        "locked_cell_delta": 0,
+        "return_value": null
+      },
+      "drop_lock_status": {
+        "game_over": true,
+        "locked_cell_count": 1,
+        "locked_cell_delta": 0,
+        "soft_drop_legal_after": true
+      },
+      "frame_index": 0,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "0:-1": true,
+          "0:1": true,
+          "1:-1": true,
+          "1:1": true,
+          "2:-1": true,
+          "2:1": true,
+          "soft_drop": true
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "79dc09f39b5262ff1799fcca6103cf58a19393a8a08595aedbc926820a1e086b",
+      "locked_cells": [
+        {
+          "coord": [
+            2,
+            0,
+            2
+          ],
+          "value": 9
+        }
+      ],
+      "score": 0,
+      "state_hash": "3d0edddb4835421ecc60f681144bed191d90081b69bf7746d3bd6fb601310cef",
+      "topology_event": null
+    }
+  ],
+  "generator": {
+    "name": "export_gameplay_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "active_piece": null,
+    "board_shape": [
+      5,
+      5,
+      5
+    ],
+    "launch_parity": null,
+    "locked_cells": [
+      {
+        "coord": [
+          2,
+          0,
+          2
+        ],
+        "value": 9
+      }
+    ],
+    "notes": [
+      "Stage 17 plain 3D spawn-blocked game-over oracle trace."
+    ],
+    "settings": {
+      "axis_sizes": [
+        5,
+        5,
+        5
+      ],
+      "exploration_mode": false,
+      "explorer_profile_digest": null,
+      "explorer_rigid_play_enabled": null,
+      "gravity_axis": 1,
+      "piece_set": "native_3d",
+      "topology_mode": "bounded",
+      "wrap_gravity_axis": false
+    },
+    "settings_digest": "117cf01d0694e86cd5fb7d9e3727411a4568fdb7442d8cfcbd122a902929f46e"
+  },
+  "seed": 2025,
+  "topology_id": "plain",
+  "trace_type": "gameplay",
+  "trace_version": 1
+}
