@@ -167,6 +167,9 @@ The current rule is one-way:
     plain-ND trace scaffold under `native/tet4d_core/` plus
     `docs/plans/plain_nd_core_parity_contract.md`; it exports only parity
     traces for `gameplay_plain_3d_short` and `gameplay_plain_4d_short`.
+    Stage 16 adds `docs/plans/plain_nd_coverage_expansion_plan.md` as the
+    next coverage-planning authority for rotation, clear/scoring, and
+    spawn-blocked game-over before any broader ND implementation.
     Live 3D/4D, topology, endgame, Python runtime, C#, Steam, or console
     implementation is not authorized here.
 

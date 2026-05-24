@@ -169,9 +169,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `gameplay_plain_3d_short` and `gameplay_plain_4d_short`, with
   `tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd` checking the
   Python golden traces including frame/final `state_hash`. Godot exposes only
-  parity/list/export/status methods for these ND traces. This does not
-  authorize live Godot 3D/4D gameplay, topology transport, endgame simulation,
-  C#, Python runtime calls from Godot, or Godot-side gameplay legality.
+  parity/list/export/status methods for these ND traces. Stage 16 adds the
+  next coverage-planning step in `docs/plans/plain_nd_coverage_expansion_plan.md`
+  so rotation, clear/scoring, and spawn-blocked game-over can be staged without
+  expanding live ND scope. This does not authorize live Godot 3D/4D gameplay,
+  topology transport, endgame simulation, C#, Python runtime calls from Godot,
+  or Godot-side gameplay legality.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

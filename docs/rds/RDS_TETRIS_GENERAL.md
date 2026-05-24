@@ -250,6 +250,10 @@ Cross-cutting requirements are defined in:
     Godot 3D/4D gameplay, topology transport, endgame simulation, ND rotation
     beyond explicit golden trace coverage, C#, Python runtime calls from
     Godot, or Godot-side gameplay legality.
+22. Stage 16 is coverage planning only and documents the next explicit ND
+    trace expansion for rotation, clear/scoring, and spawn-blocked game-over in
+    `docs/plans/plain_nd_coverage_expansion_plan.md`; it still does not
+    authorize live Godot ND gameplay or broad ND rule implementation.
 
 ### 3.3 Shared piece-local transform rules
 

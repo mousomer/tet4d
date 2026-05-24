@@ -159,25 +159,25 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "0077a11885aca65f1826d1438bdad08e0246e9145022c41c5624e30e4717f985",
+        "sha256": "fcf36135079570bb82d8c7afc7344dc3562709895e02cb3de908ad00ea5c8870",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "13cd3e118691a8b56fed036ceabb05310f4d2954d9fee52c3f694f13409ea904",
+        "sha256": "9b2aa883b7d36f4f20796ff63b309e4936ad87802145d7f8f6626fb2aefa51a6",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "d940e47fc0b03cad636ca75a246f9d0c28d2ade1be18d19dc07de69e7a9a80d0",
+        "sha256": "be23670e9e966b0228e1a4e851b90aaeac24b07568fc9a3c754e166677290013",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
         "purpose": "Shared topology/gameplay/endgame product requirements.",
         "role": "product_requirements",
-        "sha256": "ebdb15bcff846283ff3e2a9c01103da256bf2a4a481541f8145941728e58eb16",
+        "sha256": "93f26e637d86bb4fe7246041c61e9bcce26b3f3ed3118a59dffece6eeb99b45a",
         "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
       },
       {
@@ -219,7 +219,7 @@
       {
         "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
         "role": "godot_core_port_authority",
-        "sha256": "b2159156b310eeebc1dd2520f7a79f01c5c188dbee64eaef8f2226e778091eee",
+        "sha256": "045929868bf1bb05b94cb8f56bb2e9cd4159ac82b7c303f3d2252f8a8371a4eb",
         "source_path": "docs/plans/godot_core_port_plan.md"
       },
       {
@@ -231,7 +231,7 @@
       {
         "purpose": "Stage 14 plain bounded 3D/4D native trace parity plan.",
         "role": "plain_nd_core_parity_authority",
-        "sha256": "a76a10f2ea3e359fb47440119e57ca2ab29289f695d0da596e731bba36e3c61e",
+        "sha256": "b998e4d7b295cd6709a2d3c89b5fdc8e4cc95412b15a6238e1f2be7fff903544",
         "source_path": "docs/plans/plain_nd_core_parity_plan.md"
       }
     ],

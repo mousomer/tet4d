@@ -263,8 +263,9 @@ feature porting starts.
 8. Stage 15: add native plain-ND trace contract scaffolding and a minimal ND
    data model beside the accepted 2D core, with parity exports for
    `gameplay_plain_3d_short` and `gameplay_plain_4d_short`.
-9. Stage 16: plan the next explicit ND trace coverage for rotation,
-   plane-clear/scoring, and spawn-blocked game-over.
+9. Stage 16: document the next explicit ND trace coverage expansion in
+   `docs/plans/plain_nd_coverage_expansion_plan.md`, including rotation,
+   plane-clear/scoring, and spawn-blocked game-over cases.
 10. Stage 17: implement the next explicit plain-ND golden-trace target selected
    by Stage 16.
 11. Stage 18: add broader ND rotation/clear/game-over implementation only

@@ -1,14 +1,16 @@
 # Plain ND Core Parity Plan
 
 Role: Stage 14 migration architecture plan  
-Status: active planning authority; Stage 15 scaffold is tracked by `plain_nd_core_parity_contract.md`
+Status: active planning authority; Stage 15 scaffold is tracked by `plain_nd_core_parity_contract.md` and Stage 16 coverage planning lives in `plain_nd_coverage_expansion_plan.md`
 Last updated: 2026-05-23
 
 ## 1. Decision summary
 
-Stage 14 was planning-only. Stage 15 begins the selected sidecar
+Stage 14 was planning-only. Stage 15 began the selected sidecar
 implementation path with trace-parity scaffolding only; it still does not add
-live Godot 3D/4D gameplay, topology transport, or endgame simulation.
+live Godot 3D/4D gameplay, topology transport, or endgame simulation. Stage 16
+now plans the next explicit ND trace coverage before any broader native ND
+implementation begins.
 
 The next native target is plain bounded 3D/4D gameplay trace parity against
 the Python oracle:
@@ -18,7 +20,7 @@ the Python oracle:
 
 The implementation strategy is conservative: preserve the accepted C++ plain
 2D core and live `Plain2DSession`, then add a minimal plain-ND parity path
-beside it. Stage 15 codifies that path in
+beside it. Stage 15 codified that path in
 `docs/plans/plain_nd_core_parity_contract.md`. Shared helpers may be migrated
 only after 3D/4D parity is proven. The C++ core does not become authoritative
 for broader 3D/4D semantics until explicit Python traces match, including
