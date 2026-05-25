@@ -175,10 +175,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   and spawn-blocked game-over. Stage 18 implements native C++ parity only for
   `gameplay_plain_3d_rotation_short` and
   `gameplay_plain_4d_rotation_short`, including `last_rotation_plane`,
-  `last_rotation_steps`, active-cell, and `state_hash` parity. Plane
-  clear/scoring and spawn-blocked game-over remain deferred. This does not
-  authorize live Godot 3D/4D gameplay, topology transport, endgame simulation,
-  C#, Python runtime calls from Godot, or Godot-side gameplay legality.
+  `last_rotation_steps`, active-cell, and `state_hash` parity. Stage 19
+  implements native C++ parity only for
+  `gameplay_plain_3d_plane_clear_short` and
+  `gameplay_plain_4d_plane_clear_short`, including full gravity-axis
+  plane/hyperplane clear, compaction, generic `lines`, score, locked-cell
+  digest, and frame/final `state_hash` parity. Spawn-blocked game-over remains
+  deferred. This does not authorize live Godot 3D/4D gameplay, topology
+  transport, endgame simulation, C#, Python runtime calls from Godot, or
+  Godot-side gameplay legality.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

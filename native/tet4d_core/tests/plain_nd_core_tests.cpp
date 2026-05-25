@@ -156,18 +156,66 @@ void test_rotation_rejects_invalid_axes_clearly() {
 	require(state.game_over_reason == "invalid_rotation_axis", "invalid rotation should expose a clear reason");
 }
 
+void test_3d_plane_clear_stepper() {
+	tet4d::core::GameStateND state({{2, 3, 2}}, 1);
+	state.active_piece = tet4d::core::ActivePieceND::from_shape(tet4d::core::trace_single_shape_3d(), {{0, 2, 0}});
+	state.board.set_cell({{1, 2, 0}}, 1);
+	state.board.set_cell({{0, 2, 1}}, 1);
+	state.board.set_cell({{1, 2, 1}}, 1);
+	state.board.set_cell({{1, 1, 1}}, 2);
+
+	const tet4d::core::CommandResultND locked = tet4d::core::GameStepperND::apply(
+		state,
+		{"lock_plane_clear", tet4d::core::GameCommandKindND::LockCurrentPiece, 0, 0}
+	);
+	require(locked.return_int_value.has_value() && *locked.return_int_value == 1, "3D clear should return one cleared plane");
+	require(locked.locked_cell_delta == -3, "3D clear locked-cell delta should match Python");
+	require(state.lines == 1, "3D clear should increment generic lines counter");
+	require(state.score == 45, "3D clear score should be lock points plus single-clear points");
+	require(state.board.cells().size() == 1, "3D clear should leave one compacted locked cell");
+	require(state.board.has_cell({{1, 2, 1}}), "3D clear should compact surviving cell toward gravity direction");
+	require(state.board.cells().at({{1, 2, 1}}) == 2, "3D compacted survivor value mismatch");
+	require(state.active_piece.has_value(), "explicit lock_current_piece snapshot should keep active piece like Python");
+}
+
+void test_4d_plane_clear_stepper() {
+	tet4d::core::GameStateND state({{2, 3, 1, 2}}, 1);
+	state.active_piece = tet4d::core::ActivePieceND::from_shape(tet4d::core::trace_single_shape_4d(), {{0, 2, 0, 0}});
+	state.board.set_cell({{1, 2, 0, 0}}, 1);
+	state.board.set_cell({{0, 2, 0, 1}}, 1);
+	state.board.set_cell({{1, 2, 0, 1}}, 1);
+	state.board.set_cell({{1, 1, 0, 1}}, 2);
+
+	const tet4d::core::CommandResultND locked = tet4d::core::GameStepperND::apply(
+		state,
+		{"lock_hyperplane_clear", tet4d::core::GameCommandKindND::LockCurrentPiece, 0, 0}
+	);
+	require(locked.return_int_value.has_value() && *locked.return_int_value == 1, "4D clear should return one cleared hyperplane");
+	require(locked.locked_cell_delta == -3, "4D clear locked-cell delta should match Python");
+	require(state.lines == 1, "4D clear should increment generic lines counter");
+	require(state.score == 45, "4D clear score should be lock points plus single-clear points");
+	require(state.board.cells().size() == 1, "4D clear should leave one compacted locked cell");
+	require(state.board.has_cell({{1, 2, 0, 1}}), "4D clear should compact surviving cell toward gravity direction");
+	require(state.board.cells().at({{1, 2, 0, 1}}) == 2, "4D compacted survivor value mismatch");
+	require(state.active_piece.has_value(), "explicit 4D lock_current_piece snapshot should keep active piece like Python");
+}
+
 void test_trace_exports() {
 	const std::vector<std::string> cases = tet4d::core::list_plain_nd_parity_cases();
-	require(cases.size() == 4, "Stage 18 should expose four implemented plain ND parity cases");
+	require(cases.size() == 6, "Stage 19 should expose six implemented plain ND parity cases");
 	require(cases[0] == "gameplay_plain_3d_short", "first ND case id mismatch");
 	require(cases[1] == "gameplay_plain_4d_short", "second ND case id mismatch");
 	require(cases[2] == "gameplay_plain_3d_rotation_short", "third ND case id mismatch");
 	require(cases[3] == "gameplay_plain_4d_rotation_short", "fourth ND case id mismatch");
+	require(cases[4] == "gameplay_plain_3d_plane_clear_short", "fifth ND case id mismatch");
+	require(cases[5] == "gameplay_plain_4d_plane_clear_short", "sixth ND case id mismatch");
 	require(tet4d::core::run_builtin_plain_nd_smoke_case(), "plain ND smoke API should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_3d_short"), "3D required fields should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_4d_short"), "4D required fields should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_3d_rotation_short"), "3D rotation required fields should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_4d_rotation_short"), "4D rotation required fields should pass");
+	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_3d_plane_clear_short"), "3D clear required fields should pass");
+	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_4d_plane_clear_short"), "4D clear required fields should pass");
 
 	const std::string trace_3d = tet4d::core::export_plain_nd_trace_json("gameplay_plain_3d_short");
 	require(trace_3d.find("\"dimension\":3") != std::string::npos, "3D trace dimension missing");
@@ -191,6 +239,22 @@ void test_trace_exports() {
 	require(trace_4d_rotation.find("\"state_hash\":\"c3ccf55ccbac1998e7973ba4dc5e163398f2e32a6999cc933a3e4065dd71d34c\"") != std::string::npos, "4D rotation final hash missing");
 	require(trace_4d_rotation.find("\"state_hash\":\"0910d159c061826ae492aca543c28bae8d7a8d7ca430282afa7de23e62cbdcc0\"") != std::string::npos, "4D rotation frame hash missing");
 
+	const std::string trace_3d_clear = tet4d::core::export_plain_nd_trace_json("gameplay_plain_3d_plane_clear_short");
+	require(trace_3d_clear.find("\"lines\":1") != std::string::npos, "3D clear lines missing");
+	require(trace_3d_clear.find("\"score\":45") != std::string::npos, "3D clear score missing");
+	require(trace_3d_clear.find("\"locked_cell_delta\":-3") != std::string::npos, "3D clear locked-cell delta missing");
+	require(trace_3d_clear.find("\"locked_cell_digest\":\"5e9f3e56cd4891c7e96d954d52ed20072b2a62d12ac347db608cf8f630d4bd8b\"") != std::string::npos, "3D clear locked digest missing");
+	require(trace_3d_clear.find("\"state_hash\":\"9c1737872582996818277166c9b8d900a2362868315f15d1a8f9338e7afa6d57\"") != std::string::npos, "3D clear final hash missing");
+	require(trace_3d_clear.find("\"state_hash\":\"40af964de14050ef5d068e95d559385a6880450998b76d230da5450b7e2528d3\"") != std::string::npos, "3D clear frame hash missing");
+
+	const std::string trace_4d_clear = tet4d::core::export_plain_nd_trace_json("gameplay_plain_4d_plane_clear_short");
+	require(trace_4d_clear.find("\"lines\":1") != std::string::npos, "4D clear lines missing");
+	require(trace_4d_clear.find("\"score\":45") != std::string::npos, "4D clear score missing");
+	require(trace_4d_clear.find("\"locked_cell_delta\":-3") != std::string::npos, "4D clear locked-cell delta missing");
+	require(trace_4d_clear.find("\"locked_cell_digest\":\"06d0e35d7aea4e8c938561bdda9e42e377b77b3a09281e7ffdfd03e30e84fb4b\"") != std::string::npos, "4D clear locked digest missing");
+	require(trace_4d_clear.find("\"state_hash\":\"7b18f81b698dd0638fc1a11db4a896273f6d3bf3e5e31ded6241af3b6d1bee1f\"") != std::string::npos, "4D clear final hash missing");
+	require(trace_4d_clear.find("\"state_hash\":\"6a6506b6f88f177570acac30881d5e17d6cbbc24a86143a22018a4e1164fec2b\"") != std::string::npos, "4D clear frame hash missing");
+
 	const std::string unsupported = tet4d::core::export_plain_nd_trace_json("gameplay_plain_nd_rotation_deferred");
 	require(unsupported.find("\"error\":\"unsupported plain ND parity case\"") != std::string::npos, "unsupported ND trace case should fail clearly");
 }
@@ -209,6 +273,8 @@ int main(int argc, char **argv) {
 	test_3d_rotation_stepper();
 	test_4d_rotation_stepper();
 	test_rotation_rejects_invalid_axes_clearly();
+	test_3d_plane_clear_stepper();
+	test_4d_plane_clear_stepper();
 	test_trace_exports();
 	std::cout << "tet4d_core native plain ND tests passed\n";
 	return 0;

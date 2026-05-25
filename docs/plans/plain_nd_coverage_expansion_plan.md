@@ -1,8 +1,8 @@
 # Plain ND Coverage Expansion Plan
 
 Role: Stage 16 planning authority for broadening plain-ND parity beyond the short traces  
-Status: Stage 18 native rotation parity implemented; clear/scoring and game-over parity remain future work
-Last updated: 2026-05-24
+Status: Stage 19 native clear/scoring parity implemented; game-over parity remains future work
+Last updated: 2026-05-25
 
 ## 1. Decision Summary
 
@@ -10,7 +10,8 @@ Stage 15 proved the native sidecar ND scaffold can match the two short bounded
 3D/4D traces and their `state_hash` values. Stage 17 added explicit Python
 oracle traces for rotation, clear/scoring, and spawn-blocked game-over. Stage
 18 implements only the native C++ parity needed for the 3D/4D rotation traces.
-Clear/scoring and spawn-blocked game-over remain deferred.
+Stage 19 implements only the native C++ parity needed for the 3D/4D
+plane-clear traces. Spawn-blocked game-over remains deferred.
 
 Recommended direction:
 
@@ -43,13 +44,16 @@ Current native ND command coverage is narrow:
 - `soft_drop`
 - `hard_drop`
 - `rotate` for the implemented Stage 18 plain 3D/4D rotation traces only
+- `lock_current_piece` for the implemented Stage 19 plain 3D/4D plane-clear
+  traces only
 - basic lock/spawn path
 - frame/final `state_hash`
 
 Current native ND behavior is fixture-driven and does not attempt to be a full
-generalization of Python ND gameplay yet. Stage 18 does not add native plane
-clear/scoring, spawn-blocked game-over parity, live Godot 3D/4D gameplay,
-topology transport, or Godot-side ND legality.
+generalization of Python ND gameplay yet. Stage 19 adds only native
+plane-clear/scoring parity for the two explicit oracle traces. It does not add
+spawn-blocked game-over parity, live Godot 3D/4D gameplay, topology transport,
+or Godot-side ND legality.
 
 ## 3. Python Oracle References Inspected
 
@@ -84,6 +88,8 @@ Currently implemented native gameplay traces relevant to plain ND are:
 - `gameplay_plain_4d_short`
 - `gameplay_plain_3d_rotation_short`
 - `gameplay_plain_4d_rotation_short`
+- `gameplay_plain_3d_plane_clear_short`
+- `gameplay_plain_4d_plane_clear_short`
 
 Those traces cover:
 
@@ -91,14 +97,15 @@ Those traces cover:
 - `soft_drop`
 - `hard_drop`
 - one legal explicit plane rotation in 3D and one in 4D
+- one explicit full gravity-axis plane clear in 3D and one full gravity-axis
+  hyperplane clear in 4D
 - lock/respawn snapshot timing
 - score and locked-cell digest
 - frame/final `state_hash`
 
 They do not cover:
 
-- ND plane/slice/line clear behavior
-- ND scoring breadth
+- broader ND clear/scoring breadth beyond the two single-clear fixtures
 - spawn-blocked game-over
 - soft-drop lock variants
 - hard-drop edge cases
@@ -182,6 +189,7 @@ Trace design rule:
   `game_over`, `state_hash`
 - expected state_hash policy: explicit golden hash from Python exporter
 - C++ needed: plane clear, compaction, scoring, hash export
+- Stage 19 status: implemented in native C++ and included in `--all-plain-nd`
 - known risk: clear timing must match Python snapshot timing, especially whether
   the snapshot is taken after lock but before or after respawn
 
@@ -194,6 +202,7 @@ Trace design rule:
 - required snapshot fields: same as 3D clear case
 - expected state_hash policy: explicit golden hash from Python exporter
 - C++ needed: 4D hyperplane clear and scoring
+- Stage 19 status: implemented in native C++ and included in `--all-plain-nd`
 - known risk: compaction ordering on the non-gravity axes must match Python
 
 `gameplay_plain_3d_spawn_blocked_game_over`
@@ -259,12 +268,20 @@ Python clear semantics are full gravity-axis slices:
 - surviving cells compact toward the gravity direction after the clear
 - scoring is applied after lock and after clear resolution
 
-The plan for the next stage:
+Stage 19 settlement:
 
-- add a small 3D plane-clear trace and a small 4D plane-clear trace
-- ensure the exporter records post-lock snapshot timing consistently
-- verify score and line counters after the clear, not before
-- verify locked-cell digest after compaction
+- `gameplay_plain_3d_plane_clear_short` and
+  `gameplay_plain_4d_plane_clear_short` now pass native C++ comparison,
+  including frame and final `state_hash`;
+- the implemented clear object is a full gravity-axis level: a 3D plane or 4D
+  hyperplane where every non-gravity coordinate is occupied;
+- surviving locked cells compact toward larger gravity-axis values using the
+  Python rule `new_g = old_g + count(cleared_level > old_g)`;
+- `lines`, `score`, `locked_cells`, `locked_cell_digest`, and
+  `drop_lock_status` are exported through the existing Python field names;
+- explicit `lock_current_piece` trace snapshots keep the active piece present,
+  matching the Python oracle for these cases;
+- spawn-blocked game-over remains deferred to Stage 20.
 
 If Python clear semantics are not obvious for a fixture, the blocker is in the
 oracle/test layer, not the C++ implementation layer. The plan should add or
@@ -344,7 +361,7 @@ path, then verify the exported JSON only after the semantics are stable.
 ## 14. Compare-Tool Plan
 
 Current compare tooling supports `--all-plain-nd` for the implemented native
-short and rotation traces. Oracle-only clear/scoring and game-over traces stay
+short, rotation, and plane-clear traces. Oracle-only game-over traces stay
 outside that gate until their C++ semantics are implemented.
 
 Compare-tool policy:

@@ -1,8 +1,8 @@
 # Plain ND Core Parity Contract
 
 Role: native plain-ND trace-parity contract
-Status: active for Stage 15 movement/drop traces and Stage 18 rotation traces
-Last updated: 2026-05-24
+Status: active for Stage 15 movement/drop traces, Stage 18 rotation traces, and Stage 19 clear/scoring traces
+Last updated: 2026-05-25
 
 ## Scope
 
@@ -16,6 +16,11 @@ Stage 18 adds rotation parity for:
 
 - `gameplay_plain_3d_rotation_short`
 - `gameplay_plain_4d_rotation_short`
+
+Stage 19 adds clear/scoring parity for:
+
+- `gameplay_plain_3d_plane_clear_short`
+- `gameplay_plain_4d_plane_clear_short`
 
 It does not authorize live Godot 3D/4D gameplay, topology transport,
 wrap/invert/sphere behavior, endgame simulation, C#, Python runtime calls from
@@ -130,6 +135,64 @@ where `y < 0`; locked cells may not.
 - expected final state hash:
   `c3ccf55ccbac1998e7973ba4dc5e163398f2e32a6999cc933a3e4065dd71d34c`
 
+### gameplay_plain_3d_plane_clear_short
+
+- dimension: `3`
+- board shape: `[2,3,2]`
+- seed: `2023`
+- topology: plain bounded
+- gravity axis: `1`
+- piece set: `native_3d`
+- initial active piece: single-cell `TRACE_3D`
+- initial active cells: `[[0,2,0]]`
+- command:
+  - `{"action":"lock_current_piece","id":"lock_plane_clear"}`
+- initial locked fixture:
+  - `{"coord":[1,2,0],"value":1}`
+  - `{"coord":[0,2,1],"value":1}`
+  - `{"coord":[1,2,1],"value":1}`
+  - `{"coord":[1,1,1],"value":2}`
+- expected clear: one full gravity-axis plane at `y=2`
+- expected post-clear locked cells:
+  - `{"coord":[1,2,1],"value":2}`
+- expected `lines`: `1`
+- expected `score`: `45`
+- expected final locked digest:
+  `5e9f3e56cd4891c7e96d954d52ed20072b2a62d12ac347db608cf8f630d4bd8b`
+- expected frame state hash:
+  `40af964de14050ef5d068e95d559385a6880450998b76d230da5450b7e2528d3`
+- expected final state hash:
+  `9c1737872582996818277166c9b8d900a2362868315f15d1a8f9338e7afa6d57`
+
+### gameplay_plain_4d_plane_clear_short
+
+- dimension: `4`
+- board shape: `[2,3,1,2]`
+- seed: `2024`
+- topology: plain bounded
+- gravity axis: `1`
+- piece set: `embedded_2d`
+- initial active piece: single-cell `TRACE_4D`
+- initial active cells: `[[0,2,0,0]]`
+- command:
+  - `{"action":"lock_current_piece","id":"lock_hyperplane_clear"}`
+- initial locked fixture:
+  - `{"coord":[1,2,0,0],"value":1}`
+  - `{"coord":[0,2,0,1],"value":1}`
+  - `{"coord":[1,2,0,1],"value":1}`
+  - `{"coord":[1,1,0,1],"value":2}`
+- expected clear: one full gravity-axis hyperplane at `y=2`
+- expected post-clear locked cells:
+  - `{"coord":[1,2,0,1],"value":2}`
+- expected `lines`: `1`
+- expected `score`: `45`
+- expected final locked digest:
+  `06d0e35d7aea4e8c938561bdda9e42e377b77b3a09281e7ffdfd03e30e84fb4b`
+- expected frame state hash:
+  `6a6506b6f88f177570acac30881d5e17d6cbbc24a86143a22018a4e1164fec2b`
+- expected final state hash:
+  `7b18f81b698dd0638fc1a11db4a896273f6d3bf3e5e31ded6241af3b6d1bee1f`
+
 ## Snapshot Fields
 
 The native trace export must match the Python contract projection:
@@ -172,13 +235,13 @@ Stage 17 adds Python-oracle golden traces for the following deferred semantics:
 - `gameplay_plain_3d_spawn_blocked_game_over`
 - `gameplay_plain_4d_spawn_blocked_game_over`
 
-The rotation traces are implemented in Stage 18. Plane-clear/scoring and
-spawn-blocked game-over traces remain oracle-only until later stages implement
-those broader ND semantics.
+The rotation traces are implemented in Stage 18. The plane-clear/scoring
+traces are implemented in Stage 19. Spawn-blocked game-over traces remain
+oracle-only until a later stage implements those broader ND semantics.
 
-Stage 18 native C++ does not implement or claim parity for:
+Stage 19 native C++ does not implement or claim parity for:
 
-- plane clears beyond Python oracle trace generation
+- plane clears beyond the two explicit single-clear fixtures above
 - spawn-blocked ND game-over fixtures in C++
 - seeded RNG/bag parity beyond fixture-driven post-lock respawn
 - topology transport
@@ -218,6 +281,7 @@ PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --
 PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
 ```
 
-Stage 18 is acceptable only if plain 2D parity remains green, the two short
-plain-ND traces still match, and the two rotation traces match Python golden
-traces including frame/final hashes.
+Stage 19 is acceptable only if plain 2D parity remains green, the two short
+plain-ND traces still match, the two rotation traces still match, and the two
+plane-clear/scoring traces match Python golden traces including frame/final
+hashes.

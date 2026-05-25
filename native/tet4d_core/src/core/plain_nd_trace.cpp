@@ -21,6 +21,7 @@ struct PlainNDCase {
 	std::string piece_set;
 	PieceShapeND active_shape;
 	CoordND active_pos;
+	std::vector<CellND> initial_locked_cells;
 	std::vector<GameCommandND> commands;
 	std::optional<PieceShapeND> post_lock_spawn_shape;
 	std::vector<std::string> notes;
@@ -164,6 +165,8 @@ std::string command_json(const GameCommandND &command) {
 		out << "{\"action\":\"soft_drop\",\"id\":\"" << command.id << "\"}";
 	} else if (command.kind == GameCommandKindND::HardDrop) {
 		out << "{\"action\":\"hard_drop\",\"id\":\"" << command.id << "\"}";
+	} else if (command.kind == GameCommandKindND::LockCurrentPiece) {
+		out << "{\"action\":\"lock_current_piece\",\"id\":\"" << command.id << "\"}";
 	} else {
 		out << "{\"action\":\"noop\",\"id\":\"" << command.id << "\"}";
 	}
@@ -197,7 +200,13 @@ std::string command_result_json(const CommandResultND &result) {
 	std::ostringstream out;
 	out << "{\"active_cells_before\":" << coords_json(result.active_cells_before)
 		<< ",\"locked_cell_delta\":" << result.locked_cell_delta
-		<< ",\"return_value\":" << return_value_json(result.return_value) << "}";
+		<< ",\"return_value\":";
+	if (result.return_int_value.has_value()) {
+		out << *result.return_int_value;
+	} else {
+		out << return_value_json(result.return_value);
+	}
+	out << "}";
 	return out.str();
 }
 
@@ -322,6 +331,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"native_3d",
 			trace_shape_3d(),
 			{{2, 2, 2}},
+			{},
 			{
 				{"move_z", GameCommandKindND::MoveAxis, 2, 1},
 				{"soft_drop", GameCommandKindND::SoftDrop, 0, 0},
@@ -339,6 +349,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"standard_4d_5",
 			trace_shape_4d(),
 			{{2, 2, 1, 1}},
+			{},
 			{
 				{"move_w", GameCommandKindND::MoveAxis, 3, 1},
 				{"soft_drop", GameCommandKindND::SoftDrop, 0, 0},
@@ -356,6 +367,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"native_3d",
 			trace_rotation_shape_3d(),
 			{{2, 2, 2}},
+			{},
 			{
 				{"rotate_xz_cw", GameCommandKindND::Rotate, 0, 1, 2},
 			},
@@ -371,11 +383,54 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"standard_4d_5",
 			trace_rotation_shape_4d(),
 			{{2, 2, 2, 2}},
+			{},
 			{
 				{"rotate_xw_cw", GameCommandKindND::Rotate, 0, 1, 3},
 			},
 			std::nullopt,
 			{"Stage 17 plain 4D rotation oracle trace."},
+		},
+		{
+			"gameplay_plain_3d_plane_clear_short",
+			3,
+			2023,
+			{{2, 3, 2}},
+			1,
+			"native_3d",
+			trace_single_shape_3d(),
+			{{0, 2, 0}},
+			{
+				{{{1, 2, 0}}, 1},
+				{{{0, 2, 1}}, 1},
+				{{{1, 2, 1}}, 1},
+				{{{1, 1, 1}}, 2},
+			},
+			{
+				{"lock_plane_clear", GameCommandKindND::LockCurrentPiece, 0, 0},
+			},
+			std::nullopt,
+			{"Stage 17 plain 3D single-plane clear oracle trace."},
+		},
+		{
+			"gameplay_plain_4d_plane_clear_short",
+			4,
+			2024,
+			{{2, 3, 1, 2}},
+			1,
+			"embedded_2d",
+			trace_single_shape_4d(),
+			{{0, 2, 0, 0}},
+			{
+				{{{1, 2, 0, 0}}, 1},
+				{{{0, 2, 0, 1}}, 1},
+				{{{1, 2, 0, 1}}, 1},
+				{{{1, 1, 0, 1}}, 2},
+			},
+			{
+				{"lock_hyperplane_clear", GameCommandKindND::LockCurrentPiece, 0, 0},
+			},
+			std::nullopt,
+			{"Stage 17 plain 4D single-hyperplane clear oracle trace."},
 		},
 	};
 }
@@ -394,6 +449,9 @@ GameStateND make_state(const PlainNDCase &trace_case) {
 	GameStateND state(trace_case.board_shape, trace_case.gravity_axis);
 	state.active_piece = ActivePieceND::from_shape(trace_case.active_shape, trace_case.active_pos);
 	state.post_lock_spawn_shape = trace_case.post_lock_spawn_shape;
+	for (const CellND &cell : trace_case.initial_locked_cells) {
+		state.board.set_cell(cell.coord, cell.value);
+	}
 	return state;
 }
 
@@ -481,7 +539,7 @@ std::string get_plain_nd_parity_status() {
 	if (!run_builtin_plain_nd_smoke_case()) {
 		return "plain_nd parity smoke failed";
 	}
-	return "plain_nd Stage 18 3D/4D movement and rotation traces export required fields and state_hash";
+	return "plain_nd Stage 19 3D/4D movement, rotation, and clear/scoring traces export required fields and state_hash";
 }
 
 bool get_plain_nd_required_field_parity(const std::string &case_id) {

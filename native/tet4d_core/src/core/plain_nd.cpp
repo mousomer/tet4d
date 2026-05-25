@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <set>
 #include <utility>
 
 namespace tet4d::core {
@@ -114,6 +115,25 @@ std::vector<CoordND> rotate_blocks_nd(
 	return rotated;
 }
 
+int score_for_clear(int cleared_count) {
+	if (cleared_count <= 0) {
+		return 0;
+	}
+	if (cleared_count == 1) {
+		return 40;
+	}
+	if (cleared_count == 2) {
+		return 100;
+	}
+	if (cleared_count == 3) {
+		return 300;
+	}
+	if (cleared_count == 4) {
+		return 1200;
+	}
+	return 1200 + (cleared_count - 4) * 400;
+}
+
 } // namespace
 
 int CoordND::dimension() const {
@@ -165,6 +185,57 @@ bool BoardND::has_cell(const CoordND &coord) const {
 
 void BoardND::set_cell(const CoordND &coord, int value) {
 	cells_[coord] = value;
+}
+
+int BoardND::clear_planes(int gravity_axis) {
+	const int dimension = shape_.dimension();
+	if (gravity_axis < 0 || gravity_axis >= dimension || cells_.empty()) {
+		return 0;
+	}
+	const int axis_size = shape_.dims[static_cast<std::size_t>(gravity_axis)];
+	int max_per_level = 1;
+	for (int axis = 0; axis < dimension; ++axis) {
+		if (axis != gravity_axis) {
+			max_per_level *= shape_.dims[static_cast<std::size_t>(axis)];
+		}
+	}
+	std::vector<int> level_counts(static_cast<std::size_t>(axis_size), 0);
+	for (const auto &[coord, _value] : cells_) {
+		const int level = coord.values[static_cast<std::size_t>(gravity_axis)];
+		if (level >= 0 && level < axis_size) {
+			level_counts[static_cast<std::size_t>(level)] += 1;
+		}
+	}
+	std::set<int> full_levels;
+	for (int level = 0; level < axis_size; ++level) {
+		if (level_counts[static_cast<std::size_t>(level)] == max_per_level) {
+			full_levels.insert(level);
+		}
+	}
+	if (full_levels.empty()) {
+		return 0;
+	}
+
+	std::map<CoordND, int> compacted;
+	for (const auto &[coord, value] : cells_) {
+		const int level = coord.values[static_cast<std::size_t>(gravity_axis)];
+		if (full_levels.find(level) != full_levels.end()) {
+			continue;
+		}
+		int shift = 0;
+		for (const int cleared_level : full_levels) {
+			if (cleared_level > level) {
+				++shift;
+			}
+		}
+		CoordND next = coord;
+		next.values[static_cast<std::size_t>(gravity_axis)] = level + shift;
+		if (next.values[static_cast<std::size_t>(gravity_axis)] < axis_size) {
+			compacted[next] = value;
+		}
+	}
+	cells_ = std::move(compacted);
+	return static_cast<int>(full_levels.size());
 }
 
 ActivePieceND ActivePieceND::from_shape(const PieceShapeND &shape, const CoordND &pos) {
@@ -310,20 +381,18 @@ int GameStateND::lock_current_piece() {
 	}
 
 	const int color_id = active_piece->shape.color_id;
-	int locked = 0;
 	for (const CoordND &cell : active_piece->cells()) {
 		if (cell.values[static_cast<std::size_t>(gravity_axis)] < 0) {
 			game_over = true;
 			game_over_reason = "out_of_bounds";
-			active_piece.reset();
 			return 0;
 		}
 		board.set_cell(cell, color_id);
-		++locked;
 	}
-	active_piece.reset();
-	score += lock_piece_points;
-	return locked;
+	const int cleared = board.clear_planes(gravity_axis);
+	lines += cleared;
+	score += lock_piece_points + score_for_clear(cleared);
+	return cleared;
 }
 
 void GameStateND::spawn_piece(const PieceShapeND &shape) {
@@ -351,6 +420,8 @@ CommandResultND GameStepperND::apply(GameStateND &state, const GameCommandND &co
 	} else if (command.kind == GameCommandKindND::HardDrop) {
 		state.hard_drop();
 		result.return_value = std::nullopt;
+	} else if (command.kind == GameCommandKindND::LockCurrentPiece) {
+		result.return_int_value = state.lock_current_piece();
 	} else if (command.kind == GameCommandKindND::Noop) {
 		result.return_value = true;
 	}
@@ -365,6 +436,14 @@ PieceShapeND trace_shape_3d() {
 
 PieceShapeND trace_shape_4d() {
 	return {"TRACE_4D", {{{0, 0, 0, 0}}, {{1, 0, 0, 0}}}, 8};
+}
+
+PieceShapeND trace_single_shape_3d() {
+	return {"TRACE_3D", {{{0, 0, 0}}}, 8};
+}
+
+PieceShapeND trace_single_shape_4d() {
+	return {"TRACE_4D", {{{0, 0, 0, 0}}}, 8};
 }
 
 PieceShapeND trace_rotation_shape_3d() {

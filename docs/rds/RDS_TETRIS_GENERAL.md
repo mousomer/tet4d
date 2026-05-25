@@ -266,6 +266,13 @@ Cross-cutting requirements are defined in:
     3D/4D gameplay, topology transport, plane-clear/scoring parity,
     spawn-blocked game-over parity, endgame behavior, C#, Python runtime calls
     from Godot, or Godot-side ND legality.
+25. Stage 19 may implement native C++ parity only for the explicit plain-ND
+    clear/scoring traces `gameplay_plain_3d_plane_clear_short` and
+    `gameplay_plain_4d_plane_clear_short`. It may expose those cases through
+    the existing parity/list/export/status API only and must not add live Godot
+    3D/4D gameplay, topology transport, spawn-blocked game-over parity,
+    endgame behavior, C#, Python runtime calls from Godot, or Godot-side ND
+    legality.
 
 ### 3.3 Shared piece-local transform rules
 

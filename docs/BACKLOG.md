@@ -48,7 +48,8 @@ implementation; Stage 12/12b and Stage 13 have accepted the narrow live plain
 bounded 2D Godot shell with C++ as gameplay authority; Stage 14 was the
 planning-only gate for plain bounded 3D/4D native trace parity, Stage 15 adds
 the sidecar native plain-ND trace scaffold for the short 3D/4D golden traces,
-and Stage 18 adds native parity only for the plain 3D/4D rotation traces.
+Stage 18 adds native parity only for the plain 3D/4D rotation traces, and
+Stage 19 adds native parity only for the plain 3D/4D plane-clear traces.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
 
@@ -123,8 +124,11 @@ Current active follow-ups:
   rotation, plane clear, and spawn-blocked game-over. Stage 18 implements
   native C++ parity only for `gameplay_plain_3d_rotation_short` and
   `gameplay_plain_4d_rotation_short`, updates `--all-plain-nd` to include the
-  implemented rotation cases, and keeps plane clear/scoring plus
-  spawn-blocked game-over deferred. It still does not add live 3D/4D Godot
+  implemented rotation cases. Stage 19 implements native C++ parity only for
+  `gameplay_plain_3d_plane_clear_short` and
+  `gameplay_plain_4d_plane_clear_short`, updates `--all-plain-nd` to include
+  the implemented clear/scoring cases, and keeps spawn-blocked game-over
+  deferred. It still does not add live 3D/4D Godot
   gameplay, topology, endgame, C#, Python runtime, or Godot-side gameplay
   legality.
 - topology-playground shell-preserving cleanup remains centered on
@@ -335,6 +339,14 @@ stays synchronized, and the contract validator accepts the backlog shape.
     `last_rotation_plane`, `last_rotation_steps`, and frame/final
     `state_hash` parity through `--all-plain-nd`. Clear/scoring,
     spawn-blocked game-over, live Godot 3D/4D gameplay, topology, endgame, C#,
+    Python runtime calls, and Godot-side ND legality remain deferred.
+18. `DONE` `[BKL-P3-025]` Stage 19 native plain ND clear/scoring parity:
+    implement native C++ parity only for
+    `gameplay_plain_3d_plane_clear_short` and
+    `gameplay_plain_4d_plane_clear_short`, including full gravity-axis
+    plane/hyperplane clear, compaction, generic `lines`, score, locked-cell
+    digest, and frame/final `state_hash` parity through `--all-plain-nd`.
+    Spawn-blocked game-over, live Godot 3D/4D gameplay, topology, endgame, C#,
     Python runtime calls, and Godot-side ND legality remain deferred.
 
 ## Governance Watchlist

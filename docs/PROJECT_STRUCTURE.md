@@ -173,9 +173,11 @@ The current rule is one-way:
     adds those Python-oracle golden traces under `migration/golden_traces/`
     while native C++ parity remains scoped to implemented cases. Stage 18 adds
     native rotation parity only for `gameplay_plain_3d_rotation_short` and
-    `gameplay_plain_4d_rotation_short`; plane clear/scoring, spawn-blocked
-    game-over, live 3D/4D, topology, endgame, Python runtime, C#, Steam, or
-    console implementation is not authorized here.
+    `gameplay_plain_4d_rotation_short`. Stage 19 adds native clear/scoring
+    parity only for `gameplay_plain_3d_plane_clear_short` and
+    `gameplay_plain_4d_plane_clear_short`; spawn-blocked game-over, live
+    3D/4D, topology, endgame, Python runtime, C#, Steam, or console
+    implementation is not authorized here.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

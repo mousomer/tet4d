@@ -36,6 +36,7 @@ public:
 	const std::map<CoordND, int> &cells() const;
 	bool has_cell(const CoordND &coord) const;
 	void set_cell(const CoordND &coord, int value);
+	int clear_planes(int gravity_axis);
 
 private:
 	BoardShapeND shape_;
@@ -88,6 +89,7 @@ enum class GameCommandKindND {
 	Rotate,
 	SoftDrop,
 	HardDrop,
+	LockCurrentPiece,
 	Noop,
 };
 
@@ -103,6 +105,7 @@ struct CommandResultND {
 	std::vector<CoordND> active_cells_before;
 	int locked_cell_delta = 0;
 	std::optional<bool> return_value;
+	std::optional<int> return_int_value;
 };
 
 class GameStepperND {
@@ -112,6 +115,8 @@ public:
 
 PieceShapeND trace_shape_3d();
 PieceShapeND trace_shape_4d();
+PieceShapeND trace_single_shape_3d();
+PieceShapeND trace_single_shape_4d();
 PieceShapeND trace_rotation_shape_3d();
 PieceShapeND trace_rotation_shape_4d();
 PieceShapeND native_i_shape_3d();
