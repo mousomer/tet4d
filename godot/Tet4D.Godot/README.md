@@ -145,6 +145,12 @@ parity/list/export/status methods for `gameplay_plain_3d_short` and
 no topology gameplay API, no endgame API, and no Godot-side gameplay
 legality.
 
+Stage 18 adds native plain-ND rotation parity through the same parity-only API
+for `gameplay_plain_3d_rotation_short` and
+`gameplay_plain_4d_rotation_short`. Godot can list/export/status-check those
+cases, but it still does not expose live ND movement or rotation commands.
+Plane clear/scoring and spawn-blocked game-over parity remain deferred.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -218,8 +224,9 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 The GDScript tests cover bundle loading, sample trace parsing, centralized
 coordinate mapping, deterministic camera fit, replay-viewer layout containment,
 gameplay-cell snap policy when stable identity is absent, live 2D native
-status, and the native extension smoke/parity API including Stage 15 plain-ND
-trace exports. On a fresh checkout, run the submodule and native build
+status, and the native extension smoke/parity API including Stage 18 plain-ND
+movement/drop and rotation trace exports. On a fresh checkout, run the
+submodule and native build
 commands above first; the extension smoke test intentionally fails if Godot
 cannot load the native library.
 

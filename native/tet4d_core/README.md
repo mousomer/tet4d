@@ -19,8 +19,10 @@ HUD; Godot may time gravity and input repeat, but C++ owns the result of every
 `tick`, movement, rotation, soft drop, hard drop, lock, line clear, score,
 piece sequence, game-over, and hash update. Stage 15 adds a sidecar plain-ND
 trace scaffold for `gameplay_plain_3d_short` and
-`gameplay_plain_4d_short`; it is parity infrastructure only and does not add
-live Godot 3D/4D gameplay.
+`gameplay_plain_4d_short`. Stage 18 adds native parity only for
+`gameplay_plain_3d_rotation_short` and
+`gameplay_plain_4d_rotation_short`; it remains parity infrastructure only and
+does not add live Godot 3D/4D gameplay.
 
 The native source tree has two layers:
 
@@ -73,7 +75,7 @@ Allowed Stage 12 live plain-2D API:
 - `live_2d_status()`
 - `live_2d_state_hash()`
 
-Allowed Stage 15 plain-ND parity API:
+Allowed Stage 18 plain-ND parity API:
 
 - `run_builtin_plain_nd_smoke_case()`
 - `list_plain_nd_parity_cases()`
@@ -97,5 +99,8 @@ The live API is plain bounded 2D only. It exposes the current piece name in
 live status/snapshot data plus native next-piece and game-over fields, but
 Godot must not choose or mutate the piece sequence, compute legality, or
 synthesize game-over. The plain-ND API is trace export/list/status only for
-the two short bounded 3D/4D golden traces. It must not expose live 3D/4D,
-topology, endgame, Python runtime, C#, Steam, or console behavior.
+the two short bounded 3D/4D golden traces and the two Stage 18 rotation
+traces. Stage 18 rotation uses Python-compatible local `rel_blocks` plane
+rotation and serializes `last_rotation_plane` / `last_rotation_steps` for hash
+parity. It must not expose live 3D/4D, plane clear/scoring, spawn-blocked
+game-over, topology, endgame, Python runtime, C#, Steam, or console behavior.

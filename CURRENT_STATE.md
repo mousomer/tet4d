@@ -172,10 +172,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   parity/list/export/status methods for these ND traces. Stage 16 adds the
   next coverage-planning step in `docs/plans/plain_nd_coverage_expansion_plan.md`.
   Stage 17 adds Python-oracle traces for plain 3D/4D rotation, plane clear,
-  and spawn-blocked game-over while keeping C++ parity limited to the
-  implemented short ND traces. This does not authorize live Godot 3D/4D
-  gameplay, topology transport, endgame simulation, C#, Python runtime calls
-  from Godot, or Godot-side gameplay legality.
+  and spawn-blocked game-over. Stage 18 implements native C++ parity only for
+  `gameplay_plain_3d_rotation_short` and
+  `gameplay_plain_4d_rotation_short`, including `last_rotation_plane`,
+  `last_rotation_steps`, active-cell, and `state_hash` parity. Plane
+  clear/scoring and spawn-blocked game-over remain deferred. This does not
+  authorize live Godot 3D/4D gameplay, topology transport, endgame simulation,
+  C#, Python runtime calls from Godot, or Godot-side gameplay legality.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

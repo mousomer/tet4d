@@ -1,16 +1,21 @@
 # Plain ND Core Parity Contract
 
-Role: Stage 15 native trace-parity scaffold contract  
-Status: active for native plain bounded 3D/4D trace scaffolding  
-Last updated: 2026-05-23
+Role: native plain-ND trace-parity contract
+Status: active for Stage 15 movement/drop traces and Stage 18 rotation traces
+Last updated: 2026-05-24
 
 ## Scope
 
-Stage 15 adds a sidecar native C++ plain-ND trace path beside the accepted
-plain 2D core. It targets only these Python-oracle golden traces:
+The sidecar native C++ plain-ND trace path lives beside the accepted plain 2D
+core. Stage 15 targets these Python-oracle golden traces:
 
 - `gameplay_plain_3d_short`
 - `gameplay_plain_4d_short`
+
+Stage 18 adds rotation parity for:
+
+- `gameplay_plain_3d_rotation_short`
+- `gameplay_plain_4d_rotation_short`
 
 It does not authorize live Godot 3D/4D gameplay, topology transport,
 wrap/invert/sphere behavior, endgame simulation, C#, Python runtime calls from
@@ -81,6 +86,50 @@ where `y < 0`; locked cells may not.
 - expected final state hash:
   `d34d21da0a1c4aa6e947230e68e8b16a3e212b40bb7da1ccaef24200e7f80449`
 
+### gameplay_plain_3d_rotation_short
+
+- dimension: `3`
+- board shape: `[5,5,5]`
+- seed: `2021`
+- topology: plain bounded
+- gravity axis: `1`
+- piece set: `native_3d`
+- initial active piece: `TRACE_3D`
+- initial active cells: `[[2,2,2],[2,2,3],[2,3,2],[3,2,2]]`
+- command:
+  - `{"action":"rotate","axis_a":0,"axis_b":2,"delta":1,"id":"rotate_xz_cw"}`
+- expected rotated active cells:
+  - `[2,2,2]`
+  - `[2,2,3]`
+  - `[2,3,3]`
+  - `[3,2,3]`
+- expected `last_rotation_plane`: `[0,2]`
+- expected `last_rotation_steps`: `1`
+- expected final state hash:
+  `2d2ada3b5b425bf649c66cd8e6b2c3c2e24a57c4f8a7dc8aab26ac72a33a7e4d`
+
+### gameplay_plain_4d_rotation_short
+
+- dimension: `4`
+- board shape: `[5,5,5,5]`
+- seed: `2022`
+- topology: plain bounded
+- gravity axis: `1`
+- piece set: `standard_4d_5`
+- initial active piece: `TRACE_4D`
+- initial active cells: `[[2,2,2,2],[2,2,3,2],[2,3,2,2],[3,2,2,2]]`
+- command:
+  - `{"action":"rotate","axis_a":0,"axis_b":3,"delta":1,"id":"rotate_xw_cw"}`
+- expected rotated active cells:
+  - `[2,2,2,1]`
+  - `[2,2,2,2]`
+  - `[2,2,3,2]`
+  - `[2,3,2,2]`
+- expected `last_rotation_plane`: `[0,3]`
+- expected `last_rotation_steps`: `1`
+- expected final state hash:
+  `c3ccf55ccbac1998e7973ba4dc5e163398f2e32a6999cc933a3e4065dd71d34c`
+
 ## Snapshot Fields
 
 The native trace export must match the Python contract projection:
@@ -118,20 +167,17 @@ Native hashes must match Python `tools/migration/trace_schema.py`:
 
 Stage 17 adds Python-oracle golden traces for the following deferred semantics:
 
-- `gameplay_plain_3d_rotation_short`
-- `gameplay_plain_4d_rotation_short`
 - `gameplay_plain_3d_plane_clear_short`
 - `gameplay_plain_4d_plane_clear_short`
 - `gameplay_plain_3d_spawn_blocked_game_over`
 - `gameplay_plain_4d_spawn_blocked_game_over`
 
-These traces are oracle-only in Stage 17. The native C++ parity gate remains
-limited to `gameplay_plain_3d_short` and `gameplay_plain_4d_short` until later
-stages implement the broader ND semantics.
+The rotation traces are implemented in Stage 18. Plane-clear/scoring and
+spawn-blocked game-over traces remain oracle-only until later stages implement
+those broader ND semantics.
 
-Stage 15/17 native C++ does not implement or claim parity for:
+Stage 18 native C++ does not implement or claim parity for:
 
-- ND rotation
 - plane clears beyond Python oracle trace generation
 - spawn-blocked ND game-over fixtures in C++
 - seeded RNG/bag parity beyond fixture-driven post-lock respawn
@@ -145,7 +191,7 @@ unverified trace.
 
 ## Native API Boundary
 
-Allowed Stage 15 native/Godot-facing parity APIs:
+Allowed native/Godot-facing plain-ND parity APIs:
 
 - `list_plain_nd_parity_cases()`
 - `get_plain_nd_parity_status()`
@@ -172,5 +218,6 @@ PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --
 PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
 ```
 
-Stage 15 is acceptable only if plain 2D parity remains green and both target
-plain-ND traces match Python golden traces, including frame/final hashes.
+Stage 18 is acceptable only if plain 2D parity remains green, the two short
+plain-ND traces still match, and the two rotation traces match Python golden
+traces including frame/final hashes.

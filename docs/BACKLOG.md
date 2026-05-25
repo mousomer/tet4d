@@ -46,10 +46,11 @@ it still does not open 3D, 4D, topology, endgame, live Godot gameplay, Python
 runtime, C#, Steam, or console
 implementation; Stage 12/12b and Stage 13 have accepted the narrow live plain
 bounded 2D Godot shell with C++ as gameplay authority; Stage 14 was the
-planning-only gate for plain bounded 3D/4D native trace parity, and Stage 15
-adds the sidecar native plain-ND trace scaffold for the short 3D/4D golden
-traces only. Shell-preserving cleanup and endgame visual polish remain
-non-blocking and must not reopen semantics.
+planning-only gate for plain bounded 3D/4D native trace parity, Stage 15 adds
+the sidecar native plain-ND trace scaffold for the short 3D/4D golden traces,
+and Stage 18 adds native parity only for the plain 3D/4D rotation traces.
+Shell-preserving cleanup and endgame visual polish remain non-blocking and
+must not reopen semantics.
 
 Current active follow-ups:
 
@@ -119,10 +120,13 @@ Current active follow-ups:
   parity-only Godot bridge smoke coverage. Stage 16 then documents the next
   explicit ND trace expansion in `docs/plans/plain_nd_coverage_expansion_plan.md`.
   Stage 17 adds the corresponding Python-oracle golden traces for plain 3D/4D
-  rotation, plane clear, and spawn-blocked game-over while keeping native C++
-  parity scoped to the implemented short ND cases. It still does not add live
-  3D/4D Godot gameplay, topology, endgame, C#, Python runtime, or Godot-side
-  gameplay legality.
+  rotation, plane clear, and spawn-blocked game-over. Stage 18 implements
+  native C++ parity only for `gameplay_plain_3d_rotation_short` and
+  `gameplay_plain_4d_rotation_short`, updates `--all-plain-nd` to include the
+  implemented rotation cases, and keeps plane clear/scoring plus
+  spawn-blocked game-over deferred. It still does not add live 3D/4D Godot
+  gameplay, topology, endgame, C#, Python runtime, or Godot-side gameplay
+  legality.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -313,13 +317,25 @@ stays synchronized, and the contract validator accepts the backlog shape.
     polish only the accepted live plain bounded 2D slice with shell-owned
     gravity timing, held-key repeat, pause/reset, mode switching, HUD cleanup,
     and replay preservation while C++ remains gameplay authority.
-15. `ACTIVE` `[BKL-P3-022]` Stage 14 plain ND core parity plan:
-    document the path from accepted native plain 2D to plain bounded 3D/4D
-    trace parity. The plan targets `gameplay_plain_3d_short` and
-    `gameplay_plain_4d_short`, keeps Python as oracle, preserves the accepted
-    2D live path, chooses sidecar ND implementation before any broad
-    generalization, and forbids topology, endgame, live Godot 3D/4D gameplay,
-    C#, Python runtime calls from Godot, and Godot-side gameplay legality.
+15. `DONE` `[BKL-P3-022]` Stage 14/15 plain ND core parity foundation:
+    document and implement the path from accepted native plain 2D to plain
+    bounded 3D/4D trace parity for `gameplay_plain_3d_short` and
+    `gameplay_plain_4d_short`, keeping Python as oracle, preserving the
+    accepted 2D live path, choosing sidecar ND implementation before broad
+    generalization, and forbidding topology, endgame, live Godot 3D/4D
+    gameplay, C#, Python runtime calls from Godot, and Godot-side gameplay
+    legality.
+16. `DONE` `[BKL-P3-023]` Stage 17 plain ND oracle trace expansion:
+    add Python-oracle golden traces for plain 3D/4D rotation, plane clear, and
+    spawn-blocked game-over while keeping native parity scoped to implemented
+    cases.
+17. `DONE` `[BKL-P3-024]` Stage 18 native plain ND rotation parity:
+    implement native C++ parity only for `gameplay_plain_3d_rotation_short`
+    and `gameplay_plain_4d_rotation_short`, including active-cell,
+    `last_rotation_plane`, `last_rotation_steps`, and frame/final
+    `state_hash` parity through `--all-plain-nd`. Clear/scoring,
+    spawn-blocked game-over, live Godot 3D/4D gameplay, topology, endgame, C#,
+    Python runtime calls, and Godot-side ND legality remain deferred.
 
 ## Governance Watchlist
 

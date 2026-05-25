@@ -58,6 +58,7 @@ struct ActivePieceND {
 	static ActivePieceND from_shape(const PieceShapeND &shape, const CoordND &pos);
 	std::vector<CoordND> cells() const;
 	ActivePieceND moved_axis(int axis, int delta) const;
+	ActivePieceND rotated(int axis_a, int axis_b, int delta_steps) const;
 };
 
 struct GameStateND {
@@ -75,6 +76,7 @@ struct GameStateND {
 	std::vector<CoordND> active_cells() const;
 	bool can_exist(const ActivePieceND &piece) const;
 	bool try_move_axis(int axis, int delta);
+	bool try_rotate(int axis_a, int axis_b, int delta_steps);
 	bool try_soft_drop();
 	void hard_drop();
 	int lock_current_piece();
@@ -83,6 +85,7 @@ struct GameStateND {
 
 enum class GameCommandKindND {
 	MoveAxis,
+	Rotate,
 	SoftDrop,
 	HardDrop,
 	Noop,
@@ -93,6 +96,7 @@ struct GameCommandND {
 	GameCommandKindND kind = GameCommandKindND::Noop;
 	int axis = 0;
 	int delta = 0;
+	int axis_b = 0;
 };
 
 struct CommandResultND {
@@ -108,6 +112,8 @@ public:
 
 PieceShapeND trace_shape_3d();
 PieceShapeND trace_shape_4d();
+PieceShapeND trace_rotation_shape_3d();
+PieceShapeND trace_rotation_shape_4d();
 PieceShapeND native_i_shape_3d();
 PieceShapeND standard_stair_shape_4d();
 CoordND spawn_pos_for_shape(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape);

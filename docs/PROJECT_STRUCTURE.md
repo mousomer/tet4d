@@ -171,9 +171,11 @@ The current rule is one-way:
     next coverage-planning authority for rotation, clear/scoring, and
     spawn-blocked game-over before any broader ND implementation. Stage 17
     adds those Python-oracle golden traces under `migration/golden_traces/`
-    while native C++ parity remains scoped to the implemented short ND traces.
-    Live 3D/4D, topology, endgame, Python runtime, C#, Steam, or console
-    implementation is not authorized here.
+    while native C++ parity remains scoped to implemented cases. Stage 18 adds
+    native rotation parity only for `gameplay_plain_3d_rotation_short` and
+    `gameplay_plain_4d_rotation_short`; plane clear/scoring, spawn-blocked
+    game-over, live 3D/4D, topology, endgame, Python runtime, C#, Steam, or
+    console implementation is not authorized here.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

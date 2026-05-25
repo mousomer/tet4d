@@ -25,6 +25,8 @@ PLAIN_2D_CASES = {
 PLAIN_ND_CASES = {
     "gameplay_plain_3d_short",
     "gameplay_plain_4d_short",
+    "gameplay_plain_3d_rotation_short",
+    "gameplay_plain_4d_rotation_short",
 }
 SUPPORTED_CASES = PLAIN_2D_CASES | PLAIN_ND_CASES
 
@@ -112,7 +114,7 @@ def _canonical_diff(expected: Any, actual: Any) -> str:
     )
 
 
-def _first_frame_mismatch(diffs: list[str]) -> str | None:
+def _first_frame_mismatch(case_id: str, diffs: list[str]) -> str | None:
     for diff in diffs:
         marker = "$.frames["
         if not diff.startswith(marker):
@@ -122,7 +124,10 @@ def _first_frame_mismatch(diffs: list[str]) -> str | None:
             continue
         frame_index = diff[len(marker) : end]
         field_path = "$.frames[" + frame_index + "]" + diff[end + 1 :].split(": ", 1)[0]
-        return f"first mismatching frame: {frame_index}; field path: {field_path}"
+        return (
+            f"case {case_id}: first mismatching frame: {frame_index}; "
+            f"field path: {field_path}"
+        )
     return None
 
 
@@ -135,17 +140,26 @@ def compare_case(case_id: str, golden_dir: Path) -> list[str]:
     cpp_contract = _contract_projection(cpp)
     if cpp_contract != golden_contract:
         diffs = _field_diffs(golden_contract, cpp_contract)
-        frame_mismatch = _first_frame_mismatch(diffs)
+        frame_mismatch = _first_frame_mismatch(case_id, diffs)
         hash_diffs = [
             diff
             for diff in diffs
             if "state_hash" in diff or "locked_cell_digest" in diff
         ]
+        final_hash_diffs = [
+            diff for diff in diffs if diff.startswith("$.final.state_hash:")
+        ]
         summary = []
         if frame_mismatch is not None:
             summary.append(frame_mismatch)
+        if final_hash_diffs:
+            summary.append(f"case {case_id}: final hash mismatch")
+            summary.extend(final_hash_diffs[:3])
+        elif hash_diffs:
+            summary.append(f"case {case_id}: state_hash mismatch")
         summary.extend(hash_diffs[:10])
         return [
+            f"case id: {case_id}",
             *diffs[0:40],
             *summary,
             f"C++ gameplay trace contract mismatch for {case_id}",

@@ -1,16 +1,16 @@
 # Plain ND Coverage Expansion Plan
 
 Role: Stage 16 planning authority for broadening plain-ND parity beyond the short traces  
-Status: Stage 17 oracle traces added; C++ parity for those traces is future work
+Status: Stage 18 native rotation parity implemented; clear/scoring and game-over parity remain future work
 Last updated: 2026-05-24
 
 ## 1. Decision Summary
 
 Stage 15 proved the native sidecar ND scaffold can match the two short bounded
-3D/4D traces and their `state_hash` values. Stage 16 does not implement new
-gameplay semantics. It defines the next coverage expansion so the next native
-implementation stage can safely add explicit trace cases for rotation,
-clear/scoring, and spawn-blocked game-over without guessing at Python behavior.
+3D/4D traces and their `state_hash` values. Stage 17 added explicit Python
+oracle traces for rotation, clear/scoring, and spawn-blocked game-over. Stage
+18 implements only the native C++ parity needed for the 3D/4D rotation traces.
+Clear/scoring and spawn-blocked game-over remain deferred.
 
 Recommended direction:
 
@@ -42,11 +42,14 @@ Current native ND command coverage is narrow:
 - `move_axis`
 - `soft_drop`
 - `hard_drop`
+- `rotate` for the implemented Stage 18 plain 3D/4D rotation traces only
 - basic lock/spawn path
 - frame/final `state_hash`
 
 Current native ND behavior is fixture-driven and does not attempt to be a full
-generalization of Python ND gameplay yet.
+generalization of Python ND gameplay yet. Stage 18 does not add native plane
+clear/scoring, spawn-blocked game-over parity, live Godot 3D/4D gameplay,
+topology transport, or Godot-side ND legality.
 
 ## 3. Python Oracle References Inspected
 
@@ -75,23 +78,25 @@ Key semantics already confirmed from the oracle:
 
 ## 4. Existing ND Trace Coverage
 
-Currently checked-in gameplay traces relevant to ND are only:
+Currently implemented native gameplay traces relevant to plain ND are:
 
 - `gameplay_plain_3d_short`
 - `gameplay_plain_4d_short`
+- `gameplay_plain_3d_rotation_short`
+- `gameplay_plain_4d_rotation_short`
 
 Those traces cover:
 
 - `move_axis`
 - `soft_drop`
 - `hard_drop`
+- one legal explicit plane rotation in 3D and one in 4D
 - lock/respawn snapshot timing
 - score and locked-cell digest
 - frame/final `state_hash`
 
 They do not cover:
 
-- ND rotation
 - ND plane/slice/line clear behavior
 - ND scoring breadth
 - spawn-blocked game-over
@@ -104,7 +109,6 @@ They do not cover:
 The gaps that must be covered by explicit traces before broader native ND
 implementation are:
 
-- rotation semantics in 3D and 4D
 - clear semantics in 3D and 4D
 - spawn-blocked game-over in 3D and 4D
 - soft-drop edge cases where the next gravity step locks immediately
@@ -152,6 +156,7 @@ Trace design rule:
 - expected state_hash policy: explicit golden hash from Python exporter
 - C++ needed: plane-based rotation, rotation-state serialization, rejection
   path for invalid rotation
+- Stage 18 status: implemented in native C++ and included in `--all-plain-nd`
 - known risk: Python uses kick resolution, so the fixture must be chosen so the
   intended case does not depend on an ambiguous kick
 
@@ -164,6 +169,7 @@ Trace design rule:
 - required snapshot fields: same as above plus 4D coordinate serialization
 - expected state_hash policy: explicit golden hash from Python exporter
 - C++ needed: 4D plane rotation and matching snapshot export
+- Stage 18 status: implemented in native C++ and included in `--all-plain-nd`
 - known risk: 4D rotation plane/orientation semantics must match Python exactly
 
 `gameplay_plain_3d_plane_clear_short`
@@ -236,10 +242,13 @@ What the next implementation stage should do:
 - serialize `last_rotation_plane` and `last_rotation_steps` in the native trace
   export
 
-Open question to settle before implementation:
+Stage 18 settlement:
 
-- whether the target rotation traces can be chosen so that no kick resolution
-  is required, which would make the first C++ parity pass much safer
+- both target rotation traces are rotation-only and do not require kicks;
+- native C++ rotates active-piece local `rel_blocks`, preserves `pos`, and
+  verifies placement through the existing bounded/collision path;
+- `last_rotation_plane` and `last_rotation_steps` are serialized in snapshots
+  and participate in `state_hash` parity.
 
 ## 8. ND Clear/Scoring Plan
 
@@ -335,8 +344,8 @@ path, then verify the exported JSON only after the semantics are stable.
 ## 14. Compare-Tool Plan
 
 Current compare tooling supports `--all-plain-nd` for the implemented native
-short traces. Stage 17 leaves that gate scoped to implemented C++ parity cases
-so oracle-only future traces do not fail prematurely.
+short and rotation traces. Oracle-only clear/scoring and game-over traces stay
+outside that gate until their C++ semantics are implemented.
 
 Compare-tool policy:
 

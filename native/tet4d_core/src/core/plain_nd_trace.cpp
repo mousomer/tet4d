@@ -4,6 +4,7 @@
 #include "tet4d_core/sha256.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -21,7 +22,8 @@ struct PlainNDCase {
 	PieceShapeND active_shape;
 	CoordND active_pos;
 	std::vector<GameCommandND> commands;
-	PieceShapeND post_lock_spawn_shape;
+	std::optional<PieceShapeND> post_lock_spawn_shape;
+	std::vector<std::string> notes;
 };
 
 std::string stable_hash(std::string_view compact_canonical_json) {
@@ -153,6 +155,11 @@ std::string command_json(const GameCommandND &command) {
 		out << "{\"action\":\"move_axis\",\"axis\":" << command.axis
 			<< ",\"delta\":" << command.delta
 			<< ",\"id\":\"" << command.id << "\"}";
+	} else if (command.kind == GameCommandKindND::Rotate) {
+		out << "{\"action\":\"rotate\",\"axis_a\":" << command.axis
+			<< ",\"axis_b\":" << command.axis_b
+			<< ",\"delta\":" << command.delta
+			<< ",\"id\":\"" << command.id << "\"}";
 	} else if (command.kind == GameCommandKindND::SoftDrop) {
 		out << "{\"action\":\"soft_drop\",\"id\":\"" << command.id << "\"}";
 	} else if (command.kind == GameCommandKindND::HardDrop) {
@@ -252,7 +259,7 @@ std::string initial_json(const PlainNDCase &trace_case, const GameStateND &state
 		<< ",\"board_shape\":" << int_array_json(trace_case.board_shape.dims)
 		<< ",\"launch_parity\":null"
 		<< ",\"locked_cells\":" << locked_cells_json(state.board)
-		<< ",\"notes\":" << string_array_json({})
+		<< ",\"notes\":" << string_array_json(trace_case.notes)
 		<< ",\"settings\":" << settings
 		<< ",\"settings_digest\":\"" << stable_hash(settings) << "\"}";
 	return out.str();
@@ -321,6 +328,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 				{"hard_drop", GameCommandKindND::HardDrop, 0, 0},
 			},
 			native_i_shape_3d(),
+			{},
 		},
 		{
 			"gameplay_plain_4d_short",
@@ -337,6 +345,37 @@ std::vector<PlainNDCase> plain_nd_cases() {
 				{"hard_drop", GameCommandKindND::HardDrop, 0, 0},
 			},
 			standard_stair_shape_4d(),
+			{},
+		},
+		{
+			"gameplay_plain_3d_rotation_short",
+			3,
+			2021,
+			{{5, 5, 5}},
+			1,
+			"native_3d",
+			trace_rotation_shape_3d(),
+			{{2, 2, 2}},
+			{
+				{"rotate_xz_cw", GameCommandKindND::Rotate, 0, 1, 2},
+			},
+			std::nullopt,
+			{"Stage 17 plain 3D rotation oracle trace."},
+		},
+		{
+			"gameplay_plain_4d_rotation_short",
+			4,
+			2022,
+			{{5, 5, 5, 5}},
+			1,
+			"standard_4d_5",
+			trace_rotation_shape_4d(),
+			{{2, 2, 2, 2}},
+			{
+				{"rotate_xw_cw", GameCommandKindND::Rotate, 0, 1, 3},
+			},
+			std::nullopt,
+			{"Stage 17 plain 4D rotation oracle trace."},
 		},
 	};
 }
@@ -442,7 +481,7 @@ std::string get_plain_nd_parity_status() {
 	if (!run_builtin_plain_nd_smoke_case()) {
 		return "plain_nd parity smoke failed";
 	}
-	return "plain_nd Stage 15 3D/4D trace scaffold exports required fields and state_hash";
+	return "plain_nd Stage 18 3D/4D movement and rotation traces export required fields and state_hash";
 }
 
 bool get_plain_nd_required_field_parity(const std::string &case_id) {

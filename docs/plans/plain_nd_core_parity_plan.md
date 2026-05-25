@@ -1,22 +1,24 @@
 # Plain ND Core Parity Plan
 
 Role: Stage 14 migration architecture plan  
-Status: active planning authority; Stage 15 scaffold is tracked by `plain_nd_core_parity_contract.md` and Stage 16 coverage planning lives in `plain_nd_coverage_expansion_plan.md`
-Last updated: 2026-05-23
+Status: active planning authority; Stage 18 rotation parity is tracked by `plain_nd_core_parity_contract.md` and remaining coverage planning lives in `plain_nd_coverage_expansion_plan.md`
+Last updated: 2026-05-24
 
 ## 1. Decision summary
 
 Stage 14 was planning-only. Stage 15 began the selected sidecar
-implementation path with trace-parity scaffolding only; it still does not add
-live Godot 3D/4D gameplay, topology transport, or endgame simulation. Stage 16
-planned the next explicit ND trace coverage, and Stage 17 adds those
-Python-oracle traces before any broader native ND implementation begins.
+implementation path with trace-parity scaffolding only. Stage 16 planned the
+next explicit ND trace coverage, Stage 17 added Python-oracle traces, and
+Stage 18 implements native parity only for the rotation traces. This still
+does not add live Godot 3D/4D gameplay, topology transport, or endgame
+simulation.
 
-The next native target is plain bounded 3D/4D gameplay trace parity against
-the Python oracle:
+The implemented native plain bounded 3D/4D gameplay trace parity set is:
 
 - `gameplay_plain_3d_short`;
 - `gameplay_plain_4d_short`.
+- `gameplay_plain_3d_rotation_short`;
+- `gameplay_plain_4d_rotation_short`.
 
 The implementation strategy is conservative: preserve the accepted C++ plain
 2D core and live `Plain2DSession`, then add a minimal plain-ND parity path
@@ -123,9 +125,11 @@ The two plain-ND target traces are narrow by design.
 - final state hash:
   `d34d21da0a1c4aa6e947230e68e8b16a3e212b40bb7da1ccaef24200e7f80449`
 
-The target traces do not exercise ND rotation, plane clears, topology,
+The short target traces do not exercise ND rotation, plane clears, topology,
 spawn-blocked game-over, RNG piece-bag order beyond post-lock respawn snapshot
-fields, or live Godot input.
+fields, or live Godot input. Stage 18 adds separate rotation-only target
+traces and still does not exercise plane clears, spawn-blocked game-over,
+topology, RNG breadth, or live Godot input.
 
 ## 5. C++ 2D core surfaces to preserve
 
@@ -230,10 +234,12 @@ Validation rules:
 
 ## 9. Proposed ND command model
 
-Stage 15 should support only the command forms required by the target traces:
+The sidecar plain-ND path supports only the command forms required by the
+implemented target traces:
 
 ```text
 move_axis(axis:int, delta:int)
+rotate(axis_a:int, axis_b:int, delta:int)
 soft_drop
 hard_drop
 gravity_step (optional for future plain-ND expansion)
@@ -252,9 +258,9 @@ Python does. Godot should not receive live ND gameplay commands in this stage.
 Rotation is the highest-risk part and is not covered by
 `gameplay_plain_3d_short` or `gameplay_plain_4d_short`.
 
-Stage 15 should not implement broad ND rotation unless a target trace requires
-it. If a basic parser branch is needed, it should reject or mark unsupported
-ND rotation cases rather than pretending parity exists.
+Stage 18 implements ND rotation only for the explicit plain 3D/4D rotation
+traces. Unsupported case ids still fail clearly rather than pretending parity
+exists.
 
 When ND rotation becomes an explicit target, it must mirror Python
 `rotate_blocks_nd`:
@@ -267,6 +273,17 @@ When ND rotation becomes an explicit target, it must mirror Python
 - update `last_rotation_plane` and `last_rotation_steps`;
 - run placement through the same bounded/collision legality path;
 - compare rotated active cells directly against Python trace cells and hashes.
+
+Stage 18 implementation notes:
+
+- the native transform rotates active-piece local `rel_blocks`, not global
+  cells;
+- `pos` is preserved for the accepted target rotations;
+- positive steps apply the Python plane transform `(axis_a, axis_b) ->
+  (old_b, -old_a)` around the active-plane pivot;
+- the target 3D/4D fixtures fit in place with `kick_level=off`, so no kick
+  resolution is added in C++;
+- invalid rotation axes reject explicitly.
 
 ## 11. Proposed ND drop/lock strategy
 
@@ -396,9 +413,8 @@ native sidecar ND gate for the two short traces.
 
 ## 14. Trace coverage gaps
 
-Current plain-ND gaps after Stage 17:
+Current plain-ND gaps after Stage 18:
 
-- no native C++ parity for the Stage 17 ND rotation traces;
 - no native C++ parity for the Stage 17 plane-clear/scoring traces;
 - no native C++ parity for the Stage 17 spawn-blocked/game-over traces;
 - no ND gravity-step edge trace in plain topology;
@@ -407,8 +423,8 @@ Current plain-ND gaps after Stage 17:
 - no live Godot 3D/4D path;
 - no ghost/drop-target snapshot.
 
-These gaps are acceptable for Stage 15 only if the stage is scoped to the two
-existing short traces and documents unsupported behavior honestly.
+These gaps are acceptable only if the implemented native scope remains limited
+to the short and rotation traces and documents unsupported behavior honestly.
 
 ## 15. Test plan
 
@@ -422,11 +438,12 @@ Native tests for Stage 15:
 - repeat the same for the 4D target trace with `axis=3`;
 - verify coordinate sorting and locked-cell digest parity;
 - verify per-frame and final `state_hash` parity for both target traces;
-- verify unsupported ND rotation cases fail explicitly until a rotation trace
-  is introduced;
+- verify accepted ND rotation traces match active cells, rotation metadata,
+  and hashes;
+- verify unsupported ND rotation axes fail explicitly;
 - verify existing Stage 11 plain 2D parity cases still pass.
 
-Godot tests for Stage 15 remain parity/smoke oriented only:
+Godot tests for Stage 18 remain parity/smoke oriented only:
 
 - native extension still loads;
 - parity-only ND trace export/list/status methods are exposed;
@@ -443,7 +460,7 @@ Python migration tests:
 
 ## 16. Godot integration boundary
 
-Stage 15 should not add live 3D/4D Godot gameplay.
+Stage 18 must not add live 3D/4D Godot gameplay.
 
 Godot already displays copied 3D/4D replay traces through the shared replay
 renderer. That is sufficient for native ND parity development. If Godot gets
@@ -460,14 +477,16 @@ Recommended sequence after Stage 15:
 1. Stage 16: add explicit ND trace coverage planning for rotation, plane
    clear/scoring, and spawn-blocked game-over before broadening native ND
    behavior.
-2. Stage 17: implement only the next explicit plain-ND golden-trace target
-   selected by Stage 16, keeping the sidecar path and existing 2D behavior
-   stable.
-3. Stage 18: broaden native ND parity incrementally across 3D/4D rotation,
-   clear, and game-over traces only where Python golden traces exist.
-4. Stage 19: prototype live Godot 3D/4D shell only after native plain-ND trace
+2. Stage 17: add the selected Python-oracle traces, keeping native parity
+   scoped to implemented cases.
+3. Stage 18: implement native parity for 3D/4D rotation traces only.
+4. Stage 19: implement native plane clear/scoring parity for the explicit
+   plain-ND clear traces.
+5. Stage 20: implement native spawn-blocked game-over parity and command
+   rejection for the explicit plain-ND game-over traces.
+6. Later: prototype live Godot 3D/4D shell only after native plain-ND trace
    parity is stable beyond the short movement/drop traces.
-5. Stage 20: plan topology transport parity separately before any wrap,
+7. Later: plan topology transport parity separately before any wrap,
    invert, sphere-like, Topology Lab, or launch semantics are ported.
 
 The stage numbers may be split smaller if a parity gate grows.
@@ -478,8 +497,9 @@ The stage numbers may be split smaller if a parity gate grows.
   ND path first; no `Plain2DSession` refactor in Stage 15.
 - Risk: coordinate ordering mismatch. Mitigation: use lexicographic `CoordND`
   ordering and compare digest/hash on every frame.
-- Risk: rotation drift. Mitigation: defer ND rotation until an explicit trace
-  requires it, then port Python `rotate_blocks_nd` exactly.
+- Risk: rotation drift. Mitigation: Stage 18 ports Python `rotate_blocks_nd`
+  exactly for the explicit rotation traces and keeps broader kick/topology
+  rotation behavior deferred.
 - Risk: hidden topology scope creep. Mitigation: target only
   `topology_id=plain`, bounded mode, no explorer transport.
 - Risk: scoring/clear overreach. Mitigation: implement only lock score for

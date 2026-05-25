@@ -259,6 +259,13 @@ Cross-cutting requirements are defined in:
     C++ parity targets only; Stage 17 must not broaden native ND gameplay,
     expose live Godot ND commands, add topology/endgame behavior, or move
     gameplay legality into Godot.
+24. Stage 18 may implement native C++ parity only for the explicit plain-ND
+    rotation traces `gameplay_plain_3d_rotation_short` and
+    `gameplay_plain_4d_rotation_short`. It may expose those cases through the
+    existing parity/list/export/status API only and must not add live Godot
+    3D/4D gameplay, topology transport, plane-clear/scoring parity,
+    spawn-blocked game-over parity, endgame behavior, C#, Python runtime calls
+    from Godot, or Godot-side ND legality.
 
 ### 3.3 Shared piece-local transform rules
 

@@ -268,13 +268,17 @@ feature porting starts.
    plane-clear/scoring, and spawn-blocked game-over cases.
 10. Stage 17: add the explicit Python-oracle plain-ND golden traces selected
    by Stage 16 while keeping C++ parity scoped to implemented cases.
-11. Stage 18: add broader ND rotation/clear/game-over implementation only
-   where golden traces exist.
-12. Stage 19: prototype live Godot 3D/4D shell only after native plain-ND trace
+11. Stage 18: implement native ND rotation parity only for the explicit 3D/4D
+   rotation golden traces.
+12. Stage 19: implement native plane clear/scoring parity for the explicit
+   plain-ND clear traces.
+13. Stage 20: implement native spawn-blocked game-over parity and command
+   rejection for the explicit plain-ND game-over traces.
+14. Later: prototype live Godot 3D/4D shell only after native plain-ND trace
    parity is stable.
-13. Stage 20: plan topology transport and Topology Lab launch semantics.
-14. Stage 21: port locked-cell endgame particle simulation.
-15. Stage 22: retire Python as semantic oracle only after trace parity,
+15. Later: plan topology transport and Topology Lab launch semantics.
+16. Later: port locked-cell endgame particle simulation.
+17. Later: retire Python as semantic oracle only after trace parity,
    product acceptance, and authority-doc updates explicitly allow it.
 
 Stages may be split smaller if a parity gate is too broad.
@@ -568,7 +572,7 @@ future snapshot field. Godot must not compute hard-drop landing cells.
 Stage 14 is documentation/governance only. The detailed plan lives in
 `docs/plans/plain_nd_core_parity_plan.md`.
 
-The next native parity targets are:
+The first native parity targets are:
 
 - `gameplay_plain_3d_short`;
 - `gameplay_plain_4d_short`.
@@ -580,11 +584,11 @@ fixture-driven trace parity, lexicographically sorted coordinate arrays, and
 the existing compact canonical JSON/SHA-256 parity machinery. It should not
 template-refactor the accepted 2D live path.
 
-The existing target traces cover only `move_axis`, `soft_drop`, and
-`hard_drop` in plain bounded 3D/4D. They do not cover ND rotation, plane
-clears, topology, game-over, RNG/bag parity, or live Godot 3D/4D controls.
-Those behaviors require later explicit traces before native code becomes
-authoritative for them.
+The initial target traces cover only `move_axis`, `soft_drop`, and
+`hard_drop` in plain bounded 3D/4D. Stage 18 adds rotation-only native parity
+for the explicit 3D/4D rotation traces. Plane clears, spawn-blocked game-over,
+topology, RNG/bag parity, and live Godot 3D/4D controls remain deferred until
+their explicit parity stages.
 
 Stage 14 forbids 3D/4D implementation, topology transport, endgame simulation,
 live Godot 3D/4D gameplay, C#, Python runtime calls from Godot, and
@@ -626,7 +630,8 @@ The comparison tool supports `--all-plain-nd` beside the existing
 Stage 15 still forbids live Godot 3D/4D sessions or controls, topology
 transport, ND rotation beyond explicit trace coverage, plane-clear
 generalization beyond the target no-clear traces, endgame simulation, C#,
-Python runtime calls from Godot, and Godot-side gameplay legality.
+Python runtime calls from Godot, and Godot-side gameplay legality. Stage 18
+uses that explicit-trace exception only for the 3D/4D rotation traces.
 
 ## 29. Stage 17 Plain ND Oracle Traces
 
@@ -640,8 +645,26 @@ plane-clear/scoring, and spawn-blocked game-over:
 - `gameplay_plain_3d_spawn_blocked_game_over`
 - `gameplay_plain_4d_spawn_blocked_game_over`
 
-These are oracle traces only. Native C++ parity for them is deferred to later
-stages; `compare_cpp_gameplay_trace.py --all-plain-nd` remains limited to the
-implemented Stage 15 short traces. Stage 17 does not add live Godot 3D/4D,
-topology, endgame, C#, Python runtime calls from Godot, or Godot-side gameplay
-legality.
+The rotation traces become native C++ parity targets in Stage 18. Plane-clear
+and spawn-blocked game-over traces remain oracle-only. Stage 17 does not add
+live Godot 3D/4D, topology, endgame, C#, Python runtime calls from Godot, or
+Godot-side gameplay legality.
+
+## 30. Stage 18 Native Plain ND Rotation Parity
+
+Stage 18 implements native C++ parity only for:
+
+- `gameplay_plain_3d_rotation_short`
+- `gameplay_plain_4d_rotation_short`
+
+The C++ sidecar ND model now supports the trace `rotate` command with
+`axis_a`, `axis_b`, and signed `delta` step fields. Rotation applies the
+Python `rotate_blocks_nd` local-block semantics, preserves active-piece `pos`
+for these fixtures, serializes `last_rotation_plane` and
+`last_rotation_steps`, and compares frame/final `state_hash` through
+`compare_cpp_gameplay_trace.py --all-plain-nd`.
+
+Stage 18 does not add plane-clear/scoring parity, spawn-blocked game-over
+parity, live Godot ND commands, topology transport, endgame simulation, C#,
+Python runtime calls from Godot, or Godot-side gameplay legality. Accepted
+live plain 2D remains preserved.
