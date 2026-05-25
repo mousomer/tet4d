@@ -21,6 +21,7 @@ struct PlainNDCase {
 	std::string piece_set;
 	PieceShapeND active_shape;
 	CoordND active_pos;
+	bool current_piece_enabled = true;
 	std::vector<CellND> initial_locked_cells;
 	std::vector<GameCommandND> commands;
 	std::optional<PieceShapeND> post_lock_spawn_shape;
@@ -137,6 +138,7 @@ std::string legal_moves_json(const GameStateND &state) {
 	for (int axis = 0; axis < state.board.shape().dimension(); ++axis) {
 		for (const int delta : {-1, 1}) {
 			GameStateND probe = state;
+			probe.game_over = false;
 			const bool can_move = probe.try_move_axis(axis, delta);
 			if (!first) {
 				out << ",";
@@ -146,6 +148,7 @@ std::string legal_moves_json(const GameStateND &state) {
 		}
 	}
 	GameStateND soft = state;
+	soft.game_over = false;
 	out << ",\"soft_drop\":" << bool_json(soft.try_soft_drop()) << "}}";
 	return out.str();
 }
@@ -167,6 +170,8 @@ std::string command_json(const GameCommandND &command) {
 		out << "{\"action\":\"hard_drop\",\"id\":\"" << command.id << "\"}";
 	} else if (command.kind == GameCommandKindND::LockCurrentPiece) {
 		out << "{\"action\":\"lock_current_piece\",\"id\":\"" << command.id << "\"}";
+	} else if (command.kind == GameCommandKindND::SpawnNewPiece) {
+		out << "{\"action\":\"spawn_new_piece\",\"id\":\"" << command.id << "\"}";
 	} else {
 		out << "{\"action\":\"noop\",\"id\":\"" << command.id << "\"}";
 	}
@@ -188,6 +193,7 @@ std::string drop_lock_status_json(const CommandResultND &result, const GameState
 		<< ",\"soft_drop_legal_after\":";
 	if (state.active_piece.has_value()) {
 		GameStateND soft = state;
+		soft.game_over = false;
 		out << bool_json(soft.try_soft_drop());
 	} else {
 		out << "null";
@@ -331,6 +337,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"native_3d",
 			trace_shape_3d(),
 			{{2, 2, 2}},
+			true,
 			{},
 			{
 				{"move_z", GameCommandKindND::MoveAxis, 2, 1},
@@ -349,6 +356,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"standard_4d_5",
 			trace_shape_4d(),
 			{{2, 2, 1, 1}},
+			true,
 			{},
 			{
 				{"move_w", GameCommandKindND::MoveAxis, 3, 1},
@@ -367,6 +375,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"native_3d",
 			trace_rotation_shape_3d(),
 			{{2, 2, 2}},
+			true,
 			{},
 			{
 				{"rotate_xz_cw", GameCommandKindND::Rotate, 0, 1, 2},
@@ -383,6 +392,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"standard_4d_5",
 			trace_rotation_shape_4d(),
 			{{2, 2, 2, 2}},
+			true,
 			{},
 			{
 				{"rotate_xw_cw", GameCommandKindND::Rotate, 0, 1, 3},
@@ -399,6 +409,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"native_3d",
 			trace_single_shape_3d(),
 			{{0, 2, 0}},
+			true,
 			{
 				{{{1, 2, 0}}, 1},
 				{{{0, 2, 1}}, 1},
@@ -420,6 +431,7 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			"embedded_2d",
 			trace_single_shape_4d(),
 			{{0, 2, 0, 0}},
+			true,
 			{
 				{{{1, 2, 0, 0}}, 1},
 				{{{0, 2, 0, 1}}, 1},
@@ -431,6 +443,44 @@ std::vector<PlainNDCase> plain_nd_cases() {
 			},
 			std::nullopt,
 			{"Stage 17 plain 4D single-hyperplane clear oracle trace."},
+		},
+		{
+			"gameplay_plain_3d_spawn_blocked_game_over",
+			3,
+			2025,
+			{{5, 5, 5}},
+			1,
+			"native_3d",
+			trace_single_shape_3d(),
+			{{0, 0, 0}},
+			false,
+			{
+				{{{2, 0, 2}}, 9},
+			},
+			{
+				{"spawn_blocked", GameCommandKindND::SpawnNewPiece, 0, 0},
+			},
+			trace_spawn_blocked_shape_3d(),
+			{"Stage 17 plain 3D spawn-blocked game-over oracle trace."},
+		},
+		{
+			"gameplay_plain_4d_spawn_blocked_game_over",
+			4,
+			2026,
+			{{5, 5, 5, 5}},
+			1,
+			"embedded_2d",
+			trace_single_shape_4d(),
+			{{0, 0, 0, 0}},
+			false,
+			{
+				{{{2, 0, 2, 2}}, 9},
+			},
+			{
+				{"spawn_blocked", GameCommandKindND::SpawnNewPiece, 0, 0},
+			},
+			trace_spawn_blocked_shape_4d(),
+			{"Stage 17 plain 4D spawn-blocked game-over oracle trace."},
 		},
 	};
 }
@@ -447,7 +497,9 @@ const PlainNDCase *find_case(const std::string &case_id) {
 
 GameStateND make_state(const PlainNDCase &trace_case) {
 	GameStateND state(trace_case.board_shape, trace_case.gravity_axis);
-	state.active_piece = ActivePieceND::from_shape(trace_case.active_shape, trace_case.active_pos);
+	if (trace_case.current_piece_enabled) {
+		state.active_piece = ActivePieceND::from_shape(trace_case.active_shape, trace_case.active_pos);
+	}
 	state.post_lock_spawn_shape = trace_case.post_lock_spawn_shape;
 	for (const CellND &cell : trace_case.initial_locked_cells) {
 		state.board.set_cell(cell.coord, cell.value);
@@ -539,7 +591,7 @@ std::string get_plain_nd_parity_status() {
 	if (!run_builtin_plain_nd_smoke_case()) {
 		return "plain_nd parity smoke failed";
 	}
-	return "plain_nd Stage 19 3D/4D movement, rotation, and clear/scoring traces export required fields and state_hash";
+	return "plain_nd Stage 20 3D/4D movement, rotation, clear/scoring, and spawn-blocked game-over traces export required fields and state_hash";
 }
 
 bool get_plain_nd_required_field_parity(const std::string &case_id) {

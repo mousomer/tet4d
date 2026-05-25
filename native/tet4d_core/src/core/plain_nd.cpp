@@ -403,7 +403,6 @@ void GameStateND::spawn_piece(const PieceShapeND &shape) {
 	if (!can_exist(*active_piece)) {
 		game_over = true;
 		game_over_reason = "spawn_blocked";
-		active_piece.reset();
 	}
 }
 
@@ -422,6 +421,11 @@ CommandResultND GameStepperND::apply(GameStateND &state, const GameCommandND &co
 		result.return_value = std::nullopt;
 	} else if (command.kind == GameCommandKindND::LockCurrentPiece) {
 		result.return_int_value = state.lock_current_piece();
+	} else if (command.kind == GameCommandKindND::SpawnNewPiece) {
+		if (state.post_lock_spawn_shape.has_value()) {
+			state.spawn_piece(*state.post_lock_spawn_shape);
+		}
+		result.return_value = std::nullopt;
 	} else if (command.kind == GameCommandKindND::Noop) {
 		result.return_value = true;
 	}
@@ -444,6 +448,14 @@ PieceShapeND trace_single_shape_3d() {
 
 PieceShapeND trace_single_shape_4d() {
 	return {"TRACE_4D", {{{0, 0, 0, 0}}}, 8};
+}
+
+PieceShapeND trace_spawn_blocked_shape_3d() {
+	return {"TRACE_3D_NEXT", {{{0, 0, 0}}, {{0, 2, 0}}}, 7};
+}
+
+PieceShapeND trace_spawn_blocked_shape_4d() {
+	return {"TRACE_4D_NEXT", {{{0, 0, 0, 0}}, {{0, 2, 0, 0}}}, 7};
 }
 
 PieceShapeND trace_rotation_shape_3d() {

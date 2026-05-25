@@ -29,6 +29,8 @@ PLAIN_ND_CASES = {
     "gameplay_plain_4d_rotation_short",
     "gameplay_plain_3d_plane_clear_short",
     "gameplay_plain_4d_plane_clear_short",
+    "gameplay_plain_3d_spawn_blocked_game_over",
+    "gameplay_plain_4d_spawn_blocked_game_over",
 }
 SUPPORTED_CASES = PLAIN_2D_CASES | PLAIN_ND_CASES
 

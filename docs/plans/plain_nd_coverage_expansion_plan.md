@@ -1,7 +1,7 @@
 # Plain ND Coverage Expansion Plan
 
 Role: Stage 16 planning authority for broadening plain-ND parity beyond the short traces  
-Status: Stage 19 native clear/scoring parity implemented; game-over parity remains future work
+Status: Stage 20 native spawn-blocked game-over parity implemented for explicit fixtures
 Last updated: 2026-05-25
 
 ## 1. Decision Summary
@@ -11,7 +11,8 @@ Stage 15 proved the native sidecar ND scaffold can match the two short bounded
 oracle traces for rotation, clear/scoring, and spawn-blocked game-over. Stage
 18 implements only the native C++ parity needed for the 3D/4D rotation traces.
 Stage 19 implements only the native C++ parity needed for the 3D/4D
-plane-clear traces. Spawn-blocked game-over remains deferred.
+plane-clear traces. Stage 20 implements only the native C++ parity needed for
+the 3D/4D spawn-blocked game-over traces.
 
 Recommended direction:
 
@@ -26,7 +27,8 @@ Recommended next implementation sequence:
 1. Stage 17: add explicit Python-oracle ND trace cases and migration coverage.
 2. Stage 18: implement ND rotation parity against the new rotation traces.
 3. Stage 19: implement ND clear/scoring parity against the new plane-clear traces.
-4. Stage 20: implement ND spawn-blocked game-over parity and command rejection.
+4. Stage 20: implement ND spawn-blocked game-over parity for the explicit
+   fixture traces.
 
 ## 2. Current ND Baseline
 
@@ -46,14 +48,16 @@ Current native ND command coverage is narrow:
 - `rotate` for the implemented Stage 18 plain 3D/4D rotation traces only
 - `lock_current_piece` for the implemented Stage 19 plain 3D/4D plane-clear
   traces only
+- `spawn_new_piece` for the implemented Stage 20 plain 3D/4D spawn-blocked
+  traces only
 - basic lock/spawn path
 - frame/final `state_hash`
 
 Current native ND behavior is fixture-driven and does not attempt to be a full
-generalization of Python ND gameplay yet. Stage 19 adds only native
-plane-clear/scoring parity for the two explicit oracle traces. It does not add
-spawn-blocked game-over parity, live Godot 3D/4D gameplay, topology transport,
-or Godot-side ND legality.
+generalization of Python ND gameplay yet. Stage 20 adds only native
+spawn-blocked game-over parity for the two explicit oracle traces. It does not
+add live Godot 3D/4D gameplay, topology transport, endgame behavior, or
+Godot-side ND legality.
 
 ## 3. Python Oracle References Inspected
 
@@ -90,6 +94,8 @@ Currently implemented native gameplay traces relevant to plain ND are:
 - `gameplay_plain_4d_rotation_short`
 - `gameplay_plain_3d_plane_clear_short`
 - `gameplay_plain_4d_plane_clear_short`
+- `gameplay_plain_3d_spawn_blocked_game_over`
+- `gameplay_plain_4d_spawn_blocked_game_over`
 
 Those traces cover:
 
@@ -99,6 +105,7 @@ Those traces cover:
 - one legal explicit plane rotation in 3D and one in 4D
 - one explicit full gravity-axis plane clear in 3D and one full gravity-axis
   hyperplane clear in 4D
+- one explicit spawn-blocked game-over fixture in 3D and one in 4D
 - lock/respawn snapshot timing
 - score and locked-cell digest
 - frame/final `state_hash`
@@ -106,7 +113,8 @@ Those traces cover:
 They do not cover:
 
 - broader ND clear/scoring breadth beyond the two single-clear fixtures
-- spawn-blocked game-over
+- broader spawn-blocked/game-over behavior beyond the two fixture traces
+- post-game-over command rejection outside the observed trace probes
 - soft-drop lock variants
 - hard-drop edge cases
 - broader RNG/bag or piece-sequence behavior
@@ -212,10 +220,11 @@ Trace design rule:
 - dimension: 3
 - fixture setup: nearly blocked board and forced post-lock respawn piece
 - command sequence: one hard drop or lock-triggering action
-- required snapshot fields: `game_over`, `game_over_reason`, `current_piece`,
-  `state_hash`
+- required snapshot fields: `drop_lock_status.game_over`, active piece,
+  locked cells, `state_hash`
 - expected state_hash policy: explicit golden hash from Python exporter
-- C++ needed: spawn validation, game-over reason, command rejection after game-over
+- C++ needed: spawn validation, blocked active-piece preservation, hash export
+- Stage 20 status: implemented in native C++ and included in `--all-plain-nd`
 - known risk: the fixture must force a blocked spawn without relying on RNG
 
 `gameplay_plain_4d_spawn_blocked_game_over`
@@ -227,6 +236,7 @@ Trace design rule:
 - required snapshot fields: same as 3D case
 - expected state_hash policy: explicit golden hash from Python exporter
 - C++ needed: same as above in 4D
+- Stage 20 status: implemented in native C++ and included in `--all-plain-nd`
 - known risk: blocked-spawn geometry is easier to get wrong in 4D because the
   piece may be above the board while still being legal for several steps
 
@@ -280,8 +290,18 @@ Stage 19 settlement:
 - `lines`, `score`, `locked_cells`, `locked_cell_digest`, and
   `drop_lock_status` are exported through the existing Python field names;
 - explicit `lock_current_piece` trace snapshots keep the active piece present,
-  matching the Python oracle for these cases;
-- spawn-blocked game-over remains deferred to Stage 20.
+  matching the Python oracle for these cases.
+
+Stage 20 settlement:
+
+- `gameplay_plain_3d_spawn_blocked_game_over` and
+  `gameplay_plain_4d_spawn_blocked_game_over` now pass native C++ comparison,
+  including frame and final `state_hash`;
+- Python sets `game_over` during `spawn_new_piece` when the candidate collides
+  with an existing visible locked cell;
+- the rejected candidate remains the active piece in the snapshot;
+- locked cells are unchanged and `drop_lock_status.game_over` is `true`;
+- no live Godot ND, topology, or endgame behavior is added.
 
 If Python clear semantics are not obvious for a fixture, the blocker is in the
 oracle/test layer, not the C++ implementation layer. The plan should add or
@@ -292,13 +312,15 @@ adjust Python trace fixtures first rather than guessing at native behavior.
 Python game-over should be treated as native-owned and fixture-driven in the
 next stage.
 
-The plan is:
+The Stage 20 implementation is:
 
-- add explicit spawn-blocked game-over traces for 3D and 4D
-- use fixed fixtures rather than letting RNG/bag breadth block the stage
-- verify `game_over` and `game_over_reason` after the blocked spawn attempt
-- verify commands after game-over are rejected except reset/new game if that
-  path is exposed later
+- explicit spawn-blocked game-over traces for 3D and 4D
+- fixed fixtures rather than RNG/bag breadth
+- verification that `drop_lock_status.game_over` is true after the blocked
+  spawn attempt
+- verification that the rejected active piece remains serialized and locked
+  cells remain unchanged
+- no command-rejection broadening beyond what the traces observe
 
 Game-over traces should be fixture-only at first. They should not require live
 Godot ND commands or any topology behavior.
@@ -337,8 +359,8 @@ Recommended next implementation order:
 2. Stage 18: implement ND rotation parity to satisfy the new rotation traces.
 3. Stage 19: implement ND clear/scoring parity to satisfy the new plane-clear
    traces.
-4. Stage 20: implement ND spawn-blocked game-over parity and command rejection
-   to satisfy the new game-over traces.
+4. Stage 20: implement ND spawn-blocked game-over parity to satisfy the new
+   game-over traces.
 
 This sequence keeps trace design ahead of native behavior, which is the lower
 risk path for an oracle-driven port.
@@ -349,8 +371,9 @@ Add or expand native tests to cover:
 
 - explicit ND rotation acceptance and rejection
 - plane-clear scoring and compacted locked-cell layout
-- spawn-blocked game-over and `game_over_reason`
-- command rejection after game-over
+- spawn-blocked game-over, blocked active-piece preservation, and unchanged
+  locked cells
+- post-game-over command rejection only after explicit oracle traces require it
 - stable `state_hash` parity for the new traces
 - existing Stage 11 plain 2D parity remains green
 - existing Stage 15 plain ND short-trace parity remains green
@@ -361,8 +384,9 @@ path, then verify the exported JSON only after the semantics are stable.
 ## 14. Compare-Tool Plan
 
 Current compare tooling supports `--all-plain-nd` for the implemented native
-short, rotation, and plane-clear traces. Oracle-only game-over traces stay
-outside that gate until their C++ semantics are implemented.
+short, rotation, plane-clear, and spawn-blocked game-over traces. Future
+oracle-only traces stay outside that gate until their C++ semantics are
+implemented.
 
 Compare-tool policy:
 

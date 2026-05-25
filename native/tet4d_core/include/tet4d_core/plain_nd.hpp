@@ -90,6 +90,7 @@ enum class GameCommandKindND {
 	SoftDrop,
 	HardDrop,
 	LockCurrentPiece,
+	SpawnNewPiece,
 	Noop,
 };
 
@@ -117,6 +118,8 @@ PieceShapeND trace_shape_3d();
 PieceShapeND trace_shape_4d();
 PieceShapeND trace_single_shape_3d();
 PieceShapeND trace_single_shape_4d();
+PieceShapeND trace_spawn_blocked_shape_3d();
+PieceShapeND trace_spawn_blocked_shape_4d();
 PieceShapeND trace_rotation_shape_3d();
 PieceShapeND trace_rotation_shape_4d();
 PieceShapeND native_i_shape_3d();

@@ -272,8 +272,8 @@ feature porting starts.
    rotation golden traces.
 12. Stage 19: implement native plane clear/scoring parity for the explicit
    plain-ND clear traces.
-13. Stage 20: implement native spawn-blocked game-over parity and command
-   rejection for the explicit plain-ND game-over traces.
+13. Stage 20: implement native spawn-blocked game-over parity for the explicit
+   plain-ND game-over traces.
 14. Later: prototype live Godot 3D/4D shell only after native plain-ND trace
    parity is stable.
 15. Later: plan topology transport and Topology Lab launch semantics.
@@ -587,8 +587,9 @@ template-refactor the accepted 2D live path.
 The initial target traces cover only `move_axis`, `soft_drop`, and
 `hard_drop` in plain bounded 3D/4D. Stage 18 adds rotation-only native parity
 for the explicit 3D/4D rotation traces. Stage 19 adds clear/scoring parity
-only for the explicit 3D/4D plane-clear traces. Spawn-blocked game-over,
-topology, RNG/bag parity, and live Godot 3D/4D controls remain deferred until
+only for the explicit 3D/4D plane-clear traces. Stage 20 adds spawn-blocked
+game-over parity only for the explicit 3D/4D blocked-spawn traces. Topology,
+RNG/bag parity, endgame, and live Godot 3D/4D controls remain deferred until
 their explicit parity stages.
 
 Stage 14 forbids 3D/4D implementation, topology transport, endgame simulation,
@@ -633,7 +634,8 @@ transport, ND rotation beyond explicit trace coverage, plane-clear
 generalization beyond explicit trace coverage, endgame simulation, C#,
 Python runtime calls from Godot, and Godot-side gameplay legality. Stage 18
 uses that explicit-trace exception only for the 3D/4D rotation traces, and
-Stage 19 uses it only for the 3D/4D plane-clear traces.
+Stage 19 uses it only for the 3D/4D plane-clear traces. Stage 20 uses it only
+for the 3D/4D spawn-blocked game-over traces.
 
 ## 29. Stage 17 Plain ND Oracle Traces
 
@@ -649,9 +651,9 @@ plane-clear/scoring, and spawn-blocked game-over:
 
 The rotation traces become native C++ parity targets in Stage 18. The
 plane-clear/scoring traces become native C++ parity targets in Stage 19.
-Spawn-blocked game-over traces remain oracle-only. Stage 17 does not add live
-Godot 3D/4D, topology, endgame, C#, Python runtime calls from Godot, or
-Godot-side gameplay legality.
+Spawn-blocked game-over traces become native C++ parity targets in Stage 20.
+Stage 17 does not add live Godot 3D/4D, topology, endgame, C#, Python runtime
+calls from Godot, or Godot-side gameplay legality.
 
 ## 30. Stage 18 Native Plain ND Rotation Parity
 
@@ -688,3 +690,21 @@ resolution, and frame/final `state_hash` values match the Python goldens.
 Stage 19 does not add spawn-blocked game-over parity, live Godot ND commands,
 topology transport, endgame simulation, C#, Python runtime calls from Godot,
 or Godot-side gameplay legality. Accepted live plain 2D remains preserved.
+
+## 32. Stage 20 Native Plain ND Spawn-Blocked Game-Over Parity
+
+Stage 20 implements native C++ parity only for:
+
+- `gameplay_plain_3d_spawn_blocked_game_over`
+- `gameplay_plain_4d_spawn_blocked_game_over`
+
+The C++ sidecar ND model now supports the trace-only `spawn_new_piece` command
+for these fixtures. It uses the Python spawn position rule, permits active
+cells above the gravity top, detects collision with the blocking visible
+locked cell, sets `game_over`, keeps the rejected candidate as the active
+piece, preserves locked cells, and matches frame/final `state_hash` values.
+
+Stage 20 does not add live Godot ND commands, broader post-game-over command
+handling, topology transport, endgame simulation, C#, Python runtime calls
+from Godot, or Godot-side gameplay legality. Accepted live plain 2D remains
+preserved.

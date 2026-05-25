@@ -1,7 +1,7 @@
 # Plain ND Core Parity Contract
 
 Role: native plain-ND trace-parity contract
-Status: active for Stage 15 movement/drop traces, Stage 18 rotation traces, and Stage 19 clear/scoring traces
+Status: active for Stage 15 movement/drop traces, Stage 18 rotation traces, Stage 19 clear/scoring traces, and Stage 20 spawn-blocked game-over traces
 Last updated: 2026-05-25
 
 ## Scope
@@ -21,6 +21,11 @@ Stage 19 adds clear/scoring parity for:
 
 - `gameplay_plain_3d_plane_clear_short`
 - `gameplay_plain_4d_plane_clear_short`
+
+Stage 20 adds spawn-blocked game-over parity for:
+
+- `gameplay_plain_3d_spawn_blocked_game_over`
+- `gameplay_plain_4d_spawn_blocked_game_over`
 
 It does not authorize live Godot 3D/4D gameplay, topology transport,
 wrap/invert/sphere behavior, endgame simulation, C#, Python runtime calls from
@@ -193,6 +198,58 @@ where `y < 0`; locked cells may not.
 - expected final state hash:
   `7b18f81b698dd0638fc1a11db4a896273f6d3bf3e5e31ded6241af3b6d1bee1f`
 
+### gameplay_plain_3d_spawn_blocked_game_over
+
+- dimension: `3`
+- board shape: `[5,5,5]`
+- seed: `2025`
+- topology: plain bounded
+- gravity axis: `1`
+- piece set: `native_3d`
+- initial active piece: `null`
+- initial locked fixture:
+  - `{"coord":[2,0,2],"value":9}`
+- command:
+  - `{"action":"spawn_new_piece","id":"spawn_blocked"}`
+- expected spawned active piece: `TRACE_3D_NEXT`, color id `7`
+- expected active cells after blocked spawn:
+  - `[2,-2,2]`
+  - `[2,0,2]`
+- expected `drop_lock_status.game_over`: `true`
+- expected locked cells: unchanged blocking fixture
+- expected final locked digest:
+  `79dc09f39b5262ff1799fcca6103cf58a19393a8a08595aedbc926820a1e086b`
+- expected frame state hash:
+  `3d0edddb4835421ecc60f681144bed191d90081b69bf7746d3bd6fb601310cef`
+- expected final state hash:
+  `a950c1badd7dd47dda27d140b7aef5097e9331a890c145419076f1e938317619`
+
+### gameplay_plain_4d_spawn_blocked_game_over
+
+- dimension: `4`
+- board shape: `[5,5,5,5]`
+- seed: `2026`
+- topology: plain bounded
+- gravity axis: `1`
+- piece set: `embedded_2d`
+- initial active piece: `null`
+- initial locked fixture:
+  - `{"coord":[2,0,2,2],"value":9}`
+- command:
+  - `{"action":"spawn_new_piece","id":"spawn_blocked"}`
+- expected spawned active piece: `TRACE_4D_NEXT`, color id `7`
+- expected active cells after blocked spawn:
+  - `[2,-2,2,2]`
+  - `[2,0,2,2]`
+- expected `drop_lock_status.game_over`: `true`
+- expected locked cells: unchanged blocking fixture
+- expected final locked digest:
+  `3bdf132722194fb8c15892d5f679a439d6802c53803b2d7d15a1024d5b0c6031`
+- expected frame state hash:
+  `5a1262677f381cba918b8b3da7e73eb21f12c2fb5728cc2f7f02ea90142a7fdd`
+- expected final state hash:
+  `ee8f825bce34feb8fa7f9bdd15157f699bba9c34a650a582de6a6a3ee81d8ad6`
+
 ## Snapshot Fields
 
 The native trace export must match the Python contract projection:
@@ -236,13 +293,15 @@ Stage 17 adds Python-oracle golden traces for the following deferred semantics:
 - `gameplay_plain_4d_spawn_blocked_game_over`
 
 The rotation traces are implemented in Stage 18. The plane-clear/scoring
-traces are implemented in Stage 19. Spawn-blocked game-over traces remain
-oracle-only until a later stage implements those broader ND semantics.
+traces are implemented in Stage 19. The spawn-blocked game-over traces are
+implemented in Stage 20 for the explicit fixtures only.
 
-Stage 19 native C++ does not implement or claim parity for:
+Stage 20 native C++ does not implement or claim parity for:
 
 - plane clears beyond the two explicit single-clear fixtures above
-- spawn-blocked ND game-over fixtures in C++
+- broader ND game-over behavior beyond the two explicit spawn-blocked fixtures
+- command rejection after game-over beyond the legal-move probe behavior
+  observed by the Stage 17 traces
 - seeded RNG/bag parity beyond fixture-driven post-lock respawn
 - topology transport
 - live Godot 3D/4D commands
@@ -281,7 +340,9 @@ PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --
 PYTHONPATH=src .venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
 ```
 
-Stage 19 is acceptable only if plain 2D parity remains green, the two short
-plain-ND traces still match, the two rotation traces still match, and the two
-plane-clear/scoring traces match Python golden traces including frame/final
-hashes.
+Stage 20 is acceptable only if plain 2D parity remains green, the two short
+plain-ND traces still match, the two rotation traces still match, the two
+plane-clear/scoring traces still match, and the two spawn-blocked game-over
+traces match Python golden traces including frame/final hashes. `--all-plain-nd`
+is the native sidecar ND gate for the implemented short, rotation,
+clear/scoring, and spawn-blocked traces.

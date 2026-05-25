@@ -180,8 +180,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `gameplay_plain_3d_plane_clear_short` and
   `gameplay_plain_4d_plane_clear_short`, including full gravity-axis
   plane/hyperplane clear, compaction, generic `lines`, score, locked-cell
-  digest, and frame/final `state_hash` parity. Spawn-blocked game-over remains
-  deferred. This does not authorize live Godot 3D/4D gameplay, topology
+  digest, and frame/final `state_hash` parity. Stage 20 implements native C++
+  parity only for `gameplay_plain_3d_spawn_blocked_game_over` and
+  `gameplay_plain_4d_spawn_blocked_game_over`, including Python spawn
+  position, blocked active-piece preservation, unchanged locked cells,
+  `drop_lock_status.game_over`, and frame/final `state_hash` parity. This
+  does not authorize live Godot 3D/4D gameplay, topology
   transport, endgame simulation, C#, Python runtime calls from Godot, or
   Godot-side gameplay legality.
 - Current topology-playground helper ownership is:

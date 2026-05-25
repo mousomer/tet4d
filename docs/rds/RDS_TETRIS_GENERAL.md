@@ -270,9 +270,15 @@ Cross-cutting requirements are defined in:
     clear/scoring traces `gameplay_plain_3d_plane_clear_short` and
     `gameplay_plain_4d_plane_clear_short`. It may expose those cases through
     the existing parity/list/export/status API only and must not add live Godot
-    3D/4D gameplay, topology transport, spawn-blocked game-over parity,
-    endgame behavior, C#, Python runtime calls from Godot, or Godot-side ND
-    legality.
+    3D/4D gameplay, topology transport, endgame behavior, C#, Python runtime
+    calls from Godot, or Godot-side ND legality.
+26. Stage 20 may implement native C++ parity only for the explicit plain-ND
+    spawn-blocked game-over traces
+    `gameplay_plain_3d_spawn_blocked_game_over` and
+    `gameplay_plain_4d_spawn_blocked_game_over`. It may expose those cases
+    through the existing parity/list/export/status API only and must not add
+    live Godot 3D/4D gameplay, topology transport, endgame behavior, C#,
+    Python runtime calls from Godot, or Godot-side ND legality.
 
 ### 3.3 Shared piece-local transform rules
 

@@ -1,7 +1,7 @@
 # Plain ND Core Parity Plan
 
 Role: Stage 14 migration architecture plan  
-Status: active planning authority; Stage 19 clear/scoring parity is tracked by `plain_nd_core_parity_contract.md` and remaining coverage planning lives in `plain_nd_coverage_expansion_plan.md`
+Status: active planning authority; Stage 20 spawn-blocked game-over parity is tracked by `plain_nd_core_parity_contract.md` and remaining coverage planning lives in `plain_nd_coverage_expansion_plan.md`
 Last updated: 2026-05-25
 
 ## 1. Decision summary
@@ -10,8 +10,9 @@ Stage 14 was planning-only. Stage 15 began the selected sidecar
 implementation path with trace-parity scaffolding only. Stage 16 planned the
 next explicit ND trace coverage, Stage 17 added Python-oracle traces, and
 Stage 18 implements native parity only for the rotation traces. Stage 19
-implements native parity only for the plane-clear/scoring traces. This still
-does not add live Godot 3D/4D gameplay, topology transport, or endgame
+implements native parity only for the plane-clear/scoring traces. Stage 20
+implements native parity only for the spawn-blocked game-over traces. This
+still does not add live Godot 3D/4D gameplay, topology transport, or endgame
 simulation.
 
 The implemented native plain bounded 3D/4D gameplay trace parity set is:
@@ -22,6 +23,8 @@ The implemented native plain bounded 3D/4D gameplay trace parity set is:
 - `gameplay_plain_4d_rotation_short`.
 - `gameplay_plain_3d_plane_clear_short`;
 - `gameplay_plain_4d_plane_clear_short`.
+- `gameplay_plain_3d_spawn_blocked_game_over`;
+- `gameplay_plain_4d_spawn_blocked_game_over`.
 
 The implementation strategy is conservative: preserve the accepted C++ plain
 2D core and live `Plain2DSession`, then add a minimal plain-ND parity path
@@ -131,9 +134,10 @@ The two plain-ND target traces are narrow by design.
 The short target traces do not exercise ND rotation, plane clears, topology,
 spawn-blocked game-over, RNG piece-bag order beyond post-lock respawn snapshot
 fields, or live Godot input. Stage 18 adds separate rotation-only target
-traces, and Stage 19 adds separate plane-clear/scoring target traces. The
-implemented ND set still does not exercise spawn-blocked game-over, topology,
-RNG breadth, or live Godot input.
+traces, Stage 19 adds separate plane-clear/scoring target traces, and Stage 20
+adds separate spawn-blocked game-over target traces. The implemented ND set
+still does not exercise topology, RNG breadth, broader post-game-over command
+behavior, or live Godot input.
 
 ## 5. C++ 2D core surfaces to preserve
 
@@ -336,6 +340,10 @@ Game-over:
 - set native game-over when spawn cannot produce a legal eventually visible
   piece, when lock occurs above gravity top, or when no active piece exists
   for a gameplay command.
+- Stage 20 matches the explicit spawn-blocked Python traces: the blocked
+  candidate is still serialized as the active piece, locked cells are
+  unchanged, `drop_lock_status.game_over` is `true`, and frame/final hashes
+  match the Python goldens.
 - Do not implement game-over in GDScript.
 
 ## 12. Proposed ND clear/scoring strategy
@@ -422,11 +430,14 @@ native sidecar ND gate for the two short traces.
 
 ## 14. Trace coverage gaps
 
-Current plain-ND gaps after Stage 19:
+Current plain-ND gaps after Stage 20:
 
-- no native C++ parity for the Stage 17 spawn-blocked/game-over traces;
 - no native C++ parity for broader clear/scoring cases beyond the two
   single-clear fixtures;
+- no native C++ parity for broader game-over behavior beyond the two
+  spawn-blocked fixtures;
+- no post-game-over command-rejection trace beyond the observed legal-move
+  probes;
 - no ND gravity-step edge trace in plain topology;
 - no RNG/bag sequence parity trace beyond fixture-controlled oracle cases;
 - no topology transport in the plain-ND target;
@@ -434,8 +445,8 @@ Current plain-ND gaps after Stage 19:
 - no ghost/drop-target snapshot.
 
 These gaps are acceptable only if the implemented native scope remains limited
-to the short, rotation, and plane-clear traces and documents unsupported
-behavior honestly.
+to the short, rotation, plane-clear, and spawn-blocked traces and documents
+unsupported behavior honestly.
 
 ## 15. Test plan
 
@@ -453,10 +464,12 @@ Native tests for Stage 15:
   and hashes;
 - verify accepted ND plane-clear traces match compacted locked cells, generic
   `lines`, score, and hashes;
+- verify accepted ND spawn-blocked traces preserve the blocked active piece,
+  unchanged locked cells, `drop_lock_status.game_over`, and hashes;
 - verify unsupported ND rotation axes fail explicitly;
 - verify existing Stage 11 plain 2D parity cases still pass.
 
-Godot tests for Stage 19 remain parity/smoke oriented only:
+Godot tests for Stage 20 remain parity/smoke oriented only:
 
 - native extension still loads;
 - parity-only ND trace export/list/status methods are exposed;
@@ -495,8 +508,8 @@ Recommended sequence after Stage 15:
 3. Stage 18: implement native parity for 3D/4D rotation traces only.
 4. Stage 19: implement native plane clear/scoring parity for the explicit
    plain-ND clear traces.
-5. Stage 20: implement native spawn-blocked game-over parity and command
-   rejection for the explicit plain-ND game-over traces.
+5. Stage 20: implement native spawn-blocked game-over parity for the explicit
+   plain-ND game-over traces.
 6. Later: prototype live Godot 3D/4D shell only after native plain-ND trace
    parity is stable beyond the short movement/drop traces.
 7. Later: plan topology transport parity separately before any wrap,

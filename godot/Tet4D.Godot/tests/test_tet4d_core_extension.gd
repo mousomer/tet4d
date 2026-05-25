@@ -9,11 +9,11 @@ func run() -> Array:
 	if not bridge.is_available():
 		failures.append("Tet4DCoreApi should be registered by the Stage 8 GDExtension")
 		return failures
-	_assert_equal(failures, bridge.get_core_version(), "0.8.0-stage19", "core version")
+	_assert_equal(failures, bridge.get_core_version(), "0.8.0-stage20", "core version")
 	_assert_equal(
 		failures,
 		bridge.get_core_status(),
-		"native tet4d core loaded; Stage 19 plain ND clear/scoring parity available beside live plain 2D",
+		"native tet4d core loaded; Stage 20 plain ND spawn-blocked game-over parity available beside live plain 2D",
 		"core status"
 	)
 	_assert_equal(failures, bridge.echo_text("oracle-check"), "oracle-check", "echo text")
@@ -69,11 +69,11 @@ func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(
 		failures,
 		bridge.get_plain_nd_parity_status(),
-		"plain_nd Stage 19 3D/4D movement, rotation, and clear/scoring traces export required fields and state_hash",
+		"plain_nd Stage 20 3D/4D movement, rotation, clear/scoring, and spawn-blocked game-over traces export required fields and state_hash",
 		"plain ND parity status"
 	)
 	var cases: PackedStringArray = bridge.list_plain_nd_parity_cases()
-	_assert_equal(failures, cases.size(), 6, "plain ND parity case count")
+	_assert_equal(failures, cases.size(), 8, "plain ND parity case count")
 	for case_id in cases:
 		_assert_equal(failures, bridge.get_plain_nd_required_field_parity(case_id), true, "plain ND required field parity %s" % case_id)
 	var trace_3d = JSON.parse_string(bridge.export_plain_nd_trace_json("gameplay_plain_3d_short"))
@@ -156,6 +156,36 @@ func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:
 		_assert_equal(failures, frame_4d_clear.get("lines"), 1, "plain 4D clear lines")
 		_assert_equal(failures, frame_4d_clear.get("score"), 45, "plain 4D clear score")
 		_assert_equal(failures, frame_4d_clear.get("command_result", {}).get("locked_cell_delta"), -3, "plain 4D clear locked delta")
+	var trace_3d_spawn_blocked = JSON.parse_string(bridge.export_plain_nd_trace_json("gameplay_plain_3d_spawn_blocked_game_over"))
+	if typeof(trace_3d_spawn_blocked) != TYPE_DICTIONARY:
+		failures.append("plain 3D spawn-blocked exported trace should parse as JSON dictionary")
+	else:
+		_assert_equal(failures, trace_3d_spawn_blocked.get("dimension"), 3, "plain 3D spawn-blocked trace dimension")
+		_assert_equal(
+			failures,
+			trace_3d_spawn_blocked.get("final", {}).get("state_hash"),
+			"a950c1badd7dd47dda27d140b7aef5097e9331a890c145419076f1e938317619",
+			"plain 3D spawn-blocked final state hash"
+		)
+		var frame_3d_spawn_blocked = trace_3d_spawn_blocked.get("frames", [])[0]
+		_assert_equal(failures, frame_3d_spawn_blocked.get("drop_lock_status", {}).get("game_over"), true, "plain 3D spawn-blocked game_over")
+		_assert_equal(failures, frame_3d_spawn_blocked.get("active_piece", {}).get("shape"), "TRACE_3D_NEXT", "plain 3D spawn-blocked shape")
+		_assert_equal(failures, frame_3d_spawn_blocked.get("active_piece", {}).get("pos"), [2.0, -2.0, 2.0], "plain 3D spawn-blocked position")
+	var trace_4d_spawn_blocked = JSON.parse_string(bridge.export_plain_nd_trace_json("gameplay_plain_4d_spawn_blocked_game_over"))
+	if typeof(trace_4d_spawn_blocked) != TYPE_DICTIONARY:
+		failures.append("plain 4D spawn-blocked exported trace should parse as JSON dictionary")
+	else:
+		_assert_equal(failures, trace_4d_spawn_blocked.get("dimension"), 4, "plain 4D spawn-blocked trace dimension")
+		_assert_equal(
+			failures,
+			trace_4d_spawn_blocked.get("final", {}).get("state_hash"),
+			"ee8f825bce34feb8fa7f9bdd15157f699bba9c34a650a582de6a6a3ee81d8ad6",
+			"plain 4D spawn-blocked final state hash"
+		)
+		var frame_4d_spawn_blocked = trace_4d_spawn_blocked.get("frames", [])[0]
+		_assert_equal(failures, frame_4d_spawn_blocked.get("drop_lock_status", {}).get("game_over"), true, "plain 4D spawn-blocked game_over")
+		_assert_equal(failures, frame_4d_spawn_blocked.get("active_piece", {}).get("shape"), "TRACE_4D_NEXT", "plain 4D spawn-blocked shape")
+		_assert_equal(failures, frame_4d_spawn_blocked.get("active_piece", {}).get("pos"), [2.0, -2.0, 2.0, 2.0], "plain 4D spawn-blocked position")
 
 
 func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:

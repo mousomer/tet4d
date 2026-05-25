@@ -153,7 +153,12 @@ Stage 19 adds native plain-ND clear/scoring parity through that same
 parity-only API for `gameplay_plain_3d_plane_clear_short` and
 `gameplay_plain_4d_plane_clear_short`. Godot can list/export/status-check
 those cases, but it still does not expose live ND movement, rotation, clear,
-or scoring commands. Spawn-blocked game-over parity remains deferred.
+or scoring commands. Stage 20 adds native plain-ND spawn-blocked game-over
+parity through the same parity-only API for
+`gameplay_plain_3d_spawn_blocked_game_over` and
+`gameplay_plain_4d_spawn_blocked_game_over`. Godot can list/export/status-check
+those cases, but it still does not expose live ND gameplay, topology, or
+endgame APIs.
 
 ## Opening In Godot
 
@@ -229,7 +234,8 @@ The GDScript tests cover bundle loading, sample trace parsing, centralized
 coordinate mapping, deterministic camera fit, replay-viewer layout containment,
 gameplay-cell snap policy when stable identity is absent, live 2D native
 status, and the native extension smoke/parity API including Stage 19 plain-ND
-movement/drop, rotation, and clear/scoring trace exports. On a fresh checkout, run the
+movement/drop, rotation, and clear/scoring trace exports plus Stage 20
+spawn-blocked game-over trace exports. On a fresh checkout, run the
 submodule and native build
 commands above first; the extension smoke test intentionally fails if Godot
 cannot load the native library.

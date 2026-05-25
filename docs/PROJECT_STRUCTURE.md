@@ -175,8 +175,11 @@ The current rule is one-way:
     native rotation parity only for `gameplay_plain_3d_rotation_short` and
     `gameplay_plain_4d_rotation_short`. Stage 19 adds native clear/scoring
     parity only for `gameplay_plain_3d_plane_clear_short` and
-    `gameplay_plain_4d_plane_clear_short`; spawn-blocked game-over, live
-    3D/4D, topology, endgame, Python runtime, C#, Steam, or console
+    `gameplay_plain_4d_plane_clear_short`. Stage 20 adds native
+    spawn-blocked game-over parity only for
+    `gameplay_plain_3d_spawn_blocked_game_over` and
+    `gameplay_plain_4d_spawn_blocked_game_over`; live 3D/4D, topology,
+    endgame, Python runtime, C#, Steam, or console
     implementation is not authorized here.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->

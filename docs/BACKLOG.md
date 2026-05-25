@@ -50,6 +50,8 @@ planning-only gate for plain bounded 3D/4D native trace parity, Stage 15 adds
 the sidecar native plain-ND trace scaffold for the short 3D/4D golden traces,
 Stage 18 adds native parity only for the plain 3D/4D rotation traces, and
 Stage 19 adds native parity only for the plain 3D/4D plane-clear traces.
+Stage 20 adds native parity only for the plain 3D/4D spawn-blocked game-over
+traces.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
 
@@ -127,8 +129,11 @@ Current active follow-ups:
   implemented rotation cases. Stage 19 implements native C++ parity only for
   `gameplay_plain_3d_plane_clear_short` and
   `gameplay_plain_4d_plane_clear_short`, updates `--all-plain-nd` to include
-  the implemented clear/scoring cases, and keeps spawn-blocked game-over
-  deferred. It still does not add live 3D/4D Godot
+  the implemented clear/scoring cases. Stage 20 implements native C++ parity
+  only for `gameplay_plain_3d_spawn_blocked_game_over` and
+  `gameplay_plain_4d_spawn_blocked_game_over`, updates `--all-plain-nd` to
+  include those cases, and keeps live ND gameplay deferred. It still does not
+  add live 3D/4D Godot
   gameplay, topology, endgame, C#, Python runtime, or Godot-side gameplay
   legality.
 - topology-playground shell-preserving cleanup remains centered on
@@ -347,6 +352,14 @@ stays synchronized, and the contract validator accepts the backlog shape.
     plane/hyperplane clear, compaction, generic `lines`, score, locked-cell
     digest, and frame/final `state_hash` parity through `--all-plain-nd`.
     Spawn-blocked game-over, live Godot 3D/4D gameplay, topology, endgame, C#,
+    Python runtime calls, and Godot-side ND legality remain deferred.
+19. `DONE` `[BKL-P3-026]` Stage 20 native plain ND spawn-blocked game-over parity:
+    implement native C++ parity only for
+    `gameplay_plain_3d_spawn_blocked_game_over` and
+    `gameplay_plain_4d_spawn_blocked_game_over`, including Python spawn
+    position, blocked active-piece preservation, unchanged locked cells,
+    `drop_lock_status.game_over`, and frame/final `state_hash` parity through
+    `--all-plain-nd`. Live Godot 3D/4D gameplay, topology, endgame, C#,
     Python runtime calls, and Godot-side ND legality remain deferred.
 
 ## Governance Watchlist
