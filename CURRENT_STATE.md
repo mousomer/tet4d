@@ -185,9 +185,14 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `gameplay_plain_4d_spawn_blocked_game_over`, including Python spawn
   position, blocked active-piece preservation, unchanged locked cells,
   `drop_lock_status.game_over`, and frame/final `state_hash` parity. This
-  does not authorize live Godot 3D/4D gameplay, topology
-  transport, endgame simulation, C#, Python runtime calls from Godot, or
-  Godot-side gameplay legality.
+  does not authorize live Godot 3D/4D gameplay, topology transport, endgame
+  simulation, C#, Python runtime calls from Godot, or Godot-side gameplay
+  legality. Stage 21 is planning-only for the next live plain ND product step:
+  `docs/plans/live_plain_nd_godot_prototype_plan.md` chooses Stage 22 as a
+  live plain 3D Godot prototype, Stage 23 as live plain 4D, requires reuse of
+  the existing Godot trace coordinate mapper/renderer path, and keeps C++ as
+  the sole gameplay legality owner. Stage 21 itself adds no live ND session
+  code, Godot live ND mode, topology, endgame, C#, or Python runtime calls.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

@@ -279,6 +279,11 @@ Cross-cutting requirements are defined in:
     through the existing parity/list/export/status API only and must not add
     live Godot 3D/4D gameplay, topology transport, endgame behavior, C#,
     Python runtime calls from Godot, or Godot-side ND legality.
+27. Stage 21 is planning-only for the live plain ND Godot prototype. It records
+    Stage 22 as live plain 3D first and Stage 23 as live plain 4D, defines the
+    future native API, command, rendering, W-slice, HUD, and test boundaries,
+    and must not add live 3D/4D implementation, topology transport, endgame
+    behavior, C#, Python runtime calls from Godot, or Godot-side ND legality.
 
 ### 3.3 Shared piece-local transform rules
 

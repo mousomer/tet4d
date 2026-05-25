@@ -1,7 +1,7 @@
 # Plain ND Core Parity Plan
 
 Role: Stage 14 migration architecture plan  
-Status: active planning authority; Stage 20 spawn-blocked game-over parity is tracked by `plain_nd_core_parity_contract.md` and remaining coverage planning lives in `plain_nd_coverage_expansion_plan.md`
+Status: active planning authority; Stage 20 spawn-blocked game-over parity is complete and Stage 21 live ND prototype planning lives in `live_plain_nd_godot_prototype_plan.md`
 Last updated: 2026-05-25
 
 ## 1. Decision summary
@@ -11,9 +11,9 @@ implementation path with trace-parity scaffolding only. Stage 16 planned the
 next explicit ND trace coverage, Stage 17 added Python-oracle traces, and
 Stage 18 implements native parity only for the rotation traces. Stage 19
 implements native parity only for the plane-clear/scoring traces. Stage 20
-implements native parity only for the spawn-blocked game-over traces. This
-still does not add live Godot 3D/4D gameplay, topology transport, or endgame
-simulation.
+implements native parity only for the spawn-blocked game-over traces. Stage 21
+plans the future live plain 3D/4D Godot prototype. This still does not add live
+Godot 3D/4D gameplay, topology transport, or endgame simulation.
 
 The implemented native plain bounded 3D/4D gameplay trace parity set is:
 
@@ -33,6 +33,11 @@ beside it. Stage 15 codified that path in
 only after 3D/4D parity is proven. The C++ core does not become authoritative
 for broader 3D/4D semantics until explicit Python traces match, including
 `state_hash`.
+
+The next live-product plan is
+`docs/plans/live_plain_nd_godot_prototype_plan.md`: Stage 22 should prototype
+live plain 3D first, Stage 23 should add live plain 4D, and both stages must
+keep Godot as command/router/renderer while C++ owns gameplay legality.
 
 ## 2. Current accepted baseline
 
@@ -494,7 +499,9 @@ new Stage 15 surface area, it should be limited to smoke/parity methods that
 export or list native ND trace cases. It must not compute movement legality,
 hard-drop distance, rotation, clear, scoring, spawn, or game-over.
 
-Live 3D/4D shell work belongs after native trace parity is complete.
+Live 3D/4D shell work belongs after native trace parity is complete. Stage 21
+records that bridge plan only; it does not add live ND session code or Godot
+live ND modes.
 
 ## 17. Implementation stages after Stage 14
 
@@ -510,9 +517,12 @@ Recommended sequence after Stage 15:
    plain-ND clear traces.
 5. Stage 20: implement native spawn-blocked game-over parity for the explicit
    plain-ND game-over traces.
-6. Later: prototype live Godot 3D/4D shell only after native plain-ND trace
-   parity is stable beyond the short movement/drop traces.
-7. Later: plan topology transport parity separately before any wrap,
+6. Stage 21: document the live plain 3D/4D Godot prototype plan without
+   implementing live ND code.
+7. Stage 22: prototype live plain 3D through a native-owned ND session and a
+   narrow Godot command/rendering facade.
+8. Stage 23: add live plain 4D with W-slice presentation after 3D is validated.
+9. Later: plan topology transport parity separately before any wrap,
    invert, sphere-like, Topology Lab, or launch semantics are ported.
 
 The stage numbers may be split smaller if a parity gate grows.

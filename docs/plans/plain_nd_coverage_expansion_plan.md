@@ -1,7 +1,7 @@
 # Plain ND Coverage Expansion Plan
 
 Role: Stage 16 planning authority for broadening plain-ND parity beyond the short traces  
-Status: Stage 20 native spawn-blocked game-over parity implemented for explicit fixtures
+Status: Stage 16 trace-expansion plan complete; Stage 21 live ND prototype planning is separate
 Last updated: 2026-05-25
 
 ## 1. Decision Summary
@@ -12,7 +12,10 @@ oracle traces for rotation, clear/scoring, and spawn-blocked game-over. Stage
 18 implements only the native C++ parity needed for the 3D/4D rotation traces.
 Stage 19 implements only the native C++ parity needed for the 3D/4D
 plane-clear traces. Stage 20 implements only the native C++ parity needed for
-the 3D/4D spawn-blocked game-over traces.
+the 3D/4D spawn-blocked game-over traces. The trace expansion described by
+this plan is now complete for the selected Stage 17 cases. The next live
+product planning authority is
+`docs/plans/live_plain_nd_godot_prototype_plan.md`.
 
 Recommended direction:
 
@@ -20,7 +23,8 @@ Recommended direction:
 - keep the Stage 15 ND sidecar path
 - add explicit Python-oracle trace cases before broadening C++ semantics
 - keep Godot parity/list/export/status only
-- defer live Godot 3D/4D, topology, endgame, and RNG/bag parity
+- keep topology, endgame, and RNG/bag parity deferred
+- use the separate Stage 21 plan before adding live Godot 3D/4D
 
 Recommended next implementation sequence:
 
@@ -29,6 +33,8 @@ Recommended next implementation sequence:
 3. Stage 19: implement ND clear/scoring parity against the new plane-clear traces.
 4. Stage 20: implement ND spawn-blocked game-over parity for the explicit
    fixture traces.
+5. Stage 21: plan live plain ND Godot prototype separately before any live
+   3D/4D implementation.
 
 ## 2. Current ND Baseline
 
@@ -55,9 +61,9 @@ Current native ND command coverage is narrow:
 
 Current native ND behavior is fixture-driven and does not attempt to be a full
 generalization of Python ND gameplay yet. Stage 20 adds only native
-spawn-blocked game-over parity for the two explicit oracle traces. It does not
-add live Godot 3D/4D gameplay, topology transport, endgame behavior, or
-Godot-side ND legality.
+spawn-blocked game-over parity for the two explicit oracle traces. Stage 21
+plans the future live plain ND shell, but does not add live Godot 3D/4D
+gameplay, topology transport, endgame behavior, or Godot-side ND legality.
 
 ## 3. Python Oracle References Inspected
 
@@ -361,6 +367,8 @@ Recommended next implementation order:
    traces.
 4. Stage 20: implement ND spawn-blocked game-over parity to satisfy the new
    game-over traces.
+5. Stage 21: document the live plain ND Godot prototype plan without adding
+   live ND code.
 
 This sequence keeps trace design ahead of native behavior, which is the lower
 risk path for an oracle-driven port.
@@ -402,7 +410,9 @@ silently passing an incomplete set.
 
 ## 15. Godot API Boundary
 
-No live Godot 3D/4D API belongs in this stage.
+No live Godot 3D/4D API belongs in the Stage 16 through Stage 20 trace
+expansion stages. Stage 21 is the separate planning-only handoff for future
+live plain ND work.
 
 Allowed Godot surface:
 

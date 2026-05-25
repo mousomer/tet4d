@@ -51,7 +51,9 @@ the sidecar native plain-ND trace scaffold for the short 3D/4D golden traces,
 Stage 18 adds native parity only for the plain 3D/4D rotation traces, and
 Stage 19 adds native parity only for the plain 3D/4D plane-clear traces.
 Stage 20 adds native parity only for the plain 3D/4D spawn-blocked game-over
-traces.
+traces. Stage 21 adds the planning-only live plain ND Godot prototype plan,
+choosing live plain 3D for Stage 22 and live plain 4D for Stage 23 while
+preserving the accepted live 2D shell.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
 
@@ -135,7 +137,11 @@ Current active follow-ups:
   include those cases, and keeps live ND gameplay deferred. It still does not
   add live 3D/4D Godot
   gameplay, topology, endgame, C#, Python runtime, or Godot-side gameplay
-  legality.
+  legality. Stage 21 adds `docs/plans/live_plain_nd_godot_prototype_plan.md`
+  as the live plain ND prototype plan only: Stage 22 should prototype live
+  plain 3D first, Stage 23 should add live plain 4D, Godot must reuse the
+  existing coordinate mapper/renderer, and C++ must remain the gameplay
+  authority.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -361,6 +367,13 @@ stays synchronized, and the contract validator accepts the backlog shape.
     `drop_lock_status.game_over`, and frame/final `state_hash` parity through
     `--all-plain-nd`. Live Godot 3D/4D gameplay, topology, endgame, C#,
     Python runtime calls, and Godot-side ND legality remain deferred.
+20. `DONE` `[BKL-P3-027]` Stage 21 live plain ND Godot prototype plan:
+    add `docs/plans/live_plain_nd_godot_prototype_plan.md` as a planning-only
+    authority for future live plain ND work. It chooses Stage 22 as live plain
+    3D first, Stage 23 as live plain 4D, defines the future native API shape,
+    input/rotation controls, rendering/HUD reuse, and keeps Stage 21 free of
+    live ND implementation, topology, endgame, C#, Python runtime calls, and
+    Godot-side gameplay legality.
 
 ## Governance Watchlist
 

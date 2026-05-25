@@ -180,7 +180,12 @@ The current rule is one-way:
     `gameplay_plain_3d_spawn_blocked_game_over` and
     `gameplay_plain_4d_spawn_blocked_game_over`; live 3D/4D, topology,
     endgame, Python runtime, C#, Steam, or console
-    implementation is not authorized here.
+    implementation is not authorized here. Stage 21 adds
+    `docs/plans/live_plain_nd_godot_prototype_plan.md` as the planning-only
+    authority for future live plain ND work: Stage 22 should prototype live
+    plain 3D first, Stage 23 should add live plain 4D, Godot must reuse the
+    existing trace coordinate mapper/renderer, and C++ must remain gameplay
+    authority.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

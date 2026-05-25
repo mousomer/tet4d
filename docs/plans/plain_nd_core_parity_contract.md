@@ -1,7 +1,7 @@
 # Plain ND Core Parity Contract
 
 Role: native plain-ND trace-parity contract
-Status: active for Stage 15 movement/drop traces, Stage 18 rotation traces, Stage 19 clear/scoring traces, and Stage 20 spawn-blocked game-over traces
+Status: active native trace-parity contract through Stage 20; Stage 21 live ND planning is separate
 Last updated: 2026-05-25
 
 ## Scope
@@ -29,7 +29,9 @@ Stage 20 adds spawn-blocked game-over parity for:
 
 It does not authorize live Godot 3D/4D gameplay, topology transport,
 wrap/invert/sphere behavior, endgame simulation, C#, Python runtime calls from
-Godot, or Godot-side gameplay legality.
+Godot, or Godot-side gameplay legality. Stage 21 does not change this
+trace-parity contract; it only plans future live plain 3D/4D Godot prototype
+work in `docs/plans/live_plain_nd_godot_prototype_plan.md`.
 
 ## Python Oracle References
 

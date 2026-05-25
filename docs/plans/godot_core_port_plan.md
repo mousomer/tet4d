@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D accepted; planning plain ND native parity
-Last updated: 2026-05-23
+Status: active plain 2D accepted; planning live plain ND prototype
+Last updated: 2026-05-25
 
 ## 1. Decision Summary
 
@@ -274,11 +274,15 @@ feature porting starts.
    plain-ND clear traces.
 13. Stage 20: implement native spawn-blocked game-over parity for the explicit
    plain-ND game-over traces.
-14. Later: prototype live Godot 3D/4D shell only after native plain-ND trace
-   parity is stable.
-15. Later: plan topology transport and Topology Lab launch semantics.
-16. Later: port locked-cell endgame particle simulation.
-17. Later: retire Python as semantic oracle only after trace parity,
+14. Stage 21: document the live plain ND Godot prototype plan without
+   implementing live 3D/4D code.
+15. Stage 22: prototype live plain 3D first through a native-owned ND session
+   and a narrow Godot command/rendering facade.
+16. Stage 23: prototype live plain 4D after 3D is validated, reusing the
+   existing W-slice renderer path.
+17. Later: plan topology transport and Topology Lab launch semantics.
+18. Later: port locked-cell endgame particle simulation.
+19. Later: retire Python as semantic oracle only after trace parity,
    product acceptance, and authority-doc updates explicitly allow it.
 
 Stages may be split smaller if a parity gate is too broad.
@@ -708,3 +712,27 @@ Stage 20 does not add live Godot ND commands, broader post-game-over command
 handling, topology transport, endgame simulation, C#, Python runtime calls
 from Godot, or Godot-side gameplay legality. Accepted live plain 2D remains
 preserved.
+
+## 33. Stage 21 Live Plain ND Godot Prototype Plan
+
+Stage 21 is planning-only. The detailed plan lives in
+`docs/plans/live_plain_nd_godot_prototype_plan.md`.
+
+Stage 21 chooses a staged live plain-ND path:
+
+- Stage 22: live plain 3D Godot prototype first;
+- Stage 23: live plain 4D Godot prototype after 3D is validated;
+- Stage 24: live ND polish and hardening;
+- Stage 25: topology parity planning.
+
+The future native implementation should add an internal dimension-parameterized
+plain ND session beside the accepted `Plain2DSession`, while Stage 22 exposes
+only a narrow live 3D Godot-facing facade. Godot will send command payloads
+such as `move_axis`, `rotate`, `soft_drop`, `hard_drop`, `tick`, `reset`, and
+`pause`; C++ remains responsible for all gameplay legality, score/clear,
+spawn, game-over, and `state_hash` results.
+
+Live ND rendering must reuse the existing trace coordinate mapper and replay
+renderer path. Stage 21 explicitly forbids live 3D/4D code, topology
+transport, endgame simulation, C#, Python runtime calls from Godot, and
+Godot-side gameplay legality. Accepted live plain 2D remains preserved.
