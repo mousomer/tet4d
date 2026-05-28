@@ -59,7 +59,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	_clear_root(_particle_root)
 	_clear_root(_marker_root)
 
-	var is_live_2d := str(snapshot.get("trace_type", "")) == "live_2d"
+	var is_live_snapshot := str(snapshot.get("trace_type", "")).begins_with("live_")
 	var grid := GridRendererScript.new()
 	_grid_root.add_child(grid)
 	grid.rebuild(
@@ -67,7 +67,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		int(snapshot.get("dimension", 0)),
 		_mapper,
 		_display_mode,
-		is_live_2d
+		is_live_snapshot
 	)
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode)
@@ -81,11 +81,11 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var locked_color_id := int(cell.get("color_id", 0))
 		node.setup(
 			_mapper.world_position(cell.get("position", []), int(snapshot.get("dimension", 0))),
-			ReplayVisuals.live_locked_cell_material(_display_mode, locked_color_id) if is_live_2d else locked_material,
-			ReplayVisuals.LIVE_LOCKED_CELL_SCALE if is_live_2d else _cell_scale * 0.95,
-			ReplayVisuals.LIVE_CELL_DEPTH if is_live_2d else -1.0,
-			ReplayVisuals.live_locked_cell_border_material(_display_mode) if is_live_2d else null,
-			(ReplayVisuals.LIVE_LOCKED_CELL_SCALE + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_2d else 0.0
+			ReplayVisuals.live_locked_cell_material(_display_mode, locked_color_id) if is_live_snapshot else locked_material,
+			ReplayVisuals.LIVE_LOCKED_CELL_SCALE if is_live_snapshot else _cell_scale * 0.95,
+			ReplayVisuals.LIVE_CELL_DEPTH if is_live_snapshot else -1.0,
+			ReplayVisuals.live_locked_cell_border_material(_display_mode) if is_live_snapshot else null,
+			(ReplayVisuals.LIVE_LOCKED_CELL_SCALE + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_snapshot else 0.0
 		)
 
 	for cell in snapshot.get("active_cells", []):
@@ -97,11 +97,11 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var active_color_id := int(cell.get("color_id", 1))
 		node.setup(
 			position,
-			ReplayVisuals.live_active_cell_material(_display_mode, active_color_id) if is_live_2d else ReplayVisuals.gameplay_active_cell_material(_display_mode),
-			ReplayVisuals.LIVE_ACTIVE_CELL_SCALE if is_live_2d else ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE,
-			ReplayVisuals.LIVE_CELL_DEPTH if is_live_2d else -1.0,
-			ReplayVisuals.live_active_cell_border_material(_display_mode) if is_live_2d else null,
-			(ReplayVisuals.LIVE_ACTIVE_CELL_SCALE + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_2d else 0.0
+			ReplayVisuals.live_active_cell_material(_display_mode, active_color_id) if is_live_snapshot else ReplayVisuals.gameplay_active_cell_material(_display_mode),
+			ReplayVisuals.LIVE_ACTIVE_CELL_SCALE if is_live_snapshot else ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE,
+			ReplayVisuals.LIVE_CELL_DEPTH if is_live_snapshot else -1.0,
+			ReplayVisuals.live_active_cell_border_material(_display_mode) if is_live_snapshot else null,
+			(ReplayVisuals.LIVE_ACTIVE_CELL_SCALE + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_snapshot else 0.0
 		)
 
 	for marker in snapshot.get("probe_markers", []):

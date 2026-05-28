@@ -26,7 +26,12 @@ trace scaffold for `gameplay_plain_3d_short` and
 `gameplay_plain_4d_plane_clear_short`. Stage 20 adds native parity only for
 `gameplay_plain_3d_spawn_blocked_game_over` and
 `gameplay_plain_4d_spawn_blocked_game_over`; it remains parity infrastructure
-only and does not add live Godot 3D/4D gameplay.
+only and does not add live Godot 3D/4D gameplay. Stage 22 adds the first live
+plain-ND gameplay path for 3D only. `PlainNDSession` owns live 3D state,
+movement, rotation, soft/hard drop, tick/lock, clear/scoring, spawn/game-over,
+command status, and `state_hash`; Godot still only sends commands and renders
+snapshot JSON. Live 4D, topology, endgame, Python runtime calls, and
+Godot-side gameplay legality remain deferred.
 
 The native source tree has two layers:
 
@@ -87,6 +92,15 @@ Allowed Stage 20 plain-ND parity API:
 - `export_plain_nd_trace_json(case_id)`
 - `get_plain_nd_required_field_parity(case_id)`
 
+Allowed Stage 22 live plain-3D API:
+
+- `live_3d_reset()`
+- `live_3d_apply_command(command)`
+- `live_3d_tick()`
+- `live_3d_snapshot_json()`
+- `live_3d_status()`
+- `live_3d_state_hash()`
+
 Run native C++ tests and trace parity with:
 
 ```bash
@@ -112,5 +126,6 @@ clear/scoring uses Python-compatible full gravity-axis plane/hyperplane clear,
 locked-cell compaction, generic `lines`, score, and hash parity. Stage 20
 spawn-blocked game-over uses Python-compatible spawn position, blocked
 active-piece preservation, unchanged locked cells, `drop_lock_status.game_over`,
-and hash parity. It must not expose live 3D/4D, topology, endgame, Python
-runtime, C#, Steam, or console behavior.
+and hash parity. Stage 22 exposes live 3D only through the native session API
+above. It must not expose live 4D, topology, endgame, Python runtime, C#,
+Steam, or console behavior.

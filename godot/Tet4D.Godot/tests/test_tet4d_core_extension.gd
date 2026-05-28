@@ -9,11 +9,11 @@ func run() -> Array:
 	if not bridge.is_available():
 		failures.append("Tet4DCoreApi should be registered by the Stage 8 GDExtension")
 		return failures
-	_assert_equal(failures, bridge.get_core_version(), "0.8.0-stage20", "core version")
+	_assert_equal(failures, bridge.get_core_version(), "0.8.0-stage22", "core version")
 	_assert_equal(
 		failures,
 		bridge.get_core_status(),
-		"native tet4d core loaded; Stage 20 plain ND spawn-blocked game-over parity available beside live plain 2D",
+		"native tet4d core loaded; Stage 22 live plain 3D prototype available beside accepted live plain 2D",
 		"core status"
 	)
 	_assert_equal(failures, bridge.echo_text("oracle-check"), "oracle-check", "echo text")
@@ -56,6 +56,7 @@ func run() -> Array:
 		)
 	_assert_plain_nd_parity_api(failures, bridge)
 	_assert_live_2d_session(failures, bridge)
+	_assert_live_3d_session(failures, bridge)
 	return failures
 
 
@@ -257,3 +258,69 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 		failures.append("live_2d_tick should update native status")
 	if bridge.live_2d_status().find("next_piece=") < 0:
 		failures.append("live_2d_status should expose next piece")
+
+
+func _assert_live_3d_session(failures: Array, bridge: RefCounted) -> void:
+	bridge.live_3d_reset()
+	var initial_hash: String = bridge.live_3d_state_hash()
+	var snapshot = JSON.parse_string(bridge.live_3d_snapshot_json())
+	if typeof(snapshot) != TYPE_DICTIONARY:
+		failures.append("live 3D snapshot should parse as JSON dictionary")
+		return
+	_assert_equal(failures, snapshot.get("trace_type"), "live_3d", "live 3D trace type")
+	_assert_equal(failures, snapshot.get("case_id"), "live_plain_3d", "live 3D case")
+	_assert_equal(failures, snapshot.get("dimension"), 3, "live 3D dimension")
+	_assert_equal(failures, snapshot.get("board_shape"), [6.0, 10.0, 6.0], "live 3D board shape")
+	_assert_equal(failures, snapshot.get("current_piece", ""), "I3", "live 3D deterministic initial piece")
+	_assert_equal(failures, snapshot.get("next_piece", ""), "O3", "live 3D deterministic next piece")
+	_assert_equal(failures, snapshot.get("game_over", true), false, "live 3D initial game_over")
+	if snapshot.get("active_cells", []).is_empty():
+		failures.append("live 3D snapshot should include active cells")
+	bridge.live_3d_apply_command("move_x_pos")
+	if bridge.live_3d_state_hash() == initial_hash:
+		failures.append("live 3D state hash should change after X movement")
+	var moved_hash: String = bridge.live_3d_state_hash()
+	bridge.live_3d_apply_command("move_z_pos")
+	if bridge.live_3d_state_hash() == moved_hash:
+		failures.append("live 3D state hash should change after Z movement")
+	bridge.live_3d_apply_command("rotate_xy_pos")
+	var rotated_xy = JSON.parse_string(bridge.live_3d_snapshot_json())
+	if typeof(rotated_xy) == TYPE_DICTIONARY:
+		_assert_equal(failures, rotated_xy.get("last_rotation_plane", ""), "XY", "live 3D XY rotation plane")
+	else:
+		failures.append("live 3D rotated snapshot should parse")
+	bridge.live_3d_reset()
+	bridge.live_3d_apply_command("rotate_xz_pos")
+	var rotated_xz = JSON.parse_string(bridge.live_3d_snapshot_json())
+	if typeof(rotated_xz) == TYPE_DICTIONARY:
+		_assert_equal(failures, rotated_xz.get("last_rotation_plane", ""), "XZ", "live 3D XZ rotation plane")
+	else:
+		failures.append("live 3D XZ rotated snapshot should parse")
+	bridge.live_3d_reset()
+	bridge.live_3d_apply_command("rotate_yz_pos")
+	var rotated_yz = JSON.parse_string(bridge.live_3d_snapshot_json())
+	if typeof(rotated_yz) == TYPE_DICTIONARY:
+		_assert_equal(failures, rotated_yz.get("last_rotation_plane", ""), "YZ", "live 3D YZ rotation plane")
+	else:
+		failures.append("live 3D YZ rotated snapshot should parse")
+	bridge.live_3d_reset()
+	bridge.live_3d_apply_command("soft_drop")
+	if bridge.live_3d_state_hash() == initial_hash:
+		failures.append("live 3D state hash should change after soft_drop")
+	bridge.live_3d_apply_command("hard_drop")
+	var after_drop = JSON.parse_string(bridge.live_3d_snapshot_json())
+	if typeof(after_drop) != TYPE_DICTIONARY:
+		failures.append("live 3D post-drop snapshot should parse as JSON dictionary")
+		return
+	_assert_equal(failures, after_drop.get("score"), 5, "live 3D hard drop score")
+	_assert_equal(failures, after_drop.get("current_piece", ""), "O3", "live 3D first post-lock piece")
+	_assert_equal(failures, after_drop.get("next_piece", ""), "L3", "live 3D first post-lock next piece")
+	_assert_equal(failures, after_drop.get("last_command", ""), "hard_drop", "live 3D last command")
+	_assert_equal(failures, after_drop.get("last_command_status", ""), "accepted", "live 3D last command status")
+	if after_drop.get("locked_cells", []).is_empty():
+		failures.append("live 3D hard drop should expose locked cells")
+	bridge.live_3d_reset()
+	_assert_equal(failures, bridge.live_3d_state_hash(), initial_hash, "live 3D reset hash")
+	bridge.live_3d_tick()
+	if bridge.live_3d_status().find("last_command=tick") < 0:
+		failures.append("live_3d_tick should update native status")

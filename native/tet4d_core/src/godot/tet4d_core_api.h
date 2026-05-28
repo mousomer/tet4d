@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tet4d_core/plain_2d_session.hpp"
+#include "tet4d_core/plain_nd_session.hpp"
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
@@ -36,9 +37,16 @@ public:
 	String live_2d_snapshot_json() const;
 	String live_2d_status() const;
 	String live_2d_state_hash() const;
+	void live_3d_reset();
+	String live_3d_apply_command(const String &command);
+	String live_3d_tick();
+	String live_3d_snapshot_json() const;
+	String live_3d_status() const;
+	String live_3d_state_hash() const;
 
 private:
 	mutable tet4d::core::Plain2DSession live_2d_session_;
+	mutable tet4d::core::PlainNDSession live_3d_session_{3};
 };
 
 } // namespace godot

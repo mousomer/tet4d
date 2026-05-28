@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D accepted; planning live plain ND prototype
-Last updated: 2026-05-25
+Status: active plain 2D accepted; live plain 3D prototype implemented
+Last updated: 2026-05-27
 
 ## 1. Decision Summary
 
@@ -736,3 +736,30 @@ Live ND rendering must reuse the existing trace coordinate mapper and replay
 renderer path. Stage 21 explicitly forbids live 3D/4D code, topology
 transport, endgame simulation, C#, Python runtime calls from Godot, and
 Godot-side gameplay legality. Accepted live plain 2D remains preserved.
+
+## 34. Stage 22 Live Plain 3D Godot Prototype
+
+Stage 22 implements the first live plain ND product slice: live plain 3D only.
+
+The native core adds an internal `PlainNDSession` for dimension `3`, using the
+existing sidecar ND state/stepper semantics and a deterministic live 3D piece
+sequence. Godot exposes only a narrow live 3D facade:
+
+- `live_3d_reset()`;
+- `live_3d_apply_command(command)`;
+- `live_3d_tick()`;
+- `live_3d_snapshot_json()`;
+- `live_3d_status()`;
+- `live_3d_state_hash()`.
+
+Godot adds `Live Plain 3D` as a separate shell mode. It captures input,
+handles repeat cadence and pause/mode switching, parses C++ snapshot JSON,
+renders through the existing trace coordinate mapper and renderer, and shows
+`LIVE 3D · C++ CORE` HUD/hints. C++ owns movement, rotation, soft/hard drop,
+gravity tick results, lock, clear/scoring, spawn/game-over, command status,
+and `state_hash`.
+
+Stage 22 does not add live 4D, topology transport, wrap/invert/sphere
+behavior, endgame simulation, C#, Python runtime calls from Godot, or
+Godot-side gameplay legality. Accepted live plain 2D and replay mode remain
+preserved.

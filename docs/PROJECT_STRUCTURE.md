@@ -185,7 +185,10 @@ The current rule is one-way:
     authority for future live plain ND work: Stage 22 should prototype live
     plain 3D first, Stage 23 should add live plain 4D, Godot must reuse the
     existing trace coordinate mapper/renderer, and C++ must remain gameplay
-    authority.
+    authority. Stage 22 adds only that live plain 3D prototype through a
+    native `PlainNDSession` facade plus Godot command routing/HUD; live 4D,
+    topology, endgame, Python runtime, C#, Steam, or console implementation
+    remains deferred.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

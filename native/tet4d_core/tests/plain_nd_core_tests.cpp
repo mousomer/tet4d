@@ -1,4 +1,5 @@
 #include "tet4d_core/plain_nd.hpp"
+#include "tet4d_core/plain_nd_session.hpp"
 #include "tet4d_core/plain_nd_trace.hpp"
 
 #include <cstdlib>
@@ -345,6 +346,59 @@ void test_trace_exports() {
 	require(unsupported.find("\"error\":\"unsupported plain ND parity case\"") != std::string::npos, "unsupported ND trace case should fail clearly");
 }
 
+void test_live_plain_3d_session() {
+	tet4d::core::PlainNDSession session(3);
+	const std::string initial_hash = session.state_hash();
+	const std::string initial_snapshot = session.snapshot_json();
+	require(initial_snapshot.find("\"trace_type\":\"live_3d\"") != std::string::npos, "live 3D snapshot trace type missing");
+	require(initial_snapshot.find("\"case_id\":\"live_plain_3d\"") != std::string::npos, "live 3D snapshot case id missing");
+	require(initial_snapshot.find("\"dimension\":3") != std::string::npos, "live 3D snapshot dimension missing");
+	require(initial_snapshot.find("\"board_shape\":[6,10,6]") != std::string::npos, "live 3D board shape missing");
+	require(initial_snapshot.find("\"current_piece\":\"I3\"") != std::string::npos, "live 3D initial piece missing");
+	require(initial_snapshot.find("\"next_piece\":\"O3\"") != std::string::npos, "live 3D next piece missing");
+	require(initial_snapshot.find("\"state_hash\":\"" + initial_hash + "\"") != std::string::npos, "live 3D snapshot hash mismatch");
+
+	session.apply_command("move_x_pos");
+	require(session.state_hash() != initial_hash, "live 3D move X should change hash");
+	require(session.status().find("last_command=move_x_pos") != std::string::npos, "live 3D move X status missing");
+	const std::string after_x_hash = session.state_hash();
+	session.apply_command("move_z_pos");
+	require(session.state_hash() != after_x_hash, "live 3D move Z should change hash");
+	require(session.status().find("last_command=move_z_pos") != std::string::npos, "live 3D move Z status missing");
+
+	tet4d::core::PlainNDSession rotate_xy_session(3);
+	const std::string before_xy = rotate_xy_session.state_hash();
+	rotate_xy_session.apply_command("rotate_xy_pos");
+	require(rotate_xy_session.status().find("last_command=rotate_xy_pos") != std::string::npos, "live 3D rotate XY status missing");
+	require(rotate_xy_session.snapshot_json().find("\"last_rotation_plane\":\"XY\"") != std::string::npos, "live 3D rotate XY plane missing");
+	require(rotate_xy_session.state_hash() != before_xy, "live 3D rotate XY should change hash");
+	tet4d::core::PlainNDSession rotate_xz_session(3);
+	rotate_xz_session.apply_command("rotate_xz_pos");
+	require(rotate_xz_session.status().find("last_command=rotate_xz_pos") != std::string::npos, "live 3D rotate XZ status missing");
+	require(rotate_xz_session.snapshot_json().find("\"last_rotation_plane\":\"XZ\"") != std::string::npos, "live 3D rotate XZ plane missing");
+	tet4d::core::PlainNDSession rotate_yz_session(3);
+	rotate_yz_session.apply_command("rotate_yz_pos");
+	require(rotate_yz_session.status().find("last_command=rotate_yz_pos") != std::string::npos, "live 3D rotate YZ status missing");
+	require(rotate_yz_session.snapshot_json().find("\"last_rotation_plane\":\"YZ\"") != std::string::npos, "live 3D rotate YZ plane missing");
+
+	const std::string before_soft = session.state_hash();
+	session.apply_command("soft_drop");
+	require(session.state_hash() != before_soft, "live 3D soft drop should change hash");
+	session.tick();
+	require(session.status().find("last_command=tick") != std::string::npos, "live 3D tick status missing");
+
+	session.apply_command("hard_drop");
+	const std::string after_hard_drop = session.snapshot_json();
+	require(after_hard_drop.find("\"score\":5") != std::string::npos, "live 3D hard drop should score lock points");
+	require(after_hard_drop.find("\"locked_cells\":[") != std::string::npos, "live 3D hard drop should expose locked cells");
+	require(after_hard_drop.find("\"current_piece\":\"O3\"") != std::string::npos, "live 3D hard drop should spawn deterministic next piece");
+	require(session.status().find("next_piece=L3") != std::string::npos, "live 3D status should expose following piece");
+
+	session.reset();
+	require(session.state_hash() == initial_hash, "live 3D reset should restore initial hash");
+	require(session.snapshot_json().find("\"game_over\":false") != std::string::npos, "live 3D reset should clear game_over");
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -364,6 +418,7 @@ int main(int argc, char **argv) {
 	test_3d_spawn_blocked_stepper();
 	test_4d_spawn_blocked_stepper();
 	test_trace_exports();
+	test_live_plain_3d_session();
 	std::cout << "tet4d_core native plain ND tests passed\n";
 	return 0;
 }

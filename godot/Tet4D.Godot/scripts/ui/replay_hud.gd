@@ -22,6 +22,7 @@ signal fit_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
 signal live_2d_requested()
+signal live_3d_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -31,8 +32,10 @@ const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
 const REPLAY_HINT_TEXT := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
-const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Replay · Q/Esc Quit"
-const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab returns to Replay, and Q/Esc quits. Godot sends commands only."
+const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Q/Esc Quit"
+const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Q/Esc quits. Godot sends commands only."
+const LIVE_3D_HINT_TEXT := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T XY Rotate · F/G XZ Rotate · V/B YZ Rotate · P Pause · Backspace Reset · Tab Replay · Q/Esc Quit"
+const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab returns to Replay, and Q/Esc quits. Godot sends commands only."
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -81,6 +84,8 @@ var _current_screen := SCREEN_MAIN_MENU
 var _geometry_diagnostics_enabled := false
 var _live_2d_paused := false
 var _live_2d_game_over := false
+var _live_3d_paused := false
+var _live_3d_game_over := false
 
 
 static func replay_hint_text() -> String:
@@ -89,6 +94,10 @@ static func replay_hint_text() -> String:
 
 static func live_2d_hint_text() -> String:
 	return LIVE_2D_HINT_TEXT
+
+
+static func live_3d_hint_text() -> String:
+	return LIVE_3D_HINT_TEXT
 
 
 func _ready() -> void:
@@ -137,11 +146,14 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 	if _event_screen_panel != null:
 		_event_screen_panel.set_events(snapshot.get("event_lines", []))
 	if _trace_integrity_label != null:
-		if str(snapshot.get("trace_type", "")) == "live_2d":
+		if str(snapshot.get("trace_type", "")) == "live_2d" or str(snapshot.get("trace_type", "")) == "live_3d":
+			var mode_label := "LIVE 3D" if str(snapshot.get("trace_type", "")) == "live_3d" else "LIVE 2D"
 			var game_over := bool(snapshot.get("game_over", false))
-			var state_label := "GAME OVER" if game_over else ("paused" if bool(snapshot.get("paused", _live_2d_paused)) else "running")
+			var paused_fallback := _live_3d_paused if str(snapshot.get("trace_type", "")) == "live_3d" else _live_2d_paused
+			var state_label := "GAME OVER" if game_over else ("paused" if bool(snapshot.get("paused", paused_fallback)) else "running")
 			var reason := str(snapshot.get("game_over_reason", ""))
-			_trace_integrity_label.text = "LIVE 2D · C++ CORE · piece %s · next %s · score %d · lines %d · state_hash %s · last command %s/%s · %s%s" % [
+			_trace_integrity_label.text = "%s · C++ CORE · piece %s · next %s · score %d · lines %d · state_hash %s · last command %s/%s · %s%s" % [
+				mode_label,
 				str(snapshot.get("current_piece", "none")),
 				str(snapshot.get("next_piece", "none")),
 				int(snapshot.get("score", 0)),
@@ -203,6 +215,43 @@ func set_live_2d_mode(
 		_help_label.text = LIVE_2D_HELP_TEXT
 	if _trace_integrity_label != null:
 		_trace_integrity_label.text = "LIVE 2D · C++ CORE · last command %s · %s%s" % [
+			last_command,
+			"game over" if game_over else ("paused" if paused else "running"),
+			(" · reason " + game_over_reason) if game_over_reason != "" else "",
+		]
+
+
+func set_live_3d_mode(
+	paused: bool,
+	game_over: bool,
+	last_command: String,
+	game_over_reason: String = "",
+	gravity_interval_seconds: float = 0.5
+) -> void:
+	_live_3d_paused = paused
+	_live_3d_game_over = game_over
+	_play_button.text = "Resume Live" if paused else "Pause Live"
+	if _reset_button != null:
+		_reset_button.text = "Reset Live 3D"
+	_speed_value.text = "Game Over" if game_over else ("Paused Live 3D" if paused else "Running Live 3D")
+	if _authority_label != null:
+		_authority_label.text = "LIVE 3D · C++ CORE"
+	if _viewport_title != null:
+		_viewport_title.text = "Live Plain 3D"
+	if _viewport_hint != null:
+		_viewport_hint.text = "Native C++ owns movement, rotation, lock, clear, score, spawn, and hash · gravity %.2fs" % gravity_interval_seconds
+	if _mode_hint_strip != null:
+		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
+		_mode_hint_strip.text = ("GAME OVER · %s · %s" % [reason_text, LIVE_3D_HINT_TEXT]) if game_over else LIVE_3D_HINT_TEXT
+		_mode_hint_strip.theme_type_variation = "WarningLabel" if game_over else "AccentLabel"
+	if _replay_note != null:
+		_replay_note.text = "GAME OVER: %s. Backspace resets Live 3D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 3D. Godot sends commands only; C++ owns gameplay state. P pauses; paused mode blocks gameplay commands."
+	if _hint_label != null:
+		_hint_label.text = LIVE_3D_HINT_TEXT
+	if _help_label != null:
+		_help_label.text = LIVE_3D_HELP_TEXT
+	if _trace_integrity_label != null:
+		_trace_integrity_label.text = "LIVE 3D · C++ CORE · last command %s · %s%s" % [
 			last_command,
 			"game over" if game_over else ("paused" if paused else "running"),
 			(" · reason " + game_over_reason) if game_over_reason != "" else "",
@@ -356,6 +405,12 @@ func _build_layout() -> void:
 		live_2d_requested.emit()
 	)
 	nav_row_b.add_child(live_button)
+	var live_3d_button := Button.new()
+	live_3d_button.text = "Live 3D"
+	live_3d_button.pressed.connect(func() -> void:
+		live_3d_requested.emit()
+	)
+	nav_row_b.add_child(live_3d_button)
 
 	_top_status_panel = PanelContainer.new()
 	_top_status_panel.custom_minimum_size = Vector2(ReplayVisuals.TOP_STATUS_PANEL_WIDTH, ReplayVisuals.TOP_BAR_HEIGHT)
@@ -709,6 +764,14 @@ func _build_main_menu_screen(screen: Control) -> void:
 		live_2d_requested.emit()
 	)
 	layout.add_child(live_button)
+	var live_3d_button := Button.new()
+	live_3d_button.text = "Start Live Plain 3D"
+	live_3d_button.custom_minimum_size = Vector2(420, 54)
+	live_3d_button.add_theme_font_size_override("font_size", 18)
+	live_3d_button.pressed.connect(func() -> void:
+		live_3d_requested.emit()
+	)
+	layout.add_child(live_3d_button)
 	var controls_button := Button.new()
 	controls_button.text = "Controls / Keyboard Hints"
 	controls_button.custom_minimum_size = Vector2(420, 50)
@@ -789,9 +852,10 @@ func _build_controls_screen(screen: Control) -> void:
 	layout.add_child(panel)
 	var text := Label.new()
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.text = "Replay: %s. Live 2D: %s. Godot routes live commands only; C++ owns gameplay state." % [
+	text.text = "Replay: %s. Live 2D: %s. Live 3D: %s. Godot routes live commands only; C++ owns gameplay state." % [
 		REPLAY_HINT_TEXT,
 		LIVE_2D_HINT_TEXT,
+		LIVE_3D_HINT_TEXT,
 	]
 	text.theme_type_variation = "SecondaryLabel"
 	panel.add_child(text)
@@ -847,6 +911,12 @@ func _screen_nav(title_text: String) -> HBoxContainer:
 		live_2d_requested.emit()
 	)
 	nav.add_child(live_button)
+	var live_3d_button := Button.new()
+	live_3d_button.text = "Live 3D"
+	live_3d_button.pressed.connect(func() -> void:
+		live_3d_requested.emit()
+	)
+	nav.add_child(live_3d_button)
 	var diagnostics_button := Button.new()
 	diagnostics_button.text = "Diagnostics"
 	diagnostics_button.pressed.connect(func() -> void:

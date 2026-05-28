@@ -53,7 +53,10 @@ Stage 19 adds native parity only for the plain 3D/4D plane-clear traces.
 Stage 20 adds native parity only for the plain 3D/4D spawn-blocked game-over
 traces. Stage 21 adds the planning-only live plain ND Godot prototype plan,
 choosing live plain 3D for Stage 22 and live plain 4D for Stage 23 while
-preserving the accepted live 2D shell.
+preserving the accepted live 2D shell. Stage 22 implements live plain 3D only:
+C++ owns the live 3D session and command results, while Godot routes input,
+renders snapshots through the existing mapper/renderer, and shows live 3D
+HUD/hints.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
 
@@ -141,7 +144,9 @@ Current active follow-ups:
   as the live plain ND prototype plan only: Stage 22 should prototype live
   plain 3D first, Stage 23 should add live plain 4D, Godot must reuse the
   existing coordinate mapper/renderer, and C++ must remain the gameplay
-  authority.
+  authority. Stage 22 implements that live plain 3D prototype only, keeping
+  live 4D, topology, endgame, C#, Python runtime calls, and Godot-side
+  gameplay legality deferred.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -374,6 +379,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
     input/rotation controls, rendering/HUD reuse, and keeps Stage 21 free of
     live ND implementation, topology, endgame, C#, Python runtime calls, and
     Godot-side gameplay legality.
+21. `DONE` `[BKL-P3-028]` Stage 22 live plain 3D Godot prototype:
+    add a native `PlainNDSession`-backed live 3D facade, Godot Live 3D mode,
+    direct X/Z movement and XY/XZ/YZ rotation command routing, live 3D
+    HUD/hints, and shared mapper/renderer support. Live 2D and replay remain
+    preserved; live 4D, topology, endgame, C#, Python runtime calls, and
+    Godot-side gameplay legality remain deferred.
 
 ## Governance Watchlist
 

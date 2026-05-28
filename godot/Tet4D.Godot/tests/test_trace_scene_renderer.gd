@@ -95,6 +95,42 @@ func run() -> Array:
 		if live_grid.get_child_count() <= 12:
 			failures.append("live renderer should include board fill/grid lines beyond the outline")
 
+	renderer.render_snapshot({
+		"case_id": "live_plain_3d",
+		"trace_type": "live_3d",
+		"frame_index": 0,
+		"dimension": 3,
+		"board_shape": [4, 5, 4],
+		"locked_cells": [{"position": [1, 4, 1], "color_id": 4}],
+		"active_cells": [{"position": [1, 1, 2], "color_id": 6}],
+		"probe_markers": [],
+		"event_markers": [],
+		"particles": [],
+	})
+	await tree.process_frame
+	cell_root = renderer.get_node_or_null("CellRoot")
+	if cell_root == null or cell_root.get_child_count() != 2:
+		failures.append("live 3D renderer should create active and locked cells through the shared renderer")
+	else:
+		var live_3d_locked_cell := cell_root.get_child(0) as Node3D
+		var live_3d_active_cell := cell_root.get_child(1) as Node3D
+		_assert_cell_material(
+			failures,
+			live_3d_locked_cell,
+			ReplayVisuals.live_locked_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 4).albedo_color,
+			"live 3D locked cells use piece-aware secondary material"
+		)
+		_assert_cell_material(
+			failures,
+			live_3d_active_cell,
+			ReplayVisuals.live_active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).albedo_color,
+			"live 3D active cells use bright piece-aware material"
+		)
+		_assert_box_size(failures, live_3d_active_cell, ReplayVisuals.LIVE_ACTIVE_CELL_SCALE, "live 3D active cell scale")
+	grid_root = renderer.get_node_or_null("GridRoot")
+	if grid_root == null or grid_root.get_child_count() != 1:
+		failures.append("live 3D renderer should keep one shared grid renderer")
+
 	renderer.queue_free()
 	await tree.process_frame
 	return failures

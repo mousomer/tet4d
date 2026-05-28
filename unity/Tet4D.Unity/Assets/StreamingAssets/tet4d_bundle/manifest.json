@@ -159,25 +159,25 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "70314a35e3d6b2e361db9a45c15a6158e1765188ab3f2631fb3d0c8b893b6bff",
+        "sha256": "c866f9576b89c7d6f2f2a2f6de4c4ccc987fc6547e548440b2fab0dabc51db34",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "bcbc4f8ced425713dfeda745ff87b37b4c8cb58e6d560e3ba905920713d6fcea",
+        "sha256": "54f15c8e2fba5c44110d29fc188f1ac5616909f3ee5a67cc1a30a8b38e422348",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "eed12317498507da316ed93da696e9dc33cd45ab542aeff404ded56b76ae5a68",
+        "sha256": "cfc2efd141b0ada26be9f6c796660c7195fdac29a1b9b630c32ad05d9616195c",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
         "purpose": "Shared topology/gameplay/endgame product requirements.",
         "role": "product_requirements",
-        "sha256": "860ebea971716c674fe94546371a9c47e1f1b4c07bcb4a565492a25451ed6129",
+        "sha256": "4c782cb9877d8c37c56ac45352543eb0c26161ea9bf75fcc8657257bf55ebab2",
         "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
       },
       {
@@ -219,7 +219,7 @@
       {
         "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
         "role": "godot_core_port_authority",
-        "sha256": "925cc3d97c5609cbffd45f180cd479a72619b073a3f52ca3b0b228daad0da98e",
+        "sha256": "37802f7043fda3224aba79672143d907f30f46fa5d2e7612ef2be89641b11265",
         "source_path": "docs/plans/godot_core_port_plan.md"
       },
       {

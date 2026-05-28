@@ -33,6 +33,7 @@ mkdir -p "$BUILD_DIR"
   -I"$CORE_DIR/include" \
   "$CORE_DIR/src/core/core_api.cpp" \
   "$CORE_DIR/src/core/plain_nd.cpp" \
+  "$CORE_DIR/src/core/plain_nd_session.cpp" \
   "$CORE_DIR/src/core/plain_nd_trace.cpp" \
   "$CORE_DIR/src/core/sha256.cpp" \
   "$CORE_DIR/tests/plain_nd_core_tests.cpp" \

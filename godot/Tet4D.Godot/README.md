@@ -160,6 +160,16 @@ parity through the same parity-only API for
 those cases, but it still does not expose live ND gameplay, topology, or
 endgame APIs.
 
+Stage 22 adds `Live 3D`, the first live plain ND Godot prototype. It is plain
+bounded 3D only. Godot captures input, manages repeat/tick cadence, switches
+between Replay / Live 2D / Live 3D, parses the native snapshot JSON, renders
+through the existing trace coordinate mapper and renderer, and displays the
+`LIVE 3D · C++ CORE` HUD/hints. The C++ GDExtension owns the live 3D session,
+movement, rotation, soft/hard drop, gravity tick results, lock,
+clear/scoring, spawn/game-over, command status, and `state_hash`. Live 4D,
+topology, endgame, C#, Python runtime calls, and Godot-side gameplay legality
+remain deferred.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -200,15 +210,33 @@ Live 2D controls:
 - `P`: pause / resume gravity tick
 - `R`: reset live 2D
 - `F`: fit live board view
-- `Tab`: return to Replay
+- `Tab`: switch to Live 3D
 - `Q` / `Esc`: quit shell
 
-Live mode keeps this hint strip visible above the viewport and does not show
-replay frame/case controls except `Tab` back to Replay.
+Live 2D mode keeps this hint strip visible above the viewport and does not show
+replay frame/case controls.
 Switching to Replay pauses live ticking but preserves the native live session;
 use `R` / Reset Live for a fresh deterministic new game. While paused, Godot
 blocks gameplay command dispatch except pause/resume, reset, fit, mode switch,
 help, and quit.
+
+Live 3D controls:
+
+- `A` / `D` or `Left` / `Right`: move active piece on X
+- `W` / `S` or `Up` / `Down`: move active piece on Z
+- `Shift`: soft drop
+- `Space`: hard drop
+- `R` / `T`: rotate in the XY plane
+- `F` / `G`: rotate in the XZ plane
+- `V` / `B`: rotate in the YZ plane
+- `P`: pause / resume gravity tick
+- `Backspace`: reset live 3D
+- `Tab`: return to Replay
+- `Q` / `Esc`: quit shell
+
+Live 3D uses the same renderer/mapper path as replay and live 2D. `F` remains
+an XZ rotation key in Live 3D; use the visible `Fit View` button for camera
+fit in that mode.
 
 The Replay Viewer uses one container-owned layout: the game renders through a
 `SubViewport` inside `GameArea`, while the right inspector is a fixed-width
@@ -235,7 +263,8 @@ coordinate mapping, deterministic camera fit, replay-viewer layout containment,
 gameplay-cell snap policy when stable identity is absent, live 2D native
 status, and the native extension smoke/parity API including Stage 19 plain-ND
 movement/drop, rotation, and clear/scoring trace exports plus Stage 20
-spawn-blocked game-over trace exports. On a fresh checkout, run the
+spawn-blocked game-over trace exports and Stage 22 live 3D bridge/shell
+coverage. On a fresh checkout, run the
 submodule and native build
 commands above first; the extension smoke test intentionally fails if Godot
 cannot load the native library.
@@ -251,5 +280,6 @@ cannot load the native library.
   gameplay semantics.
 - 4D is displayed as visible W-separated board slices rather than a final 4D
   presentation.
-- GDScript is used only for shell/UI work. Native ND APIs are parity export
-  surfaces only; they are not live 3D/4D gameplay.
+- GDScript is used only for shell/UI work. Native ND parity APIs remain trace
+  export surfaces; the only live ND gameplay surface is Stage 22 live plain 3D.
+  Live 4D is not implemented yet.

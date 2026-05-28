@@ -97,6 +97,30 @@ func live_2d_state_hash() -> String:
 	return _api().live_2d_state_hash()
 
 
+func live_3d_reset() -> void:
+	_api().live_3d_reset()
+
+
+func live_3d_apply_command(command: String) -> String:
+	return _api().live_3d_apply_command(command)
+
+
+func live_3d_tick() -> String:
+	return _api().live_3d_tick()
+
+
+func live_3d_snapshot_json() -> String:
+	return _api().live_3d_snapshot_json()
+
+
+func live_3d_status() -> String:
+	return _api().live_3d_status()
+
+
+func live_3d_state_hash() -> String:
+	return _api().live_3d_state_hash()
+
+
 func _api() -> RefCounted:
 	_ensure_extension_loaded()
 	if _api_instance == null:

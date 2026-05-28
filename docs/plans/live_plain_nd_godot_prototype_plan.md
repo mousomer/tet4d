@@ -1,8 +1,8 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: planning-only authority for future live plain 3D/4D Godot prototype  
-Last updated: 2026-05-25
+Status: Stage 22 live plain 3D implemented; Stage 23 live plain 4D remains next
+Last updated: 2026-05-27
 
 ## 1. Decision summary
 
@@ -55,6 +55,15 @@ Native plain-ND trace parity now covers:
 - `gameplay_plain_4d_spawn_blocked_game_over`
 
 Live Godot support still covers only plain bounded 2D.
+
+Stage 22 settlement:
+
+- live plain 3D now exists as its own Godot mode;
+- native C++ owns the live 3D session, command results, score/clear,
+  spawn/game-over, and `state_hash`;
+- Godot reuses the existing trace coordinate mapper and renderer;
+- accepted live plain 2D and replay mode remain preserved;
+- live 4D remains Stage 23.
 
 ## 3. Why live ND now
 

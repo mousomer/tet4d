@@ -193,6 +193,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   the existing Godot trace coordinate mapper/renderer path, and keeps C++ as
   the sole gameplay legality owner. Stage 21 itself adds no live ND session
   code, Godot live ND mode, topology, endgame, C#, or Python runtime calls.
+  Stage 22 implements that live plain 3D prototype only: C++ now owns a live
+  `PlainNDSession`-backed 3D session and `live_3d_*` facade, Godot adds a
+  separate Live 3D mode that sends command strings and renders returned
+  snapshots through the existing mapper/renderer, and the HUD/hints show
+  `LIVE 3D · C++ CORE`. Live 4D remains Stage 23; topology/endgame remain
+  deferred.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

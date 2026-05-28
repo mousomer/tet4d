@@ -284,6 +284,13 @@ Cross-cutting requirements are defined in:
     future native API, command, rendering, W-slice, HUD, and test boundaries,
     and must not add live 3D/4D implementation, topology transport, endgame
     behavior, C#, Python runtime calls from Godot, or Godot-side ND legality.
+28. Stage 22 may add live plain 3D only. C++ must own the live 3D session,
+    movement, rotation, drop, tick, lock, clear/scoring, spawn/game-over,
+    command status, and state hashing. Godot may route input, manage shell
+    cadence/pause/mode switching, render returned snapshots, and display
+    HUD/hints through the existing mapper/renderer. Stage 22 must not add live
+    4D, topology transport, endgame behavior, C#, Python runtime calls from
+    Godot, or Godot-side ND legality.
 
 ### 3.3 Shared piece-local transform rules
 
