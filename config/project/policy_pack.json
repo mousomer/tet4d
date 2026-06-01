@@ -2014,6 +2014,10 @@
         "description": "durable product requirements"
       },
       {
+        "path": "docs/plans/gameboard_visual_language_design.md",
+        "description": "Live 3D and future Live 4D gameboard visual-language authority"
+      },
+      {
         "path": "docs/ARCHITECTURE_CONTRACT.md",
         "description": "dependency contract"
       },

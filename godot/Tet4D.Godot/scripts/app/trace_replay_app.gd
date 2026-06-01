@@ -39,6 +39,8 @@ var _live_2d_paused := false
 var _live_2d_session_started := false
 var _live_3d_paused := false
 var _live_3d_session_started := false
+var _live_3d_last_rotation_label := "none"
+var _live_3d_last_rotation_status := "none"
 var _live_tick_accumulator := 0.0
 var _live_repeat_elapsed := {
 	"move_left": 0.0,
@@ -473,7 +475,10 @@ func _fit_view() -> void:
 	if not bounds.get("ok", false):
 		_pending_fit_view = true
 		return
-	_camera_rig.fit_bounds(bounds, 1.14)
+	if _mode == MODE_LIVE_3D:
+		_camera_rig.fit_bounds(bounds, 1.2, CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD)
+	else:
+		_camera_rig.fit_bounds(bounds, 1.14)
 	_pending_fit_view = false
 
 
@@ -646,6 +651,8 @@ func _reset_live_2d() -> void:
 
 
 func _reset_live_3d() -> void:
+	_live_3d_last_rotation_label = "none"
+	_live_3d_last_rotation_status = "none"
 	_live_bridge.live_3d_reset()
 	_live_3d_session_started = true
 	_live_tick_accumulator = 0.0
@@ -866,8 +873,37 @@ func _refresh_live_3d_snapshot() -> void:
 	else:
 		_current_snapshot = parsed
 		_current_snapshot["paused"] = _live_3d_paused
+		_update_live_3d_rotation_feedback(_current_snapshot)
 	_refresh_render()
 	_refresh_hud()
+
+
+func _update_live_3d_rotation_feedback(snapshot: Dictionary) -> void:
+	var last_command := str(snapshot.get("last_command", ""))
+	var rotation_label := _rotation_label_for_command(last_command)
+	if rotation_label != "":
+		_live_3d_last_rotation_label = rotation_label
+		_live_3d_last_rotation_status = str(snapshot.get("last_command_status", "unknown"))
+	snapshot["last_rotation_label"] = _live_3d_last_rotation_label
+	snapshot["last_rotation_status"] = _live_3d_last_rotation_status
+
+
+func _rotation_label_for_command(command: String) -> String:
+	match command:
+		"rotate_xy_neg":
+			return "XY-"
+		"rotate_xy_pos":
+			return "XY+"
+		"rotate_xz_neg":
+			return "XZ-"
+		"rotate_xz_pos":
+			return "XZ+"
+		"rotate_yz_neg":
+			return "YZ-"
+		"rotate_yz_pos":
+			return "YZ+"
+		_:
+			return ""
 
 
 func _live_snapshot_last_command() -> String:

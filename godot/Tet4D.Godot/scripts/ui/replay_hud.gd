@@ -34,7 +34,7 @@ const REPLAY_HINT_TEXT := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ C
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Q/Esc Quit"
 const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Q/Esc quits. Godot sends commands only."
-const LIVE_3D_HINT_TEXT := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T XY Rotate · F/G XZ Rotate · V/B YZ Rotate · P Pause · Backspace Reset · Tab Replay · Q/Esc Quit"
+const LIVE_3D_HINT_TEXT := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Replay · Q/Esc Quit"
 const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab returns to Replay, and Q/Esc quits. Godot sends commands only."
 
 var _bundle_status_label: Label
@@ -152,7 +152,14 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 			var paused_fallback := _live_3d_paused if str(snapshot.get("trace_type", "")) == "live_3d" else _live_2d_paused
 			var state_label := "GAME OVER" if game_over else ("paused" if bool(snapshot.get("paused", paused_fallback)) else "running")
 			var reason := str(snapshot.get("game_over_reason", ""))
-			_trace_integrity_label.text = "%s · C++ CORE · piece %s · next %s · score %d · lines %d · state_hash %s · last command %s/%s · %s%s" % [
+			var rotation_text := ""
+			if str(snapshot.get("trace_type", "")) == "live_3d":
+				rotation_text = " · Last rotation: %s/%s · active plane %s" % [
+					str(snapshot.get("last_rotation_label", "none")),
+					str(snapshot.get("last_rotation_status", "none")),
+					str(snapshot.get("last_rotation_plane", "none")),
+				]
+			_trace_integrity_label.text = "%s · C++ CORE · piece %s · next %s · score %d · lines %d · state_hash %s · last command %s/%s%s · %s%s" % [
 				mode_label,
 				str(snapshot.get("current_piece", "none")),
 				str(snapshot.get("next_piece", "none")),
@@ -161,6 +168,7 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 				str(snapshot.get("state_hash", "")).left(12),
 				str(snapshot.get("last_command", "none")),
 				str(snapshot.get("last_command_status", "unknown")),
+				rotation_text,
 				state_label,
 				(" · reason " + reason) if reason != "" else "",
 			]
@@ -251,7 +259,7 @@ func set_live_3d_mode(
 	if _help_label != null:
 		_help_label.text = LIVE_3D_HELP_TEXT
 	if _trace_integrity_label != null:
-		_trace_integrity_label.text = "LIVE 3D · C++ CORE · last command %s · %s%s" % [
+		_trace_integrity_label.text = "LIVE 3D · C++ CORE · last command %s · Last rotation: pending snapshot · %s%s" % [
 			last_command,
 			"game over" if game_over else ("paused" if paused else "running"),
 			(" · reason " + game_over_reason) if game_over_reason != "" else "",

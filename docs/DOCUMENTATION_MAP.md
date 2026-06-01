@@ -94,6 +94,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Current topology-playground visible shell contract | `docs/plans/topology_playground_shell_redesign_spec.md` |
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
+| Live 3D and future Live 4D gameboard visual language | `docs/plans/gameboard_visual_language_design.md` |
 | Current restart handoff | `CURRENT_STATE.md` |
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |
 | Durable product behavior contracts | `docs/rds/*.md` |
@@ -160,6 +161,8 @@ It is not the product contract.
   `docs/plans/topology_playground_current_authority.md`.
 - If you need the current topology-playground shell behavior: use
   `docs/plans/topology_playground_shell_redesign_spec.md`.
+- If you need Live 3D or future Live 4D gameboard visual-language rules: use
+  `docs/plans/gameboard_visual_language_design.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
 - If you need task-specific context loading: use the context-switch profiles in

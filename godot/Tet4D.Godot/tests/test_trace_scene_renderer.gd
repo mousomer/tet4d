@@ -103,6 +103,8 @@ func run() -> Array:
 		"board_shape": [4, 5, 4],
 		"locked_cells": [{"position": [1, 4, 1], "color_id": 4}],
 		"active_cells": [{"position": [1, 1, 2], "color_id": 6}],
+		"last_command": "rotate_xz_pos",
+		"last_command_status": "accepted",
 		"probe_markers": [],
 		"event_markers": [],
 		"particles": [],
@@ -117,16 +119,25 @@ func run() -> Array:
 		_assert_cell_material(
 			failures,
 			live_3d_locked_cell,
-			ReplayVisuals.live_locked_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 4).albedo_color,
-			"live 3D locked cells use piece-aware secondary material"
+			ReplayVisuals.live_3d_locked_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 4).get("top").albedo_color,
+			"live 3D locked cells use piece-aware exterior face material"
 		)
 		_assert_cell_material(
 			failures,
 			live_3d_active_cell,
-			ReplayVisuals.live_active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).albedo_color,
-			"live 3D active cells use bright piece-aware material"
+			ReplayVisuals.live_3d_active_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).get("top").albedo_color,
+			"live 3D active cells use bright exterior face material"
 		)
-		_assert_box_size(failures, live_3d_active_cell, ReplayVisuals.LIVE_ACTIVE_CELL_SCALE, "live 3D active cell scale")
+		_assert_box_size(failures, live_3d_active_cell, ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE, "live 3D active cell scale")
+		_assert_box_depth(failures, live_3d_active_cell, ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE, "live 3D active cell depth")
+		_assert_lit_material(failures, live_3d_active_cell, "live 3D active cell material")
+		_assert_live_3d_exterior_block(failures, live_3d_active_cell, "live 3D active cell")
+		_assert_live_3d_exterior_block(failures, live_3d_locked_cell, "live 3D locked cell")
+		_assert_rotation_pulse_outline(failures, live_3d_active_cell, "live 3D active rotation pulse")
+		if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_3D_ACTIVE).a < 0.99:
+			failures.append("live 3D active role should be opaque")
+		if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_3D_LOCKED).a < 0.99:
+			failures.append("live 3D locked role should be opaque")
 	grid_root = renderer.get_node_or_null("GridRoot")
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live 3D renderer should keep one shared grid renderer")
@@ -174,3 +185,58 @@ func _assert_box_size(failures: Array, cell: Node3D, expected: float, label: Str
 		failures.append("%s should use a box mesh" % label)
 	elif absf(box.size.x - expected) > 0.001:
 		failures.append("%s should be %.3f, got %.3f" % [label, expected, box.size.x])
+
+
+func _assert_box_depth(failures: Array, cell: Node3D, expected: float, label: String) -> void:
+	var mesh_instance := cell.get_child(0) as MeshInstance3D
+	if mesh_instance == null:
+		failures.append("%s: missing mesh" % label)
+		return
+	var box := mesh_instance.mesh as BoxMesh
+	if box == null:
+		failures.append("%s should use a box mesh" % label)
+	elif absf(box.size.z - expected) > 0.001:
+		failures.append("%s should be %.3f, got %.3f" % [label, expected, box.size.z])
+
+
+func _assert_lit_material(failures: Array, cell: Node3D, label: String) -> void:
+	var mesh_instance := cell.get_child(0) as MeshInstance3D
+	if mesh_instance == null:
+		failures.append("%s: missing mesh" % label)
+		return
+	var material := mesh_instance.material_override as StandardMaterial3D
+	if material == null:
+		failures.append("%s: missing StandardMaterial3D" % label)
+	elif material.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
+		failures.append("%s should use lit material shading for face-depth readability" % label)
+
+
+func _assert_live_3d_exterior_block(failures: Array, cell: Node3D, label: String) -> void:
+	if cell.get_child_count() < 18:
+		failures.append("%s should include exterior face panels plus restrained outline edges" % label)
+		return
+	for index in range(6):
+		var mesh_instance := cell.get_child(index) as MeshInstance3D
+		if mesh_instance == null:
+			failures.append("%s face %d should be a mesh" % [label, index])
+			continue
+		var material := mesh_instance.material_override as StandardMaterial3D
+		if material == null:
+			failures.append("%s face %d should have material" % [label, index])
+		elif material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or material.albedo_color.a < 0.99:
+			failures.append("%s face %d should be opaque, not glass-like" % [label, index])
+
+
+func _assert_rotation_pulse_outline(failures: Array, cell: Node3D, label: String) -> void:
+	if cell.get_child_count() < 7:
+		failures.append("%s should include outline edge meshes" % label)
+		return
+	var mesh_instance := cell.get_child(6) as MeshInstance3D
+	if mesh_instance == null:
+		failures.append("%s first outline edge should be a mesh" % label)
+		return
+	var box := mesh_instance.mesh as BoxMesh
+	if box == null:
+		failures.append("%s first outline edge should use box mesh" % label)
+	elif minf(box.size.y, box.size.z) <= 0.016:
+		failures.append("%s should thicken active outline briefly after rotation" % label)

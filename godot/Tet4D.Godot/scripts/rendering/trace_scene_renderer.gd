@@ -59,7 +59,9 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	_clear_root(_particle_root)
 	_clear_root(_marker_root)
 
-	var is_live_snapshot := str(snapshot.get("trace_type", "")).begins_with("live_")
+	var trace_type := str(snapshot.get("trace_type", ""))
+	var is_live_snapshot := trace_type.begins_with("live_")
+	var is_live_3d_snapshot := trace_type == "live_3d" and int(snapshot.get("dimension", 0)) == 3
 	var grid := GridRendererScript.new()
 	_grid_root.add_child(grid)
 	grid.rebuild(
@@ -79,14 +81,25 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var node := CellRendererScript.new()
 		_cell_root.add_child(node)
 		var locked_color_id := int(cell.get("color_id", 0))
-		node.setup(
-			_mapper.world_position(cell.get("position", []), int(snapshot.get("dimension", 0))),
-			ReplayVisuals.live_locked_cell_material(_display_mode, locked_color_id) if is_live_snapshot else locked_material,
-			ReplayVisuals.LIVE_LOCKED_CELL_SCALE if is_live_snapshot else _cell_scale * 0.95,
-			ReplayVisuals.LIVE_CELL_DEPTH if is_live_snapshot else -1.0,
-			ReplayVisuals.live_locked_cell_border_material(_display_mode) if is_live_snapshot else null,
-			(ReplayVisuals.LIVE_LOCKED_CELL_SCALE + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_snapshot else 0.0
-		)
+		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if is_live_3d_snapshot else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
+		var locked_position := _mapper.world_position(cell.get("position", []), int(snapshot.get("dimension", 0)))
+		if is_live_3d_snapshot:
+			node.setup_exterior_block(
+				locked_position,
+				ReplayVisuals.live_3d_locked_face_materials(_display_mode, locked_color_id),
+				ReplayVisuals.live_3d_locked_cell_border_material(_display_mode),
+				locked_size,
+				locked_size + ReplayVisuals.LIVE_3D_CELL_BORDER_DELTA
+			)
+		else:
+			node.setup(
+				locked_position,
+				_live_locked_material(locked_color_id, is_live_3d_snapshot, is_live_snapshot, locked_material),
+				locked_size if is_live_snapshot else _cell_scale * 0.95,
+				ReplayVisuals.LIVE_CELL_DEPTH if is_live_snapshot else -1.0,
+				_live_locked_border_material(is_live_3d_snapshot, is_live_snapshot),
+				(locked_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_snapshot else 0.0
+			)
 
 	for cell in snapshot.get("active_cells", []):
 		var node := CellRendererScript.new()
@@ -95,14 +108,25 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		# Keep them on the current discrete frame instead of inventing a path.
 		var position := _mapper.world_position(cell.get("position", []), int(snapshot.get("dimension", 0)))
 		var active_color_id := int(cell.get("color_id", 1))
-		node.setup(
-			position,
-			ReplayVisuals.live_active_cell_material(_display_mode, active_color_id) if is_live_snapshot else ReplayVisuals.gameplay_active_cell_material(_display_mode),
-			ReplayVisuals.LIVE_ACTIVE_CELL_SCALE if is_live_snapshot else ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE,
-			ReplayVisuals.LIVE_CELL_DEPTH if is_live_snapshot else -1.0,
-			ReplayVisuals.live_active_cell_border_material(_display_mode) if is_live_snapshot else null,
-			(ReplayVisuals.LIVE_ACTIVE_CELL_SCALE + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_snapshot else 0.0
-		)
+		var active_size := ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE if is_live_3d_snapshot else ReplayVisuals.LIVE_ACTIVE_CELL_SCALE
+		if is_live_3d_snapshot:
+			node.setup_exterior_block(
+				position,
+				ReplayVisuals.live_3d_active_face_materials(_display_mode, active_color_id),
+				ReplayVisuals.live_3d_active_cell_border_material(_display_mode),
+				active_size,
+				active_size + ReplayVisuals.LIVE_3D_CELL_BORDER_DELTA,
+				_live_3d_rotation_pulse(snapshot)
+			)
+		else:
+			node.setup(
+				position,
+				_live_active_material(active_color_id, is_live_3d_snapshot, is_live_snapshot),
+				active_size if is_live_snapshot else ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE,
+				ReplayVisuals.LIVE_CELL_DEPTH if is_live_snapshot else -1.0,
+				_live_active_border_material(is_live_3d_snapshot, is_live_snapshot),
+				(active_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if is_live_snapshot else 0.0
+			)
 
 	for marker in snapshot.get("probe_markers", []):
 		var marker_node := EventMarkerRendererScript.new()
@@ -154,6 +178,45 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 
 func current_bounds() -> Dictionary:
 	return _last_bounds
+
+
+func _live_locked_material(color_id: int, is_live_3d_snapshot: bool, is_live_snapshot: bool, replay_material: Material) -> Material:
+	if is_live_3d_snapshot:
+		return ReplayVisuals.live_3d_locked_cell_material(_display_mode, color_id)
+	if is_live_snapshot:
+		return ReplayVisuals.live_locked_cell_material(_display_mode, color_id)
+	return replay_material
+
+
+func _live_active_material(color_id: int, is_live_3d_snapshot: bool, is_live_snapshot: bool) -> Material:
+	if is_live_3d_snapshot:
+		return ReplayVisuals.live_3d_active_cell_material(_display_mode, color_id)
+	if is_live_snapshot:
+		return ReplayVisuals.live_active_cell_material(_display_mode, color_id)
+	return ReplayVisuals.gameplay_active_cell_material(_display_mode)
+
+
+func _live_locked_border_material(is_live_3d_snapshot: bool, is_live_snapshot: bool) -> Material:
+	if is_live_3d_snapshot:
+		return ReplayVisuals.live_3d_locked_cell_border_material(_display_mode)
+	if is_live_snapshot:
+		return ReplayVisuals.live_locked_cell_border_material(_display_mode)
+	return null
+
+
+func _live_active_border_material(is_live_3d_snapshot: bool, is_live_snapshot: bool) -> Material:
+	if is_live_3d_snapshot:
+		return ReplayVisuals.live_3d_active_cell_border_material(_display_mode)
+	if is_live_snapshot:
+		return ReplayVisuals.live_active_cell_border_material(_display_mode)
+	return null
+
+
+func _live_3d_rotation_pulse(snapshot: Dictionary) -> float:
+	var last_command := str(snapshot.get("last_command", ""))
+	if not last_command.begins_with("rotate_"):
+		return 0.0
+	return 1.0 if str(snapshot.get("last_command_status", "")) == "accepted" else 0.55
 
 
 func _matching_particle(particle_id: int, particles: Array) -> Dictionary:

@@ -92,6 +92,7 @@ def test_bundle_authority_docs_and_schema_indexes_are_present(tmp_path: Path) ->
     assert "CURRENT_STATE.md" in doc_paths
     assert "docs/rds/RDS_TETRIS_GENERAL.md" in doc_paths
     assert "docs/plans/endgame_trace_export.md" in doc_paths
+    assert "docs/plans/gameboard_visual_language_design.md" in doc_paths
     for entry in docs["files"]:
         assert entry["sha256"] == file_sha256(Path(entry["source_path"]))
 

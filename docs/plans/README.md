@@ -37,6 +37,16 @@ general planning redirection or repo-wide ownership notes.
 
 ## Domain-specific active files
 
+### `gameboard_visual_language_design.md`
+- Role: `authority`
+- Status: `active`
+- Owns:
+  - Live 3D diagrammatic board visual grammar
+  - future Live 4D inherited visual constraints
+  - canonical camera/view and axis-separation rules
+  - active-piece orientation, landmark, rotation-plane, and HUD requirements
+  - manual visual acceptance checklist before Stage 23
+
 ### `topology_playground_current_authority.md`
 - Role: `authority`
 - Status: `active`

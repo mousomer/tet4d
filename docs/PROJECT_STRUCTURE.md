@@ -115,14 +115,15 @@ The current rule is one-way:
 3. `docs/WORKFLOW_CODEX.md`: human workflow explainer for repo process and verification
 4. `CURRENT_STATE.md`: restart handoff only
 5. `docs/rds/`: durable product requirements
-6. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
-7. `docs/BACKLOG.md`: active backlog and current change footprint
-8. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
-9. `config/menu/defaults.json`: default persisted settings payload
-10. `config/tutorial/lessons.json`: tutorial packs and board profiles
-11. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
-12. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
-13. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
+6. `docs/plans/gameboard_visual_language_design.md`: Live 3D and future Live 4D gameboard visual-language authority
+7. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
+8. `docs/BACKLOG.md`: active backlog and current change footprint
+9. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
+10. `config/menu/defaults.json`: default persisted settings payload
+11. `config/tutorial/lessons.json`: tutorial packs and board profiles
+12. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
+13. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
+14. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
 <!-- END GENERATED:project_structure_sources_of_truth -->
 
 ## Placement Rules
@@ -188,7 +189,12 @@ The current rule is one-way:
     authority. Stage 22 adds only that live plain 3D prototype through a
     native `PlainNDSession` facade plus Godot command routing/HUD; live 4D,
     topology, endgame, Python runtime, C#, Steam, or console implementation
-    remains deferred.
+    remains deferred. Stage 22d adds
+    `docs/plans/gameboard_visual_language_design.md` as the design-only
+    authority for Live 3D and future Live 4D board readability. Stage 22e must
+    implement that grammar through the existing mapper/renderer path, Stage
+    22f must manually accept Live 3D readability, and Stage 23 Live Plain 4D
+    must wait until Stage 22f passes.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

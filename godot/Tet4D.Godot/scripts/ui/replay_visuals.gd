@@ -43,6 +43,9 @@ const LIVE_ACTIVE_CELL_SCALE := 0.86
 const LIVE_LOCKED_CELL_SCALE := 0.82
 const LIVE_CELL_DEPTH := 0.08
 const LIVE_CELL_BORDER_DELTA := 0.055
+const LIVE_3D_ACTIVE_CELL_SCALE := 0.84
+const LIVE_3D_LOCKED_CELL_SCALE := 0.8
+const LIVE_3D_CELL_BORDER_DELTA := 0.045
 const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
 const SLICE_PADDING := 2.0
@@ -62,6 +65,10 @@ const ROLE_PARTICLE_CORE_ESCAPED := "particle_core_escaped"
 const ROLE_BOARD_OUTLINE := "board_outline"
 const ROLE_LIVE_CELL_ACTIVE_BORDER := "live_cell_active_border"
 const ROLE_LIVE_CELL_LOCKED_BORDER := "live_cell_locked_border"
+const ROLE_LIVE_3D_ACTIVE := "live_3d_active"
+const ROLE_LIVE_3D_LOCKED := "live_3d_locked"
+const ROLE_LIVE_3D_OUTLINE := "live_3d_outline"
+const ROLE_LIVE_3D_FACE_HIGHLIGHT := "live_3d_face_highlight"
 const ROLE_LIVE_BOARD_FILL := "live_board_fill"
 const ROLE_LIVE_BOARD_GRID := "live_board_grid"
 const ROLE_W_SLICE_OUTLINE := "w_slice_outline"
@@ -141,6 +148,16 @@ static func live_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, co
 	return _make_material(base, _role_emission(ROLE_ACTIVE_CELL, mode) + 0.1, false)
 
 
+static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.06)
+	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode), false)
+
+
+static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> Dictionary:
+	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.05)
+	return _live_3d_face_materials(base, mode, true)
+
+
 static func locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
 	return _role_material(ROLE_LOCKED_CELL, mode, _role_emission(ROLE_LOCKED_CELL, mode))
 
@@ -150,12 +167,30 @@ static func live_locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, co
 	return _make_material(base, _role_emission(ROLE_LOCKED_CELL, mode), false)
 
 
+static func live_3d_locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+	var base := _trace_color(color_id, false).darkened(0.24).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.18)
+	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_LOCKED, mode), false)
+
+
+static func live_3d_locked_face_materials(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> Dictionary:
+	var base := _trace_color(color_id, false).darkened(0.24).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.18)
+	return _live_3d_face_materials(base, mode, false)
+
+
 static func live_active_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_CELL_ACTIVE_BORDER, mode, _role_emission(ROLE_LIVE_CELL_ACTIVE_BORDER, mode))
 
 
 static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_CELL_LOCKED_BORDER, mode, _role_emission(ROLE_LIVE_CELL_LOCKED_BORDER, mode))
+
+
+static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	return _role_material(ROLE_LIVE_3D_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_OUTLINE, mode))
+
+
+static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	return _role_material(ROLE_LIVE_3D_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_OUTLINE, mode))
 
 
 static func live_board_fill_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
@@ -262,6 +297,10 @@ static func _palette(mode: String) -> Dictionary:
 			ROLE_BOARD_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
 			ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.95, 0.98, 1.0, 1.0),
 			ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.04, 0.06, 0.09, 1.0),
+			ROLE_LIVE_3D_ACTIVE: Color(0.0, 1.0, 1.0, 1.0),
+			ROLE_LIVE_3D_LOCKED: Color(0.50, 0.55, 0.64, 1.0),
+			ROLE_LIVE_3D_OUTLINE: Color(0.015, 0.02, 0.03, 1.0),
+			ROLE_LIVE_3D_FACE_HIGHLIGHT: Color(1.0, 1.0, 1.0, 1.0),
 			ROLE_LIVE_BOARD_FILL: _html("081322"),
 			ROLE_LIVE_BOARD_GRID: _html("283B55"),
 			ROLE_W_SLICE_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
@@ -294,6 +333,10 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_BOARD_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
 		ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.95, 0.98, 1.0, 1.0),
 		ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.04, 0.06, 0.09, 1.0),
+		ROLE_LIVE_3D_ACTIVE: Color(0.0, 1.0, 1.0, 1.0),
+		ROLE_LIVE_3D_LOCKED: Color(0.50, 0.55, 0.64, 1.0),
+		ROLE_LIVE_3D_OUTLINE: Color(0.015, 0.02, 0.03, 1.0),
+		ROLE_LIVE_3D_FACE_HIGHLIGHT: Color(1.0, 1.0, 1.0, 1.0),
 		ROLE_LIVE_BOARD_FILL: _html("080E18"),
 		ROLE_LIVE_BOARD_GRID: _html("26364F"),
 		ROLE_W_SLICE_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
@@ -328,6 +371,14 @@ static func _role_emission(role: String, mode: String) -> float:
 			return 1.0 + tron_boost
 		ROLE_LIVE_CELL_LOCKED_BORDER:
 			return 0.5 + tron_boost
+		ROLE_LIVE_3D_ACTIVE:
+			return 0.16 + tron_boost
+		ROLE_LIVE_3D_LOCKED:
+			return 0.1 + tron_boost
+		ROLE_LIVE_3D_OUTLINE:
+			return 0.18 + tron_boost
+		ROLE_LIVE_3D_FACE_HIGHLIGHT:
+			return 0.2 + tron_boost
 		ROLE_LIVE_BOARD_FILL:
 			return 0.2 + tron_boost
 		ROLE_LIVE_BOARD_GRID:
@@ -353,6 +404,47 @@ static func _make_material(color: Color, emission_strength: float, use_alpha: bo
 	material.emission = Color(material.albedo_color.r, material.albedo_color.g, material.albedo_color.b, 1.0) * emission_strength
 	material.emission_energy_multiplier = emission_strength
 	return material
+
+
+static func _make_lit_material(color: Color, emission_strength: float, use_alpha: bool) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if use_alpha else BaseMaterial3D.TRANSPARENCY_DISABLED
+	material.albedo_color = _with_alpha(color, maxf(color.a, 0.9) if use_alpha else 1.0)
+	material.emission_enabled = true
+	material.emission = Color(material.albedo_color.r, material.albedo_color.g, material.albedo_color.b, 1.0) * emission_strength
+	material.emission_energy_multiplier = emission_strength
+	material.roughness = 0.62
+	return material
+
+
+static func _live_3d_face_materials(base: Color, mode: String, active: bool) -> Dictionary:
+	var emission_role := ROLE_LIVE_3D_ACTIVE if active else ROLE_LIVE_3D_LOCKED
+	var emission := _role_emission(emission_role, mode)
+	var top := _shade_color(base.lerp(color_for_role(ROLE_LIVE_3D_FACE_HIGHLIGHT, mode), 0.1), 1.12 if active else 1.04)
+	var front := _shade_color(base, 0.98 if active else 0.94)
+	var right := _shade_color(base, 0.88 if active else 0.84)
+	var left := _shade_color(base, 0.78 if active else 0.76)
+	var back := _shade_color(base, 0.72 if active else 0.7)
+	var bottom := _shade_color(base, 0.64 if active else 0.62)
+	return {
+		"base": _make_lit_material(base, emission, false),
+		"top": _make_lit_material(top, emission, false),
+		"front": _make_lit_material(front, emission, false),
+		"right": _make_lit_material(right, emission, false),
+		"left": _make_lit_material(left, emission, false),
+		"back": _make_lit_material(back, emission, false),
+		"bottom": _make_lit_material(bottom, emission, false),
+	}
+
+
+static func _shade_color(color: Color, factor: float) -> Color:
+	return Color(
+		clampf(color.r * factor, 0.0, 1.0),
+		clampf(color.g * factor, 0.0, 1.0),
+		clampf(color.b * factor, 0.0, 1.0),
+		color.a
+	)
 
 
 static func _with_alpha(color: Color, alpha: float) -> Color:

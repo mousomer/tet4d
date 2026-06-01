@@ -99,6 +99,11 @@ AUTHORITY_DOCS: tuple[tuple[str, str, str], ...] = (
         "Stage 7+ Godot shell and native core-port ordering authority.",
     ),
     (
+        "docs/plans/gameboard_visual_language_design.md",
+        "gameboard_visual_language_authority",
+        "Stage 22d Live 3D and future Live 4D board visual-language authority.",
+    ),
+    (
         "docs/plans/plain_2d_core_parity_contract.md",
         "plain_2d_core_parity_authority",
         "Accepted plain bounded 2D native trace parity contract.",

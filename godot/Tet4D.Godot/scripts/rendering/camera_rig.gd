@@ -4,6 +4,8 @@ class_name CameraRig
 
 const PYTHON_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const PYTHON_DISPLAY_PITCH_RAD := -0.4537856055185257  # -26 degrees.
+const LIVE_3D_DISPLAY_YAW_RAD := 0.6981317007977318  # 40 degrees.
+const LIVE_3D_DISPLAY_PITCH_RAD := -0.5585053606381855  # -32 degrees.
 const DEFAULT_ORTHOGRAPHIC_SIZE := 16.0
 
 @export var min_distance := 8.0
@@ -63,15 +65,20 @@ func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> voi
 	_target_pitch = PYTHON_DISPLAY_PITCH_RAD
 
 
-func fit_bounds(bounds: Dictionary, margin: float = 1.14) -> void:
+func fit_bounds(
+	bounds: Dictionary,
+	margin: float = 1.14,
+	yaw: float = PYTHON_DISPLAY_YAW_RAD,
+	pitch: float = PYTHON_DISPLAY_PITCH_RAD
+) -> void:
 	if not bounds.get("ok", false):
 		return
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	var size := max_pos - min_pos
 	_target_focus = (min_pos + max_pos) * 0.5
-	_target_yaw = PYTHON_DISPLAY_YAW_RAD
-	_target_pitch = PYTHON_DISPLAY_PITCH_RAD
+	_target_yaw = yaw
+	_target_pitch = pitch
 	var max_extent := maxf(size.x, maxf(size.y, maxf(size.z, 1.0)))
 	_base_distance = clampf(max_extent * 1.45 + 6.0, min_distance, max_distance)
 	_zoom_multiplier = 1.0

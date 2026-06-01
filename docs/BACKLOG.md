@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-05-17
+Updated: 2026-05-31
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -16,6 +16,8 @@ Scope: active open backlog, governance watchlist, and compact recent change foot
   `docs/DOCUMENTATION_MAP.md`
 - Governance/runtime policy authority:
   `config/project/policy_pack.json`
+- Gameboard visual-language authority:
+  `docs/plans/gameboard_visual_language_design.md`
 
 Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
@@ -56,7 +58,16 @@ choosing live plain 3D for Stage 22 and live plain 4D for Stage 23 while
 preserving the accepted live 2D shell. Stage 22 implements live plain 3D only:
 C++ owns the live 3D session and command results, while Godot routes input,
 renders snapshots through the existing mapper/renderer, and shows live 3D
-HUD/hints.
+HUD/hints. Stage 22b corrects Live 3D visual acceptance only: Live 3D cells
+render as solid cuboids with centralized roles/outlines, Fit View uses a
+readable 3D angle, and the HUD shows signed XY/XZ/YZ rotation feedback from
+returned C++ command/status data. Stage 22c keeps that visual-only scope and
+changes Live 3D cells to opaque exterior face panels with restrained
+silhouettes so pieces read as solid external blocks rather than interior walls.
+Stage 22d adds the design-only gameboard visual-language authority for the
+remaining orientation ambiguity. Stage 22e must implement that grammar, Stage
+22f must manually accept Live 3D readability, and Stage 23 Live 4D is blocked
+until Stage 22f passes.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
 
@@ -146,7 +157,16 @@ Current active follow-ups:
   existing coordinate mapper/renderer, and C++ must remain the gameplay
   authority. Stage 22 implements that live plain 3D prototype only, keeping
   live 4D, topology, endgame, C#, Python runtime calls, and Godot-side
-  gameplay legality deferred.
+  gameplay legality deferred. Stage 22b is limited to Live 3D cell depth,
+  camera readability, and rotation HUD/readability feedback; it does not change
+  C++ semantics or start Stage 23. Stage 22c further limits itself to Live 3D
+  exterior-face readability, keeping the same mapper/renderer path and C++
+  authority boundary. Stage 22d adds
+  `docs/plans/gameboard_visual_language_design.md` as the design-only
+  authority: Stage 22e must implement the canonical exterior diagram view,
+  axis/near-far/drop landmarks, active-piece origin/orientation cue,
+  rotation-plane feedback, and primary-surface HUD visibility before Stage 22f
+  manual Live 3D acceptance. Stage 23 waits until Stage 22f passes.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -385,6 +405,28 @@ stays synchronized, and the contract validator accepts the backlog shape.
     HUD/hints, and shared mapper/renderer support. Live 2D and replay remain
     preserved; live 4D, topology, endgame, C#, Python runtime calls, and
     Godot-side gameplay legality remain deferred.
+22. `DONE` `[BKL-P3-029]` Stage 22b Live 3D visual acceptance correction:
+    make Live 3D cells render as solid cuboids through the existing renderer,
+    keep Live 2D shallow styling and Replay rendering separate, use a more
+    readable Live 3D Fit View angle, and show signed XY/XZ/YZ rotation feedback
+    from native command/status data without changing C++ semantics.
+23. `DONE` `[BKL-P3-030]` Stage 22c Live 3D exterior-cell readability:
+    replace cage-like Live 3D cell presentation with opaque exterior face
+    panels, restrained silhouettes, subtle face-orientation cues, and an active
+    outline pulse after returned native rotation snapshots while preserving
+    Live 2D, Replay, C++ semantics, and the existing coordinate mapper.
+24. `DONE` `[BKL-P3-031]` Stage 22d gameboard visual-language design:
+    add `docs/plans/gameboard_visual_language_design.md` as the design-only
+    authority for Live 3D and future Live 4D readability. It distinguishes the
+    resolved exterior-cell convexity problem from remaining orientation
+    ambiguity and defines the canonical view, cells, landmarks, rotation
+    feedback, HUD, and manual acceptance grammar without renderer changes.
+25. `ACTIVE` `[BKL-P3-032]` Stage 22e Live 3D visual-language implementation:
+    implement the Stage 22d authority through the existing mapper/renderer path
+    without changing C++ gameplay semantics, accepted Live 2D, or Replay.
+26. `WATCH` `[BKL-P3-033]` Stage 22f acceptance gate before Stage 23:
+    perform manual Live 3D visual acceptance against the Stage 22d checklist.
+    Do not begin the Live Plain 4D Godot prototype until Stage 22f passes.
 
 ## Governance Watchlist
 

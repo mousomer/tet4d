@@ -10,7 +10,7 @@ func run() -> Array:
 	var live_hint := ReplayHudScript.live_2d_hint_text()
 	var live_3d_hint := ReplayHudScript.live_3d_hint_text()
 	var expected_live_hint := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Q/Esc Quit"
-	var expected_live_3d_hint := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T XY Rotate · F/G XZ Rotate · V/B YZ Rotate · P Pause · Backspace Reset · Tab Replay · Q/Esc Quit"
+	var expected_live_3d_hint := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Replay · Q/Esc Quit"
 	var expected_replay_hint := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 	if live_hint != expected_live_hint:
 		failures.append("live 2D hint text should match the Stage 12 visible control strip")
@@ -24,7 +24,7 @@ func run() -> Array:
 		failures.append("live 2D hint text should not expose replay frame controls")
 	if replay_hint.contains("Hard Drop") or replay_hint.contains("Rotate CW"):
 		failures.append("replay hint text should not expose live gameplay controls")
-	if not live_3d_hint.contains("R/T XY") or not live_3d_hint.contains("Backspace Reset"):
+	if not live_3d_hint.contains("R/T: XY") or not live_3d_hint.contains("F/G: XZ") or not live_3d_hint.contains("V/B: YZ") or not live_3d_hint.contains("Backspace Reset"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
 	if absf(TraceReplayAppScript.LIVE_GRAVITY_INTERVAL_SECONDS - 0.5) > 0.001:
 		failures.append("live gravity shell interval should default to 0.5 seconds")
@@ -97,6 +97,11 @@ func run() -> Array:
 		app._dispatch_live_3d_gameplay_command("rotate_xz_pos")
 		if str(app._current_snapshot.get("last_rotation_plane", "")) != "XZ":
 			failures.append("live 3D XZ rotation should route through C++")
+		if str(app._current_snapshot.get("last_rotation_label", "")) != "XZ+":
+			failures.append("live 3D XZ rotation should expose a signed HUD rotation label")
+		app._dispatch_live_3d_gameplay_command("move_z_pos")
+		if str(app._current_snapshot.get("last_rotation_label", "")) != "XZ+":
+			failures.append("live 3D should preserve the last signed rotation label after movement")
 		app._dispatch_live_3d_gameplay_command("hard_drop")
 		if str(app._current_snapshot.get("current_piece", "")) != "O3":
 			failures.append("live 3D hard drop should route to C++ and spawn O3")

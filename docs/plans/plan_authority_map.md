@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file for planning-document ownership and precedence
 Supersedes: ad hoc ownership notes spread across active planning docs
-Last updated: 2026-03-29
+Last updated: 2026-05-31
 
 ## Purpose
 
@@ -20,6 +20,7 @@ planning redirection notes.
 | Planning-layer taxonomy, file roles, retirement rules | `README.md` |
 | Planning-document ownership and precedence | `plan_authority_map.md` |
 | Repo-wide structural cleanup sequencing | `cleanup_master_plan.md` |
+| Live 3D and future Live 4D gameboard visual language | `gameboard_visual_language_design.md` |
 | Topology-playground architecture, invariants, non-goals | `topology_playground_current_authority.md` |
 | Topology-playground visible shell contract | `topology_playground_shell_redesign_spec.md` |
 | Topology-playground transitional debt | `topology_playground_debt_register.md` |
@@ -56,6 +57,7 @@ A filename should match the authority scope of the document.
 ## Non-goals
 
 This file does not define:
+- gameboard visual-language details,
 - topology-playground architecture,
 - topology-playground shell behavior,
 - cleanup-stage details,

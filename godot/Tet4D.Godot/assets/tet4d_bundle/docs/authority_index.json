@@ -4,25 +4,25 @@
     {
       "purpose": "Current migration and handoff state.",
       "role": "restart_handoff",
-      "sha256": "c866f9576b89c7d6f2f2a2f6de4c4ccc987fc6547e548440b2fab0dabc51db34",
+      "sha256": "c1512346e384aff35843ad8a2ef516bb5241b240213f4326972857bb02467496",
       "source_path": "CURRENT_STATE.md"
     },
     {
       "purpose": "Active migration follow-up tracker.",
       "role": "backlog",
-      "sha256": "54f15c8e2fba5c44110d29fc188f1ac5616909f3ee5a67cc1a30a8b38e422348",
+      "sha256": "582e339e655b0e2074f916520648b2fdca63db139eaedafe3ddb7842098e6a85",
       "source_path": "docs/BACKLOG.md"
     },
     {
       "purpose": "Generated package layout and source-of-truth inventory.",
       "role": "project_structure",
-      "sha256": "cfc2efd141b0ada26be9f6c796660c7195fdac29a1b9b630c32ad05d9616195c",
+      "sha256": "a635cb0878ace86439d9576531235daf3462b886064de9ed0509a63e22b464b9",
       "source_path": "docs/PROJECT_STRUCTURE.md"
     },
     {
       "purpose": "Shared topology/gameplay/endgame product requirements.",
       "role": "product_requirements",
-      "sha256": "4c782cb9877d8c37c56ac45352543eb0c26161ea9bf75fcc8657257bf55ebab2",
+      "sha256": "446da999546a40b4c63648d3ceb0b6e7a2a2b81bb702bc760a70cf826efe6e22",
       "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
     },
     {
@@ -64,8 +64,14 @@
     {
       "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
       "role": "godot_core_port_authority",
-      "sha256": "37802f7043fda3224aba79672143d907f30f46fa5d2e7612ef2be89641b11265",
+      "sha256": "00b7686bc79c0c71fa197c1368e2ba076a72997970af54bb341e4c9e52a26da1",
       "source_path": "docs/plans/godot_core_port_plan.md"
+    },
+    {
+      "purpose": "Stage 22d Live 3D and future Live 4D board visual-language authority.",
+      "role": "gameboard_visual_language_authority",
+      "sha256": "b2849498d33c2dfcc1a65e4865cd98bd03046d2ef1db00b1931f48d09ba1a8a7",
+      "source_path": "docs/plans/gameboard_visual_language_design.md"
     },
     {
       "purpose": "Accepted plain bounded 2D native trace parity contract.",

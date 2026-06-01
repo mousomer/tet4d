@@ -291,6 +291,36 @@ Cross-cutting requirements are defined in:
     HUD/hints through the existing mapper/renderer. Stage 22 must not add live
     4D, topology transport, endgame behavior, C#, Python runtime calls from
     Godot, or Godot-side ND legality.
+29. Stage 22b may correct Live 3D rendering and rotation readability only.
+    Live 3D cells should be solid, readable cuboids with centralized visual
+    roles and outlines, and the HUD may show signed rotation-plane feedback
+    from returned C++ command/status data. Godot must not apply independent
+    gameplay rotation transforms, fake state interpolation, legality checks,
+    scoring, lock, spawn, or hash behavior.
+30. Stage 22c may further correct Live 3D exterior cell readability only.
+    Godot may alter cell face materials, exterior face geometry, outlines,
+    lights, and camera defaults so pieces read as opaque external blocks, but
+    must not change C++ ND parity behavior or create a separate coordinate
+    system.
+31. Stage 22d is design-only. The gameboard visual-language authority is
+    `docs/plans/gameboard_visual_language_design.md`. It distinguishes the
+    addressed convexity/internal-wall issue from the remaining active-piece
+    orientation ambiguity and defines the diagrammatic grammar for Live 3D and
+    future Live 4D without implementing rendering changes.
+32. Stage 22e may implement that diagrammatic Live 3D grammar only through the
+    existing mapper/renderer path. Live 3D requires a canonical exterior
+    orthographic view, distinguishable X/Y/Z basis, solid external cubes,
+    stable axis/near-far/drop landmarks, at least one explicit active-piece
+    origin/orientation cue, visible signed rotation-plane feedback, and
+    primary-surface score/status/game-over visibility.
+33. Stage 22f must perform manual Live 3D visual acceptance against the Stage
+    22d checklist. Stage 23 Live Plain 4D must not begin until Stage 22f
+    passes. Live 4D must inherit the same cell, axis, rotation-plane, HUD, and
+    landmark grammar with stable W-slice context.
+34. The migrated Godot Live 3D shell should prefer snapping to returned C++
+    state plus clear plane feedback over a misleading Godot-side rotation
+    tween. A future Godot presentation tween is allowed only if it is derived
+    from and cannot contradict returned native state.
 
 ### 3.3 Shared piece-local transform rules
 

@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-05-17
+Last updated: 2026-05-31
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -197,8 +197,21 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `PlainNDSession`-backed 3D session and `live_3d_*` facade, Godot adds a
   separate Live 3D mode that sends command strings and renders returned
   snapshots through the existing mapper/renderer, and the HUD/hints show
-  `LIVE 3D · C++ CORE`. Live 4D remains Stage 23; topology/endgame remain
-  deferred.
+  `LIVE 3D · C++ CORE`. Stage 22b is a visual acceptance correction for that
+  same Live 3D slice: cells render as solid cuboids with Live 3D-specific
+  material/outline roles, Fit View uses a readable Live 3D angle, and the HUD
+  shows signed last-rotation feedback from C++ command/status results. Stage
+  22c continues that visual-only pass by rendering Live 3D cells as opaque
+  exterior face panels with restrained silhouettes and subtle face brightness
+  cues so pieces read as solid external blocks rather than interior walls.
+  Stage 22d adds the design-only gameboard visual-language authority at
+  `docs/plans/gameboard_visual_language_design.md`: the remaining issue is
+  active-piece orientation ambiguity, not convexity. Stage 22e must implement
+  the canonical exterior diagram view, stable axis/near-far/drop landmarks, an
+  explicit active-piece origin/orientation cue, rotation-plane feedback, and
+  primary-surface HUD visibility through the existing mapper/renderer path.
+  Stage 22f is manual Live 3D visual acceptance. Live 4D remains Stage 23 but
+  is blocked until Stage 22f passes; topology/endgame remain deferred.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

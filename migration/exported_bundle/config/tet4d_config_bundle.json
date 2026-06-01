@@ -56,7 +56,7 @@
       "config/ui/theme.json"
     ]
   },
-  "combined_digest": "e48ac20bde7321eb6254e26a0b05b73b6be1682112313668afd2fd108da4a332",
+  "combined_digest": "a2cdf3318877858f1d634a1f34938139786b71bb469812258dae5780e0f996b2",
   "schema_files": [
     {
       "purpose": "help action map.schema JSON schema",
@@ -122,7 +122,7 @@
     "config/project/policy/manifests/help_assets_manifest.json": "f65301e28c585cc61f6662b86b22c491f29b4adce604bf07fedb643cfbdf95e7",
     "config/project/policy/manifests/replay_manifest.json": "04bd5feb7c312f94043585b09eb62d5707075861c13660697f4599b14ae81395",
     "config/project/policy/manifests/secret_scan.json": "047a6c0cbd75fb8f8ee3874f2193b6b9f3ca618eef34af2a5b8586c6a37d127f",
-    "config/project/policy_pack.json": "eb4be9f9adc90da98a444333121e79dc1c7b47f825fb11a7e20767417e90c9e8",
+    "config/project/policy_pack.json": "59394bad607146787cd5cd0fa3578a68261745f16afde20fdd63d540e5c7d0d9",
     "config/topology/designer_presets.json": "aa580530ae440285615e6f4d27f168a637efd481dfe688de4580fdfd16957a6a",
     "config/topology/lab_menu.json": "66dca73fdd7d141d6d2d001c1af0da6a5718b5cde6bd01d471502089b468110c",
     "config/tutorial/lessons.json": "5623e0313d97a399f8eab713bb51884faf2b3ec4e8d1043acc74225f3ab1f024",
@@ -8058,7 +8058,7 @@
       "format": "json",
       "payload_included": false,
       "payload_omitted_reason": "Governance policy pack is indexed by digest; source file remains the machine-readable authority.",
-      "sha256": "eb4be9f9adc90da98a444333121e79dc1c7b47f825fb11a7e20767417e90c9e8"
+      "sha256": "59394bad607146787cd5cd0fa3578a68261745f16afde20fdd63d540e5c7d0d9"
     },
     "config/topology/designer_presets.json": {
       "category": "topology_defaults",

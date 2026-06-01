@@ -1,8 +1,8 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: Stage 22 live plain 3D implemented; Stage 23 live plain 4D remains next
-Last updated: 2026-05-27
+Status: Stage 22 live plain 3D implemented; Stage 22d visual-language authority complete; Stage 22e/22f block Stage 23
+Last updated: 2026-05-31
 
 ## 1. Decision summary
 
@@ -10,12 +10,15 @@ Stage 21 is planning-only. It does not add live 3D/4D code, native live ND
 session APIs, Godot modes, topology, endgame, C#, or Python runtime calls from
 Godot.
 
-The next implementation should be split:
+The implementation sequence is:
 
 1. Stage 22: Live Plain 3D Godot Prototype.
-2. Stage 23: Live Plain 4D Godot Prototype.
-3. Stage 24: Live ND polish and hardening.
-4. Stage 25: topology parity planning.
+2. Stage 22d: Gameboard Visual Language Design.
+3. Stage 22e: Implement Live 3D Gameboard Visual Language.
+4. Stage 22f: Manual Live 3D Visual Acceptance.
+5. Stage 23: Live Plain 4D Godot Prototype only after Stage 22f passes.
+6. Stage 24: Live ND polish and hardening.
+7. Stage 25: topology parity planning.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native
@@ -65,6 +68,42 @@ Stage 22 settlement:
 - accepted live plain 2D and replay mode remain preserved;
 - live 4D remains Stage 23.
 
+Stage 22b settlement target:
+
+- live 3D cells must render as solid cuboids through the existing
+  `TraceCoordinateMapper` / `TraceSceneRenderer` / `CellRenderer` path;
+- Live 3D may use dimension-specific visual roles, materials, outlines, and
+  camera fit presets, but Live 2D and Replay styling must remain separate;
+- XZ/YZ rotation readability is a HUD/camera/rendering concern when C++ parity
+  passes, with explicit signed plane labels such as `XZ+` / `YZ-` sourced from
+  returned native command status;
+- Stage 22b must not add live 4D, topology, endgame, C#, Python runtime calls
+  from Godot, Godot-side legality, or independent rotation transforms.
+
+Stage 22c settlement target:
+
+- live 3D cells must read as solid exterior blocks, not interior walls,
+  translucent panels, or hollow cages;
+- Live 3D cell faces should use opaque exterior face panels with restrained
+  silhouette outlines and subtle face-orientation brightness cues;
+- rotation feedback may briefly pulse the active piece outline after a returned
+  native rotation snapshot, but Godot must not interpolate or transform cells
+  independently of C++ state;
+- the accepted Live 2D shallow board style and Replay rendering must remain
+  separate.
+
+Stage 22d settlement:
+
+- `docs/plans/gameboard_visual_language_design.md` is the gameboard visual-
+  language authority;
+- Stage 22d is design-only and adds no rendering implementation;
+- Live 3D must use a diagrammatic visual grammar with a canonical exterior
+  view, stable axis landmarks, an explicit active-piece orientation cue,
+  rotation-plane feedback, and primary-surface HUD state;
+- Stage 22e implements that authority and Stage 22f performs manual Live 3D
+  visual acceptance;
+- Stage 23 must not start until Stage 22f passes.
+
 ## 3. Why live ND now
 
 Native plain-ND parity has passed the first risk cluster: movement/drop,
@@ -109,9 +148,9 @@ Use staged separate product modes, backed by an evolvable ND core.
 Stage 22 should add `Live Plain 3D` as its own Godot mode. It should not expose
 `Live 4D` yet and should not replace the accepted `Live Plain 2D` path.
 
-Stage 23 should add `Live Plain 4D` after the 3D loop is playable and tested.
-4D needs W-slice navigation/presentation and six rotation planes, so it should
-not be bundled into the first live ND implementation.
+Stage 23 should add `Live Plain 4D` only after Stage 22f accepts the Live 3D
+visual language. 4D needs W-slice navigation/presentation and six rotation
+planes, so it must not inherit unresolved 3D ambiguity.
 
 Stage 24 may consolidate polish across live 3D/4D and decide whether the
 visible product should keep separate `Live 3D` / `Live 4D` entries or present a
@@ -242,6 +281,12 @@ V / B     rotate(axis_a=1, axis_b=2, delta=-1 / +1)  YZ
 The HUD should show the most recent rotation plane and status returned by C++.
 Godot may label the controls, but must not reinterpret failed rotation results.
 
+Stage 22b should show a signed last-rotation label in the Live 3D HUD
+(`XY+`, `XY-`, `XZ+`, `XZ-`, `YZ+`, `YZ-`) derived from the returned native
+command string/status. Godot may preserve that label for readability after
+later non-rotation commands, but it must not apply a visual rotation transform
+or change state before the C++ snapshot is returned.
+
 Stage 23 should extend the same direct-pair model for 4D:
 
 ```text
@@ -292,9 +337,26 @@ If styling needs to distinguish live cells from replay cells, extend the
 existing renderer role selection to treat `trace_type` values beginning with
 `live_` as live snapshots.
 
+Stage 22b should keep that pipeline and split Live 3D presentation from the
+accepted Live 2D shallow board language: Live 3D cells are full cuboids with
+lit face contrast and edge outlines, while Live 2D remains on the existing
+flat board/grid styling.
+
+Stage 22c should prefer exterior-face readability over cage-like outlines:
+Live 3D active and locked cells should use opaque shaded face panels, a dark
+but restrained external silhouette, and no transparent-wall default.
+
+Stage 22e must implement the visual grammar in
+`docs/plans/gameboard_visual_language_design.md` without adding a second
+renderer or coordinate mapper. The required additions are presentation-only:
+canonical exterior diagram view behavior, axis/landmark cues, at least one
+explicit active-piece origin/orientation cue, rotation-plane feedback, and
+primary-surface HUD visibility.
+
 ## 11. 4D W-slice presentation
 
-Stage 23 should reuse the existing W-slice rendering path:
+After Stage 22f passes, Stage 23 should reuse the existing W-slice rendering
+path:
 
 - one visible board grid per W layer;
 - mapper-owned W offsets;
@@ -385,7 +447,27 @@ Stage 22 - Live Plain 3D Godot Prototype:
 - add live 3D HUD/hints;
 - preserve live 2D and replay tests.
 
-Stage 23 - Live Plain 4D Godot Prototype:
+Stage 22d - Gameboard Visual Language Design:
+
+- add `docs/plans/gameboard_visual_language_design.md`;
+- define the Live 3D diagrammatic grammar and future Live 4D constraints;
+- add no rendering or gameplay implementation.
+
+Stage 22e - Implement Live 3D Gameboard Visual Language:
+
+- preserve the existing mapper/renderer path;
+- implement the canonical exterior diagram view;
+- add axis landmarks, a drop-direction cue, and an active-piece
+  origin/orientation cue;
+- keep rotation-plane feedback and critical HUD state visible;
+- preserve Live 2D and Replay.
+
+Stage 22f - Manual Live 3D Visual Acceptance:
+
+- run the checklist in `docs/plans/gameboard_visual_language_design.md`;
+- block Live 4D until the checklist passes.
+
+Stage 23 - Live Plain 4D Godot Prototype, only after Stage 22f:
 
 - reuse `PlainNDSession` for dimension `4`;
 - expose live 4D bridge methods;
@@ -414,8 +496,8 @@ Stage 25 - Topology parity planning:
   renders snapshots only; C++ owns legality and status.
 - Risk: 3D controls are hard to learn. Mitigation: use direct axis and direct
   plane-pair bindings with a visible hint strip.
-- Risk: 4D overwhelms the first implementation. Mitigation: Stage 22 is 3D
-  only; W-slice controls wait for Stage 23.
+- Risk: 4D inherits unresolved 3D ambiguity. Mitigation: Stage 22e implements
+  the visual grammar and Stage 22f must pass before Stage 23 starts.
 - Risk: renderer coordinate drift. Mitigation: reuse `TraceCoordinateMapper`
   and existing replay renderers.
 - Risk: native API over-generalizes too early. Mitigation: implement a
@@ -441,3 +523,8 @@ Stage 22 is accepted only if:
 - no live 4D gameplay is added in Stage 22;
 - no topology, endgame, C#, Python runtime calls, or Godot-side legality are
   added.
+
+Stage 22d is complete when the design authority exists and the roadmap blocks
+Stage 23 behind Stage 22e implementation plus Stage 22f manual visual
+acceptance. The Stage 22f checklist is owned by
+`docs/plans/gameboard_visual_language_design.md`.

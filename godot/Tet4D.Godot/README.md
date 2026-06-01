@@ -170,6 +170,17 @@ clear/scoring, spawn/game-over, command status, and `state_hash`. Live 4D,
 topology, endgame, C#, Python runtime calls, and Godot-side gameplay legality
 remain deferred.
 
+Stage 22b keeps that boundary and corrects Live 3D readability: live 3D cells
+render as solid cuboids with lit face contrast and edge outlines through the
+existing renderer, Fit View uses a depth-readable 3D angle, and the HUD shows
+signed last-rotation labels such as `XZ+` / `YZ-` from returned native
+command/status data.
+
+Stage 22c keeps the same visual-only boundary and tunes those cells to read as
+external solid blocks: Live 3D uses opaque shaded exterior face panels,
+restrained silhouettes, and subtle face brightness cues instead of a
+cage-like or transparent-wall presentation.
+
 ## Opening In Godot
 
 1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
@@ -226,9 +237,9 @@ Live 3D controls:
 - `W` / `S` or `Up` / `Down`: move active piece on Z
 - `Shift`: soft drop
 - `Space`: hard drop
-- `R` / `T`: rotate in the XY plane
-- `F` / `G`: rotate in the XZ plane
-- `V` / `B`: rotate in the YZ plane
+- `R` / `T`: XY rotate
+- `F` / `G`: XZ rotate
+- `V` / `B`: YZ rotate
 - `P`: pause / resume gravity tick
 - `Backspace`: reset live 3D
 - `Tab`: return to Replay
@@ -236,7 +247,9 @@ Live 3D controls:
 
 Live 3D uses the same renderer/mapper path as replay and live 2D. `F` remains
 an XZ rotation key in Live 3D; use the visible `Fit View` button for camera
-fit in that mode.
+fit in that mode. The HUD reports `Last rotation: XY+/-`, `XZ+/-`, or
+`YZ+/-` after native rotation commands, and the active outline briefly pulses
+after a returned native rotation snapshot.
 
 The Replay Viewer uses one container-owned layout: the game renders through a
 `SubViewport` inside `GameArea`, while the right inspector is a fixed-width

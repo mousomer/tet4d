@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D accepted; live plain 3D prototype implemented
-Last updated: 2026-05-27
+Status: active plain 2D accepted; live plain 3D prototype implemented; Stage 22d visual authority complete
+Last updated: 2026-05-31
 
 ## 1. Decision Summary
 
@@ -278,11 +278,16 @@ feature porting starts.
    implementing live 3D/4D code.
 15. Stage 22: prototype live plain 3D first through a native-owned ND session
    and a narrow Godot command/rendering facade.
-16. Stage 23: prototype live plain 4D after 3D is validated, reusing the
+16. Stage 22d: define the gameboard visual-language authority without
+   implementing renderer changes.
+17. Stage 22e: implement that authority for Live 3D through the existing
+   mapper/renderer path.
+18. Stage 22f: run manual Live 3D visual acceptance.
+19. Stage 23: prototype live plain 4D only after Stage 22f passes, reusing the
    existing W-slice renderer path.
-17. Later: plan topology transport and Topology Lab launch semantics.
-18. Later: port locked-cell endgame particle simulation.
-19. Later: retire Python as semantic oracle only after trace parity,
+20. Later: plan topology transport and Topology Lab launch semantics.
+21. Later: port locked-cell endgame particle simulation.
+22. Later: retire Python as semantic oracle only after trace parity,
    product acceptance, and authority-doc updates explicitly allow it.
 
 Stages may be split smaller if a parity gate is too broad.
@@ -721,7 +726,10 @@ Stage 21 is planning-only. The detailed plan lives in
 Stage 21 chooses a staged live plain-ND path:
 
 - Stage 22: live plain 3D Godot prototype first;
-- Stage 23: live plain 4D Godot prototype after 3D is validated;
+- Stage 22d: define the gameboard visual-language authority;
+- Stage 22e: implement the Live 3D visual language;
+- Stage 22f: perform manual Live 3D visual acceptance;
+- Stage 23: live plain 4D Godot prototype only after Stage 22f passes;
 - Stage 24: live ND polish and hardening;
 - Stage 25: topology parity planning.
 
@@ -758,6 +766,38 @@ renders through the existing trace coordinate mapper and renderer, and shows
 `LIVE 3D · C++ CORE` HUD/hints. C++ owns movement, rotation, soft/hard drop,
 gravity tick results, lock, clear/scoring, spawn/game-over, command status,
 and `state_hash`.
+
+Stage 22b is a Live 3D visual acceptance correction only. It keeps the same
+C++ authority boundary and renderer/mapper path while making Live 3D cells
+solid cuboids with lit face contrast and edge outlines, using a Live 3D camera
+fit preset that exposes X/Y/Z depth, and showing signed last-rotation HUD
+feedback such as `XZ+` and `YZ-` from returned native command/status data.
+It must not add Live 4D or move rotation math, collision, legality, scoring,
+or state hashing into GDScript.
+
+Stage 22c continues that same visual-only acceptance pass by changing Live 3D
+cells from cage-like edge-emphasized blocks to opaque exterior face panels with
+restrained silhouettes and subtle face brightness cues. A returned native
+rotation snapshot may pulse the active outline briefly for readability, but
+Godot still does not interpolate, rotate, or otherwise transform gameplay
+cells independently of C++ state.
+
+## 35. Stage 22d Gameboard Visual Language Design
+
+Stage 22d is design-only. Its authority is
+`docs/plans/gameboard_visual_language_design.md`.
+
+The authority separates the resolved exterior-cell convexity problem from the
+remaining orientation problem. Live 3D must become a diagrammatic interface:
+canonical exterior orthographic view, separated screen-space axes, solid
+external cubes, stable axis/near-far/drop landmarks, an explicit active-piece
+origin/orientation cue, rotation-plane feedback, and critical HUD state in the
+main play surface.
+
+Stage 22e implements that grammar through the existing
+`TraceCoordinateMapper` / `TraceSceneRenderer` / `CellRenderer` path. Stage
+22f performs manual Live 3D visual acceptance. Stage 23 Live Plain 4D must not
+start until Stage 22f passes.
 
 Stage 22 does not add live 4D, topology transport, wrap/invert/sphere
 behavior, endgame simulation, C#, Python runtime calls from Godot, or
