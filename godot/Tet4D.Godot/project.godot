@@ -1,7 +1,7 @@
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
 ; since the parameters that go here are not all obvious.
-; Retargeted and locked for Godot 4.6.2-stable.
+; Retargeted and locked for Godot 4.6.3-stable.
 ;
 ; Format:
 ;   [section] ; section goes between []
@@ -14,7 +14,7 @@ config_version=5
 config/name="Tet4D.Godot"
 run/main_scene="res://scenes/trace_replay.tscn"
 config/features=PackedStringArray("4.6")
-config/tet4d_target_godot_version="4.6.2-stable"
+config/tet4d_target_godot_version="4.6.3-stable"
 
 [native_extensions]
 

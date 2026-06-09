@@ -1,6 +1,6 @@
 # Tet4D Godot Trace Replay Spike
 
-This Godot 4.6.2-stable project is a replay-only spike for tet4d migration
+This Godot 4.6.3-stable project is a replay-only spike for tet4d migration
 work. It is not playable gameplay.
 
 It consumes a copied Stage 4 migration bundle from:
@@ -22,7 +22,7 @@ claim that Godot should own tet4d gameplay semantics.
 
 Current transition status:
 
-- Godot version target: locked to Godot 4.6.2-stable for this migration stage.
+- Godot version target: locked to Godot 4.6.3-stable for this migration stage.
 - Stage 6b display alignment: the replay renderer now follows the
   Python/Pygame centered board display convention, uses orthographic fit
   against projected bounds, and keeps W labels/boards/cells/particles/trails
@@ -194,7 +194,7 @@ blocked until Stage 22f passes.
 
 ## Opening In Godot
 
-1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable.
+1. Open `godot/Tet4D.Godot/` in Godot 4.6.3-stable.
 2. Let Godot generate `.godot/` and import caches locally.
 3. Open `res://scenes/trace_replay.tscn`.
 4. Run the main scene.
@@ -270,7 +270,7 @@ while checking resize behavior.
 
 ## Tests
 
-If a Godot 4.6.2-stable CLI is installed locally, run a syntax check with:
+If a Godot 4.6.3-stable CLI is installed locally, run a syntax check with:
 
 ```bash
 godot --headless --path godot/Tet4D.Godot --check-only

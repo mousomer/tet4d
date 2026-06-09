@@ -6,7 +6,7 @@ Last updated: 2026-06-09
 
 ## Purpose
 
-Stage 6 adds a small Godot 4.6.2-stable + GDScript project that consumes the
+Stage 6 adds a small Godot 4.6.3-stable + GDScript project that consumes the
 copied Stage 4 migration bundle and replays topology, gameplay, and endgame
 traces frame-by-frame.
 
@@ -147,7 +147,7 @@ PYTHONPATH=src .venv/bin/python tools/migration/sync_godot_bundle.py \
 
 - Python-side sync/export/bundle tests remain authoritative in this repo.
 - Godot headless checks and the lightweight GDScript test runner should be run
-  locally when a Godot 4.6.2-stable CLI is available.
+  locally when a Godot 4.6.3-stable CLI is available.
 - If Godot CLI is unavailable, the spike remains a code-and-asset bootstrap
   plus Python-side verification surface.
 

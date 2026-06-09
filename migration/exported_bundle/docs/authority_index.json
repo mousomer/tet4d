@@ -58,7 +58,7 @@
     {
       "purpose": "Stage 6 Godot replay shell and runtime bundle boundary contract.",
       "role": "godot_replay_authority",
-      "sha256": "3bedcd8e478381ee37c35c638ce1b5406742bff16ad2d56c68a34372873ab450",
+      "sha256": "6c2fdbb05c95144f5db1f7595a61abf436443a877ff97a93596389214a7ddec7",
       "source_path": "docs/plans/godot_trace_replay_spike.md"
     },
     {
