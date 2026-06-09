@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D accepted; live plain 3D prototype implemented; Stage 22d visual authority complete
-Last updated: 2026-05-31
+Status: active plain 2D accepted; live plain 3D prototype implemented; Stage 22d complete; Stage 22e partial; Stage 22f pending
+Last updated: 2026-06-09
 
 ## 1. Decision Summary
 
@@ -281,8 +281,10 @@ feature porting starts.
 16. Stage 22d: define the gameboard visual-language authority without
    implementing renderer changes.
 17. Stage 22e: implement that authority for Live 3D through the existing
-   mapper/renderer path.
-18. Stage 22f: run manual Live 3D visual acceptance.
+   mapper/renderer path, a reserved Godot shell layout, and focused
+   presentation/projection ownership.
+18. Stage 22f: run manual Live 3D visual acceptance using
+   `docs/plans/godot_live_3d_manual_acceptance.md`.
 19. Stage 23: prototype live plain 4D only after Stage 22f passes, reusing the
    existing W-slice renderer path.
 20. Later: plan topology transport and Topology Lab launch semantics.
@@ -795,9 +797,13 @@ origin/orientation cue, rotation-plane feedback, and critical HUD state in the
 main play surface.
 
 Stage 22e implements that grammar through the existing
-`TraceCoordinateMapper` / `TraceSceneRenderer` / `CellRenderer` path. Stage
-22f performs manual Live 3D visual acceptance. Stage 23 Live Plain 4D must not
-start until Stage 22f passes.
+`TraceCoordinateMapper` / `TraceSceneRenderer` / `CellRenderer` path. It also
+owns the structural Godot shell repair for replay/live board presentation:
+reserved left case browser, board, right inspector, top status, and bottom
+playback regions, plus a focused presentation/projection owner between
+snapshots and renderer nodes. Stage 22f performs manual Live 3D visual
+acceptance using `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live
+Plain 4D must not start until Stage 22f passes.
 
 Stage 22 does not add live 4D, topology transport, wrap/invert/sphere
 behavior, endgame simulation, C#, Python runtime calls from Godot, or

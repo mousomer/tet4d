@@ -189,6 +189,11 @@ Pause Menu
 7. When menu content exceeds the available panel height, the menu must switch
    to a shared scrolling viewport with reserved scrollbar width rather than
    clipping rows or shrinking text.
+8. The Godot replay/live board shell must use a structural layout with
+   reserved top status, left case browser, center board, right
+   diagnostics/events/settings inspector, and bottom playback regions. The
+   board viewport must not overlap or hide side panels; the right inspector
+   must remain scroll-safe and fully visible at the supported minimum viewport.
 5. The accepted Topology Playground shell uses:
 6. compact top bar
 7. contextual left sidebar

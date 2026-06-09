@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-05-31
+Updated: 2026-06-09
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -65,9 +65,12 @@ returned C++ command/status data. Stage 22c keeps that visual-only scope and
 changes Live 3D cells to opaque exterior face panels with restrained
 silhouettes so pieces read as solid external blocks rather than interior walls.
 Stage 22d adds the design-only gameboard visual-language authority for the
-remaining orientation ambiguity. Stage 22e must implement that grammar, Stage
-22f must manually accept Live 3D readability, and Stage 23 Live 4D is blocked
-until Stage 22f passes.
+remaining orientation ambiguity. Stage 22e is active/partial: the Godot shell
+layout and presentation/projection boundary are being stabilized first, then
+the remaining axis/origin/landmark visual cues must be completed. Stage 22f
+must manually accept Live 3D readability, and Stage 23 Live 4D is blocked until
+Stage 22f passes. py-godot and Python runtime bridging inside Godot are not
+active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
 
@@ -307,11 +310,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
    IDs for replay object materials, deterministic Python-informed orthographic
    Fit View using projected board bounds, mapper-owned W label positions,
    attached particle trails, frame/entity
-   metadata diagnostics, a single container-owned Replay Viewer layout that
-   constrains the replay `SubViewport` inside `GameArea` and keeps the
-   scrollable right inspector as a fixed-width body sibling, event pulses/fades,
-   replay state timeline copy, fixed replay speed presets, and visible
-   fit/quit/help replay controls,
+   metadata diagnostics, a single explicit Replay Viewer shell layout that
+   reserves top status, left case browser, center `GameArea`, right scrollable
+   diagnostics/events/settings inspector, and bottom playback regions so the
+   replay `SubViewport` cannot consume side panels, event pulses/fades, replay
+   state timeline copy, fixed replay speed presets, and visible fit/quit/help
+   replay controls,
    and keeps Godot on a renderer/browser boundary via
    `tools/migration/sync_godot_bundle.py` rather than direct repo reads or
    runtime Python calls.
@@ -423,10 +427,15 @@ stays synchronized, and the contract validator accepts the backlog shape.
     feedback, HUD, and manual acceptance grammar without renderer changes.
 25. `ACTIVE` `[BKL-P3-032]` Stage 22e Live 3D visual-language implementation:
     implement the Stage 22d authority through the existing mapper/renderer path
-    without changing C++ gameplay semantics, accepted Live 2D, or Replay.
+    without changing C++ gameplay semantics, accepted Live 2D, or Replay. The
+    current partial implementation reserves the Godot shell panel regions and
+    introduces a focused presentation/projection owner; remaining visual work
+    includes axis/near-far/drop landmarks and an explicit active-piece
+    origin/orientation cue.
 26. `WATCH` `[BKL-P3-033]` Stage 22f acceptance gate before Stage 23:
-    perform manual Live 3D visual acceptance against the Stage 22d checklist.
-    Do not begin the Live Plain 4D Godot prototype until Stage 22f passes.
+    perform manual Live 3D visual acceptance against
+    `docs/plans/godot_live_3d_manual_acceptance.md`. Do not begin the Live
+    Plain 4D Godot prototype until Stage 22f passes.
 
 ## Governance Watchlist
 

@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-05-31
+Last updated: 2026-06-09
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -208,10 +208,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `docs/plans/gameboard_visual_language_design.md`: the remaining issue is
   active-piece orientation ambiguity, not convexity. Stage 22e must implement
   the canonical exterior diagram view, stable axis/near-far/drop landmarks, an
-  explicit active-piece origin/orientation cue, rotation-plane feedback, and
-  primary-surface HUD visibility through the existing mapper/renderer path.
-  Stage 22f is manual Live 3D visual acceptance. Live 4D remains Stage 23 but
-  is blocked until Stage 22f passes; topology/endgame remain deferred.
+  explicit active-piece origin/orientation cue, rotation-plane feedback,
+  primary-surface HUD visibility, the structural Godot shell layout, and a
+  focused presentation/projection owner through the existing mapper/renderer
+  path. Stage 22e is partial after the shell layout and presentation-boundary
+  stabilization in this handoff; Stage 22f is pending manual Live 3D visual
+  acceptance in `docs/plans/godot_live_3d_manual_acceptance.md`. Live 4D
+  remains Stage 23 but is blocked until Stage 22f passes; topology/endgame
+  remain deferred. py-godot and any Python runtime bridge inside Godot are not
+  the active architecture.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

@@ -22,6 +22,7 @@ claim that Godot should own tet4d gameplay semantics.
 
 Current transition status:
 
+- Godot version target: locked to Godot 4.6.2-stable for this migration stage.
 - Stage 6b display alignment: the replay renderer now follows the
   Python/Pygame centered board display convention, uses orthographic fit
   against projected bounds, and keeps W labels/boards/cells/particles/trails
@@ -31,8 +32,9 @@ Current transition status:
   policy.
 - Menu-screen architecture: introduced with Main Menu, Trace Replay Browser,
   Replay Viewer, Settings, Controls / Keyboard Hints, and Diagnostics screens.
-- Right-panel layout: repaired with responsive containers so the inspector
-  remains visible at the default window size and during resize.
+- Shell layout: repaired as an explicit top/status, left case browser, center
+  board, right scroll-safe inspector, and bottom playback model so the board
+  viewport cannot consume either side panel.
 
 ## Bundle Sync
 
@@ -181,10 +183,18 @@ external solid blocks: Live 3D uses opaque shaded exterior face panels,
 restrained silhouettes, and subtle face brightness cues instead of a
 cage-like or transparent-wall presentation.
 
+Stage 22d defines the gameboard visual-language authority in
+`docs/plans/gameboard_visual_language_design.md`. Stage 22e implements that
+authority incrementally through the existing mapper/renderer path; the current
+Godot shell reserves left/board/right panel regions structurally and routes
+snapshot projection through focused presentation scripts. Stage 22f manual
+Live 3D acceptance remains pending in
+`docs/plans/godot_live_3d_manual_acceptance.md`, and Stage 23 Live 4D remains
+blocked until Stage 22f passes.
+
 ## Opening In Godot
 
-1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable or the latest stable
-   Godot 4.x editor.
+1. Open `godot/Tet4D.Godot/` in Godot 4.6.2-stable.
 2. Let Godot generate `.godot/` and import caches locally.
 3. Open `res://scenes/trace_replay.tscn`.
 4. Run the main scene.
@@ -251,11 +261,12 @@ fit in that mode. The HUD reports `Last rotation: XY+/-`, `XZ+/-`, or
 `YZ+/-` after native rotation commands, and the active outline briefly pulses
 after a returned native rotation snapshot.
 
-The Replay Viewer uses one container-owned layout: the game renders through a
-`SubViewport` inside `GameArea`, while the right inspector is a fixed-width
-body sibling with vertical scrolling. Enable the `Geom` checkbox in the bottom
-bar to print root/body/game-area/inspector/bottom-bar rectangles and viewport
-size while checking resize behavior.
+The Replay Viewer uses one explicit shell layout: the game renders through a
+`SubViewport` inside `GameArea`, with a bounded left case browser and a
+fixed-width right inspector as body siblings. Inspector overflow scrolls
+vertically. Enable the `Geom` checkbox in the bottom bar to print
+root/body/left/game-area/inspector/bottom-bar rectangles and viewport size
+while checking resize behavior.
 
 ## Tests
 

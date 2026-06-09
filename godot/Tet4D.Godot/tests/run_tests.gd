@@ -12,6 +12,7 @@ func _run_all() -> void:
 		"res://tests/test_trace_snapshot_extractor.gd",
 		"res://tests/test_replay_visuals.gd",
 		"res://tests/test_coordinate_mapper.gd",
+		"res://tests/test_board_presentation_model.gd",
 		"res://tests/test_camera_rig.gd",
 		"res://tests/test_trace_scene_renderer.gd",
 		"res://tests/test_tet4d_core_extension.gd",

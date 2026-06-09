@@ -60,6 +60,8 @@ var _speed_select: OptionButton
 var _speed_value: Label
 var _viewport_frame: PanelContainer
 var _body_container: HBoxContainer
+var _left_panel: PanelContainer
+var _viewer_case_browser: CaseBrowser
 var _game_area: PanelContainer
 var _game_viewport_container: SubViewportContainer
 var _game_viewport: SubViewport
@@ -117,11 +119,17 @@ func set_bundle_status(text: String) -> void:
 
 
 func set_trace_families(families: Array, selected: String) -> void:
-	_case_browser.set_trace_families(families, selected)
+	if _case_browser != null:
+		_case_browser.set_trace_families(families, selected)
+	if _viewer_case_browser != null:
+		_viewer_case_browser.set_trace_families(families, selected)
 
 
 func set_cases(cases: Array, selected_case_id: String) -> void:
-	_case_browser.set_cases(cases, selected_case_id)
+	if _case_browser != null:
+		_case_browser.set_cases(cases, selected_case_id)
+	if _viewer_case_browser != null:
+		_viewer_case_browser.set_cases(cases, selected_case_id)
 
 
 func set_summary(trace_type: String, case_id: String, dimension: int, frame_index: int, next_frame_index: int, frame_count: int, state_hash: String) -> void:
@@ -323,6 +331,7 @@ func game_viewport() -> SubViewport:
 
 func layout_contract_snapshot() -> Dictionary:
 	var root_rect := Rect2(global_position, size)
+	var left_rect := _control_rect(_left_panel)
 	var body_rect := _control_rect(_body_container)
 	var game_rect := _control_rect(_game_area)
 	var viewport_rect := _control_rect(_game_viewport_container)
@@ -330,6 +339,7 @@ func layout_contract_snapshot() -> Dictionary:
 	var bottom_rect := _control_rect(_bottom_panel)
 	return {
 		"root": root_rect,
+		"left_panel": left_rect,
 		"body": body_rect,
 		"game_area": game_rect,
 		"game_viewport": viewport_rect,
@@ -489,6 +499,23 @@ func _build_layout() -> void:
 	body.add_theme_constant_override("separation", ReplayVisuals.BODY_GAP)
 	outer.add_child(body)
 
+	_left_panel = PanelContainer.new()
+	_left_panel.name = "LeftCaseBrowserSlot"
+	_left_panel.custom_minimum_size = Vector2(ReplayVisuals.LEFT_PANEL_WIDTH, 0)
+	_left_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_left_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(_left_panel)
+
+	_viewer_case_browser = CaseBrowserScript.new()
+	_viewer_case_browser.name = "ViewerCaseBrowser"
+	_viewer_case_browser.trace_family_selected.connect(func(trace_type: String) -> void:
+		trace_family_selected.emit(trace_type)
+	)
+	_viewer_case_browser.case_selected.connect(func(case_id: String) -> void:
+		case_selected.emit(case_id)
+	)
+	_left_panel.add_child(_viewer_case_browser)
+
 	_game_area = PanelContainer.new()
 	_game_area.name = "GameArea"
 	_game_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -514,6 +541,8 @@ func _build_layout() -> void:
 	_viewport_hint = Label.new()
 	_viewport_hint.text = "Replay-only viewport with diagnostic-first 4D W slices"
 	_viewport_hint.theme_type_variation = "SecondaryLabel"
+	_viewport_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_viewport_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_viewport_hint)
 	_mode_hint_strip = Label.new()
 	_mode_hint_strip.text = REPLAY_HINT_TEXT
@@ -523,6 +552,7 @@ func _build_layout() -> void:
 	viewport_box.add_child(_mode_hint_strip)
 	_game_viewport_container = SubViewportContainer.new()
 	_game_viewport_container.name = "GameViewportContainer"
+	_game_viewport_container.custom_minimum_size = Vector2(ReplayVisuals.GAME_AREA_MIN_WIDTH, 0)
 	_game_viewport_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_game_viewport_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_game_viewport_container.stretch = true
@@ -530,6 +560,7 @@ func _build_layout() -> void:
 	viewport_box.add_child(_game_viewport_container)
 	_game_viewport = SubViewport.new()
 	_game_viewport.name = "GameViewport"
+	_game_viewport.size = Vector2i(ReplayVisuals.GAME_AREA_MIN_WIDTH, 240)
 	_game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_game_viewport_container.add_child(_game_viewport)
 
@@ -959,6 +990,7 @@ func _log_geometry_diagnostics(reason: String) -> void:
 	var parts := [
 		"[ReplayHud geometry:%s]" % reason,
 		"root=%s" % str(Rect2(global_position, size)),
+		"left_panel=%s" % _rect_text(_left_panel),
 		"body=%s" % _rect_text(_body_container),
 		"game_area=%s" % _rect_text(_game_area),
 		"right_inspector=%s" % _rect_text(_right_scroll),

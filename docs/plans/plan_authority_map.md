@@ -21,6 +21,7 @@ planning redirection notes.
 | Planning-document ownership and precedence | `plan_authority_map.md` |
 | Repo-wide structural cleanup sequencing | `cleanup_master_plan.md` |
 | Live 3D and future Live 4D gameboard visual language | `gameboard_visual_language_design.md` |
+| Stage 22f manual Live 3D acceptance run record | `godot_live_3d_manual_acceptance.md` |
 | Topology-playground architecture, invariants, non-goals | `topology_playground_current_authority.md` |
 | Topology-playground visible shell contract | `topology_playground_shell_redesign_spec.md` |
 | Topology-playground transitional debt | `topology_playground_debt_register.md` |

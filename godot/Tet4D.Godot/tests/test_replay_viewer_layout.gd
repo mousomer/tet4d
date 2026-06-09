@@ -42,6 +42,7 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	var failures: Array = []
 	var snapshot: Dictionary = hud.layout_contract_snapshot()
 	var root_rect: Rect2 = snapshot.get("root", Rect2())
+	var left_rect: Rect2 = snapshot.get("left_panel", Rect2())
 	var body_rect: Rect2 = snapshot.get("body", Rect2())
 	var game_rect: Rect2 = snapshot.get("game_area", Rect2())
 	var game_viewport_rect: Rect2 = snapshot.get("game_viewport", Rect2())
@@ -52,6 +53,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: root rect should be nonzero" % label)
 	if body_rect.size.x <= 0.0 or body_rect.size.y <= 0.0:
 		failures.append("%s: body rect should be nonzero" % label)
+	if left_rect.size.x <= 0.0 or left_rect.size.y <= 0.0:
+		failures.append("%s: left case browser rect should be nonzero" % label)
 	if game_rect.size.x <= 0.0 or game_rect.size.y <= 0.0:
 		failures.append("%s: game area rect should be nonzero" % label)
 	if game_viewport_rect.size.x <= 0.0 or game_viewport_rect.size.y <= 0.0:
@@ -61,9 +64,11 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	if bottom_rect.size.x <= 0.0 or bottom_rect.size.y <= 0.0:
 		failures.append("%s: bottom bar rect should be nonzero" % label)
 	if not _contains_rect(root_rect, body_rect):
-		failures.append("%s: body should be inside root, root=%s body=%s" % [label, root_rect, body_rect])
+		failures.append("%s: body should be inside root, root=%s body=%s left=%s game=%s inspector=%s" % [label, root_rect, body_rect, left_rect, game_rect, inspector_rect])
 	if not _contains_rect(body_rect, game_rect):
 		failures.append("%s: game area should be inside body, body=%s game=%s" % [label, body_rect, game_rect])
+	if not _contains_rect(body_rect, left_rect):
+		failures.append("%s: left case browser should be inside body, body=%s left=%s" % [label, body_rect, left_rect])
 	if not _contains_rect(body_rect, inspector_rect):
 		failures.append("%s: inspector should be inside body, body=%s inspector=%s" % [label, body_rect, inspector_rect])
 	if not _contains_rect(game_rect, game_viewport_rect):
@@ -72,6 +77,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: inspector right edge should stay inside root, root=%s inspector=%s" % [label, root_rect, inspector_rect])
 	if game_rect.end.x > inspector_rect.position.x + 0.5:
 		failures.append("%s: game area should not overlap inspector, game=%s inspector=%s" % [label, game_rect, inspector_rect])
+	if left_rect.end.x > game_rect.position.x + 0.5:
+		failures.append("%s: left case browser should not overlap game area, left=%s game=%s" % [label, left_rect, game_rect])
 	var game_viewport: SubViewport = hud.game_viewport()
 	if game_viewport == null:
 		failures.append("%s: HUD should expose a game SubViewport" % label)

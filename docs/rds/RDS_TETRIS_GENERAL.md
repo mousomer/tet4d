@@ -312,11 +312,17 @@ Cross-cutting requirements are defined in:
     orthographic view, distinguishable X/Y/Z basis, solid external cubes,
     stable axis/near-far/drop landmarks, at least one explicit active-piece
     origin/orientation cue, visible signed rotation-plane feedback, and
-    primary-surface score/status/game-over visibility.
+    primary-surface score/status/game-over visibility. The Godot shell must
+    reserve left case browser, center board, right inspector, top status, and
+    bottom playback regions structurally; side-panel clipping is a layout
+    regression, not a width/font tuning problem. Snapshot-to-world projection
+    must route through one focused presentation/projection owner before
+    renderer nodes.
 33. Stage 22f must perform manual Live 3D visual acceptance against the Stage
-    22d checklist. Stage 23 Live Plain 4D must not begin until Stage 22f
-    passes. Live 4D must inherit the same cell, axis, rotation-plane, HUD, and
-    landmark grammar with stable W-slice context.
+    22d checklist and `docs/plans/godot_live_3d_manual_acceptance.md`. Stage
+    23 Live Plain 4D must not begin until Stage 22f passes. Live 4D must
+    inherit the same cell, axis, rotation-plane, HUD, and landmark grammar
+    with stable W-slice context.
 34. The migrated Godot Live 3D shell should prefer snapping to returned C++
     state plus clear plane feedback over a misleading Godot-side rotation
     tween. A future Godot presentation tween is allowed only if it is derived

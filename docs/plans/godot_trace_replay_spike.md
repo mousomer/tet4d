@@ -2,7 +2,7 @@
 
 Role: migration replay spike  
 Status: complete, pending manual visual acceptance
-Last updated: 2026-05-17
+Last updated: 2026-06-09
 
 ## Purpose
 
@@ -101,10 +101,11 @@ trace parity passes.
   previously failed because path visuals could detach from replay entities and
   is repaired here with shared mapped trail positions, deterministic camera fit,
   Python-informed coordinate mapping, plus frame/entity metadata diagnostics;
-  right-panel clipping is repaired by a single
-  container-owned Replay Viewer layout where the `SubViewport` game surface is
-  constrained inside `GameArea`, the right inspector is a fixed-width sibling
-  inside the same body container, and inspector overflow scrolls vertically
+  right-panel clipping is repaired by a single explicit Replay Viewer shell:
+  fixed/reserved top status and bottom playback bars, a bounded left case
+  browser, a center `GameArea` board panel, and a fixed-width scroll-safe right
+  diagnostics/events/settings inspector. The `SubViewport` is constrained
+  inside the board panel and cannot consume either side panel.
 
 ## Python Display Reference Used For Stage 6b
 

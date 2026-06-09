@@ -192,9 +192,11 @@ The current rule is one-way:
     remains deferred. Stage 22d adds
     `docs/plans/gameboard_visual_language_design.md` as the design-only
     authority for Live 3D and future Live 4D board readability. Stage 22e must
-    implement that grammar through the existing mapper/renderer path, Stage
-    22f must manually accept Live 3D readability, and Stage 23 Live Plain 4D
-    must wait until Stage 22f passes.
+    implement that grammar through the existing mapper/renderer path, the
+    structural Godot shell layout, and focused presentation/projection
+    ownership. Stage 22f must manually accept Live 3D readability using
+    `docs/plans/godot_live_3d_manual_acceptance.md`, and Stage 23 Live Plain
+    4D must wait until Stage 22f passes.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

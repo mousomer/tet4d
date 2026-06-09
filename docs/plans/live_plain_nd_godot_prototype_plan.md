@@ -1,8 +1,8 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: Stage 22 live plain 3D implemented; Stage 22d visual-language authority complete; Stage 22e/22f block Stage 23
-Last updated: 2026-05-31
+Status: Stage 22 live plain 3D implemented; Stage 22d complete; Stage 22e partial; Stage 22f pending; Stage 23 blocked
+Last updated: 2026-06-09
 
 ## 1. Decision summary
 
@@ -348,10 +348,13 @@ but restrained external silhouette, and no transparent-wall default.
 
 Stage 22e must implement the visual grammar in
 `docs/plans/gameboard_visual_language_design.md` without adding a second
-renderer or coordinate mapper. The required additions are presentation-only:
-canonical exterior diagram view behavior, axis/landmark cues, at least one
-explicit active-piece origin/orientation cue, rotation-plane feedback, and
-primary-surface HUD visibility.
+renderer or coordinate mapper. The Stage 22e implementation boundary now
+requires an explicit Godot shell layout with reserved left/board/right regions,
+a scroll-safe right inspector, and a focused presentation/projection owner
+between snapshots and renderer nodes. The remaining visual additions are
+presentation-only: canonical exterior diagram view behavior, axis/landmark
+cues, at least one explicit active-piece origin/orientation cue,
+rotation-plane feedback, and primary-surface HUD visibility.
 
 ## 11. 4D W-slice presentation
 
@@ -456,6 +459,10 @@ Stage 22d - Gameboard Visual Language Design:
 Stage 22e - Implement Live 3D Gameboard Visual Language:
 
 - preserve the existing mapper/renderer path;
+- reserve left case browser, board, right inspector, top status, and bottom
+  playback regions structurally in the Godot shell;
+- route snapshot-to-world projection through a focused presentation/projection
+  owner rather than ad hoc renderer formulas;
 - implement the canonical exterior diagram view;
 - add axis landmarks, a drop-direction cue, and an active-piece
   origin/orientation cue;
@@ -464,7 +471,7 @@ Stage 22e - Implement Live 3D Gameboard Visual Language:
 
 Stage 22f - Manual Live 3D Visual Acceptance:
 
-- run the checklist in `docs/plans/gameboard_visual_language_design.md`;
+- run the checklist in `docs/plans/godot_live_3d_manual_acceptance.md`;
 - block Live 4D until the checklist passes.
 
 Stage 23 - Live Plain 4D Godot Prototype, only after Stage 22f:
@@ -526,5 +533,6 @@ Stage 22 is accepted only if:
 
 Stage 22d is complete when the design authority exists and the roadmap blocks
 Stage 23 behind Stage 22e implementation plus Stage 22f manual visual
-acceptance. The Stage 22f checklist is owned by
-`docs/plans/gameboard_visual_language_design.md`.
+acceptance. The Stage 22f run record is owned by
+`docs/plans/godot_live_3d_manual_acceptance.md` and remains pending until a
+human manual pass marks it passed.

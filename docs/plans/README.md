@@ -47,6 +47,14 @@ general planning redirection or repo-wide ownership notes.
   - active-piece orientation, landmark, rotation-plane, and HUD requirements
   - manual visual acceptance checklist before Stage 23
 
+### `godot_live_3d_manual_acceptance.md`
+- Role: `checklist`
+- Status: `pending`
+- Owns:
+  - Stage 22f manual Live 3D acceptance run record
+  - Godot shell layout visibility checks before Stage 23
+  - explicit pending/passed status for the Live 3D readability gate
+
 ### `topology_playground_current_authority.md`
 - Role: `authority`
 - Status: `active`
