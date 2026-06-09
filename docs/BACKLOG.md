@@ -70,9 +70,10 @@ layout and presentation/projection boundary are being stabilized first, then
 the remaining axis/origin/landmark visual cues must be completed. The initial
 Stage 22f manual inspection failed on Live 3D view angle, camera diagnostics,
 bundle readability, and active-vs-locked contrast. Stage 22g corrects those
-observations as a visual-only pass and keeps Stage 22f pending a manual rerun.
-Stage 23 Live 4D is blocked until Stage 22f passes. py-godot and Python runtime
-bridging inside Godot are not active architecture.
+observations as a visual-only pass.
+Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
+Stage 23 Live Plain 4D Godot Prototype is now unblocked.
+py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
 
@@ -171,7 +172,9 @@ Current active follow-ups:
   authority: Stage 22e must implement the canonical exterior diagram view,
   axis/near-far/drop landmarks, active-piece origin/orientation cue,
   rotation-plane feedback, and primary-surface HUD visibility before Stage 22f
-  manual Live 3D acceptance. Stage 23 waits until Stage 22f passes.
+  manual Live 3D acceptance. Stage 22f manual Live 3D visual acceptance passed
+  after Stage 22g corrections. Stage 23 Live Plain 4D Godot Prototype is now
+  unblocked.
 - topology-playground shell-preserving cleanup remains centered on
   `src/tet4d/ui/pygame/topology_lab/scene_state.py` and
   `src/tet4d/ui/pygame/topology_lab/controls_panel.py`, with the
@@ -427,25 +430,25 @@ stays synchronized, and the contract validator accepts the backlog shape.
     resolved exterior-cell convexity problem from remaining orientation
     ambiguity and defines the canonical view, cells, landmarks, rotation
     feedback, HUD, and manual acceptance grammar without renderer changes.
-25. `ACTIVE` `[BKL-P3-032]` Stage 22e Live 3D visual-language implementation:
+25. `DONE` `[BKL-P3-032]` Stage 22e Live 3D visual-language implementation:
     implement the Stage 22d authority through the existing mapper/renderer path
     without changing C++ gameplay semantics, accepted Live 2D, or Replay. The
     current partial implementation reserves the Godot shell panel regions and
     introduces a focused presentation/projection owner; Stage 22g adds the
     above-board canonical camera preset/status, compact bundle status,
     stronger active-vs-locked cell roles, and an active origin marker.
-    Remaining visual work may still include axis/near-far/drop landmarks until
-    Stage 22f passes.
-26. `WATCH` `[BKL-P3-033]` Stage 22f acceptance gate before Stage 23:
-    perform manual Live 3D visual acceptance against
-    `docs/plans/godot_live_3d_manual_acceptance.md`. Do not begin the Live
-    Plain 4D Godot prototype until Stage 22f passes.
+    Stage 22f manual Live 3D visual acceptance passed after Stage 22g
+    corrections.
+26. `DONE` `[BKL-P3-033]` Stage 22f acceptance gate before Stage 23:
+    manual Live 3D visual acceptance passed against
+    `docs/plans/godot_live_3d_manual_acceptance.md` after Stage 22g
+    corrections. Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 27. `DONE` `[BKL-P3-034]` Stage 22g Live 3D visual acceptance corrections:
     correct the failed initial Stage 22f observations by using an above-board
     canonical Live 3D view, exposing camera preset/view diagnostics, keeping
     bundle status compact/readable with inspector detail, and making active
     cells stronger than locked cells with an origin/orientation marker. This
-    is visual-only and does not mark Stage 22f passed.
+    is visual-only; Stage 22f passed after these corrections.
 
 ## Governance Watchlist
 

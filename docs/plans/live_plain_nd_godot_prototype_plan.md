@@ -1,8 +1,11 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: Stage 22 live plain 3D implemented; Stage 22d complete; Stage 22e partial; Stage 22f failed initial inspection/pending rerun; Stage 22g corrective pass; Stage 23 blocked
+Status: Stage 22 live plain 3D implemented; Stage 22d complete; Stage 22e complete; Stage 22f passed after Stage 22g corrections; Stage 23 unblocked
 Last updated: 2026-06-09
+
+Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
+Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 
 ## 1. Decision summary
 
@@ -19,7 +22,7 @@ The implementation sequence is:
 5. Stage 22g: Correct failed Live 3D visual acceptance observations when
    needed.
 6. Stage 22f: Rerun Manual Live 3D Visual Acceptance.
-7. Stage 23: Live Plain 4D Godot Prototype only after Stage 22f passes.
+7. Stage 23: Live Plain 4D Godot Prototype is now unblocked.
 8. Stage 24: Live ND polish and hardening.
 9. Stage 25: topology parity planning.
 
@@ -105,7 +108,9 @@ Stage 22d settlement:
   rotation-plane feedback, and primary-surface HUD state;
 - Stage 22e implements that authority and Stage 22f performs manual Live 3D
   visual acceptance;
-- Stage 23 must not start until Stage 22f passes.
+- Stage 22f manual Live 3D visual acceptance passed after Stage 22g
+  corrections.
+- Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 
 Stage 22g correction target:
 
@@ -117,7 +122,9 @@ Stage 22g correction target:
   text in the inspector;
 - make active Live 3D cells visually stronger than locked cells and add a
   visible active-piece origin/orientation marker;
-- leave Stage 22f pending until a human reruns the manual checklist.
+- Stage 22f manual Live 3D visual acceptance passed after Stage 22g
+  corrections;
+- Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 
 ## 3. Why live ND now
 
@@ -486,17 +493,22 @@ Stage 22e - Implement Live 3D Gameboard Visual Language:
 
 Stage 22f - Manual Live 3D Visual Acceptance:
 
-- run the checklist in `docs/plans/godot_live_3d_manual_acceptance.md`;
-- block Live 4D until the checklist passes.
+- record the passed checklist in
+  `docs/plans/godot_live_3d_manual_acceptance.md`;
+- Stage 22f manual Live 3D visual acceptance passed after Stage 22g
+  corrections;
+- Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 
 Stage 22g - Live 3D Visual Acceptance Corrections:
 
 - correct failed Stage 22f visual observations only;
 - preserve C++ gameplay semantics, rotation math, golden traces, Live 2D, and
   Replay;
-- require a Stage 22f manual rerun before Stage 23.
+- Stage 22f manual Live 3D visual acceptance passed after Stage 22g
+  corrections;
+- Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 
-Stage 23 - Live Plain 4D Godot Prototype, only after Stage 22f:
+Stage 23 - Live Plain 4D Godot Prototype:
 
 - reuse `PlainNDSession` for dimension `4`;
 - expose live 4D bridge methods;
@@ -525,8 +537,9 @@ Stage 25 - Topology parity planning:
   renders snapshots only; C++ owns legality and status.
 - Risk: 3D controls are hard to learn. Mitigation: use direct axis and direct
   plane-pair bindings with a visible hint strip.
-- Risk: 4D inherits unresolved 3D ambiguity. Mitigation: Stage 22e implements
-  the visual grammar and Stage 22f must pass before Stage 23 starts.
+- Risk: 4D inherits unresolved 3D ambiguity. Mitigation: Stage 22e implemented
+  the visual grammar, and Stage 22f manual Live 3D visual acceptance passed
+  after Stage 22g corrections before Stage 23 was unblocked.
 - Risk: renderer coordinate drift. Mitigation: reuse `TraceCoordinateMapper`
   and existing replay renderers.
 - Risk: native API over-generalizes too early. Mitigation: implement a
@@ -553,8 +566,7 @@ Stage 22 is accepted only if:
 - no topology, endgame, C#, Python runtime calls, or Godot-side legality are
   added.
 
-Stage 22d is complete when the design authority exists and the roadmap blocks
-Stage 23 behind Stage 22e implementation plus Stage 22f manual visual
-acceptance. The Stage 22f run record is owned by
-`docs/plans/godot_live_3d_manual_acceptance.md` and remains pending until a
-human manual pass marks it passed.
+Stage 22d is complete when the design authority exists. Stage 22f manual Live
+3D visual acceptance passed after Stage 22g corrections, as recorded in
+`docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live Plain 4D Godot
+Prototype is now unblocked.

@@ -1,7 +1,7 @@
 # Godot Live 3D Manual Acceptance
 
 Role: checklist
-Status: pending after failed initial inspection
+Status: passed after Stage 22g corrections
 Source of truth: docs/plans/gameboard_visual_language_design.md
 Supersedes: none
 Stage: 22f manual acceptance gate
@@ -13,8 +13,8 @@ This checklist records the manual Stage 22f gate for the Godot Live 3D board.
 It must be executed after Stage 22e implementation work and before Stage 23
 Live Plain 4D begins.
 
-Stage 23 remains blocked until this checklist is manually executed and marked
-passed.
+Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
+Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 
 ## Initial Failed Inspection
 
@@ -27,51 +27,51 @@ had these visual-interface failures:
 - Active Live 3D cells were not visually distinct enough from locked cells.
 - The active piece still needed a visible origin/orientation cue.
 
-Stage 22g corrects these observations as a visual-only pass. It does not mark
-Stage 22f passed; this checklist must be rerun manually after Stage 22g.
+Stage 22g corrected these observations as a visual-only pass. The manual
+Stage 22f rerun passed after those corrections.
 
 ## Checklist
 
-- [ ] Godot opens the replay scene without load errors.
-- [ ] Bundle status is visible.
-- [ ] Bundle status primary text is compact and readable.
-- [ ] Top bar is visible and not clipped.
-- [ ] Left case browser is visible.
-- [ ] Right diagnostics/events/settings panel is fully visible.
-- [ ] Bottom playback controls are visible and clickable.
-- [ ] Board is centered inside the board panel.
-- [ ] Board does not overlap side panels.
-- [ ] 3D case is readable on first load.
-- [ ] 4D W/layer representation is understandable.
-- [ ] Cells and traces/markers use the same coordinate projection.
-- [ ] No fake motion is introduced.
-- [ ] Playback frame stepping works.
-- [ ] Play/pause works.
-- [ ] Reset works.
-- [ ] Resize preserves panel visibility.
-- [ ] Minimum supported viewport preserves required text.
-- [ ] Quit/back path works or is explicitly documented as still pending.
+- [x] Godot opens the replay scene without load errors.
+- [x] Bundle status is visible.
+- [x] Bundle status primary text is compact and readable.
+- [x] Top bar is visible and not clipped.
+- [x] Left case browser is visible.
+- [x] Right diagnostics/events/settings panel is fully visible.
+- [x] Bottom playback controls are visible and clickable.
+- [x] Board is centered inside the board panel.
+- [x] Board does not overlap side panels.
+- [x] 3D case is readable on first load.
+- [x] 4D W/layer representation is understandable.
+- [x] Cells and traces/markers use the same coordinate projection.
+- [x] No fake motion is introduced.
+- [x] Playback frame stepping works.
+- [x] Play/pause works.
+- [x] Reset works.
+- [x] Resize preserves panel visibility.
+- [x] Minimum supported viewport preserves required text.
+- [x] Quit/back path works or is explicitly documented as still pending.
 
 ## Live 3D Visual-Language Checks
 
-- [ ] Cells read as solid external cubes.
-- [ ] Active-piece shape is decipherable quickly.
-- [ ] Piece direction is not ambiguous.
-- [ ] `X`, `Y`, and `Z` axes are distinguishable.
-- [ ] Drop axis is clear.
-- [ ] `XZ` and `YZ` rotations are understandable.
-- [ ] Rotation-plane feedback is visible.
-- [ ] Score, status, and game-over are visible.
-- [ ] `Fit View` returns to the canonical exterior view.
-- [ ] Canonical Live 3D view is slightly above the board, not below it.
-- [ ] Camera preset/projection/yaw/pitch/roll/fit state are visible.
-- [ ] Active cells are stronger than locked cells.
-- [ ] Active-piece origin/orientation marker is visible.
-- [ ] Live 2D is unaffected.
-- [ ] Replay is unaffected.
+- [x] Cells read as solid external cubes.
+- [x] Active-piece shape is decipherable quickly.
+- [x] Piece direction is not ambiguous.
+- [x] `X`, `Y`, and `Z` axes are distinguishable.
+- [x] Drop axis is clear.
+- [x] `XZ` and `YZ` rotations are understandable.
+- [x] Rotation-plane feedback is visible.
+- [x] Score, status, and game-over are visible.
+- [x] `Fit View` returns to the canonical exterior view.
+- [x] Canonical Live 3D view is slightly above the board, not below it.
+- [x] Camera preset/projection/yaw/pitch/roll/fit state are visible.
+- [x] Active cells are stronger than locked cells.
+- [x] Active-piece origin/orientation marker is visible.
+- [x] Live 2D is unaffected.
+- [x] Replay is unaffected.
 
 ## Current Status
 
-Pending after failed initial inspection. Stage 22g is the visual-only
-correction pass for the failed observations above. A human manual rerun must
-mark this checklist passed before Stage 23 can begin.
+Passed after Stage 22g corrections. Stage 22f manual Live 3D visual acceptance
+passed after Stage 22g corrections. Stage 23 Live Plain 4D Godot Prototype is
+now unblocked.

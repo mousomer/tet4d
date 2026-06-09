@@ -220,11 +220,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   above-board `LIVE_3D_EXTERNAL_DIAGRAM_VIEW`, the HUD exposes camera
   preset/projection/yaw/pitch/roll/fit state and compact bundle health, and
   active Live 3D cells get stronger face/outline priority plus an origin
-  marker. Stage 22f remains pending a manual rerun in
-  `docs/plans/godot_live_3d_manual_acceptance.md`. Live 4D remains Stage 23
-  but is blocked until Stage 22f passes; topology/endgame remain deferred.
-  py-godot and any Python runtime bridge inside Godot are not the active
-  architecture.
+  marker. Stage 22f manual Live 3D visual acceptance passed after Stage 22g
+  corrections, as recorded in
+  `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live Plain 4D
+  Godot Prototype is now unblocked. Topology/endgame remain deferred. py-godot
+  and any Python runtime bridge inside Godot are not the active architecture.
+  Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
+  Stage 23 Live Plain 4D Godot Prototype is now unblocked.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,
