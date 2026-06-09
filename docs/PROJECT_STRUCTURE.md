@@ -195,8 +195,12 @@ The current rule is one-way:
     implement that grammar through the existing mapper/renderer path, the
     structural Godot shell layout, and focused presentation/projection
     ownership. Stage 22f must manually accept Live 3D readability using
-    `docs/plans/godot_live_3d_manual_acceptance.md`, and Stage 23 Live Plain
-    4D must wait until Stage 22f passes.
+    `docs/plans/godot_live_3d_manual_acceptance.md`. The initial Stage 22f
+    inspection failed, so Stage 22g corrects only the Live 3D visual
+    observations: above-board canonical camera/default Fit View, visible camera
+    diagnostics, compact bundle status with inspector detail, stronger active
+    cells versus locked cells, and an active origin/orientation marker. Stage
+    23 Live Plain 4D must wait until Stage 22f is rerun and passes.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

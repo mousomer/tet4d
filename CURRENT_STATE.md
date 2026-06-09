@@ -212,11 +212,19 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   primary-surface HUD visibility, the structural Godot shell layout, and a
   focused presentation/projection owner through the existing mapper/renderer
   path. Stage 22e is partial after the shell layout and presentation-boundary
-  stabilization in this handoff; Stage 22f is pending manual Live 3D visual
-  acceptance in `docs/plans/godot_live_3d_manual_acceptance.md`. Live 4D
-  remains Stage 23 but is blocked until Stage 22f passes; topology/endgame
-  remain deferred. py-godot and any Python runtime bridge inside Godot are not
-  the active architecture.
+  stabilization in this handoff. The initial Stage 22f manual inspection did
+  not pass because the Live 3D default view read from below, camera view-state
+  diagnostics were absent, bundle status could be clipped, and active cells
+  were not distinct enough from locked cells. Stage 22g is a visual-only
+  correction pass for those observations: Live 3D Fit/default uses the
+  above-board `LIVE_3D_EXTERNAL_DIAGRAM_VIEW`, the HUD exposes camera
+  preset/projection/yaw/pitch/roll/fit state and compact bundle health, and
+  active Live 3D cells get stronger face/outline priority plus an origin
+  marker. Stage 22f remains pending a manual rerun in
+  `docs/plans/godot_live_3d_manual_acceptance.md`. Live 4D remains Stage 23
+  but is blocked until Stage 22f passes; topology/endgame remain deferred.
+  py-godot and any Python runtime bridge inside Godot are not the active
+  architecture.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

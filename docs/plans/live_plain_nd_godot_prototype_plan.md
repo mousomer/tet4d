@@ -1,7 +1,7 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: Stage 22 live plain 3D implemented; Stage 22d complete; Stage 22e partial; Stage 22f pending; Stage 23 blocked
+Status: Stage 22 live plain 3D implemented; Stage 22d complete; Stage 22e partial; Stage 22f failed initial inspection/pending rerun; Stage 22g corrective pass; Stage 23 blocked
 Last updated: 2026-06-09
 
 ## 1. Decision summary
@@ -16,9 +16,12 @@ The implementation sequence is:
 2. Stage 22d: Gameboard Visual Language Design.
 3. Stage 22e: Implement Live 3D Gameboard Visual Language.
 4. Stage 22f: Manual Live 3D Visual Acceptance.
-5. Stage 23: Live Plain 4D Godot Prototype only after Stage 22f passes.
-6. Stage 24: Live ND polish and hardening.
-7. Stage 25: topology parity planning.
+5. Stage 22g: Correct failed Live 3D visual acceptance observations when
+   needed.
+6. Stage 22f: Rerun Manual Live 3D Visual Acceptance.
+7. Stage 23: Live Plain 4D Godot Prototype only after Stage 22f passes.
+8. Stage 24: Live ND polish and hardening.
+9. Stage 25: topology parity planning.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native
@@ -103,6 +106,18 @@ Stage 22d settlement:
 - Stage 22e implements that authority and Stage 22f performs manual Live 3D
   visual acceptance;
 - Stage 23 must not start until Stage 22f passes.
+
+Stage 22g correction target:
+
+- correct the failed initial Stage 22f visual observations without changing
+  gameplay semantics or trace parity;
+- make Live 3D default/Fit View slightly above the board and expose camera
+  preset/projection/yaw/pitch/roll/fit diagnostics;
+- keep bundle status compact in the top bar while preserving digest/detail
+  text in the inspector;
+- make active Live 3D cells visually stronger than locked cells and add a
+  visible active-piece origin/orientation marker;
+- leave Stage 22f pending until a human reruns the manual checklist.
 
 ## 3. Why live ND now
 
@@ -473,6 +488,13 @@ Stage 22f - Manual Live 3D Visual Acceptance:
 
 - run the checklist in `docs/plans/godot_live_3d_manual_acceptance.md`;
 - block Live 4D until the checklist passes.
+
+Stage 22g - Live 3D Visual Acceptance Corrections:
+
+- correct failed Stage 22f visual observations only;
+- preserve C++ gameplay semantics, rotation math, golden traces, Live 2D, and
+  Replay;
+- require a Stage 22f manual rerun before Stage 23.
 
 Stage 23 - Live Plain 4D Godot Prototype, only after Stage 22f:
 

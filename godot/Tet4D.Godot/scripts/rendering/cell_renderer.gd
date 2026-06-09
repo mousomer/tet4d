@@ -24,7 +24,9 @@ func setup_exterior_block(
 	outline_material: Material,
 	size: float,
 	outline_size: float,
-	outline_pulse: float = 0.0
+	outline_pulse: float = 0.0,
+	origin_marker_material: Material = null,
+	origin_marker_size: float = 0.0
 ) -> void:
 	_add_exterior_faces(size, face_materials)
 	if outline_material != null and outline_size > size:
@@ -34,6 +36,8 @@ func setup_exterior_block(
 			outline_material,
 			outline_pulse
 		)
+	if origin_marker_material != null and origin_marker_size > 0.0:
+		_add_origin_marker(size, origin_marker_size, origin_marker_material)
 	self.position = position
 
 
@@ -106,3 +110,17 @@ func _add_edge_outline(size: Vector3, border_delta: float, material: Material, o
 				Vector3(thickness, thickness, size.z),
 				material
 			)
+
+
+func _add_origin_marker(size: float, marker_size: float, material: Material) -> void:
+	var half := size * 0.5
+	var marker_half := marker_size * 0.5
+	_add_box(
+		Vector3(
+			-half + marker_half * 1.15,
+			half + marker_half * 0.65,
+			half - marker_half * 1.15
+		),
+		Vector3(marker_size, marker_size, marker_size),
+		material
+	)

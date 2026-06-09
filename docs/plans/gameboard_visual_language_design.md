@@ -5,12 +5,18 @@ Status: active
 Source of truth: this file for gameboard visual-language decisions
 Supersedes: ad hoc Live 3D readability notes in Stage 22b/22c
 Stage: 22d design authority
-Last updated: 2026-05-31
+Last updated: 2026-06-09
 
 ## 1. Decision Summary
 
 Stage 22d is design-only. It defines the gameboard visual grammar and does not
 implement rendering changes.
+
+Stage 22g is a visual-only correction pass against this authority after an
+initial Stage 22f manual inspection found the Live 3D default view, camera
+diagnostics, bundle readability, and active-vs-locked contrast insufficient.
+It does not change gameplay semantics, rotation math, trace parity, or the
+accepted Live 2D/replay behavior.
 
 The decisions are:
 
@@ -78,13 +84,16 @@ Required properties:
 
 1. Use orthographic projection by default.
 2. Use an exterior three-quarter angle.
-3. Keep roll at `0`.
-4. Target the board center.
-5. `Fit View` preserves the canonical yaw/pitch and changes only framing,
+3. View the board from slightly above, not below.
+4. Keep roll at `0`.
+5. Target the board center.
+6. `Fit View` preserves the canonical yaw/pitch and changes only framing,
    bounds, and zoom.
-6. Do not use an inside, below-board, or behind-board default view.
-7. Manual orbit/pan/zoom may exist, but reset and `Fit View` return to
+7. Do not use an inside, below-board, or behind-board default view.
+8. Manual orbit/pan/zoom may exist, but reset and `Fit View` return to
    `LIVE_3D_EXTERNAL_DIAGRAM_VIEW`.
+9. The HUD or inspector exposes the active camera preset, projection,
+   above/below status, yaw, pitch, roll, and fit/manual state.
 
 Reject a candidate view when:
 
@@ -113,6 +122,8 @@ The implementation vocabulary is:
 live_3d_active
 live_3d_locked
 live_3d_outline
+live_3d_active_outline
+live_3d_locked_outline
 live_3d_origin_marker
 live_3d_rotation_feedback
 board_grid
@@ -183,6 +194,10 @@ The minimum result is stronger than a generic outline pulse alone: the player
 must know where the piece origin or pivot reference is and which way the piece
 extends.
 
+Stage 22g selects a solid origin/root cube marker plus stronger active-cell
+outline priority as the minimum implemented cue for the current Live 3D
+prototype.
+
 ## 11. Axis Markers And Board Landmarks
 
 Live 3D requires:
@@ -248,8 +263,12 @@ Critical state belongs in the main live play surface:
 8. Last rotation plane.
 9. Running, paused, or game-over state.
 10. Control hints.
+11. Compact readable bundle health.
+12. Live 3D camera preset/view state.
 
 Score and game-over must never be buried only in diagnostics or side panels.
+Long bundle digests belong in detail/diagnostic text; the top status must keep
+the primary bundle health readable.
 
 ## 14. Live 3D Control Hint Rules
 
@@ -285,6 +304,8 @@ Constraints for Stage 23:
 ```text
 Stage 22e - Implement Live 3D Gameboard Visual Language
 Stage 22f - Manual Live 3D Visual Acceptance
+Stage 22g - Correct failed Live 3D visual acceptance observations when needed
+Stage 22f - Rerun Manual Live 3D Visual Acceptance
 Stage 23  - Live Plain 4D Godot Prototype
 ```
 
@@ -295,13 +316,16 @@ Stage 23 must not start before Stage 22f passes.
 Live 3D acceptance:
 
 - [ ] Cells read as solid external cubes.
+- [ ] Active cells are visually stronger than locked cells.
 - [ ] Active-piece shape is decipherable quickly.
+- [ ] Active-piece origin/orientation cue is visible.
 - [ ] Piece direction is not ambiguous.
 - [ ] `X`, `Y`, and `Z` axes are distinguishable.
 - [ ] Drop axis is clear.
 - [ ] `XZ` and `YZ` rotations are understandable.
 - [ ] Rotation-plane feedback is visible.
 - [ ] Score, status, and game-over are visible.
+- [ ] Bundle health and camera preset/view state are readable.
 - [ ] `Fit View` returns to the canonical exterior view.
 - [ ] Live 2D is unaffected.
 - [ ] Replay is unaffected.

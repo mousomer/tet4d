@@ -24,6 +24,26 @@ func run() -> Array:
 	if camera.size <= 5.0 or camera.size >= 10.5:
 		failures.append("camera fit should use projected bounds with margin, got size %.3f" % camera.size)
 
+	rig.fit_bounds(
+		{"ok": true, "min": Vector3(-2.0, -2.5, -1.5), "max": Vector3(8.0, 2.5, 1.5)},
+		1.2,
+		CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
+		CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
+		CameraRigScript.LIVE_3D_VIEW_PRESET_NAME,
+		"above exterior"
+	)
+	_assert_float(failures, rig._current_yaw, CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD, "live 3D fit uses canonical yaw")
+	_assert_float(failures, rig._current_pitch, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD, "live 3D fit uses above-board pitch")
+	if rig._current_pitch <= 0.0:
+		failures.append("live 3D canonical pitch should be above the board, got %.4f" % rig._current_pitch)
+	if camera.global_position.y <= rig._current_focus.y:
+		failures.append("live 3D camera should sit above the fit focus")
+	var status := rig.view_status_text()
+	if status.find(CameraRigScript.LIVE_3D_VIEW_PRESET_NAME) == -1:
+		failures.append("live 3D camera status should name the canonical preset")
+	if status.find("above") == -1 or status.find("fit OK") == -1 or status.find("ortho") == -1:
+		failures.append("live 3D camera status should show orthographic above-board fit state: %s" % status)
+
 	rig.queue_free()
 	await tree.process_frame
 	return failures

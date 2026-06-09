@@ -134,6 +134,8 @@ func run() -> Array:
 		_assert_live_3d_exterior_block(failures, live_3d_active_cell, "live 3D active cell")
 		_assert_live_3d_exterior_block(failures, live_3d_locked_cell, "live 3D locked cell")
 		_assert_rotation_pulse_outline(failures, live_3d_active_cell, "live 3D active rotation pulse")
+		_assert_live_3d_active_priority(failures, live_3d_active_cell, live_3d_locked_cell)
+		_assert_live_3d_origin_marker(failures, live_3d_active_cell)
 		if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_3D_ACTIVE).a < 0.99:
 			failures.append("live 3D active role should be opaque")
 		if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_3D_LOCKED).a < 0.99:
@@ -240,3 +242,48 @@ func _assert_rotation_pulse_outline(failures: Array, cell: Node3D, label: String
 		failures.append("%s first outline edge should use box mesh" % label)
 	elif minf(box.size.y, box.size.z) <= 0.016:
 		failures.append("%s should thicken active outline briefly after rotation" % label)
+
+
+func _assert_live_3d_active_priority(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:
+	var active_top := active_cell.get_child(0) as MeshInstance3D
+	var locked_top := locked_cell.get_child(0) as MeshInstance3D
+	if active_top == null or locked_top == null:
+		failures.append("live 3D active priority test needs top face meshes")
+		return
+	var active_material := active_top.material_override as StandardMaterial3D
+	var locked_material := locked_top.material_override as StandardMaterial3D
+	if active_material == null or locked_material == null:
+		failures.append("live 3D active priority test needs StandardMaterial3D faces")
+		return
+	if _color_brightness(active_material.albedo_color) <= _color_brightness(locked_material.albedo_color) + 0.18:
+		failures.append("live 3D active face should be visibly brighter than locked face")
+	var active_outline := active_cell.get_child(6) as MeshInstance3D
+	var locked_outline := locked_cell.get_child(6) as MeshInstance3D
+	if active_outline == null or locked_outline == null:
+		failures.append("live 3D active priority test needs outline meshes")
+		return
+	var active_outline_material := active_outline.material_override as StandardMaterial3D
+	var locked_outline_material := locked_outline.material_override as StandardMaterial3D
+	if active_outline_material == null or locked_outline_material == null:
+		failures.append("live 3D active priority test needs outline materials")
+	elif active_outline_material.albedo_color == locked_outline_material.albedo_color:
+		failures.append("live 3D active and locked outlines should not share the same visual role")
+
+
+func _assert_live_3d_origin_marker(failures: Array, active_cell: Node3D) -> void:
+	if active_cell.get_child_count() < 19:
+		failures.append("live 3D active piece should include an origin/orientation marker")
+		return
+	var marker := active_cell.get_child(active_cell.get_child_count() - 1) as MeshInstance3D
+	if marker == null:
+		failures.append("live 3D active origin marker should be a mesh")
+		return
+	var material := marker.material_override as StandardMaterial3D
+	if material == null:
+		failures.append("live 3D active origin marker should have a material")
+	elif material.albedo_color != ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_3D_ORIGIN_MARKER):
+		failures.append("live 3D active origin marker should use the origin marker role")
+
+
+func _color_brightness(color: Color) -> float:
+	return (color.r + color.g + color.b) / 3.0

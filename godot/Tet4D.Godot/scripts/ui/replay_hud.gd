@@ -80,6 +80,8 @@ var _screens: Dictionary = {}
 var _replay_note: Label
 var _help_panel: PanelContainer
 var _trace_integrity_label: Label
+var _bundle_detail_label: Label
+var _camera_status_label: Label
 var _help_label: Label
 var _current_display_mode := ReplayVisuals.default_display_mode()
 var _current_screen := SCREEN_MAIN_MENU
@@ -114,8 +116,15 @@ func _notification(what: int) -> void:
 		call_deferred("_log_geometry_diagnostics", "resize")
 
 
-func set_bundle_status(text: String) -> void:
+func set_bundle_status(text: String, detail: String = "") -> void:
 	_bundle_status_label.text = text
+	if _bundle_detail_label != null:
+		_bundle_detail_label.text = detail if detail != "" else text
+
+
+func set_camera_status(text: String) -> void:
+	if _camera_status_label != null:
+		_camera_status_label.text = text
 
 
 func set_trace_families(families: Array, selected: String) -> void:
@@ -347,6 +356,9 @@ func layout_contract_snapshot() -> Dictionary:
 		"bottom_bar": bottom_rect,
 		"viewport_size": get_viewport_rect().size,
 		"world_parent": _game_viewport.get_node_or_null("WorldRoot") if _game_viewport != null else null,
+		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
+		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
+		"camera_status_text": _camera_status_label.text if _camera_status_label != null else "",
 	}
 
 
@@ -588,6 +600,36 @@ func _build_layout() -> void:
 	_trace_integrity_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_trace_integrity_label.theme_type_variation = "AccentLabel"
 	integrity_panel.add_child(_trace_integrity_label)
+
+	var bundle_detail_panel := PanelContainer.new()
+	bundle_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_right_column.add_child(bundle_detail_panel)
+	var bundle_detail_box := VBoxContainer.new()
+	bundle_detail_panel.add_child(bundle_detail_box)
+	var bundle_detail_title := Label.new()
+	bundle_detail_title.text = "Bundle Detail"
+	bundle_detail_title.theme_type_variation = "SecondaryLabel"
+	bundle_detail_box.add_child(bundle_detail_title)
+	_bundle_detail_label = Label.new()
+	_bundle_detail_label.text = "Bundle detail pending"
+	_bundle_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_bundle_detail_label.theme_type_variation = "DimLabel"
+	bundle_detail_box.add_child(_bundle_detail_label)
+
+	var camera_panel := PanelContainer.new()
+	camera_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_right_column.add_child(camera_panel)
+	var camera_box := VBoxContainer.new()
+	camera_panel.add_child(camera_box)
+	var camera_title := Label.new()
+	camera_title.text = "Camera"
+	camera_title.theme_type_variation = "SecondaryLabel"
+	camera_box.add_child(camera_title)
+	_camera_status_label = Label.new()
+	_camera_status_label.text = "Camera: pending"
+	_camera_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_camera_status_label.theme_type_variation = "AccentLabel"
+	camera_box.add_child(_camera_status_label)
 
 	_diagnostics_panel = DiagnosticsPanelScript.new()
 	_diagnostics_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.DIAGNOSTICS_MIN_HEIGHT)

@@ -86,7 +86,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				ReplayVisuals.live_3d_locked_face_materials(_display_mode, locked_color_id),
 				ReplayVisuals.live_3d_locked_cell_border_material(_display_mode),
 				locked_size,
-				locked_size + ReplayVisuals.LIVE_3D_CELL_BORDER_DELTA
+				locked_size + ReplayVisuals.LIVE_3D_LOCKED_CELL_BORDER_DELTA
 			)
 		else:
 			node.setup(
@@ -98,7 +98,9 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				(locked_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if _presentation.is_live else 0.0
 			)
 
-	for cell in _presentation.active_cells():
+	var active_cells := _presentation.active_cells()
+	for active_index in range(active_cells.size()):
+		var cell = active_cells[active_index]
 		var node := CellRendererScript.new()
 		_cell_root.add_child(node)
 		# Gameplay cells do not carry stable per-cell IDs in the exported traces.
@@ -112,8 +114,10 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				ReplayVisuals.live_3d_active_face_materials(_display_mode, active_color_id),
 				ReplayVisuals.live_3d_active_cell_border_material(_display_mode),
 				active_size,
-				active_size + ReplayVisuals.LIVE_3D_CELL_BORDER_DELTA,
-				_live_3d_rotation_pulse(snapshot)
+				active_size + ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA,
+				_live_3d_rotation_pulse(snapshot),
+				ReplayVisuals.live_3d_origin_marker_material(_display_mode) if active_index == 0 else null,
+				ReplayVisuals.LIVE_3D_ORIGIN_MARKER_SCALE if active_index == 0 else 0.0
 			)
 		else:
 			node.setup(

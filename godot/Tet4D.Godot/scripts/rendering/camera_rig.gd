@@ -4,8 +4,10 @@ class_name CameraRig
 
 const PYTHON_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const PYTHON_DISPLAY_PITCH_RAD := -0.4537856055185257  # -26 degrees.
-const LIVE_3D_DISPLAY_YAW_RAD := 0.6981317007977318  # 40 degrees.
-const LIVE_3D_DISPLAY_PITCH_RAD := -0.5585053606381855  # -32 degrees.
+const REPLAY_DISPLAY_VIEW_PRESET_NAME := "PYTHON_DIAGRAM_REPLAY_VIEW"
+const LIVE_3D_VIEW_PRESET_NAME := "LIVE_3D_EXTERNAL_DIAGRAM_VIEW"
+const LIVE_3D_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
+const LIVE_3D_DISPLAY_PITCH_RAD := 0.4537856055185257  # +26 degrees above the board.
 const DEFAULT_ORTHOGRAPHIC_SIZE := 16.0
 
 @export var min_distance := 8.0
@@ -25,6 +27,9 @@ var _current_pitch := PYTHON_DISPLAY_PITCH_RAD
 var _base_distance := 22.0
 var _zoom_multiplier := 1.0
 var _last_frame_signature := ""
+var _current_view_preset := REPLAY_DISPLAY_VIEW_PRESET_NAME
+var _current_view_octant := "python replay"
+var _current_fit_state := "initial"
 
 @onready var _camera: Camera3D = $Camera3D
 
@@ -63,13 +68,18 @@ func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> voi
 	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
 	_target_yaw = PYTHON_DISPLAY_YAW_RAD
 	_target_pitch = PYTHON_DISPLAY_PITCH_RAD
+	_current_view_preset = REPLAY_DISPLAY_VIEW_PRESET_NAME
+	_current_view_octant = "python replay"
+	_current_fit_state = "framed"
 
 
 func fit_bounds(
 	bounds: Dictionary,
 	margin: float = 1.14,
 	yaw: float = PYTHON_DISPLAY_YAW_RAD,
-	pitch: float = PYTHON_DISPLAY_PITCH_RAD
+	pitch: float = PYTHON_DISPLAY_PITCH_RAD,
+	view_preset: String = REPLAY_DISPLAY_VIEW_PRESET_NAME,
+	view_octant: String = "python replay"
 ) -> void:
 	if not bounds.get("ok", false):
 		return
@@ -79,6 +89,9 @@ func fit_bounds(
 	_target_focus = (min_pos + max_pos) * 0.5
 	_target_yaw = yaw
 	_target_pitch = pitch
+	_current_view_preset = view_preset
+	_current_view_octant = view_octant
+	_current_fit_state = "fit OK"
 	var max_extent := maxf(size.x, maxf(size.y, maxf(size.z, 1.0)))
 	_base_distance = clampf(max_extent * 1.45 + 6.0, min_distance, max_distance)
 	_zoom_multiplier = 1.0
@@ -89,19 +102,39 @@ func fit_bounds(
 
 func orbit(delta: Vector2) -> void:
 	_target_yaw -= delta.x * orbit_sensitivity
-	_target_pitch = clampf(_target_pitch - delta.y * orbit_sensitivity, -1.2, 0.25)
+	_target_pitch = clampf(_target_pitch - delta.y * orbit_sensitivity, -1.2, 1.2)
+	_current_fit_state = "manual"
 
 
 func pan(delta: Vector2) -> void:
 	var right: Vector3 = Basis(Vector3.UP, _target_yaw).x
 	var up: Vector3 = Vector3.UP
 	_target_focus += (-right * delta.x + up * delta.y) * pan_sensitivity * _target_distance
+	_current_fit_state = "manual"
 
 
 func zoom(step: float) -> void:
 	var multiplier: float = pow(zoom_sensitivity, step)
 	_zoom_multiplier = clampf(_zoom_multiplier * multiplier, min_distance / maxf(_base_distance, 0.001), max_distance / maxf(_base_distance, 0.001))
 	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
+	_current_fit_state = "manual"
+
+
+func view_status_text() -> String:
+	if _camera == null:
+		return "Camera: %s · pending" % _current_view_preset
+	var projection_label := "ortho" if _camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective"
+	var yaw_degrees := rad_to_deg(_current_yaw)
+	var pitch_degrees := rad_to_deg(_current_pitch)
+	var pitch_label := "above %.0f deg" % pitch_degrees if pitch_degrees >= 0.0 else "below %.0f deg" % absf(pitch_degrees)
+	return "Camera: %s · %s · %s · yaw %.0f deg · pitch %s · roll 0 deg · %s" % [
+		_current_view_preset,
+		projection_label,
+		_current_view_octant,
+		yaw_degrees,
+		pitch_label,
+		_current_fit_state,
+	]
 
 
 func _snap_to_targets() -> void:

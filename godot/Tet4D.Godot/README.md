@@ -188,9 +188,13 @@ Stage 22d defines the gameboard visual-language authority in
 authority incrementally through the existing mapper/renderer path; the current
 Godot shell reserves left/board/right panel regions structurally and routes
 snapshot projection through focused presentation scripts. Stage 22f manual
-Live 3D acceptance remains pending in
-`docs/plans/godot_live_3d_manual_acceptance.md`, and Stage 23 Live 4D remains
-blocked until Stage 22f passes.
+Live 3D acceptance had a failed initial inspection and remains pending in
+`docs/plans/godot_live_3d_manual_acceptance.md`. Stage 22g corrects only those
+visual observations: Live 3D default/Fit View uses the above-board
+`LIVE_3D_EXTERNAL_DIAGRAM_VIEW`, camera preset/view diagnostics are visible,
+bundle status stays compact with inspector detail, and active cells are
+stronger than locked cells with an origin marker. Stage 23 Live 4D remains
+blocked until Stage 22f is rerun and passes.
 
 ## Opening In Godot
 

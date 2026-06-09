@@ -26,6 +26,11 @@ func run() -> Array:
 	var live_locked := ReplayVisuals.live_locked_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 4)
 	var live_active_border := ReplayVisuals.live_active_cell_border_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 	var live_locked_border := ReplayVisuals.live_locked_cell_border_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
+	var live_3d_active_faces := ReplayVisuals.live_3d_active_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6)
+	var live_3d_locked_faces := ReplayVisuals.live_3d_locked_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 4)
+	var live_3d_active_border := ReplayVisuals.live_3d_active_cell_border_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
+	var live_3d_locked_border := ReplayVisuals.live_3d_locked_cell_border_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
+	var live_3d_origin_marker := ReplayVisuals.live_3d_origin_marker_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 	var live_board_fill := ReplayVisuals.live_board_fill_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 	var live_board_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 	_assert_material_alpha(failures, "diagnostic active cell", cyan_active, 0.95)
@@ -36,12 +41,23 @@ func run() -> Array:
 	_assert_material_alpha(failures, "live locked cell", live_locked, 0.95)
 	_assert_material_alpha(failures, "live active border", live_active_border, 0.95)
 	_assert_material_alpha(failures, "live locked border", live_locked_border, 0.95)
+	_assert_material_alpha(failures, "live 3D active border", live_3d_active_border, 0.95)
+	_assert_material_alpha(failures, "live 3D locked border", live_3d_locked_border, 0.95)
+	_assert_material_alpha(failures, "live 3D origin marker", live_3d_origin_marker, 0.95)
 	_assert_material_alpha(failures, "live board fill", live_board_fill, 0.80)
 	_assert_material_alpha(failures, "live board grid", live_board_grid, 0.95)
 	if live_active.albedo_color == gameplay_active.albedo_color:
 		failures.append("live active cells should preserve piece color instead of using the replay role color")
 	if live_active.albedo_color == Color.WHITE:
 		failures.append("live active cells should not use flat white diagnostic blocks")
+	var live_3d_active_top := live_3d_active_faces.get("top") as StandardMaterial3D
+	var live_3d_locked_top := live_3d_locked_faces.get("top") as StandardMaterial3D
+	if _color_brightness(live_3d_active_top.albedo_color) <= _color_brightness(live_3d_locked_top.albedo_color) + 0.18:
+		failures.append("live 3D active faces should be materially brighter than locked faces")
+	if live_3d_active_border.albedo_color == live_3d_locked_border.albedo_color:
+		failures.append("live 3D active and locked outlines should use distinct roles")
+	if live_3d_active_border.emission_energy_multiplier <= live_3d_locked_border.emission_energy_multiplier:
+		failures.append("live 3D active outline should have stronger emphasis than locked outline")
 	_assert_material_alpha(failures, "diagnostic locked cell", ReplayVisuals.locked_cell_material(), 0.90)
 	_assert_material_alpha(failures, "diagnostic particle", ReplayVisuals.particle_material(), 0.95)
 	_assert_material_alpha(failures, "diagnostic board outline", ReplayVisuals.board_outline_material(), 0.90)
@@ -100,3 +116,7 @@ func _assert_color_close(failures: Array, label: String, actual: Color, expected
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:
 	if actual != expected:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _color_brightness(color: Color) -> float:
+	return (color.r + color.g + color.b) / 3.0

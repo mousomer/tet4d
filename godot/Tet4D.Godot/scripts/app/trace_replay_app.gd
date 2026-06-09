@@ -169,16 +169,20 @@ func _handle_camera_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
 				_camera_rig.zoom(0.9)
+				_refresh_camera_status()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			if _camera_rig != null:
 				_camera_rig.zoom(1.1)
+				_refresh_camera_status()
 	elif event is InputEventMouseMotion:
 		if _camera_rig == null:
 			return
 		if _mouse_orbiting:
 			_camera_rig.orbit(event.relative)
+			_refresh_camera_status()
 		elif _mouse_panning:
 			_camera_rig.pan(event.relative)
+			_refresh_camera_status()
 
 
 func _handle_live_2d_input(event: InputEvent) -> bool:
@@ -324,14 +328,15 @@ func _wire_hud() -> void:
 func _load_bundle() -> void:
 	var result := BundleLoader.load_bundle(BUNDLE_ROOT)
 	if not result.get("ok", false):
-		_hud.set_bundle_status("Bundle status: load failed\n%s" % result.get("error", "unknown error"))
+		_hud.set_bundle_status("Bundle: load failed", "Bundle load failed: %s" % result.get("error", "unknown error"))
 		return
 	_bundle = result
+	var manifest: Dictionary = _bundle.get("manifest", {})
+	var bundle_type := str(manifest.get("bundle_type", "bundle"))
+	var digest := str(manifest.get("config", {}).get("combined_digest", ""))
 	_hud.set_bundle_status(
-		"Bundle status: %s  digest=%s" % [
-			_bundle.get("manifest", {}).get("bundle_type", "bundle"),
-			_bundle.get("manifest", {}).get("config", {}).get("combined_digest", ""),
-		]
+		"Bundle: OK · %d cases" % _bundle_case_count(),
+		"Bundle: %s · digest %s" % [bundle_type, digest]
 	)
 	_state.selected_trace_type = STARTUP_TRACE_TYPE if not _bundle.get("cases_by_type", {}).get(STARTUP_TRACE_TYPE, []).is_empty() else TRACE_FAMILIES[0]
 	_hud.set_trace_families(TRACE_FAMILIES, _state.selected_trace_type)
@@ -348,7 +353,7 @@ func _select_trace_family(trace_type: String, preferred_case_id: String = "", st
 	if _current_cases.is_empty():
 		_current_document = null
 		_current_snapshot = {}
-		_hud.set_bundle_status("Bundle status: no cases for %s" % trace_type)
+		_hud.set_bundle_status("Bundle: no %s cases" % trace_type, "Bundle has no cases for selected trace family %s" % trace_type)
 		return
 	var case_id := preferred_case_id if not preferred_case_id.is_empty() else str(_current_cases[0].get("case_id", ""))
 	if open_case:
@@ -369,7 +374,7 @@ func _select_case(case_id: String, start_playing: bool = false) -> void:
 			case_entry
 		)
 		if not result.get("ok", false):
-			_hud.set_bundle_status("Bundle status: failed to load %s" % case_id)
+			_hud.set_bundle_status("Bundle: case load failed", "Bundle failed to load case %s" % case_id)
 			return
 		_state.selected_case_id = case_id
 		_state.reset(start_playing)
@@ -476,10 +481,18 @@ func _fit_view() -> void:
 		_pending_fit_view = true
 		return
 	if _mode == MODE_LIVE_3D:
-		_camera_rig.fit_bounds(bounds, 1.2, CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD)
+		_camera_rig.fit_bounds(
+			bounds,
+			1.2,
+			CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
+			CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
+			CameraRigScript.LIVE_3D_VIEW_PRESET_NAME,
+			"above exterior"
+		)
 	else:
 		_camera_rig.fit_bounds(bounds, 1.14)
 	_pending_fit_view = false
+	_refresh_camera_status()
 
 
 func _resolve_scene_nodes() -> void:
@@ -530,6 +543,7 @@ func _build_world_in_game_viewport() -> void:
 	_world_root.add_child(world_environment)
 
 	_hud.set_world_root(_world_root)
+	_refresh_camera_status()
 
 
 func _refresh_hud() -> void:
@@ -555,6 +569,7 @@ func _refresh_hud() -> void:
 		_hud.set_replay_mode_labels(_state.is_playing, _state.playback_speed, _state.diagnostics_visible)
 	if _current_snapshot.is_empty():
 		return
+	_refresh_camera_status()
 	_hud.set_summary(
 		str(_current_snapshot.get("trace_type", "")),
 		str(_current_snapshot.get("case_id", "")),
@@ -565,6 +580,22 @@ func _refresh_hud() -> void:
 		str(_current_snapshot.get("state_hash", ""))
 	)
 	_hud.set_snapshot(_current_snapshot, _state.diagnostics_visible)
+
+
+func _refresh_camera_status() -> void:
+	if _hud == null:
+		return
+	_resolve_scene_nodes()
+	if _camera_rig != null and _camera_rig.has_method("view_status_text"):
+		_hud.set_camera_status(_camera_rig.view_status_text())
+
+
+func _bundle_case_count() -> int:
+	var total := 0
+	var cases_by_type: Dictionary = _bundle.get("cases_by_type", {})
+	for key in cases_by_type.keys():
+		total += (cases_by_type.get(key, []) as Array).size()
+	return total
 
 
 func _enter_live_2d_mode() -> void:

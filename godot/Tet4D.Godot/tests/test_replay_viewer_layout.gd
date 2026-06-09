@@ -32,6 +32,9 @@ func run() -> Array:
 		hud.show_replay_viewer()
 		await tree.process_frame
 		await tree.process_frame
+		hud.set_bundle_status("Bundle: OK · 12 cases", "Bundle: exported_bundle · digest abc123")
+		hud.set_camera_status("Camera: LIVE_3D_EXTERNAL_DIAGRAM_VIEW · ortho · above exterior · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
+		await tree.process_frame
 		failures.append_array(_check_layout(hud, viewport_size))
 		root.queue_free()
 		await tree.process_frame
@@ -48,6 +51,9 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	var game_viewport_rect: Rect2 = snapshot.get("game_viewport", Rect2())
 	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
 	var bottom_rect: Rect2 = snapshot.get("bottom_bar", Rect2())
+	var bundle_status_text := str(snapshot.get("bundle_status_text", ""))
+	var bundle_detail_text := str(snapshot.get("bundle_detail_text", ""))
+	var camera_status_text := str(snapshot.get("camera_status_text", ""))
 	var label := "viewport %s" % str(viewport_size)
 	if root_rect.size.x <= 0.0 or root_rect.size.y <= 0.0:
 		failures.append("%s: root rect should be nonzero" % label)
@@ -79,6 +85,12 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: game area should not overlap inspector, game=%s inspector=%s" % [label, game_rect, inspector_rect])
 	if left_rect.end.x > game_rect.position.x + 0.5:
 		failures.append("%s: left case browser should not overlap game area, left=%s game=%s" % [label, left_rect, game_rect])
+	if bundle_status_text.find("Bundle: OK") == -1:
+		failures.append("%s: top bundle status should stay compact and readable" % label)
+	if bundle_detail_text.find("digest abc123") == -1:
+		failures.append("%s: inspector should preserve detailed bundle status" % label)
+	if camera_status_text.find("LIVE_3D_EXTERNAL_DIAGRAM_VIEW") == -1 or camera_status_text.find("above") == -1:
+		failures.append("%s: inspector should expose Live 3D camera preset diagnostics" % label)
 	var game_viewport: SubViewport = hud.game_viewport()
 	if game_viewport == null:
 		failures.append("%s: HUD should expose a game SubViewport" % label)

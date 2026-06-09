@@ -323,7 +323,15 @@ Cross-cutting requirements are defined in:
     23 Live Plain 4D must not begin until Stage 22f passes. Live 4D must
     inherit the same cell, axis, rotation-plane, HUD, and landmark grammar
     with stable W-slice context.
-34. The migrated Godot Live 3D shell should prefer snapping to returned C++
+34. Stage 22g may correct failed Stage 22f visual acceptance observations only.
+    Allowed corrections include an above-board canonical Live 3D default/Fit
+    View, visible camera preset/view diagnostics, compact readable bundle
+    status with detail text, stronger active-vs-locked cell roles, and an
+    active-piece origin/orientation marker. Stage 22g must not change C++
+    gameplay semantics, rotation math, trace parity, golden traces, accepted
+    Live 2D, Replay, or mapper/renderer ownership. Stage 23 remains blocked
+    until Stage 22f is rerun and passed.
+35. The migrated Godot Live 3D shell should prefer snapping to returned C++
     state plus clear plane feedback over a misleading Godot-side rotation
     tween. A future Godot presentation tween is allowed only if it is derived
     from and cannot contradict returned native state.
