@@ -568,7 +568,7 @@ def _draw_menu_dpad_and_commands(
         (dpad_center_x + cmd_spacing // 2, cmd_y),
         cmd_size,
         None,
-        "Esc = Quit",
+        "Esc = Back/Quit",
         fonts.hint_font,
         cmd_color,
         cmd_border,

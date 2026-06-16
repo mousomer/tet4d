@@ -22,7 +22,7 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, l
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(slice_bounds, display_mode)
 		if dimension >= 4:
-			_add_w_label(w_index, mapper.slice_label_position(w_index), display_mode)
+			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode)
 
 
 func _add_outline_box(slice_bounds: Dictionary, display_mode: String) -> void:
@@ -98,12 +98,28 @@ func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 		)
 
 
-func _add_w_label(w_index: int, label_position: Vector3, display_mode: String) -> void:
+func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String) -> void:
+	_add_w_label_chip(label_position, display_mode)
 	var label := Label3D.new()
-	label.text = "W=%d" % w_index
-	label.font_size = 42
+	label.text = "W SLICE %d/%d" % [w_index + 1, maxi(w_size, 1)]
+	label.font_size = ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.modulate = ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
-	label.outline_size = 14
-	label.position = label_position
+	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE
+	label.position = label_position + Vector3(0.0, 0.0, 0.025)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_child(label)
+
+
+func _add_w_label_chip(label_position: Vector3, display_mode: String) -> void:
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(
+		ReplayVisuals.W_SLICE_LABEL_CHIP_WIDTH,
+		ReplayVisuals.W_SLICE_LABEL_CHIP_HEIGHT,
+		ReplayVisuals.W_SLICE_LABEL_CHIP_DEPTH
+	)
+	mesh_instance.mesh = mesh
+	mesh_instance.material_override = ReplayVisuals.slice_label_chip_material(display_mode)
+	mesh_instance.position = label_position + Vector3(0.0, 0.0, -0.02)
+	add_child(mesh_instance)

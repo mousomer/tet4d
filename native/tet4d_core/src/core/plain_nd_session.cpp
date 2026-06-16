@@ -139,9 +139,37 @@ std::string rotation_plane_name(const std::optional<ActivePieceND> &piece) {
 	if (axis_a == 1 && axis_b == 2) {
 		return "YZ";
 	}
+	if (axis_a == 0 && axis_b == 3) {
+		return "XW";
+	}
+	if (axis_a == 1 && axis_b == 3) {
+		return "YW";
+	}
+	if (axis_a == 2 && axis_b == 3) {
+		return "ZW";
+	}
 	std::ostringstream out;
 	out << axis_a << ":" << axis_b;
 	return out.str();
+}
+
+std::string live_mode_label(int dimension) {
+	return dimension == 4 ? "Live 4D" : "Live 3D";
+}
+
+std::string live_trace_type(int dimension) {
+	return dimension == 4 ? "live_4d" : "live_3d";
+}
+
+std::string live_case_id(int dimension) {
+	return dimension == 4 ? "live_plain_4d" : "live_plain_3d";
+}
+
+int active_w_index(const std::optional<ActivePieceND> &piece) {
+	if (!piece.has_value() || piece->pos.values.size() <= 3) {
+		return 0;
+	}
+	return piece->pos.values[3];
 }
 
 PieceShapeND live_o_shape_3d() {
@@ -169,21 +197,33 @@ PieceShapeND live_screw_shape_3d() {
 }
 
 std::vector<PieceShapeND> live_piece_sequence_for_dimension(int dimension) {
-	if (dimension != 3) {
-		return {};
+	if (dimension == 4) {
+		return {
+			trace_shape_4d(),
+			standard_stair_shape_4d(),
+			trace_rotation_shape_4d(),
+			trace_single_shape_4d(),
+			trace_spawn_blocked_shape_4d(),
+		};
 	}
-	return {
-		native_i_shape_3d(),
-		live_o_shape_3d(),
-		live_l_shape_3d(),
-		live_t_shape_3d(),
-		live_s_shape_3d(),
-		live_j_shape_3d(),
-		live_screw_shape_3d(),
-	};
+	if (dimension == 3) {
+		return {
+			native_i_shape_3d(),
+			live_o_shape_3d(),
+			live_l_shape_3d(),
+			live_t_shape_3d(),
+			live_s_shape_3d(),
+			live_j_shape_3d(),
+			live_screw_shape_3d(),
+		};
+	}
+	return {};
 }
 
 BoardShapeND live_board_shape_for_dimension(int dimension) {
+	if (dimension == 4) {
+		return {{5, 10, 4, 4}};
+	}
 	if (dimension == 3) {
 		return {{6, 10, 6}};
 	}
@@ -248,6 +288,10 @@ std::string PlainNDSession::apply_command(const std::string &command) {
 		accepted = state_.try_move_axis(2, -1);
 	} else if (command == "move_z_pos") {
 		accepted = state_.try_move_axis(2, 1);
+	} else if (command == "move_w_neg") {
+		accepted = state_.try_move_axis(3, -1);
+	} else if (command == "move_w_pos") {
+		accepted = state_.try_move_axis(3, 1);
 	} else if (command == "rotate_xy_neg") {
 		accepted = state_.try_rotate(0, 1, -1);
 	} else if (command == "rotate_xy_pos") {
@@ -260,6 +304,18 @@ std::string PlainNDSession::apply_command(const std::string &command) {
 		accepted = state_.try_rotate(1, 2, -1);
 	} else if (command == "rotate_yz_pos") {
 		accepted = state_.try_rotate(1, 2, 1);
+	} else if (command == "rotate_xw_neg") {
+		accepted = state_.try_rotate(0, 3, -1);
+	} else if (command == "rotate_xw_pos") {
+		accepted = state_.try_rotate(0, 3, 1);
+	} else if (command == "rotate_yw_neg") {
+		accepted = state_.try_rotate(1, 3, -1);
+	} else if (command == "rotate_yw_pos") {
+		accepted = state_.try_rotate(1, 3, 1);
+	} else if (command == "rotate_zw_neg") {
+		accepted = state_.try_rotate(2, 3, -1);
+	} else if (command == "rotate_zw_pos") {
+		accepted = state_.try_rotate(2, 3, 1);
 	} else if (command == "soft_drop") {
 		accepted = state_.try_soft_drop();
 	} else if (command == "hard_drop") {
@@ -308,10 +364,14 @@ std::string PlainNDSession::snapshot_json() const {
 	const std::string locked_cells = render_locked_cells_json(state_.board);
 	const int entity_count = static_cast<int>(state_.active_cells().size() + state_.board.cells().size());
 	const std::string rotation_plane = rotation_plane_name(state_.active_piece);
+	const int last_rotation_steps = state_.active_piece.has_value() ? state_.active_piece->last_rotation_steps : 0;
+	const int w_slice_count = dimension_ >= 4 && board_shape_.dims.size() > 3 ? board_shape_.dims[3] : 1;
+	const int active_w = active_w_index(state_.active_piece);
 	std::ostringstream out;
 	out << "{\"active_cells\":" << active_cells
 		<< ",\"board_shape\":" << board_shape_json(board_shape_)
-		<< ",\"case_id\":\"live_plain_3d\""
+		<< ",\"case_id\":\"" << live_case_id(dimension_) << "\""
+		<< ",\"active_w\":" << active_w
 		<< ",\"current_piece\":\"" << current_piece_name() << "\""
 		<< ",\"current_piece_color_id\":" << (state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0)
 		<< ",\"diagnostics_lines\":["
@@ -323,6 +383,9 @@ std::string PlainNDSession::snapshot_json() const {
 		<< "\"current_piece: " << current_piece_name() << "\","
 		<< "\"next_piece: " << next_piece_name() << "\","
 		<< "\"last_rotation_plane: " << rotation_plane << "\","
+		<< "\"last_rotation_steps: " << last_rotation_steps << "\","
+		<< "\"w_slices: " << w_slice_count << "\","
+		<< "\"active_w: " << active_w << "\","
 		<< "\"last_command: " << last_command_ << "\","
 		<< "\"last_command_status: " << last_command_status_ << "\","
 		<< "\"locked_count: " << state_.board.cells().size() << "\""
@@ -341,14 +404,18 @@ std::string PlainNDSession::snapshot_json() const {
 		<< ",\"last_command\":\"" << last_command_ << "\""
 		<< ",\"last_command_status\":\"" << last_command_status_ << "\""
 		<< ",\"last_rotation_plane\":\"" << rotation_plane << "\""
+		<< ",\"last_rotation_steps\":" << last_rotation_steps
 		<< ",\"lines\":" << state_.lines
 		<< ",\"locked_cells\":" << locked_cells
 		<< ",\"metadata_lines\":["
-		<< "\"mode: Live 3D\","
+		<< "\"mode: " << live_mode_label(dimension_) << "\","
 		<< "\"authority: C++ GDExtension\","
 		<< "\"current_piece: " << current_piece_name() << "\","
 		<< "\"next_piece: " << next_piece_name() << "\","
 		<< "\"last_rotation_plane: " << rotation_plane << "\","
+		<< "\"last_rotation_steps: " << last_rotation_steps << "\","
+		<< "\"w_slices: " << w_slice_count << "\","
+		<< "\"active_w: " << active_w << "\","
 		<< "\"last_command: " << last_command_ << "\","
 		<< "\"state_hash: " << hash << "\""
 		<< "]"
@@ -358,19 +425,23 @@ std::string PlainNDSession::snapshot_json() const {
 		<< ",\"probe_markers\":[]"
 		<< ",\"score\":" << state_.score
 		<< ",\"state_hash\":\"" << hash << "\""
-		<< ",\"trace_name\":\"live_plain_3d\""
-		<< ",\"trace_type\":\"live_3d\""
+		<< ",\"trace_name\":\"" << live_case_id(dimension_) << "\""
+		<< ",\"trace_type\":\"" << live_trace_type(dimension_) << "\""
+		<< ",\"w_slice_count\":" << w_slice_count
 		<< "}";
 	return out.str();
 }
 
 std::string PlainNDSession::status() const {
+	const int w_slice_count = dimension_ >= 4 && board_shape_.dims.size() > 3 ? board_shape_.dims[3] : 1;
 	std::ostringstream out;
-	out << "live_plain_3d score=" << state_.score
+	out << live_case_id(dimension_) << " score=" << state_.score
 		<< " lines=" << state_.lines
 		<< " current_piece=" << current_piece_name()
 		<< " next_piece=" << next_piece_name()
 		<< " last_rotation_plane=" << rotation_plane_name(state_.active_piece)
+		<< " active_w=" << active_w_index(state_.active_piece)
+		<< " w_slices=" << w_slice_count
 		<< " game_over=" << bool_json(state_.game_over)
 		<< " game_over_reason=" << state_.game_over_reason
 		<< " paused=false"

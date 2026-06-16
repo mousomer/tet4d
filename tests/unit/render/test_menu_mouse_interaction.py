@@ -523,7 +523,7 @@ class TestMenuMouseInteraction(unittest.TestCase):
         self.assertFalse(state.running)
         self.assertTrue(state.keep_running)
 
-    def test_settings_hub_side_quit_click_matches_q_key_quit_path(self) -> None:
+    def test_settings_hub_side_quit_click_still_exits_without_q_shortcut(self) -> None:
         fonts = self._fonts()
         screen = pygame.Surface((960, 640))
         state_click = settings_hub_model.build_unified_settings_state(
@@ -568,8 +568,8 @@ class TestMenuMouseInteraction(unittest.TestCase):
         )
         out = launcher_settings._dispatch_unified_key(screen, fonts, state_key, pygame.K_q)
         self.assertIs(out, screen)
-        self.assertFalse(state_key.running)
-        self.assertFalse(state_key.keep_running)
+        self.assertTrue(state_key.running)
+        self.assertTrue(state_key.keep_running)
 
     def test_name_prompt_mouse_hover_tracks_button_hitbox(self) -> None:
         fonts = self._fonts()

@@ -9,11 +9,11 @@ func run() -> Array:
 	if not bridge.is_available():
 		failures.append("Tet4DCoreApi should be registered by the Stage 8 GDExtension")
 		return failures
-	_assert_equal(failures, bridge.get_core_version(), "0.8.0-stage22", "core version")
+	_assert_equal(failures, bridge.get_core_version(), "0.9.0-stage23", "core version")
 	_assert_equal(
 		failures,
 		bridge.get_core_status(),
-		"native tet4d core loaded; Stage 22 live plain 3D prototype available beside accepted live plain 2D",
+		"native tet4d core loaded; Stage 23 live plain 4D prototype available beside accepted live plain 2D/3D",
 		"core status"
 	)
 	_assert_equal(failures, bridge.echo_text("oracle-check"), "oracle-check", "echo text")
@@ -57,6 +57,7 @@ func run() -> Array:
 	_assert_plain_nd_parity_api(failures, bridge)
 	_assert_live_2d_session(failures, bridge)
 	_assert_live_3d_session(failures, bridge)
+	_assert_live_4d_session(failures, bridge)
 	return failures
 
 
@@ -324,3 +325,68 @@ func _assert_live_3d_session(failures: Array, bridge: RefCounted) -> void:
 	bridge.live_3d_tick()
 	if bridge.live_3d_status().find("last_command=tick") < 0:
 		failures.append("live_3d_tick should update native status")
+
+
+func _assert_live_4d_session(failures: Array, bridge: RefCounted) -> void:
+	bridge.live_4d_reset()
+	var initial_hash: String = bridge.live_4d_state_hash()
+	var snapshot = JSON.parse_string(bridge.live_4d_snapshot_json())
+	if typeof(snapshot) != TYPE_DICTIONARY:
+		failures.append("live 4D snapshot should parse as JSON dictionary")
+		return
+	_assert_equal(failures, snapshot.get("trace_type"), "live_4d", "live 4D trace type")
+	_assert_equal(failures, snapshot.get("case_id"), "live_plain_4d", "live 4D case")
+	_assert_equal(failures, snapshot.get("dimension"), 4, "live 4D dimension")
+	_assert_equal(failures, snapshot.get("board_shape"), [5.0, 10.0, 4.0, 4.0], "live 4D board shape")
+	_assert_equal(failures, snapshot.get("w_slice_count"), 4, "live 4D W slice count")
+	_assert_equal(failures, snapshot.get("current_piece", ""), "TRACE_4D", "live 4D deterministic initial piece")
+	_assert_equal(failures, snapshot.get("next_piece", ""), "STAIR4", "live 4D deterministic next piece")
+	if snapshot.get("active_cells", []).is_empty():
+		failures.append("live 4D snapshot should include active cells")
+	bridge.live_4d_apply_command("move_w_pos")
+	if bridge.live_4d_state_hash() == initial_hash:
+		failures.append("live 4D state hash should change after W movement")
+	var moved_w = JSON.parse_string(bridge.live_4d_snapshot_json())
+	if typeof(moved_w) == TYPE_DICTIONARY:
+		_assert_equal(failures, moved_w.get("last_command", ""), "move_w_pos", "live 4D W movement command")
+		_assert_equal(failures, moved_w.get("active_w"), 2, "live 4D active W after W movement")
+	else:
+		failures.append("live 4D W movement snapshot should parse")
+	bridge.live_4d_reset()
+	bridge.live_4d_apply_command("rotate_xw_pos")
+	var rotated_xw = JSON.parse_string(bridge.live_4d_snapshot_json())
+	if typeof(rotated_xw) == TYPE_DICTIONARY:
+		_assert_equal(failures, rotated_xw.get("last_rotation_plane", ""), "XW", "live 4D XW rotation plane")
+	else:
+		failures.append("live 4D XW rotated snapshot should parse")
+	bridge.live_4d_reset()
+	bridge.live_4d_apply_command("rotate_yw_pos")
+	var rotated_yw = JSON.parse_string(bridge.live_4d_snapshot_json())
+	if typeof(rotated_yw) == TYPE_DICTIONARY:
+		_assert_equal(failures, rotated_yw.get("last_rotation_plane", ""), "YW", "live 4D YW rotation plane")
+	else:
+		failures.append("live 4D YW rotated snapshot should parse")
+	bridge.live_4d_reset()
+	bridge.live_4d_apply_command("rotate_zw_pos")
+	var rotated_zw = JSON.parse_string(bridge.live_4d_snapshot_json())
+	if typeof(rotated_zw) == TYPE_DICTIONARY:
+		_assert_equal(failures, rotated_zw.get("last_rotation_plane", ""), "ZW", "live 4D ZW rotation plane")
+	else:
+		failures.append("live 4D ZW rotated snapshot should parse")
+	bridge.live_4d_reset()
+	bridge.live_4d_apply_command("hard_drop")
+	var after_drop = JSON.parse_string(bridge.live_4d_snapshot_json())
+	if typeof(after_drop) != TYPE_DICTIONARY:
+		failures.append("live 4D post-drop snapshot should parse as JSON dictionary")
+		return
+	_assert_equal(failures, after_drop.get("score"), 5, "live 4D hard drop score")
+	_assert_equal(failures, after_drop.get("current_piece", ""), "STAIR4", "live 4D first post-lock piece")
+	_assert_equal(failures, after_drop.get("last_command", ""), "hard_drop", "live 4D last command")
+	_assert_equal(failures, after_drop.get("last_command_status", ""), "accepted", "live 4D last command status")
+	if after_drop.get("locked_cells", []).is_empty():
+		failures.append("live 4D hard drop should expose locked cells")
+	bridge.live_4d_reset()
+	_assert_equal(failures, bridge.live_4d_state_hash(), initial_hash, "live 4D reset hash")
+	bridge.live_4d_tick()
+	if bridge.live_4d_status().find("last_command=tick") < 0:
+		failures.append("live_4d_tick should update native status")

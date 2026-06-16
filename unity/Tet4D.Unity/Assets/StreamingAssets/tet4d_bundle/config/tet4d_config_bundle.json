@@ -56,7 +56,7 @@
       "config/ui/theme.json"
     ]
   },
-  "combined_digest": "a2cdf3318877858f1d634a1f34938139786b71bb469812258dae5780e0f996b2",
+  "combined_digest": "5a48f393c03a03bee77becb8e73efcf07f6dd8697ed2f388e2f8ef66b24c753d",
   "schema_files": [
     {
       "purpose": "help action map.schema JSON schema",
@@ -112,7 +112,7 @@
     "config/keybindings/catalog.json": "87db3ab8e71e64676fedfdd54804b69ed2c83dc1c227a0b7745ac9885af7b71f",
     "config/keybindings/defaults.json": "f5990e2a9c46a09570217ddc5b8aaea73fca1280a6a88f7002b9b0a8769e9100",
     "config/menu/defaults.json": "8efca9c309300eaa16a80b42c0a795fecce70971dabfa2b5ad815736f5341979",
-    "config/menu/structure.json": "b9b4f81f026f94b10c2d90550dc6eb5b2c7e31adfb0125abdc1bc850676db6e4",
+    "config/menu/structure.json": "94a52df1986dcf9194c3704ba6e68c4cb43b53addc9251c3f22707b26b1a6e7a",
     "config/playbot/policy.json": "8b3aa9f093e7123ca7dcbf68d0d4d484fafe7b30c816bbbf9d8141e990ba45ea",
     "config/project/backlog_debt.json": "b5837703b4190a1f7fd149f6ae0f52653282f95663b495a0de2ba1584d329581",
     "config/project/constants.json": "40b3fb2f1847a2be04eb0667a1162b44534af3c65984f34dc77b87fa8a7b3a22",
@@ -122,7 +122,7 @@
     "config/project/policy/manifests/help_assets_manifest.json": "f65301e28c585cc61f6662b86b22c491f29b4adce604bf07fedb643cfbdf95e7",
     "config/project/policy/manifests/replay_manifest.json": "04bd5feb7c312f94043585b09eb62d5707075861c13660697f4599b14ae81395",
     "config/project/policy/manifests/secret_scan.json": "047a6c0cbd75fb8f8ee3874f2193b6b9f3ca618eef34af2a5b8586c6a37d127f",
-    "config/project/policy_pack.json": "59394bad607146787cd5cd0fa3578a68261745f16afde20fdd63d540e5c7d0d9",
+    "config/project/policy_pack.json": "26e02bfeee391508f681557fda6d6a23e02eded2ad16a9d232facd251a2c462b",
     "config/topology/designer_presets.json": "aa580530ae440285615e6f4d27f168a637efd481dfe688de4580fdfd16957a6a",
     "config/topology/lab_menu.json": "66dca73fdd7d141d6d2d001c1af0da6a5718b5cde6bd01d471502089b468110c",
     "config/tutorial/lessons.json": "5623e0313d97a399f8eab713bb51884faf2b3ec4e8d1043acc74225f3ab1f024",
@@ -6781,7 +6781,7 @@
         "pause_copy": {
           "hints": [
             "Up/Down select   Enter apply",
-            "Esc resume   Q quit"
+            "Esc resume   Click Quit"
           ],
           "subtitle_template": "{dimension}D in-game controls and settings"
         },
@@ -7267,7 +7267,7 @@
           "bot_options": {
             "hints": [
               "Left/Right adjust values   Up/Down select",
-              "F5 save   F8 reset defaults   Backspace back   Esc exit   Q quit"
+              "F5 save   F8 reset defaults   Backspace back   Esc exit"
             ],
             "reset_confirm_enter": "Press Enter on Reset defaults again to confirm",
             "reset_confirm_f8": "Press F8 again to confirm reset defaults",
@@ -7281,15 +7281,15 @@
             "hints": [
               "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
               "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   Backspace delete custom profile",
-              "C conflict mode cycle   Enter capture   Tab sections   Backspace back   Q quit",
+              "C conflict mode cycle   Enter capture   Tab sections   Backspace back   Esc exit",
               "{scope_file_hint}"
             ],
             "section_hints": [
-              "Enter open section   Up/Down select section   Backspace back   Esc exit   Q quit",
+              "Enter open section   Up/Down select section   Backspace back   Esc exit",
               "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   F2 rename   F3 save as"
             ],
-            "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Backspace back, Q quit",
-            "subtitle_section_mode": "Up/Down select section, Enter open, Backspace back, Esc exit, Q quit",
+            "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Backspace back, Esc exit",
+            "subtitle_section_mode": "Up/Down select section, Enter open, Backspace back, Esc exit",
             "text_mode_confirm_hint": "Enter confirm   Esc cancel",
             "title": "Keybindings"
           },
@@ -7299,7 +7299,7 @@
             "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
             "controls_hint_template_tiny": "I/K select   Enter open   {escape_hint}",
             "escape_hint_back": "Backspace back",
-            "escape_hint_quit": "Esc exit   Q quit",
+            "escape_hint_quit": "Esc exit",
             "info_active_profile_template": "Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)",
             "info_continue_mode_template": "Continue mode: {mode}"
           },
@@ -7309,7 +7309,7 @@
               "Enter opens subpages, activates actions, or confirms selectors",
               "Type digits on width, height, seed, or animation timing rows for direct numeric entry",
               "Overflowing pages scroll automatically and show a shared scrollbar",
-              "F5 save   F8 reset defaults   Backspace back   Esc exit   Q quit"
+              "F5 save   F8 reset defaults   Backspace back   Esc exit"
             ],
             "reset_confirm_f8": "Press F8 again to confirm reset defaults",
             "subtitle_categories_template": "Open settings pages from the unified registry: {categories}",
@@ -7317,8 +7317,8 @@
           },
           "setup_menu": {
             "bindings_hint_template": "L = load keys, S = save keys ({bindings_file_hint})",
-            "compact_controls_hint": "Arrows navigate   Enter start   Backspace back   Esc exit   Q quit",
-            "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Backspace back, Esc exit, Q quit.",
+            "compact_controls_hint": "Arrows navigate   Enter start   Backspace back   Esc exit",
+            "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Backspace back, Esc exit.",
             "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Setup keeps safe presets only; open Topology Playground or Play Last Custom Topology for custom topology.",
             "title_2d": "2D Setup",
             "title_template": "{dimension}D Setup"
@@ -7326,7 +7326,7 @@
         }
       },
       "payload_included": true,
-      "sha256": "b9b4f81f026f94b10c2d90550dc6eb5b2c7e31adfb0125abdc1bc850676db6e4"
+      "sha256": "94a52df1986dcf9194c3704ba6e68c4cb43b53addc9251c3f22707b26b1a6e7a"
     },
     "config/playbot/policy.json": {
       "category": "playbot_defaults",
@@ -8058,7 +8058,7 @@
       "format": "json",
       "payload_included": false,
       "payload_omitted_reason": "Governance policy pack is indexed by digest; source file remains the machine-readable authority.",
-      "sha256": "59394bad607146787cd5cd0fa3578a68261745f16afde20fdd63d540e5c7d0d9"
+      "sha256": "26e02bfeee391508f681557fda6d6a23e02eded2ad16a9d232facd251a2c462b"
     },
     "config/topology/designer_presets.json": {
       "category": "topology_defaults",

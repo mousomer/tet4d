@@ -466,10 +466,6 @@ class MenuRunner:
                     len(state.stack),
                 ):
                     continue
-                if event.key == pygame.K_q:
-                    if _handle_quit():
-                        break
-                    continue
                 if key == pygame.K_BACKSPACE:
                     if _handle_backspace():
                         break

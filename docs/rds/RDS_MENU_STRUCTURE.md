@@ -114,10 +114,9 @@ Main Menu
 
 - No independent Play submenu.
 - No visible Quit row.
-- Q remains the global quit shortcut.
 - Backspace is the ordinary menu-up/back key.
 - Esc cancels active modal/text entry; otherwise it exits only from the current menu root.
-- Q/Esc/Backspace are rendered as persistent clickable side buttons in MenuRunner-backed menus and in
+- Back/Esc/Quit are rendered as persistent clickable side buttons in MenuRunner-backed menus and in
   the `Settings` hub (which still uses its custom loop).
 - Redundant single-option menus are forbidden unless they carry an explicit
   `allow_single_option: true` exemption with a documented reason or use one
@@ -264,11 +263,10 @@ Pause Menu
 3. `Enter`: activate focused action.
 4. `Backspace`: move one menu level up (ordinary menu-up/back).
 5. `Esc`: cancel active modal/text entry; otherwise it exits only from the current menu root.
-6. `Q`: global quit (only where quitting is legal).
-7. `Tab`: next section when in multi-section settings.
-8. A visible `Back` affordance must be present anywhere `Backspace`/cancel returns
+6. `Tab`: next section when in multi-section settings.
+7. A visible `Back` affordance must be present anywhere `Backspace`/cancel returns
    to the previous menu level.
-9. Mouse hover and click are required for controls that render as buttons or
+8. Mouse hover and click are required for controls that render as buttons or
    actionable menu rows; click activation must reuse the same action dispatch
    path as keyboard confirm for that control.
 10. Pointer release outside the pressed control must cancel activation unless a
@@ -480,7 +478,7 @@ Implemented in code:
 1. Unified launcher added at `front.py`.
 2. Main menu root includes `2D`, `3D`, `4D`, `Replay Last`, `Leaderboard`,
    `Help / Tutorials`, and `Advanced` (no independent `Play` submenu, no
-   visible `Quit` row; `Q` remains the global quit shortcut).
+   visible `Quit` row; `Esc` remains the universal keyboard exit path).
 3. `Tutorials` keeps separate learning/support destinations for interactive tutorials, how-to-play guidance, controls reference, and help/FAQ.
 4. `Advanced` owns `Settings`, `Topology Playground`, `Explosion Simulator`,
    `Bot`, and `Last Custom Topology` (plus `Back`).

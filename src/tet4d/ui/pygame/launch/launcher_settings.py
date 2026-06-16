@@ -96,7 +96,7 @@ class _UnifiedPointerTarget:
 _SETTINGS_SIDE_BUTTONS: tuple[tuple[str, str], ...] = (
     ("side_back", "Backspace: Back"),
     ("side_escape", "Esc: Exit"),
-    ("side_quit", "Q: Quit"),
+    ("side_quit", "Quit"),
 )
 _SIDE_BUTTON_RIGHT_MARGIN = 18
 _SIDE_BUTTON_TOP = 18
@@ -836,11 +836,6 @@ def _dispatch_unified_text_mode_key(
 ) -> pygame.Surface | None:
     if not _is_unified_text_mode(state):
         return None
-    if key == pygame.K_q:
-        _stop_unified_text_mode(state)
-        state.keep_running = False
-        state.running = False
-        return screen
     if key == pygame.K_ESCAPE:
         _stop_unified_text_mode(state)
         _set_unified_status(state, "Value edit cancelled")
@@ -895,10 +890,6 @@ def _handle_unified_exit_navigation_key(
     key: int,
     nav_key: int,
 ) -> pygame.Surface | None:
-    if key == pygame.K_q:
-        state.keep_running = False
-        state.running = False
-        return screen
     if nav_key == pygame.K_BACKSPACE:
         if not _pop_page(state):
             state.running = False
@@ -909,6 +900,13 @@ def _handle_unified_exit_navigation_key(
             state.running = False
         return screen
     return None
+
+
+def _quit_unified_settings(screen: pygame.Surface, state: _UnifiedSettingsState) -> pygame.Surface:
+    _stop_unified_text_mode(state)
+    state.keep_running = False
+    state.running = False
+    return screen
 
 
 def _handle_unified_navigation_key(
@@ -1040,7 +1038,7 @@ def _handle_unified_non_key_event(  # noqa: C901
         if target.kind == "side_escape":
             return _dispatch_unified_key(screen, fonts, state, pygame.K_ESCAPE), True
         if target.kind == "side_quit":
-            return _dispatch_unified_key(screen, fonts, state, pygame.K_q), True
+            return _quit_unified_settings(screen, state), True
         if target.kind == "item":
             _apply_unified_pointer_focus(state, target)
             return _handle_unified_enter(screen, fonts, state), True

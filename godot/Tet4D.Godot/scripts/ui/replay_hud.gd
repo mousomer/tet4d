@@ -23,6 +23,7 @@ signal quit_requested()
 signal replay_mode_requested()
 signal live_2d_requested()
 signal live_3d_requested()
+signal live_4d_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -32,10 +33,12 @@ const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
 const REPLAY_HINT_TEXT := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
-const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Q/Esc Quit"
-const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Q/Esc quits. Godot sends commands only."
-const LIVE_3D_HINT_TEXT := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Replay · Q/Esc Quit"
-const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab returns to Replay, and Q/Esc quits. Godot sends commands only."
+const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Esc Quit"
+const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Esc quits. Godot sends commands only."
+const LIVE_3D_HINT_TEXT := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Live 4D · Esc Quit"
+const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab switches to Live 4D, and Esc quits. Godot sends commands only."
+const LIVE_4D_HINT_TEXT := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Rotate: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, -/= Zoom · P Pause · Backspace Reset · Fit View Recovery · Tab Replay · Esc Quit"
+const LIVE_4D_HELP_TEXT := "Live 4D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Q/E move across W slices, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, Y/U rotates XW, H/J rotates YW, N/M rotates ZW. I/K pitch the camera, O/L yaw the camera, and -/= zoom without dispatching gameplay. P pauses, Backspace resets, Fit View restores the canonical full W-slice layout, Tab returns to Replay, and Esc quits. Q is W- movement in Live 4D. Godot sends commands only."
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -90,6 +93,8 @@ var _live_2d_paused := false
 var _live_2d_game_over := false
 var _live_3d_paused := false
 var _live_3d_game_over := false
+var _live_4d_paused := false
+var _live_4d_game_over := false
 
 
 static func replay_hint_text() -> String:
@@ -102,6 +107,10 @@ static func live_2d_hint_text() -> String:
 
 static func live_3d_hint_text() -> String:
 	return LIVE_3D_HINT_TEXT
+
+
+static func live_4d_hint_text() -> String:
+	return LIVE_4D_HINT_TEXT
 
 
 func _ready() -> void:
@@ -163,18 +172,25 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 	if _event_screen_panel != null:
 		_event_screen_panel.set_events(snapshot.get("event_lines", []))
 	if _trace_integrity_label != null:
-		if str(snapshot.get("trace_type", "")) == "live_2d" or str(snapshot.get("trace_type", "")) == "live_3d":
-			var mode_label := "LIVE 3D" if str(snapshot.get("trace_type", "")) == "live_3d" else "LIVE 2D"
+		var trace_type := str(snapshot.get("trace_type", ""))
+		if trace_type == "live_2d" or trace_type == "live_3d" or trace_type == "live_4d":
+			var mode_label := "LIVE 4D" if trace_type == "live_4d" else ("LIVE 3D" if trace_type == "live_3d" else "LIVE 2D")
 			var game_over := bool(snapshot.get("game_over", false))
-			var paused_fallback := _live_3d_paused if str(snapshot.get("trace_type", "")) == "live_3d" else _live_2d_paused
+			var paused_fallback := _live_4d_paused if trace_type == "live_4d" else (_live_3d_paused if trace_type == "live_3d" else _live_2d_paused)
 			var state_label := "GAME OVER" if game_over else ("paused" if bool(snapshot.get("paused", paused_fallback)) else "running")
 			var reason := str(snapshot.get("game_over_reason", ""))
 			var rotation_text := ""
-			if str(snapshot.get("trace_type", "")) == "live_3d":
+			if trace_type == "live_3d" or trace_type == "live_4d":
 				rotation_text = " · Last rotation: %s/%s · active plane %s" % [
 					str(snapshot.get("last_rotation_label", "none")),
 					str(snapshot.get("last_rotation_status", "none")),
 					str(snapshot.get("last_rotation_plane", "none")),
+				]
+			var w_text := ""
+			if trace_type == "live_4d":
+				w_text = " · W %d/%d" % [
+					int(snapshot.get("active_w", 0)),
+					int(snapshot.get("w_slice_count", 1)),
 				]
 			_trace_integrity_label.text = "%s · C++ CORE · piece %s · next %s · score %d · lines %d · state_hash %s · last command %s/%s%s · %s%s" % [
 				mode_label,
@@ -185,7 +201,7 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 				str(snapshot.get("state_hash", "")).left(12),
 				str(snapshot.get("last_command", "none")),
 				str(snapshot.get("last_command_status", "unknown")),
-				rotation_text,
+				rotation_text + w_text,
 				state_label,
 				(" · reason " + reason) if reason != "" else "",
 			]
@@ -283,6 +299,43 @@ func set_live_3d_mode(
 		]
 
 
+func set_live_4d_mode(
+	paused: bool,
+	game_over: bool,
+	last_command: String,
+	game_over_reason: String = "",
+	gravity_interval_seconds: float = 0.5
+) -> void:
+	_live_4d_paused = paused
+	_live_4d_game_over = game_over
+	_play_button.text = "Resume Live" if paused else "Pause Live"
+	if _reset_button != null:
+		_reset_button.text = "Reset Live 4D"
+	_speed_value.text = "Game Over" if game_over else ("Paused Live 4D" if paused else "Running Live 4D")
+	if _authority_label != null:
+		_authority_label.text = "LIVE 4D · C++ CORE"
+	if _viewport_title != null:
+		_viewport_title.text = "Live Plain 4D"
+	if _viewport_hint != null:
+		_viewport_hint.text = "Native C++ owns gameplay · W slices shown side-by-side · Fit View restores canonical fitted layout · gravity %.2fs" % gravity_interval_seconds
+	if _mode_hint_strip != null:
+		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
+		_mode_hint_strip.text = ("GAME OVER · %s · %s" % [reason_text, LIVE_4D_HINT_TEXT]) if game_over else LIVE_4D_HINT_TEXT
+		_mode_hint_strip.theme_type_variation = "WarningLabel" if game_over else "AccentLabel"
+	if _replay_note != null:
+		_replay_note.text = "GAME OVER: %s. Backspace resets Live 4D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 4D. W slices open fitted. Q/E move W; Space hard drops; I/K, O/L, -/= adjust camera; Fit View recovers; Esc quits."
+	if _hint_label != null:
+		_hint_label.text = LIVE_4D_HINT_TEXT
+	if _help_label != null:
+		_help_label.text = LIVE_4D_HELP_TEXT
+	if _trace_integrity_label != null:
+		_trace_integrity_label.text = "LIVE 4D · C++ CORE · last command %s · Last rotation: pending snapshot · %s%s" % [
+			last_command,
+			"game over" if game_over else ("paused" if paused else "running"),
+			(" · reason " + game_over_reason) if game_over_reason != "" else "",
+		]
+
+
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
 	set_playback_state(is_playing, speed, diagnostics_visible)
 	if _authority_label != null:
@@ -366,6 +419,15 @@ func show_replay_viewer() -> void:
 	show_screen(SCREEN_VIEWER)
 
 
+func set_live_keyboard_capture(enabled: bool) -> void:
+	_set_focus_mode_recursive(_viewer_screen, Control.FOCUS_NONE if enabled else Control.FOCUS_ALL)
+	var viewport := get_viewport()
+	if enabled and viewport != null:
+		var focus_owner := viewport.gui_get_focus_owner()
+		if focus_owner != null and _viewer_screen != null and _viewer_screen.is_ancestor_of(focus_owner):
+			focus_owner.release_focus()
+
+
 func _build_layout() -> void:
 	var root := MarginContainer.new()
 	_fill_parent(root)
@@ -441,6 +503,12 @@ func _build_layout() -> void:
 		live_3d_requested.emit()
 	)
 	nav_row_b.add_child(live_3d_button)
+	var live_4d_button := Button.new()
+	live_4d_button.text = "Live 4D"
+	live_4d_button.pressed.connect(func() -> void:
+		live_4d_requested.emit()
+	)
+	nav_row_b.add_child(live_4d_button)
 
 	_top_status_panel = PanelContainer.new()
 	_top_status_panel.custom_minimum_size = Vector2(ReplayVisuals.TOP_STATUS_PANEL_WIDTH, ReplayVisuals.TOP_BAR_HEIGHT)
@@ -853,6 +921,14 @@ func _build_main_menu_screen(screen: Control) -> void:
 		live_3d_requested.emit()
 	)
 	layout.add_child(live_3d_button)
+	var live_4d_button := Button.new()
+	live_4d_button.text = "Start Live Plain 4D"
+	live_4d_button.custom_minimum_size = Vector2(420, 54)
+	live_4d_button.add_theme_font_size_override("font_size", 18)
+	live_4d_button.pressed.connect(func() -> void:
+		live_4d_requested.emit()
+	)
+	layout.add_child(live_4d_button)
 	var controls_button := Button.new()
 	controls_button.text = "Controls / Keyboard Hints"
 	controls_button.custom_minimum_size = Vector2(420, 50)
@@ -933,10 +1009,11 @@ func _build_controls_screen(screen: Control) -> void:
 	layout.add_child(panel)
 	var text := Label.new()
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.text = "Replay: %s. Live 2D: %s. Live 3D: %s. Godot routes live commands only; C++ owns gameplay state." % [
+	text.text = "Replay: %s. Live 2D: %s. Live 3D: %s. Live 4D: %s. Godot routes live commands only; C++ owns gameplay state." % [
 		REPLAY_HINT_TEXT,
 		LIVE_2D_HINT_TEXT,
 		LIVE_3D_HINT_TEXT,
+		LIVE_4D_HINT_TEXT,
 	]
 	text.theme_type_variation = "SecondaryLabel"
 	panel.add_child(text)
@@ -998,6 +1075,12 @@ func _screen_nav(title_text: String) -> HBoxContainer:
 		live_3d_requested.emit()
 	)
 	nav.add_child(live_3d_button)
+	var live_4d_button := Button.new()
+	live_4d_button.text = "Live 4D"
+	live_4d_button.pressed.connect(func() -> void:
+		live_4d_requested.emit()
+	)
+	nav.add_child(live_4d_button)
 	var diagnostics_button := Button.new()
 	diagnostics_button.text = "Diagnostics"
 	diagnostics_button.pressed.connect(func() -> void:
@@ -1066,3 +1149,12 @@ func _select_speed_no_signal(speed: float) -> void:
 func toggle_help() -> void:
 	if _help_panel != null:
 		_help_panel.visible = not _help_panel.visible
+
+
+func _set_focus_mode_recursive(node: Node, focus_mode: FocusMode) -> void:
+	if node == null:
+		return
+	if node is Button or node is OptionButton or node is HSlider:
+		(node as Control).focus_mode = focus_mode
+	for child in node.get_children():
+		_set_focus_mode_recursive(child, focus_mode)

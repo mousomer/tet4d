@@ -435,6 +435,16 @@ class TestKeybindingProfiles(unittest.TestCase):
             ["spaceship"],
         )
 
+    def test_load_sanitizes_stale_non_escape_quit_binding(self) -> None:
+        path = keybindings.profile_keybinding_file_path(4, keybindings.PROFILE_SMALL)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["bindings"]["system"]["quit"] = ["q", "escape"]
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        ok, msg = keybindings.load_keybindings_file(4, profile=keybindings.PROFILE_SMALL)
+        self.assertTrue(ok, msg)
+        self.assertEqual(keybindings.SYSTEM_KEYS["quit"], (pygame.K_ESCAPE,))
+
     def test_saved_profile_payload_accepts_partial_custom_override(self) -> None:
         payload = {
             "dimension": 3,

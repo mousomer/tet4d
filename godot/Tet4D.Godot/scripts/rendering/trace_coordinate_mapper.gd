@@ -52,7 +52,11 @@ func slice_label_position(w_index: int = 0) -> Vector3:
 		return Vector3.ZERO
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
-	return Vector3((min_pos.x + max_pos.x) * 0.5, max_pos.y + 0.9, (min_pos.z + max_pos.z) * 0.5)
+	return Vector3(
+		(min_pos.x + max_pos.x) * 0.5,
+		max_pos.y + ReplayVisuals.W_SLICE_LABEL_VERTICAL_OFFSET,
+		(min_pos.z + max_pos.z) * 0.5
+	)
 
 
 func board_bounds(board_shape: Array, dimension: int) -> Dictionary:
@@ -64,6 +68,8 @@ func board_bounds(board_shape: Array, dimension: int) -> Dictionary:
 	var last_bounds := slice_bounds(maxi(w_size - 1, 0))
 	var min_pos: Vector3 = first_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = last_bounds.get("max", Vector3.ZERO)
+	if dimension >= 4:
+		max_pos.y += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
 	return {"ok": true, "min": min_pos, "max": max_pos}
 
 

@@ -53,6 +53,13 @@ const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
 const SLICE_PADDING := 2.0
 const GRID_LINE_THICKNESS := 0.045
+const W_SLICE_LABEL_FONT_SIZE := 86
+const W_SLICE_LABEL_OUTLINE_SIZE := 28
+const W_SLICE_LABEL_CHIP_WIDTH := 4.85
+const W_SLICE_LABEL_CHIP_HEIGHT := 0.88
+const W_SLICE_LABEL_CHIP_DEPTH := 0.045
+const W_SLICE_LABEL_VERTICAL_OFFSET := 1.12
+const W_SLICE_LABEL_BOUNDS_PAD := 1.72
 const PROBE_MARKER_HEIGHT := 0.32
 const EVENT_MARKER_HEIGHT := 0.62
 const PARTICLE_TRAIL_HISTORY := 14
@@ -159,9 +166,19 @@ static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC,
 	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode), false)
 
 
+static func live_4d_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
+	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72, false)
+
+
 static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> Dictionary:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.13)
 	return _live_3d_face_materials(base, mode, true)
+
+
+static func live_4d_active_face_materials(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> Dictionary:
+	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
+	return _live_3d_face_materials(base, mode, true, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72)
 
 
 static func locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
@@ -273,6 +290,13 @@ static func event_marker_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Sta
 
 static func slice_label_color(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Color:
 	return color_for_role(ROLE_W_SLICE_LABEL, mode)
+
+
+static func slice_label_chip_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+	var material := _role_material(ROLE_PANEL_QUIET, mode, 0.18)
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = _with_alpha(color_for_role(ROLE_PANEL_QUIET, mode), 0.94)
+	return material
 
 
 static func slice_outline_thickness(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> float:
@@ -440,15 +464,22 @@ static func _make_lit_material(color: Color, emission_strength: float, use_alpha
 	return material
 
 
-static func _live_3d_face_materials(base: Color, mode: String, active: bool) -> Dictionary:
+static func _live_3d_face_materials(base: Color, mode: String, active: bool, emission_override: float = -1.0) -> Dictionary:
 	var emission_role := ROLE_LIVE_3D_ACTIVE if active else ROLE_LIVE_3D_LOCKED
-	var emission := _role_emission(emission_role, mode)
-	var top := _shade_color(base.lerp(color_for_role(ROLE_LIVE_3D_FACE_HIGHLIGHT, mode), 0.18 if active else 0.04), 1.18 if active else 0.9)
-	var front := _shade_color(base, 1.02 if active else 0.8)
-	var right := _shade_color(base, 0.92 if active else 0.72)
-	var left := _shade_color(base, 0.82 if active else 0.66)
-	var back := _shade_color(base, 0.76 if active else 0.6)
-	var bottom := _shade_color(base, 0.68 if active else 0.54)
+	var emission := emission_override if emission_override >= 0.0 else _role_emission(emission_role, mode)
+	var active_boost := 0.14 if emission_override >= 0.0 else 0.18
+	var top_factor := 1.1 if emission_override >= 0.0 else 1.18
+	var front_factor := 0.96 if emission_override >= 0.0 else 1.02
+	var right_factor := 0.86 if emission_override >= 0.0 else 0.92
+	var left_factor := 0.78 if emission_override >= 0.0 else 0.82
+	var back_factor := 0.72 if emission_override >= 0.0 else 0.76
+	var bottom_factor := 0.64 if emission_override >= 0.0 else 0.68
+	var top := _shade_color(base.lerp(color_for_role(ROLE_LIVE_3D_FACE_HIGHLIGHT, mode), active_boost if active else 0.04), top_factor if active else 0.9)
+	var front := _shade_color(base, front_factor if active else 0.8)
+	var right := _shade_color(base, right_factor if active else 0.72)
+	var left := _shade_color(base, left_factor if active else 0.66)
+	var back := _shade_color(base, back_factor if active else 0.6)
+	var bottom := _shade_color(base, bottom_factor if active else 0.54)
 	return {
 		"base": _make_lit_material(base, emission, false),
 		"top": _make_lit_material(top, emission, false),

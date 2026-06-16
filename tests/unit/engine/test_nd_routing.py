@@ -24,6 +24,7 @@ from tet4d.ui.pygame.keybindings import (
     EXPLORER_KEYS_4D,
     KEYS_3D,
     KEYS_4D,
+    KEYBINDING_STATE,
     SYSTEM_KEYS,
 )
 
@@ -164,6 +165,25 @@ class TestNdRouting(unittest.TestCase):
 
         self.assertEqual(result, "continue")
         self.assertEqual(state.moves, [(3, 1)])
+
+    def test_stale_q_quit_binding_does_not_override_4d_w_movement(self) -> None:
+        cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)
+        state = _AxisCaptureState(cfg)
+        original_quit = tuple(KEYBINDING_STATE.system_keys["quit"])
+        try:
+            KEYBINDING_STATE.system_keys["quit"] = (pygame.K_q, pygame.K_ESCAPE)
+            KEYBINDING_STATE.sanitize_runtime_bindings()
+            result = frontend_nd_input.route_nd_keydown(
+                _key_for(KEYS_4D, "move_w_neg"),
+                state,
+            )
+        finally:
+            KEYBINDING_STATE.system_keys["quit"] = original_quit
+            KEYBINDING_STATE.sanitize_runtime_bindings()
+
+        self.assertEqual(result, "continue")
+        self.assertEqual(KEYBINDING_STATE.system_keys["quit"], (pygame.K_ESCAPE,))
+        self.assertEqual(state.moves, [(3, -1)])
 
     def test_axis_override_precedence_over_viewer_relative_mapping(self) -> None:
         cfg = GameConfigND(dims=(6, 10, 6, 4), gravity_axis=1, speed_level=1)

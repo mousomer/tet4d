@@ -121,6 +121,30 @@ func live_3d_state_hash() -> String:
 	return _api().live_3d_state_hash()
 
 
+func live_4d_reset() -> void:
+	_api().live_4d_reset()
+
+
+func live_4d_apply_command(command: String) -> String:
+	return _api().live_4d_apply_command(command)
+
+
+func live_4d_tick() -> String:
+	return _api().live_4d_tick()
+
+
+func live_4d_snapshot_json() -> String:
+	return _api().live_4d_snapshot_json()
+
+
+func live_4d_status() -> String:
+	return _api().live_4d_status()
+
+
+func live_4d_state_hash() -> String:
+	return _api().live_4d_state_hash()
+
+
 func _api() -> RefCounted:
 	_ensure_extension_loaded()
 	if _api_instance == null:

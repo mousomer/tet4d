@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D accepted; live plain 3D prototype implemented; Stage 22d complete; Stage 22e partial; Stage 22f failed initial inspection/pending rerun; Stage 22g corrective pass
-Last updated: 2026-06-09
+Status: active plain 2D accepted; live plain 3D accepted after Stage 22g corrections; Stage 23 live plain 4D prototype implemented
+Last updated: 2026-06-10
 
 ## 1. Decision Summary
 
@@ -285,8 +285,8 @@ feature porting starts.
    presentation/projection ownership.
 18. Stage 22f: run manual Live 3D visual acceptance using
    `docs/plans/godot_live_3d_manual_acceptance.md`.
-19. Stage 23: prototype live plain 4D only after Stage 22f passes, reusing the
-   existing W-slice renderer path.
+19. Stage 23: prototype live plain 4D after Stage 22f passed, reusing the
+   existing W-slice renderer path and C++ gameplay authority.
 20. Later: plan topology transport and Topology Lab launch semantics.
 21. Later: port locked-cell endgame particle simulation.
 22. Later: retire Python as semantic oracle only after trace parity,
@@ -731,7 +731,7 @@ Stage 21 chooses a staged live plain-ND path:
 - Stage 22d: define the gameboard visual-language authority;
 - Stage 22e: implement the Live 3D visual language;
 - Stage 22f: perform manual Live 3D visual acceptance;
-- Stage 23: live plain 4D Godot prototype only after Stage 22f passes;
+- Stage 23: live plain 4D Godot prototype after Stage 22f passed;
 - Stage 24: live ND polish and hardening;
 - Stage 25: topology parity planning.
 
@@ -802,8 +802,9 @@ owns the structural Godot shell repair for replay/live board presentation:
 reserved left case browser, board, right inspector, top status, and bottom
 playback regions, plus a focused presentation/projection owner between
 snapshots and renderer nodes. Stage 22f performs manual Live 3D visual
-acceptance using `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live
-Plain 4D must not start until Stage 22f passes.
+acceptance using `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 22f
+manual Live 3D visual acceptance passed after Stage 22g corrections, and Stage
+23 Live Plain 4D is implemented as a narrow separate mode.
 
 The initial Stage 22f manual inspection did not pass. Stage 22g is the
 visual-only correction pass for that failed inspection: Live 3D default/Fit
@@ -812,8 +813,9 @@ and fit/manual state must be visible, bundle health must remain compact and
 readable, and active cells must be visually stronger than locked cells with an
 origin/orientation marker. Stage 22g does not change C++ gameplay semantics,
 rotation math, golden traces, Live 2D, Replay, or the accepted mapper/renderer
-ownership. Stage 23 remains blocked until Stage 22f is manually rerun and
-passed.
+ownership. Stage 22f was manually rerun and passed after Stage 22g
+corrections. Stage 23 Live Plain 4D reuses the existing mapper/renderer,
+inherits the Live 3D visual grammar, and keeps C++ as gameplay authority.
 
 Stage 22 does not add live 4D, topology transport, wrap/invert/sphere
 behavior, endgame simulation, C#, Python runtime calls from Godot, or

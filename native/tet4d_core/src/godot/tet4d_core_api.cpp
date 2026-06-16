@@ -49,6 +49,12 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("live_3d_snapshot_json"), &Tet4DCoreApi::live_3d_snapshot_json);
 	ClassDB::bind_method(D_METHOD("live_3d_status"), &Tet4DCoreApi::live_3d_status);
 	ClassDB::bind_method(D_METHOD("live_3d_state_hash"), &Tet4DCoreApi::live_3d_state_hash);
+	ClassDB::bind_method(D_METHOD("live_4d_reset"), &Tet4DCoreApi::live_4d_reset);
+	ClassDB::bind_method(D_METHOD("live_4d_apply_command", "command"), &Tet4DCoreApi::live_4d_apply_command);
+	ClassDB::bind_method(D_METHOD("live_4d_tick"), &Tet4DCoreApi::live_4d_tick);
+	ClassDB::bind_method(D_METHOD("live_4d_snapshot_json"), &Tet4DCoreApi::live_4d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_4d_status"), &Tet4DCoreApi::live_4d_status);
+	ClassDB::bind_method(D_METHOD("live_4d_state_hash"), &Tet4DCoreApi::live_4d_state_hash);
 }
 
 String Tet4DCoreApi::get_core_version() const {
@@ -165,6 +171,30 @@ String Tet4DCoreApi::live_3d_status() const {
 
 String Tet4DCoreApi::live_3d_state_hash() const {
 	return to_godot_string(live_3d_session_.state_hash());
+}
+
+void Tet4DCoreApi::live_4d_reset() {
+	live_4d_session_.reset();
+}
+
+String Tet4DCoreApi::live_4d_apply_command(const String &command) {
+	return to_godot_string(live_4d_session_.apply_command(to_std_string(command)));
+}
+
+String Tet4DCoreApi::live_4d_tick() {
+	return to_godot_string(live_4d_session_.tick());
+}
+
+String Tet4DCoreApi::live_4d_snapshot_json() const {
+	return to_godot_string(live_4d_session_.snapshot_json());
+}
+
+String Tet4DCoreApi::live_4d_status() const {
+	return to_godot_string(live_4d_session_.status());
+}
+
+String Tet4DCoreApi::live_4d_state_hash() const {
+	return to_godot_string(live_4d_session_.state_hash());
 }
 
 } // namespace godot

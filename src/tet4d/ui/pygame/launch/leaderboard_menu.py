@@ -393,9 +393,6 @@ def _handle_keydown(
     total_pages: int,
 ) -> None:
     nav_key = normalize_menu_navigation_key(key)
-    if key == pygame.K_q:
-        state.running = False
-        return
     if nav_key == pygame.K_ESCAPE or key in (pygame.K_RETURN, pygame.K_KP_ENTER):
         state.running = False
         return

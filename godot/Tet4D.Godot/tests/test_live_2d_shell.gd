@@ -9,8 +9,10 @@ func run() -> Array:
 	var replay_hint := ReplayHudScript.replay_hint_text()
 	var live_hint := ReplayHudScript.live_2d_hint_text()
 	var live_3d_hint := ReplayHudScript.live_3d_hint_text()
-	var expected_live_hint := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Q/Esc Quit"
-	var expected_live_3d_hint := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Replay · Q/Esc Quit"
+	var live_4d_hint := ReplayHudScript.live_4d_hint_text()
+	var expected_live_hint := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Esc Quit"
+	var expected_live_3d_hint := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Live 4D · Esc Quit"
+	var expected_live_4d_hint := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Rotate: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, -/= Zoom · P Pause · Backspace Reset · Fit View Recovery · Tab Replay · Esc Quit"
 	var expected_replay_hint := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 	if live_hint != expected_live_hint:
 		failures.append("live 2D hint text should match the Stage 12 visible control strip")
@@ -18,6 +20,8 @@ func run() -> Array:
 		failures.append("replay hint text should match the replay control strip")
 	if live_3d_hint != expected_live_3d_hint:
 		failures.append("live 3D hint text should match the Stage 22 visible control strip")
+	if live_4d_hint != expected_live_4d_hint:
+		failures.append("live 4D hint text should match the Stage 23 visible control strip")
 	if not live_hint.contains("A/D") or not live_hint.contains("Hard Drop") or not live_hint.contains("Tab Live 3D"):
 		failures.append("live 2D hint text should expose movement, drop, and Tab-to-Live-3D controls")
 	if live_hint.contains("Frame"):
@@ -26,6 +30,8 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T: XY") or not live_3d_hint.contains("F/G: XZ") or not live_3d_hint.contains("V/B: YZ") or not live_3d_hint.contains("Backspace Reset"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
+	if not live_4d_hint.contains("Q/E W") or not live_4d_hint.contains("Y/U XW") or not live_4d_hint.contains("H/J YW") or not live_4d_hint.contains("N/M ZW") or not live_4d_hint.contains("Cam: I/K") or live_4d_hint.contains("Q/Esc Quit"):
+		failures.append("live 4D hint text should expose W controls, camera controls, six rotation planes, and Esc-only quit")
 	if absf(TraceReplayAppScript.LIVE_GRAVITY_INTERVAL_SECONDS - 0.5) > 0.001:
 		failures.append("live gravity shell interval should default to 0.5 seconds")
 	if TraceReplayAppScript.LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS <= 0.0:
@@ -72,6 +78,15 @@ func run() -> Array:
 		live_snapshot = app._current_snapshot
 		if str(live_snapshot.get("current_piece", "")) != "O":
 			failures.append("switching back to Live 2D should preserve the native live session")
+		var q_event_2d := InputEventKey.new()
+		q_event_2d.keycode = KEY_Q
+		q_event_2d.pressed = true
+		var hash_before_q_2d := str(app._live_bridge.live_2d_state_hash())
+		app._unhandled_input(q_event_2d)
+		if app._mode != TraceReplayAppScript.MODE_LIVE_2D:
+			failures.append("Q should not leave Live 2D")
+		if str(app._live_bridge.live_2d_state_hash()) != hash_before_q_2d:
+			failures.append("Q should not dispatch a Live 2D gameplay command")
 		var paused_hash := str(live_snapshot.get("state_hash", ""))
 		if app._dispatch_live_gameplay_command("move_left"):
 			failures.append("paused live mode should block gameplay command dispatch")
@@ -119,6 +134,98 @@ func run() -> Array:
 			failures.append("app should enter Live 3D mode, got %s" % str(app._mode))
 		if str(app._current_snapshot.get("current_piece", "")) != "O3":
 			failures.append("switching back to Live 3D should preserve the native live session")
+		var q_event_3d := InputEventKey.new()
+		q_event_3d.keycode = KEY_Q
+		q_event_3d.pressed = true
+		var hash_before_q_3d := str(app._live_bridge.live_3d_state_hash())
+		app._unhandled_input(q_event_3d)
+		if app._mode != TraceReplayAppScript.MODE_LIVE_3D:
+			failures.append("Q should not leave Live 3D")
+		if str(app._live_bridge.live_3d_state_hash()) != hash_before_q_3d:
+			failures.append("Q should not dispatch a Live 3D gameplay command")
+		app._enter_live_4d_mode()
+		if app._mode != TraceReplayAppScript.MODE_LIVE_4D:
+			failures.append("app should enter Live 4D mode on direct call, got %s" % str(app._mode))
+		var direct_live_4d_snapshot = JSON.parse_string(app._live_bridge.live_4d_snapshot_json())
+		if typeof(direct_live_4d_snapshot) == TYPE_DICTIONARY and str(direct_live_4d_snapshot.get("trace_type", "")) != "live_4d":
+			failures.append("direct native live 4D snapshot had trace type %s" % str(direct_live_4d_snapshot.get("trace_type", "")))
+		elif typeof(direct_live_4d_snapshot) != TYPE_DICTIONARY:
+			failures.append("direct native live 4D snapshot should parse")
+		var live_4d_snapshot: Dictionary = app._current_snapshot
+		if str(live_4d_snapshot.get("trace_type", "")) != "live_4d":
+			failures.append("live 4D mode should create a live 4D snapshot, got %s" % str(live_4d_snapshot.get("trace_type", "")))
+		if str(live_4d_snapshot.get("current_piece", "")) != "TRACE_4D":
+			failures.append("live 4D should start with native TRACE_4D piece, got %s" % str(live_4d_snapshot.get("current_piece", "")))
+		if int(live_4d_snapshot.get("w_slice_count", 0)) != 4:
+			failures.append("live 4D should expose W slice count")
+		if app._camera_rig._current_view_preset != "LIVE_4D_FITTED_W_SLICE_VIEW":
+			failures.append("live 4D should open in the fitted W-slice camera preset")
+		if app._camera_rig._current_fit_state != "fit OK":
+			failures.append("live 4D should open already fitted")
+		var camera_hash_before := str(app._live_bridge.live_4d_state_hash())
+		var yaw_before: float = app._camera_rig._current_yaw
+		var camera_event := InputEventKey.new()
+		camera_event.keycode = KEY_O
+		camera_event.pressed = true
+		app._unhandled_input(camera_event)
+		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
+			failures.append("Live 4D camera keys should not mutate gameplay state")
+		if app._camera_rig._current_yaw >= yaw_before:
+			failures.append("Live 4D O camera key should adjust yaw left")
+		if app._camera_rig._current_fit_state != "manual":
+			failures.append("Live 4D camera adjustment should mark the view manual")
+		app._fit_view()
+		if app._camera_rig._current_view_preset != "LIVE_4D_FITTED_W_SLICE_VIEW" or app._camera_rig._current_fit_state != "fit OK":
+			failures.append("Fit View should restore the full Live 4D W-slice layout")
+		if app._hud._reset_button != null and app._hud._reset_button.focus_mode != Control.FOCUS_NONE:
+			failures.append("live viewer buttons should not keep keyboard focus while live gameplay captures Space")
+		var space_event := InputEventKey.new()
+		space_event.keycode = KEY_SPACE
+		space_event.pressed = true
+		var hash_before_space := str(app._live_bridge.live_4d_state_hash())
+		app._input(space_event)
+		if str(app._live_bridge.live_4d_state_hash()) == hash_before_space:
+			failures.append("Space should dispatch Live 4D hard_drop before UI accept handling")
+		if str(app._current_snapshot.get("last_command", "")) != "hard_drop":
+			failures.append("Space should map to Live 4D hard_drop")
+		if str(app._current_snapshot.get("current_piece", "")) != "STAIR4":
+			failures.append("Space hard drop should spawn the next Live 4D piece")
+		app._reset_live_4d()
+		var live_4d_initial_hash := str(app._live_bridge.live_4d_state_hash())
+		app._dispatch_live_4d_gameplay_command("move_w_pos")
+		if str(app._live_bridge.live_4d_state_hash()) == live_4d_initial_hash:
+			failures.append("live 4D W movement should route to C++")
+		if int(app._current_snapshot.get("active_w", -1)) != 2:
+			failures.append("live 4D W movement should update active W context")
+		app._dispatch_live_4d_gameplay_command("rotate_xw_pos")
+		if str(app._current_snapshot.get("last_rotation_plane", "")) != "XW":
+			failures.append("live 4D XW rotation should route through C++")
+		if str(app._current_snapshot.get("last_rotation_label", "")) != "XW+":
+			failures.append("live 4D XW rotation should expose a signed HUD rotation label")
+		app._dispatch_live_4d_gameplay_command("rotate_yw_neg")
+		if str(app._current_snapshot.get("last_rotation_label", "")) != "YW-":
+			failures.append("live 4D YW rotation should expose a signed HUD rotation label")
+		app._dispatch_live_4d_gameplay_command("rotate_zw_pos")
+		if str(app._current_snapshot.get("last_rotation_label", "")) != "ZW+":
+			failures.append("live 4D ZW rotation should expose a signed HUD rotation label")
+		app._dispatch_live_4d_gameplay_command("hard_drop")
+		if str(app._current_snapshot.get("current_piece", "")) != "STAIR4":
+			failures.append("live 4D hard drop should route to C++ and spawn STAIR4")
+		var q_event := InputEventKey.new()
+		q_event.keycode = KEY_Q
+		q_event.pressed = true
+		var hash_before_q := str(app._live_bridge.live_4d_state_hash())
+		app._unhandled_input(q_event)
+		if app._mode != TraceReplayAppScript.MODE_LIVE_4D:
+			failures.append("Q should not leave Live 4D because Q maps to W-")
+		if str(app._live_bridge.live_4d_state_hash()) == hash_before_q:
+			failures.append("Q should dispatch Live 4D W- movement")
+		var h_event := InputEventKey.new()
+		h_event.keycode = KEY_H
+		h_event.pressed = true
+		app._unhandled_input(h_event)
+		if str(app._current_snapshot.get("last_rotation_label", "")) != "YW-":
+			failures.append("H should dispatch Live 4D YW- rotation instead of Help")
 	for action_name in [
 		"live_move_left",
 		"live_move_right",
@@ -142,6 +249,34 @@ func run() -> Array:
 		"live_3d_rotate_yz_pos",
 		"live_3d_pause",
 		"live_3d_reset",
+		"live_4d_move_x_neg",
+		"live_4d_move_x_pos",
+		"live_4d_move_z_neg",
+		"live_4d_move_z_pos",
+		"live_4d_move_w_neg",
+		"live_4d_move_w_pos",
+		"live_4d_soft_drop",
+		"live_4d_hard_drop",
+		"live_4d_rotate_xy_neg",
+		"live_4d_rotate_xy_pos",
+		"live_4d_rotate_xz_neg",
+		"live_4d_rotate_xz_pos",
+		"live_4d_rotate_yz_neg",
+		"live_4d_rotate_yz_pos",
+		"live_4d_rotate_xw_neg",
+		"live_4d_rotate_xw_pos",
+		"live_4d_rotate_yw_neg",
+		"live_4d_rotate_yw_pos",
+		"live_4d_rotate_zw_neg",
+		"live_4d_rotate_zw_pos",
+		"live_4d_pause",
+		"live_4d_reset",
+		"live_4d_camera_pitch_up",
+		"live_4d_camera_pitch_down",
+		"live_4d_camera_yaw_left",
+		"live_4d_camera_yaw_right",
+		"live_4d_camera_zoom_in",
+		"live_4d_camera_zoom_out",
 		"mode_toggle_replay_live",
 		"quit",
 	]:

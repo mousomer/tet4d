@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-06-09
+Updated: 2026-06-16
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -65,17 +65,22 @@ returned C++ command/status data. Stage 22c keeps that visual-only scope and
 changes Live 3D cells to opaque exterior face panels with restrained
 silhouettes so pieces read as solid external blocks rather than interior walls.
 Stage 22d adds the design-only gameboard visual-language authority for the
-remaining orientation ambiguity. Stage 22e is active/partial: the Godot shell
-layout and presentation/projection boundary are being stabilized first, then
-the remaining axis/origin/landmark visual cues must be completed. The initial
-Stage 22f manual inspection failed on Live 3D view angle, camera diagnostics,
-bundle readability, and active-vs-locked contrast. Stage 22g corrects those
-observations as a visual-only pass.
+remaining orientation ambiguity. Stage 22e/22g completed the Live 3D visual
+grammar implementation and correction path, and Stage 22f manual acceptance
+passed after those corrections.
 Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
-Stage 23 Live Plain 4D Godot Prototype is now unblocked.
+Stage 23 Live Plain 4D Godot Prototype is implemented narrowly: C++ owns the
+live 4D session, Godot renders side-by-side W slices through the existing
+mapper/renderer, Q/E move W, six direct rotation pairs are wired, and Live 2D,
+Live 3D, Replay, topology, endgame, and golden traces remain preserved.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
+Pygame live-mode control cleanup now also treats `Esc` as the universal
+back/quit key across live shells, removes `Q` as a live quit/back alias, keeps
+visible quit/back buttons clickable, and preserves Live 4D `Q/E` as `w-` /
+`w+` only; this remains a UI/input/HUD-copy batch and must not change gameplay
+semantics.
 
 Current active follow-ups:
 
@@ -158,11 +163,11 @@ Current active follow-ups:
   add live 3D/4D Godot
   gameplay, topology, endgame, C#, Python runtime, or Godot-side gameplay
   legality. Stage 21 adds `docs/plans/live_plain_nd_godot_prototype_plan.md`
-  as the live plain ND prototype plan only: Stage 22 should prototype live
-  plain 3D first, Stage 23 should add live plain 4D, Godot must reuse the
-  existing coordinate mapper/renderer, and C++ must remain the gameplay
-  authority. Stage 22 implements that live plain 3D prototype only, keeping
-  live 4D, topology, endgame, C#, Python runtime calls, and Godot-side
+  as the live plain ND prototype plan only: Stage 22 prototypes live plain 3D
+  first, Stage 23 adds live plain 4D, Godot reuses the existing coordinate
+  mapper/renderer, and C++ remains the gameplay authority. Stage 22 implements
+  that live plain 3D prototype only, keeping topology, endgame, C#, Python
+  runtime calls, and Godot-side
   gameplay legality deferred. Stage 22b is limited to Live 3D cell depth,
   camera readability, and rotation HUD/readability feedback; it does not change
   C++ semantics or start Stage 23. Stage 22c further limits itself to Live 3D
@@ -442,13 +447,42 @@ stays synchronized, and the contract validator accepts the backlog shape.
 26. `DONE` `[BKL-P3-033]` Stage 22f acceptance gate before Stage 23:
     manual Live 3D visual acceptance passed against
     `docs/plans/godot_live_3d_manual_acceptance.md` after Stage 22g
-    corrections. Stage 23 Live Plain 4D Godot Prototype is now unblocked.
+    corrections. Stage 23 Live Plain 4D Godot Prototype is implemented
+    narrowly.
 27. `DONE` `[BKL-P3-034]` Stage 22g Live 3D visual acceptance corrections:
     correct the failed initial Stage 22f observations by using an above-board
     canonical Live 3D view, exposing camera preset/view diagnostics, keeping
     bundle status compact/readable with inspector detail, and making active
     cells stronger than locked cells with an origin/orientation marker. This
     is visual-only; Stage 22f passed after these corrections.
+28. `DONE` `[BKL-P3-035]` Stage 23 Live Plain 4D Godot Prototype:
+    add a separate Live 4D mode backed by C++ `PlainNDSession`, expose narrow
+    `live_4d_*` bridge methods, render side-by-side W slices through the
+    existing mapper/renderer and inherited exterior cell grammar, route Q/E as
+    W movement, route R/T, F/G, V/B, Y/U, H/J, and N/M as XY, XZ, YZ, XW, YW,
+    and ZW rotations, and show `LIVE 4D · C++ CORE` HUD state with signed last
+    rotation and W context. Live 2D, Live 3D, Replay, topology, endgame, and
+    golden traces remain preserved.
+29. `DONE` `[BKL-P3-036]` Stage 23b Live 4D acceptance corrections:
+    correct the manual GUI acceptance defects by making W-slice labels larger
+    with high-contrast backing, consuming Space as live hard-drop before
+    focused UI controls can handle accept/back/reset, and reducing Live 4D
+    active-cell brightness while keeping active/locked roles distinct. This
+    is visual/input-only; C++ gameplay semantics, topology, endgame, Live 2D,
+    Live 3D, and Replay remain preserved.
+30. `DONE` `[BKL-P3-038]` Stage 23c Live 4D view/readability corrections:
+    replace W labels with `W SLICE n/N` headers and larger chips, include
+    header clearance in Fit View bounds, open/reset Live 4D in the canonical
+    fitted W-slice view, keep Fit View as recovery, and add safe camera keys
+    `I/K`, `O/L`, and `-`/`=`. This is presentation/input-only; Q/E W movement,
+    Space hard drop, Esc quit/back, Live 2D, Live 3D, Replay, and C++ gameplay
+    semantics remain preserved.
+31. `TODO` `[BKL-P3-037]` Stage 23 manual Live 4D acceptance rerun:
+    rerun the GUI checklist after Stage 23b/23c. Stage 24 polish/hardening
+    remains blocked until W-slice header readability, fitted Live 4D entry,
+    Fit View recovery, safe camera adjustment, Space hard-drop capture, Q/E W
+    movement, Esc quit/back, active-cell readability, Live 2D, Live 3D, and
+    Replay all pass manual inspection.
 
 ## Governance Watchlist
 

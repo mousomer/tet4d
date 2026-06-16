@@ -156,7 +156,7 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
         self.assertFalse(state.running)
         self.assertEqual(callback_hits["count"], 1)
 
-    def test_pause_menu_keydown_q_exits(self) -> None:
+    def test_pause_menu_keydown_q_is_ignored(self) -> None:
         state = pause_menu._PauseState()
         callback_hits = {"count": 0}
 
@@ -170,9 +170,9 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
             on_escape_back=_on_escape_back,
         )
 
-        self.assertTrue(consumed)
-        self.assertEqual(state.decision, "quit")
-        self.assertFalse(state.running)
+        self.assertFalse(consumed)
+        self.assertEqual(state.decision, "resume")
+        self.assertTrue(state.running)
         self.assertEqual(callback_hits["count"], 0)
 
     def test_run_pause_menu_escape_closes_as_resume(self) -> None:
@@ -196,7 +196,7 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
 
         self.assertEqual(decision, "resume")
 
-    def test_run_pause_menu_q_closes_as_quit(self) -> None:
+    def test_run_pause_menu_q_does_not_close(self) -> None:
         class _Fonts:
             title_font = pygame.font.Font(None, 32)
             menu_font = pygame.font.Font(None, 26)
@@ -204,9 +204,10 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
 
         screen = pygame.Surface((640, 480))
         quit_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_q})
+        esc_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})
 
         with (
-            patch.object(pygame.event, "get", return_value=[quit_event]),
+            patch.object(pygame.event, "get", side_effect=[[quit_event], [esc_event]]),
             patch.object(pygame.display, "flip", return_value=None),
         ):
             decision, _next_screen = pause_menu.run_pause_menu(
@@ -215,7 +216,7 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
                 dimension=2,
             )
 
-        self.assertEqual(decision, "quit")
+        self.assertEqual(decision, "resume")
 
     def test_pause_menu_compact_panel_keeps_required_rows_visible(self) -> None:
         fonts = type(

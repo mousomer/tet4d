@@ -18,7 +18,7 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
     def tearDownClass(cls) -> None:
         pygame.quit()
 
-    def test_q_uses_quit_handler_not_root_escape(self) -> None:
+    def test_q_does_not_trigger_quit_or_root_escape(self) -> None:
         menus = {
             "root": {
                 "title": "Root",
@@ -42,12 +42,15 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         with patch.object(
             pygame.event,
             "get",
-            return_value=[pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_q})],
+            side_effect=[
+                [pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_q})],
+                [pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})],
+            ],
         ):
             runner.run()
 
-        self.assertEqual(calls["quit"], 1)
-        self.assertEqual(calls["root_escape"], 0)
+        self.assertEqual(calls["quit"], 0)
+        self.assertEqual(calls["root_escape"], 1)
 
     def test_escape_at_root_uses_root_escape_handler(self) -> None:
         menus = {

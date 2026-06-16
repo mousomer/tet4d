@@ -183,13 +183,17 @@ The current rule is one-way:
     endgame, Python runtime, C#, Steam, or console
     implementation is not authorized here. Stage 21 adds
     `docs/plans/live_plain_nd_godot_prototype_plan.md` as the planning-only
-    authority for future live plain ND work: Stage 22 should prototype live
-    plain 3D first, Stage 23 should add live plain 4D, Godot must reuse the
-    existing trace coordinate mapper/renderer, and C++ must remain gameplay
-    authority. Stage 22 adds only that live plain 3D prototype through a
-    native `PlainNDSession` facade plus Godot command routing/HUD; live 4D,
-    topology, endgame, Python runtime, C#, Steam, or console implementation
-    remains deferred. Stage 22d adds
+    authority for live plain ND work: Stage 22 prototypes live plain 3D first,
+    Stage 23 adds live plain 4D, Godot reuses the existing trace coordinate
+    mapper/renderer, and C++ remains gameplay authority. Stage 22 adds only
+    that live plain 3D prototype through a
+    native `PlainNDSession` facade plus Godot command routing/HUD. Stage 23
+    adds the narrow Live Plain 4D prototype through the same native
+    `PlainNDSession` owner, separate `live_4d_*` bridge methods, side-by-side W
+    slices through the existing mapper/renderer, Q/E W movement, six direct
+    rotation plane pairs, and `LIVE 4D · C++ CORE` HUD state; topology,
+    endgame, Python runtime, C#, Steam, or console implementation remains
+    deferred. Stage 22d adds
     `docs/plans/gameboard_visual_language_design.md` as the design-only
     authority for Live 3D and future Live 4D board readability. Stage 22e must
     implement that grammar through the existing mapper/renderer path, the
@@ -200,8 +204,17 @@ The current rule is one-way:
     observations: above-board canonical camera/default Fit View, visible camera
     diagnostics, compact bundle status with inspector detail, stronger active
     cells versus locked cells, and an active origin/orientation marker.
-    Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
-    Stage 23 Live Plain 4D Godot Prototype is now unblocked.
+    Stage 22f manual Live 3D visual acceptance passed after Stage 22g
+    corrections. Stage 23 Live Plain 4D Godot Prototype is implemented
+    narrowly while preserving Live 2D, Live 3D, Replay, topology, endgame, and
+    golden traces. Stage 23b corrects manual Live 4D acceptance defects in
+    Godot shell/rendering only: larger backed W labels, Space captured as live
+    hard-drop before UI accept handling, and restrained Live 4D active-cell
+    brightness. Stage 23c further corrects Live 4D view/readability in Godot
+    presentation/input only: `W SLICE n/N` headers, W-header fit bounds,
+    canonical fitted Live 4D entry/reset, Fit View recovery, and safe camera
+    keys that do not overlap gameplay. Stage 23 manual acceptance remains
+    pending and Stage 24 stays blocked until rerun.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

@@ -24,8 +24,8 @@ func run() -> Array:
 		failures.append("bounds should be available")
 		return failures
 	_assert_vector(failures, bounds.get("min", Vector3.ZERO), Vector3(-2.0, -2.5, -1.5), "bounds min")
-	_assert_vector(failures, bounds.get("max", Vector3.ZERO), Vector3(8.0, 2.5, 1.5), "bounds max")
-	_assert_vector(failures, mapper.slice_label_position(1), Vector3(6.0, 3.4, 0.0), "W label position")
+	_assert_vector(failures, bounds.get("max", Vector3.ZERO), Vector3(8.0, 4.22, 1.5), "bounds max includes W header clearance")
+	_assert_vector(failures, mapper.slice_label_position(1), Vector3(6.0, 3.62, 0.0), "W label position")
 	return failures
 
 

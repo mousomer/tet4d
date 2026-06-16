@@ -43,10 +43,17 @@ public:
 	String live_3d_snapshot_json() const;
 	String live_3d_status() const;
 	String live_3d_state_hash() const;
+	void live_4d_reset();
+	String live_4d_apply_command(const String &command);
+	String live_4d_tick();
+	String live_4d_snapshot_json() const;
+	String live_4d_status() const;
+	String live_4d_state_hash() const;
 
 private:
 	mutable tet4d::core::Plain2DSession live_2d_session_;
 	mutable tet4d::core::PlainNDSession live_3d_session_{3};
+	mutable tet4d::core::PlainNDSession live_4d_session_{4};
 };
 
 } // namespace godot

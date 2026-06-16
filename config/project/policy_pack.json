@@ -1640,8 +1640,7 @@
         "file": "config/menu/structure.json",
         "must_contain": [
           "Backspace back",
-          "Esc exit",
-          "Q quit"
+          "Esc exit"
         ],
         "must_not_match_regex": [
           "(?i)esc\\s+back"

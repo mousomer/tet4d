@@ -211,7 +211,7 @@ def draw_main_menu(
         buttons=(
             ("side_back", "Backspace: Back"),
             ("side_escape", "Esc: Exit"),
-            ("side_quit", "Q: Quit"),
+            ("side_quit", "Quit"),
         ),
         hovered_kind=hovered_target.kind if hovered_target is not None else "",
         pressed_kind=pressed_target.kind if pressed_target is not None else "",

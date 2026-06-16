@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for gameboard visual-language decisions
 Supersedes: ad hoc Live 3D readability notes in Stage 22b/22c
 Stage: 22d design authority
-Last updated: 2026-06-09
+Last updated: 2026-06-16
 
 ## 1. Decision Summary
 
@@ -30,7 +30,8 @@ The decisions are:
 8. The existing `TraceCoordinateMapper` / `TraceSceneRenderer` /
    `CellRenderer` path is reused.
 9. Live 4D inherits this grammar rather than inventing a separate language.
-10. Stage 23 waits until Live 3D visual acceptance passes in Stage 22f.
+10. Stage 23 started only after Live 3D visual acceptance passed in Stage 22f
+    after Stage 22g corrections.
 
 ## 2. Problem Statement
 
@@ -286,9 +287,16 @@ unreadable through forced single-line compression.
 
 ## 15. Future Live 4D Visual Constraints
 
-Live 4D is deferred until Live 3D passes Stage 22f manual acceptance.
+Live 4D is allowed only after Live 3D passes Stage 22f manual acceptance. That
+gate passed after Stage 22g corrections, and Stage 23 implements the first
+narrow Live Plain 4D prototype. Stage 23 manual GUI acceptance found W labels
+too small, Space leaking to focused UI activation instead of hard drop, and
+overly bright active Live 4D cells. Stage 23b corrects those visual/input
+defects. Stage 23c further corrects view/readability by using explicit W-slice
+headers, opening/resetting Live 4D in a fitted W-slice view, and adding safe
+camera adjustment controls; manual acceptance remains pending until rerun.
 
-Constraints for Stage 23:
+Constraints for Stage 23 and later Live 4D polish:
 
 1. Reuse the same cell grammar.
 2. Show `W` as side-by-side slices unless a later design proves a clearer
@@ -298,6 +306,17 @@ Constraints for Stage 23:
 5. Extend the rotation-plane HUD to `XY`, `XZ`, `XW`, `YZ`, `YW`, and `ZW`.
 6. Keep selected/current `W` context visible.
 7. Do not invent a separate visual language for Live 4D.
+8. Keep W labels large enough to read at default/Fit View with high-contrast
+   backing.
+9. Consume Space as live hard-drop before shell UI controls can treat it as
+   accept/back.
+10. Keep active Live 4D cells moderately brighter than locked cells with a
+    stronger outline and origin marker, but avoid high-emission glare.
+11. Use a canonical fitted Live 4D default that frames all W slices and slice
+    headers.
+12. Keep Fit View as the canonical recovery action for the full W-slice layout.
+13. Allow limited Live 4D camera adjustment controls that do not overlap
+    movement, rotation, drop, pause, reset, mode switch, or quit controls.
 
 ## 16. Implementation Stages After Stage 22d
 
@@ -307,9 +326,20 @@ Stage 22f - Manual Live 3D Visual Acceptance
 Stage 22g - Correct failed Live 3D visual acceptance observations when needed
 Stage 22f - Rerun Manual Live 3D Visual Acceptance
 Stage 23  - Live Plain 4D Godot Prototype
+Stage 23b - Live 4D Acceptance Corrections
+Stage 23c - Live 4D View And W-Slice Readability Corrections
 ```
 
-Stage 23 must not start before Stage 22f passes.
+Stage 23 did not start before Stage 22f passed. Future Live 4D polish must
+continue to inherit this visual grammar rather than inventing a separate board
+language. Stage 24 remains blocked until Stage 23 manual Live 4D acceptance
+passes after the Stage 23b/23c corrections.
+
+Design rule after Stage 23c:
+
+1. Live 3D may rely on a fixed canonical exterior view.
+2. Live 4D requires a canonical fitted default plus safe camera adjustment
+   controls.
 
 ## 17. Manual Acceptance Checklist
 
@@ -333,10 +363,20 @@ Live 3D acceptance:
 Future Live 4D acceptance:
 
 - [ ] `W` slices are identifiable.
+- [ ] `W` labels are immediately noticeable and remain readable after Fit View
+      and resize.
+- [ ] Live 4D opens already fitted to the full W-slice layout.
+- [ ] `Fit View` restores the full W-slice layout after camera adjustment.
+- [ ] Camera controls allow inspection and do not interfere with gameplay
+      controls.
 - [ ] Current/focused slice is visible.
 - [ ] `W` movement is readable.
+- [ ] Space hard-drops and does not activate menu/back/reset/UI controls.
 - [ ] Six rotation planes are represented clearly.
 - [ ] Active piece is decipherable across slices.
+- [ ] Active cells are distinct from locked cells without becoming a glowing
+      blob.
+- [ ] Q/E are W-/W+ and Esc remains quit/back.
 
 ## 18. Risks And Mitigations
 
@@ -353,4 +393,5 @@ Risk: rotation animation lies.
 Mitigation: snap to C++ state and show clear plane feedback.
 
 Risk: 4D inherits unresolved 3D ambiguity.
-Mitigation: block Stage 23 until Stage 22f acceptance.
+Mitigation: Stage 23 was blocked until Stage 22f acceptance passed after Stage
+22g corrections; future Live 4D changes must keep the same grammar.

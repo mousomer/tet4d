@@ -848,7 +848,7 @@ def _dispatch_key(state: _TopologyLabState, key: int, mod: int = 0) -> None:
     selectable = _selectable_row_indexes(state)
     if _handle_shortcut_key(state, key, mod=mod):
         return
-    if key == pygame.K_q or nav_key == pygame.K_ESCAPE:
+    if nav_key == pygame.K_ESCAPE:
         state.running = False
         return
     if _handle_navigation_key(state, nav_key, selectable):

@@ -27,7 +27,7 @@
       "controls_hint_action_group_template": "Up/Down select   Left/Right choose Play/Setup   Enter open   {escape_hint}",
       "controls_hint_action_group_template_tiny": "I/K select   J/L choose Play/Setup   Enter open   {escape_hint}",
       "escape_hint_back": "Backspace back",
-      "escape_hint_quit": "Esc exit   Q quit"
+      "escape_hint_quit": "Esc exit"
     },
     "settings_hub": {
       "title": "Settings",
@@ -37,22 +37,22 @@
         "Enter opens subpages, activates actions, or confirms selectors",
         "Type digits on width, height, seed, or animation timing rows for direct numeric entry",
         "Overflowing pages scroll automatically and show a shared scrollbar",
-        "F5 save   F8 reset defaults   Backspace back   Esc exit   Q quit"
+        "F5 save   F8 reset defaults   Backspace back   Esc exit"
       ],
       "reset_confirm_f8": "Press F8 again to confirm reset defaults"
     },
     "keybindings_menu": {
       "title": "Keybindings",
-      "subtitle_section_mode": "Up/Down select section, Enter open, Backspace back, Esc exit, Q quit",
-      "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Backspace back, Q quit",
+      "subtitle_section_mode": "Up/Down select section, Enter open, Backspace back, Esc exit",
+      "subtitle_binding_mode": "Up/Down select, Enter rebind, Tab sections, Backspace back, Esc exit",
       "hints": [
         "L load   S save   F3 save as   F2 rename   F6 reset (confirm)",
         "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   Backspace delete custom profile",
-        "C conflict mode cycle   Enter capture   Tab sections   Backspace back   Q quit",
+        "C conflict mode cycle   Enter capture   Tab sections   Backspace back   Esc exit",
         "{scope_file_hint}"
       ],
       "section_hints": [
-        "Enter open section   Up/Down select section   Backspace back   Esc exit   Q quit",
+        "Enter open section   Up/Down select section   Backspace back   Esc exit",
         "[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   F2 rename   F3 save as"
       ],
       "capture_template": "Press a key for {binding_title} (Esc cancels)",
@@ -63,7 +63,7 @@
       "subtitle": "Dimension-specific bot controls in one place",
       "hints": [
         "Left/Right adjust values   Up/Down select",
-        "F5 save   F8 reset defaults   Backspace back   Esc exit   Q quit"
+        "F5 save   F8 reset defaults   Backspace back   Esc exit"
       ],
       "saved_status": "Saved bot options",
       "reset_confirm_enter": "Press Enter on Reset defaults again to confirm",
@@ -74,9 +74,9 @@
       "title_template": "{dimension}D Setup",
       "subtitle_template": "Use Up/Down to select, Left/Right to change, Enter to start. Setup keeps safe presets only; open Topology Playground or Play Last Custom Topology for custom topology.",
       "title_2d": "2D Setup",
-      "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Backspace back, Esc exit, Q quit.",
+      "subtitle_2d": "Use Up/Down to select, Left/Right to change, Enter to start, Backspace back, Esc exit.",
       "bindings_hint_template": "L = load keys, S = save keys ({bindings_file_hint})",
-      "compact_controls_hint": "Arrows navigate   Enter start   Backspace back   Esc exit   Q quit"
+      "compact_controls_hint": "Arrows navigate   Enter start   Backspace back   Esc exit"
     }
   },
   "menus": {
@@ -1976,7 +1976,7 @@
     "subtitle_template": "{dimension}D in-game controls and settings",
     "hints": [
       "Up/Down select   Enter apply",
-      "Esc resume   Q quit"
+      "Esc resume   Click Quit"
     ]
   },
   "setup_fields": {

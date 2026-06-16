@@ -24,11 +24,11 @@ std::string to_fixed_hex(std::uint64_t value) {
 } // namespace
 
 std::string get_core_version() {
-	return "0.8.0-stage22";
+	return "0.9.0-stage23";
 }
 
 std::string get_core_status() {
-	return "native tet4d core loaded; Stage 22 live plain 3D prototype available beside accepted live plain 2D";
+	return "native tet4d core loaded; Stage 23 live plain 4D prototype available beside accepted live plain 2D/3D";
 }
 
 std::string echo_text(std::string_view text) {

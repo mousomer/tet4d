@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-06-09
+Last updated: 2026-06-16
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -14,6 +14,23 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 - Primary product cleanup still routes through
   `docs/plans/topology_playground_current_authority.md` and
   `docs/BACKLOG.md`.
+- Live-mode keyboard exit semantics are now aligned around `Esc` as the
+  universal back/quit path in pygame shells and overlays. `Q` is no longer a
+  live-mode quit/back alias, visible quit/back buttons remain clickable, and
+  Live 4D keeps `Q/E` reserved for `w-` / `w+` movement only. This is UI/input
+  routing plus HUD-copy cleanup only; gameplay semantics are unchanged.
+- Stage 23 Live Plain 4D Godot Prototype is implemented narrowly. Manual GUI
+  acceptance found W labels too small, Space leaking to focused UI activation,
+  and active Live 4D cells too bright. Stage 23b corrects those acceptance
+  defects by enlarging/backing W labels, consuming live Space as hard-drop
+  before UI accept handling, and reducing Live 4D active-cell brightness while
+  preserving active/locked distinction. Stage 23c further corrects Live 4D
+  view/readability by replacing W labels with clear `W SLICE n/N` headers,
+  opening/resetting Live 4D in a canonical fitted W-slice view, preserving Fit
+  View as recovery, and adding safe camera controls on `I/K`, `O/L`, and
+  `-`/`=`. Stage 23 manual acceptance remains pending until rerun; Stage 24
+  remains blocked. No topology/endgame or C++ gameplay semantic work is
+  authorized by this correction.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
@@ -223,10 +240,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   marker. Stage 22f manual Live 3D visual acceptance passed after Stage 22g
   corrections, as recorded in
   `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live Plain 4D
-  Godot Prototype is now unblocked. Topology/endgame remain deferred. py-godot
-  and any Python runtime bridge inside Godot are not the active architecture.
-  Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
-  Stage 23 Live Plain 4D Godot Prototype is now unblocked.
+  Godot Prototype is implemented narrowly: C++ owns the live 4D session through
+  `PlainNDSession`, Godot exposes a separate Live 4D mode, renders side-by-side
+  W slices through the existing mapper/renderer, routes Q/E as W movement, and
+  routes six direct rotation plane pairs while keeping Live 2D, Live 3D, Replay,
+  golden traces, topology, and endgame preserved. Topology/endgame remain
+  deferred. py-godot and any Python runtime bridge inside Godot are not the
+  active architecture.
 - Current topology-playground helper ownership is:
   `controls_panel_rows.py` for row inventory,
   `controls_panel_values.py` for display/value derivation,

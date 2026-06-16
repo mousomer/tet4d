@@ -78,9 +78,9 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var node := CellRendererScript.new()
 		_cell_root.add_child(node)
 		var locked_color_id := int(cell.get("color_id", 0))
-		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if _presentation.is_live_3d else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
+		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
 		var locked_position := _presentation.world_position(cell.get("position", []))
-		if _presentation.is_live_3d:
+		if _presentation.uses_live_exterior_cells:
 			node.setup_exterior_block(
 				locked_position,
 				ReplayVisuals.live_3d_locked_face_materials(_display_mode, locked_color_id),
@@ -91,10 +91,10 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		else:
 			node.setup(
 				locked_position,
-				_live_locked_material(locked_color_id, _presentation.is_live_3d, _presentation.is_live, locked_material),
+				_live_locked_material(locked_color_id, _presentation.uses_live_exterior_cells, _presentation.is_live, locked_material),
 				locked_size if _presentation.is_live else _cell_scale * 0.95,
 				ReplayVisuals.LIVE_CELL_DEPTH if _presentation.is_live else -1.0,
-				_live_locked_border_material(_presentation.is_live_3d, _presentation.is_live),
+				_live_locked_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(locked_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if _presentation.is_live else 0.0
 			)
 
@@ -107,11 +107,11 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		# Keep them on the current discrete frame instead of inventing a path.
 		var position := _presentation.world_position(cell.get("position", []))
 		var active_color_id := int(cell.get("color_id", 1))
-		var active_size := ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE if _presentation.is_live_3d else ReplayVisuals.LIVE_ACTIVE_CELL_SCALE
-		if _presentation.is_live_3d:
+		var active_size := ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_ACTIVE_CELL_SCALE
+		if _presentation.uses_live_exterior_cells:
 			node.setup_exterior_block(
 				position,
-				ReplayVisuals.live_3d_active_face_materials(_display_mode, active_color_id),
+				_live_exterior_active_face_materials(active_color_id),
 				ReplayVisuals.live_3d_active_cell_border_material(_display_mode),
 				active_size,
 				active_size + ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA,
@@ -122,10 +122,10 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		else:
 			node.setup(
 				position,
-				_live_active_material(active_color_id, _presentation.is_live_3d, _presentation.is_live),
+				_live_active_material(active_color_id, _presentation.uses_live_exterior_cells, _presentation.is_live),
 				active_size if _presentation.is_live else ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE,
 				ReplayVisuals.LIVE_CELL_DEPTH if _presentation.is_live else -1.0,
-				_live_active_border_material(_presentation.is_live_3d, _presentation.is_live),
+				_live_active_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(active_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA) if _presentation.is_live else 0.0
 			)
 
@@ -195,6 +195,12 @@ func _live_active_material(color_id: int, is_live_3d_snapshot: bool, is_live_sna
 	if is_live_snapshot:
 		return ReplayVisuals.live_active_cell_material(_display_mode, color_id)
 	return ReplayVisuals.gameplay_active_cell_material(_display_mode)
+
+
+func _live_exterior_active_face_materials(color_id: int) -> Dictionary:
+	if _presentation.is_live_4d:
+		return ReplayVisuals.live_4d_active_face_materials(_display_mode, color_id)
+	return ReplayVisuals.live_3d_active_face_materials(_display_mode, color_id)
 
 
 func _live_locked_border_material(is_live_3d_snapshot: bool, is_live_snapshot: bool) -> Material:

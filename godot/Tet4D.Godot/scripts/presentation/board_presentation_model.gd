@@ -10,6 +10,8 @@ var trace_type := ""
 var dimension := 0
 var is_live := false
 var is_live_3d := false
+var is_live_4d := false
+var uses_live_exterior_cells := false
 
 
 func configure(source_snapshot: Dictionary) -> void:
@@ -18,6 +20,8 @@ func configure(source_snapshot: Dictionary) -> void:
 	dimension = int(snapshot.get("dimension", 0))
 	is_live = trace_type.begins_with("live_")
 	is_live_3d = trace_type == "live_3d" and dimension == 3
+	is_live_4d = trace_type == "live_4d" and dimension == 4
+	uses_live_exterior_cells = is_live and dimension >= 3
 	projection.configure(snapshot)
 
 

@@ -51,14 +51,14 @@ class TestMenuNavigationKeys(unittest.TestCase):
                 pygame.K_RIGHT,
             )
 
-    def test_q_exits_bot_options_menu(self) -> None:
+    def test_q_does_not_exit_bot_options_menu(self) -> None:
         state = bot_options_menu._BotMenuState(payload={})
 
         bot_options_menu._handle_bot_menu_key(state, pygame.K_q)
 
-        self.assertFalse(state.running)
+        self.assertTrue(state.running)
 
-    def test_q_exits_keybindings_binding_menu(self) -> None:
+    def test_q_does_not_exit_keybindings_binding_menu(self) -> None:
         state = keybindings_menu.KeybindingsMenuState(
             section_mode=False,
             allow_scope_sections=True,
@@ -71,10 +71,10 @@ class TestMenuNavigationKeys(unittest.TestCase):
             rows=[],
         )
 
-        self.assertTrue(should_exit)
+        self.assertFalse(should_exit)
         self.assertFalse(state.section_mode)
 
-    def test_q_exits_keybindings_section_menu(self) -> None:
+    def test_q_does_not_exit_keybindings_section_menu(self) -> None:
         state = keybindings_menu.KeybindingsMenuState(section_mode=True)
 
         should_exit = keybindings_menu._handle_section_key(
@@ -83,7 +83,7 @@ class TestMenuNavigationKeys(unittest.TestCase):
             menu_navigation_keys.normalize_menu_navigation_key(pygame.K_q),
         )
 
-        self.assertTrue(should_exit)
+        self.assertFalse(should_exit)
 
     def test_successful_key_capture_triggers_flash_feedback(self) -> None:
         state = keybindings_menu.KeybindingsMenuState(

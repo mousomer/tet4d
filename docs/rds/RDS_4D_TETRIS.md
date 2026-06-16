@@ -80,15 +80,15 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 Gameplay (default small profile):
 1. Move `x`: Left/Right
 2. Move `z`: Up/Down
-3. Move `w`:`N`/`/` (compact default profile)
+3. Move `w`:`Q`/`E`
 4. Soft drop: LShift/RShift
 5. Hard drop: Space
-6. Rotate `x-y`: Q/W
-7. Rotate `x-z`: A/S
-8. Rotate `y-z`: Z/X
-9. Rotate `x-w`: R/T
-10. Rotate `y-w`: F/G
-11. Rotate `z-w`: V/B
+6. Rotate `x-y`: R/T
+7. Rotate `x-z`: F/G
+8. Rotate `y-z`: V/B
+9. Rotate `x-w`: Y/U
+10. Rotate `y-w`: H/J
+11. Rotate `z-w`: N/M
 
 View controls:
 1. View `xw -/+`: `1`/`2`
@@ -124,12 +124,12 @@ Viewer-consistent translation requirement:
 2. `Left/Right` always move screen-left/screen-right.
 3. `Up`means away from the viewer,`Down` means closer to the viewer.
 4. After yaw turns, `x/z` translation remaps to board axes to preserve viewer consistency.
-5. `w`-movement keys remain a dedicated "between-layer-boards" intent.
+5. `Q/E` remain dedicated `w-` / `w+` movement intents in live 4D and must not be treated as quit/back aliases.
 6. Under basis-driven 4D decomposition, `w`-movement intent remaps to the active layer axis:
 7. identity view -> world axis `w`,
 8. `xw` view -> world axis `x`,
 9. `zw` view -> world axis `z`.
-10. Compact profile uses `N`/`/` for `w` movement.
+10. Compact profile uses `Q/E` for `w` movement.
 
 Rotation reliability requirements (4D `z-w`):
 1. `rotate_zw` (`V/B`) must be conflict-free with view/system keys.

@@ -1393,7 +1393,7 @@ Parameters:
 - `menus.settings_root.items[].menu_id`: varies (`string`); examples: `"settings_gameplay"`, `"settings_board_setup_defaults"`, `"settings_controls"`
 - `menus.settings_root.items[].type`: varies (`string`); examples: `"submenu"`, `"action"`
 - `menus.settings_root.title`: `"Settings"` (`string`)
-- `pause_copy.hints[]`: array[`string`]; examples: `"Up/Down select   Enter apply"`, `"Esc resume   Q quit"`
+- `pause_copy.hints[]`: array[`string`]; examples: `"Up/Down select   Enter apply"`, `"Esc resume   Click Quit"`
 - `pause_copy.subtitle_template`: `"{dimension}D in-game controls and settings"` (`string`)
 - `pause_menu_actions[]`: array[`string`]; examples: `"resume"`, `"restart"`, `"settings"`
 - `pause_menu_rows[]`: array[`string`]; examples: `"Resume"`, `"Restart Run"`, `"Settings"`
@@ -1488,7 +1488,7 @@ Parameters:
 - `setup_hints.2d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.3d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
 - `setup_hints.4d[]`: array[`string`]; examples: `"Esc = back, Q = quit"`, `"F7 dry-run verify (bot, no graphics)"`, `"Use Main Menu -> Settings for Random type."`
-- `ui_copy.bot_options.hints[]`: array[`string`]; examples: `"Left/Right adjust values   Up/Down select"`, `"F5 save   F8 reset defaults   Backspace back   Esc exit   Q quit"`
+- `ui_copy.bot_options.hints[]`: array[`string`]; examples: `"Left/Right adjust values   Up/Down select"`, `"F5 save   F8 reset defaults   Backspace back   Esc exit"`
 - `ui_copy.bot_options.reset_confirm_enter`: `"Press Enter on Reset defaults again to confirm"` (`string`)
 - `ui_copy.bot_options.reset_confirm_f8`: `"Press F8 again to confirm reset defaults"` (`string`)
 - `ui_copy.bot_options.reset_done_template`: `"Reset {mode_key} bot settings (not saved yet)"` (`string`)
@@ -1498,8 +1498,8 @@ Parameters:
 - `ui_copy.keybindings_menu.capture_template`: `"Press a key for {binding_title} (Esc cancels)"` (`string`)
 - `ui_copy.keybindings_menu.hints[]`: array[`string`]; examples: `"L load   S save   F3 save as   F2 rename   F6 reset (confirm)"`, `"[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   Backspac...`, `"C conflict mode cycle   Enter capture   Tab sections   Backspace bac...`
 - `ui_copy.keybindings_menu.section_hints[]`: array[`string`]; examples: `"Enter open section   Up/Down select section   Backspace back   Esc e...`, `"[ ] or -/= or PgUp/PgDn profile prev/next   N new profile   F2 renam...`
-- `ui_copy.keybindings_menu.subtitle_binding_mode`: `"Up/Down select, Enter rebind, Tab sections, Backspace back, Q quit"` (`string`)
-- `ui_copy.keybindings_menu.subtitle_section_mode`: `"Up/Down select section, Enter open, Backspace back, Esc exit, Q quit"` (`string`)
+- `ui_copy.keybindings_menu.subtitle_binding_mode`: `"Up/Down select, Enter rebind, Tab sections, Backspace back, Esc exit"` (`string`)
+- `ui_copy.keybindings_menu.subtitle_section_mode`: `"Up/Down select section, Enter open, Backspace back, Esc exit"` (`string`)
 - `ui_copy.keybindings_menu.text_mode_confirm_hint`: `"Enter confirm   Esc cancel"` (`string`)
 - `ui_copy.keybindings_menu.title`: `"Keybindings"` (`string`)
 - `ui_copy.launcher.controls_hint_action_group_template`: `"Up/Down select   Left/Right choose Play/Setup   Enter open   {escape...` (`string`)
@@ -1507,7 +1507,7 @@ Parameters:
 - `ui_copy.launcher.controls_hint_template`: `"Up/Down select   Enter open   {escape_hint}"` (`string`)
 - `ui_copy.launcher.controls_hint_template_tiny`: `"I/K select   Enter open   {escape_hint}"` (`string`)
 - `ui_copy.launcher.escape_hint_back`: `"Backspace back"` (`string`)
-- `ui_copy.launcher.escape_hint_quit`: `"Esc exit   Q quit"` (`string`)
+- `ui_copy.launcher.escape_hint_quit`: `"Esc exit"` (`string`)
 - `ui_copy.launcher.info_active_profile_template`: `"Active key profile: {profile} (switch: [ ] or -/= or PgUp/PgDn)"` (`string`)
 - `ui_copy.launcher.info_continue_mode_template`: `"Continue mode: {mode}"` (`string`)
 - `ui_copy.settings_hub.hints[]`: array[`string`]; examples: `"Up/Down select   Left/Right adjust   Enter activate"`, `"Enter opens subpages, activates actions, or confirms selectors"`, `"Type digits on width, height, seed, or animation timing rows for dir...`
@@ -1515,7 +1515,7 @@ Parameters:
 - `ui_copy.settings_hub.subtitle_categories_template`: `"Open settings pages from the unified registry: {categories}"` (`string`)
 - `ui_copy.settings_hub.title`: `"Settings"` (`string`)
 - `ui_copy.setup_menu.bindings_hint_template`: `"L = load keys, S = save keys ({bindings_file_hint})"` (`string`)
-- `ui_copy.setup_menu.compact_controls_hint`: `"Arrows navigate   Enter start   Backspace back   Esc exit   Q quit"` (`string`)
+- `ui_copy.setup_menu.compact_controls_hint`: `"Arrows navigate   Enter start   Backspace back   Esc exit"` (`string`)
 - `ui_copy.setup_menu.subtitle_2d`: `"Use Up/Down to select, Left/Right to change, Enter to start, Backspa...` (`string`)
 - `ui_copy.setup_menu.subtitle_template`: `"Use Up/Down to select, Left/Right to change, Enter to start. Setup k...` (`string`)
 - `ui_copy.setup_menu.title_2d`: `"2D Setup"` (`string`)

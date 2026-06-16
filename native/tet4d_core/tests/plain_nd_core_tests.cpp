@@ -399,6 +399,55 @@ void test_live_plain_3d_session() {
 	require(session.snapshot_json().find("\"game_over\":false") != std::string::npos, "live 3D reset should clear game_over");
 }
 
+void test_live_plain_4d_session() {
+	tet4d::core::PlainNDSession session(4);
+	const std::string initial_hash = session.state_hash();
+	const std::string initial_snapshot = session.snapshot_json();
+	require(initial_snapshot.find("\"trace_type\":\"live_4d\"") != std::string::npos, "live 4D snapshot trace type missing");
+	require(initial_snapshot.find("\"case_id\":\"live_plain_4d\"") != std::string::npos, "live 4D snapshot case id missing");
+	require(initial_snapshot.find("\"dimension\":4") != std::string::npos, "live 4D snapshot dimension missing");
+	require(initial_snapshot.find("\"board_shape\":[5,10,4,4]") != std::string::npos, "live 4D board shape missing");
+	require(initial_snapshot.find("\"w_slice_count\":4") != std::string::npos, "live 4D W slice count missing");
+	require(initial_snapshot.find("\"current_piece\":\"TRACE_4D\"") != std::string::npos, "live 4D initial piece missing");
+	require(initial_snapshot.find("\"next_piece\":\"STAIR4\"") != std::string::npos, "live 4D next piece missing");
+	require(initial_snapshot.find("\"state_hash\":\"" + initial_hash + "\"") != std::string::npos, "live 4D snapshot hash mismatch");
+
+	session.apply_command("move_w_pos");
+	require(session.state_hash() != initial_hash, "live 4D W move should change hash");
+	require(session.status().find("last_command=move_w_pos") != std::string::npos, "live 4D W move status missing");
+	require(session.snapshot_json().find("\"active_w\":2") != std::string::npos, "live 4D W move active slice missing");
+
+	tet4d::core::PlainNDSession rotate_xw_session(4);
+	rotate_xw_session.apply_command("rotate_xw_pos");
+	require(rotate_xw_session.status().find("last_command=rotate_xw_pos") != std::string::npos, "live 4D rotate XW status missing");
+	require(rotate_xw_session.snapshot_json().find("\"last_rotation_plane\":\"XW\"") != std::string::npos, "live 4D rotate XW plane missing");
+	tet4d::core::PlainNDSession rotate_yw_session(4);
+	rotate_yw_session.apply_command("rotate_yw_pos");
+	require(rotate_yw_session.status().find("last_command=rotate_yw_pos") != std::string::npos, "live 4D rotate YW status missing");
+	require(rotate_yw_session.snapshot_json().find("\"last_rotation_plane\":\"YW\"") != std::string::npos, "live 4D rotate YW plane missing");
+	tet4d::core::PlainNDSession rotate_zw_session(4);
+	rotate_zw_session.apply_command("rotate_zw_pos");
+	require(rotate_zw_session.status().find("last_command=rotate_zw_pos") != std::string::npos, "live 4D rotate ZW status missing");
+	require(rotate_zw_session.snapshot_json().find("\"last_rotation_plane\":\"ZW\"") != std::string::npos, "live 4D rotate ZW plane missing");
+
+	const std::string before_soft = session.state_hash();
+	session.apply_command("soft_drop");
+	require(session.state_hash() != before_soft, "live 4D soft drop should change hash");
+	session.tick();
+	require(session.status().find("last_command=tick") != std::string::npos, "live 4D tick status missing");
+
+	session.apply_command("hard_drop");
+	const std::string after_hard_drop = session.snapshot_json();
+	require(after_hard_drop.find("\"score\":5") != std::string::npos, "live 4D hard drop should score lock points");
+	require(after_hard_drop.find("\"locked_cells\":[") != std::string::npos, "live 4D hard drop should expose locked cells");
+	require(after_hard_drop.find("\"current_piece\":\"STAIR4\"") != std::string::npos, "live 4D hard drop should spawn deterministic next piece");
+	require(session.status().find("next_piece=") != std::string::npos, "live 4D status should expose following piece");
+
+	session.reset();
+	require(session.state_hash() == initial_hash, "live 4D reset should restore initial hash");
+	require(session.snapshot_json().find("\"game_over\":false") != std::string::npos, "live 4D reset should clear game_over");
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -419,6 +468,7 @@ int main(int argc, char **argv) {
 	test_4d_spawn_blocked_stepper();
 	test_trace_exports();
 	test_live_plain_3d_session();
+	test_live_plain_4d_session();
 	std::cout << "tet4d_core native plain ND tests passed\n";
 	return 0;
 }

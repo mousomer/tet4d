@@ -188,13 +188,23 @@ Stage 22d defines the gameboard visual-language authority in
 authority incrementally through the existing mapper/renderer path; the current
 Godot shell reserves left/board/right panel regions structurally and routes
 snapshot projection through focused presentation scripts. Stage 22f manual
-Live 3D acceptance had a failed initial inspection and remains pending in
-`docs/plans/godot_live_3d_manual_acceptance.md`. Stage 22g corrects only those
-visual observations: Live 3D default/Fit View uses the above-board
-`LIVE_3D_EXTERNAL_DIAGRAM_VIEW`, camera preset/view diagnostics are visible,
-bundle status stays compact with inspector detail, and active cells are
-stronger than locked cells with an origin marker. Stage 23 Live 4D remains
-blocked until Stage 22f is rerun and passes.
+Live 3D acceptance passed after Stage 22g corrections: Live 3D default/Fit
+View uses the above-board `LIVE_3D_EXTERNAL_DIAGRAM_VIEW`, camera preset/view
+diagnostics are visible, bundle status stays compact with inspector detail,
+and active cells are stronger than locked cells with an origin marker. Stage
+23 adds a narrow Live 4D mode backed by C++ `PlainNDSession`, side-by-side W
+slices through the existing mapper/renderer, Q/E W movement, and six direct
+rotation plane pairs.
+Stage 23 manual GUI acceptance found W labels too small, Space leaking to
+focused UI activation, and active Live 4D cells too bright. Stage 23b corrects
+those visual/input defects by enlarging/backing W labels, consuming Space as
+live hard-drop before UI accept handling, and reducing Live 4D active-cell
+brightness while preserving outlines/origin markers. Stage 23 manual
+acceptance remains pending until rerun; Stage 24 remains blocked.
+Stage 23c further corrects Live 4D view/readability: W markers are now
+`W SLICE n/N` headers with larger chips, Live 4D opens/resets in a fitted
+W-slice view, `Fit View` restores that canonical full layout, and safe camera
+keys allow inspection without overlapping gameplay controls.
 
 ## Opening In Godot
 
@@ -236,7 +246,7 @@ Live 2D controls:
 - `R`: reset live 2D
 - `F`: fit live board view
 - `Tab`: switch to Live 3D
-- `Q` / `Esc`: quit shell
+- `Esc`: quit shell
 
 Live 2D mode keeps this hint strip visible above the viewport and does not show
 replay frame/case controls.
@@ -256,14 +266,47 @@ Live 3D controls:
 - `V` / `B`: YZ rotate
 - `P`: pause / resume gravity tick
 - `Backspace`: reset live 3D
-- `Tab`: return to Replay
-- `Q` / `Esc`: quit shell
+- `Tab`: switch to Live 4D
+- `Esc`: quit shell
 
 Live 3D uses the same renderer/mapper path as replay and live 2D. `F` remains
 an XZ rotation key in Live 3D; use the visible `Fit View` button for camera
 fit in that mode. The HUD reports `Last rotation: XY+/-`, `XZ+/-`, or
 `YZ+/-` after native rotation commands, and the active outline briefly pulses
 after a returned native rotation snapshot.
+
+Live 4D controls:
+
+- `A` / `D` or `Left` / `Right`: move active piece on X
+- `W` / `S` or `Up` / `Down`: move active piece on Z
+- `Q` / `E`: move active piece W- / W+
+- `Shift`: soft drop
+- `Space`: hard drop
+- `R` / `T`: XY rotate
+- `F` / `G`: XZ rotate
+- `V` / `B`: YZ rotate
+- `Y` / `U`: XW rotate
+- `H` / `J`: YW rotate
+- `N` / `M`: ZW rotate
+- `I` / `K`: camera pitch adjustment
+- `O` / `L`: camera yaw adjustment
+- `-` / `=`: camera zoom adjustment
+- `P`: pause / resume gravity tick
+- `Backspace`: reset live 4D
+- `Tab`: return to Replay
+- `Esc`: quit shell
+
+In Live 4D, `Q` is W- movement and `E` is W+ movement; `Q` does not quit.
+`H` is YW- rotation and does not open Help. `Esc` is the keyboard quit/back
+path. Space is captured by live gameplay as hard drop before focused shell
+buttons can receive UI accept. Visible `Fit View`, reset, and quit/back
+buttons remain mouse-clickable. The HUD reports `LIVE 4D · C++ CORE`, score,
+lines, hash, pieces, last command, signed last rotation, and active W context.
+The W-slice headers use larger outlined `W SLICE n/N` text with high-contrast
+backing chips for default/Fit View readability. Live 4D opens and resets in a
+canonical fitted W-slice view. `Fit View` is the recovery action after manual
+camera adjustment. `I/K`, `O/L`, and `-`/`=` adjust only the camera and do not
+dispatch gameplay commands.
 
 The Replay Viewer uses one explicit shell layout: the game renders through a
 `SubViewport` inside `GameArea`, with a bounded left case browser and a
@@ -291,8 +334,11 @@ coordinate mapping, deterministic camera fit, replay-viewer layout containment,
 gameplay-cell snap policy when stable identity is absent, live 2D native
 status, and the native extension smoke/parity API including Stage 19 plain-ND
 movement/drop, rotation, and clear/scoring trace exports plus Stage 20
-spawn-blocked game-over trace exports and Stage 22 live 3D bridge/shell
-coverage. On a fresh checkout, run the
+spawn-blocked game-over trace exports, Stage 22 live 3D bridge/shell coverage,
+and Stage 23/23b/23c live 4D bridge/shell coverage including Q/E W movement,
+Esc-only live quit, Space hard-drop capture, W-slice header readability,
+fitted Live 4D entry, Fit View recovery, safe camera-key non-mutation, and
+restrained Live 4D active-cell brightness. On a fresh checkout, run the
 submodule and native build
 commands above first; the extension smoke test intentionally fails if Godot
 cannot load the native library.
@@ -309,5 +355,9 @@ cannot load the native library.
 - 4D is displayed as visible W-separated board slices rather than a final 4D
   presentation.
 - GDScript is used only for shell/UI work. Native ND parity APIs remain trace
-  export surfaces; the only live ND gameplay surface is Stage 22 live plain 3D.
-  Live 4D is not implemented yet.
+  export surfaces; live 3D and live 4D gameplay state remain owned by C++.
+  Stage 23 Live 4D is a narrow prototype, not topology or endgame gameplay.
+- Stage 23b automated checks cover the reported visual/input defects, but
+  manual Live 4D GUI acceptance is still pending until rerun in Godot.
+- Stage 23c adds fitted Live 4D camera controls for inspection; it does not add
+  topology/endgame behavior or change C++ gameplay semantics.

@@ -6,9 +6,14 @@ const PYTHON_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const PYTHON_DISPLAY_PITCH_RAD := -0.4537856055185257  # -26 degrees.
 const REPLAY_DISPLAY_VIEW_PRESET_NAME := "PYTHON_DIAGRAM_REPLAY_VIEW"
 const LIVE_3D_VIEW_PRESET_NAME := "LIVE_3D_EXTERNAL_DIAGRAM_VIEW"
+const LIVE_4D_VIEW_PRESET_NAME := "LIVE_4D_FITTED_W_SLICE_VIEW"
 const LIVE_3D_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const LIVE_3D_DISPLAY_PITCH_RAD := 0.4537856055185257  # +26 degrees above the board.
+const LIVE_4D_DISPLAY_YAW_RAD := 0.4363323129985824  # 25 degrees for side-by-side W slices.
+const LIVE_4D_DISPLAY_PITCH_RAD := 0.3490658503988659  # +20 degrees above the board.
 const DEFAULT_ORTHOGRAPHIC_SIZE := 16.0
+const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
+const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 
 @export var min_distance := 8.0
 @export var max_distance := 80.0
@@ -104,6 +109,20 @@ func orbit(delta: Vector2) -> void:
 	_target_yaw -= delta.x * orbit_sensitivity
 	_target_pitch = clampf(_target_pitch - delta.y * orbit_sensitivity, -1.2, 1.2)
 	_current_fit_state = "manual"
+
+
+func nudge_yaw(delta_radians: float) -> void:
+	_target_yaw += delta_radians
+	_current_yaw = _target_yaw
+	_current_fit_state = "manual"
+	_update_camera()
+
+
+func nudge_pitch(delta_radians: float) -> void:
+	_target_pitch = clampf(_target_pitch + delta_radians, -1.2, 1.2)
+	_current_pitch = _target_pitch
+	_current_fit_state = "manual"
+	_update_camera()
 
 
 func pan(delta: Vector2) -> void:

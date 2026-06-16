@@ -460,7 +460,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
             "controls_hint_template": "Up/Down select   Enter open   {escape_hint}",
             "controls_hint_template_tiny": "I/K select   Enter open   {escape_hint}",
             "escape_hint_back": "Backspace back",
-            "escape_hint_quit": "Esc exit   Q quit",
+            "escape_hint_quit": "Esc exit",
         }
         with mock.patch.object(
             launcher_menu_view,
@@ -523,7 +523,7 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertTrue(state.running)
         self.assertEqual(state.text_mode_buffer, original_buffer[:-1])
 
-    def test_settings_hub_q_exits_application_loop_even_in_numeric_text_mode(self) -> None:
+    def test_settings_hub_q_does_not_exit_application_loop_even_in_numeric_text_mode(self) -> None:
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
@@ -535,9 +535,9 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         screen = pygame.Surface((640, 480))
         out = launcher_settings._dispatch_unified_key(screen, self._fonts(), state, pygame.K_q)
         self.assertIs(out, screen)
-        self.assertFalse(state.running)
-        self.assertFalse(state.keep_running)
-        self.assertEqual(state.text_mode_row_key, "")
+        self.assertTrue(state.running)
+        self.assertTrue(state.keep_running)
+        self.assertEqual(state.text_mode_row_key, "display_width")
 
     def test_settings_hub_backspace_pops_page_stack_but_escape_does_not(self) -> None:
         state = settings_hub_model.build_unified_settings_state(

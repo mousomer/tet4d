@@ -346,7 +346,6 @@ def _action_profile_delete(
 
 
 _MENU_KEY_HANDLERS = {
-    pygame.K_q: _action_exit,
     pygame.K_UP: _action_row_up,
     pygame.K_DOWN: _action_row_down,
     pygame.K_RETURN: _action_capture_start,
@@ -465,7 +464,7 @@ def _draw_section_menu(
 def _handle_section_key(
     state: KeybindingsMenuState, key: int, nav_key: int
 ) -> bool:
-    if key == pygame.K_q or nav_key in (pygame.K_BACKSPACE, pygame.K_ESCAPE):
+    if nav_key in (pygame.K_BACKSPACE, pygame.K_ESCAPE):
         return True
     if nav_key == pygame.K_UP:
         state.selected_section = (state.selected_section - 1) % len(SECTION_MENU)

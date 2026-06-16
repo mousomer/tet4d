@@ -144,6 +144,74 @@ func run() -> Array:
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live 3D renderer should keep one shared grid renderer")
 
+	renderer.render_snapshot({
+		"case_id": "live_plain_4d",
+		"trace_type": "live_4d",
+		"frame_index": 0,
+		"dimension": 4,
+		"board_shape": [5, 10, 4, 4],
+		"locked_cells": [{"position": [1, 4, 1, 0], "color_id": 4}],
+		"active_cells": [{"position": [1, 1, 2, 1], "color_id": 6}],
+		"last_command": "rotate_xw_pos",
+		"last_command_status": "accepted",
+		"w_slice_count": 4,
+		"active_w": 1,
+		"probe_markers": [],
+		"event_markers": [],
+		"particles": [],
+	})
+	await tree.process_frame
+	cell_root = renderer.get_node_or_null("CellRoot")
+	if cell_root == null or cell_root.get_child_count() != 2:
+		failures.append("live 4D renderer should create active and locked cells through the shared renderer")
+	else:
+		var live_4d_locked_cell := cell_root.get_child(0) as Node3D
+		var live_4d_active_cell := cell_root.get_child(1) as Node3D
+		_assert_cell_material(
+			failures,
+			live_4d_locked_cell,
+			ReplayVisuals.live_3d_locked_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 4).get("top").albedo_color,
+			"live 4D locked cells reuse piece-aware exterior face material"
+		)
+		_assert_cell_material(
+			failures,
+			live_4d_active_cell,
+			ReplayVisuals.live_4d_active_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).get("top").albedo_color,
+			"live 4D active cells use restrained exterior face material"
+		)
+		_assert_live_3d_exterior_block(failures, live_4d_active_cell, "live 4D active cell")
+		_assert_live_3d_exterior_block(failures, live_4d_locked_cell, "live 4D locked cell")
+		_assert_rotation_pulse_outline(failures, live_4d_active_cell, "live 4D active rotation pulse")
+		_assert_live_3d_origin_marker(failures, live_4d_active_cell)
+		_assert_live_4d_active_restrained(failures, live_4d_active_cell, live_4d_locked_cell)
+		if live_4d_active_cell.position.x <= live_4d_locked_cell.position.x:
+			failures.append("live 4D renderer should position higher W slices to the right")
+	grid_root = renderer.get_node_or_null("GridRoot")
+	if grid_root == null or grid_root.get_child_count() != 1:
+		failures.append("live 4D renderer should keep one shared grid renderer")
+	else:
+		var live_4d_grid := grid_root.get_child(0)
+		var w_label_count := 0
+		var label_chip_count := 0
+		for child in live_4d_grid.get_children():
+			if child is Label3D and str((child as Label3D).text).begins_with("W SLICE"):
+				w_label_count += 1
+				var label := child as Label3D
+				if not label.text.contains("/4"):
+					failures.append("live 4D W labels should read as slice headers with total count")
+				if label.font_size < ReplayVisuals.W_SLICE_LABEL_FONT_SIZE:
+					failures.append("live 4D W labels should use the large readable label size")
+				if label.outline_size < ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE:
+					failures.append("live 4D W labels should use a strong outline")
+			elif child is MeshInstance3D:
+				var chip_mesh := (child as MeshInstance3D).mesh as BoxMesh
+				if chip_mesh != null and absf(chip_mesh.size.x - ReplayVisuals.W_SLICE_LABEL_CHIP_WIDTH) < 0.001:
+					label_chip_count += 1
+		if w_label_count < 4:
+			failures.append("live 4D renderer should label each W slice")
+		if label_chip_count < 4:
+			failures.append("live 4D W labels should have high-contrast backing chips")
+
 	renderer.queue_free()
 	await tree.process_frame
 	return failures
@@ -268,6 +336,25 @@ func _assert_live_3d_active_priority(failures: Array, active_cell: Node3D, locke
 		failures.append("live 3D active priority test needs outline materials")
 	elif active_outline_material.albedo_color == locked_outline_material.albedo_color:
 		failures.append("live 3D active and locked outlines should not share the same visual role")
+
+
+func _assert_live_4d_active_restrained(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:
+	var active_top := active_cell.get_child(0) as MeshInstance3D
+	var locked_top := locked_cell.get_child(0) as MeshInstance3D
+	if active_top == null or locked_top == null:
+		failures.append("live 4D active restraint test needs top face meshes")
+		return
+	var active_material := active_top.material_override as StandardMaterial3D
+	var locked_material := locked_top.material_override as StandardMaterial3D
+	if active_material == null or locked_material == null:
+		failures.append("live 4D active restraint test needs StandardMaterial3D faces")
+		return
+	if active_material.emission_energy_multiplier > 0.34:
+		failures.append("live 4D active emission should stay below glare threshold")
+	if _color_brightness(active_material.albedo_color) <= _color_brightness(locked_material.albedo_color) + 0.08:
+		failures.append("live 4D active face should remain brighter than locked face")
+	if _color_brightness(active_material.albedo_color) >= 0.82:
+		failures.append("live 4D active face should not wash out toward white")
 
 
 func _assert_live_3d_origin_marker(failures: Array, active_cell: Node3D) -> void:

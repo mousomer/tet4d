@@ -125,7 +125,7 @@ def _draw_list_menu_panel(
         buttons=(
             ("side_back", "Backspace: Back"),
             ("side_escape", "Esc: Exit"),
-            ("side_quit", "Q: Quit"),
+            ("side_quit", "Quit"),
         ),
         hovered_kind=hovered_target.kind if hovered_target is not None else "",
         pressed_kind=pressed_target.kind if pressed_target is not None else "",
@@ -543,8 +543,6 @@ def _pause_menu_keydown(
 ) -> bool:
     if int(key) == pygame.K_ESCAPE and int(stack_depth) <= 1:
         return _pause_root_escape(state, on_escape_back=on_escape_back)
-    if int(key) == pygame.K_q:
-        return _pause_quit_event(state)
     return False
 
 

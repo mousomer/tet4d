@@ -22,6 +22,8 @@ REBIND_CONFLICT_OPTIONS = (
     REBIND_CONFLICT_CANCEL,
 )
 
+_ESCAPE_KEY = 27
+
 
 def _replace_map(
     target: MutableMapping[str, KeyTuple], source: Mapping[str, KeyTuple]
@@ -228,6 +230,13 @@ class KeybindingRuntimeState:
         camera_defaults_4d: Mapping[str, KeyTuple] | None = None,
         reset_camera_key_fallback: int | None = None,
     ) -> None:
+        quit_keys = tuple(
+            key for key in self.system_keys.get("quit", ()) if int(key) == _ESCAPE_KEY
+        )
+        if not quit_keys:
+            quit_keys = (_ESCAPE_KEY,)
+        self.system_keys["quit"] = quit_keys
+
         fallback_camera_4d = (
             dict(camera_defaults_4d)
             if camera_defaults_4d is not None
