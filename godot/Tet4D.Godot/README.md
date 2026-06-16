@@ -205,6 +205,9 @@ Stage 23c further corrects Live 4D view/readability: W markers are now
 `W SLICE n/N` headers with larger chips, Live 4D opens/resets in a fitted
 W-slice view, `Fit View` restores that canonical full layout, and safe camera
 keys allow inspection without overlapping gameplay controls.
+Stage 23d fixes the Live 4D zoom path: `-` zooms out, `=`/`+` zoom in by
+changing orthographic camera size, camera diagnostics expose size/zoom state,
+and camera keys remain captured even after clicking viewer panels/buttons.
 
 ## Opening In Godot
 
@@ -290,7 +293,8 @@ Live 4D controls:
 - `N` / `M`: ZW rotate
 - `I` / `K`: camera pitch adjustment
 - `O` / `L`: camera yaw adjustment
-- `-` / `=`: camera zoom adjustment
+- `-`: camera zoom out
+- `=` / `+`: camera zoom in
 - `P`: pause / resume gravity tick
 - `Backspace`: reset live 4D
 - `Tab`: return to Replay
@@ -338,7 +342,10 @@ spawn-blocked game-over trace exports, Stage 22 live 3D bridge/shell coverage,
 and Stage 23/23b/23c live 4D bridge/shell coverage including Q/E W movement,
 Esc-only live quit, Space hard-drop capture, W-slice header readability,
 fitted Live 4D entry, Fit View recovery, safe camera-key non-mutation, and
-restrained Live 4D active-cell brightness. On a fresh checkout, run the
+restrained Live 4D active-cell brightness. Stage 23d adds coverage for
+orthographic zoom size changes, `-`/`=`/`+` key variants, focused-UI capture,
+diagnostic size/zoom text, Fit View recovery, and switching away/back to Live
+4D. On a fresh checkout, run the
 submodule and native build
 commands above first; the extension smoke test intentionally fails if Godot
 cannot load the native library.
@@ -361,3 +368,5 @@ cannot load the native library.
   manual Live 4D GUI acceptance is still pending until rerun in Godot.
 - Stage 23c adds fitted Live 4D camera controls for inspection; it does not add
   topology/endgame behavior or change C++ gameplay semantics.
+- Stage 23d makes those zoom controls affect orthographic camera size; it does
+  not add topology/endgame behavior or change C++ gameplay semantics.

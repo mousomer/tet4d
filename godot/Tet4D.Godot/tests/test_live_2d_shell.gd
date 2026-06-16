@@ -12,7 +12,7 @@ func run() -> Array:
 	var live_4d_hint := ReplayHudScript.live_4d_hint_text()
 	var expected_live_hint := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Esc Quit"
 	var expected_live_3d_hint := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Live 4D · Esc Quit"
-	var expected_live_4d_hint := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Rotate: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, -/= Zoom · P Pause · Backspace Reset · Fit View Recovery · Tab Replay · Esc Quit"
+	var expected_live_4d_hint := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Rotate: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, - Out, =/+ In · P Pause · Backspace Reset · Fit View Recovery · Tab Replay · Esc Quit"
 	var expected_replay_hint := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 	if live_hint != expected_live_hint:
 		failures.append("live 2D hint text should match the Stage 12 visible control strip")
@@ -163,6 +163,44 @@ func run() -> Array:
 		if app._camera_rig._current_fit_state != "fit OK":
 			failures.append("live 4D should open already fitted")
 		var camera_hash_before := str(app._live_bridge.live_4d_state_hash())
+		var live_4d_camera := app._camera_rig.get_node_or_null("Camera3D") as Camera3D
+		if live_4d_camera == null:
+			failures.append("Live 4D camera should exist for zoom checks")
+		var fitted_camera_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		var zoom_in_event := InputEventKey.new()
+		zoom_in_event.keycode = KEY_EQUAL
+		zoom_in_event.unicode = 43
+		zoom_in_event.pressed = true
+		app._input(zoom_in_event)
+		if live_4d_camera != null and live_4d_camera.size >= fitted_camera_size:
+			failures.append("Live 4D =/+ zoom should reduce orthographic size")
+		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
+			failures.append("Live 4D zoom keys should not mutate gameplay state")
+		var zoomed_in_camera_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		var zoom_status: String = app._camera_rig.view_status_text()
+		if zoom_status.find("size") == -1 or zoom_status.find("zoom") == -1 or zoom_status.find("manual") == -1:
+			failures.append("Live 4D camera diagnostics should expose size, zoom, and manual state after zoom")
+		var zoom_out_event := InputEventKey.new()
+		zoom_out_event.keycode = KEY_MINUS
+		zoom_out_event.unicode = 45
+		zoom_out_event.pressed = true
+		app._input(zoom_out_event)
+		if live_4d_camera != null and live_4d_camera.size <= zoomed_in_camera_size:
+			failures.append("Live 4D - zoom should increase orthographic size")
+		app._refresh_live_4d_snapshot()
+		await tree.process_frame
+		if live_4d_camera != null and app._camera_rig._current_fit_state != "manual":
+			failures.append("Live 4D snapshot refresh should not continuously reapply Fit View after zoom")
+		if live_4d_camera != null and live_4d_camera.size <= zoomed_in_camera_size:
+			failures.append("Live 4D manual zoom should survive a live snapshot refresh")
+		var focused_zoom_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		var plus_event := InputEventKey.new()
+		plus_event.keycode = KEY_PLUS
+		plus_event.unicode = 43
+		plus_event.pressed = true
+		app._input(plus_event)
+		if live_4d_camera != null and live_4d_camera.size >= focused_zoom_size:
+			failures.append("Live 4D zoom should still work through pre-UI input capture")
 		var yaw_before: float = app._camera_rig._current_yaw
 		var camera_event := InputEventKey.new()
 		camera_event.keycode = KEY_O
@@ -226,6 +264,14 @@ func run() -> Array:
 		app._unhandled_input(h_event)
 		if str(app._current_snapshot.get("last_rotation_label", "")) != "YW-":
 			failures.append("H should dispatch Live 4D YW- rotation instead of Help")
+		app._enter_replay_mode()
+		await tree.process_frame
+		app._enter_live_4d_mode()
+		await tree.process_frame
+		var switched_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		app._input(zoom_out_event)
+		if live_4d_camera != null and live_4d_camera.size <= switched_fit_size:
+			failures.append("Live 4D zoom should work after switching away and back")
 	for action_name in [
 		"live_move_left",
 		"live_move_right",

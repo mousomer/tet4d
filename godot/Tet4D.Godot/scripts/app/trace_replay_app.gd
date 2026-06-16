@@ -133,10 +133,12 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not _is_live_mode() or not _event_is_space_pressed_once(event):
+	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
+		get_viewport().set_input_as_handled()
 		return
-	_handle_live_space_hard_drop()
-	get_viewport().set_input_as_handled()
+	if _is_live_mode() and _event_is_space_pressed_once(event):
+		_handle_live_space_hard_drop()
+		get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -408,11 +410,11 @@ func _handle_live_4d_camera_input(event: InputEvent) -> bool:
 		_camera_rig.nudge_pitch(-CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
 		_refresh_camera_status()
 		return true
-	if _event_action_pressed_once(event, ["live_4d_camera_zoom_in"]):
+	if _event_is_live_4d_zoom_in(event):
 		_camera_rig.zoom(-1.0)
 		_refresh_camera_status()
 		return true
-	if _event_action_pressed_once(event, ["live_4d_camera_zoom_out"]):
+	if _event_is_live_4d_zoom_out(event):
 		_camera_rig.zoom(1.0)
 		_refresh_camera_status()
 		return true
@@ -1366,6 +1368,31 @@ func _event_is_space_pressed_once(event: InputEvent) -> bool:
 	)
 
 
+func _event_is_live_4d_zoom_in(event: InputEvent) -> bool:
+	if _event_action_pressed_once(event, ["live_4d_camera_zoom_in"]):
+		return true
+	return _event_key_pressed_once(event, [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD], ["=", "+"])
+
+
+func _event_is_live_4d_zoom_out(event: InputEvent) -> bool:
+	if _event_action_pressed_once(event, ["live_4d_camera_zoom_out"]):
+		return true
+	return _event_key_pressed_once(event, [KEY_MINUS, KEY_KP_SUBTRACT], ["-"])
+
+
+func _event_key_pressed_once(event: InputEvent, keycodes: Array, unicode_chars: Array) -> bool:
+	if not (event is InputEventKey):
+		return false
+	var key_event := event as InputEventKey
+	if not key_event.is_pressed() or key_event.echo:
+		return false
+	for keycode in keycodes:
+		if key_event.keycode == keycode or key_event.physical_keycode == keycode:
+			return true
+	var typed_char := char(key_event.unicode) if key_event.unicode > 0 else ""
+	return not typed_char.is_empty() and unicode_chars.has(typed_char)
+
+
 func _handle_live_space_hard_drop() -> bool:
 	if _mode == MODE_LIVE_4D:
 		_dispatch_live_4d_gameplay_command("hard_drop")
@@ -1562,7 +1589,10 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("live_4d_camera_yaw_left", KEY_O)
 	_ensure_key_action("live_4d_camera_yaw_right", KEY_L)
 	_ensure_key_action("live_4d_camera_zoom_in", KEY_EQUAL)
+	_ensure_key_action("live_4d_camera_zoom_in", KEY_PLUS)
+	_ensure_key_action("live_4d_camera_zoom_in", KEY_KP_ADD)
 	_ensure_key_action("live_4d_camera_zoom_out", KEY_MINUS)
+	_ensure_key_action("live_4d_camera_zoom_out", KEY_KP_SUBTRACT)
 	_ensure_mouse_action("camera_orbit", MOUSE_BUTTON_LEFT)
 	_ensure_mouse_action("camera_zoom", MOUSE_BUTTON_WHEEL_UP)
 

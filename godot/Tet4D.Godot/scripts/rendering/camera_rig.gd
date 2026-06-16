@@ -12,6 +12,8 @@ const LIVE_3D_DISPLAY_PITCH_RAD := 0.4537856055185257  # +26 degrees above the b
 const LIVE_4D_DISPLAY_YAW_RAD := 0.4363323129985824  # 25 degrees for side-by-side W slices.
 const LIVE_4D_DISPLAY_PITCH_RAD := 0.3490658503988659  # +20 degrees above the board.
 const DEFAULT_ORTHOGRAPHIC_SIZE := 16.0
+const MIN_ORTHOGRAPHIC_SIZE := 2.0
+const MAX_ORTHOGRAPHIC_SIZE := 96.0
 const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
 const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 
@@ -30,6 +32,7 @@ var _current_yaw := PYTHON_DISPLAY_YAW_RAD
 var _target_pitch := PYTHON_DISPLAY_PITCH_RAD
 var _current_pitch := PYTHON_DISPLAY_PITCH_RAD
 var _base_distance := 22.0
+var _base_orthographic_size := DEFAULT_ORTHOGRAPHIC_SIZE
 var _zoom_multiplier := 1.0
 var _last_frame_signature := ""
 var _current_view_preset := REPLAY_DISPLAY_VIEW_PRESET_NAME
@@ -42,6 +45,7 @@ var _current_fit_state := "initial"
 func _ready() -> void:
 	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	_camera.size = DEFAULT_ORTHOGRAPHIC_SIZE
+	_base_orthographic_size = _camera.size
 	_update_camera()
 
 
@@ -101,7 +105,8 @@ func fit_bounds(
 	_base_distance = clampf(max_extent * 1.45 + 6.0, min_distance, max_distance)
 	_zoom_multiplier = 1.0
 	_target_distance = _base_distance
-	_camera.size = maxf(_projected_orthographic_size(min_pos, max_pos, _target_yaw, _target_pitch, margin), 4.0)
+	_base_orthographic_size = maxf(_projected_orthographic_size(min_pos, max_pos, _target_yaw, _target_pitch, margin), 4.0)
+	_camera.size = _base_orthographic_size
 	_snap_to_targets()
 
 
@@ -134,8 +139,17 @@ func pan(delta: Vector2) -> void:
 
 func zoom(step: float) -> void:
 	var multiplier: float = pow(zoom_sensitivity, step)
-	_zoom_multiplier = clampf(_zoom_multiplier * multiplier, min_distance / maxf(_base_distance, 0.001), max_distance / maxf(_base_distance, 0.001))
-	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
+	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+		var orthographic_multiplier: float = clampf(
+			_camera.size * multiplier / maxf(_base_orthographic_size, 0.001),
+			MIN_ORTHOGRAPHIC_SIZE / maxf(_base_orthographic_size, 0.001),
+			MAX_ORTHOGRAPHIC_SIZE / maxf(_base_orthographic_size, 0.001)
+		)
+		_zoom_multiplier = orthographic_multiplier
+		_camera.size = clampf(_base_orthographic_size * _zoom_multiplier, MIN_ORTHOGRAPHIC_SIZE, MAX_ORTHOGRAPHIC_SIZE)
+	else:
+		_zoom_multiplier = clampf(_zoom_multiplier * multiplier, min_distance / maxf(_base_distance, 0.001), max_distance / maxf(_base_distance, 0.001))
+		_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
 	_current_fit_state = "manual"
 
 
@@ -146,9 +160,11 @@ func view_status_text() -> String:
 	var yaw_degrees := rad_to_deg(_current_yaw)
 	var pitch_degrees := rad_to_deg(_current_pitch)
 	var pitch_label := "above %.0f deg" % pitch_degrees if pitch_degrees >= 0.0 else "below %.0f deg" % absf(pitch_degrees)
-	return "Camera: %s · %s · %s · yaw %.0f deg · pitch %s · roll 0 deg · %s" % [
+	return "Camera: %s · %s · size %.2f · zoom %.2fx · %s · yaw %.0f deg · pitch %s · roll 0 deg · %s" % [
 		_current_view_preset,
 		projection_label,
+		_camera.size,
+		_zoom_multiplier,
 		_current_view_octant,
 		yaw_degrees,
 		pitch_label,

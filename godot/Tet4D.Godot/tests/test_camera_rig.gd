@@ -57,8 +57,18 @@ func run() -> Array:
 	if camera.size <= 20.0:
 		failures.append("live 4D camera fit should frame the full W-slice layout, got size %.3f" % camera.size)
 	status = rig.view_status_text()
-	if status.find(CameraRigScript.LIVE_4D_VIEW_PRESET_NAME) == -1 or status.find("fitted W slices") == -1:
-		failures.append("live 4D camera status should name the fitted W-slice preset: %s" % status)
+	if status.find(CameraRigScript.LIVE_4D_VIEW_PRESET_NAME) == -1 or status.find("fitted W slices") == -1 or status.find("size") == -1 or status.find("zoom") == -1:
+		failures.append("live 4D camera status should name the fitted W-slice preset and zoom diagnostics: %s" % status)
+	var fitted_size := camera.size
+	rig.zoom(-1.0)
+	if camera.size >= fitted_size:
+		failures.append("live 4D zoom in should reduce orthographic size, got %.3f from %.3f" % [camera.size, fitted_size])
+	if rig.view_status_text().find("manual") == -1 or rig.view_status_text().find("zoom") == -1:
+		failures.append("live 4D zoom should mark manual view and expose zoom status")
+	var zoomed_in_size := camera.size
+	rig.zoom(1.0)
+	if camera.size <= zoomed_in_size:
+		failures.append("live 4D zoom out should increase orthographic size, got %.3f from %.3f" % [camera.size, zoomed_in_size])
 	var yaw_before := rig._current_yaw
 	rig.nudge_yaw(CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
 	if rig._current_yaw <= yaw_before:
@@ -73,6 +83,8 @@ func run() -> Array:
 		CameraRigScript.LIVE_4D_VIEW_PRESET_NAME,
 		"fitted W slices"
 	)
+	if absf(camera.size - fitted_size) > 0.001:
+		failures.append("live 4D Fit View should restore fitted orthographic size, got %.3f expected %.3f" % [camera.size, fitted_size])
 	if rig.view_status_text().find("fit OK") == -1:
 		failures.append("live 4D Fit View should restore fitted state")
 

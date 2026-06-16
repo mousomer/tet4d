@@ -352,7 +352,15 @@ Cross-cutting requirements are defined in:
     change C++ gameplay semantics, trace parity, topology, endgame, Python
     runtime calls, Godot-side legality, or the accepted Live 2D/Live 3D/Replay
     behavior.
-37. The migrated Godot Live 3D shell should prefer snapping to returned C++
+37. Stage 23d may correct Live 4D zoom-control defects only. Allowed
+    corrections include changing orthographic camera size for `-`/`=`/`+`,
+    robust minus/equal/plus key detection, camera diagnostics that expose size
+    and zoom state, pre-UI camera-key capture in Live 4D, and Fit View
+    recovery for the canonical fitted W-slice layout. Stage 23d must not
+    change C++ gameplay semantics, trace parity, topology, endgame, Python
+    runtime calls, Godot-side legality, or the accepted Live 2D/Live 3D/Replay
+    behavior.
+38. The migrated Godot Live 3D shell should prefer snapping to returned C++
     state plus clear plane feedback over a misleading Godot-side rotation
     tween. A future Godot presentation tween is allowed only if it is derived
     from and cannot contradict returned native state.

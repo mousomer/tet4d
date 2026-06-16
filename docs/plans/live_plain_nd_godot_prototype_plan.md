@@ -1,8 +1,8 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: Stage 23 live plain 4D Godot prototype implemented; Stage 23c view/readability corrections implemented; manual rerun pending
-Last updated: 2026-06-16
+Status: Stage 23 live plain 4D Godot prototype implemented; Stage 23d zoom correction implemented; manual rerun pending
+Last updated: 2026-06-17
 
 Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
 Stage 23 Live Plain 4D Godot Prototype is implemented narrowly. Stage 23
@@ -11,8 +11,10 @@ activation, and overly bright active Live 4D cells. Stage 23b corrects those
 visual/input defects without changing gameplay semantics. Stage 23c further
 corrects Live 4D view/readability by replacing W labels with slice headers,
 opening/resetting Live 4D in a fitted W-slice view, and adding safe camera
-adjustment controls. Stage 23 manual acceptance remains pending until rerun,
-and Stage 24 remains blocked.
+adjustment controls. Stage 23d fixes Live 4D zoom so orthographic camera size
+changes for `-`, `=`, and `+` without focused UI controls eating the keys.
+Stage 23 manual acceptance remains pending until rerun, and Stage 24 remains
+blocked.
 
 ## 1. Decision summary
 
@@ -32,8 +34,9 @@ The implementation sequence is:
 7. Stage 23: Live Plain 4D Godot Prototype.
 8. Stage 23b: Live 4D acceptance corrections.
 9. Stage 23c: Live 4D view and W-slice readability corrections.
-10. Stage 24: Live ND polish and hardening after manual acceptance passes.
-11. Stage 25: topology parity planning.
+10. Stage 23d: Live 4D zoom-control correction.
+11. Stage 24: Live ND polish and hardening after manual acceptance passes.
+12. Stage 25: topology parity planning.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native
@@ -570,6 +573,20 @@ Stage 23c - Live 4D view and W-slice readability corrections:
 - preserved: Q/E W movement, Space hard drop, Esc quit/back, Live 2D, Live 3D,
   Replay, and C++ gameplay semantics.
 
+Stage 23d - Live 4D zoom-control correction:
+
+- implemented: Live 4D zoom keys change effective orthographic camera size
+  instead of camera distance;
+- implemented: `-` zooms out, `=`/`+` zoom in, with keypad equivalents and
+  typed-character fallback accepted;
+- implemented: Live 4D camera keys are captured before focused UI controls can
+  consume them;
+- implemented: camera diagnostics include orthographic size and zoom factor;
+- implemented: Fit View remains the only recovery path that resets the fitted
+  W-slice layout after manual zoom;
+- preserved: Q/E W movement, Space hard drop, Esc quit/back, I/K pitch, O/L
+  yaw, Live 2D, Live 3D, Replay, and C++ gameplay semantics.
+
 Stage 24 - Live ND polish/hardening:
 
 - tune input repeat, camera fit, and status readability after Stage 23 manual
@@ -652,10 +669,17 @@ remain W-/W+, Space remains hard drop, Esc remains quit/back, Live 2D/3D/Replay
 are preserved, automated verification passes, and Stage 23 manual acceptance
 is explicitly left pending until rerun.
 
+Stage 23d is complete when `-` visibly zooms out, `=` or `+` visibly zooms in,
+camera diagnostics change with zoom, Fit View restores the fitted W-slice
+layout, zoom still works after clicking panels/buttons and after switching
+away from and back to Live 4D, Q/E remain W-/W+, Space remains hard drop, Esc
+remains back/quit, Live 2D/3D/Replay are preserved, automated verification
+passes, and no C++ gameplay semantics change.
+
 Stage 22d is complete when the design authority exists. Stage 22f manual Live
 3D visual acceptance passed after Stage 22g corrections, as recorded in
 `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live Plain 4D Godot
-Prototype is implemented narrowly. Stage 23b and Stage 23c acceptance
-corrections are implemented; Stage 23 manual GUI acceptance remains pending,
-and Stage 24 polish/hardening remains blocked until that acceptance rerun
-passes.
+Prototype is implemented narrowly. Stage 23b, Stage 23c, and Stage 23d
+acceptance corrections are implemented; Stage 23 manual GUI acceptance remains
+pending, and Stage 24 polish/hardening remains blocked until that acceptance
+rerun passes.

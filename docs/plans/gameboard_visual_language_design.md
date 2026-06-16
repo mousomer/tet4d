@@ -294,7 +294,9 @@ too small, Space leaking to focused UI activation instead of hard drop, and
 overly bright active Live 4D cells. Stage 23b corrects those visual/input
 defects. Stage 23c further corrects view/readability by using explicit W-slice
 headers, opening/resetting Live 4D in a fitted W-slice view, and adding safe
-camera adjustment controls; manual acceptance remains pending until rerun.
+camera adjustment controls. Stage 23d corrects the zoom part of those controls
+so Live 4D orthographic zoom changes camera size and remains available after UI
+focus changes; manual acceptance remains pending until rerun.
 
 Constraints for Stage 23 and later Live 4D polish:
 
@@ -317,6 +319,8 @@ Constraints for Stage 23 and later Live 4D polish:
 12. Keep Fit View as the canonical recovery action for the full W-slice layout.
 13. Allow limited Live 4D camera adjustment controls that do not overlap
     movement, rotation, drop, pause, reset, mode switch, or quit controls.
+14. Live 4D orthographic zoom must adjust effective orthographic size; camera
+    distance alone is not visible zoom for this view.
 
 ## 16. Implementation Stages After Stage 22d
 
@@ -328,12 +332,13 @@ Stage 22f - Rerun Manual Live 3D Visual Acceptance
 Stage 23  - Live Plain 4D Godot Prototype
 Stage 23b - Live 4D Acceptance Corrections
 Stage 23c - Live 4D View And W-Slice Readability Corrections
+Stage 23d - Live 4D Zoom-Control Correction
 ```
 
 Stage 23 did not start before Stage 22f passed. Future Live 4D polish must
 continue to inherit this visual grammar rather than inventing a separate board
 language. Stage 24 remains blocked until Stage 23 manual Live 4D acceptance
-passes after the Stage 23b/23c corrections.
+passes after the Stage 23b/23c/23d corrections.
 
 Design rule after Stage 23c:
 

@@ -477,12 +477,20 @@ stays synchronized, and the contract validator accepts the backlog shape.
     `I/K`, `O/L`, and `-`/`=`. This is presentation/input-only; Q/E W movement,
     Space hard drop, Esc quit/back, Live 2D, Live 3D, Replay, and C++ gameplay
     semantics remain preserved.
-31. `TODO` `[BKL-P3-037]` Stage 23 manual Live 4D acceptance rerun:
-    rerun the GUI checklist after Stage 23b/23c. Stage 24 polish/hardening
+31. `DONE` `[BKL-P3-039]` Stage 23d Live 4D zoom-control correction:
+    make Live 4D zoom keys change orthographic camera size rather than camera
+    distance, support `-`, `=`, `+`, and keypad variants, capture camera keys
+    before focused UI controls can consume them, expose size/zoom diagnostics,
+    and preserve Fit View as the fitted W-slice recovery action. This is
+    Godot shell/camera/input only; C++ gameplay semantics, Q/E W movement,
+    Space hard drop, Esc quit/back, I/K pitch, O/L yaw, Live 2D, Live 3D, and
+    Replay remain preserved.
+32. `TODO` `[BKL-P3-037]` Stage 23 manual Live 4D acceptance rerun:
+    rerun the GUI checklist after Stage 23b/23c/23d. Stage 24 polish/hardening
     remains blocked until W-slice header readability, fitted Live 4D entry,
-    Fit View recovery, safe camera adjustment, Space hard-drop capture, Q/E W
-    movement, Esc quit/back, active-cell readability, Live 2D, Live 3D, and
-    Replay all pass manual inspection.
+    Fit View recovery, safe camera adjustment including visible orthographic
+    zoom, Space hard-drop capture, Q/E W movement, Esc quit/back, active-cell
+    readability, Live 2D, Live 3D, and Replay all pass manual inspection.
 
 ## Governance Watchlist
 

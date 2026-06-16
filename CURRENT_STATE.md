@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-06-16
+Last updated: 2026-06-17
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -28,9 +28,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   view/readability by replacing W labels with clear `W SLICE n/N` headers,
   opening/resetting Live 4D in a canonical fitted W-slice view, preserving Fit
   View as recovery, and adding safe camera controls on `I/K`, `O/L`, and
-  `-`/`=`. Stage 23 manual acceptance remains pending until rerun; Stage 24
-  remains blocked. No topology/endgame or C++ gameplay semantic work is
-  authorized by this correction.
+  `-`/`=`. Stage 23d corrects those zoom controls so Live 4D orthographic zoom
+  changes camera size, supports `-`, `=`, and `+`, survives focused UI controls
+  and mode switching, and keeps Fit View as the fitted W-slice recovery action.
+  Stage 23 manual acceptance remains pending until rerun; Stage 24 remains
+  blocked. No topology/endgame or C++ gameplay semantic work is authorized by
+  this correction.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
