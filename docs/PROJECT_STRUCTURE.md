@@ -213,8 +213,10 @@ The current rule is one-way:
     brightness. Stage 23c further corrects Live 4D view/readability in Godot
     presentation/input only: `W SLICE n/N` headers, W-header fit bounds,
     canonical fitted Live 4D entry/reset, Fit View recovery, and safe camera
-    keys that do not overlap gameplay. Stage 23 manual acceptance remains
-    pending and Stage 24 stays blocked until rerun.
+    keys that do not overlap gameplay. Stage 23 Live Plain 4D Godot Prototype
+    passed manual GUI acceptance after Stage 23b/23c/23d corrections. Live 4D
+    is accepted as a narrow plain bounded prototype. Stage 24 Live ND polish
+    and hardening is now unblocked. Topology and endgame remain deferred.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

@@ -32,9 +32,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   changes camera size, supports `-`, `=`, and `+`, survives focused UI controls
   and mode switching, keeps mouse-wheel up/down direction correct, and keeps
   Fit View as the fitted W-slice recovery action.
-  Stage 23 manual acceptance remains pending until rerun; Stage 24 remains
-  blocked. No topology/endgame or C++ gameplay semantic work is authorized by
-  this correction.
+  Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+  Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
+  prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
+  and endgame remain deferred.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

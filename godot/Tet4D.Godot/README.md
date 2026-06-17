@@ -200,7 +200,7 @@ focused UI activation, and active Live 4D cells too bright. Stage 23b corrects
 those visual/input defects by enlarging/backing W labels, consuming Space as
 live hard-drop before UI accept handling, and reducing Live 4D active-cell
 brightness while preserving outlines/origin markers. Stage 23 manual
-acceptance remains pending until rerun; Stage 24 remains blocked.
+acceptance passed after Stage 23b/23c/23d corrections; Stage 24 is unblocked.
 Stage 23c further corrects Live 4D view/readability: W markers are now
 `W SLICE n/N` headers with larger chips, Live 4D opens/resets in a fitted
 W-slice view, `Fit View` restores that canonical full layout, and safe camera
@@ -209,6 +209,10 @@ Stage 23d fixes the Live 4D zoom path: `-` zooms out, `=`/`+` zoom in by
 changing orthographic camera size, camera diagnostics expose size/zoom state,
 mouse wheel up/down use the same visible zoom direction, and camera keys remain
 captured even after clicking viewer panels/buttons.
+Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
+prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
+and endgame remain deferred.
 
 ## Opening In Godot
 
@@ -365,8 +369,10 @@ cannot load the native library.
 - GDScript is used only for shell/UI work. Native ND parity APIs remain trace
   export surfaces; live 3D and live 4D gameplay state remain owned by C++.
   Stage 23 Live 4D is a narrow prototype, not topology or endgame gameplay.
-- Stage 23b automated checks cover the reported visual/input defects, but
-  manual Live 4D GUI acceptance is still pending until rerun in Godot.
+- Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+  Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
+  prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
+  and endgame remain deferred.
 - Stage 23c adds fitted Live 4D camera controls for inspection; it does not add
   topology/endgame behavior or change C++ gameplay semantics.
 - Stage 23d makes those zoom controls affect orthographic camera size; it does

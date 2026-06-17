@@ -296,7 +296,10 @@ defects. Stage 23c further corrects view/readability by using explicit W-slice
 headers, opening/resetting Live 4D in a fitted W-slice view, and adding safe
 camera adjustment controls. Stage 23d corrects the zoom part of those controls
 so Live 4D orthographic zoom changes camera size and remains available after UI
-focus changes; manual acceptance remains pending until rerun.
+focus changes. Stage 23 Live Plain 4D Godot Prototype passed manual GUI
+acceptance after Stage 23b/23c/23d corrections. Live 4D is accepted as a
+narrow plain bounded prototype. Stage 24 Live ND polish and hardening is now
+unblocked. Topology and endgame remain deferred.
 
 Constraints for Stage 23 and later Live 4D polish:
 
@@ -333,12 +336,15 @@ Stage 23  - Live Plain 4D Godot Prototype
 Stage 23b - Live 4D Acceptance Corrections
 Stage 23c - Live 4D View And W-Slice Readability Corrections
 Stage 23d - Live 4D Zoom-Control Correction
+Stage 24  - Live ND Polish And Hardening
 ```
 
 Stage 23 did not start before Stage 22f passed. Future Live 4D polish must
 continue to inherit this visual grammar rather than inventing a separate board
-language. Stage 24 remains blocked until Stage 23 manual Live 4D acceptance
-passes after the Stage 23b/23c/23d corrections.
+language. Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance
+after Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain
+bounded prototype. Stage 24 Live ND polish and hardening is now unblocked.
+Topology and endgame remain deferred.
 
 Design rule after Stage 23c:
 

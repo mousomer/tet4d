@@ -72,7 +72,11 @@ Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
 Stage 23 Live Plain 4D Godot Prototype is implemented narrowly: C++ owns the
 live 4D session, Godot renders side-by-side W slices through the existing
 mapper/renderer, Q/E move W, six direct rotation pairs are wired, and Live 2D,
-Live 3D, Replay, topology, endgame, and golden traces remain preserved.
+Live 3D, Replay, topology, endgame, and golden traces remain preserved. Stage
+23 Live Plain 4D Godot Prototype passed manual GUI acceptance after Stage
+23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
+prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
+and endgame remain deferred.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
@@ -486,12 +490,11 @@ stays synchronized, and the contract validator accepts the backlog shape.
     Godot shell/camera/input only; C++ gameplay semantics, Q/E W movement,
     Space hard drop, Esc quit/back, I/K pitch, O/L yaw, Live 2D, Live 3D, and
     Replay remain preserved.
-32. `TODO` `[BKL-P3-037]` Stage 23 manual Live 4D acceptance rerun:
-    rerun the GUI checklist after Stage 23b/23c/23d. Stage 24 polish/hardening
-    remains blocked until W-slice header readability, fitted Live 4D entry,
-    Fit View recovery, safe camera adjustment including visible orthographic
-    zoom, Space hard-drop capture, Q/E W movement, Esc quit/back, active-cell
-    readability, Live 2D, Live 3D, and Replay all pass manual inspection.
+32. `DONE` `[BKL-P3-037]` Stage 23 manual Live 4D acceptance rerun:
+    Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+    Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain
+    bounded prototype. Stage 24 Live ND polish and hardening is now unblocked.
+    Topology and endgame remain deferred.
 
 ## Governance Watchlist
 

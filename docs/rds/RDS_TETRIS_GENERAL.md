@@ -341,8 +341,10 @@ Cross-cutting requirements are defined in:
     while preserving active/locked distinction. Stage 23b must not change C++
     gameplay semantics, trace parity, topology, endgame, Python runtime calls,
     Godot-side legality, or the accepted Live 2D/Live 3D/Replay behavior.
-    Stage 23 manual acceptance remains pending until rerun, and Stage 24
-    remains blocked until that rerun passes.
+    Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+    Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain
+    bounded prototype. Stage 24 Live ND polish and hardening is now unblocked.
+    Topology and endgame remain deferred.
 36. Stage 23c may correct Live 4D view and W-slice readability defects only.
     Allowed corrections include explicit W-slice headers/chips, fitted Live 4D
     entry/reset, Fit View recovery for the full W-slice layout, and limited
@@ -360,6 +362,10 @@ Cross-cutting requirements are defined in:
     change C++ gameplay semantics, trace parity, topology, endgame, Python
     runtime calls, Godot-side legality, or the accepted Live 2D/Live 3D/Replay
     behavior.
+    Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+    Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain
+    bounded prototype. Stage 24 Live ND polish and hardening is now unblocked.
+    Topology and endgame remain deferred.
 38. The migrated Godot Live 3D shell should prefer snapping to returned C++
     state plus clear plane feedback over a misleading Godot-side rotation
     tween. A future Godot presentation tween is allowed only if it is derived

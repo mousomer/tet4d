@@ -1,20 +1,14 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: Stage 23 live plain 4D Godot prototype implemented; Stage 23d zoom correction implemented; manual rerun pending
+Status: Stage 23 Live Plain 4D Godot Prototype accepted; Stage 24 unblocked
 Last updated: 2026-06-17
 
 Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
-Stage 23 Live Plain 4D Godot Prototype is implemented narrowly. Stage 23
-manual GUI acceptance found W labels too small, Space leaking to focused UI
-activation, and overly bright active Live 4D cells. Stage 23b corrects those
-visual/input defects without changing gameplay semantics. Stage 23c further
-corrects Live 4D view/readability by replacing W labels with slice headers,
-opening/resetting Live 4D in a fitted W-slice view, and adding safe camera
-adjustment controls. Stage 23d fixes Live 4D zoom so orthographic camera size
-changes for `-`, `=`, and `+` without focused UI controls eating the keys.
-Stage 23 manual acceptance remains pending until rerun, and Stage 24 remains
-blocked.
+Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
+prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
+and endgame remain deferred.
 
 ## 1. Decision summary
 
@@ -35,7 +29,7 @@ The implementation sequence is:
 8. Stage 23b: Live 4D acceptance corrections.
 9. Stage 23c: Live 4D view and W-slice readability corrections.
 10. Stage 23d: Live 4D zoom-control correction.
-11. Stage 24: Live ND polish and hardening after manual acceptance passes.
+11. Stage 24: Live ND polish and hardening.
 12. Stage 25: topology parity planning.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
@@ -556,8 +550,8 @@ Stage 23b - Live 4D acceptance corrections:
 - implemented: reduce Live 4D active-cell face brightness/emission while
   preserving the stronger active outline and origin marker;
 - implemented: preserve Q/E as W-/W+ and Esc as quit/back in Live 4D;
-- status: Stage 23 manual acceptance remains pending until a human rerun;
-- blocked: Stage 24 polish/hardening may not start until that rerun passes.
+- historical status: Stage 23 manual acceptance was rerun after the Stage
+  23b/23c/23d correction series and passed.
 
 Stage 23c - Live 4D view and W-slice readability corrections:
 
@@ -589,10 +583,18 @@ Stage 23d - Live 4D zoom-control correction:
 - preserved: Q/E W movement, Space hard drop, Esc quit/back, I/K pitch, O/L
   yaw, Live 2D, Live 3D, Replay, and C++ gameplay semantics.
 
+Stage 23 acceptance:
+
+- Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
+  Stage 23b/23c/23d corrections;
+- Live 4D is accepted as a narrow plain bounded prototype;
+- Stage 24 Live ND polish and hardening is now unblocked;
+- topology and endgame remain deferred.
+
 Stage 24 - Live ND polish/hardening:
 
 - tune input repeat, camera fit, and status readability after Stage 23 manual
-  acceptance passes;
+  acceptance passed;
 - decide whether product navigation should stay split or become one `Live ND`
   selector;
 - add next-piece, ghost/drop target, or preview fields only if C++ owns them;
@@ -661,15 +663,15 @@ Stage 23b is complete when W labels are prominent at default/Fit View, Space
 is consumed by live gameplay as hard drop instead of UI activation, Live 4D
 active brightness is restrained but distinct from locked cells, Q/E remain
 W-/W+, Esc remains quit/back, Live 2D/3D/Replay are preserved, automated
-verification passes, and Stage 23 manual acceptance is explicitly left pending
-until rerun.
+verification passes, and the Stage 23 correction series is reserved for a
+final manual acceptance rerun.
 
 Stage 23c is complete when W-slice headers are obvious without searching, Live
 4D opens already fitted, Fit View restores the full W-slice layout, safe camera
 controls allow board inspection without colliding with gameplay controls, Q/E
 remain W-/W+, Space remains hard drop, Esc remains quit/back, Live 2D/3D/Replay
-are preserved, automated verification passes, and Stage 23 manual acceptance
-is explicitly left pending until rerun.
+are preserved, automated verification passes, and the Stage 23 correction
+series is reserved for a final manual acceptance rerun.
 
 Stage 23d is complete when `-` visibly zooms out, `=` or `+` visibly zooms in,
 camera diagnostics change with zoom, Fit View restores the fitted W-slice
@@ -682,6 +684,7 @@ Stage 22d is complete when the design authority exists. Stage 22f manual Live
 3D visual acceptance passed after Stage 22g corrections, as recorded in
 `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live Plain 4D Godot
 Prototype is implemented narrowly. Stage 23b, Stage 23c, and Stage 23d
-acceptance corrections are implemented; Stage 23 manual GUI acceptance remains
-pending, and Stage 24 polish/hardening remains blocked until that acceptance
-rerun passes.
+acceptance corrections are implemented; Stage 23 Live Plain 4D Godot Prototype
+passed manual GUI acceptance after those corrections. Live 4D is accepted as a
+narrow plain bounded prototype. Stage 24 Live ND polish and hardening is now
+unblocked. Topology and endgame remain deferred.
