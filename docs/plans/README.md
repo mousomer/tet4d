@@ -55,6 +55,15 @@ general planning redirection or repo-wide ownership notes.
   - Godot shell layout visibility checks before Stage 23
   - explicit pending/passed status for the Live 3D readability gate
 
+### `live_nd_manual_acceptance.md`
+- Role: `spec`
+- Status: `pending manual GUI run`
+- Owns:
+  - Stage 24 manual Live ND acceptance checklist
+  - Replay, Live 2D, Live 3D, and Live 4D manual regression checks
+  - input focus, Space, Q/E, Esc, camera, Fit View, W-slice, and HUD checks
+  - explicit gate before Stage 25 topology planning
+
 ### `topology_playground_current_authority.md`
 - Role: `authority`
 - Status: `active`

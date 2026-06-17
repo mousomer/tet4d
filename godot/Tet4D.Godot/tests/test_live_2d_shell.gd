@@ -76,6 +76,8 @@ func run() -> Array:
 			failures.append("replay mode should not dispatch live gameplay commands")
 		app._enter_live_2d_mode()
 		live_snapshot = app._current_snapshot
+		if app._live_2d_paused:
+			failures.append("switching back to Live 2D should resume the selected live mode")
 		if str(live_snapshot.get("current_piece", "")) != "O":
 			failures.append("switching back to Live 2D should preserve the native live session")
 		var q_event_2d := InputEventKey.new()
@@ -87,11 +89,15 @@ func run() -> Array:
 			failures.append("Q should not leave Live 2D")
 		if str(app._live_bridge.live_2d_state_hash()) != hash_before_q_2d:
 			failures.append("Q should not dispatch a Live 2D gameplay command")
-		var paused_hash := str(live_snapshot.get("state_hash", ""))
-		if app._dispatch_live_gameplay_command("move_left"):
-			failures.append("paused live mode should block gameplay command dispatch")
-		if str(app._current_snapshot.get("state_hash", "")) != paused_hash:
-			failures.append("blocked paused command should not mutate the live snapshot")
+		var live_2d_focus_space_event := InputEventKey.new()
+		live_2d_focus_space_event.keycode = KEY_SPACE
+		live_2d_focus_space_event.pressed = true
+		var hash_before_live_2d_space := str(app._live_bridge.live_2d_state_hash())
+		app._input(live_2d_focus_space_event)
+		if str(app._live_bridge.live_2d_state_hash()) == hash_before_live_2d_space:
+			failures.append("Space should dispatch Live 2D hard_drop before UI accept handling")
+		if str(app._current_snapshot.get("last_command", "")) != "hard_drop":
+			failures.append("Space should map to Live 2D hard_drop")
 		app._enter_live_3d_mode()
 		if app._mode != TraceReplayAppScript.MODE_LIVE_3D:
 			failures.append("app should enter Live 3D mode on direct call, got %s" % str(app._mode))
@@ -132,6 +138,8 @@ func run() -> Array:
 		app._enter_live_3d_mode()
 		if app._mode != TraceReplayAppScript.MODE_LIVE_3D:
 			failures.append("app should enter Live 3D mode, got %s" % str(app._mode))
+		if app._live_3d_paused:
+			failures.append("switching back to Live 3D should resume the selected live mode")
 		if str(app._current_snapshot.get("current_piece", "")) != "O3":
 			failures.append("switching back to Live 3D should preserve the native live session")
 		var q_event_3d := InputEventKey.new()
@@ -143,6 +151,15 @@ func run() -> Array:
 			failures.append("Q should not leave Live 3D")
 		if str(app._live_bridge.live_3d_state_hash()) != hash_before_q_3d:
 			failures.append("Q should not dispatch a Live 3D gameplay command")
+		var live_3d_focus_space_event := InputEventKey.new()
+		live_3d_focus_space_event.keycode = KEY_SPACE
+		live_3d_focus_space_event.pressed = true
+		var hash_before_live_3d_space := str(app._live_bridge.live_3d_state_hash())
+		app._input(live_3d_focus_space_event)
+		if str(app._live_bridge.live_3d_state_hash()) == hash_before_live_3d_space:
+			failures.append("Space should dispatch Live 3D hard_drop before UI accept handling")
+		if str(app._current_snapshot.get("last_command", "")) != "hard_drop":
+			failures.append("Space should map to Live 3D hard_drop")
 		app._enter_live_4d_mode()
 		if app._mode != TraceReplayAppScript.MODE_LIVE_4D:
 			failures.append("app should enter Live 4D mode on direct call, got %s" % str(app._mode))
@@ -234,6 +251,14 @@ func run() -> Array:
 		app._fit_view()
 		if app._hud._reset_button != null and app._hud._reset_button.focus_mode != Control.FOCUS_NONE:
 			failures.append("live viewer buttons should not keep keyboard focus while live gameplay captures Space")
+		if app._hud._reset_button != null:
+			app._hud._reset_button.focus_mode = Control.FOCUS_ALL
+			app._hud._reset_button.grab_focus()
+			app._input(zoom_in_event)
+			if live_4d_camera != null and app._camera_rig._current_fit_state != "manual":
+				failures.append("Live 4D zoom should still work after a visible button is clicked or focused")
+			app._hud._reset_button.focus_mode = Control.FOCUS_NONE
+			app._fit_view()
 		var space_event := InputEventKey.new()
 		space_event.keycode = KEY_SPACE
 		space_event.pressed = true
@@ -285,6 +310,8 @@ func run() -> Array:
 		await tree.process_frame
 		app._enter_live_4d_mode()
 		await tree.process_frame
+		if app._live_4d_paused:
+			failures.append("switching back to Live 4D should resume the selected live mode")
 		var switched_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
 		app._input(zoom_out_event)
 		if live_4d_camera != null and live_4d_camera.size <= switched_fit_size:

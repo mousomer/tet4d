@@ -159,25 +159,25 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "6919bdcf93314ee4f264427f4a889980a91e485a643d22ebe2fed0fbd0bb45b9",
+        "sha256": "cbdfbb2b2b2c02d3a44469f475e5e03fbac65b7d566e6e845b0a3f099f1995d7",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "510777a33559db8adff2322169cdeffa50b19445f8ecd70c77b223cef42811f7",
+        "sha256": "9eac198e834a2e4a57212778dee70777329178cfb945efd7974aab588e9f617a",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "bd80feb17bbd575369c0d9bc18495e61ef8b44a7ae642e336df95c27c7017762",
+        "sha256": "ccb55db399dd06e9e6d4938bcb721efbde0603efa53783f54a23f2f0cb3e8435",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
         "purpose": "Shared topology/gameplay/endgame product requirements.",
         "role": "product_requirements",
-        "sha256": "d5b16a0c2692b32f6732ac5c1ba672ca6aa590adb3c04e019f9d27e7127a03f1",
+        "sha256": "01e1ff1e3d42c3d0457b58f69e95174faa1fb1cb1c21990036d5f94fa411a10c",
         "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
       },
       {
@@ -219,13 +219,13 @@
       {
         "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
         "role": "godot_core_port_authority",
-        "sha256": "c65fd8fffaf3215863fb646a4bb0b3a2ceb95c644ea83d300bbe22c01bebe107",
+        "sha256": "b2098fe8f6161a05184a2e4a675a2e5bb7d50d414027aef3a2817c050cb91f57",
         "source_path": "docs/plans/godot_core_port_plan.md"
       },
       {
         "purpose": "Stage 22d Live 3D and future Live 4D board visual-language authority.",
         "role": "gameboard_visual_language_authority",
-        "sha256": "25fd66be7cb0509ec8d0800937c8d6db6be482c6faad3161c0d4add5d53511af",
+        "sha256": "89e603a47fac5e5b4a1a007d425545c565edfc03632a0a1d228f035e7ca544d2",
         "source_path": "docs/plans/gameboard_visual_language_design.md"
       },
       {

@@ -299,7 +299,13 @@ so Live 4D orthographic zoom changes camera size and remains available after UI
 focus changes. Stage 23 Live Plain 4D Godot Prototype passed manual GUI
 acceptance after Stage 23b/23c/23d corrections. Live 4D is accepted as a
 narrow plain bounded prototype. Stage 24 Live ND polish and hardening is now
-unblocked. Topology and endgame remain deferred.
+unblocked. Stage 24 hardens Godot live shell lifecycle/input behavior only:
+returning from Replay resumes the selected Live 2D/3D/4D mode without
+resetting native state, pauses non-selected live modes, clears focus/repeat
+state, and preserves Space hard-drop plus Live 4D camera/zoom pre-UI capture.
+Topology and endgame remain deferred. Manual Stage 24 acceptance via
+`docs/plans/live_nd_manual_acceptance.md` is required before Stage 25 topology
+planning.
 
 Constraints for Stage 23 and later Live 4D polish:
 
@@ -343,8 +349,9 @@ Stage 23 did not start before Stage 22f passed. Future Live 4D polish must
 continue to inherit this visual grammar rather than inventing a separate board
 language. Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance
 after Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain
-bounded prototype. Stage 24 Live ND polish and hardening is now unblocked.
-Topology and endgame remain deferred.
+bounded prototype. Stage 24 Live ND polish and hardening is implemented as
+Godot shell lifecycle/input hardening. Manual Stage 24 acceptance is required
+before Stage 25 topology planning. Topology and endgame remain deferred.
 
 Design rule after Stage 23c:
 
@@ -388,6 +395,9 @@ Future Live 4D acceptance:
 - [ ] Active cells are distinct from locked cells without becoming a glowing
       blob.
 - [ ] Q/E are W-/W+ and Esc remains quit/back.
+- [ ] Switching away to Replay and back resumes the selected Live 4D session
+      without resetting the native C++ state.
+- [ ] Zoom and Space hard-drop still work after HUD focus changes.
 
 ## 18. Risks And Mitigations
 

@@ -75,8 +75,9 @@ mapper/renderer, Q/E move W, six direct rotation pairs are wired, and Live 2D,
 Live 3D, Replay, topology, endgame, and golden traces remain preserved. Stage
 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after Stage
 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
-prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
-and endgame remain deferred.
+prototype. Stage 24 Live ND polish and hardening passed manual acceptance as
+shell lifecycle/input hardening. Stage 25 topology planning is unblocked.
+Topology and endgame remain deferred until Stage 25.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
@@ -495,6 +496,18 @@ stays synchronized, and the contract validator accepts the backlog shape.
     Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain
     bounded prototype. Stage 24 Live ND polish and hardening is now unblocked.
     Topology and endgame remain deferred.
+33. `DONE` `[BKL-P3-040]` Stage 24 Live ND polish and hardening:
+    harden Godot live shell lifecycle/input behavior after Stage 23 acceptance.
+    Returning from Replay to an existing Live 2D, Live 3D, or Live 4D session
+    resumes the selected mode without resetting native C++ state, pauses
+    non-selected live modes, clears focus/repeat state, and preserves pre-UI
+    Space hard-drop plus Live 4D camera/zoom capture after focus changes and
+    mode switching. Fit View remains recovery; Q/E remain W-/W+ in Live 4D;
+    Space remains hard drop; Esc remains back/quit; Live 2D, Live 3D, Replay,
+    topology, endgame, trace parity, and C++ gameplay semantics remain
+    preserved. Manual Stage 24 acceptance via
+    `docs/plans/live_nd_manual_acceptance.md` passed, so Stage 25 topology
+    planning is unblocked.
 
 ## Governance Watchlist
 

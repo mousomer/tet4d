@@ -200,7 +200,9 @@ focused UI activation, and active Live 4D cells too bright. Stage 23b corrects
 those visual/input defects by enlarging/backing W labels, consuming Space as
 live hard-drop before UI accept handling, and reducing Live 4D active-cell
 brightness while preserving outlines/origin markers. Stage 23 manual
-acceptance passed after Stage 23b/23c/23d corrections; Stage 24 is unblocked.
+acceptance passed after Stage 23b/23c/23d corrections; Stage 24 shell
+hardening passed manual acceptance and Stage 25 topology planning is
+unblocked.
 Stage 23c further corrects Live 4D view/readability: W markers are now
 `W SLICE n/N` headers with larger chips, Live 4D opens/resets in a fitted
 W-slice view, `Fit View` restores that canonical full layout, and safe camera
@@ -211,8 +213,14 @@ mouse wheel up/down use the same visible zoom direction, and camera keys remain
 captured even after clicking viewer panels/buttons.
 Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
 Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
-prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
-and endgame remain deferred.
+prototype. Stage 24 Live ND polish and hardening is implemented as Godot shell
+lifecycle/input hardening: switching from Replay back to Live 2D, Live 3D, or
+Live 4D resumes the selected native session without resetting it, pauses
+non-selected live modes, clears focus/repeat state, and keeps Space hard-drop
+plus Live 4D camera/zoom keys captured before HUD focus. Topology and endgame
+remain deferred. Manual Stage 24 acceptance via
+`docs/plans/live_nd_manual_acceptance.md` is required before Stage 25 topology
+planning.
 
 ## Opening In Godot
 
@@ -315,7 +323,9 @@ The W-slice headers use larger outlined `W SLICE n/N` text with high-contrast
 backing chips for default/Fit View readability. Live 4D opens and resets in a
 canonical fitted W-slice view. `Fit View` is the recovery action after manual
 camera adjustment. `I/K`, `O/L`, and `-`/`=` adjust only the camera and do not
-dispatch gameplay commands.
+dispatch gameplay commands. Returning from Replay resumes the selected live
+mode without resetting native state, and Space/zoom controls continue to work
+after clicking HUD panels or buttons.
 
 The Replay Viewer uses one explicit shell layout: the game renders through a
 `SubViewport` inside `GameArea`, with a bounded left case browser and a
@@ -350,7 +360,10 @@ fitted Live 4D entry, Fit View recovery, safe camera-key non-mutation, and
 restrained Live 4D active-cell brightness. Stage 23d adds coverage for
 orthographic zoom size changes, `-`/`=`/`+` key variants, focused-UI capture,
 mouse-wheel direction, diagnostic size/zoom text, Fit View recovery, and
-switching away/back to Live 4D. On a fresh checkout, run the
+switching away/back to Live 4D. Stage 24 adds lifecycle/focus coverage for
+resuming Live 2D/3D/4D from Replay without native reset, pausing non-selected
+live modes, and preserving pre-UI Space hard-drop plus Live 4D zoom capture
+after HUD focus changes. On a fresh checkout, run the
 submodule and native build
 commands above first; the extension smoke test intentionally fails if Godot
 cannot load the native library.
@@ -371,9 +384,13 @@ cannot load the native library.
   Stage 23 Live 4D is a narrow prototype, not topology or endgame gameplay.
 - Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
   Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
-  prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
-  and endgame remain deferred.
+  prototype. Stage 24 Live ND polish and hardening is implemented as shell
+  lifecycle/input hardening. Topology and endgame remain deferred.
 - Stage 23c adds fitted Live 4D camera controls for inspection; it does not add
   topology/endgame behavior or change C++ gameplay semantics.
 - Stage 23d makes those zoom controls affect orthographic camera size; it does
   not add topology/endgame behavior or change C++ gameplay semantics.
+- Stage 24 resumes selected live sessions on re-entry and hardens focus/input
+  capture; it does not add topology/endgame behavior or change C++ gameplay
+  semantics. Manual Stage 24 acceptance is required before Stage 25 topology
+  planning.

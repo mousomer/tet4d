@@ -216,7 +216,12 @@ The current rule is one-way:
     keys that do not overlap gameplay. Stage 23 Live Plain 4D Godot Prototype
     passed manual GUI acceptance after Stage 23b/23c/23d corrections. Live 4D
     is accepted as a narrow plain bounded prototype. Stage 24 Live ND polish
-    and hardening is now unblocked. Topology and endgame remain deferred.
+    and hardening is implemented as Godot shell lifecycle/input hardening:
+    returning from Replay resumes the selected Live 2D/3D/4D session without
+    resetting native state, pauses non-selected live modes, and preserves
+    pre-UI Space and Live 4D camera/zoom capture. Topology and endgame remain
+    deferred. Manual Stage 24 acceptance is required before Stage 25 topology
+    planning.
 
 <!-- BEGIN GENERATED:project_structure_verification_contract -->
 ## Verification Contract

@@ -1,8 +1,8 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D accepted; live plain 3D accepted after Stage 22g corrections; Stage 23 live plain 4D prototype implemented
-Last updated: 2026-06-10
+Status: active plain 2D accepted; live plain 3D accepted after Stage 22g corrections; Stage 23 live plain 4D prototype accepted; Stage 24 live ND shell hardening implemented
+Last updated: 2026-06-17
 
 ## 1. Decision Summary
 
@@ -539,7 +539,7 @@ gravity ticks once the native snapshot reports game-over, render `GAME OVER`
 with the native reason, and continue to route reset back through C++.
 
 The always-visible viewer hint strip is mode-specific. Live 2D shows:
-`A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Replay · Q/Esc Quit`.
+`A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Esc Quit`.
 Replay shows:
 `Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit`.
 Live cells must remain in the shared replay renderer/material system while
@@ -732,7 +732,8 @@ Stage 21 chooses a staged live plain-ND path:
 - Stage 22e: implement the Live 3D visual language;
 - Stage 22f: perform manual Live 3D visual acceptance;
 - Stage 23: live plain 4D Godot prototype after Stage 22f passed;
-- Stage 24: live ND polish and hardening;
+- Stage 24: live ND polish and hardening implemented as Godot shell
+  lifecycle/input hardening;
 - Stage 25: topology parity planning.
 
 The future native implementation should add an internal dimension-parameterized
@@ -816,8 +817,14 @@ rotation math, golden traces, Live 2D, Replay, or the accepted mapper/renderer
 ownership. Stage 22f was manually rerun and passed after Stage 22g
 corrections. Stage 23 Live Plain 4D reuses the existing mapper/renderer,
 inherits the Live 3D visual grammar, and keeps C++ as gameplay authority.
+Stage 24 hardens live shell lifecycle/input behavior only: returning from
+Replay resumes the selected Live 2D/3D/4D session without resetting native
+state, pauses non-selected live modes, clears focus/repeat state, and keeps
+Space hard-drop plus Live 4D camera/zoom keys captured before HUD focus.
 
 Stage 22 does not add live 4D, topology transport, wrap/invert/sphere
 behavior, endgame simulation, C#, Python runtime calls from Godot, or
-Godot-side gameplay legality. Accepted live plain 2D and replay mode remain
-preserved.
+Godot-side gameplay legality. Stage 24 does not add topology transport,
+endgame simulation, Python runtime calls from Godot, or Godot-side gameplay
+legality. Accepted live plain 2D, live plain 3D, live plain 4D, and replay mode
+remain preserved.

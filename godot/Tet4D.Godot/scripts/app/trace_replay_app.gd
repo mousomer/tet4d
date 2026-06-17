@@ -761,36 +761,20 @@ func _bundle_case_count() -> int:
 
 
 func _enter_live_2d_mode() -> void:
-	_mode = MODE_LIVE_2D
-	_state.is_playing = false
-	_hud.set_live_keyboard_capture(true)
-	_clear_live_ui_focus()
-	_live_3d_paused = true
-	_live_4d_paused = true
+	_prepare_live_mode_entry(MODE_LIVE_2D)
 	if not _live_2d_session_started:
 		_live_bridge.live_2d_reset()
 		_live_2d_session_started = true
-		_live_2d_paused = false
-	_live_tick_accumulator = 0.0
-	_reset_live_repeat_state()
 	_refresh_live_2d_snapshot()
 	_fit_view()
 	_hud.show_replay_viewer()
 
 
 func _enter_live_3d_mode() -> void:
-	_mode = MODE_LIVE_3D
-	_state.is_playing = false
-	_hud.set_live_keyboard_capture(true)
-	_clear_live_ui_focus()
-	_live_2d_paused = true
-	_live_4d_paused = true
+	_prepare_live_mode_entry(MODE_LIVE_3D)
 	if not _live_3d_session_started:
 		_live_bridge.live_3d_reset()
 		_live_3d_session_started = true
-		_live_3d_paused = false
-	_live_tick_accumulator = 0.0
-	_reset_live_repeat_state()
 	_refresh_live_3d_snapshot()
 	_fit_view()
 	_hud.show_replay_viewer()
@@ -798,22 +782,26 @@ func _enter_live_3d_mode() -> void:
 
 
 func _enter_live_4d_mode() -> void:
-	_mode = MODE_LIVE_4D
-	_state.is_playing = false
-	_hud.set_live_keyboard_capture(true)
-	_clear_live_ui_focus()
-	_live_2d_paused = true
-	_live_3d_paused = true
+	_prepare_live_mode_entry(MODE_LIVE_4D)
 	if not _live_4d_session_started:
 		_live_bridge.live_4d_reset()
 		_live_4d_session_started = true
-		_live_4d_paused = false
-	_live_tick_accumulator = 0.0
-	_reset_live_repeat_state()
 	_refresh_live_4d_snapshot()
 	_fit_view()
 	_hud.show_replay_viewer()
 	_refresh_live_4d_snapshot()
+
+
+func _prepare_live_mode_entry(mode_name: String) -> void:
+	_mode = mode_name
+	_state.is_playing = false
+	_hud.set_live_keyboard_capture(true)
+	_clear_live_ui_focus()
+	_live_2d_paused = mode_name != MODE_LIVE_2D
+	_live_3d_paused = mode_name != MODE_LIVE_3D
+	_live_4d_paused = mode_name != MODE_LIVE_4D
+	_live_tick_accumulator = 0.0
+	_reset_live_repeat_state()
 
 
 func _enter_replay_mode() -> void:

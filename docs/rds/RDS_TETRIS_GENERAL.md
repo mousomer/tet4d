@@ -366,7 +366,17 @@ Cross-cutting requirements are defined in:
     Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain
     bounded prototype. Stage 24 Live ND polish and hardening is now unblocked.
     Topology and endgame remain deferred.
-38. The migrated Godot Live 3D shell should prefer snapping to returned C++
+38. Stage 24 may harden live ND shell lifecycle and input focus only. Allowed
+    corrections include resuming the selected Live 2D/3D/4D mode when returning
+    from Replay without resetting native C++ session state, pausing
+    non-selected live modes, clearing live UI focus and repeat state on entry,
+    preserving pre-UI Space hard-drop capture, and preserving pre-UI Live 4D
+    camera/zoom capture after focus changes and mode switching. Stage 24 must
+    not change C++ gameplay semantics, trace parity, topology, endgame, Python
+    runtime calls, Godot-side legality, or accepted Live 2D/Live 3D/Replay
+    behavior. Manual Stage 24 acceptance is required before Stage 25 topology
+    planning.
+39. The migrated Godot Live 3D shell should prefer snapping to returned C++
     state plus clear plane feedback over a misleading Godot-side rotation
     tween. A future Godot presentation tween is allowed only if it is derived
     from and cannot contradict returned native state.

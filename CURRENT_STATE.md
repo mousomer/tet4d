@@ -35,7 +35,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
   Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
   prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
-  and endgame remain deferred.
+  and endgame remain deferred. Stage 24 hardens the Godot live ND shell only:
+  re-entering an existing Live 2D, Live 3D, or Live 4D session from Replay now
+  resumes the selected live mode without resetting its native C++ state,
+  pauses non-selected live modes, clears live UI focus/repeat state on entry,
+  and keeps pre-UI Space hard-drop and Live 4D camera/zoom capture active
+  after focus changes. C++ gameplay semantics, trace parity, topology, and
+  endgame remain unchanged. The manual Stage 24 checklist in
+  `docs/plans/live_nd_manual_acceptance.md` is the gate before Stage 25
+  topology planning.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
