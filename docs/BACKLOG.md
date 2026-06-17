@@ -479,9 +479,10 @@ stays synchronized, and the contract validator accepts the backlog shape.
     semantics remain preserved.
 31. `DONE` `[BKL-P3-039]` Stage 23d Live 4D zoom-control correction:
     make Live 4D zoom keys change orthographic camera size rather than camera
-    distance, support `-`, `=`, `+`, and keypad variants, capture camera keys
-    before focused UI controls can consume them, expose size/zoom diagnostics,
-    and preserve Fit View as the fitted W-slice recovery action. This is
+    distance, support `-`, `=`, `+`, keypad variants, and correct mouse-wheel
+    direction, capture camera keys before focused UI controls can consume them,
+    expose size/zoom diagnostics, and preserve Fit View as the fitted W-slice
+    recovery action. This is
     Godot shell/camera/input only; C++ gameplay semantics, Q/E W movement,
     Space hard drop, Esc quit/back, I/K pitch, O/L yaw, Live 2D, Live 3D, and
     Replay remain preserved.

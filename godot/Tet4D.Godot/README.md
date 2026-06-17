@@ -207,7 +207,8 @@ W-slice view, `Fit View` restores that canonical full layout, and safe camera
 keys allow inspection without overlapping gameplay controls.
 Stage 23d fixes the Live 4D zoom path: `-` zooms out, `=`/`+` zoom in by
 changing orthographic camera size, camera diagnostics expose size/zoom state,
-and camera keys remain captured even after clicking viewer panels/buttons.
+mouse wheel up/down use the same visible zoom direction, and camera keys remain
+captured even after clicking viewer panels/buttons.
 
 ## Opening In Godot
 
@@ -228,7 +229,7 @@ and camera keys remain captured even after clicking viewer panels/buttons.
 - `1` / `2` / `3`: topology / gameplay / endgame
 - mouse drag: orbit
 - `Shift` + mouse drag: pan
-- mouse wheel: zoom
+- mouse wheel up/down: zoom in/out
 - speed menu: `0.25x` / `0.5x` / `1x` / `2x` / `4x` replay speed
 
 These are replay controls only. They are not gameplay controls and they are
@@ -344,8 +345,8 @@ Esc-only live quit, Space hard-drop capture, W-slice header readability,
 fitted Live 4D entry, Fit View recovery, safe camera-key non-mutation, and
 restrained Live 4D active-cell brightness. Stage 23d adds coverage for
 orthographic zoom size changes, `-`/`=`/`+` key variants, focused-UI capture,
-diagnostic size/zoom text, Fit View recovery, and switching away/back to Live
-4D. On a fresh checkout, run the
+mouse-wheel direction, diagnostic size/zoom text, Fit View recovery, and
+switching away/back to Live 4D. On a fresh checkout, run the
 submodule and native build
 commands above first; the extension smoke test intentionally fails if Godot
 cannot load the native library.

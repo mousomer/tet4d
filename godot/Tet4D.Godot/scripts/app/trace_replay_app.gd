@@ -195,11 +195,11 @@ func _handle_camera_input(event: InputEvent) -> void:
 			_mouse_panning = event.pressed and Input.is_key_pressed(KEY_SHIFT)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
-				_camera_rig.zoom(0.9)
+				_camera_rig.zoom(-1.0)
 				_refresh_camera_status()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			if _camera_rig != null:
-				_camera_rig.zoom(1.1)
+				_camera_rig.zoom(1.0)
 				_refresh_camera_status()
 	elif event is InputEventMouseMotion:
 		if _camera_rig == null:

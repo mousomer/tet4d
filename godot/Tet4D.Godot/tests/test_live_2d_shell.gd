@@ -215,6 +215,23 @@ func run() -> Array:
 		app._fit_view()
 		if app._camera_rig._current_view_preset != "LIVE_4D_FITTED_W_SLICE_VIEW" or app._camera_rig._current_fit_state != "fit OK":
 			failures.append("Fit View should restore the full Live 4D W-slice layout")
+		var wheel_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		var wheel_up_event := InputEventMouseButton.new()
+		wheel_up_event.button_index = MOUSE_BUTTON_WHEEL_UP
+		wheel_up_event.pressed = true
+		app._handle_camera_input(wheel_up_event)
+		if live_4d_camera != null and live_4d_camera.size >= wheel_fit_size:
+			failures.append("Mouse wheel up should zoom in by reducing orthographic size")
+		var wheel_zoomed_in_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		var wheel_down_event := InputEventMouseButton.new()
+		wheel_down_event.button_index = MOUSE_BUTTON_WHEEL_DOWN
+		wheel_down_event.pressed = true
+		app._handle_camera_input(wheel_down_event)
+		if live_4d_camera != null and live_4d_camera.size <= wheel_zoomed_in_size:
+			failures.append("Mouse wheel down should zoom out by increasing orthographic size")
+		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
+			failures.append("Mouse wheel zoom should not mutate Live 4D gameplay state")
+		app._fit_view()
 		if app._hud._reset_button != null and app._hud._reset_button.focus_mode != Control.FOCUS_NONE:
 			failures.append("live viewer buttons should not keep keyboard focus while live gameplay captures Space")
 		var space_event := InputEventKey.new()

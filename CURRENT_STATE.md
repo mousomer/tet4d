@@ -30,7 +30,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   View as recovery, and adding safe camera controls on `I/K`, `O/L`, and
   `-`/`=`. Stage 23d corrects those zoom controls so Live 4D orthographic zoom
   changes camera size, supports `-`, `=`, and `+`, survives focused UI controls
-  and mode switching, and keeps Fit View as the fitted W-slice recovery action.
+  and mode switching, keeps mouse-wheel up/down direction correct, and keeps
+  Fit View as the fitted W-slice recovery action.
   Stage 23 manual acceptance remains pending until rerun; Stage 24 remains
   blocked. No topology/endgame or C++ gameplay semantic work is authorized by
   this correction.

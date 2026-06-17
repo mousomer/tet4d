@@ -579,6 +579,8 @@ Stage 23d - Live 4D zoom-control correction:
   instead of camera distance;
 - implemented: `-` zooms out, `=`/`+` zoom in, with keypad equivalents and
   typed-character fallback accepted;
+- implemented: mouse wheel up zooms in and mouse wheel down zooms out using
+  the same orthographic size path;
 - implemented: Live 4D camera keys are captured before focused UI controls can
   consume them;
 - implemented: camera diagnostics include orthographic size and zoom factor;
