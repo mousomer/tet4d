@@ -22,6 +22,15 @@
 - [ ] No unsafe memory policy weakening was introduced.
 - [ ] No no-rewrite/no-reinvention policy weakening was introduced.
 
+## Native C++ safety
+
+- [ ] No raw owning pointers.
+- [ ] No naked `new` or `delete`.
+- [ ] Ownership/lifetime/nullability documented for public APIs and stored
+      Godot pointers.
+- [ ] GDExtension adapter remains thin.
+- [ ] Native code does not become semantic authority without parity evidence.
+
 ## Config
 
 - [ ] Nontrivial constants are routed through config policy.

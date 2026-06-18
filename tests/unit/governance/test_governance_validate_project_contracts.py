@@ -127,9 +127,7 @@ def test_policy_manifest_string_safety_allows_clean_manifests(
     assert issues == []
 
 
-def test_required_paths_detect_untracked_file(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_required_paths_detect_untracked_file(tmp_path: Path, monkeypatch) -> None:
     rel = "docs/WORKFLOW_CODEX.md"
     workflow_doc = tmp_path / rel
     workflow_doc.parent.mkdir(parents=True, exist_ok=True)
@@ -138,7 +136,9 @@ def test_required_paths_detect_untracked_file(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(contracts, "_git_tracked_paths", lambda issues: set())
 
-    issues = contracts._validate_required_paths({"required_paths": {"root_docs": [rel]}})
+    issues = contracts._validate_required_paths(
+        {"required_paths": {"root_docs": [rel]}}
+    )
 
     assert any(
         issue.message == f"required path is not tracked in git: {rel}"
@@ -146,9 +146,7 @@ def test_required_paths_detect_untracked_file(
     )
 
 
-def test_required_paths_accept_git_tracked_file(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_required_paths_accept_git_tracked_file(tmp_path: Path, monkeypatch) -> None:
     rel = "docs/WORKFLOW_CODEX.md"
     workflow_doc = tmp_path / rel
     workflow_doc.parent.mkdir(parents=True, exist_ok=True)
@@ -157,9 +155,89 @@ def test_required_paths_accept_git_tracked_file(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(contracts, "_git_tracked_paths", lambda issues: {rel})
 
-    issues = contracts._validate_required_paths({"required_paths": {"root_docs": [rel]}})
+    issues = contracts._validate_required_paths(
+        {"required_paths": {"root_docs": [rel]}}
+    )
 
     assert issues == []
+
+
+def _write_minimal_cpp_safety_policy(root: Path) -> None:
+    _write_text(
+        root / "docs" / "governance" / "cpp_safety_policy.md",
+        "\n".join(
+            [
+                "# C++ Safety Policy",
+                "Python remains the semantic oracle.",
+                "Use RAII.",
+                "No raw owning pointers.",
+                "No naked new or delete.",
+                "Document the GDExtension boundary.",
+                "Require parity evidence.",
+                "Update the authority map.",
+            ]
+        ),
+    )
+
+
+def test_native_cpp_safety_governance_requires_style_files(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_text(
+        tmp_path / "native" / "AGENTS.md",
+        "See docs/governance/cpp_safety_policy.md\n",
+    )
+    _write_minimal_cpp_safety_policy(tmp_path)
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_native_cpp_safety_governance()
+
+    assert any(".clang-format" in issue.message for issue in issues)
+    assert any(".clang-tidy" in issue.message for issue in issues)
+
+
+def test_native_cpp_safety_governance_rejects_warnings_as_errors_star(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_text(
+        tmp_path / "native" / "AGENTS.md",
+        "See docs/governance/cpp_safety_policy.md\n",
+    )
+    _write_minimal_cpp_safety_policy(tmp_path)
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(
+        tmp_path / ".clang-tidy",
+        "Checks: clang-analyzer-*\nWarningsAsErrors: '*'\n",
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_native_cpp_safety_governance()
+
+    assert any("WarningsAsErrors" in issue.message for issue in issues)
+
+
+def test_native_cpp_safety_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_text(
+        tmp_path / "native" / "AGENTS.md",
+        "See docs/governance/cpp_safety_policy.md\n",
+    )
+    _write_minimal_cpp_safety_policy(tmp_path)
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(
+        tmp_path / ".clang-tidy",
+        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_native_cpp_safety_governance() == []
 
 
 def test_governance_directives_include_staged_migration_contract() -> None:
@@ -191,7 +269,9 @@ def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
 def test_current_state_rule_enforces_restart_only_scope() -> None:
     manifest = contracts._load_manifest()
     rules = manifest["content_rules"]
-    current_state_rule = next(rule for rule in rules if rule["file"] == "CURRENT_STATE.md")
+    current_state_rule = next(
+        rule for rule in rules if rule["file"] == "CURRENT_STATE.md"
+    )
 
     must_contain = set(current_state_rule["must_contain"])
     must_not_contain = set(current_state_rule["must_not_contain"])
@@ -278,9 +358,7 @@ def test_menu_structure_single_source_reads_policy_pack_contract_data(
         menu_path,
         {
             "menus": {
-                "settings_root": {
-                    "items": [{"type": "submenu", "label": "Different"}]
-                }
+                "settings_root": {"items": [{"type": "submenu", "label": "Different"}]}
             }
         },
     )
@@ -300,9 +378,7 @@ def test_menu_structure_single_option_policy_detects_redundant_pages() -> None:
     payload = {
         "menus": {
             "submenu_wrapper": {
-                "items": [
-                    {"type": "submenu", "label": "Child", "menu_id": "child"}
-                ]
+                "items": [{"type": "submenu", "label": "Child", "menu_id": "child"}]
             },
             "action_back": {
                 "items": [
@@ -330,9 +406,7 @@ def test_menu_structure_single_option_policy_detects_redundant_pages() -> None:
             "allow_exempt": {
                 "allow_single_option": True,
                 "allow_single_option_reason": "Intentional landing page.",
-                "items": [
-                    {"type": "action", "label": "Open", "action_id": "open"}
-                ],
+                "items": [{"type": "action", "label": "Open", "action_id": "open"}],
             },
         }
     }
@@ -406,7 +480,9 @@ def test_menu_control_typing_detects_mismatched_semantic_controls(
     issues = contracts._validate_menu_control_typing()
 
     assert any("bad_enum_slider" in issue.message for issue in issues)
-    assert any("enum fields must use control=selector" in issue.message for issue in issues)
+    assert any(
+        "enum fields must use control=selector" in issue.message for issue in issues
+    )
 
 
 def test_menu_control_typing_accepts_semantic_type_aligned_controls(
@@ -431,7 +507,9 @@ def test_menu_control_typing_accepts_semantic_type_aligned_controls(
     _write_json(
         menu_path,
         {
-            "settings_option_labels": {"game_random_mode": ["Fixed seed", "True random"]},
+            "settings_option_labels": {
+                "game_random_mode": ["Fixed seed", "True random"]
+            },
             "menus": {
                 "settings_game_root": {
                     "items": [

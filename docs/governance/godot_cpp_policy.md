@@ -18,27 +18,11 @@ Use the actual repository structure, but preserve these boundaries:
 
 ## Memory safety
 
-For C++/native code:
+Native C++ and GDExtension memory-safety rules live in
+`docs/governance/cpp_safety_policy.md`.
 
-- No raw owning pointers.
-- No naked `new` or `delete`.
-- Prefer values and RAII.
-- Use `std::unique_ptr` or `std::shared_ptr` only when ownership requires it.
-- Avoid pointer arithmetic.
-- Avoid C-style casts.
-- No unsafe casts without written justification.
-- No global mutable state unless explicitly justified.
-- No detached threads.
-- Public APIs must document ownership, nullability, lifetime, preconditions,
-  and failure modes.
-
-For Godot-facing native code:
-
-- Keep Godot object lifetime rules at the boundary.
-- Use Godot reference types appropriately where applicable.
-- Stored Godot object pointers are non-owning unless explicitly documented.
-- Any stored Godot pointer must document owner, lifetime, nullability, and
-  invalidation condition.
+Migration work must keep deterministic rule logic independent from Godot where
+practical and keep Godot-facing adapter code thin.
 
 ## No semantic duplication
 
@@ -95,7 +79,10 @@ Do not add a large dependency for trivial code.
 
 ## Comments
 
-Comments must explain:
+For C++ public APIs and stored Godot pointers, follow
+`docs/governance/cpp_safety_policy.md`.
+
+Comments in migration code must explain:
 
 - intent
 - invariants

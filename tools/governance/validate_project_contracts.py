@@ -33,6 +33,7 @@ AGENTS_LINE_LIMITS: tuple[tuple[str, int], ...] = (
     ("godot/AGENTS.md", 80),
     ("native/AGENTS.md", 80),
 )
+NATIVE_CPP_EXTENSIONS = {".cpp", ".hpp", ".h", ".cc", ".cxx", ".hh", ".hxx"}
 POLICY_LITERAL_SAFETY_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"/" + r"Users/"), "unix_users_path"),
     (re.compile(r"/" + r"home/"), "unix_home_path"),
@@ -2179,6 +2180,25 @@ def _is_real_native_tree() -> bool:
     return False
 
 
+def _native_project_cpp_files() -> list[Path]:
+    native_root = PROJECT_ROOT / "native"
+    if not native_root.is_dir():
+        return []
+    files: list[Path] = []
+    for path in native_root.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in NATIVE_CPP_EXTENSIONS:
+            continue
+        rel_parts = path.relative_to(PROJECT_ROOT).parts
+        if "third_party" in rel_parts or "build" in rel_parts:
+            continue
+        files.append(path)
+    return sorted(files)
+
+
+def _has_native_project_cpp_files() -> bool:
+    return bool(_native_project_cpp_files())
+
+
 def _governance_required_paths() -> tuple[str, ...]:
     paths = list(GOVERNANCE_ROUTING_REQUIRED_PATHS)
     if _is_real_native_tree():
@@ -2303,6 +2323,7 @@ def _validate_governance_routing_concepts() -> list[ValidationIssue]:
             "review_checklist",
             "authority_map",
             "utility_index",
+            "cpp_safety_policy",
         ):
             if token not in router_text:
                 issues.append(
@@ -2403,6 +2424,70 @@ def _validate_governance_authority_inversion() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    if not _is_real_native_tree():
+        return issues
+
+    required_rels = ("docs/governance/cpp_safety_policy.md",)
+    if _has_native_project_cpp_files():
+        required_rels = (
+            "docs/governance/cpp_safety_policy.md",
+            ".clang-format",
+            ".clang-tidy",
+        )
+    for rel in required_rels:
+        if not (PROJECT_ROOT / rel).exists():
+            issues.append(
+                ValidationIssue("missing", f"missing native C++ governance path: {rel}")
+            )
+
+    cpp_policy = _read_text("docs/governance/cpp_safety_policy.md", issues)
+    if cpp_policy is not None:
+        _append_missing_concepts(
+            rel="docs/governance/cpp_safety_policy.md",
+            label="C++ safety policy",
+            text=cpp_policy,
+            concept_groups=(
+                ("Python semantic oracle", ("semantic oracle",)),
+                ("RAII", ("raii",)),
+                ("raw owning pointers", ("raw owning pointer",)),
+                ("new/delete", ("new", "delete")),
+                ("GDExtension boundary", ("gdextension",)),
+                ("parity", ("parity",)),
+                ("authority map", ("authority_map", "authority map")),
+            ),
+            issues=issues,
+        )
+
+    native_agents = _read_text("native/AGENTS.md", issues)
+    if native_agents is not None and "cpp_safety_policy" not in native_agents:
+        issues.append(
+            ValidationIssue(
+                "content", "native/AGENTS.md must route to cpp_safety_policy"
+            )
+        )
+
+    clang_tidy = _read_text(".clang-tidy", issues)
+    if clang_tidy is not None:
+        if re.search(r"(?im)^\s*WarningsAsErrors\s*:\s*['\"]?\*['\"]?\s*$", clang_tidy):
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    ".clang-tidy must not set WarningsAsErrors: '*' at this stage",
+                )
+            )
+        lower = clang_tidy.lower()
+        if "clang-analyzer" not in lower and "cppcoreguidelines" not in lower:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    ".clang-tidy should include clang-analyzer or cppcoreguidelines",
+                )
+            )
+    return issues
+
+
 def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(_validate_governance_routing_required_files())
@@ -2411,6 +2496,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_governance_local_paths())
     issues.extend(_validate_governance_secret_patterns())
     issues.extend(_validate_governance_authority_inversion())
+    issues.extend(_validate_native_cpp_safety_governance())
     return issues
 
 

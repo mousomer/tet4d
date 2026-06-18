@@ -2,6 +2,9 @@
 
 This directory contains native code for the Godot migration.
 
+See `docs/governance/cpp_safety_policy.md` for native C++ memory-safety rules.
+See `docs/architecture/authority_map.md` for semantic authority.
+
 Rules:
 
 - Keep deterministic rule logic independent from Godot where possible.
