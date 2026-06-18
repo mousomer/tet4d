@@ -124,6 +124,11 @@ Gameplay and topology constants must not be redefined independently in Godot.
 
 Every ported behavior needs parity evidence against Python.
 
+Semantic parity requirements for native subsystems are defined in
+`docs/architecture/parity_protocol.md`. C++/GDExtension code remains
+provisional until parity evidence exists and the authority map records the
+transfer.
+
 Use the repo testing policy. Expected categories:
 
 - Python tests for current oracle behavior

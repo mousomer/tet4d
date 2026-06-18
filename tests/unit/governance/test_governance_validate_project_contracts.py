@@ -191,6 +191,51 @@ def _write_minimal_native_tooling_governance(root: Path) -> None:
     )
 
 
+def _write_minimal_parity_governance(root: Path) -> None:
+    _write_text(root / "AGENTS.md", "Python semantic oracle. Godot. C++. Parity.\n")
+    _write_text(root / "docs" / "WORKFLOW_CODEX.md", "Workflow.\n")
+    _write_text(root / "godot" / "AGENTS.md", "Godot UI only.\n")
+    _write_text(
+        root / "docs" / "architecture" / "parity_protocol.md",
+        "\n".join(
+            [
+                "# Parity Protocol",
+                "Python remains the semantic oracle.",
+                "C++/GDExtension implementations require golden evidence.",
+                "Comparison modes define exact and tolerance comparisons.",
+                "Disagreement rules favor Python.",
+                "Fixture location includes migration/golden_traces.",
+                "Authority transfer updates the authority map.",
+            ]
+        ),
+    )
+    _write_text(
+        root / "docs" / "architecture" / "authority_map.md",
+        "See docs/architecture/parity_protocol.md. "
+        "Authority transfer is subsystem-specific.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "testing_policy.md",
+        "## C++ / Python parity\nPython oracle required. "
+        "Visual Godot tests are not substitutes.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "godot_cpp_policy.md",
+        "See docs/architecture/parity_protocol.md. "
+        "C++ remains provisional until the authority map records transfer.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "## Parity / authority transfer\n"
+        "- Python oracle identified.\n"
+        "- Godot visual checks are not semantic parity.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        "docs/architecture/parity_protocol.md\nTesting/parity\n",
+    )
+
+
 def test_native_cpp_safety_governance_requires_style_files(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -274,6 +319,64 @@ def test_native_cpp_safety_governance_accepts_baseline(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
     assert contracts._validate_native_cpp_safety_governance() == []
+
+
+def test_cpp_parity_protocol_governance_requires_protocol(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_cpp_parity_protocol_governance()
+
+    assert any("parity_protocol.md" in issue.message for issue in issues)
+
+
+def test_cpp_parity_protocol_governance_rejects_dangerous_wording(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_minimal_parity_governance(tmp_path)
+    _write_text(
+        tmp_path / "docs" / "governance" / "extra.md",
+        "Visual correctness is parity.\n",
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_cpp_parity_protocol_governance()
+
+    assert any("dangerous parity wording" in issue.message for issue in issues)
+
+
+def test_cpp_parity_protocol_governance_requires_fixture_readme(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_minimal_parity_governance(tmp_path)
+    (tmp_path / "tests" / "replay" / "golden").mkdir(parents=True)
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_cpp_parity_protocol_governance()
+
+    assert any("tests/replay/golden" in issue.message for issue in issues)
+
+
+def test_cpp_parity_protocol_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_minimal_parity_governance(tmp_path)
+    _write_text(
+        tmp_path / "tests" / "replay" / "golden" / "README.md",
+        "See docs/architecture/parity_protocol.md.\n",
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_cpp_parity_protocol_governance() == []
 
 
 def test_governance_directives_include_staged_migration_contract() -> None:

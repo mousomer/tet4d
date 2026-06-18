@@ -85,6 +85,12 @@ AUTHORITY_INVERSION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "non-Python supersession claim",
     ),
 )
+PARITY_DANGEROUS_PHRASES: tuple[tuple[str, str], ...] = (
+    ("c++ is the semantic oracle", "C++ semantic oracle claim"),
+    ("godot is the semantic oracle", "Godot semantic oracle claim"),
+    ("visual correctness is parity", "visual parity shortcut"),
+    ("godot display proves semantics", "Godot display semantic-proof shortcut"),
+)
 PLACEHOLDER_SECRET_VALUES = {
     "<redacted>",
     "redacted",
@@ -2324,6 +2330,7 @@ def _validate_governance_routing_concepts() -> list[ValidationIssue]:
             "authority_map",
             "utility_index",
             "cpp_safety_policy",
+            "parity_protocol",
         ):
             if token not in router_text:
                 issues.append(
@@ -2424,6 +2431,119 @@ def _validate_governance_authority_inversion() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_parity_dangerous_phrases() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel in _governance_scan_paths():
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for phrase, label in PARITY_DANGEROUS_PHRASES:
+            if phrase in lower:
+                issues.append(
+                    ValidationIssue(
+                        "authority",
+                        f"{rel} contains dangerous parity wording: {label}",
+                    )
+                )
+    return issues
+
+
+def _validate_parity_fixture_readmes() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel in ("tests/golden", "tests/replay/golden"):
+        fixture_root = PROJECT_ROOT / rel
+        if not fixture_root.exists():
+            continue
+        readme = fixture_root / "README.md"
+        if not readme.exists():
+            issues.append(
+                ValidationIssue(
+                    "missing", f"{rel}/ must include README.md linking parity protocol"
+                )
+            )
+            continue
+        text = readme.read_text(encoding="utf-8").lower()
+        if "parity_protocol" not in text and "parity protocol" not in text:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{rel}/README.md must link to docs/architecture/parity_protocol.md",
+                )
+            )
+    return issues
+
+
+def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    if not _is_real_native_tree():
+        return issues
+
+    parity_rel = "docs/architecture/parity_protocol.md"
+    if not (PROJECT_ROOT / parity_rel).exists():
+        issues.append(
+            ValidationIssue("missing", f"missing parity protocol: {parity_rel}")
+        )
+
+    parity_text = _read_text(parity_rel, issues)
+    if parity_text is not None:
+        _append_missing_concepts(
+            rel=parity_rel,
+            label="parity protocol",
+            text=parity_text,
+            concept_groups=(
+                ("Python semantic oracle", ("semantic oracle",)),
+                ("C++/GDExtension", ("c++", "gdextension")),
+                ("golden evidence", ("golden evidence", "golden traces")),
+                ("comparison modes", ("comparison mode",)),
+                ("disagreement rule", ("disagreement",)),
+                ("fixture location", ("fixture location", "migration/golden_traces")),
+                ("authority map transfer", ("authority map", "authority transfer")),
+            ),
+            issues=issues,
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/authority_map.md",
+            ("parity_protocol", "authority transfer", "subsystem-specific"),
+        ),
+        (
+            "docs/governance/testing_policy.md",
+            ("c++ / python parity", "python oracle", "visual godot"),
+        ),
+        (
+            "docs/governance/godot_cpp_policy.md",
+            ("parity_protocol", "provisional", "authority map"),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("parity / authority transfer", "python oracle", "godot visual"),
+        ),
+        (
+            "docs/governance/README.md",
+            ("parity_protocol", "testing/parity"),
+        ),
+    )
+    for rel, tokens in required_docs:
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} missing parity governance token: {token}",
+                    )
+                )
+
+    issues.extend(_validate_parity_fixture_readmes())
+    issues.extend(_validate_parity_dangerous_phrases())
+    return issues
+
+
 def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     if not _is_real_native_tree():
@@ -2514,6 +2634,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_governance_secret_patterns())
     issues.extend(_validate_governance_authority_inversion())
     issues.extend(_validate_native_cpp_safety_governance())
+    issues.extend(_validate_cpp_parity_protocol_governance())
     return issues
 
 

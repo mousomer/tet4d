@@ -56,6 +56,17 @@ plain bounded gameplay surfaces in `docs/plans/godot_core_port_plan.md` and
 `CURRENT_STATE.md`. Topology implementation remains deferred by
 `docs/plans/topology_godot_core_port_plan.md`.
 
+## Authority transfer requires parity
+
+A C++/GDExtension subsystem is provisional until it satisfies
+`docs/architecture/parity_protocol.md`.
+
+C++ existence, cleaner implementation, type safety, or successful Godot display
+do not transfer semantic authority.
+
+Authority transfer is subsystem-specific. One C++ subsystem passing parity does
+not make the whole native port authoritative.
+
 ## Forbidden migration shortcuts
 
 - Reimplementing Python semantics in GDScript.

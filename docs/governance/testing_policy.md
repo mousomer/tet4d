@@ -17,6 +17,22 @@ Parity evidence may include:
 - deterministic replay comparisons
 - equivalent input/output test cases
 
+## C++ / Python parity tests
+
+Native C++ behavior that corresponds to existing Python semantics requires
+parity evidence before it can be treated as authoritative.
+
+Required for parity claims:
+
+- identified Python oracle behavior
+- deterministic inputs
+- expected Python output
+- comparison command or documented comparison process
+- regression coverage for known edge cases
+- authority-map update when ownership changes
+
+Visual Godot tests are not substitutes for parity tests.
+
 ## C++ tests
 
 Native deterministic logic requires unit tests.

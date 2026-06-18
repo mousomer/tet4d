@@ -31,6 +31,16 @@
 - [ ] GDExtension adapter remains thin.
 - [ ] Native code does not become semantic authority without parity evidence.
 
+## Parity / authority transfer
+
+- [ ] Python oracle behavior identified.
+- [ ] Golden traces or equivalent deterministic fixtures exist.
+- [ ] C++ output compared against Python output.
+- [ ] Disagreements resolved in favor of Python unless an explicit semantic
+      change was approved.
+- [ ] Godot visual correctness was not treated as semantic parity.
+- [ ] Authority map updated if semantic ownership changed.
+
 ## Config
 
 - [ ] Nontrivial constants are routed through config policy.
