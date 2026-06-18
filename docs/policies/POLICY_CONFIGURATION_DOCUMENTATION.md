@@ -24,6 +24,10 @@ direct code literals. `config/project/constants.json` is part of that
 authority surface, alongside other canonical runtime config files such as
 `config/gameplay/tuning.json` and `config/menu/defaults.json`.
 
+For Godot/C++ migration work, `docs/governance/config_policy.md` clarifies that
+Python configuration remains authoritative for current behavior unless
+`docs/architecture/authority_map.md` records a narrower transfer.
+
 ## Scope
 
 This policy applies to:

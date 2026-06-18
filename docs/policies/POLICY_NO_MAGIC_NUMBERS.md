@@ -52,3 +52,6 @@ When taking an exception, include:
 1. PR review rejects unexplained behavioral numeric literals.
 2. New tunable values must be added to canonical config assets.
 3. Governance/contract docs must stay synchronized with new config keys.
+4. Godot/C++ migration constants must also follow
+   `docs/governance/config_policy.md`; gameplay and topology constants must
+   not be redefined independently in Godot.

@@ -7,11 +7,13 @@ This document explains how to apply the machine rules in
 
 - Machine-readable governance authority: `config/project/policy_pack.json`
 - Thin dispatch file: `AGENTS.md`
+- Governance router: `docs/governance/README.md`
 - Human workflow explainer: `docs/WORKFLOW_CODEX.md`
 - Restart handoff only: `CURRENT_STATE.md`
 - Active backlog and scope tracker: `docs/BACKLOG.md`
 - Durable product requirements: `docs/rds/`
 - Architecture boundary contract: `docs/ARCHITECTURE_CONTRACT.md`
+- Godot/C++ migration authority map: `docs/architecture/authority_map.md`
 
 ## Source-of-truth order
 
@@ -21,10 +23,12 @@ This document explains how to apply the machine rules in
 3. Domain authorities such as
    `docs/plans/topology_playground_current_authority.md` when the task touches
    their scope.
-4. `docs/WORKFLOW_CODEX.md` for human-readable repo workflow.
-5. Relevant `docs/rds/*` contracts for product behavior.
-6. `docs/ARCHITECTURE_CONTRACT.md` for dependency and package-boundary rules.
-7. `CURRENT_STATE.md` and `docs/BACKLOG.md` for restart context and open work.
+4. `docs/governance/README.md` and `docs/architecture/authority_map.md` for
+   Godot/C++ migration routing and authority boundaries.
+5. `docs/WORKFLOW_CODEX.md` for human-readable repo workflow.
+6. Relevant `docs/rds/*` contracts for product behavior.
+7. `docs/ARCHITECTURE_CONTRACT.md` for dependency and package-boundary rules.
+8. `CURRENT_STATE.md` and `docs/BACKLOG.md` for restart context and open work.
 
 ## Context-switch profiles
 
@@ -123,9 +127,11 @@ Skip unless cross-cutting: topology-playground authority/spec docs, full
 1. `AGENTS.md`
 2. `CURRENT_STATE.md`
 3. `config/project/policy_pack.json`
-4. `tools/governance/validate_project_contracts.py`
-5. `tools/governance/generate_maintenance_docs.py`
-6. `docs/BACKLOG.md`
+4. `docs/governance/README.md`
+5. `docs/architecture/authority_map.md`
+6. `tools/governance/validate_project_contracts.py`
+7. `tools/governance/generate_maintenance_docs.py`
+8. `docs/BACKLOG.md`
 
 Verify: run `.venv/bin/python tools/governance/validate_project_contracts.py`,
 `.venv/bin/python tools/governance/generate_maintenance_docs.py --check`, and

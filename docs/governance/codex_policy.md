@@ -1,0 +1,136 @@
+# Codex Policy
+
+## Purpose
+
+Codex must preserve the Python-centered authority structure while supporting
+the Godot/C++ migration.
+
+## Before editing
+
+Codex must inspect existing files and search for existing implementations or
+policies before adding new ones.
+
+Use searches equivalent to:
+
+```bash
+rg "<function_or_concept>" .
+rg "TODO|FIXME|HACK|legacy|deprecated|governance|policy|authority|oracle|migration" .
+```
+
+For governance work, Codex must identify whether an existing document already
+covers the topic and extend it instead of creating a duplicate.
+
+## Task routing
+
+### Python task
+
+Examples:
+
+- gameplay rule fix
+- topology semantics
+- trace generation
+- existing pygame/Python behavior
+- Python test update
+- current implementation refactor
+
+Read:
+
+- root `AGENTS.md`
+- existing Python governance and relevant `docs/rds/*`
+- governance router
+- architecture authority map
+- testing policy
+
+### Godot task
+
+Examples:
+
+- menu
+- scene
+- UI layout
+- camera
+- animation
+- product-shell readability
+- inspector/probe panel
+- visual diagnostics
+
+Read:
+
+- root `AGENTS.md`
+- `godot/AGENTS.md`
+- governance router
+- Godot/C++ migration policy
+- authority map
+
+### C++ / GDExtension / native task
+
+Examples:
+
+- native core API
+- Godot adapter
+- C++ test
+- memory safety
+- native build
+- CMake/SCons/native library configuration
+
+Read:
+
+- root `AGENTS.md`
+- local native/GDExtension `AGENTS.md`
+- governance router
+- Godot/C++ migration policy
+- authority map
+- testing policy
+- config policy
+
+### Mixed migration task
+
+Examples:
+
+- port Python rule to C++
+- expose C++ rule to Godot
+- replace replay-only behavior with real core behavior
+- compare Python trace with Godot/C++ output
+
+Read all relevant policies:
+
+- root `AGENTS.md`
+- existing Python governance
+- local Godot/C++ `AGENTS.md`
+- governance router
+- authority map
+- migration plan
+- testing policy
+- config policy
+
+## No-rewrite rule
+
+Codex must not rewrite existing functions or governance documents wholesale
+unless the task explicitly asks for a rewrite.
+
+Allowed:
+
+- append a routing section
+- add a clarification
+- add cross-links
+- add a small new document when no equivalent exists
+- split a bloated document only if all links are preserved
+
+Not allowed:
+
+- delete existing governance
+- move all governance under Godot
+- silently replace Python authority with Godot/C++ authority
+- duplicate existing policy under a new name
+
+## Final response requirements
+
+Codex must report:
+
+- files changed
+- files intentionally not changed
+- existing governance reused
+- new governance created
+- conflicts found and how they were resolved
+- checks run
+- unresolved risks

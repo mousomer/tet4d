@@ -4,6 +4,10 @@ This repo's active machine-readable governance authority is
 `config/project/policy_pack.json`.
 It is the sole runtime policy source for governance checks.
 
+Human routing for task-specific governance lives in `docs/governance/README.md`.
+Godot/C++ migration authority is clarified by
+`docs/architecture/authority_map.md` without replacing this policy pack.
+
 Domain-specific contracts remain in `config/project/policy/manifests/` where
 they are still useful as standalone data files.
 
