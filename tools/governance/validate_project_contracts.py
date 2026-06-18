@@ -15,11 +15,86 @@ POLICY_PACK_PATH = PROJECT_ROOT / POLICY_PACK_REL
 POLICY_INDEX_PATH = PROJECT_ROOT / "docs/policies/INDEX.md"
 POLICY_MANIFEST_DIR = PROJECT_ROOT / "config/project/policy/manifests"
 MENU_STRUCTURE_PATH = PROJECT_ROOT / "config/menu/structure.json"
+GOVERNANCE_ROUTING_REQUIRED_PATHS: tuple[str, ...] = (
+    "AGENTS.md",
+    "docs/governance/README.md",
+    "docs/governance/codex_policy.md",
+    "docs/governance/godot_cpp_policy.md",
+    "docs/governance/config_policy.md",
+    "docs/governance/secrets_policy.md",
+    "docs/governance/testing_policy.md",
+    "docs/governance/review_checklist.md",
+    "docs/architecture/authority_map.md",
+    "docs/architecture/utility_index.md",
+    "godot/AGENTS.md",
+)
+AGENTS_LINE_LIMITS: tuple[tuple[str, int], ...] = (
+    ("AGENTS.md", 140),
+    ("godot/AGENTS.md", 80),
+    ("native/AGENTS.md", 80),
+)
 POLICY_LITERAL_SAFETY_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"/" + r"Users/"), "unix_users_path"),
     (re.compile(r"/" + r"home/"), "unix_home_path"),
     (re.compile(r"[A-Za-z]:" + r"\\"), "windows_drive_prefix"),
 )
+GOVERNANCE_LOCAL_PATH_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"/Users/"), "macOS user path"),
+    (re.compile(r"C:\\Users\\", flags=re.IGNORECASE), "Windows user path"),
+    (re.compile(r"/home/[A-Za-z0-9._-]+/"), "Linux user path"),
+)
+SECRET_PREFIX_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"BEGIN (?:RSA |OPENSSH )?PRIVATE KEY"), "private key block"),
+    (re.compile(r"\bAKIA[0-9A-Z]{16}\b"), "AWS access key"),
+    (re.compile(r"\bghp_[A-Za-z0-9_]{20,}\b"), "GitHub token"),
+    (re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"), "GitHub fine-grained token"),
+    (re.compile(r"\bsk-[A-Za-z0-9]{20,}\b"), "API key token"),
+    (re.compile(r"\bxoxb-[A-Za-z0-9-]{10,}\b"), "Slack bot token"),
+)
+SECRET_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)\b(password|api_key|token|secret)\b\s*[:=]\s*([^#\s].*)$"
+)
+AUTHORITY_INVERSION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (
+        re.compile(
+            r"\b(godot|c\+\+|gdextension)\b.{0,40}\bsemantic oracle\b",
+            flags=re.IGNORECASE,
+        ),
+        "non-Python semantic oracle claim",
+    ),
+    (
+        re.compile(
+            r"\b(godot|c\+\+|gdextension)\b.{0,40}\bsource of truth\b",
+            flags=re.IGNORECASE,
+        ),
+        "non-Python source-of-truth claim",
+    ),
+    (
+        re.compile(
+            r"\b(godot|c\+\+|gdextension)\b.{0,40}\breplaces?\b.{0,20}\bpython\b",
+            flags=re.IGNORECASE,
+        ),
+        "non-Python replacement claim",
+    ),
+    (
+        re.compile(
+            r"\b(godot|c\+\+|gdextension)\b.{0,40}\bsupersedes?\b.{0,20}\bpython\b",
+            flags=re.IGNORECASE,
+        ),
+        "non-Python supersession claim",
+    ),
+)
+PLACEHOLDER_SECRET_VALUES = {
+    "<redacted>",
+    "redacted",
+    "example",
+    "placeholder",
+    "your_token_here",
+    "your_api_key_here",
+    "changeme",
+    "change_me",
+    "dummy",
+}
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 if str(SRC_ROOT) not in sys.path:
@@ -2091,6 +2166,254 @@ def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
     return issues
 
 
+def _is_real_native_tree() -> bool:
+    native_root = PROJECT_ROOT / "native"
+    if not native_root.is_dir():
+        return False
+    for path in native_root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(PROJECT_ROOT).as_posix()
+        if rel != "native/AGENTS.md":
+            return True
+    return False
+
+
+def _governance_required_paths() -> tuple[str, ...]:
+    paths = list(GOVERNANCE_ROUTING_REQUIRED_PATHS)
+    if _is_real_native_tree():
+        paths.append("native/AGENTS.md")
+    return tuple(paths)
+
+
+def _governance_scan_paths() -> list[str]:
+    rels = {
+        "AGENTS.md",
+        "docs/WORKFLOW_CODEX.md",
+        "godot/AGENTS.md",
+    }
+    if (PROJECT_ROOT / "native/AGENTS.md").exists():
+        rels.add("native/AGENTS.md")
+    for root in ("docs/governance", "docs/architecture", "docs/policies"):
+        root_path = PROJECT_ROOT / root
+        if root_path.exists():
+            rels.update(
+                path.relative_to(PROJECT_ROOT).as_posix()
+                for path in root_path.rglob("*.md")
+            )
+    return sorted(rels)
+
+
+def _read_text(rel: str, issues: list[ValidationIssue]) -> str | None:
+    path = PROJECT_ROOT / rel
+    try:
+        return path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
+        return None
+
+
+def _validate_governance_routing_required_files() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    tracked_paths = _git_tracked_paths(issues)
+    for rel in _governance_required_paths():
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            issues.append(
+                ValidationIssue("missing", f"missing governance routing path: {rel}")
+            )
+            continue
+        if tracked_paths is not None and path.is_file() and rel not in tracked_paths:
+            issues.append(
+                ValidationIssue(
+                    "git", f"governance routing path is not tracked in git: {rel}"
+                )
+            )
+    return issues
+
+
+def _append_missing_concepts(
+    *,
+    rel: str,
+    label: str,
+    text: str,
+    concept_groups: tuple[tuple[str, tuple[str, ...]], ...],
+    issues: list[ValidationIssue],
+) -> None:
+    lower = text.lower()
+    for concept, options in concept_groups:
+        if not any(option.lower() in lower for option in options):
+            issues.append(
+                ValidationIssue(
+                    "content", f"{rel} missing governance concept: {label} {concept}"
+                )
+            )
+
+
+def _validate_governance_routing_concepts() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    root_text = _read_text("AGENTS.md", issues)
+    if root_text is not None:
+        _append_missing_concepts(
+            rel="AGENTS.md",
+            label="root routing",
+            text=root_text,
+            concept_groups=(
+                ("Python", ("python",)),
+                ("semantic oracle", ("semantic oracle",)),
+                ("Godot", ("godot",)),
+                ("C++/GDExtension", ("c++", "gdextension")),
+                ("authority", ("authority",)),
+                ("parity", ("parity",)),
+            ),
+            issues=issues,
+        )
+
+    authority_text = _read_text("docs/architecture/authority_map.md", issues)
+    if authority_text is not None:
+        _append_missing_concepts(
+            rel="docs/architecture/authority_map.md",
+            label="authority map",
+            text=authority_text,
+            concept_groups=(
+                ("Python", ("python",)),
+                ("current semantics", ("current semantic", "current gameplay")),
+                ("Godot", ("godot",)),
+                (
+                    "UI/product shell/presentation",
+                    ("ui", "product shell", "presentation"),
+                ),
+                ("C++/GDExtension", ("c++", "gdextension")),
+                ("authority", ("authority",)),
+                ("parity", ("parity",)),
+                ("GDScript", ("gdscript",)),
+                ("semantic duplication", ("duplicate", "duplicating")),
+            ),
+            issues=issues,
+        )
+
+    router_text = _read_text("docs/governance/README.md", issues)
+    if router_text is not None:
+        for token in (
+            "codex_policy",
+            "godot_cpp_policy",
+            "config_policy",
+            "secrets_policy",
+            "testing_policy",
+            "review_checklist",
+            "authority_map",
+            "utility_index",
+        ):
+            if token not in router_text:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"docs/governance/README.md missing routing link token: {token}",
+                    )
+                )
+    return issues
+
+
+def _validate_agents_line_limits() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel, limit in AGENTS_LINE_LIMITS:
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            continue
+        line_count = len(path.read_text(encoding="utf-8").splitlines())
+        if line_count > limit:
+            issues.append(
+                ValidationIssue(
+                    "content", f"{rel} exceeds {limit} lines ({line_count})"
+                )
+            )
+    return issues
+
+
+def _validate_governance_local_paths() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel in _governance_scan_paths():
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            for pattern, label in GOVERNANCE_LOCAL_PATH_PATTERNS:
+                if pattern.search(line):
+                    issues.append(
+                        ValidationIssue(
+                            "safety",
+                            f"{rel}:{lineno} includes local machine path ({label})",
+                        )
+                    )
+    return issues
+
+
+def _is_placeholder_secret_value(raw_value: str) -> bool:
+    value = raw_value.strip().strip("'\"`")
+    if not value:
+        return True
+    normalized = value.lower()
+    return normalized in PLACEHOLDER_SECRET_VALUES or "redacted" in normalized
+
+
+def _validate_governance_secret_patterns() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel in _governance_scan_paths():
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            for pattern, label in SECRET_PREFIX_PATTERNS:
+                if pattern.search(line):
+                    issues.append(
+                        ValidationIssue(
+                            "secret", f"{rel}:{lineno} contains likely {label}"
+                        )
+                    )
+            assignment = SECRET_ASSIGNMENT_PATTERN.search(line)
+            if assignment is None:
+                continue
+            value = assignment.group(2).strip()
+            if _is_placeholder_secret_value(value):
+                continue
+            issues.append(
+                ValidationIssue(
+                    "secret",
+                    f"{rel}:{lineno} contains assignment-like secret value",
+                )
+            )
+    return issues
+
+
+def _validate_governance_authority_inversion() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for rel in _governance_scan_paths():
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            for pattern, label in AUTHORITY_INVERSION_PATTERNS:
+                if pattern.search(line):
+                    issues.append(
+                        ValidationIssue(
+                            "authority",
+                            f"{rel}:{lineno} contains possible {label}",
+                        )
+                    )
+    return issues
+
+
+def _validate_governance_routing_overlay() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    issues.extend(_validate_governance_routing_required_files())
+    issues.extend(_validate_governance_routing_concepts())
+    issues.extend(_validate_agents_line_limits())
+    issues.extend(_validate_governance_local_paths())
+    issues.extend(_validate_governance_secret_patterns())
+    issues.extend(_validate_governance_authority_inversion())
+    return issues
+
+
 def validate_manifest() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     manifest = _load_manifest()
@@ -2109,6 +2432,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_menu_simplification_rule())
     issues.extend(_validate_menu_structure_single_source_of_truth())
     issues.extend(_validate_keybinding_single_source_of_truth())
+    issues.extend(_validate_governance_routing_overlay())
     _load_code_rules(issues)
     return issues
 

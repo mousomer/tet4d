@@ -64,4 +64,4 @@ plain bounded gameplay surfaces in `docs/plans/godot_core_port_plan.md` and
 - Duplicating topology, movement, collision, gravity, scoring, or trace
   utilities.
 - Treating visual plausibility as semantic correctness.
-- Letting Godot UI behavior become the source of truth for game rules.
+- Letting Godot UI behavior define game-rule semantics.
