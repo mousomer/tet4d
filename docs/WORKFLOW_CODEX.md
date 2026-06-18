@@ -223,6 +223,11 @@ Primary local gate:
 CODEX_MODE=1 ./scripts/verify.sh
 ```
 
+Native C++ tooling checks are reached through the governance validation in this
+gate. They run clang-format when available and run clang-tidy only when a
+compilation database exists; missing optional native tools are skips unless
+`TET4D_STRICT_NATIVE_TOOLS=1` is set.
+
 Menu IA/settings migrations must include smoke coverage (automated or manual) for:
 - root launch
 - 2D setup

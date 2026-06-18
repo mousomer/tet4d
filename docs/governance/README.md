@@ -26,6 +26,8 @@ overlay, not a replacement for existing Python/repo governance.
 
 - Godot/C++ migration policy: `docs/governance/godot_cpp_policy.md`
 - native C++ safety policy: `docs/governance/cpp_safety_policy.md`
+- native C++ tooling validator:
+  `tools/governance/validate_native_cpp_tooling.py`
 - architecture authority map: `docs/architecture/authority_map.md`
 - migration plan: `docs/plans/godot_core_port_plan.md`
 - topology migration plan: `docs/plans/topology_godot_core_port_plan.md`

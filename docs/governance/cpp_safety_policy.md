@@ -58,8 +58,11 @@ Comments should explain intent and invariants, not restate obvious code.
 The native style baseline is `.clang-format`. The static-analysis baseline is
 `.clang-tidy`.
 
-These files define governance expectations only. This stage does not require CI
-to run clang-format, clang-tidy, Godot, or native C++ builds.
+Native C++ tooling checks run through the governance verification path via
+`tools/governance/validate_native_cpp_tooling.py`. They execute clang-format
+when available and clang-tidy when a compilation database is available. Missing
+optional native tools are reported as skips unless strict mode is enabled with
+`TET4D_STRICT_NATIVE_TOOLS=1`.
 
 ## Authority
 

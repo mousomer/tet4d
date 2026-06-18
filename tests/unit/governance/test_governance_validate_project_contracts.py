@@ -180,6 +180,17 @@ def _write_minimal_cpp_safety_policy(root: Path) -> None:
     )
 
 
+def _write_minimal_native_tooling_governance(root: Path) -> None:
+    _write_text(
+        root / "tools" / "governance" / "validate_native_cpp_tooling.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_native_cpp_tooling\n",
+    )
+
+
 def test_native_cpp_safety_governance_requires_style_files(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -189,6 +200,7 @@ def test_native_cpp_safety_governance_requires_style_files(
         "See docs/governance/cpp_safety_policy.md\n",
     )
     _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_governance(tmp_path)
 
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
@@ -207,6 +219,7 @@ def test_native_cpp_safety_governance_rejects_warnings_as_errors_star(
         "See docs/governance/cpp_safety_policy.md\n",
     )
     _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_governance(tmp_path)
     _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
     _write_text(
         tmp_path / ".clang-tidy",
@@ -220,6 +233,28 @@ def test_native_cpp_safety_governance_rejects_warnings_as_errors_star(
     assert any("WarningsAsErrors" in issue.message for issue in issues)
 
 
+def test_native_cpp_safety_governance_requires_tooling_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_text(
+        tmp_path / "native" / "AGENTS.md",
+        "See docs/governance/cpp_safety_policy.md\n",
+    )
+    _write_minimal_cpp_safety_policy(tmp_path)
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(
+        tmp_path / ".clang-tidy",
+        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_native_cpp_safety_governance()
+
+    assert any("validate_native_cpp_tooling.py" in issue.message for issue in issues)
+
+
 def test_native_cpp_safety_governance_accepts_baseline(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -229,6 +264,7 @@ def test_native_cpp_safety_governance_accepts_baseline(
         "See docs/governance/cpp_safety_policy.md\n",
     )
     _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_governance(tmp_path)
     _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
     _write_text(
         tmp_path / ".clang-tidy",

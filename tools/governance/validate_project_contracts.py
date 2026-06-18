@@ -2485,6 +2485,23 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
                     ".clang-tidy should include clang-analyzer or cppcoreguidelines",
                 )
             )
+
+    tooling_rel = "tools/governance/validate_native_cpp_tooling.py"
+    if not (PROJECT_ROOT / tooling_rel).exists():
+        issues.append(
+            ValidationIssue(
+                "missing", f"missing native C++ tooling validator: {tooling_rel}"
+            )
+        )
+
+    governance = _read_text("tools/governance/validate_governance.py", issues)
+    if governance is not None and "validate_native_cpp_tooling" not in governance:
+        issues.append(
+            ValidationIssue(
+                "content",
+                "tools/governance/validate_governance.py must run native C++ tooling validation",
+            )
+        )
     return issues
 
 
