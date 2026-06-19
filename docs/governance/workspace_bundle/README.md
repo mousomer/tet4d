@@ -21,3 +21,6 @@ See `MANIFEST.md` for files and customization requirements.
 
 Use `tools/governance/export_workspace_governance_bundle.py` from the source
 project to copy only this bundle into another repository.
+
+Use `technical_debt_policy.md` for reusable debt accounting rules and
+`drift_protection_policy.md` for reusable drift-protection principles.

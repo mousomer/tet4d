@@ -2817,6 +2817,68 @@ def _validate_workspace_bundle_governance() -> list[ValidationIssue]:
     ]
 
 
+def _validate_technical_debt_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    required_paths = (
+        "docs/governance/workspace_bundle/technical_debt_policy.md",
+        "docs/governance/workspace_bundle/drift_protection_policy.md",
+        "docs/governance/technical_debt_register.md",
+        "tools/governance/validate_technical_debt.py",
+    )
+    for rel in required_paths:
+        if not (PROJECT_ROOT / rel).exists():
+            issues.append(
+                ValidationIssue("missing", f"missing technical debt path: {rel}")
+            )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/governance/README.md",
+            (
+                "technical_debt_register.md",
+                "technical_debt_policy.md",
+                "drift_protection_policy.md",
+                "validate_technical_debt.py",
+            ),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("technical-debt delta", "advisory validator findings", "drift protection"),
+        ),
+        (
+            "docs/governance/workspace_bundle/MANIFEST.md",
+            ("technical_debt_policy.md", "drift_protection_policy.md"),
+        ),
+        (
+            "tools/governance/validate_governance.py",
+            ("validate_technical_debt",),
+        ),
+    )
+    for rel, tokens in required_docs:
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} missing technical debt governance token: {token}",
+                    )
+                )
+
+    register = _read_text("docs/governance/technical_debt_register.md", issues)
+    if register is not None and "reusable workspace policy" in register.lower():
+        issues.append(
+            ValidationIssue(
+                "content",
+                "technical debt register must not present itself as reusable workspace policy",
+            )
+        )
+    return issues
+
+
 def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(_validate_governance_routing_required_files())
@@ -2831,6 +2893,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_config_authority_governance())
     issues.extend(_validate_utility_reuse_governance())
     issues.extend(_validate_workspace_bundle_governance())
+    issues.extend(_validate_technical_debt_governance())
     return issues
 
 

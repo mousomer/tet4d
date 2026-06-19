@@ -37,6 +37,21 @@ This checklist extends the reusable workspace governance in
       invalid suppressions from `tools/governance/validate_utility_reuse.py`
       were resolved.
 
+## Technical debt
+
+- [ ] New suppressions are either removed or recorded as debt.
+- [ ] Advisory validator findings introduced by this change are classified.
+- [ ] Accepted/deferred cleanup has a debt record with remediation estimate.
+- [ ] Technical-debt delta is reported in the final task summary.
+
+## Drift protection
+
+- [ ] New governance files are routed from an index, manifest, or local
+      AGENTS.md.
+- [ ] New project overlays link to the workspace policies they extend.
+- [ ] Generated outputs were not hand-edited.
+- [ ] New validators are wired into the main governance runner.
+
 ## Native C++ safety
 
 - [ ] No raw owning pointers.

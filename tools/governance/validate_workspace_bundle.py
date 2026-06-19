@@ -19,6 +19,7 @@ REQUIRED_BUNDLE_FILES = {
     "secrets_policy.md",
     "dependency_reuse_policy.md",
     "technical_debt_policy.md",
+    "drift_protection_policy.md",
     "validator_design_policy.md",
     "review_checklist_template.md",
     "AGENTS.template.md",
@@ -171,6 +172,13 @@ def _validate_export_helper(root: Path, issues: list[BundleIssue]) -> None:
             BundleIssue(
                 "content",
                 "bundle README or MANIFEST must mention export helper",
+            )
+        )
+    if "drift_protection_policy.md" not in combined:
+        issues.append(
+            BundleIssue(
+                "content",
+                "bundle README or MANIFEST must mention drift_protection_policy.md",
             )
         )
 

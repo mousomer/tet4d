@@ -11,6 +11,7 @@
 | `secrets_policy.md` | General secrets hygiene | `docs/governance/workspace_bundle/` | No |
 | `dependency_reuse_policy.md` | Dependency and utility reuse rules | `docs/governance/workspace_bundle/` | Usually |
 | `technical_debt_policy.md` | Technical debt accounting fields | `docs/governance/workspace_bundle/` | Usually |
+| `drift_protection_policy.md` | General drift-protection principles | `docs/governance/workspace_bundle/` | Usually |
 | `validator_design_policy.md` | Validator design rules | `docs/governance/workspace_bundle/` | No |
 | `review_checklist_template.md` | Reusable review checklist | `docs/governance/workspace_bundle/` | Yes |
 | `AGENTS.template.md` | Root agent-instruction template | project root as `AGENTS.md` | Yes |

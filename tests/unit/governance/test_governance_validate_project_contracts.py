@@ -379,6 +379,119 @@ def test_workspace_bundle_governance_routes_validator(
     assert any("workspace_bundle/README.md" in issue.message for issue in issues)
 
 
+def _write_minimal_technical_debt_governance(root: Path) -> None:
+    _write_text(
+        root / "docs" / "governance" / "workspace_bundle" / "technical_debt_policy.md",
+        "Technical debt policy.\n",
+    )
+    _write_text(
+        root
+        / "docs"
+        / "governance"
+        / "workspace_bundle"
+        / "drift_protection_policy.md",
+        "Drift protection policy.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "workspace_bundle" / "MANIFEST.md",
+        "technical_debt_policy.md\ndrift_protection_policy.md\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "technical_debt_register.md",
+        "Project-specific debt register.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        "technical_debt_register.md technical_debt_policy.md "
+        "drift_protection_policy.md validate_technical_debt.py\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "technical-debt delta advisory validator findings drift protection\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_technical_debt.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_technical_debt\n",
+    )
+
+
+def test_technical_debt_governance_requires_register(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_technical_debt_governance()
+
+    assert any("technical_debt_register.md" in issue.message for issue in issues)
+
+
+def test_technical_debt_governance_requires_router_debt_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_technical_debt_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_technical_debt_governance()
+
+    assert any("technical_debt_register.md" in issue.message for issue in issues)
+
+
+def test_technical_debt_governance_requires_router_drift_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_technical_debt_governance(tmp_path)
+    _write_text(
+        tmp_path / "docs" / "governance" / "README.md",
+        "technical_debt_register.md technical_debt_policy.md validate_technical_debt.py\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_technical_debt_governance()
+
+    assert any("drift_protection_policy.md" in issue.message for issue in issues)
+
+
+def test_technical_debt_governance_requires_review_delta(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_technical_debt_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_technical_debt_governance()
+
+    assert any("technical-debt delta" in issue.message for issue in issues)
+
+
+def test_technical_debt_governance_requires_runner_reference(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_technical_debt_governance(tmp_path)
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_governance.py",
+        "def main():\n    return 0\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_technical_debt_governance()
+
+    assert any("validate_technical_debt" in issue.message for issue in issues)
+
+
+def test_technical_debt_governance_accepts_without_drift_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_technical_debt_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_technical_debt_governance() == []
+
+
 def test_config_authority_governance_requires_validator(
     tmp_path: Path, monkeypatch
 ) -> None:

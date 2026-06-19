@@ -83,6 +83,15 @@ def test_missing_required_bundle_file_fails(tmp_path: Path) -> None:
     assert any("testing_policy.md" in issue.message for issue in issues)
 
 
+def test_missing_drift_protection_policy_fails(tmp_path: Path) -> None:
+    _write_valid_workspace_bundle(tmp_path)
+    (tmp_path / validator.BUNDLE_REL / "drift_protection_policy.md").unlink()
+
+    issues = validator.validate(tmp_path)
+
+    assert any("drift_protection_policy.md" in issue.message for issue in issues)
+
+
 def test_manifest_missing_file_fails(tmp_path: Path) -> None:
     _write_valid_workspace_bundle(tmp_path)
     listed = set(validator.REQUIRED_BUNDLE_FILES)
@@ -95,6 +104,17 @@ def test_manifest_missing_file_fails(tmp_path: Path) -> None:
         "does not list bundle file: secrets_policy.md" in issue.message
         for issue in issues
     )
+
+
+def test_manifest_missing_drift_protection_policy_fails(tmp_path: Path) -> None:
+    _write_valid_workspace_bundle(tmp_path)
+    listed = set(validator.REQUIRED_BUNDLE_FILES)
+    listed.remove("drift_protection_policy.md")
+    _write(tmp_path / validator.BUNDLE_REL / "MANIFEST.md", _manifest(listed))
+
+    issues = validator.validate(tmp_path)
+
+    assert any("drift_protection_policy.md" in issue.message for issue in issues)
 
 
 def test_manifest_listing_nonexistent_file_fails(tmp_path: Path) -> None:
@@ -118,6 +138,20 @@ def test_forbidden_project_specific_term_fails(tmp_path: Path) -> None:
     issues = validator.validate(tmp_path)
 
     assert any("forbidden term: tet4d" in issue.message for issue in issues)
+
+
+def test_forbidden_project_specific_term_in_drift_policy_fails(
+    tmp_path: Path,
+) -> None:
+    _write_valid_workspace_bundle(tmp_path)
+    _write(
+        tmp_path / validator.BUNDLE_REL / "drift_protection_policy.md",
+        "Python is the current tet4d semantic oracle.\n",
+    )
+
+    issues = validator.validate(tmp_path)
+
+    assert any("forbidden term" in issue.message for issue in issues)
 
 
 def test_root_agents_missing_programming_policy_link_fails(tmp_path: Path) -> None:

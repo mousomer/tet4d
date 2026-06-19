@@ -24,6 +24,10 @@ overlay, not a replacement for existing Python/repo governance.
 - existing wheel/dedup checks:
   `tools/governance/check_wheel_reuse_rules.py` and
   `tools/governance/check_dedup_dead_code_rules.py`
+- technical debt register:
+  `docs/governance/technical_debt_register.md`
+- technical debt validator:
+  `tools/governance/validate_technical_debt.py`
 
 ## Reusable workspace governance
 
@@ -35,6 +39,23 @@ tet4d-specific authority.
 tet4d-specific rules live in this router,
 `docs/architecture/authority_map.md`, `docs/architecture/parity_protocol.md`,
 and the project overlay policies in `docs/governance/`.
+
+## Technical debt and drift protection
+
+General debt schema and calculations live in
+`docs/governance/workspace_bundle/technical_debt_policy.md`.
+
+General drift-protection principles live in
+`docs/governance/workspace_bundle/drift_protection_policy.md`.
+
+tet4d-specific debt items live in
+`docs/governance/technical_debt_register.md`.
+
+Debt validation is handled by
+`tools/governance/validate_technical_debt.py`.
+
+Project-specific drift-surface validation is intentionally deferred to the next
+stage.
 
 ## Applies to current Python implementation
 
@@ -66,6 +87,7 @@ and the project overlay policies in `docs/governance/`.
 | Testing/parity | `docs/architecture/parity_protocol.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
 | Config/constants | `docs/governance/config_policy.md`, `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`, `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`, `tools/governance/validate_config_authority.py` |
 | Dependency / utility reuse | `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, `docs/architecture/utility_index.md`, `tools/governance/validate_utility_reuse.py`, `tools/governance/check_wheel_reuse_rules.py`, `tools/governance/check_dedup_dead_code_rules.py` |
+| Technical debt / drift foundations | `docs/governance/technical_debt_register.md`, `docs/governance/workspace_bundle/technical_debt_policy.md`, `docs/governance/workspace_bundle/drift_protection_policy.md`, `tools/governance/validate_technical_debt.py` |
 | Secrets/security | `docs/governance/secrets_policy.md`, `config/project/policy/manifests/secret_scan.json` |
 | Mixed migration | all relevant Python, Godot, native, testing, config, and authority docs above |
 
