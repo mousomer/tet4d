@@ -262,6 +262,78 @@ def _write_minimal_godot_semantic_boundary_governance(root: Path) -> None:
     )
 
 
+def _write_minimal_config_authority_governance(root: Path) -> None:
+    _write_text(
+        root / "tools" / "governance" / "validate_config_authority.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_config_authority\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "config_policy.md",
+        "Config authority routes through POLICY_NO_MAGIC_NUMBERS. "
+        "Use config/project/constants.json.\n",
+    )
+    _write_text(
+        root / "docs" / "policies" / "POLICY_NO_MAGIC_NUMBERS.md",
+        "See docs/governance/config_policy.md and validate_config_authority.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "Check config-authority validator hardcoded constants.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        "Route config_policy through validate_config_authority.\n",
+    )
+
+
+def test_config_authority_governance_requires_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_config_authority_governance()
+
+    assert any("validate_config_authority.py" in issue.message for issue in issues)
+
+
+def test_config_authority_governance_requires_doc_tokens(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_config_authority.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_config_authority\n",
+    )
+    _write_text(tmp_path / "docs" / "governance" / "config_policy.md", "Config\n")
+    _write_text(
+        tmp_path / "docs" / "policies" / "POLICY_NO_MAGIC_NUMBERS.md",
+        "Numbers\n",
+    )
+    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_config_authority_governance()
+
+    assert any("config authority governance token" in issue.message for issue in issues)
+
+
+def test_config_authority_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_config_authority_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_config_authority_governance() == []
+
+
 def test_native_cpp_safety_governance_requires_style_files(
     tmp_path: Path, monkeypatch
 ) -> None:

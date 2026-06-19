@@ -2677,6 +2677,63 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_config_authority_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    validator_rel = "tools/governance/validate_config_authority.py"
+    if not (PROJECT_ROOT / validator_rel).exists():
+        issues.append(
+            ValidationIssue(
+                "missing", f"missing config authority validator: {validator_rel}"
+            )
+        )
+
+    governance = _read_text("tools/governance/validate_governance.py", issues)
+    if governance is not None and "validate_config_authority" not in governance:
+        issues.append(
+            ValidationIssue(
+                "content",
+                "tools/governance/validate_governance.py must run config authority validation",
+            )
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/governance/config_policy.md",
+            (
+                "config authority",
+                "policy_no_magic_numbers",
+                "config/project/constants.json",
+            ),
+        ),
+        (
+            "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
+            ("docs/governance/config_policy.md", "validate_config_authority"),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("config-authority validator", "hardcoded constants"),
+        ),
+        (
+            "docs/governance/README.md",
+            ("config_policy", "validate_config_authority"),
+        ),
+    )
+    for rel, tokens in required_docs:
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} missing config authority governance token: {token}",
+                    )
+                )
+    return issues
+
+
 def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(_validate_governance_routing_required_files())
@@ -2688,6 +2745,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_native_cpp_safety_governance())
     issues.extend(_validate_cpp_parity_protocol_governance())
     issues.extend(_validate_godot_semantic_boundary_governance())
+    issues.extend(_validate_config_authority_governance())
     return issues
 
 

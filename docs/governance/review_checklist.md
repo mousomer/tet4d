@@ -55,6 +55,9 @@
 - [ ] Nontrivial constants are routed through config policy.
 - [ ] Magic-number policy is clear.
 - [ ] Config authority between Python/Godot/C++ is clear.
+- [ ] Suspicious hardcoded constants from the config-authority validator are
+      addressed, suppressed with a narrow reason, or documented as advisory
+      debt.
 
 ## Tests
 

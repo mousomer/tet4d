@@ -11,9 +11,19 @@ authorities remain:
 Python configuration remains authoritative for current Python behavior unless
 `docs/architecture/authority_map.md` records a narrower transfer.
 
+Standard config authority includes `config/project/constants.json`,
+`config/gameplay/tuning.json`, and `config/menu/defaults.json`, with
+`docs/CONFIGURATION_REFERENCE.md` generated from those sources rather than
+hand-authored as authority.
+
 Godot UI constants may live in Godot theme/config resources when they affect
 presentation only. Gameplay and topology constants must not be redefined
 independently in Godot.
+
+Config authority is validated by
+`tools/governance/validate_config_authority.py`. Default mode treats suspicious
+hardcoded constants as advisory warnings; strict mode can fail on them with
+`TET4D_STRICT_CONFIG_AUTHORITY=1`.
 
 ## Required behavior
 

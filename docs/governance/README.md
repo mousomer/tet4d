@@ -11,6 +11,8 @@ overlay, not a replacement for existing Python/repo governance.
 - existing repo policies under `docs/policies/`
 - secrets/security policy: `docs/governance/secrets_policy.md`
 - config/constants policy: `docs/governance/config_policy.md`
+- config authority validator:
+  `tools/governance/validate_config_authority.py`
 - native C++ safety policy: `docs/governance/cpp_safety_policy.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
@@ -43,7 +45,7 @@ overlay, not a replacement for existing Python/repo governance.
 | Godot UI/product shell | `AGENTS.md`, `godot/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/architecture/authority_map.md` |
 | C++/GDExtension/native | `AGENTS.md`, `native/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/governance/cpp_safety_policy.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/authority_map.md` |
 | Testing/parity | `docs/architecture/parity_protocol.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
-| Config/constants | `docs/governance/config_policy.md`, `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`, `docs/policies/POLICY_NO_MAGIC_NUMBERS.md` |
+| Config/constants | `docs/governance/config_policy.md`, `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`, `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`, `tools/governance/validate_config_authority.py` |
 | Secrets/security | `docs/governance/secrets_policy.md`, `config/project/policy/manifests/secret_scan.json` |
 | Mixed migration | all relevant Python, Godot, native, testing, config, and authority docs above |
 

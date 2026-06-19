@@ -22,7 +22,8 @@ hand.
 Repo-owned runtime constants must come from config-backed authority rather than
 direct code literals. `config/project/constants.json` is part of that
 authority surface, alongside other canonical runtime config files such as
-`config/gameplay/tuning.json` and `config/menu/defaults.json`.
+`config/project/policy_pack.json`, `config/gameplay/tuning.json`, and
+`config/menu/defaults.json`.
 
 For Godot/C++ migration work, `docs/governance/config_policy.md` clarifies that
 Python configuration remains authoritative for current behavior unless
@@ -70,3 +71,6 @@ Exceptions are allowed only when documented and one of these applies:
 3. `docs/USER_SETTINGS_REFERENCE.md` bucket structure and label resolution must come from canonical runtime/config sources, not ad hoc literals.
 4. Keybinding profile summaries inside `docs/USER_SETTINGS_REFERENCE.md` must derive category labels/descriptions and scope ordering from canonical keybinding category docs, not from hardcoded profile-shape assumptions.
 5. Governance manifests and policy docs must stay synchronized with this rule.
+6. `tools/governance/validate_config_authority.py` checks that config
+   authority remains linked to the no-magic-number policy and generated
+   configuration references.

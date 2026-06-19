@@ -55,3 +55,6 @@ When taking an exception, include:
 4. Godot/C++ migration constants must also follow
    `docs/governance/config_policy.md`; gameplay and topology constants must
    not be redefined independently in Godot.
+5. `tools/governance/validate_config_authority.py` reports suspicious
+   hardcoded constants as advisory warnings by default and can fail on them in
+   strict mode with `TET4D_STRICT_CONFIG_AUTHORITY=1`.
