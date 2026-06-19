@@ -123,9 +123,12 @@ def _checks() -> tuple[GovernanceCheck, ...]:
     from tools.governance import validate_godot_semantic_boundary
     from tools.governance import validate_native_cpp_tooling
     from tools.governance import validate_project_contracts
+    from tools.governance import validate_utility_reuse
+    from tools.governance import validate_workspace_bundle
 
     return (
         GovernanceCheck("contracts", validate_project_contracts.main),
+        GovernanceCheck("workspace_bundle", validate_workspace_bundle.main),
         GovernanceCheck("config_authority", validate_config_authority.main),
         GovernanceCheck(
             "godot_semantic_boundary", validate_godot_semantic_boundary.main
@@ -135,6 +138,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         GovernanceCheck("risk_gates", check_risk_gates.main),
         GovernanceCheck("policy_runtime_rules", check_policy_runtime_rules.main),
         GovernanceCheck("wheel_reuse_rules", check_wheel_reuse_rules.main),
+        GovernanceCheck("utility_reuse", validate_utility_reuse.main),
         GovernanceCheck("loc_guidance", check_loc_guidance.main),
         GovernanceCheck("dedup_dead_code_rules", check_dedup_dead_code_rules.main),
         GovernanceCheck("drift_protection", check_drift_protection.main),

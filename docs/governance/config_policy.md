@@ -1,5 +1,8 @@
 # Config and Constants Policy
 
+This policy extends the reusable workspace governance in
+`docs/governance/workspace_bundle/`.
+
 This file routes Godot/C++ migration-specific config ownership. The repo-wide
 authorities remain:
 

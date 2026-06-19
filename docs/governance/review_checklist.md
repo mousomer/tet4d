@@ -1,5 +1,8 @@
 # Review Checklist
 
+This checklist extends the reusable workspace governance in
+`docs/governance/workspace_bundle/`.
+
 ## Governance routing
 
 - [ ] Existing governance was inspected.
@@ -21,6 +24,18 @@
 - [ ] No secrets were introduced.
 - [ ] No unsafe memory policy weakening was introduced.
 - [ ] No no-rewrite/no-reinvention policy weakening was introduced.
+
+## Dependency / utility reuse
+
+- [ ] Existing helpers, utilities, and libraries were searched before adding a
+      new helper.
+- [ ] Reusable helpers are routed through `docs/architecture/utility_index.md`
+      when they become shared project utilities.
+- [ ] No duplicate config loader, trace reader, topology helper, projection
+      helper, subprocess wrapper, or local mini-framework was introduced.
+- [ ] Utility-reuse advisory findings were reviewed, and strict findings or
+      invalid suppressions from `tools/governance/validate_utility_reuse.py`
+      were resolved.
 
 ## Native C++ safety
 

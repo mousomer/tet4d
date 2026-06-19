@@ -1,5 +1,8 @@
 # Codex Policy
 
+This policy extends the reusable workspace governance in
+`docs/governance/workspace_bundle/`.
+
 ## Purpose
 
 Codex must preserve the Python-centered authority structure while supporting
@@ -7,8 +10,8 @@ the Godot/C++ migration.
 
 ## Before editing
 
-Codex must inspect existing files and search for existing implementations or
-policies before adding new ones.
+Codex must inspect existing files and search for existing implementations,
+helpers, utilities, libraries, or policies before adding new ones.
 
 Use searches equivalent to:
 
@@ -19,6 +22,12 @@ rg "TODO|FIXME|HACK|legacy|deprecated|governance|policy|authority|oracle|migrati
 
 For governance work, Codex must identify whether an existing document already
 covers the topic and extend it instead of creating a duplicate.
+
+Before adding a new helper, adapter, parser, config loader, trace reader,
+topology helper, projection helper, subprocess wrapper, or test fixture tool,
+Codex must search by concept, likely function/class name, related config key,
+and subsystem name. Shared reusable helpers must be checked against
+`docs/architecture/utility_index.md`.
 
 ## Task routing
 

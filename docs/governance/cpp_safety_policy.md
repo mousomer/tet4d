@@ -1,5 +1,8 @@
 # C++ Safety Policy
 
+This policy extends the reusable workspace governance in
+`docs/governance/workspace_bundle/`.
+
 ## Scope
 
 This policy applies to native C++ and GDExtension code used by the Godot

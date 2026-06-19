@@ -1,5 +1,8 @@
 # Secrets Policy
 
+This policy extends the reusable workspace governance in
+`docs/governance/workspace_bundle/`.
+
 No secrets may be committed or included in prompts, logs, traces, screenshots,
 docs, tests, config, or exported bundles.
 

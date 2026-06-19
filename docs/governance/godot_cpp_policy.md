@@ -1,5 +1,8 @@
 # Godot/C++ Migration Policy
 
+This policy extends the reusable workspace governance in
+`docs/governance/workspace_bundle/`.
+
 ## Scope
 
 This policy applies only to Godot, GDExtension, native C++, and migration work.

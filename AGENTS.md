@@ -44,6 +44,10 @@ a migration overlay, not a replacement root constitution.
 
 ## Instruction routing
 
+- General programming rules follow
+  `docs/governance/workspace_bundle/programming_policy.md`.
+- tet4d-specific semantic authority follows
+  `docs/architecture/authority_map.md`.
 - Python implementation work follows existing repo/Python governance, relevant
   `docs/rds/*`, and the current Python tests and traces.
 - Godot UI/product-shell work follows root governance plus `godot/AGENTS.md`

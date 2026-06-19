@@ -40,9 +40,9 @@ POLICY_LITERAL_SAFETY_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"[A-Za-z]:" + r"\\"), "windows_drive_prefix"),
 )
 GOVERNANCE_LOCAL_PATH_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"/Users/"), "macOS user path"),
-    (re.compile(r"C:\\Users\\", flags=re.IGNORECASE), "Windows user path"),
-    (re.compile(r"/home/[A-Za-z0-9._-]+/"), "Linux user path"),
+    (re.compile("/" + "Users/"), "macOS user path"),
+    (re.compile("C:" + r"\\Users\\", flags=re.IGNORECASE), "Windows user path"),
+    (re.compile("/" + r"home/[A-Za-z0-9._-]+/"), "Linux user path"),
 )
 SECRET_PREFIX_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"BEGIN (?:RSA |OPENSSH )?PRIVATE KEY"), "private key block"),
@@ -2642,21 +2642,7 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
 
     clang_tidy = _read_text(".clang-tidy", issues)
     if clang_tidy is not None:
-        if re.search(r"(?im)^\s*WarningsAsErrors\s*:\s*['\"]?\*['\"]?\s*$", clang_tidy):
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    ".clang-tidy must not set WarningsAsErrors: '*' at this stage",
-                )
-            )
-        lower = clang_tidy.lower()
-        if "clang-analyzer" not in lower and "cppcoreguidelines" not in lower:
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    ".clang-tidy should include clang-analyzer or cppcoreguidelines",
-                )
-            )
+        _validate_native_clang_tidy_content(clang_tidy, issues)
 
     tooling_rel = "tools/governance/validate_native_cpp_tooling.py"
     if not (PROJECT_ROOT / tooling_rel).exists():
@@ -2675,6 +2661,26 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
             )
         )
     return issues
+
+
+def _validate_native_clang_tidy_content(
+    clang_tidy: str, issues: list[ValidationIssue]
+) -> None:
+    if re.search(r"(?im)^\s*WarningsAsErrors\s*:\s*['\"]?\*['\"]?\s*$", clang_tidy):
+        issues.append(
+            ValidationIssue(
+                "content",
+                ".clang-tidy must not set WarningsAsErrors: '*' at this stage",
+            )
+        )
+    lower = clang_tidy.lower()
+    if "clang-analyzer" not in lower and "cppcoreguidelines" not in lower:
+        issues.append(
+            ValidationIssue(
+                "content",
+                ".clang-tidy should include clang-analyzer or cppcoreguidelines",
+            )
+        )
 
 
 def _validate_config_authority_governance() -> list[ValidationIssue]:
@@ -2734,6 +2740,83 @@ def _validate_config_authority_governance() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_utility_reuse_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    validator_rel = "tools/governance/validate_utility_reuse.py"
+    if not (PROJECT_ROOT / validator_rel).exists():
+        issues.append(
+            ValidationIssue(
+                "missing", f"missing utility reuse validator: {validator_rel}"
+            )
+        )
+
+    governance = _read_text("tools/governance/validate_governance.py", issues)
+    if governance is not None and "validate_utility_reuse" not in governance:
+        issues.append(
+            ValidationIssue(
+                "content",
+                "tools/governance/validate_governance.py must run utility reuse validation",
+            )
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/utility_index.md",
+            ("required fields", "owner", "reuse rule", "migration relevance"),
+        ),
+        (
+            "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
+            (
+                "docs/architecture/utility_index.md",
+                "check_wheel_reuse_rules.py",
+                "check_dedup_dead_code_rules.py",
+                "validate_utility_reuse.py",
+            ),
+        ),
+        (
+            "docs/governance/codex_policy.md",
+            ("search", "helpers", "existing", "utility_index"),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("dependency / utility reuse", "no-reinvention", "validate_utility_reuse"),
+        ),
+        (
+            "docs/governance/README.md",
+            (
+                "utility_index",
+                "policy_no_reinventing_wheel",
+                "validate_utility_reuse",
+                "check_wheel_reuse_rules",
+                "check_dedup_dead_code_rules",
+            ),
+        ),
+    )
+    for rel, tokens in required_docs:
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} missing utility reuse governance token: {token}",
+                    )
+                )
+    return issues
+
+
+def _validate_workspace_bundle_governance() -> list[ValidationIssue]:
+    from tools.governance import validate_workspace_bundle
+
+    return [
+        ValidationIssue(issue.kind, issue.message)
+        for issue in validate_workspace_bundle.validate(PROJECT_ROOT)
+    ]
+
+
 def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(_validate_governance_routing_required_files())
@@ -2746,6 +2829,8 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_cpp_parity_protocol_governance())
     issues.extend(_validate_godot_semantic_boundary_governance())
     issues.extend(_validate_config_authority_governance())
+    issues.extend(_validate_utility_reuse_governance())
+    issues.extend(_validate_workspace_bundle_governance())
     return issues
 
 

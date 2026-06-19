@@ -1,5 +1,8 @@
 # Testing Policy
 
+This policy extends the reusable workspace governance in
+`docs/governance/workspace_bundle/`.
+
 ## Python oracle tests
 
 Current Python behavior must remain covered by existing tests where available.

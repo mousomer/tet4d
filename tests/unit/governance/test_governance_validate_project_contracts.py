@@ -290,6 +290,95 @@ def _write_minimal_config_authority_governance(root: Path) -> None:
     )
 
 
+def _write_minimal_utility_reuse_governance(root: Path) -> None:
+    _write_text(
+        root / "tools" / "governance" / "validate_utility_reuse.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_utility_reuse\n",
+    )
+    _write_text(
+        root / "docs" / "architecture" / "utility_index.md",
+        "## Required fields\nOwner\nReuse rule\nMigration relevance\n",
+    )
+    _write_text(
+        root / "docs" / "policies" / "POLICY_NO_REINVENTING_WHEEL.md",
+        "docs/architecture/utility_index.md\n"
+        "check_wheel_reuse_rules.py\n"
+        "check_dedup_dead_code_rules.py\n"
+        "validate_utility_reuse.py\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "codex_policy.md",
+        "Search existing helpers before adding new ones. See utility_index.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "## Dependency / utility reuse\n"
+        "No-reinvention checks include validate_utility_reuse.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        "utility_index policy_no_reinventing_wheel validate_utility_reuse "
+        "check_wheel_reuse_rules check_dedup_dead_code_rules\n",
+    )
+
+
+def test_utility_reuse_governance_requires_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_utility_reuse_governance()
+
+    assert any("validate_utility_reuse.py" in issue.message for issue in issues)
+
+
+def test_utility_reuse_governance_requires_doc_tokens(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_utility_reuse.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_utility_reuse\n",
+    )
+    _write_text(tmp_path / "docs" / "architecture" / "utility_index.md", "Utility\n")
+    _write_text(
+        tmp_path / "docs" / "policies" / "POLICY_NO_REINVENTING_WHEEL.md",
+        "Wheel\n",
+    )
+    _write_text(tmp_path / "docs" / "governance" / "codex_policy.md", "Codex\n")
+    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_utility_reuse_governance()
+
+    assert any("utility reuse governance token" in issue.message for issue in issues)
+
+
+def test_utility_reuse_governance_accepts_baseline(tmp_path: Path, monkeypatch) -> None:
+    _write_minimal_utility_reuse_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_utility_reuse_governance() == []
+
+
+def test_workspace_bundle_governance_routes_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_workspace_bundle_governance()
+
+    assert any("workspace_bundle/README.md" in issue.message for issue in issues)
+
+
 def test_config_authority_governance_requires_validator(
     tmp_path: Path, monkeypatch
 ) -> None:
