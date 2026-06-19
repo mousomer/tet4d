@@ -54,8 +54,11 @@ tet4d-specific debt items live in
 Debt validation is handled by
 `tools/governance/validate_technical_debt.py`.
 
-Project-specific drift-surface validation is intentionally deferred to the next
-stage.
+tet4d-specific drift surfaces live in
+`docs/governance/drift_protection_map.md`.
+
+Drift validation is handled by
+`tools/governance/validate_drift_protection.py`.
 
 ## Applies to current Python implementation
 

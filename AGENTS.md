@@ -46,6 +46,8 @@ a migration overlay, not a replacement root constitution.
 
 - General programming rules follow
   `docs/governance/workspace_bundle/programming_policy.md`.
+- General drift-protection rules follow
+  `docs/governance/workspace_bundle/drift_protection_policy.md`.
 - tet4d-specific semantic authority follows
   `docs/architecture/authority_map.md`.
 - Python implementation work follows existing repo/Python governance, relevant

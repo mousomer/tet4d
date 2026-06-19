@@ -89,6 +89,13 @@ semantics.
 
 Current active follow-ups:
 
+- Project drift protection now has a mechanical stage: keep
+  `docs/governance/drift_protection_map.md`,
+  `tools/governance/validate_drift_protection.py`,
+  `tools/governance/validate_governance.py`, and
+  `tools/governance/validate_project_contracts.py` aligned so governance
+  routing, authority/parity, generated-file, debt/advisory, utility-index, and
+  review-checklist drift fail with actionable diagnostics.
 - topology semantics are now the migration-blocking authority: `Editor` owns
   construction/validation/launch eligibility, `Sandbox` owns free probing, and
   `Play` owns gameplay launch plus stricter drop/lock legality; wrap /

@@ -46,11 +46,17 @@ This checklist extends the reusable workspace governance in
 
 ## Drift protection
 
-- [ ] New governance files are routed from an index, manifest, or local
-      AGENTS.md.
+- [ ] New governance files are reachable from a router, index, manifest, or
+      local `AGENTS.md`.
+- [ ] New validators are wired into
+      `tools/governance/validate_governance.py`.
+- [ ] Authority claims remain consistent with
+      `docs/architecture/authority_map.md`.
+- [ ] Config/generated surfaces still identify source authority or generator.
 - [ ] New project overlays link to the workspace policies they extend.
 - [ ] Generated outputs were not hand-edited.
-- [ ] New validators are wired into the main governance runner.
+- [ ] Accepted advisory findings or suppressions are classified or recorded as
+      debt.
 
 ## Native C++ safety
 

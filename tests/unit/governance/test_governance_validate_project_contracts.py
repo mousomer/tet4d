@@ -492,6 +492,129 @@ def test_technical_debt_governance_accepts_without_drift_validator(
     assert contracts._validate_technical_debt_governance() == []
 
 
+def _write_minimal_drift_protection_governance(root: Path) -> None:
+    _write_text(
+        root
+        / "docs"
+        / "governance"
+        / "workspace_bundle"
+        / "drift_protection_policy.md",
+        "Reusable drift policy.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        "tet4d-specific surfaces\n"
+        "docs/governance/workspace_bundle/drift_protection_policy.md\n"
+        "governance routing drift\n"
+        "authority drift\n"
+        "config/generated drift\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_drift_protection.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_drift_protection\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        "drift_protection_policy.md drift_protection_map.md "
+        "validate_drift_protection.py\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "drift protection validate_governance.py generated outputs\n",
+    )
+
+
+def test_drift_protection_governance_requires_map(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_drift_protection_governance()
+
+    assert any("drift_protection_map.md" in issue.message for issue in issues)
+
+
+def test_drift_protection_governance_requires_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_drift_protection_governance(tmp_path)
+    (tmp_path / "tools" / "governance" / "validate_drift_protection.py").unlink()
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_drift_protection_governance()
+
+    assert any("validate_drift_protection.py" in issue.message for issue in issues)
+
+
+def test_drift_protection_governance_requires_router_links(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_drift_protection_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_drift_protection_governance()
+
+    assert any("drift_protection_map.md" in issue.message for issue in issues)
+    assert any("validate_drift_protection.py" in issue.message for issue in issues)
+
+
+def test_drift_protection_governance_requires_runner_reference(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_drift_protection_governance(tmp_path)
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_governance.py",
+        "def main():\n    return 0\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_drift_protection_governance()
+
+    assert any("validate_drift_protection" in issue.message for issue in issues)
+
+
+def test_drift_protection_governance_requires_review_checklist(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_drift_protection_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_drift_protection_governance()
+
+    assert any("drift protection" in issue.message for issue in issues)
+
+
+def test_drift_protection_governance_rejects_workspace_policy_copy(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_drift_protection_governance(tmp_path)
+    _write_text(
+        tmp_path / "docs" / "governance" / "drift_protection_map.md",
+        "tet4d-specific surfaces\n"
+        "docs/governance/workspace_bundle/drift_protection_policy.md\n"
+        "governance routing drift\nauthority drift\nconfig/generated drift\n"
+        "## General drift risks\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_drift_protection_governance()
+
+    assert any("must not copy workspace policy" in issue.message for issue in issues)
+
+
+def test_drift_protection_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_drift_protection_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_drift_protection_governance() == []
+
+
 def test_config_authority_governance_requires_validator(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -2879,6 +2879,92 @@ def _validate_technical_debt_governance() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_drift_protection_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    required_paths = (
+        "docs/governance/workspace_bundle/drift_protection_policy.md",
+        "docs/governance/drift_protection_map.md",
+        "tools/governance/validate_drift_protection.py",
+    )
+    for rel in required_paths:
+        if not (PROJECT_ROOT / rel).exists():
+            issues.append(
+                ValidationIssue("missing", f"missing drift-protection path: {rel}")
+            )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/governance/README.md",
+            (
+                "drift_protection_policy.md",
+                "drift_protection_map.md",
+                "validate_drift_protection.py",
+            ),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("drift protection", "validate_governance.py", "generated outputs"),
+        ),
+        (
+            "tools/governance/validate_governance.py",
+            ("validate_drift_protection",),
+        ),
+        (
+            "docs/governance/drift_protection_map.md",
+            (
+                "workspace_bundle/drift_protection_policy.md",
+                "tet4d-specific",
+                "governance routing drift",
+                "authority drift",
+                "config/generated drift",
+            ),
+        ),
+    )
+    for rel, tokens in required_docs:
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} missing drift-protection governance token: {token}",
+                    )
+                )
+
+    map_text = _read_text("docs/governance/drift_protection_map.md", issues)
+    workspace_text = _read_text(
+        "docs/governance/workspace_bundle/drift_protection_policy.md", issues
+    )
+    if map_text is not None and workspace_text is not None:
+        map_body = map_text.lower()
+        workspace_body = workspace_text.lower()
+        duplicated_workspace_markers = (
+            "## general drift risks",
+            "## general drift-protection rules",
+            "## project-specific drift maps",
+        )
+        for marker in duplicated_workspace_markers:
+            if marker in map_body:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        "docs/governance/drift_protection_map.md must not copy "
+                        f"workspace policy section {marker}",
+                    )
+                )
+        if map_body == workspace_body:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    "project drift map must not duplicate workspace drift policy",
+                )
+            )
+    return issues
+
+
 def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(_validate_governance_routing_required_files())
@@ -2894,6 +2980,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_utility_reuse_governance())
     issues.extend(_validate_workspace_bundle_governance())
     issues.extend(_validate_technical_debt_governance())
+    issues.extend(_validate_drift_protection_governance())
     return issues
 
 

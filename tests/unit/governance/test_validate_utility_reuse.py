@@ -179,7 +179,8 @@ def test_godot_lifecycle_methods_are_ignored(tmp_path: Path) -> None:
 
 def test_test_functions_are_ignored(tmp_path: Path) -> None:
     target = tmp_path / "tests" / "unit" / "test_sample.py"
-    _write(target, "def test_load_config() -> None:\n    pass\n")
+    source = "\n".join(("def test_load_config() -> None:", "    pass", ""))
+    _write(target, source)
 
     symbols, findings = utility_reuse.scan_symbols(target)
 
