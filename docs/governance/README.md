@@ -75,6 +75,10 @@ Drift validation is handled by
   `tools/governance/validate_native_cpp_tooling.py`
 - architecture authority map: `docs/architecture/authority_map.md`
 - parity protocol: `docs/architecture/parity_protocol.md`
+- authority-transfer protocol:
+  `docs/architecture/authority_transfer_protocol.md`
+- authority-transfer validator:
+  `tools/governance/validate_authority_transfer.py`
 - migration plan: `docs/plans/godot_core_port_plan.md`
 - topology migration plan: `docs/plans/topology_godot_core_port_plan.md`
 - utility index: `docs/architecture/utility_index.md`
@@ -98,6 +102,9 @@ Drift validation is handled by
 
 The existing Python implementation is the semantic oracle. Godot and C++ code
 are ports/adapters until explicitly promoted by documented parity evidence.
+Promotion also requires
+`docs/architecture/authority_transfer_protocol.md`; parity evidence alone does
+not transfer authority.
 
 ## Conflict rule
 

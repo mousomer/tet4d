@@ -43,15 +43,18 @@ Surfaces:
 
 - `docs/architecture/authority_map.md`
 - `docs/architecture/parity_protocol.md`
+- `docs/architecture/authority_transfer_protocol.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/testing_policy.md`
+- `tools/governance/validate_authority_transfer.py`
 
 Required invariants:
 
 - Python remains the current semantic oracle.
 - Godot remains shell/presentation unless authority is explicitly transferred.
-- C++/GDExtension remains provisional until parity transfer is documented.
+- C++/GDExtension remains provisional until parity evidence and a completed
+  authority-transfer record are documented.
 - No policy claims C++ owns gameplay semantics without a transfer record.
 - No policy claims GDScript owns topology, movement, collision, gravity,
   rotation, scoring, trace semantics, or replay correctness.
@@ -69,6 +72,7 @@ Surfaces:
 - `tools/governance/validate_godot_semantic_boundary.py`
 - `tools/governance/validate_native_cpp_tooling.py`
 - `tools/governance/validate_drift_protection.py`
+- `tools/governance/validate_authority_transfer.py`
 
 Required invariants:
 

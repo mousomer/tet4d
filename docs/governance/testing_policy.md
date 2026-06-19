@@ -11,7 +11,9 @@ define it.
 
 ## Golden parity
 
-A ported subsystem is not authoritative until parity evidence exists.
+A ported subsystem is not authoritative until parity evidence exists and
+`docs/architecture/authority_transfer_protocol.md` contains a completed
+transfer record.
 
 Parity evidence may include:
 
@@ -32,7 +34,8 @@ Required for parity claims:
 - expected Python output
 - comparison command or documented comparison process
 - regression coverage for known edge cases
-- authority-map update when ownership changes
+- authority-transfer record, fallback path, known exclusions, and authority-map
+  update when ownership changes
 
 Visual Godot tests are not substitutes for parity tests.
 

@@ -19,6 +19,10 @@ Use the actual repository structure, but preserve these boundaries:
 - Adapter layer: thin conversion boundary between Godot and deterministic
   logic.
 
+Godot, GDScript, C++, and GDExtension cannot gain semantic authority by
+implementation alone. Parity evidence and promotion claims route through
+`docs/architecture/authority_transfer_protocol.md`.
+
 ## Memory safety
 
 Native C++ and GDExtension memory-safety rules live in
@@ -140,7 +144,7 @@ Every ported behavior needs parity evidence against Python.
 Semantic parity requirements for native subsystems are defined in
 `docs/architecture/parity_protocol.md`. C++/GDExtension code remains
 provisional until parity evidence exists and the authority map records the
-transfer.
+transfer through `docs/architecture/authority_transfer_protocol.md`.
 
 Use the repo testing policy. Expected categories:
 

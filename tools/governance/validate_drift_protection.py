@@ -15,7 +15,9 @@ REQUIRED_FILES = (
     "docs/governance/technical_debt_register.md",
     "docs/architecture/authority_map.md",
     "docs/architecture/parity_protocol.md",
+    "docs/architecture/authority_transfer_protocol.md",
     "docs/architecture/utility_index.md",
+    "tools/governance/validate_authority_transfer.py",
     "tools/governance/validate_drift_protection.py",
     "tools/governance/validate_governance.py",
     "tools/governance/validate_project_contracts.py",
@@ -53,6 +55,7 @@ REACHABILITY_ROOTS = (
     "docs/architecture/authority_map.md",
     "docs/architecture/utility_index.md",
     "docs/architecture/parity_protocol.md",
+    "docs/architecture/authority_transfer_protocol.md",
     "docs/governance/drift_protection_map.md",
 )
 
@@ -70,6 +73,7 @@ REACHABILITY_ALLOWLIST = {
 VALIDATORS = (
     "validate_workspace_bundle.py",
     "validate_technical_debt.py",
+    "validate_authority_transfer.py",
     "validate_drift_protection.py",
     "validate_project_contracts.py",
     "validate_config_authority.py",
@@ -228,6 +232,11 @@ def check_workspace_bundle_consistency(root: Path = ROOT) -> CheckResult:
             "workspace bundle MANIFEST.md does not list drift_protection_policy.md"
         )
     if bundle_root.exists():
+        transfer_protocol = bundle_root / "authority_transfer_protocol.md"
+        if transfer_protocol.exists():
+            failures.append(
+                "authority-transfer protocol must not live in workspace bundle"
+            )
         actual_markdown = {path.name for path in bundle_root.glob("*.md")}
         for filename in sorted(actual_markdown - listed):
             failures.append(f"workspace bundle markdown file is not listed: {filename}")

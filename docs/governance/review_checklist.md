@@ -75,7 +75,10 @@ This checklist extends the reusable workspace governance in
 - [ ] Disagreements resolved in favor of Python unless an explicit semantic
       change was approved.
 - [ ] Godot visual correctness was not treated as semantic parity.
+- [ ] Any claim of transferred authority has a completed
+      `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.
+- [ ] Transfer review includes fallback path and known exclusions.
 
 ## Godot semantic boundary
 

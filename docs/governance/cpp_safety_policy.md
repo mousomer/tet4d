@@ -9,7 +9,8 @@ This policy applies to native C++ and GDExtension code used by the Godot
 migration.
 
 It does not make C++ the semantic authority. Python remains the semantic oracle
-until parity evidence and the authority map say otherwise.
+until parity evidence, `docs/architecture/authority_transfer_protocol.md`, and
+the authority map say otherwise.
 
 ## Memory ownership
 
@@ -74,4 +75,6 @@ A native subsystem is provisional until:
 1. Python behavior is identified.
 2. Parity tests or golden traces exist.
 3. Native implementation passes parity checks.
-4. `docs/architecture/authority_map.md` is updated.
+4. `docs/architecture/authority_transfer_protocol.md` contains a completed
+   transfer record.
+5. `docs/architecture/authority_map.md` is updated.

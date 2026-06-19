@@ -2965,6 +2965,83 @@ def _validate_drift_protection_governance() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_authority_transfer_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    required_paths = (
+        "docs/architecture/authority_transfer_protocol.md",
+        "tools/governance/validate_authority_transfer.py",
+    )
+    for rel in required_paths:
+        if not (PROJECT_ROOT / rel).exists():
+            issues.append(
+                ValidationIssue("missing", f"missing authority-transfer path: {rel}")
+            )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/governance/README.md",
+            (
+                "authority_transfer_protocol.md",
+                "validate_authority_transfer.py",
+            ),
+        ),
+        (
+            "docs/architecture/authority_map.md",
+            ("authority_transfer_protocol.md",),
+        ),
+        (
+            "docs/architecture/parity_protocol.md",
+            ("authority_transfer_protocol.md",),
+        ),
+        (
+            "docs/governance/drift_protection_map.md",
+            ("authority_transfer_protocol.md", "validate_authority_transfer.py"),
+        ),
+        (
+            "tools/governance/validate_governance.py",
+            ("validate_authority_transfer",),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("authority transfer", "transfer record", "fallback path"),
+        ),
+    )
+    for rel, tokens in required_docs:
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} missing authority-transfer governance token: {token}",
+                    )
+                )
+
+    bundle_root = PROJECT_ROOT / "docs/governance/workspace_bundle"
+    if bundle_root.exists():
+        for path in sorted(bundle_root.glob("*.md")):
+            text = path.read_text(encoding="utf-8").lower()
+            if "tet4d authority-transfer" in text or "transfer record" in text:
+                rel = path.relative_to(PROJECT_ROOT).as_posix()
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} must not define tet4d authority-transfer records",
+                    )
+                )
+    if (bundle_root / "authority_transfer_protocol.md").exists():
+        issues.append(
+            ValidationIssue(
+                "content",
+                "authority-transfer protocol must live outside workspace bundle",
+            )
+        )
+    return issues
+
+
 def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(_validate_governance_routing_required_files())
@@ -2981,6 +3058,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_workspace_bundle_governance())
     issues.extend(_validate_technical_debt_governance())
     issues.extend(_validate_drift_protection_governance())
+    issues.extend(_validate_authority_transfer_governance())
     return issues
 
 

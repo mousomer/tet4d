@@ -67,6 +67,19 @@ do not transfer semantic authority.
 Authority transfer is subsystem-specific. One C++ subsystem passing parity does
 not make the whole native port authoritative.
 
+## Authority transfer
+
+The existing Python implementation remains the current semantic oracle.
+
+Authority may move away from Python only through
+`docs/architecture/authority_transfer_protocol.md`.
+
+Parity evidence alone does not transfer authority.
+
+A document may not claim C++/GDExtension, Godot, or GDScript owns semantic
+gameplay behavior unless a completed transfer record exists and this authority
+map has been updated.
+
 ## Forbidden migration shortcuts
 
 - Reimplementing Python semantics in GDScript.

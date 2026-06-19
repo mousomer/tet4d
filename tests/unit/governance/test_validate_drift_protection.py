@@ -75,12 +75,14 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/testing_policy.md\n"
         "docs/architecture/authority_map.md\n"
         "docs/architecture/parity_protocol.md\n"
+        "docs/architecture/authority_transfer_protocol.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
         "config/generated drift\n"
         "tools/migration/export_config_bundle.py\n"
-        "tools/governance/generate_configuration_reference.py\n",
+        "tools/governance/generate_configuration_reference.py\n"
+        "tools/governance/validate_authority_transfer.py\n",
     )
     _write(
         root
@@ -103,6 +105,10 @@ def _valid_fixture(root: Path) -> None:
         root / "docs" / "architecture" / "parity_protocol.md",
         "Python oracle. Golden fixtures and golden traces. Comparison mode. "
         "Authority transfer and subsystem promotion.\n",
+    )
+    _write(
+        root / "docs" / "architecture" / "authority_transfer_protocol.md",
+        "Python remains the semantic oracle. Authority transfer protocol.\n",
     )
     _write(root / "docs" / "architecture" / "utility_index.md", "Utility index.\n")
     _write(
@@ -218,6 +224,37 @@ def test_governance_runner_missing_drift_validator_reference_fails(
     failures = _messages(drift.validate(tmp_path))
 
     assert any("validate_drift_protection.py" in item for item in failures)
+
+
+def test_governance_runner_missing_authority_transfer_validator_fails(
+    tmp_path: Path,
+) -> None:
+    _valid_fixture(tmp_path)
+    runner = tmp_path / "tools" / "governance" / "validate_governance.py"
+    runner.write_text(
+        runner.read_text(encoding="utf-8").replace("validate_authority_transfer", ""),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("validate_authority_transfer.py" in item for item in failures)
+
+
+def test_workspace_bundle_authority_transfer_protocol_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    _write(
+        tmp_path
+        / "docs"
+        / "governance"
+        / "workspace_bundle"
+        / "authority_transfer_protocol.md",
+        "Project authority transfer.\n",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("authority-transfer protocol" in item for item in failures)
 
 
 def test_authority_map_missing_python_oracle_concept_fails(tmp_path: Path) -> None:

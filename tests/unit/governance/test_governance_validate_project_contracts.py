@@ -615,6 +615,130 @@ def test_drift_protection_governance_accepts_baseline(
     assert contracts._validate_drift_protection_governance() == []
 
 
+def _write_minimal_authority_transfer_governance(root: Path) -> None:
+    _write_text(
+        root / "docs" / "architecture" / "authority_transfer_protocol.md",
+        "Authority transfer protocol.\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_authority_transfer.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_authority_transfer\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        "authority_transfer_protocol.md validate_authority_transfer.py\n",
+    )
+    _write_text(
+        root / "docs" / "architecture" / "authority_map.md",
+        "authority_transfer_protocol.md\n",
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_protocol.md",
+        "authority_transfer_protocol.md\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        "authority_transfer_protocol.md validate_authority_transfer.py\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "authority transfer transfer record fallback path\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "workspace_bundle" / "README.md",
+        "Reusable governance.\n",
+    )
+
+
+def test_authority_transfer_governance_requires_protocol(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_authority_transfer_governance()
+
+    assert any("authority_transfer_protocol.md" in issue.message for issue in issues)
+
+
+def test_authority_transfer_governance_requires_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_authority_transfer_governance(tmp_path)
+    (tmp_path / "tools" / "governance" / "validate_authority_transfer.py").unlink()
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_authority_transfer_governance()
+
+    assert any("validate_authority_transfer.py" in issue.message for issue in issues)
+
+
+def test_authority_transfer_governance_requires_router_links(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_authority_transfer_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_authority_transfer_governance()
+
+    assert any("authority_transfer_protocol.md" in issue.message for issue in issues)
+    assert any("validate_authority_transfer.py" in issue.message for issue in issues)
+
+
+def test_authority_transfer_governance_requires_architecture_links(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_authority_transfer_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "architecture" / "authority_map.md", "Map\n")
+    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "Parity\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_authority_transfer_governance()
+
+    assert any("authority_map.md" in issue.message for issue in issues)
+    assert any("parity_protocol.md" in issue.message for issue in issues)
+
+
+def test_authority_transfer_governance_requires_drift_surface(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_authority_transfer_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "drift_protection_map.md", "Map\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_authority_transfer_governance()
+
+    assert any("drift_protection_map.md" in issue.message for issue in issues)
+
+
+def test_authority_transfer_governance_rejects_workspace_record_text(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_authority_transfer_governance(tmp_path)
+    _write_text(
+        tmp_path / "docs" / "governance" / "workspace_bundle" / "README.md",
+        "tet4d authority-transfer transfer record\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_authority_transfer_governance()
+
+    assert any("workspace" in issue.message for issue in issues)
+
+
+def test_authority_transfer_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_authority_transfer_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_authority_transfer_governance() == []
+
+
 def test_config_authority_governance_requires_validator(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -19,6 +19,14 @@ data, and initial state.
 Visual similarity is not parity. A Godot scene appearing correct is not
 parity.
 
+## Parity versus authority transfer
+
+Parity evidence is necessary but not sufficient for authority transfer.
+
+A candidate implementation that passes parity checks remains provisional until
+`docs/architecture/authority_transfer_protocol.md` contains a completed
+transfer record and the authority map is updated.
+
 ## Python oracle
 
 The Python implementation is the oracle for:
