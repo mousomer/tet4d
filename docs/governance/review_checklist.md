@@ -41,6 +41,15 @@
 - [ ] Godot visual correctness was not treated as semantic parity.
 - [ ] Authority map updated if semantic ownership changed.
 
+## Godot semantic boundary
+
+- [ ] GDScript does not compute legal moves, topology transitions, collision,
+      gravity, rotation validity, scoring, trace correctness, or replay
+      correctness.
+- [ ] Godot display/replay/probe code treats semantic state as input, not
+      locally owned truth.
+- [ ] Any semantic-boundary validator suppression has a narrow accepted reason.
+
 ## Config
 
 - [ ] Nontrivial constants are routed through config policy.

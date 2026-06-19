@@ -46,6 +46,16 @@ GDScript may:
 - display diagnostics
 - manage menus and scenes
 
+## Godot semantic boundary
+
+Godot may display, animate, route, and request semantic state. Godot must not
+independently compute topology, movement, collision, gravity, rotation, scoring,
+trace correctness, or replay correctness.
+
+The semantic-boundary validator scans Godot scripts for suspicious local rule
+computation. Legitimate display/routing cases may use a narrow suppression with
+a reason.
+
 ## No rewriting existing functions
 
 Migration must reuse, map, or wrap existing Python semantics. Do not rewrite

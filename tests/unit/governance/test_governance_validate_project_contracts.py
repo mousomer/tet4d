@@ -236,6 +236,32 @@ def _write_minimal_parity_governance(root: Path) -> None:
     )
 
 
+def _write_minimal_godot_semantic_boundary_governance(root: Path) -> None:
+    _write_text(root / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
+    _write_text(
+        root / "tools" / "governance" / "validate_godot_semantic_boundary.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        root / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_godot_semantic_boundary\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "godot_cpp_policy.md",
+        "## Godot semantic boundary\n"
+        "GDScript must not independently compute semantic state.\n",
+    )
+    _write_text(
+        root / "godot" / "AGENTS.md",
+        "Do not compute semantic truth in GDScript; use adapter APIs.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "## Godot semantic boundary\n"
+        "GDScript remains presentation. Check semantic-boundary validator suppressions.\n",
+    )
+
+
 def test_native_cpp_safety_governance_requires_style_files(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -377,6 +403,53 @@ def test_cpp_parity_protocol_governance_accepts_baseline(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
     assert contracts._validate_cpp_parity_protocol_governance() == []
+
+
+def test_godot_semantic_boundary_governance_requires_validator(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_godot_semantic_boundary_governance()
+
+    assert any(
+        "validate_godot_semantic_boundary.py" in issue.message for issue in issues
+    )
+
+
+def test_godot_semantic_boundary_governance_requires_doc_tokens(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_godot_semantic_boundary.py",
+        "def main():\n    return 0\n",
+    )
+    _write_text(
+        tmp_path / "tools" / "governance" / "validate_governance.py",
+        "from tools.governance import validate_godot_semantic_boundary\n",
+    )
+    _write_text(tmp_path / "docs" / "governance" / "godot_cpp_policy.md", "Godot\n")
+    _write_text(tmp_path / "godot" / "AGENTS.md", "Godot\n")
+    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Godot\n")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_godot_semantic_boundary_governance()
+
+    assert any("semantic-boundary token" in issue.message for issue in issues)
+
+
+def test_godot_semantic_boundary_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_godot_semantic_boundary_governance(tmp_path)
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_godot_semantic_boundary_governance() == []
 
 
 def test_governance_directives_include_staged_migration_contract() -> None:

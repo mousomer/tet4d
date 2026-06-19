@@ -119,11 +119,15 @@ def _checks() -> tuple[GovernanceCheck, ...]:
     from tools.governance import check_policy_runtime_rules
     from tools.governance import check_risk_gates
     from tools.governance import check_wheel_reuse_rules
+    from tools.governance import validate_godot_semantic_boundary
     from tools.governance import validate_native_cpp_tooling
     from tools.governance import validate_project_contracts
 
     return (
         GovernanceCheck("contracts", validate_project_contracts.main),
+        GovernanceCheck(
+            "godot_semantic_boundary", validate_godot_semantic_boundary.main
+        ),
         GovernanceCheck("native_cpp_tooling", validate_native_cpp_tooling.main),
         GovernanceCheck("menu_graph", lint_menu_graph.main),
         GovernanceCheck("risk_gates", check_risk_gates.main),

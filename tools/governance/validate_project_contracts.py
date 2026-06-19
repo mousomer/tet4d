@@ -2544,6 +2544,58 @@ def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_godot_semantic_boundary_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    if not (PROJECT_ROOT / "godot").exists():
+        return issues
+
+    validator_rel = "tools/governance/validate_godot_semantic_boundary.py"
+    if not (PROJECT_ROOT / validator_rel).exists():
+        issues.append(
+            ValidationIssue(
+                "missing", f"missing Godot semantic-boundary validator: {validator_rel}"
+            )
+        )
+
+    governance = _read_text("tools/governance/validate_governance.py", issues)
+    if governance is not None and "validate_godot_semantic_boundary" not in governance:
+        issues.append(
+            ValidationIssue(
+                "content",
+                "tools/governance/validate_governance.py must run Godot semantic-boundary validation",
+            )
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/governance/godot_cpp_policy.md",
+            ("semantic boundary", "gdscript", "independently compute"),
+        ),
+        (
+            "godot/AGENTS.md",
+            ("semantic truth", "gdscript", "adapter"),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("godot semantic boundary", "gdscript", "semantic-boundary validator"),
+        ),
+    )
+    for rel, tokens in required_docs:
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{rel} missing Godot semantic-boundary token: {token}",
+                    )
+                )
+    return issues
+
+
 def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     if not _is_real_native_tree():
@@ -2635,6 +2687,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_governance_authority_inversion())
     issues.extend(_validate_native_cpp_safety_governance())
     issues.extend(_validate_cpp_parity_protocol_governance())
+    issues.extend(_validate_godot_semantic_boundary_governance())
     return issues
 
 
