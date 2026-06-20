@@ -29,6 +29,7 @@ def _valid_fixture(root: Path) -> None:
         root / "AGENTS.md",
         "docs/governance/workspace_bundle/programming_policy.md\n"
         "docs/governance/workspace_bundle/drift_protection_policy.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/authority_map.md\n",
     )
     _write(root / "godot" / "AGENTS.md", "Godot UI only.\n")
@@ -43,6 +44,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
@@ -97,6 +99,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -131,6 +134,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -158,6 +162,18 @@ def _valid_fixture(root: Path) -> None:
         "Metadata-only fixture. "
         "Exact comparison only. "
         "This slice does not transfer authority.\n",
+    )
+    _write(
+        root
+        / "docs"
+        / "architecture"
+        / "parity_evidence_review_and_third_slice_selection.md",
+        "Stage 19 parity evidence review and third-slice selection. "
+        "Python remains the semantic oracle. "
+        "Reviewed the first pilot and Stage 18 evidence. "
+        "Topology identifier normalization only. "
+        "This review does not transfer authority. "
+        "Stage 20 implementation may only implement topology identifier normalization.\n",
     )
     _write(
         root
@@ -198,6 +214,8 @@ def _valid_fixture(root: Path) -> None:
         "Stage 18 trace metadata identity/digest parity evidence and "
         "implementation details live in "
         "docs/architecture/trace_metadata_identity_digest_parity.md. "
+        "Stage 19 evidence review and third-slice selection live in "
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md. "
         "docs/architecture/second_parity_slice_candidate_selection.md.\n",
     )
     _write(
@@ -211,7 +229,8 @@ def _valid_fixture(root: Path) -> None:
         "This evidence does not transfer authority. "
         "Promotion gates are required before a second parity slice. "
         "selected Stage 18 trace metadata identity/digest parity "
-        "implementation doc docs/architecture/trace_metadata_identity_digest_parity.md.\n",
+        "implementation doc docs/architecture/trace_metadata_identity_digest_parity.md. "
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md.\n",
     )
     _write(
         root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",
@@ -646,6 +665,30 @@ def test_second_parity_selection_missing_no_transfer_wording_fails(
     assert any(
         "candidate selection does not transfer authority" in item for item in failures
     )
+
+
+def test_parity_evidence_review_missing_stage20_boundary_fails(
+    tmp_path: Path,
+) -> None:
+    _valid_fixture(tmp_path)
+    review_doc = (
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_evidence_review_and_third_slice_selection.md"
+    )
+    review_doc.write_text(
+        "Stage 19 parity evidence review and third-slice selection. "
+        "Python remains the semantic oracle. "
+        "Reviewed the first pilot and Stage 18 evidence. "
+        "Topology identifier normalization only. "
+        "This review does not transfer authority.\n",
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("Stage 20 boundary" in item for item in failures)
 
 
 def test_pr_template_missing_review_concept_fails(tmp_path: Path) -> None:

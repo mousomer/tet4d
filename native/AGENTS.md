@@ -11,6 +11,8 @@ See `docs/architecture/second_parity_slice_candidate_selection.md` before
 Stage 18 parity work.
 See `docs/architecture/trace_metadata_identity_digest_parity.md` for the
 Stage 18 implementation boundary.
+See `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+for Stage 19 review and third-slice selection.
 See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
 See `docs/architecture/authority_map.md` for semantic authority.
 

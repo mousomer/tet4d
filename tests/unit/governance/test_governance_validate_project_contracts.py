@@ -214,9 +214,14 @@ def _write_minimal_native_tooling_governance(root: Path) -> None:
 
 
 def _write_minimal_parity_governance(root: Path) -> None:
-    _write_text(root / "AGENTS.md", "Python semantic oracle. Godot. C++. Parity.\n")
+    _write_text(
+        root / "AGENTS.md",
+        "Python semantic oracle. Godot. C++. Parity.\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
+    )
     _write_text(root / "docs" / "WORKFLOW_CODEX.md", "Workflow.\n")
     _write_text(root / "godot" / "AGENTS.md", "Godot UI only.\n")
+    _write_text(root / "native" / "AGENTS.md", "Native C++ only.\n")
     _write_text(
         root / "docs" / "architecture" / "parity_protocol.md",
         "\n".join(
@@ -233,13 +238,16 @@ def _write_minimal_parity_governance(root: Path) -> None:
                 "See docs/architecture/parity_pilot_audit_and_promotion_gates.md before a second parity slice.",
                 "Stage 18 may only implement docs/architecture/second_parity_slice_candidate_selection.md.",
                 "Candidate selection does not transfer authority.",
+                "Stage 19 evidence review and third-slice selection live in docs/architecture/parity_evidence_review_and_third_slice_selection.md.",
             ]
         ),
     )
     _write_text(
         root / "docs" / "architecture" / "authority_map.md",
         "See docs/architecture/parity_protocol.md. "
-        "Authority transfer is subsystem-specific.\n",
+        "Authority transfer is subsystem-specific. "
+        "The parity evidence review and third-slice candidate selection is provisional parity-planning work for topology identifier normalization only; it does not change authority. "
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
     )
     _write_text(
         root / "docs" / "governance" / "testing_policy.md",
@@ -256,7 +264,10 @@ def _write_minimal_parity_governance(root: Path) -> None:
         "## Parity / authority transfer\n"
         "- Python oracle identified.\n"
         "- Godot visual checks are not semantic parity.\n"
-        "- First parity pilot evidence was documented as process-only.\n",
+        "- First parity pilot evidence was documented as process-only.\n"
+        "- The parity evidence review and third-slice selection doc was checked.\n"
+        "- docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
+        "- Stage 19 records the reviewed evidence, chosen candidate, and Stage 20 boundary.\n",
     )
     _write_text(
         root / "docs" / "governance" / "README.md",
@@ -264,7 +275,30 @@ def _write_minimal_parity_governance(root: Path) -> None:
         "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "Testing/parity\n",
+    )
+    _write_text(
+        root / "docs" / "DOCUMENTATION_MAP.md",
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "codex_policy.md",
+        "Parity evidence review and third-slice selection tasks must also report the reviewed evidence, chosen candidate, explicit exclusions, Stage 20 boundary, authority boundary, routing, and validation.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        "docs/architecture/authority_map.md\n"
+        "docs/architecture/parity_protocol.md\n"
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/trace_metadata_identity_digest_parity.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
+        "docs/governance/README.md\n"
+        "docs/governance/review_checklist.md\n"
+        "docs/DOCUMENTATION_MAP.md\n"
+        "AGENTS.md\n"
+        "native/AGENTS.md\n",
     )
     _write_text(
         root / "docs" / "architecture" / "first_subsystem_parity_pilot.md",
@@ -286,6 +320,7 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
                 "Current harness path tools/migration/first_subsystem_parity_pilot.py is accepted for the first pilot.",
                 "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.",
                 "Selected candidate docs/architecture/second_parity_slice_candidate_selection.md satisfies promotion gates.",
+                "docs/architecture/parity_evidence_review_and_third_slice_selection.md routes the Stage 19 review.",
             ]
         ),
     )
@@ -293,6 +328,7 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
         root / "docs" / "governance" / "drift_protection_map.md",
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "selected candidate\n"
         "forbidden second-slice areas\n"
         "tools/migration/first_subsystem_parity_pilot.py\n"
@@ -316,16 +352,19 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
     )
     _write_text(
         root / "docs" / "DOCUMENTATION_MAP.md",
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n",
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
     )
     _write_text(
         root / "AGENTS.md",
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "second parity slice requires promotion-gate compliance\n",
     )
     _write_text(
         root / "native" / "AGENTS.md",
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "provisional evidence\n"
         "strict parity behavior\n",
     )
@@ -354,6 +393,7 @@ def _write_minimal_second_parity_selection_governance(root: Path) -> None:
     _write_text(
         root / "docs" / "architecture" / "parity_protocol.md",
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "Stage 18 may only implement the selected candidate.\n"
         "Candidate selection does not transfer authority.\n",
         append=True,
@@ -361,35 +401,41 @@ def _write_minimal_second_parity_selection_governance(root: Path) -> None:
     _write_text(
         root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "selected candidate\n",
         append=True,
     )
     _write_text(
         root / "docs" / "governance" / "README.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
         append=True,
     )
     _write_text(
         root / "docs" / "governance" / "drift_protection_map.md",
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "selected candidate\n"
         "forbidden second-slice areas\n",
         append=True,
     )
     _write_text(
         root / "docs" / "DOCUMENTATION_MAP.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
         append=True,
     )
     _write_text(
         root / "AGENTS.md",
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "Stage 18 may only implement the selected candidate.\n",
         append=True,
     )
     _write_text(
         root / "native" / "AGENTS.md",
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "selected candidate\n"
         "native work remains provisional\n",
         append=True,
@@ -1392,6 +1438,18 @@ def test_parity_pilot_audit_governance_rejects_authority_transfer_claim(
         tmp_path
         / "docs"
         / "architecture"
+        / "parity_evidence_review_and_third_slice_selection.md",
+        "Stage 19 parity evidence review and third-slice selection.\n"
+        "Python remains the semantic oracle.\n"
+        "Reviewed the first pilot and Stage 18 evidence.\n"
+        "Topology identifier normalization only.\n"
+        "This review does not transfer authority.\n"
+        "Stage 20 implementation may only implement topology identifier normalization.\n",
+    )
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
         / "parity_pilot_audit_and_promotion_gates.md",
         "Python remains the semantic oracle.\n"
         "C++ becomes authoritative after this audit.\n"
@@ -1773,6 +1831,44 @@ def test_second_parity_selection_governance_accepts_baseline(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
     assert contracts._validate_second_parity_slice_candidate_selection() == []
+
+
+def test_parity_evidence_review_governance_requires_doc(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_review_and_third_slice_selection()
+
+    assert any("parity evidence review doc" in issue.message for issue in issues)
+
+
+def test_parity_evidence_review_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_evidence_review_and_third_slice_selection.md",
+        "Stage 19 parity evidence review and third-slice selection.\n"
+        "Python remains the semantic oracle.\n"
+        "First pilot evidence reviewed.\n"
+        "Stage 18 trace metadata identity/digest parity evidence reviewed.\n"
+        "Topology identifier normalization only.\n"
+        "Explicit exclusions: seam traversal, neighbor lookup, movement semantics, rendering/projection/view semantics, endgame physics.\n"
+        "This review does not transfer authority.\n"
+        "Stage 20 implementation may only implement topology identifier normalization.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_parity_evidence_review_and_third_slice_selection() == []
 
 
 def test_godot_semantic_boundary_governance_requires_validator(

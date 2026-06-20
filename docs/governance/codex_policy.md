@@ -44,6 +44,10 @@ results.
 Second parity slice tasks must also report the selected candidate, explicit
 exclusions, Stage 18 boundary, authority boundary, routing, and validation.
 
+Parity evidence review and third-slice selection tasks must also report the
+reviewed evidence, chosen candidate, explicit exclusions, Stage 20 boundary,
+authority boundary, routing, and validation.
+
 Stage 18 implementation tasks must also report the committed implementation
 doc, exact fixture set, comparison mode, native command, and any provisional
 native fallback behavior.

@@ -121,10 +121,17 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
 - [ ] Stage 18 preserves explicit exclusions for topology movement, rotation,
       drop/collision, lock/clear/gameplay loop, rendering/projection/view
       semantics, and endgame physics.
+- [ ] The Stage 19 review doc
+      `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+      was checked before the next parity slice was selected.
 - [ ] Candidate selection and any second-slice evidence were not treated as
       authority transfer.
 - [ ] Review verified Python oracle, fixture set, comparison command, and
       strict/default parity behavior.
+- [ ] The parity evidence review and third-slice selection doc was checked
+      before approving the next parity slice.
+- [ ] Stage 19 records the reviewed evidence, chosen candidate, and Stage 20
+      boundary without claiming authority transfer.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

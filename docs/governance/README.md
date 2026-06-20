@@ -25,6 +25,8 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/architecture/second_parity_slice_candidate_selection.md`
 - trace metadata identity/digest parity:
   `docs/architecture/trace_metadata_identity_digest_parity.md`
+- parity evidence review and third-slice selection:
+  `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -107,6 +109,8 @@ Drift validation is handled by
   `docs/architecture/second_parity_slice_candidate_selection.md`
 - trace metadata identity/digest parity:
   `docs/architecture/trace_metadata_identity_digest_parity.md`
+- parity evidence review and third-slice selection:
+  `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
 - authority-transfer protocol:
   `docs/architecture/authority_transfer_protocol.md`
 - authority-transfer validator:
@@ -139,8 +143,9 @@ Promotion also requires
 not transfer authority. First parity-pilot evidence is process-only and does
 not transfer authority. Governance validation also checks that parity routing
 and promotion-gate routing remain intact. Governance validation also checks
-second parity slice candidate-selection routing and the trace metadata
-identity/digest parity route.
+ second parity slice candidate-selection routing, the trace metadata
+ identity/digest parity route, and the parity evidence review and third-slice
+ selection route.
 
 ## Conflict rule
 

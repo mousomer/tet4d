@@ -61,6 +61,10 @@ The parity-pilot audit and promotion gates are evidence-only process routing and
 do not change authority.
 The second parity slice candidate selection is provisional parity-planning work
 for trace metadata identity/digest only; it does not change authority.
+The parity evidence review and third-slice candidate selection is provisional
+parity-planning work for topology identifier normalization only; it does not
+change authority. The routed review doc is
+`docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
 
 ## Authority transfer requires parity
 

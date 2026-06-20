@@ -13,6 +13,7 @@ REQUIRED_FILES = (
     "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
     "docs/architecture/second_parity_slice_candidate_selection.md",
     "docs/architecture/trace_metadata_identity_digest_parity.md",
+    "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -569,6 +570,50 @@ def check_trace_metadata_identity_digest_parity_drift(root: Path = ROOT) -> Chec
     return CheckResult("trace metadata identity/digest parity drift", failures)
 
 
+def check_parity_evidence_review_and_third_slice_selection_drift(
+    root: Path = ROOT,
+) -> CheckResult:
+    failures: list[str] = []
+    doc_rel = "docs/architecture/parity_evidence_review_and_third_slice_selection.md"
+    doc_text = read_text(root, doc_rel, failures)
+    parity_protocol = read_text(root, "docs/architecture/parity_protocol.md", failures)
+    governance_text = read_text(root, "docs/governance/README.md", failures)
+    drift_text = read_text(root, "docs/governance/drift_protection_map.md", failures)
+
+    if doc_rel not in parity_protocol:
+        failures.append(
+            "parity_protocol.md must route to parity evidence review and third-slice selection"
+        )
+    if doc_rel not in governance_text and doc_rel not in drift_text:
+        failures.append(
+            "parity evidence review and third-slice selection must be reachable from governance README or drift map"
+        )
+    if doc_rel not in drift_text:
+        failures.append(
+            "drift_protection_map.md must list parity evidence review and third-slice selection as a parity drift surface"
+        )
+    if doc_text:
+        lower = doc_text.lower()
+        if "does not transfer authority" not in lower:
+            failures.append(
+                f"{doc_rel} must state that the review does not transfer authority"
+            )
+        if "topology identifier normalization" not in lower:
+            failures.append(
+                f"{doc_rel} must name topology identifier normalization as the selected third slice"
+            )
+        if "stage 20" not in lower:
+            failures.append(f"{doc_rel} must state the Stage 20 boundary")
+        if "first pilot" not in lower or "stage 18" not in lower:
+            failures.append(
+                f"{doc_rel} must reference the reviewed first pilot and Stage 18 evidence"
+            )
+
+    return CheckResult(
+        "parity evidence review and third-slice selection drift", failures
+    )
+
+
 def validate(root: Path = ROOT) -> list[CheckResult]:
     return [
         check_required_files(root),
@@ -583,6 +628,7 @@ def validate(root: Path = ROOT) -> list[CheckResult]:
         check_parity_pilot_drift(root),
         check_second_parity_selection_drift(root),
         check_trace_metadata_identity_digest_parity_drift(root),
+        check_parity_evidence_review_and_third_slice_selection_drift(root),
     ]
 
 

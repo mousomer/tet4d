@@ -52,6 +52,7 @@ Surfaces:
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - `docs/architecture/second_parity_slice_candidate_selection.md`
 - `docs/architecture/trace_metadata_identity_digest_parity.md`
+- `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -79,12 +80,41 @@ Required invariants:
   `docs/architecture/second_parity_slice_candidate_selection.md`.
 - Stage 18 implementation evidence must stay within
   `docs/architecture/trace_metadata_identity_digest_parity.md`.
+- The third-slice review must stay within
+  `docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
+- The chosen third slice is topology identifier normalization only.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
 - Native tooling CI readiness remains a quality gate and does not imply C++
   semantic authority.
 - Trace metadata parity compares exact identity and exact digest only.
+
+## Parity evidence review drift
+
+Surfaces:
+
+- `docs/architecture/parity_protocol.md`
+- `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
+- `docs/architecture/authority_map.md`
+- `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+- `docs/governance/README.md`
+- `docs/governance/review_checklist.md`
+- `docs/DOCUMENTATION_MAP.md`
+- `AGENTS.md`
+- `native/AGENTS.md`
+
+Required invariants:
+
+- The review compares the first pilot and Stage 18 evidence before choosing
+  the third slice.
+- The review document names topology identifier normalization as the selected
+  third-slice candidate.
+- The review stays process-only and does not transfer authority.
+- Stage 20 implementation must remain within the selected candidate and avoid
+  seam traversal, neighbor lookup, movement semantics, rotation, collision,
+  gravity/drop, lock/clear/gameplay loop, rendering/projection/view
+  semantics, and endgame physics.
 
 ## Parity pilot drift
 

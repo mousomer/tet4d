@@ -184,6 +184,11 @@ Stage 18 trace metadata identity/digest parity evidence and implementation
 details live in
 `docs/architecture/trace_metadata_identity_digest_parity.md`.
 
+Stage 19 evidence review and third-slice selection live in
+`docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
+That review compares the first pilot and Stage 18 evidence, then selects the
+next safe slice without transferring authority.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

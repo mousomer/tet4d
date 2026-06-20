@@ -48,8 +48,11 @@ a migration overlay, not a replacement root constitution.
    `docs/architecture/trace_metadata_identity_digest_parity.md` for the Stage
    18 implementation boundary. No authority transfer occurs without
    `docs/architecture/authority_transfer_protocol.md`.
-10. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
-11. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
+10. For parity evidence review or third-slice selection, read
+    `docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
+    That review remains process-only and does not transfer authority.
+11. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
+12. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
 
 ## Instruction routing
 
