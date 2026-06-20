@@ -88,9 +88,15 @@ back/quit key across live shells, removes `Q` as a live quit/back alias, keeps
 visible quit/back buttons clickable, and preserves Live 4D `Q/E` as `w-` /
 `w+` only; this remains a UI/input/HUD-copy batch and must not change gameplay
 semantics.
-
 Current active follow-ups:
 
+- Dependency / utility reuse governance now has a mechanical stage: keep
+  `docs/architecture/utility_index.md`, `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`,
+  `tools/governance/validate_utility_reuse.py`,
+  `tools/governance/check_wheel_reuse_rules.py`, and
+  `tools/governance/check_dedup_dead_code_rules.py` linked through the
+  governance router and review checklist. Duplicate-helper findings remain
+  advisory by default unless strict utility-reuse mode is explicitly enabled.
 - Project drift protection now has a mechanical stage: keep
   `docs/governance/drift_protection_map.md`,
   `tools/governance/validate_drift_protection.py`,

@@ -10,6 +10,9 @@ already satisfy correctness, performance, licensing, and maintenance needs.
 Do not implement custom functionality if an existing solution already covers
 the need with acceptable correctness, performance, licensing, and maintenance.
 
+Before adding a reusable helper, search existing project utilities and the
+utility index at `docs/architecture/utility_index.md`.
+
 ## Scope
 
 This policy applies to:
@@ -53,6 +56,11 @@ When taking an exception, include all of the following:
 1. PR review rejects reinventions without the required exception block.
 2. CI may add a lint note that flags common reinventions, for example:
    ad-hoc JSON parsing, ad-hoc CLI parsing, and ad-hoc bool parsing.
+3. `tools/governance/check_wheel_reuse_rules.py` enforces configured wheel
+   reuse rules, `tools/governance/check_dedup_dead_code_rules.py` covers
+   configured duplicate/dead-code policy, and
+   `tools/governance/validate_utility_reuse.py` checks utility-index routing
+   plus advisory duplicate-helper names.
 
 ## Examples
 
