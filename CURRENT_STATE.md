@@ -506,7 +506,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.71`
+1. `delivery_size_pressure = 2.72`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -519,7 +519,7 @@ Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
 2. `tests/unit/render/test_locked_cell_explosion.py`: `3466` real LOC
-3. `tools/governance/validate_project_contracts.py`: `3249` real LOC
+3. `tools/governance/validate_project_contracts.py`: `3330` real LOC
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3039` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
 6. `scripts/arch_metrics.py`: `1890` real LOC
