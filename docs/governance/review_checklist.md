@@ -110,6 +110,13 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
       authority transfer.
 - [ ] The first-pilot audit and promotion gates were checked before approving a
       second parity slice.
+- [ ] Stage 18 implements only the selected candidate in
+      `docs/architecture/second_parity_slice_candidate_selection.md`.
+- [ ] Stage 18 preserves explicit exclusions for topology movement, rotation,
+      drop/collision, lock/clear/gameplay loop, rendering/projection/view
+      semantics, and endgame physics.
+- [ ] Candidate selection and any second-slice evidence were not treated as
+      authority transfer.
 - [ ] Review verified Python oracle, fixture set, comparison command, and
       strict/default parity behavior.
 - [ ] Any claim of transferred authority has a completed

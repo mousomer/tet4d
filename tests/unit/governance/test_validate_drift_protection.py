@@ -41,6 +41,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/drift_protection_map.md\n"
         "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
@@ -93,10 +94,13 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/authority_transfer_protocol.md\n"
         "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
         "config/generated drift\n"
+        "selected candidate\n"
+        "forbidden second-slice areas\n"
         "tools/migration/first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tools/migration/export_config_bundle.py\n"
@@ -138,7 +142,8 @@ def _valid_fixture(root: Path) -> None:
         "Authority transfer and subsystem promotion. "
         "First subsystem parity pilot stays evidence only. "
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md "
-        "before a second parity slice.\n",
+        "before a second parity slice. "
+        "docs/architecture/second_parity_slice_candidate_selection.md.\n",
     )
     _write(
         root / "docs" / "architecture" / "authority_transfer_protocol.md",
@@ -150,6 +155,17 @@ def _valid_fixture(root: Path) -> None:
         "Python remains the semantic oracle. "
         "This evidence does not transfer authority. "
         "Promotion gates are required before a second parity slice.\n",
+    )
+    _write(
+        root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",
+        "Chosen candidate: trace metadata identity/digest. "
+        "Decision status: selected. "
+        "Stage 18 implementation allowed: yes. "
+        "Python remains the semantic oracle. "
+        "Native/C++ remains provisional. "
+        "Candidate selection does not transfer authority. "
+        "Explicit exclusions: topology movement, rotation, drop/collision, "
+        "rendering/projection/view, endgame physics.\n",
     )
     _write(root / "docs" / "architecture" / "utility_index.md", "Utility index.\n")
     _write(
@@ -496,6 +512,83 @@ def test_parity_audit_missing_no_transfer_wording_fails(tmp_path: Path) -> None:
     failures = _messages(drift.validate(tmp_path))
 
     assert any("no-authority-transfer wording" in item for item in failures)
+
+
+def test_second_parity_selection_missing_parity_link_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    parity_doc = tmp_path / "docs" / "architecture" / "parity_protocol.md"
+    parity_doc.write_text(
+        parity_doc.read_text(encoding="utf-8").replace(
+            "docs/architecture/second_parity_slice_candidate_selection.md", ""
+        ),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("second parity slice selection" in item for item in failures)
+
+
+def test_second_parity_selection_missing_governance_reachability_fails(
+    tmp_path: Path,
+) -> None:
+    _valid_fixture(tmp_path)
+    router = tmp_path / "docs" / "governance" / "README.md"
+    router.write_text(
+        router.read_text(encoding="utf-8").replace(
+            "docs/architecture/second_parity_slice_candidate_selection.md\n", ""
+        ),
+        encoding="utf-8",
+    )
+    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
+    drift_map.write_text(
+        drift_map.read_text(encoding="utf-8").replace(
+            "docs/architecture/second_parity_slice_candidate_selection.md\n", ""
+        ),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any(
+        "reachable from governance README or drift map" in item for item in failures
+    )
+
+
+def test_second_parity_selection_missing_drift_map_listing_fails(
+    tmp_path: Path,
+) -> None:
+    _valid_fixture(tmp_path)
+    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
+    drift_map.write_text(
+        drift_map.read_text(encoding="utf-8").replace(
+            "docs/architecture/second_parity_slice_candidate_selection.md\n", ""
+        ),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("drift_protection_map.md must list" in item for item in failures)
+
+
+def test_second_parity_selection_missing_no_transfer_wording_fails(
+    tmp_path: Path,
+) -> None:
+    _valid_fixture(tmp_path)
+    selection_doc = (
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "second_parity_slice_candidate_selection.md"
+    )
+    selection_doc.write_text("Chosen candidate only.\n", encoding="utf-8")
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any(
+        "candidate selection does not transfer authority" in item for item in failures
+    )
 
 
 def test_pr_template_missing_review_concept_fails(tmp_path: Path) -> None:

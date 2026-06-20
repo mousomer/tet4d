@@ -11,8 +11,11 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def _write_text(path: Path, content: str) -> None:
+def _write_text(path: Path, content: str, *, append: bool = False) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    if append and path.exists():
+        path.write_text(path.read_text(encoding="utf-8") + content, encoding="utf-8")
+        return
     path.write_text(content, encoding="utf-8")
 
 
@@ -228,6 +231,8 @@ def _write_minimal_parity_governance(root: Path) -> None:
                 "First subsystem parity pilot stays evidence only.",
                 "Pilot authority routes through docs/architecture/first_subsystem_parity_pilot.md.",
                 "See docs/architecture/parity_pilot_audit_and_promotion_gates.md before a second parity slice.",
+                "Stage 18 may only implement docs/architecture/second_parity_slice_candidate_selection.md.",
+                "Candidate selection does not transfer authority.",
             ]
         ),
     )
@@ -258,6 +263,7 @@ def _write_minimal_parity_governance(root: Path) -> None:
         "docs/architecture/parity_protocol.md\n"
         "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "Testing/parity\n",
     )
     _write_text(
@@ -279,12 +285,16 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
                 "Forbidden: full topology movement, rotation semantics, endgame physics.",
                 "Current harness path tools/migration/first_subsystem_parity_pilot.py is accepted for the first pilot.",
                 "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.",
+                "Selected candidate docs/architecture/second_parity_slice_candidate_selection.md satisfies promotion gates.",
             ]
         ),
     )
     _write_text(
         root / "docs" / "governance" / "drift_protection_map.md",
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "selected candidate\n"
+        "forbidden second-slice areas\n"
         "tools/migration/first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n",
     )
@@ -293,6 +303,12 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
         "first-pilot audit and promotion gates\n"
         "strict/default parity behavior\n"
         "second parity slice\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "selected candidate\nStage 18\nauthority transfer\n",
+        append=True,
     )
     _write_text(
         root / "docs" / "architecture" / "authority_transfer_protocol.md",
@@ -312,6 +328,71 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "provisional evidence\n"
         "strict parity behavior\n",
+    )
+
+
+def _write_minimal_second_parity_selection_governance(root: Path) -> None:
+    _write_text(
+        root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",
+        "\n".join(
+            [
+                "# Second Parity Slice Candidate Selection",
+                "Chosen candidate: trace metadata identity/digest.",
+                "Decision status: selected.",
+                "Stage 18 implementation allowed: yes.",
+                "Python remains the semantic oracle.",
+                "Native/C++ remains provisional.",
+                "Candidate selection does not transfer authority.",
+                "Passing a future second-slice parity check will still not transfer authority.",
+                "Comparison rule: exact digest equality.",
+                "Default mode is advisory.",
+                "Strict mode uses TET4D_STRICT_PARITY.",
+                "Explicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.",
+            ]
+        ),
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_protocol.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "Stage 18 may only implement the selected candidate.\n"
+        "Candidate selection does not transfer authority.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "selected candidate\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "selected candidate\n"
+        "forbidden second-slice areas\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "DOCUMENTATION_MAP.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n",
+        append=True,
+    )
+    _write_text(
+        root / "AGENTS.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "Stage 18 may only implement the selected candidate.\n",
+        append=True,
+    )
+    _write_text(
+        root / "native" / "AGENTS.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "selected candidate\n"
+        "native work remains provisional\n",
+        append=True,
     )
 
 
@@ -1452,6 +1533,246 @@ def test_parity_pilot_audit_governance_accepts_baseline(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
     assert contracts._validate_parity_pilot_audit_governance() == []
+
+
+def test_second_parity_selection_governance_requires_doc(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("second parity slice selection doc" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_python_oracle_statement(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "second_parity_slice_candidate_selection.md",
+        "Chosen candidate: trace metadata identity/digest.\n"
+        "Decision status: selected.\n"
+        "Stage 18 implementation allowed: yes.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("Python semantic oracle" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_rejects_authority_transfer_claim(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "second_parity_slice_candidate_selection.md",
+        "Chosen candidate: trace metadata identity/digest.\n"
+        "Decision status: selected.\n"
+        "Stage 18 implementation allowed: yes.\n"
+        "Python remains the semantic oracle.\n"
+        "Native/C++ remains provisional.\n"
+        "This selection transfers authority.\n"
+        "Explicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("no authority transfer" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_chosen_or_blocked_status(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    selection = (
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "second_parity_slice_candidate_selection.md"
+    )
+    selection.write_text(
+        selection.read_text(encoding="utf-8")
+        .replace("Chosen candidate: trace metadata identity/digest.\n", "")
+        .replace("Decision status: selected.\n", ""),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("decision status" in issue.message for issue in issues)
+    assert any("chosen or blocked candidate" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_stage18_decision(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    selection = (
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "second_parity_slice_candidate_selection.md"
+    )
+    selection.write_text(
+        selection.read_text(encoding="utf-8").replace(
+            "Stage 18 implementation allowed: yes.\n", ""
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("Stage 18 decision" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_explicit_exclusions(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    selection = (
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "second_parity_slice_candidate_selection.md"
+    )
+    selection.write_text(
+        selection.read_text(encoding="utf-8").replace(
+            "Explicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.",
+            "",
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("explicit exclusions" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_parity_protocol_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "Parity\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("parity_protocol.md" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_audit_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_pilot_audit_and_promotion_gates.md",
+        "Python remains the semantic oracle.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any(
+        "parity_pilot_audit_and_promotion_gates.md" in issue.message for issue in issues
+    )
+
+
+def test_second_parity_selection_requires_governance_router_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("docs/governance/README.md" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_drift_map_entry(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "drift_protection_map.md", "")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("drift_protection_map.md" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_agents_routing(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(tmp_path / "AGENTS.md", "AGENTS\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("AGENTS.md" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_requires_native_agents_warning(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_text(tmp_path / "native" / "AGENTS.md", "Native\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_second_parity_slice_candidate_selection()
+
+    assert any("native/AGENTS.md" in issue.message for issue in issues)
+
+
+def test_second_parity_selection_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_second_parity_slice_candidate_selection() == []
 
 
 def test_godot_semantic_boundary_governance_requires_validator(

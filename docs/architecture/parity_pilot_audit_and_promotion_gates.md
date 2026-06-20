@@ -141,6 +141,14 @@ Forbidden:
 - first pilot accepted as evidence mechanism: yes
 - dedicated `tools/parity/` migration needed now: no
 - next slice allowed now: yes, but only if every promotion gate above is met
+- selected Stage 18 candidate:
+  `docs/architecture/second_parity_slice_candidate_selection.md`
+- selected candidate satisfies promotion gates: yes, as trace metadata
+  identity/digest planning only
 - required follow-up before next slice: route the candidate slice to this audit,
   keep Python as oracle, keep native provisional, and add validator/test
   coverage for the new surface
+
+The selected candidate preserves the forbidden areas above. It does not allow
+topology movement, rotation, drop/collision, lock/clear/gameplay loop,
+rendering/projection/view semantics, or endgame physics work.

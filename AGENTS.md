@@ -42,8 +42,12 @@ a migration overlay, not a replacement root constitution.
    `docs/architecture/first_subsystem_parity_pilot.md`, and
    `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, and
    `docs/governance/README.md`.
-9. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
-10. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
+9. For Stage 18 parity work, read
+   `docs/architecture/second_parity_slice_candidate_selection.md`; Stage 18
+   may only implement the selected candidate, and no authority transfer occurs
+   without `docs/architecture/authority_transfer_protocol.md`.
+10. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
+11. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
 
 ## Instruction routing
 
@@ -87,6 +91,9 @@ a migration overlay, not a replacement root constitution.
   parity-pilot audit/gates doc before parity work.
 - A second parity slice requires promotion-gate compliance and does not
   transfer authority by itself.
+- Stage 18 parity work may only implement the selected candidate in
+  `docs/architecture/second_parity_slice_candidate_selection.md`.
+- Stage 18 may only implement the selected candidate.
 
 ## Done criteria
 

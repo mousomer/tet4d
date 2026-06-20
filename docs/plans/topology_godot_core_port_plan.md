@@ -119,6 +119,10 @@ traces.
 Before any second parity slice is added to support this plan, it must satisfy
 `docs/architecture/parity_pilot_audit_and_promotion_gates.md`. That gate is
 process-only and does not transfer authority.
+Stage 17 candidate selection lives in
+`docs/architecture/second_parity_slice_candidate_selection.md`; Stage 18 may
+only implement the selected trace metadata identity/digest candidate. Python
+remains the oracle and C++ remains provisional.
 
 ## 5. Proposed Staging
 

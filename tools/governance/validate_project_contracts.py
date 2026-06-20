@@ -2681,6 +2681,117 @@ def _validate_parity_pilot_audit_governance() -> list[ValidationIssue]:
     return issues
 
 
+def _validate_second_parity_slice_candidate_selection() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    selection_rel = "docs/architecture/second_parity_slice_candidate_selection.md"
+    if not (PROJECT_ROOT / selection_rel).exists():
+        issues.append(
+            ValidationIssue(
+                "missing", f"missing second parity slice selection doc: {selection_rel}"
+            )
+        )
+        return issues
+
+    selection_text = _read_text(selection_rel, issues)
+    if selection_text is not None:
+        _append_missing_concepts(
+            rel=selection_rel,
+            label="second parity slice selection",
+            text=selection_text,
+            concept_groups=(
+                ("Python semantic oracle", ("python remains the semantic oracle",)),
+                (
+                    "native provisional status",
+                    ("native/c++ remains provisional", "c++ remains provisional"),
+                ),
+                (
+                    "no authority transfer",
+                    (
+                        "candidate selection does not transfer authority",
+                        "will still not transfer authority",
+                    ),
+                ),
+                ("decision status", ("decision status",)),
+                ("Stage 18 decision", ("stage 18 implementation allowed",)),
+                (
+                    "chosen or blocked candidate",
+                    ("chosen candidate", "decision status: blocked"),
+                ),
+                (
+                    "explicit exclusions",
+                    ("explicit exclusions",),
+                ),
+                (
+                    "trace metadata candidate",
+                    ("trace metadata identity/digest", "comparison rule"),
+                ),
+                (
+                    "strict/default behavior",
+                    ("default mode", "strict mode", "tet4d_strict_parity"),
+                ),
+            ),
+            issues=issues,
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/parity_protocol.md",
+            (
+                "second_parity_slice_candidate_selection.md",
+                "stage 18 may",
+                "candidate selection does not transfer authority",
+            ),
+        ),
+        (
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
+            ("second_parity_slice_candidate_selection.md", "selected candidate"),
+        ),
+        (
+            "docs/governance/README.md",
+            ("second_parity_slice_candidate_selection.md",),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            ("selected candidate", "stage 18", "authority transfer"),
+        ),
+        (
+            "docs/governance/drift_protection_map.md",
+            (
+                "second_parity_slice_candidate_selection.md",
+                "selected candidate",
+                "forbidden second-slice areas",
+            ),
+        ),
+        (
+            "docs/DOCUMENTATION_MAP.md",
+            ("second_parity_slice_candidate_selection.md",),
+        ),
+        (
+            "AGENTS.md",
+            (
+                "second_parity_slice_candidate_selection.md",
+                "stage 18 may only implement the selected candidate",
+            ),
+        ),
+        (
+            "native/AGENTS.md",
+            (
+                "second_parity_slice_candidate_selection.md",
+                "selected candidate",
+                "native work remains provisional",
+            ),
+        ),
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            required_docs,
+            "second-parity-slice-selection",
+            issues,
+        )
+    )
+    return issues
+
+
 def _validate_godot_semantic_boundary_governance() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     if not (PROJECT_ROOT / "godot").exists():
@@ -3414,6 +3525,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_native_cpp_safety_governance())
     issues.extend(_validate_cpp_parity_protocol_governance())
     issues.extend(_validate_parity_pilot_audit_governance())
+    issues.extend(_validate_second_parity_slice_candidate_selection())
     issues.extend(_validate_godot_semantic_boundary_governance())
     issues.extend(_validate_config_authority_governance())
     issues.extend(_validate_utility_reuse_governance())

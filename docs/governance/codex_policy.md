@@ -41,6 +41,9 @@ Parity tasks must also report routing, authority boundary, Python oracle,
 fixture evidence, comparison command, strict/default behavior, and validation
 results.
 
+Second parity slice tasks must also report the selected candidate, explicit
+exclusions, Stage 18 boundary, authority boundary, routing, and validation.
+
 ## Task routing
 
 ### Python task

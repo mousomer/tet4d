@@ -167,7 +167,18 @@ authority.
 Pilot authority and routing live in
 `docs/architecture/first_subsystem_parity_pilot.md`.
 
-Future parity slices must also satisfy `docs/architecture/parity_pilot_audit_and_promotion_gates.md` before a second parity slice is added.
+Future parity slices must also satisfy
+`docs/architecture/parity_pilot_audit_and_promotion_gates.md` before a second
+parity slice is added.
+
+Stage 17 selected the only Stage 18 implementation candidate in
+`docs/architecture/second_parity_slice_candidate_selection.md`. Stage 18 may
+implement only that selected trace metadata identity/digest slice. Candidate
+selection does not transfer authority. This is the selected second parity
+slice boundary.
+
+Second parity slice selection: trace metadata identity/digest.
+Candidate selection does not transfer authority.
 
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without

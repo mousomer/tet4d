@@ -39,6 +39,9 @@ The implementation sequence is:
 Any second parity slice used by later stages must first satisfy
 `docs/architecture/parity_pilot_audit_and_promotion_gates.md`. That gate does
 not transfer authority away from Python.
+Stage 17 candidate selection is only a parity/migration process gate in
+`docs/architecture/second_parity_slice_candidate_selection.md`; it adds no
+gameplay, rendering, or live-shell implementation commitment.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native

@@ -11,6 +11,7 @@ REQUIRED_FILES = (
     ".github/pull_request_template.md",
     "docs/architecture/first_subsystem_parity_pilot.md",
     "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
+    "docs/architecture/second_parity_slice_candidate_selection.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -487,6 +488,40 @@ def check_parity_pilot_drift(root: Path = ROOT) -> CheckResult:
     return CheckResult("parity pilot drift", failures)
 
 
+def check_second_parity_selection_drift(root: Path = ROOT) -> CheckResult:
+    failures: list[str] = []
+    selection_rel = "docs/architecture/second_parity_slice_candidate_selection.md"
+    selection_text = read_text(root, selection_rel, failures)
+    parity_text = read_text(root, "docs/architecture/parity_protocol.md", failures)
+    governance_text = read_text(root, "docs/governance/README.md", failures)
+    drift_text = read_text(root, "docs/governance/drift_protection_map.md", failures)
+
+    if selection_text:
+        lower_selection = selection_text.lower()
+        if "candidate selection does not transfer authority" not in lower_selection:
+            failures.append(
+                f"{selection_rel} must state candidate selection does not transfer authority"
+            )
+        if "transferred" in lower_selection and "must not" not in lower_selection:
+            failures.append(
+                f"{selection_rel} must not claim a transferred authority state"
+            )
+    if selection_rel not in parity_text:
+        failures.append(
+            "parity_protocol.md must route to second parity slice selection"
+        )
+    if selection_rel not in governance_text and selection_rel not in drift_text:
+        failures.append(
+            "second parity slice selection must be reachable from governance README or drift map"
+        )
+    if selection_rel not in drift_text:
+        failures.append(
+            "drift_protection_map.md must list second parity slice selection as a parity drift surface"
+        )
+
+    return CheckResult("second parity selection drift", failures)
+
+
 def validate(root: Path = ROOT) -> list[CheckResult]:
     return [
         check_required_files(root),
@@ -499,6 +534,7 @@ def validate(root: Path = ROOT) -> list[CheckResult]:
         check_debt_advisory_drift(root),
         check_review_checklist_drift(root),
         check_parity_pilot_drift(root),
+        check_second_parity_selection_drift(root),
     ]
 
 

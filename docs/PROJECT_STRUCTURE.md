@@ -143,7 +143,10 @@ The current rule is one-way:
 9. Keep the first parity pilot in `tools/migration/` and
    `tests/unit/migration/` while it remains a single migration-evidence
    harness. Create a dedicated `tools/parity/` route only after multiple parity
-   harnesses exist and governance routes that domain explicitly.
+   harnesses exist and governance routes that domain explicitly. Stage 18
+   parity work must follow
+   `docs/architecture/second_parity_slice_candidate_selection.md`; do not add
+   `tools/parity/` for candidate selection alone.
 10. Keep `migration/exported_bundle/` generated from
    `tools/migration/export_config_bundle.py`; it is a disposable engine-spike
    input package, not a config, trace, docs, or runtime authority.

@@ -50,6 +50,7 @@ Surfaces:
 - `docs/architecture/authority_transfer_protocol.md`
 - `docs/architecture/first_subsystem_parity_pilot.md`
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
+- `docs/architecture/second_parity_slice_candidate_selection.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -70,6 +71,11 @@ Required invariants:
   authority.
 - Promotion-gate evidence for a second parity slice stays process-only and does
   not transfer authority.
+- Second parity implementation must match the selected candidate in
+  `docs/architecture/second_parity_slice_candidate_selection.md`.
+- Forbidden second-slice areas remain excluded: topology movement, rotation,
+  drop/collision, lock/clear/gameplay loop, rendering/projection/view
+  semantics, and endgame physics.
 - Native tooling CI readiness remains a quality gate and does not imply C++
   semantic authority.
 
@@ -79,6 +85,7 @@ Surfaces:
 
 - `docs/architecture/first_subsystem_parity_pilot.md`
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
+- `docs/architecture/second_parity_slice_candidate_selection.md`
 - `tools/migration/first_subsystem_parity_pilot.py`
 - `tests/unit/migration/test_first_subsystem_parity_pilot.py`
 - `native/tet4d_core/tests/plain_2d_core_tests.cpp`
@@ -90,6 +97,8 @@ Required invariants:
 - Python remains the oracle for the pilot.
 - The audit/gates doc remains reachable from parity and governance routing.
 - Any second parity slice must reference the promotion gates before expansion.
+- Any second parity implementation must match the selected candidate-selection
+  document before expansion.
 - The pilot never records a `transferred` authority state.
 
 ## Validator integration drift

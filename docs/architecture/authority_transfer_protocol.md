@@ -21,11 +21,16 @@ This document does not transfer authority by itself.
 - `docs/architecture/parity_protocol.md` defines evidence required for parity.
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md` defines the
   reusable gate for any second parity slice.
+- `docs/architecture/second_parity_slice_candidate_selection.md` records
+  Stage 17 candidate selection only; selection documents are not transfer
+  records.
 - This document defines the additional transfer record required before
   authority changes.
 - `tools/governance/validate_authority_transfer.py` validates transfer claims.
 
 Parity-pilot evidence and promotion-gate audits are not transfer records.
+Future second-slice parity evidence is also insufficient for transfer without
+an explicit transfer record and authority-map update.
 
 ## Rule
 
@@ -97,6 +102,7 @@ change authority.
 Potential future candidates:
 
 - coordinate/bounds helper
+- trace metadata identity/digest
 - trace parser
 - topology lookup helper
 - deterministic scoring helper
