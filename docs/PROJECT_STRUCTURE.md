@@ -140,16 +140,20 @@ The current rule is one-way:
    small topology, gameplay, and endgame replay artifacts in
    `migration/golden_traces/`; these artifacts are migration oracles, not
    gameplay or renderer authority.
-9. Keep the first parity pilot in `tools/migration/` and
+9. Keep committed parity fixtures under `tests/fixtures/parity/` and route
+   them through the matching parity harness docs rather than treating them as
+   runtime assets.
+10. Keep the first parity pilot in `tools/migration/` and
    `tests/unit/migration/` while it remains a single migration-evidence
    harness. Create a dedicated `tools/parity/` route only after multiple parity
    harnesses exist and governance routes that domain explicitly. Stage 18
    parity work must follow
-   `docs/architecture/second_parity_slice_candidate_selection.md`; do not add
+   `docs/architecture/second_parity_slice_candidate_selection.md` and
+   `docs/architecture/trace_metadata_identity_digest_parity.md`; do not add
    `tools/parity/` for candidate selection alone.
-10. Keep `migration/exported_bundle/` generated from
-   `tools/migration/export_config_bundle.py`; it is a disposable engine-spike
-   input package, not a config, trace, docs, or runtime authority.
+11. Keep `migration/exported_bundle/` generated from
+    `tools/migration/export_config_bundle.py`; it is a disposable engine-spike
+    input package, not a config, trace, docs, or runtime authority.
 11. Keep Unity replay code under `unity/Tet4D.Unity/` and load only the copied
     `Assets/StreamingAssets/tet4d_bundle/` payload at runtime; Unity is a
     replay/browser surface here, not a gameplay/topology/endgame semantic owner.
@@ -181,8 +185,9 @@ The current rule is one-way:
     spawn-blocked game-over before any broader ND implementation. Stage 17
     adds those Python-oracle golden traces under `migration/golden_traces/`
     while native C++ parity remains scoped to implemented cases. Stage 18 adds
-    native rotation parity only for `gameplay_plain_3d_rotation_short` and
-    `gameplay_plain_4d_rotation_short`. Stage 19 adds native clear/scoring
+    trace metadata identity/digest parity only for the metadata-only slice in
+    `docs/architecture/trace_metadata_identity_digest_parity.md`. Stage 19
+    adds native clear/scoring
     parity only for `gameplay_plain_3d_plane_clear_short` and
     `gameplay_plain_4d_plane_clear_short`. Stage 20 adds native
     spawn-blocked game-over parity only for

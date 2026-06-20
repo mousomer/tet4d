@@ -44,6 +44,10 @@ results.
 Second parity slice tasks must also report the selected candidate, explicit
 exclusions, Stage 18 boundary, authority boundary, routing, and validation.
 
+Stage 18 implementation tasks must also report the committed implementation
+doc, exact fixture set, comparison mode, native command, and any provisional
+native fallback behavior.
+
 ## Task routing
 
 ### Python task

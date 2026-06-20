@@ -112,6 +112,12 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
       second parity slice.
 - [ ] Stage 18 implements only the selected candidate in
       `docs/architecture/second_parity_slice_candidate_selection.md`.
+- [ ] Stage 18 parity evidence is recorded in
+      `docs/architecture/trace_metadata_identity_digest_parity.md`.
+- [ ] Stage 18 compares compact canonical metadata identity and SHA-256
+      digest only.
+- [ ] Stage 18 uses a metadata-only fixture and does not include movement,
+      rotation, collision, or renderer state.
 - [ ] Stage 18 preserves explicit exclusions for topology movement, rotation,
       drop/collision, lock/clear/gameplay loop, rendering/projection/view
       semantics, and endgame physics.

@@ -180,6 +180,10 @@ slice boundary.
 Second parity slice selection: trace metadata identity/digest.
 Candidate selection does not transfer authority.
 
+Stage 18 trace metadata identity/digest parity evidence and implementation
+details live in
+`docs/architecture/trace_metadata_identity_digest_parity.md`.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

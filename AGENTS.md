@@ -44,8 +44,10 @@ a migration overlay, not a replacement root constitution.
    `docs/governance/README.md`.
 9. For Stage 18 parity work, read
    `docs/architecture/second_parity_slice_candidate_selection.md`; Stage 18
-   may only implement the selected candidate, and no authority transfer occurs
-   without `docs/architecture/authority_transfer_protocol.md`.
+   may only implement the selected candidate. Also read
+   `docs/architecture/trace_metadata_identity_digest_parity.md` for the Stage
+   18 implementation boundary. No authority transfer occurs without
+   `docs/architecture/authority_transfer_protocol.md`.
 10. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
 11. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
 
@@ -93,6 +95,8 @@ a migration overlay, not a replacement root constitution.
   transfer authority by itself.
 - Stage 18 parity work may only implement the selected candidate in
   `docs/architecture/second_parity_slice_candidate_selection.md`.
+- Stage 18 implementation details live in
+  `docs/architecture/trace_metadata_identity_digest_parity.md`.
 - Stage 18 may only implement the selected candidate.
 
 ## Done criteria

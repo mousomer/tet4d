@@ -1,0 +1,30 @@
+{
+  "authority": "python",
+  "candidate": "trace_metadata_identity_digest",
+  "cases": [
+    {
+      "dimension": 2,
+      "mode": "2d",
+      "name": "plain-2d-minimal",
+      "schema_version": 1,
+      "topology": "plain",
+      "trace_id": "plain_2d_spawn_001"
+    },
+    {
+      "dimension": 3,
+      "mode": "3d",
+      "name": "plain-3d-minimal",
+      "schema_version": 1,
+      "topology": "plain",
+      "trace_id": "plain_3d_spawn_001"
+    },
+    {
+      "dimension": 4,
+      "mode": "4d",
+      "name": "wrapped-4d-minimal",
+      "schema_version": 1,
+      "topology": "wrapped",
+      "trace_id": "wrapped_4d_spawn_001"
+    }
+  ]
+}

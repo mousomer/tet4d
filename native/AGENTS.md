@@ -9,6 +9,8 @@ See `docs/architecture/parity_pilot_audit_and_promotion_gates.md` for second
 slice gates.
 See `docs/architecture/second_parity_slice_candidate_selection.md` before
 Stage 18 parity work.
+See `docs/architecture/trace_metadata_identity_digest_parity.md` for the
+Stage 18 implementation boundary.
 See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
 See `docs/architecture/authority_map.md` for semantic authority.
 
@@ -30,6 +32,8 @@ Rules:
 - Treat first-pilot parity output as provisional evidence only.
 - Keep second-slice native work within the selected candidate; native work
   remains provisional.
+- Keep Stage 18 implementation within the trace metadata identity/digest
+  parity slice only.
 - Native work remains provisional until explicit authority transfer.
 - Preserve advisory default behavior and strict parity behavior for native
   unavailability.

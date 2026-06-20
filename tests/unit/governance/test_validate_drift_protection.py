@@ -42,6 +42,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
@@ -95,6 +96,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -102,10 +104,60 @@ def _valid_fixture(root: Path) -> None:
         "selected candidate\n"
         "forbidden second-slice areas\n"
         "tools/migration/first_subsystem_parity_pilot.py\n"
+        "tools/migration/trace_metadata_identity_digest_parity.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
+        "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
+        "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp\n"
+        "tests/fixtures/parity/trace_metadata_identity_digest.json\n"
         "tools/migration/export_config_bundle.py\n"
         "tools/governance/generate_configuration_reference.py\n"
         "tools/governance/validate_authority_transfer.py\n",
+    )
+    _write(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        "tet4d-specific drift surfaces\n"
+        "docs/governance/workspace_bundle/drift_protection_policy.md\n"
+        "docs/governance/review_checklist.md\n"
+        "docs/governance/technical_debt_register.md\n"
+        "docs/governance/config_policy.md\n"
+        "docs/governance/godot_cpp_policy.md\n"
+        "docs/governance/cpp_safety_policy.md\n"
+        "docs/governance/native_tooling_ci_policy.md\n"
+        "docs/governance/testing_policy.md\n"
+        "docs/architecture/authority_map.md\n"
+        "docs/architecture/parity_protocol.md\n"
+        "docs/architecture/authority_transfer_protocol.md\n"
+        "docs/architecture/first_subsystem_parity_pilot.md\n"
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "docs/architecture/second_parity_slice_candidate_selection.md\n"
+        "docs/architecture/trace_metadata_identity_digest_parity.md\n"
+        "docs/architecture/utility_index.md\n"
+        "governance routing drift\n"
+        "authority drift\n"
+        "config/generated drift\n"
+        "selected candidate\n"
+        "forbidden second-slice areas\n"
+        "tools/migration/first_subsystem_parity_pilot.py\n"
+        "tools/migration/trace_metadata_identity_digest_parity.py\n"
+        "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
+        "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
+        "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp\n"
+        "tests/fixtures/parity/trace_metadata_identity_digest.json\n"
+        "tools/migration/export_config_bundle.py\n"
+        "tools/governance/generate_configuration_reference.py\n"
+        "tools/governance/validate_authority_transfer.py\n"
+        "trace metadata parity drift\n"
+        "trace metadata identity/digest parity\n"
+        "exact identity\n"
+        "exact digest\n",
+    )
+    _write(
+        root / "docs" / "architecture" / "trace_metadata_identity_digest_parity.md",
+        "Stage 18 trace metadata identity/digest parity. "
+        "Python oracle trace_schema.py. "
+        "Metadata-only fixture. "
+        "Exact comparison only. "
+        "This slice does not transfer authority.\n",
     )
     _write(
         root
@@ -143,6 +195,9 @@ def _valid_fixture(root: Path) -> None:
         "First subsystem parity pilot stays evidence only. "
         "docs/architecture/parity_pilot_audit_and_promotion_gates.md "
         "before a second parity slice. "
+        "Stage 18 trace metadata identity/digest parity evidence and "
+        "implementation details live in "
+        "docs/architecture/trace_metadata_identity_digest_parity.md. "
         "docs/architecture/second_parity_slice_candidate_selection.md.\n",
     )
     _write(
@@ -154,7 +209,9 @@ def _valid_fixture(root: Path) -> None:
         root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
         "Python remains the semantic oracle. "
         "This evidence does not transfer authority. "
-        "Promotion gates are required before a second parity slice.\n",
+        "Promotion gates are required before a second parity slice. "
+        "selected Stage 18 trace metadata identity/digest parity "
+        "implementation doc docs/architecture/trace_metadata_identity_digest_parity.md.\n",
     )
     _write(
         root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",

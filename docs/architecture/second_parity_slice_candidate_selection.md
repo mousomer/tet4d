@@ -163,6 +163,7 @@ Stage 18 must update or verify:
 - `docs/architecture/parity_protocol.md`
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - `docs/architecture/second_parity_slice_candidate_selection.md`
+- `docs/architecture/trace_metadata_identity_digest_parity.md`
 - `docs/architecture/authority_transfer_protocol.md`
 - `docs/architecture/authority_map.md`
 - `docs/plans/godot_core_port_plan.md`

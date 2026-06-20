@@ -26,6 +26,7 @@ GOVERNANCE_ROUTING_REQUIRED_PATHS: tuple[str, ...] = (
     "docs/governance/review_checklist.md",
     "docs/architecture/authority_map.md",
     "docs/architecture/utility_index.md",
+    "docs/architecture/trace_metadata_identity_digest_parity.md",
     "godot/AGENTS.md",
 )
 AGENTS_LINE_LIMITS: tuple[tuple[str, int], ...] = (
@@ -2331,6 +2332,7 @@ def _validate_governance_routing_concepts() -> list[ValidationIssue]:
             "utility_index",
             "cpp_safety_policy",
             "parity_protocol",
+            "trace_metadata_identity_digest_parity",
         ):
             if token not in router_text:
                 issues.append(
@@ -2789,6 +2791,89 @@ def _validate_second_parity_slice_candidate_selection() -> list[ValidationIssue]
             issues,
         )
     )
+    return issues
+
+
+def _validate_trace_metadata_identity_digest_parity_governance() -> list[
+    ValidationIssue
+]:
+    issues: list[ValidationIssue] = []
+    doc_rel = "docs/architecture/trace_metadata_identity_digest_parity.md"
+    if not (PROJECT_ROOT / doc_rel).exists():
+        issues.append(
+            ValidationIssue("missing", f"missing trace metadata parity doc: {doc_rel}")
+        )
+        return issues
+
+    doc_text = _read_text(doc_rel, issues)
+    if doc_text is not None:
+        _append_missing_concepts(
+            rel=doc_rel,
+            label="trace metadata parity",
+            text=doc_text,
+            concept_groups=(
+                ("Python oracle", ("trace_schema.py", "python oracle")),
+                ("metadata-only fixture", ("metadata only", "fixture")),
+                ("exact identity", ("exact identity", "compact canonical json")),
+                ("exact digest", ("exact digest", "sha-256")),
+                (
+                    "provisional native path",
+                    ("provisional native", "native/provisional"),
+                ),
+                ("default advisory", ("default behavior is advisory", "advisory")),
+                ("strict blocking", ("tet4d_strict_parity=1", "blocking")),
+                ("no authority transfer", ("does not transfer authority",)),
+                ("explicit exclusions", ("explicit exclusions",)),
+            ),
+            issues=issues,
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/parity_protocol.md",
+            (doc_rel, "trace metadata identity/digest parity"),
+        ),
+        (
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
+            (doc_rel, "trace metadata identity/digest parity"),
+        ),
+        (
+            "docs/architecture/second_parity_slice_candidate_selection.md",
+            (doc_rel, "trace metadata identity/digest"),
+        ),
+        ("docs/governance/README.md", (doc_rel,)),
+        ("docs/governance/review_checklist.md", (doc_rel,)),
+        ("docs/governance/drift_protection_map.md", (doc_rel,)),
+        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
+        ("docs/PROJECT_STRUCTURE.md", (doc_rel, "tests/fixtures/parity/")),
+        ("AGENTS.md", (doc_rel,)),
+        ("native/AGENTS.md", (doc_rel,)),
+        ("docs/governance/codex_policy.md", ("stage 18 implementation tasks",)),
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            required_docs,
+            "trace-metadata-parity",
+            issues,
+        )
+    )
+
+    drift_text = _read_text("docs/governance/drift_protection_map.md", issues)
+    if drift_text is not None:
+        for rel in (
+            doc_rel,
+            "tools/migration/trace_metadata_identity_digest_parity.py",
+            "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
+            "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
+            "tests/fixtures/parity/trace_metadata_identity_digest.json",
+        ):
+            if rel not in drift_text:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"docs/governance/drift_protection_map.md must list {rel}",
+                    )
+                )
     return issues
 
 
@@ -3526,6 +3611,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_cpp_parity_protocol_governance())
     issues.extend(_validate_parity_pilot_audit_governance())
     issues.extend(_validate_second_parity_slice_candidate_selection())
+    issues.extend(_validate_trace_metadata_identity_digest_parity_governance())
     issues.extend(_validate_godot_semantic_boundary_governance())
     issues.extend(_validate_config_authority_governance())
     issues.extend(_validate_utility_reuse_governance())

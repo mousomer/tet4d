@@ -51,12 +51,16 @@ Surfaces:
 - `docs/architecture/first_subsystem_parity_pilot.md`
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - `docs/architecture/second_parity_slice_candidate_selection.md`
+- `docs/architecture/trace_metadata_identity_digest_parity.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
 - `docs/governance/testing_policy.md`
 - `tools/governance/validate_authority_transfer.py`
 - `tools/migration/first_subsystem_parity_pilot.py`
+- `tools/migration/trace_metadata_identity_digest_parity.py`
+- `native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp`
+- `tests/fixtures/parity/trace_metadata_identity_digest.json`
 
 Required invariants:
 
@@ -73,11 +77,14 @@ Required invariants:
   not transfer authority.
 - Second parity implementation must match the selected candidate in
   `docs/architecture/second_parity_slice_candidate_selection.md`.
+- Stage 18 implementation evidence must stay within
+  `docs/architecture/trace_metadata_identity_digest_parity.md`.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
 - Native tooling CI readiness remains a quality gate and does not imply C++
   semantic authority.
+- Trace metadata parity compares exact identity and exact digest only.
 
 ## Parity pilot drift
 
@@ -86,9 +93,14 @@ Surfaces:
 - `docs/architecture/first_subsystem_parity_pilot.md`
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - `docs/architecture/second_parity_slice_candidate_selection.md`
+- `docs/architecture/trace_metadata_identity_digest_parity.md`
 - `tools/migration/first_subsystem_parity_pilot.py`
+- `tools/migration/trace_metadata_identity_digest_parity.py`
 - `tests/unit/migration/test_first_subsystem_parity_pilot.py`
+- `tests/unit/migration/test_trace_metadata_identity_digest_parity.py`
 - `native/tet4d_core/tests/plain_2d_core_tests.cpp`
+- `native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp`
+- `tests/fixtures/parity/trace_metadata_identity_digest.json`
 
 Required invariants:
 
@@ -100,6 +112,27 @@ Required invariants:
 - Any second parity implementation must match the selected candidate-selection
   document before expansion.
 - The pilot never records a `transferred` authority state.
+- The Stage 18 metadata parity slice never records a `transferred` authority
+  state.
+
+## Trace metadata parity drift
+
+Surfaces:
+
+- `docs/architecture/trace_metadata_identity_digest_parity.md`
+- `tools/migration/trace_metadata_identity_digest_parity.py`
+- `tests/unit/migration/test_trace_metadata_identity_digest_parity.py`
+- `native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp`
+- `tests/fixtures/parity/trace_metadata_identity_digest.json`
+
+Required invariants:
+
+- The slice compares exact compact canonical metadata identity and exact
+  SHA-256 digest.
+- The fixture stays metadata-only and deterministic.
+- The native path remains provisional and does not transfer authority.
+- The slice preserves explicit exclusions for movement, rotation, collision,
+  rendering, and endgame semantics.
 
 ## Validator integration drift
 

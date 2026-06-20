@@ -143,6 +143,8 @@ Forbidden:
 - next slice allowed now: yes, but only if every promotion gate above is met
 - selected Stage 18 candidate:
   `docs/architecture/second_parity_slice_candidate_selection.md`
+- selected Stage 18 trace metadata identity/digest parity implementation doc:
+  `docs/architecture/trace_metadata_identity_digest_parity.md`
 - selected candidate satisfies promotion gates: yes, as trace metadata
   identity/digest planning only
 - required follow-up before next slice: route the candidate slice to this audit,

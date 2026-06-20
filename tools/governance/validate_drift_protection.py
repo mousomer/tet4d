@@ -12,6 +12,7 @@ REQUIRED_FILES = (
     "docs/architecture/first_subsystem_parity_pilot.md",
     "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
     "docs/architecture/second_parity_slice_candidate_selection.md",
+    "docs/architecture/trace_metadata_identity_digest_parity.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -32,6 +33,10 @@ REQUIRED_FILES = (
     "tools/governance/validate_utility_reuse.py",
     "tools/governance/validate_godot_semantic_boundary.py",
     "tools/governance/validate_native_cpp_tooling.py",
+    "tools/migration/trace_metadata_identity_digest_parity.py",
+    "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
+    "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
+    "tests/fixtures/parity/trace_metadata_identity_digest.json",
 )
 
 ROUTER_LINKS = {
@@ -522,6 +527,48 @@ def check_second_parity_selection_drift(root: Path = ROOT) -> CheckResult:
     return CheckResult("second parity selection drift", failures)
 
 
+def check_trace_metadata_identity_digest_parity_drift(root: Path = ROOT) -> CheckResult:
+    failures: list[str] = []
+    doc_rel = "docs/architecture/trace_metadata_identity_digest_parity.md"
+    doc_text = read_text(root, doc_rel, failures)
+    parity_protocol = read_text(root, "docs/architecture/parity_protocol.md", failures)
+    governance_text = read_text(root, "docs/governance/README.md", failures)
+    drift_text = read_text(root, "docs/governance/drift_protection_map.md", failures)
+
+    if doc_rel not in parity_protocol:
+        failures.append(
+            "parity_protocol.md must route to trace metadata identity/digest parity"
+        )
+    if doc_rel not in governance_text and doc_rel not in drift_text:
+        failures.append(
+            "trace metadata identity/digest parity must be reachable from governance README or drift map"
+        )
+    if doc_rel not in drift_text:
+        failures.append(
+            "drift_protection_map.md must list trace metadata identity/digest parity as a parity drift surface"
+        )
+    if doc_text:
+        lower = doc_text.lower()
+        if "does not transfer authority" not in lower:
+            failures.append(
+                f"{doc_rel} must state that the slice does not transfer authority"
+            )
+        if "exact comparison only" not in lower:
+            failures.append(f"{doc_rel} must state that comparison is exact-only")
+        for rel in (
+            "tools/migration/trace_metadata_identity_digest_parity.py",
+            "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
+            "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
+            "tests/fixtures/parity/trace_metadata_identity_digest.json",
+        ):
+            if rel not in drift_text:
+                failures.append(
+                    f"docs/governance/drift_protection_map.md does not list {rel}"
+                )
+
+    return CheckResult("trace metadata identity/digest parity drift", failures)
+
+
 def validate(root: Path = ROOT) -> list[CheckResult]:
     return [
         check_required_files(root),
@@ -535,6 +582,7 @@ def validate(root: Path = ROOT) -> list[CheckResult]:
         check_review_checklist_drift(root),
         check_parity_pilot_drift(root),
         check_second_parity_selection_drift(root),
+        check_trace_metadata_identity_digest_parity_drift(root),
     ]
 
 

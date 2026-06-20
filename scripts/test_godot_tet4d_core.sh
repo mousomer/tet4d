@@ -6,6 +6,7 @@ CORE_DIR="$ROOT_DIR/native/tet4d_core"
 BUILD_DIR="$CORE_DIR/build/tests"
 TEST_2D_BIN="$BUILD_DIR/plain_2d_core_tests"
 TEST_ND_BIN="$BUILD_DIR/plain_nd_core_tests"
+TEST_TRACE_METADATA_BIN="$BUILD_DIR/trace_metadata_identity_digest_tests"
 
 if [[ -n "${CXX:-}" ]]; then
   CXX_BIN="$CXX"
@@ -39,12 +40,20 @@ mkdir -p "$BUILD_DIR"
   "$CORE_DIR/tests/plain_nd_core_tests.cpp" \
   -o "$TEST_ND_BIN"
 
+"$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
+  -I"$CORE_DIR/include" \
+  "$CORE_DIR/src/core/sha256.cpp" \
+  "$CORE_DIR/tests/trace_metadata_identity_digest_tests.cpp" \
+  -o "$TEST_TRACE_METADATA_BIN"
+
 if [[ "${1:-}" == "--export-plain-2d-trace" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--export-plain-nd-trace" ]]; then
   "$TEST_ND_BIN" "$@"
 elif [[ "${1:-}" == "--pilot-stable-hash" ]]; then
   "$TEST_2D_BIN" "$@"
+elif [[ "${1:-}" == "--trace-metadata-identity-digest" ]]; then
+  "$TEST_TRACE_METADATA_BIN" "$@"
 else
   "$TEST_2D_BIN" "$@"
   "$TEST_ND_BIN"
