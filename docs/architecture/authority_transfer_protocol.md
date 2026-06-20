@@ -10,6 +10,8 @@ Current state:
   and visualization.
 - C++/GDExtension remains provisional until parity evidence and an explicit
   completed transfer record exist.
+- The first subsystem parity pilot is evidence only and must not be recorded
+  as a transferred subsystem.
 
 This document does not transfer authority by itself.
 
@@ -94,6 +96,7 @@ Potential future candidates:
 - trace parser
 - topology lookup helper
 - deterministic scoring helper
+- first subsystem parity pilot for `stable_hash_text(text)` evidence only
 
 Do not list full gameplay loop, full topology engine, or rotation system as a
 first transfer unless evidence already exists.

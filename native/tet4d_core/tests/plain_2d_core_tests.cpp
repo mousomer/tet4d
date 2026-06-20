@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,26 @@ void require(bool condition, const std::string &message) {
 		std::cerr << message << "\n";
 		std::exit(1);
 	}
+}
+
+void test_stable_hash_pilot() {
+	const std::vector<std::string> inputs = {
+		"",
+		"tet4d",
+		"oracle-check",
+		"hash-bridge",
+	};
+	std::cout << "{\n  \"cases\": [\n";
+	for (std::size_t index = 0; index < inputs.size(); ++index) {
+		const std::string &input = inputs[index];
+		std::cout << "    {\"input\":\"" << input << "\",\"native_hash\":\""
+		          << tet4d::core::stable_hash_text(input) << "\"}";
+		if (index + 1 < inputs.size()) {
+			std::cout << ",";
+		}
+		std::cout << "\n";
+	}
+	std::cout << "  ]\n}\n";
 }
 
 void test_board_and_piece_cells() {
@@ -165,6 +186,10 @@ void test_game_over_spawn_blocked_and_rejected_commands() {
 } // namespace
 
 int main(int argc, char **argv) {
+	if (argc >= 2 && std::string(argv[1]) == "--pilot-stable-hash") {
+		test_stable_hash_pilot();
+		return 0;
+	}
 	if (argc >= 2 && std::string(argv[1]) == "--export-plain-2d-trace") {
 		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "gameplay_plain_2d_short";
 		std::cout << tet4d::core::export_plain_2d_trace_json(case_id) << "\n";

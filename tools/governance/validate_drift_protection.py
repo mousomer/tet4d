@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 REQUIRED_FILES = (
     ".github/pull_request_template.md",
+    "docs/architecture/first_subsystem_parity_pilot.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -126,6 +127,7 @@ REVIEW_CONCEPTS = {
     "Godot boundary": ("godot semantic boundary",),
     "C++ safety or native safety": ("c++ safety", "native c++ safety"),
     "native tooling CI readiness": ("native tooling ci readiness",),
+    "first parity pilot": ("first parity pilot", "first subsystem parity pilot"),
     "parity": ("parity",),
 }
 

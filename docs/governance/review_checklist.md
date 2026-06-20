@@ -106,6 +106,8 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
 - [ ] Disagreements resolved in favor of Python unless an explicit semantic
       change was approved.
 - [ ] Godot visual correctness was not treated as semantic parity.
+- [ ] First parity pilot evidence was documented as process-only and not
+      authority transfer.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

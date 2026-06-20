@@ -252,6 +252,9 @@ feature porting starts.
    binding, and a headless smoke test. No gameplay port. The only exposed API
    is `get_core_version()`, `get_core_status()`, `echo_text(text)`,
    `stable_hash_text(text)`, and `add_integers(a, b)`.
+   A separate first-subsystem parity pilot may compare `stable_hash_text(text)`
+   through the existing bridge as evidence-only process validation; it does
+   not change authority or stage order.
 2. Stage 9: port the smallest plain 2D data model and deterministic reducer
    surface needed to match `gameplay_plain_2d_short` on required trace fields.
 3. Stage 10: complete canonical snapshot and `state_hash` parity for

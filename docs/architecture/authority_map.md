@@ -55,6 +55,8 @@ Current accepted native authority is limited to already documented parity-backed
 plain bounded gameplay surfaces in `docs/plans/godot_core_port_plan.md` and
 `CURRENT_STATE.md`. Topology implementation remains deferred by
 `docs/plans/topology_godot_core_port_plan.md`.
+The first subsystem parity pilot is evidence only and does not change
+authority.
 
 ## Authority transfer requires parity
 

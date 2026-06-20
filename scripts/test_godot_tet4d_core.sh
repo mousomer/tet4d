@@ -43,6 +43,8 @@ if [[ "${1:-}" == "--export-plain-2d-trace" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--export-plain-nd-trace" ]]; then
   "$TEST_ND_BIN" "$@"
+elif [[ "${1:-}" == "--pilot-stable-hash" ]]; then
+  "$TEST_2D_BIN" "$@"
 else
   "$TEST_2D_BIN" "$@"
   "$TEST_ND_BIN"

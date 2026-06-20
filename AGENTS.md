@@ -37,7 +37,9 @@ a migration overlay, not a replacement root constitution.
    folder moves.
 7. Read `config/project/policy_pack.json` when the task touches governance,
    validation, generated maintenance docs, or policy-backed tooling.
-8. For migration decisions, read `docs/architecture/authority_map.md` and
+8. For migration decisions, read `docs/architecture/authority_map.md`,
+   `docs/architecture/parity_protocol.md`,
+   `docs/architecture/first_subsystem_parity_pilot.md`, and
    `docs/governance/README.md`.
 9. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
 10. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.

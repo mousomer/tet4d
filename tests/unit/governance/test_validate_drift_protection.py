@@ -39,6 +39,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/workspace_bundle/review_checklist_template.md\n"
         "docs/governance/workspace_bundle/drift_protection_policy.md\n"
         "docs/governance/drift_protection_map.md\n"
+        "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
@@ -59,6 +60,7 @@ def _valid_fixture(root: Path) -> None:
         "godot semantic boundary\n"
         "native c++ safety\n"
         "native tooling ci readiness\n"
+        "first parity pilot\n"
         "parity\n"
         "tools/governance/validate_governance.py\n",
     )
@@ -87,6 +89,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/authority_map.md\n"
         "docs/architecture/parity_protocol.md\n"
         "docs/architecture/authority_transfer_protocol.md\n"
+        "docs/architecture/first_subsystem_parity_pilot.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -127,11 +130,13 @@ def _valid_fixture(root: Path) -> None:
     _write(
         root / "docs" / "architecture" / "parity_protocol.md",
         "Python oracle. Golden fixtures and golden traces. Comparison mode. "
-        "Authority transfer and subsystem promotion.\n",
+        "Authority transfer and subsystem promotion. "
+        "First subsystem parity pilot stays evidence only.\n",
     )
     _write(
         root / "docs" / "architecture" / "authority_transfer_protocol.md",
-        "Python remains the semantic oracle. Authority transfer protocol.\n",
+        "Python remains the semantic oracle. Authority transfer protocol. "
+        "First subsystem parity pilot stays evidence only.\n",
     )
     _write(root / "docs" / "architecture" / "utility_index.md", "Utility index.\n")
     _write(
@@ -385,6 +390,21 @@ def test_review_checklist_missing_drift_concept_fails(tmp_path: Path) -> None:
     failures = _messages(drift.validate(tmp_path))
 
     assert any("drift protection" in item for item in failures)
+
+
+def test_review_checklist_missing_first_parity_pilot_fails(
+    tmp_path: Path,
+) -> None:
+    _valid_fixture(tmp_path)
+    checklist = tmp_path / "docs" / "governance" / "review_checklist.md"
+    checklist.write_text(
+        checklist.read_text(encoding="utf-8").replace("first parity pilot\n", ""),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("first parity pilot" in item for item in failures)
 
 
 def test_pr_template_missing_review_concept_fails(tmp_path: Path) -> None:

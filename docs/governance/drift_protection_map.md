@@ -48,11 +48,13 @@ Surfaces:
 - `docs/architecture/authority_map.md`
 - `docs/architecture/parity_protocol.md`
 - `docs/architecture/authority_transfer_protocol.md`
+- `docs/architecture/first_subsystem_parity_pilot.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
 - `docs/governance/testing_policy.md`
 - `tools/governance/validate_authority_transfer.py`
+- `tools/migration/first_subsystem_parity_pilot.py`
 
 Required invariants:
 
@@ -63,8 +65,25 @@ Required invariants:
 - No policy claims C++ owns gameplay semantics without a transfer record.
 - No policy claims GDScript owns topology, movement, collision, gravity,
   rotation, scoring, trace semantics, or replay correctness.
+- First parity-pilot evidence stays process-only and does not transfer
+  authority.
 - Native tooling CI readiness remains a quality gate and does not imply C++
   semantic authority.
+
+## Parity pilot drift
+
+Surfaces:
+
+- `docs/architecture/first_subsystem_parity_pilot.md`
+- `tools/migration/first_subsystem_parity_pilot.py`
+- `native/tet4d_core/tests/plain_2d_core_tests.cpp`
+
+Required invariants:
+
+- The pilot compares a fixed, deterministic text fixture set with exact
+  string comparison.
+- Python remains the oracle for the pilot.
+- The pilot never records a `transferred` authority state.
 
 ## Validator integration drift
 

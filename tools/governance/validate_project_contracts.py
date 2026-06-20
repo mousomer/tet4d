@@ -2499,6 +2499,10 @@ def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
                 ("disagreement rule", ("disagreement",)),
                 ("fixture location", ("fixture location", "migration/golden_traces")),
                 ("authority map transfer", ("authority map", "authority transfer")),
+                (
+                    "first parity pilot",
+                    ("first subsystem parity pilot", "stable_hash_text"),
+                ),
             ),
             issues=issues,
         )
@@ -2518,11 +2522,16 @@ def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
         ),
         (
             "docs/governance/review_checklist.md",
-            ("parity / authority transfer", "python oracle", "godot visual"),
+            (
+                "parity / authority transfer",
+                "python oracle",
+                "godot visual",
+                "first parity pilot",
+            ),
         ),
         (
             "docs/governance/README.md",
-            ("parity_protocol", "testing/parity"),
+            ("parity_protocol", "testing/parity", "first_subsystem_parity_pilot"),
         ),
     )
     for rel, tokens in required_docs:
@@ -3208,6 +3217,22 @@ def _validate_authority_transfer_governance() -> list[ValidationIssue]:
             "authority-transfer",
         )
     )
+    authority_transfer_protocol = _read_text(
+        "docs/architecture/authority_transfer_protocol.md", issues
+    )
+    if authority_transfer_protocol is not None:
+        _append_missing_concepts(
+            rel="docs/architecture/authority_transfer_protocol.md",
+            label="authority transfer protocol",
+            text=authority_transfer_protocol,
+            concept_groups=(
+                ("candidate status", ("candidate",)),
+                ("blocked status", ("blocked",)),
+                ("evidence-only pilot", ("first subsystem parity pilot",)),
+                ("no transfer wording", ("evidence only", "must not be recorded")),
+            ),
+            issues=issues,
+        )
     issues.extend(
         _validate_governance_doc_tokens(
             (
@@ -3224,7 +3249,7 @@ def _validate_authority_transfer_governance() -> list[ValidationIssue]:
                 ),
                 (
                     "docs/architecture/parity_protocol.md",
-                    ("authority_transfer_protocol.md",),
+                    ("authority_transfer_protocol.md", "first_subsystem_parity_pilot"),
                 ),
                 (
                     "docs/governance/drift_protection_map.md",

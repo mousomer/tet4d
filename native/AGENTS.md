@@ -3,6 +3,8 @@
 This directory contains native code for the Godot migration.
 
 See `docs/governance/cpp_safety_policy.md` for native C++ memory-safety rules.
+See `docs/architecture/parity_protocol.md` and
+`docs/architecture/first_subsystem_parity_pilot.md` for parity-pilot rules.
 See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
 See `docs/architecture/authority_map.md` for semantic authority.
 

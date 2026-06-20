@@ -225,6 +225,7 @@ def _write_minimal_parity_governance(root: Path) -> None:
                 "Disagreement rules favor Python.",
                 "Fixture location includes migration/golden_traces.",
                 "Authority transfer updates the authority map.",
+                "First subsystem parity pilot stays evidence only.",
             ]
         ),
     )
@@ -247,11 +248,18 @@ def _write_minimal_parity_governance(root: Path) -> None:
         root / "docs" / "governance" / "review_checklist.md",
         "## Parity / authority transfer\n"
         "- Python oracle identified.\n"
-        "- Godot visual checks are not semantic parity.\n",
+        "- Godot visual checks are not semantic parity.\n"
+        "- First parity pilot evidence was documented as process-only.\n",
     )
     _write_text(
         root / "docs" / "governance" / "README.md",
-        "docs/architecture/parity_protocol.md\nTesting/parity\n",
+        "docs/architecture/parity_protocol.md\n"
+        "docs/architecture/first_subsystem_parity_pilot.md\n"
+        "Testing/parity\n",
+    )
+    _write_text(
+        root / "docs" / "architecture" / "first_subsystem_parity_pilot.md",
+        "First subsystem parity pilot stays evidence only.\n",
     )
 
 
@@ -637,7 +645,10 @@ def test_drift_protection_governance_accepts_baseline(
 def _write_minimal_authority_transfer_governance(root: Path) -> None:
     _write_text(
         root / "docs" / "architecture" / "authority_transfer_protocol.md",
-        "Authority transfer protocol.\n",
+        "Authority transfer protocol.\n"
+        "Candidate and blocked statuses only.\n"
+        "First subsystem parity pilot stays evidence only.\n"
+        "This record must not be transferred.\n",
     )
     _write_text(
         root / "tools" / "governance" / "validate_authority_transfer.py",
@@ -649,7 +660,8 @@ def _write_minimal_authority_transfer_governance(root: Path) -> None:
     )
     _write_text(
         root / "docs" / "governance" / "README.md",
-        "authority_transfer_protocol.md validate_authority_transfer.py\n",
+        "authority_transfer_protocol.md validate_authority_transfer.py\n"
+        "docs/architecture/first_subsystem_parity_pilot.md\n",
     )
     _write_text(
         root / "docs" / "architecture" / "authority_map.md",
@@ -657,7 +669,7 @@ def _write_minimal_authority_transfer_governance(root: Path) -> None:
     )
     _write_text(
         root / "docs" / "architecture" / "parity_protocol.md",
-        "authority_transfer_protocol.md\n",
+        "authority_transfer_protocol.md first_subsystem_parity_pilot.md\n",
     )
     _write_text(
         root / "docs" / "governance" / "drift_protection_map.md",

@@ -22,6 +22,7 @@ These files define the codebase shape and architectural rules.
 
 - `docs/ARCHITECTURE_CONTRACT.md`
 - `docs/PROJECT_STRUCTURE.md`
+- `docs/architecture/first_subsystem_parity_pilot.md`
 
 ### 3. Active planning
 
@@ -95,6 +96,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Live 3D and future Live 4D gameboard visual language | `docs/plans/gameboard_visual_language_design.md` |
+| First subsystem parity pilot | `docs/architecture/first_subsystem_parity_pilot.md` |
 | Stage 22f manual Live 3D acceptance run record | `docs/plans/godot_live_3d_manual_acceptance.md` |
 | Current restart handoff | `CURRENT_STATE.md` |
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |

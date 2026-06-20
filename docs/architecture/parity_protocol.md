@@ -153,3 +153,16 @@ Any PR or task that claims C++ parity must state:
 - result
 - known exclusions
 - authority-map update, if any
+
+## First subsystem parity pilot
+
+The repository's first parity pilot is a narrow evidence-only trial for
+`stable_hash_text(text)`.
+
+It uses a fixed text fixture set, a Python oracle helper, and the existing
+native/Godot-facing bridge to compare exact text-hash outputs. The pilot
+proves the parity process, not subsystem promotion, and it does not transfer
+authority.
+
+Pilot authority and routing live in
+`docs/architecture/first_subsystem_parity_pilot.md`.
