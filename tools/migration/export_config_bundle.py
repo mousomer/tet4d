@@ -99,6 +99,11 @@ AUTHORITY_DOCS: tuple[tuple[str, str, str], ...] = (
         "Stage 7+ Godot shell and native core-port ordering authority.",
     ),
     (
+        "docs/plans/topology_godot_core_port_plan.md",
+        "topology_godot_core_port_authority",
+        "Stage 25 topology Godot/C++ port planning authority.",
+    ),
+    (
         "docs/plans/gameboard_visual_language_design.md",
         "gameboard_visual_language_authority",
         "Stage 22d Live 3D and future Live 4D board visual-language authority.",

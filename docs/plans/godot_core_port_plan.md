@@ -1,7 +1,7 @@
 # Godot Core-Port Plan
 
 Role: migration architecture plan
-Status: active plain 2D accepted; live plain 3D accepted after Stage 22g corrections; Stage 23 live plain 4D prototype accepted; Stage 24 live ND shell hardening implemented
+Status: active plain 2D accepted; live plain 3D accepted after Stage 22g corrections; Stage 23 live plain 4D prototype accepted; Stage 24 live ND shell hardening accepted; Stage 25 topology port planning documented
 Last updated: 2026-06-17
 
 ## 1. Decision Summary
@@ -20,6 +20,10 @@ speed clearly outweighs export, console, and long-term dependency concerns.
 Python remains the oracle and reference implementation until the replacement
 core passes trace parity against the Stage 2 topology/gameplay traces and the
 Stage 3 endgame traces.
+
+The repo-wide migration routing overlay is `docs/governance/README.md`; the
+ownership boundary summary is `docs/architecture/authority_map.md`. Those files
+clarify this plan without superseding the Python-centered policy pack.
 
 ## 2. Why Godot
 
@@ -287,9 +291,12 @@ feature porting starts.
    `docs/plans/godot_live_3d_manual_acceptance.md`.
 19. Stage 23: prototype live plain 4D after Stage 22f passed, reusing the
    existing W-slice renderer path and C++ gameplay authority.
-20. Later: plan topology transport and Topology Lab launch semantics.
-21. Later: port locked-cell endgame particle simulation.
-22. Later: retire Python as semantic oracle only after trace parity,
+20. Stage 25: plan topology transport and Topology Lab launch semantics in
+   `docs/plans/topology_godot_core_port_plan.md` without implementation.
+21. Stage 26: audit or expand topology trace contracts before native topology
+   implementation.
+22. Later: port locked-cell endgame particle simulation.
+23. Later: retire Python as semantic oracle only after trace parity,
    product acceptance, and authority-doc updates explicitly allow it.
 
 Stages may be split smaller if a parity gate is too broad.
@@ -734,7 +741,11 @@ Stage 21 chooses a staged live plain-ND path:
 - Stage 23: live plain 4D Godot prototype after Stage 22f passed;
 - Stage 24: live ND polish and hardening implemented as Godot shell
   lifecycle/input hardening;
-- Stage 25: topology parity planning.
+- Stage 25: topology Godot/C++ port planning, documented in
+  `docs/plans/topology_godot_core_port_plan.md`.
+- Stage 26: topology trace contract audit / expansion before native topology
+  implementation unless the opening audit proves the trace contract already
+  sufficient.
 
 The future native implementation should add an internal dimension-parameterized
 plain ND session beside the accepted `Plain2DSession`, while Stage 22 exposes
@@ -828,3 +839,27 @@ Godot-side gameplay legality. Stage 24 does not add topology transport,
 endgame simulation, Python runtime calls from Godot, or Godot-side gameplay
 legality. Accepted live plain 2D, live plain 3D, live plain 4D, and replay mode
 remain preserved.
+
+## 36. Stage 25 Topology Godot Core Port Planning
+
+Stage 25 is planning-only. Its authority is
+`docs/plans/topology_godot_core_port_plan.md`.
+
+Stage 25 records that topology migration starts after the accepted plain
+bounded Live ND baseline and must remain trace-first. Python stays the topology
+oracle until native trace parity passes. C++ is the future owner for topology
+transport, topology-aware gameplay legality, drop/lock policy, collision,
+status, snapshots, and `state_hash`. Godot remains the product shell for
+editor widgets, mode selection, input dispatch, rendering, camera, HUD, and
+diagnostics.
+
+The recommended next stage is Stage 26, a topology trace contract audit /
+expansion. It should verify whether existing topology and topology-aware
+gameplay traces are sufficient for the first native topology transport parity
+slice and strengthen comparison tooling or add Python oracle traces if gaps
+exist.
+
+Stage 25 does not add topology gameplay, C++ topology transport, Godot topology
+editor UI, live wrap/invert/sphere-like gameplay, endgame simulation, C#,
+Python runtime calls from Godot, or Godot-side gameplay legality. Accepted
+plain bounded Live 2D, Live 3D, Live 4D, and Replay remain preserved.

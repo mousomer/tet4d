@@ -1,16 +1,17 @@
 # Live Plain ND Godot Prototype Plan
 
 Role: Stage 21 implementation plan  
-Status: Stage 24 PASSED; Stage 25 UNBLOCKED
+Status: Stage 24 PASSED; Stage 25 PLANNING COMPLETE
 Last updated: 2026-06-17
 
 Stage 22f manual Live 3D visual acceptance passed after Stage 22g corrections.
 Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
 Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
-prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
-and endgame remain deferred. Stage 24 is implemented as Godot shell lifecycle
-and input-focus hardening only. Stage 24 manual acceptance passed, so Stage 25
-topology planning is unblocked.
+prototype. Stage 24 Live ND polish and hardening passed manual acceptance.
+Stage 25 topology Godot/C++ port planning lives in
+`docs/plans/topology_godot_core_port_plan.md`. Topology implementation and
+endgame remain deferred. Stage 24 is implemented as Godot shell lifecycle and
+input-focus hardening only.
 
 ## 1. Decision summary
 
@@ -32,7 +33,8 @@ The implementation sequence is:
 9. Stage 23c: Live 4D view and W-slice readability corrections.
 10. Stage 23d: Live 4D zoom-control correction.
 11. Stage 24: Live ND polish and hardening.
-12. Stage 25: topology parity planning.
+12. Stage 25: topology Godot/C++ port planning.
+13. Stage 26: topology trace contract audit / expansion.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native
@@ -612,10 +614,16 @@ Stage 24 - Live ND polish/hardening:
 - deferred: one generic `Live ND` selector, next-piece/ghost/drop-preview
   presentation, topology, and endgame.
 
-Stage 25 - Topology parity planning:
+Stage 25 - Topology Godot/C++ port planning:
 
-- plan topology trace parity before adding wrap/invert/sphere-like live
-  gameplay.
+- documented in `docs/plans/topology_godot_core_port_plan.md`;
+- planning-only: no topology gameplay, C++ topology transport, Godot topology
+  editor, live wrap/invert/sphere-like gameplay, endgame, C#, Python runtime
+  calls from Godot, or Godot-side gameplay legality;
+- chooses a trace-first topology migration after accepted plain bounded Live
+  ND;
+- recommends Stage 26 as topology trace contract audit / expansion before
+  native topology implementation.
 
 ## 15. Risks and mitigations
 
@@ -699,6 +707,13 @@ focused HUD controls, Fit View remains recovery, Q/E remain W-/W+, Space
 remains hard drop, Esc remains back/quit, Live 2D/3D/Replay are preserved,
 automated verification passes, and no C++ gameplay semantics change.
 
+Stage 25 is complete when
+`docs/plans/topology_godot_core_port_plan.md` records the planning-only
+topology migration boundary, Python oracle trace role, C++ ownership target,
+Godot product-shell target, renderer reuse plan, risk register, and Stage 26
+recommendation while preserving the accepted plain bounded Live 2D/3D/4D and
+Replay baseline.
+
 Stage 22d is complete when the design authority exists. Stage 22f manual Live
 3D visual acceptance passed after Stage 22g corrections, as recorded in
 `docs/plans/godot_live_3d_manual_acceptance.md`. Stage 23 Live Plain 4D Godot
@@ -706,5 +721,7 @@ Prototype is implemented narrowly. Stage 23b, Stage 23c, and Stage 23d
 acceptance corrections are implemented; Stage 23 Live Plain 4D Godot Prototype
 passed manual GUI acceptance after those corrections. Live 4D is accepted as a
 narrow plain bounded prototype. Stage 24 Live ND polish and hardening is
-implemented as Godot shell lifecycle/input hardening. Topology and endgame
-remain deferred.
+implemented as Godot shell lifecycle/input hardening. Stage 25 topology
+Godot/C++ port planning is documented in
+`docs/plans/topology_godot_core_port_plan.md`; topology implementation and
+endgame remain deferred.

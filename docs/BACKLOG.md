@@ -76,8 +76,10 @@ Live 3D, Replay, topology, endgame, and golden traces remain preserved. Stage
 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after Stage
 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
 prototype. Stage 24 Live ND polish and hardening passed manual acceptance as
-shell lifecycle/input hardening. Stage 25 topology planning is unblocked.
-Topology and endgame remain deferred until Stage 25.
+shell lifecycle/input hardening. Stage 25 topology Godot/C++ port planning is
+documented in `docs/plans/topology_godot_core_port_plan.md`. Topology
+implementation and endgame remain deferred; Stage 26 should audit or expand
+the topology trace contract before native topology implementation.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
@@ -515,6 +517,17 @@ stays synchronized, and the contract validator accepts the backlog shape.
     preserved. Manual Stage 24 acceptance via
     `docs/plans/live_nd_manual_acceptance.md` passed, so Stage 25 topology
     planning is unblocked.
+34. `DONE` `[BKL-P3-041]` Stage 25 topology Godot/C++ port planning:
+    add `docs/plans/topology_godot_core_port_plan.md` as the planning-only
+    topology port authority after accepted plain bounded Live ND. Python
+    remains the topology oracle, C++ is the future topology
+    transport/gameplay authority after parity, Godot remains the topology
+    product shell/render/HUD/editor presentation owner, accepted Live
+    2D/3D/4D and Replay stay preserved, and Stage 26 is recommended as a
+    topology trace contract audit / expansion before native topology
+    implementation. No topology gameplay, C++ topology transport, Godot
+    topology editor UI, endgame, C#, Python runtime calls from Godot, or
+    Godot-side gameplay legality is added.
 
 ## Governance Watchlist
 
