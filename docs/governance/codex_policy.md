@@ -37,6 +37,10 @@ cross-layer behavior, the final report must include changed files, created
 files, preserved areas, checks run, technical-debt delta, drift/authority
 implications, and remaining risks.
 
+Parity tasks must also report routing, authority boundary, Python oracle,
+fixture evidence, comparison command, strict/default behavior, and validation
+results.
+
 ## Task routing
 
 ### Python task

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+STRICT_PARITY_ENV = "TET4D_STRICT_PARITY"
 PILOT_COMMAND = [
     str(ROOT / "scripts" / "test_godot_tet4d_core.sh"),
     "--pilot-stable-hash",
@@ -27,6 +29,12 @@ class PilotCase:
     python_hash: str
 
 
+@dataclass(frozen=True)
+class PilotRunResult:
+    failures: list[str]
+    advisories: list[str]
+
+
 def python_oracle_stable_hash_text(text: str) -> str:
     value = FNV_OFFSET_BASIS
     for byte in text.encode("utf-8"):
@@ -45,13 +53,18 @@ def python_oracle_cases() -> list[PilotCase]:
 def load_native_cases(
     command: list[str] | None = None,
 ) -> list[dict[str, str]]:
-    result = subprocess.run(
-        command or PILOT_COMMAND,
-        cwd=ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            command or PILOT_COMMAND,
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        raise RuntimeError(
+            f"unable to start native parity pilot command: {exc}"
+        ) from exc
     if result.returncode != 0:
         raise RuntimeError(
             "native parity pilot command failed.\n"
@@ -102,17 +115,40 @@ def compare_cases(
     return failures
 
 
-def run() -> list[str]:
-    return compare_cases(load_native_cases())
+def strict_mode_enabled() -> bool:
+    return STRICT_PARITY_ENV in os.environ and os.environ[STRICT_PARITY_ENV] != "0"
+
+
+def run(strict: bool | None = None) -> PilotRunResult:
+    active_strict = strict_mode_enabled() if strict is None else strict
+    try:
+        native_cases = load_native_cases()
+    except RuntimeError as exc:
+        message = (
+            "native parity pilot unavailable: "
+            f"{exc} "
+            f"(rerun after native toolchain setup or set {STRICT_PARITY_ENV}=1 "
+            "to make unavailability blocking)"
+        )
+        if active_strict:
+            return PilotRunResult(failures=[message], advisories=[])
+        return PilotRunResult(failures=[], advisories=[message])
+
+    return PilotRunResult(failures=compare_cases(native_cases), advisories=[])
 
 
 def main() -> int:
-    failures = run()
-    if failures:
+    result = run()
+    if result.failures:
         print("First subsystem parity pilot failed:")
-        for failure in failures:
+        for failure in result.failures:
             print(f"- {failure}")
         return 1
+    if result.advisories:
+        print("First subsystem parity pilot advisory:")
+        for advisory in result.advisories:
+            print(f"- {advisory}")
+        return 0
 
     print("First subsystem parity pilot passed.")
     for case in python_oracle_cases():

@@ -36,6 +36,10 @@ The implementation sequence is:
 12. Stage 25: topology Godot/C++ port planning.
 13. Stage 26: topology trace contract audit / expansion.
 
+Any second parity slice used by later stages must first satisfy
+`docs/architecture/parity_pilot_audit_and_promotion_gates.md`. That gate does
+not transfer authority away from Python.
+
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native
 plain-ND sidecar semantics proven by the Stage 15, 18, 19, and 20 parity

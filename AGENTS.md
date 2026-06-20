@@ -40,6 +40,7 @@ a migration overlay, not a replacement root constitution.
 8. For migration decisions, read `docs/architecture/authority_map.md`,
    `docs/architecture/parity_protocol.md`,
    `docs/architecture/first_subsystem_parity_pilot.md`, and
+   `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, and
    `docs/governance/README.md`.
 9. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
 10. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
@@ -82,6 +83,10 @@ a migration overlay, not a replacement root constitution.
   occurs.
 - Godot/C++ code must prove parity with Python through tests, traces, or
   documented verification before it becomes authoritative.
+- Parity contributors must consult the parity protocol, first pilot doc, and
+  parity-pilot audit/gates doc before parity work.
+- A second parity slice requires promotion-gate compliance and does not
+  transfer authority by itself.
 
 ## Done criteria
 

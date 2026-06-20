@@ -108,6 +108,10 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
 - [ ] Godot visual correctness was not treated as semantic parity.
 - [ ] First parity pilot evidence was documented as process-only and not
       authority transfer.
+- [ ] The first-pilot audit and promotion gates were checked before approving a
+      second parity slice.
+- [ ] Review verified Python oracle, fixture set, comparison command, and
+      strict/default parity behavior.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

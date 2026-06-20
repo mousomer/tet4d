@@ -166,3 +166,9 @@ authority.
 
 Pilot authority and routing live in
 `docs/architecture/first_subsystem_parity_pilot.md`.
+
+Future parity slices must also satisfy `docs/architecture/parity_pilot_audit_and_promotion_gates.md` before a second parity slice is added.
+
+Parity evidence and promotion-gate acceptance remain evidence only. They do not
+transfer authority without
+`docs/architecture/authority_transfer_protocol.md` and an authority-map update.

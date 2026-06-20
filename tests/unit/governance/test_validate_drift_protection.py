@@ -40,6 +40,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/workspace_bundle/drift_protection_policy.md\n"
         "docs/governance/drift_protection_map.md\n"
         "docs/architecture/first_subsystem_parity_pilot.md\n"
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
@@ -61,6 +62,7 @@ def _valid_fixture(root: Path) -> None:
         "native c++ safety\n"
         "native tooling ci readiness\n"
         "first parity pilot\n"
+        "promotion gates\n"
         "parity\n"
         "tools/governance/validate_governance.py\n",
     )
@@ -90,10 +92,13 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_protocol.md\n"
         "docs/architecture/authority_transfer_protocol.md\n"
         "docs/architecture/first_subsystem_parity_pilot.md\n"
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
         "config/generated drift\n"
+        "tools/migration/first_subsystem_parity_pilot.py\n"
+        "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tools/migration/export_config_bundle.py\n"
         "tools/governance/generate_configuration_reference.py\n"
         "tools/governance/validate_authority_transfer.py\n",
@@ -131,12 +136,20 @@ def _valid_fixture(root: Path) -> None:
         root / "docs" / "architecture" / "parity_protocol.md",
         "Python oracle. Golden fixtures and golden traces. Comparison mode. "
         "Authority transfer and subsystem promotion. "
-        "First subsystem parity pilot stays evidence only.\n",
+        "First subsystem parity pilot stays evidence only. "
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md "
+        "before a second parity slice.\n",
     )
     _write(
         root / "docs" / "architecture" / "authority_transfer_protocol.md",
         "Python remains the semantic oracle. Authority transfer protocol. "
         "First subsystem parity pilot stays evidence only.\n",
+    )
+    _write(
+        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
+        "Python remains the semantic oracle. "
+        "This evidence does not transfer authority. "
+        "Promotion gates are required before a second parity slice.\n",
     )
     _write(root / "docs" / "architecture" / "utility_index.md", "Utility index.\n")
     _write(
@@ -405,6 +418,84 @@ def test_review_checklist_missing_first_parity_pilot_fails(
     failures = _messages(drift.validate(tmp_path))
 
     assert any("first parity pilot" in item for item in failures)
+
+
+def test_review_checklist_missing_promotion_gates_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    checklist = tmp_path / "docs" / "governance" / "review_checklist.md"
+    checklist.write_text(
+        checklist.read_text(encoding="utf-8").replace("promotion gates\n", ""),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("promotion gates" in item for item in failures)
+
+
+def test_parity_protocol_missing_audit_link_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    parity_protocol = tmp_path / "docs" / "architecture" / "parity_protocol.md"
+    parity_protocol.write_text("Parity protocol.\n", encoding="utf-8")
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("parity_pilot_audit_and_promotion_gates.md" in item for item in failures)
+
+
+def test_governance_router_missing_audit_link_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    router = tmp_path / "docs" / "governance" / "README.md"
+    router.write_text(
+        router.read_text(encoding="utf-8").replace(
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n", ""
+        ),
+        encoding="utf-8",
+    )
+    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
+    drift_map.write_text(
+        drift_map.read_text(encoding="utf-8").replace(
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n", ""
+        ),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("parity_pilot_audit_and_promotion_gates.md" in item for item in failures)
+
+
+def test_drift_map_missing_first_pilot_surfaces_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
+    drift_map.write_text(
+        drift_map.read_text(encoding="utf-8")
+        .replace("tools/migration/first_subsystem_parity_pilot.py\n", "")
+        .replace("tests/unit/migration/test_first_subsystem_parity_pilot.py\n", ""),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any(
+        "tools/migration/first_subsystem_parity_pilot.py" in item for item in failures
+    )
+    assert any(
+        "tests/unit/migration/test_first_subsystem_parity_pilot.py" in item
+        for item in failures
+    )
+
+
+def test_parity_audit_missing_no_transfer_wording_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    audit_doc = (
+        tmp_path / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md"
+    )
+    audit_doc.write_text("Promotion gates only.\n", encoding="utf-8")
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("no-authority-transfer wording" in item for item in failures)
 
 
 def test_pr_template_missing_review_concept_fails(tmp_path: Path) -> None:

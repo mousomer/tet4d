@@ -226,6 +226,8 @@ def _write_minimal_parity_governance(root: Path) -> None:
                 "Fixture location includes migration/golden_traces.",
                 "Authority transfer updates the authority map.",
                 "First subsystem parity pilot stays evidence only.",
+                "Pilot authority routes through docs/architecture/first_subsystem_parity_pilot.md.",
+                "See docs/architecture/parity_pilot_audit_and_promotion_gates.md before a second parity slice.",
             ]
         ),
     )
@@ -255,11 +257,61 @@ def _write_minimal_parity_governance(root: Path) -> None:
         root / "docs" / "governance" / "README.md",
         "docs/architecture/parity_protocol.md\n"
         "docs/architecture/first_subsystem_parity_pilot.md\n"
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
         "Testing/parity\n",
     )
     _write_text(
         root / "docs" / "architecture" / "first_subsystem_parity_pilot.md",
         "First subsystem parity pilot stays evidence only.\n",
+    )
+
+
+def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
+    _write_text(
+        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
+        "\n".join(
+            [
+                "# Parity Pilot Audit and Promotion Gates",
+                "Python remains the semantic oracle.",
+                "This evidence does not transfer authority.",
+                "Promotion gates are required before a second parity slice.",
+                "Allowed: coordinate, topology identifier, trace metadata, dimension label.",
+                "Forbidden: full topology movement, rotation semantics, endgame physics.",
+                "Current harness path tools/migration/first_subsystem_parity_pilot.py is accepted for the first pilot.",
+                "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.",
+            ]
+        ),
+    )
+    _write_text(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "tools/migration/first_subsystem_parity_pilot.py\n"
+        "tests/unit/migration/test_first_subsystem_parity_pilot.py\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "first-pilot audit and promotion gates\n"
+        "strict/default parity behavior\n"
+        "second parity slice\n",
+    )
+    _write_text(
+        root / "docs" / "architecture" / "authority_transfer_protocol.md",
+        "parity_pilot_audit_and_promotion_gates not transfer records\n",
+    )
+    _write_text(
+        root / "docs" / "DOCUMENTATION_MAP.md",
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n",
+    )
+    _write_text(
+        root / "AGENTS.md",
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "second parity slice requires promotion-gate compliance\n",
+    )
+    _write_text(
+        root / "native" / "AGENTS.md",
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
+        "provisional evidence\n"
+        "strict parity behavior\n",
     )
 
 
@@ -1217,6 +1269,189 @@ def test_cpp_parity_protocol_governance_accepts_baseline(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
     assert contracts._validate_cpp_parity_protocol_governance() == []
+
+
+def test_parity_pilot_audit_governance_requires_doc(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any(
+        "parity_pilot_audit_and_promotion_gates.md" in issue.message for issue in issues
+    )
+
+
+def test_parity_pilot_audit_governance_requires_python_oracle_statement(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_pilot_audit_and_promotion_gates.md",
+        "Promotion gates only.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any("Python semantic oracle" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_rejects_authority_transfer_claim(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_pilot_audit_and_promotion_gates.md",
+        "Python remains the semantic oracle.\n"
+        "C++ becomes authoritative after this audit.\n"
+        "Promotion gates are required before a second parity slice.\n"
+        "Allowed: coordinate.\n"
+        "Forbidden: full topology movement.\n"
+        "Current harness path tools/migration/first_subsystem_parity_pilot.py is accepted for the first pilot.\n"
+        "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts.validate_manifest()
+
+    assert any("no authority transfer" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_requires_promotion_gates(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_pilot_audit_and_promotion_gates.md",
+        "Python remains the semantic oracle.\n"
+        "This evidence does not transfer authority.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any("promotion gates" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_requires_allowed_and_forbidden_categories(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_pilot_audit_and_promotion_gates.md",
+        "Python remains the semantic oracle.\n"
+        "This evidence does not transfer authority.\n"
+        "Promotion gates are required before a second parity slice.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any("allowed categories" in issue.message for issue in issues)
+    assert any("forbidden categories" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_requires_parity_protocol_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "Parity\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any("parity_protocol.md" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_requires_router_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any("docs/governance/README.md" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_requires_drift_map_entries(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(
+        tmp_path / "docs" / "governance" / "drift_protection_map.md",
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any(
+        "tools/migration/first_subsystem_parity_pilot.py" in issue.message
+        for issue in issues
+    )
+    assert any(
+        "tests/unit/migration/test_first_subsystem_parity_pilot.py" in issue.message
+        for issue in issues
+    )
+
+
+def test_parity_pilot_audit_governance_requires_agents_routing(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(tmp_path / "AGENTS.md", "AGENTS\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any("AGENTS.md" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_requires_native_agents_warning(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_text(tmp_path / "native" / "AGENTS.md", "Native\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_pilot_audit_governance()
+
+    assert any("native/AGENTS.md" in issue.message for issue in issues)
+
+
+def test_parity_pilot_audit_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_parity_pilot_audit_governance() == []
 
 
 def test_godot_semantic_boundary_governance_requires_validator(

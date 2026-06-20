@@ -19,9 +19,13 @@ This document does not transfer authority by itself.
 
 - `docs/architecture/authority_map.md` defines current subsystem authority.
 - `docs/architecture/parity_protocol.md` defines evidence required for parity.
+- `docs/architecture/parity_pilot_audit_and_promotion_gates.md` defines the
+  reusable gate for any second parity slice.
 - This document defines the additional transfer record required before
   authority changes.
 - `tools/governance/validate_authority_transfer.py` validates transfer claims.
+
+Parity-pilot evidence and promotion-gate audits are not transfer records.
 
 ## Rule
 
@@ -97,6 +101,10 @@ Potential future candidates:
 - topology lookup helper
 - deterministic scoring helper
 - first subsystem parity pilot for `stable_hash_text(text)` evidence only
+
+Any future parity slice still needs the promotion gates in
+`docs/architecture/parity_pilot_audit_and_promotion_gates.md` plus an explicit
+transfer record before authority moves.
 
 Do not list full gameplay loop, full topology engine, or rotation system as a
 first transfer unless evidence already exists.

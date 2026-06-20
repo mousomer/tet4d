@@ -116,6 +116,10 @@ and likely sufficient for a narrow first transport parity scaffold, but Stage
 topology must not invent semantics that are not validated against Python
 traces.
 
+Before any second parity slice is added to support this plan, it must satisfy
+`docs/architecture/parity_pilot_audit_and_promotion_gates.md`. That gate is
+process-only and does not transfer authority.
+
 ## 5. Proposed Staging
 
 Stage 26 - Topology Trace Contract Audit / Expansion:

@@ -5,6 +5,8 @@ This directory contains native code for the Godot migration.
 See `docs/governance/cpp_safety_policy.md` for native C++ memory-safety rules.
 See `docs/architecture/parity_protocol.md` and
 `docs/architecture/first_subsystem_parity_pilot.md` for parity-pilot rules.
+See `docs/architecture/parity_pilot_audit_and_promotion_gates.md` for second
+slice gates.
 See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
 See `docs/architecture/authority_map.md` for semantic authority.
 
@@ -23,3 +25,8 @@ Rules:
   preconditions, and failure modes.
 - Ported behavior requires parity tests against Python traces or equivalent
   fixtures.
+- Treat first-pilot parity output as provisional evidence only.
+- Preserve advisory default behavior and strict parity behavior for native
+  unavailability.
+- Do not expand into gameplay semantics without a routed parity slice that
+  satisfies the promotion gates.

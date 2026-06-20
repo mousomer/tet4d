@@ -254,7 +254,8 @@ feature porting starts.
    `stable_hash_text(text)`, and `add_integers(a, b)`.
    A separate first-subsystem parity pilot may compare `stable_hash_text(text)`
    through the existing bridge as evidence-only process validation; it does
-   not change authority or stage order.
+   not change authority or stage order. Any second parity slice must first
+   satisfy `docs/architecture/parity_pilot_audit_and_promotion_gates.md`.
 2. Stage 9: port the smallest plain 2D data model and deterministic reducer
    surface needed to match `gameplay_plain_2d_short` on required trace fields.
 3. Stage 10: complete canonical snapshot and `state_hash` parity for

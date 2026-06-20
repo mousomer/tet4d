@@ -2503,6 +2503,13 @@ def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
                     "first parity pilot",
                     ("first subsystem parity pilot", "stable_hash_text"),
                 ),
+                (
+                    "parity pilot audit gates",
+                    (
+                        "parity_pilot_audit_and_promotion_gates",
+                        "second parity slice",
+                    ),
+                ),
             ),
             issues=issues,
         )
@@ -2531,7 +2538,12 @@ def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
         ),
         (
             "docs/governance/README.md",
-            ("parity_protocol", "testing/parity", "first_subsystem_parity_pilot"),
+            (
+                "parity_protocol",
+                "testing/parity",
+                "first_subsystem_parity_pilot",
+                "parity_pilot_audit_and_promotion_gates",
+            ),
         ),
     )
     for rel, tokens in required_docs:
@@ -2550,6 +2562,122 @@ def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
 
     issues.extend(_validate_parity_fixture_readmes())
     issues.extend(_validate_parity_dangerous_phrases())
+    return issues
+
+
+def _validate_parity_pilot_audit_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    audit_rel = "docs/architecture/parity_pilot_audit_and_promotion_gates.md"
+    if not (PROJECT_ROOT / audit_rel).exists():
+        issues.append(
+            ValidationIssue("missing", f"missing parity audit doc: {audit_rel}")
+        )
+        return issues
+
+    audit_text = _read_text(audit_rel, issues)
+    if audit_text is not None:
+        _append_missing_concepts(
+            rel=audit_rel,
+            label="parity pilot audit",
+            text=audit_text,
+            concept_groups=(
+                ("Python semantic oracle", ("python remains the semantic oracle",)),
+                (
+                    "no authority transfer",
+                    ("does not transfer authority", "not authority transfer"),
+                ),
+                ("promotion gates", ("promotion gates", "second parity slice")),
+                (
+                    "allowed categories",
+                    (
+                        "coordinate",
+                        "topology identifier",
+                        "trace metadata",
+                        "dimension label",
+                    ),
+                ),
+                (
+                    "forbidden categories",
+                    ("full topology movement", "rotation semantics", "endgame physics"),
+                ),
+                (
+                    "harness placement decision",
+                    (
+                        "tools/migration/first_subsystem_parity_pilot.py",
+                        "accepted for the first pilot",
+                    ),
+                ),
+                (
+                    "strict/default behavior",
+                    ("default behaviour", "strict behaviour", "tet4d_strict_parity"),
+                ),
+            ),
+            issues=issues,
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/parity_protocol.md",
+            (
+                "first_subsystem_parity_pilot",
+                "parity_pilot_audit_and_promotion_gates",
+                "second parity slice",
+            ),
+        ),
+        (
+            "docs/architecture/authority_transfer_protocol.md",
+            (
+                "parity_pilot_audit_and_promotion_gates",
+                "not transfer records",
+            ),
+        ),
+        (
+            "docs/governance/README.md",
+            ("parity_pilot_audit_and_promotion_gates",),
+        ),
+        (
+            "docs/governance/review_checklist.md",
+            (
+                "first-pilot audit and promotion gates",
+                "strict/default parity behavior",
+                "second parity slice",
+            ),
+        ),
+        (
+            "docs/governance/drift_protection_map.md",
+            (
+                "parity_pilot_audit_and_promotion_gates.md",
+                "tools/migration/first_subsystem_parity_pilot.py",
+                "tests/unit/migration/test_first_subsystem_parity_pilot.py",
+            ),
+        ),
+        (
+            "docs/DOCUMENTATION_MAP.md",
+            ("parity_pilot_audit_and_promotion_gates.md",),
+        ),
+        (
+            "AGENTS.md",
+            (
+                "parity_pilot_audit_and_promotion_gates.md",
+                "second parity slice requires promotion-gate compliance",
+            ),
+        ),
+        (
+            "native/AGENTS.md",
+            (
+                "parity_pilot_audit_and_promotion_gates.md",
+                "provisional evidence",
+                "strict parity behavior",
+            ),
+        ),
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            required_docs,
+            "parity-pilot-audit",
+            issues,
+        )
+    )
     return issues
 
 
@@ -3285,6 +3413,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_governance_authority_inversion())
     issues.extend(_validate_native_cpp_safety_governance())
     issues.extend(_validate_cpp_parity_protocol_governance())
+    issues.extend(_validate_parity_pilot_audit_governance())
     issues.extend(_validate_godot_semantic_boundary_governance())
     issues.extend(_validate_config_authority_governance())
     issues.extend(_validate_utility_reuse_governance())

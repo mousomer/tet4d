@@ -21,6 +21,7 @@ def test_compare_cases_detects_mismatch() -> None:
     failures = pilot.compare_cases(native_cases)
 
     assert any("hash mismatch" in failure for failure in failures)
+    assert any("expected" in failure and "got" in failure for failure in failures)
 
 
 def test_load_native_cases_parses_native_pilot_output(monkeypatch) -> None:
@@ -47,3 +48,37 @@ def test_load_native_cases_parses_native_pilot_output(monkeypatch) -> None:
 
     assert native_cases == payload["cases"]
     assert pilot.compare_cases(native_cases) == []
+
+
+def test_python_oracle_cases_are_deterministic() -> None:
+    assert pilot.PILOT_CASES == ("", "tet4d", "oracle-check", "hash-bridge")
+    assert pilot.python_oracle_cases() == pilot.python_oracle_cases()
+
+
+def test_run_reports_advisory_when_native_unavailable_in_default_mode(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        pilot,
+        "load_native_cases",
+        lambda command=None: (_ for _ in ()).throw(RuntimeError("compiler missing")),
+    )
+
+    result = pilot.run(strict=False)
+
+    assert result.failures == []
+    assert result.advisories
+    assert any("TET4D_STRICT_PARITY=1" in advisory for advisory in result.advisories)
+
+
+def test_run_fails_when_native_unavailable_in_strict_mode(monkeypatch) -> None:
+    monkeypatch.setattr(
+        pilot,
+        "load_native_cases",
+        lambda command=None: (_ for _ in ()).throw(RuntimeError("compiler missing")),
+    )
+
+    result = pilot.run(strict=True)
+
+    assert result.advisories == []
+    assert any("compiler missing" in failure for failure in result.failures)

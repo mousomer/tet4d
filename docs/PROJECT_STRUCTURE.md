@@ -140,22 +140,26 @@ The current rule is one-way:
    small topology, gameplay, and endgame replay artifacts in
    `migration/golden_traces/`; these artifacts are migration oracles, not
    gameplay or renderer authority.
-9. Keep `migration/exported_bundle/` generated from
+9. Keep the first parity pilot in `tools/migration/` and
+   `tests/unit/migration/` while it remains a single migration-evidence
+   harness. Create a dedicated `tools/parity/` route only after multiple parity
+   harnesses exist and governance routes that domain explicitly.
+10. Keep `migration/exported_bundle/` generated from
    `tools/migration/export_config_bundle.py`; it is a disposable engine-spike
    input package, not a config, trace, docs, or runtime authority.
-10. Keep Unity replay code under `unity/Tet4D.Unity/` and load only the copied
+11. Keep Unity replay code under `unity/Tet4D.Unity/` and load only the copied
     `Assets/StreamingAssets/tet4d_bundle/` payload at runtime; Unity is a
     replay/browser surface here, not a gameplay/topology/endgame semantic owner.
-11. Keep Godot shell code under `godot/Tet4D.Godot/` and load only the copied
+12. Keep Godot shell code under `godot/Tet4D.Godot/` and load only the copied
     `res://assets/tet4d_bundle/` payload for the current replay spike. Godot is
     the conditional primary product shell direction after Stage 7, with
     GDScript owning shell/UI/rendering and no gameplay/topology/endgame
     semantics until a native core passes trace parity.
-12. Use `docs/plans/godot_core_port_plan.md` for the Stage 7 engine decision
+13. Use `docs/plans/godot_core_port_plan.md` for the Stage 7 engine decision
     and Stage 8+ core-port order. The recommended future core path is C++
     GDExtension; do not add C++, C#, GDExtension, gameplay, topology, or
     endgame implementation as part of Stage 7 documentation work.
-13. Keep native core code under `native/tet4d_core/`, with the official
+14. Keep native core code under `native/tet4d_core/`, with the official
     `godot-cpp` dependency isolated as `native/third_party/godot-cpp`. Stage 8
     is native integration proof; Stage 9 adds only the plain bounded 2D
     `gameplay_plain_2d_short` parity slice; Stage 10 adds canonical snapshot

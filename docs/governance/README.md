@@ -19,6 +19,8 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/governance/native_tooling_ci_policy.md`
 - first subsystem parity pilot:
   `docs/architecture/first_subsystem_parity_pilot.md`
+- parity pilot audit and promotion gates:
+  `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -95,6 +97,8 @@ Drift validation is handled by
 - parity protocol: `docs/architecture/parity_protocol.md`
 - first subsystem parity pilot:
   `docs/architecture/first_subsystem_parity_pilot.md`
+- parity pilot audit and promotion gates:
+  `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - authority-transfer protocol:
   `docs/architecture/authority_transfer_protocol.md`
 - authority-transfer validator:
@@ -110,8 +114,8 @@ Drift validation is handled by
 |---|---|
 | Python gameplay/topology/trace behavior | `AGENTS.md`, `docs/WORKFLOW_CODEX.md`, `docs/ARCHITECTURE_CONTRACT.md`, relevant `docs/rds/*` |
 | Godot UI/product shell | `AGENTS.md`, `godot/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/architecture/authority_map.md` |
-| C++/GDExtension/native | `AGENTS.md`, `native/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/governance/cpp_safety_policy.md`, `docs/governance/native_tooling_ci_policy.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/authority_map.md` |
-| Testing/parity | `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
+| C++/GDExtension/native | `AGENTS.md`, `native/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/governance/cpp_safety_policy.md`, `docs/governance/native_tooling_ci_policy.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, `docs/architecture/authority_map.md` |
+| Testing/parity | `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
 | Config/constants | `docs/governance/config_policy.md`, `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`, `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`, `tools/governance/validate_config_authority.py` |
 | Dependency / utility reuse | `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, `docs/architecture/utility_index.md`, `tools/governance/validate_utility_reuse.py`, `tools/governance/check_wheel_reuse_rules.py`, `tools/governance/check_dedup_dead_code_rules.py` |
 | Technical debt / drift foundations | `docs/governance/technical_debt_register.md`, `docs/governance/workspace_bundle/technical_debt_policy.md`, `docs/governance/workspace_bundle/drift_protection_policy.md`, `tools/governance/validate_technical_debt.py` |
@@ -125,7 +129,8 @@ are ports/adapters until explicitly promoted by documented parity evidence.
 Promotion also requires
 `docs/architecture/authority_transfer_protocol.md`; parity evidence alone does
 not transfer authority. First parity-pilot evidence is process-only and does
-not transfer authority.
+not transfer authority. Governance validation also checks that parity routing
+and promotion-gate routing remain intact.
 
 ## Conflict rule
 

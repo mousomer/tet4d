@@ -57,6 +57,8 @@ plain bounded gameplay surfaces in `docs/plans/godot_core_port_plan.md` and
 `docs/plans/topology_godot_core_port_plan.md`.
 The first subsystem parity pilot is evidence only and does not change
 authority.
+The parity-pilot audit and promotion gates are evidence-only process routing and
+do not change authority.
 
 ## Authority transfer requires parity
 

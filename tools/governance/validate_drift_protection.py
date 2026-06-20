@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_FILES = (
     ".github/pull_request_template.md",
     "docs/architecture/first_subsystem_parity_pilot.md",
+    "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -128,6 +129,7 @@ REVIEW_CONCEPTS = {
     "C++ safety or native safety": ("c++ safety", "native c++ safety"),
     "native tooling CI readiness": ("native tooling ci readiness",),
     "first parity pilot": ("first parity pilot", "first subsystem parity pilot"),
+    "promotion gates": ("promotion gates", "second parity slice"),
     "parity": ("parity",),
 }
 
@@ -448,6 +450,43 @@ def check_review_checklist_drift(root: Path = ROOT) -> CheckResult:
     return CheckResult("review checklist drift", failures)
 
 
+def check_parity_pilot_drift(root: Path = ROOT) -> CheckResult:
+    failures: list[str] = []
+    parity_protocol = read_text(root, "docs/architecture/parity_protocol.md", failures)
+    audit_rel = "docs/architecture/parity_pilot_audit_and_promotion_gates.md"
+    if audit_rel not in parity_protocol:
+        failures.append(
+            "docs/architecture/parity_protocol.md does not link to "
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md"
+        )
+
+    governance_router = read_text(root, "docs/governance/README.md", failures)
+    drift_map = read_text(root, "docs/governance/drift_protection_map.md", failures)
+    if audit_rel not in governance_router and audit_rel not in drift_map:
+        failures.append(
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md is not reachable from governance routing"
+        )
+
+    for rel in (
+        "tools/migration/first_subsystem_parity_pilot.py",
+        "tests/unit/migration/test_first_subsystem_parity_pilot.py",
+    ):
+        if rel not in drift_map:
+            failures.append(
+                f"docs/governance/drift_protection_map.md does not list {rel}"
+            )
+
+    audit_text = read_text(root, audit_rel, failures).lower()
+    if (
+        "does not transfer authority" not in audit_text
+        and "not authority transfer" not in audit_text
+    ):
+        failures.append(
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md must preserve no-authority-transfer wording"
+        )
+    return CheckResult("parity pilot drift", failures)
+
+
 def validate(root: Path = ROOT) -> list[CheckResult]:
     return [
         check_required_files(root),
@@ -459,6 +498,7 @@ def validate(root: Path = ROOT) -> list[CheckResult]:
         check_generated_file_drift(root),
         check_debt_advisory_drift(root),
         check_review_checklist_drift(root),
+        check_parity_pilot_drift(root),
     ]
 
 
