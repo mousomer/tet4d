@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-06-16
+Updated: 2026-06-18
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -16,6 +16,10 @@ Scope: active open backlog, governance watchlist, and compact recent change foot
   `docs/DOCUMENTATION_MAP.md`
 - Governance/runtime policy authority:
   `config/project/policy_pack.json`
+- Governance routing overlay:
+  `docs/governance/README.md`
+- Godot/C++ migration authority map:
+  `docs/architecture/authority_map.md`
 - Gameboard visual-language authority:
   `docs/plans/gameboard_visual_language_design.md`
 
