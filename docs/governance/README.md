@@ -15,6 +15,8 @@ overlay, not a replacement for existing Python/repo governance.
 - config authority validator:
   `tools/governance/validate_config_authority.py`
 - native C++ safety policy: `docs/governance/cpp_safety_policy.md`
+- native tooling CI policy:
+  `docs/governance/native_tooling_ci_policy.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -83,6 +85,8 @@ Drift validation is handled by
 
 - Godot/C++ migration policy: `docs/governance/godot_cpp_policy.md`
 - native C++ safety policy: `docs/governance/cpp_safety_policy.md`
+- native tooling CI policy:
+  `docs/governance/native_tooling_ci_policy.md`
 - native C++ tooling validator:
   `tools/governance/validate_native_cpp_tooling.py`
 - architecture authority map: `docs/architecture/authority_map.md`
@@ -102,7 +106,7 @@ Drift validation is handled by
 |---|---|
 | Python gameplay/topology/trace behavior | `AGENTS.md`, `docs/WORKFLOW_CODEX.md`, `docs/ARCHITECTURE_CONTRACT.md`, relevant `docs/rds/*` |
 | Godot UI/product shell | `AGENTS.md`, `godot/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/architecture/authority_map.md` |
-| C++/GDExtension/native | `AGENTS.md`, `native/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/governance/cpp_safety_policy.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/authority_map.md` |
+| C++/GDExtension/native | `AGENTS.md`, `native/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/governance/cpp_safety_policy.md`, `docs/governance/native_tooling_ci_policy.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/authority_map.md` |
 | Testing/parity | `docs/architecture/parity_protocol.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
 | Config/constants | `docs/governance/config_policy.md`, `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`, `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`, `tools/governance/validate_config_authority.py` |
 | Dependency / utility reuse | `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, `docs/architecture/utility_index.md`, `tools/governance/validate_utility_reuse.py`, `tools/governance/check_wheel_reuse_rules.py`, `tools/governance/check_dedup_dead_code_rules.py` |

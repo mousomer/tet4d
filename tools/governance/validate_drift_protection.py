@@ -14,6 +14,7 @@ REQUIRED_FILES = (
     "docs/governance/README.md",
     "docs/governance/review_checklist.md",
     "docs/governance/technical_debt_register.md",
+    "docs/governance/native_tooling_ci_policy.md",
     "docs/architecture/authority_map.md",
     "docs/architecture/parity_protocol.md",
     "docs/architecture/authority_transfer_protocol.md",
@@ -37,6 +38,7 @@ ROUTER_LINKS = {
         "docs/governance/workspace_bundle/review_checklist_template.md",
         "docs/governance/drift_protection_map.md",
         "docs/governance/technical_debt_register.md",
+        "docs/governance/native_tooling_ci_policy.md",
         "docs/governance/review_checklist.md",
         "tools/governance/validate_drift_protection.py",
         "tools/governance/validate_technical_debt.py",
@@ -123,6 +125,7 @@ REVIEW_CONCEPTS = {
     "utility reuse": ("utility reuse", "dependency / utility reuse"),
     "Godot boundary": ("godot semantic boundary",),
     "C++ safety or native safety": ("c++ safety", "native c++ safety"),
+    "native tooling CI readiness": ("native tooling ci readiness",),
     "parity": ("parity",),
 }
 
@@ -131,6 +134,7 @@ PR_TEMPLATE_CONCEPTS = {
     "technical debt": ("technical debt", "technical-debt"),
     "drift protection": ("drift protection",),
     "validation": ("validation", "verify.sh"),
+    "native tooling": ("native tooling", "tet4d_strict_native_tools"),
     "staging": ("staging", "staged diff", "git diff --cached --check"),
 }
 
@@ -334,12 +338,26 @@ def check_authority_drift(root: Path = ROOT) -> CheckResult:
         },
         failures,
     )
+    _append_missing_doc_concepts(
+        root,
+        "docs/governance/native_tooling_ci_policy.md",
+        {
+            "local advisory mode": ("local advisory",),
+            "local strict mode": ("local strict",),
+            "CI strict mode": ("ci strict",),
+            "compile database": ("compile_commands.json",),
+            "Python semantic oracle": ("semantic oracle",),
+            "authority transfer": ("authority_transfer_protocol",),
+        },
+        failures,
+    )
 
     for rel in (
         "AGENTS.md",
         "docs/governance/README.md",
         "docs/governance/godot_cpp_policy.md",
         "docs/governance/cpp_safety_policy.md",
+        "docs/governance/native_tooling_ci_policy.md",
         "docs/governance/testing_policy.md",
         "docs/architecture/authority_map.md",
         "docs/architecture/parity_protocol.md",

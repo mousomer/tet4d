@@ -50,6 +50,7 @@ Surfaces:
 - `docs/architecture/authority_transfer_protocol.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
+- `docs/governance/native_tooling_ci_policy.md`
 - `docs/governance/testing_policy.md`
 - `tools/governance/validate_authority_transfer.py`
 
@@ -62,6 +63,8 @@ Required invariants:
 - No policy claims C++ owns gameplay semantics without a transfer record.
 - No policy claims GDScript owns topology, movement, collision, gravity,
   rotation, scoring, trace semantics, or replay correctness.
+- Native tooling CI readiness remains a quality gate and does not imply C++
+  semantic authority.
 
 ## Validator integration drift
 
@@ -83,6 +86,8 @@ Required invariants:
 - Active governance validators are wired into `validate_governance.py`.
 - Project-contract checks know about active governance validators.
 - Validator output remains deterministic and actionable.
+- Native tooling validation preserves local advisory mode and strict
+  `TET4D_STRICT_NATIVE_TOOLS=1` behavior.
 
 ## Debt/advisory drift
 
@@ -147,3 +152,5 @@ The following are intentionally deferred:
 - one-to-one mapping between each advisory finding and a debt record
 - exhaustive TODO/FIXME debt coverage
 - full generated-output checksum comparison
+- strict native tooling CI enforcement until the native compile database and
+  clang tools are reproducible

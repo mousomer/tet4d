@@ -68,6 +68,10 @@ when available and clang-tidy when a compilation database is available. Missing
 optional native tools are reported as skips unless strict mode is enabled with
 `TET4D_STRICT_NATIVE_TOOLS=1`.
 
+CI readiness and strict-mode expectations are defined in
+`docs/governance/native_tooling_ci_policy.md`. Passing native tooling checks is
+a quality gate only; it does not transfer semantic authority to C++.
+
 ## Authority
 
 A native subsystem is provisional until:

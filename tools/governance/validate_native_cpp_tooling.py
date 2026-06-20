@@ -31,10 +31,25 @@ COMPILE_DATABASE_RELS = (
     "build/compile_commands.json",
     "native/compile_commands.json",
 )
+STRICT_ENV = "TET4D_STRICT_NATIVE_TOOLS"
+CI_STRICT_ENV = "TET4D_NATIVE_TOOLS_CI_STRICT"
+CI_ENVS = ("CI", "GITHUB_ACTIONS")
 
 
 def _is_strict() -> bool:
-    return os.environ.get("TET4D_STRICT_NATIVE_TOOLS") == "1"
+    if os.environ.get(STRICT_ENV) == "1":
+        return True
+    return os.environ.get(CI_STRICT_ENV) == "1" and any(
+        os.environ.get(name) for name in CI_ENVS
+    )
+
+
+def _mode_name(strict: bool) -> str:
+    if not strict:
+        return "local advisory"
+    if any(os.environ.get(name) for name in CI_ENVS):
+        return "CI strict"
+    return "local strict"
 
 
 def _is_excluded(path: Path) -> bool:
@@ -199,7 +214,7 @@ def validate(
     if not files:
         return [], ["No native C++ files found; native tooling checks skipped."]
 
-    messages: list[str] = []
+    messages: list[str] = [f"Native C++ tooling mode: {_mode_name(strict)}."]
     issues: list[str] = []
     for rel in (".clang-format", ".clang-tidy"):
         if not (root / rel).is_file():

@@ -2601,10 +2601,23 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
     if not _is_real_native_tree():
         return issues
 
-    required_rels = ("docs/governance/cpp_safety_policy.md",)
+    _validate_native_cpp_required_paths(issues)
+    _validate_native_cpp_policy_contents(issues)
+    _validate_native_cpp_routing(issues)
+    _validate_native_cpp_tooling_validator(issues)
+    _validate_native_cpp_review_routing(issues)
+    return issues
+
+
+def _validate_native_cpp_required_paths(issues: list[ValidationIssue]) -> None:
+    required_rels = (
+        "docs/governance/cpp_safety_policy.md",
+        "docs/governance/native_tooling_ci_policy.md",
+    )
     if _has_native_project_cpp_files():
         required_rels = (
             "docs/governance/cpp_safety_policy.md",
+            "docs/governance/native_tooling_ci_policy.md",
             ".clang-format",
             ".clang-tidy",
         )
@@ -2614,6 +2627,8 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
                 ValidationIssue("missing", f"missing native C++ governance path: {rel}")
             )
 
+
+def _validate_native_cpp_policy_contents(issues: list[ValidationIssue]) -> None:
     cpp_policy = _read_text("docs/governance/cpp_safety_policy.md", issues)
     if cpp_policy is not None:
         _append_missing_concepts(
@@ -2632,6 +2647,37 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
             issues=issues,
         )
 
+    _validate_native_tooling_ci_policy(issues)
+
+    clang_tidy = _read_text(".clang-tidy", issues)
+    if clang_tidy is not None:
+        _validate_native_clang_tidy_content(clang_tidy, issues)
+
+
+def _validate_native_tooling_ci_policy(issues: list[ValidationIssue]) -> None:
+    tooling_policy = _read_text("docs/governance/native_tooling_ci_policy.md", issues)
+    if tooling_policy is not None:
+        _append_missing_concepts(
+            rel="docs/governance/native_tooling_ci_policy.md",
+            label="native tooling CI policy",
+            text=tooling_policy,
+            concept_groups=(
+                ("local advisory mode", ("local advisory",)),
+                ("local strict mode", ("local strict",)),
+                ("CI strict mode", ("ci strict",)),
+                ("strict environment", ("tet4d_strict_native_tools",)),
+                ("clang-format", ("clang-format",)),
+                ("clang-tidy", ("clang-tidy",)),
+                ("compile database", ("compile_commands.json",)),
+                ("Python semantic oracle", ("semantic oracle",)),
+                ("authority transfer", ("authority_transfer_protocol",)),
+                ("technical debt", ("technical_debt_register", "td-0004")),
+            ),
+            issues=issues,
+        )
+
+
+def _validate_native_cpp_routing(issues: list[ValidationIssue]) -> None:
     native_agents = _read_text("native/AGENTS.md", issues)
     if native_agents is not None and "cpp_safety_policy" not in native_agents:
         issues.append(
@@ -2639,11 +2685,16 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
                 "content", "native/AGENTS.md must route to cpp_safety_policy"
             )
         )
+    if native_agents is not None and "native_tooling_ci_policy" not in native_agents:
+        issues.append(
+            ValidationIssue(
+                "content",
+                "native/AGENTS.md must route to native_tooling_ci_policy",
+            )
+        )
 
-    clang_tidy = _read_text(".clang-tidy", issues)
-    if clang_tidy is not None:
-        _validate_native_clang_tidy_content(clang_tidy, issues)
 
+def _validate_native_cpp_tooling_validator(issues: list[ValidationIssue]) -> None:
     tooling_rel = "tools/governance/validate_native_cpp_tooling.py"
     if not (PROJECT_ROOT / tooling_rel).exists():
         issues.append(
@@ -2660,7 +2711,29 @@ def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
                 "tools/governance/validate_governance.py must run native C++ tooling validation",
             )
         )
-    return issues
+
+
+def _validate_native_cpp_review_routing(issues: list[ValidationIssue]) -> None:
+    router = _read_text("docs/governance/README.md", issues)
+    if router is not None and "native_tooling_ci_policy.md" not in router:
+        issues.append(
+            ValidationIssue(
+                "content",
+                "docs/governance/README.md must route native_tooling_ci_policy.md",
+            )
+        )
+
+    checklist = _read_text("docs/governance/review_checklist.md", issues)
+    if checklist is not None:
+        lower = checklist.lower()
+        for token in ("native tooling", "tet4d_strict_native_tools", "ci strict"):
+            if token not in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"docs/governance/review_checklist.md missing native tooling token: {token}",
+                    )
+                )
 
 
 def _validate_native_clang_tidy_content(

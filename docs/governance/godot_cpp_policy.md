@@ -28,6 +28,9 @@ implementation alone. Parity evidence and promotion claims route through
 Native C++ and GDExtension memory-safety rules live in
 `docs/governance/cpp_safety_policy.md`.
 
+Native tooling CI-readiness rules live in
+`docs/governance/native_tooling_ci_policy.md`.
+
 Migration work must keep deterministic rule logic independent from Godot where
 practical and keep Godot-facing adapter code thin.
 

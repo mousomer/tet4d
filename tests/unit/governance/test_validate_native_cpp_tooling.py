@@ -45,6 +45,7 @@ def test_native_cpp_tooling_requires_configs_when_native_files_exist(
 
     assert ".clang-format is missing." in issues
     assert ".clang-tidy is missing." in issues
+    assert "Native C++ tooling mode: local advisory." in messages
     assert "clang-format not found; skipping format execution." in messages
     assert "clang-tidy: skipped; compile_commands.json not found." in messages
 
@@ -61,8 +62,53 @@ def test_native_cpp_tooling_strict_mode_fails_for_missing_tools(
 
     assert "clang-format is required in strict native tooling mode." in issues
     assert "compile_commands.json is required in strict native tooling mode." in issues
+    assert "Native C++ tooling mode: local strict." in messages
     assert "clang-format not found; skipping format execution." in messages
     assert "clang-tidy: skipped; compile_commands.json not found." in messages
+
+
+def test_native_cpp_tooling_strict_mode_fails_for_missing_clang_tidy(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(tmp_path / ".clang-tidy", "Checks: clang-analyzer-*\n")
+    _write_text(tmp_path / "compile_commands.json", "[]\n")
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp")
+
+    def fake_which(name: str) -> str | None:
+        if name == "clang-format":
+            return "/usr/bin/clang-format"
+        return None
+
+    monkeypatch.setattr(native_tooling.shutil, "which", fake_which)
+    monkeypatch.setattr(
+        native_tooling,
+        "_validate_clang_format",
+        lambda files, root, strict: ([], "clang-format: checked 1 files."),
+    )
+
+    issues, messages = native_tooling.validate(tmp_path, strict=True)
+
+    assert "clang-tidy is required in strict native tooling mode." in issues
+    assert "Native C++ tooling mode: local strict." in messages
+    assert "clang-tidy not found; skipping static-analysis execution." in messages
+
+
+def test_native_cpp_tooling_ci_strict_env_uses_strict_mode(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(tmp_path / ".clang-tidy", "Checks: clang-analyzer-*\n")
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp")
+    monkeypatch.setattr(native_tooling.shutil, "which", lambda name: None)
+    monkeypatch.setenv("CI", "true")
+    monkeypatch.setenv("TET4D_NATIVE_TOOLS_CI_STRICT", "1")
+
+    issues, messages = native_tooling.validate(tmp_path)
+
+    assert "clang-format is required in strict native tooling mode." in issues
+    assert "compile_commands.json is required in strict native tooling mode." in issues
+    assert "Native C++ tooling mode: CI strict." in messages
 
 
 def test_native_cpp_tooling_preserves_python_authority_in_policy() -> None:

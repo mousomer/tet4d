@@ -29,6 +29,8 @@
 
 - [ ] Relevant focused tests were run.
 - [ ] `tools/governance/validate_governance.py` was run for governance changes.
+- [ ] Native tooling changes checked local advisory mode and strict
+      `TET4D_STRICT_NATIVE_TOOLS=1` behavior, or documented the blocker.
 - [ ] `CODEX_MODE=1 ./scripts/verify.sh` was run, or skipped with reason.
 - [ ] Failures/skips are documented below.
 

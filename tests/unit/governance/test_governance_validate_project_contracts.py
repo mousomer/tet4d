@@ -180,6 +180,25 @@ def _write_minimal_cpp_safety_policy(root: Path) -> None:
     )
 
 
+def _write_minimal_native_tooling_ci_policy(root: Path) -> None:
+    _write_text(
+        root / "docs" / "governance" / "native_tooling_ci_policy.md",
+        "\n".join(
+            [
+                "# Native Tooling CI Policy",
+                "Local advisory mode skips unavailable tools.",
+                "Local strict mode uses TET4D_STRICT_NATIVE_TOOLS.",
+                "CI strict mode uses the same strict checks.",
+                "clang-format and clang-tidy are native tooling gates.",
+                "compile_commands.json is required for clang-tidy.",
+                "Python remains the semantic oracle.",
+                "See docs/architecture/authority_transfer_protocol.md.",
+                "See docs/governance/technical_debt_register.md and TD-0004.",
+            ]
+        ),
+    )
+
+
 def _write_minimal_native_tooling_governance(root: Path) -> None:
     _write_text(
         root / "tools" / "governance" / "validate_native_cpp_tooling.py",
@@ -941,9 +960,11 @@ def test_native_cpp_safety_governance_requires_style_files(
     _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
     _write_text(
         tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n",
+        "See docs/governance/cpp_safety_policy.md\n"
+        "See docs/governance/native_tooling_ci_policy.md\n",
     )
     _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_ci_policy(tmp_path)
     _write_minimal_native_tooling_governance(tmp_path)
 
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
@@ -960,9 +981,11 @@ def test_native_cpp_safety_governance_rejects_warnings_as_errors_star(
     _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
     _write_text(
         tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n",
+        "See docs/governance/cpp_safety_policy.md\n"
+        "See docs/governance/native_tooling_ci_policy.md\n",
     )
     _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_ci_policy(tmp_path)
     _write_minimal_native_tooling_governance(tmp_path)
     _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
     _write_text(
@@ -983,9 +1006,11 @@ def test_native_cpp_safety_governance_requires_tooling_validator(
     _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
     _write_text(
         tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n",
+        "See docs/governance/cpp_safety_policy.md\n"
+        "See docs/governance/native_tooling_ci_policy.md\n",
     )
     _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_ci_policy(tmp_path)
     _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
     _write_text(
         tmp_path / ".clang-tidy",
@@ -1005,7 +1030,39 @@ def test_native_cpp_safety_governance_accepts_baseline(
     _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
     _write_text(
         tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n",
+        "See docs/governance/cpp_safety_policy.md\n"
+        "See docs/governance/native_tooling_ci_policy.md\n",
+    )
+    _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_ci_policy(tmp_path)
+    _write_minimal_native_tooling_governance(tmp_path)
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(
+        tmp_path / ".clang-tidy",
+        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
+    )
+    _write_text(
+        tmp_path / "docs" / "governance" / "README.md",
+        "docs/governance/native_tooling_ci_policy.md\n",
+    )
+    _write_text(
+        tmp_path / "docs" / "governance" / "review_checklist.md",
+        "Native tooling CI readiness TET4D_STRICT_NATIVE_TOOLS CI strict.\n",
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_native_cpp_safety_governance() == []
+
+
+def test_native_cpp_safety_governance_requires_native_tooling_policy(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_text(
+        tmp_path / "native" / "AGENTS.md",
+        "See docs/governance/cpp_safety_policy.md\n"
+        "See docs/governance/native_tooling_ci_policy.md\n",
     )
     _write_minimal_cpp_safety_policy(tmp_path)
     _write_minimal_native_tooling_governance(tmp_path)
@@ -1014,10 +1071,82 @@ def test_native_cpp_safety_governance_accepts_baseline(
         tmp_path / ".clang-tidy",
         "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
     )
+    _write_text(
+        tmp_path / "docs" / "governance" / "README.md",
+        "docs/governance/native_tooling_ci_policy.md\n",
+    )
+    _write_text(
+        tmp_path / "docs" / "governance" / "review_checklist.md",
+        "Native tooling CI readiness TET4D_STRICT_NATIVE_TOOLS CI strict.\n",
+    )
 
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
-    assert contracts._validate_native_cpp_safety_governance() == []
+    issues = contracts._validate_native_cpp_safety_governance()
+
+    assert any("native_tooling_ci_policy.md" in issue.message for issue in issues)
+
+
+def test_native_cpp_safety_governance_requires_native_tooling_route(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_text(
+        tmp_path / "native" / "AGENTS.md",
+        "See docs/governance/cpp_safety_policy.md\n",
+    )
+    _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_ci_policy(tmp_path)
+    _write_minimal_native_tooling_governance(tmp_path)
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(
+        tmp_path / ".clang-tidy",
+        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
+    )
+    _write_text(
+        tmp_path / "docs" / "governance" / "README.md",
+        "docs/governance/native_tooling_ci_policy.md\n",
+    )
+    _write_text(
+        tmp_path / "docs" / "governance" / "review_checklist.md",
+        "Native tooling CI readiness TET4D_STRICT_NATIVE_TOOLS CI strict.\n",
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_native_cpp_safety_governance()
+
+    assert any("native_tooling_ci_policy" in issue.message for issue in issues)
+
+
+def test_native_cpp_safety_governance_requires_native_tooling_review(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
+    _write_text(
+        tmp_path / "native" / "AGENTS.md",
+        "See docs/governance/cpp_safety_policy.md\n"
+        "See docs/governance/native_tooling_ci_policy.md\n",
+    )
+    _write_minimal_cpp_safety_policy(tmp_path)
+    _write_minimal_native_tooling_ci_policy(tmp_path)
+    _write_minimal_native_tooling_governance(tmp_path)
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(
+        tmp_path / ".clang-tidy",
+        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
+    )
+    _write_text(
+        tmp_path / "docs" / "governance" / "README.md",
+        "docs/governance/native_tooling_ci_policy.md\n",
+    )
+    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_native_cpp_safety_governance()
+
+    assert any("native tooling token" in issue.message for issue in issues)
 
 
 def test_cpp_parity_protocol_governance_requires_protocol(

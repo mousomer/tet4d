@@ -40,6 +40,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/workspace_bundle/drift_protection_policy.md\n"
         "docs/governance/drift_protection_map.md\n"
         "docs/governance/technical_debt_register.md\n"
+        "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
         "tools/governance/validate_technical_debt.py\n"
         "docs/governance/review_checklist.md\n"
@@ -57,12 +58,14 @@ def _valid_fixture(root: Path) -> None:
         "dependency / utility reuse\n"
         "godot semantic boundary\n"
         "native c++ safety\n"
+        "native tooling ci readiness\n"
         "parity\n"
         "tools/governance/validate_governance.py\n",
     )
     _write(
         root / ".github" / "pull_request_template.md",
         "authority\ntechnical debt\ndrift protection\nvalidation\n"
+        "native tooling TET4D_STRICT_NATIVE_TOOLS\n"
         "git diff --cached --check\n",
     )
     _write(
@@ -79,6 +82,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/config_policy.md\n"
         "docs/governance/godot_cpp_policy.md\n"
         "docs/governance/cpp_safety_policy.md\n"
+        "docs/governance/native_tooling_ci_policy.md\n"
         "docs/governance/testing_policy.md\n"
         "docs/architecture/authority_map.md\n"
         "docs/architecture/parity_protocol.md\n"
@@ -136,6 +140,12 @@ def _valid_fixture(root: Path) -> None:
         "collision, gravity, rotation, scoring, trace semantics, or replay semantics.\n",
     )
     _write(root / "docs" / "governance" / "cpp_safety_policy.md", "C++ safety.\n")
+    _write(
+        root / "docs" / "governance" / "native_tooling_ci_policy.md",
+        "Local advisory mode. Local strict mode. CI strict mode. "
+        "compile_commands.json. Python remains the semantic oracle. "
+        "docs/architecture/authority_transfer_protocol.md.\n",
+    )
     _write(root / "docs" / "governance" / "testing_policy.md", "Testing parity.\n")
     _write(
         root / "docs" / "governance" / "config_policy.md",
@@ -324,6 +334,18 @@ def test_godot_policy_missing_semantic_boundary_concepts_fails(
     failures = _messages(drift.validate(tmp_path))
 
     assert any("collision" in item for item in failures)
+
+
+def test_native_tooling_policy_missing_ci_concepts_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    _write(
+        tmp_path / "docs" / "governance" / "native_tooling_ci_policy.md",
+        "Native tooling policy.\n",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("CI strict mode" in item for item in failures)
 
 
 def test_dangerous_authority_inversion_phrase_fails(tmp_path: Path) -> None:

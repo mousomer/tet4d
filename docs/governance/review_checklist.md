@@ -85,6 +85,19 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
 - [ ] GDExtension adapter remains thin.
 - [ ] Native code does not become semantic authority without parity evidence.
 
+## Native tooling CI readiness
+
+- [ ] `docs/governance/native_tooling_ci_policy.md` was checked for native
+      tooling, CI, clang-format, clang-tidy, or compile database changes.
+- [ ] Local advisory mode still skips unavailable native tools without failing
+      unrelated local validation.
+- [ ] Strict mode with `TET4D_STRICT_NATIVE_TOOLS=1` was run or the blocker was
+      recorded as accepted native-tooling debt.
+- [ ] CI strict mode was not enabled unless clang-format, clang-tidy, and
+      `compile_commands.json` are reproducible.
+- [ ] Native tooling readiness was not treated as parity evidence or C++
+      semantic authority.
+
 ## Parity / authority transfer
 
 - [ ] Python oracle behavior identified.
