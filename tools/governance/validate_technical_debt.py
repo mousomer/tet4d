@@ -158,40 +158,59 @@ def parse_register(text: str) -> tuple[list[DebtRecord], list[str]]:
     return records, issues
 
 
+def _validate_required_record_fields(record: DebtRecord) -> list[str]:
+    issues: list[str] = []
+    for field in REQUIRED_COLUMNS:
+        if field == "notes":
+            continue
+        if not str(getattr(record, field)).strip():
+            issues.append(
+                f"{record.id or '<missing>'} has empty required field `{field}`"
+            )
+    return issues
+
+
+def _validate_record_id(record: DebtRecord, seen_ids: set[str]) -> list[str]:
+    issues: list[str] = []
+    if not ID_RE.match(record.id):
+        issues.append(f"{record.id or '<missing>'} has invalid id")
+    if record.id in seen_ids:
+        issues.append(f"{record.id} is duplicated")
+    seen_ids.add(record.id)
+    return issues
+
+
+def _validate_record_enums(record: DebtRecord) -> list[str]:
+    issues: list[str] = []
+    if record.category not in ALLOWED_CATEGORIES:
+        issues.append(f"{record.id} has invalid category `{record.category}`")
+    if record.classification not in ALLOWED_CLASSIFICATIONS:
+        issues.append(
+            f"{record.id} has invalid classification `{record.classification}`"
+        )
+    if record.severity not in ALLOWED_SEVERITIES:
+        issues.append(f"{record.id} has invalid severity `{record.severity}`")
+    if record.status not in ALLOWED_STATUSES:
+        issues.append(f"{record.id} has invalid status `{record.status}`")
+    return issues
+
+
+def _validate_remediation_minutes(record: DebtRecord) -> list[str]:
+    if record.status in OPEN_STATUSES and record.remediation_minutes <= 0:
+        return [f"{record.id} remediation_minutes must be a positive integer"]
+    if record.status in {"mitigated", "closed"} and record.remediation_minutes < 0:
+        return [f"{record.id} remediation_minutes must be zero or a positive integer"]
+    return []
+
+
 def validate_records(records: list[DebtRecord]) -> list[str]:
     issues: list[str] = []
     seen_ids: set[str] = set()
     for record in records:
-        for field in REQUIRED_COLUMNS:
-            if field == "notes":
-                continue
-            if not str(getattr(record, field)).strip():
-                issues.append(
-                    f"{record.id or '<missing>'} has empty required field `{field}`"
-                )
-        if not ID_RE.match(record.id):
-            issues.append(f"{record.id or '<missing>'} has invalid id")
-        if record.id in seen_ids:
-            issues.append(f"{record.id} is duplicated")
-        seen_ids.add(record.id)
-        if record.category not in ALLOWED_CATEGORIES:
-            issues.append(f"{record.id} has invalid category `{record.category}`")
-        if record.classification not in ALLOWED_CLASSIFICATIONS:
-            issues.append(
-                f"{record.id} has invalid classification `{record.classification}`"
-            )
-        if record.severity not in ALLOWED_SEVERITIES:
-            issues.append(f"{record.id} has invalid severity `{record.severity}`")
-        if record.status not in ALLOWED_STATUSES:
-            issues.append(f"{record.id} has invalid status `{record.status}`")
-        if record.status in OPEN_STATUSES and record.remediation_minutes <= 0:
-            issues.append(f"{record.id} remediation_minutes must be a positive integer")
-        elif (
-            record.status in {"mitigated", "closed"} and record.remediation_minutes < 0
-        ):
-            issues.append(
-                f"{record.id} remediation_minutes must be zero or a positive integer"
-            )
+        issues.extend(_validate_required_record_fields(record))
+        issues.extend(_validate_record_id(record, seen_ids))
+        issues.extend(_validate_record_enums(record))
+        issues.extend(_validate_remediation_minutes(record))
     return issues
 
 

@@ -187,40 +187,64 @@ def _is_placeholder(value: str) -> bool:
     return not normalized or normalized in PLACEHOLDERS
 
 
+def _validate_required_record_fields(record: TransferRecord) -> list[str]:
+    failures: list[str] = []
+    for field in REQUIRED_COLUMNS:
+        if field == "notes":
+            continue
+        if _is_placeholder(getattr(record, field)):
+            failures.append(
+                f"{record.id or '<missing>'} has empty or placeholder `{field}`"
+            )
+    return failures
+
+
+def _validate_record_identity(
+    record: TransferRecord, seen: set[str]
+) -> tuple[list[str], set[str]]:
+    failures: list[str] = []
+    if not TRANSFER_ID_RE.match(record.id):
+        failures.append(f"{record.id or '<missing>'} has invalid transfer id")
+    if record.id in seen:
+        failures.append(f"{record.id} is duplicated")
+    seen.add(record.id)
+    return failures, seen
+
+
+def _validate_record_status(record: TransferRecord) -> list[str]:
+    failures: list[str] = []
+    if record.status not in ALLOWED_STATUSES:
+        failures.append(f"{record.id} has invalid status `{record.status}`")
+    if record.status != "retired" and "python" not in record.current_authority.lower():
+        failures.append(f"{record.id} current_authority must include Python")
+    return failures
+
+
+def _validate_transferred_record_evidence(record: TransferRecord) -> list[str]:
+    if record.status != "transferred":
+        return []
+
+    failures: list[str] = []
+    for field in (
+        "golden_fixtures",
+        "comparison_command",
+        "authority_map_update",
+        "validation",
+    ):
+        if _is_placeholder(getattr(record, field)):
+            failures.append(f"{record.id} transferred row has placeholder `{field}`")
+    return failures
+
+
 def _validate_record_fields(records: list[TransferRecord]) -> list[str]:
     failures: list[str] = []
     seen: set[str] = set()
-    required_non_notes = [field for field in REQUIRED_COLUMNS if field != "notes"]
     for record in records:
-        for field in required_non_notes:
-            value = getattr(record, field)
-            if _is_placeholder(value):
-                failures.append(
-                    f"{record.id or '<missing>'} has empty or placeholder `{field}`"
-                )
-        if not TRANSFER_ID_RE.match(record.id):
-            failures.append(f"{record.id or '<missing>'} has invalid transfer id")
-        if record.id in seen:
-            failures.append(f"{record.id} is duplicated")
-        seen.add(record.id)
-        if record.status not in ALLOWED_STATUSES:
-            failures.append(f"{record.id} has invalid status `{record.status}`")
-        if (
-            record.status != "retired"
-            and "python" not in record.current_authority.lower()
-        ):
-            failures.append(f"{record.id} current_authority must include Python")
-        if record.status == "transferred":
-            for field in (
-                "golden_fixtures",
-                "comparison_command",
-                "authority_map_update",
-                "validation",
-            ):
-                if _is_placeholder(getattr(record, field)):
-                    failures.append(
-                        f"{record.id} transferred row has placeholder `{field}`"
-                    )
+        failures.extend(_validate_required_record_fields(record))
+        record_failures, seen = _validate_record_identity(record, seen)
+        failures.extend(record_failures)
+        failures.extend(_validate_record_status(record))
+        failures.extend(_validate_transferred_record_evidence(record))
     return failures
 
 

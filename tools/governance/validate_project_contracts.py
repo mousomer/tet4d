@@ -2879,47 +2879,22 @@ def _validate_technical_debt_governance() -> list[ValidationIssue]:
     return issues
 
 
-def _validate_drift_protection_governance() -> list[ValidationIssue]:
+def _validate_required_governance_paths(
+    required_paths: tuple[str, ...], label: str
+) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
-    required_paths = (
-        "docs/governance/workspace_bundle/drift_protection_policy.md",
-        "docs/governance/drift_protection_map.md",
-        "tools/governance/validate_drift_protection.py",
-    )
     for rel in required_paths:
         if not (PROJECT_ROOT / rel).exists():
-            issues.append(
-                ValidationIssue("missing", f"missing drift-protection path: {rel}")
-            )
+            issues.append(ValidationIssue("missing", f"missing {label} path: {rel}"))
+    return issues
 
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/governance/README.md",
-            (
-                "drift_protection_policy.md",
-                "drift_protection_map.md",
-                "validate_drift_protection.py",
-            ),
-        ),
-        (
-            "docs/governance/review_checklist.md",
-            ("drift protection", "validate_governance.py", "generated outputs"),
-        ),
-        (
-            "tools/governance/validate_governance.py",
-            ("validate_drift_protection",),
-        ),
-        (
-            "docs/governance/drift_protection_map.md",
-            (
-                "workspace_bundle/drift_protection_policy.md",
-                "tet4d-specific",
-                "governance routing drift",
-                "authority drift",
-                "config/generated drift",
-            ),
-        ),
-    )
+
+def _validate_governance_doc_tokens(
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...],
+    label: str,
+    issues: list[ValidationIssue],
+) -> list[ValidationIssue]:
+    content_issues: list[ValidationIssue] = []
     for rel, tokens in required_docs:
         text = _read_text(rel, issues)
         if text is None:
@@ -2927,111 +2902,66 @@ def _validate_drift_protection_governance() -> list[ValidationIssue]:
         lower = text.lower()
         for token in tokens:
             if token not in lower:
-                issues.append(
+                content_issues.append(
                     ValidationIssue(
                         "content",
-                        f"{rel} missing drift-protection governance token: {token}",
+                        f"{rel} missing {label} governance token: {token}",
                     )
                 )
+    return content_issues
 
+
+def _validate_drift_protection_map_uniqueness() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
     map_text = _read_text("docs/governance/drift_protection_map.md", issues)
     workspace_text = _read_text(
         "docs/governance/workspace_bundle/drift_protection_policy.md", issues
     )
-    if map_text is not None and workspace_text is not None:
-        map_body = map_text.lower()
-        workspace_body = workspace_text.lower()
-        duplicated_workspace_markers = (
-            "## general drift risks",
-            "## general drift-protection rules",
-            "## project-specific drift maps",
-        )
-        for marker in duplicated_workspace_markers:
-            if marker in map_body:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        "docs/governance/drift_protection_map.md must not copy "
-                        f"workspace policy section {marker}",
-                    )
-                )
-        if map_body == workspace_body:
+    if map_text is None or workspace_text is None:
+        return issues
+
+    map_body = map_text.lower()
+    workspace_body = workspace_text.lower()
+    duplicated_workspace_markers = (
+        "## general drift risks",
+        "## general drift-protection rules",
+        "## project-specific drift maps",
+    )
+    for marker in duplicated_workspace_markers:
+        if marker in map_body:
             issues.append(
                 ValidationIssue(
                     "content",
-                    "project drift map must not duplicate workspace drift policy",
+                    "docs/governance/drift_protection_map.md must not copy "
+                    f"workspace policy section {marker}",
                 )
             )
+    if map_body == workspace_body:
+        issues.append(
+            ValidationIssue(
+                "content",
+                "project drift map must not duplicate workspace drift policy",
+            )
+        )
     return issues
 
 
-def _validate_authority_transfer_governance() -> list[ValidationIssue]:
+def _validate_workspace_bundle_authority_transfer_separation() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
-    required_paths = (
-        "docs/architecture/authority_transfer_protocol.md",
-        "tools/governance/validate_authority_transfer.py",
-    )
-    for rel in required_paths:
-        if not (PROJECT_ROOT / rel).exists():
-            issues.append(
-                ValidationIssue("missing", f"missing authority-transfer path: {rel}")
-            )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/governance/README.md",
-            (
-                "authority_transfer_protocol.md",
-                "validate_authority_transfer.py",
-            ),
-        ),
-        (
-            "docs/architecture/authority_map.md",
-            ("authority_transfer_protocol.md",),
-        ),
-        (
-            "docs/architecture/parity_protocol.md",
-            ("authority_transfer_protocol.md",),
-        ),
-        (
-            "docs/governance/drift_protection_map.md",
-            ("authority_transfer_protocol.md", "validate_authority_transfer.py"),
-        ),
-        (
-            "tools/governance/validate_governance.py",
-            ("validate_authority_transfer",),
-        ),
-        (
-            "docs/governance/review_checklist.md",
-            ("authority transfer", "transfer record", "fallback path"),
-        ),
-    )
-    for rel, tokens in required_docs:
-        text = _read_text(rel, issues)
-        if text is None:
-            continue
-        lower = text.lower()
-        for token in tokens:
-            if token not in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} missing authority-transfer governance token: {token}",
-                    )
-                )
-
     bundle_root = PROJECT_ROOT / "docs/governance/workspace_bundle"
-    if bundle_root.exists():
-        for path in sorted(bundle_root.glob("*.md")):
-            text = path.read_text(encoding="utf-8").lower()
-            if "tet4d authority-transfer" in text or "transfer record" in text:
-                rel = path.relative_to(PROJECT_ROOT).as_posix()
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} must not define tet4d authority-transfer records",
-                    )
+    if not bundle_root.exists():
+        return issues
+
+    for path in sorted(bundle_root.glob("*.md")):
+        text = path.read_text(encoding="utf-8").lower()
+        if "tet4d authority-transfer" in text or "transfer record" in text:
+            rel = path.relative_to(PROJECT_ROOT).as_posix()
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{rel} must not define tet4d authority-transfer records",
                 )
+            )
     if (bundle_root / "authority_transfer_protocol.md").exists():
         issues.append(
             ValidationIssue(
@@ -3039,6 +2969,109 @@ def _validate_authority_transfer_governance() -> list[ValidationIssue]:
                 "authority-transfer protocol must live outside workspace bundle",
             )
         )
+    return issues
+
+
+def _validate_drift_protection_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    issues.extend(
+        _validate_required_governance_paths(
+            (
+                "docs/governance/workspace_bundle/drift_protection_policy.md",
+                "docs/governance/drift_protection_map.md",
+                "tools/governance/validate_drift_protection.py",
+            ),
+            "drift-protection",
+        )
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            (
+                (
+                    "docs/governance/README.md",
+                    (
+                        "drift_protection_policy.md",
+                        "drift_protection_map.md",
+                        "validate_drift_protection.py",
+                    ),
+                ),
+                (
+                    "docs/governance/review_checklist.md",
+                    ("drift protection", "validate_governance.py", "generated outputs"),
+                ),
+                (
+                    "tools/governance/validate_governance.py",
+                    ("validate_drift_protection",),
+                ),
+                (
+                    "docs/governance/drift_protection_map.md",
+                    (
+                        "workspace_bundle/drift_protection_policy.md",
+                        "tet4d-specific",
+                        "governance routing drift",
+                        "authority drift",
+                        "config/generated drift",
+                    ),
+                ),
+            ),
+            "drift-protection",
+            issues,
+        )
+    )
+    issues.extend(_validate_drift_protection_map_uniqueness())
+    return issues
+
+
+def _validate_authority_transfer_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    issues.extend(
+        _validate_required_governance_paths(
+            (
+                "docs/architecture/authority_transfer_protocol.md",
+                "tools/governance/validate_authority_transfer.py",
+            ),
+            "authority-transfer",
+        )
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            (
+                (
+                    "docs/governance/README.md",
+                    (
+                        "authority_transfer_protocol.md",
+                        "validate_authority_transfer.py",
+                    ),
+                ),
+                (
+                    "docs/architecture/authority_map.md",
+                    ("authority_transfer_protocol.md",),
+                ),
+                (
+                    "docs/architecture/parity_protocol.md",
+                    ("authority_transfer_protocol.md",),
+                ),
+                (
+                    "docs/governance/drift_protection_map.md",
+                    (
+                        "authority_transfer_protocol.md",
+                        "validate_authority_transfer.py",
+                    ),
+                ),
+                (
+                    "tools/governance/validate_governance.py",
+                    ("validate_authority_transfer",),
+                ),
+                (
+                    "docs/governance/review_checklist.md",
+                    ("authority transfer", "transfer record", "fallback path"),
+                ),
+            ),
+            "authority-transfer",
+            issues,
+        )
+    )
+    issues.extend(_validate_workspace_bundle_authority_transfer_separation())
     return issues
 
 
