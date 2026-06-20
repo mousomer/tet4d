@@ -2972,6 +2972,108 @@ def _validate_workspace_bundle_authority_transfer_separation() -> list[Validatio
     return issues
 
 
+def _validate_workspace_review_template_neutrality() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    rel = "docs/governance/workspace_bundle/review_checklist_template.md"
+    text = _read_text(rel, issues)
+    if text is None:
+        return issues
+
+    forbidden_terms = (
+        "tet4d",
+        "python oracle",
+        "python semantic oracle",
+        "godot shell",
+        "w-slice",
+        "topology gameplay",
+        "config/project",
+    )
+    lower = text.lower()
+    for term in forbidden_terms:
+        if term in lower:
+            issues.append(
+                ValidationIssue(
+                    "content",
+                    f"{rel} contains project-specific forbidden term: {term}",
+                )
+            )
+    return issues
+
+
+def _validate_review_template_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    issues.extend(
+        _validate_required_governance_paths(
+            (
+                ".github/pull_request_template.md",
+                "docs/governance/review_checklist.md",
+                "docs/governance/workspace_bundle/review_checklist_template.md",
+            ),
+            "review-template",
+        )
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            (
+                (
+                    "docs/governance/README.md",
+                    (
+                        ".github/pull_request_template.md",
+                        "docs/governance/review_checklist.md",
+                        "docs/governance/workspace_bundle/review_checklist_template.md",
+                    ),
+                ),
+                (
+                    "docs/governance/review_checklist.md",
+                    (
+                        "workspace_bundle/review_checklist_template.md",
+                        "authority_map",
+                        "parity_protocol",
+                        "authority_transfer_protocol",
+                        "technical_debt_register",
+                        "drift_protection_map",
+                        "generated bundle",
+                        "staging discipline",
+                    ),
+                ),
+            ),
+            "review-template",
+            issues,
+        )
+    )
+
+    pr_template = _read_text(".github/pull_request_template.md", issues)
+    if pr_template is not None:
+        _append_missing_concepts(
+            rel=".github/pull_request_template.md",
+            label="PR template",
+            text=pr_template,
+            concept_groups=(
+                ("scope/summary", ("summary", "scope")),
+                ("unrelated dirty files", ("unrelated dirty files",)),
+                ("Python semantic authority", ("python semantic",)),
+                ("Godot/GDScript boundary", ("godot", "gdscript")),
+                ("C++/GDExtension provisional", ("provisional", "gdextension")),
+                ("authority-transfer protocol", ("authority-transfer",)),
+                ("utility reuse/no reinvention", ("utilities", "duplicate")),
+                ("config/constants authority", ("config/constants", "constants")),
+                ("generated files", ("generated",)),
+                ("technical debt", ("technical debt", "technical-debt")),
+                ("drift protection", ("drift protection",)),
+                ("validation commands", ("validation commands",)),
+                (
+                    "full verification",
+                    ("codex_mode=1 ./scripts/verify.sh",),
+                ),
+                ("staging discipline", ("git diff --cached --check", "staged diff")),
+            ),
+            issues=issues,
+        )
+
+    issues.extend(_validate_workspace_review_template_neutrality())
+    return issues
+
+
 def _validate_drift_protection_governance() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     issues.extend(
@@ -3092,6 +3194,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_technical_debt_governance())
     issues.extend(_validate_drift_protection_governance())
     issues.extend(_validate_authority_transfer_governance())
+    issues.extend(_validate_review_template_governance())
     return issues
 
 

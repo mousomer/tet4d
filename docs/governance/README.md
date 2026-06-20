@@ -17,6 +17,7 @@ overlay, not a replacement for existing Python/repo governance.
 - native C++ safety policy: `docs/governance/cpp_safety_policy.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
+- GitHub PR template: `.github/pull_request_template.md`
 - dependency/reuse policy: `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`
 - utility index: `docs/architecture/utility_index.md`
 - utility reuse validator:
@@ -39,6 +40,17 @@ tet4d-specific authority.
 tet4d-specific rules live in this router,
 `docs/architecture/authority_map.md`, `docs/architecture/parity_protocol.md`,
 and the project overlay policies in `docs/governance/`.
+
+## Review and PR checks
+
+Reusable review guidance lives in
+`docs/governance/workspace_bundle/review_checklist_template.md`.
+
+tet4d-specific review checks live in `docs/governance/review_checklist.md`.
+
+The GitHub PR template lives in `.github/pull_request_template.md`.
+
+Project-contract validation checks that the review surfaces remain routed.
 
 ## Technical debt and drift protection
 

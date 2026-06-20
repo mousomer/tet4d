@@ -29,6 +29,14 @@ Codex must search by concept, likely function/class name, related config key,
 and subsystem name. Shared reusable helpers must be checked against
 `docs/architecture/utility_index.md`.
 
+## Review reporting
+
+Codex tasks must use `docs/governance/review_checklist.md` for final review
+coverage. When a task changes governance, migration, generated outputs, or
+cross-layer behavior, the final report must include changed files, created
+files, preserved areas, checks run, technical-debt delta, drift/authority
+implications, and remaining risks.
+
 ## Task routing
 
 ### Python task

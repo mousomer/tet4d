@@ -35,6 +35,8 @@ def _valid_fixture(root: Path) -> None:
     _write(root / "native" / "AGENTS.md", "Native C++ only.\n")
     _write(
         root / "docs" / "governance" / "README.md",
+        ".github/pull_request_template.md\n"
+        "docs/governance/workspace_bundle/review_checklist_template.md\n"
         "docs/governance/workspace_bundle/drift_protection_policy.md\n"
         "docs/governance/drift_protection_map.md\n"
         "docs/governance/technical_debt_register.md\n"
@@ -57,6 +59,11 @@ def _valid_fixture(root: Path) -> None:
         "native c++ safety\n"
         "parity\n"
         "tools/governance/validate_governance.py\n",
+    )
+    _write(
+        root / ".github" / "pull_request_template.md",
+        "authority\ntechnical debt\ndrift protection\nvalidation\n"
+        "git diff --cached --check\n",
     )
     _write(
         root / "docs" / "governance" / "technical_debt_register.md",
@@ -93,8 +100,20 @@ def _valid_fixture(root: Path) -> None:
         "# Drift Protection Policy\nReusable guidance.\n",
     )
     _write(
+        root
+        / "docs"
+        / "governance"
+        / "workspace_bundle"
+        / "review_checklist_template.md",
+        "# Review Checklist Template\nReusable guidance.\n",
+    )
+    _write(
         root / "docs" / "governance" / "workspace_bundle" / "MANIFEST.md",
-        _manifest("drift_protection_policy.md", "MANIFEST.md"),
+        _manifest(
+            "drift_protection_policy.md",
+            "review_checklist_template.md",
+            "MANIFEST.md",
+        ),
     )
     _write(
         root / "docs" / "architecture" / "authority_map.md",
@@ -344,6 +363,40 @@ def test_review_checklist_missing_drift_concept_fails(tmp_path: Path) -> None:
     failures = _messages(drift.validate(tmp_path))
 
     assert any("drift protection" in item for item in failures)
+
+
+def test_pr_template_missing_review_concept_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    template = tmp_path / ".github" / "pull_request_template.md"
+    template.write_text(
+        "authority\ntechnical debt\nvalidation\nstaging\n", encoding="utf-8"
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("drift protection" in item for item in failures)
+
+
+def test_pr_template_unreachable_from_review_governance_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    router = tmp_path / "docs" / "governance" / "README.md"
+    router.write_text(
+        router.read_text(encoding="utf-8").replace(
+            ".github/pull_request_template.md\n", ""
+        ),
+        encoding="utf-8",
+    )
+    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
+    drift_map.write_text(
+        drift_map.read_text(encoding="utf-8").replace(
+            ".github/pull_request_template.md\n", ""
+        ),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("pull_request_template.md is not reachable" in item for item in failures)
 
 
 def test_technical_debt_register_missing_drift_policy_link_fails(

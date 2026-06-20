@@ -12,6 +12,10 @@
 - [ ] Public/cross-layer APIs remain compatible or migration is documented.
 - [ ] Suppressions are narrow and reasoned.
 - [ ] Technical debt delta is recorded if applicable.
+- [ ] Drift risk was considered for policy, generated, public API, and routing
+      surfaces.
+- [ ] Relevant validators/checks were run or skipped with a recorded reason.
+- [ ] Mixed or unrelated files were staged narrowly.
 
 ## Project-specific overlay
 

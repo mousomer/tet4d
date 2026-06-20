@@ -739,6 +739,158 @@ def test_authority_transfer_governance_accepts_baseline(
     assert contracts._validate_authority_transfer_governance() == []
 
 
+def _valid_pr_template() -> str:
+    return "\n".join(
+        [
+            "# Pull Request Checklist",
+            "## Summary",
+            "- Scope is limited.",
+            "- Unrelated dirty files were not staged.",
+            "## Authority",
+            "- Python semantic authority is preserved.",
+            "- Godot/GDScript boundary remains presentation only.",
+            "- C++/GDExtension remains provisional.",
+            "- authority-transfer protocol checked.",
+            "## Governance",
+            "- Existing utilities searched; duplicate implementations avoided.",
+            "- config/constants authority checked.",
+            "- Generated files were not hand-edited.",
+            "- Technical debt delta described.",
+            "- Drift protection impact described.",
+            "## Validation commands",
+            "- CODEX_MODE=1 ./scripts/verify.sh",
+            "- git diff --cached --check",
+            "",
+        ]
+    )
+
+
+def _write_minimal_review_template_governance(root: Path) -> None:
+    _write_text(root / ".github" / "pull_request_template.md", _valid_pr_template())
+    _write_text(
+        root
+        / "docs"
+        / "governance"
+        / "workspace_bundle"
+        / "review_checklist_template.md",
+        "General programming. Generated files. Technical debt. Drift risk. Validators. Staging.\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        "docs/governance/workspace_bundle/review_checklist_template.md\n"
+        "docs/architecture/authority_map.md\n"
+        "docs/architecture/parity_protocol.md\n"
+        "docs/architecture/authority_transfer_protocol.md\n"
+        "docs/governance/technical_debt_register.md\n"
+        "docs/governance/drift_protection_map.md\n"
+        "generated bundle\n"
+        "staging discipline\n",
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        ".github/pull_request_template.md\n"
+        "docs/governance/review_checklist.md\n"
+        "docs/governance/workspace_bundle/review_checklist_template.md\n",
+    )
+
+
+def test_review_template_governance_requires_pr_template(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_review_template_governance(tmp_path)
+    (tmp_path / ".github" / "pull_request_template.md").unlink()
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_review_template_governance()
+
+    assert any("pull_request_template.md" in issue.message for issue in issues)
+
+
+def test_review_template_governance_requires_router_pr_template_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_review_template_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_review_template_governance()
+
+    assert any(".github/pull_request_template.md" in issue.message for issue in issues)
+
+
+def test_review_template_governance_requires_workspace_template_link(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_review_template_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_review_template_governance()
+
+    assert any(
+        "workspace_bundle/review_checklist_template.md" in issue.message
+        for issue in issues
+    )
+
+
+def test_review_template_governance_rejects_workspace_tet4d_terms(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_review_template_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "governance"
+        / "workspace_bundle"
+        / "review_checklist_template.md",
+        "tet4d Python semantic oracle\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_review_template_governance()
+
+    assert any("forbidden term" in issue.message for issue in issues)
+
+
+def test_review_template_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_review_template_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_review_template_governance() == []
+
+
+def test_pr_template_missing_required_concepts_fails(
+    tmp_path: Path, monkeypatch
+) -> None:
+    missing_terms = (
+        "Python semantic authority",
+        "Godot/GDScript boundary",
+        "C++/GDExtension remains provisional",
+        "authority-transfer protocol",
+        "utilities searched; duplicate",
+        "config/constants authority",
+        "Generated files",
+        "Technical debt",
+        "Drift protection",
+        "Validation commands",
+        "git diff --cached --check",
+    )
+    _write_minimal_review_template_governance(tmp_path)
+    template = _valid_pr_template()
+    for term in missing_terms:
+        _write_text(
+            tmp_path / ".github" / "pull_request_template.md",
+            template.replace(term, ""),
+        )
+        monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+        issues = contracts._validate_review_template_governance()
+
+        assert issues, f"expected missing concept failure for {term}"
+
+
 def test_config_authority_governance_requires_validator(
     tmp_path: Path, monkeypatch
 ) -> None:

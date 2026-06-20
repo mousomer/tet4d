@@ -1,7 +1,9 @@
-# Review Checklist
+# tet4d Review Checklist
 
-This checklist extends the reusable workspace governance in
-`docs/governance/workspace_bundle/`.
+This checklist extends
+`docs/governance/workspace_bundle/review_checklist_template.md`.
+
+Use it for Codex tasks, local commits, PRs, and governance reviews.
 
 ## Governance routing
 
@@ -17,7 +19,13 @@ This checklist extends the reusable workspace governance in
 - [ ] Godot ownership is limited to UI/product-shell/presentation unless
       explicitly documented.
 - [ ] C++ authority requires parity evidence.
+- [ ] C++/GDExtension remains provisional until parity evidence and a completed
+      authority-transfer record exist.
 - [ ] No GDScript semantic duplication was introduced.
+- [ ] `docs/architecture/authority_map.md`,
+      `docs/architecture/parity_protocol.md`, and
+      `docs/architecture/authority_transfer_protocol.md` were updated when
+      authority claims changed.
 
 ## Safety
 
@@ -39,6 +47,8 @@ This checklist extends the reusable workspace governance in
 
 ## Technical debt
 
+- [ ] `docs/governance/technical_debt_register.md` was checked when debt,
+      suppressions, or advisories changed.
 - [ ] New suppressions are either removed or recorded as debt.
 - [ ] Advisory validator findings introduced by this change are classified.
 - [ ] Accepted/deferred cleanup has a debt record with remediation estimate.
@@ -46,6 +56,8 @@ This checklist extends the reusable workspace governance in
 
 ## Drift protection
 
+- [ ] `docs/governance/drift_protection_map.md` was checked when governance,
+      generated, authority, or validator routing changed.
 - [ ] New governance files are reachable from a router, index, manifest, or
       local `AGENTS.md`.
 - [ ] New validators are wired into
@@ -55,6 +67,12 @@ This checklist extends the reusable workspace governance in
 - [ ] Config/generated surfaces still identify source authority or generator.
 - [ ] New project overlays link to the workspace policies they extend.
 - [ ] Generated outputs were not hand-edited.
+- [ ] Generated bundle updates under `migration/exported_bundle/` reflect
+      committed source/config/docs.
+- [ ] Generated bundle files and other generated outputs were committed
+      separately where practical.
+- [ ] `docs/BACKLOG.md` and generated bundle files were not staged wholesale
+      when they contained mixed hunks.
 - [ ] Accepted advisory findings or suppressions are classified or recorded as
       debt.
 
@@ -94,6 +112,8 @@ This checklist extends the reusable workspace governance in
 - [ ] Nontrivial constants are routed through config policy.
 - [ ] Magic-number policy is clear.
 - [ ] Config authority between Python/Godot/C++ is clear.
+- [ ] Generated config/reference/migration-bundle outputs identify their source
+      authority or generator.
 - [ ] Suspicious hardcoded constants from the config-authority validator are
       addressed, suppressed with a narrow reason, or documented as advisory
       debt.
@@ -103,6 +123,27 @@ This checklist extends the reusable workspace governance in
 - [ ] Behavioral changes require tests.
 - [ ] Migration work requires parity evidence.
 - [ ] Testing policy covers Python, C++, and Godot layers.
+
+## Validation commands
+
+- [ ] Focused tests or validators relevant to the changed area were run.
+- [ ] Governance changes ran `tools/governance/validate_governance.py`.
+- [ ] Full verification ran with `CODEX_MODE=1 ./scripts/verify.sh`, or the
+      skip/failure reason is recorded.
+- [ ] Staged diff hygiene ran with `git diff --cached --check` before commit.
+
+## Staging discipline
+
+- [ ] Unrelated dirty files were not staged.
+- [ ] Mixed files were staged with `git add -p`.
+- [ ] Generated files were committed separately where practical.
+
+## Final report expectations
+
+- [ ] Files changed and files created are reported.
+- [ ] Preserved areas are reported.
+- [ ] Checks run and remaining risks are reported.
+- [ ] Technical-debt delta and drift/authority implications are reported.
 
 ## Maintainability
 

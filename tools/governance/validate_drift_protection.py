@@ -8,6 +8,7 @@ import re
 ROOT = Path(__file__).resolve().parents[2]
 
 REQUIRED_FILES = (
+    ".github/pull_request_template.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -31,9 +32,12 @@ REQUIRED_FILES = (
 
 ROUTER_LINKS = {
     "docs/governance/README.md": (
+        ".github/pull_request_template.md",
         "docs/governance/workspace_bundle/drift_protection_policy.md",
+        "docs/governance/workspace_bundle/review_checklist_template.md",
         "docs/governance/drift_protection_map.md",
         "docs/governance/technical_debt_register.md",
+        "docs/governance/review_checklist.md",
         "tools/governance/validate_drift_protection.py",
         "tools/governance/validate_technical_debt.py",
     ),
@@ -120,6 +124,14 @@ REVIEW_CONCEPTS = {
     "Godot boundary": ("godot semantic boundary",),
     "C++ safety or native safety": ("c++ safety", "native c++ safety"),
     "parity": ("parity",),
+}
+
+PR_TEMPLATE_CONCEPTS = {
+    "authority": ("authority",),
+    "technical debt": ("technical debt", "technical-debt"),
+    "drift protection": ("drift protection",),
+    "validation": ("validation", "verify.sh"),
+    "staging": ("staging", "staged diff", "git diff --cached --check"),
 }
 
 
@@ -397,6 +409,21 @@ def check_review_checklist_drift(root: Path = ROOT) -> CheckResult:
     for concept in contains_all_concepts(checklist, REVIEW_CONCEPTS):
         failures.append(
             f"docs/governance/review_checklist.md is missing review concept `{concept}`"
+        )
+    pr_template = read_text(root, ".github/pull_request_template.md", failures)
+    for concept in contains_all_concepts(pr_template, PR_TEMPLATE_CONCEPTS):
+        failures.append(
+            f".github/pull_request_template.md is missing review concept `{concept}`"
+        )
+
+    router = read_text(root, "docs/governance/README.md", failures)
+    drift_map = read_text(root, "docs/governance/drift_protection_map.md", failures)
+    if (
+        ".github/pull_request_template.md" not in router
+        and ".github/pull_request_template.md" not in drift_map
+    ):
+        failures.append(
+            ".github/pull_request_template.md is not reachable from review governance"
         )
     return CheckResult("review checklist drift", failures)
 

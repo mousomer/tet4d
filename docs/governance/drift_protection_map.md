@@ -14,6 +14,8 @@ Surfaces:
 - `native/AGENTS.md`
 - `docs/governance/README.md`
 - `docs/governance/review_checklist.md`
+- `docs/governance/workspace_bundle/review_checklist_template.md`
+- `.github/pull_request_template.md`
 
 Required invariants:
 
@@ -22,6 +24,8 @@ Required invariants:
 - `docs/governance/README.md` links active governance surfaces.
 - New governance files are reachable from a router, index, manifest, or local
   `AGENTS.md`.
+- Review surfaces route to workspace governance, tet4d authority, debt, drift,
+  generated-file, validation, and staging checks.
 
 ## Workspace bundle drift
 
