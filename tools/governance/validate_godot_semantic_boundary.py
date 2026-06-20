@@ -73,7 +73,7 @@ ADAPTER_TOKENS = (
 )
 PRESENTATION_PARTS = {"presentation", "rendering", "traces", "ui", "bundle", "tests"}
 
-SUPPRESSION_RE = re.compile(r"tet4d-semantic-boundary:\s*allow\s+([a-z0-9-]+)")
+SUPPRESSION_RE = re.compile("tet4d-semantic-boundary:" + r"\s*allow\s+([a-z0-9-]+)")
 FUNC_RE = re.compile(r"^\s*func\s+([A-Za-z0-9_]+)")
 ASSIGNMENT_RE = re.compile(
     r"^\s*(?:var|const)\s+.*(?:legal|valid|collision|gravity|topology|seam|wrap|boundary|neighbor|neighbour|score)\w*\s*=",

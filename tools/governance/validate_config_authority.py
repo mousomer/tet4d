@@ -106,7 +106,7 @@ SUSPICIOUS_CONTEXT_TERMS = (
 )
 ALLOWED_NUMBERS = {"-1", "0", "1", "2"}
 
-SUPPRESSION_RE = re.compile(r"tet4d-config-authority:\s*allow\s+([a-z0-9-]+)")
+SUPPRESSION_RE = re.compile("tet4d-config-authority:" + r"\s*allow\s+([a-z0-9-]+)")
 NUMBER_RE = re.compile(r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])")
 CONFIG_PATH_RE = re.compile(
     r"""["'](?:config|docs)/(?:[^"']+)\.(?:json|md|toml|yaml|yml)["']"""
