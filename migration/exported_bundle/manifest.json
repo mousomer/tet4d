@@ -10,7 +10,7 @@
   "bundle_version": 1,
   "config": {
     "bundle_path": "config/tet4d_config_bundle.json",
-    "combined_digest": "5a48f393c03a03bee77becb8e73efcf07f6dd8697ed2f388e2f8ef66b24c753d",
+    "combined_digest": "81d803d8aebb61926bc25a0c6297eee729d9b549511c2192853847c66a3c8381",
     "files": [
       {
         "category": "audio_defaults",
@@ -125,7 +125,7 @@
       {
         "category": "project_governance",
         "path": "config/project/policy_pack.json",
-        "sha256": "26e02bfeee391508f681557fda6d6a23e02eded2ad16a9d232facd251a2c462b"
+        "sha256": "d138e8b3bcf402114f18ce34fb7de7c382ebcc512de383a7247b647254142d11"
       },
       {
         "category": "topology_defaults",
@@ -159,19 +159,19 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "cbdfbb2b2b2c02d3a44469f475e5e03fbac65b7d566e6e845b0a3f099f1995d7",
+        "sha256": "d34e2e3b07188ff3e47f258055401a583638b55c894bb1fa72cd0462e8f306fb",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "9eac198e834a2e4a57212778dee70777329178cfb945efd7974aab588e9f617a",
+        "sha256": "f63fef1e46efd2da9e6f4d83c02d11d39bb9292cb3c4f2a233ab4d62222a2fc9",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "ccb55db399dd06e9e6d4938bcb721efbde0603efa53783f54a23f2f0cb3e8435",
+        "sha256": "1f815cc20d6509f5496362dd36628e814255b762adcbe4c79059ad613ca63fd5",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
@@ -219,8 +219,14 @@
       {
         "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
         "role": "godot_core_port_authority",
-        "sha256": "b2098fe8f6161a05184a2e4a675a2e5bb7d50d414027aef3a2817c050cb91f57",
+        "sha256": "5904ed72414484b92cf9ff965dc5d07dc95b049b27f4a634284e9b70d2fef382",
         "source_path": "docs/plans/godot_core_port_plan.md"
+      },
+      {
+        "purpose": "Stage 25 topology Godot/C++ port planning authority.",
+        "role": "topology_godot_core_port_authority",
+        "sha256": "6219e04ed98557ce79fa49639fbb74a2e90733d42a279c08dcce69a553033c98",
+        "source_path": "docs/plans/topology_godot_core_port_plan.md"
       },
       {
         "purpose": "Stage 22d Live 3D and future Live 4D board visual-language authority.",
