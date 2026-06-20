@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-06-17
+Last updated: 2026-06-18
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -14,6 +14,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 - Primary product cleanup still routes through
   `docs/plans/topology_playground_current_authority.md` and
   `docs/BACKLOG.md`.
+- Governance routing now has an explicit overlay:
+  `docs/governance/README.md` routes Python, Godot UI, native C++,
+  testing/parity, config/constants, secrets, and mixed migration work;
+  `docs/architecture/authority_map.md` preserves Python as the semantic oracle
+  and scopes Godot/C++ authority to documented, parity-backed transfers.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
@@ -34,16 +39,24 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Fit View as the fitted W-slice recovery action.
   Stage 23 Live Plain 4D Godot Prototype passed manual GUI acceptance after
   Stage 23b/23c/23d corrections. Live 4D is accepted as a narrow plain bounded
-  prototype. Stage 24 Live ND polish and hardening is now unblocked. Topology
-  and endgame remain deferred. Stage 24 hardens the Godot live ND shell only:
+  prototype. Stage 24 Live ND polish and hardening passed manual acceptance.
+  Stage 25 topology Godot/C++ port planning is now documented in
+  `docs/plans/topology_godot_core_port_plan.md`. Topology implementation and
+  endgame remain deferred. Stage 24 hardens the Godot live ND shell only:
   re-entering an existing Live 2D, Live 3D, or Live 4D session from Replay now
   resumes the selected live mode without resetting its native C++ state,
   pauses non-selected live modes, clears live UI focus/repeat state on entry,
   and keeps pre-UI Space hard-drop and Live 4D camera/zoom capture active
   after focus changes. C++ gameplay semantics, trace parity, topology, and
   endgame remain unchanged. The manual Stage 24 checklist in
-  `docs/plans/live_nd_manual_acceptance.md` is the gate before Stage 25
-  topology planning.
+  `docs/plans/live_nd_manual_acceptance.md` passed before Stage 25 topology
+  planning.
+  Stage 25 is planning-only: Python remains the topology oracle, C++ is the
+  future topology transport/gameplay authority after parity, Godot remains
+  topology product shell/render/HUD/editor presentation, and the accepted
+  plain bounded Live 2D/3D/4D plus Replay baseline must stay preserved. The
+  next recommended stage is Stage 26 topology trace contract audit /
+  expansion before native topology implementation.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
@@ -489,11 +502,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.32` (`low`)
+- `tech_debt.score = 5.37` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.66`
+1. `delivery_size_pressure = 2.70`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -507,8 +520,8 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
 2. `tests/unit/render/test_locked_cell_explosion.py`: `3466` real LOC
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3039` real LOC
-4. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
-5. `tools/governance/validate_project_contracts.py`: `1914` real LOC
+4. `tools/governance/validate_project_contracts.py`: `2806` real LOC
+5. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
 6. `scripts/arch_metrics.py`: `1890` real LOC
 7. `src/tet4d/ui/pygame/endgame_animation.py`: `1866` real LOC
 8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1691` real LOC
@@ -580,6 +593,11 @@ CODEX_MODE=1 ./scripts/verify.sh
   playback.
 - Keep governance edits pack-driven and update workflow/backlog/current-state
   docs together when boundary rules change.
+- Keep dependency / utility reuse governance linked through
+  `docs/architecture/utility_index.md`,
+  `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, and
+  `tools/governance/validate_utility_reuse.py`; duplicate-helper findings are
+  advisory unless strict utility-reuse mode is explicitly enabled.
 - Next migration task after Stage 12 verification is to harden the live plain
   2D shell against Python behavior with additional parity traces before
   expanding to 3D/4D/topology.

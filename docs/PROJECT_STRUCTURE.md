@@ -116,14 +116,15 @@ The current rule is one-way:
 4. `CURRENT_STATE.md`: restart handoff only
 5. `docs/rds/`: durable product requirements
 6. `docs/plans/gameboard_visual_language_design.md`: Live 3D and future Live 4D gameboard visual-language authority
-7. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
-8. `docs/BACKLOG.md`: active backlog and current change footprint
-9. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
-10. `config/menu/defaults.json`: default persisted settings payload
-11. `config/tutorial/lessons.json`: tutorial packs and board profiles
-12. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
-13. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
-14. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
+7. `docs/plans/topology_godot_core_port_plan.md`: Stage 25 topology Godot/C++ core-port planning authority
+8. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
+9. `docs/BACKLOG.md`: active backlog and current change footprint
+10. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
+11. `config/menu/defaults.json`: default persisted settings payload
+12. `config/tutorial/lessons.json`: tutorial packs and board profiles
+13. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
+14. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
+15. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
 <!-- END GENERATED:project_structure_sources_of_truth -->
 
 ## Placement Rules
