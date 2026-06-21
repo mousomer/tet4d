@@ -49,6 +49,8 @@ overlay, not a replacement for existing Python/repo governance.
   `tests/fixtures/parity/trace_envelope_validation.json`
 - Godot replay shell UX acceptance:
   `docs/architecture/godot_replay_shell_ux_acceptance.md`
+- Godot visual style authority:
+  `docs/architecture/godot_visual_style_authority.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -98,6 +100,8 @@ Stage 27 trace envelope validation parity routing is also validated by
 governance reachability.
 Stage 30 Godot replay shell UX acceptance routing is also validated by
 governance reachability.
+Stage 31 Godot visual style authority routing is also validated by governance
+reachability.
 
 ## Technical debt and drift protection
 
@@ -160,6 +164,8 @@ Drift validation is handled by
   `docs/architecture/trace_envelope_validation_parity.md`
 - Godot replay shell UX acceptance:
   `docs/architecture/godot_replay_shell_ux_acceptance.md`
+- Godot visual style authority:
+  `docs/architecture/godot_visual_style_authority.md`
 - authority-transfer protocol:
   `docs/architecture/authority_transfer_protocol.md`
 - authority-transfer validator:
@@ -208,7 +214,9 @@ and promotion-gate routing remain intact. Governance validation also checks
  authority. Stage 27 trace envelope validation parity remains structural and
  does not inspect trace-event semantics or transfer authority. Stage 30 Godot
  replay shell UX acceptance remains product-shell usability work and does not
- transfer authority.
+ transfer authority. Stage 31 Godot visual style authority remains
+ product-shell design authority and does not implement themes or transfer
+ authority.
 
 ## Conflict rule
 

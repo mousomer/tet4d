@@ -59,6 +59,10 @@ Surfaces:
 - `docs/architecture/parity_tooling_package_review.md`
 - `docs/architecture/structural_parity_slice_selection.md`
 - `docs/architecture/trace_envelope_validation_parity.md`
+- `docs/architecture/godot_shell_layout_stabilization.md`
+- `docs/architecture/godot_shell_settings_source_of_truth.md`
+- `docs/architecture/godot_replay_shell_ux_acceptance.md`
+- `docs/architecture/godot_visual_style_authority.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -115,6 +119,18 @@ Required invariants:
 - Stage 27 validates only structural trace envelope fields and must not inspect
   trace event semantics, board snapshots, piece positions, topology traversal,
   movement, rendering, native/Godot implementation, or transfer authority.
+- Stage 28 Godot shell layout stabilization lives in
+  `docs/architecture/godot_shell_layout_stabilization.md`.
+- Stage 29 Godot shell settings registry foundation lives in
+  `docs/architecture/godot_shell_settings_source_of_truth.md`.
+- Stage 30 Godot replay shell UX acceptance lives in
+  `docs/architecture/godot_replay_shell_ux_acceptance.md`.
+- Stage 31 Godot visual style authority lives in
+  `docs/architecture/godot_visual_style_authority.md`.
+- Stage 31 defines Godot product-shell visual direction only and must not
+  implement Godot theme resources, add style scripts, port pygame UI history,
+  add gameplay/topology/movement settings, create parity evidence, or transfer
+  authority.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.

@@ -79,6 +79,16 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   layout contract covers settings-panel horizontal reachability inside the
   right inspector. It adds no gameplay, topology, trace semantics, parity
   evidence, native authority, or authority transfer.
+- Stage 31 Godot visual style authority is complete. The architecture note is
+  `docs/architecture/godot_visual_style_authority.md`; it defines the Godot
+  product-shell visual direction as diagrammatic, readable, high-contrast,
+  technical, and lightly futuristic, fixes the `diagnostic`, `plain`, and
+  `tron` theme model, records semantic colour roles, typography, spacing,
+  component, board/replay, and accessibility rules, and accepts the current
+  replay/settings shell as the MVP visual-style implementation baseline with
+  known manual-navigation limitations. It is design authority only and adds no
+  Godot implementation, gameplay, topology, trace semantics, parity evidence,
+  native authority, or authority transfer.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

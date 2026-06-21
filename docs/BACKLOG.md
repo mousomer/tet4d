@@ -589,6 +589,16 @@ stays synchronized, and the contract validator accepts the backlog shape.
     layout coverage for settings-panel reachability inside the right
     inspector. No gameplay, topology, trace semantics, parity evidence, native
     authority, or authority transfer is added.
+38. `DONE` `[BKL-P3-045]` Stage 31 Godot visual style authority:
+    add `docs/architecture/godot_visual_style_authority.md` as the design
+    authority for Godot product-shell visual work. It fixes the visual
+    direction, the `diagnostic` / `plain` / `tron` theme model, semantic
+    colour roles, concrete palettes, typography, spacing, component styling,
+    board/replay visual language, accessibility constraints, and the MVP
+    baseline decision accepting the current replay/settings shell with known
+    manual-navigation limitations. No Godot implementation, gameplay,
+    topology, trace semantics, parity logic, native authority, or authority
+    transfer is added.
 
 ## Governance Watchlist
 

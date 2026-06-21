@@ -47,6 +47,12 @@ Current transition status:
   Plain, Diagnostic, and Tron are distinct presentation modes; settings remain
   shell-local and do not alter gameplay, topology, trace semantics, Python
   config, parity fixtures, or native authority.
+- Stage 31 visual style authority: future Godot visual implementation routes
+  through `docs/architecture/godot_visual_style_authority.md`. The accepted
+  direction is diagrammatic, readable, high-contrast, technical, and lightly
+  futuristic; the current replay/settings shell is accepted as the MVP
+  visual-style implementation baseline with known manual-navigation
+  limitations.
 
 ## Bundle Sync
 

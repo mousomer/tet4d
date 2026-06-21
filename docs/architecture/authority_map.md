@@ -112,6 +112,14 @@ Godot product-shell acceptance work only. It records manual launch/readability
 evidence and shell-local theme/settings/layout readability fixes without
 changing gameplay, topology, trace semantics, parity evidence, native
 authority, or authority transfer.
+Stage 31 Godot visual style authority lives in
+`docs/architecture/godot_visual_style_authority.md` and remains design
+authority for Godot product-shell presentation only. It accepts the current
+Godot replay/settings shell as the MVP visual-style implementation baseline
+with known manual-navigation limitations, defines theme/colour/typography/
+spacing/component/board visual rules, and does not implement themes, change
+gameplay, topology, trace semantics, parity evidence, native authority, or
+authority transfer.
 
 ## Authority transfer requires parity
 
