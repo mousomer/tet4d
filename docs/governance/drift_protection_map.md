@@ -55,6 +55,7 @@ Surfaces:
 - `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
 - `docs/architecture/topology_identifier_normalization_parity.md`
 - `docs/architecture/parity_evidence_package_review.md`
+- `docs/architecture/python_oracle_boundary_audit.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -91,6 +92,11 @@ Required invariants:
   `docs/architecture/parity_evidence_package_review.md`.
 - Stage 22 trace schema/version normalization parity lives in
   `docs/architecture/trace_schema_version_normalization_parity.md`.
+- Stage 23 Python oracle boundary audit lives in
+  `docs/architecture/python_oracle_boundary_audit.md`.
+- The Python oracle boundary audit must not transfer authority, approve
+  semantic Python deletion, or authorize gameplay, topology, trace-event,
+  movement, rendering, or Godot implementation changes.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.

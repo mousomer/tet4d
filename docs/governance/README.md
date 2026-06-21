@@ -37,6 +37,8 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/architecture/trace_schema_version_normalization_parity.md`,
   `tools/migration/trace_schema_version_normalization_parity.py`,
   `tests/fixtures/parity/trace_schema_version_normalization.json`
+- Python oracle boundary audit:
+  `docs/architecture/python_oracle_boundary_audit.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -76,6 +78,8 @@ Project-contract validation checks that the review surfaces remain routed.
 Stage 20 topology identifier normalization parity routing is also validated.
 Stage 21 parity evidence package review routing is also validated.
 Stage 22 trace schema/version normalization parity routing is also validated.
+Stage 23 Python oracle boundary audit routing is also validated by governance
+reachability.
 
 ## Technical debt and drift protection
 
@@ -128,6 +132,8 @@ Drift validation is handled by
   `docs/architecture/parity_evidence_package_review.md`
 - trace schema/version normalization parity:
   `docs/architecture/trace_schema_version_normalization_parity.md`
+- Python oracle boundary audit:
+  `docs/architecture/python_oracle_boundary_audit.md`
 - authority-transfer protocol:
   `docs/architecture/authority_transfer_protocol.md`
 - authority-transfer validator:
@@ -145,6 +151,7 @@ Drift validation is handled by
 | Godot UI/product shell | `AGENTS.md`, `godot/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/architecture/authority_map.md` |
 | C++/GDExtension/native | `AGENTS.md`, `native/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/governance/cpp_safety_policy.md`, `docs/governance/native_tooling_ci_policy.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, `docs/architecture/second_parity_slice_candidate_selection.md`, `docs/architecture/trace_metadata_identity_digest_parity.md`, `docs/architecture/trace_schema_version_normalization_parity.md`, `docs/architecture/authority_map.md` |
 | Testing/parity | `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, `docs/architecture/second_parity_slice_candidate_selection.md`, `docs/architecture/trace_metadata_identity_digest_parity.md`, `docs/architecture/parity_evidence_package_review.md`, `docs/architecture/trace_schema_version_normalization_parity.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
+| Python oracle boundary audit | `docs/architecture/authority_map.md`, `docs/architecture/python_oracle_boundary_audit.md`, `docs/architecture/parity_protocol.md`, relevant Python gameplay/topology/trace surfaces |
 | Config/constants | `docs/governance/config_policy.md`, `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`, `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`, `tools/governance/validate_config_authority.py` |
 | Dependency / utility reuse | `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, `docs/architecture/utility_index.md`, `tools/governance/validate_utility_reuse.py`, `tools/governance/check_wheel_reuse_rules.py`, `tools/governance/check_dedup_dead_code_rules.py` |
 | Technical debt / drift foundations | `docs/governance/technical_debt_register.md`, `docs/governance/workspace_bundle/technical_debt_policy.md`, `docs/governance/workspace_bundle/drift_protection_policy.md`, `tools/governance/validate_technical_debt.py` |
@@ -164,7 +171,9 @@ and promotion-gate routing remain intact. Governance validation also checks
  identity/digest parity route, and the parity evidence review and third-slice
  selection route. Governance validation also checks the Stage 21 parity
  evidence package review route and the Stage 22 trace schema/version
- normalization parity route.
+ normalization parity route. Stage 23 Python oracle boundary audit keeps
+ Python gameplay semantics and golden traces authoritative while marking
+ incidental Python UI/history as non-authoritative for porting.
 
 ## Conflict rule
 

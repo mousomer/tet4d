@@ -76,6 +76,11 @@ Stage 22 trace schema/version normalization parity lives in
 `docs/architecture/trace_schema_version_normalization_parity.md` and remains
 provisional schema/version metadata evidence only. It does not change
 authority.
+Stage 23 Python oracle boundary audit lives in
+`docs/architecture/python_oracle_boundary_audit.md` and classifies Python
+surfaces for migration porting decisions only. It does not transfer authority,
+approve deletion of semantic Python code, or authorize gameplay, topology,
+trace-event, movement, rendering, or Godot implementation changes.
 
 ## Authority transfer requires parity
 

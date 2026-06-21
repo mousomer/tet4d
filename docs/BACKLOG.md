@@ -84,6 +84,14 @@ shell lifecycle/input hardening. Stage 25 topology Godot/C++ port planning is
 documented in `docs/plans/topology_godot_core_port_plan.md`. Topology
 implementation and endgame remain deferred; Stage 26 should audit or expand
 the topology trace contract before native topology implementation.
+Stage 23 Python oracle boundary audit is documented in
+`docs/architecture/python_oracle_boundary_audit.md`: Python gameplay semantics
+and golden traces remain oracle material, while pygame UI history, helper
+panels, obsolete helpers, duplicated utilities, and temporary migration harness
+layout are not automatically authoritative for Godot/C++ porting. This audit
+does not transfer authority or authorize gameplay/topology/rendering/native
+changes. The next structural-but-safe candidate remains trace envelope
+validation after parity tooling/package review.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
