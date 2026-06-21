@@ -80,6 +80,7 @@ func _build_panel() -> void:
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	scroll.add_child(content)
+	content.add_child(_panel_intro())
 	for category_data in registry.categories:
 		var category_id := str(category_data.get("id", ""))
 		var specs := registry.settings_for_category(category_id)
@@ -90,11 +91,32 @@ func _build_panel() -> void:
 			content.add_child(_setting_row(spec))
 
 
+func _panel_intro() -> Control:
+	var box := VBoxContainer.new()
+	box.name = "SettingsIntro"
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", ReplayVisuals.SPEED_GROUP_GAP)
+	var title := Label.new()
+	title.name = "SettingsTitle"
+	title.text = "Shell Settings"
+	title.theme_type_variation = "AccentLabel"
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(title)
+	var subtitle := Label.new()
+	subtitle.name = "SettingsSubtitle"
+	subtitle.text = "Visual replay-shell preferences. Python remains the gameplay oracle."
+	subtitle.theme_type_variation = "DimLabel"
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(subtitle)
+	return box
+
+
 func _section_header(label_text: String) -> Control:
 	var label := Label.new()
 	label.name = "SectionHeader__%s" % label_text.replace(" ", "_")
 	label.text = label_text
 	label.theme_type_variation = "AccentLabel"
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
 
 
@@ -102,14 +124,15 @@ func _setting_row(spec) -> Control:
 	var row := HBoxContainer.new()
 	row.name = "SettingRow__%s" % spec.id().replace(".", "__")
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
 	var text_box := VBoxContainer.new()
-	text_box.custom_minimum_size = Vector2(150, 0)
+	text_box.custom_minimum_size = Vector2(172, 0)
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(text_box)
 	var label := Label.new()
 	label.text = spec.label()
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text_box.add_child(label)
 	var description := Label.new()
 	description.text = spec.description()
@@ -117,7 +140,7 @@ func _setting_row(spec) -> Control:
 	description.theme_type_variation = "DimLabel"
 	text_box.add_child(description)
 	var control := _control_factory.build_control(spec, store.value(spec.id()), _on_control_value_changed)
-	control.custom_minimum_size = Vector2(130, 0)
+	control.custom_minimum_size = Vector2(120, 0)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_controls_by_id[spec.id()] = control
 	row.add_child(control)

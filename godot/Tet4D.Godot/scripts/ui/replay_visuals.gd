@@ -4,6 +4,7 @@ class_name ReplayVisuals
 
 const DIAGNOSTIC_THEME_PATH := "res://themes/replay_diagnostic_theme.tres"
 const TRON_THEME_PATH := "res://themes/replay_tron_theme.tres"
+const PLAIN_THEME_PATH := "res://themes/replay_theme.tres"
 
 const DISPLAY_MODE_DIAGNOSTIC := "diagnostic"
 const DISPLAY_MODE_TRON := "tron"
@@ -156,7 +157,12 @@ static func color_for_role(role: String, mode: String = DISPLAY_MODE_DIAGNOSTIC)
 
 static func build_theme(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Theme:
 	var display_mode := normalize_display_mode(mode)
-	var theme_path := TRON_THEME_PATH if display_mode == DISPLAY_MODE_TRON else DIAGNOSTIC_THEME_PATH
+	var theme_path := DIAGNOSTIC_THEME_PATH
+	match display_mode:
+		DISPLAY_MODE_TRON:
+			theme_path = TRON_THEME_PATH
+		DISPLAY_MODE_PLAIN:
+			theme_path = PLAIN_THEME_PATH
 	return load(theme_path).duplicate() as Theme
 
 
@@ -316,7 +322,8 @@ static func slice_outline_thickness(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> f
 
 
 static func _palette(mode: String) -> Dictionary:
-	if normalize_display_mode(mode) == DISPLAY_MODE_TRON:
+	var normalized_mode := normalize_display_mode(mode)
+	if normalized_mode == DISPLAY_MODE_TRON:
 		return {
 			ROLE_BACKGROUND: _html("071018"),
 			ROLE_PANEL_BACKGROUND: _html("0D1720"),
@@ -355,6 +362,46 @@ static func _palette(mode: String) -> Dictionary:
 			ROLE_W_SLICE_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
 			ROLE_W_SLICE_LABEL: Color(0.86, 0.89, 0.94, 1.0),
 			ROLE_VIEWPORT_FRAME: _html("0D1720"),
+		}
+	if normalized_mode == DISPLAY_MODE_PLAIN:
+		return {
+			ROLE_BACKGROUND: _html("111316"),
+			ROLE_PANEL_BACKGROUND: _html("1B1E22"),
+			ROLE_PANEL_QUIET: _html("15181C"),
+			ROLE_PANEL_ALT: _html("24282E"),
+			ROLE_BORDER: _html("C9A45B"),
+			ROLE_BORDER_SOFT: _html("6D6554"),
+			ROLE_TEXT: _html("F2F0EA"),
+			ROLE_TEXT_SECONDARY: _html("C9C2B2"),
+			ROLE_TEXT_DIM: _html("A79F8F"),
+			ROLE_ACCENT: _html("E4B85F"),
+			ROLE_ACCENT_SOFT: _html("3C3322"),
+			ROLE_SUCCESS: _html("78D6A3"),
+			ROLE_WARNING: _html("E4B85F"),
+			ROLE_EVENT_MARKER: Color(0.89, 0.72, 0.37, 1.0),
+			ROLE_ACTIVE_CELL: TRACE_COLOR_PALETTE[1],
+			ROLE_LOCKED_CELL: Color(0.45, 0.45, 0.48, 1.0),
+			ROLE_PROBE_BEFORE: Color(0.40, 0.80, 0.88, 1.0),
+			ROLE_PROBE_AFTER: Color(0.47, 0.84, 0.64, 1.0),
+			ROLE_PARTICLE: TRACE_COLOR_PALETTE[2],
+			ROLE_PARTICLE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.35),
+			ROLE_PARTICLE_CORE: TRACE_COLOR_PALETTE[0].lerp(Color.WHITE, 0.32),
+			ROLE_PARTICLE_CORE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.55),
+			ROLE_BOARD_OUTLINE: Color(0.54, 0.52, 0.48, 1.0),
+			ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.98, 0.96, 0.90, 1.0),
+			ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.06, 0.06, 0.07, 1.0),
+			ROLE_LIVE_3D_ACTIVE: Color(0.19, 0.82, 0.92, 1.0),
+			ROLE_LIVE_3D_LOCKED: Color(0.43, 0.45, 0.48, 1.0),
+			ROLE_LIVE_3D_OUTLINE: Color(0.08, 0.08, 0.09, 1.0),
+			ROLE_LIVE_3D_ACTIVE_OUTLINE: Color(0.98, 0.96, 0.90, 1.0),
+			ROLE_LIVE_3D_LOCKED_OUTLINE: Color(0.07, 0.07, 0.08, 1.0),
+			ROLE_LIVE_3D_FACE_HIGHLIGHT: Color(1.0, 0.95, 0.82, 1.0),
+			ROLE_LIVE_3D_ORIGIN_MARKER: Color(0.95, 0.78, 0.30, 1.0),
+			ROLE_LIVE_BOARD_FILL: _html("16191E"),
+			ROLE_LIVE_BOARD_GRID: _html("3A414A"),
+			ROLE_W_SLICE_OUTLINE: Color(0.54, 0.52, 0.48, 1.0),
+			ROLE_W_SLICE_LABEL: Color(0.91, 0.88, 0.80, 1.0),
+			ROLE_VIEWPORT_FRAME: _html("1B1E22"),
 		}
 	return {
 		ROLE_BACKGROUND: _html("05070A"),

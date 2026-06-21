@@ -16,6 +16,8 @@ func run() -> Array:
 	var content: Node = panel.get_node_or_null("SettingsScroll/SettingsContent")
 	_assert_node_type(failures, content, VBoxContainer, "settings panel should use VBoxContainer content")
 	if content != null:
+		_assert_node_type(failures, content.get_node_or_null("SettingsIntro/SettingsTitle"), Label, "settings panel should include title")
+		_assert_node_type(failures, content.get_node_or_null("SettingsIntro/SettingsSubtitle"), Label, "settings panel should include shell-only subtitle")
 		_assert_section(failures, content, "Replay")
 		_assert_section(failures, content, "Display")
 		_assert_section(failures, content, "Theme")
@@ -35,6 +37,8 @@ func run() -> Array:
 	_assert_control_type(failures, panel, "display.projection_strength", HBoxContainer, "float display setting should produce slider group")
 	_assert_slider_value_label(failures, panel, "display.projection_strength")
 	_assert_control_type(failures, panel, "theme.name", OptionButton, "enum should produce dropdown")
+	_assert_dropdown_options(failures, panel, "theme.name", ["diagnostic", "tron", "plain"])
+	_assert_wrapped_setting_label(failures, content, "display.projection_strength")
 	panel.queue_free()
 	await tree.process_frame
 	return failures
@@ -75,3 +79,31 @@ func _assert_slider_value_label(failures: Array, panel, setting_id: String) -> v
 		failures.append("%s should include Slider" % setting_id)
 	if group.get_node_or_null("ValueLabel") == null:
 		failures.append("%s should include numeric value label" % setting_id)
+
+
+func _assert_dropdown_options(failures: Array, panel, setting_id: String, expected_values: Array) -> void:
+	var control := panel.generated_control(setting_id) as OptionButton
+	if control == null:
+		return
+	var actual_values: Array = []
+	for index in range(control.item_count):
+		actual_values.append(str(control.get_item_metadata(index)))
+	if actual_values != expected_values:
+		failures.append("%s dropdown values: expected %s, got %s" % [setting_id, expected_values, actual_values])
+
+
+func _assert_wrapped_setting_label(failures: Array, content: Node, setting_id: String) -> void:
+	if content == null:
+		return
+	var row := content.get_node_or_null("SettingRow__%s" % setting_id.replace(".", "__"))
+	if row == null:
+		return
+	var text_box := row.get_child(0) as VBoxContainer
+	if text_box == null or text_box.get_child_count() == 0:
+		failures.append("%s should keep label and description in a text column" % setting_id)
+		return
+	var label := text_box.get_child(0) as Label
+	if label == null:
+		failures.append("%s should include a label" % setting_id)
+	elif label.autowrap_mode == TextServer.AUTOWRAP_OFF:
+		failures.append("%s label should wrap instead of clipping" % setting_id)

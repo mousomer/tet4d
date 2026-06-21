@@ -402,6 +402,7 @@ func layout_contract_snapshot() -> Dictionary:
 	var game_rect := _control_rect(_game_area)
 	var viewport_rect := _control_rect(_game_viewport_container)
 	var inspector_rect := _control_rect(_right_scroll)
+	var settings_rect := _control_rect(_settings_panel)
 	var bottom_rect := _control_rect(_bottom_panel)
 	return {
 		"root": root_rect,
@@ -410,6 +411,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"game_area": game_rect,
 		"game_viewport": viewport_rect,
 		"right_inspector": inspector_rect,
+		"settings_panel": settings_rect,
 		"bottom_bar": bottom_rect,
 		"viewport_size": get_viewport_rect().size,
 		"supported_minimum_size": ReplayVisuals.supported_shell_minimum_size(),

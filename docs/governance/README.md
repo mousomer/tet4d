@@ -47,6 +47,8 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/architecture/trace_envelope_validation_parity.md`,
   `tools/parity/trace_envelope_validation_parity.py`,
   `tests/fixtures/parity/trace_envelope_validation.json`
+- Godot replay shell UX acceptance:
+  `docs/architecture/godot_replay_shell_ux_acceptance.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -93,6 +95,8 @@ reachability.
 Stage 26 structural parity slice selection is the current route for the next
 structural-but-safe parity target.
 Stage 27 trace envelope validation parity routing is also validated by
+governance reachability.
+Stage 30 Godot replay shell UX acceptance routing is also validated by
 governance reachability.
 
 ## Technical debt and drift protection
@@ -154,6 +158,8 @@ Drift validation is handled by
   `docs/architecture/structural_parity_slice_selection.md`
 - trace envelope validation parity:
   `docs/architecture/trace_envelope_validation_parity.md`
+- Godot replay shell UX acceptance:
+  `docs/architecture/godot_replay_shell_ux_acceptance.md`
 - authority-transfer protocol:
   `docs/architecture/authority_transfer_protocol.md`
 - authority-transfer validator:
@@ -200,7 +206,9 @@ and promotion-gate routing remain intact. Governance validation also checks
  moving any semantic authority. Stage 26 structural parity slice selection
  chooses trace envelope validation for Stage 27 only and does not transfer
  authority. Stage 27 trace envelope validation parity remains structural and
- does not inspect trace-event semantics or transfer authority.
+ does not inspect trace-event semantics or transfer authority. Stage 30 Godot
+ replay shell UX acceptance remains product-shell usability work and does not
+ transfer authority.
 
 ## Conflict rule
 

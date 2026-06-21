@@ -581,6 +581,14 @@ stays synchronized, and the contract validator accepts the backlog shape.
     settings; no gameplay, topology, movement, keyboard rebinding, Python
     config migration, parity logic, native semantic authority, or authority
     transfer is added.
+37. `DONE` `[BKL-P3-044]` Stage 30 Godot replay shell UX acceptance:
+    add `docs/architecture/godot_replay_shell_ux_acceptance.md`, document the
+    manual launch/readability result and assistive-access navigation blocker,
+    and keep the fixes to shell-local readability: distinct Plain display
+    theme/palette, clearer generated settings panel framing/wrapping, and
+    layout coverage for settings-panel reachability inside the right
+    inspector. No gameplay, topology, trace semantics, parity evidence, native
+    authority, or authority transfer is added.
 
 ## Governance Watchlist
 

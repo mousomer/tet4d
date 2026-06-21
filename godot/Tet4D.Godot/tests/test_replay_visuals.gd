@@ -19,6 +19,8 @@ func run() -> Array:
 	)
 	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_TRON)
+	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_PLAIN)
+	_assert_plain_theme_is_visible_choice(failures)
 	var cyan_active := ReplayVisuals.active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 1)
 	var yellow_active := ReplayVisuals.active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 2)
 	var gameplay_active := ReplayVisuals.gameplay_active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
@@ -86,6 +88,21 @@ func _assert_theme_loads(failures: Array, display_mode: String) -> void:
 	var theme := ReplayVisuals.build_theme(display_mode)
 	if theme == null:
 		failures.append("%s theme did not load" % display_mode)
+
+
+func _assert_plain_theme_is_visible_choice(failures: Array) -> void:
+	var diagnostic_theme := ReplayVisuals.build_theme(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
+	var plain_theme := ReplayVisuals.build_theme(ReplayVisuals.DISPLAY_MODE_PLAIN)
+	if diagnostic_theme == null or plain_theme == null:
+		return
+	var diagnostic_accent := diagnostic_theme.get_color("font_color", "AccentLabel")
+	var plain_accent := plain_theme.get_color("font_color", "AccentLabel")
+	if diagnostic_accent == plain_accent:
+		failures.append("plain theme should use a visibly distinct accent color")
+	var diagnostic_background := ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
+	var plain_background := ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, ReplayVisuals.DISPLAY_MODE_PLAIN)
+	if diagnostic_background == plain_background:
+		failures.append("plain display palette should be distinct from diagnostic")
 
 
 func _assert_material_alpha(

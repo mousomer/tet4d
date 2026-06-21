@@ -42,6 +42,11 @@ Current transition status:
   `res://config/shell_settings_registry.json` and rendered by the generated
   settings panel. The slice is limited to replay, display, theme, diagnostics,
   and controls-help shell settings.
+- Stage 30 shell UX acceptance: the Godot shell manual launch/readability pass
+  is recorded in `docs/architecture/godot_replay_shell_ux_acceptance.md`.
+  Plain, Diagnostic, and Tron are distinct presentation modes; settings remain
+  shell-local and do not alter gameplay, topology, trace semantics, Python
+  config, parity fixtures, or native authority.
 
 ## Bundle Sync
 
@@ -84,7 +89,8 @@ half-cell boundaries, and tetromino-style trace color IDs; Godot adds only the
 labeled W-card layout needed to inspect copied 4D trace frames.
 UI styling is carried by reusable Godot Theme resources in `res://themes/`:
 `replay_diagnostic_theme.tres` for the startup shell and
-`replay_tron_theme.tres` for the optional neon variant. Replay geometry uses
+`replay_tron_theme.tres` for the optional neon variant, and
+`replay_theme.tres` for the quieter Plain variant. Replay geometry uses
 separate role-based materials in GDScript so UI theme changes do not alter
 trace semantics or object visibility rules.
 Startup opens a real Main Menu. The Trace Replay Browser loads copied bundle

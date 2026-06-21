@@ -70,6 +70,15 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   only replay, display, theme, diagnostics, and controls-help shell settings.
   It adds no gameplay, topology, movement, keyboard rebinding, Python config
   migration, parity logic, native semantic authority, or authority transfer.
+- Stage 30 Godot replay shell UX acceptance is complete. The architecture note
+  is `docs/architecture/godot_replay_shell_ux_acceptance.md`; manual launch
+  confirmed the Godot main menu is readable, while automated interaction was
+  blocked by macOS assistive-access permissions. The batch keeps fixes
+  shell-local: Plain is now a distinct display theme/palette, the generated
+  settings panel has clearer shell-only framing and wrapped labels, and the
+  layout contract covers settings-panel horizontal reachability inside the
+  right inspector. It adds no gameplay, topology, trace semantics, parity
+  evidence, native authority, or authority transfer.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

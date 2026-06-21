@@ -106,6 +106,12 @@ Godot product-shell settings work only. It centralizes shell/view/replay
 setting declarations for replay, display, theme, diagnostics, and controls-help
 surfaces without adding gameplay, topology, movement, keyboard rebinding,
 Python config migration, parity logic, native authority, or authority transfer.
+Stage 30 Godot replay shell UX acceptance lives in
+`docs/architecture/godot_replay_shell_ux_acceptance.md` and remains
+Godot product-shell acceptance work only. It records manual launch/readability
+evidence and shell-local theme/settings/layout readability fixes without
+changing gameplay, topology, trace semantics, parity evidence, native
+authority, or authority transfer.
 
 ## Authority transfer requires parity
 

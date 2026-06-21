@@ -51,6 +51,7 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	var game_rect: Rect2 = snapshot.get("game_area", Rect2())
 	var game_viewport_rect: Rect2 = snapshot.get("game_viewport", Rect2())
 	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
+	var settings_rect: Rect2 = snapshot.get("settings_panel", Rect2())
 	var bottom_rect: Rect2 = snapshot.get("bottom_bar", Rect2())
 	var supported_minimum_size: Vector2 = snapshot.get("supported_minimum_size", Vector2())
 	var bundle_status_text := str(snapshot.get("bundle_status_text", ""))
@@ -69,6 +70,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: game viewport rect should be nonzero" % label)
 	if inspector_rect.size.x <= 0.0 or inspector_rect.size.y <= 0.0:
 		failures.append("%s: right inspector rect should be nonzero" % label)
+	if settings_rect.size.x <= 0.0 or settings_rect.size.y <= 0.0:
+		failures.append("%s: settings panel rect should be nonzero" % label)
 	if bottom_rect.size.x <= 0.0 or bottom_rect.size.y <= 0.0:
 		failures.append("%s: bottom bar rect should be nonzero" % label)
 	if supported_minimum_size != ReplayVisuals.supported_shell_minimum_size():
@@ -81,6 +84,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: left case browser should keep its reserved width, left=%s" % [label, left_rect])
 	if inspector_rect.size.x < ReplayVisuals.RIGHT_PANEL_MIN_WIDTH - 0.5:
 		failures.append("%s: right inspector should keep its reserved width, inspector=%s" % [label, inspector_rect])
+	if settings_rect.size.x > inspector_rect.size.x + 0.5:
+		failures.append("%s: settings panel should stay within inspector width, inspector=%s settings=%s" % [label, inspector_rect, settings_rect])
 	if game_rect.size.x < ReplayVisuals.GAME_AREA_MIN_WIDTH - 0.5:
 		failures.append("%s: game area should keep its minimum width, game=%s" % [label, game_rect])
 	if not _contains_rect(root_rect, body_rect):
@@ -95,6 +100,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: game viewport should be inside game area, game=%s viewport=%s" % [label, game_rect, game_viewport_rect])
 	if inspector_rect.end.x > root_rect.end.x + 0.5:
 		failures.append("%s: inspector right edge should stay inside root, root=%s inspector=%s" % [label, root_rect, inspector_rect])
+	if settings_rect.position.x < inspector_rect.position.x - 0.5 or settings_rect.end.x > inspector_rect.end.x + 0.5:
+		failures.append("%s: settings panel should be horizontally reachable inside inspector, inspector=%s settings=%s" % [label, inspector_rect, settings_rect])
 	if game_rect.end.x > inspector_rect.position.x + 0.5:
 		failures.append("%s: game area should not overlap inspector, game=%s inspector=%s" % [label, game_rect, inspector_rect])
 	if left_rect.end.x > game_rect.position.x + 0.5:
