@@ -202,6 +202,12 @@ Stage 20 must not expand into topology movement, seam traversal, neighbor
 lookup, rotation, collision, gravity/drop, lock/clear/gameplay loop,
 rendering/projection/view/camera, or endgame physics.
 
+Stage 21 parity evidence package review lives in
+`docs/architecture/parity_evidence_package_review.md`.
+That review summarizes Stages 15, 18, and 20, keeps parity harnesses under
+`tools/migration/` for now, recommends trace schema/version normalization as
+the next data-only candidate, and does not transfer authority.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

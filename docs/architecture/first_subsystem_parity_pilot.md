@@ -30,6 +30,10 @@ Status rule:
 - Evidence-only pilot results stay process documentation.
 - No authority transfer entry may say `transferred`.
 
+Package review:
+- `docs/architecture/parity_evidence_package_review.md` reviews this pilot as
+  process evidence only.
+
 Mode rule:
 - Default mode is advisory only when the native bridge/toolchain is unavailable.
 - `TET4D_STRICT_PARITY=1` makes native unavailability blocking.

@@ -61,6 +61,12 @@ Strict mode blocks that unavailability.
 
 Do not claim native parity when the native route is unavailable.
 
+## Package review
+
+`docs/architecture/parity_evidence_package_review.md` reviews this slice as
+identifier-only parity evidence with no native route yet. The review does not
+change this slice's scope and does not transfer authority.
+
 ## Comparison rule
 
 Exact equality of canonical topology identifier strings.

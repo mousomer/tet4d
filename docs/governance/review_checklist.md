@@ -139,6 +139,12 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
       unavailable.
 - [ ] Stage 20 strict mode blocks unavailability and mismatches.
 - [ ] Stage 20 remains topology identifier normalization only.
+- [ ] The Stage 21 parity evidence package review
+      `docs/architecture/parity_evidence_package_review.md` was checked before
+      approving further parity expansion.
+- [ ] Stage 21 does not claim authority transfer.
+- [ ] The next parity-slice scope, `tools/migration/` versus `tools/parity/`
+      route decision, and forbidden areas were verified.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

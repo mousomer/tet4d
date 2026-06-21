@@ -54,6 +54,7 @@ Surfaces:
 - `docs/architecture/trace_metadata_identity_digest_parity.md`
 - `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
 - `docs/architecture/topology_identifier_normalization_parity.md`
+- `docs/architecture/parity_evidence_package_review.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -86,6 +87,8 @@ Required invariants:
 - The chosen third slice is topology identifier normalization only.
 - Stage 20 topology identifier normalization parity lives in
   `docs/architecture/topology_identifier_normalization_parity.md`.
+- Stage 21 parity evidence package review lives in
+  `docs/architecture/parity_evidence_package_review.md`.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
@@ -101,6 +104,7 @@ Surfaces:
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - `docs/architecture/authority_map.md`
 - `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+- `docs/architecture/parity_evidence_package_review.md`
 - `docs/governance/README.md`
 - `docs/governance/review_checklist.md`
 - `docs/DOCUMENTATION_MAP.md`
@@ -118,6 +122,34 @@ Required invariants:
   seam traversal, neighbor lookup, movement semantics, rotation, collision,
   gravity/drop, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
+- Further parity work must route through the Stage 21 evidence package review.
+- The `tools/migration/` versus `tools/parity/` route decision must remain
+  documented.
+- Authority transfer remains blocked unless the authority-transfer protocol is
+  satisfied.
+
+## Parity evidence package review drift
+
+Surfaces:
+
+- `docs/architecture/parity_evidence_package_review.md`
+- `docs/architecture/parity_protocol.md`
+- `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
+- `docs/governance/README.md`
+- `docs/governance/review_checklist.md`
+- `docs/governance/drift_protection_map.md`
+- `docs/DOCUMENTATION_MAP.md`
+- `AGENTS.md`
+- `native/AGENTS.md`
+
+Required invariants:
+
+- The package review summarizes Stages 15, 18, and 20.
+- The package review does not transfer authority.
+- The package review documents the `tools/migration/` versus `tools/parity/`
+  route decision.
+- The package review records authority-transfer readiness.
+- Further parity work must use the package review before expansion.
 
 ## Parity pilot drift
 

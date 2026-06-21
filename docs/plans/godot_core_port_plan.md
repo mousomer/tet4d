@@ -23,6 +23,9 @@ Stage 3 endgame traces.
 
 Stage 20 topology identifier normalization parity is a separate evidence slice
 and remains identifier-only, provisional, and authority-preserving.
+Stage 21 parity evidence package review is recorded in
+`docs/architecture/parity_evidence_package_review.md`; future parity work
+remains evidence-only until the authority-transfer protocol is satisfied.
 
 The repo-wide migration routing overlay is `docs/governance/README.md`; the
 ownership boundary summary is `docs/architecture/authority_map.md`. Those files

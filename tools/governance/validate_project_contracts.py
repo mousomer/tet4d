@@ -3092,6 +3092,140 @@ def _validate_topology_identifier_normalization_parity_governance() -> list[
     return issues
 
 
+def _validate_parity_evidence_package_review_governance() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    doc_rel = "docs/architecture/parity_evidence_package_review.md"
+    if not (PROJECT_ROOT / doc_rel).exists():
+        issues.append(
+            ValidationIssue(
+                "missing",
+                f"missing parity evidence package review doc: {doc_rel}",
+            )
+        )
+        return issues
+
+    doc_text = _read_text(doc_rel, issues)
+    if doc_text is not None:
+        _append_missing_concepts(
+            rel=doc_rel,
+            label="parity evidence package review",
+            text=doc_text,
+            concept_groups=(
+                ("first pilot review", ("first subsystem parity pilot", "stage 15")),
+                (
+                    "trace metadata parity review",
+                    ("trace metadata identity/digest", "stage 18"),
+                ),
+                (
+                    "topology identifier parity review",
+                    ("topology identifier normalization", "stage 20"),
+                ),
+                ("Python semantic oracle", ("python remains the semantic oracle",)),
+                (
+                    "native provisional status",
+                    (
+                        "native/c++ remains provisional",
+                        "c++/gdextension remains provisional",
+                    ),
+                ),
+                (
+                    "no authority transfer",
+                    ("does not transfer authority", "no authority-transfer record"),
+                ),
+                (
+                    "tooling route decision",
+                    ("tooling route decision",),
+                ),
+                (
+                    "tooling route options",
+                    ("tools/migration/", "tools/parity/"),
+                ),
+                (
+                    "authority-transfer readiness",
+                    ("authority-transfer readiness",),
+                ),
+                (
+                    "next-stage recommendation",
+                    ("recommended next stage",),
+                ),
+                (
+                    "explicit forbidden areas",
+                    ("explicit forbidden areas",),
+                ),
+                (
+                    "forbidden area list",
+                    (
+                        "topology movement",
+                        "seam traversal",
+                        "neighbor lookup",
+                        "rendering/projection/view/camera",
+                        "endgame physics",
+                    ),
+                ),
+            ),
+            issues=issues,
+        )
+        lower = doc_text.lower()
+        forbidden_claims = (
+            "this review transfers authority",
+            "ready for authority transfer: yes",
+            "transferred authority: yes",
+            "candidate transfer record created: yes",
+        )
+        for claim in forbidden_claims:
+            if claim in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{doc_rel} must not claim authority transfer: {claim}",
+                    )
+                )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/parity_protocol.md",
+            (doc_rel, "stages 15, 18, and 20", "does not transfer authority"),
+        ),
+        (
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
+            (doc_rel, "future parity slices", "promotion gates"),
+        ),
+        (
+            "docs/architecture/authority_transfer_protocol.md",
+            (doc_rel, "not transfer records"),
+        ),
+        (
+            "docs/architecture/authority_map.md",
+            (doc_rel, "provisional parity evidence"),
+        ),
+        ("docs/governance/README.md", (doc_rel,)),
+        (
+            "docs/governance/review_checklist.md",
+            (doc_rel, "further parity expansion", "authority transfer"),
+        ),
+        (
+            "docs/governance/drift_protection_map.md",
+            (doc_rel, "tools/migration/", "tools/parity/"),
+        ),
+        ("docs/governance/codex_policy.md", ("evidence-package status",)),
+        ("docs/DOCUMENTATION_MAP.md", (doc_rel, "stages 15, 18, and 20")),
+        ("docs/PROJECT_STRUCTURE.md", (doc_rel,)),
+        ("AGENTS.md", (doc_rel, "tools/migration/", "tools/parity/")),
+        (
+            "native/AGENTS.md",
+            (doc_rel, "provisional", "forbidden areas"),
+        ),
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            required_docs,
+            "parity-evidence-package-review",
+            issues,
+        )
+    )
+    return issues
+
+
 def _validate_godot_semantic_boundary_governance() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     if not (PROJECT_ROOT / "godot").exists():
@@ -3829,6 +3963,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_parity_evidence_review_and_third_slice_selection())
     issues.extend(_validate_trace_metadata_identity_digest_parity_governance())
     issues.extend(_validate_topology_identifier_normalization_parity_governance())
+    issues.extend(_validate_parity_evidence_package_review_governance())
     issues.extend(_validate_godot_semantic_boundary_governance())
     issues.extend(_validate_config_authority_governance())
     issues.extend(_validate_utility_reuse_governance())

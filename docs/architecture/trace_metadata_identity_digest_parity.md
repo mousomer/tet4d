@@ -83,6 +83,12 @@ authority transfer.
 
 This parity slice does not transfer authority.
 
+## Package review
+
+`docs/architecture/parity_evidence_package_review.md` reviews this slice as
+data-only parity evidence. The review does not change this slice's scope and
+does not transfer authority.
+
 ## Routing
 
 This implementation doc is routed from:

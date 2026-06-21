@@ -37,6 +37,9 @@ Implemented in `docs/architecture/topology_identifier_normalization_parity.md`.
 Harness: `tools/migration/topology_identifier_normalization_parity.py`.
 Fixture: `tests/fixtures/parity/topology_identifier_normalization.json`.
 
+Stage 21 reviews the accumulated package in
+`docs/architecture/parity_evidence_package_review.md`.
+
 This is parity evidence only.
 
 Why this candidate is the smallest safe next step:

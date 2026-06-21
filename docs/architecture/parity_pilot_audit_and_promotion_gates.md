@@ -159,6 +159,11 @@ Stage 20 topology identifier normalization parity remains within the same
 promotion gates. It is still evidence-only, still identifier-only, and still
 does not transfer authority.
 
+Stage 21 parity evidence package review is recorded in
+`docs/architecture/parity_evidence_package_review.md`. Future parity slices
+must satisfy the promotion gates here, preserve the forbidden areas below, and
+remain evidence-only until the authority-transfer protocol is satisfied.
+
 The selected candidate preserves the forbidden areas above. It does not allow
 topology movement, rotation, drop/collision, lock/clear/gameplay loop,
 rendering/projection/view semantics, or endgame physics work.

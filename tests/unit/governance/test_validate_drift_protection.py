@@ -31,6 +31,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/workspace_bundle/drift_protection_policy.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
+        "docs/architecture/parity_evidence_package_review.md\n"
         "docs/architecture/authority_map.md\n",
     )
     _write(root / "godot" / "AGENTS.md", "Godot UI only.\n")
@@ -50,6 +51,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
+        "docs/architecture/parity_evidence_package_review.md\n"
         "topology identifier normalization\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
@@ -107,6 +109,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
+        "docs/architecture/parity_evidence_package_review.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -146,6 +149,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
+        "docs/architecture/parity_evidence_package_review.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -172,7 +176,11 @@ def _valid_fixture(root: Path) -> None:
         "topology identifier normalization parity\n"
         "identifier-only\n"
         "default mode is advisory\n"
-        "strict mode blocks unavailability\n",
+        "strict mode blocks unavailability\n"
+        "parity evidence package review drift\n"
+        "parity evidence package review\n"
+        "tools/migration/\n"
+        "tools/parity/\n",
     )
     _write(
         root / "docs" / "architecture" / "trace_metadata_identity_digest_parity.md",
@@ -195,10 +203,7 @@ def _valid_fixture(root: Path) -> None:
         "Stage 20 implementation may only implement topology identifier normalization.\n",
     )
     _write(
-        root
-        / "docs"
-        / "architecture"
-        / "topology_identifier_normalization_parity.md",
+        root / "docs" / "architecture" / "topology_identifier_normalization_parity.md",
         "Stage 20 topology identifier normalization parity. "
         "Python remains the semantic oracle. "
         "The slice is identifier-only. "
@@ -211,6 +216,13 @@ def _valid_fixture(root: Path) -> None:
         "Fixture tests/fixtures/parity/topology_identifier_normalization.json. "
         "Canonical identifiers plain_2d wrap_all_4d invert_all_4d sphere_like_4d. "
         "Exact equality comparison.\n",
+    )
+    _write(
+        root / "docs" / "architecture" / "parity_evidence_package_review.md",
+        "Stage 21 parity evidence package review. "
+        "Reviews Stage 15 first pilot, Stage 18 trace metadata, and Stage 20 topology identifier evidence. "
+        "This evidence package review does not transfer authority. "
+        "The tooling route decision keeps tools/migration/ and defers tools/parity/.\n",
     )
     _write(
         root
@@ -241,7 +253,8 @@ def _valid_fixture(root: Path) -> None:
         "Python is the current semantic oracle. Godot is the product shell and "
         "presentation layer. C++/GDExtension is provisional until parity. "
         "Stage 20 docs/architecture/topology_identifier_normalization_parity.md "
-        "topology identifier normalization does not transfer authority.\n",
+        "topology identifier normalization does not transfer authority. "
+        "Stage 21 docs/architecture/parity_evidence_package_review.md provisional evidence.\n",
     )
     _write(
         root / "docs" / "architecture" / "parity_protocol.md",
@@ -257,6 +270,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md. "
         "Stage 20 docs/architecture/topology_identifier_normalization_parity.md "
         "topology identifier normalization does not transfer authority. "
+        "Stage 21 docs/architecture/parity_evidence_package_review.md does not transfer authority. "
         "docs/architecture/second_parity_slice_candidate_selection.md.\n",
     )
     _write(
@@ -272,7 +286,8 @@ def _valid_fixture(root: Path) -> None:
         "selected Stage 18 trace metadata identity/digest parity "
         "implementation doc docs/architecture/trace_metadata_identity_digest_parity.md. "
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md. "
-        "docs/architecture/topology_identifier_normalization_parity.md.\n",
+        "docs/architecture/topology_identifier_normalization_parity.md. "
+        "docs/architecture/parity_evidence_package_review.md.\n",
     )
     _write(
         root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",
@@ -330,6 +345,46 @@ def test_valid_minimal_fixture_passes(tmp_path: Path) -> None:
     _valid_fixture(tmp_path)
 
     assert _messages(drift.validate(tmp_path)) == []
+
+
+def test_parity_package_review_missing_doc_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    (tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md").unlink()
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("parity_evidence_package_review.md" in item for item in failures)
+
+
+def test_parity_package_review_missing_protocol_route_fails(tmp_path: Path) -> None:
+    _valid_fixture(tmp_path)
+    protocol = tmp_path / "docs" / "architecture" / "parity_protocol.md"
+    protocol.write_text(
+        protocol.read_text(encoding="utf-8").replace(
+            "Stage 21 docs/architecture/parity_evidence_package_review.md does not transfer authority. ",
+            "",
+        ),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("parity evidence package review" in item for item in failures)
+
+
+def test_parity_package_review_missing_tooling_route_decision_fails(
+    tmp_path: Path,
+) -> None:
+    _valid_fixture(tmp_path)
+    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
+    drift_map.write_text(
+        drift_map.read_text(encoding="utf-8").replace("tools/parity/\n", ""),
+        encoding="utf-8",
+    )
+
+    failures = _messages(drift.validate(tmp_path))
+
+    assert any("tools/migration vs tools/parity" in item for item in failures)
 
 
 def test_missing_drift_map_fails(tmp_path: Path) -> None:

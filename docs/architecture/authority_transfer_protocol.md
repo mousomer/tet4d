@@ -31,6 +31,9 @@ This document does not transfer authority by itself.
 Parity-pilot evidence and promotion-gate audits are not transfer records.
 Future second-slice parity evidence is also insufficient for transfer without
 an explicit transfer record and authority-map update.
+Evidence package reviews, including
+`docs/architecture/parity_evidence_package_review.md`, are not transfer
+records.
 
 ## Rule
 

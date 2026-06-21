@@ -42,6 +42,9 @@ not transfer authority away from Python.
 Stage 17 candidate selection is only a parity/migration process gate in
 `docs/architecture/second_parity_slice_candidate_selection.md`; it adds no
 gameplay, rendering, or live-shell implementation commitment.
+Stage 21 parity evidence package review is only parity/migration review in
+`docs/architecture/parity_evidence_package_review.md`; it adds no Godot scene,
+rendering, or live-shell implementation commitment.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native

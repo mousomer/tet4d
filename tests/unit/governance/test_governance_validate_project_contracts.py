@@ -442,6 +442,89 @@ def _write_minimal_second_parity_selection_governance(root: Path) -> None:
     )
 
 
+def _write_minimal_parity_package_review_governance(
+    root: Path,
+    *,
+    doc_text: str | None = None,
+) -> None:
+    review_rel = "docs/architecture/parity_evidence_package_review.md"
+    _write_text(
+        root / review_rel,
+        doc_text
+        or (
+            "Stage 21 parity evidence package review.\n"
+            "Reviewed evidence: Stage 15 first subsystem parity pilot, "
+            "Stage 18 trace metadata identity/digest parity, and Stage 20 "
+            "topology identifier normalization parity.\n"
+            "Python remains the semantic oracle.\n"
+            "Native/C++ remains provisional and C++/GDExtension remains provisional.\n"
+            "This evidence package review does not transfer authority.\n"
+            "No authority-transfer record is created by this review.\n"
+            "Tooling route decision: keep tools/migration/ for now; create "
+            "tools/parity/ later after the trigger is met.\n"
+            "Authority-transfer readiness: ready for authority transfer: no.\n"
+            "Recommended next stage: select a data-only slice. Candidate: "
+            "trace schema/version normalization.\n"
+            "Explicit forbidden areas: topology movement, seam traversal, "
+            "neighbor lookup, rendering/projection/view/camera, endgame physics.\n"
+        ),
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_protocol.md",
+        f"{review_rel}\nStages 15, 18, and 20\nDoes not transfer authority.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
+        f"{review_rel}\nFuture parity slices use promotion gates.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "authority_transfer_protocol.md",
+        f"{review_rel} not transfer records.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "authority_map.md",
+        f"{review_rel} provisional parity evidence.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md", f"{review_rel}\n", append=True
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        f"{review_rel}\nFurther parity expansion.\nAuthority transfer.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        f"{review_rel}\ntools/migration/\ntools/parity/\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "codex_policy.md",
+        "Evidence-package status must be reported.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "DOCUMENTATION_MAP.md",
+        f"{review_rel}\nStages 15, 18, and 20.\n",
+        append=True,
+    )
+    _write_text(root / "docs" / "PROJECT_STRUCTURE.md", f"{review_rel}\n")
+    _write_text(
+        root / "AGENTS.md",
+        f"{review_rel}\ntools/migration/\ntools/parity/\n",
+        append=True,
+    )
+    _write_text(
+        root / "native" / "AGENTS.md",
+        f"{review_rel}\nprovisional\nforbidden areas\n",
+        append=True,
+    )
+
+
 def _write_minimal_godot_semantic_boundary_governance(root: Path) -> None:
     _write_text(root / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
     _write_text(
@@ -1869,6 +1952,298 @@ def test_parity_evidence_review_governance_accepts_baseline(
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
     assert contracts._validate_parity_evidence_review_and_third_slice_selection() == []
+
+
+def test_parity_package_review_governance_requires_doc(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any(
+        "parity evidence package review doc" in issue.message for issue in issues
+    )
+
+
+def test_parity_package_review_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert contracts._validate_parity_evidence_package_review_governance() == []
+
+
+def test_parity_package_review_requires_reviewed_first_pilot(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(
+        tmp_path,
+        doc_text="Stage 21 review. Stage 18 trace metadata identity/digest. Stage 20 topology identifier normalization. Python remains the semantic oracle. Native/C++ remains provisional. This evidence package review does not transfer authority. No authority-transfer record is created by this review. Tooling route decision: tools/migration/ tools/parity/. Authority-transfer readiness: ready for authority transfer: no. Recommended next stage: candidate: trace schema/version. Explicit forbidden areas: topology movement, seam traversal, neighbor lookup, rendering/projection/view/camera, endgame physics.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("first pilot review" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_reviewed_trace_metadata(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(
+        tmp_path,
+        doc_text="Stage 21 review. Stage 15 first subsystem parity pilot. Stage 20 topology identifier normalization. Python remains the semantic oracle. Native/C++ remains provisional. This evidence package review does not transfer authority. No authority-transfer record is created by this review. Tooling route decision: tools/migration/ tools/parity/. Authority-transfer readiness: ready for authority transfer: no. Recommended next stage: candidate: trace schema/version. Explicit forbidden areas: topology movement, seam traversal, neighbor lookup, rendering/projection/view/camera, endgame physics.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("trace metadata parity review" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_reviewed_topology_identifier(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(
+        tmp_path,
+        doc_text="Stage 21 review. Stage 15 first subsystem parity pilot. Stage 18 trace metadata identity/digest. Python remains the semantic oracle. Native/C++ remains provisional. This evidence package review does not transfer authority. No authority-transfer record is created by this review. Tooling route decision: tools/migration/ tools/parity/. Authority-transfer readiness: ready for authority transfer: no. Recommended next stage: candidate: trace schema/version. Explicit forbidden areas: topology movement, seam traversal, neighbor lookup, rendering/projection/view/camera, endgame physics.\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("topology identifier parity review" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_python_oracle_statement(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
+    review.write_text(
+        review.read_text(encoding="utf-8").replace(
+            "Python remains the semantic oracle.", ""
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("Python semantic oracle" in issue.message for issue in issues)
+
+
+def test_parity_package_review_rejects_authority_transfer_claim(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
+    review.write_text(
+        review.read_text(encoding="utf-8") + "\nReady for authority transfer: yes.\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("must not claim authority transfer" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_tooling_route_decision(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
+    review.write_text(
+        review.read_text(encoding="utf-8").replace("Tooling route decision:", ""),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("tooling route decision" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_authority_transfer_readiness(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
+    review.write_text(
+        review.read_text(encoding="utf-8").replace("Authority-transfer readiness:", ""),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("authority-transfer readiness" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_next_stage_recommendation(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
+    review.write_text(
+        review.read_text(encoding="utf-8").replace("Recommended next stage:", ""),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("next-stage recommendation" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_explicit_forbidden_areas(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
+    review.write_text(
+        review.read_text(encoding="utf-8").replace("Explicit forbidden areas:", ""),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("explicit forbidden areas" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_protocol_route(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "protocol\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("parity_protocol.md" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_audit_route(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    _write_text(
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "parity_pilot_audit_and_promotion_gates.md",
+        "audit\n",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any(
+        "parity_pilot_audit_and_promotion_gates.md" in issue.message for issue in issues
+    )
+
+
+def test_parity_package_review_requires_governance_readme_route(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "README.md", "router\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("README.md" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_drift_map_route(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    _write_text(tmp_path / "docs" / "governance" / "drift_protection_map.md", "drift\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("drift_protection_map.md" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_agents_route(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    _write_text(tmp_path / "AGENTS.md", "agents\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("AGENTS.md" in issue.message for issue in issues)
+
+
+def test_parity_package_review_requires_native_agents_warning(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_parity_governance(tmp_path)
+    _write_minimal_parity_pilot_audit_governance(tmp_path)
+    _write_minimal_second_parity_selection_governance(tmp_path)
+    _write_minimal_parity_package_review_governance(tmp_path)
+    _write_text(tmp_path / "native" / "AGENTS.md", "native\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_parity_evidence_package_review_governance()
+
+    assert any("native/AGENTS.md" in issue.message for issue in issues)
 
 
 def test_godot_semantic_boundary_governance_requires_validator(

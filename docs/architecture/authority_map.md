@@ -68,6 +68,10 @@ change authority. The routed review doc is
 Stage 20 topology identifier normalization parity evidence lives in
 `docs/architecture/topology_identifier_normalization_parity.md` and remains
 provisional evidence only. It does not change authority.
+Stage 21 parity evidence package review lives in
+`docs/architecture/parity_evidence_package_review.md` and summarizes the
+current evidence package as provisional parity evidence only. It does not
+change authority.
 
 ## Authority transfer requires parity
 

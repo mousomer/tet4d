@@ -13,6 +13,9 @@ bounded Live ND baseline.
 Stage 20 topology identifier normalization parity is already committed as
 identifier-only evidence. It does not transfer authority and it does not allow
 topology movement, seam traversal, or neighbor lookup semantics.
+Stage 21 parity evidence package review is recorded in
+`docs/architecture/parity_evidence_package_review.md`. Future topology parity
+work remains evidence-only until the authority-transfer protocol is satisfied.
 
 ## 1. Decision Summary
 

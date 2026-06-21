@@ -15,6 +15,7 @@ REQUIRED_FILES = (
     "docs/architecture/trace_metadata_identity_digest_parity.md",
     "docs/architecture/topology_identifier_normalization_parity.md",
     "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
+    "docs/architecture/parity_evidence_package_review.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -672,6 +673,40 @@ def check_parity_evidence_review_and_third_slice_selection_drift(
     )
 
 
+def check_parity_evidence_package_review_drift(root: Path = ROOT) -> CheckResult:
+    failures: list[str] = []
+    doc_rel = "docs/architecture/parity_evidence_package_review.md"
+    doc_text = read_text(root, doc_rel, failures)
+    parity_protocol = read_text(root, "docs/architecture/parity_protocol.md", failures)
+    governance_text = read_text(root, "docs/governance/README.md", failures)
+    drift_text = read_text(root, "docs/governance/drift_protection_map.md", failures)
+
+    if doc_rel not in parity_protocol:
+        failures.append(
+            "parity_protocol.md must route to parity evidence package review"
+        )
+    if doc_rel not in governance_text and doc_rel not in drift_text:
+        failures.append(
+            "parity evidence package review must be reachable from governance README or drift map"
+        )
+    if doc_rel not in drift_text:
+        failures.append(
+            "drift_protection_map.md must list parity evidence package review as a parity drift surface"
+        )
+    if doc_text:
+        lower = doc_text.lower()
+        if "does not transfer authority" not in lower:
+            failures.append(f"{doc_rel} must state that it does not transfer authority")
+        if "ready for authority transfer: yes" in lower:
+            failures.append(f"{doc_rel} must not claim authority-transfer readiness")
+    if "tools/migration/" not in drift_text or "tools/parity/" not in drift_text:
+        failures.append(
+            "drift_protection_map.md must preserve the tools/migration vs tools/parity route-decision invariant"
+        )
+
+    return CheckResult("parity evidence package review drift", failures)
+
+
 def validate(root: Path = ROOT) -> list[CheckResult]:
     return [
         check_required_files(root),
@@ -688,6 +723,7 @@ def validate(root: Path = ROOT) -> list[CheckResult]:
         check_trace_metadata_identity_digest_parity_drift(root),
         check_topology_identifier_normalization_parity_drift(root),
         check_parity_evidence_review_and_third_slice_selection_drift(root),
+        check_parity_evidence_package_review_drift(root),
     ]
 
 
