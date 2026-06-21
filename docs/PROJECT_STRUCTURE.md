@@ -130,6 +130,10 @@ The current rule is one-way:
 
 1. `docs/architecture/topology_identifier_normalization_parity.md`: Stage 20 topology identifier normalization parity doc
 2. `tools/migration/topology_identifier_normalization_parity.py`: Stage 20 parity harness
+
+### Stage 21 Parity Evidence Package Review
+
+1. `docs/architecture/parity_evidence_package_review.md`: Stage 21 package review of Stages 15, 18, and 20
 <!-- END GENERATED:project_structure_sources_of_truth -->
 
 ## Placement Rules

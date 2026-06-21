@@ -518,12 +518,12 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-2. `tools/governance/validate_project_contracts.py`: `3538` real LOC
+2. `tools/governance/validate_project_contracts.py`: `3669` real LOC
 3. `tests/unit/render/test_locked_cell_explosion.py`: `3466` real LOC
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3039` real LOC
-5. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
-6. `scripts/arch_metrics.py`: `1890` real LOC
-7. `tests/unit/governance/test_governance_validate_project_contracts.py`: `1879` real LOC
+5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2185` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
+7. `scripts/arch_metrics.py`: `1890` real LOC
 8. `src/tet4d/ui/pygame/endgame_animation.py`: `1866` real LOC
 
 Thin-wrapper budgets:
