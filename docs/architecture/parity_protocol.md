@@ -224,6 +224,12 @@ isolated routing/refactor that moves the maintained parity harnesses into
 `tools/parity/` without adding parity logic, changing fixtures, or transferring
 authority.
 
+Stage 26 structural parity slice selection lives in
+`docs/architecture/structural_parity_slice_selection.md`.
+It selects trace envelope validation as the Stage 27 target only. Stage 26
+does not implement a harness, add fixtures, inspect trace events, or transfer
+authority.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

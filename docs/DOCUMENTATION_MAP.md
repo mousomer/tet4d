@@ -31,6 +31,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/parity_evidence_package_review.md`
 - `docs/architecture/python_oracle_boundary_audit.md`
 - `docs/architecture/parity_tooling_package_review.md`
+- `docs/architecture/structural_parity_slice_selection.md`
 
 ### 3. Active planning
 
@@ -113,6 +114,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 22 trace schema/version normalization parity implementation | `docs/architecture/trace_schema_version_normalization_parity.md` |
 | Stage 23 Python oracle boundary audit | `docs/architecture/python_oracle_boundary_audit.md` |
 | Stage 24 parity tooling package review and `tools/parity/` decision | `docs/architecture/parity_tooling_package_review.md` |
+| Stage 26 structural parity slice selection | `docs/architecture/structural_parity_slice_selection.md` |
 | Stage 22f manual Live 3D acceptance run record | `docs/plans/godot_live_3d_manual_acceptance.md` |
 | Current restart handoff | `CURRENT_STATE.md` |
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |

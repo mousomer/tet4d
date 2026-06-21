@@ -82,8 +82,9 @@ Live 3D, Replay, topology, endgame, and golden traces remain preserved. Stage
 prototype. Stage 24 Live ND polish and hardening passed manual acceptance as
 shell lifecycle/input hardening. Stage 25 topology Godot/C++ port planning is
 documented in `docs/plans/topology_godot_core_port_plan.md`. Topology
-implementation and endgame remain deferred; Stage 26 should audit or expand
-the topology trace contract before native topology implementation.
+implementation and endgame remain deferred. A topology trace contract audit /
+expansion remains required before native topology implementation, but it is
+not part of this parity Stage 26 selection.
 Stage 23 Python oracle boundary audit is documented in
 `docs/architecture/python_oracle_boundary_audit.md`: Python gameplay semantics
 and golden traces remain oracle material, while pygame UI history, helper
@@ -98,6 +99,11 @@ Stage 24 parity tooling/package review is documented in
 maintained parity harnesses now form a reusable parity family. Stage 25 then
 applies that isolated routing/refactor so reusable parity harnesses live under
 `tools/parity/`, while parity logic, fixtures, and authority remain unchanged.
+Stage 26 structural parity slice selection is documented in
+`docs/architecture/structural_parity_slice_selection.md`: it selects trace
+envelope validation for Stage 27 only. It does not implement a harness, add
+fixtures, inspect trace events, change gameplay/topology/movement/rendering,
+or transfer authority.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.
@@ -547,8 +553,8 @@ stays synchronized, and the contract validator accepts the backlog shape.
     remains the topology oracle, C++ is the future topology
     transport/gameplay authority after parity, Godot remains the topology
     product shell/render/HUD/editor presentation owner, accepted Live
-    2D/3D/4D and Replay stay preserved, and Stage 26 is recommended as a
-    topology trace contract audit / expansion before native topology
+    2D/3D/4D and Replay stay preserved, and a later topology trace contract
+    audit / expansion is still recommended before native topology
     implementation. No topology gameplay, C++ topology transport, Godot
     topology editor UI, endgame, C#, Python runtime calls from Godot, or
     Godot-side gameplay legality is added.

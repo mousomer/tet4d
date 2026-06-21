@@ -85,6 +85,10 @@ Stage 24 parity tooling package review lives in
 `docs/architecture/parity_tooling_package_review.md` and records the
 package-routing decision only. Stage 25 applies that approved `tools/parity/`
 routing/refactor without changing parity logic or transferring authority.
+Stage 26 structural parity slice selection lives in
+`docs/architecture/structural_parity_slice_selection.md` and selects trace
+envelope validation for Stage 27 only. It does not implement trace envelope
+validation, change trace-event semantics, or transfer authority.
 
 ## Authority transfer requires parity
 

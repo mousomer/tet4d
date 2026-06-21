@@ -57,6 +57,7 @@ Surfaces:
 - `docs/architecture/parity_evidence_package_review.md`
 - `docs/architecture/python_oracle_boundary_audit.md`
 - `docs/architecture/parity_tooling_package_review.md`
+- `docs/architecture/structural_parity_slice_selection.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -103,6 +104,11 @@ Required invariants:
 - Stage 24 remains a decision-only review. Stage 25 may move approved parity
   harnesses to `tools/parity/`, but that routing refactor must not add parity
   logic or transfer authority.
+- Stage 26 structural parity slice selection lives in
+  `docs/architecture/structural_parity_slice_selection.md`.
+- Stage 26 selects trace envelope validation for Stage 27 only and must not
+  implement a harness, add fixtures, inspect trace events, or transfer
+  authority.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
@@ -211,6 +217,26 @@ Required invariants:
 - Native output is not faked.
 - No trace events, board snapshots, topology movement, gameplay, rendering, or
   endgame semantics are allowed.
+
+## Structural parity slice selection drift
+
+Surfaces:
+
+- `docs/architecture/structural_parity_slice_selection.md`
+- `docs/architecture/parity_protocol.md`
+- `docs/architecture/authority_map.md`
+- `docs/governance/README.md`
+- `docs/governance/drift_protection_map.md`
+- `docs/DOCUMENTATION_MAP.md`
+
+Required invariants:
+
+- Stage 26 selects trace envelope validation for Stage 27.
+- Stage 26 does not implement a parity harness or add fixtures.
+- Trace envelope validation remains structural and top-level only.
+- Trace events, board snapshots, piece positions, topology traversal,
+  movement, drop/collision/lock, rendering/view/camera, Godot implementation,
+  C++ implementation, and authority transfer remain excluded.
 
 ## Parity pilot drift
 
