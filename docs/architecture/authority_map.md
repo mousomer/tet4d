@@ -94,6 +94,12 @@ Stage 27 trace envelope validation parity lives in
 envelope evidence only. It does not validate trace event semantics, board
 states, piece positions, topology traversal, movement, rendering, native/Godot
 comparison, or authority transfer.
+Stage 28 Godot shell compliance and layout stabilization lives in
+`docs/architecture/godot_shell_layout_stabilization.md` and remains
+product-shell/layout work only. It audits existing Godot surfaces, records
+boundary-risk bridge/router surfaces, and reserves the replay viewer shell
+regions without changing gameplay, topology, trace semantics, parity evidence,
+native authority, or authority transfer.
 
 ## Authority transfer requires parity
 

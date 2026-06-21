@@ -1,5 +1,6 @@
 extends RefCounted
 
+const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 const VIEWPORT_SIZES := [
 	Vector2i(1600, 960),
@@ -51,6 +52,7 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	var game_viewport_rect: Rect2 = snapshot.get("game_viewport", Rect2())
 	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
 	var bottom_rect: Rect2 = snapshot.get("bottom_bar", Rect2())
+	var supported_minimum_size: Vector2 = snapshot.get("supported_minimum_size", Vector2())
 	var bundle_status_text := str(snapshot.get("bundle_status_text", ""))
 	var bundle_detail_text := str(snapshot.get("bundle_detail_text", ""))
 	var camera_status_text := str(snapshot.get("camera_status_text", ""))
@@ -69,6 +71,18 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: right inspector rect should be nonzero" % label)
 	if bottom_rect.size.x <= 0.0 or bottom_rect.size.y <= 0.0:
 		failures.append("%s: bottom bar rect should be nonzero" % label)
+	if supported_minimum_size != ReplayVisuals.supported_shell_minimum_size():
+		failures.append("%s: HUD should report the supported shell minimum size" % label)
+	if root_rect.size.x < supported_minimum_size.x - 0.5:
+		failures.append("%s: root should satisfy supported shell minimum width, root=%s minimum=%s" % [label, root_rect, supported_minimum_size])
+	if root_rect.size.y < supported_minimum_size.y - 0.5:
+		failures.append("%s: root should satisfy supported shell minimum height, root=%s minimum=%s" % [label, root_rect, supported_minimum_size])
+	if left_rect.size.x < ReplayVisuals.LEFT_PANEL_WIDTH - 0.5:
+		failures.append("%s: left case browser should keep its reserved width, left=%s" % [label, left_rect])
+	if inspector_rect.size.x < ReplayVisuals.RIGHT_PANEL_MIN_WIDTH - 0.5:
+		failures.append("%s: right inspector should keep its reserved width, inspector=%s" % [label, inspector_rect])
+	if game_rect.size.x < ReplayVisuals.GAME_AREA_MIN_WIDTH - 0.5:
+		failures.append("%s: game area should keep its minimum width, game=%s" % [label, game_rect])
 	if not _contains_rect(root_rect, body_rect):
 		failures.append("%s: body should be inside root, root=%s body=%s left=%s game=%s inspector=%s" % [label, root_rect, body_rect, left_rect, game_rect, inspector_rect])
 	if not _contains_rect(body_rect, game_rect):

@@ -564,6 +564,15 @@ stays synchronized, and the contract validator accepts the backlog shape.
     implementation. No topology gameplay, C++ topology transport, Godot
     topology editor UI, endgame, C#, Python runtime calls from Godot, or
     Godot-side gameplay legality is added.
+35. `DONE` `[BKL-P3-042]` Stage 28 Godot shell compliance and layout
+    stabilization:
+    add `docs/architecture/godot_shell_layout_stabilization.md` as the audit
+    and layout-contract record, keep Godot inside product-shell/replay-view
+    and accepted live-shell presentation boundaries, and stabilize the Replay
+    Viewer so the left browser, center game viewport, right inspector, and
+    bottom controls have explicit minimum-size ownership. Python gameplay
+    semantics, topology, trace semantics, parity evidence, native authority,
+    and authority transfer remain unchanged.
 
 ## Governance Watchlist
 

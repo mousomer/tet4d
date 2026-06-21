@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-06-18
+Last updated: 2026-06-21
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -57,6 +57,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   plain bounded Live 2D/3D/4D plus Replay baseline must stay preserved. The
   next recommended stage is Stage 26 topology trace contract audit /
   expansion before native topology implementation.
+- Stage 28 Godot shell compliance and layout stabilization is complete. The
+  audit and layout contract live in
+  `docs/architecture/godot_shell_layout_stabilization.md`; Godot remains a
+  product-shell/replay-view and accepted live-shell presentation surface, and
+  `ReplayHud` now installs explicit shell minimums so the right inspector
+  cannot be consumed by the game panel.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

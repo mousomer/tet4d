@@ -35,6 +35,9 @@ Current transition status:
 - Shell layout: repaired as an explicit top/status, left case browser, center
   board, right scroll-safe inspector, and bottom playback model so the board
   viewport cannot consume either side panel.
+- Stage 28 shell contract: `ReplayHud` now installs an explicit supported
+  minimum shell size and the layout regression test asserts that the right
+  inspector keeps its reserved width.
 
 ## Bundle Sync
 

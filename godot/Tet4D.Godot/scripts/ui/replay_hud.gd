@@ -116,6 +116,7 @@ static func live_4d_hint_text() -> String:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	theme = ReplayVisuals.build_theme(_current_display_mode)
+	_install_shell_layout_contract()
 	_build_layout()
 	call_deferred("_log_geometry_diagnostics", "ready")
 
@@ -408,6 +409,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"right_inspector": inspector_rect,
 		"bottom_bar": bottom_rect,
 		"viewport_size": get_viewport_rect().size,
+		"supported_minimum_size": ReplayVisuals.supported_shell_minimum_size(),
 		"world_parent": _game_viewport.get_node_or_null("WorldRoot") if _game_viewport != null else null,
 		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
 		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
@@ -428,9 +430,21 @@ func set_live_keyboard_capture(enabled: bool) -> void:
 			focus_owner.release_focus()
 
 
+func _install_shell_layout_contract() -> void:
+	var minimum_size := ReplayVisuals.supported_shell_minimum_size()
+	custom_minimum_size = minimum_size
+	var parent_control := get_parent() as Control
+	if parent_control != null:
+		parent_control.custom_minimum_size = minimum_size
+	var window := get_window()
+	if window != null:
+		window.min_size = Vector2i(int(minimum_size.x), int(minimum_size.y))
+
+
 func _build_layout() -> void:
 	var root := MarginContainer.new()
 	_fill_parent(root)
+	root.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
 	root.add_theme_constant_override("margin_left", ReplayVisuals.OUTER_MARGIN)
 	root.add_theme_constant_override("margin_top", ReplayVisuals.OUTER_MARGIN)
 	root.add_theme_constant_override("margin_right", ReplayVisuals.OUTER_MARGIN)
@@ -452,11 +466,13 @@ func _build_layout() -> void:
 	_build_browser_screen(_browser_screen)
 
 	_viewer_screen = _make_screen()
+	_viewer_screen.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
 	screen_stack.add_child(_viewer_screen)
 	var outer := VBoxContainer.new()
 	_fill_parent(outer)
 	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
 	_viewer_screen.add_child(outer)
 
 	var top_bar := HBoxContainer.new()
@@ -576,6 +592,7 @@ func _build_layout() -> void:
 	_body_container = body
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.custom_minimum_size = Vector2(ReplayVisuals.BODY_MIN_WIDTH, ReplayVisuals.BODY_MIN_HEIGHT)
 	body.add_theme_constant_override("separation", ReplayVisuals.BODY_GAP)
 	outer.add_child(body)
 
@@ -648,7 +665,7 @@ func _build_layout() -> void:
 	_right_scroll.name = "RightInspectorSlot"
 	_right_scroll.size_flags_horizontal = Control.SIZE_SHRINK_END
 	_right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_right_scroll.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_INSPECTOR_WIDTH, 0)
+	_right_scroll.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_MIN_WIDTH, 0)
 	_right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	body.add_child(_right_scroll)
 
@@ -656,7 +673,7 @@ func _build_layout() -> void:
 	_right_column.name = "RightInspectorContent"
 	_right_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_right_column.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_INSPECTOR_WIDTH, 0)
+	_right_column.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_MIN_WIDTH, 0)
 	_right_column.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	_right_scroll.add_child(_right_column)
 
