@@ -18,6 +18,9 @@ signal frame_scrub_requested(frame_index: int)
 signal playback_speed_changed(value: float)
 signal diagnostics_visibility_changed(visible: bool)
 signal display_mode_changed(mode: String)
+signal replay_loop_changed(enabled: bool)
+signal display_w_labels_changed(visible: bool)
+signal projection_strength_changed(value: float)
 signal fit_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
@@ -219,9 +222,9 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 
 func set_playback_state(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
 	_play_button.text = "Pause Replay" if is_playing else "Play Replay"
-	_settings_panel.set_diagnostics_visible(diagnostics_visible)
+	_settings_panel.set_playback_speed(speed)
 	if _settings_screen_panel != null:
-		_settings_screen_panel.set_diagnostics_visible(diagnostics_visible)
+		_settings_screen_panel.set_playback_speed(speed)
 	_select_speed_no_signal(speed)
 	_speed_value.text = "%s Replay" % ("Playing" if is_playing else "Paused")
 
@@ -428,6 +431,50 @@ func set_live_keyboard_capture(enabled: bool) -> void:
 		var focus_owner := viewport.gui_get_focus_owner()
 		if focus_owner != null and _viewer_screen != null and _viewer_screen.is_ancestor_of(focus_owner):
 			focus_owner.release_focus()
+
+
+func apply_shell_settings() -> void:
+	if _settings_panel != null:
+		_settings_panel.apply_initial_settings()
+
+
+func _wire_settings_panel(panel: SettingsPanel) -> void:
+	panel.playback_speed_changed.connect(func(value: float) -> void:
+		playback_speed_changed.emit(value)
+	)
+	panel.replay_loop_changed.connect(func(enabled: bool) -> void:
+		replay_loop_changed.emit(enabled)
+	)
+	panel.display_w_labels_changed.connect(func(visible: bool) -> void:
+		display_w_labels_changed.emit(visible)
+	)
+	panel.projection_strength_changed.connect(func(value: float) -> void:
+		projection_strength_changed.emit(value)
+	)
+	panel.display_mode_changed.connect(func(mode: String) -> void:
+		display_mode_changed.emit(mode)
+	)
+	panel.layout_bounds_visibility_changed.connect(func(visible: bool) -> void:
+		_set_layout_bounds_visible(visible)
+	)
+	panel.keyboard_hints_visibility_changed.connect(func(visible: bool) -> void:
+		_set_keyboard_hints_visible(visible)
+	)
+	panel.apply_initial_settings()
+
+
+func _set_layout_bounds_visible(visible: bool) -> void:
+	_geometry_diagnostics_enabled = visible
+	_log_geometry_diagnostics("settings")
+
+
+func _set_keyboard_hints_visible(visible: bool) -> void:
+	if _mode_hint_strip != null:
+		_mode_hint_strip.visible = visible
+	if _hint_label != null:
+		_hint_label.visible = visible
+	if _help_panel != null and not visible:
+		_help_panel.visible = false
 
 
 func _install_shell_layout_contract() -> void:
@@ -724,12 +771,7 @@ func _build_layout() -> void:
 	_right_column.add_child(_event_panel)
 	_settings_panel = SettingsPanelScript.new()
 	_settings_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
-	_settings_panel.diagnostics_visibility_changed.connect(func(visible: bool) -> void:
-		diagnostics_visibility_changed.emit(visible)
-	)
-	_settings_panel.display_mode_changed.connect(func(mode: String) -> void:
-		display_mode_changed.emit(mode)
-	)
+	_wire_settings_panel(_settings_panel)
 	_right_column.add_child(_settings_panel)
 
 	var bottom_panel := PanelContainer.new()
@@ -825,7 +867,7 @@ func _build_layout() -> void:
 	speed_group.add_child(speed_label)
 	_speed_select = OptionButton.new()
 	_speed_select.custom_minimum_size = Vector2(ReplayVisuals.SPEED_SLIDER_WIDTH, 0)
-	for speed in [0.25, 0.5, 1.0, 2.0, 4.0]:
+	for speed in [0.25, 0.5, 1.0, 2.0, 3.0]:
 		_speed_select.add_item("%sx" % speed)
 		_speed_select.set_item_metadata(_speed_select.item_count - 1, speed)
 	_speed_select.item_selected.connect(func(index: int) -> void:
@@ -1004,12 +1046,7 @@ func _build_settings_screen(screen: Control) -> void:
 	_settings_screen_panel = SettingsPanelScript.new()
 	_settings_screen_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_settings_screen_panel.size_flags_vertical = Control.SIZE_FILL
-	_settings_screen_panel.diagnostics_visibility_changed.connect(func(visible: bool) -> void:
-		diagnostics_visibility_changed.emit(visible)
-	)
-	_settings_screen_panel.display_mode_changed.connect(func(mode: String) -> void:
-		display_mode_changed.emit(mode)
-	)
+	_wire_settings_panel(_settings_screen_panel)
 	layout.add_child(_settings_screen_panel)
 
 

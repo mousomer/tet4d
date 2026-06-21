@@ -1,0 +1,100 @@
+{
+  "categories": [
+    {"id": "replay", "label": "Replay"},
+    {"id": "display", "label": "Display"},
+    {"id": "theme", "label": "Theme"},
+    {"id": "diagnostics", "label": "Diagnostics"},
+    {"id": "controls_help", "label": "Controls Help"}
+  ],
+  "settings": [
+    {
+      "id": "replay.playback_speed",
+      "label": "Replay speed",
+      "description": "Controls visual replay playback speed only. Does not change gameplay timing.",
+      "category": "replay",
+      "value_type": "float",
+      "control_type": "slider",
+      "default": 1.0,
+      "min": 0.25,
+      "max": 3.0,
+      "step": 0.25,
+      "unit": "x",
+      "authority": "godot_shell",
+      "persistence": "local_shell"
+    },
+    {
+      "id": "replay.loop_enabled",
+      "label": "Loop replay",
+      "description": "Repeats the loaded replay when playback reaches the end.",
+      "category": "replay",
+      "value_type": "bool",
+      "control_type": "checkbox",
+      "default": true,
+      "authority": "godot_shell",
+      "persistence": "local_shell"
+    },
+    {
+      "id": "display.show_w_labels",
+      "label": "Show W labels",
+      "description": "Shows W/layer labels in the replay view.",
+      "category": "display",
+      "value_type": "bool",
+      "control_type": "checkbox",
+      "default": true,
+      "authority": "godot_shell",
+      "persistence": "local_shell"
+    },
+    {
+      "id": "display.projection_strength",
+      "label": "Projection strength",
+      "description": "Controls visual projection emphasis only. Does not change topology or coordinates.",
+      "category": "display",
+      "value_type": "float",
+      "control_type": "slider",
+      "default": 1.0,
+      "min": 0.0,
+      "max": 2.0,
+      "step": 0.1,
+      "authority": "godot_shell",
+      "persistence": "local_shell"
+    },
+    {
+      "id": "theme.name",
+      "label": "Theme",
+      "description": "Selects the Godot shell visual theme.",
+      "category": "theme",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "diagnostic",
+      "options": [
+        {"value": "diagnostic", "label": "Diagnostic"},
+        {"value": "tron", "label": "Tron"},
+        {"value": "plain", "label": "Plain"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell"
+    },
+    {
+      "id": "diagnostics.show_layout_bounds",
+      "label": "Show layout bounds",
+      "description": "Shows shell layout bounds for UI debugging.",
+      "category": "diagnostics",
+      "value_type": "bool",
+      "control_type": "checkbox",
+      "default": false,
+      "authority": "godot_shell",
+      "persistence": "session"
+    },
+    {
+      "id": "controls_help.show_keyboard_hints",
+      "label": "Show keyboard hints",
+      "description": "Shows keyboard help in the replay shell.",
+      "category": "controls_help",
+      "value_type": "bool",
+      "control_type": "checkbox",
+      "default": true,
+      "authority": "godot_shell",
+      "persistence": "local_shell"
+    }
+  ]
+}

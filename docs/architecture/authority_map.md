@@ -100,6 +100,12 @@ product-shell/layout work only. It audits existing Godot surfaces, records
 boundary-risk bridge/router surfaces, and reserves the replay viewer shell
 regions without changing gameplay, topology, trace semantics, parity evidence,
 native authority, or authority transfer.
+Stage 29 Godot shell settings registry foundation lives in
+`docs/architecture/godot_shell_settings_source_of_truth.md` and remains
+Godot product-shell settings work only. It centralizes shell/view/replay
+setting declarations for replay, display, theme, diagnostics, and controls-help
+surfaces without adding gameplay, topology, movement, keyboard rebinding,
+Python config migration, parity logic, native authority, or authority transfer.
 
 ## Authority transfer requires parity
 

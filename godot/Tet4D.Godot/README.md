@@ -38,6 +38,10 @@ Current transition status:
 - Stage 28 shell contract: `ReplayHud` now installs an explicit supported
   minimum shell size and the layout regression test asserts that the right
   inspector keeps its reserved width.
+- Stage 29 shell settings: Godot shell settings are declared in
+  `res://config/shell_settings_registry.json` and rendered by the generated
+  settings panel. The slice is limited to replay, display, theme, diagnostics,
+  and controls-help shell settings.
 
 ## Bundle Sync
 

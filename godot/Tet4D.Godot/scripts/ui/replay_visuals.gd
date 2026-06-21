@@ -7,9 +7,11 @@ const TRON_THEME_PATH := "res://themes/replay_tron_theme.tres"
 
 const DISPLAY_MODE_DIAGNOSTIC := "diagnostic"
 const DISPLAY_MODE_TRON := "tron"
+const DISPLAY_MODE_PLAIN := "plain"
 const DISPLAY_MODES := [
 	DISPLAY_MODE_DIAGNOSTIC,
 	DISPLAY_MODE_TRON,
+	DISPLAY_MODE_PLAIN,
 ]
 
 const OUTER_MARGIN := 12
@@ -137,6 +139,8 @@ static func display_mode_label(mode: String) -> String:
 			return "Diagnostic High Contrast"
 		DISPLAY_MODE_TRON:
 			return "Tron"
+		DISPLAY_MODE_PLAIN:
+			return "Plain"
 		_:
 			return DISPLAY_MODE_DIAGNOSTIC.capitalize()
 

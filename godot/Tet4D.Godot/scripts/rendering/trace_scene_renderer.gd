@@ -14,6 +14,8 @@ var _cell_scale := ReplayVisuals.CELL_SCALE
 var _particle_scale := ReplayVisuals.PARTICLE_SCALE
 var _event_scale := ReplayVisuals.EVENT_SCALE
 var _display_mode := ReplayVisuals.default_display_mode()
+var _show_w_labels := true
+var _projection_strength := 1.0
 var _last_case_id := ""
 var _last_frame_index := -1
 var _particle_trails: Dictionary = {}
@@ -35,6 +37,17 @@ func _ready() -> void:
 
 func set_display_mode(display_mode: String) -> void:
 	_display_mode = ReplayVisuals.normalize_display_mode(display_mode)
+
+
+func set_show_w_labels(visible: bool) -> void:
+	_show_w_labels = visible
+
+
+func set_projection_strength(value: float) -> void:
+	_projection_strength = clampf(value, 0.0, 2.0)
+	_cell_scale = ReplayVisuals.CELL_SCALE * _projection_strength
+	_particle_scale = ReplayVisuals.PARTICLE_SCALE * _projection_strength
+	_event_scale = ReplayVisuals.EVENT_SCALE * _projection_strength
 
 
 func render_snapshot(snapshot: Dictionary) -> void:
@@ -66,7 +79,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_presentation.dimension,
 		_presentation.projection.mapper,
 		_display_mode,
-		_presentation.is_live
+		_presentation.is_live,
+		_show_w_labels
 	)
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode)

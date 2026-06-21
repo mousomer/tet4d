@@ -63,6 +63,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   product-shell/replay-view and accepted live-shell presentation surface, and
   `ReplayHud` now installs explicit shell minimums so the right inspector
   cannot be consumed by the game panel.
+- Stage 29 Godot shell settings registry foundation is complete. The
+  architecture note is
+  `docs/architecture/godot_shell_settings_source_of_truth.md`; the registry
+  lives at `godot/Tet4D.Godot/config/shell_settings_registry.json` and covers
+  only replay, display, theme, diagnostics, and controls-help shell settings.
+  It adds no gameplay, topology, movement, keyboard rebinding, Python config
+  migration, parity logic, native semantic authority, or authority transfer.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

@@ -5,7 +5,7 @@ class_name GridRenderer
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 
-func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, live_2d: bool = false) -> void:
+func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, live_2d: bool = false, show_w_labels: bool = true) -> void:
 	for child in get_children():
 		child.queue_free()
 
@@ -21,7 +21,7 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, l
 			_add_live_board_fill(slice_bounds, display_mode)
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(slice_bounds, display_mode)
-		if dimension >= 4:
+		if dimension >= 4 and show_w_labels:
 			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode)
 
 

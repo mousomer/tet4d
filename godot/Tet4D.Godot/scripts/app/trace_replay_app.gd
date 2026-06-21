@@ -98,6 +98,7 @@ func _deferred_ready() -> void:
 	_build_world_in_game_viewport()
 	_renderer.set_display_mode(_state.display_mode)
 	_hud.set_display_mode(_state.display_mode)
+	_hud.apply_shell_settings()
 	_load_bundle()
 
 
@@ -123,6 +124,11 @@ func _process(delta: float) -> void:
 	while _playback_accumulator >= 1.0:
 		_playback_accumulator -= 1.0
 		if not _advance_frame(1):
+			if not _state.loop_enabled:
+				_state.is_playing = false
+				_playback_accumulator = 0.0
+				_refresh_hud()
+				break
 			_state.current_frame_index = 0
 			_playback_accumulator = 0.0
 			_refresh_snapshot()
@@ -440,6 +446,17 @@ func _wire_hud() -> void:
 	_hud.playback_speed_changed.connect(func(value: float) -> void:
 		_state.playback_speed = value
 		_refresh_hud()
+	)
+	_hud.replay_loop_changed.connect(func(enabled: bool) -> void:
+		_state.loop_enabled = enabled
+	)
+	_hud.display_w_labels_changed.connect(func(visible: bool) -> void:
+		_renderer.set_show_w_labels(visible)
+		_refresh_render()
+	)
+	_hud.projection_strength_changed.connect(func(value: float) -> void:
+		_renderer.set_projection_strength(value)
+		_refresh_render()
 	)
 	_hud.diagnostics_visibility_changed.connect(func(visible: bool) -> void:
 		_state.diagnostics_visible = visible

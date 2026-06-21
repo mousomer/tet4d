@@ -573,6 +573,14 @@ stays synchronized, and the contract validator accepts the backlog shape.
     bottom controls have explicit minimum-size ownership. Python gameplay
     semantics, topology, trace semantics, parity evidence, native authority,
     and authority transfer remain unchanged.
+36. `DONE` `[BKL-P3-043]` Stage 29 Godot shell settings registry foundation:
+    add `godot/Tet4D.Godot/config/shell_settings_registry.json`, registry
+    validation, shell-local/session storage, generated settings controls, and
+    Godot tests for registry and panel generation. The first settings slice is
+    limited to replay, display, theme, diagnostics, and controls-help shell
+    settings; no gameplay, topology, movement, keyboard rebinding, Python
+    config migration, parity logic, native semantic authority, or authority
+    transfer is added.
 
 ## Governance Watchlist
 
