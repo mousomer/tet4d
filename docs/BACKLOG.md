@@ -104,6 +104,12 @@ Stage 26 structural parity slice selection is documented in
 envelope validation for Stage 27 only. It does not implement a harness, add
 fixtures, inspect trace events, change gameplay/topology/movement/rendering,
 or transfer authority.
+Stage 27 trace envelope validation parity is documented in
+`docs/architecture/trace_envelope_validation_parity.md`: it adds a
+fixture-backed `tools/parity/` harness for top-level trace envelope structure
+only. It does not validate trace event semantics, board snapshots, piece
+positions, topology traversal, movement/drop/collision/lock,
+rendering/Godot/C++, native/provisional output, or authority transfer.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.

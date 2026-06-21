@@ -58,6 +58,7 @@ Surfaces:
 - `docs/architecture/python_oracle_boundary_audit.md`
 - `docs/architecture/parity_tooling_package_review.md`
 - `docs/architecture/structural_parity_slice_selection.md`
+- `docs/architecture/trace_envelope_validation_parity.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -109,6 +110,11 @@ Required invariants:
 - Stage 26 selects trace envelope validation for Stage 27 only and must not
   implement a harness, add fixtures, inspect trace events, or transfer
   authority.
+- Stage 27 trace envelope validation parity lives in
+  `docs/architecture/trace_envelope_validation_parity.md`.
+- Stage 27 validates only structural trace envelope fields and must not inspect
+  trace event semantics, board snapshots, piece positions, topology traversal,
+  movement, rendering, native/Godot implementation, or transfer authority.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
@@ -237,6 +243,28 @@ Required invariants:
 - Trace events, board snapshots, piece positions, topology traversal,
   movement, drop/collision/lock, rendering/view/camera, Godot implementation,
   C++ implementation, and authority transfer remain excluded.
+
+## Trace envelope validation parity drift
+
+Surfaces:
+
+- `docs/architecture/trace_envelope_validation_parity.md`
+- `tools/parity/trace_envelope_validation_parity.py`
+- `tests/fixtures/parity/trace_envelope_validation.json`
+- `tests/unit/migration/test_trace_envelope_validation_parity.py`
+
+Required invariants:
+
+- Stage 27 remains trace envelope validation only.
+- The fixture stays envelope-only and deterministic.
+- Default mode is advisory when no safe native/provisional route exists.
+- Strict mode with `TET4D_STRICT_PARITY=1` blocks native route unavailability
+  and mismatches.
+- No authority transfer is claimed.
+- Native output is not faked.
+- No trace event semantics, board snapshots, piece positions, topology
+  traversal, movement, drop/collision/lock, rendering, Godot implementation,
+  C++ implementation, or authority transfer is allowed.
 
 ## Parity pilot drift
 

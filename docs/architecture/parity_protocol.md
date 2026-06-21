@@ -230,6 +230,12 @@ It selects trace envelope validation as the Stage 27 target only. Stage 26
 does not implement a harness, add fixtures, inspect trace events, or transfer
 authority.
 
+Stage 27 trace envelope validation parity lives in
+`docs/architecture/trace_envelope_validation_parity.md`.
+It validates only top-level trace envelope structure and diagnostics. It does
+not inspect trace event semantics, add a native/Godot implementation, or
+transfer authority.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

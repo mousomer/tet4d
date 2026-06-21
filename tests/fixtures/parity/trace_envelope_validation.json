@@ -1,0 +1,162 @@
+{
+  "slice": "trace_envelope_validation",
+  "authority": "python",
+  "cases": [
+    {
+      "name": "valid-minimal-envelope",
+      "trace": {
+        "case_id": "trace_envelope_minimal",
+        "dimension": 2,
+        "final": {
+          "state_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "frames": [],
+        "generator": {
+          "name": "trace_envelope_fixture",
+          "schema_version": 1
+        },
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      "expected": {
+        "valid": true,
+        "diagnostics": []
+      }
+    },
+    {
+      "name": "valid-unknown-event-payloads-ignored",
+      "trace": {
+        "case_id": "trace_envelope_unknown_events",
+        "dimension": 4,
+        "final": {
+          "state_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "frames": [
+          {
+            "events": [
+              {
+                "unknown_event_type": "intentionally-not-interpreted",
+                "payload": {
+                  "nonsense": true
+                }
+              }
+            ],
+            "frame_index": 0
+          }
+        ],
+        "generator": {
+          "name": "trace_envelope_fixture",
+          "schema_version": 1
+        },
+        "trace_type": "endgame",
+        "trace_version": 1
+      },
+      "expected": {
+        "valid": true,
+        "diagnostics": []
+      }
+    },
+    {
+      "name": "missing-generator-envelope-object",
+      "trace": {
+        "case_id": "trace_envelope_missing_generator",
+        "dimension": 2,
+        "final": {
+          "state_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "frames": [],
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      "expected": {
+        "valid": false,
+        "diagnostics": [
+          "missing required field: generator"
+        ]
+      }
+    },
+    {
+      "name": "missing-trace-version",
+      "trace": {
+        "case_id": "trace_envelope_missing_version",
+        "dimension": 2,
+        "final": {
+          "state_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        },
+        "frames": [],
+        "generator": {
+          "name": "trace_envelope_fixture",
+          "schema_version": 1
+        },
+        "trace_type": "gameplay"
+      },
+      "expected": {
+        "valid": false,
+        "diagnostics": [
+          "missing required field: trace_version"
+        ]
+      }
+    },
+    {
+      "name": "missing-final-state-hash-digest",
+      "trace": {
+        "case_id": "trace_envelope_missing_digest",
+        "dimension": 2,
+        "final": {},
+        "frames": [],
+        "generator": {
+          "name": "trace_envelope_fixture",
+          "schema_version": 1
+        },
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      "expected": {
+        "valid": false,
+        "diagnostics": [
+          "missing required field: state_hash"
+        ]
+      }
+    },
+    {
+      "name": "malformed-top-level-trace-type",
+      "trace": [
+        "not",
+        "a",
+        "trace",
+        "object"
+      ],
+      "expected": {
+        "valid": false,
+        "diagnostics": [
+          "malformed trace: expected object, got array"
+        ]
+      }
+    },
+    {
+      "name": "malformed-frames-container",
+      "trace": {
+        "case_id": "trace_envelope_bad_frames",
+        "dimension": 2,
+        "final": {
+          "state_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "frames": {
+          "frame_index": 0
+        },
+        "generator": {
+          "name": "trace_envelope_fixture",
+          "schema_version": 1
+        },
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      "expected": {
+        "valid": false,
+        "diagnostics": [
+          "malformed field: frames must be an array, got object"
+        ]
+      }
+    }
+  ]
+}

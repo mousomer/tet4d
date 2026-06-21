@@ -43,6 +43,10 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/architecture/parity_tooling_package_review.md`
 - structural parity slice selection:
   `docs/architecture/structural_parity_slice_selection.md`
+- trace envelope validation parity:
+  `docs/architecture/trace_envelope_validation_parity.md`,
+  `tools/parity/trace_envelope_validation_parity.py`,
+  `tests/fixtures/parity/trace_envelope_validation.json`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -88,6 +92,8 @@ Stage 24 parity tooling package review routing is also validated by governance
 reachability.
 Stage 26 structural parity slice selection is the current route for the next
 structural-but-safe parity target.
+Stage 27 trace envelope validation parity routing is also validated by
+governance reachability.
 
 ## Technical debt and drift protection
 
@@ -146,6 +152,8 @@ Drift validation is handled by
   `docs/architecture/parity_tooling_package_review.md`
 - structural parity slice selection:
   `docs/architecture/structural_parity_slice_selection.md`
+- trace envelope validation parity:
+  `docs/architecture/trace_envelope_validation_parity.md`
 - authority-transfer protocol:
   `docs/architecture/authority_transfer_protocol.md`
 - authority-transfer validator:
@@ -162,7 +170,7 @@ Drift validation is handled by
 | Python gameplay/topology/trace behavior | `AGENTS.md`, `docs/WORKFLOW_CODEX.md`, `docs/ARCHITECTURE_CONTRACT.md`, relevant `docs/rds/*` |
 | Godot UI/product shell | `AGENTS.md`, `godot/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/architecture/authority_map.md` |
 | C++/GDExtension/native | `AGENTS.md`, `native/AGENTS.md`, `docs/governance/godot_cpp_policy.md`, `docs/governance/cpp_safety_policy.md`, `docs/governance/native_tooling_ci_policy.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, `docs/architecture/second_parity_slice_candidate_selection.md`, `docs/architecture/trace_metadata_identity_digest_parity.md`, `docs/architecture/trace_schema_version_normalization_parity.md`, `docs/architecture/authority_map.md` |
-| Testing/parity | `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, `docs/architecture/second_parity_slice_candidate_selection.md`, `docs/architecture/trace_metadata_identity_digest_parity.md`, `docs/architecture/parity_evidence_package_review.md`, `docs/architecture/trace_schema_version_normalization_parity.md`, `docs/architecture/structural_parity_slice_selection.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
+| Testing/parity | `docs/architecture/parity_protocol.md`, `docs/architecture/first_subsystem_parity_pilot.md`, `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, `docs/architecture/second_parity_slice_candidate_selection.md`, `docs/architecture/trace_metadata_identity_digest_parity.md`, `docs/architecture/parity_evidence_package_review.md`, `docs/architecture/trace_schema_version_normalization_parity.md`, `docs/architecture/structural_parity_slice_selection.md`, `docs/architecture/trace_envelope_validation_parity.md`, `docs/governance/testing_policy.md`, relevant test docs and trace plans |
 | Python oracle boundary audit | `docs/architecture/authority_map.md`, `docs/architecture/python_oracle_boundary_audit.md`, `docs/architecture/parity_protocol.md`, relevant Python gameplay/topology/trace surfaces |
 | Parity tooling/package review | `docs/architecture/parity_tooling_package_review.md`, `docs/architecture/parity_protocol.md`, `docs/architecture/parity_evidence_package_review.md`, current `tools/migration/*parity*.py` harnesses |
 | Config/constants | `docs/governance/config_policy.md`, `docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md`, `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`, `tools/governance/validate_config_authority.py` |
@@ -191,7 +199,8 @@ and promotion-gate routing remain intact. Governance validation also checks
  `tools/parity/` decision, and Stage 25 applies that routing refactor without
  moving any semantic authority. Stage 26 structural parity slice selection
  chooses trace envelope validation for Stage 27 only and does not transfer
- authority.
+ authority. Stage 27 trace envelope validation parity remains structural and
+ does not inspect trace-event semantics or transfer authority.
 
 ## Conflict rule
 

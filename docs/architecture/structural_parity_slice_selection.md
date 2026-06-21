@@ -66,7 +66,8 @@ A candidate must be rejected if it requires:
 
 ## Selected Slice: Trace Envelope Validation
 
-Stage 27 should validate only the top-level trace envelope structure.
+Stage 27 validates only the top-level trace envelope structure in
+`docs/architecture/trace_envelope_validation_parity.md`.
 
 Allowed Stage 27 scope:
 
@@ -106,15 +107,14 @@ Forbidden examples:
 
 ## Stage 27 Proposed Deliverables
 
-Stage 27 should choose final paths after inspecting current repository
-conventions. Expected deliverables are likely:
+Stage 27 uses these final paths:
 
 - `tools/parity/trace_envelope_validation_parity.py`
 - `tests/fixtures/parity/trace_envelope_validation.json`
-- `tests/unit/parity/test_trace_envelope_validation_parity.py`
+- `tests/unit/migration/test_trace_envelope_validation_parity.py`
 - `docs/architecture/trace_envelope_validation_parity.md`
 
-Stage 26 does not create these files.
+Stage 26 did not create these files.
 
 ## Stage 27 Guardrails
 

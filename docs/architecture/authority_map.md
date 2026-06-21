@@ -89,6 +89,11 @@ Stage 26 structural parity slice selection lives in
 `docs/architecture/structural_parity_slice_selection.md` and selects trace
 envelope validation for Stage 27 only. It does not implement trace envelope
 validation, change trace-event semantics, or transfer authority.
+Stage 27 trace envelope validation parity lives in
+`docs/architecture/trace_envelope_validation_parity.md` and remains structural
+envelope evidence only. It does not validate trace event semantics, board
+states, piece positions, topology traversal, movement, rendering, native/Godot
+comparison, or authority transfer.
 
 ## Authority transfer requires parity
 
