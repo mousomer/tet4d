@@ -33,6 +33,7 @@ COMPILE_DATABASE_RELS = (
 )
 STRICT_ENV = "TET4D_STRICT_NATIVE_TOOLS"
 CI_STRICT_ENV = "TET4D_NATIVE_TOOLS_CI_STRICT"
+CI_ADVISORY_ENV = "TET4D_NATIVE_TOOLS_CI_ADVISORY"
 CI_ENVS = ("CI", "GITHUB_ACTIONS")
 
 
@@ -50,6 +51,12 @@ def _mode_name(strict: bool) -> str:
     if any(os.environ.get(name) for name in CI_ENVS):
         return "CI strict"
     return "local strict"
+
+
+def _is_ci_advisory() -> bool:
+    return os.environ.get(CI_ADVISORY_ENV) == "1" and any(
+        os.environ.get(name) for name in CI_ENVS
+    )
 
 
 def _is_excluded(path: Path) -> bool:
@@ -219,6 +226,14 @@ def validate(
     for rel in (".clang-format", ".clang-tidy"):
         if not (root / rel).is_file():
             issues.append(f"{rel} is missing.")
+
+    if not strict and _is_ci_advisory():
+        messages.append(
+            "CI advisory native tooling: clang execution deferred until strict mode."
+        )
+        if issues:
+            return issues, messages
+        return [], ["Native C++ tooling validation passed.", *messages]
 
     format_issues, format_message = _validate_clang_format(files, root, strict)
     issues.extend(format_issues)

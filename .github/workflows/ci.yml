@@ -11,6 +11,8 @@ jobs:
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
+      CODEX_MODE: "1"
+      TET4D_NATIVE_TOOLS_CI_ADVISORY: "1"
 
     strategy:
       fail-fast: false

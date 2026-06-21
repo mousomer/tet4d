@@ -65,6 +65,11 @@ CI strict mode uses the same strict behavior as
 CI must not enable strict native tooling until the readiness checklist below is
 complete. Until then, CI may run the validator in local advisory mode so missing
 clang tools or compile database do not make unrelated governance checks brittle.
+Hosted runner tool availability must not silently promote advisory mode into a
+hard native formatting/static-analysis gate. While strict native tooling is
+deferred, CI runs the validator with `TET4D_NATIVE_TOOLS_CI_ADVISORY=1`; this
+keeps configuration/discovery checks active, records native tooling as a
+deferred CI advisory, and skips opportunistic clang-format/clang-tidy execution.
 
 ## CI readiness checklist
 

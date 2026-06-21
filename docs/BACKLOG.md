@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-06-18
+Updated: 2026-06-21
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,15 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Stage 31a repairs remote CI bootstrap after the Stage 31/32 push sequence
+without changing gameplay, Godot visual implementation, parity semantics, or
+roadmap scope. The first shared CI failure was the common verification step:
+GitHub-hosted Ubuntu exposed `clang-format`, which made deferred native tooling
+advisory mode fail opportunistically before pytest. CI now runs the same
+`CODEX_MODE=1 ./scripts/verify.sh` contract used locally and marks native
+tooling as explicit CI advisory until the documented strict-mode readiness
+checklist is complete.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior

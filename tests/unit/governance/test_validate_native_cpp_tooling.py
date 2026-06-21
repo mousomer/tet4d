@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 import tools.governance.validate_native_cpp_tooling as native_tooling
+
+
+@pytest.fixture(autouse=True)
+def _clear_native_tooling_env(monkeypatch) -> None:
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("TET4D_STRICT_NATIVE_TOOLS", raising=False)
+    monkeypatch.delenv("TET4D_NATIVE_TOOLS_CI_STRICT", raising=False)
+    monkeypatch.delenv("TET4D_NATIVE_TOOLS_CI_ADVISORY", raising=False)
 
 
 def _write_text(path: Path, content: str = "") -> None:
@@ -109,6 +120,39 @@ def test_native_cpp_tooling_ci_strict_env_uses_strict_mode(
     assert "clang-format is required in strict native tooling mode." in issues
     assert "compile_commands.json is required in strict native tooling mode." in issues
     assert "Native C++ tooling mode: CI strict." in messages
+
+
+def test_native_cpp_tooling_ci_advisory_skips_opportunistic_clang_execution(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(tmp_path / ".clang-tidy", "Checks: clang-analyzer-*\n")
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp")
+    monkeypatch.setenv("CI", "true")
+    monkeypatch.setenv("TET4D_NATIVE_TOOLS_CI_ADVISORY", "1")
+    monkeypatch.setattr(
+        native_tooling,
+        "_validate_clang_format",
+        lambda files, root, strict: (_ for _ in ()).throw(
+            AssertionError("clang-format should not run in CI advisory mode")
+        ),
+    )
+    monkeypatch.setattr(
+        native_tooling,
+        "_validate_clang_tidy",
+        lambda files, root, strict: (_ for _ in ()).throw(
+            AssertionError("clang-tidy should not run in CI advisory mode")
+        ),
+    )
+
+    issues, messages = native_tooling.validate(tmp_path)
+
+    assert issues == []
+    assert "Native C++ tooling mode: local advisory." in messages
+    assert (
+        "CI advisory native tooling: clang execution deferred until strict mode."
+        in messages
+    )
 
 
 def test_native_cpp_tooling_preserves_python_authority_in_policy() -> None:
