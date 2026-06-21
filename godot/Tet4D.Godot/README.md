@@ -53,6 +53,12 @@ Current transition status:
   futuristic; the current replay/settings shell is accepted as the MVP
   visual-style implementation baseline with known manual-navigation
   limitations.
+- Stage 32 visual style foundation: Godot shell styling now routes through
+  `res://config/shell_theme_palettes.json` and the style-token scripts under
+  `res://scripts/ui/style/`. `Tron` is the default product theme; Diagnostic
+  and Plain remain available. The styling applies to shell controls and
+  replay/board visual roles only, without changing gameplay, topology, trace
+  semantics, parity fixtures, or native authority.
 
 ## Bundle Sync
 
@@ -86,13 +92,14 @@ The runtime loads:
 The runtime renders frames and diagnostics only. Python remains the semantic
 oracle and the exported bundle remains non-authoritative. The shell should
 make that explicit with replay-only status text and replay-labelled controls.
-The startup display mode is `Diagnostic High Contrast`, not `Tron`: bright
-opaque role-based materials are the default so board outlines, W slices,
-probes, cells, and endgame particles stay readable before any aesthetic
-styling is considered. Replay geometry follows the existing Python/Pygame
-display conventions for centered board coordinates, inverted visual Y, board
-half-cell boundaries, and tetromino-style trace color IDs; Godot adds only the
-labeled W-card layout needed to inspect copied 4D trace frames.
+The startup display mode is `Tron`: it is the primary product shell theme and
+is implemented as a restrained technical diagram style, not arcade neon.
+Diagnostic remains available for development/debug readability, and Plain
+remains available as the neutral fallback. Replay geometry follows the existing
+Python/Pygame display conventions for centered board coordinates, inverted
+visual Y, board half-cell boundaries, and tetromino-style trace color IDs;
+Godot adds only the labeled W-card layout needed to inspect copied 4D trace
+frames.
 UI styling is carried by reusable Godot Theme resources in `res://themes/`:
 `replay_diagnostic_theme.tres` for the startup shell and
 `replay_tron_theme.tres` for the optional neon variant, and

@@ -6,6 +6,8 @@ const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const SettingControlFactoryScript = preload("res://scripts/ui/settings/setting_control_factory.gd")
+const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
+const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 
 signal setting_changed(setting_id: String, value)
 signal playback_speed_changed(value: float)
@@ -20,6 +22,8 @@ signal display_mode_changed(mode: String)
 var registry = SettingsRegistryScript.new()
 var store
 var _control_factory = SettingControlFactoryScript.new()
+var _style_manager = null
+var _style_applier = ShellControlStyleApplierScript.new()
 var _controls_by_id: Dictionary = {}
 var _updating_controls := false
 
@@ -29,10 +33,14 @@ func _ready() -> void:
 		registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	if store == null:
 		store = SettingsStoreScript.new(registry)
+	if _style_manager == null:
+		_style_manager = ShellStyleManagerScript.new()
+		_style_manager.set_theme(ReplayVisuals.normalize_display_mode(str(store.value("theme.name"))))
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
 	_build_panel()
+	apply_shell_style()
 
 
 func setting_value(setting_id: String):
@@ -50,6 +58,9 @@ func set_diagnostics_visible(visible: bool) -> void:
 
 func set_display_mode(mode: String) -> void:
 	set_setting_value("theme.name", ReplayVisuals.normalize_display_mode(mode))
+	if _style_manager != null:
+		_style_manager.set_theme(ReplayVisuals.normalize_display_mode(mode))
+		apply_shell_style()
 
 
 func set_playback_speed(speed: float) -> void:
@@ -63,6 +74,22 @@ func apply_initial_settings() -> void:
 
 func generated_control(setting_id: String) -> Control:
 	return _controls_by_id.get(setting_id)
+
+
+func set_style_manager(style_manager) -> void:
+	_style_manager = style_manager
+	if _style_manager != null and is_inside_tree():
+		apply_shell_style()
+
+
+func style_manager():
+	return _style_manager
+
+
+func apply_shell_style() -> void:
+	if _style_manager == null:
+		return
+	_style_applier.apply_to_tree(self, _style_manager)
 
 
 func _build_panel() -> void:
@@ -166,6 +193,9 @@ func _emit_setting(setting_id: String, value) -> void:
 		"display.projection_strength":
 			projection_strength_changed.emit(float(value))
 		"theme.name":
+			if _style_manager != null:
+				_style_manager.set_theme(ReplayVisuals.normalize_display_mode(str(value)))
+				apply_shell_style()
 			display_mode_changed.emit(ReplayVisuals.normalize_display_mode(str(value)))
 		"diagnostics.show_layout_bounds":
 			layout_bounds_visibility_changed.emit(bool(value))

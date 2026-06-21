@@ -37,7 +37,7 @@ func run() -> Array:
 	_assert_control_type(failures, panel, "display.projection_strength", HBoxContainer, "float display setting should produce slider group")
 	_assert_slider_value_label(failures, panel, "display.projection_strength")
 	_assert_control_type(failures, panel, "theme.name", OptionButton, "enum should produce dropdown")
-	_assert_dropdown_options(failures, panel, "theme.name", ["diagnostic", "tron", "plain"])
+	_assert_dropdown_options(failures, panel, "theme.name", ["diagnostic", "plain", "tron"])
 	_assert_wrapped_setting_label(failures, content, "display.projection_strength")
 	panel.queue_free()
 	await tree.process_frame

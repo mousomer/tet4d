@@ -120,6 +120,12 @@ with known manual-navigation limitations, defines theme/colour/typography/
 spacing/component/board visual rules, and does not implement themes, change
 gameplay, topology, trace semantics, parity evidence, native authority, or
 authority transfer.
+Stage 32 Godot visual style foundation lives in
+`docs/architecture/godot_visual_style_foundation.md` and implements that
+visual authority for Godot product-shell styling only. It adds palette data,
+style-token resolution, control style application, and board/replay visual role
+mapping without changing gameplay, topology, trace semantics, replay-frame
+semantics, parity evidence, native authority, or authority transfer.
 
 ## Authority transfer requires parity
 

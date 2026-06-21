@@ -7,6 +7,9 @@ const CaseBrowserScript = preload("res://scripts/ui/case_browser.gd")
 const DiagnosticsPanelScript = preload("res://scripts/ui/diagnostics_panel.gd")
 const EventListPanelScript = preload("res://scripts/ui/event_list_panel.gd")
 const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
+const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
+const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
+const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -76,6 +79,7 @@ var _right_column: VBoxContainer
 var _bottom_panel: PanelContainer
 var _top_status_panel: PanelContainer
 var _authority_panel: PanelContainer
+var _background_rect: ColorRect
 var _main_menu_screen: Control
 var _browser_screen: Control
 var _viewer_screen: Control
@@ -90,6 +94,8 @@ var _bundle_detail_label: Label
 var _camera_status_label: Label
 var _help_label: Label
 var _current_display_mode := ReplayVisuals.default_display_mode()
+var _style_manager = ShellStyleManagerScript.new()
+var _style_applier = ShellControlStyleApplierScript.new()
 var _current_screen := SCREEN_MAIN_MENU
 var _geometry_diagnostics_enabled := false
 var _live_2d_paused := false
@@ -118,9 +124,14 @@ static func live_4d_hint_text() -> String:
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	_style_manager.set_theme(_current_display_mode)
+	_style_manager.theme_changed.connect(func(theme_id: String) -> void:
+		_apply_shell_style()
+	)
 	theme = ReplayVisuals.build_theme(_current_display_mode)
 	_install_shell_layout_contract()
 	_build_layout()
+	_apply_shell_style()
 	call_deferred("_log_geometry_diagnostics", "ready")
 
 
@@ -363,15 +374,17 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 
 func set_display_mode(mode: String) -> void:
 	_current_display_mode = ReplayVisuals.normalize_display_mode(mode)
+	_style_manager.set_theme(_current_display_mode)
 	theme = ReplayVisuals.build_theme(_current_display_mode)
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
 	if _replay_note != null:
-		_replay_note.text = "Replay shell only. Diagnostic display is the default readability mode; Godot does not implement gameplay."
+		_replay_note.text = "Replay shell only. Tron is the product display default; Godot does not implement gameplay."
 	if _settings_panel != null:
 		_settings_panel.set_display_mode(_current_display_mode)
 	if _settings_screen_panel != null:
 		_settings_screen_panel.set_display_mode(_current_display_mode)
+	_apply_shell_style()
 
 
 func show_screen(screen_name: String) -> void:
@@ -419,7 +432,15 @@ func layout_contract_snapshot() -> Dictionary:
 		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
 		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
 		"camera_status_text": _camera_status_label.text if _camera_status_label != null else "",
+		"style_theme_id": _style_manager.get_theme_id(),
+		"background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
+		"board_background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
+		"hint_color": _style_manager.get_color(ShellStyleRolesScript.LABEL_HINT),
 	}
+
+
+func style_manager():
+	return _style_manager
 
 
 func show_replay_viewer() -> void:
@@ -491,6 +512,12 @@ func _install_shell_layout_contract() -> void:
 
 
 func _build_layout() -> void:
+	_background_rect = ColorRect.new()
+	_background_rect.name = "ShellBackground"
+	_background_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fill_parent(_background_rect)
+	add_child(_background_rect)
+
 	var root := MarginContainer.new()
 	_fill_parent(root)
 	root.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
@@ -773,6 +800,7 @@ func _build_layout() -> void:
 	_right_column.add_child(_event_panel)
 	_settings_panel = SettingsPanelScript.new()
 	_settings_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
+	_settings_panel.set_style_manager(_style_manager)
 	_wire_settings_panel(_settings_panel)
 	_right_column.add_child(_settings_panel)
 
@@ -846,7 +874,7 @@ func _build_layout() -> void:
 	control_group.add_child(geometry_toggle)
 
 	_replay_note = Label.new()
-	_replay_note.text = "Replay shell only. Diagnostic display is the default readability mode; Godot does not implement gameplay."
+	_replay_note.text = "Replay shell only. Tron is the product display default; Godot does not implement gameplay."
 	_replay_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_replay_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_replay_note.theme_type_variation = "SecondaryLabel"
@@ -1048,6 +1076,7 @@ func _build_settings_screen(screen: Control) -> void:
 	_settings_screen_panel = SettingsPanelScript.new()
 	_settings_screen_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_settings_screen_panel.size_flags_vertical = Control.SIZE_FILL
+	_settings_screen_panel.set_style_manager(_style_manager)
 	_wire_settings_panel(_settings_screen_panel)
 	layout.add_child(_settings_screen_panel)
 
@@ -1158,6 +1187,19 @@ func _fill_parent(control: Control) -> void:
 	control.offset_top = 0.0
 	control.offset_right = 0.0
 	control.offset_bottom = 0.0
+
+
+func _apply_shell_style() -> void:
+	if _background_rect != null:
+		_background_rect.color = _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY)
+	if _game_viewport != null:
+		_game_viewport.transparent_bg = false
+		_game_viewport.get_world_3d()
+	_style_applier.apply_to_tree(self, _style_manager)
+	if _settings_panel != null:
+		_settings_panel.apply_shell_style()
+	if _settings_screen_panel != null:
+		_settings_screen_panel.apply_shell_style()
 
 
 func _apply_responsive_layout() -> void:

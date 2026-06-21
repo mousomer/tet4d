@@ -89,6 +89,14 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   known manual-navigation limitations. It is design authority only and adds no
   Godot implementation, gameplay, topology, trace semantics, parity evidence,
   native authority, or authority transfer.
+- Stage 32 Godot visual style foundation is complete. The architecture note is
+  `docs/architecture/godot_visual_style_foundation.md`; Godot now has a
+  central `config/shell_theme_palettes.json`, style role/palette/manager/
+  control-applier scripts under `godot/Tet4D.Godot/scripts/ui/style/`, `tron`
+  as the default `theme.name`, and shared style-role routing for shell
+  controls plus board/replay visual materials. This is product-shell styling
+  only and adds no gameplay, topology, trace semantics, replay-frame
+  semantics, parity evidence, native authority, or authority transfer.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

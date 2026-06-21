@@ -63,6 +63,7 @@ Surfaces:
 - `docs/architecture/godot_shell_settings_source_of_truth.md`
 - `docs/architecture/godot_replay_shell_ux_acceptance.md`
 - `docs/architecture/godot_visual_style_authority.md`
+- `docs/architecture/godot_visual_style_foundation.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -131,6 +132,11 @@ Required invariants:
   implement Godot theme resources, add style scripts, port pygame UI history,
   add gameplay/topology/movement settings, create parity evidence, or transfer
   authority.
+- Stage 32 Godot visual style foundation lives in
+  `docs/architecture/godot_visual_style_foundation.md`.
+- Stage 32 may implement Godot shell palette/style-token presentation only and
+  must not change gameplay, topology, movement, trace semantics, replay-frame
+  semantics, parity evidence, native authority, or transfer authority.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.

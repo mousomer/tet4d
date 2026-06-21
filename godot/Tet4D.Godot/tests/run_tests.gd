@@ -11,6 +11,8 @@ func _run_all() -> void:
 		"res://tests/test_bundle_loader.gd",
 		"res://tests/test_trace_snapshot_extractor.gd",
 		"res://tests/test_replay_visuals.gd",
+		"res://tests/test_shell_theme_palettes.gd",
+		"res://tests/test_shell_style_manager.gd",
 		"res://tests/test_shell_settings_registry.gd",
 		"res://tests/test_coordinate_mapper.gd",
 		"res://tests/test_board_presentation_model.gd",
@@ -21,6 +23,7 @@ func _run_all() -> void:
 		"res://tests/test_scene_integrity.gd",
 		"res://tests/test_replay_viewer_layout.gd",
 		"res://tests/test_settings_panel_generation.gd",
+		"res://tests/test_shell_style_application.gd",
 		"res://tests/test_particle_renderer.gd",
 	]:
 		var test_case = load(script_path).new()
@@ -30,6 +33,7 @@ func _run_all() -> void:
 			"res://tests/test_live_2d_shell.gd",
 			"res://tests/test_replay_viewer_layout.gd",
 			"res://tests/test_settings_panel_generation.gd",
+			"res://tests/test_shell_style_application.gd",
 		]:
 			failures.append_array(await test_case.run())
 		else:

@@ -51,6 +51,8 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/architecture/godot_replay_shell_ux_acceptance.md`
 - Godot visual style authority:
   `docs/architecture/godot_visual_style_authority.md`
+- Godot visual style foundation:
+  `docs/architecture/godot_visual_style_foundation.md`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -101,6 +103,8 @@ governance reachability.
 Stage 30 Godot replay shell UX acceptance routing is also validated by
 governance reachability.
 Stage 31 Godot visual style authority routing is also validated by governance
+reachability.
+Stage 32 Godot visual style foundation routing is also validated by governance
 reachability.
 
 ## Technical debt and drift protection
@@ -166,6 +170,8 @@ Drift validation is handled by
   `docs/architecture/godot_replay_shell_ux_acceptance.md`
 - Godot visual style authority:
   `docs/architecture/godot_visual_style_authority.md`
+- Godot visual style foundation:
+  `docs/architecture/godot_visual_style_foundation.md`
 - authority-transfer protocol:
   `docs/architecture/authority_transfer_protocol.md`
 - authority-transfer validator:
@@ -216,7 +222,8 @@ and promotion-gate routing remain intact. Governance validation also checks
  replay shell UX acceptance remains product-shell usability work and does not
  transfer authority. Stage 31 Godot visual style authority remains
  product-shell design authority and does not implement themes or transfer
- authority.
+ authority. Stage 32 Godot visual style foundation remains product-shell style
+ implementation and does not transfer authority.
 
 ## Conflict rule
 

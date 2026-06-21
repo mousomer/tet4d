@@ -8,13 +8,13 @@ func run() -> Array:
 	_assert_equal(
 		failures,
 		ReplayVisuals.default_display_mode(),
-		ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC,
-		"diagnostic high contrast should be the startup display mode"
+		ReplayVisuals.DISPLAY_MODE_TRON,
+		"tron should be the startup display mode"
 	)
 	_assert_equal(
 		failures,
 		ReplayVisuals.display_mode_label(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC),
-		"Diagnostic High Contrast",
+		"Diagnostic",
 		"diagnostic display label"
 	)
 	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
@@ -36,9 +36,9 @@ func run() -> Array:
 	var live_board_fill := ReplayVisuals.live_board_fill_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 	var live_board_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 	_assert_material_alpha(failures, "diagnostic active cell", cyan_active, 0.95)
-	_assert_color_close(failures, "diagnostic active cyan hue", cyan_active.albedo_color, Color(0.0, 1.0, 1.0, 1.0))
-	_assert_color_close(failures, "diagnostic active yellow hue", yellow_active.albedo_color, Color(1.0, 1.0, 0.0, 1.0))
-	_assert_color_close(failures, "gameplay active role hue", gameplay_active.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL))
+	_assert_color_close(failures, "diagnostic active role hue", cyan_active.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC))
+	_assert_color_close(failures, "diagnostic active role ignores trace color id", yellow_active.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC))
+	_assert_color_close(failures, "gameplay active role hue", gameplay_active.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC))
 	_assert_material_alpha(failures, "live active cell", live_active, 0.95)
 	_assert_material_alpha(failures, "live locked cell", live_locked, 0.95)
 	_assert_material_alpha(failures, "live active border", live_active_border, 0.95)

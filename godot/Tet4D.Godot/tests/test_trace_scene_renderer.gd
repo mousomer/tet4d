@@ -12,6 +12,7 @@ func run() -> Array:
 	var renderer := TraceSceneRendererScript.new()
 	tree.root.add_child(renderer)
 	await tree.process_frame
+	renderer.set_display_mode(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
 
 	var snapshot := {
 		"case_id": "gameplay_snap_policy",
@@ -43,7 +44,7 @@ func run() -> Array:
 			if material == null:
 				failures.append("gameplay active cell should have a StandardMaterial3D")
 			else:
-				_assert_color(failures, material.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL), "gameplay active cells use role color")
+				_assert_color(failures, material.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC), "gameplay active cells use role color")
 			var box := mesh_instance.mesh as BoxMesh
 			if box == null:
 				failures.append("gameplay active cell should use a box mesh")
@@ -368,7 +369,7 @@ func _assert_live_3d_origin_marker(failures: Array, active_cell: Node3D) -> void
 	var material := marker.material_override as StandardMaterial3D
 	if material == null:
 		failures.append("live 3D active origin marker should have a material")
-	elif material.albedo_color != ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_3D_ORIGIN_MARKER):
+	elif material.albedo_color != ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_3D_ORIGIN_MARKER, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC):
 		failures.append("live 3D active origin marker should use the origin marker role")
 
 

@@ -65,11 +65,11 @@
       "category": "theme",
       "value_type": "enum",
       "control_type": "dropdown",
-      "default": "diagnostic",
+      "default": "tron",
       "options": [
         {"value": "diagnostic", "label": "Diagnostic"},
-        {"value": "tron", "label": "Tron"},
-        {"value": "plain", "label": "Plain"}
+        {"value": "plain", "label": "Plain"},
+        {"value": "tron", "label": "Tron"}
       ],
       "authority": "godot_shell",
       "persistence": "local_shell"

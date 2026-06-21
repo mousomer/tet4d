@@ -599,6 +599,16 @@ stays synchronized, and the contract validator accepts the backlog shape.
     manual-navigation limitations. No Godot implementation, gameplay,
     topology, trace semantics, parity logic, native authority, or authority
     transfer is added.
+39. `DONE` `[BKL-P3-046]` Stage 32 Godot visual style foundation:
+    add `godot/Tet4D.Godot/config/shell_theme_palettes.json`, split
+    role/palette/style-manager/control-applier scripts under
+    `godot/Tet4D.Godot/scripts/ui/style/`, make `tron` the default
+    `theme.name`, apply shared style roles to shell controls/settings surfaces,
+    route board/replay visual materials through the same palette roles, and
+    add Godot tests for palettes, style manager behavior, settings integration,
+    style application, and replay visual role mapping. No gameplay, topology,
+    trace semantics, replay-frame semantics, parity logic, native authority, or
+    authority transfer is added.
 
 ## Governance Watchlist
 

@@ -5,6 +5,8 @@ class_name ReplayVisuals
 const DIAGNOSTIC_THEME_PATH := "res://themes/replay_diagnostic_theme.tres"
 const TRON_THEME_PATH := "res://themes/replay_tron_theme.tres"
 const PLAIN_THEME_PATH := "res://themes/replay_theme.tres"
+const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
+const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 
 const DISPLAY_MODE_DIAGNOSTIC := "diagnostic"
 const DISPLAY_MODE_TRON := "tron"
@@ -123,7 +125,7 @@ const TRACE_COLOR_PALETTE := [
 
 
 static func default_display_mode() -> String:
-	return DISPLAY_MODE_DIAGNOSTIC
+	return DISPLAY_MODE_TRON
 
 
 static func supported_shell_minimum_size() -> Vector2:
@@ -131,13 +133,13 @@ static func supported_shell_minimum_size() -> Vector2:
 
 
 static func normalize_display_mode(mode: String) -> String:
-	return mode if DISPLAY_MODES.has(mode) else DISPLAY_MODE_DIAGNOSTIC
+	return mode if DISPLAY_MODES.has(mode) else DISPLAY_MODE_TRON
 
 
 static func display_mode_label(mode: String) -> String:
 	match normalize_display_mode(mode):
 		DISPLAY_MODE_DIAGNOSTIC:
-			return "Diagnostic High Contrast"
+			return "Diagnostic"
 		DISPLAY_MODE_TRON:
 			return "Tron"
 		DISPLAY_MODE_PLAIN:
@@ -150,12 +152,12 @@ static func authority_label(mode: String) -> String:
 	return "REPLAY · PYTHON ORACLE · %s DISPLAY" % normalize_display_mode(mode).to_upper()
 
 
-static func color_for_role(role: String, mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Color:
+static func color_for_role(role: String, mode: String = DISPLAY_MODE_TRON) -> Color:
 	var palette := _palette(normalize_display_mode(mode))
 	return palette.get(role, palette.get(ROLE_TEXT, Color.WHITE))
 
 
-static func build_theme(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Theme:
+static func build_theme(mode: String = DISPLAY_MODE_TRON) -> Theme:
 	var display_mode := normalize_display_mode(mode)
 	var theme_path := DIAGNOSTIC_THEME_PATH
 	match display_mode:
@@ -166,111 +168,111 @@ static func build_theme(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Theme:
 	return load(theme_path).duplicate() as Theme
 
 
-static func active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
-	return _make_material(_trace_color(color_id, false), _role_emission(ROLE_ACTIVE_CELL, mode), false)
-
-
-static func gameplay_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
 	return _role_material(ROLE_ACTIVE_CELL, mode, _role_emission(ROLE_ACTIVE_CELL, mode))
 
 
-static func live_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+static func gameplay_active_cell_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+	return _role_material(ROLE_ACTIVE_CELL, mode, _role_emission(ROLE_ACTIVE_CELL, mode))
+
+
+static func live_active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.08)
 	return _make_material(base, _role_emission(ROLE_ACTIVE_CELL, mode) + 0.1, false)
 
 
-static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.14)
 	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode), false)
 
 
-static func live_4d_active_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+static func live_4d_active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
 	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72, false)
 
 
-static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> Dictionary:
+static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> Dictionary:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.13)
 	return _live_3d_face_materials(base, mode, true)
 
 
-static func live_4d_active_face_materials(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> Dictionary:
+static func live_4d_active_face_materials(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> Dictionary:
 	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
 	return _live_3d_face_materials(base, mode, true, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72)
 
 
-static func locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func locked_cell_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_LOCKED_CELL, mode, _role_emission(ROLE_LOCKED_CELL, mode))
 
 
-static func live_locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+static func live_locked_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).darkened(0.22).lerp(color_for_role(ROLE_LOCKED_CELL, mode), 0.18)
 	return _make_material(base, _role_emission(ROLE_LOCKED_CELL, mode), false)
 
 
-static func live_3d_locked_cell_material(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> StandardMaterial3D:
+static func live_3d_locked_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).darkened(0.42).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.28)
 	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_LOCKED, mode), false)
 
 
-static func live_3d_locked_face_materials(mode: String = DISPLAY_MODE_DIAGNOSTIC, color_id: int = 1) -> Dictionary:
+static func live_3d_locked_face_materials(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> Dictionary:
 	var base := _trace_color(color_id, false).darkened(0.42).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.28)
 	return _live_3d_face_materials(base, mode, false)
 
 
-static func live_active_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func live_active_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_CELL_ACTIVE_BORDER, mode, _role_emission(ROLE_LIVE_CELL_ACTIVE_BORDER, mode))
 
 
-static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_CELL_LOCKED_BORDER, mode, _role_emission(ROLE_LIVE_CELL_LOCKED_BORDER, mode))
 
 
-static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode))
 
 
-static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_3D_LOCKED_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_LOCKED_OUTLINE, mode))
 
 
-static func live_3d_origin_marker_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func live_3d_origin_marker_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_3D_ORIGIN_MARKER, mode, _role_emission(ROLE_LIVE_3D_ORIGIN_MARKER, mode))
 
 
-static func live_board_fill_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func live_board_fill_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	var material := _role_material(ROLE_LIVE_BOARD_FILL, mode, _role_emission(ROLE_LIVE_BOARD_FILL, mode))
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = _with_alpha(material.albedo_color, 0.88)
 	return material
 
 
-static func live_board_grid_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func live_board_grid_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_BOARD_GRID, mode, _role_emission(ROLE_LIVE_BOARD_GRID, mode))
 
 
-static func probe_before_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func probe_before_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_PROBE_BEFORE, mode, _role_emission(ROLE_PROBE_BEFORE, mode))
 
 
-static func probe_after_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func probe_after_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_PROBE_AFTER, mode, _role_emission(ROLE_PROBE_AFTER, mode))
 
 
 static func particle_material(
-	mode: String = DISPLAY_MODE_DIAGNOSTIC,
+	mode: String = DISPLAY_MODE_TRON,
 	escaped: bool = false,
 	color_id: int = 0
 ) -> StandardMaterial3D:
 	return _make_material(
-		_trace_color(color_id, escaped),
+		color_for_role(ROLE_PARTICLE_ESCAPED if escaped else ROLE_PARTICLE, mode),
 		_role_emission(ROLE_PARTICLE_ESCAPED if escaped else ROLE_PARTICLE, mode),
 		false
 	)
 
 
 static func particle_core_material(
-	mode: String = DISPLAY_MODE_DIAGNOSTIC,
+	mode: String = DISPLAY_MODE_TRON,
 	escaped: bool = false,
 	color_id: int = 0
 ) -> StandardMaterial3D:
@@ -283,164 +285,86 @@ static func particle_core_material(
 
 
 static func particle_trail_material(
-	mode: String = DISPLAY_MODE_DIAGNOSTIC,
+	mode: String = DISPLAY_MODE_TRON,
 	escaped: bool = false,
 	color_id: int = 0
 ) -> StandardMaterial3D:
-	var color := _trace_color(color_id, escaped).darkened(0.25)
+	var color := color_for_role(ROLE_PARTICLE_ESCAPED if escaped else ROLE_PARTICLE, mode).darkened(0.25)
 	var material := _make_material(color, 0.75, false)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = _with_alpha(color, 0.72)
 	return material
 
 
-static func board_outline_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func board_outline_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_BOARD_OUTLINE, mode, _role_emission(ROLE_BOARD_OUTLINE, mode))
 
 
-static func slice_outline_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func slice_outline_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_W_SLICE_OUTLINE, mode, _role_emission(ROLE_W_SLICE_OUTLINE, mode))
 
 
-static func event_marker_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func event_marker_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	return _role_material(ROLE_EVENT_MARKER, mode, _role_emission(ROLE_EVENT_MARKER, mode))
 
 
-static func slice_label_color(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> Color:
+static func slice_label_color(mode: String = DISPLAY_MODE_TRON) -> Color:
 	return color_for_role(ROLE_W_SLICE_LABEL, mode)
 
 
-static func slice_label_chip_material(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> StandardMaterial3D:
+static func slice_label_chip_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	var material := _role_material(ROLE_PANEL_QUIET, mode, 0.18)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = _with_alpha(color_for_role(ROLE_PANEL_QUIET, mode), 0.94)
 	return material
 
 
-static func slice_outline_thickness(mode: String = DISPLAY_MODE_DIAGNOSTIC) -> float:
+static func slice_outline_thickness(mode: String = DISPLAY_MODE_TRON) -> float:
 	return GRID_LINE_THICKNESS
 
 
 static func _palette(mode: String) -> Dictionary:
 	var normalized_mode := normalize_display_mode(mode)
-	if normalized_mode == DISPLAY_MODE_TRON:
-		return {
-			ROLE_BACKGROUND: _html("071018"),
-			ROLE_PANEL_BACKGROUND: _html("0D1720"),
-			ROLE_PANEL_QUIET: _html("0A131B"),
-			ROLE_PANEL_ALT: _html("122230"),
-			ROLE_BORDER: _html("2E6F82"),
-			ROLE_BORDER_SOFT: _html("214E5C"),
-			ROLE_TEXT: _html("EAF8FF"),
-			ROLE_TEXT_SECONDARY: _html("9CC8D6"),
-			ROLE_TEXT_DIM: _html("7EA6B4"),
-			ROLE_ACCENT: _html("19D7FF"),
-			ROLE_ACCENT_SOFT: _html("103C49"),
-			ROLE_SUCCESS: _html("00FFAA"),
-			ROLE_WARNING: _html("FFD166"),
-			ROLE_EVENT_MARKER: Color(1.0, 0.82, 0.28, 1.0),
-			ROLE_ACTIVE_CELL: TRACE_COLOR_PALETTE[1],
-			ROLE_LOCKED_CELL: Color(0.36, 0.39, 0.45, 1.0),
-			ROLE_PROBE_BEFORE: Color(0.22, 0.94, 0.95, 1.0),
-			ROLE_PROBE_AFTER: Color(0.32, 0.92, 0.65, 1.0),
-			ROLE_PARTICLE: TRACE_COLOR_PALETTE[2],
-			ROLE_PARTICLE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.35),
-			ROLE_PARTICLE_CORE: TRACE_COLOR_PALETTE[0].lerp(Color.WHITE, 0.32),
-			ROLE_PARTICLE_CORE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.55),
-			ROLE_BOARD_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
-			ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.95, 0.98, 1.0, 1.0),
-			ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.04, 0.06, 0.09, 1.0),
-			ROLE_LIVE_3D_ACTIVE: Color(0.0, 1.0, 1.0, 1.0),
-			ROLE_LIVE_3D_LOCKED: Color(0.32, 0.36, 0.44, 1.0),
-			ROLE_LIVE_3D_OUTLINE: Color(0.015, 0.02, 0.03, 1.0),
-			ROLE_LIVE_3D_ACTIVE_OUTLINE: Color(0.95, 0.99, 1.0, 1.0),
-			ROLE_LIVE_3D_LOCKED_OUTLINE: Color(0.025, 0.035, 0.055, 1.0),
-			ROLE_LIVE_3D_FACE_HIGHLIGHT: Color(1.0, 1.0, 1.0, 1.0),
-			ROLE_LIVE_3D_ORIGIN_MARKER: Color(1.0, 0.95, 0.28, 1.0),
-			ROLE_LIVE_BOARD_FILL: _html("081322"),
-			ROLE_LIVE_BOARD_GRID: _html("283B55"),
-			ROLE_W_SLICE_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
-			ROLE_W_SLICE_LABEL: Color(0.86, 0.89, 0.94, 1.0),
-			ROLE_VIEWPORT_FRAME: _html("0D1720"),
-		}
-	if normalized_mode == DISPLAY_MODE_PLAIN:
-		return {
-			ROLE_BACKGROUND: _html("111316"),
-			ROLE_PANEL_BACKGROUND: _html("1B1E22"),
-			ROLE_PANEL_QUIET: _html("15181C"),
-			ROLE_PANEL_ALT: _html("24282E"),
-			ROLE_BORDER: _html("C9A45B"),
-			ROLE_BORDER_SOFT: _html("6D6554"),
-			ROLE_TEXT: _html("F2F0EA"),
-			ROLE_TEXT_SECONDARY: _html("C9C2B2"),
-			ROLE_TEXT_DIM: _html("A79F8F"),
-			ROLE_ACCENT: _html("E4B85F"),
-			ROLE_ACCENT_SOFT: _html("3C3322"),
-			ROLE_SUCCESS: _html("78D6A3"),
-			ROLE_WARNING: _html("E4B85F"),
-			ROLE_EVENT_MARKER: Color(0.89, 0.72, 0.37, 1.0),
-			ROLE_ACTIVE_CELL: TRACE_COLOR_PALETTE[1],
-			ROLE_LOCKED_CELL: Color(0.45, 0.45, 0.48, 1.0),
-			ROLE_PROBE_BEFORE: Color(0.40, 0.80, 0.88, 1.0),
-			ROLE_PROBE_AFTER: Color(0.47, 0.84, 0.64, 1.0),
-			ROLE_PARTICLE: TRACE_COLOR_PALETTE[2],
-			ROLE_PARTICLE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.35),
-			ROLE_PARTICLE_CORE: TRACE_COLOR_PALETTE[0].lerp(Color.WHITE, 0.32),
-			ROLE_PARTICLE_CORE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.55),
-			ROLE_BOARD_OUTLINE: Color(0.54, 0.52, 0.48, 1.0),
-			ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.98, 0.96, 0.90, 1.0),
-			ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.06, 0.06, 0.07, 1.0),
-			ROLE_LIVE_3D_ACTIVE: Color(0.19, 0.82, 0.92, 1.0),
-			ROLE_LIVE_3D_LOCKED: Color(0.43, 0.45, 0.48, 1.0),
-			ROLE_LIVE_3D_OUTLINE: Color(0.08, 0.08, 0.09, 1.0),
-			ROLE_LIVE_3D_ACTIVE_OUTLINE: Color(0.98, 0.96, 0.90, 1.0),
-			ROLE_LIVE_3D_LOCKED_OUTLINE: Color(0.07, 0.07, 0.08, 1.0),
-			ROLE_LIVE_3D_FACE_HIGHLIGHT: Color(1.0, 0.95, 0.82, 1.0),
-			ROLE_LIVE_3D_ORIGIN_MARKER: Color(0.95, 0.78, 0.30, 1.0),
-			ROLE_LIVE_BOARD_FILL: _html("16191E"),
-			ROLE_LIVE_BOARD_GRID: _html("3A414A"),
-			ROLE_W_SLICE_OUTLINE: Color(0.54, 0.52, 0.48, 1.0),
-			ROLE_W_SLICE_LABEL: Color(0.91, 0.88, 0.80, 1.0),
-			ROLE_VIEWPORT_FRAME: _html("1B1E22"),
-		}
+	var manager = ShellStyleManagerScript.new()
+	manager.set_theme(normalized_mode)
 	return {
-		ROLE_BACKGROUND: _html("05070A"),
-		ROLE_PANEL_BACKGROUND: _html("111820"),
-		ROLE_PANEL_QUIET: _html("0D141B"),
-		ROLE_PANEL_ALT: _html("16212B"),
-		ROLE_BORDER: _html("00E5FF"),
-		ROLE_BORDER_SOFT: _html("2F6172"),
-		ROLE_TEXT: _html("EAF8FF"),
-		ROLE_TEXT_SECONDARY: _html("9BB7C4"),
-		ROLE_TEXT_DIM: _html("85A2B0"),
-		ROLE_ACCENT: _html("00E5FF"),
-		ROLE_ACCENT_SOFT: _html("1B3642"),
-		ROLE_SUCCESS: _html("00FFAA"),
-		ROLE_WARNING: _html("FFD166"),
-		ROLE_EVENT_MARKER: Color(1.0, 0.82, 0.28, 1.0),
-		ROLE_ACTIVE_CELL: TRACE_COLOR_PALETTE[1],
-		ROLE_LOCKED_CELL: Color(0.36, 0.39, 0.45, 1.0),
-		ROLE_PROBE_BEFORE: Color(0.22, 0.94, 0.95, 1.0),
-		ROLE_PROBE_AFTER: Color(0.32, 0.92, 0.65, 1.0),
-		ROLE_PARTICLE: TRACE_COLOR_PALETTE[2],
-		ROLE_PARTICLE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.35),
-		ROLE_PARTICLE_CORE: TRACE_COLOR_PALETTE[0].lerp(Color.WHITE, 0.32),
-		ROLE_PARTICLE_CORE_ESCAPED: TRACE_COLOR_PALETTE[4].lerp(Color.WHITE, 0.55),
-		ROLE_BOARD_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
-		ROLE_LIVE_CELL_ACTIVE_BORDER: Color(0.95, 0.98, 1.0, 1.0),
-		ROLE_LIVE_CELL_LOCKED_BORDER: Color(0.04, 0.06, 0.09, 1.0),
-		ROLE_LIVE_3D_ACTIVE: Color(0.0, 1.0, 1.0, 1.0),
-		ROLE_LIVE_3D_LOCKED: Color(0.32, 0.36, 0.44, 1.0),
-		ROLE_LIVE_3D_OUTLINE: Color(0.015, 0.02, 0.03, 1.0),
-		ROLE_LIVE_3D_ACTIVE_OUTLINE: Color(0.95, 0.99, 1.0, 1.0),
-		ROLE_LIVE_3D_LOCKED_OUTLINE: Color(0.025, 0.035, 0.055, 1.0),
-		ROLE_LIVE_3D_FACE_HIGHLIGHT: Color(1.0, 1.0, 1.0, 1.0),
-		ROLE_LIVE_3D_ORIGIN_MARKER: Color(1.0, 0.95, 0.28, 1.0),
-		ROLE_LIVE_BOARD_FILL: _html("080E18"),
-		ROLE_LIVE_BOARD_GRID: _html("26364F"),
-		ROLE_W_SLICE_OUTLINE: Color(0.38, 0.41, 0.48, 1.0),
-		ROLE_W_SLICE_LABEL: Color(0.86, 0.89, 0.94, 1.0),
-		ROLE_VIEWPORT_FRAME: _html("111820"),
+		ROLE_BACKGROUND: manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
+		ROLE_PANEL_BACKGROUND: manager.get_color(ShellStyleRolesScript.BACKGROUND_PANEL),
+		ROLE_PANEL_QUIET: manager.get_color(ShellStyleRolesScript.BACKGROUND_PANEL),
+		ROLE_PANEL_ALT: manager.get_color(ShellStyleRolesScript.BACKGROUND_ELEVATED),
+		ROLE_BORDER: manager.get_color(ShellStyleRolesScript.ACCENT_PRIMARY),
+		ROLE_BORDER_SOFT: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
+		ROLE_TEXT: manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY),
+		ROLE_TEXT_SECONDARY: manager.get_color(ShellStyleRolesScript.TEXT_SECONDARY),
+		ROLE_TEXT_DIM: manager.get_color(ShellStyleRolesScript.TEXT_MUTED),
+		ROLE_ACCENT: manager.get_color(ShellStyleRolesScript.ACCENT_PRIMARY),
+		ROLE_ACCENT_SOFT: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS).darkened(0.65),
+		ROLE_SUCCESS: manager.get_color(ShellStyleRolesScript.STATE_SUCCESS),
+		ROLE_WARNING: manager.get_color(ShellStyleRolesScript.STATE_WARNING),
+		ROLE_EVENT_MARKER: manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS),
+		ROLE_ACTIVE_CELL: manager.get_color(ShellStyleRolesScript.CELL_ACTIVE),
+		ROLE_LOCKED_CELL: manager.get_color(ShellStyleRolesScript.CELL_LOCKED),
+		ROLE_PROBE_BEFORE: manager.get_color(ShellStyleRolesScript.TRACE_PAST),
+		ROLE_PROBE_AFTER: manager.get_color(ShellStyleRolesScript.TRACE_CURRENT),
+		ROLE_PARTICLE: manager.get_color(ShellStyleRolesScript.TRACE_CURRENT),
+		ROLE_PARTICLE_ESCAPED: manager.get_color(ShellStyleRolesScript.STATE_SUCCESS),
+		ROLE_PARTICLE_CORE: manager.get_color(ShellStyleRolesScript.CELL_PREVIEW),
+		ROLE_PARTICLE_CORE_ESCAPED: manager.get_color(ShellStyleRolesScript.STATE_SUCCESS),
+		ROLE_BOARD_OUTLINE: manager.get_color(ShellStyleRolesScript.GRID_MAJOR),
+		ROLE_LIVE_CELL_ACTIVE_BORDER: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS),
+		ROLE_LIVE_CELL_LOCKED_BORDER: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
+		ROLE_LIVE_3D_ACTIVE: manager.get_color(ShellStyleRolesScript.CELL_ACTIVE),
+		ROLE_LIVE_3D_LOCKED: manager.get_color(ShellStyleRolesScript.CELL_LOCKED),
+		ROLE_LIVE_3D_OUTLINE: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
+		ROLE_LIVE_3D_ACTIVE_OUTLINE: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS),
+		ROLE_LIVE_3D_LOCKED_OUTLINE: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
+		ROLE_LIVE_3D_FACE_HIGHLIGHT: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS),
+		ROLE_LIVE_3D_ORIGIN_MARKER: manager.get_color(ShellStyleRolesScript.GRID_AXIS),
+		ROLE_LIVE_BOARD_FILL: manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
+		ROLE_LIVE_BOARD_GRID: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
+		ROLE_W_SLICE_OUTLINE: manager.get_color(ShellStyleRolesScript.GRID_MAJOR),
+		ROLE_W_SLICE_LABEL: manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER),
+		ROLE_VIEWPORT_FRAME: manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
 	}
 
 

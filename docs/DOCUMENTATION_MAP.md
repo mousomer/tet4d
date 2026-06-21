@@ -37,6 +37,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/godot_shell_settings_source_of_truth.md`
 - `docs/architecture/godot_replay_shell_ux_acceptance.md`
 - `docs/architecture/godot_visual_style_authority.md`
+- `docs/architecture/godot_visual_style_foundation.md`
 
 ### 3. Active planning
 
@@ -125,6 +126,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 29 Godot shell settings registry foundation | `docs/architecture/godot_shell_settings_source_of_truth.md` |
 | Stage 30 Godot replay shell UX acceptance | `docs/architecture/godot_replay_shell_ux_acceptance.md` |
 | Stage 31 Godot visual style authority | `docs/architecture/godot_visual_style_authority.md` |
+| Stage 32 Godot visual style foundation | `docs/architecture/godot_visual_style_foundation.md` |
 | Stage 22f manual Live 3D acceptance run record | `docs/plans/godot_live_3d_manual_acceptance.md` |
 | Current restart handoff | `CURRENT_STATE.md` |
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |
@@ -199,6 +201,9 @@ It is not the product contract.
 - If you need Godot visual style, theme roles, typography, spacing, component
   styling, board/replay visual language, or the Godot shell MVP visual
   baseline: use `docs/architecture/godot_visual_style_authority.md`.
+- If you need the current Godot implementation route for shell palette tokens
+  and style application: use
+  `docs/architecture/godot_visual_style_foundation.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
 - If you need task-specific context loading: use the context-switch profiles in
