@@ -62,8 +62,8 @@ Surfaces:
 - `docs/governance/native_tooling_ci_policy.md`
 - `docs/governance/testing_policy.md`
 - `tools/governance/validate_authority_transfer.py`
-- `tools/migration/first_subsystem_parity_pilot.py`
-- `tools/migration/trace_metadata_identity_digest_parity.py`
+- `tools/parity/first_subsystem_parity_pilot.py`
+- `tools/parity/trace_metadata_identity_digest_parity.py`
 - `native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp`
 - `tests/fixtures/parity/trace_metadata_identity_digest.json`
 
@@ -100,8 +100,9 @@ Required invariants:
   movement, rendering, or Godot implementation changes.
 - Stage 24 parity tooling package review lives in
   `docs/architecture/parity_tooling_package_review.md`.
-- The Stage 24 review must not create `tools/parity/`, move
-  `tools/migration/` files, add parity logic, or transfer authority.
+- Stage 24 remains a decision-only review. Stage 25 may move approved parity
+  harnesses to `tools/parity/`, but that routing refactor must not add parity
+  logic or transfer authority.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
@@ -163,8 +164,9 @@ Required invariants:
   route decision.
 - The package review records authority-transfer readiness.
 - Further parity work must use the package review before expansion.
-- Stage 24 may supersede the Stage 21 package route decision only as a
-  decision document; the actual file move must remain isolated to Stage 25.
+- Stage 24 supersedes the Stage 21 package route decision only as a decision
+  document, and Stage 25 is the isolated routing/refactor that applies that
+  decision without semantic changes.
 
 ## Parity tooling package review drift
 
@@ -182,10 +184,10 @@ Surfaces:
 Required invariants:
 
 - Stage 24 decides package routing only.
-- Stage 24 may approve future `tools/parity/` creation only for an isolated
-  Stage 25 routing/refactor.
-- Stage 24 must not create `tools/parity/`.
-- Stage 24 must not move `tools/migration/` files.
+- Stage 24 records the package-routing decision only.
+- Stage 25 applies the approved isolated `tools/parity/` routing/refactor.
+- Stage 24 itself must not have created `tools/parity/` or moved
+  `tools/migration/` files.
 - Stage 24 must not add parity logic, fixtures, gameplay, topology, rendering,
   Godot, native-code, or authority-transfer changes.
 
@@ -194,7 +196,7 @@ Required invariants:
 Surfaces:
 
 - `docs/architecture/trace_schema_version_normalization_parity.md`
-- `tools/migration/trace_schema_version_normalization_parity.py`
+- `tools/parity/trace_schema_version_normalization_parity.py`
 - `tests/fixtures/parity/trace_schema_version_normalization.json`
 - `tests/unit/migration/test_trace_schema_version_normalization_parity.py`
 
@@ -218,8 +220,8 @@ Surfaces:
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - `docs/architecture/second_parity_slice_candidate_selection.md`
 - `docs/architecture/trace_metadata_identity_digest_parity.md`
-- `tools/migration/first_subsystem_parity_pilot.py`
-- `tools/migration/trace_metadata_identity_digest_parity.py`
+- `tools/parity/first_subsystem_parity_pilot.py`
+- `tools/parity/trace_metadata_identity_digest_parity.py`
 - `tests/unit/migration/test_first_subsystem_parity_pilot.py`
 - `tests/unit/migration/test_trace_metadata_identity_digest_parity.py`
 - `native/tet4d_core/tests/plain_2d_core_tests.cpp`
@@ -244,7 +246,7 @@ Required invariants:
 Surfaces:
 
 - `docs/architecture/trace_metadata_identity_digest_parity.md`
-- `tools/migration/trace_metadata_identity_digest_parity.py`
+- `tools/parity/trace_metadata_identity_digest_parity.py`
 - `tests/unit/migration/test_trace_metadata_identity_digest_parity.py`
 - `native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp`
 - `tests/fixtures/parity/trace_metadata_identity_digest.json`
@@ -263,7 +265,7 @@ Required invariants:
 Surfaces:
 
 - `docs/architecture/topology_identifier_normalization_parity.md`
-- `tools/migration/topology_identifier_normalization_parity.py`
+- `tools/parity/topology_identifier_normalization_parity.py`
 - `tests/fixtures/parity/topology_identifier_normalization.json`
 - `tests/unit/migration/test_topology_identifier_normalization_parity.py`
 

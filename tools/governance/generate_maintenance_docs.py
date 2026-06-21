@@ -789,7 +789,7 @@ def render_project_structure_sections() -> dict[str, str]:
             "### Stage 20 Topology Identifier Normalization Parity",
             "",
             "1. `docs/architecture/topology_identifier_normalization_parity.md`: Stage 20 topology identifier normalization parity doc",
-            "2. `tools/migration/topology_identifier_normalization_parity.py`: Stage 20 parity harness",
+            "2. `tools/parity/topology_identifier_normalization_parity.py`: Stage 20 parity harness",
             "",
             "### Stage 21 Parity Evidence Package Review",
             "",
@@ -798,7 +798,7 @@ def render_project_structure_sections() -> dict[str, str]:
             "### Stage 22 Trace Schema/Version Normalization Parity",
             "",
             "1. `docs/architecture/trace_schema_version_normalization_parity.md`: Stage 22 trace schema/version normalization parity doc",
-            "2. `tools/migration/trace_schema_version_normalization_parity.py`: Stage 22 parity harness",
+            "2. `tools/parity/trace_schema_version_normalization_parity.py`: Stage 22 parity harness",
         ]
     )
 

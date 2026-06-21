@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import tools.migration.topology_identifier_normalization_parity as parity
+import tools.parity.topology_identifier_normalization_parity as parity
 
 
 def test_python_oracle_cases_are_deterministic() -> None:
@@ -57,11 +57,18 @@ def test_compare_cases_detects_identifier_mismatch() -> None:
     failures = parity.compare_cases(native_cases, oracle_cases)
 
     assert any("identifier mismatch" in failure for failure in failures)
-    assert any("expected Python canonical identifier" in failure for failure in failures)
-    assert any("actual native/provisional canonical identifier" in failure for failure in failures)
+    assert any(
+        "expected Python canonical identifier" in failure for failure in failures
+    )
+    assert any(
+        "actual native/provisional canonical identifier" in failure
+        for failure in failures
+    )
 
 
-def test_run_reports_advisory_when_native_unavailable_in_default_mode(monkeypatch) -> None:
+def test_run_reports_advisory_when_native_unavailable_in_default_mode(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(
         parity,
         "load_native_cases",

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from subprocess import CompletedProcess
 
-import tools.migration.first_subsystem_parity_pilot as pilot
+import tools.parity.first_subsystem_parity_pilot as pilot
 
 
 def test_python_oracle_stable_hash_text_matches_known_values() -> None:

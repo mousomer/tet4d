@@ -195,7 +195,7 @@ That topology identifier normalization slice is identifier-only, remains
 provisional, and does not transfer authority.
 
 Stage 20 harness and fixture:
-`tools/migration/topology_identifier_normalization_parity.py` and
+`tools/parity/topology_identifier_normalization_parity.py` and
 `tests/fixtures/parity/topology_identifier_normalization.json`.
 
 Stage 20 must not expand into topology movement, seam traversal, neighbor
@@ -204,9 +204,9 @@ rendering/projection/view/camera, or endgame physics.
 
 Stage 21 parity evidence package review lives in
 `docs/architecture/parity_evidence_package_review.md`.
-That review summarizes Stages 15, 18, and 20, keeps parity harnesses under
-`tools/migration/` for now, recommends trace schema/version normalization as
-the next data-only candidate, and does not transfer authority.
+That review summarizes Stages 15, 18, and 20, records the then-current
+`tools/migration/` route, recommends trace schema/version normalization as the
+next data-only candidate, and does not transfer authority.
 
 Stage 22 implementation lives in
 `docs/architecture/trace_schema_version_normalization_parity.md`.
@@ -214,15 +214,15 @@ Stage 22 implements only trace schema/version normalization and does not
 transfer authority.
 
 Stage 22 harness and fixture:
-`tools/migration/trace_schema_version_normalization_parity.py` and
+`tools/parity/trace_schema_version_normalization_parity.py` and
 `tests/fixtures/parity/trace_schema_version_normalization.json`.
 
 Stage 24 package review lives in
 `docs/architecture/parity_tooling_package_review.md`.
-It approves a future isolated Stage 25 routing/refactor that may move the
-maintained `tools/migration/*parity*.py` harnesses into `tools/parity/`.
-Stage 24 does not create `tools/parity/`, move files, add parity logic, change
-fixtures, or transfer authority.
+It records the package-routing decision only. Stage 25 applies the approved
+isolated routing/refactor that moves the maintained parity harnesses into
+`tools/parity/` without adding parity logic, changing fixtures, or transferring
+authority.
 
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without

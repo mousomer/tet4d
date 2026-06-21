@@ -121,10 +121,10 @@ def _valid_fixture(root: Path) -> None:
         "config/generated drift\n"
         "selected candidate\n"
         "forbidden second-slice areas\n"
-        "tools/migration/first_subsystem_parity_pilot.py\n"
-        "tools/migration/trace_metadata_identity_digest_parity.py\n"
-        "tools/migration/topology_identifier_normalization_parity.py\n"
-        "tools/migration/trace_schema_version_normalization_parity.py\n"
+        "tools/parity/first_subsystem_parity_pilot.py\n"
+        "tools/parity/trace_metadata_identity_digest_parity.py\n"
+        "tools/parity/topology_identifier_normalization_parity.py\n"
+        "tools/parity/trace_schema_version_normalization_parity.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
         "tests/unit/migration/test_topology_identifier_normalization_parity.py\n"
@@ -165,10 +165,10 @@ def _valid_fixture(root: Path) -> None:
         "config/generated drift\n"
         "selected candidate\n"
         "forbidden second-slice areas\n"
-        "tools/migration/first_subsystem_parity_pilot.py\n"
-        "tools/migration/trace_metadata_identity_digest_parity.py\n"
-        "tools/migration/topology_identifier_normalization_parity.py\n"
-        "tools/migration/trace_schema_version_normalization_parity.py\n"
+        "tools/parity/first_subsystem_parity_pilot.py\n"
+        "tools/parity/trace_metadata_identity_digest_parity.py\n"
+        "tools/parity/topology_identifier_normalization_parity.py\n"
+        "tools/parity/trace_schema_version_normalization_parity.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
         "tests/unit/migration/test_topology_identifier_normalization_parity.py\n"
@@ -225,7 +225,7 @@ def _valid_fixture(root: Path) -> None:
         "Strict mode TET4D_STRICT_PARITY blocks that unavailability. "
         "Explicit exclusions: seam traversal, neighbor lookup, topology movement, "
         "rendering/projection/view/camera, and endgame physics. "
-        "Harness tools/migration/topology_identifier_normalization_parity.py. "
+        "Harness tools/parity/topology_identifier_normalization_parity.py. "
         "Fixture tests/fixtures/parity/topology_identifier_normalization.json. "
         "Canonical identifiers plain_2d wrap_all_4d invert_all_4d sphere_like_4d. "
         "Exact equality comparison.\n",
@@ -409,7 +409,7 @@ def test_parity_package_review_missing_tooling_route_decision_fails(
     _valid_fixture(tmp_path)
     drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
     drift_map.write_text(
-        drift_map.read_text(encoding="utf-8").replace("tools/parity/\n", ""),
+        drift_map.read_text(encoding="utf-8").replace("tools/parity/", "tools/legacy/"),
         encoding="utf-8",
     )
 
@@ -690,7 +690,7 @@ def test_drift_map_missing_first_pilot_surfaces_fails(tmp_path: Path) -> None:
     drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
     drift_map.write_text(
         drift_map.read_text(encoding="utf-8")
-        .replace("tools/migration/first_subsystem_parity_pilot.py\n", "")
+        .replace("tools/parity/first_subsystem_parity_pilot.py\n", "")
         .replace("tests/unit/migration/test_first_subsystem_parity_pilot.py\n", ""),
         encoding="utf-8",
     )
@@ -698,7 +698,7 @@ def test_drift_map_missing_first_pilot_surfaces_fails(tmp_path: Path) -> None:
     failures = _messages(drift.validate(tmp_path))
 
     assert any(
-        "tools/migration/first_subsystem_parity_pilot.py" in item for item in failures
+        "tools/parity/first_subsystem_parity_pilot.py" in item for item in failures
     )
     assert any(
         "tests/unit/migration/test_first_subsystem_parity_pilot.py" in item

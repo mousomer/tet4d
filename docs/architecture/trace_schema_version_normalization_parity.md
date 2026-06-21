@@ -27,7 +27,7 @@ Schema/version metadata-only fixture:
 `tests/fixtures/parity/trace_schema_version_normalization.json`
 
 Parity harness:
-`tools/migration/trace_schema_version_normalization_parity.py`
+`tools/parity/trace_schema_version_normalization_parity.py`
 
 Explicit exclusions:
 
@@ -46,7 +46,7 @@ Explicit exclusions:
 ## Python oracle
 
 The Python oracle is the local schema/version normalization helper inside
-`tools/migration/trace_schema_version_normalization_parity.py`.
+`tools/parity/trace_schema_version_normalization_parity.py`.
 
 It normalizes schema version values to canonical integer version `1`, maps trace
 kind and trace family labels to canonical strings, normalizes compatibility
@@ -70,10 +70,10 @@ Exact equality of normalized schema/version identity.
 ## Commands
 
 Default/advisory:
-`python tools/migration/trace_schema_version_normalization_parity.py`
+`python tools/parity/trace_schema_version_normalization_parity.py`
 
 Strict:
-`TET4D_STRICT_PARITY=1 python tools/migration/trace_schema_version_normalization_parity.py`
+`TET4D_STRICT_PARITY=1 python tools/parity/trace_schema_version_normalization_parity.py`
 
 Tests:
 `python -m pytest -q tests/unit/migration/test_trace_schema_version_normalization_parity.py`

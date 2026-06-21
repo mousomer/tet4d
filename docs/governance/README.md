@@ -29,13 +29,13 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
 - topology identifier normalization parity:
   `docs/architecture/topology_identifier_normalization_parity.md`,
-  `tools/migration/topology_identifier_normalization_parity.py`,
+  `tools/parity/topology_identifier_normalization_parity.py`,
   `tests/fixtures/parity/topology_identifier_normalization.json`
 - parity evidence package review:
   `docs/architecture/parity_evidence_package_review.md`
 - trace schema/version normalization parity:
   `docs/architecture/trace_schema_version_normalization_parity.md`,
-  `tools/migration/trace_schema_version_normalization_parity.py`,
+  `tools/parity/trace_schema_version_normalization_parity.py`,
   `tests/fixtures/parity/trace_schema_version_normalization.json`
 - Python oracle boundary audit:
   `docs/architecture/python_oracle_boundary_audit.md`
@@ -181,8 +181,9 @@ and promotion-gate routing remain intact. Governance validation also checks
  normalization parity route. Stage 23 Python oracle boundary audit keeps
  Python gameplay semantics and golden traces authoritative while marking
  incidental Python UI/history as non-authoritative for porting. Stage 24
- parity tooling package review approves a future Stage 25 `tools/parity/`
- routing/refactor only; it does not move files or transfer authority.
+ parity tooling package review records the `tools/migration/` versus
+ `tools/parity/` decision, and Stage 25 applies that routing refactor without
+ moving any semantic authority.
 
 ## Conflict rule
 

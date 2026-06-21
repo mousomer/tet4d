@@ -11,7 +11,7 @@ authority.
 ## Current pilot
 
 - pilot document: `docs/architecture/first_subsystem_parity_pilot.md`
-- harness: `tools/migration/first_subsystem_parity_pilot.py`
+- harness: `tools/parity/first_subsystem_parity_pilot.py`
 - fixture/test: `tests/unit/migration/test_first_subsystem_parity_pilot.py`
 - native/provisional surface: `scripts/test_godot_tet4d_core.sh` and
   `native/tet4d_core/tests/plain_2d_core_tests.cpp`
@@ -59,7 +59,7 @@ Any future authority transfer still requires
 
 ### Harness placement
 
-- current path: `tools/migration/first_subsystem_parity_pilot.py`
+- current path: `tools/parity/first_subsystem_parity_pilot.py`
 - accepted / needs migration: accepted for the first pilot
 - reason: the pilot is migration evidence for the Godot/C++ boundary, not yet a
   standalone parity-tooling domain
@@ -72,7 +72,7 @@ Future routing:
 
 ### Oracle comparison
 
-- Python oracle path: `tools/migration/first_subsystem_parity_pilot.py` via
+- Python oracle path: `tools/parity/first_subsystem_parity_pilot.py` via
   `python_oracle_stable_hash_text(text)`
 - native/provisional output path: `scripts/test_godot_tet4d_core.sh
   --pilot-stable-hash` backed by

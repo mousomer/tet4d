@@ -317,7 +317,7 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
                 "Promotion gates are required before a second parity slice.",
                 "Allowed: coordinate, topology identifier, trace metadata, dimension label.",
                 "Forbidden: full topology movement, rotation semantics, endgame physics.",
-                "Current harness path tools/migration/first_subsystem_parity_pilot.py is accepted for the first pilot.",
+                "Current harness path tools/parity/first_subsystem_parity_pilot.py is accepted for the first pilot.",
                 "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.",
                 "Selected candidate docs/architecture/second_parity_slice_candidate_selection.md satisfies promotion gates.",
                 "docs/architecture/parity_evidence_review_and_third_slice_selection.md routes the Stage 19 review.",
@@ -331,7 +331,7 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "selected candidate\n"
         "forbidden second-slice areas\n"
-        "tools/migration/first_subsystem_parity_pilot.py\n"
+        "tools/parity/first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n",
     )
     _write_text(
@@ -527,7 +527,7 @@ def _write_minimal_parity_package_review_governance(
 
 def _write_minimal_trace_schema_version_parity_governance(root: Path) -> None:
     doc_rel = "docs/architecture/trace_schema_version_normalization_parity.md"
-    harness_rel = "tools/migration/trace_schema_version_normalization_parity.py"
+    harness_rel = "tools/parity/trace_schema_version_normalization_parity.py"
     fixture_rel = "tests/fixtures/parity/trace_schema_version_normalization.json"
     test_rel = "tests/unit/migration/test_trace_schema_version_normalization_parity.py"
     _write_text(
@@ -1626,7 +1626,7 @@ def test_parity_pilot_audit_governance_rejects_authority_transfer_claim(
         "Promotion gates are required before a second parity slice.\n"
         "Allowed: coordinate.\n"
         "Forbidden: full topology movement.\n"
-        "Current harness path tools/migration/first_subsystem_parity_pilot.py is accepted for the first pilot.\n"
+        "Current harness path tools/parity/first_subsystem_parity_pilot.py is accepted for the first pilot.\n"
         "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.\n",
     )
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
@@ -1718,7 +1718,7 @@ def test_parity_pilot_audit_governance_requires_drift_map_entries(
     issues = contracts._validate_parity_pilot_audit_governance()
 
     assert any(
-        "tools/migration/first_subsystem_parity_pilot.py" in issue.message
+        "tools/parity/first_subsystem_parity_pilot.py" in issue.message
         for issue in issues
     )
     assert any(

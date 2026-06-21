@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import tools.migration.trace_schema_version_normalization_parity as parity
+import tools.parity.trace_schema_version_normalization_parity as parity
 
 
 def test_fixture_loads_and_is_schema_version_metadata_only() -> None:

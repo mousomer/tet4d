@@ -26,7 +26,7 @@ Identifier-only fixture:
 `tests/fixtures/parity/topology_identifier_normalization.json`
 
 Parity harness:
-`tools/migration/topology_identifier_normalization_parity.py`
+`tools/parity/topology_identifier_normalization_parity.py`
 
 Explicit exclusions:
 
@@ -45,7 +45,7 @@ Explicit exclusions:
 ## Python oracle
 
 The Python oracle is the local identifier-normalization helper inside
-`tools/migration/topology_identifier_normalization_parity.py`.
+`tools/parity/topology_identifier_normalization_parity.py`.
 
 It normalizes identifier strings by trimming whitespace, lower-casing,
 canonicalizing separators, stripping an optional `topology_` prefix, and
@@ -74,10 +74,10 @@ Exact equality of canonical topology identifier strings.
 ## Commands
 
 Default/advisory:
-`python tools/migration/topology_identifier_normalization_parity.py`
+`python tools/parity/topology_identifier_normalization_parity.py`
 
 Strict:
-`TET4D_STRICT_PARITY=1 python tools/migration/topology_identifier_normalization_parity.py`
+`TET4D_STRICT_PARITY=1 python tools/parity/topology_identifier_normalization_parity.py`
 
 Tests:
 `python -m pytest -q tests/unit/migration/test_topology_identifier_normalization_parity.py`

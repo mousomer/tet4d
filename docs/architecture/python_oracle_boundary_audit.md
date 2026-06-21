@@ -115,7 +115,7 @@ found; their current equivalents are under `src/tet4d/engine/core/`,
 | `src/tet4d/ui/pygame/locked_cell_explosion/` | Mixed | Headless model/simulation/topology surfaces feed endgame golden traces; launcher, surface, render, board view, preview, and audio are presentation/scaffolding. |
 | `tools/migration/` | Mixed | Exporters, trace schema helpers, comparison harnesses, and parity harnesses preserve oracle evidence; their current directory layout is temporary migration organization. |
 | `tools/migration/export_topology_trace.py`, `export_gameplay_trace.py`, `export_endgame_trace.py`, `trace_cases.py`, `trace_schema.py`, `compare_trace.py`, `compare_cpp_gameplay_trace.py` | Semantic oracle / useful implementation | They define and verify current migration evidence; harness code can be reorganized only if trace meaning and comparisons remain equivalent. |
-| `tools/migration/first_subsystem_parity_pilot.py`, `trace_metadata_identity_digest_parity.py`, `topology_identifier_normalization_parity.py`, `trace_schema_version_normalization_parity.py` | Useful implementation | Maintained parity/evidence harnesses are authoritative for their documented evidence boundaries, but not gameplay authority or permanent package layout. |
+| `tools/parity/first_subsystem_parity_pilot.py`, `trace_metadata_identity_digest_parity.py`, `topology_identifier_normalization_parity.py`, `trace_schema_version_normalization_parity.py` | Useful implementation | Maintained parity/evidence harnesses are authoritative for their documented evidence boundaries, but not gameplay authority or permanent package layout. |
 | `tools/migration/export_config_bundle.py`, `sync_godot_bundle.py`, `sync_unity_bundle.py`, `compare_config_bundle.py` | Useful implementation | Bundle and sync tooling is migration support; exported copies are not sources of truth. |
 | `tests/fixtures/` | Mixed | Present fixture area contains parity fixtures; fixture semantics are authoritative where docs identify them as evidence. |
 | `tests/fixtures/parity/` | Semantic oracle | Committed parity fixtures encode current semantic/evidence expectations for the maintained parity slices. |
@@ -210,7 +210,7 @@ This audit supports the next planned stages:
 
 ```text
 24. Parity tooling/package review and tools/parity decision
-25. Optional tools/migration/*parity*.py -> tools/parity/ routing refactor
+25. Move parity harnesses from tools/migration/ to tools/parity/
 26. Select first structural-but-safe parity slice
 27. Implement first structural-but-safe parity slice
 28. Authority-transfer readiness review

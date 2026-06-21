@@ -2608,7 +2608,7 @@ def _validate_parity_pilot_audit_governance() -> list[ValidationIssue]:
                 (
                     "harness placement decision",
                     (
-                        "tools/migration/first_subsystem_parity_pilot.py",
+                        "tools/parity/first_subsystem_parity_pilot.py",
                         "accepted for the first pilot",
                     ),
                 ),
@@ -2652,7 +2652,7 @@ def _validate_parity_pilot_audit_governance() -> list[ValidationIssue]:
             "docs/governance/drift_protection_map.md",
             (
                 "parity_pilot_audit_and_promotion_gates.md",
-                "tools/migration/first_subsystem_parity_pilot.py",
+                "tools/parity/first_subsystem_parity_pilot.py",
                 "tests/unit/migration/test_first_subsystem_parity_pilot.py",
             ),
         ),
@@ -2952,7 +2952,7 @@ def _validate_trace_metadata_identity_digest_parity_governance() -> list[
     if drift_text is not None:
         for rel in (
             doc_rel,
-            "tools/migration/trace_metadata_identity_digest_parity.py",
+            "tools/parity/trace_metadata_identity_digest_parity.py",
             "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
             "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
             "tests/fixtures/parity/trace_metadata_identity_digest.json",
@@ -3019,7 +3019,7 @@ def _validate_topology_identifier_normalization_parity_governance() -> list[
                 (
                     "harness and fixture",
                     (
-                        "tools/migration/topology_identifier_normalization_parity.py",
+                        "tools/parity/topology_identifier_normalization_parity.py",
                         "tests/fixtures/parity/topology_identifier_normalization.json",
                     ),
                 ),
@@ -3060,7 +3060,7 @@ def _validate_topology_identifier_normalization_parity_governance() -> list[
             "docs/PROJECT_STRUCTURE.md",
             (
                 doc_rel,
-                "tools/migration/topology_identifier_normalization_parity.py",
+                "tools/parity/topology_identifier_normalization_parity.py",
                 "tests/fixtures/parity/topology_identifier_normalization.json",
                 "tests/unit/migration/test_topology_identifier_normalization_parity.py",
             ),
@@ -3080,7 +3080,7 @@ def _validate_topology_identifier_normalization_parity_governance() -> list[
     if drift_text is not None:
         for rel in (
             doc_rel,
-            "tools/migration/topology_identifier_normalization_parity.py",
+            "tools/parity/topology_identifier_normalization_parity.py",
             "tests/fixtures/parity/topology_identifier_normalization.json",
             "tests/unit/migration/test_topology_identifier_normalization_parity.py",
         ):
@@ -3233,7 +3233,7 @@ def _validate_trace_schema_version_normalization_parity_governance() -> list[
 ]:
     issues: list[ValidationIssue] = []
     doc_rel = "docs/architecture/trace_schema_version_normalization_parity.md"
-    harness_rel = "tools/migration/trace_schema_version_normalization_parity.py"
+    harness_rel = "tools/parity/trace_schema_version_normalization_parity.py"
     fixture_rel = "tests/fixtures/parity/trace_schema_version_normalization.json"
     test_rel = "tests/unit/migration/test_trace_schema_version_normalization_parity.py"
     required_paths = (doc_rel, harness_rel, fixture_rel, test_rel)

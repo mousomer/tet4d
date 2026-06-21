@@ -5,10 +5,10 @@
 Stage 24 reviews whether parity tooling is still migration-local or now
 deserves its own package/tooling namespace.
 
-The current maintained parity/evidence harnesses all live under
-`tools/migration/`, but they now describe recurring comparison contracts rather
-than one-off bundle or trace-export chores. This review decides whether that
-boundary should change in a later stage.
+At Stage 24 review time, the maintained parity/evidence harnesses all lived
+under `tools/migration/`, but they described recurring comparison contracts
+rather than one-off bundle or trace-export chores. This review records the
+decision that Stage 25 later applies.
 
 This review does not move files.
 This review does not add parity logic.
@@ -19,10 +19,10 @@ native code.
 
 | Stage | Surface | Current file path | Fixture path | Test path | Purpose | Current character |
 | --- | --- | --- | --- | --- | --- | --- |
-| 15 | First subsystem parity pilot | `tools/migration/first_subsystem_parity_pilot.py` | In-code fixture set: `""`, `tet4d`, `oracle-check`, `hash-bridge` | `tests/unit/migration/test_first_subsystem_parity_pilot.py` | Proves the parity process shape for exact `stable_hash_text(text)` comparison between Python oracle and native/provisional output. | Reusable parity infrastructure |
-| 18 | Trace metadata identity/digest parity | `tools/migration/trace_metadata_identity_digest_parity.py` | `tests/fixtures/parity/trace_metadata_identity_digest.json` | `tests/unit/migration/test_trace_metadata_identity_digest_parity.py` | Compares compact canonical trace metadata identity and digest behavior. | Reusable parity infrastructure |
-| 20 | Topology identifier normalization parity | `tools/migration/topology_identifier_normalization_parity.py` | `tests/fixtures/parity/topology_identifier_normalization.json` | `tests/unit/migration/test_topology_identifier_normalization_parity.py` | Compares canonical topology identifier normalization without topology mechanics. | Reusable parity infrastructure |
-| 22 | Trace schema/version normalization parity | `tools/migration/trace_schema_version_normalization_parity.py` | `tests/fixtures/parity/trace_schema_version_normalization.json` | `tests/unit/migration/test_trace_schema_version_normalization_parity.py` | Compares trace schema/version metadata identity without interpreting trace events. | Reusable parity infrastructure |
+| 15 | First subsystem parity pilot | `tools/parity/first_subsystem_parity_pilot.py` | In-code fixture set: `""`, `tet4d`, `oracle-check`, `hash-bridge` | `tests/unit/migration/test_first_subsystem_parity_pilot.py` | Proves the parity process shape for exact `stable_hash_text(text)` comparison between Python oracle and native/provisional output. | Reusable parity infrastructure |
+| 18 | Trace metadata identity/digest parity | `tools/parity/trace_metadata_identity_digest_parity.py` | `tests/fixtures/parity/trace_metadata_identity_digest.json` | `tests/unit/migration/test_trace_metadata_identity_digest_parity.py` | Compares compact canonical trace metadata identity and digest behavior. | Reusable parity infrastructure |
+| 20 | Topology identifier normalization parity | `tools/parity/topology_identifier_normalization_parity.py` | `tests/fixtures/parity/topology_identifier_normalization.json` | `tests/unit/migration/test_topology_identifier_normalization_parity.py` | Compares canonical topology identifier normalization without topology mechanics. | Reusable parity infrastructure |
+| 22 | Trace schema/version normalization parity | `tools/parity/trace_schema_version_normalization_parity.py` | `tests/fixtures/parity/trace_schema_version_normalization.json` | `tests/unit/migration/test_trace_schema_version_normalization_parity.py` | Compares trace schema/version metadata identity without interpreting trace events. | Reusable parity infrastructure |
 
 Related supporting surfaces:
 
@@ -38,7 +38,9 @@ Related supporting surfaces:
   review that kept parity harnesses under `tools/migration/` until at least
   four maintained harnesses existed.
 
-No `tools/parity/` directory exists at the time of this review.
+Historical note: no `tools/parity/` directory existed at the time of this
+Stage 24 review. Stage 25 later creates that route and moves the approved
+harnesses there without semantic changes.
 
 ## Classification Criteria
 
@@ -173,12 +175,12 @@ Must remain in `tools/migration/`:
   `compare_cpp_gameplay_trace.py`, unless a later review separates general
   parity comparison from migration trace replay
 
-May move to `tools/parity/` in Stage 25:
+Approved to move to `tools/parity/` in Stage 25:
 
-- `tools/migration/first_subsystem_parity_pilot.py`
-- `tools/migration/trace_metadata_identity_digest_parity.py`
-- `tools/migration/topology_identifier_normalization_parity.py`
-- `tools/migration/trace_schema_version_normalization_parity.py`
+- `tools/parity/first_subsystem_parity_pilot.py`
+- `tools/parity/trace_metadata_identity_digest_parity.py`
+- `tools/parity/topology_identifier_normalization_parity.py`
+- `tools/parity/trace_schema_version_normalization_parity.py`
 
 Requires explicit Stage 25 review before moving:
 
@@ -193,9 +195,9 @@ Why Stage 24 does not perform the move:
 - The refactor should be isolated so verification failures can be attributed to
   routing changes rather than to the decision document.
 
-## Proposed Stage 25 Scope
+## Implemented Stage 25 Scope
 
-Stage 25 should be a pure routing/refactor stage limited to:
+Stage 25 is a pure routing/refactor stage limited to:
 
 ```text
 move tools/migration/*parity*.py -> tools/parity/
@@ -272,7 +274,7 @@ This review does not transfer authority from Python to Godot or C++.
 This review does not approve deletion of Python semantic code.
 This review does not authorize gameplay, topology, trace-event, movement,
 rendering, Godot, or native-code changes.
-This review does not move `tools/migration` files.
-This review does not create `tools/parity/`.
-
-The approval is for a future isolated Stage 25 routing/refactor only.
+This review document itself did not move `tools/migration` files or create
+`tools/parity/`.
+Stage 25 is the isolated follow-through that applies the approved routing
+refactor only.

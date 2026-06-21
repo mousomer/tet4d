@@ -37,9 +37,9 @@ REQUIRED_FILES = (
     "tools/governance/validate_utility_reuse.py",
     "tools/governance/validate_godot_semantic_boundary.py",
     "tools/governance/validate_native_cpp_tooling.py",
-    "tools/migration/trace_metadata_identity_digest_parity.py",
-    "tools/migration/topology_identifier_normalization_parity.py",
-    "tools/migration/trace_schema_version_normalization_parity.py",
+    "tools/parity/trace_metadata_identity_digest_parity.py",
+    "tools/parity/topology_identifier_normalization_parity.py",
+    "tools/parity/trace_schema_version_normalization_parity.py",
     "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
     "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
     "tests/fixtures/parity/trace_metadata_identity_digest.json",
@@ -485,7 +485,7 @@ def check_parity_pilot_drift(root: Path = ROOT) -> CheckResult:
         )
 
     for rel in (
-        "tools/migration/first_subsystem_parity_pilot.py",
+        "tools/parity/first_subsystem_parity_pilot.py",
         "tests/unit/migration/test_first_subsystem_parity_pilot.py",
     ):
         if rel not in drift_map:
@@ -567,7 +567,7 @@ def check_trace_metadata_identity_digest_parity_drift(root: Path = ROOT) -> Chec
         if "exact comparison only" not in lower:
             failures.append(f"{doc_rel} must state that comparison is exact-only")
         for rel in (
-            "tools/migration/trace_metadata_identity_digest_parity.py",
+            "tools/parity/trace_metadata_identity_digest_parity.py",
             "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
             "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
             "tests/fixtures/parity/trace_metadata_identity_digest.json",
@@ -621,7 +621,7 @@ def check_topology_identifier_normalization_parity_drift(
     if doc_text:
         _append_topology_identifier_parity_doc_failures(doc_rel, doc_text, failures)
         for rel in (
-            "tools/migration/topology_identifier_normalization_parity.py",
+            "tools/parity/topology_identifier_normalization_parity.py",
             "tests/unit/migration/test_topology_identifier_normalization_parity.py",
             "tests/fixtures/parity/topology_identifier_normalization.json",
         ):
@@ -743,7 +743,7 @@ def _append_trace_schema_version_surface_failures(
     failures: list[str],
 ) -> None:
     for rel in (
-        "tools/migration/trace_schema_version_normalization_parity.py",
+        "tools/parity/trace_schema_version_normalization_parity.py",
         "tests/unit/migration/test_trace_schema_version_normalization_parity.py",
         "tests/fixtures/parity/trace_schema_version_normalization.json",
     ):

@@ -93,11 +93,11 @@ does not transfer authority or authorize gameplay/topology/rendering/native
 changes. The next structural-but-safe candidate remains trace envelope
 validation after parity tooling/package review.
 Stage 24 parity tooling/package review is documented in
-`docs/architecture/parity_tooling_package_review.md`: the review approves
-creating `tools/parity/` in a future isolated Stage 25 routing/refactor because
-the four maintained parity harnesses now form a reusable parity family. Stage
-24 does not create `tools/parity/`, move `tools/migration/` files, change
-parity logic, alter fixtures, or transfer authority.
+`docs/architecture/parity_tooling_package_review.md`: the review records the
+`tools/migration/` versus `tools/parity/` package decision because the four
+maintained parity harnesses now form a reusable parity family. Stage 25 then
+applies that isolated routing/refactor so reusable parity harnesses live under
+`tools/parity/`, while parity logic, fixtures, and authority remain unchanged.
 py-godot and Python runtime bridging inside Godot are not active architecture.
 Shell-preserving cleanup and endgame visual polish remain non-blocking and
 must not reopen semantics.

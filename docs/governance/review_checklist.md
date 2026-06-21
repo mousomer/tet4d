@@ -158,8 +158,9 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
 - [ ] Stage 24 parity tooling package review
       `docs/architecture/parity_tooling_package_review.md` was checked before
       moving parity harnesses or changing the `tools/parity/` route.
-- [ ] Stage 24 does not create `tools/parity/`, move `tools/migration/` files,
-      add parity logic, change fixtures, or claim authority transfer.
+- [ ] Stage 25 route-only follow-through does not add parity logic, change
+      fixtures, or claim authority transfer while moving approved harnesses to
+      `tools/parity/`.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

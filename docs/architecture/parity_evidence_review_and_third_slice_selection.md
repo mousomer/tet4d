@@ -34,7 +34,7 @@ parity harness.
 Chosen candidate: topology identifier normalization.
 
 Implemented in `docs/architecture/topology_identifier_normalization_parity.md`.
-Harness: `tools/migration/topology_identifier_normalization_parity.py`.
+Harness: `tools/parity/topology_identifier_normalization_parity.py`.
 Fixture: `tests/fixtures/parity/topology_identifier_normalization.json`.
 
 Stage 21 reviews the accumulated package in

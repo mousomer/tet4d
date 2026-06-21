@@ -167,8 +167,9 @@ Do not move files before that trigger is met.
 
 Stage 24 update: `docs/architecture/parity_tooling_package_review.md`
 supersedes this Stage 21 route decision after Stage 22 added the fourth
-maintained parity harness. Stage 24 approves a future isolated Stage 25
-`tools/parity/` routing/refactor, but still does not move files or transfer
+maintained parity harness. Stage 24 records the `tools/migration/` versus
+`tools/parity/` decision, and Stage 25 applies that isolated routing/refactor.
+This Stage 21 review remains historical context only and does not transfer
 authority.
 
 ## Next-stage recommendation
@@ -181,7 +182,7 @@ Candidate: trace schema/version normalization.
 Implemented by:
 `docs/architecture/trace_schema_version_normalization_parity.md`.
 
-Harness: `tools/migration/trace_schema_version_normalization_parity.py`.
+Harness: `tools/parity/trace_schema_version_normalization_parity.py`.
 
 Fixture: `tests/fixtures/parity/trace_schema_version_normalization.json`.
 

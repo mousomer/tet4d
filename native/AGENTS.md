@@ -53,8 +53,9 @@ Rules:
   for trace schema/version normalization.
 - Keep Stage 22 schema/version metadata-only and out of trace events, topology
   movement, gameplay, rendering, and authority transfer.
-- Stage 24 approves only a future isolated `tools/parity/` routing/refactor;
-  it does not authorize native code or parity logic changes.
+- Stage 24 records the `tools/migration/` versus `tools/parity/` routing
+  decision, and Stage 25 applies that isolated move without authorizing native
+  code or parity logic changes.
 - Forbidden areas remain off-limits until separately selected and routed.
 - Native work remains provisional until explicit authority transfer.
 - Preserve advisory default behavior and strict parity behavior for native

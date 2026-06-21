@@ -129,7 +129,7 @@ The current rule is one-way:
 ### Stage 20 Topology Identifier Normalization Parity
 
 1. `docs/architecture/topology_identifier_normalization_parity.md`: Stage 20 topology identifier normalization parity doc
-2. `tools/migration/topology_identifier_normalization_parity.py`: Stage 20 parity harness
+2. `tools/parity/topology_identifier_normalization_parity.py`: Stage 20 parity harness
 
 ### Stage 21 Parity Evidence Package Review
 
@@ -138,7 +138,7 @@ The current rule is one-way:
 ### Stage 22 Trace Schema/Version Normalization Parity
 
 1. `docs/architecture/trace_schema_version_normalization_parity.md`: Stage 22 trace schema/version normalization parity doc
-2. `tools/migration/trace_schema_version_normalization_parity.py`: Stage 22 parity harness
+2. `tools/parity/trace_schema_version_normalization_parity.py`: Stage 22 parity harness
 <!-- END GENERATED:project_structure_sources_of_truth -->
 
 ## Placement Rules
@@ -157,14 +157,12 @@ The current rule is one-way:
 9. Keep committed parity fixtures under `tests/fixtures/parity/` and route
    them through the matching parity harness docs rather than treating them as
    runtime assets.
-10. Keep the first parity pilot in `tools/migration/` and
-   `tests/unit/migration/` while it remains a single migration-evidence
-   harness. Create a dedicated `tools/parity/` route only after multiple parity
-   harnesses exist and governance routes that domain explicitly. Stage 18
-   parity work must follow
+10. Keep maintained parity harnesses under `tools/parity/` and
+   `tests/unit/migration/`, while migration-only exporters and trace helpers
+   remain under `tools/migration/`. Stage 18 parity work must follow
    `docs/architecture/second_parity_slice_candidate_selection.md` and
-   `docs/architecture/trace_metadata_identity_digest_parity.md`; do not add
-   `tools/parity/` for candidate selection alone.
+   `docs/architecture/trace_metadata_identity_digest_parity.md`; do not change
+   parity routing outside the approved governance path.
 11. Keep `migration/exported_bundle/` generated from
     `tools/migration/export_config_bundle.py`; it is a disposable engine-spike
     input package, not a config, trace, docs, or runtime authority.

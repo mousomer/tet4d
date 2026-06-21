@@ -15,8 +15,8 @@ Fixture set:
 - `hash-bridge`
 
 Primary commands:
-- `PYTHONPATH=src .venv/bin/python tools/migration/first_subsystem_parity_pilot.py`
-- `TET4D_STRICT_PARITY=1 PYTHONPATH=src .venv/bin/python tools/migration/first_subsystem_parity_pilot.py`
+- `PYTHONPATH=src .venv/bin/python tools/parity/first_subsystem_parity_pilot.py`
+- `TET4D_STRICT_PARITY=1 PYTHONPATH=src .venv/bin/python tools/parity/first_subsystem_parity_pilot.py`
 - `./scripts/test_godot_tet4d_core.sh --pilot-stable-hash`
 
 Routing:

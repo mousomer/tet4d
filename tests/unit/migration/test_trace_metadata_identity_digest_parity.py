@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from subprocess import CompletedProcess
 
-import tools.migration.trace_metadata_identity_digest_parity as parity
+import tools.parity.trace_metadata_identity_digest_parity as parity
 
 
 def test_python_oracle_cases_are_deterministic() -> None:
@@ -21,7 +21,10 @@ def test_python_oracle_identity_and_digest_are_exact() -> None:
     assert first_case.identity == (
         '{"dimension":2,"mode":"2d","schema_version":1,"topology":"plain","trace_id":"plain_2d_spawn_001"}'
     )
-    assert first_case.digest == "d22dcee65766b3ac75cc129b41c330762bec3b015c6638def83073cf4f51ab06"
+    assert (
+        first_case.digest
+        == "d22dcee65766b3ac75cc129b41c330762bec3b015c6638def83073cf4f51ab06"
+    )
 
 
 def test_compare_cases_detects_identity_and_digest_mismatch() -> None:
@@ -74,7 +77,9 @@ def test_load_native_cases_parses_native_parity_output(monkeypatch) -> None:
     assert native_cases == payload["cases"]
 
 
-def test_run_reports_advisory_when_native_unavailable_in_default_mode(monkeypatch) -> None:
+def test_run_reports_advisory_when_native_unavailable_in_default_mode(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(
         parity,
         "load_native_cases",
