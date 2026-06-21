@@ -56,8 +56,8 @@ a migration overlay, not a replacement root constitution.
     Stage 20 is identifier-only and does not allow topology movement, seam
     traversal, neighbor lookup, gameplay, or authority transfer.
 12. Before further parity expansion, read
-    `docs/architecture/parity_evidence_package_review.md`. Future parity work
-    must respect its `tools/migration/` versus `tools/parity/` route decision.
+    `docs/architecture/parity_evidence_package_review.md` and Stage 24
+    `docs/architecture/parity_tooling_package_review.md`; route `tools/migration/`/`tools/parity/`.
 13. For Stage 22 trace schema/version normalization parity, read
     `docs/architecture/trace_schema_version_normalization_parity.md`; Stage
     22 is schema/version metadata-only and excludes trace events, topology
@@ -114,8 +114,8 @@ a migration overlay, not a replacement root constitution.
 - Stage 20 parity work may only implement topology identifier normalization in
   `docs/architecture/topology_identifier_normalization_parity.md`.
 - Stage 20 remains identifier-only and does not transfer authority.
-- Further parity expansion must first route through
-  `docs/architecture/parity_evidence_package_review.md`.
+- Further parity expansion must route through Stage 21/24 package reviews:
+  `docs/architecture/parity_tooling_package_review.md`.
 - Stage 22 work may only implement trace schema/version normalization in
   `docs/architecture/trace_schema_version_normalization_parity.md`.
 - Do not transfer authority without

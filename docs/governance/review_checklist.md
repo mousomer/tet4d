@@ -155,6 +155,11 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
 - [ ] Stage 22 does not fake native output and does not include trace events,
       board snapshots, topology movement, gameplay, rendering, or authority
       transfer.
+- [ ] Stage 24 parity tooling package review
+      `docs/architecture/parity_tooling_package_review.md` was checked before
+      moving parity harnesses or changing the `tools/parity/` route.
+- [ ] Stage 24 does not create `tools/parity/`, move `tools/migration/` files,
+      add parity logic, change fixtures, or claim authority transfer.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

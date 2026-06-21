@@ -81,6 +81,10 @@ Stage 23 Python oracle boundary audit lives in
 surfaces for migration porting decisions only. It does not transfer authority,
 approve deletion of semantic Python code, or authorize gameplay, topology,
 trace-event, movement, rendering, or Godot implementation changes.
+Stage 24 parity tooling package review lives in
+`docs/architecture/parity_tooling_package_review.md` and approves a future
+Stage 25 `tools/parity/` routing/refactor only. It does not create
+`tools/parity/`, move files, change parity logic, or transfer authority.
 
 ## Authority transfer requires parity
 

@@ -19,6 +19,8 @@ See `docs/architecture/parity_evidence_package_review.md` before further
 parity expansion.
 See `docs/architecture/trace_schema_version_normalization_parity.md` for
 Stage 22 trace schema/version normalization parity.
+See `docs/architecture/parity_tooling_package_review.md` before moving parity
+harnesses or changing the `tools/migration/` versus `tools/parity/` route.
 See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
 See `docs/architecture/authority_map.md` for semantic authority.
 
@@ -51,6 +53,8 @@ Rules:
   for trace schema/version normalization.
 - Keep Stage 22 schema/version metadata-only and out of trace events, topology
   movement, gameplay, rendering, and authority transfer.
+- Stage 24 approves only a future isolated `tools/parity/` routing/refactor;
+  it does not authorize native code or parity logic changes.
 - Forbidden areas remain off-limits until separately selected and routed.
 - Native work remains provisional until explicit authority transfer.
 - Preserve advisory default behavior and strict parity behavior for native

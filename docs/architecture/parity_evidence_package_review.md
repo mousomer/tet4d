@@ -165,6 +165,12 @@ or when parity harnesses are used outside the Godot/native migration path.
 
 Do not move files before that trigger is met.
 
+Stage 24 update: `docs/architecture/parity_tooling_package_review.md`
+supersedes this Stage 21 route decision after Stage 22 added the fourth
+maintained parity harness. Stage 24 approves a future isolated Stage 25
+`tools/parity/` routing/refactor, but still does not move files or transfer
+authority.
+
 ## Next-stage recommendation
 
 Recommended next stage: select and implement one additional data-only parity

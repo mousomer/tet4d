@@ -217,6 +217,13 @@ Stage 22 harness and fixture:
 `tools/migration/trace_schema_version_normalization_parity.py` and
 `tests/fixtures/parity/trace_schema_version_normalization.json`.
 
+Stage 24 package review lives in
+`docs/architecture/parity_tooling_package_review.md`.
+It approves a future isolated Stage 25 routing/refactor that may move the
+maintained `tools/migration/*parity*.py` harnesses into `tools/parity/`.
+Stage 24 does not create `tools/parity/`, move files, add parity logic, change
+fixtures, or transfer authority.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

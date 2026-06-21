@@ -56,6 +56,7 @@ Surfaces:
 - `docs/architecture/topology_identifier_normalization_parity.md`
 - `docs/architecture/parity_evidence_package_review.md`
 - `docs/architecture/python_oracle_boundary_audit.md`
+- `docs/architecture/parity_tooling_package_review.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -97,6 +98,10 @@ Required invariants:
 - The Python oracle boundary audit must not transfer authority, approve
   semantic Python deletion, or authorize gameplay, topology, trace-event,
   movement, rendering, or Godot implementation changes.
+- Stage 24 parity tooling package review lives in
+  `docs/architecture/parity_tooling_package_review.md`.
+- The Stage 24 review must not create `tools/parity/`, move
+  `tools/migration/` files, add parity logic, or transfer authority.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
@@ -158,6 +163,31 @@ Required invariants:
   route decision.
 - The package review records authority-transfer readiness.
 - Further parity work must use the package review before expansion.
+- Stage 24 may supersede the Stage 21 package route decision only as a
+  decision document; the actual file move must remain isolated to Stage 25.
+
+## Parity tooling package review drift
+
+Surfaces:
+
+- `docs/architecture/parity_tooling_package_review.md`
+- `docs/architecture/parity_protocol.md`
+- `docs/architecture/parity_evidence_package_review.md`
+- `docs/architecture/authority_map.md`
+- `docs/governance/README.md`
+- `docs/governance/drift_protection_map.md`
+- `docs/DOCUMENTATION_MAP.md`
+- `AGENTS.md`
+
+Required invariants:
+
+- Stage 24 decides package routing only.
+- Stage 24 may approve future `tools/parity/` creation only for an isolated
+  Stage 25 routing/refactor.
+- Stage 24 must not create `tools/parity/`.
+- Stage 24 must not move `tools/migration/` files.
+- Stage 24 must not add parity logic, fixtures, gameplay, topology, rendering,
+  Godot, native-code, or authority-transfer changes.
 
 ## Trace schema/version parity drift
 
