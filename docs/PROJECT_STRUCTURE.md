@@ -125,6 +125,11 @@ The current rule is one-way:
 13. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
 14. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
 15. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
+
+### Stage 20 Topology Identifier Normalization Parity
+
+1. `docs/architecture/topology_identifier_normalization_parity.md`: Stage 20 topology identifier normalization parity doc
+2. `tools/migration/topology_identifier_normalization_parity.py`: Stage 20 parity harness
 <!-- END GENERATED:project_structure_sources_of_truth -->
 
 ## Placement Rules
@@ -550,4 +555,9 @@ Match labels are shown inline as `(exact)`, `(prefix)`, or `(fallback)`.
 - `src/tet4d/ui/pygame/topology_lab/piece_sandbox.py`: `tests/unit/topology_lab/test_topology_lab_projection_sandbox.py` (fallback)
 - `src/tet4d/ui/pygame/topology_lab/projection_scene.py`: `tests/unit/topology_lab/test_topology_lab_projection_sandbox.py` (fallback)
 - `src/tet4d/ui/pygame/topology_lab/scene_preview_state.py`: `tests/unit/topology_lab/test_topology_lab_preview_latency.py` (fallback)
+
+### Stage 20 Topology Identifier Normalization Parity Test Files
+
+1. `tests/fixtures/parity/topology_identifier_normalization.json`: identifier-only Stage 20 fixture
+2. `tests/unit/migration/test_topology_identifier_normalization_parity.py`: Stage 20 parity tests
 <!-- END GENERATED:project_structure_likely_test_files -->
