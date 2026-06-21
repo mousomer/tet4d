@@ -172,6 +172,16 @@ slice only after this review is accepted.
 
 Candidate: trace schema/version normalization.
 
+Implemented by:
+`docs/architecture/trace_schema_version_normalization_parity.md`.
+
+Harness: `tools/migration/trace_schema_version_normalization_parity.py`.
+
+Fixture: `tests/fixtures/parity/trace_schema_version_normalization.json`.
+
+This is parity evidence only. It remains schema/version metadata-only and does
+not transfer authority.
+
 Reason: it is data-only, trace/replay relevant, exact-comparison friendly, not
 topology mechanics, not renderer-owned, and not gameplay mutation.
 

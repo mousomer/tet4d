@@ -26,6 +26,11 @@ and remains identifier-only, provisional, and authority-preserving.
 Stage 21 parity evidence package review is recorded in
 `docs/architecture/parity_evidence_package_review.md`; future parity work
 remains evidence-only until the authority-transfer protocol is satisfied.
+Stage 22 trace schema/version normalization parity is recorded in
+`docs/architecture/trace_schema_version_normalization_parity.md`. It is
+schema/version metadata-only evidence under Python authority and does not add
+Godot scenes, resources, rendering, topology movement, gameplay semantics, or
+authority transfer.
 
 The repo-wide migration routing overlay is `docs/governance/README.md`; the
 ownership boundary summary is `docs/architecture/authority_map.md`. Those files

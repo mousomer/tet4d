@@ -89,6 +89,8 @@ Required invariants:
   `docs/architecture/topology_identifier_normalization_parity.md`.
 - Stage 21 parity evidence package review lives in
   `docs/architecture/parity_evidence_package_review.md`.
+- Stage 22 trace schema/version normalization parity lives in
+  `docs/architecture/trace_schema_version_normalization_parity.md`.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
@@ -150,6 +152,27 @@ Required invariants:
   route decision.
 - The package review records authority-transfer readiness.
 - Further parity work must use the package review before expansion.
+
+## Trace schema/version parity drift
+
+Surfaces:
+
+- `docs/architecture/trace_schema_version_normalization_parity.md`
+- `tools/migration/trace_schema_version_normalization_parity.py`
+- `tests/fixtures/parity/trace_schema_version_normalization.json`
+- `tests/unit/migration/test_trace_schema_version_normalization_parity.py`
+
+Required invariants:
+
+- Stage 22 remains trace schema/version normalization only.
+- The fixture stays schema/version metadata-only and deterministic.
+- Default mode is advisory when no safe native/provisional route exists.
+- Strict mode with `TET4D_STRICT_PARITY=1` blocks native route unavailability
+  and mismatches.
+- No authority transfer is claimed.
+- Native output is not faked.
+- No trace events, board snapshots, topology movement, gameplay, rendering, or
+  endgame semantics are allowed.
 
 ## Parity pilot drift
 

@@ -17,6 +17,8 @@ See `docs/architecture/topology_identifier_normalization_parity.md` for
 Stage 20 topology identifier normalization parity.
 See `docs/architecture/parity_evidence_package_review.md` before further
 parity expansion.
+See `docs/architecture/trace_schema_version_normalization_parity.md` for
+Stage 22 trace schema/version normalization parity.
 See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
 See `docs/architecture/authority_map.md` for semantic authority.
 
@@ -45,6 +47,10 @@ Rules:
   gameplay, or rendering.
 - Treat the parity evidence package as provisional and keep native work bounded
   by the selected parity slices.
+- Stage 22 has no safe native/provisional route yet; do not fake native output
+  for trace schema/version normalization.
+- Keep Stage 22 schema/version metadata-only and out of trace events, topology
+  movement, gameplay, rendering, and authority transfer.
 - Forbidden areas remain off-limits until separately selected and routed.
 - Native work remains provisional until explicit authority transfer.
 - Preserve advisory default behavior and strict parity behavior for native

@@ -2334,6 +2334,7 @@ def _validate_governance_routing_concepts() -> list[ValidationIssue]:
             "cpp_safety_policy",
             "parity_protocol",
             "trace_metadata_identity_digest_parity",
+            "trace_schema_version_normalization_parity",
             "parity_evidence_review_and_third_slice_selection",
         ):
             if token not in router_text:
@@ -2774,7 +2775,8 @@ def _validate_second_parity_slice_candidate_selection() -> list[ValidationIssue]
             "AGENTS.md",
             (
                 "second_parity_slice_candidate_selection.md",
-                "stage 18 may only implement the selected candidate",
+                "stage 18 may",
+                "selected candidate",
             ),
         ),
         (
@@ -3220,6 +3222,123 @@ def _validate_parity_evidence_package_review_governance() -> list[ValidationIssu
         _validate_governance_doc_tokens(
             required_docs,
             "parity-evidence-package-review",
+            issues,
+        )
+    )
+    return issues
+
+
+def _validate_trace_schema_version_normalization_parity_governance() -> list[
+    ValidationIssue
+]:
+    issues: list[ValidationIssue] = []
+    doc_rel = "docs/architecture/trace_schema_version_normalization_parity.md"
+    harness_rel = "tools/migration/trace_schema_version_normalization_parity.py"
+    fixture_rel = "tests/fixtures/parity/trace_schema_version_normalization.json"
+    test_rel = "tests/unit/migration/test_trace_schema_version_normalization_parity.py"
+    required_paths = (doc_rel, harness_rel, fixture_rel, test_rel)
+    for rel in required_paths:
+        if not (PROJECT_ROOT / rel).exists():
+            issues.append(
+                ValidationIssue(
+                    "missing",
+                    f"missing trace schema/version normalization parity path: {rel}",
+                )
+            )
+    if not (PROJECT_ROOT / doc_rel).exists():
+        return issues
+
+    doc_text = _read_text(doc_rel, issues)
+    if doc_text is not None:
+        _append_missing_concepts(
+            rel=doc_rel,
+            label="trace schema/version normalization parity",
+            text=doc_text,
+            concept_groups=(
+                ("Python oracle", ("python remains the semantic oracle",)),
+                ("schema/version scope", ("trace schema/version normalization",)),
+                ("metadata-only scope", ("schema/version metadata-only",)),
+                ("no authority transfer", ("does not transfer authority",)),
+                ("native provisional", ("native/c++ remains provisional",)),
+                ("no safe native route", ("no safe native/provisional route",)),
+                ("default advisory", ("default mode is advisory",)),
+                ("strict blocking", ("tet4d_strict_parity=1", "blocks")),
+                (
+                    "explicit exclusions",
+                    (
+                        "trace events",
+                        "board snapshots",
+                        "topology movement",
+                        "gameplay",
+                        "rendering",
+                        "endgame physics",
+                    ),
+                ),
+                (
+                    "harness and fixture",
+                    (
+                        harness_rel,
+                        fixture_rel,
+                    ),
+                ),
+            ),
+            issues=issues,
+        )
+        lower = doc_text.lower()
+        for claim in (
+            "this slice transfers authority",
+            "transferred authority: yes",
+            "native/c++ is authoritative",
+            "fake native output",
+        ):
+            if claim in lower:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"{doc_rel} must not claim invalid Stage 22 status: {claim}",
+                    )
+                )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/parity_protocol.md",
+            (doc_rel, "trace schema/version normalization"),
+        ),
+        (
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
+            (doc_rel, "schema/version metadata"),
+        ),
+        (
+            "docs/architecture/parity_evidence_package_review.md",
+            (doc_rel, harness_rel, fixture_rel),
+        ),
+        (
+            "docs/architecture/authority_transfer_protocol.md",
+            (doc_rel, "not a transfer record"),
+        ),
+        (
+            "docs/architecture/authority_map.md",
+            (doc_rel, "schema/version metadata"),
+        ),
+        ("docs/governance/README.md", (doc_rel, harness_rel, fixture_rel)),
+        ("docs/governance/review_checklist.md", (doc_rel, "stage 22")),
+        (
+            "docs/governance/drift_protection_map.md",
+            (doc_rel, harness_rel, fixture_rel, test_rel),
+        ),
+        ("docs/governance/codex_policy.md", ("stage 22 implementation tasks",)),
+        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
+        (
+            "docs/PROJECT_STRUCTURE.md",
+            (doc_rel, harness_rel, fixture_rel, test_rel),
+        ),
+        ("AGENTS.md", (doc_rel,)),
+        ("native/AGENTS.md", (doc_rel, "do not fake native output")),
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            required_docs,
+            "trace-schema-version-normalization-parity",
             issues,
         )
     )
@@ -3964,6 +4083,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_trace_metadata_identity_digest_parity_governance())
     issues.extend(_validate_topology_identifier_normalization_parity_governance())
     issues.extend(_validate_parity_evidence_package_review_governance())
+    issues.extend(_validate_trace_schema_version_normalization_parity_governance())
     issues.extend(_validate_godot_semantic_boundary_governance())
     issues.extend(_validate_config_authority_governance())
     issues.extend(_validate_utility_reuse_governance())

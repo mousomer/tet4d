@@ -16,6 +16,7 @@ REQUIRED_FILES = (
     "docs/architecture/topology_identifier_normalization_parity.md",
     "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
     "docs/architecture/parity_evidence_package_review.md",
+    "docs/architecture/trace_schema_version_normalization_parity.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
     "docs/governance/README.md",
@@ -38,11 +39,14 @@ REQUIRED_FILES = (
     "tools/governance/validate_native_cpp_tooling.py",
     "tools/migration/trace_metadata_identity_digest_parity.py",
     "tools/migration/topology_identifier_normalization_parity.py",
+    "tools/migration/trace_schema_version_normalization_parity.py",
     "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
     "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
     "tests/fixtures/parity/trace_metadata_identity_digest.json",
     "tests/unit/migration/test_topology_identifier_normalization_parity.py",
     "tests/fixtures/parity/topology_identifier_normalization.json",
+    "tests/unit/migration/test_trace_schema_version_normalization_parity.py",
+    "tests/fixtures/parity/trace_schema_version_normalization.json",
 )
 
 ROUTER_LINKS = {
@@ -707,6 +711,77 @@ def check_parity_evidence_package_review_drift(root: Path = ROOT) -> CheckResult
     return CheckResult("parity evidence package review drift", failures)
 
 
+def _append_trace_schema_version_doc_failures(
+    doc_rel: str,
+    doc_text: str,
+    failures: list[str],
+) -> None:
+    lower = doc_text.lower()
+    for phrase in (
+        "schema/version metadata-only",
+        "does not transfer authority",
+        "default mode is advisory",
+        "tet4d_strict_parity=1",
+        "no safe native/provisional route",
+    ):
+        if phrase not in lower:
+            failures.append(f"{doc_rel} must state `{phrase}`")
+    for forbidden in (
+        "trace events",
+        "board snapshots",
+        "topology movement",
+        "gameplay",
+        "rendering",
+        "endgame physics",
+    ):
+        if forbidden not in lower:
+            failures.append(f"{doc_rel} must exclude `{forbidden}`")
+
+
+def _append_trace_schema_version_surface_failures(
+    drift_text: str,
+    failures: list[str],
+) -> None:
+    for rel in (
+        "tools/migration/trace_schema_version_normalization_parity.py",
+        "tests/unit/migration/test_trace_schema_version_normalization_parity.py",
+        "tests/fixtures/parity/trace_schema_version_normalization.json",
+    ):
+        if rel not in drift_text:
+            failures.append(
+                f"docs/governance/drift_protection_map.md does not list {rel}"
+            )
+
+
+def check_trace_schema_version_normalization_parity_drift(
+    root: Path = ROOT,
+) -> CheckResult:
+    failures: list[str] = []
+    doc_rel = "docs/architecture/trace_schema_version_normalization_parity.md"
+    doc_text = read_text(root, doc_rel, failures)
+    parity_protocol = read_text(root, "docs/architecture/parity_protocol.md", failures)
+    governance_text = read_text(root, "docs/governance/README.md", failures)
+    drift_text = read_text(root, "docs/governance/drift_protection_map.md", failures)
+
+    if doc_rel not in parity_protocol:
+        failures.append(
+            "parity_protocol.md must route to trace schema/version normalization parity"
+        )
+    if doc_rel not in governance_text and doc_rel not in drift_text:
+        failures.append(
+            "trace schema/version normalization parity must be reachable from governance README or drift map"
+        )
+    if doc_rel not in drift_text:
+        failures.append(
+            "drift_protection_map.md must list trace schema/version normalization parity as a parity drift surface"
+        )
+    if doc_text:
+        _append_trace_schema_version_doc_failures(doc_rel, doc_text, failures)
+        _append_trace_schema_version_surface_failures(drift_text, failures)
+
+    return CheckResult("trace schema/version normalization parity drift", failures)
+
+
 def validate(root: Path = ROOT) -> list[CheckResult]:
     return [
         check_required_files(root),
@@ -724,6 +799,7 @@ def validate(root: Path = ROOT) -> list[CheckResult]:
         check_topology_identifier_normalization_parity_drift(root),
         check_parity_evidence_review_and_third_slice_selection_drift(root),
         check_parity_evidence_package_review_drift(root),
+        check_trace_schema_version_normalization_parity_drift(root),
     ]
 
 

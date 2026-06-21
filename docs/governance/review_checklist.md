@@ -145,6 +145,16 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
 - [ ] Stage 21 does not claim authority transfer.
 - [ ] The next parity-slice scope, `tools/migration/` versus `tools/parity/`
       route decision, and forbidden areas were verified.
+- [ ] Stage 22 trace schema/version normalization parity is documented in
+      `docs/architecture/trace_schema_version_normalization_parity.md`.
+- [ ] Stage 22 fixture is schema/version metadata-only and deterministic.
+- [ ] Stage 22 default mode is advisory when no safe native/provisional route
+      exists.
+- [ ] Stage 22 strict mode with `TET4D_STRICT_PARITY=1` blocks native route
+      unavailability or mismatches.
+- [ ] Stage 22 does not fake native output and does not include trace events,
+      board snapshots, topology movement, gameplay, rendering, or authority
+      transfer.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

@@ -1,0 +1,72 @@
+{
+  "slice": "trace_schema_version_normalization",
+  "authority": "python",
+  "cases": [
+    {
+      "name": "schema-v1-int",
+      "metadata": {
+        "schema_version": 1,
+        "trace_kind": "golden",
+        "trace_family": "migration"
+      },
+      "expected": {
+        "schema_version": 1,
+        "trace_kind": "golden",
+        "trace_family": "migration",
+        "compatibility": "stable",
+        "schema_id": "trace_schema_v1",
+        "schema_identity": "trace_schema_v1:golden:migration:stable"
+      }
+    },
+    {
+      "name": "schema-v1-string",
+      "metadata": {
+        "schema_version": "1",
+        "trace_kind": " Golden ",
+        "trace_family": "Migration"
+      },
+      "expected": {
+        "schema_version": 1,
+        "trace_kind": "golden",
+        "trace_family": "migration",
+        "compatibility": "stable",
+        "schema_id": "trace_schema_v1",
+        "schema_identity": "trace_schema_v1:golden:migration:stable"
+      }
+    },
+    {
+      "name": "schema-v1-prefixed",
+      "metadata": {
+        "schema_version": "v1",
+        "trace_kind": "Golden Trace",
+        "trace_family": "Godot-Native Migration",
+        "compatibility": "Strict"
+      },
+      "expected": {
+        "schema_version": 1,
+        "trace_kind": "golden",
+        "trace_family": "migration",
+        "compatibility": "strict",
+        "schema_id": "trace_schema_v1",
+        "schema_identity": "trace_schema_v1:golden:migration:strict"
+      }
+    },
+    {
+      "name": "schema-v1-family-alias",
+      "metadata": {
+        "schema_version": "schema-v1",
+        "trace_kind": "Replay",
+        "trace_family": "Trace Replay",
+        "compatibility": "legacy-compatible"
+      },
+      "expected": {
+        "schema_version": 1,
+        "trace_kind": "replay",
+        "trace_family": "replay",
+        "compatibility": "legacy_compatible",
+        "schema_id": "trace_schema_v1",
+        "schema_identity": "trace_schema_v1:replay:replay:legacy_compatible"
+      }
+    }
+  ]
+}

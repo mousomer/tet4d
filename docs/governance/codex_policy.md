@@ -57,6 +57,11 @@ Stage 18 implementation tasks must also report the committed implementation
 doc, exact fixture set, comparison mode, native command, and any provisional
 native fallback behavior.
 
+Stage 22 implementation tasks must also report the committed implementation
+doc, trace schema/version fixture set, Python oracle, native/provisional route
+status, default advisory behavior, `TET4D_STRICT_PARITY=1` blocking behavior,
+explicit exclusions, authority boundary, routing, and validation.
+
 ## Task routing
 
 ### Python task

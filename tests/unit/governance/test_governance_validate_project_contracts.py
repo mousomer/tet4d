@@ -525,6 +525,93 @@ def _write_minimal_parity_package_review_governance(
     )
 
 
+def _write_minimal_trace_schema_version_parity_governance(root: Path) -> None:
+    doc_rel = "docs/architecture/trace_schema_version_normalization_parity.md"
+    harness_rel = "tools/migration/trace_schema_version_normalization_parity.py"
+    fixture_rel = "tests/fixtures/parity/trace_schema_version_normalization.json"
+    test_rel = "tests/unit/migration/test_trace_schema_version_normalization_parity.py"
+    _write_text(
+        root / doc_rel,
+        "Stage 22 trace schema/version normalization parity.\n"
+        "Python remains the semantic oracle.\n"
+        "Native/C++ remains provisional.\n"
+        "This slice is schema/version metadata-only.\n"
+        "No safe native/provisional route exists yet.\n"
+        "Default mode is advisory.\n"
+        "Strict mode TET4D_STRICT_PARITY=1 blocks unavailability.\n"
+        "This slice does not transfer authority.\n"
+        "Explicit exclusions: trace events, board snapshots, topology movement, "
+        "gameplay, rendering, and endgame physics.\n"
+        f"Harness {harness_rel}. Fixture {fixture_rel}.\n",
+    )
+    for rel in (harness_rel, test_rel):
+        _write_text(root / rel, "def main():\n    return 0\n")
+    _write_json(
+        root / fixture_rel,
+        {
+            "slice": "trace_schema_version_normalization",
+            "authority": "python",
+            "cases": [],
+        },
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_protocol.md",
+        f"{doc_rel}\ntrace schema/version normalization\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
+        f"{doc_rel}\nschema/version metadata\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "parity_evidence_package_review.md",
+        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "authority_transfer_protocol.md",
+        f"{doc_rel} is not a transfer record.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "architecture" / "authority_map.md",
+        f"{doc_rel} schema/version metadata.\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "README.md",
+        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "review_checklist.md",
+        f"Stage 22 {doc_rel}\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "drift_protection_map.md",
+        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n{test_rel}\n",
+        append=True,
+    )
+    _write_text(
+        root / "docs" / "governance" / "codex_policy.md",
+        "Stage 22 implementation tasks must report route status.\n",
+        append=True,
+    )
+    _write_text(root / "docs" / "DOCUMENTATION_MAP.md", f"{doc_rel}\n", append=True)
+    _write_text(
+        root / "docs" / "PROJECT_STRUCTURE.md",
+        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n{test_rel}\n",
+    )
+    _write_text(root / "AGENTS.md", f"{doc_rel}\n", append=True)
+    _write_text(
+        root / "native" / "AGENTS.md",
+        f"{doc_rel}\ndo not fake native output\n",
+        append=True,
+    )
+
+
 def _write_minimal_godot_semantic_boundary_governance(root: Path) -> None:
     _write_text(root / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
     _write_text(
@@ -2317,6 +2404,80 @@ def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
     assert "## Context-switch profiles" in must_contain
     assert "## Boundary model" in must_contain
     assert "CODEX_MODE=1 ./scripts/verify.sh" in must_contain
+
+
+def test_trace_schema_version_parity_governance_accepts_baseline(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_trace_schema_version_parity_governance(tmp_path)
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    assert (
+        contracts._validate_trace_schema_version_normalization_parity_governance() == []
+    )
+
+
+def test_trace_schema_version_parity_governance_requires_doc(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_trace_schema_version_parity_governance(tmp_path)
+    (
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "trace_schema_version_normalization_parity.md"
+    ).unlink()
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_trace_schema_version_normalization_parity_governance()
+
+    assert any(
+        "trace schema/version normalization parity" in item.message for item in issues
+    )
+
+
+def test_trace_schema_version_parity_governance_rejects_transfer_claim(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_trace_schema_version_parity_governance(tmp_path)
+    doc = (
+        tmp_path
+        / "docs"
+        / "architecture"
+        / "trace_schema_version_normalization_parity.md"
+    )
+    _write_text(
+        doc, doc.read_text(encoding="utf-8") + "This slice transfers authority.\n"
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_trace_schema_version_normalization_parity_governance()
+
+    assert any(
+        "must not claim invalid Stage 22 status" in item.message for item in issues
+    )
+
+
+def test_trace_schema_version_parity_governance_requires_drift_surfaces(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_minimal_trace_schema_version_parity_governance(tmp_path)
+    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
+    drift_map.write_text(
+        drift_map.read_text(encoding="utf-8").replace(
+            "tests/unit/migration/test_trace_schema_version_normalization_parity.py\n",
+            "",
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+
+    issues = contracts._validate_trace_schema_version_normalization_parity_governance()
+
+    assert any(
+        "test_trace_schema_version_normalization_parity.py" in item.message
+        for item in issues
+    )
 
 
 def test_current_state_rule_enforces_restart_only_scope() -> None:

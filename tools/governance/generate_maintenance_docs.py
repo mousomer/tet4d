@@ -794,6 +794,11 @@ def render_project_structure_sections() -> dict[str, str]:
             "### Stage 21 Parity Evidence Package Review",
             "",
             "1. `docs/architecture/parity_evidence_package_review.md`: Stage 21 package review of Stages 15, 18, and 20",
+            "",
+            "### Stage 22 Trace Schema/Version Normalization Parity",
+            "",
+            "1. `docs/architecture/trace_schema_version_normalization_parity.md`: Stage 22 trace schema/version normalization parity doc",
+            "2. `tools/migration/trace_schema_version_normalization_parity.py`: Stage 22 parity harness",
         ]
     )
 
@@ -820,6 +825,7 @@ def render_project_structure_sections() -> dict[str, str]:
     )
     sections["project_structure_likely_test_files"] += (
         "\n\n### Stage 20 Topology Identifier Normalization Parity Test Files\n\n1. `tests/fixtures/parity/topology_identifier_normalization.json`: identifier-only Stage 20 fixture\n2. `tests/unit/migration/test_topology_identifier_normalization_parity.py`: Stage 20 parity tests"
+        "\n\n### Stage 22 Trace Schema/Version Normalization Parity Test Files\n\n1. `tests/fixtures/parity/trace_schema_version_normalization.json`: schema/version metadata-only Stage 22 fixture\n2. `tests/unit/migration/test_trace_schema_version_normalization_parity.py`: Stage 22 parity tests"
     )
     return sections
 

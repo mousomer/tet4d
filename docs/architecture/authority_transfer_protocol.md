@@ -34,6 +34,9 @@ an explicit transfer record and authority-map update.
 Evidence package reviews, including
 `docs/architecture/parity_evidence_package_review.md`, are not transfer
 records.
+Stage 22 trace schema/version normalization parity in
+`docs/architecture/trace_schema_version_normalization_parity.md` is metadata
+evidence only and is not a transfer record.
 
 ## Rule
 
@@ -106,6 +109,7 @@ Potential future candidates:
 
 - coordinate/bounds helper
 - trace metadata identity/digest
+- trace schema/version normalization
 - trace parser
 - topology lookup helper
 - deterministic scoring helper

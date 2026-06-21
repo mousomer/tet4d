@@ -208,6 +208,15 @@ That review summarizes Stages 15, 18, and 20, keeps parity harnesses under
 `tools/migration/` for now, recommends trace schema/version normalization as
 the next data-only candidate, and does not transfer authority.
 
+Stage 22 implementation lives in
+`docs/architecture/trace_schema_version_normalization_parity.md`.
+Stage 22 implements only trace schema/version normalization and does not
+transfer authority.
+
+Stage 22 harness and fixture:
+`tools/migration/trace_schema_version_normalization_parity.py` and
+`tests/fixtures/parity/trace_schema_version_normalization.json`.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

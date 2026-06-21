@@ -43,8 +43,8 @@ a migration overlay, not a replacement root constitution.
    `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, and
    `docs/governance/README.md`.
 9. For Stage 18 parity work, read
-   `docs/architecture/second_parity_slice_candidate_selection.md`; Stage 18
-   may only implement the selected candidate. Also read
+   `docs/architecture/second_parity_slice_candidate_selection.md`.
+   Stage 18 may only implement the selected candidate. Also read
    `docs/architecture/trace_metadata_identity_digest_parity.md` for the Stage
    18 implementation boundary. No authority transfer occurs without
    `docs/architecture/authority_transfer_protocol.md`.
@@ -58,8 +58,12 @@ a migration overlay, not a replacement root constitution.
 12. Before further parity expansion, read
     `docs/architecture/parity_evidence_package_review.md`. Future parity work
     must respect its `tools/migration/` versus `tools/parity/` route decision.
-13. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
-14. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
+13. For Stage 22 trace schema/version normalization parity, read
+    `docs/architecture/trace_schema_version_normalization_parity.md`; Stage
+    22 is schema/version metadata-only and excludes trace events, topology
+    movement, gameplay, rendering, and authority transfer.
+14. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
+15. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
 
 ## Instruction routing
 
@@ -107,12 +111,13 @@ a migration overlay, not a replacement root constitution.
   `docs/architecture/second_parity_slice_candidate_selection.md`.
 - Stage 18 implementation details live in
   `docs/architecture/trace_metadata_identity_digest_parity.md`.
-- Stage 18 may only implement the selected candidate.
 - Stage 20 parity work may only implement topology identifier normalization in
   `docs/architecture/topology_identifier_normalization_parity.md`.
 - Stage 20 remains identifier-only and does not transfer authority.
 - Further parity expansion must first route through
   `docs/architecture/parity_evidence_package_review.md`.
+- Stage 22 work may only implement trace schema/version normalization in
+  `docs/architecture/trace_schema_version_normalization_parity.md`.
 - Do not transfer authority without
   `docs/architecture/authority_transfer_protocol.md`.
 

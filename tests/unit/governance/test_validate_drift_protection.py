@@ -32,12 +32,14 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
         "docs/architecture/parity_evidence_package_review.md\n"
+        "docs/architecture/trace_schema_version_normalization_parity.md\n"
         "docs/architecture/authority_map.md\n",
     )
     _write(root / "godot" / "AGENTS.md", "Godot UI only.\n")
     _write(
         root / "native" / "AGENTS.md",
-        "Native C++ only. docs/architecture/topology_identifier_normalization_parity.md\n",
+        "Native C++ only. docs/architecture/topology_identifier_normalization_parity.md\n"
+        "Native C++ only. docs/architecture/trace_schema_version_normalization_parity.md\n",
     )
     _write(
         root / "docs" / "governance" / "README.md",
@@ -52,7 +54,9 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
         "docs/architecture/parity_evidence_package_review.md\n"
+        "docs/architecture/trace_schema_version_normalization_parity.md\n"
         "topology identifier normalization\n"
+        "trace schema/version normalization\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
@@ -110,6 +114,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
         "docs/architecture/parity_evidence_package_review.md\n"
+        "docs/architecture/trace_schema_version_normalization_parity.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -119,12 +124,15 @@ def _valid_fixture(root: Path) -> None:
         "tools/migration/first_subsystem_parity_pilot.py\n"
         "tools/migration/trace_metadata_identity_digest_parity.py\n"
         "tools/migration/topology_identifier_normalization_parity.py\n"
+        "tools/migration/trace_schema_version_normalization_parity.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
         "tests/unit/migration/test_topology_identifier_normalization_parity.py\n"
+        "tests/unit/migration/test_trace_schema_version_normalization_parity.py\n"
         "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp\n"
         "tests/fixtures/parity/trace_metadata_identity_digest.json\n"
         "tests/fixtures/parity/topology_identifier_normalization.json\n"
+        "tests/fixtures/parity/trace_schema_version_normalization.json\n"
         "tools/migration/export_config_bundle.py\n"
         "tools/governance/generate_configuration_reference.py\n"
         "tools/governance/validate_authority_transfer.py\n",
@@ -150,6 +158,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
         "docs/architecture/topology_identifier_normalization_parity.md\n"
         "docs/architecture/parity_evidence_package_review.md\n"
+        "docs/architecture/trace_schema_version_normalization_parity.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -159,12 +168,15 @@ def _valid_fixture(root: Path) -> None:
         "tools/migration/first_subsystem_parity_pilot.py\n"
         "tools/migration/trace_metadata_identity_digest_parity.py\n"
         "tools/migration/topology_identifier_normalization_parity.py\n"
+        "tools/migration/trace_schema_version_normalization_parity.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
         "tests/unit/migration/test_topology_identifier_normalization_parity.py\n"
+        "tests/unit/migration/test_trace_schema_version_normalization_parity.py\n"
         "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp\n"
         "tests/fixtures/parity/trace_metadata_identity_digest.json\n"
         "tests/fixtures/parity/topology_identifier_normalization.json\n"
+        "tests/fixtures/parity/trace_schema_version_normalization.json\n"
         "tools/migration/export_config_bundle.py\n"
         "tools/governance/generate_configuration_reference.py\n"
         "tools/governance/validate_authority_transfer.py\n"
@@ -179,6 +191,7 @@ def _valid_fixture(root: Path) -> None:
         "strict mode blocks unavailability\n"
         "parity evidence package review drift\n"
         "parity evidence package review\n"
+        "trace schema/version normalization parity\n"
         "tools/migration/\n"
         "tools/parity/\n",
     )
@@ -225,6 +238,18 @@ def _valid_fixture(root: Path) -> None:
         "The tooling route decision keeps tools/migration/ and defers tools/parity/.\n",
     )
     _write(
+        root / "docs" / "architecture" / "trace_schema_version_normalization_parity.md",
+        "Stage 22 trace schema/version normalization parity. "
+        "Python remains the semantic oracle. "
+        "The slice is schema/version metadata-only. "
+        "Default mode is advisory when no safe native/provisional route exists. "
+        "Strict mode TET4D_STRICT_PARITY=1 blocks unavailability. "
+        "No safe native/provisional route exists. "
+        "This slice does not transfer authority. "
+        "Explicit exclusions: trace events, board snapshots, topology movement, "
+        "gameplay, rendering, and endgame physics.\n",
+    )
+    _write(
         root
         / "docs"
         / "governance"
@@ -254,7 +279,9 @@ def _valid_fixture(root: Path) -> None:
         "presentation layer. C++/GDExtension is provisional until parity. "
         "Stage 20 docs/architecture/topology_identifier_normalization_parity.md "
         "topology identifier normalization does not transfer authority. "
-        "Stage 21 docs/architecture/parity_evidence_package_review.md provisional evidence.\n",
+        "Stage 21 docs/architecture/parity_evidence_package_review.md provisional evidence. "
+        "Stage 22 docs/architecture/trace_schema_version_normalization_parity.md "
+        "schema/version metadata evidence.\n",
     )
     _write(
         root / "docs" / "architecture" / "parity_protocol.md",
@@ -271,6 +298,8 @@ def _valid_fixture(root: Path) -> None:
         "Stage 20 docs/architecture/topology_identifier_normalization_parity.md "
         "topology identifier normalization does not transfer authority. "
         "Stage 21 docs/architecture/parity_evidence_package_review.md does not transfer authority. "
+        "Stage 22 docs/architecture/trace_schema_version_normalization_parity.md "
+        "trace schema/version normalization. "
         "docs/architecture/second_parity_slice_candidate_selection.md.\n",
     )
     _write(
@@ -287,7 +316,9 @@ def _valid_fixture(root: Path) -> None:
         "implementation doc docs/architecture/trace_metadata_identity_digest_parity.md. "
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md. "
         "docs/architecture/topology_identifier_normalization_parity.md. "
-        "docs/architecture/parity_evidence_package_review.md.\n",
+        "docs/architecture/parity_evidence_package_review.md. "
+        "docs/architecture/trace_schema_version_normalization_parity.md "
+        "schema/version metadata.\n",
     )
     _write(
         root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",

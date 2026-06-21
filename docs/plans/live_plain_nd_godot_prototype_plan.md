@@ -45,6 +45,10 @@ gameplay, rendering, or live-shell implementation commitment.
 Stage 21 parity evidence package review is only parity/migration review in
 `docs/architecture/parity_evidence_package_review.md`; it adds no Godot scene,
 rendering, or live-shell implementation commitment.
+Stage 22 trace schema/version normalization parity is recorded in
+`docs/architecture/trace_schema_version_normalization_parity.md`. It remains
+metadata-only migration evidence and does not add Godot scenes, live ND UI,
+rendering, gameplay, native authority, or authority transfer.
 
 Stage 22 should start with live plain 3D only. This keeps control, rendering,
 HUD, and testing risk below the accepted live 2D shell while reusing the native

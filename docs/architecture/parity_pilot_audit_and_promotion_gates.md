@@ -164,6 +164,11 @@ Stage 21 parity evidence package review is recorded in
 must satisfy the promotion gates here, preserve the forbidden areas below, and
 remain evidence-only until the authority-transfer protocol is satisfied.
 
+Stage 22 trace schema/version normalization parity is recorded in
+`docs/architecture/trace_schema_version_normalization_parity.md`. It remains
+within the promotion gates as data-only schema/version metadata evidence and
+does not expand into the forbidden areas below.
+
 The selected candidate preserves the forbidden areas above. It does not allow
 topology movement, rotation, drop/collision, lock/clear/gameplay loop,
 rendering/projection/view semantics, or endgame physics work.
