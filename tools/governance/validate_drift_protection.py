@@ -13,6 +13,7 @@ REQUIRED_FILES = (
     "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
     "docs/architecture/second_parity_slice_candidate_selection.md",
     "docs/architecture/trace_metadata_identity_digest_parity.md",
+    "docs/architecture/topology_identifier_normalization_parity.md",
     "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
     "docs/governance/workspace_bundle/drift_protection_policy.md",
     "docs/governance/drift_protection_map.md",
@@ -35,9 +36,12 @@ REQUIRED_FILES = (
     "tools/governance/validate_godot_semantic_boundary.py",
     "tools/governance/validate_native_cpp_tooling.py",
     "tools/migration/trace_metadata_identity_digest_parity.py",
+    "tools/migration/topology_identifier_normalization_parity.py",
     "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
     "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
     "tests/fixtures/parity/trace_metadata_identity_digest.json",
+    "tests/unit/migration/test_topology_identifier_normalization_parity.py",
+    "tests/fixtures/parity/topology_identifier_normalization.json",
 )
 
 ROUTER_LINKS = {
@@ -372,6 +376,7 @@ def check_authority_drift(root: Path = ROOT) -> CheckResult:
         "docs/governance/testing_policy.md",
         "docs/architecture/authority_map.md",
         "docs/architecture/parity_protocol.md",
+        "docs/architecture/topology_identifier_normalization_parity.md",
         "docs/governance/drift_protection_map.md",
     ):
         text = read_text(root, rel, failures)
@@ -570,6 +575,59 @@ def check_trace_metadata_identity_digest_parity_drift(root: Path = ROOT) -> Chec
     return CheckResult("trace metadata identity/digest parity drift", failures)
 
 
+def _append_topology_identifier_parity_doc_failures(
+    doc_rel: str,
+    doc_text: str,
+    failures: list[str],
+) -> None:
+    concepts = {
+        "identifier-only": ("identifier-only",),
+        "no authority transfer": ("does not transfer authority",),
+        "exact equality": ("exact equality",),
+        "default advisory": ("default/advisory", "default mode is advisory"),
+        "strict blocking": ("strict mode", "blocks"),
+    }
+    for concept in contains_all_concepts(doc_text, concepts):
+        failures.append(f"{doc_rel} must state topology parity concept `{concept}`")
+
+
+def check_topology_identifier_normalization_parity_drift(
+    root: Path = ROOT,
+) -> CheckResult:
+    failures: list[str] = []
+    doc_rel = "docs/architecture/topology_identifier_normalization_parity.md"
+    doc_text = read_text(root, doc_rel, failures)
+    parity_protocol = read_text(root, "docs/architecture/parity_protocol.md", failures)
+    governance_text = read_text(root, "docs/governance/README.md", failures)
+    drift_text = read_text(root, "docs/governance/drift_protection_map.md", failures)
+
+    if doc_rel not in parity_protocol:
+        failures.append(
+            "parity_protocol.md must route to topology identifier normalization parity"
+        )
+    if doc_rel not in governance_text and doc_rel not in drift_text:
+        failures.append(
+            "topology identifier normalization parity must be reachable from governance README or drift map"
+        )
+    if doc_rel not in drift_text:
+        failures.append(
+            "drift_protection_map.md must list topology identifier normalization parity as a parity drift surface"
+        )
+    if doc_text:
+        _append_topology_identifier_parity_doc_failures(doc_rel, doc_text, failures)
+        for rel in (
+            "tools/migration/topology_identifier_normalization_parity.py",
+            "tests/unit/migration/test_topology_identifier_normalization_parity.py",
+            "tests/fixtures/parity/topology_identifier_normalization.json",
+        ):
+            if rel not in drift_text:
+                failures.append(
+                    f"docs/governance/drift_protection_map.md does not list {rel}"
+                )
+
+    return CheckResult("topology identifier normalization parity drift", failures)
+
+
 def check_parity_evidence_review_and_third_slice_selection_drift(
     root: Path = ROOT,
 ) -> CheckResult:
@@ -628,6 +686,7 @@ def validate(root: Path = ROOT) -> list[CheckResult]:
         check_parity_pilot_drift(root),
         check_second_parity_selection_drift(root),
         check_trace_metadata_identity_digest_parity_drift(root),
+        check_topology_identifier_normalization_parity_drift(root),
         check_parity_evidence_review_and_third_slice_selection_drift(root),
     ]
 

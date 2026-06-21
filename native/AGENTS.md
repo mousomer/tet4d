@@ -13,6 +13,8 @@ See `docs/architecture/trace_metadata_identity_digest_parity.md` for the
 Stage 18 implementation boundary.
 See `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
 for Stage 19 review and third-slice selection.
+See `docs/architecture/topology_identifier_normalization_parity.md` for
+Stage 20 topology identifier normalization parity.
 See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
 See `docs/architecture/authority_map.md` for semantic authority.
 
@@ -36,6 +38,9 @@ Rules:
   remains provisional.
 - Keep Stage 18 implementation within the trace metadata identity/digest
   parity slice only.
+- Keep Stage 20 within identifier-only topology normalization parity and do
+  not expand it into topology movement, seam traversal, neighbor lookup,
+  gameplay, or rendering.
 - Native work remains provisional until explicit authority transfer.
 - Preserve advisory default behavior and strict parity behavior for native
   unavailability.

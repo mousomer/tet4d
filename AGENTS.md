@@ -51,8 +51,12 @@ a migration overlay, not a replacement root constitution.
 10. For parity evidence review or third-slice selection, read
     `docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
     That review remains process-only and does not transfer authority.
-11. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
-12. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
+11. For Stage 20 topology identifier normalization parity, read
+    `docs/architecture/topology_identifier_normalization_parity.md`.
+    Stage 20 is identifier-only and does not allow topology movement, seam
+    traversal, neighbor lookup, gameplay, or authority transfer.
+12. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
+13. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
 
 ## Instruction routing
 
@@ -101,6 +105,9 @@ a migration overlay, not a replacement root constitution.
 - Stage 18 implementation details live in
   `docs/architecture/trace_metadata_identity_digest_parity.md`.
 - Stage 18 may only implement the selected candidate.
+- Stage 20 parity work may only implement topology identifier normalization in
+  `docs/architecture/topology_identifier_normalization_parity.md`.
+- Stage 20 remains identifier-only and does not transfer authority.
 
 ## Done criteria
 

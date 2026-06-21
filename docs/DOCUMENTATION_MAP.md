@@ -27,6 +27,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/second_parity_slice_candidate_selection.md`
 - `docs/architecture/trace_metadata_identity_digest_parity.md`
 - `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+- `docs/architecture/topology_identifier_normalization_parity.md`
 
 ### 3. Active planning
 

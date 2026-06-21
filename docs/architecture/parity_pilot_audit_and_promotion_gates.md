@@ -147,11 +147,17 @@ Forbidden:
   `docs/architecture/trace_metadata_identity_digest_parity.md`
 - Stage 19 evidence review and third-slice selection doc:
   `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+- Stage 20 topology identifier normalization parity doc:
+  `docs/architecture/topology_identifier_normalization_parity.md`
 - selected candidate satisfies promotion gates: yes, as trace metadata
   identity/digest planning only
 - required follow-up before next slice: route the candidate slice to this audit,
   keep Python as oracle, keep native provisional, and add validator/test
   coverage for the new surface
+
+Stage 20 topology identifier normalization parity remains within the same
+promotion gates. It is still evidence-only, still identifier-only, and still
+does not transfer authority.
 
 The selected candidate preserves the forbidden areas above. It does not allow
 topology movement, rotation, drop/collision, lock/clear/gameplay loop,

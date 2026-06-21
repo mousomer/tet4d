@@ -33,6 +33,12 @@ parity harness.
 
 Chosen candidate: topology identifier normalization.
 
+Implemented in `docs/architecture/topology_identifier_normalization_parity.md`.
+Harness: `tools/migration/topology_identifier_normalization_parity.py`.
+Fixture: `tests/fixtures/parity/topology_identifier_normalization.json`.
+
+This is parity evidence only.
+
 Why this candidate is the smallest safe next step:
 
 - It is data-only and deterministic.

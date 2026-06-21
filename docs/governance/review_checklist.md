@@ -132,6 +132,13 @@ Use it for Codex tasks, local commits, PRs, and governance reviews.
       before approving the next parity slice.
 - [ ] Stage 19 records the reviewed evidence, chosen candidate, and Stage 20
       boundary without claiming authority transfer.
+- [ ] Stage 20 topology identifier normalization parity is documented in
+      `docs/architecture/topology_identifier_normalization_parity.md`.
+- [ ] Stage 20 fixture is identifier-only and deterministic.
+- [ ] Stage 20 default mode is advisory when the native/provisional route is
+      unavailable.
+- [ ] Stage 20 strict mode blocks unavailability and mismatches.
+- [ ] Stage 20 remains topology identifier normalization only.
 - [ ] Any claim of transferred authority has a completed
       `docs/architecture/authority_transfer_protocol.md` transfer record.
 - [ ] Authority map updated if semantic ownership changed.

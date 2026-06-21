@@ -2965,6 +2965,133 @@ def _validate_trace_metadata_identity_digest_parity_governance() -> list[
     return issues
 
 
+def _validate_topology_identifier_normalization_parity_governance() -> list[
+    ValidationIssue
+]:
+    issues: list[ValidationIssue] = []
+    doc_rel = "docs/architecture/topology_identifier_normalization_parity.md"
+    if not (PROJECT_ROOT / doc_rel).exists():
+        issues.append(
+            ValidationIssue(
+                "missing",
+                f"missing topology identifier normalization parity doc: {doc_rel}",
+            )
+        )
+        return issues
+
+    doc_text = _read_text(doc_rel, issues)
+    if doc_text is not None:
+        _append_missing_concepts(
+            rel=doc_rel,
+            label="topology identifier normalization parity",
+            text=doc_text,
+            concept_groups=(
+                ("Python oracle", ("python remains the semantic oracle",)),
+                ("identifier-only scope", ("identifier-only",)),
+                ("no authority transfer", ("does not transfer authority",)),
+                (
+                    "default advisory",
+                    (
+                        "default mode is advisory",
+                        "advisory when the native/provisional route is unavailable",
+                    ),
+                ),
+                (
+                    "strict blocking",
+                    (
+                        "strict mode",
+                        "tet4d_strict_parity",
+                        "blocks that unavailability",
+                    ),
+                ),
+                (
+                    "explicit exclusions",
+                    (
+                        "seam traversal",
+                        "neighbor lookup",
+                        "topology movement",
+                        "rendering/projection/view/camera",
+                        "endgame physics",
+                    ),
+                ),
+                (
+                    "harness and fixture",
+                    (
+                        "tools/migration/topology_identifier_normalization_parity.py",
+                        "tests/fixtures/parity/topology_identifier_normalization.json",
+                    ),
+                ),
+                (
+                    "canonical identifiers",
+                    ("plain_2d", "wrap_all_4d", "invert_all_4d", "sphere_like_4d"),
+                ),
+            ),
+            issues=issues,
+        )
+
+    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "docs/architecture/parity_protocol.md",
+            (
+                doc_rel,
+                "topology identifier normalization",
+                "does not transfer authority",
+            ),
+        ),
+        (
+            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
+            (doc_rel,),
+        ),
+        (
+            "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
+            (doc_rel,),
+        ),
+        (
+            "docs/architecture/authority_map.md",
+            (doc_rel, "topology identifier normalization"),
+        ),
+        ("docs/governance/README.md", (doc_rel, "topology identifier normalization")),
+        ("docs/governance/review_checklist.md", (doc_rel,)),
+        ("docs/governance/drift_protection_map.md", (doc_rel,)),
+        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
+        (
+            "docs/PROJECT_STRUCTURE.md",
+            (
+                doc_rel,
+                "tools/migration/topology_identifier_normalization_parity.py",
+                "tests/fixtures/parity/topology_identifier_normalization.json",
+                "tests/unit/migration/test_topology_identifier_normalization_parity.py",
+            ),
+        ),
+        ("AGENTS.md", (doc_rel,)),
+        ("native/AGENTS.md", (doc_rel,)),
+    )
+    issues.extend(
+        _validate_governance_doc_tokens(
+            required_docs,
+            "topology-identifier-normalization-parity",
+            issues,
+        )
+    )
+
+    drift_text = _read_text("docs/governance/drift_protection_map.md", issues)
+    if drift_text is not None:
+        for rel in (
+            doc_rel,
+            "tools/migration/topology_identifier_normalization_parity.py",
+            "tests/fixtures/parity/topology_identifier_normalization.json",
+            "tests/unit/migration/test_topology_identifier_normalization_parity.py",
+        ):
+            if rel not in drift_text:
+                issues.append(
+                    ValidationIssue(
+                        "content",
+                        f"docs/governance/drift_protection_map.md must list {rel}",
+                    )
+                )
+    return issues
+
+
 def _validate_godot_semantic_boundary_governance() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     if not (PROJECT_ROOT / "godot").exists():
@@ -3701,6 +3828,7 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_second_parity_slice_candidate_selection())
     issues.extend(_validate_parity_evidence_review_and_third_slice_selection())
     issues.extend(_validate_trace_metadata_identity_digest_parity_governance())
+    issues.extend(_validate_topology_identifier_normalization_parity_governance())
     issues.extend(_validate_godot_semantic_boundary_governance())
     issues.extend(_validate_config_authority_governance())
     issues.extend(_validate_utility_reuse_governance())

@@ -1,0 +1,41 @@
+{
+  "slice": "topology_identifier_normalization",
+  "authority": "python",
+  "cases": [
+    {
+      "name": "plain-2d-canonical",
+      "input": "plain_2d",
+      "expected": "plain_2d"
+    },
+    {
+      "name": "plain-2d-spacing",
+      "input": " Plain 2D ",
+      "expected": "plain_2d"
+    },
+    {
+      "name": "wrap-all-4d-alias",
+      "input": "wrap all 4d",
+      "expected": "wrap_all_4d"
+    },
+    {
+      "name": "topology-prefix",
+      "input": "topology_plain_3d",
+      "expected": "plain_3d"
+    },
+    {
+      "name": "torus-alias",
+      "input": "torus 2D",
+      "expected": "wrap_all_2d"
+    },
+    {
+      "name": "projective-space-alias",
+      "input": "Projective Space 4D",
+      "expected": "invert_all_4d"
+    },
+    {
+      "name": "sphere-like-alias",
+      "input": "Sphere Like 4D",
+      "expected": "sphere_like_4d"
+    }
+  ]
+}

@@ -189,6 +189,19 @@ Stage 19 evidence review and third-slice selection live in
 That review compares the first pilot and Stage 18 evidence, then selects the
 next safe slice without transferring authority.
 
+Stage 20 implementation lives in
+`docs/architecture/topology_identifier_normalization_parity.md`.
+That topology identifier normalization slice is identifier-only, remains
+provisional, and does not transfer authority.
+
+Stage 20 harness and fixture:
+`tools/migration/topology_identifier_normalization_parity.py` and
+`tests/fixtures/parity/topology_identifier_normalization.json`.
+
+Stage 20 must not expand into topology movement, seam traversal, neighbor
+lookup, rotation, collision, gravity/drop, lock/clear/gameplay loop,
+rendering/projection/view/camera, or endgame physics.
+
 Parity evidence and promotion-gate acceptance remain evidence only. They do not
 transfer authority without
 `docs/architecture/authority_transfer_protocol.md` and an authority-map update.

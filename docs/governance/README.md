@@ -27,6 +27,10 @@ overlay, not a replacement for existing Python/repo governance.
   `docs/architecture/trace_metadata_identity_digest_parity.md`
 - parity evidence review and third-slice selection:
   `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+- topology identifier normalization parity:
+  `docs/architecture/topology_identifier_normalization_parity.md`,
+  `tools/migration/topology_identifier_normalization_parity.py`,
+  `tests/fixtures/parity/topology_identifier_normalization.json`
 - testing policy: `docs/governance/testing_policy.md`
 - review checklist: `docs/governance/review_checklist.md`
 - GitHub PR template: `.github/pull_request_template.md`
@@ -63,6 +67,7 @@ tet4d-specific review checks live in `docs/governance/review_checklist.md`.
 The GitHub PR template lives in `.github/pull_request_template.md`.
 
 Project-contract validation checks that the review surfaces remain routed.
+Stage 20 topology identifier normalization parity routing is also validated.
 
 ## Technical debt and drift protection
 

@@ -21,6 +21,9 @@ Python remains the oracle and reference implementation until the replacement
 core passes trace parity against the Stage 2 topology/gameplay traces and the
 Stage 3 endgame traces.
 
+Stage 20 topology identifier normalization parity is a separate evidence slice
+and remains identifier-only, provisional, and authority-preserving.
+
 The repo-wide migration routing overlay is `docs/governance/README.md`; the
 ownership boundary summary is `docs/architecture/authority_map.md`. Those files
 clarify this plan without superseding the Python-centered policy pack.

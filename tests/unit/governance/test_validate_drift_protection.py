@@ -30,10 +30,14 @@ def _valid_fixture(root: Path) -> None:
         "docs/governance/workspace_bundle/programming_policy.md\n"
         "docs/governance/workspace_bundle/drift_protection_policy.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
+        "docs/architecture/topology_identifier_normalization_parity.md\n"
         "docs/architecture/authority_map.md\n",
     )
     _write(root / "godot" / "AGENTS.md", "Godot UI only.\n")
-    _write(root / "native" / "AGENTS.md", "Native C++ only.\n")
+    _write(
+        root / "native" / "AGENTS.md",
+        "Native C++ only. docs/architecture/topology_identifier_normalization_parity.md\n",
+    )
     _write(
         root / "docs" / "governance" / "README.md",
         ".github/pull_request_template.md\n"
@@ -45,6 +49,8 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
+        "docs/architecture/topology_identifier_normalization_parity.md\n"
+        "topology identifier normalization\n"
         "docs/governance/technical_debt_register.md\n"
         "docs/governance/native_tooling_ci_policy.md\n"
         "tools/governance/validate_drift_protection.py\n"
@@ -100,6 +106,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
+        "docs/architecture/topology_identifier_normalization_parity.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -108,10 +115,13 @@ def _valid_fixture(root: Path) -> None:
         "forbidden second-slice areas\n"
         "tools/migration/first_subsystem_parity_pilot.py\n"
         "tools/migration/trace_metadata_identity_digest_parity.py\n"
+        "tools/migration/topology_identifier_normalization_parity.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
+        "tests/unit/migration/test_topology_identifier_normalization_parity.py\n"
         "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp\n"
         "tests/fixtures/parity/trace_metadata_identity_digest.json\n"
+        "tests/fixtures/parity/topology_identifier_normalization.json\n"
         "tools/migration/export_config_bundle.py\n"
         "tools/governance/generate_configuration_reference.py\n"
         "tools/governance/validate_authority_transfer.py\n",
@@ -135,6 +145,7 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/second_parity_slice_candidate_selection.md\n"
         "docs/architecture/trace_metadata_identity_digest_parity.md\n"
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
+        "docs/architecture/topology_identifier_normalization_parity.md\n"
         "docs/architecture/utility_index.md\n"
         "governance routing drift\n"
         "authority drift\n"
@@ -143,17 +154,25 @@ def _valid_fixture(root: Path) -> None:
         "forbidden second-slice areas\n"
         "tools/migration/first_subsystem_parity_pilot.py\n"
         "tools/migration/trace_metadata_identity_digest_parity.py\n"
+        "tools/migration/topology_identifier_normalization_parity.py\n"
         "tests/unit/migration/test_first_subsystem_parity_pilot.py\n"
         "tests/unit/migration/test_trace_metadata_identity_digest_parity.py\n"
+        "tests/unit/migration/test_topology_identifier_normalization_parity.py\n"
         "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp\n"
         "tests/fixtures/parity/trace_metadata_identity_digest.json\n"
+        "tests/fixtures/parity/topology_identifier_normalization.json\n"
         "tools/migration/export_config_bundle.py\n"
         "tools/governance/generate_configuration_reference.py\n"
         "tools/governance/validate_authority_transfer.py\n"
         "trace metadata parity drift\n"
         "trace metadata identity/digest parity\n"
         "exact identity\n"
-        "exact digest\n",
+        "exact digest\n"
+        "topology identifier parity drift\n"
+        "topology identifier normalization parity\n"
+        "identifier-only\n"
+        "default mode is advisory\n"
+        "strict mode blocks unavailability\n",
     )
     _write(
         root / "docs" / "architecture" / "trace_metadata_identity_digest_parity.md",
@@ -174,6 +193,24 @@ def _valid_fixture(root: Path) -> None:
         "Topology identifier normalization only. "
         "This review does not transfer authority. "
         "Stage 20 implementation may only implement topology identifier normalization.\n",
+    )
+    _write(
+        root
+        / "docs"
+        / "architecture"
+        / "topology_identifier_normalization_parity.md",
+        "Stage 20 topology identifier normalization parity. "
+        "Python remains the semantic oracle. "
+        "The slice is identifier-only. "
+        "This slice does not transfer authority. "
+        "Default mode is advisory when the native/provisional route is unavailable. "
+        "Strict mode TET4D_STRICT_PARITY blocks that unavailability. "
+        "Explicit exclusions: seam traversal, neighbor lookup, topology movement, "
+        "rendering/projection/view/camera, and endgame physics. "
+        "Harness tools/migration/topology_identifier_normalization_parity.py. "
+        "Fixture tests/fixtures/parity/topology_identifier_normalization.json. "
+        "Canonical identifiers plain_2d wrap_all_4d invert_all_4d sphere_like_4d. "
+        "Exact equality comparison.\n",
     )
     _write(
         root
@@ -202,7 +239,9 @@ def _valid_fixture(root: Path) -> None:
     _write(
         root / "docs" / "architecture" / "authority_map.md",
         "Python is the current semantic oracle. Godot is the product shell and "
-        "presentation layer. C++/GDExtension is provisional until parity.\n",
+        "presentation layer. C++/GDExtension is provisional until parity. "
+        "Stage 20 docs/architecture/topology_identifier_normalization_parity.md "
+        "topology identifier normalization does not transfer authority.\n",
     )
     _write(
         root / "docs" / "architecture" / "parity_protocol.md",
@@ -216,6 +255,8 @@ def _valid_fixture(root: Path) -> None:
         "docs/architecture/trace_metadata_identity_digest_parity.md. "
         "Stage 19 evidence review and third-slice selection live in "
         "docs/architecture/parity_evidence_review_and_third_slice_selection.md. "
+        "Stage 20 docs/architecture/topology_identifier_normalization_parity.md "
+        "topology identifier normalization does not transfer authority. "
         "docs/architecture/second_parity_slice_candidate_selection.md.\n",
     )
     _write(
@@ -230,7 +271,8 @@ def _valid_fixture(root: Path) -> None:
         "Promotion gates are required before a second parity slice. "
         "selected Stage 18 trace metadata identity/digest parity "
         "implementation doc docs/architecture/trace_metadata_identity_digest_parity.md. "
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md.\n",
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md. "
+        "docs/architecture/topology_identifier_normalization_parity.md.\n",
     )
     _write(
         root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",

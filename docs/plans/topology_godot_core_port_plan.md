@@ -10,6 +10,10 @@ endgame, no C#, no Python runtime calls from Godot, and no Godot-side gameplay
 legality. It records the topology migration plan after the accepted plain
 bounded Live ND baseline.
 
+Stage 20 topology identifier normalization parity is already committed as
+identifier-only evidence. It does not transfer authority and it does not allow
+topology movement, seam traversal, or neighbor lookup semantics.
+
 ## 1. Decision Summary
 
 Topology porting will be staged after the accepted plain bounded Live 2D,

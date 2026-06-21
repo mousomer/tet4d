@@ -53,6 +53,7 @@ Surfaces:
 - `docs/architecture/second_parity_slice_candidate_selection.md`
 - `docs/architecture/trace_metadata_identity_digest_parity.md`
 - `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
+- `docs/architecture/topology_identifier_normalization_parity.md`
 - `docs/governance/godot_cpp_policy.md`
 - `docs/governance/cpp_safety_policy.md`
 - `docs/governance/native_tooling_ci_policy.md`
@@ -83,6 +84,8 @@ Required invariants:
 - The third-slice review must stay within
   `docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
 - The chosen third slice is topology identifier normalization only.
+- Stage 20 topology identifier normalization parity lives in
+  `docs/architecture/topology_identifier_normalization_parity.md`.
 - Forbidden second-slice areas remain excluded: topology movement, rotation,
   drop/collision, lock/clear/gameplay loop, rendering/projection/view
   semantics, and endgame physics.
@@ -163,6 +166,24 @@ Required invariants:
 - The native path remains provisional and does not transfer authority.
 - The slice preserves explicit exclusions for movement, rotation, collision,
   rendering, and endgame semantics.
+
+## Topology identifier parity drift
+
+Surfaces:
+
+- `docs/architecture/topology_identifier_normalization_parity.md`
+- `tools/migration/topology_identifier_normalization_parity.py`
+- `tests/fixtures/parity/topology_identifier_normalization.json`
+- `tests/unit/migration/test_topology_identifier_normalization_parity.py`
+
+Required invariants:
+
+- Stage 20 remains topology identifier normalization only.
+- The fixture stays identifier-only and deterministic.
+- Default mode is advisory when the native/provisional route is unavailable.
+- Strict mode blocks unavailability and mismatches.
+- No authority transfer is claimed.
+- No seam traversal, movement, or gameplay semantics are allowed.
 
 ## Validator integration drift
 

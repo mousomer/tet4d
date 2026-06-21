@@ -65,6 +65,9 @@ The parity evidence review and third-slice candidate selection is provisional
 parity-planning work for topology identifier normalization only; it does not
 change authority. The routed review doc is
 `docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
+Stage 20 topology identifier normalization parity evidence lives in
+`docs/architecture/topology_identifier_normalization_parity.md` and remains
+provisional evidence only. It does not change authority.
 
 ## Authority transfer requires parity
 

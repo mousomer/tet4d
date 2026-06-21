@@ -785,6 +785,11 @@ def render_project_structure_sections() -> dict[str, str]:
             _render_numbered_rows(
                 _rows_from_entries(maintenance_contract.get("sources_of_truth"))
             ),
+            "",
+            "### Stage 20 Topology Identifier Normalization Parity",
+            "",
+            "1. `docs/architecture/topology_identifier_normalization_parity.md`: Stage 20 topology identifier normalization parity doc",
+            "2. `tools/migration/topology_identifier_normalization_parity.py`: Stage 20 parity harness",
         ]
     )
 
@@ -808,6 +813,9 @@ def render_project_structure_sections() -> dict[str, str]:
     )
     sections["project_structure_likely_test_files"] = _render_likely_test_files(
         maintenance_contract
+    )
+    sections["project_structure_likely_test_files"] += (
+        "\n\n### Stage 20 Topology Identifier Normalization Parity Test Files\n\n1. `tests/fixtures/parity/topology_identifier_normalization.json`: identifier-only Stage 20 fixture\n2. `tests/unit/migration/test_topology_identifier_normalization_parity.py`: Stage 20 parity tests"
     )
     return sections
 
