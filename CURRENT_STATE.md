@@ -120,7 +120,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   prose with structured scoped status, full/quick grouped controls, status
   badges, and W-slice card/header hierarchy while preserving the same
   product-shell-only boundary and avoiding gameplay, topology, replay,
-  parity, native semantic, or authority-transfer changes.
+  parity, native semantic, or authority-transfer changes. Stage 33b is the
+  follow-up declutter pass: W labels are demoted to subtle orientation markers,
+  live quick controls are removed from the central board area, and the live
+  replay bottom bar is hidden/reduced so the right inspector remains the single
+  complete live control map.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

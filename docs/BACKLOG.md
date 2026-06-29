@@ -35,10 +35,13 @@ structured keycap/action hints, compact generated settings cards, persistent
 inspector sectioning, `Vector Arcade` display labeling for the internal `tron`
 theme ID, and stronger board/W-label visual emphasis. Stage 33a is the active
 live-mode acceptance repair: structured scoped live status, status badges,
-full/quick grouped controls, and W-slice card/header hierarchy. No gameplay,
-topology, movement, trace semantics, replay-frame semantics, parity logic,
-native authority, or authority transfer is added. Full manual visual
-acceptance remains required before merge acceptance.
+full/quick grouped controls, and W-slice card/header hierarchy. Stage 33b is
+the active declutter polish: W labels become subtle orientation markers, the
+central live board stops repeating partial quick controls, and live mode hides
+or reduces the replay bottom bar. No gameplay, topology, movement, trace
+semantics, replay-frame semantics, parity logic, native authority, or authority
+transfer is added. Full manual visual acceptance remains required before merge
+acceptance.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior
@@ -638,10 +641,12 @@ stays synchronized, and the contract validator accepts the backlog shape.
     board/W-label visual emphasis. Stage 33a repairs the live-mode acceptance
     rejection by replacing diagnostic status prose with structured scoped
     status, exposing full and quick grouped controls, adding status badges,
-    and moving W slices toward card/header presentation. This is product-shell
-    visual UX only; no gameplay, topology, movement, trace semantics,
-    replay-frame semantics, parity logic, native authority, or authority
-    transfer is added.
+    and moving W slices toward card/header presentation. Stage 33b then
+    reduces live cockpit noise by demoting W labels to orientation markers,
+    removing central partial quick controls, and hiding/reducing repeated live
+    bottom controls. This is product-shell visual UX only; no gameplay,
+    topology, movement, trace semantics, replay-frame semantics, parity logic,
+    native authority, or authority transfer is added.
 
 ## Governance Watchlist
 

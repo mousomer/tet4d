@@ -186,3 +186,66 @@ slice boundaries, and filled slice-card planes are sufficient for this repair.
 - Right inspector remains visible and the board area is not starved.
 - Headless tests cover the visible contract.
 - Manual GUI acceptance remains required before merge acceptance.
+
+## Stage 33b Live Cockpit Declutter
+
+Stage 33a moved the live cockpit in the right direction, but manual inspection
+found two overcorrections: W-slice labels became title-like banners, and live
+controls were repeated across the top, central board area, right inspector, and
+bottom bar. Stage 33b is a reduction pass. It keeps the Stage 33a scoped status
+and right-panel controls while removing visual noise from the central play
+area.
+
+Stage 33b remains Godot product-shell visual UX only. It does not change
+gameplay, topology, movement, drop, collision, lock behavior, trace semantics,
+replay-frame semantics, fixtures, parity logic, native C++ semantics, or
+authority transfer.
+
+### W Labels As Orientation Aids
+
+W labels are orientation markers, not slice titles. They should use subtle
+`w1`, `w2`, `w3`, `w4` style markers near a slice edge or corner. They should
+be smaller and dimmer than active cells, locked cells, and board/slice
+outlines, and they should not use large header chips by default.
+
+The intended visual hierarchy is:
+
+- active cells;
+- locked cells;
+- board/slice outlines;
+- grid;
+- W labels.
+
+### One Primary Control Map
+
+Live mode should have one primary visible control map: the full grouped
+controls in the right inspector. The central board area must not repeat partial
+samples such as `[A/D] X`, `[Q/E] W`, or `[R/T] XY`, because partial hints imply
+those are the only important controls.
+
+The top bar may continue to show mode, status, and immediate actions such as
+Fit View, Reset, and Esc, but it should not become a second keycap control map.
+
+### Live Bottom Bar
+
+Live modes should hide or reduce the replay bottom bar so it does not compete
+with the board. Replay-only actions such as `Prev`, `Next`, and `Quit Replay`
+must not dominate live mode. If a live bottom action is ever shown, it must use
+live wording such as Back, Quit Live, or Esc rather than `Quit Replay`.
+
+### Right Inspector Controls
+
+The right inspector remains the complete discoverable control surface. It must
+retain movement, rotation, camera, and system groups, including Q/E W movement
+and all six Live 4D rotation pairs (`R/T`, `F/G`, `V/B`, `Y/U`, `H/J`, `N/M`).
+
+### Stage 33b Acceptance Checklist
+
+- W labels are subtle orientation markers and no longer dominate the board.
+- The central board area does not show partial quick-control rows in live mode.
+- Controls are not repeated across board, right panel, and bottom bar.
+- The right inspector remains the single complete live control map.
+- The live bottom bar is hidden or reduced and does not show `Quit Replay`.
+- The board has more visual priority than in Stage 33a.
+- No gameplay, topology, replay, trace, parity, fixture, native semantic, or
+  authority-transfer behavior changes.
