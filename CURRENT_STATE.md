@@ -129,7 +129,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   side panel, remove dangling top/viewport command-render detail, give the
   recovered space to the board, keep controls first in the right inspector, and
   leave diagnostics/settings secondary while preserving subtle W labels and the
-  same product-shell-only boundary.
+  same product-shell-only boundary. Stage 33d is the compact live control-map
+  pass after Stage 33c was accepted with issues: Live Plain 4D movement,
+  rotation, and camera rows are grouped as inverse pairs, rotation gets one
+  section-level CCW/CW hint, and system controls remain one-per-row without
+  changing bindings or gameplay semantics.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

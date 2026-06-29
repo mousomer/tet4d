@@ -329,3 +329,79 @@ header chips.
   appropriate.
 - No gameplay, topology, replay, trace, parity, fixture, native semantic, or
   authority-transfer behavior changes.
+
+## Stage 33d Compact Live Control Map
+
+Manual review found Stage 33c substantially cleaner, with the remaining issue
+that the complete right-panel Live Plain 4D control map was still too
+vertically verbose. Stage 33d keeps the right inspector as the single full
+control map, but compacts inverse controls into paired rows and adds one
+rotation-direction hint.
+
+Stage 33d remains Godot product-shell visual UX only. It changes only
+control-map presentation and does not change input bindings, gameplay,
+topology, movement, drop, collision, lock behavior, trace semantics,
+replay-frame semantics, fixtures, parity logic, native C++ semantics, or
+authority transfer.
+
+### Inverse-Pair Grouping
+
+Movement controls that form inverse pairs should render as one row per axis:
+
+- `A / D`: `X- / X+`
+- `W / S`: `Z+ / Z-`
+- `Q / E`: `W- / W+`
+
+Camera controls should follow the same compact pairing:
+
+- `I / K`: pitch up / down
+- `O / L`: yaw left / right
+- `- / = / +`: zoom out / in
+
+The display may include `+` with `=` for zoom-in discoverability, but the
+underlying camera bindings remain unchanged.
+
+### Rotation Plane Rows
+
+Live Plain 4D rotation controls remain six visible plane-pair rows:
+
+- `R / T`: `XY- / XY+`
+- `F / G`: `XZ- / XZ+`
+- `V / B`: `YZ- / YZ+`
+- `Y / U`: `XW- / XW+`
+- `H / J`: `YW- / YW+`
+- `N / M`: `ZW- / ZW+`
+
+The rotation section must include one section-level direction note:
+`Left key: CCW · Right key: CW on plane`. Individual rows should not repeat
+`Rotate`, `clockwise`, or `counter-clockwise`.
+
+### System Rows
+
+System controls are not inverse pairs and remain one-per-row: `P` pause,
+`Backspace` reset, `Esc` back / quit, and `Fit View` fit view. System labels
+should stay short enough to avoid making the control map tall again.
+
+### Density And Non-Regression Rules
+
+The full Live Plain 4D control map should be noticeably shorter than the Stage
+33c version and should mostly fit in the first visible right-panel view before
+diagnostics, inspector metadata, events, and settings. The pass must preserve
+the Stage 33b/33c rules: subtle W labels, no central quick-control row, no
+Replay Cases panel in live mode, no live `Quit Replay` wording, no live bottom
+replay bar, and no dangling top-status `Godot command/render shell` detail.
+
+### Stage 33d Acceptance Checklist
+
+- Movement controls appear as paired rows, not six separate rows.
+- Rotation controls appear as six compact plane-pair rows.
+- The rotation section explains left key as CCW and right key as CW on the
+  named plane.
+- Rotation rows do not repeat `Rotate` wording.
+- Camera controls appear as paired pitch, yaw, and zoom rows.
+- System controls remain readable and complete.
+- The full Live Plain 4D control map is shorter than Stage 33c.
+- The right panel remains the single complete live control map.
+- Stage 33b/33c layout decisions remain intact.
+- No gameplay, topology, replay, trace, parity, fixture, native semantic, or
+  authority-transfer behavior changes.

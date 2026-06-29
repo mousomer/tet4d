@@ -187,11 +187,15 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
 	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("System") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["Q", "E", "R/T", "F/G", "V/B", "Y/U", "H/J", "N/M"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Backspace", "Esc", "Fit View"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D full controls should include %s" % [label, required])
+	if inspector_hint_text.find("Left key: CCW") == -1 or inspector_hint_text.find("Right key: CW on plane") == -1:
+		failures.append("%s: Live 4D rotation controls should include a section-level CCW/CW hint" % label)
 	if inspector_hint_text.find("Move:") != -1 or inspector_hint_text.find("Rotate:") != -1:
 		failures.append("%s: common controls should not collapse into prose hint strings" % label)
+	if inspector_hint_text.find("Rotate XY") != -1 or inspector_hint_text.find("Rotate XZ") != -1:
+		failures.append("%s: rotation rows should avoid repeated Rotate wording" % label)
 	if inspector_rect.size.x <= 0.0:
 		failures.append("%s: right inspector should remain visible" % label)
 	if game_rect.size.x <= inspector_rect.size.x:
@@ -215,12 +219,56 @@ func _check_live_control_maps() -> Array:
 	for required_group in ["Movement", "Rotation", "Camera", "System"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
-	for required in ["Q", "E", "R/T", "F/G", "V/B", "Y/U", "H/J", "N/M"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +"]:
 		if flattened.find(required) == -1:
 			failures.append("Live 4D control map should include %s" % required)
+	var group_items := {}
+	var group_notes := {}
+	for group in live_4d_groups:
+		group_items[str(group.get("group", ""))] = group.get("items", [])
+		group_notes[str(group.get("group", ""))] = str(group.get("note", ""))
+	_assert_group_items(
+		failures,
+		group_items,
+		"Movement",
+		[["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]
+	)
+	_assert_group_items(
+		failures,
+		group_items,
+		"Rotation",
+		[["R / T", "XY- / XY+"], ["F / G", "XZ- / XZ+"], ["V / B", "YZ- / YZ+"], ["Y / U", "XW- / XW+"], ["H / J", "YW- / YW+"], ["N / M", "ZW- / ZW+"]]
+	)
+	if str(group_notes.get("Rotation", "")).find("Left key: CCW") == -1 or str(group_notes.get("Rotation", "")).find("Right key: CW on plane") == -1:
+		failures.append("Live 4D rotation group should include one section-level CCW/CW note")
+	for item in group_items.get("Rotation", []):
+		if str(item[1]).find("Rotate") != -1:
+			failures.append("Live 4D rotation row should not repeat Rotate wording: %s" % str(item))
+	_assert_group_items(
+		failures,
+		group_items,
+		"Camera",
+		[["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], ["- / = / +", "Zoom out / in"]]
+	)
+	_assert_group_items(
+		failures,
+		group_items,
+		"System",
+		[["P", "Pause"], ["Backspace", "Reset"], ["Esc", "Back / Quit"], ["Fit View", "Fit View"]]
+	)
 	if not ReplayHud.quick_control_hint_groups("live_4d").is_empty():
 		failures.append("Live 4D should not expose a partial quick-control map")
 	return failures
+
+
+func _assert_group_items(failures: Array, group_items: Dictionary, group_name: String, expected_items: Array) -> void:
+	var actual_items: Array = group_items.get(group_name, [])
+	if actual_items.size() != expected_items.size():
+		failures.append("%s controls should have %d compact rows, got %d" % [group_name, expected_items.size(), actual_items.size()])
+		return
+	for index in range(expected_items.size()):
+		if str(actual_items[index][0]) != str(expected_items[index][0]) or str(actual_items[index][1]) != str(expected_items[index][1]):
+			failures.append("%s controls row %d should be %s, got %s" % [group_name, index, str(expected_items[index]), str(actual_items[index])])
 
 
 func _contains_rect(container: Rect2, child: Rect2) -> bool:

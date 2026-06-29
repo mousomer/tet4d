@@ -42,10 +42,12 @@ or reduces the replay bottom bar. Stage 33c is the active layout-consolidation
 pass: live mode removes the replay case-browser side panel, cleans dangling
 top/viewport status detail, gives the recovered space to the board, keeps the
 right inspector as the single full control map, and pushes diagnostics/settings
-below live controls. No gameplay, topology, movement, trace semantics,
-replay-frame semantics, parity logic, native authority, or authority transfer
-is added. Full manual visual acceptance remains required before merge
-acceptance.
+below live controls. Stage 33d is the active compactness pass: Live Plain 4D
+movement, rotation, and camera controls are grouped into inverse-pair rows with
+a single rotation CCW/CW section hint while system controls remain readable and
+one-per-row. No gameplay, topology, movement, trace semantics, replay-frame
+semantics, parity logic, native authority, or authority transfer is added. Full
+manual visual acceptance remains required before merge acceptance.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior

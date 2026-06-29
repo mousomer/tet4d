@@ -158,10 +158,14 @@ static func live_3d_control_hint_groups() -> Array:
 
 static func live_4d_control_hint_groups() -> Array:
 	return [
-		{"group": "Movement", "items": [["A", "Move X-"], ["D", "Move X+"], ["W", "Move Z+"], ["S", "Move Z-"], ["Q", "Move W-"], ["E", "Move W+"]]},
-		{"group": "Rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"], ["Y/U", "Rotate XW- / XW+"], ["H/J", "Rotate YW- / YW+"], ["N/M", "Rotate ZW- / ZW+"]]},
-		{"group": "Camera", "items": [["I/K", "Pitch up / down"], ["O/L", "Yaw left / right"], ["-", "Zoom out"], ["= / +", "Zoom in"]]},
-		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Esc", "Back / Quit"], ["Fit View", "Restore fitted W-slice view"]]},
+		{"group": "Movement", "items": [["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]},
+		{
+			"group": "Rotation",
+			"note": "Left key: CCW · Right key: CW on plane",
+			"items": [["R / T", "XY- / XY+"], ["F / G", "XZ- / XZ+"], ["V / B", "YZ- / YZ+"], ["Y / U", "XW- / XW+"], ["H / J", "YW- / YW+"], ["N / M", "ZW- / ZW+"]],
+		},
+		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], ["- / = / +", "Zoom out / in"]]},
+		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Esc", "Back / Quit"], ["Fit View", "Fit View"]]},
 	]
 
 
@@ -1512,6 +1516,14 @@ func _control_hint_group(group: Dictionary, compact: bool) -> Control:
 	title.theme_type_variation = "SecondaryLabel"
 	title.add_theme_font_size_override("font_size", 12 if compact else 13)
 	box.add_child(title)
+	if group.has("note"):
+		var note := Label.new()
+		note.name = "ControlHintNote"
+		note.text = str(group.get("note", ""))
+		note.theme_type_variation = "DimLabel"
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(note)
 	for item in group.get("items", []):
 		var row := HBoxContainer.new()
 		row.name = "ControlHintRow"
@@ -1519,7 +1531,7 @@ func _control_hint_group(group: Dictionary, compact: bool) -> Control:
 		var keycap := Label.new()
 		keycap.name = "ControlHintKeycap"
 		keycap.text = str(item[0])
-		keycap.custom_minimum_size = Vector2(70 if compact else 94, 20)
+		keycap.custom_minimum_size = Vector2(70 if compact else 82, 20)
 		keycap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		keycap.theme_type_variation = "KeycapLabel"
 		row.add_child(keycap)
