@@ -87,6 +87,11 @@ func _check_control_hint_palette(manager) -> Array:
 	var failures: Array = []
 	var applier = ShellControlStyleApplierScript.new()
 	var group := HBoxContainer.new()
+	var section := Label.new()
+	section.name = "ControlHintSectionHeader"
+	section.text = "Movement"
+	section.theme_type_variation = "SecondaryLabel"
+	group.add_child(section)
 	var keycap := Label.new()
 	keycap.name = "ControlHintKeycap"
 	keycap.text = "A / D"
@@ -97,16 +102,32 @@ func _check_control_hint_palette(manager) -> Array:
 	action.text = "X- / X+"
 	action.theme_type_variation = "SecondaryLabel"
 	group.add_child(action)
+	var note := Label.new()
+	note.name = "ControlHintNote"
+	note.text = "Left: CCW"
+	note.theme_type_variation = "DimLabel"
+	group.add_child(note)
+	var warning := Label.new()
+	warning.name = "ControlHintWarning"
+	warning.text = "GAME OVER · Piece out of bounds"
+	warning.theme_type_variation = "WarningLabel"
+	group.add_child(warning)
 	applier.apply_to_tree(group, manager)
 	var keycap_box := keycap.get_theme_stylebox("normal") as StyleBoxFlat
 	if keycap_box == null:
 		failures.append("keycap should receive a cockpit stylebox")
-	elif keycap_box.border_color != manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS):
-		failures.append("keycap border should use Blueprint accent.focus")
-	if keycap.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.LABEL_HINT):
-		failures.append("keycap text should keep the hint-panel hint color")
-	if action.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.LABEL_HINT):
-		failures.append("control action text should keep the hint-panel hint color")
+	elif keycap_box.border_color != manager.get_color(ShellStyleRolesScript.HINT_KEYCAP_BORDER):
+		failures.append("keycap border should use hint.keycap.border")
+	if section.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_SECTION):
+		failures.append("control section headers should use hint.section")
+	if keycap.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_KEYCAP_TEXT):
+		failures.append("keycap text should use hint.keycap.text")
+	if action.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_ACTION):
+		failures.append("control action text should use hint.action")
+	if note.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_NOTE):
+		failures.append("control notes should use hint.note")
+	if warning.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_ERROR):
+		failures.append("control game-over warnings should use hint.error")
 	return failures
 
 
@@ -150,4 +171,6 @@ func _check_replay_visual_roles() -> Array: # tet4d-semantic-boundary: allow tes
 		failures.append("W/layer labels should be muted orientation markers")
 	if ReplayVisuals.event_marker_material("tron").albedo_color != manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS):
 		failures.append("event markers should use diagnostic.bounds")
+	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACCENT_SOFT, "tron") != manager.get_color(ShellStyleRolesScript.ACCENT_SOFT):
+		failures.append("soft accent should use config-owned accent.soft")
 	return failures

@@ -1534,6 +1534,7 @@ func _control_hint_group(group: Dictionary, compact: bool) -> Control:
 		compact_row.add_theme_constant_override("h_separation", 6)
 		compact_row.add_theme_constant_override("v_separation", 4)
 		var compact_title := Label.new()
+		compact_title.name = "ControlHintSectionHeader"
 		compact_title.text = str(group.get("group", ""))
 		compact_title.theme_type_variation = "SecondaryLabel"
 		compact_title.custom_minimum_size = Vector2(56, 20)
@@ -1556,6 +1557,7 @@ func _control_hint_group(group: Dictionary, compact: bool) -> Control:
 	box.name = "ControlHintGroup__%s" % str(group.get("group", "")).replace(" ", "_")
 	box.add_theme_constant_override("separation", 3)
 	var title := Label.new()
+	title.name = "ControlHintSectionHeader"
 	title.text = str(group.get("group", ""))
 	title.theme_type_variation = "SecondaryLabel"
 	title.add_theme_font_size_override("font_size", 12 if compact else 13)

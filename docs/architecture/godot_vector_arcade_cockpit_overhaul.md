@@ -483,10 +483,9 @@ Blueprint Arcade palette. The intent is:
 - red/orange only for error and bounds roles;
 - reduced bright green and magenta in control hints.
 
-Control-hint keycap borders keep the muted cyan/blue Blueprint Arcade frame,
-but hint-panel key and action text returns to the prior single `label.hint`
-color treatment so the controls read as one panel instead of competing text
-tiers. Game-over/error status still uses the state-error/status roles.
+Control-hint panels use distinct role mapping rather than the generic
+`label.hint` fallback. Stage 33f owns the final config-first hint role
+split.
 
 ### Stage 33e Follow-Up: Restart And Endgame Camera
 
@@ -514,5 +513,90 @@ native live snapshot reports game over.
 - Palette is calmer and less green/magenta-heavy.
 - Board readability and subtle W-label orientation markers are preserved.
 - Stage 33b/33c/33d layout and compactness decisions remain intact.
+- No gameplay, topology, replay, trace, parity, fixture, native semantic, or
+  authority-transfer behavior changes.
+
+## Stage 33f Config-First Calm Blueprint Cockpit Polish
+
+Stage 33f repairs the Stage 33e follow-up hint-colour regression without
+reverting the good endgame behavior from `3d4909a1`. `Restart Game` remains
+visible after live game over, mouse camera controls remain usable after game
+over, gameplay commands remain blocked after game over, and camera movement
+remains presentation-only.
+
+The stage is product-shell visual presentation only. It does not transfer
+authority and does not change gameplay, topology, replay-frame, trace, parity,
+fixture, or native C++ semantics.
+
+### Config-First Design Rule
+
+Palette and visual hierarchy values should live in style config/resources
+where practical. GDScript may construct layout and map semantic UI states to
+named roles, but should consume named palette roles instead of hard-coding
+colours or derived visual constants in UI logic.
+
+Stage 33f extends `shell_theme_palettes.json` and `ShellStyleRoles` with
+config-owned cockpit roles:
+
+- `accent.soft`
+- `cell.secondary`
+- `hint.section`
+- `hint.keycap.border`
+- `hint.keycap.text`
+- `hint.action`
+- `hint.note`
+- `hint.error`
+
+All required roles are present in `diagnostic`, `plain`, and `tron` themes.
+Unknown role fallback remains deterministic through `ShellThemePalette`.
+
+### Calm Blueprint Cockpit Palette
+
+The default `tron` / `Vector Arcade` theme uses a calmer Blueprint Cockpit
+palette:
+
+- dark blue-black backgrounds;
+- cyan/teal board geometry and section headers;
+- off-white and pale-blue keycap/action text;
+- muted grey-blue locked cells and W labels;
+- amber reserved for warnings/notes;
+- restrained red for error/game-over text;
+- no bright-green keycap borders or magenta-dominant action labels.
+
+`ReplayVisuals` consumes the config-owned `accent.soft` role rather than
+deriving a soft accent in code.
+
+### Hint Panel Hierarchy
+
+The right controls panel must not collapse into one `label.hint` colour.
+Control labels map to distinct roles:
+
+- section headers: `hint.section`
+- keycap border: `hint.keycap.border`
+- keycap text: `hint.keycap.text`
+- action labels: `hint.action`
+- notes: `hint.note`
+- game-over/error hint text: `hint.error`
+
+These are visual roles only. Control group content, key bindings, and live
+gameplay command routing remain unchanged.
+
+### Stage 33f Acceptance Checklist
+
+- `Restart Game` remains visible after live game over.
+- Mouse camera controls remain usable after live game over.
+- Gameplay commands remain blocked after live game over.
+- Right controls panel has clear but calm section/key/action/note/error
+  hierarchy.
+- Ordinary controls are not dominated by bright green, magenta, or one
+  lavender/pink text colour.
+- Product/default palette values are config-owned.
+- Board readability and subtle W-label orientation markers are preserved.
+- Main board area still has no partial quick-control row.
+- Right inspector remains the single full live control map.
+- Live mode does not show `Replay Cases` or `Quit Replay` wording.
+- Plane Rotation wording and the single CCW/CW rule remain intact.
+- Game-over reason labels remain user-facing, for example
+  `Piece out of bounds`.
 - No gameplay, topology, replay, trace, parity, fixture, native semantic, or
   authority-transfer behavior changes.

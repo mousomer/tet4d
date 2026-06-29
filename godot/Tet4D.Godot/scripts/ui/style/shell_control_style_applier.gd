@@ -72,7 +72,17 @@ func _apply_label(label: Label, style_manager) -> void:
 			role = ShellStyleRolesScript.LABEL_W_LAYER
 		"KeycapLabel":
 			role = ShellStyleRolesScript.TEXT_PRIMARY
-	if label.name.find("Hint") >= 0 or label.text.find("Hint") >= 0:
+	if label.name.find("ControlHintSectionHeader") >= 0:
+		role = ShellStyleRolesScript.HINT_SECTION
+	elif label.name.find("ControlHintKeycap") >= 0:
+		role = ShellStyleRolesScript.HINT_KEYCAP_TEXT
+	elif label.name.find("ControlHintAction") >= 0:
+		role = ShellStyleRolesScript.HINT_ACTION
+	elif label.name.find("ControlHintNote") >= 0:
+		role = ShellStyleRolesScript.HINT_NOTE
+	elif label.name.find("ControlHintWarning") >= 0:
+		role = ShellStyleRolesScript.HINT_ERROR if label.text.find("GAME OVER") >= 0 else ShellStyleRolesScript.STATE_WARNING
+	elif label.name.find("Hint") >= 0 or label.text.find("Hint") >= 0:
 		role = ShellStyleRolesScript.LABEL_HINT
 	elif label.name.find("ValueLabel") >= 0 or label.name.find("StateValue") >= 0:
 		role = ShellStyleRolesScript.DIAGNOSTIC_METADATA
@@ -156,7 +166,7 @@ func _button_box(style_manager, background_role: String, border_role: String, co
 func _keycap_box(style_manager) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = style_manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD)
-	style.border_color = style_manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS)
+	style.border_color = style_manager.get_color(ShellStyleRolesScript.HINT_KEYCAP_BORDER)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	style.set_content_margin_all(4)

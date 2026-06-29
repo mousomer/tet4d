@@ -342,7 +342,7 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_TEXT_SECONDARY: manager.get_color(ShellStyleRolesScript.TEXT_SECONDARY),
 		ROLE_TEXT_DIM: manager.get_color(ShellStyleRolesScript.TEXT_MUTED),
 		ROLE_ACCENT: manager.get_color(ShellStyleRolesScript.ACCENT_PRIMARY),
-		ROLE_ACCENT_SOFT: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS).darkened(0.65),
+		ROLE_ACCENT_SOFT: manager.get_color(ShellStyleRolesScript.ACCENT_SOFT),
 		ROLE_SUCCESS: manager.get_color(ShellStyleRolesScript.STATE_SUCCESS),
 		ROLE_WARNING: manager.get_color(ShellStyleRolesScript.STATE_WARNING),
 		ROLE_EVENT_MARKER: manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS),
