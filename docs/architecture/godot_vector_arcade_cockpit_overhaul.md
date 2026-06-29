@@ -405,3 +405,99 @@ replay bar, and no dangling top-status `Godot command/render shell` detail.
 - Stage 33b/33c layout decisions remain intact.
 - No gameplay, topology, replay, trace, parity, fixture, native semantic, or
   authority-transfer behavior changes.
+
+## Stage 33e Live Control Wording, Mouse Camera, And Palette Polish
+
+Manual review found Stage 33d cleaner but still accepted with issues:
+rotation wording remained awkward, game-over status exposed internal reason
+strings, camera roll and mouse-camera controls were missing from the Live Plain
+4D cockpit, and the Vector Arcade palette read too much like neon terminal
+signage. Stage 33e is a focused presentation polish pass for those issues.
+
+Stage 33e remains Godot product-shell, HUD, camera-presentation, and palette
+work only. It does not change gameplay input command semantics, native C++
+gameplay rules, topology, movement, drop, collision, lock behavior, trace
+semantics, replay-frame semantics, fixtures, parity logic, Python oracle
+authority, or authority transfer.
+
+### Rotation Wording
+
+The Live Plain 4D rotation section should read as `Plane Rotation`, with one
+section-level direction hint: `Left: CCW · Right: CW`. Rows name the plane only:
+
+- `R / T`: `XY`
+- `F / G`: `XZ`
+- `V / B`: `YZ`
+- `Y / U`: `XW`
+- `H / J`: `YW`
+- `N / M`: `ZW`
+
+Rows must not repeat `Rotate`, `clockwise`, or `counter-clockwise`, and the
+underlying rotation input bindings remain unchanged.
+
+### Game-Over Reason Labels
+
+Live top/status/inspector text must use user-facing reason labels. Internal
+snapshot values remain unchanged and may appear only in lower-level diagnostics
+if needed. Required presentation mappings are:
+
+- `out_of_bounds`: `Piece out of bounds`
+- `spawn_blocked`: `Spawn blocked`
+- `locked_above_top`: `Locked above board`
+- `stopped`, empty, or missing: `Stopped`
+- unknown values: prettified fallback text
+
+Accepted top-strip wording includes `GAME OVER · Piece out of bounds`; raw
+strings such as `out_of_bounds` should not appear in user-facing live status
+or inspector rows.
+
+### Camera Roll And Mouse Camera
+
+Live Plain 4D camera controls are presentation-only and must not dispatch
+gameplay commands. Keyboard camera controls include:
+
+- `I / K`: pitch up / down
+- `O / L`: yaw left / right
+- `, / .`: roll left / right
+- `- / = / +`: zoom out / in
+
+Mouse camera hints and behavior are:
+
+- drag: orbit
+- Shift-drag: roll
+- wheel: zoom
+- double-click: Fit View
+
+Fit View restores the canonical fitted W-slice camera and clears accumulated
+manual roll as part of the existing fitted-view reset convention.
+
+### Blueprint Arcade Palette
+
+The default `tron` / `Vector Arcade` product theme shifts to a calmer
+Blueprint Arcade palette. The intent is:
+
+- cyan/teal board geometry without screaming wireframes;
+- off-white and pale blue text;
+- muted amber warning/status accents;
+- restrained purple locked cells;
+- red/orange only for error and bounds roles;
+- reduced bright green and magenta in control hints.
+
+Control-hint styling should use muted cyan/blue keycap borders, pale keycap
+text, secondary text for action labels, accent-primary section headers, muted
+or amber notes, and state-error for game-over/error status.
+
+### Stage 33e Acceptance Checklist
+
+- Rotation section reads naturally as `Plane Rotation`.
+- The CCW/CW plane rule appears once at section level.
+- Rotation rows are compact plane rows and not cryptic.
+- Game-over reasons are user-facing, for example `Piece out of bounds`.
+- Raw internal reason strings do not appear in user-facing live status.
+- Camera roll appears in controls and is presentation-only.
+- Mouse camera hints appear and route to camera-only presentation controls.
+- Palette is calmer and less green/magenta-heavy.
+- Board readability and subtle W-label orientation markers are preserved.
+- Stage 33b/33c/33d layout and compactness decisions remain intact.
+- No gameplay, topology, replay, trace, parity, fixture, native semantic, or
+  authority-transfer behavior changes.

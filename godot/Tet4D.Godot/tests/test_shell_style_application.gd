@@ -3,6 +3,7 @@ extends RefCounted
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
+const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 
@@ -13,6 +14,7 @@ func run() -> Array:
 	if tree == null:
 		return ["shell style application test requires SceneTree"]
 	var manager = ShellStyleManagerScript.new()
+	failures.append_array(_check_control_hint_palette(manager))
 	var panel: Control = SettingsPanelScript.new()
 	panel.set_style_manager(manager)
 	tree.root.add_child(panel)
@@ -78,6 +80,33 @@ func run() -> Array:
 	await tree.process_frame
 	failures.append_array(_check_settings_registry())
 	failures.append_array(_check_replay_visual_roles())
+	return failures
+
+
+func _check_control_hint_palette(manager) -> Array:
+	var failures: Array = []
+	var applier = ShellControlStyleApplierScript.new()
+	var group := HBoxContainer.new()
+	var keycap := Label.new()
+	keycap.name = "ControlHintKeycap"
+	keycap.text = "A / D"
+	keycap.theme_type_variation = "KeycapLabel"
+	group.add_child(keycap)
+	var action := Label.new()
+	action.name = "ControlHintAction"
+	action.text = "X- / X+"
+	action.theme_type_variation = "SecondaryLabel"
+	group.add_child(action)
+	applier.apply_to_tree(group, manager)
+	var keycap_box := keycap.get_theme_stylebox("normal") as StyleBoxFlat
+	if keycap_box == null:
+		failures.append("keycap should receive a cockpit stylebox")
+	elif keycap_box.border_color != manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS):
+		failures.append("keycap border should use Blueprint accent.focus")
+	if keycap.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY):
+		failures.append("keycap text should use text.primary")
+	if action.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.TEXT_SECONDARY):
+		failures.append("control action text should use text.secondary")
 	return failures
 
 

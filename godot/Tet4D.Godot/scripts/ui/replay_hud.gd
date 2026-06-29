@@ -43,8 +43,8 @@ const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CC
 const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Esc quits. Godot sends commands only."
 const LIVE_3D_HINT_TEXT := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Live 4D · Esc Quit"
 const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab switches to Live 4D, and Esc quits. Godot sends commands only."
-const LIVE_4D_HINT_TEXT := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Rotate: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, - Out, =/+ In · P Pause · Backspace Reset · Fit View Recovery · Tab Replay · Esc Quit"
-const LIVE_4D_HELP_TEXT := "Live 4D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Q/E move across W slices, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, Y/U rotates XW, H/J rotates YW, N/M rotates ZW. I/K pitch the camera, O/L yaw the camera, - zooms out, and =/+ zooms in without dispatching gameplay. P pauses, Backspace resets, Fit View restores the canonical full W-slice layout, Tab returns to Replay, and Esc quits. Q is W- movement in Live 4D. Godot sends commands only."
+const LIVE_4D_HINT_TEXT := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Plane Rotation: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, ,/. Roll, - Out, =/+ In · Mouse: Drag Orbit, Shift Drag Roll, Wheel Zoom, Double-click Fit · P Pause · Backspace Reset · Tab Replay · Esc Quit"
+const LIVE_4D_HELP_TEXT := "Live 4D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Q/E move across W slices, Shift soft drops, Space hard drops, R/T rotates on XY, F/G on XZ, V/B on YZ, Y/U on XW, H/J on YW, and N/M on ZW. In each plane pair, the left key is CCW and the right key is CW. I/K pitch the camera, O/L yaw, comma/period roll, - zooms out, and =/+ zooms in without dispatching gameplay. Mouse drag orbits, Shift-drag rolls, wheel zooms, and double-click fits the view. P pauses, Backspace resets, Tab returns to Replay, and Esc quits. Q is W- movement in Live 4D. Godot sends commands only."
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -160,11 +160,12 @@ static func live_4d_control_hint_groups() -> Array:
 	return [
 		{"group": "Movement", "items": [["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]},
 		{
-			"group": "Rotation",
-			"note": "Left key: CCW · Right key: CW on plane",
-			"items": [["R / T", "XY- / XY+"], ["F / G", "XZ- / XZ+"], ["V / B", "YZ- / YZ+"], ["Y / U", "XW- / XW+"], ["H / J", "YW- / YW+"], ["N / M", "ZW- / ZW+"]],
+			"group": "Plane Rotation",
+			"note": "Left: CCW · Right: CW",
+			"items": [["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]],
 		},
-		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], ["- / = / +", "Zoom out / in"]]},
+		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
+		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]},
 		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Esc", "Back / Quit"], ["Fit View", "Fit View"]]},
 	]
 
@@ -318,7 +319,7 @@ func set_live_2d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER: %s. R resets Live 2D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 2D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
+		_replay_note.text = "GAME OVER · %s. R resets Live 2D." % _game_over_reason_label(game_over_reason) if game_over else "Live Plain 2D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -359,7 +360,7 @@ func set_live_3d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER: %s. Backspace resets Live 3D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 3D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
+		_replay_note.text = "GAME OVER · %s. Backspace resets Live 3D." % _game_over_reason_label(game_over_reason) if game_over else "Live Plain 3D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -400,7 +401,7 @@ func set_live_4d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER: %s. Backspace resets Live 4D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 4D. W slices open fitted. Q/E move W; Space hard drops; I/K, O/L, -/= adjust camera; Fit View recovers; Esc quits."
+		_replay_note.text = "GAME OVER · %s. Backspace resets Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Live Plain 4D. W slices open fitted. Q/E move W; Space hard drops; I/K, O/L, ,/., -/= adjust camera; drag orbits; Shift-drag rolls; wheel zooms; double-click fits; Esc quits."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -506,6 +507,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"supported_minimum_size": ReplayVisuals.supported_shell_minimum_size(),
 		"world_parent": _game_viewport.get_node_or_null("WorldRoot") if _game_viewport != null else null,
 		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
+		"top_summary_text": _summary_label.text if _summary_label != null else "",
 		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
 		"camera_status_text": _camera_status_label.text if _camera_status_label != null else "",
 		"top_detail_text": _hash_label.text if _hash_label != null and _hash_label.visible else "",
@@ -578,7 +580,7 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 	if _bundle_status_label != null:
 		_bundle_status_label.text = "TET4D"
 	if _summary_label != null:
-		var state_part := "GAME OVER: %s" % reason if state_label == "Game Over" and reason != "" else state_label
+		var state_part := "GAME OVER · %s" % _game_over_reason_label(reason) if state_label == "Game Over" else state_label
 		_summary_label.text = "%s | C++ Session | %s | Fit View | Reset | Esc" % [mode_label, state_part]
 	if _hash_label != null:
 		_hash_label.text = "Godot command/render shell"
@@ -652,10 +654,30 @@ func _move_right_column_child(node: Node, index: int) -> void:
 
 func _status_badge_text(state_label: String, reason: String) -> String:
 	if state_label == "Game Over":
-		return "[ GAME OVER ] %s" % (reason if reason != "" else "stopped")
+		return "[ GAME OVER ] %s" % _game_over_reason_label(reason)
 	if state_label == "Paused":
 		return "[ PAUSED ]"
 	return "[ RUNNING ]"
+
+
+static func game_over_reason_label(reason: String) -> String:
+	return _game_over_reason_label(reason)
+
+
+static func _game_over_reason_label(reason: String) -> String:
+	var normalized := reason.strip_edges()
+	match normalized:
+		"", "stopped":
+			return "Stopped"
+		"out_of_bounds":
+			return "Piece out of bounds"
+		"spawn_blocked":
+			return "Spawn blocked"
+		"locked_above_top":
+			return "Locked above board"
+		_:
+			var words := normalized.replace("_", " ")
+			return words.capitalize() if not words.is_empty() else "Stopped"
 
 
 func _format_live_inspector_text(
@@ -675,7 +697,7 @@ func _format_live_inspector_text(
 		"",
 		"STATUS",
 		"State       %s" % _status_badge_text(state_label, reason),
-		"Reason      %s" % (reason if reason != "" else "none"),
+		"Reason      %s" % _game_over_reason_label(reason),
 		"Last input  %s" % (last_input if last_input != "" else "none"),
 		"",
 		"VIEW",
@@ -1460,7 +1482,7 @@ func _update_control_hint_panel(
 	if warning and warning_text != "":
 		var warning_label := Label.new()
 		warning_label.name = "ControlHintWarning"
-		warning_label.text = "GAME OVER · %s" % warning_text
+		warning_label.text = "GAME OVER · %s" % _game_over_reason_label(warning_text)
 		warning_label.theme_type_variation = "WarningLabel"
 		panel.add_child(warning_label)
 	var groups := quick_control_hint_groups(mode) if compact else _control_hint_groups_for_mode(mode)

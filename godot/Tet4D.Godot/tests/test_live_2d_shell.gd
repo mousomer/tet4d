@@ -12,7 +12,7 @@ func run() -> Array:
 	var live_4d_hint := ReplayHudScript.live_4d_hint_text()
 	var expected_live_hint := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Esc Quit"
 	var expected_live_3d_hint := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Live 4D · Esc Quit"
-	var expected_live_4d_hint := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Rotate: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, - Out, =/+ In · P Pause · Backspace Reset · Fit View Recovery · Tab Replay · Esc Quit"
+	var expected_live_4d_hint := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Plane Rotation: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, ,/. Roll, - Out, =/+ In · Mouse: Drag Orbit, Shift Drag Roll, Wheel Zoom, Double-click Fit · P Pause · Backspace Reset · Tab Replay · Esc Quit"
 	var expected_replay_hint := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 	if live_hint != expected_live_hint:
 		failures.append("live 2D hint text should match the Stage 12 visible control strip")
@@ -30,7 +30,7 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T: XY") or not live_3d_hint.contains("F/G: XZ") or not live_3d_hint.contains("V/B: YZ") or not live_3d_hint.contains("Backspace Reset"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q/E W") or not live_4d_hint.contains("Y/U XW") or not live_4d_hint.contains("H/J YW") or not live_4d_hint.contains("N/M ZW") or not live_4d_hint.contains("Cam: I/K") or live_4d_hint.contains("Q/Esc Quit"):
+	if not live_4d_hint.contains("Q/E W") or not live_4d_hint.contains("Y/U XW") or not live_4d_hint.contains("H/J YW") or not live_4d_hint.contains("N/M ZW") or not live_4d_hint.contains("Cam: I/K") or not live_4d_hint.contains(",/. Roll") or not live_4d_hint.contains("Shift Drag Roll") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose W controls, camera controls, six rotation planes, and Esc-only quit")
 	if absf(TraceReplayAppScript.LIVE_GRAVITY_INTERVAL_SECONDS - 0.5) > 0.001:
 		failures.append("live gravity shell interval should default to 0.5 seconds")
@@ -229,9 +229,26 @@ func run() -> Array:
 			failures.append("Live 4D O camera key should adjust yaw left")
 		if app._camera_rig._current_fit_state != "manual":
 			failures.append("Live 4D camera adjustment should mark the view manual")
+		var roll_before: float = app._camera_rig._current_roll
+		var roll_event := InputEventKey.new()
+		roll_event.keycode = KEY_PERIOD
+		roll_event.pressed = true
+		app._unhandled_input(roll_event)
+		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
+			failures.append("Live 4D roll keys should not mutate gameplay state")
+		if app._camera_rig._current_roll <= roll_before:
+			failures.append("Live 4D period camera key should roll right")
+		var roll_left_event := InputEventKey.new()
+		roll_left_event.keycode = KEY_COMMA
+		roll_left_event.pressed = true
+		app._unhandled_input(roll_left_event)
+		if app._camera_rig._current_fit_state != "manual":
+			failures.append("Live 4D camera roll should mark the view manual")
 		app._fit_view()
 		if app._camera_rig._current_view_preset != "LIVE_4D_FITTED_W_SLICE_VIEW" or app._camera_rig._current_fit_state != "fit OK":
 			failures.append("Fit View should restore the full Live 4D W-slice layout")
+		if absf(app._camera_rig._current_roll) > 0.001:
+			failures.append("Fit View should reset Live 4D camera roll")
 		var wheel_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
 		var wheel_up_event := InputEventMouseButton.new()
 		wheel_up_event.button_index = MOUSE_BUTTON_WHEEL_UP
@@ -248,7 +265,42 @@ func run() -> Array:
 			failures.append("Mouse wheel down should zoom out by increasing orthographic size")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Mouse wheel zoom should not mutate Live 4D gameplay state")
+		var drag_event := InputEventMouseButton.new()
+		drag_event.button_index = MOUSE_BUTTON_LEFT
+		drag_event.pressed = true
+		app._handle_camera_input(drag_event)
+		var yaw_before_drag: float = app._camera_rig._target_yaw
+		var motion_event := InputEventMouseMotion.new()
+		motion_event.relative = Vector2(12.0, 0.0)
+		app._handle_camera_input(motion_event)
+		if app._camera_rig._target_yaw >= yaw_before_drag:
+			failures.append("Mouse drag should orbit camera view")
+		drag_event.pressed = false
+		app._handle_camera_input(drag_event)
+		var shift_drag_event := InputEventMouseButton.new()
+		shift_drag_event.button_index = MOUSE_BUTTON_LEFT
+		shift_drag_event.pressed = true
+		shift_drag_event.shift_pressed = true
+		app._handle_camera_input(shift_drag_event)
+		var roll_before_drag: float = app._camera_rig._target_roll
+		var roll_motion_event := InputEventMouseMotion.new()
+		roll_motion_event.relative = Vector2(12.0, 0.0)
+		app._handle_camera_input(roll_motion_event)
+		if app._camera_rig._target_roll <= roll_before_drag:
+			failures.append("Shift-drag should roll camera view")
+		shift_drag_event.pressed = false
+		app._handle_camera_input(shift_drag_event)
+		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
+			failures.append("Mouse camera controls should not mutate Live 4D gameplay state")
 		app._fit_view()
+		app._camera_rig.zoom(-1.0)
+		var double_click_event := InputEventMouseButton.new()
+		double_click_event.button_index = MOUSE_BUTTON_LEFT
+		double_click_event.pressed = true
+		double_click_event.double_click = true
+		app._handle_camera_input(double_click_event)
+		if app._camera_rig._current_fit_state != "fit OK":
+			failures.append("Double-click should route to Fit View")
 		if app._hud._reset_button != null and app._hud._reset_button.focus_mode != Control.FOCUS_NONE:
 			failures.append("live viewer buttons should not keep keyboard focus while live gameplay captures Space")
 		if app._hud._reset_button != null:
@@ -365,6 +417,8 @@ func run() -> Array:
 		"live_4d_camera_pitch_down",
 		"live_4d_camera_yaw_left",
 		"live_4d_camera_yaw_right",
+		"live_4d_camera_roll_left",
+		"live_4d_camera_roll_right",
 		"live_4d_camera_zoom_in",
 		"live_4d_camera_zoom_out",
 		"mode_toggle_replay_live",

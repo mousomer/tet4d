@@ -45,7 +45,11 @@ right inspector as the single full control map, and pushes diagnostics/settings
 below live controls. Stage 33d is the active compactness pass: Live Plain 4D
 movement, rotation, and camera controls are grouped into inverse-pair rows with
 a single rotation CCW/CW section hint while system controls remain readable and
-one-per-row. No gameplay, topology, movement, trace semantics, replay-frame
+one-per-row. Stage 33e is the active wording/input-presentation/palette polish
+pass: Plane Rotation wording is clarified, live game-over reasons map to
+user-facing labels, camera roll and mouse camera hints are presentation-only,
+and the default Vector Arcade palette shifts toward calmer Blueprint Arcade
+tokens. No gameplay, topology, movement, trace semantics, replay-frame
 semantics, parity logic, native authority, or authority transfer is added. Full
 manual visual acceptance remains required before merge acceptance.
 

@@ -155,6 +155,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	var bottom_hint_text := str(snapshot.get("bottom_hint_text", ""))
 	var inspector_hint_text := str(snapshot.get("inspector_hint_text", ""))
 	var top_status_badge_text := str(snapshot.get("top_status_badge_text", ""))
+	var top_summary_text := str(snapshot.get("top_summary_text", ""))
 	var top_detail_text := str(snapshot.get("top_detail_text", ""))
 	var authority_text := str(snapshot.get("authority_text", ""))
 	var inspector_status_text := str(snapshot.get("inspector_status_text", ""))
@@ -171,12 +172,16 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: authority wording should be scoped to the Live Plain 4D C++ session" % label)
 	if top_detail_text != "" or viewport_detail_text.find("Godot command/render shell") != -1:
 		failures.append("%s: live shell detail should not dangle in top or viewport chrome" % label)
-	if top_status_badge_text.find("[ GAME OVER ]") == -1 or top_status_badge_text.find("out_of_bounds") == -1:
-		failures.append("%s: top status badge should expose game-over reason" % label)
+	if top_status_badge_text.find("[ GAME OVER ]") == -1 or top_status_badge_text.find("Piece out of bounds") == -1:
+		failures.append("%s: top status badge should expose user-facing game-over reason" % label)
+	if top_status_badge_text.find("out_of_bounds") != -1 or top_summary_text.find("out_of_bounds") != -1 or inspector_status_text.find("out_of_bounds") != -1:
+		failures.append("%s: user-facing live status should not expose raw out_of_bounds reason" % label)
 	if inspector_status_text.find("SESSION") == -1 or inspector_status_text.find("STATUS") == -1 or inspector_status_text.find("VIEW") == -1:
 		failures.append("%s: inspector should use structured sections" % label)
 	if inspector_status_text.find("Mode        Live Plain 4D") == -1 or inspector_status_text.find("Engine      C++ PlainNDSession") == -1:
 		failures.append("%s: inspector should expose aligned session rows" % label)
+	if inspector_status_text.find("Reason      Piece out of bounds") == -1:
+		failures.append("%s: inspector should expose user-facing game-over reason" % label)
 	if viewport_hints_visible or viewport_hint_text != "":
 		failures.append("%s: central board should not repeat partial Live 4D quick controls" % label)
 	if bottom_bar_visible or bottom_hint_text != "":
@@ -185,12 +190,12 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should not show Quit Replay wording" % label)
 	if left_panel_visible:
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
-	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("System") == -1:
+	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("System") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Backspace", "Esc", "Fit View"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click", "Backspace", "Esc", "Fit View"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D full controls should include %s" % [label, required])
-	if inspector_hint_text.find("Left key: CCW") == -1 or inspector_hint_text.find("Right key: CW on plane") == -1:
+	if inspector_hint_text.find("Left: CCW") == -1 or inspector_hint_text.find("Right: CW") == -1:
 		failures.append("%s: Live 4D rotation controls should include a section-level CCW/CW hint" % label)
 	if inspector_hint_text.find("Move:") != -1 or inspector_hint_text.find("Rotate:") != -1:
 		failures.append("%s: common controls should not collapse into prose hint strings" % label)
@@ -216,10 +221,10 @@ func _check_live_control_maps() -> Array:
 		group_names.append(str(group.get("group", "")))
 		for item in group.get("items", []):
 			flattened += "%s %s\n" % [str(item[0]), str(item[1])]
-	for required_group in ["Movement", "Rotation", "Camera", "System"]:
+	for required_group in ["Movement", "Plane Rotation", "Camera", "Mouse Camera", "System"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click"]:
 		if flattened.find(required) == -1:
 			failures.append("Live 4D control map should include %s" % required)
 	var group_items := {}
@@ -236,19 +241,25 @@ func _check_live_control_maps() -> Array:
 	_assert_group_items(
 		failures,
 		group_items,
-		"Rotation",
-		[["R / T", "XY- / XY+"], ["F / G", "XZ- / XZ+"], ["V / B", "YZ- / YZ+"], ["Y / U", "XW- / XW+"], ["H / J", "YW- / YW+"], ["N / M", "ZW- / ZW+"]]
+		"Plane Rotation",
+		[["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]]
 	)
-	if str(group_notes.get("Rotation", "")).find("Left key: CCW") == -1 or str(group_notes.get("Rotation", "")).find("Right key: CW on plane") == -1:
+	if str(group_notes.get("Plane Rotation", "")).find("Left: CCW") == -1 or str(group_notes.get("Plane Rotation", "")).find("Right: CW") == -1:
 		failures.append("Live 4D rotation group should include one section-level CCW/CW note")
-	for item in group_items.get("Rotation", []):
+	for item in group_items.get("Plane Rotation", []):
 		if str(item[1]).find("Rotate") != -1:
 			failures.append("Live 4D rotation row should not repeat Rotate wording: %s" % str(item))
 	_assert_group_items(
 		failures,
 		group_items,
 		"Camera",
-		[["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], ["- / = / +", "Zoom out / in"]]
+		[["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]
+	)
+	_assert_group_items(
+		failures,
+		group_items,
+		"Mouse Camera",
+		[["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
 	)
 	_assert_group_items(
 		failures,

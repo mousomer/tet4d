@@ -133,7 +133,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   pass after Stage 33c was accepted with issues: Live Plain 4D movement,
   rotation, and camera rows are grouped as inverse pairs, rotation gets one
   section-level CCW/CW hint, and system controls remain one-per-row without
-  changing bindings or gameplay semantics.
+  changing bindings or gameplay semantics. Stage 33e is the focused wording,
+  camera-presentation, and palette polish pass after Stage 33d was accepted
+  with issues: Plane Rotation wording replaces the awkward signed rotation
+  text, live game-over reasons are mapped to user-facing labels, comma/period
+  and Shift-drag add camera roll without gameplay dispatch, mouse camera hints
+  document orbit/roll/zoom/Fit View, and the default Vector Arcade palette uses
+  calmer Blueprint Arcade tokens.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
