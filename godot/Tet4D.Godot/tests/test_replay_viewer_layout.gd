@@ -1,6 +1,7 @@
 extends RefCounted
 
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const ReplayHud = preload("res://scripts/ui/replay_hud.gd")
 
 const VIEWPORT_SIZES := [
 	Vector2i(1600, 960),
@@ -37,8 +38,12 @@ func run() -> Array:
 		hud.set_camera_status("Camera: LIVE_3D_EXTERNAL_DIAGRAM_VIEW · ortho · above exterior · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
 		await tree.process_frame
 		failures.append_array(_check_layout(hud, viewport_size))
+		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
+		await tree.process_frame
+		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size))
 		root.queue_free()
 		await tree.process_frame
+	failures.append_array(_check_live_control_maps())
 	return failures
 
 
@@ -57,6 +62,11 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	var bundle_status_text := str(snapshot.get("bundle_status_text", ""))
 	var bundle_detail_text := str(snapshot.get("bundle_detail_text", ""))
 	var camera_status_text := str(snapshot.get("camera_status_text", ""))
+	var viewport_hint_text := str(snapshot.get("viewport_hint_text", ""))
+	var bottom_hint_text := str(snapshot.get("bottom_hint_text", ""))
+	var game_area_panel_color: Color = snapshot.get("game_area_panel_color", Color.TRANSPARENT)
+	var game_area_border_color: Color = snapshot.get("game_area_border_color", Color.TRANSPARENT)
+	var bottom_bar_border_color: Color = snapshot.get("bottom_bar_border_color", Color.TRANSPARENT)
 	var label := "viewport %s" % str(viewport_size)
 	if root_rect.size.x <= 0.0 or root_rect.size.y <= 0.0:
 		failures.append("%s: root rect should be nonzero" % label)
@@ -112,11 +122,83 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: inspector should preserve detailed bundle status" % label)
 	if camera_status_text.find("LIVE_3D_EXTERNAL_DIAGRAM_VIEW") == -1 or camera_status_text.find("above") == -1:
 		failures.append("%s: inspector should expose Live 3D camera preset diagnostics" % label)
+	if viewport_hint_text.find("Quick") == -1 or viewport_hint_text.find("Space") == -1 or viewport_hint_text.find("Play / Pause") == -1:
+		failures.append("%s: viewport should expose structured replay quick keycap/action hints" % label)
+	if bottom_hint_text.find("Quick") == -1 or bottom_hint_text.find("Q/Esc") == -1 or bottom_hint_text.find("Quit") == -1:
+		failures.append("%s: bottom controls should expose structured replay quick keycap/action hints" % label)
+	if game_area_panel_color != snapshot.get("board_background_color", Color.TRANSPARENT):
+		failures.append("%s: game area shell should use board background colour" % label)
+	if game_area_border_color == Color.TRANSPARENT:
+		failures.append("%s: game area shell should expose a grid border colour" % label)
+	if bottom_bar_border_color == Color.TRANSPARENT:
+		failures.append("%s: bottom replay controls should expose a cockpit border colour" % label)
 	var game_viewport: SubViewport = hud.game_viewport()
 	if game_viewport == null:
 		failures.append("%s: HUD should expose a game SubViewport" % label)
 	elif game_viewport.get_node_or_null("WorldRoot") == null:
 		failures.append("%s: WorldRoot should live inside HUD game SubViewport" % label)
+	return failures
+
+
+func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i) -> Array:
+	var failures: Array = []
+	var snapshot: Dictionary = hud.layout_contract_snapshot()
+	var label := "live 4D viewport %s" % str(viewport_size)
+	var viewport_hint_text := str(snapshot.get("viewport_hint_text", ""))
+	var bottom_hint_text := str(snapshot.get("bottom_hint_text", ""))
+	var inspector_hint_text := str(snapshot.get("inspector_hint_text", ""))
+	var top_status_badge_text := str(snapshot.get("top_status_badge_text", ""))
+	var authority_text := str(snapshot.get("authority_text", ""))
+	var inspector_status_text := str(snapshot.get("inspector_status_text", ""))
+	var game_rect: Rect2 = snapshot.get("game_area", Rect2())
+	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
+	if authority_text.find("Native C++ owns gameplay") != -1 or inspector_status_text.find("Native C++ owns gameplay") != -1:
+		failures.append("%s: broad native gameplay ownership wording should not appear" % label)
+	if authority_text.find("Live Plain 4D") == -1 or authority_text.find("C++ PlainNDSession") == -1 or authority_text.find("Godot shell") == -1:
+		failures.append("%s: authority wording should be scoped to the Live Plain 4D C++ session" % label)
+	if top_status_badge_text.find("[ GAME OVER ]") == -1 or top_status_badge_text.find("out_of_bounds") == -1:
+		failures.append("%s: top status badge should expose game-over reason" % label)
+	if inspector_status_text.find("SESSION") == -1 or inspector_status_text.find("STATUS") == -1 or inspector_status_text.find("VIEW") == -1:
+		failures.append("%s: inspector should use structured sections" % label)
+	if inspector_status_text.find("Mode        Live Plain 4D") == -1 or inspector_status_text.find("Engine      C++ PlainNDSession") == -1:
+		failures.append("%s: inspector should expose aligned session rows" % label)
+	if viewport_hint_text.find("Quick") == -1 or viewport_hint_text.find("Q/E") == -1 or viewport_hint_text.find("Fit View") == -1:
+		failures.append("%s: quick controls should stay visible for Live 4D" % label)
+	if bottom_hint_text.find("Quick") == -1 or bottom_hint_text.find("A/D") == -1 or bottom_hint_text.find("R/T") == -1:
+		failures.append("%s: bottom quick controls should summarize Live 4D commands" % label)
+	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("System") == -1:
+		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
+	for required in ["Q", "E", "R/T", "F/G", "V/B", "Y/U", "H/J", "N/M"]:
+		if inspector_hint_text.find(required) == -1:
+			failures.append("%s: Live 4D full controls should include %s" % [label, required])
+	if inspector_hint_text.find("Move:") != -1 or inspector_hint_text.find("Rotate:") != -1:
+		failures.append("%s: common controls should not collapse into prose hint strings" % label)
+	if inspector_rect.size.x <= 0.0:
+		failures.append("%s: right inspector should remain visible" % label)
+	if game_rect.size.x <= inspector_rect.size.x:
+		failures.append("%s: game area should remain larger than the inspector column, game=%s inspector=%s" % [label, game_rect, inspector_rect])
+	return failures
+
+
+func _check_live_control_maps() -> Array:
+	var failures: Array = []
+	var live_4d_groups := ReplayHud.live_4d_control_hint_groups()
+	var group_names: Array = []
+	var flattened := ""
+	for group in live_4d_groups:
+		group_names.append(str(group.get("group", "")))
+		for item in group.get("items", []):
+			flattened += "%s %s\n" % [str(item[0]), str(item[1])]
+	for required_group in ["Movement", "Rotation", "Camera", "System"]:
+		if not group_names.has(required_group):
+			failures.append("Live 4D controls should include %s group" % required_group)
+	for required in ["Q", "E", "R/T", "F/G", "V/B", "Y/U", "H/J", "N/M"]:
+		if flattened.find(required) == -1:
+			failures.append("Live 4D control map should include %s" % required)
+	var quick_groups := ReplayHud.quick_control_hint_groups("live_4d")
+	var quick_text := str(quick_groups)
+	if quick_text.find("Q/E") == -1 or quick_text.find("Fit View") == -1:
+		failures.append("Live 4D quick controls should include W movement and Fit View")
 	return failures
 
 

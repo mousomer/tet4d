@@ -97,6 +97,30 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   controls plus board/replay visual materials. This is product-shell styling
   only and adds no gameplay, topology, trace semantics, replay-frame
   semantics, parity evidence, native authority, or authority transfer.
+- Stage 32b Godot Neon CAD Cockpit style refinement is complete under the same
+  architecture note. It tightens direct shell-control styling, inspector value
+  labels, panel role naming, and board/bottom-bar style snapshot coverage
+  without adding a new theme, redesign authority, gameplay, topology, trace
+  semantics, replay-frame semantics, parity evidence, native authority, or
+  authority transfer.
+- Stage 33 Godot Vector Arcade Cockpit UI overhaul is implemented on branch
+  `codex/vector-arcade-cockpit-ui` under
+  `docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. It keeps the
+  Stage 32 style-role architecture and moves the Godot shell toward
+  command-card menus, grouped keycap/action hints, compact settings cards,
+  explicit inspector sections, `Vector Arcade` display labeling for the
+  internal `tron` theme ID, and stronger board/W-label visual emphasis. It is
+  product-shell visual UX only and adds no gameplay, topology, trace
+  semantics, replay-frame semantics, parity evidence, native authority, or
+  authority transfer. Headless validation passed. Manual GUI launch showed the
+  command-card main menu, but macOS automation did not activate navigation into
+  viewer/settings/controls during this pass; manual visual acceptance remains
+  pending, so Stage 33 is not merge-accepted yet. Stage 33a is the corrective
+  live-mode acceptance repair on the same branch: replace diagnostic live HUD
+  prose with structured scoped status, full/quick grouped controls, status
+  badges, and W-slice card/header hierarchy while preserving the same
+  product-shell-only boundary and avoiding gameplay, topology, replay,
+  parity, native semantic, or authority-transfer changes.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

@@ -69,7 +69,7 @@
       "options": [
         {"value": "diagnostic", "label": "Diagnostic"},
         {"value": "plain", "label": "Plain"},
-        {"value": "tron", "label": "Tron"}
+        {"value": "tron", "label": "Vector Arcade"}
       ],
       "authority": "godot_shell",
       "persistence": "local_shell"

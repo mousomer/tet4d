@@ -17,7 +17,7 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, l
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
 		if not slice_bounds.get("ok", false):
 			continue
-		if live_2d and dimension == 2:
+		if live_2d and (dimension == 2 or dimension >= 4):
 			_add_live_board_fill(slice_bounds, display_mode)
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(slice_bounds, display_mode)

@@ -58,8 +58,8 @@ var _settings_panel: SettingsPanel
 var _settings_screen_panel: SettingsPanel
 var _play_button: Button
 var _reset_button: Button
-var _hint_label: Label
-var _mode_hint_strip: Label
+var _hint_label: VBoxContainer
+var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
 var _viewport_hint: Label
 var _frame_slider: HSlider
@@ -93,6 +93,8 @@ var _trace_integrity_label: Label
 var _bundle_detail_label: Label
 var _camera_status_label: Label
 var _help_label: Label
+var _top_state_badge_label: Label
+var _inspector_hint_panel: VBoxContainer
 var _current_display_mode := ReplayVisuals.default_display_mode()
 var _style_manager = ShellStyleManagerScript.new()
 var _style_applier = ShellControlStyleApplierScript.new()
@@ -120,6 +122,50 @@ static func live_3d_hint_text() -> String:
 
 static func live_4d_hint_text() -> String:
 	return LIVE_4D_HINT_TEXT
+
+
+static func replay_control_hint_groups() -> Array:
+	return [
+		{"group": "Replay", "items": [["Space", "Play / Pause"], ["Left/Right", "Previous / Next frame"], ["Up/Down", "Previous / Next case"], ["1/2/3", "Trace family"]]},
+		{"group": "System", "items": [["F", "Fit View"], ["H", "Help / Controls"], ["Q/Esc", "Quit Replay"]]},
+	]
+
+
+static func live_2d_control_hint_groups() -> Array:
+	return [
+		{"group": "Movement", "items": [["A/D", "Move left / right"], ["Left/Right", "Move left / right"], ["S/Down", "Soft Drop"], ["Space", "Hard Drop"]]},
+		{"group": "Rotation", "items": [["W/Up/X", "Rotate clockwise"], ["Z", "Rotate counter-clockwise"]]},
+		{"group": "System", "items": [["P", "Pause"], ["R", "Reset"], ["Tab", "Live 3D"], ["Esc", "Back / Quit"]]},
+	]
+
+
+static func live_3d_control_hint_groups() -> Array:
+	return [
+		{"group": "Movement", "items": [["A/D", "Move X- / X+"], ["W/S", "Move Z+ / Z-"], ["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
+		{"group": "Rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"]]},
+		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Tab", "Live 4D"], ["Esc", "Back / Quit"]]},
+	]
+
+
+static func live_4d_control_hint_groups() -> Array:
+	return [
+		{"group": "Movement", "items": [["A", "Move X-"], ["D", "Move X+"], ["W", "Move Z+"], ["S", "Move Z-"], ["Q", "Move W-"], ["E", "Move W+"]]},
+		{"group": "Rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"], ["Y/U", "Rotate XW- / XW+"], ["H/J", "Rotate YW- / YW+"], ["N/M", "Rotate ZW- / ZW+"]]},
+		{"group": "Camera", "items": [["I/K", "Pitch up / down"], ["O/L", "Yaw left / right"], ["-", "Zoom out"], ["= / +", "Zoom in"]]},
+		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Esc", "Back / Quit"], ["Fit View", "Restore fitted W-slice view"]]},
+	]
+
+
+static func quick_control_hint_groups(mode: String) -> Array:
+	match mode:
+		"live_2d":
+			return [{"group": "Quick", "items": [["Esc", "Back"], ["P", "Pause"], ["A/D", "Move"], ["S/Down", "Drop"], ["W/X", "Rotate"], ["R", "Reset"]]}]
+		"live_3d":
+			return [{"group": "Quick", "items": [["Esc", "Back"], ["P", "Pause"], ["A/D", "X"], ["W/S", "Z"], ["R/T", "XY"], ["Backspace", "Reset"]]}]
+		"live_4d":
+			return [{"group": "Quick", "items": [["Esc", "Back"], ["P", "Pause"], ["A/D", "X"], ["Q/E", "W"], ["R/T", "XY"], ["Fit", "Fit View"]]}]
+		_:
+			return [{"group": "Quick", "items": [["Space", "Play / Pause"], ["Left/Right", "Frame"], ["Up/Down", "Case"], ["1/2/3", "Family"], ["F", "Fit View"], ["Q/Esc", "Quit"]]}]
 
 
 func _ready() -> void:
@@ -189,37 +235,37 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 	if _trace_integrity_label != null:
 		var trace_type := str(snapshot.get("trace_type", ""))
 		if trace_type == "live_2d" or trace_type == "live_3d" or trace_type == "live_4d":
-			var mode_label := "LIVE 4D" if trace_type == "live_4d" else ("LIVE 3D" if trace_type == "live_3d" else "LIVE 2D")
+			var mode_label := "Live Plain 4D" if trace_type == "live_4d" else ("Live Plain 3D" if trace_type == "live_3d" else "Live Plain 2D")
 			var game_over := bool(snapshot.get("game_over", false))
 			var paused_fallback := _live_4d_paused if trace_type == "live_4d" else (_live_3d_paused if trace_type == "live_3d" else _live_2d_paused)
-			var state_label := "GAME OVER" if game_over else ("paused" if bool(snapshot.get("paused", paused_fallback)) else "running")
+			var state_label := "Game Over" if game_over else ("Paused" if bool(snapshot.get("paused", paused_fallback)) else "Running")
 			var reason := str(snapshot.get("game_over_reason", ""))
-			var rotation_text := ""
+			var last_input := "%s / %s" % [str(snapshot.get("last_command", "none")), str(snapshot.get("last_command_status", "unknown"))]
+			var rotation_text := "Last rotation %s / %s" % [
+				str(snapshot.get("last_rotation_label", "none")),
+				str(snapshot.get("last_rotation_status", "none")),
+			]
 			if trace_type == "live_3d" or trace_type == "live_4d":
-				rotation_text = " · Last rotation: %s/%s · active plane %s" % [
+				rotation_text = "Last rotation %s / %s · plane %s" % [
 					str(snapshot.get("last_rotation_label", "none")),
 					str(snapshot.get("last_rotation_status", "none")),
 					str(snapshot.get("last_rotation_plane", "none")),
 				]
-			var w_text := ""
+			var layout_text := "Board view"
 			if trace_type == "live_4d":
-				w_text = " · W %d/%d" % [
+				layout_text = "W slices side-by-side · W %d/%d" % [
 					int(snapshot.get("active_w", 0)),
 					int(snapshot.get("w_slice_count", 1)),
 				]
-			_trace_integrity_label.text = "%s · C++ CORE · piece %s · next %s · score %d · lines %d · state_hash %s · last command %s/%s%s · %s%s" % [
+			_update_live_status_strip(mode_label, state_label, reason, trace_type)
+			_trace_integrity_label.text = _format_live_inspector_text(
 				mode_label,
-				str(snapshot.get("current_piece", "none")),
-				str(snapshot.get("next_piece", "none")),
-				int(snapshot.get("score", 0)),
-				int(snapshot.get("lines", 0)),
-				str(snapshot.get("state_hash", "")).left(12),
-				str(snapshot.get("last_command", "none")),
-				str(snapshot.get("last_command_status", "unknown")),
-				rotation_text + w_text,
 				state_label,
-				(" · reason " + reason) if reason != "" else "",
-			]
+				reason,
+				last_input,
+				layout_text,
+				rotation_text
+			)
 			return
 		_trace_integrity_label.text = "Trace %s · frame %d/%d · entities %d · frame metadata %s · entity metadata %s" % [
 			str(snapshot.get("trace_name", snapshot.get("case_id", ""))),
@@ -253,28 +299,32 @@ func set_live_2d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live" if paused else "Running Live")
-	if _authority_label != null:
-		_authority_label.text = "LIVE 2D · C++ CORE"
+	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
+	_update_live_status_strip("Live Plain 2D", state_text, game_over_reason, "live_2d")
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 2D"
 	if _viewport_hint != null:
-		_viewport_hint.text = "Native C++ owns movement, lock, clear, score, and hash · gravity %.2fs" % gravity_interval_seconds
+		_viewport_hint.text = "C++ PlainNDSession · Godot command/render shell · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
 		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
-		_mode_hint_strip.text = ("GAME OVER · %s · %s" % [reason_text, LIVE_2D_HINT_TEXT]) if game_over else LIVE_2D_HINT_TEXT
-		_mode_hint_strip.theme_type_variation = "WarningLabel" if game_over else "AccentLabel"
+		_update_control_hint_panel(_mode_hint_strip, "live_2d", game_over, reason_text)
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER: %s. R resets Live 2D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 2D. Godot sends commands only; C++ owns gameplay state. P pauses; paused mode blocks gameplay commands."
+		_replay_note.text = "GAME OVER: %s. R resets Live 2D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 2D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
 	if _hint_label != null:
-		_hint_label.text = LIVE_2D_HINT_TEXT
+		_update_control_hint_panel(_hint_label, "live_2d", game_over, game_over_reason)
+	if _inspector_hint_panel != null:
+		_update_control_hint_panel(_inspector_hint_panel, "live_2d", game_over, game_over_reason)
 	if _help_label != null:
 		_help_label.text = LIVE_2D_HELP_TEXT
 	if _trace_integrity_label != null:
-		_trace_integrity_label.text = "LIVE 2D · C++ CORE · last command %s · %s%s" % [
+		_trace_integrity_label.text = _format_live_inspector_text(
+			"Live Plain 2D",
+			state_text,
+			game_over_reason,
 			last_command,
-			"game over" if game_over else ("paused" if paused else "running"),
-			(" · reason " + game_over_reason) if game_over_reason != "" else "",
-		]
+			"Flat board",
+			"Rotation XY"
+		)
 
 
 func set_live_3d_mode(
@@ -290,28 +340,32 @@ func set_live_3d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 3D"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 3D" if paused else "Running Live 3D")
-	if _authority_label != null:
-		_authority_label.text = "LIVE 3D · C++ CORE"
+	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
+	_update_live_status_strip("Live Plain 3D", state_text, game_over_reason, "live_3d")
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 3D"
 	if _viewport_hint != null:
-		_viewport_hint.text = "Native C++ owns movement, rotation, lock, clear, score, spawn, and hash · gravity %.2fs" % gravity_interval_seconds
+		_viewport_hint.text = "C++ PlainNDSession · Godot command/render shell · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
 		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
-		_mode_hint_strip.text = ("GAME OVER · %s · %s" % [reason_text, LIVE_3D_HINT_TEXT]) if game_over else LIVE_3D_HINT_TEXT
-		_mode_hint_strip.theme_type_variation = "WarningLabel" if game_over else "AccentLabel"
+		_update_control_hint_panel(_mode_hint_strip, "live_3d", game_over, reason_text)
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER: %s. Backspace resets Live 3D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 3D. Godot sends commands only; C++ owns gameplay state. P pauses; paused mode blocks gameplay commands."
+		_replay_note.text = "GAME OVER: %s. Backspace resets Live 3D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 3D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
 	if _hint_label != null:
-		_hint_label.text = LIVE_3D_HINT_TEXT
+		_update_control_hint_panel(_hint_label, "live_3d", game_over, game_over_reason)
+	if _inspector_hint_panel != null:
+		_update_control_hint_panel(_inspector_hint_panel, "live_3d", game_over, game_over_reason)
 	if _help_label != null:
 		_help_label.text = LIVE_3D_HELP_TEXT
 	if _trace_integrity_label != null:
-		_trace_integrity_label.text = "LIVE 3D · C++ CORE · last command %s · Last rotation: pending snapshot · %s%s" % [
+		_trace_integrity_label.text = _format_live_inspector_text(
+			"Live Plain 3D",
+			state_text,
+			game_over_reason,
 			last_command,
-			"game over" if game_over else ("paused" if paused else "running"),
-			(" · reason " + game_over_reason) if game_over_reason != "" else "",
-		]
+			"External diagram board",
+			"Last rotation pending snapshot"
+		)
 
 
 func set_live_4d_mode(
@@ -327,34 +381,41 @@ func set_live_4d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 4D"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 4D" if paused else "Running Live 4D")
-	if _authority_label != null:
-		_authority_label.text = "LIVE 4D · C++ CORE"
+	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
+	_update_live_status_strip("Live Plain 4D", state_text, game_over_reason, "live_4d")
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 4D"
 	if _viewport_hint != null:
-		_viewport_hint.text = "Native C++ owns gameplay · W slices shown side-by-side · Fit View restores canonical fitted layout · gravity %.2fs" % gravity_interval_seconds
+		_viewport_hint.text = "C++ PlainNDSession · Godot command/render shell · W slice cards · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
 		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
-		_mode_hint_strip.text = ("GAME OVER · %s · %s" % [reason_text, LIVE_4D_HINT_TEXT]) if game_over else LIVE_4D_HINT_TEXT
-		_mode_hint_strip.theme_type_variation = "WarningLabel" if game_over else "AccentLabel"
+		_update_control_hint_panel(_mode_hint_strip, "live_4d", game_over, reason_text)
 	if _replay_note != null:
 		_replay_note.text = "GAME OVER: %s. Backspace resets Live 4D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 4D. W slices open fitted. Q/E move W; Space hard drops; I/K, O/L, -/= adjust camera; Fit View recovers; Esc quits."
 	if _hint_label != null:
-		_hint_label.text = LIVE_4D_HINT_TEXT
+		_update_control_hint_panel(_hint_label, "live_4d", game_over, game_over_reason)
+	if _inspector_hint_panel != null:
+		_update_control_hint_panel(_inspector_hint_panel, "live_4d", game_over, game_over_reason)
 	if _help_label != null:
 		_help_label.text = LIVE_4D_HELP_TEXT
 	if _trace_integrity_label != null:
-		_trace_integrity_label.text = "LIVE 4D · C++ CORE · last command %s · Last rotation: pending snapshot · %s%s" % [
+		_trace_integrity_label.text = _format_live_inspector_text(
+			"Live Plain 4D",
+			state_text,
+			game_over_reason,
 			last_command,
-			"game over" if game_over else ("paused" if paused else "running"),
-			(" · reason " + game_over_reason) if game_over_reason != "" else "",
-		]
+			"W slices side-by-side",
+			"Last rotation pending snapshot"
+		)
 
 
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
 	set_playback_state(is_playing, speed, diagnostics_visible)
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
+	if _top_state_badge_label != null:
+		_top_state_badge_label.text = "[ PAUSED ]" if not is_playing else "[ RUNNING ]"
+		_top_state_badge_label.theme_type_variation = "AccentLabel"
 	if _reset_button != null:
 		_reset_button.text = "Reset Replay"
 	if _viewport_title != null:
@@ -362,12 +423,13 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 	if _viewport_hint != null:
 		_viewport_hint.text = "Replay-only viewport with diagnostic-first 4D W slices"
 	if _mode_hint_strip != null:
-		_mode_hint_strip.text = REPLAY_HINT_TEXT
-		_mode_hint_strip.theme_type_variation = "DimLabel"
+		_update_control_hint_panel(_mode_hint_strip, "replay")
 	if _replay_note != null:
-		_replay_note.text = "Replay shell only. Diagnostic display is the default readability mode; Godot does not implement gameplay."
+		_replay_note.text = "Replay shell only. Vector Arcade is the product display default; Godot does not implement gameplay."
 	if _hint_label != null:
-		_hint_label.text = REPLAY_HINT_TEXT
+		_update_control_hint_panel(_hint_label, "replay")
+	if _inspector_hint_panel != null:
+		_update_control_hint_panel(_inspector_hint_panel, "replay")
 	if _help_label != null:
 		_help_label.text = REPLAY_HELP_TEXT
 
@@ -379,7 +441,7 @@ func set_display_mode(mode: String) -> void:
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
 	if _replay_note != null:
-		_replay_note.text = "Replay shell only. Tron is the product display default; Godot does not implement gameplay."
+		_replay_note.text = "Replay shell only. Vector Arcade is the product display default; Godot does not implement gameplay."
 	if _settings_panel != null:
 		_settings_panel.set_display_mode(_current_display_mode)
 	if _settings_screen_panel != null:
@@ -432,10 +494,19 @@ func layout_contract_snapshot() -> Dictionary:
 		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
 		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
 		"camera_status_text": _camera_status_label.text if _camera_status_label != null else "",
+		"viewport_hint_text": _collect_label_text(_mode_hint_strip),
+		"bottom_hint_text": _collect_label_text(_hint_label),
+		"inspector_hint_text": _collect_label_text(_inspector_hint_panel),
+		"top_status_badge_text": _top_state_badge_label.text if _top_state_badge_label != null else "",
+		"authority_text": _authority_label.text if _authority_label != null else "",
+		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
 		"style_theme_id": _style_manager.get_theme_id(),
 		"background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
 		"board_background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
 		"hint_color": _style_manager.get_color(ShellStyleRolesScript.LABEL_HINT),
+		"game_area_panel_color": _panel_style_color(_game_area),
+		"game_area_border_color": _panel_style_border_color(_game_area),
+		"bottom_bar_border_color": _panel_style_border_color(_bottom_panel),
 	}
 
 
@@ -484,6 +555,56 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 		_set_keyboard_hints_visible(visible)
 	)
 	panel.apply_initial_settings()
+
+
+func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
+	if _bundle_status_label != null:
+		_bundle_status_label.text = "TET4D"
+	if _summary_label != null:
+		var state_part := "GAME OVER: %s" % reason if state_label == "Game Over" and reason != "" else state_label
+		_summary_label.text = "%s | C++ Session | %s | Fit View | Reset | Esc" % [mode_label, state_part]
+	if _hash_label != null:
+		_hash_label.text = "Godot command/render shell"
+	if _authority_label != null:
+		_authority_label.text = "%s | C++ PlainNDSession | Godot shell" % mode_label
+	if _top_state_badge_label != null:
+		_top_state_badge_label.text = _status_badge_text(state_label, reason)
+		_top_state_badge_label.theme_type_variation = "WarningLabel" if state_label == "Game Over" else "AccentLabel"
+
+
+func _status_badge_text(state_label: String, reason: String) -> String:
+	if state_label == "Game Over":
+		return "[ GAME OVER ] %s" % (reason if reason != "" else "stopped")
+	if state_label == "Paused":
+		return "[ PAUSED ]"
+	return "[ RUNNING ]"
+
+
+func _format_live_inspector_text(
+	mode_label: String,
+	state_label: String,
+	reason: String,
+	last_input: String,
+	layout_text: String,
+	camera_text: String
+) -> String:
+	return "\n".join([
+		"SESSION",
+		"Mode        %s" % mode_label,
+		"Engine      C++ PlainNDSession",
+		"Shell       Godot command/render",
+		"Topology    Plain bounded",
+		"",
+		"STATUS",
+		"State       %s" % _status_badge_text(state_label, reason),
+		"Reason      %s" % (reason if reason != "" else "none"),
+		"Last input  %s" % (last_input if last_input != "" else "none"),
+		"",
+		"VIEW",
+		"Layout      %s" % layout_text,
+		"Fit         Restored / Manual",
+		"Camera      %s" % camera_text,
+	])
 
 
 func _set_layout_bounds_visible(visible: bool) -> void:
@@ -603,6 +724,7 @@ func _build_layout() -> void:
 	nav_row_b.add_child(live_4d_button)
 
 	_top_status_panel = PanelContainer.new()
+	_top_status_panel.name = "TopStatusPanel"
 	_top_status_panel.custom_minimum_size = Vector2(ReplayVisuals.TOP_STATUS_PANEL_WIDTH, ReplayVisuals.TOP_BAR_HEIGHT)
 	_top_status_panel.size_flags_horizontal = Control.SIZE_FILL
 	top_bar.add_child(_top_status_panel)
@@ -623,6 +745,7 @@ func _build_layout() -> void:
 	top_status_box.add_child(_bundle_status_label)
 
 	var top_summary_panel := PanelContainer.new()
+	top_summary_panel.name = "TopReplaySummaryPanel"
 	top_summary_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(top_summary_panel)
 	var top_summary_root := Control.new()
@@ -643,8 +766,15 @@ func _build_layout() -> void:
 	_hash_label.theme_type_variation = "DimLabel"
 	_hash_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	top_summary_box.add_child(_hash_label)
+	_top_state_badge_label = Label.new()
+	_top_state_badge_label.name = "TopStatusBadgeLabel"
+	_top_state_badge_label.text = "[ PAUSED ]"
+	_top_state_badge_label.theme_type_variation = "AccentLabel"
+	_top_state_badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	top_summary_box.add_child(_top_state_badge_label)
 
 	_authority_panel = PanelContainer.new()
+	_authority_panel.name = "AuthorityPanel"
 	_authority_panel.custom_minimum_size = Vector2(ReplayVisuals.AUTHORITY_PANEL_WIDTH, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_child(_authority_panel)
 	var authority_root := Control.new()
@@ -717,10 +847,8 @@ func _build_layout() -> void:
 	_viewport_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_viewport_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_viewport_hint)
-	_mode_hint_strip = Label.new()
-	_mode_hint_strip.text = REPLAY_HINT_TEXT
-	_mode_hint_strip.theme_type_variation = "DimLabel"
-	_mode_hint_strip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_mode_hint_strip = _make_control_hint_panel("replay", true)
+	_mode_hint_strip.name = "ViewportControlHints"
 	_mode_hint_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_mode_hint_strip)
 	_game_viewport_container = SubViewportContainer.new()
@@ -753,45 +881,60 @@ func _build_layout() -> void:
 	_right_column.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	_right_scroll.add_child(_right_column)
 
+	_right_column.add_child(_inspector_section_header("INSPECTOR"))
 	var integrity_panel := PanelContainer.new()
+	integrity_panel.name = "InspectorTracePanel"
 	integrity_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_column.add_child(integrity_panel)
 	_trace_integrity_label = Label.new()
+	_trace_integrity_label.name = "InspectorTraceValueLabel"
 	_trace_integrity_label.text = "Trace metadata pending"
 	_trace_integrity_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_trace_integrity_label.theme_type_variation = "AccentLabel"
 	integrity_panel.add_child(_trace_integrity_label)
 
 	var bundle_detail_panel := PanelContainer.new()
+	bundle_detail_panel.name = "InspectorBundlePanel"
 	bundle_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_column.add_child(bundle_detail_panel)
 	var bundle_detail_box := VBoxContainer.new()
 	bundle_detail_panel.add_child(bundle_detail_box)
 	var bundle_detail_title := Label.new()
+	bundle_detail_title.name = "InspectorSectionHeader__Bundle"
 	bundle_detail_title.text = "Bundle Detail"
 	bundle_detail_title.theme_type_variation = "SecondaryLabel"
 	bundle_detail_box.add_child(bundle_detail_title)
 	_bundle_detail_label = Label.new()
+	_bundle_detail_label.name = "InspectorMetadataValueLabel"
 	_bundle_detail_label.text = "Bundle detail pending"
 	_bundle_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_bundle_detail_label.theme_type_variation = "DimLabel"
 	bundle_detail_box.add_child(_bundle_detail_label)
 
+	_right_column.add_child(_inspector_section_header("VIEW"))
 	var camera_panel := PanelContainer.new()
+	camera_panel.name = "InspectorCameraPanel"
 	camera_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_column.add_child(camera_panel)
 	var camera_box := VBoxContainer.new()
 	camera_panel.add_child(camera_box)
 	var camera_title := Label.new()
+	camera_title.name = "InspectorSectionHeader__Camera"
 	camera_title.text = "Camera"
 	camera_title.theme_type_variation = "SecondaryLabel"
 	camera_box.add_child(camera_title)
 	_camera_status_label = Label.new()
+	_camera_status_label.name = "InspectorCameraValueLabel"
 	_camera_status_label.text = "Camera: pending"
 	_camera_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_camera_status_label.theme_type_variation = "AccentLabel"
 	camera_box.add_child(_camera_status_label)
 
+	_right_column.add_child(_inspector_section_header("CONTROLS"))
+	_inspector_hint_panel = _make_control_hint_panel("replay", false)
+	_inspector_hint_panel.name = "InspectorControlHints"
+	_right_column.add_child(_inspector_hint_panel)
+	_right_column.add_child(_inspector_section_header("DIAGNOSTICS"))
 	_diagnostics_panel = DiagnosticsPanelScript.new()
 	_diagnostics_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.DIAGNOSTICS_MIN_HEIGHT)
 	_right_column.add_child(_diagnostics_panel)
@@ -802,10 +945,12 @@ func _build_layout() -> void:
 	_settings_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
 	_settings_panel.set_style_manager(_style_manager)
 	_wire_settings_panel(_settings_panel)
+	_right_column.add_child(_inspector_section_header("QUICK SETTINGS"))
 	_right_column.add_child(_settings_panel)
 
 	var bottom_panel := PanelContainer.new()
 	_bottom_panel = bottom_panel
+	bottom_panel.name = "BottomReplayControls"
 	bottom_panel.custom_minimum_size = Vector2(0, ReplayVisuals.TIMELINE_HEIGHT)
 	outer.add_child(bottom_panel)
 	var bottom_content_root := Control.new()
@@ -874,7 +1019,7 @@ func _build_layout() -> void:
 	control_group.add_child(geometry_toggle)
 
 	_replay_note = Label.new()
-	_replay_note.text = "Replay shell only. Tron is the product display default; Godot does not implement gameplay."
+	_replay_note.text = "Replay shell only. Vector Arcade is the product display default; Godot does not implement gameplay."
 	_replay_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_replay_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_replay_note.theme_type_variation = "SecondaryLabel"
@@ -905,17 +1050,17 @@ func _build_layout() -> void:
 	)
 	speed_group.add_child(_speed_select)
 	_speed_value = Label.new()
+	_speed_value.name = "PlaybackStateValueLabel"
 	_speed_value.text = "Paused Replay"
 	speed_group.add_child(_speed_value)
 
 	_frame_label = Label.new()
+	_frame_label.name = "FrameValueLabel"
 	_frame_label.text = "Frame 0 / 0"
 	_frame_label.theme_type_variation = "AccentLabel"
 	bottom.add_child(_frame_label)
-	_hint_label = Label.new()
-	_hint_label.text = REPLAY_HINT_TEXT
-	_hint_label.theme_type_variation = "DimLabel"
-	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint_label = _make_control_hint_panel("replay", true)
+	_hint_label.name = "BottomControlHints"
 	bottom_stack.add_child(_hint_label)
 	_help_panel = PanelContainer.new()
 	_help_panel.visible = false
@@ -975,7 +1120,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	layout.add_theme_constant_override("separation", 18)
 	margin.add_child(layout)
 	var title := Label.new()
-	title.text = "Tet4D Godot Transition Spike"
+	title.text = "Tet4D Vector Arcade Cockpit"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.theme_type_variation = "AccentLabel"
 	title.add_theme_font_size_override("font_size", 32)
@@ -986,58 +1131,37 @@ func _build_main_menu_screen(screen: Control) -> void:
 	subtitle.theme_type_variation = "SecondaryLabel"
 	subtitle.add_theme_font_size_override("font_size", 18)
 	layout.add_child(subtitle)
-	var browser_button := Button.new()
-	browser_button.text = "Open Trace Replay Browser"
-	browser_button.custom_minimum_size = Vector2(420, 54)
-	browser_button.add_theme_font_size_override("font_size", 18)
+	var browser_button := _make_command_card("Replay Viewer", "Load and inspect exported trace playback", "Enter")
 	browser_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_BROWSER)
 	)
 	layout.add_child(browser_button)
-	var live_button := Button.new()
-	live_button.text = "Start Live Plain 2D"
-	live_button.custom_minimum_size = Vector2(420, 54)
-	live_button.add_theme_font_size_override("font_size", 18)
+	var live_button := _make_command_card("Live Plain 2D", "Accepted native-core shell with direct controls", "2D")
 	live_button.pressed.connect(func() -> void:
 		live_2d_requested.emit()
 	)
 	layout.add_child(live_button)
-	var live_3d_button := Button.new()
-	live_3d_button.text = "Start Live Plain 3D"
-	live_3d_button.custom_minimum_size = Vector2(420, 54)
-	live_3d_button.add_theme_font_size_override("font_size", 18)
+	var live_3d_button := _make_command_card("Live Plain 3D", "External diagram view with direct rotation planes", "3D")
 	live_3d_button.pressed.connect(func() -> void:
 		live_3d_requested.emit()
 	)
 	layout.add_child(live_3d_button)
-	var live_4d_button := Button.new()
-	live_4d_button.text = "Start Live Plain 4D"
-	live_4d_button.custom_minimum_size = Vector2(420, 54)
-	live_4d_button.add_theme_font_size_override("font_size", 18)
+	var live_4d_button := _make_command_card("Live Plain 4D", "Side-by-side W slices with camera recovery", "4D")
 	live_4d_button.pressed.connect(func() -> void:
 		live_4d_requested.emit()
 	)
 	layout.add_child(live_4d_button)
-	var controls_button := Button.new()
-	controls_button.text = "Controls / Keyboard Hints"
-	controls_button.custom_minimum_size = Vector2(420, 50)
-	controls_button.add_theme_font_size_override("font_size", 17)
+	var controls_button := _make_command_card("Controls", "Separated keycap/action cockpit hints", "H")
 	controls_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_CONTROLS)
 	)
 	layout.add_child(controls_button)
-	var settings_button := Button.new()
-	settings_button.text = "Settings"
-	settings_button.custom_minimum_size = Vector2(420, 50)
-	settings_button.add_theme_font_size_override("font_size", 17)
+	var settings_button := _make_command_card("Settings", "Display, replay, diagnostics, and shell options", "S")
 	settings_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_SETTINGS)
 	)
 	layout.add_child(settings_button)
-	var quit_button := Button.new()
-	quit_button.text = "Quit Replay Shell"
-	quit_button.custom_minimum_size = Vector2(420, 50)
-	quit_button.add_theme_font_size_override("font_size", 17)
+	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(func() -> void:
 		quit_requested.emit()
 	)
@@ -1089,19 +1213,17 @@ func _build_controls_screen(screen: Control) -> void:
 	layout.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	screen.add_child(layout)
 	layout.add_child(_screen_nav("Controls / Keyboard Hints"))
-	var panel := PanelContainer.new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.add_child(panel)
-	var text := Label.new()
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.text = "Replay: %s. Live 2D: %s. Live 3D: %s. Live 4D: %s. Godot routes live commands only; C++ owns gameplay state." % [
-		REPLAY_HINT_TEXT,
-		LIVE_2D_HINT_TEXT,
-		LIVE_3D_HINT_TEXT,
-		LIVE_4D_HINT_TEXT,
-	]
-	text.theme_type_variation = "SecondaryLabel"
-	panel.add_child(text)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", ReplayVisuals.PANEL_GAP)
+	grid.add_theme_constant_override("v_separation", ReplayVisuals.PANEL_GAP)
+	layout.add_child(grid)
+	grid.add_child(_control_mode_card("Replay", "Trace playback controls only.", "replay"))
+	grid.add_child(_control_mode_card("Live Plain 2D", "Godot routes commands; C++ PlainNDSession keeps this live state.", "live_2d"))
+	grid.add_child(_control_mode_card("Live Plain 3D", "Direct movement, drop, and plane rotations.", "live_3d"))
+	grid.add_child(_control_mode_card("Live Plain 4D", "W movement, six rotation planes, and camera recovery.", "live_4d"))
 
 
 func _build_diagnostics_screen(screen: Control) -> void:
@@ -1181,6 +1303,155 @@ func _screen_nav(title_text: String) -> HBoxContainer:
 	return nav
 
 
+func _make_command_card(label_text: String, description: String, shortcut: String) -> Button:
+	var button := Button.new()
+	button.name = "CommandCard__%s" % label_text.replace(" ", "_")
+	button.text = "%s        %s\n%s" % [label_text, shortcut, description]
+	button.custom_minimum_size = Vector2(480, 66)
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.add_theme_font_size_override("font_size", 17)
+	button.tooltip_text = "%s - %s" % [label_text, description]
+	return button
+
+
+func _inspector_section_header(label_text: String) -> Label:
+	var label := Label.new()
+	label.name = "InspectorSectionHeader__%s" % label_text.replace(" ", "_")
+	label.text = label_text
+	label.theme_type_variation = "AccentLabel"
+	label.add_theme_font_size_override("font_size", 13)
+	return label
+
+
+func _control_mode_card(title_text: String, subtitle: String, mode: String) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.name = "ControlModeCard__%s" % mode
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_FILL
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
+	panel.add_child(content)
+	var title := Label.new()
+	title.text = title_text
+	title.theme_type_variation = "AccentLabel"
+	content.add_child(title)
+	var description := Label.new()
+	description.text = subtitle
+	description.theme_type_variation = "SecondaryLabel"
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(description)
+	content.add_child(_make_control_hint_panel(mode, false))
+	return panel
+
+
+func _make_control_hint_panel(mode: String, compact: bool = false) -> VBoxContainer:
+	var panel := VBoxContainer.new()
+	panel.name = "ControlHintPanel__%s" % mode
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_constant_override("separation", ReplayVisuals.SPEED_GROUP_GAP)
+	panel.set_meta("hint_compact", compact)
+	_update_control_hint_panel(panel, mode, false, "", compact)
+	return panel
+
+
+func _update_control_hint_panel(
+	panel: VBoxContainer,
+	mode: String,
+	warning: bool = false,
+	warning_text: String = "",
+	compact: bool = false
+) -> void:
+	if panel == null:
+		return
+	compact = bool(panel.get_meta("hint_compact", compact))
+	panel.set_meta("hint_mode", mode)
+	panel.set_meta("hint_warning", warning)
+	panel.set_meta("hint_compact", compact)
+	for child in panel.get_children():
+		panel.remove_child(child)
+		child.queue_free()
+	if warning and warning_text != "":
+		var warning_label := Label.new()
+		warning_label.name = "ControlHintWarning"
+		warning_label.text = "GAME OVER · %s" % warning_text
+		warning_label.theme_type_variation = "WarningLabel"
+		panel.add_child(warning_label)
+	var groups := quick_control_hint_groups(mode) if compact else _control_hint_groups_for_mode(mode)
+	for group in groups:
+		panel.add_child(_control_hint_group(group, compact))
+	if is_inside_tree():
+		_style_applier.apply_to_tree(panel, _style_manager)
+
+
+func _control_hint_groups_for_mode(mode: String) -> Array:
+	match mode:
+		"live_2d":
+			return live_2d_control_hint_groups()
+		"live_3d":
+			return live_3d_control_hint_groups()
+		"live_4d":
+			return live_4d_control_hint_groups()
+		_:
+			return replay_control_hint_groups()
+
+
+func _control_hint_group(group: Dictionary, compact: bool) -> Control:
+	if compact:
+		var compact_row := HFlowContainer.new()
+		compact_row.name = "ControlHintGroup__%s" % str(group.get("group", "")).replace(" ", "_")
+		compact_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		compact_row.add_theme_constant_override("h_separation", 6)
+		compact_row.add_theme_constant_override("v_separation", 4)
+		var compact_title := Label.new()
+		compact_title.text = str(group.get("group", ""))
+		compact_title.theme_type_variation = "SecondaryLabel"
+		compact_title.custom_minimum_size = Vector2(56, 20)
+		compact_row.add_child(compact_title)
+		for item in group.get("items", []):
+			var keycap := Label.new()
+			keycap.name = "ControlHintKeycap"
+			keycap.text = str(item[0])
+			keycap.custom_minimum_size = Vector2(52, 20)
+			keycap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			keycap.theme_type_variation = "KeycapLabel"
+			compact_row.add_child(keycap)
+			var action := Label.new()
+			action.name = "ControlHintAction"
+			action.text = str(item[1])
+			action.theme_type_variation = "DimLabel"
+			compact_row.add_child(action)
+		return compact_row
+	var box := VBoxContainer.new()
+	box.name = "ControlHintGroup__%s" % str(group.get("group", "")).replace(" ", "_")
+	box.add_theme_constant_override("separation", 3)
+	var title := Label.new()
+	title.text = str(group.get("group", ""))
+	title.theme_type_variation = "SecondaryLabel"
+	title.add_theme_font_size_override("font_size", 12 if compact else 13)
+	box.add_child(title)
+	for item in group.get("items", []):
+		var row := HBoxContainer.new()
+		row.name = "ControlHintRow"
+		row.add_theme_constant_override("separation", 6)
+		var keycap := Label.new()
+		keycap.name = "ControlHintKeycap"
+		keycap.text = str(item[0])
+		keycap.custom_minimum_size = Vector2(70 if compact else 94, 20)
+		keycap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		keycap.theme_type_variation = "KeycapLabel"
+		row.add_child(keycap)
+		var action := Label.new()
+		action.name = "ControlHintAction"
+		action.text = str(item[1])
+		action.theme_type_variation = "DimLabel" if compact else "SecondaryLabel"
+		action.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(action)
+		box.add_child(row)
+	return box
+
+
 func _fill_parent(control: Control) -> void:
 	control.set_anchors_preset(Control.PRESET_FULL_RECT)
 	control.offset_left = 0.0
@@ -1233,6 +1504,37 @@ func _control_rect(node: Control) -> Rect2:
 	if node == null:
 		return Rect2()
 	return Rect2(node.global_position, node.size)
+
+
+func _panel_style_color(node: Control) -> Color:
+	var style := _panel_style_box(node)
+	return style.bg_color if style != null else Color.TRANSPARENT
+
+
+func _panel_style_border_color(node: Control) -> Color:
+	var style := _panel_style_box(node)
+	return style.border_color if style != null else Color.TRANSPARENT
+
+
+func _panel_style_box(node: Control) -> StyleBoxFlat:
+	if node == null:
+		return null
+	return node.get_theme_stylebox("panel") as StyleBoxFlat
+
+
+func _collect_label_text(node: Node) -> String:
+	if node == null:
+		return ""
+	var parts: Array = []
+	_collect_label_text_into(node, parts)
+	return " ".join(parts)
+
+
+func _collect_label_text_into(node: Node, parts: Array) -> void:
+	if node is Label:
+		parts.append((node as Label).text)
+	for child in node.get_children():
+		_collect_label_text_into(child, parts)
 
 
 func _select_speed_no_signal(speed: float) -> void:

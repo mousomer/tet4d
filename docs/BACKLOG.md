@@ -28,14 +28,17 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Stage 31a repairs remote CI bootstrap after the Stage 31/32 push sequence
-without changing gameplay, Godot visual implementation, parity semantics, or
-roadmap scope. The first shared CI failure was the common verification step:
-GitHub-hosted Ubuntu exposed `clang-format`, which made deferred native tooling
-advisory mode fail opportunistically before pytest. CI now runs the same
-`CODEX_MODE=1 ./scripts/verify.sh` contract used locally and marks native
-tooling as explicit CI advisory until the documented strict-mode readiness
-checklist is complete.
+Stage 33 Godot Vector Arcade Cockpit UI overhaul is active under
+`docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. Scope is limited
+to Godot product-shell visual UX and style-contract tests: command-card menus,
+structured keycap/action hints, compact generated settings cards, persistent
+inspector sectioning, `Vector Arcade` display labeling for the internal `tron`
+theme ID, and stronger board/W-label visual emphasis. Stage 33a is the active
+live-mode acceptance repair: structured scoped live status, status badges,
+full/quick grouped controls, and W-slice card/header hierarchy. No gameplay,
+topology, movement, trace semantics, replay-frame semantics, parity logic,
+native authority, or authority transfer is added. Full manual visual
+acceptance remains required before merge acceptance.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior
@@ -179,8 +182,9 @@ Current active follow-ups:
   replay inspection should treat these as post-command snapshots, with active
   gameplay cells rendered using role color rather than synthetic trace green
 - Stage 12 adds the first live plain bounded 2D Godot shell: Godot routes
-  input and renders native snapshots, while C++ owns all gameplay state
-  transitions and hashes. Replay mode remains intact and separate.
+  input and renders native snapshots, while the C++ live plain 2D session owns
+  that session's state transitions and hashes. Replay mode remains intact and
+  separate.
 - Stage 12b hardens that live plain bounded 2D shell without broadening scope:
   C++ owns a deterministic fixed classic sequence, Godot displays mode-specific
   live controls/status and renders live cells through the shared visual role
@@ -618,6 +622,26 @@ stays synchronized, and the contract validator accepts the backlog shape.
     style application, and replay visual role mapping. No gameplay, topology,
     trace semantics, replay-frame semantics, parity logic, native authority, or
     authority transfer is added.
+40. `DONE` `[BKL-P3-047]` Stage 32b Godot Neon CAD Cockpit style refinement:
+    extend the existing Stage 32 style applier so checkbox, slider, dropdown,
+    line-edit, value-label, inspector-panel, board-frame, and bottom-control
+    surfaces route through shared shell roles with compact technical panel
+    styling. Add Godot tests for generated direct-control styling and replay
+    viewer style snapshots. This is product-shell styling only; no gameplay,
+    topology, trace semantics, replay-frame semantics, parity logic, native
+    authority, or authority transfer is added.
+41. `ACTIVE` `[BKL-P3-048]` Stage 33 Godot Vector Arcade Cockpit UI overhaul:
+    keep the Stage 32 style-role architecture and replace remaining patched
+    replay-spike presentation with command-card menus, grouped keycap/action
+    hints, compact generated settings cards, explicit inspector sections,
+    `Vector Arcade` display labeling for internal `tron`, and stronger
+    board/W-label visual emphasis. Stage 33a repairs the live-mode acceptance
+    rejection by replacing diagnostic status prose with structured scoped
+    status, exposing full and quick grouped controls, adding status badges,
+    and moving W slices toward card/header presentation. This is product-shell
+    visual UX only; no gameplay, topology, movement, trace semantics,
+    replay-frame semantics, parity logic, native authority, or authority
+    transfer is added.
 
 ## Governance Watchlist
 

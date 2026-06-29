@@ -126,6 +126,16 @@ visual authority for Godot product-shell styling only. It adds palette data,
 style-token resolution, control style application, and board/replay visual role
 mapping without changing gameplay, topology, trace semantics, replay-frame
 semantics, parity evidence, native authority, or authority transfer.
+Stage 32b extends that same foundation with Neon CAD Cockpit shell-control
+affordances and style-contract tests only. It does not create a new visual
+authority, gameplay authority, parity authority, or replay semantics authority.
+Stage 33 Vector Arcade Cockpit overhaul lives in
+`docs/architecture/godot_vector_arcade_cockpit_overhaul.md` and remains
+Godot product-shell visual UX work only. It updates menus, settings row
+presentation, structured keycap/action hints, inspector sectioning, displayed
+theme labels, and board/W-label visual emphasis without changing gameplay,
+topology, movement, trace semantics, replay-frame semantics, parity evidence,
+native authority, or authority transfer.
 
 ## Authority transfer requires parity
 

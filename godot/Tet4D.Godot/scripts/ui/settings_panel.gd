@@ -148,29 +148,36 @@ func _section_header(label_text: String) -> Control:
 
 
 func _setting_row(spec) -> Control:
-	var row := HBoxContainer.new()
+	var row := PanelContainer.new()
 	row.name = "SettingRow__%s" % spec.id().replace(".", "__")
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
+	var row_content := HBoxContainer.new()
+	row_content.name = "SettingRowContent"
+	row_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row_content.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
+	row.add_child(row_content)
 	var text_box := VBoxContainer.new()
-	text_box.custom_minimum_size = Vector2(172, 0)
+	text_box.custom_minimum_size = Vector2(132, 0)
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(text_box)
+	row_content.add_child(text_box)
 	var label := Label.new()
+	label.name = "SettingLabel__%s" % spec.id().replace(".", "__")
 	label.text = spec.label()
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.theme_type_variation = "SecondaryLabel"
 	text_box.add_child(label)
 	var description := Label.new()
+	description.name = "SettingDescription__%s" % spec.id().replace(".", "__")
 	description.text = spec.description()
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.theme_type_variation = "DimLabel"
 	text_box.add_child(description)
 	var control := _control_factory.build_control(spec, store.value(spec.id()), _on_control_value_changed)
-	control.custom_minimum_size = Vector2(120, 0)
+	control.custom_minimum_size = Vector2(96, 0)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_controls_by_id[spec.id()] = control
-	row.add_child(control)
+	row_content.add_child(control)
 	return row
 
 
