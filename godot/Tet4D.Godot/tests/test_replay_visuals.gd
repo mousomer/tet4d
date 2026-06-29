@@ -68,8 +68,12 @@ func run() -> Array:
 		failures.append("live 3D active outline should have stronger emphasis than locked outline")
 	if ReplayVisuals.slice_outline_thickness(ReplayVisuals.DISPLAY_MODE_TRON) <= ReplayVisuals.GRID_LINE_THICKNESS:
 		failures.append("W-slice card outline should be stronger than internal grid thickness")
-	if ReplayVisuals.W_SLICE_LABEL_FONT_SIZE < 100:
-		failures.append("W-slice headers should use large readable slice-card labels")
+	if ReplayVisuals.W_SLICE_LABEL_FONT_SIZE >= 60:
+		failures.append("W-slice labels should be demoted below Stage 33a header size")
+	if ReplayVisuals.W_SLICE_LABEL_CHIP_WIDTH != 0.0 or ReplayVisuals.W_SLICE_LABEL_CHIP_HEIGHT != 0.0:
+		failures.append("W-slice labels should not use large backing chips by default")
+	if ReplayVisuals.slice_label_color("tron").a >= 0.9:
+		failures.append("W-slice labels should be muted orientation markers")
 	_assert_material_alpha(failures, "diagnostic locked cell", ReplayVisuals.locked_cell_material(), 0.90)
 	_assert_material_alpha(failures, "diagnostic particle", ReplayVisuals.particle_material(), 0.95)
 	_assert_material_alpha(failures, "diagnostic board outline", ReplayVisuals.board_outline_material(), 0.90)

@@ -117,8 +117,8 @@ func _check_replay_visual_roles() -> Array: # tet4d-semantic-boundary: allow tes
 		failures.append("board fill should use background.board")
 	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_BOARD_GRID, "tron") != manager.get_color(ShellStyleRolesScript.GRID_MINOR):
 		failures.append("board grid should use grid.minor")
-	if ReplayVisuals.slice_label_color("tron") != manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER):
-		failures.append("W/layer labels should use label.w_layer")
+	if ReplayVisuals.slice_label_color("tron").a >= 0.9:
+		failures.append("W/layer labels should be muted orientation markers")
 	if ReplayVisuals.event_marker_material("tron").albedo_color != manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS):
 		failures.append("event markers should use diagnostic.bounds")
 	return failures

@@ -62,13 +62,14 @@ const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
 const SLICE_PADDING := 2.0
 const GRID_LINE_THICKNESS := 0.058
-const W_SLICE_LABEL_FONT_SIZE := 108
-const W_SLICE_LABEL_OUTLINE_SIZE := 34
-const W_SLICE_LABEL_CHIP_WIDTH := 5.35
-const W_SLICE_LABEL_CHIP_HEIGHT := 1.02
-const W_SLICE_LABEL_CHIP_DEPTH := 0.06
-const W_SLICE_LABEL_VERTICAL_OFFSET := 1.24
-const W_SLICE_LABEL_BOUNDS_PAD := 1.72
+const W_SLICE_LABEL_FONT_SIZE := 34
+const W_SLICE_LABEL_OUTLINE_SIZE := 7
+const W_SLICE_LABEL_CHIP_WIDTH := 0.0
+const W_SLICE_LABEL_CHIP_HEIGHT := 0.0
+const W_SLICE_LABEL_CHIP_DEPTH := 0.0
+const W_SLICE_LABEL_VERTICAL_OFFSET := 0.42
+const W_SLICE_LABEL_EDGE_OFFSET := 0.34
+const W_SLICE_LABEL_BOUNDS_PAD := 0.68
 const PROBE_MARKER_HEIGHT := 0.32
 const EVENT_MARKER_HEIGHT := 0.62
 const PARTICLE_TRAIL_HISTORY := 14
@@ -312,7 +313,7 @@ static func event_marker_material(mode: String = DISPLAY_MODE_TRON) -> StandardM
 
 
 static func slice_label_color(mode: String = DISPLAY_MODE_TRON) -> Color:
-	return color_for_role(ROLE_W_SLICE_LABEL, mode)
+	return _with_alpha(color_for_role(ROLE_TEXT_DIM, mode), 0.74)
 
 
 static func slice_label_chip_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:

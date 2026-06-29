@@ -99,14 +99,13 @@ func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 
 
 func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String) -> void:
-	_add_w_label_chip(label_position, display_mode)
 	var label := Label3D.new()
-	label.text = "W SLICE %d/%d" % [w_index + 1, maxi(w_size, 1)]
+	label.text = "w%d" % [w_index + 1]
 	label.font_size = ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.modulate = ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
 	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE
-	label.position = label_position + Vector3(0.0, 0.0, 0.025)
+	label.position = label_position + Vector3(0.0, 0.0, 0.015)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_child(label)
 

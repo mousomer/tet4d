@@ -53,9 +53,9 @@ func slice_label_position(w_index: int = 0) -> Vector3:
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	return Vector3(
-		(min_pos.x + max_pos.x) * 0.5,
+		min_pos.x + ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET,
 		max_pos.y + ReplayVisuals.W_SLICE_LABEL_VERTICAL_OFFSET,
-		(min_pos.z + max_pos.z) * 0.5
+		min_pos.z + ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
 	)
 
 
