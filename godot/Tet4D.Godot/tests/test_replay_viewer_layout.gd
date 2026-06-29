@@ -150,6 +150,8 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i) -> Arra
 	var top_status_badge_text := str(snapshot.get("top_status_badge_text", ""))
 	var authority_text := str(snapshot.get("authority_text", ""))
 	var inspector_status_text := str(snapshot.get("inspector_status_text", ""))
+	var bottom_bar_visible := bool(snapshot.get("bottom_bar_visible", true))
+	var viewport_hints_visible := bool(snapshot.get("viewport_hints_visible", true))
 	var game_rect: Rect2 = snapshot.get("game_area", Rect2())
 	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
 	if authority_text.find("Native C++ owns gameplay") != -1 or inspector_status_text.find("Native C++ owns gameplay") != -1:
@@ -162,10 +164,12 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i) -> Arra
 		failures.append("%s: inspector should use structured sections" % label)
 	if inspector_status_text.find("Mode        Live Plain 4D") == -1 or inspector_status_text.find("Engine      C++ PlainNDSession") == -1:
 		failures.append("%s: inspector should expose aligned session rows" % label)
-	if viewport_hint_text.find("Quick") == -1 or viewport_hint_text.find("Q/E") == -1 or viewport_hint_text.find("Fit View") == -1:
-		failures.append("%s: quick controls should stay visible for Live 4D" % label)
-	if bottom_hint_text.find("Quick") == -1 or bottom_hint_text.find("A/D") == -1 or bottom_hint_text.find("R/T") == -1:
-		failures.append("%s: bottom quick controls should summarize Live 4D commands" % label)
+	if viewport_hints_visible or viewport_hint_text != "":
+		failures.append("%s: central board should not repeat partial Live 4D quick controls" % label)
+	if bottom_bar_visible or bottom_hint_text != "":
+		failures.append("%s: live bottom controls should be hidden or reduced without repeated hints" % label)
+	if bottom_hint_text.find("Quit Replay") != -1 or viewport_hint_text.find("Quit Replay") != -1:
+		failures.append("%s: Live 4D mode should not show Quit Replay wording" % label)
 	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("System") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
 	for required in ["Q", "E", "R/T", "F/G", "V/B", "Y/U", "H/J", "N/M"]:
@@ -195,10 +199,8 @@ func _check_live_control_maps() -> Array:
 	for required in ["Q", "E", "R/T", "F/G", "V/B", "Y/U", "H/J", "N/M"]:
 		if flattened.find(required) == -1:
 			failures.append("Live 4D control map should include %s" % required)
-	var quick_groups := ReplayHud.quick_control_hint_groups("live_4d")
-	var quick_text := str(quick_groups)
-	if quick_text.find("Q/E") == -1 or quick_text.find("Fit View") == -1:
-		failures.append("Live 4D quick controls should include W movement and Fit View")
+	if not ReplayHud.quick_control_hint_groups("live_4d").is_empty():
+		failures.append("Live 4D should not expose a partial quick-control map")
 	return failures
 
 

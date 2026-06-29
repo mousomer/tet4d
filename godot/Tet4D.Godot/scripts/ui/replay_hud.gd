@@ -58,6 +58,7 @@ var _settings_panel: SettingsPanel
 var _settings_screen_panel: SettingsPanel
 var _play_button: Button
 var _reset_button: Button
+var _quit_button: Button
 var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
@@ -158,12 +159,8 @@ static func live_4d_control_hint_groups() -> Array:
 
 static func quick_control_hint_groups(mode: String) -> Array:
 	match mode:
-		"live_2d":
-			return [{"group": "Quick", "items": [["Esc", "Back"], ["P", "Pause"], ["A/D", "Move"], ["S/Down", "Drop"], ["W/X", "Rotate"], ["R", "Reset"]]}]
-		"live_3d":
-			return [{"group": "Quick", "items": [["Esc", "Back"], ["P", "Pause"], ["A/D", "X"], ["W/S", "Z"], ["R/T", "XY"], ["Backspace", "Reset"]]}]
-		"live_4d":
-			return [{"group": "Quick", "items": [["Esc", "Back"], ["P", "Pause"], ["A/D", "X"], ["Q/E", "W"], ["R/T", "XY"], ["Fit", "Fit View"]]}]
+		"live_2d", "live_3d", "live_4d":
+			return []
 		_:
 			return [{"group": "Quick", "items": [["Space", "Play / Pause"], ["Left/Right", "Frame"], ["Up/Down", "Case"], ["1/2/3", "Family"], ["F", "Fit View"], ["Q/Esc", "Quit"]]}]
 
@@ -295,6 +292,7 @@ func set_live_2d_mode(
 ) -> void:
 	_live_2d_paused = paused
 	_live_2d_game_over = game_over
+	_set_live_declutter_mode(true)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Reset Live"
@@ -306,12 +304,11 @@ func set_live_2d_mode(
 	if _viewport_hint != null:
 		_viewport_hint.text = "C++ PlainNDSession · Godot command/render shell · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
-		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
-		_update_control_hint_panel(_mode_hint_strip, "live_2d", game_over, reason_text)
+		_mode_hint_strip.visible = false
 	if _replay_note != null:
 		_replay_note.text = "GAME OVER: %s. R resets Live 2D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 2D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
 	if _hint_label != null:
-		_update_control_hint_panel(_hint_label, "live_2d", game_over, game_over_reason)
+		_hint_label.visible = false
 	if _inspector_hint_panel != null:
 		_update_control_hint_panel(_inspector_hint_panel, "live_2d", game_over, game_over_reason)
 	if _help_label != null:
@@ -336,6 +333,7 @@ func set_live_3d_mode(
 ) -> void:
 	_live_3d_paused = paused
 	_live_3d_game_over = game_over
+	_set_live_declutter_mode(true)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 3D"
@@ -347,12 +345,11 @@ func set_live_3d_mode(
 	if _viewport_hint != null:
 		_viewport_hint.text = "C++ PlainNDSession · Godot command/render shell · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
-		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
-		_update_control_hint_panel(_mode_hint_strip, "live_3d", game_over, reason_text)
+		_mode_hint_strip.visible = false
 	if _replay_note != null:
 		_replay_note.text = "GAME OVER: %s. Backspace resets Live 3D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 3D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
 	if _hint_label != null:
-		_update_control_hint_panel(_hint_label, "live_3d", game_over, game_over_reason)
+		_hint_label.visible = false
 	if _inspector_hint_panel != null:
 		_update_control_hint_panel(_inspector_hint_panel, "live_3d", game_over, game_over_reason)
 	if _help_label != null:
@@ -377,6 +374,7 @@ func set_live_4d_mode(
 ) -> void:
 	_live_4d_paused = paused
 	_live_4d_game_over = game_over
+	_set_live_declutter_mode(true)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 4D"
@@ -388,12 +386,11 @@ func set_live_4d_mode(
 	if _viewport_hint != null:
 		_viewport_hint.text = "C++ PlainNDSession · Godot command/render shell · W slice cards · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
-		var reason_text := game_over_reason if game_over_reason != "" else "stopped"
-		_update_control_hint_panel(_mode_hint_strip, "live_4d", game_over, reason_text)
+		_mode_hint_strip.visible = false
 	if _replay_note != null:
 		_replay_note.text = "GAME OVER: %s. Backspace resets Live 4D." % (game_over_reason if game_over_reason != "" else "stopped") if game_over else "Live Plain 4D. W slices open fitted. Q/E move W; Space hard drops; I/K, O/L, -/= adjust camera; Fit View recovers; Esc quits."
 	if _hint_label != null:
-		_update_control_hint_panel(_hint_label, "live_4d", game_over, game_over_reason)
+		_hint_label.visible = false
 	if _inspector_hint_panel != null:
 		_update_control_hint_panel(_inspector_hint_panel, "live_4d", game_over, game_over_reason)
 	if _help_label != null:
@@ -410,6 +407,7 @@ func set_live_4d_mode(
 
 
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
+	_set_live_declutter_mode(false)
 	set_playback_state(is_playing, speed, diagnostics_visible)
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
@@ -488,6 +486,8 @@ func layout_contract_snapshot() -> Dictionary:
 		"right_inspector": inspector_rect,
 		"settings_panel": settings_rect,
 		"bottom_bar": bottom_rect,
+		"bottom_bar_visible": _bottom_panel.visible if _bottom_panel != null else false,
+		"viewport_hints_visible": _mode_hint_strip.visible if _mode_hint_strip != null else false,
 		"viewport_size": get_viewport_rect().size,
 		"supported_minimum_size": ReplayVisuals.supported_shell_minimum_size(),
 		"world_parent": _game_viewport.get_node_or_null("WorldRoot") if _game_viewport != null else null,
@@ -572,6 +572,17 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 		_top_state_badge_label.theme_type_variation = "WarningLabel" if state_label == "Game Over" else "AccentLabel"
 
 
+func _set_live_declutter_mode(live_mode: bool) -> void:
+	if _bottom_panel != null:
+		_bottom_panel.visible = not live_mode
+	if _mode_hint_strip != null:
+		_mode_hint_strip.visible = not live_mode
+	if _hint_label != null:
+		_hint_label.visible = not live_mode
+	if _quit_button != null:
+		_quit_button.text = "Back" if live_mode else "Quit Replay"
+
+
 func _status_badge_text(state_label: String, reason: String) -> String:
 	if state_label == "Game Over":
 		return "[ GAME OVER ] %s" % (reason if reason != "" else "stopped")
@@ -613,6 +624,8 @@ func _set_layout_bounds_visible(visible: bool) -> void:
 
 
 func _set_keyboard_hints_visible(visible: bool) -> void:
+	if _bottom_panel != null and not _bottom_panel.visible:
+		return
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = visible
 	if _hint_label != null:
@@ -1004,6 +1017,7 @@ func _build_layout() -> void:
 	)
 	control_group.add_child(fit_button)
 	var quit_button := Button.new()
+	_quit_button = quit_button
 	quit_button.text = "Quit Replay"
 	quit_button.pressed.connect(func() -> void:
 		quit_requested.emit()
@@ -1531,6 +1545,8 @@ func _collect_label_text(node: Node) -> String:
 
 
 func _collect_label_text_into(node: Node, parts: Array) -> void:
+	if node is CanvasItem and not (node as CanvasItem).visible:
+		return
 	if node is Label:
 		parts.append((node as Label).text)
 	for child in node.get_children():
