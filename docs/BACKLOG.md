@@ -38,9 +38,13 @@ live-mode acceptance repair: structured scoped live status, status badges,
 full/quick grouped controls, and W-slice card/header hierarchy. Stage 33b is
 the active declutter polish: W labels become subtle orientation markers, the
 central live board stops repeating partial quick controls, and live mode hides
-or reduces the replay bottom bar. No gameplay, topology, movement, trace
-semantics, replay-frame semantics, parity logic, native authority, or authority
-transfer is added. Full manual visual acceptance remains required before merge
+or reduces the replay bottom bar. Stage 33c is the active layout-consolidation
+pass: live mode removes the replay case-browser side panel, cleans dangling
+top/viewport status detail, gives the recovered space to the board, keeps the
+right inspector as the single full control map, and pushes diagnostics/settings
+below live controls. No gameplay, topology, movement, trace semantics,
+replay-frame semantics, parity logic, native authority, or authority transfer
+is added. Full manual visual acceptance remains required before merge
 acceptance.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for

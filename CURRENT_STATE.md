@@ -124,7 +124,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   follow-up declutter pass: W labels are demoted to subtle orientation markers,
   live quick controls are removed from the central board area, and the live
   replay bottom bar is hidden/reduced so the right inspector remains the single
-  complete live control map.
+  complete live control map. Stage 33c is the layout-consolidation pass after
+  Stage 33b was accepted with issues: live modes hide the replay case-browser
+  side panel, remove dangling top/viewport command-render detail, give the
+  recovered space to the board, keep controls first in the right inspector, and
+  leave diagnostics/settings secondary while preserving subtle W labels and the
+  same product-shell-only boundary.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

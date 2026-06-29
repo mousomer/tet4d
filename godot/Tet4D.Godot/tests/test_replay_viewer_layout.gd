@@ -38,9 +38,11 @@ func run() -> Array:
 		hud.set_camera_status("Camera: LIVE_3D_EXTERNAL_DIAGRAM_VIEW · ortho · above exterior · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
 		await tree.process_frame
 		failures.append_array(_check_layout(hud, viewport_size))
+		var replay_snapshot: Dictionary = hud.layout_contract_snapshot()
+		var replay_game_rect: Rect2 = replay_snapshot.get("game_area", Rect2())
 		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
 		await tree.process_frame
-		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size))
+		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size, replay_game_rect.size.x))
 		root.queue_free()
 		await tree.process_frame
 	failures.append_array(_check_live_control_maps())
@@ -64,6 +66,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	var camera_status_text := str(snapshot.get("camera_status_text", ""))
 	var viewport_hint_text := str(snapshot.get("viewport_hint_text", ""))
 	var bottom_hint_text := str(snapshot.get("bottom_hint_text", ""))
+	var left_panel_visible := bool(snapshot.get("left_panel_visible", false))
+	var left_panel_text := str(snapshot.get("left_panel_text", ""))
 	var game_area_panel_color: Color = snapshot.get("game_area_panel_color", Color.TRANSPARENT)
 	var game_area_border_color: Color = snapshot.get("game_area_border_color", Color.TRANSPARENT)
 	var bottom_bar_border_color: Color = snapshot.get("bottom_bar_border_color", Color.TRANSPARENT)
@@ -74,6 +78,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: body rect should be nonzero" % label)
 	if left_rect.size.x <= 0.0 or left_rect.size.y <= 0.0:
 		failures.append("%s: left case browser rect should be nonzero" % label)
+	if not left_panel_visible or left_panel_text.find("Replay Cases") == -1:
+		failures.append("%s: replay mode should keep Replay Cases browser available" % label)
 	if game_rect.size.x <= 0.0 or game_rect.size.y <= 0.0:
 		failures.append("%s: game area rect should be nonzero" % label)
 	if game_viewport_rect.size.x <= 0.0 or game_viewport_rect.size.y <= 0.0:
@@ -140,24 +146,31 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	return failures
 
 
-func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i) -> Array:
+func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_game_width: float) -> Array:
 	var failures: Array = []
 	var snapshot: Dictionary = hud.layout_contract_snapshot()
 	var label := "live 4D viewport %s" % str(viewport_size)
 	var viewport_hint_text := str(snapshot.get("viewport_hint_text", ""))
+	var viewport_detail_text := str(snapshot.get("viewport_detail_text", ""))
 	var bottom_hint_text := str(snapshot.get("bottom_hint_text", ""))
 	var inspector_hint_text := str(snapshot.get("inspector_hint_text", ""))
 	var top_status_badge_text := str(snapshot.get("top_status_badge_text", ""))
+	var top_detail_text := str(snapshot.get("top_detail_text", ""))
 	var authority_text := str(snapshot.get("authority_text", ""))
 	var inspector_status_text := str(snapshot.get("inspector_status_text", ""))
 	var bottom_bar_visible := bool(snapshot.get("bottom_bar_visible", true))
 	var viewport_hints_visible := bool(snapshot.get("viewport_hints_visible", true))
+	var left_panel_visible := bool(snapshot.get("left_panel_visible", true))
+	var left_panel_text := str(snapshot.get("left_panel_text", ""))
+	var right_inspector_order: Array = snapshot.get("right_inspector_order", [])
 	var game_rect: Rect2 = snapshot.get("game_area", Rect2())
 	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
 	if authority_text.find("Native C++ owns gameplay") != -1 or inspector_status_text.find("Native C++ owns gameplay") != -1:
 		failures.append("%s: broad native gameplay ownership wording should not appear" % label)
 	if authority_text.find("Live Plain 4D") == -1 or authority_text.find("C++ PlainNDSession") == -1 or authority_text.find("Godot shell") == -1:
 		failures.append("%s: authority wording should be scoped to the Live Plain 4D C++ session" % label)
+	if top_detail_text != "" or viewport_detail_text.find("Godot command/render shell") != -1:
+		failures.append("%s: live shell detail should not dangle in top or viewport chrome" % label)
 	if top_status_badge_text.find("[ GAME OVER ]") == -1 or top_status_badge_text.find("out_of_bounds") == -1:
 		failures.append("%s: top status badge should expose game-over reason" % label)
 	if inspector_status_text.find("SESSION") == -1 or inspector_status_text.find("STATUS") == -1 or inspector_status_text.find("VIEW") == -1:
@@ -168,8 +181,10 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i) -> Arra
 		failures.append("%s: central board should not repeat partial Live 4D quick controls" % label)
 	if bottom_bar_visible or bottom_hint_text != "":
 		failures.append("%s: live bottom controls should be hidden or reduced without repeated hints" % label)
-	if bottom_hint_text.find("Quit Replay") != -1 or viewport_hint_text.find("Quit Replay") != -1:
+	if bottom_hint_text.find("Quit Replay") != -1 or viewport_hint_text.find("Quit Replay") != -1 or left_panel_text.find("Replay Cases") != -1:
 		failures.append("%s: Live 4D mode should not show Quit Replay wording" % label)
+	if left_panel_visible:
+		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
 	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("System") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
 	for required in ["Q", "E", "R/T", "F/G", "V/B", "Y/U", "H/J", "N/M"]:
@@ -181,6 +196,10 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i) -> Arra
 		failures.append("%s: right inspector should remain visible" % label)
 	if game_rect.size.x <= inspector_rect.size.x:
 		failures.append("%s: game area should remain larger than the inspector column, game=%s inspector=%s" % [label, game_rect, inspector_rect])
+	if replay_game_width > 0.0 and game_rect.size.x <= replay_game_width + 0.5:
+		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
+	if right_inspector_order.size() < 2 or str(right_inspector_order[0]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[1]) != "InspectorControlHints":
+		failures.append("%s: live right inspector should present controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
 	return failures
 
 

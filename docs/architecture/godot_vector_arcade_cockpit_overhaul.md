@@ -249,3 +249,83 @@ and all six Live 4D rotation pairs (`R/T`, `F/G`, `V/B`, `Y/U`, `H/J`, `N/M`).
 - The board has more visual priority than in Stage 33a.
 - No gameplay, topology, replay, trace, parity, fixture, native semantic, or
   authority-transfer behavior changes.
+
+## Stage 33c Live Cockpit Layout Consolidation
+
+Manual review accepted the Stage 33b direction with remaining layout issues:
+the live top status still had a dangling `Godot command/render shell` detail
+line, Live Plain 4D still showed the replay case browser, and diagnostics /
+quick settings competed with the full live controls in the right inspector.
+Stage 33c consolidates those live-mode layout details without changing the
+Stage 33b visual direction.
+
+Stage 33c remains Godot product-shell visual UX only. It does not change
+gameplay, topology, movement, drop, collision, lock behavior, trace semantics,
+replay-frame semantics, fixtures, parity logic, native C++ semantics, or
+authority transfer.
+
+### Top Status Cleanup
+
+Live modes keep the structured product status strip, including mode, scoped C++
+session, state, game-over reason where present, and immediate actions such as
+Fit View, Reset, and Esc. Detailed `Godot command/render shell` wording belongs
+in the inspector session metadata, not as a dangling top-status or viewport
+subline.
+
+Top status text must trim safely when narrow and must not overlap panel
+borders.
+
+### Live Side Panel And Board Priority
+
+Replay mode keeps the `Replay Cases` browser. Live Plain 2D, Live Plain 3D, and
+Live Plain 4D hide the replay case-browser slot so the central board receives
+the recovered horizontal space. Live mode must not show a left panel titled
+`Replay Cases`.
+
+The board remains the primary live visual element. Shell layout constants may
+be adjusted or panel visibility may change to avoid starving the board, but
+coordinate projection and board-state derivation semantics remain unchanged.
+
+### Inspector Density
+
+Live mode presents the full grouped controls first in the right inspector.
+Diagnostics, events, and quick settings are secondary and appear after the
+control map. Replay mode may keep replay diagnostics and case browsing in its
+normal replay-oriented positions.
+
+The right inspector remains the single complete live control map. It must
+retain Q/E W movement and all six Live 4D rotation pairs (`R/T`, `F/G`, `V/B`,
+`Y/U`, `H/J`, `N/M`). The central board, bottom bar, and top bar must not
+reintroduce partial keycap samples such as `[A/D] X`, `[Q/E] W`, or `[R/T] XY`.
+
+### Live Labels
+
+Live mode must avoid replay-specific labels in visible live chrome. The live
+bottom bar remains hidden or reduced and must not show `Quit Replay`; the live
+quit/back action should use Back, Quit Live, or Esc according to the local UI
+convention. Live diagnostics use generic `Diagnostics` wording instead of
+`Replay Diagnostics`.
+
+### W Labels
+
+Stage 33c preserves the Stage 33b W-label rule. W labels remain small, muted
+orientation markers and must not return to large `W SLICE n/N` banners or
+header chips.
+
+### Stage 33c Acceptance Checklist
+
+- The live top status has no dangling or overlapping `Godot command/render
+  shell` line.
+- Live Plain 2D, Live Plain 3D, and Live Plain 4D do not show `Replay Cases` as
+  a left-panel title.
+- Live mode gives the recovered side-panel space to the board, and the board
+  remains visually dominant.
+- The central board area has no partial quick-control row.
+- The right inspector remains the single full live control map.
+- Diagnostics and quick settings are secondary in live mode.
+- Live mode does not show `Quit Replay`.
+- W labels remain subtle orientation markers.
+- Replay mode still exposes the replay case browser and replay diagnostics as
+  appropriate.
+- No gameplay, topology, replay, trace, parity, fixture, native semantic, or
+  authority-transfer behavior changes.

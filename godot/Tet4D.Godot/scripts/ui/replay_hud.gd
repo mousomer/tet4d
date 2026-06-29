@@ -96,6 +96,14 @@ var _camera_status_label: Label
 var _help_label: Label
 var _top_state_badge_label: Label
 var _inspector_hint_panel: VBoxContainer
+var _inspector_header: Label
+var _view_header: Label
+var _controls_header: Label
+var _diagnostics_header: Label
+var _quick_settings_header: Label
+var _integrity_panel: PanelContainer
+var _bundle_detail_panel: PanelContainer
+var _camera_panel: PanelContainer
 var _current_display_mode := ReplayVisuals.default_display_mode()
 var _style_manager = ShellStyleManagerScript.new()
 var _style_applier = ShellControlStyleApplierScript.new()
@@ -480,6 +488,8 @@ func layout_contract_snapshot() -> Dictionary:
 	return {
 		"root": root_rect,
 		"left_panel": left_rect,
+		"left_panel_visible": _left_panel.visible if _left_panel != null else false,
+		"left_panel_text": _collect_label_text(_left_panel),
 		"body": body_rect,
 		"game_area": game_rect,
 		"game_viewport": viewport_rect,
@@ -494,9 +504,12 @@ func layout_contract_snapshot() -> Dictionary:
 		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
 		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
 		"camera_status_text": _camera_status_label.text if _camera_status_label != null else "",
+		"top_detail_text": _hash_label.text if _hash_label != null and _hash_label.visible else "",
+		"viewport_detail_text": _viewport_hint.text if _viewport_hint != null and _viewport_hint.visible else "",
 		"viewport_hint_text": _collect_label_text(_mode_hint_strip),
 		"bottom_hint_text": _collect_label_text(_hint_label),
 		"inspector_hint_text": _collect_label_text(_inspector_hint_panel),
+		"right_inspector_order": _visible_direct_child_names(_right_column),
 		"top_status_badge_text": _top_state_badge_label.text if _top_state_badge_label != null else "",
 		"authority_text": _authority_label.text if _authority_label != null else "",
 		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
@@ -573,14 +586,64 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
+	if _left_panel != null:
+		_left_panel.visible = not live_mode
+		_left_panel.custom_minimum_size = Vector2(0, 0) if live_mode else Vector2(ReplayVisuals.LEFT_PANEL_WIDTH, 0)
 	if _bottom_panel != null:
 		_bottom_panel.visible = not live_mode
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = not live_mode
 	if _hint_label != null:
 		_hint_label.visible = not live_mode
+	if _viewport_hint != null:
+		_viewport_hint.visible = not live_mode
+		if live_mode:
+			_viewport_hint.text = ""
+	if _hash_label != null:
+		_hash_label.visible = not live_mode
+		if live_mode:
+			_hash_label.text = ""
 	if _quit_button != null:
 		_quit_button.text = "Back" if live_mode else "Quit Replay"
+	if _diagnostics_panel != null:
+		_diagnostics_panel.set_title("Diagnostics" if live_mode else "Replay Diagnostics")
+	_set_live_inspector_density(live_mode)
+
+
+func _set_live_inspector_density(live_mode: bool) -> void:
+	if _right_column == null:
+		return
+	if live_mode:
+		_move_right_column_child(_controls_header, 0)
+		_move_right_column_child(_inspector_hint_panel, 1)
+		_move_right_column_child(_inspector_header, 2)
+		_move_right_column_child(_integrity_panel, 3)
+		_move_right_column_child(_bundle_detail_panel, 4)
+		_move_right_column_child(_view_header, 5)
+		_move_right_column_child(_camera_panel, 6)
+		_move_right_column_child(_diagnostics_header, 7)
+		_move_right_column_child(_diagnostics_panel, 8)
+		_move_right_column_child(_event_panel, 9)
+		_move_right_column_child(_quick_settings_header, 10)
+		_move_right_column_child(_settings_panel, 11)
+		return
+	_move_right_column_child(_inspector_header, 0)
+	_move_right_column_child(_integrity_panel, 1)
+	_move_right_column_child(_bundle_detail_panel, 2)
+	_move_right_column_child(_view_header, 3)
+	_move_right_column_child(_camera_panel, 4)
+	_move_right_column_child(_controls_header, 5)
+	_move_right_column_child(_inspector_hint_panel, 6)
+	_move_right_column_child(_diagnostics_header, 7)
+	_move_right_column_child(_diagnostics_panel, 8)
+	_move_right_column_child(_event_panel, 9)
+	_move_right_column_child(_quick_settings_header, 10)
+	_move_right_column_child(_settings_panel, 11)
+
+
+func _move_right_column_child(node: Node, index: int) -> void:
+	if node != null and node.get_parent() == _right_column:
+		_right_column.move_child(node, index)
 
 
 func _status_badge_text(state_label: String, reason: String) -> String:
@@ -894,24 +957,25 @@ func _build_layout() -> void:
 	_right_column.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	_right_scroll.add_child(_right_column)
 
-	_right_column.add_child(_inspector_section_header("INSPECTOR"))
-	var integrity_panel := PanelContainer.new()
-	integrity_panel.name = "InspectorTracePanel"
-	integrity_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_right_column.add_child(integrity_panel)
+	_inspector_header = _inspector_section_header("INSPECTOR")
+	_right_column.add_child(_inspector_header)
+	_integrity_panel = PanelContainer.new()
+	_integrity_panel.name = "InspectorTracePanel"
+	_integrity_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_right_column.add_child(_integrity_panel)
 	_trace_integrity_label = Label.new()
 	_trace_integrity_label.name = "InspectorTraceValueLabel"
 	_trace_integrity_label.text = "Trace metadata pending"
 	_trace_integrity_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_trace_integrity_label.theme_type_variation = "AccentLabel"
-	integrity_panel.add_child(_trace_integrity_label)
+	_integrity_panel.add_child(_trace_integrity_label)
 
-	var bundle_detail_panel := PanelContainer.new()
-	bundle_detail_panel.name = "InspectorBundlePanel"
-	bundle_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_right_column.add_child(bundle_detail_panel)
+	_bundle_detail_panel = PanelContainer.new()
+	_bundle_detail_panel.name = "InspectorBundlePanel"
+	_bundle_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_right_column.add_child(_bundle_detail_panel)
 	var bundle_detail_box := VBoxContainer.new()
-	bundle_detail_panel.add_child(bundle_detail_box)
+	_bundle_detail_panel.add_child(bundle_detail_box)
 	var bundle_detail_title := Label.new()
 	bundle_detail_title.name = "InspectorSectionHeader__Bundle"
 	bundle_detail_title.text = "Bundle Detail"
@@ -924,13 +988,14 @@ func _build_layout() -> void:
 	_bundle_detail_label.theme_type_variation = "DimLabel"
 	bundle_detail_box.add_child(_bundle_detail_label)
 
-	_right_column.add_child(_inspector_section_header("VIEW"))
-	var camera_panel := PanelContainer.new()
-	camera_panel.name = "InspectorCameraPanel"
-	camera_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_right_column.add_child(camera_panel)
+	_view_header = _inspector_section_header("VIEW")
+	_right_column.add_child(_view_header)
+	_camera_panel = PanelContainer.new()
+	_camera_panel.name = "InspectorCameraPanel"
+	_camera_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_right_column.add_child(_camera_panel)
 	var camera_box := VBoxContainer.new()
-	camera_panel.add_child(camera_box)
+	_camera_panel.add_child(camera_box)
 	var camera_title := Label.new()
 	camera_title.name = "InspectorSectionHeader__Camera"
 	camera_title.text = "Camera"
@@ -943,11 +1008,13 @@ func _build_layout() -> void:
 	_camera_status_label.theme_type_variation = "AccentLabel"
 	camera_box.add_child(_camera_status_label)
 
-	_right_column.add_child(_inspector_section_header("CONTROLS"))
+	_controls_header = _inspector_section_header("CONTROLS")
+	_right_column.add_child(_controls_header)
 	_inspector_hint_panel = _make_control_hint_panel("replay", false)
 	_inspector_hint_panel.name = "InspectorControlHints"
 	_right_column.add_child(_inspector_hint_panel)
-	_right_column.add_child(_inspector_section_header("DIAGNOSTICS"))
+	_diagnostics_header = _inspector_section_header("DIAGNOSTICS")
+	_right_column.add_child(_diagnostics_header)
 	_diagnostics_panel = DiagnosticsPanelScript.new()
 	_diagnostics_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.DIAGNOSTICS_MIN_HEIGHT)
 	_right_column.add_child(_diagnostics_panel)
@@ -958,7 +1025,8 @@ func _build_layout() -> void:
 	_settings_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
 	_settings_panel.set_style_manager(_style_manager)
 	_wire_settings_panel(_settings_panel)
-	_right_column.add_child(_inspector_section_header("QUICK SETTINGS"))
+	_quick_settings_header = _inspector_section_header("QUICK SETTINGS")
+	_right_column.add_child(_quick_settings_header)
 	_right_column.add_child(_settings_panel)
 
 	var bottom_panel := PanelContainer.new()
@@ -1542,6 +1610,17 @@ func _collect_label_text(node: Node) -> String:
 	var parts: Array = []
 	_collect_label_text_into(node, parts)
 	return " ".join(parts)
+
+
+func _visible_direct_child_names(node: Node) -> Array:
+	var names: Array = []
+	if node == null:
+		return names
+	for child in node.get_children():
+		if child is CanvasItem and not (child as CanvasItem).visible:
+			continue
+		names.append(str(child.name))
+	return names
 
 
 func _collect_label_text_into(node: Node, parts: Array) -> void:
