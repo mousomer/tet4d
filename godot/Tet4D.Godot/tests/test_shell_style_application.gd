@@ -103,10 +103,10 @@ func _check_control_hint_palette(manager) -> Array:
 		failures.append("keycap should receive a cockpit stylebox")
 	elif keycap_box.border_color != manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS):
 		failures.append("keycap border should use Blueprint accent.focus")
-	if keycap.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY):
-		failures.append("keycap text should use text.primary")
-	if action.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.TEXT_SECONDARY):
-		failures.append("control action text should use text.secondary")
+	if keycap.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.LABEL_HINT):
+		failures.append("keycap text should keep the hint-panel hint color")
+	if action.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.LABEL_HINT):
+		failures.append("control action text should keep the hint-panel hint color")
 	return failures
 
 

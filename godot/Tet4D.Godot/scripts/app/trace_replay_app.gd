@@ -142,6 +142,10 @@ func _input(event: InputEvent) -> void:
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
 		return
+	if _is_live_mode() and _event_is_camera_mouse_input(event) and _mouse_event_in_game_viewport(event):
+		_handle_camera_input(event)
+		get_viewport().set_input_as_handled()
+		return
 	if _is_live_mode() and _event_is_space_pressed_once(event):
 		_handle_live_space_hard_drop()
 		get_viewport().set_input_as_handled()
@@ -222,6 +226,29 @@ func _handle_camera_input(event: InputEvent) -> void:
 		elif _mouse_rolling:
 			_camera_rig.roll(event.relative)
 			_refresh_camera_status()
+
+
+func _event_is_camera_mouse_input(event: InputEvent) -> bool:
+	if event is InputEventMouseMotion:
+		return _mouse_orbiting or _mouse_rolling
+	if event is InputEventMouseButton:
+		return event.button_index in [
+			MOUSE_BUTTON_LEFT,
+			MOUSE_BUTTON_WHEEL_UP,
+			MOUSE_BUTTON_WHEEL_DOWN,
+		]
+	return false
+
+
+func _mouse_event_in_game_viewport(event: InputEvent) -> bool:
+	if _hud == null:
+		return false
+	if not (event is InputEventMouseButton or event is InputEventMouseMotion):
+		return false
+	var rect := _hud.game_viewport_global_rect()
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return false
+	return rect.has_point(event.position)
 
 
 func _handle_live_2d_input(event: InputEvent) -> bool:

@@ -49,7 +49,10 @@ one-per-row. Stage 33e is the active wording/input-presentation/palette polish
 pass: Plane Rotation wording is clarified, live game-over reasons map to
 user-facing labels, camera roll and mouse camera hints are presentation-only,
 and the default Vector Arcade palette shifts toward calmer Blueprint Arcade
-tokens. No gameplay, topology, movement, trace semantics, replay-frame
+tokens. Follow-up acceptance keeps hint-panel text on the prior unified hint
+color, restores a visible live game-over `Restart Game` button, and keeps
+viewport mouse camera controls active after game over. No gameplay, topology,
+movement, trace semantics, replay-frame
 semantics, parity logic, native authority, or authority transfer is added. Full
 manual visual acceptance remains required before merge acceptance.
 

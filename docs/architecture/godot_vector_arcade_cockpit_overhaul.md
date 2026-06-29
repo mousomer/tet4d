@@ -483,9 +483,22 @@ Blueprint Arcade palette. The intent is:
 - red/orange only for error and bounds roles;
 - reduced bright green and magenta in control hints.
 
-Control-hint styling should use muted cyan/blue keycap borders, pale keycap
-text, secondary text for action labels, accent-primary section headers, muted
-or amber notes, and state-error for game-over/error status.
+Control-hint keycap borders keep the muted cyan/blue Blueprint Arcade frame,
+but hint-panel key and action text returns to the prior single `label.hint`
+color treatment so the controls read as one panel instead of competing text
+tiers. Game-over/error status still uses the state-error/status roles.
+
+### Stage 33e Follow-Up: Restart And Endgame Camera
+
+Live game-over presentation keeps the keyboard reset bindings and also exposes
+a visible `Restart Game` button in the top live status area. The button routes
+to the existing reset signal and does not introduce gameplay ownership in
+Godot.
+
+Camera controls are presentation-only and should remain available after game
+over. Live mouse camera gestures over the game viewport continue to orbit,
+roll, zoom, and fit the camera while gameplay commands remain blocked once the
+native live snapshot reports game over.
 
 ### Stage 33e Acceptance Checklist
 
@@ -495,7 +508,9 @@ or amber notes, and state-error for game-over/error status.
 - Game-over reasons are user-facing, for example `Piece out of bounds`.
 - Raw internal reason strings do not appear in user-facing live status.
 - Camera roll appears in controls and is presentation-only.
-- Mouse camera hints appear and route to camera-only presentation controls.
+- Mouse camera hints appear and route to camera-only presentation controls,
+  including after live game over.
+- Live game-over status exposes a visible `Restart Game` button.
 - Palette is calmer and less green/magenta-heavy.
 - Board readability and subtle W-label orientation markers are preserved.
 - Stage 33b/33c/33d layout and compactness decisions remain intact.

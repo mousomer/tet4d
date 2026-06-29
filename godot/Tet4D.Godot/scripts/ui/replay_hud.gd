@@ -58,6 +58,7 @@ var _settings_panel: SettingsPanel
 var _settings_screen_panel: SettingsPanel
 var _play_button: Button
 var _reset_button: Button
+var _restart_game_button: Button
 var _quit_button: Button
 var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
@@ -517,6 +518,8 @@ func layout_contract_snapshot() -> Dictionary:
 		"inspector_hint_text": _collect_label_text(_inspector_hint_panel),
 		"right_inspector_order": _visible_direct_child_names(_right_column),
 		"top_status_badge_text": _top_state_badge_label.text if _top_state_badge_label != null else "",
+		"restart_game_button_visible": _restart_game_button.visible if _restart_game_button != null else false,
+		"restart_game_button_text": _restart_game_button.text if _restart_game_button != null else "",
 		"authority_text": _authority_label.text if _authority_label != null else "",
 		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
 		"style_theme_id": _style_manager.get_theme_id(),
@@ -535,6 +538,12 @@ func style_manager():
 
 func show_replay_viewer() -> void:
 	show_screen(SCREEN_VIEWER)
+
+
+func game_viewport_global_rect() -> Rect2:
+	if _game_viewport_container == null or not _game_viewport_container.is_inside_tree():
+		return Rect2()
+	return _game_viewport_container.get_global_rect()
 
 
 func set_live_keyboard_capture(enabled: bool) -> void:
@@ -589,6 +598,9 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 	if _top_state_badge_label != null:
 		_top_state_badge_label.text = _status_badge_text(state_label, reason)
 		_top_state_badge_label.theme_type_variation = "WarningLabel" if state_label == "Game Over" else "AccentLabel"
+	if _restart_game_button != null:
+		_restart_game_button.visible = state_label == "Game Over"
+		_restart_game_button.text = "Restart Game"
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
@@ -597,6 +609,8 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_left_panel.custom_minimum_size = Vector2(0, 0) if live_mode else Vector2(ReplayVisuals.LEFT_PANEL_WIDTH, 0)
 	if _bottom_panel != null:
 		_bottom_panel.visible = not live_mode
+	if _restart_game_button != null and not live_mode:
+		_restart_game_button.visible = false
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = not live_mode
 	if _hint_label != null:
@@ -874,6 +888,14 @@ func _build_layout() -> void:
 	_top_state_badge_label.theme_type_variation = "AccentLabel"
 	_top_state_badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	top_summary_box.add_child(_top_state_badge_label)
+	_restart_game_button = Button.new()
+	_restart_game_button.name = "RestartGameButton"
+	_restart_game_button.text = "Restart Game"
+	_restart_game_button.visible = false
+	_restart_game_button.pressed.connect(func() -> void:
+		reset_requested.emit()
+	)
+	top_summary_box.add_child(_restart_game_button)
 
 	_authority_panel = PanelContainer.new()
 	_authority_panel.name = "AuthorityPanel"

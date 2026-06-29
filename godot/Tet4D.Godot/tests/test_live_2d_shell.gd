@@ -322,6 +322,38 @@ func run() -> Array:
 			failures.append("Space should map to Live 4D hard_drop")
 		if str(app._current_snapshot.get("current_piece", "")) != "STAIR4":
 			failures.append("Space hard drop should spawn the next Live 4D piece")
+		app._current_snapshot["game_over"] = true
+		app._current_snapshot["game_over_reason"] = "out_of_bounds"
+		var endgame_hash := str(app._live_bridge.live_4d_state_hash())
+		var viewport_rect: Rect2 = app._hud.game_viewport_global_rect()
+		var viewport_center := viewport_rect.position + (viewport_rect.size * 0.5)
+		var endgame_drag_start := InputEventMouseButton.new()
+		endgame_drag_start.button_index = MOUSE_BUTTON_LEFT
+		endgame_drag_start.pressed = true
+		endgame_drag_start.position = viewport_center
+		app._input(endgame_drag_start)
+		var endgame_yaw_before: float = app._camera_rig._target_yaw
+		var endgame_motion := InputEventMouseMotion.new()
+		endgame_motion.position = viewport_center + Vector2(10.0, 0.0)
+		endgame_motion.relative = Vector2(10.0, 0.0)
+		app._input(endgame_motion)
+		if app._camera_rig._target_yaw >= endgame_yaw_before:
+			failures.append("Mouse drag over the live viewport should orbit camera after game over")
+		var endgame_drag_end := InputEventMouseButton.new()
+		endgame_drag_end.button_index = MOUSE_BUTTON_LEFT
+		endgame_drag_end.pressed = false
+		endgame_drag_end.position = viewport_center + Vector2(10.0, 0.0)
+		app._input(endgame_drag_end)
+		var endgame_wheel_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		var endgame_wheel := InputEventMouseButton.new()
+		endgame_wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+		endgame_wheel.pressed = true
+		endgame_wheel.position = viewport_center
+		app._input(endgame_wheel)
+		if live_4d_camera != null and live_4d_camera.size >= endgame_wheel_size:
+			failures.append("Mouse wheel over the live viewport should zoom camera after game over")
+		if str(app._live_bridge.live_4d_state_hash()) != endgame_hash:
+			failures.append("Endgame mouse camera controls should not mutate Live 4D gameplay state")
 		app._reset_live_4d()
 		var live_4d_initial_hash := str(app._live_bridge.live_4d_state_hash())
 		app._dispatch_live_4d_gameplay_command("move_w_pos")

@@ -156,6 +156,8 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	var inspector_hint_text := str(snapshot.get("inspector_hint_text", ""))
 	var top_status_badge_text := str(snapshot.get("top_status_badge_text", ""))
 	var top_summary_text := str(snapshot.get("top_summary_text", ""))
+	var restart_game_button_visible := bool(snapshot.get("restart_game_button_visible", false))
+	var restart_game_button_text := str(snapshot.get("restart_game_button_text", ""))
 	var top_detail_text := str(snapshot.get("top_detail_text", ""))
 	var authority_text := str(snapshot.get("authority_text", ""))
 	var inspector_status_text := str(snapshot.get("inspector_status_text", ""))
@@ -174,6 +176,8 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: live shell detail should not dangle in top or viewport chrome" % label)
 	if top_status_badge_text.find("[ GAME OVER ]") == -1 or top_status_badge_text.find("Piece out of bounds") == -1:
 		failures.append("%s: top status badge should expose user-facing game-over reason" % label)
+	if not restart_game_button_visible or restart_game_button_text != "Restart Game":
+		failures.append("%s: live game-over status should expose a Restart Game button" % label)
 	if top_status_badge_text.find("out_of_bounds") != -1 or top_summary_text.find("out_of_bounds") != -1 or inspector_status_text.find("out_of_bounds") != -1:
 		failures.append("%s: user-facing live status should not expose raw out_of_bounds reason" % label)
 	if inspector_status_text.find("SESSION") == -1 or inspector_status_text.find("STATUS") == -1 or inspector_status_text.find("VIEW") == -1:

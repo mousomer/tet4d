@@ -139,7 +139,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   text, live game-over reasons are mapped to user-facing labels, comma/period
   and Shift-drag add camera roll without gameplay dispatch, mouse camera hints
   document orbit/roll/zoom/Fit View, and the default Vector Arcade palette uses
-  calmer Blueprint Arcade tokens.
+  calmer Blueprint Arcade tokens. Follow-up polish keeps hint-panel key/action
+  text on the prior unified hint color, exposes a visible `Restart Game` button
+  for live game-over status, and keeps viewport mouse camera controls available
+  after game over while gameplay commands remain blocked.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece

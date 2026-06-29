@@ -72,13 +72,7 @@ func _apply_label(label: Label, style_manager) -> void:
 			role = ShellStyleRolesScript.LABEL_W_LAYER
 		"KeycapLabel":
 			role = ShellStyleRolesScript.TEXT_PRIMARY
-	if label.theme_type_variation == "KeycapLabel":
-		role = ShellStyleRolesScript.TEXT_PRIMARY
-	elif label.name.find("ControlHintAction") >= 0:
-		role = ShellStyleRolesScript.TEXT_SECONDARY
-	elif label.name.find("ControlHintNote") >= 0:
-		role = ShellStyleRolesScript.TEXT_MUTED
-	elif label.name.find("Hint") >= 0 or label.text.find("Hint") >= 0:
+	if label.name.find("Hint") >= 0 or label.text.find("Hint") >= 0:
 		role = ShellStyleRolesScript.LABEL_HINT
 	elif label.name.find("ValueLabel") >= 0 or label.name.find("StateValue") >= 0:
 		role = ShellStyleRolesScript.DIAGNOSTIC_METADATA
