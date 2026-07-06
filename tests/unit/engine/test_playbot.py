@@ -354,12 +354,16 @@ class TestPlaybot(unittest.TestCase):
         )
         state.current_piece = ActivePieceND.from_shape(shape, (1, -2, 0, 0))
 
-        plan = plan_best_nd_move(state)
-        if plan is None:
-            self.fail("expected a valid 4D bot plan")
-        _cells_after, cleared, game_over = simulate_lock_board(state, plan.final_piece)
-        self.assertFalse(game_over)
-        self.assertEqual(cleared, 1)
+        for budget_ms in (None, 1):
+            plan = plan_best_nd_move(state, budget_ms=budget_ms)
+            if plan is None:
+                self.fail("expected a valid 4D bot plan")
+            _cells_after, cleared, game_over = simulate_lock_board(
+                state,
+                plan.final_piece,
+            )
+            self.assertFalse(game_over)
+            self.assertEqual(cleared, 1)
 
     def test_bot_hard_drops_after_configured_soft_drops_2d(self) -> None:
         cfg = GameConfig(width=10, height=20, piece_set=PIECE_SET_2D_DEBUG)
