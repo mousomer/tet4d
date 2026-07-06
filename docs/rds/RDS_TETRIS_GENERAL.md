@@ -60,6 +60,9 @@ Cross-cutting requirements are defined in:
 3. Gravity acts on axis `y` in all modes.
 4. `y < 0` is allowed before lock; locking above top triggers game over.
 5. Board storage is sparse (`coord -> cell_id`).
+6. Placement legality must reject duplicate candidate cells, out-of-bounds
+   cells, and occupied cells consistently across direct board checks and the
+   central candidate-placement validator.
 
 ### 3.1 Shared topology preset rules
 

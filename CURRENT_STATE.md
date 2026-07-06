@@ -22,7 +22,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 - Stage 35 gameplay/topology sweep is active on
   `codex/gameplay-topology-sweeps`: Topology Playground launch settings now
   clamp unsupported `rigid_play_mode` values from saved/source settings to
-  `auto` before canonical runtime state construction. This is Python
+  `auto` before canonical runtime state construction; the sweep also adds
+  invariant coverage for 2D/ND placement, translation, rotation, hard-drop,
+  spawn, and topology seam behavior. `BoardND.can_place` now rejects duplicate
+  candidate cells to match the central placement validator. This is Python
   gameplay/topology boundary hardening only and does not change topology
   traversal, drop/lock legality, rigid-play policy, Godot/C++ routing, parity
   logic, or authority ownership.
@@ -564,7 +567,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.74`
+1. `delivery_size_pressure = 2.75`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import unittest
 
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.topology_explorer import (
     CELLWISE_DEFORMATION,
     MoveStep,
     RIGID_TRANSFORM,
     build_explorer_transport_resolver,
+    movement_steps_for_dimension,
+    neighbors_for_cell,
 )
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
@@ -366,6 +373,135 @@ class TestExplorerTransportResolver(unittest.TestCase):
             result.frame_transform.apply_absolute((0, 2, 2, 1)),
             (1, 1, 2, 3),
         )
+
+
+class TestStage35TopologySemantics(unittest.TestCase):
+    def test_explorer_y_seam_traversal_does_not_become_play_drop_legality_2d(
+        self,
+    ) -> None:
+        profile = axis_wrap_profile(dimension=2, wrapped_axes=(1,))
+        shape = PieceShape2D("dot", [(0, 0)], color_id=5)
+        explorer_cfg = GameConfig(
+            width=4,
+            height=4,
+            exploration_mode=True,
+            explorer_topology_profile=profile,
+        )
+        play_cfg = GameConfig(
+            width=4,
+            height=4,
+            exploration_mode=False,
+            explorer_topology_profile=profile,
+        )
+        explorer_state = GameState(config=explorer_cfg, board=BoardND((4, 4)))
+        play_state = GameState(config=play_cfg, board=BoardND((4, 4)))
+        explorer_state.board.cells.clear()
+        play_state.board.cells.clear()
+        explorer_state.current_piece = ActivePiece2D(shape, pos=(1, 3), rotation=0)
+        play_state.current_piece = ActivePiece2D(shape, pos=(1, 3), rotation=0)
+
+        self.assertTrue(explorer_state.try_move(0, 1))
+        self.assertEqual(explorer_state.current_piece.cells(), [(1, 0)])
+        self.assertFalse(play_state.try_soft_drop())
+        play_state.hard_drop()
+
+        self.assertEqual(play_state.board.cells, {(1, 3): 5})
+
+    def test_explorer_y_seam_traversal_does_not_become_play_drop_legality_nd(
+        self,
+    ) -> None:
+        profile = axis_wrap_profile(dimension=3, wrapped_axes=(1,))
+        shape = PieceShapeND("dot", ((0, 0, 0),), color_id=6)
+        explorer_cfg = GameConfigND(
+            dims=(4, 4, 3),
+            gravity_axis=1,
+            exploration_mode=True,
+            explorer_topology_profile=profile,
+        )
+        play_cfg = GameConfigND(
+            dims=(4, 4, 3),
+            gravity_axis=1,
+            exploration_mode=False,
+            explorer_topology_profile=profile,
+        )
+        explorer_state = GameStateND(config=explorer_cfg, board=BoardND((4, 4, 3)))
+        play_state = GameStateND(config=play_cfg, board=BoardND((4, 4, 3)))
+        explorer_state.board.cells.clear()
+        play_state.board.cells.clear()
+        explorer_state.current_piece = ActivePieceND.from_shape(
+            shape,
+            pos=(1, 3, 1),
+        )
+        play_state.current_piece = ActivePieceND.from_shape(shape, pos=(1, 3, 1))
+
+        self.assertTrue(explorer_state.try_move_axis(1, 1))
+        self.assertEqual(explorer_state.current_piece.cells(), [(1, 0, 1)])
+        self.assertFalse(play_state.try_soft_drop())
+        play_state.hard_drop()
+
+        self.assertEqual(play_state.board.cells, {(1, 3, 1): 6})
+
+    def test_non_gravity_side_seams_remain_play_translation_legal(self) -> None:
+        profile = axis_wrap_profile(dimension=3, wrapped_axes=(0,))
+        cfg = GameConfigND(
+            dims=(4, 4, 3),
+            gravity_axis=1,
+            exploration_mode=False,
+            explorer_topology_profile=profile,
+        )
+        state = GameStateND(config=cfg, board=BoardND((4, 4, 3)))
+        state.board.cells.clear()
+        shape = PieceShapeND("dot", ((0, 0, 0),), color_id=7)
+        state.current_piece = ActivePieceND.from_shape(shape, pos=(3, 2, 1))
+
+        self.assertTrue(state.try_move_axis(0, 1))
+
+        self.assertEqual(state.current_piece.cells(), [(0, 2, 1)])
+
+    def test_torus_neighbors_match_resolver_targets_for_every_cell(self) -> None:
+        profile = axis_wrap_profile(dimension=2, wrapped_axes=(0, 1))
+        dims = (3, 4)
+        resolver = build_explorer_transport_resolver(profile, dims)
+        steps = tuple(movement_steps_for_dimension(2))
+
+        for x in range(dims[0]):
+            for y in range(dims[1]):
+                coord = (x, y)
+                with self.subTest(coord=coord):
+                    graph_edges = {
+                        edge.step.label: edge.target
+                        for edge in neighbors_for_cell(profile, dims=dims, coord=coord)
+                    }
+                    resolver_edges = {
+                        step.label: resolver.resolve_cell_step(coord, step).target
+                        for step in steps
+                    }
+                    self.assertEqual(graph_edges, resolver_edges)
+                    self.assertEqual(len(graph_edges), 4)
+
+    def test_cross_axis_seam_records_entry_step_and_reverse_exit(self) -> None:
+        profile = swapped_xz_profile_3d()
+        dims = (4, 4, 4)
+        resolver = build_explorer_transport_resolver(profile, dims)
+        forward = resolver.resolve_cell_step((0, 1, 2), MoveStep(axis=0, delta=-1))
+        self.assertIsNotNone(forward.traversal)
+
+        inward = resolver.resolve_cell_step(
+            forward.target,
+            forward.traversal.entry_step,
+        )
+        reverse = resolver.resolve_cell_step(
+            forward.target,
+            MoveStep(axis=2, delta=1),
+        )
+
+        self.assertEqual(forward.target, (2, 1, 3))
+        self.assertEqual(forward.traversal.source_boundary.label, "x-")
+        self.assertEqual(forward.traversal.target_boundary.label, "z+")
+        self.assertEqual(forward.traversal.entry_step.label, "z-")
+        self.assertEqual(inward.target, (2, 1, 2))
+        self.assertIsNone(inward.traversal)
+        self.assertEqual(reverse.target, (0, 1, 2))
 
 
 if __name__ == "__main__":
