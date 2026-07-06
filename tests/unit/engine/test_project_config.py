@@ -152,6 +152,20 @@ class TestProjectConfig(unittest.TestCase):
                 expected_root / "analytics/custom.jsonl",
             )
 
+    def test_state_root_override_uses_default_suffix_for_custom_state_dir(self) -> None:
+        override_root = "state/test_runs/project_config_custom_state_dir"
+        expected_root = (PROJECT_ROOT / override_root).resolve()
+        with (
+            mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}),
+            mock.patch.object(
+                project_config_module,
+                "io_paths_payload",
+                return_value={"paths": {"state_dir": "data"}},
+            ),
+        ):
+            self.assertEqual(state_dir_relative(), "data")
+            self.assertEqual(menu_settings_file_path(), expected_root / "menu_settings.json")
+
     def test_default_state_backed_paths_use_writable_root(self) -> None:
         with mock.patch.dict(os.environ, {}, clear=True):
             expected_root = WRITABLE_ROOT.resolve()

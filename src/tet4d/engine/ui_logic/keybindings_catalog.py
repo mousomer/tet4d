@@ -114,6 +114,70 @@ def _validate_helper_line(
     }
 
 
+def _validate_reference_group_order(
+    *,
+    order_name: str,
+    order_values: tuple[str, ...],
+    known_order_groups: set[str],
+    reference_headings: dict[str, str],
+) -> None:
+    unknown = sorted(set(order_values) - known_order_groups)
+    if unknown:
+        raise RuntimeError(
+            "keybindings.catalog.reference_groups."
+            f"{order_name} references unknown groups: {', '.join(unknown)}"
+        )
+    missing_headings = sorted(set(order_values) - set(reference_headings.keys()))
+    if missing_headings:
+        raise RuntimeError(
+            "keybindings.catalog.reference_groups.headings is missing groups "
+            f"from {order_name}: {', '.join(missing_headings)}"
+        )
+
+
+def _validate_reference_groups(
+    reference_obj: dict[str, Any],
+    *,
+    groups: dict[str, Any],
+    gameplay_buckets: dict[str, Any],
+) -> tuple[tuple[str, ...], tuple[str, ...], dict[str, str]]:
+    runtime_order = _require_string_list(
+        reference_obj.get("runtime_order"),
+        path="keybindings.catalog.reference_groups.runtime_order",
+    )
+    live_order = _require_string_list(
+        reference_obj.get("live_order"),
+        path="keybindings.catalog.reference_groups.live_order",
+    )
+    headings_obj = _require_object(
+        reference_obj.get("headings"),
+        path="keybindings.catalog.reference_groups.headings",
+    )
+    reference_headings = {
+        _require_string(key, path="keybindings.catalog.reference_groups.headings keys", non_empty=True): _require_string(
+            value,
+            path=f"keybindings.catalog.reference_groups.headings.{key}",
+            non_empty=True,
+        )
+        for key, value in headings_obj.items()
+    }
+    known_runtime_groups = set(groups.keys())
+    known_live_groups = set(groups.keys()) | {
+        f"game_{bucket_name}" for bucket_name in gameplay_buckets
+    }
+    for order_name, order_values, known_order_groups in (
+        ("runtime_order", runtime_order, known_runtime_groups),
+        ("live_order", live_order, known_live_groups),
+    ):
+        _validate_reference_group_order(
+            order_name=order_name,
+            order_values=order_values,
+            known_order_groups=known_order_groups,
+            reference_headings=reference_headings,
+        )
+    return runtime_order, live_order, reference_headings
+
+
 def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
     version = _require_int(payload.get("version"), path="keybindings.catalog.version", minimum=1)
     scopes_obj = _require_object(payload.get("scopes"), path="keybindings.catalog.scopes")
@@ -240,26 +304,11 @@ def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
             ),
         }
 
-    runtime_order = _require_string_list(
-        reference_obj.get("runtime_order"),
-        path="keybindings.catalog.reference_groups.runtime_order",
+    runtime_order, live_order, reference_headings = _validate_reference_groups(
+        reference_obj,
+        groups=groups,
+        gameplay_buckets=gameplay_buckets,
     )
-    live_order = _require_string_list(
-        reference_obj.get("live_order"),
-        path="keybindings.catalog.reference_groups.live_order",
-    )
-    headings_obj = _require_object(
-        reference_obj.get("headings"),
-        path="keybindings.catalog.reference_groups.headings",
-    )
-    reference_headings = {
-        _require_string(key, path="keybindings.catalog.reference_groups.headings keys", non_empty=True): _require_string(
-            value,
-            path=f"keybindings.catalog.reference_groups.headings.{key}",
-            non_empty=True,
-        )
-        for key, value in headings_obj.items()
-    }
 
     actions: dict[str, dict[str, Any]] = {}
     for action_name, raw_action in actions_obj.items():

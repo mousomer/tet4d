@@ -24,12 +24,61 @@ from tet4d.ai.playbot.types import (
     resolve_auto_planner_algorithm,
 )
 from tet4d.engine.core.model import BoardND
-from tet4d.engine.core.piece_transform import canonicalize_blocks_nd, enumerate_orientations_nd
+from tet4d.engine.core.piece_transform import (
+    canonicalize_blocks_nd,
+    normalize_blocks_nd,
+    rotate_blocks_nd,
+    rotation_planes_nd,
+)
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 
 canonical_blocks = canonicalize_blocks_nd
-enumerate_orientations = enumerate_orientations_nd
+
+
+def enumerate_orientations(
+    start_blocks: tuple[tuple[int, ...], ...],
+    ndim: int,
+    gravity_axis: int,
+) -> tuple[tuple[tuple[int, ...], ...], ...]:
+    planes = rotation_planes_nd(ndim, gravity_axis)
+    max_depth = 8 if ndim == 3 else 7
+    max_states = 240
+    queue: list[tuple[tuple[tuple[int, ...], ...], int]] = [(start_blocks, 0)]
+    seen: set[tuple[tuple[int, ...], ...]] = {start_blocks}
+    seen_shapes: set[tuple[tuple[int, ...], ...]] = {
+        canonical_blocks(normalize_blocks_nd(start_blocks))
+    }
+    ordered: list[tuple[tuple[int, ...], ...]] = [start_blocks]
+    index = 0
+    while index < len(queue) and len(seen) < max_states:
+        blocks, depth = queue[index]
+        index += 1
+        if depth >= max_depth:
+            continue
+        for axis_a, axis_b in planes:
+            for delta in (1, -1):
+                rotated = canonical_blocks(
+                    rotate_blocks_nd(
+                        blocks,
+                        axis_a=axis_a,
+                        axis_b=axis_b,
+                        quarter_turns=delta,
+                    )
+                )
+                if rotated in seen:
+                    continue
+                seen.add(rotated)
+                shape_key = canonical_blocks(normalize_blocks_nd(rotated))
+                if shape_key not in seen_shapes:
+                    seen_shapes.add(shape_key)
+                    ordered.append(rotated)
+                queue.append((rotated, depth + 1))
+                if len(seen) >= max_states:
+                    break
+            if len(seen) >= max_states:
+                break
+    return tuple(ordered)
 
 
 @dataclass(frozen=True)
@@ -331,4 +380,3 @@ def plan_best_nd_with_budget(
         algorithm=algorithm,
         planning_budget_ms=planning_budget_ms,
     )
-

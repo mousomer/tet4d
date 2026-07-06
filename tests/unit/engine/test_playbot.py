@@ -22,6 +22,9 @@ from tet4d.ai.playbot import (
     plan_best_2d_move,
     plan_best_nd_move,
 )
+from tet4d.ai.playbot.controller import _rotation_sequence_nd
+from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
+from tet4d.ai.playbot.planner_nd_search import enumerate_orientations
 from tet4d.ai.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
 from tet4d.ai.playbot.types import (
     BotMode,
@@ -33,6 +36,43 @@ from tet4d.engine.topology_explorer.presets import twisted_y_profile_3d
 
 
 class TestPlaybot(unittest.TestCase):
+    def test_lookahead_combines_base_candidate_followup_score(self) -> None:
+        candidates = ("doomed", "safe")
+        followups = {"doomed": -1000.0, "safe": -1.0}
+
+        selected, combined = choose_best_with_followup(
+            candidates=candidates,
+            base_candidate="doomed",
+            score_of=lambda candidate: 10.0 if candidate == "doomed" else 9.0,
+            cleared_of=lambda _candidate: 0,
+            followup_score_of=lambda candidate: followups[candidate],
+            deadline_s=float("inf"),
+            followup_weight=0.30,
+        )
+
+        self.assertEqual(selected, "safe")
+        self.assertAlmostEqual(combined, 8.7)
+
+    def test_nd_planner_orientations_are_controller_reachable(self) -> None:
+        cfg = GameConfigND(
+            dims=(6, 14, 4),
+            gravity_axis=1,
+            piece_set_id=PIECE_SET_3D_DEBUG,
+        )
+        state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=random.Random(0))
+        assert state.current_piece is not None
+        start = tuple(sorted(state.current_piece.rel_blocks))
+
+        for target in enumerate_orientations(start, cfg.ndim, cfg.gravity_axis):
+            sequence = _rotation_sequence_nd(
+                start,
+                target,
+                ndim=cfg.ndim,
+                gravity_axis=cfg.gravity_axis,
+            )
+            if target != start:
+                self.assertTrue(sequence)
+
     def test_grid_mode_cycle(self) -> None:
         self.assertEqual(cycle_grid_mode(GridMode.OFF), GridMode.BOTTOM_BOUNDARY)
         self.assertEqual(

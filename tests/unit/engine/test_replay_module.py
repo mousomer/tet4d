@@ -45,7 +45,19 @@ def _sig_nd(state: api.GameStateND) -> tuple[object, ...]:
 
 
 def test_replay_2d_record_and_payload_roundtrip() -> None:
-    cfg = api.GameConfig(width=8, height=16, speed_level=2, kick_level="light")
+    cfg = api.GameConfig(
+        width=8,
+        height=16,
+        speed_level=2,
+        topology_mode="wrap_all",
+        piece_set="debug_rectangles_2d",
+        kick_level="light",
+        random_cell_count=5,
+        challenge_layers=2,
+        lock_piece_points=9,
+        rng_mode="fixed_seed",
+        rng_seed=12345,
+    )
     actions = (
         api.Action.MOVE_LEFT,
         api.Action.ROTATE_POSITIVE,
@@ -59,7 +71,11 @@ def test_replay_2d_record_and_payload_roundtrip() -> None:
 
     assert restored.seed == 55
     assert restored.config.width == cfg.width
+    assert restored.config.topology_mode == cfg.topology_mode
+    assert restored.config.piece_set == cfg.piece_set
     assert restored.config.kick_level == cfg.kick_level
+    assert restored.config.rng_mode == cfg.rng_mode
+    assert restored.config.rng_seed == cfg.rng_seed
     assert tuple(event.action for event in restored.events) == tuple(
         a.name for a in actions
     )
@@ -87,7 +103,17 @@ def test_replay_2d_playback_matches_direct_api_execution() -> None:
 
 def test_replay_nd_tick_playback_matches_direct_api_execution() -> None:
     cfg = api.GameConfigND(
-        dims=(6, 14, 4), gravity_axis=1, speed_level=1, kick_level="standard"
+        dims=(6, 14, 4),
+        gravity_axis=1,
+        speed_level=1,
+        topology_mode="wrap_all",
+        piece_set_id="native_3d",
+        kick_level="standard",
+        random_cell_count=6,
+        challenge_layers=2,
+        lock_piece_points=11,
+        rng_mode="fixed_seed",
+        rng_seed=98765,
     )
     script = record_replay_nd_ticks(config=cfg, seed=202, ticks=6)
 
@@ -95,6 +121,10 @@ def test_replay_nd_tick_playback_matches_direct_api_execution() -> None:
     restored = ReplayTickScriptND.from_dict(payload)
     replayed = play_replay_nd_ticks(restored)
     assert restored.config.kick_level == cfg.kick_level
+    assert restored.config.topology_mode == cfg.topology_mode
+    assert restored.config.piece_set_id == cfg.piece_set_id
+    assert restored.config.rng_mode == cfg.rng_mode
+    assert restored.config.rng_seed == cfg.rng_seed
 
     direct = api.new_game_state_nd(cfg, seed=202)
     for _ in range(6):

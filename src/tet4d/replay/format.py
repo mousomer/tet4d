@@ -1,9 +1,55 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Any
 
 from tet4d.engine import api
+
+
+def _json_safe_config_value(value: Any) -> Any:
+    if isinstance(value, tuple):
+        return [_json_safe_config_value(item) for item in value]
+    if isinstance(value, list):
+        return [_json_safe_config_value(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            str(key): _json_safe_config_value(item) for key, item in value.items()
+        }
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    raise TypeError(f"Replay config field is not JSON-serializable: {type(value)!r}")
+
+
+def _config_to_dict(config: Any) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    for field in fields(config):
+        value = getattr(config, field.name)
+        payload[field.name] = _json_safe_config_value(value)
+    return payload
+
+
+def _edge_rules_or_none(value: object) -> tuple[tuple[str, str], ...] | None:
+    if value is None:
+        return None
+    if not isinstance(value, (list, tuple)):
+        return None
+    return tuple(tuple(str(part) for part in rule) for rule in value)
+
+
+def _game_config_2d_from_payload(payload: dict[str, Any]) -> api.GameConfig:
+    kwargs = dict(payload)
+    if "topology_edge_rules" in kwargs:
+        kwargs["topology_edge_rules"] = _edge_rules_or_none(kwargs["topology_edge_rules"])
+    return api.GameConfig(**kwargs)
+
+
+def _game_config_nd_from_payload(payload: dict[str, Any]) -> api.GameConfigND:
+    kwargs = dict(payload)
+    if "dims" in kwargs:
+        kwargs["dims"] = tuple(int(v) for v in kwargs["dims"])
+    if "topology_edge_rules" in kwargs:
+        kwargs["topology_edge_rules"] = _edge_rules_or_none(kwargs["topology_edge_rules"])
+    return api.GameConfigND(**kwargs)
 
 
 @dataclass(frozen=True)
@@ -28,26 +74,14 @@ class ReplayScript2D:
         return {
             "mode": "2d",
             "seed": int(self.seed),
-            "config": {
-                "width": self.config.width,
-                "height": self.config.height,
-                "gravity_axis": self.config.gravity_axis,
-                "speed_level": self.config.speed_level,
-                "kick_level": self.config.kick_level,
-            },
+            "config": _config_to_dict(self.config),
             "events": [event.to_dict() for event in self.events],
         }
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "ReplayScript2D":
         cfg_payload = payload["config"]
-        cfg = api.GameConfig(
-            width=int(cfg_payload["width"]),
-            height=int(cfg_payload["height"]),
-            gravity_axis=int(cfg_payload.get("gravity_axis", 1)),
-            speed_level=int(cfg_payload.get("speed_level", 1)),
-            kick_level=str(cfg_payload.get("kick_level", "off")),
-        )
+        cfg = _game_config_2d_from_payload(dict(cfg_payload))
         events = tuple(
             ReplayEvent2D.from_dict(item) for item in payload.get("events", ())
         )
@@ -65,23 +99,13 @@ class ReplayTickScriptND:
             "mode": "nd_ticks",
             "seed": int(self.seed),
             "ticks": int(self.ticks),
-            "config": {
-                "dims": tuple(int(v) for v in self.config.dims),
-                "gravity_axis": int(self.config.gravity_axis),
-                "speed_level": int(self.config.speed_level),
-                "kick_level": str(self.config.kick_level),
-            },
+            "config": _config_to_dict(self.config),
         }
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "ReplayTickScriptND":
         cfg_payload = payload["config"]
-        cfg = api.GameConfigND(
-            dims=tuple(int(v) for v in cfg_payload["dims"]),
-            gravity_axis=int(cfg_payload.get("gravity_axis", 1)),
-            speed_level=int(cfg_payload.get("speed_level", 1)),
-            kick_level=str(cfg_payload.get("kick_level", "off")),
-        )
+        cfg = _game_config_nd_from_payload(dict(cfg_payload))
         return cls(
             seed=int(payload.get("seed", 0)),
             config=cfg,

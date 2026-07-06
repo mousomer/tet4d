@@ -8,6 +8,7 @@ from unittest import mock
 
 from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
 from tet4d.engine.runtime import menu_config, menu_runtime_graph
+from tet4d.engine.ui_logic import menu_graph_linter
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
@@ -73,6 +74,23 @@ class TestMenuPolicy(unittest.TestCase):
                 "legacy_dispatch",
             }.issubset(item_types)
         )
+
+    def test_menu_graph_linter_reports_missing_submenu_target(self) -> None:
+        issues: list[menu_graph_linter.MenuGraphIssue] = []
+        menu_graph_linter._validate_submenu_targets(
+            {
+                "root": {
+                    "items": (
+                        {"type": "submenu", "menu_id": "missing_child"},
+                    )
+                }
+            },
+            issues=issues,
+        )
+
+        self.assertTrue(issues)
+        self.assertEqual(issues[0].kind, "reachability")
+        self.assertIn("missing_child", issues[0].message)
 
     def test_authored_settings_root_declares_expected_categories(self) -> None:
         settings_menu = menu_config.authored_menu_definition(

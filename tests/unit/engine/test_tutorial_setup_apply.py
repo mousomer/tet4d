@@ -636,6 +636,33 @@ class TutorialSetupApplyTests(unittest.TestCase):
             moved = state.current_piece.moved((0, 0, 0, expected_delta))
             self.assertTrue(state._can_exist(moved), msg=f"{step_id} not legal from spawn")
 
+    def test_nd_setup_failure_restores_existing_state(self) -> None:
+        cfg, state = _new_state_3d()
+        state.board.cells[(1, 17, 1)] = 7
+        original_cells = dict(state.board.cells)
+        original_piece = state.current_piece
+        original_bag = list(state.next_bag)
+        original_rng_state = state.rng.getstate()
+
+        with self.assertRaisesRegex(RuntimeError, "starter piece"):
+            apply_tutorial_step_setup_nd(
+                state,
+                cfg,
+                {
+                    "rng_seed": 3001,
+                    "starter_piece_id": "NOT_A_REAL_PIECE",
+                    "bottom_layers_min": 1,
+                    "bottom_layers_max": 2,
+                },
+                lesson_id="tutorial_3d_core",
+                step_id="move_x_neg",
+            )
+
+        self.assertEqual(state.board.cells, original_cells)
+        self.assertEqual(state.current_piece, original_piece)
+        self.assertEqual(state.next_bag, original_bag)
+        self.assertEqual(state.rng.getstate(), original_rng_state)
+
 
 if __name__ == "__main__":
     unittest.main()

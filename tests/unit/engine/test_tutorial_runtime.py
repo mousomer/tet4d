@@ -178,6 +178,8 @@ class TutorialRuntimeTests(unittest.TestCase):
             self.assertIsNotNone(initial_setup)
             assert initial_setup is not None
             self.assertEqual(initial_setup.get("step_id"), "move_x_neg")
+            self.assertIsNotNone(session.consume_pending_setup())
+            session.acknowledge_pending_setup("move_x_neg")
             self.assertIsNone(session.consume_pending_setup())
 
             self.assertTrue(self._complete_step_with_repeats(session, "move_x_neg"))
@@ -187,6 +189,7 @@ class TutorialRuntimeTests(unittest.TestCase):
             assert next_setup is not None
             self.assertEqual(next_setup.get("step_id"), "move_x_pos")
             self.assertEqual(next_setup.get("setup"), {})
+            session.acknowledge_pending_setup("move_x_pos")
             self.assertIsNone(session.consume_pending_setup())
 
             self.assertTrue(session.restart())
@@ -333,6 +336,7 @@ class TutorialRuntimeTests(unittest.TestCase):
                 self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
                 self.assertEqual(session.required_action(), "move_x_neg")
                 self.assertIsNotNone(session.consume_pending_setup())
+                session.acknowledge_pending_setup("move_x_neg")
                 self.assertIsNone(session.consume_pending_setup())
 
                 self.assertTrue(session.next_stage())

@@ -89,6 +89,36 @@ def _clear_runtime_board_state(state: GameState | GameStateND) -> None:
     state.game_over = False
 
 
+def _snapshot_tutorial_state(state: GameState | GameStateND) -> dict[str, Any]:
+    return {
+        "cells": dict(state.board.cells),
+        "last_cleared_levels": list(state.board.last_cleared_levels),
+        "last_cleared_cells": list(state.board.last_cleared_cells),
+        "current_piece": state.current_piece,
+        "next_bag": list(state.next_bag),
+        "score": state.score,
+        "lines_cleared": state.lines_cleared,
+        "game_over": state.game_over,
+        "rng_state": state.rng.getstate(),
+    }
+
+
+def _restore_tutorial_state(
+    state: GameState | GameStateND,
+    snapshot: dict[str, Any],
+) -> None:
+    state.board.cells.clear()
+    state.board.cells.update(snapshot["cells"])
+    state.board.last_cleared_levels = list(snapshot["last_cleared_levels"])
+    state.board.last_cleared_cells = list(snapshot["last_cleared_cells"])
+    state.current_piece = snapshot["current_piece"]
+    state.next_bag = list(snapshot["next_bag"])
+    state.score = int(snapshot["score"])
+    state.lines_cleared = int(snapshot["lines_cleared"])
+    state.game_over = bool(snapshot["game_over"])
+    state.rng.setstate(snapshot["rng_state"])
+
+
 def _piece_is_visible_2d(state: GameState, piece: ActivePiece2D) -> bool:
     mapped = state.mapped_piece_cells_for_piece(piece, include_above=True)
     if mapped is None:
@@ -1413,6 +1443,37 @@ def apply_tutorial_step_setup_2d(
         raise RuntimeError(
             f"tutorial setup failed ({scope_tag}): starter_piece_id is required"
         )
+    snapshot = _snapshot_tutorial_state(state)
+    try:
+        _apply_tutorial_step_setup_2d_mutating(
+            state=state,
+            cfg=cfg,
+            setup=setup,
+            scope_tag=scope_tag,
+            board_preset=board_preset,
+            min_visible_layer=min_visible_layer,
+            starter_piece=starter_piece,
+            lesson_id=lesson_id,
+            step_id=step_id,
+        )
+    except Exception:
+        _restore_tutorial_state(state, snapshot)
+        raise
+
+
+def _apply_tutorial_step_setup_2d_mutating(
+    *,
+    state: GameState,
+    cfg: GameConfig,
+    setup: dict[str, Any],
+    scope_tag: str,
+    board_preset: str,
+    min_visible_layer: int,
+    starter_piece: str,
+    lesson_id: str,
+    step_id: str,
+) -> None:
+    del lesson_id
     seed = _normalize_seed(setup.get("rng_seed"), default=int(cfg.rng_seed))
     setup_rng = _set_seeded_runtime_rng(state, seed=seed)
     layers_min, layers_max = _normalize_bottom_layers(setup)
@@ -1528,6 +1589,37 @@ def apply_tutorial_step_setup_nd(
         raise RuntimeError(
             f"tutorial setup failed ({scope_tag}): starter_piece_id is required"
         )
+    snapshot = _snapshot_tutorial_state(state)
+    try:
+        _apply_tutorial_step_setup_nd_mutating(
+            state=state,
+            cfg=cfg,
+            setup=setup,
+            scope_tag=scope_tag,
+            board_preset=board_preset,
+            min_visible_layer=min_visible_layer,
+            starter_piece=starter_piece,
+            lesson_id=lesson_id,
+            step_id=step_id,
+        )
+    except Exception:
+        _restore_tutorial_state(state, snapshot)
+        raise
+
+
+def _apply_tutorial_step_setup_nd_mutating(
+    *,
+    state: GameStateND,
+    cfg: GameConfigND,
+    setup: dict[str, Any],
+    scope_tag: str,
+    board_preset: str,
+    min_visible_layer: int,
+    starter_piece: str,
+    lesson_id: str,
+    step_id: str,
+) -> None:
+    del lesson_id
     seed = _normalize_seed(setup.get("rng_seed"), default=int(cfg.rng_seed))
     setup_rng = _set_seeded_runtime_rng(state, seed=seed)
     layers_min, layers_max = _normalize_bottom_layers(setup)

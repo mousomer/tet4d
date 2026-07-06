@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-06-21
+Updated: 2026-07-06
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -36,6 +36,17 @@ advisory mode fail opportunistically before pytest. CI now runs the same
 `CODEX_MODE=1 ./scripts/verify.sh` contract used locally and marks native
 tooling as explicit CI advisory until the documented strict-mode readiness
 checklist is complete.
+
+Python review-repair batch (2026-07-06): fix review findings inside existing
+AI, replay, runtime, tutorial, and UI-logic ownership boundaries. Scope covers
+controller-reachable ND playbot orientation representatives, follow-up score
+selection, lossless JSON-safe replay config payloads, state-root override path
+resolution, atomic JSON writes, saved keybinding duplicate validation with
+documented compatibility aliases, integer setting clamps, missing submenu
+target linting, keybinding catalog order/headings validation, and tutorial
+setup rollback/application-acknowledgement sequencing. This is a hardening
+batch only and does not introduce new gameplay authority, topology behavior,
+parity logic, native authority, or authority transfer.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior

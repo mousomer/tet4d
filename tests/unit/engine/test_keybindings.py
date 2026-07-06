@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import shutil
 import unittest
@@ -23,6 +24,7 @@ from tet4d.engine.runtime import keybinding_store, menu_settings_state
 from tet4d.engine.runtime.keybinding_runtime_state import KEYBINDING_STATE
 from tet4d.engine.runtime import menu_config
 from tet4d.engine.runtime.project_config import state_dir_path
+from tet4d.engine.ui_logic import keybindings_catalog
 
 
 @dataclass
@@ -476,6 +478,26 @@ class TestKeybindingProfiles(unittest.TestCase):
             validated["bindings"]["game"]["hard_drop"],
             [pygame.K_SPACE],
         )
+
+    def test_saved_profile_payload_rejects_duplicate_keycodes(self) -> None:
+        payload = {
+            "dimension": 2,
+            "profile": "custom_conflict",
+            "bindings": {
+                "system": {"menu": ["p"]},
+                "game": {"rotate_xy_pos": ["p"]},
+            },
+        }
+
+        with self.assertRaisesRegex(ValueError, "conflicts"):
+            keybinding_store.validate_keybinding_file_payload(payload)
+
+    def test_keybinding_reference_order_rejects_unknown_group(self) -> None:
+        payload = copy.deepcopy(keybindings_catalog._read_catalog_payload())
+        payload["reference_groups"]["runtime_order"] = ["system", "rotations"]
+
+        with self.assertRaisesRegex(RuntimeError, "unknown groups"):
+            keybindings_catalog._validate_catalog(payload)
 
     def test_saved_profile_payload_rejects_newer_schema_version(self) -> None:
         path = keybindings.profile_keybinding_file_path(2, keybindings.PROFILE_SMALL)

@@ -37,6 +37,12 @@ KEYBINDING_FILES = {
     3: KEYBINDINGS_DIR / "3d.json",
     4: KEYBINDINGS_DIR / "4d.json",
 }
+_ALLOWED_DUPLICATE_ACTION_PAIRS = frozenset(
+    {
+        frozenset(("move_down", "soft_drop")),
+        frozenset(("move_w_neg", "quit")),
+    }
+)
 
 _DEFAULT_GROUPS_BY_DIMENSION = {
     2: ("game", "explorer", "system"),
@@ -436,6 +442,70 @@ def _validate_complete_binding_payload(
             )
 
 
+def _validate_no_duplicate_keycodes(bindings: dict[str, object], *, path: str) -> None:
+    owners: dict[int, str] = {}
+
+    if all(
+        isinstance(action_name, str) and action_name in _keybinding_action_contracts()
+        for action_name in bindings.keys()
+    ):
+        for action_name, raw_keys in bindings.items():
+            _register_keybinding_owners(
+                owners,
+                str(action_name),
+                raw_keys,
+                action_path=f"{path}.{action_name}",
+            )
+        return
+
+    for group_name, raw_group in bindings.items():
+        if not isinstance(raw_group, dict):
+            continue
+        for action_name, raw_keys in raw_group.items():
+            _register_keybinding_owners(
+                owners,
+                str(action_name),
+                raw_keys,
+                action_path=f"{path}.{group_name}.{action_name}",
+            )
+
+
+def _register_keybinding_owners(
+    owners: dict[int, str],
+    action_name: str,
+    raw_keys: object,
+    *,
+    action_path: str,
+) -> None:
+    if not isinstance(raw_keys, list):
+        return
+    for keycode in raw_keys:
+        if not isinstance(keycode, int) or isinstance(keycode, bool):
+            continue
+        owner = owners.get(keycode)
+        if owner is not None and owner != action_name:
+            _raise_duplicate_keybinding_if_disallowed(
+                owner=owner,
+                action_name=action_name,
+                keycode=keycode,
+                action_path=action_path,
+            )
+        owners[keycode] = action_name
+
+
+def _raise_duplicate_keybinding_if_disallowed(
+    *,
+    owner: str,
+    action_name: str,
+    keycode: int,
+    action_path: str,
+) -> None:
+    action_pair = frozenset((owner, action_name))
+    if action_pair in _ALLOWED_DUPLICATE_ACTION_PAIRS:
+        return
+    raise ValueError(f"{action_path} keycode {keycode} conflicts with {owner}")
+
+
 def validate_keybinding_file_payload(
     payload: object,
     *,
@@ -458,10 +528,12 @@ def validate_keybinding_file_payload(
             bindings,
             allow_partial_bindings=allow_partial_bindings,
         )
+        _validate_no_duplicate_keycodes(bindings, path="keybinding.payload.bindings")
         return payload
     _validate_grouped_binding_payload(bindings, dimension=dimension)
     if not allow_partial_bindings:
         _validate_complete_binding_payload(bindings, dimension=dimension)
+    _validate_no_duplicate_keycodes(bindings, path="keybinding.payload.bindings")
     return payload
 
 
