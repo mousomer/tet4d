@@ -48,6 +48,13 @@ setup rollback/application-acknowledgement sequencing. This is a hardening
 batch only and does not introduce new gameplay authority, topology behavior,
 parity logic, native authority, or authority transfer.
 
+Stage 35 gameplay/topology sweep (2026-07-06): harden the Topology Playground
+launch-settings boundary so malformed `rigid_play_mode` values from saved or
+source settings normalize to `auto` before canonical runtime state is built.
+This preserves the existing `auto` / `on` / `off` transport policy, does not
+change topology traversal, drop/lock legality, rigid-play authority, parity
+logic, Godot/C++ routing, or authority ownership.
+
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior
 as the Python-authoritative migration oracle, Stage 3 endgame golden trace

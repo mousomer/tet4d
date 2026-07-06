@@ -19,6 +19,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
+- Stage 35 gameplay/topology sweep is active on
+  `codex/gameplay-topology-sweeps`: Topology Playground launch settings now
+  clamp unsupported `rigid_play_mode` values from saved/source settings to
+  `auto` before canonical runtime state construction. This is Python
+  gameplay/topology boundary hardening only and does not change topology
+  traversal, drop/lock legality, rigid-play policy, Godot/C++ routing, parity
+  logic, or authority ownership.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and

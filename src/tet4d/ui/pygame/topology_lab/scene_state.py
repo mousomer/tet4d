@@ -9,6 +9,8 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.runtime.topology_playground_state import (
     RIGID_PLAY_MODE_AUTO,
+    RIGID_PLAY_MODE_OFF,
+    RIGID_PLAY_MODE_ON,
     TOOL_CREATE,
     TOOL_EDIT,
     TOOL_NAVIGATE,
@@ -60,6 +62,16 @@ TOOL_LABELS = {
     TOOL_SANDBOX: "Sandbox",
     TOOL_PLAY: "Play",
 }
+_VALID_RIGID_PLAY_MODES = frozenset(
+    (RIGID_PLAY_MODE_AUTO, RIGID_PLAY_MODE_ON, RIGID_PLAY_MODE_OFF)
+)
+
+
+def _normalize_rigid_play_mode(value: object) -> str:
+    mode = str(value).strip().lower()
+    if mode in _VALID_RIGID_PLAY_MODES:
+        return mode
+    return RIGID_PLAY_MODE_AUTO
 
 
 @dataclass(frozen=True)
@@ -70,6 +82,13 @@ class ExplorerPlaygroundSettings:
     random_mode_index: int = 0
     game_seed: int = 0
     rigid_play_mode: str = RIGID_PLAY_MODE_AUTO
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "rigid_play_mode",
+            _normalize_rigid_play_mode(self.rigid_play_mode),
+        )
 
 
 @dataclass(frozen=True)
