@@ -19,6 +19,16 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
+- Stage 35 gameplay/topology sweep is active on
+  `codex/gameplay-topology-sweeps`: Topology Playground launch settings now
+  clamp unsupported `rigid_play_mode` values from saved/source settings to
+  `auto` before canonical runtime state construction; the sweep also adds
+  invariant coverage for 2D/ND placement, translation, rotation, hard-drop,
+  spawn, and topology seam behavior. `BoardND.can_place` now rejects duplicate
+  candidate cells to match the central placement validator. This is Python
+  gameplay/topology boundary hardening only and does not change topology
+  traversal, drop/lock legality, rigid-play policy, Godot/C++ routing, parity
+  logic, or authority ownership.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
@@ -557,7 +567,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.74`
+1. `delivery_size_pressure = 2.75`
 2. `code_balance = 1.67`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

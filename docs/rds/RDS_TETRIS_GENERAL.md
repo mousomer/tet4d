@@ -60,6 +60,9 @@ Cross-cutting requirements are defined in:
 3. Gravity acts on axis `y` in all modes.
 4. `y < 0` is allowed before lock; locking above top triggers game over.
 5. Board storage is sparse (`coord -> cell_id`).
+6. Placement legality must reject duplicate candidate cells, out-of-bounds
+   cells, and occupied cells consistently across direct board checks and the
+   central candidate-placement validator.
 
 ### 3.1 Shared topology preset rules
 
@@ -88,15 +91,18 @@ Cross-cutting requirements are defined in:
    selection, validation, validity status, and launch eligibility.
 3. `Sandbox` owns free probe/piece exploration, neighbor inspection, seam
    visibility, and exploratory movement diagnostics.
-4. `Play` owns launched gameplay and play-specific legality, including
+4. Explorer Playground launch settings must treat unsupported rigid-play mode
+   values as `auto`; malformed persisted or source settings must not prevent
+   canonical topology state construction.
+5. `Play` owns launched gameplay and play-specific legality, including
    gameplay drop and lock behavior.
-5. Sandbox/Explorer movement may exceed Play legality on non-trivial `Y`-seam
+6. Sandbox/Explorer movement may exceed Play legality on non-trivial `Y`-seam
    topologies; gravity tick, soft drop, and hard drop must not treat a
    `Y`-axis seam traversal as ordinary fall continuation.
-6. `Play This Topology` must preserve the exact canonical topology transport
+7. `Play This Topology` must preserve the exact canonical topology transport
    semantics selected and validated in the lab. No silent fallback or partial
    topology reconstruction is allowed.
-7. Wrap / invert / sphere-like selections are transport presets, not visual
+8. Wrap / invert / sphere-like selections are transport presets, not visual
    themes, spawn presets, or renderer-only options.
 
 ### 3.2b Topology/gameplay golden trace rules
