@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-06-21
+Last updated: 2026-07-06
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -97,6 +97,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   controls plus board/replay visual materials. This is product-shell styling
   only and adds no gameplay, topology, trace semantics, replay-frame
   semantics, parity evidence, native authority, or authority transfer.
+- Python review repairs are in progress on branch
+  `codex/python-review-fixes` under the existing architecture owners: AI
+  playbot planning now targets controller-reachable ND orientation
+  representatives and combines follow-up scores correctly; replay scripts
+  preserve JSON-safe config fields; runtime settings, keybindings,
+  state-root path resolution, and atomic JSON writes are hardened;
+  menu/keybinding catalogs report missing targets and order drift; tutorial
+  setup application is rollback-safe and pending setup is consumed only after
+  setup is successfully applied to committed game state. This batch adds no
+  gameplay authority transfer, topology semantics, parity evidence, native
+  authority, or Godot/C++ routing change.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
@@ -542,7 +553,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.40` (`low`)
+- `tech_debt.score = 5.41` (`low`)
 
 Dominant remaining pressure:
 

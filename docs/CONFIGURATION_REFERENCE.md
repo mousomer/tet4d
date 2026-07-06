@@ -663,6 +663,7 @@ Parameters:
 - `helper_layout.tokens.notes`: `"Helper membership/order is data-driven from the keybinding catalog."` (`string`)
 - `reference_groups.headings.camera`: `"Camera / View"` (`string`)
 - `reference_groups.headings.explorer`: `"Explorer Movement"` (`string`)
+- `reference_groups.headings.game`: `"Gameplay"` (`string`)
 - `reference_groups.headings.game_other`: `"Gameplay / Other"` (`string`)
 - `reference_groups.headings.game_rotation`: `"Gameplay / Rotation"` (`string`)
 - `reference_groups.headings.game_translation`: `"Gameplay / Translation"` (`string`)

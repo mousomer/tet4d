@@ -22,13 +22,15 @@ def choose_best_with_followup(
         candidates, key=lambda item: (score_of(item), cleared_of(item)), reverse=True
     )
     final_candidate = base_candidate
-    best_combined = score_of(base_candidate)
+    best_combined = float("-inf")
+    evaluated = False
 
     for candidate in ranked:
         if time.perf_counter() >= deadline_s:
             break
         followup_score = followup_score_of(candidate)
         combined = score_of(candidate) + followup_weight * followup_score
+        evaluated = True
         if combined > best_combined or (
             combined == best_combined
             and cleared_of(candidate) > cleared_of(final_candidate)
@@ -36,4 +38,6 @@ def choose_best_with_followup(
             final_candidate = candidate
             best_combined = combined
 
+    if not evaluated:
+        return base_candidate, score_of(base_candidate)
     return final_candidate, best_combined
