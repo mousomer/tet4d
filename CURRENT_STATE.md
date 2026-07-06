@@ -29,6 +29,14 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   gameplay/topology boundary hardening only and does not change topology
   traversal, drop/lock legality, rigid-play policy, Godot/C++ routing, parity
   logic, or authority ownership.
+- Stage 36 replay/parity contract hardening is active on
+  `codex/replay-parity-contract`: replay payloads now carry an explicit
+  version marker, reject unknown or missing semantic fields with readable
+  replay-format errors, and migration bundle manifests record replay, trace,
+  config, topology, piece-set, and RNG identity needed for Python-to-native
+  replay comparison. This is contract hardening only and does not change
+  gameplay rules, topology features, Godot/C++ ownership, or authority
+  transfer.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
@@ -563,7 +571,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.41` (`low`)
+- `tech_debt.score = 5.42` (`low`)
 
 Dominant remaining pressure:
 

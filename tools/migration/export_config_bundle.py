@@ -11,7 +11,11 @@ from pathlib import Path
 from typing import Any
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    _ROOT = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(_ROOT))
+    sys.path.insert(0, str(_ROOT / "src"))
+
+from tet4d.replay.format import REPLAY_SCHEMA_VERSION
 
 from tools.migration.trace_schema import (
     SCHEMA_VERSION,
@@ -219,21 +223,77 @@ def _config_source_entries() -> dict[str, dict[str, Any]]:
 def _trace_metadata(trace_type: str, source_path: Path) -> dict[str, Any]:
     payload = read_json(source_path)
     final = payload.get("final", {}) if isinstance(payload.get("final"), dict) else {}
+    initial = (
+        payload.get("initial", {}) if isinstance(payload.get("initial"), dict) else {}
+    )
+    settings = (
+        initial.get("settings", {}) if isinstance(initial.get("settings"), dict) else {}
+    )
     topology_payload = (
         payload.get("topology", {}) if isinstance(payload.get("topology"), dict) else {}
     )
+    topology_id = payload.get("topology_id", topology_payload.get("topology_id"))
+    trace_version = payload.get("trace_version")
+    config_identity = None
+    piece_set_identity = None
+    topology_identity: dict[str, Any] = {
+        "topology_id": topology_id,
+        "topology_preset": payload.get("topology_preset"),
+    }
+    rng_identity = None
+    if trace_type == "gameplay":
+        config_identity = {
+            "axis_sizes": settings.get("axis_sizes"),
+            "exploration_mode": settings.get("exploration_mode"),
+            "settings_digest": initial.get("settings_digest"),
+            "topology_mode": settings.get("topology_mode"),
+            "wrap_gravity_axis": settings.get("wrap_gravity_axis"),
+        }
+        topology_identity.update(
+            {
+                "explorer_profile_digest": settings.get("explorer_profile_digest"),
+                "topology_mode": settings.get("topology_mode"),
+                "wrap_gravity_axis": settings.get("wrap_gravity_axis"),
+            }
+        )
+        piece_set_identity = {"piece_set": settings.get("piece_set")}
+        rng_identity = {
+            "rng_mode": "fixed_seed",
+            "rng_seed": payload.get("seed"),
+        }
+    elif trace_type == "endgame":
+        rng_identity = {
+            "rng_mode": "fixed_seed",
+            "rng_seed": payload.get("seed"),
+        }
     return {
         "trace_type": str(payload.get("trace_type", trace_type)),
         "case_id": str(payload.get("case_id", source_path.stem)),
         "path": f"traces/{trace_type}/{source_path.name}",
         "source_path": _repo_path(source_path),
         "sha256": file_sha256(source_path),
+        "config_identity": config_identity,
         "dimension": payload.get("dimension"),
-        "topology_id": payload.get("topology_id", topology_payload.get("topology_id")),
+        "identity_digest": stable_hash(
+            {
+                "case_id": payload.get("case_id", source_path.stem),
+                "config_identity": config_identity,
+                "rng_identity": rng_identity,
+                "topology_identity": topology_identity,
+                "trace_schema_version": SCHEMA_VERSION,
+                "trace_type": payload.get("trace_type", trace_type),
+                "trace_version": trace_version,
+            }
+        ),
+        "piece_set_identity": piece_set_identity,
+        "rng_identity": rng_identity,
+        "topology_identity": topology_identity,
+        "topology_id": topology_id,
         "topology_preset": payload.get("topology_preset"),
         "frame_count": len(payload.get("frames", [])),
         "final_state_hash": final.get("state_hash"),
-        "trace_version": payload.get("trace_version"),
+        "trace_schema_version": SCHEMA_VERSION,
+        "trace_version": trace_version,
     }
 
 
@@ -308,6 +368,7 @@ def build_config_bundle(trace_index: dict[str, list[dict[str, Any]]]) -> dict[st
         },
         "versions": {
             "bundle_version": BUNDLE_VERSION,
+            "replay_schema_version": REPLAY_SCHEMA_VERSION,
             "trace_version": TRACE_VERSION,
             "trace_schema_version": SCHEMA_VERSION,
         },
@@ -352,6 +413,12 @@ def build_manifest(
             "trace_authority_root": "migration/golden_traces/",
             "runtime_semantics_authority": "src/",
         },
+        "versions": {
+            "bundle_version": BUNDLE_VERSION,
+            "replay_schema_version": REPLAY_SCHEMA_VERSION,
+            "trace_schema_version": SCHEMA_VERSION,
+            "trace_version": TRACE_VERSION,
+        },
         "traces": trace_index,
         "config": {
             "files": [
@@ -389,6 +456,134 @@ def build_manifest(
     }
 
 
+def _require_manifest_object(payload: Any, *, path: str) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path} must be an object")
+    return payload
+
+
+def _require_manifest_field(payload: dict[str, Any], key: str, *, path: str) -> Any:
+    if key not in payload:
+        raise ValueError(f"{path}.{key} is required")
+    return payload[key]
+
+
+def _require_manifest_int(payload: dict[str, Any], key: str, *, path: str) -> int:
+    value = _require_manifest_field(payload, key, path=path)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{path}.{key} must be an integer")
+    return int(value)
+
+
+def _validate_trace_manifest_entry(
+    entry: dict[str, Any],
+    *,
+    trace_type: str,
+    path: str,
+) -> None:
+    for key in (
+        "case_id",
+        "identity_digest",
+        "path",
+        "sha256",
+        "source_path",
+        "topology_identity",
+        "trace_schema_version",
+        "trace_version",
+    ):
+        _require_manifest_field(entry, key, path=path)
+    if _require_manifest_int(entry, "trace_version", path=path) != TRACE_VERSION:
+        raise ValueError(f"{path}.trace_version must be {TRACE_VERSION}")
+    if (
+        _require_manifest_int(entry, "trace_schema_version", path=path)
+        != SCHEMA_VERSION
+    ):
+        raise ValueError(f"{path}.trace_schema_version must be {SCHEMA_VERSION}")
+    topology_identity = _require_manifest_object(
+        entry["topology_identity"], path=f"{path}.topology_identity"
+    )
+    _require_manifest_field(
+        topology_identity, "topology_id", path=f"{path}.topology_identity"
+    )
+    if trace_type == "gameplay":
+        config_identity = _require_manifest_object(
+            _require_manifest_field(entry, "config_identity", path=path),
+            path=f"{path}.config_identity",
+        )
+        for key in (
+            "axis_sizes",
+            "settings_digest",
+            "topology_mode",
+            "wrap_gravity_axis",
+        ):
+            _require_manifest_field(
+                config_identity, key, path=f"{path}.config_identity"
+            )
+        piece_identity = _require_manifest_object(
+            _require_manifest_field(entry, "piece_set_identity", path=path),
+            path=f"{path}.piece_set_identity",
+        )
+        _require_manifest_field(
+            piece_identity, "piece_set", path=f"{path}.piece_set_identity"
+        )
+        rng_identity = _require_manifest_object(
+            _require_manifest_field(entry, "rng_identity", path=path),
+            path=f"{path}.rng_identity",
+        )
+        _require_manifest_field(rng_identity, "rng_mode", path=f"{path}.rng_identity")
+        _require_manifest_int(rng_identity, "rng_seed", path=f"{path}.rng_identity")
+    elif trace_type == "endgame":
+        rng_identity = _require_manifest_object(
+            _require_manifest_field(entry, "rng_identity", path=path),
+            path=f"{path}.rng_identity",
+        )
+        _require_manifest_field(rng_identity, "rng_mode", path=f"{path}.rng_identity")
+        _require_manifest_int(rng_identity, "rng_seed", path=f"{path}.rng_identity")
+
+
+def validate_bundle_manifest(manifest: dict[str, Any]) -> None:
+    if manifest.get("bundle_type") != "tet4d_migration_bundle":
+        raise ValueError("manifest.bundle_type must be tet4d_migration_bundle")
+    versions = _require_manifest_object(
+        _require_manifest_field(manifest, "versions", path="manifest"),
+        path="manifest.versions",
+    )
+    if (
+        _require_manifest_int(versions, "bundle_version", path="manifest.versions")
+        != BUNDLE_VERSION
+    ):
+        raise ValueError(f"manifest.versions.bundle_version must be {BUNDLE_VERSION}")
+    if (
+        _require_manifest_int(
+            versions, "replay_schema_version", path="manifest.versions"
+        )
+        != REPLAY_SCHEMA_VERSION
+    ):
+        raise ValueError(
+            f"manifest.versions.replay_schema_version must be {REPLAY_SCHEMA_VERSION}"
+        )
+    traces = _require_manifest_object(
+        _require_manifest_field(manifest, "traces", path="manifest"),
+        path="manifest.traces",
+    )
+    for trace_type in ("topology", "gameplay", "endgame"):
+        entries = _require_manifest_field(traces, trace_type, path="manifest.traces")
+        if not isinstance(entries, list):
+            raise ValueError(f"manifest.traces.{trace_type} must be a list")
+        if not entries:
+            raise ValueError(f"manifest.traces.{trace_type} must not be empty")
+        for index, raw_entry in enumerate(entries):
+            entry = _require_manifest_object(
+                raw_entry,
+                path=f"manifest.traces.{trace_type}[{index}]",
+            )
+            _validate_trace_manifest_entry(
+                entry,
+                trace_type=trace_type,
+                path=f"manifest.traces.{trace_type}[{index}]",
+            )
+
+
 def _write_readme(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(README_TEXT, encoding="utf-8")
@@ -407,6 +602,7 @@ def export_bundle(out_dir: Path) -> list[Path]:
         schema_index=schema_index,
         authority_index=authority_index,
     )
+    validate_bundle_manifest(manifest)
 
     written = [
         write_canonical_json(out_dir / "manifest.json", manifest),
@@ -445,6 +641,12 @@ def _file_text(path: Path) -> str:
 
 def compare_bundle_directory(path: Path) -> list[str]:
     failures: list[str] = []
+    manifest_path = path / "manifest.json"
+    if manifest_path.is_file():
+        try:
+            validate_bundle_manifest(read_json(manifest_path))
+        except ValueError as exc:
+            failures.append(f"invalid checked-in bundle manifest: {exc}")
     with tempfile.TemporaryDirectory(prefix="tet4d-config-bundle-") as raw_tmp:
         tmp_root = Path(raw_tmp) / "bundle"
         export_bundle(tmp_root)

@@ -4,7 +4,13 @@ from collections.abc import Iterable
 
 from tet4d.engine import api
 
-from .format import ReplayEvent2D, ReplayScript2D, ReplayTickScriptND
+from .format import (
+    REPLAY_SCHEMA_VERSION,
+    ReplayEvent2D,
+    ReplayFormatError,
+    ReplayScript2D,
+    ReplayTickScriptND,
+)
 
 
 def play_replay_2d(script: ReplayScript2D) -> api.GameState2D:
@@ -36,8 +42,10 @@ def record_replay_nd_ticks(
 
 __all__ = [
     "ReplayEvent2D",
+    "ReplayFormatError",
     "ReplayScript2D",
     "ReplayTickScriptND",
+    "REPLAY_SCHEMA_VERSION",
     "play_replay_2d",
     "play_replay_nd_ticks",
     "record_replay_2d",

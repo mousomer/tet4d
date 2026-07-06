@@ -381,7 +381,7 @@ It is a public symbol skim for navigation, not full API documentation, and it do
 - `src/tet4d/engine/ui_logic/menu_layout.py`: `LayoutRect`, `MenuLayoutZones`, `compute_menu_layout_zones(*, width, height, outer_pad, header_height, ...)`
 - `src/tet4d/engine/ui_logic/view_modes.py`: `GridMode`, `ShadowMode`, `cycle_grid_mode(mode)`, `grid_mode_label(mode)`, `shadow_mode_label(mode)`
 - `src/tet4d/replay/__init__.py`: `play_replay_2d(script)`, `play_replay_nd_ticks(script)`, `record_replay_2d(*, config, seed, actions)`, `record_replay_nd_ticks(*, config, seed, ticks)`
-- `src/tet4d/replay/format.py`: `ReplayEvent2D`, `ReplayScript2D`, `ReplayTickScriptND`
+- `src/tet4d/replay/format.py`: `ReplayFormatError`, `ReplayEvent2D`, `ReplayScript2D`, `ReplayTickScriptND`
 - `src/tet4d/shared/nd_coords.py`: `coord_from_column(column, lateral_axes, gravity_axis, gravity_value, ...)`
 - `src/tet4d/ui/pygame/__init__.py`: `run_2d()`, `run_3d()`, `run_4d()`
 - `src/tet4d/ui/pygame/endgame_animation.py`: `EndgamePresetConfig`, `EndgameAnimationTuning`, `load_endgame_animation_tuning()`, `EndgameRenderContext`, `SnapshotCell`, `EndgameSnapshot`, `EndgameCellSplit`, `ShellFragment`, `EndgameShellArtifact`, `EndgameGridBreakMark`, `EndgameShatterState`, `EndgameAnimationState`, ...
