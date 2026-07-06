@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-06-21
+Last updated: 2026-07-05
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -143,7 +143,22 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Game` button and endgame mouse camera controls while gameplay commands remain
   blocked, and moves the Calm Blueprint hierarchy into config-owned roles for
   `hint.section`, `hint.keycap.border`, `hint.keycap.text`, `hint.action`,
-  `hint.note`, and `hint.error`.
+  `hint.note`, and `hint.error`. Stage 33f review repairs keep that boundary
+  while preserving keyboard-hint settings across replay/live transitions,
+  restoring bundle status after live mode, avoiding unchanged hint-panel
+  rebuilds, styling live game-over badges from explicit status roles, routing
+  W-label opacity through `label.w_layer`, repairing Tab/Fit View control-map
+  drift, and removing obsolete camera pan code after Shift-drag became camera
+  roll.
+- Python review repairs are in progress on the same branch under the existing
+  architecture owners: AI playbot planning now targets controller-reachable ND
+  orientations and combines follow-up scores correctly; replay scripts preserve
+  JSON-safe config fields; runtime settings, keybindings, state-root path
+  resolution, and atomic JSON writes are hardened; menu/keybinding catalogs
+  report missing targets and order drift; tutorial setup application is
+  rollback-safe and pending setup is acknowledged only after successful UI
+  application. This batch adds no gameplay authority transfer, topology
+  semantics, parity evidence, native authority, or Godot/C++ routing change.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
@@ -589,7 +604,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.40` (`low`)
+- `tech_debt.score = 5.41` (`low`)
 
 Dominant remaining pressure:
 

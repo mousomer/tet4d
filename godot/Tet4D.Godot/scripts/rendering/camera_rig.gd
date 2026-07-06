@@ -21,7 +21,6 @@ const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
 @export var min_distance := 8.0
 @export var max_distance := 80.0
 @export var orbit_sensitivity := 0.01
-@export var pan_sensitivity := 0.015
 @export var zoom_sensitivity := 1.1
 
 var _target_focus := Vector3.ZERO
@@ -145,13 +144,6 @@ func nudge_roll(delta_radians: float) -> void:
 
 func roll(delta: Vector2) -> void:
 	_target_roll += delta.x * orbit_sensitivity
-	_current_fit_state = "manual"
-
-
-func pan(delta: Vector2) -> void:
-	var right: Vector3 = Basis(Vector3.UP, _target_yaw).x
-	var up: Vector3 = Vector3.UP
-	_target_focus += (-right * delta.x + up * delta.y) * pan_sensitivity * _target_distance
 	_current_fit_state = "manual"
 
 

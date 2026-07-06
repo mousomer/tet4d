@@ -39,7 +39,7 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 func _apply_control(control: Control, style_manager) -> void:
 	control.set_meta("shell_style_theme_id", style_manager.get_theme_id())
 	if control is PanelContainer:
-		var elevated := control.name.find("Top") >= 0 or control.name.find("Bottom") >= 0 or control.name.find("Authority") >= 0
+		var elevated := _is_elevated_panel(control)
 		apply_panel(control, style_manager, elevated)
 	if control is Label:
 		_apply_label(control as Label, style_manager)
@@ -66,6 +66,10 @@ func _apply_label(label: Label, style_manager) -> void:
 			role = ShellStyleRolesScript.TEXT_MUTED
 		"WarningLabel":
 			role = ShellStyleRolesScript.STATE_WARNING
+		"StatusAccentLabel":
+			role = ShellStyleRolesScript.ACCENT_PRIMARY
+		"StatusErrorLabel":
+			role = ShellStyleRolesScript.STATE_ERROR
 		"CockpitValueLabel":
 			role = ShellStyleRolesScript.DIAGNOSTIC_METADATA
 		"WLayerLabel":
@@ -81,20 +85,18 @@ func _apply_label(label: Label, style_manager) -> void:
 	elif label.name.find("ControlHintNote") >= 0:
 		role = ShellStyleRolesScript.HINT_NOTE
 	elif label.name.find("ControlHintWarning") >= 0:
-		role = ShellStyleRolesScript.HINT_ERROR if label.text.find("GAME OVER") >= 0 else ShellStyleRolesScript.STATE_WARNING
-	elif label.name.find("Hint") >= 0 or label.text.find("Hint") >= 0:
+		role = ShellStyleRolesScript.HINT_ERROR
+	elif label.name.find("Hint") >= 0:
 		role = ShellStyleRolesScript.LABEL_HINT
 	elif label.name.find("ValueLabel") >= 0 or label.name.find("StateValue") >= 0:
 		role = ShellStyleRolesScript.DIAGNOSTIC_METADATA
 	elif label.name.find("WLayer") >= 0 or label.name.find("Slice") >= 0:
 		role = ShellStyleRolesScript.LABEL_W_LAYER
-	elif label.name.find("StatusBadge") >= 0 and label.text.find("GAME OVER") >= 0:
-		role = ShellStyleRolesScript.STATE_ERROR
 	label.add_theme_color_override("font_color", style_manager.get_color(role))
 	if label.theme_type_variation == "KeycapLabel":
 		label.add_theme_stylebox_override("normal", _keycap_box(style_manager))
 	elif label.name.find("StatusBadge") >= 0:
-		var badge_border := ShellStyleRolesScript.STATE_ERROR if label.text.find("GAME OVER") >= 0 else ShellStyleRolesScript.ACCENT_PRIMARY
+		var badge_border := ShellStyleRolesScript.STATE_ERROR if label.theme_type_variation == "StatusErrorLabel" else ShellStyleRolesScript.ACCENT_PRIMARY
 		label.add_theme_stylebox_override("normal", _badge_box(style_manager, badge_border))
 
 
@@ -153,55 +155,44 @@ func _apply_line_edit(line_edit: LineEdit, style_manager) -> void:
 	line_edit.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.ACCENT_FOCUS))
 
 
-func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = 8) -> StyleBoxFlat:
+func _flat_box(style_manager, background_role: String, border_role: String, radius: int = 4, content_margin: int = 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = style_manager.get_color(background_role)
 	style.border_color = style_manager.get_color(border_role)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
+	style.set_corner_radius_all(radius)
 	style.set_content_margin_all(content_margin)
 	return style
+
+
+func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = 8) -> StyleBoxFlat:
+	return _flat_box(style_manager, background_role, border_role, 4, content_margin)
 
 
 func _keycap_box(style_manager) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = style_manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD)
-	style.border_color = style_manager.get_color(ShellStyleRolesScript.HINT_KEYCAP_BORDER)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.set_content_margin_all(4)
-	return style
+	return _flat_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.HINT_KEYCAP_BORDER, 3, 4)
 
 
 func _badge_box(style_manager, border_role: String) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = style_manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD)
-	style.border_color = style_manager.get_color(border_role)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(5)
-	return style
+	return _flat_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, border_role, 4, 5)
 
 
 func _panel_box(style_manager, background_role: String, border_role: String, content_margin: int) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = style_manager.get_color(background_role)
-	style.border_color = style_manager.get_color(border_role)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(content_margin)
-	return style
+	return _flat_box(style_manager, background_role, border_role, 4, content_margin)
 
 
 func _checkbox_box(style_manager, background_role: String, border_role: String) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = style_manager.get_color(background_role)
-	style.border_color = style_manager.get_color(border_role)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.set_content_margin_all(4)
-	return style
+	return _flat_box(style_manager, background_role, border_role, 3, 4)
 
 
 func _is_inspector_panel(panel: Control) -> bool:
 	return panel.name.find("Inspector") >= 0 or panel.name.find("Settings") >= 0 or panel.name.find("Diagnostics") >= 0 or panel.name.find("Event") >= 0
+
+
+func _is_elevated_panel(panel: Control) -> bool:
+	return [
+		"TopStatusPanel",
+		"TopReplaySummaryPanel",
+		"AuthorityPanel",
+		"BottomReplayControls",
+	].has(panel.name)

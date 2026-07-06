@@ -112,6 +112,11 @@ func _check_control_hint_palette(manager) -> Array:
 	warning.text = "GAME OVER · Piece out of bounds"
 	warning.theme_type_variation = "WarningLabel"
 	group.add_child(warning)
+	var status := Label.new()
+	status.name = "TopStatusBadgeLabel"
+	status.text = "[ GAME OVER ] Piece out of bounds"
+	status.theme_type_variation = "StatusErrorLabel"
+	group.add_child(status)
 	applier.apply_to_tree(group, manager)
 	var keycap_box := keycap.get_theme_stylebox("normal") as StyleBoxFlat
 	if keycap_box == null:
@@ -128,6 +133,13 @@ func _check_control_hint_palette(manager) -> Array:
 		failures.append("control notes should use hint.note")
 	if warning.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_ERROR):
 		failures.append("control game-over warnings should use hint.error")
+	var status_box := status.get_theme_stylebox("normal") as StyleBoxFlat
+	if status.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.STATE_ERROR):
+		failures.append("status error badges should use state.error text")
+	if status_box == null:
+		failures.append("status error badges should receive a badge stylebox")
+	elif status_box.border_color != manager.get_color(ShellStyleRolesScript.STATE_ERROR):
+		failures.append("status error badges should use state.error border")
 	return failures
 
 
@@ -167,8 +179,8 @@ func _check_replay_visual_roles() -> Array: # tet4d-semantic-boundary: allow tes
 		failures.append("board fill should use background.board")
 	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_BOARD_GRID, "tron") != manager.get_color(ShellStyleRolesScript.GRID_MINOR):
 		failures.append("board grid should use grid.minor")
-	if ReplayVisuals.slice_label_color("tron").a >= 0.9:
-		failures.append("W/layer labels should be muted orientation markers")
+	if ReplayVisuals.slice_label_color("tron") != manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER):
+		failures.append("W/layer labels should use config-owned label.w_layer")
 	if ReplayVisuals.event_marker_material("tron").albedo_color != manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS):
 		failures.append("event markers should use diagnostic.bounds")
 	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACCENT_SOFT, "tron") != manager.get_color(ShellStyleRolesScript.ACCENT_SOFT):

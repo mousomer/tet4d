@@ -124,6 +124,8 @@ const TRACE_COLOR_PALETTE := [
 	Color(0.32, 0.92, 0.65, 1.0),
 ]
 
+static var _palette_cache := {}
+
 
 static func default_display_mode() -> String:
 	return DISPLAY_MODE_TRON
@@ -313,7 +315,7 @@ static func event_marker_material(mode: String = DISPLAY_MODE_TRON) -> StandardM
 
 
 static func slice_label_color(mode: String = DISPLAY_MODE_TRON) -> Color:
-	return _with_alpha(color_for_role(ROLE_TEXT_DIM, mode), 0.74)
+	return color_for_role(ROLE_W_SLICE_LABEL, mode)
 
 
 static func slice_label_chip_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
@@ -329,9 +331,11 @@ static func slice_outline_thickness(mode: String = DISPLAY_MODE_TRON) -> float:
 
 static func _palette(mode: String) -> Dictionary:
 	var normalized_mode := normalize_display_mode(mode)
+	if _palette_cache.has(normalized_mode):
+		return _palette_cache.get(normalized_mode)
 	var manager = ShellStyleManagerScript.new()
 	manager.set_theme(normalized_mode)
-	return {
+	var palette := {
 		ROLE_BACKGROUND: manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
 		ROLE_PANEL_BACKGROUND: manager.get_color(ShellStyleRolesScript.BACKGROUND_PANEL),
 		ROLE_PANEL_QUIET: manager.get_color(ShellStyleRolesScript.BACKGROUND_PANEL),
@@ -370,6 +374,8 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_W_SLICE_LABEL: manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER),
 		ROLE_VIEWPORT_FRAME: manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
 	}
+	_palette_cache[normalized_mode] = palette
+	return palette
 
 
 static func _role_material(role: String, mode: String, emission_strength: float) -> StandardMaterial3D:

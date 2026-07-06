@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-06-21
+Updated: 2026-07-05
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -53,10 +53,27 @@ tokens. Stage 33f keeps the visible live game-over `Restart Game` button and
 viewport mouse camera controls after game over, then moves Calm Blueprint
 cockpit hierarchy into config-owned roles for `hint.section`,
 `hint.keycap.border`, `hint.keycap.text`, `hint.action`, `hint.note`, and
-`hint.error`. No gameplay, topology,
+`hint.error`. Stage 33f review repairs preserve keyboard-hint settings across
+replay/live transitions, restore bundle status after live mode, avoid
+unchanged hint-panel rebuilds, style live game-over badges through explicit
+status roles, route W-label opacity through `label.w_layer`, repair Tab/Fit
+View control-map drift, derive test hint text from structured control groups,
+and remove obsolete camera pan code after Shift-drag became camera roll. No
+gameplay, topology,
 movement, trace semantics, replay-frame
 semantics, parity logic, native authority, or authority transfer is added. Full
 manual visual acceptance remains required before merge acceptance.
+
+Python review-repair batch (2026-07-05): fix review findings inside existing
+AI, replay, runtime, tutorial, and UI-logic ownership boundaries. Scope covers
+controller-reachable ND playbot orientation enumeration, follow-up score
+selection, lossless JSON-safe replay config payloads, state-root override path
+resolution, atomic JSON writes, saved keybinding duplicate validation with
+documented compatibility aliases, integer setting clamps, missing submenu
+target linting, keybinding catalog order/headings validation, and tutorial
+setup rollback/acknowledgement sequencing. This is a hardening batch only and
+does not introduce new gameplay authority, topology behavior, parity logic,
+native authority, or authority transfer.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior

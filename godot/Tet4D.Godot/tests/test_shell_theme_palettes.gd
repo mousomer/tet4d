@@ -38,7 +38,7 @@ func run() -> Array:
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.ACCENT_FOCUS), Color.html("#7DD3FC"), "tron Blueprint accent.focus")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.CELL_LOCKED), Color.html("#5E6F89"), "tron Calm Blueprint locked cell")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.CELL_SECONDARY), Color.html("#6657B8"), "tron Calm Blueprint secondary cell")
-		_assert_color(failures, tron.get_color(ShellStyleRolesScript.LABEL_W_LAYER), Color.html("#78909C"), "tron muted W label")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.LABEL_W_LAYER), Color.html("#78909CBD"), "tron muted W label")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_SECTION), Color.html("#2FB7C8"), "tron hint.section")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_KEYCAP_BORDER), Color.html("#426D7A"), "tron hint.keycap.border")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_KEYCAP_TEXT), Color.html("#DDEBFA"), "tron hint.keycap.text")

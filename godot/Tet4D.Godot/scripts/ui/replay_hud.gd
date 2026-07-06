@@ -37,13 +37,9 @@ const SCREEN_VIEWER := "viewer"
 const SCREEN_SETTINGS := "settings"
 const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
-const REPLAY_HINT_TEXT := "Space Play/Pause Replay · ←/→ Frame · ↑/↓ Case · 1/2/3 Family · F Fit · H Help · Tab Live 2D · Q/Esc Quit"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
-const LIVE_2D_HINT_TEXT := "A/D or ←/→ Move · W/↑/X Rotate · Z Rotate CCW · S/↓ Soft Drop · Space Hard Drop · P Pause · R Reset · F Fit · Tab Live 3D · Esc Quit"
 const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Esc quits. Godot sends commands only."
-const LIVE_3D_HINT_TEXT := "A/D or ←/→ X Move · W/S or ↑/↓ Z Move · Shift Soft Drop · Space Hard Drop · R/T: XY Rotate · F/G: XZ Rotate · V/B: YZ Rotate · P Pause · Backspace Reset · Tab Live 4D · Esc Quit"
 const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab switches to Live 4D, and Esc quits. Godot sends commands only."
-const LIVE_4D_HINT_TEXT := "Move: A/D or ←/→ X, W/S or ↑/↓ Z, Q/E W · Drop: Shift Soft, Space Hard · Plane Rotation: R/T XY, F/G XZ, V/B YZ, Y/U XW, H/J YW, N/M ZW · Cam: I/K Pitch, O/L Yaw, ,/. Roll, - Out, =/+ In · Mouse: Drag Orbit, Shift Drag Roll, Wheel Zoom, Double-click Fit · P Pause · Backspace Reset · Tab Replay · Esc Quit"
 const LIVE_4D_HELP_TEXT := "Live 4D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Q/E move across W slices, Shift soft drops, Space hard drops, R/T rotates on XY, F/G on XZ, V/B on YZ, Y/U on XW, H/J on YW, and N/M on ZW. In each plane pair, the left key is CCW and the right key is CW. I/K pitch the camera, O/L yaw, comma/period roll, - zooms out, and =/+ zooms in without dispatching gameplay. Mouse drag orbits, Shift-drag rolls, wheel zooms, and double-click fits the view. P pauses, Backspace resets, Tab returns to Replay, and Esc quits. Q is W- movement in Live 4D. Godot sends commands only."
 
 var _bundle_status_label: Label
@@ -110,6 +106,9 @@ var _style_manager = ShellStyleManagerScript.new()
 var _style_applier = ShellControlStyleApplierScript.new()
 var _current_screen := SCREEN_MAIN_MENU
 var _geometry_diagnostics_enabled := false
+var _keyboard_hints_visible := true
+var _bundle_status_text := ""
+var _bundle_status_detail := ""
 var _live_2d_paused := false
 var _live_2d_game_over := false
 var _live_3d_paused := false
@@ -119,25 +118,25 @@ var _live_4d_game_over := false
 
 
 static func replay_hint_text() -> String:
-	return REPLAY_HINT_TEXT
+	return _control_groups_text(replay_control_hint_groups())
 
 
 static func live_2d_hint_text() -> String:
-	return LIVE_2D_HINT_TEXT
+	return _control_groups_text(live_2d_control_hint_groups())
 
 
 static func live_3d_hint_text() -> String:
-	return LIVE_3D_HINT_TEXT
+	return _control_groups_text(live_3d_control_hint_groups())
 
 
 static func live_4d_hint_text() -> String:
-	return LIVE_4D_HINT_TEXT
+	return _control_groups_text(live_4d_control_hint_groups())
 
 
 static func replay_control_hint_groups() -> Array:
 	return [
 		{"group": "Replay", "items": [["Space", "Play / Pause"], ["Left/Right", "Previous / Next frame"], ["Up/Down", "Previous / Next case"], ["1/2/3", "Trace family"]]},
-		{"group": "System", "items": [["F", "Fit View"], ["H", "Help / Controls"], ["Q/Esc", "Quit Replay"]]},
+		{"group": "System", "items": [["F", "Fit View"], ["H", "Help / Controls"], ["Tab", "Live 2D"], ["Q/Esc", "Quit Replay"]]},
 	]
 
 
@@ -145,7 +144,7 @@ static func live_2d_control_hint_groups() -> Array:
 	return [
 		{"group": "Movement", "items": [["A/D", "Move left / right"], ["Left/Right", "Move left / right"], ["S/Down", "Soft Drop"], ["Space", "Hard Drop"]]},
 		{"group": "Rotation", "items": [["W/Up/X", "Rotate clockwise"], ["Z", "Rotate counter-clockwise"]]},
-		{"group": "System", "items": [["P", "Pause"], ["R", "Reset"], ["Tab", "Live 3D"], ["Esc", "Back / Quit"]]},
+		{"group": "System", "items": [["P", "Pause"], ["R", "Reset"], ["F", "Fit View"], ["Tab", "Live 3D"], ["Esc", "Back / Quit"]]},
 	]
 
 
@@ -167,7 +166,7 @@ static func live_4d_control_hint_groups() -> Array:
 		},
 		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
 		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]},
-		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Esc", "Back / Quit"], ["Fit View", "Fit View"]]},
+		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Tab", "Replay"], ["Esc", "Back / Quit"]]},
 	]
 
 
@@ -176,7 +175,15 @@ static func quick_control_hint_groups(mode: String) -> Array:
 		"live_2d", "live_3d", "live_4d":
 			return []
 		_:
-			return [{"group": "Quick", "items": [["Space", "Play / Pause"], ["Left/Right", "Frame"], ["Up/Down", "Case"], ["1/2/3", "Family"], ["F", "Fit View"], ["Q/Esc", "Quit"]]}]
+			return [{"group": "Quick", "items": [["Space", "Play / Pause"], ["Left/Right", "Frame"], ["Up/Down", "Case"], ["1/2/3", "Family"], ["F", "Fit View"], ["Tab", "Live 2D"], ["Q/Esc", "Quit"]]}]
+
+
+static func _control_groups_text(groups: Array) -> String:
+	var parts: Array = []
+	for group in groups:
+		for item in group.get("items", []):
+			parts.append("%s %s" % [str(item[0]), str(item[1])])
+	return " · ".join(parts)
 
 
 func _ready() -> void:
@@ -198,9 +205,11 @@ func _notification(what: int) -> void:
 
 
 func set_bundle_status(text: String, detail: String = "") -> void:
+	_bundle_status_text = text
+	_bundle_status_detail = detail if detail != "" else text
 	_bundle_status_label.text = text
 	if _bundle_detail_label != null:
-		_bundle_detail_label.text = detail if detail != "" else text
+		_bundle_detail_label.text = _bundle_status_detail
 
 
 func set_camera_status(text: String) -> void:
@@ -427,7 +436,8 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
 	if _top_state_badge_label != null:
 		_top_state_badge_label.text = "[ PAUSED ]" if not is_playing else "[ RUNNING ]"
-		_top_state_badge_label.theme_type_variation = "AccentLabel"
+		_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
+		_style_applier.apply_to_tree(_top_state_badge_label, _style_manager)
 	if _reset_button != null:
 		_reset_button.text = "Reset Replay"
 	if _viewport_title != null:
@@ -504,6 +514,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"bottom_bar": bottom_rect,
 		"bottom_bar_visible": _bottom_panel.visible if _bottom_panel != null else false,
 		"viewport_hints_visible": _mode_hint_strip.visible if _mode_hint_strip != null else false,
+		"bottom_hints_visible": _hint_label.visible if _hint_label != null else false,
 		"viewport_size": get_viewport_rect().size,
 		"supported_minimum_size": ReplayVisuals.supported_shell_minimum_size(),
 		"world_parent": _game_viewport.get_node_or_null("WorldRoot") if _game_viewport != null else null,
@@ -518,6 +529,8 @@ func layout_contract_snapshot() -> Dictionary:
 		"inspector_hint_text": _collect_label_text(_inspector_hint_panel),
 		"right_inspector_order": _visible_direct_child_names(_right_column),
 		"top_status_badge_text": _top_state_badge_label.text if _top_state_badge_label != null else "",
+		"top_status_badge_color": _top_state_badge_label.get_theme_color("font_color") if _top_state_badge_label != null else Color.TRANSPARENT,
+		"top_status_badge_border_color": _label_style_border_color(_top_state_badge_label),
 		"restart_game_button_visible": _restart_game_button.visible if _restart_game_button != null else false,
 		"restart_game_button_text": _restart_game_button.text if _restart_game_button != null else "",
 		"authority_text": _authority_label.text if _authority_label != null else "",
@@ -597,7 +610,8 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 		_authority_label.text = "%s | C++ PlainNDSession | Godot shell" % mode_label
 	if _top_state_badge_label != null:
 		_top_state_badge_label.text = _status_badge_text(state_label, reason)
-		_top_state_badge_label.theme_type_variation = "WarningLabel" if state_label == "Game Over" else "AccentLabel"
+		_top_state_badge_label.theme_type_variation = "StatusErrorLabel" if state_label == "Game Over" else "StatusAccentLabel"
+		_style_applier.apply_to_tree(_top_state_badge_label, _style_manager)
 	if _restart_game_button != null:
 		_restart_game_button.visible = state_label == "Game Over"
 		_restart_game_button.text = "Restart Game"
@@ -612,9 +626,13 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 	if _restart_game_button != null and not live_mode:
 		_restart_game_button.visible = false
 	if _mode_hint_strip != null:
-		_mode_hint_strip.visible = not live_mode
+		_mode_hint_strip.visible = (not live_mode) and _keyboard_hints_visible
 	if _hint_label != null:
-		_hint_label.visible = not live_mode
+		_hint_label.visible = (not live_mode) and _keyboard_hints_visible
+	if not live_mode and _bundle_status_label != null:
+		_bundle_status_label.text = _bundle_status_text if _bundle_status_text != "" else "Bundle"
+	if not live_mode and _bundle_detail_label != null:
+		_bundle_detail_label.text = _bundle_status_detail if _bundle_status_detail != "" else _bundle_status_text
 	if _viewport_hint != null:
 		_viewport_hint.visible = not live_mode
 		if live_mode:
@@ -727,12 +745,11 @@ func _set_layout_bounds_visible(visible: bool) -> void:
 
 
 func _set_keyboard_hints_visible(visible: bool) -> void:
-	if _bottom_panel != null and not _bottom_panel.visible:
-		return
+	_keyboard_hints_visible = visible
 	if _mode_hint_strip != null:
-		_mode_hint_strip.visible = visible
+		_mode_hint_strip.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
 	if _hint_label != null:
-		_hint_label.visible = visible
+		_hint_label.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
 	if _help_panel != null and not visible:
 		_help_panel.visible = false
 
@@ -885,7 +902,7 @@ func _build_layout() -> void:
 	_top_state_badge_label = Label.new()
 	_top_state_badge_label.name = "TopStatusBadgeLabel"
 	_top_state_badge_label.text = "[ PAUSED ]"
-	_top_state_badge_label.theme_type_variation = "AccentLabel"
+	_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
 	_top_state_badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	top_summary_box.add_child(_top_state_badge_label)
 	_restart_game_button = Button.new()
@@ -1495,6 +1512,10 @@ func _update_control_hint_panel(
 	if panel == null:
 		return
 	compact = bool(panel.get_meta("hint_compact", compact))
+	var cache_key := "%s|%s|%s|%s" % [mode, str(warning), warning_text, str(compact)]
+	if str(panel.get_meta("hint_cache_key", "")) == cache_key:
+		return
+	panel.set_meta("hint_cache_key", cache_key)
 	panel.set_meta("hint_mode", mode)
 	panel.set_meta("hint_warning", warning)
 	panel.set_meta("hint_compact", compact)
@@ -1653,6 +1674,11 @@ func _panel_style_color(node: Control) -> Color:
 
 func _panel_style_border_color(node: Control) -> Color:
 	var style := _panel_style_box(node)
+	return style.border_color if style != null else Color.TRANSPARENT
+
+
+func _label_style_border_color(node: Control) -> Color:
+	var style := node.get_theme_stylebox("normal") as StyleBoxFlat if node != null else null
 	return style.border_color if style != null else Color.TRANSPARENT
 
 

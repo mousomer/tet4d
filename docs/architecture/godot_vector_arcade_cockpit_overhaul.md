@@ -564,7 +564,9 @@ palette:
 - no bright-green keycap borders or magenta-dominant action labels.
 
 `ReplayVisuals` consumes the config-owned `accent.soft` role rather than
-deriving a soft accent in code.
+deriving a soft accent in code. W-slice orientation labels consume the
+config-owned `label.w_layer` role, including alpha, rather than deriving their
+colour or opacity from generic muted text in renderer code.
 
 ### Hint Panel Hierarchy
 
@@ -580,6 +582,29 @@ Control labels map to distinct roles:
 
 These are visual roles only. Control group content, key bindings, and live
 gameplay command routing remain unchanged.
+
+### Stage 33f Review Repairs
+
+The Stage 33f code review found several shell-local regressions and cleanup
+items. The repair keeps the product-shell boundary and addresses them without
+changing gameplay dispatch:
+
+- keyboard-hint visibility is stored as HUD state, so returning from live mode
+  does not re-enable hints after the user disables them;
+- replay bundle status is cached and restored after live-mode status chrome;
+- control-hint panels skip rebuilds when their mode/warning/compact state has
+  not changed;
+- live game-over status badges use explicit status theme variations and
+  reapply style when state changes;
+- replay and Live 4D structured control maps include the active `Tab` mode
+  toggle, and Live 4D no longer renders `Fit View` as a fake keycap;
+- the UI-dead hint-text constants were removed in favor of deriving practical
+  test text from structured control groups;
+- obsolete camera pan code was removed after Stage 33e intentionally assigned
+  Shift-drag to camera roll;
+- shared stylebox construction is centralized, and the style applier no longer
+  depends on displayed `GAME OVER` text or generic `Hint` copy for role
+  selection.
 
 ### Stage 33f Acceptance Checklist
 
@@ -598,5 +623,8 @@ gameplay command routing remain unchanged.
 - Plane Rotation wording and the single CCW/CW rule remain intact.
 - Game-over reason labels remain user-facing, for example
   `Piece out of bounds`.
+- Keyboard-hint visibility persists across replay/live transitions.
+- Replay bundle status is restored after returning from live mode.
+- Control-hint panels avoid unnecessary per-frame rebuilds.
 - No gameplay, topology, replay, trace, parity, fixture, native semantic, or
   authority-transfer behavior changes.

@@ -38,11 +38,17 @@ func run() -> Array:
 		hud.set_camera_status("Camera: LIVE_3D_EXTERNAL_DIAGRAM_VIEW · ortho · above exterior · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
 		await tree.process_frame
 		failures.append_array(_check_layout(hud, viewport_size))
+		failures.append_array(await _check_keyboard_hint_visibility_setting(hud))
 		var replay_snapshot: Dictionary = hud.layout_contract_snapshot()
 		var replay_game_rect: Rect2 = replay_snapshot.get("game_area", Rect2())
 		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
 		await tree.process_frame
 		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size, replay_game_rect.size.x))
+		hud.set_replay_mode_labels(false, 1.0, false)
+		await tree.process_frame
+		var restored_snapshot: Dictionary = hud.layout_contract_snapshot()
+		if str(restored_snapshot.get("bundle_status_text", "")).find("Bundle: OK") == -1:
+			failures.append("replay mode should restore bundle status after live mode")
 		root.queue_free()
 		await tree.process_frame
 	failures.append_array(_check_live_control_maps())
@@ -168,6 +174,9 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	var right_inspector_order: Array = snapshot.get("right_inspector_order", [])
 	var game_rect: Rect2 = snapshot.get("game_area", Rect2())
 	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
+	var status_badge_color: Color = snapshot.get("top_status_badge_color", Color.TRANSPARENT)
+	var status_badge_border_color: Color = snapshot.get("top_status_badge_border_color", Color.TRANSPARENT)
+	var style_manager = hud.style_manager()
 	if authority_text.find("Native C++ owns gameplay") != -1 or inspector_status_text.find("Native C++ owns gameplay") != -1:
 		failures.append("%s: broad native gameplay ownership wording should not appear" % label)
 	if authority_text.find("Live Plain 4D") == -1 or authority_text.find("C++ PlainNDSession") == -1 or authority_text.find("Godot shell") == -1:
@@ -176,6 +185,8 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: live shell detail should not dangle in top or viewport chrome" % label)
 	if top_status_badge_text.find("[ GAME OVER ]") == -1 or top_status_badge_text.find("Piece out of bounds") == -1:
 		failures.append("%s: top status badge should expose user-facing game-over reason" % label)
+	if status_badge_color != style_manager.get_color("state.error") or status_badge_border_color != style_manager.get_color("state.error"):
+		failures.append("%s: game-over status badge should use error styling" % label)
 	if not restart_game_button_visible or restart_game_button_text != "Restart Game":
 		failures.append("%s: live game-over status should expose a Restart Game button" % label)
 	if top_status_badge_text.find("out_of_bounds") != -1 or top_summary_text.find("out_of_bounds") != -1 or inspector_status_text.find("out_of_bounds") != -1:
@@ -196,7 +207,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
 	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("System") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click", "Backspace", "Esc", "Fit View"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click", "Backspace", "Tab", "Esc", "Fit View"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D full controls should include %s" % [label, required])
 	if inspector_hint_text.find("Left: CCW") == -1 or inspector_hint_text.find("Right: CW") == -1:
@@ -213,6 +224,29 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
 	if right_inspector_order.size() < 2 or str(right_inspector_order[0]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[1]) != "InspectorControlHints":
 		failures.append("%s: live right inspector should present controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
+	return failures
+
+
+func _check_keyboard_hint_visibility_setting(hud: Node) -> Array:
+	var failures: Array = []
+	hud._set_keyboard_hints_visible(false)
+	await Engine.get_main_loop().process_frame
+	var replay_hidden: Dictionary = hud.layout_contract_snapshot()
+	if bool(replay_hidden.get("viewport_hints_visible", true)) or bool(replay_hidden.get("bottom_hints_visible", true)):
+		failures.append("keyboard hint setting should hide replay hint strips")
+	hud.set_live_4d_mode(false, false, "none", "", 0.5)
+	await Engine.get_main_loop().process_frame
+	hud._set_keyboard_hints_visible(false)
+	hud.set_replay_mode_labels(false, 1.0, false)
+	await Engine.get_main_loop().process_frame
+	var replay_restored_hidden: Dictionary = hud.layout_contract_snapshot()
+	if bool(replay_restored_hidden.get("viewport_hints_visible", true)) or bool(replay_restored_hidden.get("bottom_hints_visible", true)):
+		failures.append("live-mode declutter should not forget hidden keyboard hints")
+	hud._set_keyboard_hints_visible(true)
+	await Engine.get_main_loop().process_frame
+	var replay_visible: Dictionary = hud.layout_contract_snapshot()
+	if not bool(replay_visible.get("viewport_hints_visible", false)) or not bool(replay_visible.get("bottom_hints_visible", false)):
+		failures.append("keyboard hint setting should restore replay hint strips")
 	return failures
 
 
@@ -269,7 +303,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"System",
-		[["P", "Pause"], ["Backspace", "Reset"], ["Esc", "Back / Quit"], ["Fit View", "Fit View"]]
+		[["P", "Pause"], ["Backspace", "Reset"], ["Tab", "Replay"], ["Esc", "Back / Quit"]]
 	)
 	if not ReplayHud.quick_control_hint_groups("live_4d").is_empty():
 		failures.append("Live 4D should not expose a partial quick-control map")
