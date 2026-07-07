@@ -10,6 +10,7 @@ from ..gameplay.challenge_mode import (
     apply_challenge_prefill_2d,
     apply_challenge_prefill_nd,
 )
+from ..gameplay.api import piece_pose_legal_gameplay
 from ..gameplay.game2d import GameConfig, GameState
 from ..gameplay.game_nd import GameConfigND, GameStateND
 from ..gameplay.pieces2d import (
@@ -261,7 +262,7 @@ def _candidate_piece_placeable_2d(
         return False
     if _piece_min_gravity_2d(state, candidate) < min_visible_layer:
         return False
-    if not state._can_exist(candidate):
+    if not piece_pose_legal_gameplay(state, candidate):
         return False
     if required_move_delta is None:
         return True
@@ -271,7 +272,7 @@ def _candidate_piece_placeable_2d(
     delta_y = int(required_move_delta[1])
     for _ in range(repeats):
         probe = probe.moved(delta_x, delta_y)
-        if not state._can_exist(probe):
+        if not piece_pose_legal_gameplay(state, probe):
             return False
     return True
 
@@ -556,9 +557,11 @@ def _nudge_goal_piece_away_from_holes_2d(*, state: GameState) -> None:
         if dx == 0:
             continue
         candidate = piece.moved(int(dx), 0)
-        if not state._can_exist(candidate):
+        if not piece_pose_legal_gameplay(state, candidate):
             continue
-        candidate_cells = state.mapped_piece_cells_for_piece(candidate, include_above=True)
+        candidate_cells = state.mapped_piece_cells_for_piece(
+            candidate, include_above=True
+        )
         if not candidate_cells:
             continue
         candidate_center = float(sum(coord[0] for coord in candidate_cells)) / float(
@@ -662,7 +665,7 @@ def _best_nudged_piece_nd(
         delta = [0] * state.config.ndim
         delta[primary_axis] = int(direction) * int(step)
         candidate = piece.moved(tuple(delta))
-        if not state._can_exist(candidate):
+        if not piece_pose_legal_gameplay(state, candidate):
             continue
         candidate_center = _piece_center_axis_nd(
             state=state,
@@ -690,7 +693,7 @@ def _candidate_piece_placeable_nd(
         return False
     if _piece_min_gravity_nd(state, candidate) < min_visible_layer:
         return False
-    if not state._can_exist(candidate):
+    if not piece_pose_legal_gameplay(state, candidate):
         return False
     if required_move_delta is None:
         return True
@@ -698,7 +701,7 @@ def _candidate_piece_placeable_nd(
     repeats = max(1, int(required_move_repetitions))
     for _ in range(repeats):
         probe = probe.moved(required_move_delta)
-        if not state._can_exist(probe):
+        if not piece_pose_legal_gameplay(state, probe):
             return False
     return True
 
@@ -713,7 +716,7 @@ def _candidate_supports_repeated_move_nd(
     probe = candidate
     for _ in range(max(1, int(repeats))):
         probe = probe.moved(delta)
-        if not state._can_exist(probe):
+        if not piece_pose_legal_gameplay(state, probe):
             return False
     return True
 
@@ -737,8 +740,11 @@ def _target_axis_score_nd(
     return abs(actual_max - target_max)
 
 
-def _opening_translation_move_requirements_nd(*, ndim: int) -> tuple[tuple[int, ...], ...]:
+def _opening_translation_move_requirements_nd(
+    *, ndim: int
+) -> tuple[tuple[int, ...], ...]:
     requirements: list[tuple[int, ...]] = []
+
     def _delta(values: tuple[int, ...]) -> tuple[int, ...]:
         if len(values) == ndim:
             return tuple(int(value) for value in values)
@@ -748,6 +754,7 @@ def _opening_translation_move_requirements_nd(*, ndim: int) -> tuple[tuple[int, 
                 break
             padded[index] = int(value)
         return tuple(padded)
+
     if ndim >= 3:
         requirements.extend((_delta((-1, 0, 0)), _delta((0, 0, 1))))
     if ndim >= 4:
@@ -819,7 +826,7 @@ def _opening_translation_candidate_valid_nd(
         return False
     if _piece_min_gravity_nd(state, candidate) < int(min_visible_layer):
         return False
-    if not state._can_exist(candidate):
+    if not piece_pose_legal_gameplay(state, candidate):
         return False
     return all(
         _candidate_supports_repeated_move_nd(
@@ -852,7 +859,10 @@ def _opening_translation_candidate_score_nd(
         )
         if ndim >= 4
         else 0,
-        sum(abs(int(candidate.pos[axis]) - int(current_pos[axis])) for axis in lateral_axes),
+        sum(
+            abs(int(candidate.pos[axis]) - int(current_pos[axis]))
+            for axis in lateral_axes
+        ),
     )
 
 
@@ -1152,8 +1162,7 @@ def _apply_board_preset_nd_single_gap(
     target_level = cfg.dims[gravity_axis] - 1
     lateral_axes = [axis for axis in range(cfg.ndim) if axis != gravity_axis]
     gap_coords = [
-        int(setup_rng.randrange(max(1, cfg.dims[axis])))
-        for axis in lateral_axes
+        int(setup_rng.randrange(max(1, cfg.dims[axis]))) for axis in lateral_axes
     ]
     lateral_ranges = [range(cfg.dims[axis]) for axis in lateral_axes]
     for lateral_values in product(*lateral_ranges):
@@ -1248,7 +1257,7 @@ def _ensure_current_piece_visible_2d(
     if (
         _piece_is_visible_2d(state, piece)
         and _piece_min_gravity_2d(state, piece) >= min_visible_layer
-        and state._can_exist(piece)
+        and piece_pose_legal_gameplay(state, piece)
     ):
         return
     required_drop = max(0, min_visible_layer - _piece_min_gravity_2d(state, piece))
@@ -1257,7 +1266,7 @@ def _ensure_current_piece_visible_2d(
         if (
             _piece_is_visible_2d(state, candidate)
             and _piece_min_gravity_2d(state, candidate) >= min_visible_layer
-            and state._can_exist(candidate)
+            and piece_pose_legal_gameplay(state, candidate)
         ):
             state.current_piece = candidate
             return
@@ -1286,7 +1295,7 @@ def _ensure_current_piece_visible_nd(
     if (
         _piece_is_visible_nd(state, piece)
         and _piece_min_gravity_nd(state, piece) >= min_visible_layer
-        and state._can_exist(piece)
+        and piece_pose_legal_gameplay(state, piece)
     ):
         return
     required_drop = max(0, min_visible_layer - _piece_min_gravity_nd(state, piece))
@@ -1297,7 +1306,7 @@ def _ensure_current_piece_visible_nd(
         if (
             _piece_is_visible_nd(state, candidate)
             and _piece_min_gravity_nd(state, candidate) >= min_visible_layer
-            and state._can_exist(candidate)
+            and piece_pose_legal_gameplay(state, candidate)
         ):
             state.current_piece = candidate
             return
@@ -1362,7 +1371,9 @@ def _find_starter_shape_nd(
     )
     if selected_shape is not None:
         return selected_shape, str(cfg.piece_set_id)
-    fallback_piece_set = PIECE_SET_3D_STANDARD if cfg.ndim == 3 else PIECE_SET_4D_STANDARD
+    fallback_piece_set = (
+        PIECE_SET_3D_STANDARD if cfg.ndim == 3 else PIECE_SET_4D_STANDARD
+    )
     fallback_shapes = get_piece_shapes_nd(
         cfg.ndim,
         piece_set_id=fallback_piece_set,

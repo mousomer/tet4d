@@ -4,6 +4,7 @@ from typing import Any
 
 import pygame
 
+from tet4d.engine import api as engine_api
 from tet4d.engine.runtime.menu_settings_state import (
     DEFAULT_OVERLAY_TRANSPARENCY,
     clamp_overlay_transparency,
@@ -110,18 +111,22 @@ def _tutorial_can_apply_piece_action_2d(loop: Any, action_id: str) -> bool:
     if action_id == "hard_drop":
         return True
     if action_id == "soft_drop":
-        return bool(loop.state._can_exist(piece.moved(0, 1)))
+        return engine_api.piece_pose_legal(loop.state, piece.moved(0, 1))
     move_delta = _TUTORIAL_MOVE_DELTAS_2D.get(action_id)
     if move_delta is not None:
-        return bool(loop.state._can_exist(piece.moved(*move_delta)))
+        return engine_api.piece_pose_legal(loop.state, piece.moved(*move_delta))
     rotation = _TUTORIAL_ROTATIONS_2D.get(action_id)
     if rotation is not None:
-        return bool(loop.state._can_exist(piece.rotated(rotation)))
+        return engine_api.piece_pose_legal(loop.state, piece.rotated(rotation))
     return True
 
 
-def _tutorial_has_legal_action_2d(loop: Any, action_ids: tuple[str, ...] | list[str]) -> bool:
-    return any(_tutorial_required_action_legal_2d(loop, action_id) for action_id in action_ids)
+def _tutorial_has_legal_action_2d(
+    loop: Any, action_ids: tuple[str, ...] | list[str]
+) -> bool:
+    return any(
+        _tutorial_required_action_legal_2d(loop, action_id) for action_id in action_ids
+    )
 
 
 def _tutorial_running_session_2d(loop: Any) -> object | None:
@@ -178,7 +183,6 @@ def enforce_tutorial_runtime_safety_2d(loop: Any) -> None:
         _redo_tutorial_stage_2d(loop, tutorial_session)
 
 
-
 def _tutorial_overlay_start_from_setup(payload: dict[str, object]) -> float | None:
     setup_payload = payload.get("setup")
     if not isinstance(setup_payload, dict):
@@ -210,7 +214,6 @@ def apply_pending_tutorial_setup(loop: Any) -> None:
             start_overlay,
             default=float(DEFAULT_OVERLAY_TRANSPARENCY),
         )
-
 
 
 def handle_tutorial_hotkey(loop: Any, key: int) -> str | None:
@@ -337,7 +340,9 @@ def _draw_tutorial_targets_2d(screen: pygame.Surface, loop: Any) -> None:
         pygame.draw.rect(screen, _TUTORIAL_TARGET_BORDER_RGBA, rect, 2)
 
 
-def draw_tutorial_overlays_2d(screen: pygame.Surface, fonts: GfxFonts, loop: Any) -> None:
+def draw_tutorial_overlays_2d(
+    screen: pygame.Surface, fonts: GfxFonts, loop: Any
+) -> None:
     if loop.tutorial_session is None:
         return
     _draw_tutorial_targets_2d(screen, loop)
@@ -349,7 +354,9 @@ def draw_tutorial_overlays_2d(screen: pygame.Surface, fonts: GfxFonts, loop: Any
     )
 
 
-def apply_tutorial_board_profile_2d(cfg: Any, *, tutorial_lesson_id: str | None) -> None:
+def apply_tutorial_board_profile_2d(
+    cfg: Any, *, tutorial_lesson_id: str | None
+) -> None:
     if not tutorial_lesson_id:
         return
     width, height = tutorial_board_dims_2d()

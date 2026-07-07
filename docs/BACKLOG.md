@@ -64,6 +64,12 @@ manifests record replay, trace, config, topology, piece-set, and RNG identity
 for parity consumers. This is contract hardening only and does not add
 gameplay rules, topology features, native semantics, or authority transfer.
 
+Stage 37 engine public API boundary cleanup (2026-07-07): add a narrow public
+engine legality query surface and route UI/tutorial/frontend legality previews
+through it instead of private gameplay helpers. This is boundary cleanup only
+and does not change gameplay rules, topology behavior, native semantics, or
+authority transfer.
+
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior
 as the Python-authoritative migration oracle, Stage 3 endgame golden trace

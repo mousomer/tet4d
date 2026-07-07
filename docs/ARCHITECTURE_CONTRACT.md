@@ -123,7 +123,8 @@ creating reverse dependencies.
 2. Rotation-kick candidate and resolution logic: `src/tet4d/engine/core/rotation_kicks.py`
 3. Shared lock/spawn/drop lifecycle: `src/tet4d/engine/core/rules/lifecycle.py`
 4. Shared lock-and-analysis orchestration: `src/tet4d/engine/gameplay/lock_flow.py`
-5. Engine gameplay convenience exports: `src/tet4d/engine/gameplay/api.py`
+5. Engine gameplay convenience exports and legality query surface:
+   `src/tet4d/engine/gameplay/api.py`
 6. Runtime-owned keybinding storage: `src/tet4d/engine/runtime/keybinding_store.py`
 7. Runtime-owned keybinding mutable state: `src/tet4d/engine/runtime/keybinding_runtime_state.py`
 8. Engine runtime convenience exports: `src/tet4d/engine/runtime/api.py`

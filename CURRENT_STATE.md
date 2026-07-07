@@ -37,6 +37,12 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   replay comparison. This is contract hardening only and does not change
   gameplay rules, topology features, Godot/C++ ownership, or authority
   transfer.
+- Stage 37 engine public API boundary cleanup is active on
+  `codex/engine-public-api-boundary`: UI/tutorial/frontend legality previews
+  route through public engine legality queries instead of private gameplay
+  helpers. This is authority-boundary cleanup only and does not change
+  movement, rotation, drop/lock, spawn, topology traversal, Godot/C++ routing,
+  or authority ownership.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
@@ -571,12 +577,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.42` (`low`)
+- `tech_debt.score = 5.30` (`low`)
 
 Dominant remaining pressure:
 
 1. `delivery_size_pressure = 2.75`
-2. `code_balance = 1.67`
+2. `code_balance = 1.55`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -601,7 +607,7 @@ Thin-wrapper budgets:
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
-5. `src/tet4d/engine/api.py: 91/160 real LOC (small engine compatibility facade)`
+5. `src/tet4d/engine/api.py: 136/160 real LOC (small engine compatibility facade)`
 6. `src/tet4d/ui/pygame/front2d_game.py: 116/180 real LOC (2D orchestration entrypoint)`
 
 Tutorial wording drift guard:
