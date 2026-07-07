@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -38,18 +39,18 @@ def _initial_arch_stage() -> int:
 
 
 POLICY_KIT_DIR = Path(
-    __import__("os").environ.get(
-        "POLICY_KIT_DIR", str(Path.home() / "workspace/policy-kit")
-    )
+    os.environ.get("POLICY_KIT_DIR", str(Path.home() / "workspace/policy-kit"))
 )
 OPTIONAL_ARCH_METRICS_PATH = POLICY_KIT_DIR / "optional/architecture_metrics"
+USE_OPTIONAL_ARCH_METRICS = os.environ.get("TET4D_USE_OPTIONAL_ARCH_METRICS") == "1"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 if str(SRC_LAYOUT_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_LAYOUT_ROOT))
 if (
-    OPTIONAL_ARCH_METRICS_PATH.exists()
+    USE_OPTIONAL_ARCH_METRICS
+    and OPTIONAL_ARCH_METRICS_PATH.exists()
     and str(OPTIONAL_ARCH_METRICS_PATH) not in sys.path
 ):
     sys.path.insert(0, str(OPTIONAL_ARCH_METRICS_PATH))
