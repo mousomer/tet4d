@@ -1,7 +1,7 @@
 # Godot Vector Arcade Cockpit Overhaul
 
-Status: active Godot product-shell visual UX stage  
-Date: 2026-06-22  
+Status: active Godot product-shell visual UX stage
+Date: 2026-06-22
 Scope: Godot UI shell, visual presentation, menus, settings, inspector, hints
 
 ## Purpose
