@@ -11,6 +11,12 @@ from ..runtime.runtime_config import (
     kick_default_level,
 )
 from ..runtime.score_analyzer import hud_analysis_lines
+from ..core.rules.piece_placement import (
+    build_candidate_piece_placement,
+    validate_candidate_piece_placement,
+)
+from .game2d import GameState
+from .game_nd import GameStateND
 from .leveling import compute_speed_level
 from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
@@ -118,14 +124,101 @@ def hud_analysis_lines_runtime(event: dict[str, object] | None) -> tuple[str, ..
     return hud_analysis_lines(event)
 
 
+def _state_piece_cells_for_legality(state: GameState | GameStateND, piece: Any):
+    if isinstance(state, GameState):
+        return state.mapped_piece_cells_for_piece(piece, include_above=True)
+    return state._mapped_piece_cells(piece)
+
+
+def _placement_ignore_cells_for_legality(
+    state: GameState | GameStateND,
+    *,
+    allow_self_overlap: bool,
+) -> tuple[tuple[int, ...], ...]:
+    if not allow_self_overlap or state.current_piece is None:
+        return ()
+    return state.current_piece_cells_mapped(include_above=True)
+
+
+def piece_pose_legal_gameplay(
+    state: GameState | GameStateND,
+    piece: Any,
+    *,
+    allow_self_overlap: bool = False,
+) -> bool:
+    candidate = build_candidate_piece_placement(
+        piece,
+        _state_piece_cells_for_legality(state, piece),
+    )
+    return validate_candidate_piece_placement(
+        candidate,
+        state.board.cells,
+        ignore_cells=_placement_ignore_cells_for_legality(
+            state,
+            allow_self_overlap=allow_self_overlap,
+        ),
+    )
+
+
+def translated_piece_pose_legal_gameplay(
+    state: GameState | GameStateND,
+    delta: tuple[int, ...],
+    *,
+    allow_self_overlap: bool = False,
+) -> bool:
+    piece = state.current_piece
+    if piece is None:
+        return False
+    if isinstance(state, GameState):
+        if len(delta) != 2:
+            raise ValueError("2D translation delta must have 2 axes")
+        candidate = piece.moved(int(delta[0]), int(delta[1]))
+    else:
+        candidate = piece.moved(tuple(int(value) for value in delta))
+    return piece_pose_legal_gameplay(
+        state,
+        candidate,
+        allow_self_overlap=allow_self_overlap,
+    )
+
+
+def rotated_piece_pose_legal_gameplay(
+    state: GameState | GameStateND,
+    *,
+    delta_steps: int = 1,
+    axis_a: int = 0,
+    axis_b: int | None = None,
+    allow_self_overlap: bool = False,
+) -> bool:
+    piece = state.current_piece
+    if piece is None:
+        return False
+    if isinstance(state, GameState):
+        candidate = piece.rotated(int(delta_steps))
+    else:
+        resolved_axis_b = state.config.gravity_axis if axis_b is None else int(axis_b)
+        candidate = piece.rotated(int(axis_a), resolved_axis_b, int(delta_steps))
+    return piece_pose_legal_gameplay(
+        state,
+        candidate,
+        allow_self_overlap=allow_self_overlap,
+    )
+
+
 def runtime_assist_combined_score_multiplier(*args: Any, **kwargs: Any) -> Any:
     bot_mode = kwargs.get("bot_mode") if kwargs else args[0]
     grid_mode = kwargs.get("grid_mode") if kwargs else args[1]
     speed_level = kwargs.get("speed_level") if kwargs else args[2]
-    kick_level = kwargs.get("kick_level") if kwargs else (args[3] if len(args) > 3 else None)
+    kick_level = (
+        kwargs.get("kick_level") if kwargs else (args[3] if len(args) > 3 else None)
+    )
     bot_name = getattr(bot_mode, "value", bot_mode)
     grid_name = getattr(grid_mode, "value", grid_mode)
-    kick_name = kick_default_level() if kick_level is None else getattr(kick_level, "value", kick_level)
+    kick_name = (
+        kick_default_level()
+        if kick_level is None
+        else getattr(kick_level, "value", kick_level)
+    )
     base, per_level, min_level, max_level = assist_speed_formula()
     level = max(min_level, min(max_level, int(speed_level)))
     speed_factor = min(1.0, base + (per_level * level))
@@ -141,7 +234,9 @@ def runtime_assist_combined_score_multiplier(*args: Any, **kwargs: Any) -> Any:
 
 def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
     state = kwargs.get("state", args[0] if len(args) > 0 else None)
-    expected_coord_len = kwargs.get("expected_coord_len", args[1] if len(args) > 1 else 0)
+    expected_coord_len = kwargs.get(
+        "expected_coord_len", args[1] if len(args) > 1 else 0
+    )
     color_for_cell = kwargs.get("color_for_cell", args[2] if len(args) > 2 else None)
     if state is None or getattr(state, "board", None) is None or color_for_cell is None:
         return ()
@@ -153,4 +248,8 @@ def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
     return tuple(ghost_cells)
 
 
-__all__ = [name for name in globals() if name.endswith("_runtime") or name.endswith("_gameplay")]
+__all__ = [
+    name
+    for name in globals()
+    if name.endswith("_runtime") or name.endswith("_gameplay")
+]

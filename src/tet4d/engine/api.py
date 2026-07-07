@@ -13,6 +13,11 @@ from .core.step.reducer import step_2d as core_step_2d
 from .core.step.reducer import step_nd as core_step_nd
 from .gameplay.game2d import GameConfig, GameState
 from .gameplay.game_nd import GameConfigND, GameStateND
+from .gameplay.api import (
+    piece_pose_legal_gameplay,
+    rotated_piece_pose_legal_gameplay,
+    translated_piece_pose_legal_gameplay,
+)
 from .tutorial.api import (
     tutorial_board_dims_runtime,
     tutorial_lesson_ids_runtime,
@@ -88,6 +93,49 @@ def is_game_over(state: GameState | GameStateND) -> bool:
     return core_is_game_over(state)
 
 
+def piece_pose_legal(
+    state: GameState | GameStateND,
+    piece: object,
+    *,
+    allow_self_overlap: bool = False,
+) -> bool:
+    return piece_pose_legal_gameplay(
+        state,
+        piece,
+        allow_self_overlap=allow_self_overlap,
+    )
+
+
+def translated_piece_pose_legal(
+    state: GameState | GameStateND,
+    delta: tuple[int, ...],
+    *,
+    allow_self_overlap: bool = False,
+) -> bool:
+    return translated_piece_pose_legal_gameplay(
+        state,
+        delta,
+        allow_self_overlap=allow_self_overlap,
+    )
+
+
+def rotated_piece_pose_legal(
+    state: GameState | GameStateND,
+    *,
+    delta_steps: int = 1,
+    axis_a: int = 0,
+    axis_b: int | None = None,
+    allow_self_overlap: bool = False,
+) -> bool:
+    return rotated_piece_pose_legal_gameplay(
+        state,
+        delta_steps=delta_steps,
+        axis_a=axis_a,
+        axis_b=axis_b,
+        allow_self_overlap=allow_self_overlap,
+    )
+
+
 __all__ = [
     "Action",
     "Action2D",
@@ -105,9 +153,12 @@ __all__ = [
     "new_game_state_2d",
     "new_game_state_nd",
     "new_rng",
+    "piece_pose_legal",
+    "rotated_piece_pose_legal",
     "step",
     "step_2d",
     "step_nd",
+    "translated_piece_pose_legal",
     "tutorial_board_dims_runtime",
     "tutorial_lesson_ids_runtime",
     "tutorial_lessons_payload_runtime",
