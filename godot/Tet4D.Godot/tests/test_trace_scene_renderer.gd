@@ -193,25 +193,18 @@ func run() -> Array:
 	else:
 		var live_4d_grid := grid_root.get_child(0)
 		var w_label_count := 0
-		var label_chip_count := 0
 		for child in live_4d_grid.get_children():
-			if child is Label3D and str((child as Label3D).text).begins_with("W SLICE"):
+			if child is Label3D and str((child as Label3D).text).begins_with("w"):
 				w_label_count += 1
 				var label := child as Label3D
-				if not label.text.contains("/4"):
-					failures.append("live 4D W labels should read as slice headers with total count")
-				if label.font_size < ReplayVisuals.W_SLICE_LABEL_FONT_SIZE:
-					failures.append("live 4D W labels should use the large readable label size")
-				if label.outline_size < ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE:
-					failures.append("live 4D W labels should use a strong outline")
-			elif child is MeshInstance3D:
-				var chip_mesh := (child as MeshInstance3D).mesh as BoxMesh
-				if chip_mesh != null and absf(chip_mesh.size.x - ReplayVisuals.W_SLICE_LABEL_CHIP_WIDTH) < 0.001:
-					label_chip_count += 1
+				if label.text.find("SLICE") != -1:
+					failures.append("live 4D W labels should be subtle markers, not slice headers")
+				if label.font_size != ReplayVisuals.W_SLICE_LABEL_FONT_SIZE:
+					failures.append("live 4D W labels should use the demoted label size")
+				if label.modulate.a >= 0.9:
+					failures.append("live 4D W labels should be muted below cells and outlines")
 		if w_label_count < 4:
 			failures.append("live 4D renderer should label each W slice")
-		if label_chip_count < 4:
-			failures.append("live 4D W labels should have high-contrast backing chips")
 
 	renderer.queue_free()
 	await tree.process_frame

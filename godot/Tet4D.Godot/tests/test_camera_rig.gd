@@ -75,6 +75,12 @@ func run() -> Array:
 		failures.append("live 4D camera yaw nudge should adjust the view")
 	if rig.view_status_text().find("manual") == -1:
 		failures.append("live 4D camera nudge should mark the view as manual")
+	var roll_before := rig._current_roll
+	rig.nudge_roll(CameraRigScript.LIVE_4D_CAMERA_ROLL_STEP_RAD)
+	if rig._current_roll <= roll_before:
+		failures.append("live 4D camera roll nudge should adjust the view")
+	if rig.view_status_text().find("roll") == -1:
+		failures.append("live 4D camera status should expose roll diagnostics")
 	rig.fit_bounds(
 		{"ok": true, "min": Vector3(-2.5, -5.0, -2.0), "max": Vector3(23.5, 6.72, 2.0)},
 		1.34,
@@ -85,6 +91,8 @@ func run() -> Array:
 	)
 	if absf(camera.size - fitted_size) > 0.001:
 		failures.append("live 4D Fit View should restore fitted orthographic size, got %.3f expected %.3f" % [camera.size, fitted_size])
+	if absf(rig._current_roll) > 0.001:
+		failures.append("live 4D Fit View should reset camera roll")
 	if rig.view_status_text().find("fit OK") == -1:
 		failures.append("live 4D Fit View should restore fitted state")
 

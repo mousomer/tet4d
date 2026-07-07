@@ -33,7 +33,7 @@ var _current_document: TraceDocument
 var _current_snapshot: Dictionary = {}
 var _playback_accumulator := 0.0
 var _mouse_orbiting := false
-var _mouse_panning := false
+var _mouse_rolling := false
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
 var _live_2d_paused := false
@@ -142,6 +142,10 @@ func _input(event: InputEvent) -> void:
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
 		return
+	if _is_live_mode() and _event_is_camera_mouse_input(event) and _mouse_event_in_game_viewport(event):
+		_handle_camera_input(event)
+		get_viewport().set_input_as_handled()
+		return
 	if _is_live_mode() and _event_is_space_pressed_once(event):
 		_handle_live_space_hard_drop()
 		get_viewport().set_input_as_handled()
@@ -197,8 +201,14 @@ func _unhandled_input(event: InputEvent) -> void:
 func _handle_camera_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			_mouse_orbiting = event.pressed and not Input.is_key_pressed(KEY_SHIFT)
-			_mouse_panning = event.pressed and Input.is_key_pressed(KEY_SHIFT)
+			if event.pressed and event.double_click:
+				_mouse_orbiting = false
+				_mouse_rolling = false
+				_fit_view()
+				return
+			var shift_roll: bool = event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)
+			_mouse_orbiting = event.pressed and not shift_roll
+			_mouse_rolling = event.pressed and shift_roll
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
 				_camera_rig.zoom(-1.0)
@@ -213,9 +223,32 @@ func _handle_camera_input(event: InputEvent) -> void:
 		if _mouse_orbiting:
 			_camera_rig.orbit(event.relative)
 			_refresh_camera_status()
-		elif _mouse_panning:
-			_camera_rig.pan(event.relative)
+		elif _mouse_rolling:
+			_camera_rig.roll(event.relative)
 			_refresh_camera_status()
+
+
+func _event_is_camera_mouse_input(event: InputEvent) -> bool:
+	if event is InputEventMouseMotion:
+		return _mouse_orbiting or _mouse_rolling
+	if event is InputEventMouseButton:
+		return event.button_index in [
+			MOUSE_BUTTON_LEFT,
+			MOUSE_BUTTON_WHEEL_UP,
+			MOUSE_BUTTON_WHEEL_DOWN,
+		]
+	return false
+
+
+func _mouse_event_in_game_viewport(event: InputEvent) -> bool:
+	if _hud == null:
+		return false
+	if not (event is InputEventMouseButton or event is InputEventMouseMotion):
+		return false
+	var rect := _hud.game_viewport_global_rect()
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return false
+	return rect.has_point(event.position)
 
 
 func _handle_live_2d_input(event: InputEvent) -> bool:
@@ -414,6 +447,14 @@ func _handle_live_4d_camera_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_pitch_down"]):
 		_camera_rig.nudge_pitch(-CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
+		_refresh_camera_status()
+		return true
+	if _event_action_pressed_once(event, ["live_4d_camera_roll_left"]):
+		_camera_rig.nudge_roll(-CameraRigScript.LIVE_4D_CAMERA_ROLL_STEP_RAD)
+		_refresh_camera_status()
+		return true
+	if _event_action_pressed_once(event, ["live_4d_camera_roll_right"]):
+		_camera_rig.nudge_roll(CameraRigScript.LIVE_4D_CAMERA_ROLL_STEP_RAD)
 		_refresh_camera_status()
 		return true
 	if _event_is_live_4d_zoom_in(event):
@@ -1593,6 +1634,8 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("live_4d_camera_pitch_down", KEY_K)
 	_ensure_key_action("live_4d_camera_yaw_left", KEY_O)
 	_ensure_key_action("live_4d_camera_yaw_right", KEY_L)
+	_ensure_key_action("live_4d_camera_roll_left", KEY_COMMA)
+	_ensure_key_action("live_4d_camera_roll_right", KEY_PERIOD)
 	_ensure_key_action("live_4d_camera_zoom_in", KEY_EQUAL)
 	_ensure_key_action("live_4d_camera_zoom_in", KEY_PLUS)
 	_ensure_key_action("live_4d_camera_zoom_in", KEY_KP_ADD)

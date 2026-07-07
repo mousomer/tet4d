@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -121,6 +121,65 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   controls plus board/replay visual materials. This is product-shell styling
   only and adds no gameplay, topology, trace semantics, replay-frame
   semantics, parity evidence, native authority, or authority transfer.
+- Stage 32b Godot Neon CAD Cockpit style refinement is complete under the same
+  architecture note. It tightens direct shell-control styling, inspector value
+  labels, panel role naming, and board/bottom-bar style snapshot coverage
+  without adding a new theme, redesign authority, gameplay, topology, trace
+  semantics, replay-frame semantics, parity evidence, native authority, or
+  authority transfer.
+- Stage 33 Godot Vector Arcade Cockpit UI overhaul is implemented on branch
+  `codex/vector-arcade-cockpit-ui` under
+  `docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. It keeps the
+  Stage 32 style-role architecture and moves the Godot shell toward
+  command-card menus, grouped keycap/action hints, compact settings cards,
+  explicit inspector sections, `Vector Arcade` display labeling for the
+  internal `tron` theme ID, and stronger board/W-label visual emphasis. It is
+  product-shell visual UX only and adds no gameplay, topology, trace
+  semantics, replay-frame semantics, parity evidence, native authority, or
+  authority transfer. Stage 38 accepts the Stage 33 cockpit UI branch on the
+  current `master` baseline: manual GUI launch confirmed the command-card main
+  menu readability and explicit Python-authority/replay-only framing, while
+  Godot acceptance/layout tests exercised replay and live shell states for
+  keyboard-hint persistence, unchanged hint-panel behavior, game-over error
+  styling, bundle-status restoration, camera/help affordances, Tab/Fit View
+  wording, right-inspector reachability, and live/replay declutter. This
+  records product-shell acceptance only and adds no gameplay, topology,
+  replay/parity schema, native semantic, or authority-transfer change. Stage
+  33a is the corrective
+  live-mode acceptance repair on the same branch: replace diagnostic live HUD
+  prose with structured scoped status, full/quick grouped controls, status
+  badges, and W-slice card/header hierarchy while preserving the same
+  product-shell-only boundary and avoiding gameplay, topology, replay,
+  parity, native semantic, or authority-transfer changes. Stage 33b is the
+  follow-up declutter pass: W labels are demoted to subtle orientation markers,
+  live quick controls are removed from the central board area, and the live
+  replay bottom bar is hidden/reduced so the right inspector remains the single
+  complete live control map. Stage 33c is the layout-consolidation pass after
+  Stage 33b was accepted with issues: live modes hide the replay case-browser
+  side panel, remove dangling top/viewport command-render detail, give the
+  recovered space to the board, keep controls first in the right inspector, and
+  leave diagnostics/settings secondary while preserving subtle W labels and the
+  same product-shell-only boundary. Stage 33d is the compact live control-map
+  pass after Stage 33c was accepted with issues: Live Plain 4D movement,
+  rotation, and camera rows are grouped as inverse pairs, rotation gets one
+  section-level CCW/CW hint, and system controls remain one-per-row without
+  changing bindings or gameplay semantics. Stage 33e is the focused wording,
+  camera-presentation, and palette polish pass after Stage 33d was accepted
+  with issues: Plane Rotation wording replaces the awkward signed rotation
+  text, live game-over reasons are mapped to user-facing labels, comma/period
+  and Shift-drag add camera roll without gameplay dispatch, mouse camera hints
+  document orbit/roll/zoom/Fit View, and the default Vector Arcade palette uses
+  calmer Blueprint Arcade tokens. Stage 33f preserves the visible `Restart
+  Game` button and endgame mouse camera controls while gameplay commands remain
+  blocked, and moves the Calm Blueprint hierarchy into config-owned roles for
+  `hint.section`, `hint.keycap.border`, `hint.keycap.text`, `hint.action`,
+  `hint.note`, and `hint.error`. Stage 33f review repairs keep that boundary
+  while preserving keyboard-hint settings across replay/live transitions,
+  restoring bundle status after live mode, avoiding unchanged hint-panel
+  rebuilds, styling live game-over badges from explicit status roles, routing
+  W-label opacity through `label.w_layer`, repairing Tab/Fit View control-map
+  drift, and removing obsolete camera pan code after Shift-drag became camera
+  roll.
 - Python review repairs are in progress on branch
   `codex/python-review-fixes` under the existing architecture owners: AI
   playbot planning now targets controller-reachable ND orientation

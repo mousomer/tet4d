@@ -3,6 +3,7 @@ extends RefCounted
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
+const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 
@@ -13,6 +14,7 @@ func run() -> Array:
 	if tree == null:
 		return ["shell style application test requires SceneTree"]
 	var manager = ShellStyleManagerScript.new()
+	failures.append_array(_check_control_hint_palette(manager))
 	var panel: Control = SettingsPanelScript.new()
 	panel.set_style_manager(manager)
 	tree.root.add_child(panel)
@@ -30,6 +32,43 @@ func run() -> Array:
 		failures.append("settings subtitle missing")
 	elif description.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.TEXT_MUTED):
 		failures.append("settings subtitle should use text.muted")
+	var loop_checkbox := panel.generated_control("replay.loop_enabled") as CheckBox
+	if loop_checkbox == null:
+		failures.append("replay loop checkbox should be generated")
+	else:
+		var checked_box := loop_checkbox.get_theme_stylebox("checked") as StyleBoxFlat
+		if checked_box == null:
+			failures.append("checkbox should receive a checked cockpit stylebox")
+		elif checked_box.bg_color != manager.get_color(ShellStyleRolesScript.ACCENT_PRIMARY):
+			failures.append("checked checkbox should use accent.primary")
+		var unchecked_box := loop_checkbox.get_theme_stylebox("unchecked") as StyleBoxFlat
+		if unchecked_box == null:
+			failures.append("checkbox should receive an unchecked cockpit stylebox")
+		elif unchecked_box.border_color != manager.get_color(ShellStyleRolesScript.GRID_MINOR):
+			failures.append("unchecked checkbox should use grid.minor border")
+	var speed_group := panel.generated_control("replay.playback_speed") as HBoxContainer
+	var speed_slider: HSlider = null
+	var speed_value_label: Label = null
+	if speed_group != null:
+		speed_slider = speed_group.get_node_or_null("Slider") as HSlider
+		speed_value_label = speed_group.get_node_or_null("ValueLabel") as Label
+	if speed_slider == null:
+		failures.append("playback speed slider should be generated")
+	else:
+		var slider_track := speed_slider.get_theme_stylebox("grabber_area") as StyleBoxFlat
+		var slider_fill := speed_slider.get_theme_stylebox("slider") as StyleBoxFlat
+		if slider_track == null:
+			failures.append("slider should receive a cockpit track stylebox")
+		elif slider_track.bg_color != manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD):
+			failures.append("slider track should use background.board")
+		if slider_fill == null:
+			failures.append("slider should receive a cockpit fill stylebox")
+		elif slider_fill.bg_color != manager.get_color(ShellStyleRolesScript.ACCENT_PRIMARY):
+			failures.append("slider fill should use accent.primary")
+	if speed_value_label == null:
+		failures.append("playback speed value label should be generated")
+	elif speed_value_label.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_METADATA):
+		failures.append("numeric value labels should use diagnostic.metadata")
 	panel.set_setting_value("theme.name", "plain")
 	panel.set_display_mode("plain")
 	await tree.process_frame
@@ -41,6 +80,66 @@ func run() -> Array:
 	await tree.process_frame
 	failures.append_array(_check_settings_registry())
 	failures.append_array(_check_replay_visual_roles())
+	return failures
+
+
+func _check_control_hint_palette(manager) -> Array:
+	var failures: Array = []
+	var applier = ShellControlStyleApplierScript.new()
+	var group := HBoxContainer.new()
+	var section := Label.new()
+	section.name = "ControlHintSectionHeader"
+	section.text = "Movement"
+	section.theme_type_variation = "SecondaryLabel"
+	group.add_child(section)
+	var keycap := Label.new()
+	keycap.name = "ControlHintKeycap"
+	keycap.text = "A / D"
+	keycap.theme_type_variation = "KeycapLabel"
+	group.add_child(keycap)
+	var action := Label.new()
+	action.name = "ControlHintAction"
+	action.text = "X- / X+"
+	action.theme_type_variation = "SecondaryLabel"
+	group.add_child(action)
+	var note := Label.new()
+	note.name = "ControlHintNote"
+	note.text = "Left: CCW"
+	note.theme_type_variation = "DimLabel"
+	group.add_child(note)
+	var warning := Label.new()
+	warning.name = "ControlHintWarning"
+	warning.text = "GAME OVER · Piece out of bounds"
+	warning.theme_type_variation = "WarningLabel"
+	group.add_child(warning)
+	var status := Label.new()
+	status.name = "TopStatusBadgeLabel"
+	status.text = "[ GAME OVER ] Piece out of bounds"
+	status.theme_type_variation = "StatusErrorLabel"
+	group.add_child(status)
+	applier.apply_to_tree(group, manager)
+	var keycap_box := keycap.get_theme_stylebox("normal") as StyleBoxFlat
+	if keycap_box == null:
+		failures.append("keycap should receive a cockpit stylebox")
+	elif keycap_box.border_color != manager.get_color(ShellStyleRolesScript.HINT_KEYCAP_BORDER):
+		failures.append("keycap border should use hint.keycap.border")
+	if section.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_SECTION):
+		failures.append("control section headers should use hint.section")
+	if keycap.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_KEYCAP_TEXT):
+		failures.append("keycap text should use hint.keycap.text")
+	if action.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_ACTION):
+		failures.append("control action text should use hint.action")
+	if note.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_NOTE):
+		failures.append("control notes should use hint.note")
+	if warning.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_ERROR):
+		failures.append("control game-over warnings should use hint.error")
+	var status_box := status.get_theme_stylebox("normal") as StyleBoxFlat
+	if status.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.STATE_ERROR):
+		failures.append("status error badges should use state.error text")
+	if status_box == null:
+		failures.append("status error badges should receive a badge stylebox")
+	elif status_box.border_color != manager.get_color(ShellStyleRolesScript.STATE_ERROR):
+		failures.append("status error badges should use state.error border")
 	return failures
 
 
@@ -58,6 +157,11 @@ func _check_settings_registry() -> Array:
 		values.append(str(option.get("value", "")))
 	if values != ["diagnostic", "plain", "tron"]:
 		failures.append("theme.name options should be diagnostic/plain/tron, got %s" % values)
+	var labels: Array = []
+	for option in spec.data.get("options", []):
+		labels.append(str(option.get("label", "")))
+	if labels != ["Diagnostic", "Plain", "Vector Arcade"]:
+		failures.append("theme.name labels should present tron as Vector Arcade, got %s" % labels)
 	if spec.control_type() != "dropdown":
 		failures.append("theme.name should remain a dropdown")
 	var manager = ShellStyleManagerScript.new()
@@ -76,7 +180,9 @@ func _check_replay_visual_roles() -> Array: # tet4d-semantic-boundary: allow tes
 	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_BOARD_GRID, "tron") != manager.get_color(ShellStyleRolesScript.GRID_MINOR):
 		failures.append("board grid should use grid.minor")
 	if ReplayVisuals.slice_label_color("tron") != manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER):
-		failures.append("W/layer labels should use label.w_layer")
+		failures.append("W/layer labels should use config-owned label.w_layer")
 	if ReplayVisuals.event_marker_material("tron").albedo_color != manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS):
 		failures.append("event markers should use diagnostic.bounds")
+	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACCENT_SOFT, "tron") != manager.get_color(ShellStyleRolesScript.ACCENT_SOFT):
+		failures.append("soft accent should use config-owned accent.soft")
 	return failures

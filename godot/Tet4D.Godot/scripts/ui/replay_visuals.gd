@@ -22,8 +22,8 @@ const BODY_GAP := 10
 const PANEL_GAP := 12
 const TOP_BAR_HEIGHT := 80
 const TIMELINE_HEIGHT := 104
-const LEFT_PANEL_WIDTH := 300
-const RIGHT_INSPECTOR_WIDTH := 360
+const LEFT_PANEL_WIDTH := 210
+const RIGHT_INSPECTOR_WIDTH := 260
 const RIGHT_PANEL_WIDTH := RIGHT_INSPECTOR_WIDTH
 const RIGHT_PANEL_MIN_WIDTH := RIGHT_INSPECTOR_WIDTH
 const RIGHT_PANEL_COMPACT_WIDTH := RIGHT_INSPECTOR_WIDTH
@@ -61,14 +61,15 @@ const LIVE_3D_ORIGIN_MARKER_SCALE := 0.18
 const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
 const SLICE_PADDING := 2.0
-const GRID_LINE_THICKNESS := 0.045
-const W_SLICE_LABEL_FONT_SIZE := 86
-const W_SLICE_LABEL_OUTLINE_SIZE := 28
-const W_SLICE_LABEL_CHIP_WIDTH := 4.85
-const W_SLICE_LABEL_CHIP_HEIGHT := 0.88
-const W_SLICE_LABEL_CHIP_DEPTH := 0.045
-const W_SLICE_LABEL_VERTICAL_OFFSET := 1.12
-const W_SLICE_LABEL_BOUNDS_PAD := 1.72
+const GRID_LINE_THICKNESS := 0.058
+const W_SLICE_LABEL_FONT_SIZE := 34
+const W_SLICE_LABEL_OUTLINE_SIZE := 7
+const W_SLICE_LABEL_CHIP_WIDTH := 0.0
+const W_SLICE_LABEL_CHIP_HEIGHT := 0.0
+const W_SLICE_LABEL_CHIP_DEPTH := 0.0
+const W_SLICE_LABEL_VERTICAL_OFFSET := 0.42
+const W_SLICE_LABEL_EDGE_OFFSET := 0.34
+const W_SLICE_LABEL_BOUNDS_PAD := 0.68
 const PROBE_MARKER_HEIGHT := 0.32
 const EVENT_MARKER_HEIGHT := 0.62
 const PARTICLE_TRAIL_HISTORY := 14
@@ -123,6 +124,8 @@ const TRACE_COLOR_PALETTE := [
 	Color(0.32, 0.92, 0.65, 1.0),
 ]
 
+static var _palette_cache := {}
+
 
 static func default_display_mode() -> String:
 	return DISPLAY_MODE_TRON
@@ -141,7 +144,7 @@ static func display_mode_label(mode: String) -> String:
 		DISPLAY_MODE_DIAGNOSTIC:
 			return "Diagnostic"
 		DISPLAY_MODE_TRON:
-			return "Tron"
+			return "Vector Arcade"
 		DISPLAY_MODE_PLAIN:
 			return "Plain"
 		_:
@@ -149,7 +152,7 @@ static func display_mode_label(mode: String) -> String:
 
 
 static func authority_label(mode: String) -> String:
-	return "REPLAY · PYTHON ORACLE · %s DISPLAY" % normalize_display_mode(mode).to_upper()
+	return "REPLAY · PYTHON ORACLE · %s DISPLAY" % display_mode_label(mode).to_upper()
 
 
 static func color_for_role(role: String, mode: String = DISPLAY_MODE_TRON) -> Color:
@@ -243,12 +246,15 @@ static func live_3d_origin_marker_material(mode: String = DISPLAY_MODE_TRON) -> 
 static func live_board_fill_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
 	var material := _role_material(ROLE_LIVE_BOARD_FILL, mode, _role_emission(ROLE_LIVE_BOARD_FILL, mode))
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = _with_alpha(material.albedo_color, 0.88)
+	material.albedo_color = _with_alpha(material.albedo_color, 0.80)
 	return material
 
 
 static func live_board_grid_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
-	return _role_material(ROLE_LIVE_BOARD_GRID, mode, _role_emission(ROLE_LIVE_BOARD_GRID, mode))
+	var material := _role_material(ROLE_LIVE_BOARD_GRID, mode, _role_emission(ROLE_LIVE_BOARD_GRID, mode))
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = _with_alpha(material.albedo_color.darkened(0.18), 0.64)
+	return material
 
 
 static func probe_before_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
@@ -313,21 +319,23 @@ static func slice_label_color(mode: String = DISPLAY_MODE_TRON) -> Color:
 
 
 static func slice_label_chip_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
-	var material := _role_material(ROLE_PANEL_QUIET, mode, 0.18)
+	var material := _role_material(ROLE_PANEL_ALT, mode, 0.28)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = _with_alpha(color_for_role(ROLE_PANEL_QUIET, mode), 0.94)
+	material.albedo_color = _with_alpha(color_for_role(ROLE_PANEL_ALT, mode), 0.96)
 	return material
 
 
 static func slice_outline_thickness(mode: String = DISPLAY_MODE_TRON) -> float:
-	return GRID_LINE_THICKNESS
+	return GRID_LINE_THICKNESS * 1.45
 
 
 static func _palette(mode: String) -> Dictionary:
 	var normalized_mode := normalize_display_mode(mode)
+	if _palette_cache.has(normalized_mode):
+		return _palette_cache.get(normalized_mode)
 	var manager = ShellStyleManagerScript.new()
 	manager.set_theme(normalized_mode)
-	return {
+	var palette := {
 		ROLE_BACKGROUND: manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
 		ROLE_PANEL_BACKGROUND: manager.get_color(ShellStyleRolesScript.BACKGROUND_PANEL),
 		ROLE_PANEL_QUIET: manager.get_color(ShellStyleRolesScript.BACKGROUND_PANEL),
@@ -338,7 +346,7 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_TEXT_SECONDARY: manager.get_color(ShellStyleRolesScript.TEXT_SECONDARY),
 		ROLE_TEXT_DIM: manager.get_color(ShellStyleRolesScript.TEXT_MUTED),
 		ROLE_ACCENT: manager.get_color(ShellStyleRolesScript.ACCENT_PRIMARY),
-		ROLE_ACCENT_SOFT: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS).darkened(0.65),
+		ROLE_ACCENT_SOFT: manager.get_color(ShellStyleRolesScript.ACCENT_SOFT),
 		ROLE_SUCCESS: manager.get_color(ShellStyleRolesScript.STATE_SUCCESS),
 		ROLE_WARNING: manager.get_color(ShellStyleRolesScript.STATE_WARNING),
 		ROLE_EVENT_MARKER: manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS),
@@ -366,6 +374,8 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_W_SLICE_LABEL: manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER),
 		ROLE_VIEWPORT_FRAME: manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
 	}
+	_palette_cache[normalized_mode] = palette
+	return palette
 
 
 static func _role_material(role: String, mode: String, emission_strength: float) -> StandardMaterial3D:
@@ -411,7 +421,7 @@ static func _role_emission(role: String, mode: String) -> float:
 		ROLE_LIVE_BOARD_FILL:
 			return 0.2 + tron_boost
 		ROLE_LIVE_BOARD_GRID:
-			return 0.58 + tron_boost
+			return 0.74 + tron_boost
 		_:
 			return 0.9 + tron_boost
 

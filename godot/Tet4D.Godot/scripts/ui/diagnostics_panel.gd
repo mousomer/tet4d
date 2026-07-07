@@ -5,6 +5,7 @@ class_name DiagnosticsPanel
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 var _label: RichTextLabel
+var _title: Label
 
 
 func _ready() -> void:
@@ -15,9 +16,9 @@ func _ready() -> void:
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(layout)
-	var title := Label.new()
-	title.text = "Replay Diagnostics"
-	layout.add_child(title)
+	_title = Label.new()
+	_title.text = "Replay Diagnostics"
+	layout.add_child(_title)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -55,3 +56,8 @@ func set_snapshot(snapshot: Dictionary) -> void:
 		for line in energy_lines:
 			sections.append(str(line))
 	_label.text = "\n".join(sections)
+
+
+func set_title(text: String) -> void:
+	if _title != null:
+		_title.text = text

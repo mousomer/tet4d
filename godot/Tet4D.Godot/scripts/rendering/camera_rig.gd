@@ -16,11 +16,11 @@ const MIN_ORTHOGRAPHIC_SIZE := 2.0
 const MAX_ORTHOGRAPHIC_SIZE := 96.0
 const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
 const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
+const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
 
 @export var min_distance := 8.0
 @export var max_distance := 80.0
 @export var orbit_sensitivity := 0.01
-@export var pan_sensitivity := 0.015
 @export var zoom_sensitivity := 1.1
 
 var _target_focus := Vector3.ZERO
@@ -31,6 +31,8 @@ var _target_yaw := PYTHON_DISPLAY_YAW_RAD
 var _current_yaw := PYTHON_DISPLAY_YAW_RAD
 var _target_pitch := PYTHON_DISPLAY_PITCH_RAD
 var _current_pitch := PYTHON_DISPLAY_PITCH_RAD
+var _target_roll := 0.0
+var _current_roll := 0.0
 var _base_distance := 22.0
 var _base_orthographic_size := DEFAULT_ORTHOGRAPHIC_SIZE
 var _zoom_multiplier := 1.0
@@ -55,6 +57,7 @@ func _process(delta: float) -> void:
 	_current_distance = lerpf(_current_distance, _target_distance, t)
 	_current_yaw = lerpf(_current_yaw, _target_yaw, t)
 	_current_pitch = lerpf(_current_pitch, _target_pitch, t)
+	_current_roll = lerpf(_current_roll, _target_roll, t)
 	_update_camera()
 
 
@@ -77,6 +80,7 @@ func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> voi
 	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
 	_target_yaw = PYTHON_DISPLAY_YAW_RAD
 	_target_pitch = PYTHON_DISPLAY_PITCH_RAD
+	_target_roll = 0.0
 	_current_view_preset = REPLAY_DISPLAY_VIEW_PRESET_NAME
 	_current_view_octant = "python replay"
 	_current_fit_state = "framed"
@@ -98,6 +102,7 @@ func fit_bounds(
 	_target_focus = (min_pos + max_pos) * 0.5
 	_target_yaw = yaw
 	_target_pitch = pitch
+	_target_roll = 0.0
 	_current_view_preset = view_preset
 	_current_view_octant = view_octant
 	_current_fit_state = "fit OK"
@@ -130,10 +135,15 @@ func nudge_pitch(delta_radians: float) -> void:
 	_update_camera()
 
 
-func pan(delta: Vector2) -> void:
-	var right: Vector3 = Basis(Vector3.UP, _target_yaw).x
-	var up: Vector3 = Vector3.UP
-	_target_focus += (-right * delta.x + up * delta.y) * pan_sensitivity * _target_distance
+func nudge_roll(delta_radians: float) -> void:
+	_target_roll += delta_radians
+	_current_roll = _target_roll
+	_current_fit_state = "manual"
+	_update_camera()
+
+
+func roll(delta: Vector2) -> void:
+	_target_roll += delta.x * orbit_sensitivity
 	_current_fit_state = "manual"
 
 
@@ -159,8 +169,9 @@ func view_status_text() -> String:
 	var projection_label := "ortho" if _camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective"
 	var yaw_degrees := rad_to_deg(_current_yaw)
 	var pitch_degrees := rad_to_deg(_current_pitch)
+	var roll_degrees := rad_to_deg(_current_roll)
 	var pitch_label := "above %.0f deg" % pitch_degrees if pitch_degrees >= 0.0 else "below %.0f deg" % absf(pitch_degrees)
-	return "Camera: %s · %s · size %.2f · zoom %.2fx · %s · yaw %.0f deg · pitch %s · roll 0 deg · %s" % [
+	return "Camera: %s · %s · size %.2f · zoom %.2fx · %s · yaw %.0f deg · pitch %s · roll %.0f deg · %s" % [
 		_current_view_preset,
 		projection_label,
 		_camera.size,
@@ -168,6 +179,7 @@ func view_status_text() -> String:
 		_current_view_octant,
 		yaw_degrees,
 		pitch_label,
+		roll_degrees,
 		_current_fit_state,
 	]
 
@@ -177,6 +189,7 @@ func _snap_to_targets() -> void:
 	_current_distance = _target_distance
 	_current_yaw = _target_yaw
 	_current_pitch = _target_pitch
+	_current_roll = _target_roll
 	_update_camera()
 
 
@@ -188,7 +201,9 @@ func _update_camera() -> void:
 		cos(_current_yaw) * horizontal_radius
 	)
 	_camera.global_position = _current_focus + offset
-	_camera.look_at(_current_focus, Vector3.UP)
+	var forward := (_current_focus - _camera.global_position).normalized()
+	var rolled_up := Basis(forward, _current_roll) * Vector3.UP
+	_camera.look_at(_current_focus, rolled_up)
 
 
 func _projected_orthographic_size(min_pos: Vector3, max_pos: Vector3, yaw: float, pitch: float, margin: float) -> float:

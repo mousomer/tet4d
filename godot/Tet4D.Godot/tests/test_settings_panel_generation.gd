@@ -98,7 +98,11 @@ func _assert_wrapped_setting_label(failures: Array, content: Node, setting_id: S
 	var row := content.get_node_or_null("SettingRow__%s" % setting_id.replace(".", "__"))
 	if row == null:
 		return
-	var text_box := row.get_child(0) as VBoxContainer
+	var row_content := row.get_node_or_null("SettingRowContent") as HBoxContainer
+	if row_content == null:
+		failures.append("%s should render as a setting card with row content" % setting_id)
+		return
+	var text_box := row_content.get_child(0) as VBoxContainer
 	if text_box == null or text_box.get_child_count() == 0:
 		failures.append("%s should keep label and description in a text column" % setting_id)
 		return

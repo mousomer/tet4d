@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-06
+Updated: 2026-07-07
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -28,14 +28,62 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Stage 31a repairs remote CI bootstrap after the Stage 31/32 push sequence
-without changing gameplay, Godot visual implementation, parity semantics, or
-roadmap scope. The first shared CI failure was the common verification step:
-GitHub-hosted Ubuntu exposed `clang-format`, which made deferred native tooling
-advisory mode fail opportunistically before pytest. CI now runs the same
-`CODEX_MODE=1 ./scripts/verify.sh` contract used locally and marks native
-tooling as explicit CI advisory until the documented strict-mode readiness
-checklist is complete.
+Stage 38 Godot Stage 33 cockpit UI acceptance (2026-07-07): the
+`codex/vector-arcade-cockpit-ui` branch is accepted on the current `master`
+baseline. Manual GUI launch confirmed the command-card main menu is readable
+at normal desktop size and continues to state the replay-only/Python-authority
+boundary. Godot acceptance/layout tests cover the replay/live shell paths for
+keyboard-hint persistence, unchanged hint-panel behavior, game-over badge error
+styling, bundle-status restoration, camera/help affordances, Tab/Fit View
+wording, right-inspector reachability, and live/replay declutter. This is
+Godot product-shell acceptance only and adds no gameplay, topology,
+replay/parity schema, native semantic, or authority-transfer change.
+
+Stage 33 Godot Vector Arcade Cockpit UI overhaul is accepted under
+`docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. Scope is limited
+to Godot product-shell visual UX and style-contract tests: command-card menus,
+structured keycap/action hints, compact generated settings cards, persistent
+inspector sectioning, `Vector Arcade` display labeling for the internal `tron`
+theme ID, and stronger board/W-label visual emphasis. Stage 33a is the active
+live-mode acceptance repair: structured scoped live status, status badges,
+full/quick grouped controls, and W-slice card/header hierarchy. Stage 33b is
+the active declutter polish: W labels become subtle orientation markers, the
+central live board stops repeating partial quick controls, and live mode hides
+or reduces the replay bottom bar. Stage 33c is the active layout-consolidation
+pass: live mode removes the replay case-browser side panel, cleans dangling
+top/viewport status detail, gives the recovered space to the board, keeps the
+right inspector as the single full control map, and pushes diagnostics/settings
+below live controls. Stage 33d is the active compactness pass: Live Plain 4D
+movement, rotation, and camera controls are grouped into inverse-pair rows with
+a single rotation CCW/CW section hint while system controls remain readable and
+one-per-row. Stage 33e is the active wording/input-presentation/palette polish
+pass: Plane Rotation wording is clarified, live game-over reasons map to
+user-facing labels, camera roll and mouse camera hints are presentation-only,
+and the default Vector Arcade palette shifts toward calmer Blueprint Arcade
+tokens. Stage 33f keeps the visible live game-over `Restart Game` button and
+viewport mouse camera controls after game over, then moves Calm Blueprint
+cockpit hierarchy into config-owned roles for `hint.section`,
+`hint.keycap.border`, `hint.keycap.text`, `hint.action`, `hint.note`, and
+`hint.error`. Stage 33f review repairs preserve keyboard-hint settings across
+replay/live transitions, restore bundle status after live mode, avoid
+unchanged hint-panel rebuilds, style live game-over badges through explicit
+status roles, route W-label opacity through `label.w_layer`, repair Tab/Fit
+View control-map drift, derive test hint text from structured control groups,
+and remove obsolete camera pan code after Shift-drag became camera roll. No
+gameplay, topology,
+movement, trace semantics, replay-frame
+semantics, parity logic, native authority, or authority transfer is added.
+
+Python review-repair batch (2026-07-05): fix review findings inside existing
+AI, replay, runtime, tutorial, and UI-logic ownership boundaries. Scope covers
+controller-reachable ND playbot orientation enumeration, follow-up score
+selection, lossless JSON-safe replay config payloads, state-root override path
+resolution, atomic JSON writes, saved keybinding duplicate validation with
+documented compatibility aliases, integer setting clamps, missing submenu
+target linting, keybinding catalog order/headings validation, and tutorial
+setup rollback/acknowledgement sequencing. This is a hardening batch only and
+does not introduce new gameplay authority, topology behavior, parity logic,
+native authority, or authority transfer.
 
 Python review-repair batch (2026-07-06): fix review findings inside existing
 AI, replay, runtime, tutorial, and UI-logic ownership boundaries. Scope covers
@@ -212,8 +260,9 @@ Current active follow-ups:
   replay inspection should treat these as post-command snapshots, with active
   gameplay cells rendered using role color rather than synthetic trace green
 - Stage 12 adds the first live plain bounded 2D Godot shell: Godot routes
-  input and renders native snapshots, while C++ owns all gameplay state
-  transitions and hashes. Replay mode remains intact and separate.
+  input and renders native snapshots, while the C++ live plain 2D session owns
+  that session's state transitions and hashes. Replay mode remains intact and
+  separate.
 - Stage 12b hardens that live plain bounded 2D shell without broadening scope:
   C++ owns a deterministic fixed classic sequence, Godot displays mode-specific
   live controls/status and renders live cells through the shared visual role
@@ -650,6 +699,33 @@ stays synchronized, and the contract validator accepts the backlog shape.
     add Godot tests for palettes, style manager behavior, settings integration,
     style application, and replay visual role mapping. No gameplay, topology,
     trace semantics, replay-frame semantics, parity logic, native authority, or
+    authority transfer is added.
+40. `DONE` `[BKL-P3-047]` Stage 32b Godot Neon CAD Cockpit style refinement:
+    extend the existing Stage 32 style applier so checkbox, slider, dropdown,
+    line-edit, value-label, inspector-panel, board-frame, and bottom-control
+    surfaces route through shared shell roles with compact technical panel
+    styling. Add Godot tests for generated direct-control styling and replay
+    viewer style snapshots. This is product-shell styling only; no gameplay,
+    topology, trace semantics, replay-frame semantics, parity logic, native
+    authority, or authority transfer is added.
+41. `DONE` `[BKL-P3-048]` Stage 33 Godot Vector Arcade Cockpit UI overhaul:
+    keep the Stage 32 style-role architecture and replace remaining patched
+    replay-spike presentation with command-card menus, grouped keycap/action
+    hints, compact generated settings cards, explicit inspector sections,
+    `Vector Arcade` display labeling for internal `tron`, and stronger
+    board/W-label visual emphasis. Stage 33a repairs the live-mode acceptance
+    rejection by replacing diagnostic status prose with structured scoped
+    status, exposing full and quick grouped controls, adding status badges,
+    and moving W slices toward card/header presentation. Stage 33b then
+    reduces live cockpit noise by demoting W labels to orientation markers,
+    removing central partial quick controls, and hiding/reducing repeated live
+    bottom controls. Stage 33f review repairs preserve keyboard-hint settings,
+    restore bundle status after live mode, avoid unchanged hint-panel rebuilds,
+    style live game-over badges through explicit status roles, repair Tab/Fit
+    View control-map drift, and remove obsolete camera pan code after
+    Shift-drag became camera roll. Stage 38 accepts this branch as
+    product-shell visual UX only; no gameplay, topology, movement, trace
+    semantics, replay-frame semantics, parity logic, native authority, or
     authority transfer is added.
 
 ## Governance Watchlist

@@ -32,12 +32,40 @@ func run() -> Array:
 			failures.append("tron accent.primary should differ from diagnostic")
 		if tron.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY) == diagnostic.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY):
 			failures.append("tron should not be identical to diagnostic")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY), Color.html("#05080E"), "tron Calm Blueprint background.primary")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.ACCENT_PRIMARY), Color.html("#2FB7C8"), "tron Calm Blueprint accent.primary")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.ACCENT_SOFT), Color.html("#3F6F7C"), "tron Calm Blueprint accent.soft")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.ACCENT_FOCUS), Color.html("#7DD3FC"), "tron Blueprint accent.focus")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.CELL_LOCKED), Color.html("#5E6F89"), "tron Calm Blueprint locked cell")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.CELL_SECONDARY), Color.html("#6657B8"), "tron Calm Blueprint secondary cell")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.LABEL_W_LAYER), Color.html("#78909CBD"), "tron muted W label")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_SECTION), Color.html("#2FB7C8"), "tron hint.section")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_KEYCAP_BORDER), Color.html("#426D7A"), "tron hint.keycap.border")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_KEYCAP_TEXT), Color.html("#DDEBFA"), "tron hint.keycap.text")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_ACTION), Color.html("#B8C7D9"), "tron hint.action")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_NOTE), Color.html("#8FA1B4"), "tron hint.note")
+		_assert_color(failures, tron.get_color(ShellStyleRolesScript.HINT_ERROR), Color.html("#E06C75"), "tron hint.error")
+		if _green_dominance(tron.get_color(ShellStyleRolesScript.ACCENT_FOCUS)) > 0.2:
+			failures.append("tron keycap/focus accent should not read as bright green")
+		if _green_dominance(tron.get_color(ShellStyleRolesScript.HINT_KEYCAP_BORDER)) > 0.2:
+			failures.append("tron keycap border should not read as bright green")
+		if tron.get_color(ShellStyleRolesScript.HINT_ACTION).r > tron.get_color(ShellStyleRolesScript.HINT_ACTION).b:
+			failures.append("tron hint action text should not read as magenta-dominant")
 	return failures
 
 
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:
 	if actual != expected:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _assert_color(failures: Array, actual: Color, expected: Color, label: String) -> void:
+	if absf(actual.r - expected.r) > 0.001 or absf(actual.g - expected.g) > 0.001 or absf(actual.b - expected.b) > 0.001 or absf(actual.a - expected.a) > 0.001:
+		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _green_dominance(color: Color) -> float:
+	return color.g - maxf(color.r, color.b)
 
 
 func _brightness(color: Color) -> float:

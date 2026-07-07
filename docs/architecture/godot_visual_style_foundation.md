@@ -10,15 +10,30 @@ Stage 32 adds a hybrid style-token system so standard Godot controls and
 script-driven replay/board visuals use the same semantic colour roles. It does
 not redesign the Stage 31 visual direction.
 
+Stage 32b tightens that implementation toward the Stage 31 Neon CAD Cockpit
+direction without adding a new theme or visual authority. The refinement keeps
+`tron` as the product default and makes the existing shell controls read as a
+compact technical cockpit: thin grid-border panels, dark board framing,
+metadata-value labels, direct checkbox/dropdown/slider controls, and stable
+inspector panel roles. This is still product-shell styling only.
+
+Stage 33 extends the same foundation through
+`docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. It keeps the
+semantic style-role architecture and updates the Godot shell toward the Vector
+Arcade Cockpit product direction: command-card menus, grouped keycap/action
+hints, settings cards, persistent inspector sectioning, `Vector Arcade`
+display labeling for the internal `tron` theme ID, and stronger board/W-label
+visual emphasis.
+
 The primary product identity is:
 
 ```text
-Tron-like technical diagram
+Vector Arcade Cockpit
 ```
 
-`tron` is now the primary/default product theme. `diagnostic` remains the
-development/debug theme, and `plain` remains the neutral/accessibility
-fallback.
+`tron` is the primary/default product theme ID and displays as `Vector Arcade`.
+`diagnostic` remains the development/debug theme, and `plain` remains the
+neutral/accessibility fallback.
 
 ## Palette Data
 
@@ -56,6 +71,11 @@ Responsibilities:
   buttons, option buttons, checkboxes, sliders, settings rows, and keyboard
   hints.
 
+The control applier is the shared local/CI contract for generated shell
+controls. Checkboxes, dropdowns, sliders, line edits, value labels, inspector
+panels, top/bottom bars, and the board frame must route through the style
+manager rather than hard-coded node colours.
+
 Replay visuals also use the same style manager through `ReplayVisuals`, so
 board/replay materials resolve through semantic roles instead of an unrelated
 hard-coded palette path.
@@ -87,6 +107,9 @@ theme.name changes
         -> ReplayVisuals uses the same palette roles for board/replay visuals
 ```
 
+The setting option values remain exactly `diagnostic`, `plain`, and `tron`.
+Only the display label for `tron` changes to `Vector Arcade`.
+
 ## Styled Shell Surfaces
 
 Stage 32 styles:
@@ -96,10 +119,29 @@ Stage 32 styles:
 - left case browser shell surfaces through recursive panel styling;
 - right inspector panels;
 - settings panel and settings rows;
-- generated buttons, sliders, dropdowns, and checkboxes;
+- generated buttons, sliders, dropdowns, line edits, and checkboxes;
 - keyboard hint labels;
 - bottom replay controls;
 - settings screen, controls screen, and diagnostics screen shell controls.
+
+Stage 32b additionally records these direct-control affordances:
+
+- checkboxes use explicit checked/unchecked cockpit boxes;
+- sliders use a dark board-colour track, neon fill, and focus grabber;
+- numeric/value labels use `diagnostic.metadata`;
+- the board shell frame uses `background.board` with a grid border;
+- inspector panels use stable `Inspector*` node names for deterministic role
+  application.
+
+Stage 33 additionally records:
+
+- command-card menu buttons with visible shortcut text;
+- structured keycap/action hint groups in the viewer, inspector, bottom
+  controls, and controls screen;
+- settings rows as compact generated cards;
+- explicit inspector section headers for trace, view, controls, diagnostics,
+  and quick settings;
+- `Vector Arcade` user-facing labeling for the internal `tron` theme.
 
 ## Styled Board And Replay Visuals
 
@@ -125,7 +167,7 @@ board-state derivation, or piece-position derivation changed.
 Manual visual acceptance should check:
 
 - Godot shell opens in Tron by default.
-- Tron is visibly dark/neon/technical without overwhelming board readability.
+- Vector Arcade is visibly dark/neon/technical without overwhelming board readability.
 - Diagnostic remains readable/debug-oriented.
 - Plain is visibly light/neutral.
 - Theme dropdown switches between `diagnostic`, `plain`, and `tron`.
@@ -150,6 +192,10 @@ Godot tests cover:
 - style manager default/fallback/theme-change behavior;
 - `theme.name` default/options/control mapping;
 - settings panel style application and refresh;
+- generated checkbox, slider, and value-label cockpit styling;
+- replay viewer board/bottom-bar style-contract snapshot;
+- structured keycap/action hint snapshots;
+- `Vector Arcade` display label coverage for the internal `tron` theme;
 - replay visual role mapping;
 - existing layout/settings/UX coverage from Stages 28-30.
 
