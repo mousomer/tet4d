@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-import difflib
 import json
 import re
 import subprocess
@@ -851,17 +850,6 @@ def _check_doc(path: Path, expected: str) -> int:
         rel = path.relative_to(PROJECT_ROOT).as_posix()
         print(
             f"Generated maintenance documentation is out of date: {rel}. Run tools/governance/generate_maintenance_docs.py.",
-            file=sys.stderr,
-        )
-        print(
-            "".join(
-                difflib.unified_diff(
-                    actual.splitlines(keepends=True),
-                    expected.splitlines(keepends=True),
-                    fromfile=f"{rel} (actual)",
-                    tofile=f"{rel} (expected)",
-                )
-            ),
             file=sys.stderr,
         )
         return 1
