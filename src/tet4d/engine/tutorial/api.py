@@ -88,6 +88,13 @@ def tutorial_runtime_consume_pending_setup_runtime(
     return dict(payload)
 
 
+def tutorial_runtime_acknowledge_pending_setup_runtime(
+    session: Any,
+    step_id: str,
+) -> None:
+    session.acknowledge_pending_setup(step_id)
+
+
 def tutorial_runtime_restart_runtime(session: Any) -> bool:
     return bool(session.restart())
 

@@ -52,6 +52,28 @@ def _reachable_menu_ids(
     return seen
 
 
+def _validate_submenu_targets(
+    menus: dict[str, dict[str, object]],
+    *,
+    issues: list[MenuGraphIssue],
+) -> None:
+    for menu_id, menu in menus.items():
+        raw_items = menu.get("items")
+        if not isinstance(raw_items, tuple):
+            continue
+        for item in raw_items:
+            if str(item.get("type", "")).lower() != "submenu":
+                continue
+            target = str(item.get("menu_id", "")).strip().lower()
+            if not target or target not in menus:
+                issues.append(
+                    MenuGraphIssue(
+                        "reachability",
+                        f"{menu_id} links to missing submenu {target!r}",
+                    )
+                )
+
+
 def lint_menu_graph() -> list[MenuGraphIssue]:
     try:
         menus = menu_graph()
@@ -65,6 +87,7 @@ def lint_menu_graph() -> list[MenuGraphIssue]:
     _validate_launcher_advanced_menu(menus, issues=issues)
     _validate_settings_ia(menus, issues=issues)
     _validate_explosion_defaults_settings_coverage(menus, issues=issues)
+    _validate_submenu_targets(menus, issues=issues)
 
     reachable_menus = _reachable_menu_ids(
         menus,

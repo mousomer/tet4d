@@ -348,11 +348,23 @@ def _state_root_override_path(*, root_dir: Path) -> Path | None:
     return None
 
 
-def _state_relative_suffix(relative_path: str, *, state_root_relative: str) -> Path:
+def _state_relative_suffix(
+    relative_path: str,
+    *,
+    state_root_relative: str,
+    default_relative: str,
+) -> Path:
     prefix = state_root_relative.rstrip("/")
     if relative_path == prefix:
         return Path()
-    return Path(relative_path[len(prefix) + 1 :])
+    if relative_path.startswith(prefix + "/"):
+        return Path(relative_path[len(prefix) + 1 :])
+    default_prefix = "state"
+    if default_relative == default_prefix:
+        return Path()
+    if default_relative.startswith(default_prefix + "/"):
+        return Path(default_relative[len(default_prefix) + 1 :])
+    return Path(default_relative)
 
 
 def _resolve_state_path_for_root(
@@ -371,6 +383,7 @@ def _resolve_state_path_for_root(
     suffix = _state_relative_suffix(
         relative_path,
         state_root_relative=state_dir_relative(),
+        default_relative=default_relative,
     )
     return (override_root / suffix).resolve()
 

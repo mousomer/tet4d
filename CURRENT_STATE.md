@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-05
+Last updated: 2026-07-07
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -19,6 +19,30 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
+- Stage 35 gameplay/topology sweep is active on
+  `codex/gameplay-topology-sweeps`: Topology Playground launch settings now
+  clamp unsupported `rigid_play_mode` values from saved/source settings to
+  `auto` before canonical runtime state construction; the sweep also adds
+  invariant coverage for 2D/ND placement, translation, rotation, hard-drop,
+  spawn, and topology seam behavior. `BoardND.can_place` now rejects duplicate
+  candidate cells to match the central placement validator. This is Python
+  gameplay/topology boundary hardening only and does not change topology
+  traversal, drop/lock legality, rigid-play policy, Godot/C++ routing, parity
+  logic, or authority ownership.
+- Stage 36 replay/parity contract hardening is active on
+  `codex/replay-parity-contract`: replay payloads now carry an explicit
+  version marker, reject unknown or missing semantic fields with readable
+  replay-format errors, and migration bundle manifests record replay, trace,
+  config, topology, piece-set, and RNG identity needed for Python-to-native
+  replay comparison. This is contract hardening only and does not change
+  gameplay rules, topology features, Godot/C++ ownership, or authority
+  transfer.
+- Stage 37 engine public API boundary cleanup is active on
+  `codex/engine-public-api-boundary`: UI/tutorial/frontend legality previews
+  route through public engine legality queries instead of private gameplay
+  helpers. This is authority-boundary cleanup only and does not change
+  movement, rotation, drop/lock, spawn, topology traversal, Godot/C++ routing,
+  or authority ownership.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
@@ -150,15 +174,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   W-label opacity through `label.w_layer`, repairing Tab/Fit View control-map
   drift, and removing obsolete camera pan code after Shift-drag became camera
   roll.
-- Python review repairs are in progress on the same branch under the existing
-  architecture owners: AI playbot planning now targets controller-reachable ND
-  orientations and combines follow-up scores correctly; replay scripts preserve
-  JSON-safe config fields; runtime settings, keybindings, state-root path
-  resolution, and atomic JSON writes are hardened; menu/keybinding catalogs
-  report missing targets and order drift; tutorial setup application is
-  rollback-safe and pending setup is acknowledged only after successful UI
-  application. This batch adds no gameplay authority transfer, topology
-  semantics, parity evidence, native authority, or Godot/C++ routing change.
+- Python review repairs are in progress on branch
+  `codex/python-review-fixes` under the existing architecture owners: AI
+  playbot planning now targets controller-reachable ND orientation
+  representatives and combines follow-up scores correctly; replay scripts
+  preserve JSON-safe config fields; runtime settings, keybindings,
+  state-root path resolution, and atomic JSON writes are hardened;
+  menu/keybinding catalogs report missing targets and order drift; tutorial
+  setup application is rollback-safe and pending setup is consumed only after
+  setup is successfully applied to committed game state. This batch adds no
+  gameplay authority transfer, topology semantics, parity evidence, native
+  authority, or Godot/C++ routing change.
 - Topology Lab semantic freeze is now the migration-blocking gameplay
   authority: `Editor` owns topology construction, gluing, preset selection,
   validation, and launch eligibility; `Sandbox` owns free probe/piece
@@ -604,12 +630,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.41` (`low`)
+- `tech_debt.score = 5.54` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.74`
-2. `code_balance = 1.67`
+1. `delivery_size_pressure = 2.75`
+2. `code_balance = 1.79`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -625,7 +651,7 @@ Top 8 live Python hotspots by real LOC:
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3039` real LOC
 5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2329` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
-7. `scripts/arch_metrics.py`: `1890` real LOC
+7. `scripts/arch_metrics.py`: `1891` real LOC
 8. `src/tet4d/ui/pygame/endgame_animation.py`: `1866` real LOC
 
 Thin-wrapper budgets:
@@ -634,7 +660,7 @@ Thin-wrapper budgets:
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
-5. `src/tet4d/engine/api.py: 91/160 real LOC (small engine compatibility facade)`
+5. `src/tet4d/engine/api.py: 136/160 real LOC (small engine compatibility facade)`
 6. `src/tet4d/ui/pygame/front2d_game.py: 116/180 real LOC (2D orchestration entrypoint)`
 
 Tutorial wording drift guard:

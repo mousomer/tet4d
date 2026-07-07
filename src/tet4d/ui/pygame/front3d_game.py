@@ -35,6 +35,7 @@ from tet4d.engine.tutorial.api import (
     tutorial_apply_step_setup_nd_runtime,
     tutorial_board_dims_runtime,
     tutorial_ensure_piece_visibility_nd_runtime,
+    tutorial_runtime_acknowledge_pending_setup_runtime,
     tutorial_runtime_action_allowed_runtime,
     tutorial_runtime_allowed_actions_runtime,
     tutorial_runtime_completion_ready_runtime,
@@ -130,6 +131,9 @@ tutorial_runtime_action_allowed = tutorial_runtime_action_allowed_runtime
 tutorial_runtime_observe_action = tutorial_runtime_observe_action_runtime
 tutorial_runtime_sync_and_advance = tutorial_runtime_sync_and_advance_runtime
 tutorial_runtime_consume_pending_setup = tutorial_runtime_consume_pending_setup_runtime
+tutorial_runtime_acknowledge_pending_setup = (
+    tutorial_runtime_acknowledge_pending_setup_runtime
+)
 tutorial_runtime_restart = tutorial_runtime_restart_runtime
 tutorial_runtime_previous_stage = tutorial_runtime_previous_stage_runtime
 tutorial_runtime_next_stage = tutorial_runtime_next_stage_runtime
@@ -325,6 +329,7 @@ def _apply_pending_tutorial_setup(loop: "LoopContext3D") -> None:
         return
     step_id = str(payload.get("step_id", "")).strip().lower()
     tutorial_apply_step_setup_nd(loop.state, loop.cfg, payload)
+    tutorial_runtime_acknowledge_pending_setup(tutorial_session, step_id)
     if step_id in _TUTORIAL_GRID_OFF_STEPS_3D:
         loop.grid_mode = GridMode.OFF
     elif step_id in _TUTORIAL_GRID_HELPER_STEPS_3D:

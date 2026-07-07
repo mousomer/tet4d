@@ -27,7 +27,11 @@ class BoardND:
         return coord in self.cells
 
     def can_place(self, coords: Iterable[Coord]) -> bool:
+        seen: set[Coord] = set()
         for c in coords:
+            if c in seen:
+                return False
+            seen.add(c)
             if not self.inside_bounds(c):
                 return False
             if self.is_occupied(c):

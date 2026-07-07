@@ -131,6 +131,33 @@ class TestMenuSettingsSemanticPersistence(unittest.TestCase):
             self.assertEqual(mode["random_mode_index"], 0)
             self.assertEqual(mode["random_mode_id"], "fixed_seed")
 
+    def test_invalid_integer_settings_are_clamped_on_load(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        state_dir = root / "state"
+        state_file = state_dir / "menu_settings.json"
+        state_dir.mkdir(parents=True, exist_ok=True)
+
+        with (
+            patch.object(menu_settings_state, "STATE_DIR", state_dir),
+            patch.object(menu_settings_state, "STATE_FILE", state_file),
+        ):
+            payload = menu_settings_state._default_settings_payload()
+            mode = payload["settings"]["2d"]
+            mode["speed_level"] = -5
+            mode["lines_per_level"] = 0
+            mode["rotation_animation_duration_ms_2d"] = -10
+            mode["endgame_relic_speed_percent"] = -1
+            state_file.write_text(json.dumps(payload), encoding="utf-8")
+
+            loaded = menu_settings_state.load_app_settings_payload()
+            mode = loaded["settings"]["2d"]
+            self.assertEqual(mode["speed_level"], 1)
+            self.assertGreaterEqual(mode["lines_per_level"], 1)
+            self.assertGreaterEqual(mode["rotation_animation_duration_ms_2d"], 0)
+            self.assertGreaterEqual(mode["endgame_relic_speed_percent"], 1)
+
     def test_load_menu_settings_applies_semantic_ids_as_runtime_indices(self) -> None:
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

@@ -12,7 +12,10 @@ from .settings_schema import (
     MODE_KEY_SET,
     PROFILE_NAME_RE,
     RuntimeSettingDefaults,
+    clamp_animation_duration_ms,
+    clamp_endgame_speed_percent,
     clamp_game_seed,
+    clamp_lines_per_level,
     clamp_overlay_transparency,
 )
 
@@ -81,19 +84,53 @@ def _normalize_mode_attr_value(
     defaults: RuntimeSettingDefaults,
 ) -> object:
     if isinstance(default_value, bool):
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, int) and not isinstance(value, bool):
-            return bool(value)
-        return bool(default_value)
+        return _normalize_bool_setting(value, default=bool(default_value))
     if isinstance(default_value, int) and not isinstance(default_value, bool):
-        if isinstance(value, bool) or not isinstance(value, int):
-            return default_value
-        if attr_name == "game_seed":
-            return clamp_game_seed(value, default=defaults.game_seed)
-        return value
+        return _normalize_int_setting(
+            attr_name,
+            value=value,
+            default_value=int(default_value),
+            defaults=defaults,
+        )
     if not isinstance(value, type(default_value)):
         return default_value
+    return value
+
+
+def _normalize_bool_setting(value: object, *, default: bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return bool(value)
+    return default
+
+
+def _normalize_int_setting(
+    attr_name: str,
+    *,
+    value: object,
+    default_value: int,
+    defaults: RuntimeSettingDefaults,
+) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return default_value
+    if attr_name == "game_seed":
+        return clamp_game_seed(value, default=defaults.game_seed)
+    if attr_name in ("speed_level", "bot_speed_level"):
+        return max(1, min(10, int(value)))
+    if attr_name == "lines_per_level":
+        return clamp_lines_per_level(value, default=default_value)
+    if attr_name in (
+        "rotation_animation_duration_ms_2d",
+        "rotation_animation_duration_ms_nd",
+        "translation_animation_duration_ms",
+    ):
+        return clamp_animation_duration_ms(value, default=default_value)
+    if attr_name in (
+        "endgame_relic_speed_percent",
+        "endgame_shatter_speed_percent",
+    ):
+        return clamp_endgame_speed_percent(value, default=default_value)
     return value
 
 

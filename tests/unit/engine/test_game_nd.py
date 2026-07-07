@@ -2,7 +2,13 @@ import unittest
 import random
 
 from tet4d.engine.core.model import BoardND
+from tet4d.engine.core.rules.piece_placement import (
+    build_candidate_piece_placement,
+    validate_candidate_piece_placement,
+)
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import (
     ActivePieceND,
     PIECE_SET_3D_DEBUG,
@@ -745,6 +751,188 @@ class TestGameND(unittest.TestCase):
             tuple(sorted(state.current_piece.cells())),
             ((2, 1, 1), (3, 1, 1)),
         )
+
+
+class TestStage35GameplaySemantics(unittest.TestCase):
+    def test_direct_board_occupancy_agrees_with_candidate_legality(self) -> None:
+        board = BoardND((4, 5))
+        board.cells[(2, 2)] = 9
+        cases = (
+            ("open", ((0, 1), (1, 1))),
+            ("occupied", ((1, 2), (2, 2))),
+            ("duplicate", ((1, 1), (1, 1))),
+            ("out_of_bounds", ((3, 4), (4, 4))),
+        )
+
+        for label, cells in cases:
+            with self.subTest(case=label):
+                candidate = build_candidate_piece_placement(object(), cells)
+
+                self.assertEqual(
+                    validate_candidate_piece_placement(
+                        candidate,
+                        board.cells,
+                        coord_validator=board.inside_bounds,
+                    ),
+                    board.can_place(cells),
+                )
+
+    def test_2d_and_embedded_nd_translation_reject_same_occupied_final_cells(
+        self,
+    ) -> None:
+        shape_2d = PieceShape2D("pair", [(0, 0), (1, 0)], color_id=4)
+        shape_nd = PieceShapeND("pair", ((0, 0, 0), (1, 0, 0)), color_id=4)
+        state_2d = GameState(
+            config=GameConfig(width=4, height=5),
+            board=BoardND((4, 5)),
+        )
+        state_nd = GameStateND(
+            config=GameConfigND(dims=(4, 5, 1), gravity_axis=1),
+            board=BoardND((4, 5, 1)),
+        )
+        state_2d.board.cells.clear()
+        state_nd.board.cells.clear()
+        state_2d.current_piece = ActivePiece2D(shape_2d, pos=(1, 2), rotation=0)
+        state_nd.current_piece = ActivePieceND.from_shape(shape_nd, pos=(1, 2, 0))
+        state_2d.board.cells[(3, 2)] = 8
+        state_nd.board.cells[(3, 2, 0)] = 8
+
+        self.assertFalse(state_2d.try_move(1, 0))
+        self.assertFalse(state_nd.try_move_axis(0, 1))
+        self.assertEqual(
+            tuple(sorted(state_2d.current_piece.cells())),
+            ((1, 2), (2, 2)),
+        )
+        self.assertEqual(
+            tuple(sorted(state_nd.current_piece.cells())),
+            ((1, 2, 0), (2, 2, 0)),
+        )
+
+    def test_2d_and_embedded_nd_translation_reject_same_boundary_exit(self) -> None:
+        shape_2d = PieceShape2D("pair", [(0, 0), (1, 0)], color_id=4)
+        shape_nd = PieceShapeND("pair", ((0, 0, 0), (1, 0, 0)), color_id=4)
+        state_2d = GameState(
+            config=GameConfig(width=4, height=5),
+            board=BoardND((4, 5)),
+        )
+        state_nd = GameStateND(
+            config=GameConfigND(dims=(4, 5, 1), gravity_axis=1),
+            board=BoardND((4, 5, 1)),
+        )
+        state_2d.board.cells.clear()
+        state_nd.board.cells.clear()
+        state_2d.current_piece = ActivePiece2D(shape_2d, pos=(2, 2), rotation=0)
+        state_nd.current_piece = ActivePieceND.from_shape(shape_nd, pos=(2, 2, 0))
+
+        self.assertFalse(state_2d.try_move(1, 0))
+        self.assertFalse(state_nd.try_move_axis(0, 1))
+        self.assertEqual(
+            tuple(sorted(state_2d.current_piece.cells())),
+            ((2, 2), (3, 2)),
+        )
+        self.assertEqual(
+            tuple(sorted(state_nd.current_piece.cells())),
+            ((2, 2, 0), (3, 2, 0)),
+        )
+
+    def test_2d_and_embedded_nd_rotation_reject_same_occupied_final_cells(self) -> None:
+        blocks_2d = [(0, 0), (1, 0), (0, 1)]
+        shape_2d = PieceShape2D("corner", blocks_2d, color_id=5)
+        shape_nd = PieceShapeND(
+            "corner",
+            tuple((x, y, 0) for x, y in blocks_2d),
+            color_id=5,
+        )
+        state_2d = GameState(
+            config=GameConfig(width=5, height=6, kick_level="off"),
+            board=BoardND((5, 6)),
+        )
+        state_nd = GameStateND(
+            config=GameConfigND(dims=(5, 6, 1), gravity_axis=1, kick_level="off"),
+            board=BoardND((5, 6, 1)),
+        )
+        state_2d.board.cells.clear()
+        state_nd.board.cells.clear()
+        state_2d.current_piece = ActivePiece2D(shape_2d, pos=(2, 2), rotation=0)
+        state_nd.current_piece = ActivePieceND.from_shape(shape_nd, pos=(2, 2, 0))
+        state_2d.board.cells[(3, 3)] = 9
+        state_nd.board.cells[(3, 3, 0)] = 9
+
+        state_2d.try_rotate(1)
+        nd_rotated = state_nd.try_rotate(0, 1, 1)
+
+        self.assertFalse(nd_rotated)
+        self.assertEqual(
+            tuple(sorted(state_2d.current_piece.cells())),
+            ((2, 2), (2, 3), (3, 2)),
+        )
+        self.assertEqual(
+            tuple(sorted(state_nd.current_piece.cells())),
+            ((2, 2, 0), (2, 3, 0), (3, 2, 0)),
+        )
+
+    def test_hard_drop_matches_repeated_soft_drop_then_lock_in_2d_and_nd(self) -> None:
+        shape_2d = PieceShape2D("dot", [(0, 0)], color_id=6)
+        shape_nd = PieceShapeND("dot", ((0, 0, 0),), color_id=6)
+
+        hard_2d = GameState(config=GameConfig(width=4, height=5), board=BoardND((4, 5)))
+        repeated_2d = GameState(
+            config=GameConfig(width=4, height=5),
+            board=BoardND((4, 5)),
+        )
+        for state in (hard_2d, repeated_2d):
+            state.board.cells.clear()
+            state.current_piece = ActivePiece2D(shape_2d, pos=(1, -1), rotation=0)
+        hard_2d.hard_drop()
+        while repeated_2d.try_soft_drop():
+            pass
+        repeated_2d.lock_current_piece()
+
+        self.assertEqual(hard_2d.board.cells, repeated_2d.board.cells)
+
+        hard_nd = GameStateND(
+            config=GameConfigND(dims=(4, 5, 1), gravity_axis=1),
+            board=BoardND((4, 5, 1)),
+        )
+        repeated_nd = GameStateND(
+            config=GameConfigND(dims=(4, 5, 1), gravity_axis=1),
+            board=BoardND((4, 5, 1)),
+        )
+        for state in (hard_nd, repeated_nd):
+            state.board.cells.clear()
+            state.current_piece = ActivePieceND.from_shape(shape_nd, pos=(1, -1, 0))
+        hard_nd.hard_drop()
+        while repeated_nd.try_soft_drop():
+            pass
+        repeated_nd.lock_current_piece()
+
+        self.assertEqual(hard_nd.board.cells, repeated_nd.board.cells)
+
+    def test_spawn_validity_rejects_occupied_spawn_cells_in_2d_and_nd(self) -> None:
+        shape_2d = PieceShape2D("visible_spawn", [(0, 0), (0, 3)], color_id=3)
+        cfg_2d = GameConfig(width=5, height=6)
+        board_2d = BoardND((cfg_2d.width, cfg_2d.height))
+        board_2d.cells[(2, 1)] = 9
+        state_2d = GameState(
+            config=cfg_2d,
+            board=board_2d,
+            current_piece=None,
+            next_bag=[shape_2d],
+        )
+
+        shape_nd = PieceShapeND("visible_spawn", ((0, 0, 0), (0, 3, 0)), color_id=3)
+        cfg_nd = GameConfigND(dims=(5, 6, 1), gravity_axis=1)
+        board_nd = BoardND(cfg_nd.dims)
+        board_nd.cells[(2, 1, 0)] = 9
+        state_nd = GameStateND(
+            config=cfg_nd,
+            board=board_nd,
+            current_piece=None,
+            next_bag=[shape_nd],
+        )
+
+        self.assertTrue(state_2d.game_over)
+        self.assertTrue(state_nd.game_over)
 
 
 if __name__ == "__main__":

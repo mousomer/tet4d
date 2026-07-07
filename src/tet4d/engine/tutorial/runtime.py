@@ -445,13 +445,22 @@ class TutorialRuntimeSession:
             snapshot.step_id
         ):
             setup_payload["overlay_start_percent"] = 50
-        self._pending_setup_step_id = None
-        self._transition_from_step_id = None
         return {
             "lesson_id": lesson.lesson_id,
             "step_id": step.step_id,
             "setup": setup_payload,
         }
+
+    def acknowledge_pending_setup(self, step_id: str) -> None:
+        clean_step_id = str(step_id).strip().lower()
+        pending = (
+            str(self._pending_setup_step_id).strip().lower()
+            if self._pending_setup_step_id is not None
+            else ""
+        )
+        if clean_step_id and clean_step_id == pending:
+            self._pending_setup_step_id = None
+            self._transition_from_step_id = None
 
     def overlay_payload(self) -> dict[str, Any]:
         snapshot = self.manager.snapshot()

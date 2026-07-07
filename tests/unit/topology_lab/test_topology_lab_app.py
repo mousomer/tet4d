@@ -26,7 +26,11 @@ from tet4d.ui.pygame.topology_lab.app import (
     mode_settings_snapshot_for_dimension,
 )
 from tet4d.ui.pygame import frontend_nd_setup
-from tet4d.ui.pygame.topology_lab.scene_state import TOOL_EDIT, TOOL_SANDBOX
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    ExplorerPlaygroundSettings,
+    TOOL_EDIT,
+    TOOL_SANDBOX,
+)
 
 class TestTopologyLabApp(unittest.TestCase):
     def _invalid_profile_3d(self) -> ExplorerTopologyProfile:
@@ -168,6 +172,31 @@ class TestTopologyLabApp(unittest.TestCase):
         self.assertEqual(launch.settings_snapshot.random_mode_index, 1)
         self.assertEqual(launch.settings_snapshot.game_seed, 1234)
         self.assertEqual(launch.settings_snapshot.rigid_play_mode, "off")
+
+    def test_build_explorer_launch_clamps_invalid_rigid_play_mode_to_auto(self) -> None:
+        launch = build_explorer_playground_launch(
+            dimension=3,
+            source_settings=SimpleNamespace(
+                width=9,
+                height=10,
+                depth=7,
+                piece_set_index=0,
+                speed_level=1,
+                random_mode_index=0,
+                game_seed=0,
+                rigid_play_mode="bad-value",
+            ),
+        )
+
+        self.assertEqual(launch.settings_snapshot.rigid_play_mode, "auto")
+
+    def test_explorer_settings_clamps_direct_invalid_rigid_play_snapshot(self) -> None:
+        snapshot = ExplorerPlaygroundSettings(
+            board_dims=(8, 8, 8),
+            rigid_play_mode="bad-value",
+        )
+
+        self.assertEqual(snapshot.rigid_play_mode, "auto")
 
     def test_build_explorer_and_launcher_launch_preserve_invalid_3d_profile(
         self,

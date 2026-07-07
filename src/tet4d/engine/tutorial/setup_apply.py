@@ -10,6 +10,7 @@ from ..gameplay.challenge_mode import (
     apply_challenge_prefill_2d,
     apply_challenge_prefill_nd,
 )
+from ..gameplay.api import piece_pose_legal_gameplay
 from ..gameplay.game2d import GameConfig, GameState
 from ..gameplay.game_nd import GameConfigND, GameStateND
 from ..gameplay.pieces2d import (
@@ -87,6 +88,36 @@ def _clear_runtime_board_state(state: GameState | GameStateND) -> None:
     state.board.last_cleared_levels = []
     state.board.last_cleared_cells = []
     state.game_over = False
+
+
+def _snapshot_tutorial_state(state: GameState | GameStateND) -> dict[str, Any]:
+    return {
+        "cells": dict(state.board.cells),
+        "last_cleared_levels": list(state.board.last_cleared_levels),
+        "last_cleared_cells": list(state.board.last_cleared_cells),
+        "current_piece": state.current_piece,
+        "next_bag": list(state.next_bag),
+        "score": state.score,
+        "lines_cleared": state.lines_cleared,
+        "game_over": state.game_over,
+        "rng_state": state.rng.getstate(),
+    }
+
+
+def _restore_tutorial_state(
+    state: GameState | GameStateND,
+    snapshot: dict[str, Any],
+) -> None:
+    state.board.cells.clear()
+    state.board.cells.update(snapshot["cells"])
+    state.board.last_cleared_levels = list(snapshot["last_cleared_levels"])
+    state.board.last_cleared_cells = list(snapshot["last_cleared_cells"])
+    state.current_piece = snapshot["current_piece"]
+    state.next_bag = list(snapshot["next_bag"])
+    state.score = int(snapshot["score"])
+    state.lines_cleared = int(snapshot["lines_cleared"])
+    state.game_over = bool(snapshot["game_over"])
+    state.rng.setstate(snapshot["rng_state"])
 
 
 def _piece_is_visible_2d(state: GameState, piece: ActivePiece2D) -> bool:
@@ -231,7 +262,7 @@ def _candidate_piece_placeable_2d(
         return False
     if _piece_min_gravity_2d(state, candidate) < min_visible_layer:
         return False
-    if not state._can_exist(candidate):
+    if not piece_pose_legal_gameplay(state, candidate):
         return False
     if required_move_delta is None:
         return True
@@ -241,7 +272,7 @@ def _candidate_piece_placeable_2d(
     delta_y = int(required_move_delta[1])
     for _ in range(repeats):
         probe = probe.moved(delta_x, delta_y)
-        if not state._can_exist(probe):
+        if not piece_pose_legal_gameplay(state, probe):
             return False
     return True
 
@@ -526,9 +557,11 @@ def _nudge_goal_piece_away_from_holes_2d(*, state: GameState) -> None:
         if dx == 0:
             continue
         candidate = piece.moved(int(dx), 0)
-        if not state._can_exist(candidate):
+        if not piece_pose_legal_gameplay(state, candidate):
             continue
-        candidate_cells = state.mapped_piece_cells_for_piece(candidate, include_above=True)
+        candidate_cells = state.mapped_piece_cells_for_piece(
+            candidate, include_above=True
+        )
         if not candidate_cells:
             continue
         candidate_center = float(sum(coord[0] for coord in candidate_cells)) / float(
@@ -632,7 +665,7 @@ def _best_nudged_piece_nd(
         delta = [0] * state.config.ndim
         delta[primary_axis] = int(direction) * int(step)
         candidate = piece.moved(tuple(delta))
-        if not state._can_exist(candidate):
+        if not piece_pose_legal_gameplay(state, candidate):
             continue
         candidate_center = _piece_center_axis_nd(
             state=state,
@@ -660,7 +693,7 @@ def _candidate_piece_placeable_nd(
         return False
     if _piece_min_gravity_nd(state, candidate) < min_visible_layer:
         return False
-    if not state._can_exist(candidate):
+    if not piece_pose_legal_gameplay(state, candidate):
         return False
     if required_move_delta is None:
         return True
@@ -668,7 +701,7 @@ def _candidate_piece_placeable_nd(
     repeats = max(1, int(required_move_repetitions))
     for _ in range(repeats):
         probe = probe.moved(required_move_delta)
-        if not state._can_exist(probe):
+        if not piece_pose_legal_gameplay(state, probe):
             return False
     return True
 
@@ -683,7 +716,7 @@ def _candidate_supports_repeated_move_nd(
     probe = candidate
     for _ in range(max(1, int(repeats))):
         probe = probe.moved(delta)
-        if not state._can_exist(probe):
+        if not piece_pose_legal_gameplay(state, probe):
             return False
     return True
 
@@ -707,8 +740,11 @@ def _target_axis_score_nd(
     return abs(actual_max - target_max)
 
 
-def _opening_translation_move_requirements_nd(*, ndim: int) -> tuple[tuple[int, ...], ...]:
+def _opening_translation_move_requirements_nd(
+    *, ndim: int
+) -> tuple[tuple[int, ...], ...]:
     requirements: list[tuple[int, ...]] = []
+
     def _delta(values: tuple[int, ...]) -> tuple[int, ...]:
         if len(values) == ndim:
             return tuple(int(value) for value in values)
@@ -718,6 +754,7 @@ def _opening_translation_move_requirements_nd(*, ndim: int) -> tuple[tuple[int, 
                 break
             padded[index] = int(value)
         return tuple(padded)
+
     if ndim >= 3:
         requirements.extend((_delta((-1, 0, 0)), _delta((0, 0, 1))))
     if ndim >= 4:
@@ -789,7 +826,7 @@ def _opening_translation_candidate_valid_nd(
         return False
     if _piece_min_gravity_nd(state, candidate) < int(min_visible_layer):
         return False
-    if not state._can_exist(candidate):
+    if not piece_pose_legal_gameplay(state, candidate):
         return False
     return all(
         _candidate_supports_repeated_move_nd(
@@ -822,7 +859,10 @@ def _opening_translation_candidate_score_nd(
         )
         if ndim >= 4
         else 0,
-        sum(abs(int(candidate.pos[axis]) - int(current_pos[axis])) for axis in lateral_axes),
+        sum(
+            abs(int(candidate.pos[axis]) - int(current_pos[axis]))
+            for axis in lateral_axes
+        ),
     )
 
 
@@ -1122,8 +1162,7 @@ def _apply_board_preset_nd_single_gap(
     target_level = cfg.dims[gravity_axis] - 1
     lateral_axes = [axis for axis in range(cfg.ndim) if axis != gravity_axis]
     gap_coords = [
-        int(setup_rng.randrange(max(1, cfg.dims[axis])))
-        for axis in lateral_axes
+        int(setup_rng.randrange(max(1, cfg.dims[axis]))) for axis in lateral_axes
     ]
     lateral_ranges = [range(cfg.dims[axis]) for axis in lateral_axes]
     for lateral_values in product(*lateral_ranges):
@@ -1218,7 +1257,7 @@ def _ensure_current_piece_visible_2d(
     if (
         _piece_is_visible_2d(state, piece)
         and _piece_min_gravity_2d(state, piece) >= min_visible_layer
-        and state._can_exist(piece)
+        and piece_pose_legal_gameplay(state, piece)
     ):
         return
     required_drop = max(0, min_visible_layer - _piece_min_gravity_2d(state, piece))
@@ -1227,7 +1266,7 @@ def _ensure_current_piece_visible_2d(
         if (
             _piece_is_visible_2d(state, candidate)
             and _piece_min_gravity_2d(state, candidate) >= min_visible_layer
-            and state._can_exist(candidate)
+            and piece_pose_legal_gameplay(state, candidate)
         ):
             state.current_piece = candidate
             return
@@ -1256,7 +1295,7 @@ def _ensure_current_piece_visible_nd(
     if (
         _piece_is_visible_nd(state, piece)
         and _piece_min_gravity_nd(state, piece) >= min_visible_layer
-        and state._can_exist(piece)
+        and piece_pose_legal_gameplay(state, piece)
     ):
         return
     required_drop = max(0, min_visible_layer - _piece_min_gravity_nd(state, piece))
@@ -1267,7 +1306,7 @@ def _ensure_current_piece_visible_nd(
         if (
             _piece_is_visible_nd(state, candidate)
             and _piece_min_gravity_nd(state, candidate) >= min_visible_layer
-            and state._can_exist(candidate)
+            and piece_pose_legal_gameplay(state, candidate)
         ):
             state.current_piece = candidate
             return
@@ -1332,7 +1371,9 @@ def _find_starter_shape_nd(
     )
     if selected_shape is not None:
         return selected_shape, str(cfg.piece_set_id)
-    fallback_piece_set = PIECE_SET_3D_STANDARD if cfg.ndim == 3 else PIECE_SET_4D_STANDARD
+    fallback_piece_set = (
+        PIECE_SET_3D_STANDARD if cfg.ndim == 3 else PIECE_SET_4D_STANDARD
+    )
     fallback_shapes = get_piece_shapes_nd(
         cfg.ndim,
         piece_set_id=fallback_piece_set,
@@ -1413,6 +1454,37 @@ def apply_tutorial_step_setup_2d(
         raise RuntimeError(
             f"tutorial setup failed ({scope_tag}): starter_piece_id is required"
         )
+    snapshot = _snapshot_tutorial_state(state)
+    try:
+        _apply_tutorial_step_setup_2d_mutating(
+            state=state,
+            cfg=cfg,
+            setup=setup,
+            scope_tag=scope_tag,
+            board_preset=board_preset,
+            min_visible_layer=min_visible_layer,
+            starter_piece=starter_piece,
+            lesson_id=lesson_id,
+            step_id=step_id,
+        )
+    except Exception:
+        _restore_tutorial_state(state, snapshot)
+        raise
+
+
+def _apply_tutorial_step_setup_2d_mutating(
+    *,
+    state: GameState,
+    cfg: GameConfig,
+    setup: dict[str, Any],
+    scope_tag: str,
+    board_preset: str,
+    min_visible_layer: int,
+    starter_piece: str,
+    lesson_id: str,
+    step_id: str,
+) -> None:
+    del lesson_id
     seed = _normalize_seed(setup.get("rng_seed"), default=int(cfg.rng_seed))
     setup_rng = _set_seeded_runtime_rng(state, seed=seed)
     layers_min, layers_max = _normalize_bottom_layers(setup)
@@ -1528,6 +1600,37 @@ def apply_tutorial_step_setup_nd(
         raise RuntimeError(
             f"tutorial setup failed ({scope_tag}): starter_piece_id is required"
         )
+    snapshot = _snapshot_tutorial_state(state)
+    try:
+        _apply_tutorial_step_setup_nd_mutating(
+            state=state,
+            cfg=cfg,
+            setup=setup,
+            scope_tag=scope_tag,
+            board_preset=board_preset,
+            min_visible_layer=min_visible_layer,
+            starter_piece=starter_piece,
+            lesson_id=lesson_id,
+            step_id=step_id,
+        )
+    except Exception:
+        _restore_tutorial_state(state, snapshot)
+        raise
+
+
+def _apply_tutorial_step_setup_nd_mutating(
+    *,
+    state: GameStateND,
+    cfg: GameConfigND,
+    setup: dict[str, Any],
+    scope_tag: str,
+    board_preset: str,
+    min_visible_layer: int,
+    starter_piece: str,
+    lesson_id: str,
+    step_id: str,
+) -> None:
+    del lesson_id
     seed = _normalize_seed(setup.get("rng_seed"), default=int(cfg.rng_seed))
     setup_rng = _set_seeded_runtime_rng(state, seed=seed)
     layers_min, layers_max = _normalize_bottom_layers(setup)

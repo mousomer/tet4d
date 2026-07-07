@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 
 import pygame
 
+from tet4d.engine import api as engine_api
 from tet4d.engine.gameplay.explorer_movement_policy import (
     explorer_movement_policy_from_rigid_play_enabled,
 )
@@ -291,7 +292,9 @@ def _translated_or_explorer_candidate(
     mapped_delta = int(delta)
     if not (0 <= mapped_axis < int(state.config.ndim)):
         return None
-    if _uses_explorer_piece_transport(state.config) and not _piece_has_cells_above_gravity(state):
+    if _uses_explorer_piece_transport(
+        state.config
+    ) and not _piece_has_cells_above_gravity(state):
         transport = state.config.explorer_transport
         if transport is None:
             return None
@@ -499,7 +502,7 @@ def can_apply_nd_gameplay_action_with_view(
         axis_overrides_by_action=axis_overrides_by_action,
     )
     if candidate is not None:
-        return bool(state._can_exist(candidate))
+        return engine_api.piece_pose_legal(state, candidate)
     candidate = _candidate_from_rotation_override(
         state=state,
         action=action,
@@ -508,7 +511,7 @@ def can_apply_nd_gameplay_action_with_view(
         viewer_axes_by_label=viewer_axes_by_label,
     )
     if candidate is not None:
-        return bool(state._can_exist(candidate))
+        return engine_api.piece_pose_legal(state, candidate)
     candidate, is_view_relative = _viewer_relative_move_candidate(
         state=state,
         action=action,
@@ -516,11 +519,13 @@ def can_apply_nd_gameplay_action_with_view(
         viewer_axes_by_label=viewer_axes_by_label,
     )
     if is_view_relative:
-        return bool(candidate is not None and state._can_exist(candidate))
+        return bool(
+            candidate is not None and engine_api.piece_pose_legal(state, candidate)
+        )
     candidate = _candidate_for_base_nd_action(state, action)
     if candidate is None:
         return True
-    return bool(state._can_exist(candidate))
+    return engine_api.piece_pose_legal(state, candidate)
 
 
 def apply_nd_gameplay_action_with_view(

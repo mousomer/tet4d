@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-05
+Updated: 2026-07-07
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -74,6 +74,39 @@ target linting, keybinding catalog order/headings validation, and tutorial
 setup rollback/acknowledgement sequencing. This is a hardening batch only and
 does not introduce new gameplay authority, topology behavior, parity logic,
 native authority, or authority transfer.
+
+Python review-repair batch (2026-07-06): fix review findings inside existing
+AI, replay, runtime, tutorial, and UI-logic ownership boundaries. Scope covers
+controller-reachable ND playbot orientation representatives, follow-up score
+selection, lossless JSON-safe replay config payloads, state-root override path
+resolution, atomic JSON writes, saved keybinding duplicate validation with
+documented compatibility aliases, integer setting clamps, missing submenu
+target linting, keybinding catalog order/headings validation, and tutorial
+setup rollback/application-acknowledgement sequencing. This is a hardening
+batch only and does not introduce new gameplay authority, topology behavior,
+parity logic, native authority, or authority transfer.
+
+Stage 35 gameplay/topology sweep (2026-07-06): harden the Topology Playground
+launch-settings boundary so malformed `rigid_play_mode` values normalize to
+`auto`, add invariant coverage for 2D/ND placement, translation, rotation,
+hard-drop, spawn, and topology seam behavior, and align `BoardND.can_place`
+with the central candidate-placement validator by rejecting duplicate
+candidate cells. This preserves the existing `auto` / `on` / `off` transport
+policy, does not change topology traversal, drop/lock legality, rigid-play
+authority, parity logic, Godot/C++ routing, or authority ownership.
+
+Stage 36 replay/parity contract hardening (2026-07-07): replay payloads now
+carry an explicit accepted schema version, strict replay loading rejects
+missing or unknown semantic fields with readable errors, and migration bundle
+manifests record replay, trace, config, topology, piece-set, and RNG identity
+for parity consumers. This is contract hardening only and does not add
+gameplay rules, topology features, native semantics, or authority transfer.
+
+Stage 37 engine public API boundary cleanup (2026-07-07): add a narrow public
+engine legality query surface and route UI/tutorial/frontend legality previews
+through it instead of private gameplay helpers. This is boundary cleanup only
+and does not change gameplay rules, topology behavior, native semantics, or
+authority transfer.
 
 Current sub-batch (2026-05-05): topology-lab semantic freeze is pinned for
 migration, Stage 2 topology/gameplay golden trace export records that behavior

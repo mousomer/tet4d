@@ -74,6 +74,7 @@
     ],
     "headings": {
       "system": "General / System",
+      "game": "Gameplay",
       "game_translation": "Gameplay / Translation",
       "game_rotation": "Gameplay / Rotation",
       "game_other": "Gameplay / Other",
