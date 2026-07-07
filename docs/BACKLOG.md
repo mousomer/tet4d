@@ -28,7 +28,18 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Stage 33 Godot Vector Arcade Cockpit UI overhaul is active under
+Stage 38 Godot Stage 33 cockpit UI acceptance (2026-07-07): the
+`codex/vector-arcade-cockpit-ui` branch is accepted on the current `master`
+baseline. Manual GUI launch confirmed the command-card main menu is readable
+at normal desktop size and continues to state the replay-only/Python-authority
+boundary. Godot acceptance/layout tests cover the replay/live shell paths for
+keyboard-hint persistence, unchanged hint-panel behavior, game-over badge error
+styling, bundle-status restoration, camera/help affordances, Tab/Fit View
+wording, right-inspector reachability, and live/replay declutter. This is
+Godot product-shell acceptance only and adds no gameplay, topology,
+replay/parity schema, native semantic, or authority-transfer change.
+
+Stage 33 Godot Vector Arcade Cockpit UI overhaul is accepted under
 `docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. Scope is limited
 to Godot product-shell visual UX and style-contract tests: command-card menus,
 structured keycap/action hints, compact generated settings cards, persistent
@@ -61,8 +72,7 @@ View control-map drift, derive test hint text from structured control groups,
 and remove obsolete camera pan code after Shift-drag became camera roll. No
 gameplay, topology,
 movement, trace semantics, replay-frame
-semantics, parity logic, native authority, or authority transfer is added. Full
-manual visual acceptance remains required before merge acceptance.
+semantics, parity logic, native authority, or authority transfer is added.
 
 Python review-repair batch (2026-07-05): fix review findings inside existing
 AI, replay, runtime, tutorial, and UI-logic ownership boundaries. Scope covers
@@ -698,7 +708,7 @@ stays synchronized, and the contract validator accepts the backlog shape.
     viewer style snapshots. This is product-shell styling only; no gameplay,
     topology, trace semantics, replay-frame semantics, parity logic, native
     authority, or authority transfer is added.
-41. `ACTIVE` `[BKL-P3-048]` Stage 33 Godot Vector Arcade Cockpit UI overhaul:
+41. `DONE` `[BKL-P3-048]` Stage 33 Godot Vector Arcade Cockpit UI overhaul:
     keep the Stage 32 style-role architecture and replace remaining patched
     replay-spike presentation with command-card menus, grouped keycap/action
     hints, compact generated settings cards, explicit inspector sections,
@@ -709,9 +719,14 @@ stays synchronized, and the contract validator accepts the backlog shape.
     and moving W slices toward card/header presentation. Stage 33b then
     reduces live cockpit noise by demoting W labels to orientation markers,
     removing central partial quick controls, and hiding/reducing repeated live
-    bottom controls. This is product-shell visual UX only; no gameplay,
-    topology, movement, trace semantics, replay-frame semantics, parity logic,
-    native authority, or authority transfer is added.
+    bottom controls. Stage 33f review repairs preserve keyboard-hint settings,
+    restore bundle status after live mode, avoid unchanged hint-panel rebuilds,
+    style live game-over badges through explicit status roles, repair Tab/Fit
+    View control-map drift, and remove obsolete camera pan code after
+    Shift-drag became camera roll. Stage 38 accepts this branch as
+    product-shell visual UX only; no gameplay, topology, movement, trace
+    semantics, replay-frame semantics, parity logic, native authority, or
+    authority transfer is added.
 
 ## Governance Watchlist
 

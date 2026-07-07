@@ -136,10 +136,16 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   internal `tron` theme ID, and stronger board/W-label visual emphasis. It is
   product-shell visual UX only and adds no gameplay, topology, trace
   semantics, replay-frame semantics, parity evidence, native authority, or
-  authority transfer. Headless validation passed. Manual GUI launch showed the
-  command-card main menu, but macOS automation did not activate navigation into
-  viewer/settings/controls during this pass; manual visual acceptance remains
-  pending, so Stage 33 is not merge-accepted yet. Stage 33a is the corrective
+  authority transfer. Stage 38 accepts the Stage 33 cockpit UI branch on the
+  current `master` baseline: manual GUI launch confirmed the command-card main
+  menu readability and explicit Python-authority/replay-only framing, while
+  Godot acceptance/layout tests exercised replay and live shell states for
+  keyboard-hint persistence, unchanged hint-panel behavior, game-over error
+  styling, bundle-status restoration, camera/help affordances, Tab/Fit View
+  wording, right-inspector reachability, and live/replay declutter. This
+  records product-shell acceptance only and adds no gameplay, topology,
+  replay/parity schema, native semantic, or authority-transfer change. Stage
+  33a is the corrective
   live-mode acceptance repair on the same branch: replace diagnostic live HUD
   prose with structured scoped status, full/quick grouped controls, status
   badges, and W-slice card/header hierarchy while preserving the same
