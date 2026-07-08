@@ -111,6 +111,11 @@ Allowed Stage 39 core geometry query API:
 - `geometry_rotate_blocks(blocks, axis_a, axis_b, quarter_turns)`
 - `geometry_hash_blocks(blocks)`
 
+Allowed Stage 40 legality/topology diagnostic query API:
+
+- `query_piece_pose_legal(dims, piece_cells, occupied_cells)`
+- `query_topology_axis_wrap_cell_step(dims, wrapped_axes, coord, axis, delta)`
+
 Run native C++ tests and trace parity with:
 
 ```bash
@@ -140,4 +145,10 @@ and hash parity. Stage 22 exposes live 3D only through the native session API
 above. Stage 39 geometry helpers are deterministic query helpers only. They
 must remain parity-backed by Python `piece_transform` behavior and must not
 become gameplay legality, topology, replay, endgame, Python runtime, C#,
-Steam, console behavior, or authority transfer.
+Steam, console behavior, or authority transfer. Stage 40 adds deterministic
+legality and topology diagnostics only: bounded pose/translation/rotation
+legality, collision, duplicate-cell rejection, bounded/torus neighbor
+resolution, and seam transport metadata are parity-backed against Python public
+engine APIs and `ExplorerTransportResolver`. These helpers must not become
+live gameplay, topology traversal, replay schema, endgame, or authority
+transfer.

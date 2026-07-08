@@ -5,6 +5,7 @@
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/array.hpp>
+#include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/variant/string.hpp>
 
@@ -26,6 +27,8 @@ public:
 	Array geometry_translate_blocks(const Array &blocks, const Array &offset) const;
 	Array geometry_rotate_blocks(const Array &blocks, int64_t axis_a, int64_t axis_b, int64_t quarter_turns) const;
 	String geometry_hash_blocks(const Array &blocks) const;
+	Dictionary query_piece_pose_legal(const Array &dims, const Array &piece_cells, const Array &occupied_cells) const;
+	Dictionary query_topology_axis_wrap_cell_step(const Array &dims, const Array &wrapped_axes, const Array &coord, int64_t axis, int64_t delta) const;
 	bool run_builtin_plain_2d_smoke_case() const;
 	PackedStringArray list_plain_2d_parity_cases() const;
 	String get_plain_2d_parity_status() const;

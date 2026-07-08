@@ -7,6 +7,7 @@ BUILD_DIR="$CORE_DIR/build/tests"
 TEST_2D_BIN="$BUILD_DIR/plain_2d_core_tests"
 TEST_ND_BIN="$BUILD_DIR/plain_nd_core_tests"
 TEST_GEOMETRY_BIN="$BUILD_DIR/geometry_core_tests"
+TEST_QUERY_BIN="$BUILD_DIR/query_core_tests"
 TEST_TRACE_METADATA_BIN="$BUILD_DIR/trace_metadata_identity_digest_tests"
 
 if [[ -n "${CXX:-}" ]]; then
@@ -42,6 +43,15 @@ mkdir -p "$BUILD_DIR"
 "$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
   -I"$CORE_DIR/include" \
   "$CORE_DIR/src/core/core_api.cpp" \
+  "$CORE_DIR/src/core/geometry.cpp" \
+  "$CORE_DIR/src/core/plain_nd.cpp" \
+  "$CORE_DIR/src/core/query.cpp" \
+  "$CORE_DIR/tests/query_core_tests.cpp" \
+  -o "$TEST_QUERY_BIN"
+
+"$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
+  -I"$CORE_DIR/include" \
+  "$CORE_DIR/src/core/core_api.cpp" \
   "$CORE_DIR/src/core/plain_nd.cpp" \
   "$CORE_DIR/src/core/plain_nd_session.cpp" \
   "$CORE_DIR/src/core/plain_nd_trace.cpp" \
@@ -63,10 +73,13 @@ elif [[ "${1:-}" == "--pilot-stable-hash" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--geometry-parity" ]]; then
   "$TEST_GEOMETRY_BIN" "$@"
+elif [[ "${1:-}" == "--query-parity" ]]; then
+  "$TEST_QUERY_BIN" "$@"
 elif [[ "${1:-}" == "--trace-metadata-identity-digest" ]]; then
   "$TEST_TRACE_METADATA_BIN" "$@"
 else
   "$TEST_2D_BIN" "$@"
   "$TEST_ND_BIN"
   "$TEST_GEOMETRY_BIN"
+  "$TEST_QUERY_BIN"
 fi
