@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-07
+Last updated: 2026-07-08
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -43,6 +43,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   helpers. This is authority-boundary cleanup only and does not change
   movement, rotation, drop/lock, spawn, topology traversal, Godot/C++ routing,
   or authority ownership.
+- Stage 39 C++ core geometry slice is active on
+  `codex/cpp-core-geometry-slice`: native C++ now exposes narrow
+  parity-backed piece-geometry query helpers for ND block normalization,
+  translation, rotation, and stable geometry hashing, with Python oracle parity
+  coverage and Godot bridge smoke coverage. This is a deterministic helper
+  slice only and does not transfer gameplay, topology, replay, parity-schema,
+  or semantic authority away from Python.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
@@ -640,7 +647,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.75`
+1. `delivery_size_pressure = 2.76`
 2. `code_balance = 1.79`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

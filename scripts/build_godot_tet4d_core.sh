@@ -10,11 +10,13 @@ if [[ ! -f "$GODOT_CPP_DIR/SConstruct" ]]; then
 fi
 
 if [[ -n "${SCONS:-}" ]]; then
-  SCONS_BIN="$SCONS"
+  read -r -a SCONS_CMD <<< "$SCONS"
+elif [[ -x "$ROOT_DIR/.venv/bin/python" ]] && "$ROOT_DIR/.venv/bin/python" -c "import SCons" >/dev/null 2>&1; then
+  SCONS_CMD=("$ROOT_DIR/.venv/bin/python" -m SCons)
 elif [[ -x "$ROOT_DIR/.venv/bin/scons" ]]; then
-  SCONS_BIN="$ROOT_DIR/.venv/bin/scons"
+  SCONS_CMD=("$ROOT_DIR/.venv/bin/scons")
 elif command -v scons >/dev/null 2>&1; then
-  SCONS_BIN="$(command -v scons)"
+  SCONS_CMD=("$(command -v scons)")
 else
   echo "scons not found. Install it with: .venv/bin/pip install scons" >&2
   exit 1
@@ -43,4 +45,4 @@ target="${SCONS_TARGET:-template_debug}"
 jobs="${SCONS_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 2)}"
 
 cd "$CORE_DIR"
-"$SCONS_BIN" platform="$platform" target="$target" arch="$arch" -j "$jobs"
+"${SCONS_CMD[@]}" platform="$platform" target="$target" arch="$arch" -j "$jobs"
