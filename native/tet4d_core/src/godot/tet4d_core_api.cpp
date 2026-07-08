@@ -4,11 +4,13 @@
 #include "tet4d_core/geometry.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/core/error_macros.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/char_string.hpp>
 #include <godot_cpp/variant/variant.hpp>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace godot {
@@ -23,12 +25,19 @@ String to_godot_string(const std::string &text) {
 	return String::utf8(text.c_str());
 }
 
-tet4d::core::CoordND coord_from_array(const Array &values) {
+tet4d::core::CoordND coord_from_array(const Array &values, bool &valid) {
 	tet4d::core::CoordND coord;
 	coord.values.reserve(static_cast<std::size_t>(values.size()));
 	for (int64_t index = 0; index < values.size(); ++index) {
-		coord.values.push_back(static_cast<int>(values[index]));
+		const Variant value = values[index];
+		if (value.get_type() != Variant::INT) {
+			ERR_PRINT("Tet4D geometry coordinates must contain integer values.");
+			valid = false;
+			return {};
+		}
+		coord.values.push_back(static_cast<int>(value));
 	}
+	valid = true;
 	return coord;
 }
 
@@ -38,10 +47,17 @@ std::vector<tet4d::core::CoordND> blocks_from_array(const Array &blocks, bool &v
 	for (int64_t index = 0; index < blocks.size(); ++index) {
 		const Variant value = blocks[index];
 		if (value.get_type() != Variant::ARRAY) {
+			ERR_PRINT("Tet4D geometry blocks must be arrays of integer coordinates.");
 			valid = false;
 			return {};
 		}
-		result.push_back(coord_from_array(static_cast<Array>(value)));
+		bool coord_valid = false;
+		tet4d::core::CoordND coord = coord_from_array(static_cast<Array>(value), coord_valid);
+		if (!coord_valid) {
+			valid = false;
+			return {};
+		}
+		result.push_back(std::move(coord));
 	}
 	valid = true;
 	return result;
@@ -140,7 +156,12 @@ Array Tet4DCoreApi::geometry_translate_blocks(const Array &blocks, const Array &
 	if (!valid) {
 		return {};
 	}
-	return blocks_to_array(tet4d::core::translate_blocks_nd(converted, coord_from_array(offset)));
+	bool offset_valid = false;
+	const tet4d::core::CoordND converted_offset = coord_from_array(offset, offset_valid);
+	if (!offset_valid) {
+		return {};
+	}
+	return blocks_to_array(tet4d::core::translate_blocks_nd(converted, converted_offset));
 }
 
 Array Tet4DCoreApi::geometry_rotate_blocks(const Array &blocks, int64_t axis_a, int64_t axis_b, int64_t quarter_turns) const {
