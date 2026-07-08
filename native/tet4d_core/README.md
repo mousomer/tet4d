@@ -30,8 +30,11 @@ only and does not add live Godot 3D/4D gameplay. Stage 22 adds the first live
 plain-ND gameplay path for 3D only. `PlainNDSession` owns live 3D state,
 movement, rotation, soft/hard drop, tick/lock, clear/scoring, spawn/game-over,
 command status, and `state_hash`; Godot still only sends commands and renders
-snapshot JSON. Live 4D, topology, endgame, Python runtime calls, and
-Godot-side gameplay legality remain deferred.
+snapshot JSON. Stage 39 adds provisional C++ core geometry helpers for
+normalizing, translating, rotating, and hashing ND piece blocks, backed by
+Python oracle parity tests and exposed to Godot as query helpers only. Live 4D,
+topology, endgame, Python runtime calls, Godot-side gameplay legality, and
+native semantic authority transfers remain deferred.
 
 The native source tree has two layers:
 
@@ -101,6 +104,13 @@ Allowed Stage 22 live plain-3D API:
 - `live_3d_status()`
 - `live_3d_state_hash()`
 
+Allowed Stage 39 core geometry query API:
+
+- `geometry_normalize_blocks(blocks)`
+- `geometry_translate_blocks(blocks, offset)`
+- `geometry_rotate_blocks(blocks, axis_a, axis_b, quarter_turns)`
+- `geometry_hash_blocks(blocks)`
+
 Run native C++ tests and trace parity with:
 
 ```bash
@@ -127,5 +137,7 @@ locked-cell compaction, generic `lines`, score, and hash parity. Stage 20
 spawn-blocked game-over uses Python-compatible spawn position, blocked
 active-piece preservation, unchanged locked cells, `drop_lock_status.game_over`,
 and hash parity. Stage 22 exposes live 3D only through the native session API
-above. It must not expose live 4D, topology, endgame, Python runtime, C#,
-Steam, or console behavior.
+above. Stage 39 geometry helpers are deterministic query helpers only. They
+must remain parity-backed by Python `piece_transform` behavior and must not
+become gameplay legality, topology, replay, endgame, Python runtime, C#,
+Steam, console behavior, or authority transfer.

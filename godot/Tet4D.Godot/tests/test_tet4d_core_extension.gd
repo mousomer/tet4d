@@ -19,6 +19,7 @@ func run() -> Array:
 	_assert_equal(failures, bridge.echo_text("oracle-check"), "oracle-check", "echo text")
 	_assert_equal(failures, bridge.stable_hash_text("tet4d"), "49fb984865ccbc22", "stable hash")
 	_assert_equal(failures, bridge.add_integers(40, 2), 42, "integer addition")
+	_assert_geometry_helpers(failures, bridge)
 	_assert_equal(failures, bridge.run_builtin_plain_2d_smoke_case(), true, "plain 2D smoke")
 	_assert_equal(
 		failures,
@@ -64,6 +65,29 @@ func run() -> Array:
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:
 	if actual != expected:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _assert_geometry_helpers(failures: Array, bridge: RefCounted) -> void:
+	var blocks_3d := [[2, -1, 0], [0, 0, 1], [1, 0, -1], [0, 1, 1]]
+	_assert_equal(
+		failures,
+		bridge.geometry_normalize_blocks(blocks_3d),
+		[[-1, 0, 1], [-1, 1, 1], [0, 0, -1], [1, -1, 0]],
+		"geometry normalize"
+	)
+	_assert_equal(
+		failures,
+		bridge.geometry_translate_blocks(blocks_3d, [-2, 3, 1]),
+		[[-2, 3, 2], [-2, 4, 2], [-1, 3, 0], [0, 2, 1]],
+		"geometry translate"
+	)
+	_assert_equal(
+		failures,
+		bridge.geometry_rotate_blocks(blocks_3d, 0, 2, 1),
+		[[1, -1, -1], [2, 0, 1], [0, 0, 0], [2, 1, 1]],
+		"geometry rotate"
+	)
+	_assert_equal(failures, bridge.geometry_hash_blocks(blocks_3d), "bbec08d1ebde9192", "geometry hash")
 
 
 func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:

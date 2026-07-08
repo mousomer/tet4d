@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-07
+Updated: 2026-07-08
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,14 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Stage 39 C++ core geometry slice (2026-07-08): add a narrow deterministic
+native geometry helper surface for ND piece block normalization, translation,
+rotation, and stable geometry hashing. The slice is parity-backed against the
+Python `piece_transform` oracle and exposed to Godot only as query helpers
+through the existing GDExtension bridge. It does not change gameplay rules,
+topology traversal, replay/parity schemas, Python oracle status, or authority
+ownership.
 
 Stage 38 Godot Stage 33 cockpit UI acceptance (2026-07-07): the
 `codex/vector-arcade-cockpit-ui` branch is accepted on the current `master`

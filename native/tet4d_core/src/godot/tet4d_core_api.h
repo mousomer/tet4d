@@ -4,6 +4,7 @@
 #include "tet4d_core/plain_nd_session.hpp"
 
 #include <godot_cpp/classes/ref_counted.hpp>
+#include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/variant/string.hpp>
 
@@ -21,6 +22,10 @@ public:
 	String echo_text(const String &text) const;
 	String stable_hash_text(const String &text) const;
 	int64_t add_integers(int64_t a, int64_t b) const;
+	Array geometry_normalize_blocks(const Array &blocks) const;
+	Array geometry_translate_blocks(const Array &blocks, const Array &offset) const;
+	Array geometry_rotate_blocks(const Array &blocks, int64_t axis_a, int64_t axis_b, int64_t quarter_turns) const;
+	String geometry_hash_blocks(const Array &blocks) const;
 	bool run_builtin_plain_2d_smoke_case() const;
 	PackedStringArray list_plain_2d_parity_cases() const;
 	String get_plain_2d_parity_status() const;

@@ -33,6 +33,22 @@ func add_integers(a: int, b: int) -> int:
 	return int(_api().add_integers(a, b))
 
 
+func geometry_normalize_blocks(blocks: Array) -> Array:
+	return _api().geometry_normalize_blocks(blocks)
+
+
+func geometry_translate_blocks(blocks: Array, offset: Array) -> Array:
+	return _api().geometry_translate_blocks(blocks, offset)
+
+
+func geometry_rotate_blocks(blocks: Array, axis_a: int, axis_b: int, quarter_turns: int) -> Array:
+	return _api().geometry_rotate_blocks(blocks, axis_a, axis_b, quarter_turns)
+
+
+func geometry_hash_blocks(blocks: Array) -> String:
+	return _api().geometry_hash_blocks(blocks)
+
+
 func run_builtin_plain_2d_smoke_case() -> bool:
 	return bool(_api().run_builtin_plain_2d_smoke_case())
 
