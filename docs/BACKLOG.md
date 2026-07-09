@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-08
+Updated: 2026-07-09
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,17 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Stage 41 Godot playable loop parity acceptance (2026-07-09): accept and
+protect the existing Godot Live Plain 2D/3D/4D playable loops with deterministic
+headless coverage for spawn, movement, rotation, soft drop, hard drop, lock,
+and HUD/status-visible snapshot state. The coverage also confirms the existing
+Python-golden parity export checks remain healthy and reports live-loop drift
+with mode, action index, action name, Godot state/cells, expected state/cells,
+and mismatch reason. This is acceptance/protection only and does not rebuild
+playable loops, change gameplay/topology/replay rules, introduce new native
+gameplay ownership, make Godot gameplay depend on Stage 39/40 query helpers, or
+transfer semantic authority away from Python.
 
 Stage 40 C++ legality/topology query slice (2026-07-08): add narrow native
 query diagnostics for bounded piece pose, translation, and rotation legality;

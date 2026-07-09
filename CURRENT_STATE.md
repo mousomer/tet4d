@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-08
+Last updated: 2026-07-09
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -49,15 +49,24 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Python oracle parity coverage and Godot bridge smoke coverage. This is a
   deterministic helper slice only and does not transfer gameplay, topology,
   replay, parity-schema, or semantic authority away from Python.
-- Stage 40 C++ legality/topology query slice is active on
-  `codex/cpp-legality-topology-query-slice`: native C++ now adds query-only
-  legality and topology diagnostics for bounded piece pose/translation/rotation
-  legality, collision, strict bounds, duplicate candidate-cell rejection,
-  bounded/torus neighbor resolution, and seam transport metadata. The slice is
-  parity-backed against Python public engine legality APIs, central placement
-  validation, and `ExplorerTransportResolver`, and Godot sees it only through
-  diagnostic GDExtension queries. It does not change gameplay, topology,
-  replay, live-session state, or authority ownership.
+- Stage 40 C++ legality/topology query slice is complete on `master`: native
+  C++ exposes query-only legality and topology diagnostics for bounded piece
+  pose/translation/rotation legality, collision, strict bounds, duplicate
+  candidate-cell rejection, bounded/torus neighbor resolution, and seam
+  transport metadata. The slice is parity-backed against Python public engine
+  legality APIs, central placement validation, and `ExplorerTransportResolver`,
+  and Godot sees it only through diagnostic GDExtension queries. It does not
+  change gameplay, topology, replay, live-session state, or authority
+  ownership.
+- Stage 41 Godot playable loop parity acceptance is active on
+  `codex/godot-playable-loop-parity-acceptance`: the existing Godot Live Plain
+  2D/3D/4D entry points and bridge-backed live sessions are being accepted and
+  protected with headless deterministic coverage for spawn, movement,
+  rotation, soft drop, hard drop, lock, HUD/status-visible snapshot state, and
+  Python-golden parity export health. This is acceptance/protection only; it
+  does not rebuild playable loops, change gameplay/topology/replay rules,
+  introduce new native gameplay ownership, make Godot gameplay depend on the
+  Stage 39/40 query helpers, or transfer semantic authority away from Python.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
