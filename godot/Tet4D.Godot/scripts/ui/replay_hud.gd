@@ -37,10 +37,32 @@ const SCREEN_VIEWER := "viewer"
 const SCREEN_SETTINGS := "settings"
 const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
+const SCREEN_ABOUT := "about"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Esc quits. Godot sends commands only."
 const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab switches to Live 4D, and Esc quits. Godot sends commands only."
 const LIVE_4D_HELP_TEXT := "Live 4D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Q/E move across W slices, Shift soft drops, Space hard drops, R/T rotates on XY, F/G on XZ, V/B on YZ, Y/U on XW, H/J on YW, and N/M on ZW. In each plane pair, the left key is CCW and the right key is CW. I/K pitch the camera, O/L yaw, comma/period roll, - zooms out, and =/+ zooms in without dispatching gameplay. Mouse drag orbits, Shift-drag rolls, wheel zooms, and double-click fits the view. P pauses, Backspace resets, Tab returns to Replay, and Esc quits. Q is W- movement in Live 4D. Godot sends commands only."
+const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end is the fastest way to inspect replay demos and try the accepted plain 2D, 3D, and 4D live shells.
+
+Choose a mode:
+Replay Demos - inspect exported gameplay, topology, and endgame traces.
+Live Plain 2D - the easiest first play mode.
+Live Plain 3D - direct plane rotations on a readable 3D board.
+Live Plain 4D - side-by-side W slices with camera recovery.
+Topology Playground - still launches from the Python tools, not this Godot shell.
+
+Demo tour:
+1. Open Replay Demos and scrub a gameplay or topology case.
+2. Return to Main Menu and play Live Plain 2D.
+3. Try Live Plain 3D for direct XY/XZ/YZ rotations.
+4. Inspect Live Plain 4D with Q/E W movement and Fit View.
+
+Known limitations:
+- Python remains the rules reference implementation.
+- Godot is the product shell and playable front end.
+- Native C++ powers the accepted plain live sessions plus geometry/query helpers; it does not replace Python as the rules source.
+- Topology Playground and broader topology editing still live in the Python launcher.
+- This shell is best for demos, replay inspection, and accepted plain-mode play, not packaging or release polish."""
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -84,6 +106,7 @@ var _viewer_screen: Control
 var _settings_screen: Control
 var _controls_screen: Control
 var _diagnostics_screen: Control
+var _about_screen: Control
 var _screens: Dictionary = {}
 var _replay_note: Label
 var _help_panel: PanelContainer
@@ -512,6 +535,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"right_inspector": inspector_rect,
 		"settings_panel": settings_rect,
 		"bottom_bar": bottom_rect,
+		"current_screen": _current_screen,
 		"bottom_bar_visible": _bottom_panel.visible if _bottom_panel != null else false,
 		"viewport_hints_visible": _mode_hint_strip.visible if _mode_hint_strip != null else false,
 		"bottom_hints_visible": _hint_label.visible if _hint_label != null else false,
@@ -535,6 +559,8 @@ func layout_contract_snapshot() -> Dictionary:
 		"restart_game_button_text": _restart_game_button.text if _restart_game_button != null else "",
 		"authority_text": _authority_label.text if _authority_label != null else "",
 		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
+		"main_menu_text": _collect_label_text(_main_menu_screen),
+		"about_text": _collect_label_text(_about_screen),
 		"style_theme_id": _style_manager.get_theme_id(),
 		"background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
 		"board_background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
@@ -1228,6 +1254,9 @@ func _build_layout() -> void:
 	_diagnostics_screen = _make_screen()
 	screen_stack.add_child(_diagnostics_screen)
 	_build_diagnostics_screen(_diagnostics_screen)
+	_about_screen = _make_screen()
+	screen_stack.add_child(_about_screen)
+	_build_about_screen(_about_screen)
 	_screens = {
 		SCREEN_MAIN_MENU: _main_menu_screen,
 		SCREEN_BROWSER: _browser_screen,
@@ -1235,6 +1264,7 @@ func _build_layout() -> void:
 		SCREEN_SETTINGS: _settings_screen,
 		SCREEN_CONTROLS: _controls_screen,
 		SCREEN_DIAGNOSTICS: _diagnostics_screen,
+		SCREEN_ABOUT: _about_screen,
 	}
 	show_screen(SCREEN_MAIN_MENU)
 
@@ -1267,38 +1297,45 @@ func _build_main_menu_screen(screen: Control) -> void:
 	layout.add_theme_constant_override("separation", 18)
 	margin.add_child(layout)
 	var title := Label.new()
+	title.name = "MainMenuTitle"
 	title.text = "Tet4D Vector Arcade Cockpit"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.theme_type_variation = "AccentLabel"
 	title.add_theme_font_size_override("font_size", 32)
 	layout.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text = "Replay-only shell. Python remains the semantic authority."
+	subtitle.name = "MainMenuSubtitle"
+	subtitle.text = "Inspect replay demos or play accepted plain 2D, 3D, and 4D modes."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.theme_type_variation = "SecondaryLabel"
 	subtitle.add_theme_font_size_override("font_size", 18)
 	layout.add_child(subtitle)
-	var browser_button := _make_command_card("Replay Viewer", "Load and inspect exported trace playback", "Enter")
+	var browser_button := _make_command_card("Replay Demos", "Load exported gameplay, topology, and endgame traces", "Enter")
 	browser_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_BROWSER)
 	)
 	layout.add_child(browser_button)
-	var live_button := _make_command_card("Live Plain 2D", "Accepted native-core shell with direct controls", "2D")
+	var live_button := _make_command_card("Live Plain 2D", "Best first play mode with classic left, right, rotate, and drop", "2D")
 	live_button.pressed.connect(func() -> void:
 		live_2d_requested.emit()
 	)
 	layout.add_child(live_button)
-	var live_3d_button := _make_command_card("Live Plain 3D", "External diagram view with direct rotation planes", "3D")
+	var live_3d_button := _make_command_card("Live Plain 3D", "Playable plain 3D board with direct XY, XZ, and YZ rotations", "3D")
 	live_3d_button.pressed.connect(func() -> void:
 		live_3d_requested.emit()
 	)
 	layout.add_child(live_3d_button)
-	var live_4d_button := _make_command_card("Live Plain 4D", "Side-by-side W slices with camera recovery", "4D")
+	var live_4d_button := _make_command_card("Live Plain 4D", "Playable plain 4D W-slice view with camera recovery and Fit View", "4D")
 	live_4d_button.pressed.connect(func() -> void:
 		live_4d_requested.emit()
 	)
 	layout.add_child(live_4d_button)
-	var controls_button := _make_command_card("Controls", "Separated keycap/action cockpit hints", "H")
+	var about_button := _make_command_card("About / Demo Path", "What Tet4D is, where topology lives, and known limits", "A")
+	about_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_ABOUT)
+	)
+	layout.add_child(about_button)
+	var controls_button := _make_command_card("Controls", "Mode-specific controls and camera help without opening source", "H")
 	controls_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_CONTROLS)
 	)
@@ -1322,7 +1359,7 @@ func _build_browser_screen(screen: Control) -> void:
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	screen.add_child(layout)
-	var nav := _screen_nav("Trace Replay Browser")
+	var nav := _screen_nav("Replay Demos")
 	layout.add_child(nav)
 	_case_browser = CaseBrowserScript.new()
 	_case_browser.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1367,10 +1404,10 @@ func _build_controls_screen(screen: Control) -> void:
 	grid.add_theme_constant_override("h_separation", ReplayVisuals.PANEL_GAP)
 	grid.add_theme_constant_override("v_separation", ReplayVisuals.PANEL_GAP)
 	layout.add_child(grid)
-	grid.add_child(_control_mode_card("Replay", "Trace playback controls only.", "replay"))
-	grid.add_child(_control_mode_card("Live Plain 2D", "Godot routes commands; C++ PlainNDSession keeps this live state.", "live_2d"))
-	grid.add_child(_control_mode_card("Live Plain 3D", "Direct movement, drop, and plane rotations.", "live_3d"))
-	grid.add_child(_control_mode_card("Live Plain 4D", "W movement, six rotation planes, and camera recovery.", "live_4d"))
+	grid.add_child(_control_mode_card("Replay", "Inspect exported traces frame by frame without moving pieces.", "replay"))
+	grid.add_child(_control_mode_card("Live Plain 2D", "Best first play mode with classic movement, rotation, and drop.", "live_2d"))
+	grid.add_child(_control_mode_card("Live Plain 3D", "Playable plain 3D with direct XY, XZ, and YZ plane rotations.", "live_3d"))
+	grid.add_child(_control_mode_card("Live Plain 4D", "Playable plain 4D with W movement, six rotation planes, and camera recovery.", "live_4d"))
 
 
 func _build_diagnostics_screen(screen: Control) -> void:
@@ -1391,6 +1428,34 @@ func _build_diagnostics_screen(screen: Control) -> void:
 	layout.add_child(_event_screen_panel)
 
 
+func _build_about_screen(screen: Control) -> void:
+	var layout := VBoxContainer.new()
+	_fill_parent(layout)
+	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
+	screen.add_child(layout)
+	layout.add_child(_screen_nav("About / Demo Path"))
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(panel)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	panel.add_child(margin)
+	var label := Label.new()
+	label.name = "AboutDemoLabel"
+	label.text = ABOUT_DEMO_TEXT
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_child(label)
+
+
 func _screen_nav(title_text: String) -> HBoxContainer:
 	var nav := HBoxContainer.new()
 	nav.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
@@ -1406,7 +1471,7 @@ func _screen_nav(title_text: String) -> HBoxContainer:
 	)
 	nav.add_child(menu_button)
 	var browser_button := Button.new()
-	browser_button.text = "Browser"
+	browser_button.text = "Replay Demos"
 	browser_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_BROWSER)
 	)
@@ -1441,6 +1506,12 @@ func _screen_nav(title_text: String) -> HBoxContainer:
 		show_screen(SCREEN_DIAGNOSTICS)
 	)
 	nav.add_child(diagnostics_button)
+	var about_button := Button.new()
+	about_button.text = "About"
+	about_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_ABOUT)
+	)
+	nav.add_child(about_button)
 	var settings_button := Button.new()
 	settings_button.text = "Settings"
 	settings_button.pressed.connect(func() -> void:

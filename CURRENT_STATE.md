@@ -58,15 +58,21 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   and Godot sees it only through diagnostic GDExtension queries. It does not
   change gameplay, topology, replay, live-session state, or authority
   ownership.
-- Stage 41 Godot playable loop parity acceptance is active on
-  `codex/godot-playable-loop-parity-acceptance`: the existing Godot Live Plain
-  2D/3D/4D entry points and bridge-backed live sessions are being accepted and
-  protected with headless deterministic coverage for spawn, movement,
-  rotation, soft drop, hard drop, lock, HUD/status-visible snapshot state, and
-  Python-golden parity export health. This is acceptance/protection only; it
-  does not rebuild playable loops, change gameplay/topology/replay rules,
-  introduce new native gameplay ownership, make Godot gameplay depend on the
-  Stage 39/40 query helpers, or transfer semantic authority away from Python.
+- Stage 41 Godot playable loop parity acceptance is complete on `master`: the
+  existing Godot Live Plain 2D/3D/4D entry points and bridge-backed live
+  sessions are protected with headless deterministic coverage for spawn,
+  movement, rotation, soft drop, hard drop, lock, HUD/status-visible snapshot
+  state, and Python-golden parity export health. This is
+  acceptance/protection only; it does not rebuild playable loops, change
+  gameplay/topology/replay rules, introduce new native gameplay ownership,
+  make Godot gameplay depend on the Stage 39/40 query helpers, or transfer
+  semantic authority away from Python.
+- Stage 42 demo-quality milestone is active on
+  `codex/demo-quality-milestone`: improve first-run clarity, launch guidance,
+  mode discovery, controls/help discoverability, and honest limitations across
+  the public README and the Godot shell. This is product/readability work
+  only; it does not change gameplay, topology, replay schemas, authority
+  routing, native ownership, or Stage 43 dedup/performance scope.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and
