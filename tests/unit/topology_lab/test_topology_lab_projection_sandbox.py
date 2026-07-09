@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 import pygame
 
 from tet4d.engine.gameplay.topology_designer import (
@@ -19,6 +20,7 @@ from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_c
 from tet4d.ui.pygame.topology_lab import projection_scene
 from tet4d.ui.pygame.topology_lab import scene2d
 from tet4d.ui.pygame.topology_lab import scene_state_canonical as topology_lab_scene_state_canonical
+from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 from tet4d.ui.pygame.topology_lab.scene2d import draw_scene as draw_scene_2d
 from tet4d.ui.pygame.topology_lab.scene3d import draw_scene as draw_scene_3d
 from tet4d.ui.pygame.topology_lab.scene4d import draw_scene as draw_scene_4d
@@ -806,6 +808,56 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         self.assertEqual(topology_lab_menu._current_probe_coord(state), (2, 2))
         topology_lab_menu._set_probe_neighbors_visible(state, False)
         self.assertEqual(topology_lab_menu._active_workspace_neighbor_markers(state), [])
+
+    def test_editor_probe_neighbor_markers_reuse_matching_signature_and_refresh_on_move(
+        self,
+    ) -> None:
+        state = self._explorer_state(2)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
+        topology_lab_menu._select_projection_coord(state, (2, 2))
+        topology_lab_menu._set_probe_neighbors_visible(state, True)
+        topology_lab_workspace_shell._editor_probe_neighbor_markers_for_signature.cache_clear()
+
+        with mock.patch.object(
+            topology_lab_workspace_shell,
+            "explorer_probe_options",
+            wraps=topology_lab_workspace_shell.explorer_probe_options,
+        ) as probe_options:
+            first = topology_lab_workspace_shell._editor_probe_neighbor_markers(state)
+            second = topology_lab_workspace_shell._editor_probe_neighbor_markers(state)
+            topology_lab_menu._select_projection_coord(state, (3, 2))
+            moved = topology_lab_workspace_shell._editor_probe_neighbor_markers(state)
+
+        self.assertEqual(first, second)
+        self.assertNotEqual(first, moved)
+        self.assertEqual(probe_options.call_count, 2)
+
+    def test_sandbox_neighbor_markers_reuse_matching_signature_and_refresh_on_move(
+        self,
+    ) -> None:
+        state = self._explorer_state(2)
+        topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
+        topology_lab_menu.ensure_piece_sandbox(state)
+        assert state.sandbox is not None
+        state.sandbox.origin = (2, 2)
+        state.sandbox.local_blocks = ((0, 0),)
+        topology_lab_workspace_shell._sandbox_neighbor_markers_for_signature.cache_clear()
+
+        with mock.patch.object(
+            topology_lab_workspace_shell,
+            "build_explorer_transport_resolver",
+            wraps=topology_lab_workspace_shell.build_explorer_transport_resolver,
+        ) as build_resolver:
+            first = topology_lab_workspace_shell._sandbox_neighbor_markers(state)
+            second = topology_lab_workspace_shell._sandbox_neighbor_markers(state)
+            profile = topology_lab_menu._current_explorer_profile(state)
+            ok, message = topology_lab_menu.move_sandbox_piece(state, profile, "x+")
+            self.assertTrue(ok, message)
+            moved = topology_lab_workspace_shell._sandbox_neighbor_markers(state)
+
+        self.assertEqual(first, second)
+        self.assertEqual(build_resolver.call_count, 2)
+        self.assertNotEqual(first, moved)
 
     def test_workspace_preview_lines_include_sandbox_seam_crossings(self) -> None:
         state = self._explorer_state(2)

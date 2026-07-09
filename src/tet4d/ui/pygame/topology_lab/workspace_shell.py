@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import lru_cache
+
 import pygame
 
 from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
@@ -230,17 +232,19 @@ def _active_workspace_path(state) -> list[tuple[int, ...]]:
     return []
 
 
-def _editor_probe_neighbor_markers(state) -> list[tuple[int, ...]]:
-    profile = _current_explorer_profile(state)
-    probe_coord = _current_probe_coord(state)
-    if profile is None or probe_coord is None:
-        return []
-    frame_permutation, frame_signs = _current_probe_frame(state)
+@lru_cache(maxsize=128)
+def _editor_probe_neighbor_markers_for_signature(
+    profile,
+    dims: tuple[int, ...],
+    probe_coord: tuple[int, ...],
+    frame_permutation: tuple[int, ...],
+    frame_signs: tuple[int, ...],
+) -> tuple[tuple[int, ...], ...]:
     markers: list[tuple[int, ...]] = []
     seen: set[tuple[int, ...]] = set()
     for option in explorer_probe_options(
         profile,
-        dims=_board_dims_for_state(state),
+        dims=dims,
         coord=probe_coord,
         frame_permutation=frame_permutation,
         frame_signs=frame_signs,
@@ -253,29 +257,42 @@ def _editor_probe_neighbor_markers(state) -> list[tuple[int, ...]]:
             continue
         seen.add(coord)
         markers.append(coord)
-    return markers
+    return tuple(markers)
 
 
-def _sandbox_neighbor_markers(state) -> list[tuple[int, ...]]:
+def _editor_probe_neighbor_markers(state) -> list[tuple[int, ...]]:
     profile = _current_explorer_profile(state)
-    if profile is None:
+    probe_coord = _current_probe_coord(state)
+    if profile is None or probe_coord is None:
         return []
-    try:
-        resolver = build_explorer_transport_resolver(
+    frame_permutation, frame_signs = _current_probe_frame(state)
+    return list(
+        _editor_probe_neighbor_markers_for_signature(
             profile,
-            _board_dims_for_state(state),
+            tuple(int(value) for value in _board_dims_for_state(state)),
+            tuple(int(value) for value in probe_coord),
+            tuple(int(value) for value in frame_permutation),
+            tuple(int(value) for value in frame_signs),
         )
-    except ValueError:
-        return []
-    piece_cells = tuple(
-        tuple(int(value) for value in coord) for coord in (sandbox_cells(state) or ())
     )
+
+
+@lru_cache(maxsize=128)
+def _sandbox_neighbor_markers_for_signature(
+    profile,
+    dims: tuple[int, ...],
+    piece_cells: tuple[tuple[int, ...], ...],
+) -> tuple[tuple[int, ...], ...]:
+    try:
+        resolver = build_explorer_transport_resolver(profile, dims)
+    except ValueError:
+        return ()
     if not piece_cells:
-        return []
+        return ()
     markers: list[tuple[int, ...]] = []
     seen: set[tuple[int, ...]] = set()
     occupied = set(piece_cells)
-    for step in movement_steps_for_dimension(state.dimension):
+    for step in movement_steps_for_dimension(profile.dimension):
         result = resolver.resolve_piece_step(piece_cells, step)
         if result.moved_cells is None:
             continue
@@ -285,7 +302,23 @@ def _sandbox_neighbor_markers(state) -> list[tuple[int, ...]]:
                 continue
             seen.add(target)
             markers.append(target)
-    return markers
+    return tuple(markers)
+
+
+def _sandbox_neighbor_markers(state) -> list[tuple[int, ...]]:
+    profile = _current_explorer_profile(state)
+    if profile is None:
+        return []
+    piece_cells = tuple(
+        tuple(int(value) for value in coord) for coord in (sandbox_cells(state) or ())
+    )
+    return list(
+        _sandbox_neighbor_markers_for_signature(
+            profile,
+            tuple(int(value) for value in _board_dims_for_state(state)),
+            piece_cells,
+        )
+    )
 
 
 def _active_workspace_neighbor_markers(state) -> list[tuple[int, ...]]:
