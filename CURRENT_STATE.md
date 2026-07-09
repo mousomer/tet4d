@@ -19,6 +19,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
+- Stage 44 topology explorer stabilization is in progress on
+  `codex/topology-explorer-hotpath-stabilization`: repeated render-time editor
+  probe and sandbox neighbor calculations reuse bounded caches keyed by the
+  immutable topology profile, board dimensions, and current probe or piece
+  state. Focused tests prove cache reuse and recomputation after movement.
+  This changes no topology, gameplay, replay, Godot, C++, or authority
+  semantics.
 - Stage 35 gameplay/topology sweep is active on
   `codex/gameplay-topology-sweeps`: Topology Playground launch settings now
   clamp unsupported `rigid_play_mode` values from saved/source settings to

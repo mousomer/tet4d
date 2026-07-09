@@ -28,6 +28,14 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Stage 44 topology explorer stabilization (2026-07-09): cache repeated
+render-time Editor probe and Sandbox neighbor derivation by immutable topology
+profile, board dimensions, and the current probe frame or piece cells. Focused
+tests cover cache reuse and movement-driven invalidation. This is Python
+explorer hot-path cleanup only; it does not change topology/gameplay/replay
+semantics, start Godot feature migration, add C++ topology authority, or
+transfer semantic authority away from Python.
+
 Stage 42 demo-quality milestone (2026-07-09): improve launch clarity,
 mode-selection comprehension, help/controls discoverability, public run
 instructions, demo-path guidance, and honest known-limitations copy across the
