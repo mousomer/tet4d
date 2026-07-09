@@ -673,7 +673,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.54` (`low`)
+- `tech_debt.score = 5.55` (`low`)
 
 Dominant remaining pressure:
 
