@@ -49,6 +49,14 @@ func geometry_hash_blocks(blocks: Array) -> String:
 	return _api().geometry_hash_blocks(blocks)
 
 
+func native_piece_pose_diagnostic(dims: Array, piece_cells: Array, occupied_cells: Array = []) -> Dictionary:
+	return _api().query_piece_pose_legal(dims, piece_cells, occupied_cells)
+
+
+func query_topology_axis_wrap_cell_step(dims: Array, wrapped_axes: Array, coord: Array, axis: int, delta: int) -> Dictionary:
+	return _api().query_topology_axis_wrap_cell_step(dims, wrapped_axes, coord, axis, delta)
+
+
 func run_builtin_plain_2d_smoke_case() -> bool:
 	return bool(_api().run_builtin_plain_2d_smoke_case())
 

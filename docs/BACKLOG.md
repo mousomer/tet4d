@@ -28,6 +28,16 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Stage 40 C++ legality/topology query slice (2026-07-08): add narrow native
+query diagnostics for bounded piece pose, translation, and rotation legality;
+collision, strict bounds, and duplicate candidate-cell rejection; and
+bounded/torus/cross-axis seam cell-step resolution. The slice is parity-backed
+against Python public engine legality APIs, central placement validation, and
+`ExplorerTransportResolver`, and is exposed to Godot only through diagnostic
+GDExtension queries. It does not change gameplay rules, topology traversal,
+replay/parity schemas, live-session ownership, Python oracle status, or
+authority ownership.
+
 Stage 39 C++ core geometry slice (2026-07-08): add a narrow deterministic
 native geometry helper surface for ND piece block normalization, translation,
 rotation, and stable geometry hashing. The slice is parity-backed against the

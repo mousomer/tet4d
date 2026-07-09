@@ -43,13 +43,21 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   helpers. This is authority-boundary cleanup only and does not change
   movement, rotation, drop/lock, spawn, topology traversal, Godot/C++ routing,
   or authority ownership.
-- Stage 39 C++ core geometry slice is active on
-  `codex/cpp-core-geometry-slice`: native C++ now exposes narrow
-  parity-backed piece-geometry query helpers for ND block normalization,
-  translation, rotation, and stable geometry hashing, with Python oracle parity
-  coverage and Godot bridge smoke coverage. This is a deterministic helper
-  slice only and does not transfer gameplay, topology, replay, parity-schema,
-  or semantic authority away from Python.
+- Stage 39 C++ core geometry slice is complete on `master`: native C++ exposes
+  narrow parity-backed piece-geometry query helpers for ND block
+  normalization, translation, rotation, and stable geometry hashing, with
+  Python oracle parity coverage and Godot bridge smoke coverage. This is a
+  deterministic helper slice only and does not transfer gameplay, topology,
+  replay, parity-schema, or semantic authority away from Python.
+- Stage 40 C++ legality/topology query slice is active on
+  `codex/cpp-legality-topology-query-slice`: native C++ now adds query-only
+  legality and topology diagnostics for bounded piece pose/translation/rotation
+  legality, collision, strict bounds, duplicate candidate-cell rejection,
+  bounded/torus neighbor resolution, and seam transport metadata. The slice is
+  parity-backed against Python public engine legality APIs, central placement
+  validation, and `ExplorerTransportResolver`, and Godot sees it only through
+  diagnostic GDExtension queries. It does not change gameplay, topology,
+  replay, live-session state, or authority ownership.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and

@@ -2,6 +2,7 @@
 
 #include "tet4d_core/core_api.hpp"
 #include "tet4d_core/geometry.hpp"
+#include "tet4d_core/query.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/error_macros.hpp>
@@ -41,6 +42,22 @@ tet4d::core::CoordND coord_from_array(const Array &values, bool &valid) {
 	return coord;
 }
 
+std::vector<int> ints_from_array(const Array &values, bool &valid) {
+	std::vector<int> result;
+	result.reserve(static_cast<std::size_t>(values.size()));
+	for (int64_t index = 0; index < values.size(); ++index) {
+		const Variant value = values[index];
+		if (value.get_type() != Variant::INT) {
+			ERR_PRINT("Tet4D query arrays must contain integer values.");
+			valid = false;
+			return {};
+		}
+		result.push_back(static_cast<int>(value));
+	}
+	valid = true;
+	return result;
+}
+
 std::vector<tet4d::core::CoordND> blocks_from_array(const Array &blocks, bool &valid) {
 	std::vector<tet4d::core::CoordND> result;
 	result.reserve(static_cast<std::size_t>(blocks.size()));
@@ -63,6 +80,23 @@ std::vector<tet4d::core::CoordND> blocks_from_array(const Array &blocks, bool &v
 	return result;
 }
 
+Dictionary legality_result_to_dictionary(const tet4d::core::LegalityQueryResult &result) {
+	Dictionary dictionary;
+	dictionary["ok"] = true;
+	dictionary["legal"] = result.legal;
+	dictionary["reason"] = to_godot_string(result.reason);
+	return dictionary;
+}
+
+Dictionary query_error_dictionary(const String &message) {
+	Dictionary dictionary;
+	dictionary["ok"] = false;
+	dictionary["legal"] = false;
+	dictionary["reason"] = message;
+	dictionary["error"] = message;
+	return dictionary;
+}
+
 Array coord_to_array(const tet4d::core::CoordND &coord) {
 	Array result;
 	for (const int value : coord.values) {
@@ -79,6 +113,16 @@ Array blocks_to_array(const std::vector<tet4d::core::CoordND> &blocks) {
 	return result;
 }
 
+String boundary_label(const tet4d::core::BoundaryQueryRef &boundary) {
+	const char *names[] = {"x", "y", "z", "w"};
+	return String(names[boundary.axis]) + (boundary.side < 0 ? "-" : "+");
+}
+
+String step_label(const tet4d::core::MoveStepQuery &step) {
+	const char *names[] = {"x", "y", "z", "w"};
+	return String(names[step.axis]) + (step.delta < 0 ? "-" : "+");
+}
+
 } // namespace
 
 void Tet4DCoreApi::_bind_methods() {
@@ -91,6 +135,8 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("geometry_translate_blocks", "blocks", "offset"), &Tet4DCoreApi::geometry_translate_blocks);
 	ClassDB::bind_method(D_METHOD("geometry_rotate_blocks", "blocks", "axis_a", "axis_b", "quarter_turns"), &Tet4DCoreApi::geometry_rotate_blocks);
 	ClassDB::bind_method(D_METHOD("geometry_hash_blocks", "blocks"), &Tet4DCoreApi::geometry_hash_blocks);
+	ClassDB::bind_method(D_METHOD("query_piece_pose_legal", "dims", "piece_cells", "occupied_cells"), &Tet4DCoreApi::query_piece_pose_legal);
+	ClassDB::bind_method(D_METHOD("query_topology_axis_wrap_cell_step", "dims", "wrapped_axes", "coord", "axis", "delta"), &Tet4DCoreApi::query_topology_axis_wrap_cell_step);
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
 	ClassDB::bind_method(D_METHOD("list_plain_2d_parity_cases"), &Tet4DCoreApi::list_plain_2d_parity_cases);
 	ClassDB::bind_method(D_METHOD("get_plain_2d_parity_status"), &Tet4DCoreApi::get_plain_2d_parity_status);
@@ -184,6 +230,64 @@ String Tet4DCoreApi::geometry_hash_blocks(const Array &blocks) const {
 		return String();
 	}
 	return to_godot_string(tet4d::core::geometry_hash_blocks(converted));
+}
+
+Dictionary Tet4DCoreApi::query_piece_pose_legal(const Array &dims, const Array &piece_cells, const Array &occupied_cells) const {
+	bool dims_valid = false;
+	const std::vector<int> converted_dims = ints_from_array(dims, dims_valid);
+	if (!dims_valid) {
+		return query_error_dictionary("invalid_dims");
+	}
+	bool cells_valid = false;
+	const std::vector<tet4d::core::CoordND> converted_cells = blocks_from_array(piece_cells, cells_valid);
+	if (!cells_valid) {
+		return query_error_dictionary("invalid_piece_cells");
+	}
+	bool occupied_valid = false;
+	const std::vector<tet4d::core::CoordND> converted_occupied = blocks_from_array(occupied_cells, occupied_valid);
+	if (!occupied_valid) {
+		return query_error_dictionary("invalid_occupied_cells");
+	}
+	return legality_result_to_dictionary(tet4d::core::piece_pose_legal_query(
+			tet4d::core::BoardShapeND{converted_dims},
+			converted_cells,
+			converted_occupied));
+}
+
+Dictionary Tet4DCoreApi::query_topology_axis_wrap_cell_step(const Array &dims, const Array &wrapped_axes, const Array &coord, int64_t axis, int64_t delta) const {
+	bool dims_valid = false;
+	const std::vector<int> converted_dims = ints_from_array(dims, dims_valid);
+	if (!dims_valid) {
+		return query_error_dictionary("invalid_dims");
+	}
+	bool axes_valid = false;
+	const std::vector<int> converted_axes = ints_from_array(wrapped_axes, axes_valid);
+	if (!axes_valid) {
+		return query_error_dictionary("invalid_wrapped_axes");
+	}
+	bool coord_valid = false;
+	const tet4d::core::CoordND converted_coord = coord_from_array(coord, coord_valid);
+	if (!coord_valid) {
+		return query_error_dictionary("invalid_coord");
+	}
+	const tet4d::core::TopologyCellStepQueryResult result = tet4d::core::resolve_topology_cell_step_query(
+			tet4d::core::axis_wrap_topology_profile(static_cast<int>(converted_dims.size()), converted_axes),
+			tet4d::core::BoardShapeND{converted_dims},
+			converted_coord,
+			tet4d::core::MoveStepQuery{static_cast<int>(axis), static_cast<int>(delta)});
+	Dictionary dictionary;
+	dictionary["ok"] = result.ok;
+	dictionary["error"] = to_godot_string(result.error);
+	if (result.target.has_value()) {
+		dictionary["target"] = coord_to_array(*result.target);
+	} else {
+		dictionary["target"] = Variant();
+	}
+	dictionary["glue_id"] = result.glue_id.has_value() ? to_godot_string(*result.glue_id) : String();
+	dictionary["source_boundary"] = result.source_boundary.has_value() ? boundary_label(*result.source_boundary) : String();
+	dictionary["target_boundary"] = result.target_boundary.has_value() ? boundary_label(*result.target_boundary) : String();
+	dictionary["entry_step"] = step_label(result.entry_step);
+	return dictionary;
 }
 
 bool Tet4DCoreApi::run_builtin_plain_2d_smoke_case() const {

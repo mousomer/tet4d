@@ -20,6 +20,7 @@ func run() -> Array:
 	_assert_equal(failures, bridge.stable_hash_text("tet4d"), "49fb984865ccbc22", "stable hash")
 	_assert_equal(failures, bridge.add_integers(40, 2), 42, "integer addition")
 	_assert_geometry_helpers(failures, bridge)
+	_assert_query_helpers(failures, bridge)
 	_assert_equal(failures, bridge.run_builtin_plain_2d_smoke_case(), true, "plain 2D smoke")
 	_assert_equal(
 		failures,
@@ -88,6 +89,19 @@ func _assert_geometry_helpers(failures: Array, bridge: RefCounted) -> void:
 		"geometry rotate"
 	)
 	_assert_equal(failures, bridge.geometry_hash_blocks(blocks_3d), "bbec08d1ebde9192", "geometry hash")
+
+
+func _assert_query_helpers(failures: Array, bridge: RefCounted) -> void:
+	var legal: Dictionary = bridge.native_piece_pose_diagnostic([4, 5], [[1, 1], [2, 1]], [])
+	_assert_equal(failures, legal.get("ok"), true, "query legality ok")
+	_assert_equal(failures, legal.get("legal"), true, "query legality accepts bounded cells")
+	var duplicate: Dictionary = bridge.native_piece_pose_diagnostic([4, 5], [[1, 1], [1, 1]], [])
+	_assert_equal(failures, duplicate.get("legal"), false, "query legality rejects duplicates")
+	_assert_equal(failures, duplicate.get("reason"), "duplicate_piece_cell", "query duplicate reason")
+	var torus: Dictionary = bridge.query_topology_axis_wrap_cell_step([3, 4], [0, 1], [2, 2], 0, 1)
+	_assert_equal(failures, torus.get("ok"), true, "query topology ok")
+	_assert_equal(failures, torus.get("target"), [0, 2], "query topology torus target")
+	_assert_equal(failures, torus.get("glue_id"), "wrap_0", "query topology glue")
 
 
 func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:
