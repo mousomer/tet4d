@@ -28,6 +28,13 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Stage 42 demo-quality milestone (2026-07-09): improve launch clarity,
+mode-selection comprehension, help/controls discoverability, public run
+instructions, demo-path guidance, and honest known-limitations copy across the
+README and Godot shell. This is product/readability work only and does not
+change gameplay rules, topology rules, replay schemas, native authority, or
+Stage 43 dedup/performance scope.
+
 Stage 41 Godot playable loop parity acceptance (2026-07-09): accept and
 protect the existing Godot Live Plain 2D/3D/4D playable loops with deterministic
 headless coverage for spawn, movement, rotation, soft drop, hard drop, lock,

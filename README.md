@@ -1,78 +1,71 @@
 # tet4d
 
-Usage guide for the 2D/3D/4D Tetris project.
+Tet4D is a 2D/3D/4D Tetris project with two main ways to explore it:
 
-## What this is
+- The Godot front end for replay demos and accepted plain 2D/3D/4D live play.
+- The Python launcher for the broader project tools, including the Topology Playground.
 
-This is a 2D/3D/4D Tetris game written in Python. Currently, it contains a main launcher for the entire suite, dedicated 2D/3D/4D game launchers, Tutorials, and a Topology Explorer Playground, which is my main development effort right now.
-
-4d game:
 ![4D game mode](img.png)
 
-4d topology designer:
-![4d sandbox projections](img_1.png)
+## Start Here
 
+For the best demo path, use the Godot front end.
 
-## Entry Points
-
-`python front.py` — Root Wrapper, main launcher.
-
-Use optional usage: front.py [--frontend {main,2d,3d,4d,front}]
-to get directly to 2d/3d/4d game modes.
-
-**Examples:**
-```sh
-python front.py                      # launches main unified launcher
-python front.py --frontend 4d        # launches 4D mode directly
-python front.py --mode 3d            # alias form
+```bash
+./scripts/build_godot_tet4d_core.sh
+godot --path godot/Tet4D.Godot
 ```
 
-Use front.py --topology-playground [DIM]
-to launch the Topology Playground directly.
+If you want the original Python launcher instead:
 
+```bash
+python front.py
 ```
-  Examples:
-  python cli/front.py                          # normal game launcher
-  python cli/front.py --topology-playground    # topology playground, dim 2
-  python cli/front.py --topology-playground 3  # topology playground, dim 3
-  python cli/front.py --topology-playground 4  # topology playground, dim 4
-```
- 
 
-Boundary topology presets are available in setup menus:
-- `bounded` (default)
-- `wrap_all`
-- `invert_all`
+## What You Can Do
 
-Gravity-axis wrapping is disabled by default on Game Mode. Topology explorer, available through the topology playground, enables full wrapping including the Y axis.
-![Moving a piece across the ecges in 4D sphere topology](img_2.png)
+- `Replay Demos`: inspect exported gameplay, topology, and endgame traces.
+- `Live Plain 2D`: the easiest first play mode.
+- `Live Plain 3D`: playable plain 3D with direct XY, XZ, and YZ rotations.
+- `Live Plain 4D`: playable plain 4D in side-by-side W slices with camera controls.
+- `Topology Playground`: available from the Python launcher, not the Godot shell.
 
-Advanced topology designer controls are available per mode:
-- `Topology advanced` (toggle)
-- `Topology profile` (loaded from `config/topology/designer_presets.json`)
+## Demo Path
 
-## Requirements
+1. Launch `godot --path godot/Tet4D.Godot`.
+2. Open `Replay Demos` and load a gameplay or topology case.
+3. Return to `Main Menu` and play `Live Plain 2D`.
+4. Try `Live Plain 3D` to understand direct plane rotations.
+5. Open `Live Plain 4D` and use `Q / E` for W movement plus `Fit View` when needed.
 
-- Python `3.11+` (target compatibility includes `3.14`)
-- Development, local verification, CI, and packaging all use the editable-install contract from `pyproject.toml`
-- Do not install legacy `pygame` in the same environment
-- CI validation matrix: Python `3.11`, `3.12`, `3.13`, `3.14`
-- Desktop installers include embedded Python runtime (end users do not need system Python)
+## Controls Overview
+
+- Replay: `Space` play/pause, arrows move frame/case, `1/2/3` switch trace family, `F` fit view.
+- Live Plain 2D: `A/D` move, `W` or `X` rotate clockwise, `Z` rotate counter-clockwise, `S` soft drop, `Space` hard drop.
+- Live Plain 3D: `A/D` move on X, `W/S` move on Z, `R/T`, `F/G`, `V/B` rotate planes, `Shift` soft drop, `Space` hard drop.
+- Live Plain 4D: `A/D` move on X, `W/S` move on Z, `Q/E` move on W, `R/T`, `F/G`, `V/B`, `Y/U`, `H/J`, `N/M` rotate planes, `I/K/O/L`, `,/.`, wheel, and drag control the camera.
+- Live shell system controls: `P` pause, `Backspace` reset, `Tab` switches mode, `Esc` backs out or quits.
+
+The Godot shell also exposes a `Controls` screen and an `About / Demo Path` screen.
+
+## Known Limitations
+
+- Python remains the rules reference implementation.
+- Godot is the product shell and playable front end.
+- Native C++ currently powers accepted plain live sessions plus geometry/query helpers; it does not replace Python as the rules source.
+- Topology Playground, broader topology editing, and Python-first development flows still live in the Python launcher.
+- This repo is verified for development use; packaging and release polish are not the focus of the current demo milestone.
 
 ## Setup
 
-Bootstrap script (preferred):
+Preferred bootstrap:
 
 ```bash
-cd .
 scripts/bootstrap_env.sh
 source .venv/bin/activate
 ```
 
-`scripts/bootstrap_env.sh` also installs the repo pre-push hook path
-(`.githooks/pre-push`) so pushes run the local CI gate by default.
-
-Manual setup uses the same editable-install contract:
+Manual setup:
 
 ```bash
 python3 -m venv .venv
@@ -82,168 +75,74 @@ python -m pip install -e ".[dev]"
 scripts/install_git_hooks.sh
 ```
 
-`./scripts/verify.sh`, `./scripts/ci_check.sh`, and the GitHub workflows all assume the repo package is installed this way in the active environment.
+## Run Commands
 
-## Development
-
-- Canonical runtime source path is `src/tet4d/engine/`.
-- `tet4d.engine.*` is the canonical import path for runtime/tests/tools.
-- The repo expects an editable install for development and verification (`pip install -e ".[dev]"`).
-- See `docs/MIGRATION_NOTES.md` for structure history and shim removal milestones.
-
-## Run
+Python launcher:
 
 ```bash
-# Unified launcher via compatibility wrapper (kept stable)
 python front.py
-
-# Unified wrapper selector (routes to main/2d/3d/4d; default is "main")
-# `front` is an alias for `main` (same target)
+python front.py --frontend 2d
+python front.py --frontend 3d
 python front.py --frontend 4d
-python front.py --mode 2d
-
-# Canonical direct entrypoints (primary scripts)
-python cli/front.py
-
-# Direct modes (canonical cli forms; root wrapper supports --frontend/--mode)
-python cli/front2d.py
-python cli/front3d.py
-python cli/front4d.py
+python cli/front.py --topology-playground
+python cli/front.py --topology-playground 4
 ```
 
-## Menu and tutorial controls
-
-- Global menu navigation:
-  - `Esc` / `Backspace`: go back (or exit current root menu)
-  - `q`: normalized as menu-back / escape in menu flows
-  - Tiny profile aliases: `i/k/j/l` -> up/down/left/right
-- Tutorials are launched from the main launcher menu.
-- Tutorial in-run hotkeys:
-  - `F5`: previous stage
-  - `F6`: next stage
-  - `F7`: redo current stage
-  - `F8`: exit tutorial to menu
-  - `F9`: restart tutorial lesson
-
-## Local desktop packaging (installer outputs)
+Godot front end:
 
 ```bash
-# macOS (.dmg)
-bash packaging/scripts/build_macos.sh
-
-# Linux (.deb)
-bash packaging/scripts/build_linux.sh
+./scripts/build_godot_tet4d_core.sh
+godot --path godot/Tet4D.Godot
 ```
 
-Windows (PowerShell, `.msi`):
-
-```powershell
-./packaging/scripts/build_windows.ps1
-```
-
-Build artifacts are written to `artifacts/installers/`.
-The Windows build produces a self-contained `.msi` with the payload cabinet
-embedded, so install does not depend on a sibling `cab1.cab` file.
-The canonical PyInstaller spec also pins lazy `tet4d.ai.playbot.*` modules as
-hidden imports so frozen launcher/setup menus do not fail when playbot helpers
-are loaded through package-level lazy exports.
-The packaging scripts now smoke-run the freshly built packaged runtime with
-`--runtime-smoke-check` under isolated user-data roots plus dummy SDL drivers
-before emitting release artifacts, so frozen startup regressions fail the build
-instead of shipping to installers.
-Tag pushes matching `v*` also publish the generated installers through `.github/workflows/release-packaging.yml`.
-
-## Key files
-
-Menu config:
-- `config/menu/structure.json`
-- `config/menu/defaults.json`
-- `config/help/topics.json`
-- `config/help/action_map.json`
-- `config/topology/designer_presets.json`
-
-Runtime tuning:
-- `config/gameplay/tuning.json`
-- `config/gameplay/score_analyzer.json`
-- `config/playbot/policy.json`
-- `config/audio/sfx.json`
-
-Project-wide path/constants/security policy:
-- `config/project/io_paths.json`
-- `config/project/constants.json`
-- `config/project/policy/manifests/secret_scan.json`
-
-User state:
-- `state/menu_settings.json`
-- `state/topology/selected_profile.json` (advanced topology export)
-- `state/analytics/leaderboard.json`
-- `state/tutorial/progress.json`
-- `state/analytics/score_events.jsonl`
-- `state/analytics/score_summary.json`
-
-Keybindings:
-- `config/keybindings/defaults.json`
-- `keybindings/2d.json`
-- `keybindings/3d.json`
-- `keybindings/4d.json`
-
-Control/action icon renderer:
-- `src/tet4d/ui/pygame/render/control_icons.py`
-- `draw_action_icon`
-
-## Quality checks
+Godot tests:
 
 ```bash
-ruff check .
-ruff check --select C901 .
-./scripts/check_editable_install.sh
-python3 tools/governance/validate_project_contracts.py
-python3 tools/governance/scan_secrets.py
-python3 tools/governance/check_pygame_ce.py
-pytest -q
-PYTHONPATH=. python3 tools/stability/check_playbot_stability.py --repeats 20 --seed-base 0
-python3 tools/benchmarks/bench_playbot.py --assert --record-trend
-scripts/ci_check.sh
+godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
+```
 
-# Local quick parity run (quiet by default)
+Native core build and parity tests:
+
+```bash
+./scripts/test_godot_tet4d_core.sh
+native/tet4d_core/build/tests/geometry_core_tests --geometry-parity
+native/tet4d_core/build/tests/query_core_tests --query-parity
+```
+
+Python-golden gameplay parity checks:
+
+```bash
+.venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
+.venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
+```
+
+Primary verification gate:
+
+```bash
 CODEX_MODE=1 ./scripts/verify.sh
 ```
 
-## Documentation map
+## More Docs
 
-1. Project structure and documentation:
-- `docs/PROJECT_STRUCTURE.md`
-- `docs/FEATURE_MAP.md`
-- `docs/CONFIGURATION_REFERENCE.md`
-- `docs/USER_SETTINGS_REFERENCE.md`
-- `docs/GUIDELINES_RESEARCH.md`
-- `docs/RELEASE_INSTALLERS.md`
+- Documentation map:
+  - `docs/CONFIGURATION_REFERENCE.md`
+  - `docs/USER_SETTINGS_REFERENCE.md`
+  - `docs/RELEASE_INSTALLERS.md`
+- Godot shell notes: `godot/Tet4D.Godot/README.md`
+- Workflow and contributor rules: `docs/WORKFLOW_CODEX.md`
+- Product requirements: `docs/rds/`
+- Current open work: `docs/BACKLOG.md`
 
-2. Usage:
-- `README.md`
+## Developer References
 
-3. Workflow and product guidance:
-- `docs/WORKFLOW_CODEX.md`
-- `docs/rds/`
-
-## Policy pack
-
-- Contract source: `config/project/policy_pack.json`
-- Validator: `tools/governance/validate_project_contracts.py`
-- Generated maintenance docs source data: `config/project/policy_pack.json`
-- Generated config references: `docs/CONFIGURATION_REFERENCE.md` and `docs/USER_SETTINGS_REFERENCE.md` (`tools/governance/generate_configuration_reference.py`)
-- Secret scanning policy/runtime scanner: `config/project/policy/manifests/secret_scan.json` + `tools/governance/scan_secrets.py`
-
-## Local pytest warning
-
-- If you install `pytest` from local/offline wheels only, import can fail with `ModuleNotFoundError: No module named 'py'`.
-- Workaround (offline/local wheel path): copy Homebrew shim file into the venv:
-  - `cp /opt/homebrew/lib/python3.11/site-packages/py.py .venv/lib/python3.14/site-packages/py.py`
-- Preferred path (when network is available): install `pytest` from PyPI into the active `.venv`.
-
-## Test run TODO (short checklist)
-
-1. Activate `.venv` and verify `pygame-ce` (not legacy `pygame`).
-2. Ensure `ruff` and `pytest` import in `.venv`.
-3. Run `scripts/ci_check.sh`.
-4. If it fails, run the individual checks listed in `Quality checks` to isolate the failing stage.
+- Packaging:
+  - `packaging/scripts/build_macos.sh`
+- Verification:
+  - `scripts/ci_check.sh`
+  - `tools/governance/scan_secrets.py`
+  - `tools/governance/check_pygame_ce.py`
+- Runtime config:
+  - `config/gameplay/score_analyzer.json`
+  - `config/project/io_paths.json`
+  - `config/project/constants.json`
+  - `config/project/policy/manifests/secret_scan.json`
