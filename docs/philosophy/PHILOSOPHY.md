@@ -297,21 +297,27 @@ of an explicit test but the medium in which action takes place?
 
 That is the experiment tet4d makes playable.
 
-## What this does not prove
+## What Tet4D Makes Possible
 
-tet4d does not prove Reid right.
+Tet4D does not need to prove Reid right or refute Kant. Its claim is sharper: it turns the question into a recursive
+experiment.
 
-It does not refute Kant.
+Spatial intuition should not be treated as a fixed possession, something the mind either has or lacks. If we follow 
+Reid, then we should see ordinary 3D Euclidean space as something built through loops of action, resistance, correction, 
+prediction, and feedback. I have built Tet4D in the hope that the same process can be pushed one dimension higher.
 
-It is not a controlled cognitive-science experiment. A self-selected group of players, playing a strange
-higher-dimensional game, cannot settle a major dispute in the philosophy of mind, the philosophy of geometry, or the
-history of metaphysics.
+At first, 4D play is translation. The player manages projections, symbols, slices, rotations, and rules. But repeated
+interaction may change the status of those rules. Translation may become anticipation. Projection management may
+become spatial expectation. Calculation may begin to behave like intuition.
 
-Failure would also be informative. It may turn out that players get better only at symbolic translation. It may turn out
-that all apparent 4D competence remains projection management. It may turn out that ordinary human spatial intuition
-really does have a hard ceiling, at least for practical purposes.
+Failure would still matter. If players improve only at symbolic manipulation, that tells us where the ceiling is. If
+they transfer competence to unfamiliar 4D tasks, then the ceiling has moved.
 
-But even that would be worth knowing.
+That is the point of Tet4D: not to declare that higher-dimensional intuition is possible, but to give the claim a
+playable form in which learning, failure, transfer, and transformation can actually be observed.
+
+Tet4D is the argument in executable form: give the mind a lawful higher-dimensional world, give it action and
+recurrence, and test whether the boundary between calculation and intuition holds.
 
 The important move is that the question is not left as a slogan. It is given a form in which something can happen.
 Players can learn or fail to learn. Errors can be observed. Strategies can change. Reaction times can be measured. New
@@ -324,13 +330,6 @@ suggest that the structure of practical spatial life may itself be coordinated, 
 action.
 
 The issue is not whether the mind structures spatial experience.
-
-The issue is whether that structure is fixed once and for all, or whether it has a history.
-
-Thirty years is a long time to sit on an experiment.
-
-tet4d is that experiment in playable form: the bet that higher-dimensional space is not only something to calculate,
-project, or describe, but something one might learn to act inside.
 
 ## References and further reading
 
