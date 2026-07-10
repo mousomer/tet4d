@@ -1,0 +1,29 @@
+<svg viewBox="0 0 880 520" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">
+<rect width="880" height="520" fill="#faf8f4"/>
+<!-- sphere -->
+<circle cx="300" cy="250" r="175" fill="#f0ecff" fill-opacity="0.5" stroke="#1a1a2e" stroke-width="2"/>
+<!-- great circle: a visible "straight line" -->
+<ellipse cx="300" cy="250" rx="175" ry="52" fill="none" stroke="#8888aa" stroke-width="1.6" stroke-dasharray="6 5"/>
+<path d="M 125 250 A 175 52 0 0 0 475 250" fill="none" stroke="#e94560" stroke-width="2.6"/>
+<!-- eye at center -->
+<ellipse cx="300" cy="250" rx="17" ry="10" fill="#fff" stroke="#1a1a2e" stroke-width="2"/>
+<circle cx="300" cy="250" r="4.5" fill="#1a1a2e"/>
+<!-- spherical triangle, edges bulge outward -->
+<path d="M 230 160 Q 313 140 390 190 Q 371 283 300 330 Q 233 260 230 160 Z"
+      fill="#e94560" fill-opacity="0.10" stroke="#1a1a2e" stroke-width="2.2"/>
+<circle cx="230" cy="160" r="4" fill="#1a1a2e"/>
+<circle cx="390" cy="190" r="4" fill="#1a1a2e"/>
+<circle cx="300" cy="330" r="4" fill="#1a1a2e"/>
+<!-- labels -->
+<text x="545" y="128" font-size="16" fill="#1a1a2e">Visible figure lives on a sphere</text>
+<text x="545" y="150" font-size="16" fill="#1a1a2e">centred on the eye.</text>
+<text x="545" y="238" font-size="15" fill="#e94560">A visible &#8220;straight line&#8221; is a great</text>
+<text x="545" y="258" font-size="15" fill="#e94560">circle: extended far enough,</text>
+<text x="545" y="278" font-size="15" fill="#e94560">it returns upon itself.</text>
+<text x="545" y="336" font-size="15" fill="#1a1a2e">Every visible triangle:</text>
+<text x="545" y="362" font-size="18" font-style="italic" fill="#1a1a2e">&#945; + &#946; + &#947; &gt; 180&#176;</text>
+<line x1="452" y1="230" x2="535" y2="248" stroke="#bbb" stroke-width="1"/>
+<line x1="370" y1="298" x2="535" y2="340" stroke="#bbb" stroke-width="1"/>
+<text x="440" y="470" text-anchor="middle" font-size="19" fill="#1a1a2e">Reid&#8217;s geometry of visibles (1764): the eye&#8217;s native geometry is not Euclid&#8217;s</text>
+<text x="440" y="496" text-anchor="middle" font-size="15" font-style="italic" fill="#666">A doubly elliptic geometry, described sixty years before Lobachevsky</text>
+</svg>
