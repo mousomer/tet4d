@@ -22,10 +22,8 @@ from ..runtime.runtime_config import (
 from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.lifecycle import advance_or_lock_and_respawn, run_hard_drop
 from ..core.rules.piece_placement import (
-    CandidatePiecePlacement,
-    build_candidate_piece_placement,
-    commit_piece_placement,
-    validate_candidate_piece_placement,
+    commit_piece_if_legal,
+    piece_placement_is_legal,
 )
 from ..core.step.reducer import step_2d as core_step_2d
 from .explorer_runtime_2d import (
@@ -208,9 +206,7 @@ class GameState:
     analysis_session_id: str = field(default_factory=new_analysis_session_id)
     analysis_seq: int = 0
     last_score_analysis: dict[str, object] | None = None
-    _pending_translation_animation: bool = field(
-        default=False, init=False, repr=False
-    )
+    _pending_translation_animation: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self):
         self.topology_policy = self.config.topology_policy()
@@ -293,7 +289,9 @@ class GameState:
     def _mapped_piece_cells(
         self, piece: ActivePiece2D
     ) -> tuple[tuple[int, int], ...] | None:
-        if self.config.exploration_mode and _uses_explorer_piece_transport_2d(self.config):
+        if self.config.exploration_mode and _uses_explorer_piece_transport_2d(
+            self.config
+        ):
             return piece_cells_in_bounds_2d(
                 piece,
                 dims=(self.config.width, self.config.height),
@@ -345,20 +343,15 @@ class GameState:
             return ()
         return self.current_piece_cells_mapped(include_above=True)
 
-    def _candidate_placement(
+    def _piece_pose_legal(
         self,
         piece: ActivePiece2D,
-    ) -> CandidatePiecePlacement[ActivePiece2D] | None:
-        return build_candidate_piece_placement(piece, self._mapped_piece_cells(piece))
-
-    def _can_place_candidate(
-        self,
-        candidate: CandidatePiecePlacement[ActivePiece2D] | None,
         *,
         allow_self_overlap: bool = False,
     ) -> bool:
-        return validate_candidate_piece_placement(
-            candidate,
+        return piece_placement_is_legal(
+            piece,
+            self._mapped_piece_cells(piece),
             self.board.cells,
             ignore_cells=self._placement_ignore_cells(
                 allow_self_overlap=allow_self_overlap
@@ -366,22 +359,20 @@ class GameState:
         )
 
     def _can_exist_after_motion(self, piece: ActivePiece2D) -> bool:
-        return self._can_place_candidate(
-            self._candidate_placement(piece),
-            allow_self_overlap=True,
-        )
+        return self._piece_pose_legal(piece, allow_self_overlap=True)
 
     def _try_commit_candidate_piece(self, piece: ActivePiece2D) -> bool:
-        candidate = self._candidate_placement(piece)
-        if not self._can_place_candidate(candidate, allow_self_overlap=True):
-            return False
-        assert candidate is not None
-        commit_piece_placement(self, candidate)
-        return True
+        return commit_piece_if_legal(
+            self,
+            piece,
+            self._mapped_piece_cells(piece),
+            self.board.cells,
+            ignore_cells=self._placement_ignore_cells(allow_self_overlap=True),
+        )
 
     def _can_exist(self, piece: ActivePiece2D) -> bool:
         """Compatibility wrapper over the shared placement validator."""
-        return self._can_place_candidate(self._candidate_placement(piece))
+        return self._piece_pose_legal(piece)
 
     def lock_current_piece(self) -> int:
         """
@@ -443,7 +434,9 @@ class GameState:
         if self.current_piece is None:
             return None
         if self.config.explorer_transport is None:
-            raise ValueError("explorer transport must exist when explorer topology is active")
+            raise ValueError(
+                "explorer transport must exist when explorer topology is active"
+            )
         if is_drop_intent(intent):
             if (dx, dy) != (0, 1):
                 raise ValueError("drop intents must use the configured gravity step")
@@ -474,10 +467,9 @@ class GameState:
     ) -> bool:
         if self.current_piece is None:
             return False
-        if (
-            _uses_explorer_piece_transport_2d(self.config)
-            and not _piece_has_cells_above_gravity_2d(self.current_piece)
-        ):
+        if _uses_explorer_piece_transport_2d(
+            self.config
+        ) and not _piece_has_cells_above_gravity_2d(self.current_piece):
             moved = self._explorer_move_for_intent(
                 dx=dx,
                 dy=dy,

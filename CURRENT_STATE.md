@@ -19,20 +19,21 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
-- Stage 43 README/philosophy correction is in progress on
-  `codex/readme-python-baseline-philosophy-docs`: the public README now needs
-  to state Python/pygame as the current full playable/reference implementation,
-  Godot as the partial migration/demo front end and future product shell, and
-  `docs/philosophy/PHILOSOPHY.md` as the deeper motivation doc linked from the
-  README. This is docs framing only and changes no gameplay, topology, replay,
-  Godot, C++, or authority semantics.
-- Stage 44 topology explorer stabilization is in progress on
-  `codex/topology-explorer-hotpath-stabilization`: repeated render-time editor
-  probe and sandbox neighbor calculations reuse bounded caches keyed by the
-  immutable topology profile, board dimensions, and current probe or piece
-  state. Focused tests prove cache reuse and recomputation after movement.
-  This changes no topology, gameplay, replay, Godot, C++, or authority
-  semantics.
+- Stage 45A Python reference hardening is complete on
+  `codex/python-reference-dedup-first-slice`: mapped piece-pose legality and
+  validate-then-commit behavior now have one pure owner in
+  `engine/core/rules/piece_placement.py`, while 2D, ND, the public legality API,
+  and the 2D state query retain only dimensional/state adapters. Regression
+  coverage proves collision rejection, atomic failure, successful commit, and
+  public 2D/embedded-ND translation and rotation equivalence. Python remains
+  semantic authority; gameplay, topology, replay schemas, Godot, native C++,
+  and authority ownership are unchanged. Further Godot gameplay work remains
+  blocked pending continued Python reference hardening, and topology-in-Godot
+  remains later.
+- Stages 43 and 44 are complete on `master`: the README/philosophy correction
+  presents Python/pygame as the current full playable/reference implementation,
+  and topology explorer render-time probes reuse bounded caches without
+  semantic changes.
 - Stage 35 gameplay/topology sweep is active on
   `codex/gameplay-topology-sweeps`: Topology Playground launch settings now
   clamp unsupported `rigid_play_mode` values from saved/source settings to
@@ -81,12 +82,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   gameplay/topology/replay rules, introduce new native gameplay ownership,
   make Godot gameplay depend on the Stage 39/40 query helpers, or transfer
   semantic authority away from Python.
-- Stage 42 demo-quality milestone is active on
-  `codex/demo-quality-milestone`: improve first-run clarity, launch guidance,
-  mode discovery, controls/help discoverability, and honest limitations across
-  the public README and the Godot shell. This is product/readability work
-  only; it does not change gameplay, topology, replay schemas, authority
-  routing, native ownership, or Stage 43 dedup/performance scope.
+- Stage 42 demo-quality milestone is complete on `master`: first-run clarity,
+  launch guidance, mode discovery, controls/help discoverability, and honest
+  limitations were improved across the public README and Godot shell. This is
+  product/readability work only; it does not change gameplay, topology, replay
+  schemas, authority routing, native ownership, or Stage 45A dedup scope.
 - Live-mode keyboard exit semantics are now aligned around `Esc` as the
   universal back/quit path in pygame shells and overlays. `Q` is no longer a
   live-mode quit/back alias, visible quit/back buttons remain clickable, and

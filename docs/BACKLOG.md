@@ -28,21 +28,13 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Stage 43 README and philosophy-doc correction (2026-07-10): reframe the public
-README around Python/pygame as the current full playable/reference
-implementation, Godot as the partial migration/demo front end and future
-product shell, and a short link to `docs/philosophy/PHILOSOPHY.md`. Add the
-Reid/Kant philosophy essay under `docs/philosophy/` with repo-relative figure
-links and stable image filenames. This is documentation-only work and does not
-change gameplay, topology, replay, native authority, or code semantics.
-
-Stage 44 topology explorer stabilization (2026-07-09): cache repeated
-render-time Editor probe and Sandbox neighbor derivation by immutable topology
-profile, board dimensions, and the current probe frame or piece cells. Focused
-tests cover cache reuse and movement-driven invalidation. This is Python
-explorer hot-path cleanup only; it does not change topology/gameplay/replay
-semantics, start Godot feature migration, add C++ topology authority, or
-transfer semantic authority away from Python.
+After Stage 45A, continue Python reference hardening in small, regression-backed
+slices. Deferred audit seams include spawn geometry and bag filtering,
+dimension-specific movement/topology adapters, planner simulation/private
+legality access, and frontend orchestration. Godot gameplay work remains blocked
+until Python reference hardening progresses further. Topology-in-Godot remains a
+later migration stage. Python remains semantic authority; no Godot or C++
+authority transfer is implied by deduplication work.
 
 Stage 42 demo-quality milestone (2026-07-09): improve launch clarity,
 mode-selection comprehension, help/controls discoverability, public run
@@ -818,6 +810,23 @@ stays synchronized, and the contract validator accepts the backlog shape.
   authored `Controls` wrapper as a visible one-item runtime page.
 
 ## Recent Completed Work
+
+Completed on 2026-07-10:
+
+- Stage 45A Python reference hardening and first 2D/ND dedup slice centralized
+  mapped piece-pose legality and atomic validate-then-commit behavior in
+  `engine/core/rules/piece_placement.py`. The 2D and ND game states, public
+  legality facade, and 2D state query now route through the same pure rule.
+  Core and public-boundary tests cover collision rejection, atomic failure,
+  successful commit, and 2D/embedded-ND translation and rotation equivalence.
+  Gameplay semantics, topology semantics, replay schemas, Godot, native C++,
+  and authority ownership are unchanged.
+- Stage 43 README/philosophy correction landed, preserving existing game
+  images while presenting Python/pygame as the current full playable/reference
+  implementation and Godot as a partial migration/demo front end and future
+  product shell.
+- Stage 44 topology explorer stabilization landed with bounded cache reuse and
+  movement-driven recomputation coverage, without semantic changes.
 
 Completed on 2026-04-30:
 

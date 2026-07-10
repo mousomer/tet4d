@@ -69,6 +69,23 @@ def validate_candidate_piece_placement(
     return all(coord not in occupied or coord in ignored for coord in candidate.cells)
 
 
+def piece_placement_is_legal(
+    piece: object,
+    cells: Iterable[Sequence[int]] | None,
+    board_cells: Mapping[Sequence[int], object] | Iterable[Sequence[int]],
+    *,
+    ignore_cells: Iterable[Sequence[int]] = (),
+    coord_validator: Callable[[Coord], bool] | None = None,
+) -> bool:
+    """Build and validate one mapped piece pose without mutating game state."""
+    return validate_candidate_piece_placement(
+        build_candidate_piece_placement(piece, cells),
+        board_cells,
+        ignore_cells=ignore_cells,
+        coord_validator=coord_validator,
+    )
+
+
 def commit_piece_placement(
     state: object,
     candidate: CandidatePiecePlacement[object],
@@ -78,9 +95,35 @@ def commit_piece_placement(
     setattr(state, attribute, candidate.piece)
 
 
+def commit_piece_if_legal(
+    state: object,
+    piece: _PieceT,
+    cells: Iterable[Sequence[int]] | None,
+    board_cells: Mapping[Sequence[int], object] | Iterable[Sequence[int]],
+    *,
+    ignore_cells: Iterable[Sequence[int]] = (),
+    coord_validator: Callable[[Coord], bool] | None = None,
+    attribute: str = "current_piece",
+) -> bool:
+    """Atomically commit a mapped piece pose only when placement is legal."""
+    candidate = build_candidate_piece_placement(piece, cells)
+    if not validate_candidate_piece_placement(
+        candidate,
+        board_cells,
+        ignore_cells=ignore_cells,
+        coord_validator=coord_validator,
+    ):
+        return False
+    assert candidate is not None
+    commit_piece_placement(state, candidate, attribute=attribute)
+    return True
+
+
 __all__ = [
     "CandidatePiecePlacement",
     "build_candidate_piece_placement",
+    "commit_piece_if_legal",
     "commit_piece_placement",
+    "piece_placement_is_legal",
     "validate_candidate_piece_placement",
 ]

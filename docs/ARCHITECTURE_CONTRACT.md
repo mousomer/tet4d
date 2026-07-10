@@ -145,6 +145,8 @@ creating reverse dependencies.
 23. 3D render adapter: `src/tet4d/ui/pygame/front3d_render.py`
 24. 4D render adapter: `src/tet4d/ui/pygame/front4d_render.py`
 25. Shared tutorial runtime UI helpers: `src/tet4d/ui/pygame/runtime_ui/`
+26. Mapped piece-pose legality and atomic conditional commit:
+    `src/tet4d/engine/core/rules/piece_placement.py`
 
 ## Enforcement
 

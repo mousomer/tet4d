@@ -5,7 +5,9 @@ from .locking import LockScoreResult, apply_lock_and_score
 from .piece_placement import (
     CandidatePiecePlacement,
     build_candidate_piece_placement,
+    commit_piece_if_legal,
     commit_piece_placement,
+    piece_placement_is_legal,
     validate_candidate_piece_placement,
 )
 from .scoring import score_for_clear
@@ -25,12 +27,14 @@ __all__ = [
     "can_piece_exist_2d",
     "CandidatePiecePlacement",
     "clear_planes",
+    "commit_piece_if_legal",
     "commit_piece_placement",
     "current_piece_cells",
     "full_levels",
     "is_game_over",
     "lock_and_respawn",
     "LockScoreResult",
+    "piece_placement_is_legal",
     "run_hard_drop",
     "score_for_clear",
     "validate_candidate_piece_placement",

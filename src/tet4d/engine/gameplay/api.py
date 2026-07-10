@@ -11,10 +11,7 @@ from ..runtime.runtime_config import (
     kick_default_level,
 )
 from ..runtime.score_analyzer import hud_analysis_lines
-from ..core.rules.piece_placement import (
-    build_candidate_piece_placement,
-    validate_candidate_piece_placement,
-)
+from ..core.rules.piece_placement import piece_placement_is_legal
 from .game2d import GameState
 from .game_nd import GameStateND
 from .leveling import compute_speed_level
@@ -146,12 +143,9 @@ def piece_pose_legal_gameplay(
     *,
     allow_self_overlap: bool = False,
 ) -> bool:
-    candidate = build_candidate_piece_placement(
+    return piece_placement_is_legal(
         piece,
         _state_piece_cells_for_legality(state, piece),
-    )
-    return validate_candidate_piece_placement(
-        candidate,
         state.board.cells,
         ignore_cells=_placement_ignore_cells_for_legality(
             state,

@@ -30,6 +30,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/topology_identifier_normalization_parity.md`
 - `docs/architecture/parity_evidence_package_review.md`
 - `docs/architecture/python_oracle_boundary_audit.md`
+- `docs/architecture/python_2d_nd_dedup_audit.md`
 - `docs/architecture/parity_tooling_package_review.md`
 - `docs/architecture/structural_parity_slice_selection.md`
 - `docs/architecture/trace_envelope_validation_parity.md`
@@ -120,6 +121,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 21 parity evidence package review of Stages 15, 18, and 20 and further expansion boundary | `docs/architecture/parity_evidence_package_review.md` |
 | Stage 22 trace schema/version normalization parity implementation | `docs/architecture/trace_schema_version_normalization_parity.md` |
 | Stage 23 Python oracle boundary audit | `docs/architecture/python_oracle_boundary_audit.md` |
+| Stage 45A Python 2D/ND duplication audit and first safe slice | `docs/architecture/python_2d_nd_dedup_audit.md` |
 | Stage 24 parity tooling package review and `tools/parity/` decision | `docs/architecture/parity_tooling_package_review.md` |
 | Stage 26 structural parity slice selection | `docs/architecture/structural_parity_slice_selection.md` |
 | Stage 27 trace envelope validation parity implementation | `docs/architecture/trace_envelope_validation_parity.md` |
