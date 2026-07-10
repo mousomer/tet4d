@@ -295,7 +295,7 @@ It is a public symbol skim for navigation, not full API documentation, and it do
 - `src/tet4d/engine/core/rules/gravity_2d.py`: `apply_gravity_tick_2d(state)`
 - `src/tet4d/engine/core/rules/lifecycle.py`: `lock_and_respawn(state)`, `advance_or_lock_and_respawn(state, *, try_advance)`, `run_hard_drop(state, *, try_advance)`
 - `src/tet4d/engine/core/rules/locking.py`: `LockScoreResult`, `apply_lock_and_score(*, board, visible_piece_cells, color_id, ...)`
-- `src/tet4d/engine/core/rules/piece_placement.py`: `CandidatePiecePlacement`, `build_candidate_piece_placement(piece, cells)`, `validate_candidate_piece_placement(candidate, board_cells, *, ignore_cells=..., ...)`, `commit_piece_placement(state, candidate, *, attribute=...)`
+- `src/tet4d/engine/core/rules/piece_placement.py`: `CandidatePiecePlacement`, `build_candidate_piece_placement(piece, cells)`, `validate_candidate_piece_placement(candidate, board_cells, *, ignore_cells=..., ...)`, `piece_placement_is_legal(piece, cells, board_cells, *, ignore_cells=..., ...)`, `commit_piece_placement(state, candidate, *, attribute=...)`, `commit_piece_if_legal(state, piece, cells, board_cells, ...)`
 - `src/tet4d/engine/core/rules/scoring.py`: `score_for_clear(cleared_count)`
 - `src/tet4d/engine/core/rules/state_queries.py`: `board_cells(state)`, `current_piece_cells(state, *, include_above=...)`, `is_game_over(state)`, `can_piece_exist_2d(state, piece, *, ignore_cells=...)`
 - `src/tet4d/engine/core/step/reducer.py`: `apply_action_2d(state, action)`, `step_2d(state, action)`, `step_nd(state)`

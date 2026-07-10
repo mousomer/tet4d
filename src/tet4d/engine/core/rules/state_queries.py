@@ -4,10 +4,7 @@ from collections.abc import Iterable, Sequence
 from typing import Any
 
 from ..model.game2d_types import ActivePiece2DLike, GameState2DLike
-from .piece_placement import (
-    build_candidate_piece_placement,
-    validate_candidate_piece_placement,
-)
+from .piece_placement import piece_placement_is_legal
 
 
 def board_cells(state: Any) -> dict[tuple[int, ...], int]:
@@ -33,11 +30,9 @@ def can_piece_exist_2d(
     *,
     ignore_cells: Iterable[Sequence[int]] = (),
 ) -> bool:
-    return validate_candidate_piece_placement(
-        build_candidate_piece_placement(
-            piece,
-            state.mapped_piece_cells_for_piece(piece, include_above=True),
-        ),
+    return piece_placement_is_legal(
+        piece,
+        state.mapped_piece_cells_for_piece(piece, include_above=True),
         state.board.cells,
         ignore_cells=ignore_cells,
     )

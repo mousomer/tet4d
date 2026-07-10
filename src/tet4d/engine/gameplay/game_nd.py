@@ -25,10 +25,8 @@ from ..runtime.runtime_config import (
 from ..core.rotation_kicks import resolve_rotated_piece
 from ..core.rules.lifecycle import advance_or_lock_and_respawn, run_hard_drop
 from ..core.rules.piece_placement import (
-    CandidatePiecePlacement,
-    build_candidate_piece_placement,
-    commit_piece_placement,
-    validate_candidate_piece_placement,
+    commit_piece_if_legal,
+    piece_placement_is_legal,
 )
 from ..core.step.reducer import step_nd as core_step_nd
 from ..topology_explorer import ExplorerTopologyProfile, MoveStep
@@ -176,8 +174,8 @@ def _compose_piece_frame(
     for source_axis, intermediate_axis in enumerate(permutation):
         target_axis = int(frame_transform.permutation[intermediate_axis])
         composed_permutation[source_axis] = target_axis
-        composed_signs[source_axis] = (
-            int(signs[source_axis]) * int(frame_transform.signs[intermediate_axis])
+        composed_signs[source_axis] = int(signs[source_axis]) * int(
+            frame_transform.signs[intermediate_axis]
         )
     return tuple(composed_permutation), tuple(composed_signs)
 
@@ -283,9 +281,7 @@ class GameStateND:
     analysis_session_id: str = field(default_factory=new_analysis_session_id)
     analysis_seq: int = 0
     last_score_analysis: dict[str, object] | None = None
-    _pending_translation_animation: bool = field(
-        default=False, init=False, repr=False
-    )
+    _pending_translation_animation: bool = field(default=False, init=False, repr=False)
     _piece_frame_permutation: tuple[int, ...] = field(
         default=(), init=False, repr=False
     )
@@ -401,7 +397,9 @@ class GameStateND:
         self._piece_frame_signs = signs
 
     def _mapped_piece_cells(self, piece: ActivePieceND) -> tuple[Coord, ...] | None:
-        if self.config.exploration_mode and _uses_explorer_piece_transport_nd(self.config):
+        if self.config.exploration_mode and _uses_explorer_piece_transport_nd(
+            self.config
+        ):
             return piece_cells_in_bounds(piece, dims=self.config.dims)
         if _uses_explorer_piece_transport_nd(self.config):
             return _piece_cells_in_play_bounds_nd(
@@ -444,20 +442,15 @@ class GameStateND:
             return ()
         return self.current_piece_cells_mapped(include_above=True)
 
-    def _candidate_placement(
+    def _piece_pose_legal(
         self,
         piece: ActivePieceND,
-    ) -> CandidatePiecePlacement[ActivePieceND] | None:
-        return build_candidate_piece_placement(piece, self._mapped_piece_cells(piece))
-
-    def _can_place_candidate(
-        self,
-        candidate: CandidatePiecePlacement[ActivePieceND] | None,
         *,
         allow_self_overlap: bool = False,
     ) -> bool:
-        return validate_candidate_piece_placement(
-            candidate,
+        return piece_placement_is_legal(
+            piece,
+            self._mapped_piece_cells(piece),
             self.board.cells,
             ignore_cells=self._placement_ignore_cells(
                 allow_self_overlap=allow_self_overlap
@@ -465,21 +458,19 @@ class GameStateND:
         )
 
     def _can_exist_after_motion(self, piece: ActivePieceND) -> bool:
-        return self._can_place_candidate(
-            self._candidate_placement(piece),
-            allow_self_overlap=True,
-        )
+        return self._piece_pose_legal(piece, allow_self_overlap=True)
 
     def _try_commit_candidate_piece(self, piece: ActivePieceND) -> bool:
-        candidate = self._candidate_placement(piece)
-        if not self._can_place_candidate(candidate, allow_self_overlap=True):
-            return False
-        assert candidate is not None
-        commit_piece_placement(self, candidate)
-        return True
+        return commit_piece_if_legal(
+            self,
+            piece,
+            self._mapped_piece_cells(piece),
+            self.board.cells,
+            ignore_cells=self._placement_ignore_cells(allow_self_overlap=True),
+        )
 
     def _can_exist(self, piece: ActivePieceND) -> bool:
-        return self._can_place_candidate(self._candidate_placement(piece))
+        return self._piece_pose_legal(piece)
 
     def lock_current_piece(self) -> int:
         if self.current_piece is None:
@@ -532,12 +523,11 @@ class GameStateND:
     ) -> bool:
         if self.current_piece is None:
             return False
-        if (
-            _uses_explorer_piece_transport_nd(self.config)
-            and not _piece_has_cells_above_gravity_nd(
-                self.current_piece,
-                gravity_axis=self.config.gravity_axis,
-            )
+        if _uses_explorer_piece_transport_nd(
+            self.config
+        ) and not _piece_has_cells_above_gravity_nd(
+            self.current_piece,
+            gravity_axis=self.config.gravity_axis,
         ):
             non_zero = [
                 (axis, int(value))
@@ -567,7 +557,9 @@ class GameStateND:
         if self.current_piece is None:
             return None
         if self.config.explorer_transport is None:
-            raise ValueError("explorer transport must exist when explorer topology is active")
+            raise ValueError(
+                "explorer transport must exist when explorer topology is active"
+            )
         if is_drop_intent(intent):
             if axis != self.config.gravity_axis or delta != 1:
                 raise ValueError("drop intents must use the configured gravity step")
@@ -600,12 +592,11 @@ class GameStateND:
             raise ValueError("axis out of bounds")
         if self.current_piece is None:
             return False
-        if (
-            _uses_explorer_piece_transport_nd(self.config)
-            and not _piece_has_cells_above_gravity_nd(
-                self.current_piece,
-                gravity_axis=self.config.gravity_axis,
-            )
+        if _uses_explorer_piece_transport_nd(
+            self.config
+        ) and not _piece_has_cells_above_gravity_nd(
+            self.current_piece,
+            gravity_axis=self.config.gravity_axis,
         ):
             move_result = self._explorer_move_result_for_intent(
                 axis=axis,
