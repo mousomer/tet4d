@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-09
+Updated: 2026-07-10
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,14 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Stage 43 README and philosophy-doc correction (2026-07-10): reframe the public
+README around Python/pygame as the current full playable/reference
+implementation, Godot as the partial migration/demo front end and future
+product shell, and a short link to `docs/philosophy/PHILOSOPHY.md`. Add the
+Reid/Kant philosophy essay under `docs/philosophy/` with repo-relative figure
+links and stable image filenames. This is documentation-only work and does not
+change gameplay, topology, replay, native authority, or code semantics.
 
 Stage 44 topology explorer stabilization (2026-07-09): cache repeated
 render-time Editor probe and Sandbox neighbor derivation by immutable topology

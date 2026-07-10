@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-09
+Last updated: 2026-07-10
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -19,6 +19,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
+- Stage 43 README/philosophy correction is in progress on
+  `codex/readme-python-baseline-philosophy-docs`: the public README now needs
+  to state Python/pygame as the current full playable/reference implementation,
+  Godot as the partial migration/demo front end and future product shell, and
+  `docs/philosophy/PHILOSOPHY.md` as the deeper motivation doc linked from the
+  README. This is docs framing only and changes no gameplay, topology, replay,
+  Godot, C++, or authority semantics.
 - Stage 44 topology explorer stabilization is in progress on
   `codex/topology-explorer-hotpath-stabilization`: repeated render-time editor
   probe and sandbox neighbor calculations reuse bounded caches keyed by the

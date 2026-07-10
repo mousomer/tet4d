@@ -1,6 +1,7 @@
 # Tet4D Godot Front End
 
-This Godot 4.6.3 project is the demo-friendly Tet4D front end.
+This Godot 4.6.3 project is the partial migration of Tet4D into a demo front
+end and future product shell.
 
 It currently supports:
 
@@ -9,8 +10,9 @@ It currently supports:
 - `Live Plain 3D`
 - `Live Plain 4D`
 
-It does not currently host the Topology Playground. That stays in the Python
-launcher.
+Python remains the fuller current playable/reference implementation. The
+Topology Playground stays in the Python launcher, and this shell is not yet
+feature-complete against the Python game.
 
 ## Quick Start
 
@@ -37,7 +39,7 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 ## Boundaries
 
 - Python remains the rules reference implementation.
-- Godot is the product shell and playable front end.
+- Godot is the partial migration/demo front end and future product shell.
 - Native C++ powers accepted plain live sessions plus geometry/query helpers.
 - This shell does not own gameplay-rule authority, topology-rule authority, or replay-schema authority.
 
