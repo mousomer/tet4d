@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -19,17 +19,19 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
-- Stage 45A Python reference hardening is complete on
-  `codex/python-reference-dedup-first-slice`: mapped piece-pose legality and
-  validate-then-commit behavior now have one pure owner in
-  `engine/core/rules/piece_placement.py`, while 2D, ND, the public legality API,
-  and the 2D state query retain only dimensional/state adapters. Regression
-  coverage proves collision rejection, atomic failure, successful commit, and
-  public 2D/embedded-ND translation and rotation equivalence. Python remains
-  semantic authority; gameplay, topology, replay schemas, Godot, native C++,
-  and authority ownership are unchanged. Further Godot gameplay work remains
-  blocked pending continued Python reference hardening, and topology-in-Godot
-  remains later.
+- Stage 45 Python reference hardening continues on
+  `codex/python-reference-dedup-major-pass`. Stage 45A's mapped-pose legality
+  and atomic commit owner remains in `engine/core/rules/piece_placement.py`.
+  The continued pass centralizes spawn installation/game-over handling,
+  rotation resolve-and-commit, and current-piece lock/clear/score/analysis state
+  mutation; the public legality facade and ND planner now use public
+  dimensional legality adapters. Regression coverage protects helper behavior
+  and 2D/embedded-ND movement, rotation, hard-drop, spawn, lock, clear, and
+  scoring equivalence. Topology-aware movement transport, dimensional
+  spawn/bag rules, and planner algorithms remain explicitly separate. Python
+  remains semantic authority; gameplay and topology rules, replay/parity
+  schemas, Godot, native C++, migration bundles, and authority ownership are
+  unchanged.
 - Stages 43 and 44 are complete on `master`: the README/philosophy correction
   presents Python/pygame as the current full playable/reference implementation,
   and topology explorer render-time probes reuse bounded caches without
@@ -677,15 +679,15 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
 - `deep_imports.ui_to_engine_non_api.count = 258` (allowed under current rule)
-- `deep_imports.ai_to_engine_non_api.count = 27` (allowed under current rule)
+- `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.55` (`low`)
+- `tech_debt.score = 5.67` (`low`)
 
 Dominant remaining pressure:
 
 1. `delivery_size_pressure = 2.76`
-2. `code_balance = 1.79`
+2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->

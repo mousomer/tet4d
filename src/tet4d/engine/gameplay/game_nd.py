@@ -22,8 +22,12 @@ from ..runtime.runtime_config import (
     normalize_kick_level_name,
     rotation_kick_candidate_offsets,
 )
-from ..core.rotation_kicks import resolve_rotated_piece
-from ..core.rules.lifecycle import advance_or_lock_and_respawn, run_hard_drop
+from ..core.rotation_kicks import resolve_and_commit_rotated_piece
+from ..core.rules.lifecycle import (
+    advance_or_lock_and_respawn,
+    install_spawn_candidate,
+    run_hard_drop,
+)
 from ..core.rules.piece_placement import (
     commit_piece_if_legal,
     piece_placement_is_legal,
@@ -39,7 +43,7 @@ from .explorer_runtime_nd import (
     move_piece_via_explorer_glue_with_frame,
     piece_cells_in_bounds,
 )
-from .lock_flow import apply_lock_flow, has_cells_above_gravity, visible_locked_cells
+from .lock_flow import apply_current_piece_lock_flow
 from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
@@ -365,10 +369,12 @@ class GameStateND:
     def spawn_new_piece(self) -> None:
         shape = self.draw_next_piece_shape()
         candidate = ActivePieceND.from_shape(shape, self._spawn_pos_for_shape(shape))
-        if not self._can_exist(candidate):
-            self.game_over = True
-        self._reset_piece_frame()
-        self.current_piece = candidate
+        install_spawn_candidate(
+            self,
+            candidate,
+            can_exist=self._can_exist,
+            before_install=self._reset_piece_frame,
+        )
 
     def _shape_fits_board(self, shape: PieceShapeND) -> bool:
         for axis in range(self.config.ndim):
@@ -442,7 +448,7 @@ class GameStateND:
             return ()
         return self.current_piece_cells_mapped(include_above=True)
 
-    def _piece_pose_legal(
+    def piece_pose_legal(
         self,
         piece: ActivePieceND,
         *,
@@ -458,7 +464,7 @@ class GameStateND:
         )
 
     def _can_exist_after_motion(self, piece: ActivePieceND) -> bool:
-        return self._piece_pose_legal(piece, allow_self_overlap=True)
+        return self.piece_pose_legal(piece, allow_self_overlap=True)
 
     def _try_commit_candidate_piece(self, piece: ActivePieceND) -> bool:
         return commit_piece_if_legal(
@@ -470,7 +476,7 @@ class GameStateND:
         )
 
     def _can_exist(self, piece: ActivePieceND) -> bool:
-        return self._piece_pose_legal(piece)
+        return self.piece_pose_legal(piece)
 
     def lock_current_piece(self) -> int:
         if self.current_piece is None:
@@ -479,42 +485,13 @@ class GameStateND:
             return 0
 
         g = self.config.gravity_axis
-        piece = self.current_piece
-        mapped_cells = self._mapped_piece_cells(piece)
-        if mapped_cells is None:
-            self.game_over = True
-            return 0
-        pre_cells = dict(self.board.cells)
-        visible_piece_cells = visible_locked_cells(
-            mapped_cells,
-            gravity_axis=g,
-        )
-
-        if has_cells_above_gravity(mapped_cells, gravity_axis=g):
-            self.game_over = True
-
-        self.analysis_seq += 1
-        lock_flow = apply_lock_flow(
-            board=self.board,
-            board_pre=pre_cells,
+        mapped_cells = self._mapped_piece_cells(self.current_piece)
+        return apply_current_piece_lock_flow(
+            self,
+            mapped_cells=mapped_cells,
             dims=self.config.dims,
             gravity_axis=g,
-            visible_piece_cells=visible_piece_cells,
-            color_id=piece.shape.color_id,
-            lock_piece_points=self.config.lock_piece_points,
-            score_multiplier=self.score_multiplier,
-            piece_id=piece.shape.name,
-            actor_mode=self.analysis_actor_mode,
-            bot_mode=self.analysis_bot_mode,
-            grid_mode=self.analysis_grid_mode,
-            speed_level=self.config.speed_level,
-            session_id=self.analysis_session_id,
-            seq=self.analysis_seq,
         )
-        self.lines_cleared += lock_flow.cleared
-        self.score += lock_flow.awarded_points
-        self.last_score_analysis = lock_flow.analysis
-        return lock_flow.cleared
 
     # --- Movement and rotation ---
 
@@ -646,7 +623,7 @@ class GameStateND:
         if self.current_piece is None:
             return False
         rotated = self.current_piece.rotated(axis_a, axis_b, delta_steps)
-        resolved = resolve_rotated_piece(
+        return resolve_and_commit_rotated_piece(
             rotated,
             ndim=self.config.ndim,
             axis_a=axis_a,
@@ -656,10 +633,8 @@ class GameStateND:
             plane_offsets_for_level=rotation_kick_candidate_offsets,
             move_piece=lambda piece, delta: piece.moved(delta),
             can_place=self._can_exist_after_motion,
+            commit_piece=self._try_commit_candidate_piece,
         )
-        if resolved is not None:
-            return self._try_commit_candidate_piece(resolved)
-        return False
 
     def hard_drop(self) -> None:
         run_hard_drop(

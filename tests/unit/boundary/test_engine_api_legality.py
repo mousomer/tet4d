@@ -133,10 +133,11 @@ def test_public_legality_matches_for_2d_embedded_in_nd_collision_and_rotation() 
     )
 
 
-def test_ui_and_tutorial_do_not_call_private_piece_legality() -> None:
+def test_ui_tutorial_and_playbot_do_not_call_private_piece_legality() -> None:
     searched_roots = (
         Path("src/tet4d/ui/pygame"),
         Path("src/tet4d/engine/tutorial"),
+        Path("src/tet4d/ai/playbot"),
     )
     offenders = [
         path.as_posix()

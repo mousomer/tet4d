@@ -6,11 +6,13 @@ from typing import Iterable
 
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.core.piece_transform import block_axis_bounds
+from tet4d.engine.gameplay.api import piece_pose_legal_gameplay
 from tet4d.engine.gameplay.game_nd import GameStateND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.shared.nd_coords import coord_from_column
 
 RelBlocks = tuple[tuple[int, ...], ...]
+
 
 def build_column_levels(
     cells: dict[tuple[int, ...], int],
@@ -341,7 +343,7 @@ def iter_settled_candidates(
                 lateral_values=lateral_values,
                 spawn_g=spawn_g,
             )
-            if not state._can_exist(candidate):
+            if not piece_pose_legal_gameplay(state, candidate):
                 continue
             yield drop_piece_fast(
                 candidate,
@@ -350,4 +352,3 @@ def iter_settled_candidates(
                 lateral_axes=lateral_axes,
                 column_levels=column_levels,
             )
-

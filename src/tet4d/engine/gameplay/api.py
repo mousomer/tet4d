@@ -11,7 +11,6 @@ from ..runtime.runtime_config import (
     kick_default_level,
 )
 from ..runtime.score_analyzer import hud_analysis_lines
-from ..core.rules.piece_placement import piece_placement_is_legal
 from .game2d import GameState
 from .game_nd import GameStateND
 from .leveling import compute_speed_level
@@ -121,36 +120,15 @@ def hud_analysis_lines_runtime(event: dict[str, object] | None) -> tuple[str, ..
     return hud_analysis_lines(event)
 
 
-def _state_piece_cells_for_legality(state: GameState | GameStateND, piece: Any):
-    if isinstance(state, GameState):
-        return state.mapped_piece_cells_for_piece(piece, include_above=True)
-    return state._mapped_piece_cells(piece)
-
-
-def _placement_ignore_cells_for_legality(
-    state: GameState | GameStateND,
-    *,
-    allow_self_overlap: bool,
-) -> tuple[tuple[int, ...], ...]:
-    if not allow_self_overlap or state.current_piece is None:
-        return ()
-    return state.current_piece_cells_mapped(include_above=True)
-
-
 def piece_pose_legal_gameplay(
     state: GameState | GameStateND,
     piece: Any,
     *,
     allow_self_overlap: bool = False,
 ) -> bool:
-    return piece_placement_is_legal(
+    return state.piece_pose_legal(
         piece,
-        _state_piece_cells_for_legality(state, piece),
-        state.board.cells,
-        ignore_cells=_placement_ignore_cells_for_legality(
-            state,
-            allow_self_overlap=allow_self_overlap,
-        ),
+        allow_self_overlap=allow_self_overlap,
     )
 
 
