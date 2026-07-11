@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from typing import TypeVar
@@ -158,11 +158,39 @@ def resolve_rotated_piece(
     )
 
 
+def resolve_and_commit_rotated_piece(
+    rotated_piece: _T,
+    *,
+    ndim: int,
+    axis_a: int,
+    axis_b: int,
+    gravity_axis: int,
+    kick_level: str,
+    plane_offsets_for_level: Callable[[str], Sequence[PlaneOffset]],
+    move_piece: Callable[[_T, Sequence[int]], _T],
+    can_place: Callable[[_T], bool],
+    commit_piece: Callable[[_T], bool],
+) -> bool:
+    resolved = resolve_rotated_piece(
+        rotated_piece,
+        ndim=ndim,
+        axis_a=axis_a,
+        axis_b=axis_b,
+        gravity_axis=gravity_axis,
+        kick_level=kick_level,
+        plane_offsets_for_level=plane_offsets_for_level,
+        move_piece=move_piece,
+        can_place=can_place,
+    )
+    return resolved is not None and bool(commit_piece(resolved))
+
+
 __all__ = [
     "PlaneOffset",
     "kick_candidate_vectors",
     "normalize_kick_level_name",
     "project_plane_offset",
+    "resolve_and_commit_rotated_piece",
     "resolve_kicked_candidate",
     "resolve_kicked_piece_2d",
     "resolve_kicked_piece_nd",

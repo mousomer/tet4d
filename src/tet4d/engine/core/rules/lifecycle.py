@@ -4,6 +4,22 @@ from collections.abc import Callable
 from typing import Any
 
 
+def install_spawn_candidate(
+    state: Any,
+    candidate: Any,
+    *,
+    can_exist: Callable[[Any], bool],
+    before_install: Callable[[], None] | None = None,
+) -> bool:
+    is_legal = bool(can_exist(candidate))
+    if not is_legal:
+        state.game_over = True
+    if before_install is not None:
+        before_install()
+    state.current_piece = candidate
+    return is_legal
+
+
 def lock_and_respawn(state: Any) -> int:
     cleared = int(state.lock_current_piece())
     if not state.game_over:
@@ -36,4 +52,9 @@ def run_hard_drop(
     lock_and_respawn(state)
 
 
-__all__ = ["advance_or_lock_and_respawn", "lock_and_respawn", "run_hard_drop"]
+__all__ = [
+    "advance_or_lock_and_respawn",
+    "install_spawn_candidate",
+    "lock_and_respawn",
+    "run_hard_drop",
+]

@@ -28,13 +28,15 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-After Stage 45A, continue Python reference hardening in small, regression-backed
-slices. Deferred audit seams include spawn geometry and bag filtering,
-dimension-specific movement/topology adapters, planner simulation/private
-legality access, and frontend orchestration. Godot gameplay work remains blocked
-until Python reference hardening progresses further. Topology-in-Godot remains a
-later migration stage. Python remains semantic authority; no Godot or C++
-authority transfer is implied by deduplication work.
+Stage 45 Python reference hardening has continued with shared spawn
+installation/game-over handling, rotation resolve-and-commit, and
+lock/clear/score/analysis state mutation. ND planning now uses the public
+gameplay legality owner, and boundary coverage protects frontend, tutorial, and
+playbot access. Remaining audit seams are topology-aware movement/frame
+transport, dimensional spawn geometry and bag fallback policy, and distinct
+2D/ND planner algorithms. These remain deferred because they encode meaningful
+semantics rather than interchangeable orchestration. Python remains semantic
+authority; no Godot or C++ authority transfer is implied.
 
 Stage 42 demo-quality milestone (2026-07-09): improve launch clarity,
 mode-selection comprehension, help/controls discoverability, public run
@@ -811,6 +813,18 @@ stays synchronized, and the contract validator accepts the backlog shape.
 
 ## Recent Completed Work
 
+Completed on 2026-07-11:
+
+- Stage 45 continued Python reference hardening centralizes spawn candidate
+  installation and game-over handling in `engine/core/rules/lifecycle.py`,
+  rotation resolve-and-commit in `engine/core/rotation_kicks.py`, and shared
+  current-piece lock/clear/score/analysis mutation in
+  `engine/gameplay/lock_flow.py`. Public legality adapters now serve the
+  gameplay facade and ND planner without private legality access. Focused
+  helper and 2D/embedded-ND equivalence tests protect the refactor. No gameplay
+  or topology rule, replay/parity schema, Godot file, native file, migration
+  bundle, or authority boundary changes.
+
 Completed on 2026-07-10:
 
 - Stage 45A Python reference hardening and first 2D/ND dedup slice centralized
@@ -821,6 +835,7 @@ Completed on 2026-07-10:
   successful commit, and 2D/embedded-ND translation and rotation equivalence.
   Gameplay semantics, topology semantics, replay schemas, Godot, native C++,
   and authority ownership are unchanged.
+
 - Stage 43 README/philosophy correction landed, preserving existing game
   images while presenting Python/pygame as the current full playable/reference
   implementation and Godot as a partial migration/demo front end and future

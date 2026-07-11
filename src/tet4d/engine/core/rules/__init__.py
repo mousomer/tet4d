@@ -1,6 +1,11 @@
 from .board_rules import clear_planes, full_levels
 from .gravity_2d import apply_gravity_tick_2d
-from .lifecycle import advance_or_lock_and_respawn, lock_and_respawn, run_hard_drop
+from .lifecycle import (
+    advance_or_lock_and_respawn,
+    install_spawn_candidate,
+    lock_and_respawn,
+    run_hard_drop,
+)
 from .locking import LockScoreResult, apply_lock_and_score
 from .piece_placement import (
     CandidatePiecePlacement,
@@ -32,6 +37,7 @@ __all__ = [
     "current_piece_cells",
     "full_levels",
     "is_game_over",
+    "install_spawn_candidate",
     "lock_and_respawn",
     "LockScoreResult",
     "piece_placement_is_legal",
