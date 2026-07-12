@@ -11,6 +11,14 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- Stage 48 Godot shell settings persistence is active on
+  `codex/godot-shell-settings-persistence`. It extends the Stage 29 registry
+  foundation with a single Godot-owned, versioned, validated user preference
+  layer and keeps Stage 47 navigation/onboarding behavior intact. Only
+  presentation preferences are eligible; gameplay, live sessions, topology,
+  replay/parity schemas, Python config, native authority, migration bundles,
+  and packaging remain unchanged. Stage 49 topology work remains deferred.
+
 - Stage 46 Godot core gameplay completion is complete on the merged `master`
   baseline. The bounded audit is recorded in
   `docs/architecture/godot_core_gameplay_completion.md`. Live Plain 2D/3D/4D

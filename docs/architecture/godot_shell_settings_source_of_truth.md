@@ -70,17 +70,21 @@ options and a default inside the option values.
 
 ## Persistence
 
-`SettingsStore` supports Stage 29 persistence values:
+`SettingsStore` supports the Stage 29 persistence declarations:
 
 - `none`
 - `session`
 - `local_shell`
 
-`local_shell` values are written only to Godot local user config:
+Stage 48 supersedes the original unversioned Stage 29 storage path with the
+validated, versioned contract in
+`docs/architecture/godot_shell_settings_persistence.md`. Persistent values are
+now written only to Godot user data at:
 
-- `user://tet4d_shell_settings.cfg`
+- `user://shell_settings.json`
 
-Stage 29 does not write Python config, gameplay config, migration bundle data,
+The old `user://tet4d_shell_settings.cfg` file is no longer read or written.
+Neither stage writes Python config, gameplay config, migration bundle data,
 golden traces, parity fixtures, or native/C++ settings.
 
 ## Integration

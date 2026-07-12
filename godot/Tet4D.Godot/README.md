@@ -35,6 +35,19 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 - Routes accepted plain live-mode inputs to the native bridge.
 - Renders replay snapshots and live-session snapshots.
 - Exposes controls/help and a demo/limitations summary for first-time users.
+- Saves supported presentation preferences from the Settings screen and restores them at startup.
+
+## Shell Settings
+
+The checked-in shell settings registry defines supported preferences and their
+defaults. Validated user choices are saved as versioned JSON in Godot's writable
+user-data directory at `user://shell_settings.json`; no repository or Python
+configuration file is changed.
+
+Missing or malformed settings recover to registry defaults with a concise
+diagnostic. `Reset Settings to Defaults` restores and saves only shell
+preferences. Onboarding can be disabled and re-enabled from Settings without
+storing tutorial progress or gameplay state.
 
 ## Boundaries
 

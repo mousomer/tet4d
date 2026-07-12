@@ -41,7 +41,10 @@ repairs viewport-safe scrolling, deterministic focus navigation, and immediate
 onboarding visibility under
 `docs/architecture/godot_guided_onboarding_navigation.md`, extending Stage 42
 without repeating its static copy pass. Stage 48 settings/persistence and Stage
-49 topology remain deferred. Python
+49 topology remain deferred. Stage 48 shell-settings persistence is active on
+`codex/godot-shell-settings-persistence`; it extends the Stage 29 registry with
+validated versioned user storage, recovery, reset, and onboarding visibility
+without adding gameplay settings. Python
 gameplay semantics, topology semantics, replay/parity schemas, native
 authority, and migration bundles are unchanged.
 
