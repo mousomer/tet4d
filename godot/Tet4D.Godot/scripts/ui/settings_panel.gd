@@ -18,6 +18,8 @@ signal diagnostics_visibility_changed(visible: bool)
 signal layout_bounds_visibility_changed(visible: bool)
 signal keyboard_hints_visibility_changed(visible: bool)
 signal display_mode_changed(mode: String)
+signal onboarding_visibility_changed(visible: bool)
+signal settings_reset()
 
 var registry = SettingsRegistryScript.new()
 var store
@@ -26,6 +28,8 @@ var _style_manager = null
 var _style_applier = ShellControlStyleApplierScript.new()
 var _controls_by_id: Dictionary = {}
 var _updating_controls := false
+var _focus_controls: Array[Control] = []
+var _status_label: Label
 
 
 func _ready() -> void:
@@ -47,9 +51,38 @@ func setting_value(setting_id: String):
 	return store.value(setting_id)
 
 
+func set_store(settings_store) -> void:
+	store = settings_store
+
+
 func set_setting_value(setting_id: String, value) -> void:
 	store.set_value(setting_id, value)
-	_update_control(setting_id, value)
+	_update_control(setting_id, store.value(setting_id))
+	_update_status()
+
+
+func refresh_setting_value(setting_id: String) -> void:
+	_update_control(setting_id, store.value(setting_id))
+	_update_status()
+
+
+func refresh_all_controls() -> void:
+	for spec in registry.settings:
+		_update_control(spec.id(), store.value(spec.id()))
+	_update_status()
+
+
+func first_focus_control() -> Control:
+	return _focus_controls[0] if not _focus_controls.is_empty() else null
+
+
+func reset_settings_to_defaults() -> void:
+	if store == null:
+		return
+	store.reset_to_defaults()
+	refresh_all_controls()
+	settings_reset.emit()
+	apply_initial_settings()
 
 
 func set_diagnostics_visible(visible: bool) -> void:
@@ -57,14 +90,14 @@ func set_diagnostics_visible(visible: bool) -> void:
 
 
 func set_display_mode(mode: String) -> void:
-	set_setting_value("theme.name", ReplayVisuals.normalize_display_mode(mode))
+	_update_control("theme.name", ReplayVisuals.normalize_display_mode(mode))
 	if _style_manager != null:
 		_style_manager.set_theme(ReplayVisuals.normalize_display_mode(mode))
 		apply_shell_style()
 
 
 func set_playback_speed(speed: float) -> void:
-	set_setting_value("replay.playback_speed", speed)
+	_update_control("replay.playback_speed", speed)
 
 
 func apply_initial_settings() -> void:
@@ -116,6 +149,8 @@ func _build_panel() -> void:
 		content.add_child(_section_header(registry.category_label(category_id)))
 		for spec in specs:
 			content.add_child(_setting_row(spec))
+	content.add_child(_reset_settings_button())
+	_configure_focus_order()
 
 
 func _panel_intro() -> Control:
@@ -131,10 +166,16 @@ func _panel_intro() -> Control:
 	box.add_child(title)
 	var subtitle := Label.new()
 	subtitle.name = "SettingsSubtitle"
-	subtitle.text = "Visual replay-shell preferences. Python remains the gameplay oracle."
+	subtitle.text = "Presentation preferences are saved on this device."
 	subtitle.theme_type_variation = "DimLabel"
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(subtitle)
+	_status_label = Label.new()
+	_status_label.name = "SettingsPersistenceStatus"
+	_status_label.text = store.status_text() if store != null else "Shell settings ready."
+	_status_label.theme_type_variation = "DimLabel"
+	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_status_label)
 	return box
 
 
@@ -178,14 +219,20 @@ func _setting_row(spec) -> Control:
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_controls_by_id[spec.id()] = control
 	row_content.add_child(control)
+	var focus_control := _focus_target_for(control)
+	if focus_control != null:
+		_focus_controls.append(focus_control)
 	return row
 
 
 func _on_control_value_changed(setting_id: String, value) -> void:
 	if _updating_controls:
 		return
-	store.set_value(setting_id, value)
-	_emit_setting(setting_id, value)
+	if store.set_value(setting_id, value):
+		var canonical_value = store.value(setting_id)
+		_update_control(setting_id, canonical_value)
+		_emit_setting(setting_id, canonical_value)
+	_update_status()
 
 
 func _emit_setting(setting_id: String, value) -> void:
@@ -208,6 +255,8 @@ func _emit_setting(setting_id: String, value) -> void:
 			layout_bounds_visibility_changed.emit(bool(value))
 		"controls_help.show_keyboard_hints":
 			keyboard_hints_visibility_changed.emit(bool(value))
+		"interface.show_onboarding":
+			onboarding_visibility_changed.emit(bool(value))
 
 
 func _update_control(setting_id: String, value) -> void:
@@ -234,3 +283,38 @@ func _update_control(setting_id: String, value) -> void:
 	elif control is LineEdit:
 		(control as LineEdit).text = str(value)
 	_updating_controls = false
+
+
+func _reset_settings_button() -> Button:
+	var button := Button.new()
+	button.name = "ResetSettingsToDefaultsButton"
+	button.text = "Reset Settings to Defaults"
+	button.tooltip_text = "Restore and save the default shell preferences"
+	button.focus_mode = Control.FOCUS_ALL
+	button.pressed.connect(reset_settings_to_defaults)
+	_focus_controls.append(button)
+	return button
+
+
+func _focus_target_for(control: Control) -> Control:
+	if control is HBoxContainer:
+		return control.get_node_or_null("Slider") as Control
+	return control if control.focus_mode != Control.FOCUS_NONE else null
+
+
+func _configure_focus_order() -> void:
+	if _focus_controls.is_empty():
+		return
+	for index in range(_focus_controls.size()):
+		var control := _focus_controls[index]
+		var previous := _focus_controls[(index - 1 + _focus_controls.size()) % _focus_controls.size()]
+		var next := _focus_controls[(index + 1) % _focus_controls.size()]
+		control.focus_neighbor_top = control.get_path_to(previous)
+		control.focus_neighbor_left = control.get_path_to(previous)
+		control.focus_neighbor_bottom = control.get_path_to(next)
+		control.focus_neighbor_right = control.get_path_to(next)
+
+
+func _update_status() -> void:
+	if _status_label != null and store != null:
+		_status_label.text = store.status_text()

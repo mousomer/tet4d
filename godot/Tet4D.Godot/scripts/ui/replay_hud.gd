@@ -12,6 +12,8 @@ const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_con
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onboarding_model.gd")
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
+const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
+const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -146,6 +148,8 @@ var _screen_focus_targets := {}
 var _main_menu_scroll: ScrollContainer
 var _controls_scroll: ScrollContainer
 var _about_scroll: ScrollContainer
+var _settings_registry = SettingsRegistryScript.new()
+var _settings_store
 
 
 static func replay_hint_text() -> String:
@@ -227,6 +231,8 @@ static func _control_groups_text(groups: Array) -> String:
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	_settings_registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
+	_settings_store = SettingsStoreScript.new(_settings_registry)
 	_style_manager.set_theme(_current_display_mode)
 	_style_manager.theme_changed.connect(func(theme_id: String) -> void:
 		_apply_shell_style()
@@ -650,6 +656,9 @@ func apply_shell_settings() -> void:
 
 
 func _wire_settings_panel(panel: SettingsPanel) -> void:
+	panel.setting_changed.connect(func(setting_id: String, value) -> void:
+		_sync_setting_controls(panel, setting_id)
+	)
 	panel.playback_speed_changed.connect(func(value: float) -> void:
 		playback_speed_changed.emit(value)
 	)
@@ -671,7 +680,31 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.keyboard_hints_visibility_changed.connect(func(visible: bool) -> void:
 		_set_keyboard_hints_visible(visible)
 	)
-	panel.apply_initial_settings()
+	panel.onboarding_visibility_changed.connect(func(visible: bool) -> void:
+		_set_onboarding_visible(visible)
+	)
+	panel.settings_reset.connect(func() -> void:
+		_sync_all_setting_controls(panel)
+	)
+
+
+func _sync_setting_controls(source: SettingsPanel, setting_id: String) -> void:
+	for panel in [_settings_panel, _settings_screen_panel]:
+		if panel != null and panel != source:
+			panel.refresh_setting_value(setting_id)
+
+
+func _sync_all_setting_controls(source: SettingsPanel = null) -> void:
+	for panel in [_settings_panel, _settings_screen_panel]:
+		if panel != null and panel != source:
+			panel.refresh_all_controls()
+
+
+func _set_persistent_setting(setting_id: String, value) -> void:
+	if _settings_store != null and _settings_store.set_value(setting_id, value):
+		_sync_all_setting_controls()
+	if setting_id == "interface.show_onboarding":
+		_set_onboarding_visible(bool(_settings_store.value(setting_id)))
 
 
 func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
@@ -788,6 +821,11 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 func _render_onboarding() -> void:
 	if _onboarding_panel != null:
 		_onboarding_panel.render(_onboarding_model.snapshot())
+
+
+func _set_onboarding_visible(visible: bool) -> void:
+	_onboarding_model.set_enabled(visible)
+	_render_onboarding()
 
 
 func _set_live_inspector_density(live_mode: bool) -> void:
@@ -1225,8 +1263,7 @@ func _build_layout() -> void:
 	_onboarding_panel = LiveOnboardingPanelScript.new()
 	_onboarding_panel.visible = false
 	_onboarding_panel.dismiss_requested.connect(func() -> void:
-		_onboarding_model.dismiss()
-		_render_onboarding()
+		_set_persistent_setting("interface.show_onboarding", false)
 	)
 	_right_column.add_child(_onboarding_panel)
 	_diagnostics_header = _inspector_section_header("DIAGNOSTICS")
@@ -1239,6 +1276,8 @@ func _build_layout() -> void:
 	_right_column.add_child(_event_panel)
 	_settings_panel = SettingsPanelScript.new()
 	_settings_panel.custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
+	_settings_panel.registry = _settings_registry
+	_settings_panel.set_store(_settings_store)
 	_settings_panel.set_style_manager(_style_manager)
 	_wire_settings_panel(_settings_panel)
 	_quick_settings_header = _inspector_section_header("QUICK SETTINGS")
@@ -1525,10 +1564,13 @@ func _build_settings_screen(screen: Control) -> void:
 	layout.add_child(_screen_nav("Settings"))
 	_settings_screen_panel = SettingsPanelScript.new()
 	_settings_screen_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_settings_screen_panel.size_flags_vertical = Control.SIZE_FILL
+	_settings_screen_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_settings_screen_panel.registry = _settings_registry
+	_settings_screen_panel.set_store(_settings_store)
 	_settings_screen_panel.set_style_manager(_style_manager)
 	_wire_settings_panel(_settings_screen_panel)
 	layout.add_child(_settings_screen_panel)
+	_screen_focus_targets[SCREEN_SETTINGS] = _settings_screen_panel.first_focus_control()
 
 
 func _build_controls_screen(screen: Control) -> void:
