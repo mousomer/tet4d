@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -11,6 +11,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- Stage 46 Godot core gameplay completion is active on
+  `codex/godot-core-gameplay-polish`. The bounded audit is recorded in
+  `docs/architecture/godot_core_gameplay_completion.md`. Live Plain 2D/3D/4D
+  retain their accepted native-session command/state paths while primary live
+  HUD chrome now exposes native score, clears, current/next piece, command
+  outcome, pause/game-over state, and decisive hard-drop lock feedback.
+  Existing live-loop parity and shell tests protect the real three-mode
+  spawn/move/rotate/drop/lock flows and their visible HUD results. Python
+  remains semantic authority; topology, replay/parity schemas, native
+  authority, settings, onboarding, and migration bundles are unchanged.
+
 - Primary product cleanup still routes through
   `docs/plans/topology_playground_current_authority.md` and
   `docs/BACKLOG.md`.
@@ -19,8 +30,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   testing/parity, config/constants, secrets, and mixed migration work;
   `docs/architecture/authority_map.md` preserves Python as the semantic oracle
   and scopes Godot/C++ authority to documented, parity-backed transfers.
-- Stage 45 Python reference hardening continues on
-  `codex/python-reference-dedup-major-pass`. Stage 45A's mapped-pose legality
+- Stage 45 Python reference hardening is complete on `master`. Stage 45A's
+  mapped-pose legality
   and atomic commit owner remains in `engine/core/rules/piece_placement.py`.
   The continued pass centralizes spawn installation/game-over handling,
   rotation resolve-and-commit, and current-piece lock/clear/score/analysis state

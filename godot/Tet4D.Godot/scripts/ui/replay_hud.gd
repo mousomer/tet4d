@@ -301,6 +301,7 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 					int(snapshot.get("w_slice_count", 1)),
 				]
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
+			_update_live_gameplay_summary(snapshot, mode_label)
 			_trace_integrity_label.text = _format_live_inspector_text(
 				mode_label,
 				state_label,
@@ -630,8 +631,6 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 	if _summary_label != null:
 		var state_part := "GAME OVER · %s" % _game_over_reason_label(reason) if state_label == "Game Over" else state_label
 		_summary_label.text = "%s | C++ Session | %s | Fit View | Reset | Esc" % [mode_label, state_part]
-	if _hash_label != null:
-		_hash_label.text = "Godot command/render shell"
 	if _authority_label != null:
 		_authority_label.text = "%s | C++ PlainNDSession | Godot shell" % mode_label
 	if _top_state_badge_label != null:
@@ -641,6 +640,59 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 	if _restart_game_button != null:
 		_restart_game_button.visible = state_label == "Game Over"
 		_restart_game_button.text = "Restart Game"
+
+
+func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String) -> void:
+	if _summary_label != null:
+		_summary_label.text = live_gameplay_summary_text(snapshot, mode_label)
+
+
+static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String) -> String:
+	var current_piece := str(snapshot.get("current_piece", "-")).strip_edges()
+	var next_piece := str(snapshot.get("next_piece", "-")).strip_edges()
+	return "%s | SCORE %d | CLEARS %d | %s > %s | %s" % [
+		mode_label,
+		int(snapshot.get("score", 0)),
+		int(snapshot.get("lines", 0)),
+		current_piece if not current_piece.is_empty() else "-",
+		next_piece if not next_piece.is_empty() else "-",
+		_live_feedback_short(snapshot),
+	]
+
+
+static func live_command_feedback_text(snapshot: Dictionary) -> String:
+	if bool(snapshot.get("game_over", false)):
+		return "GAME OVER · %s · RESET TO PLAY AGAIN" % _game_over_reason_label(str(snapshot.get("game_over_reason", "")))
+	if bool(snapshot.get("paused", false)):
+		return "PAUSED · GAMEPLAY INPUT HELD"
+	var command := str(snapshot.get("last_command", "none"))
+	var status := str(snapshot.get("last_command_status", "unknown"))
+	if command == "hard_drop" and status == "accepted":
+		return "LOCK CONFIRMED · HARD DROP ACCEPTED"
+	if status not in ["accepted", "reset"]:
+		return "%s · %s" % [_command_display_name(command), status.replace("_", " ").to_upper()]
+	return "%s · %s" % [_command_display_name(command), status.to_upper()]
+
+
+static func _command_display_name(command: String) -> String:
+	var normalized := command.strip_edges()
+	if normalized.is_empty() or normalized == "none":
+		return "READY"
+	return normalized.replace("_", " ").to_upper()
+
+
+static func _live_feedback_short(snapshot: Dictionary) -> String:
+	if bool(snapshot.get("game_over", false)):
+		return "GAME OVER"
+	if bool(snapshot.get("paused", false)):
+		return "PAUSED"
+	var command := str(snapshot.get("last_command", "none"))
+	var status := str(snapshot.get("last_command_status", "unknown"))
+	if command == "hard_drop" and status == "accepted":
+		return "LOCKED"
+	if status not in ["accepted", "reset"]:
+		return "BLOCKED"
+	return "READY" if status == "reset" else _command_display_name(command)
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
