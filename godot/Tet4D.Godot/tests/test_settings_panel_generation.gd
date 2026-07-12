@@ -23,6 +23,7 @@ func run() -> Array:
 		_assert_section(failures, content, "Theme")
 		_assert_section(failures, content, "Diagnostics")
 		_assert_section(failures, content, "Controls Help")
+		_assert_section(failures, content, "Interface")
 		_assert_row(failures, content, "replay.playback_speed")
 		_assert_row(failures, content, "replay.loop_enabled")
 		_assert_row(failures, content, "display.show_w_labels")
@@ -30,6 +31,8 @@ func run() -> Array:
 		_assert_row(failures, content, "theme.name")
 		_assert_row(failures, content, "diagnostics.show_layout_bounds")
 		_assert_row(failures, content, "controls_help.show_keyboard_hints")
+		_assert_row(failures, content, "interface.show_onboarding")
+		_assert_node_type(failures, content.get_node_or_null("ResetSettingsToDefaultsButton"), Button, "settings panel should expose reset defaults action")
 	_assert_control_type(failures, panel, "replay.loop_enabled", CheckBox, "bool should produce checkbox")
 	_assert_control_type(failures, panel, "display.show_w_labels", CheckBox, "bool display setting should produce checkbox")
 	_assert_control_type(failures, panel, "replay.playback_speed", HBoxContainer, "float should produce slider group")
@@ -37,8 +40,11 @@ func run() -> Array:
 	_assert_control_type(failures, panel, "display.projection_strength", HBoxContainer, "float display setting should produce slider group")
 	_assert_slider_value_label(failures, panel, "display.projection_strength")
 	_assert_control_type(failures, panel, "theme.name", OptionButton, "enum should produce dropdown")
+	_assert_control_type(failures, panel, "interface.show_onboarding", CheckBox, "onboarding preference should produce checkbox")
 	_assert_dropdown_options(failures, panel, "theme.name", ["diagnostic", "plain", "tron"])
 	_assert_wrapped_setting_label(failures, content, "display.projection_strength")
+	if panel.first_focus_control() != panel.generated_control("replay.playback_speed").get_node_or_null("Slider"):
+		failures.append("settings panel should focus the first generated preference")
 	panel.queue_free()
 	await tree.process_frame
 	return failures
