@@ -136,7 +136,7 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: inspector should expose Live 3D camera preset diagnostics" % label)
 	if viewport_hint_text.find("Quick") == -1 or viewport_hint_text.find("Space") == -1 or viewport_hint_text.find("Play / Pause") == -1:
 		failures.append("%s: viewport should expose structured replay quick keycap/action hints" % label)
-	if bottom_hint_text.find("Quick") == -1 or bottom_hint_text.find("Q/Esc") == -1 or bottom_hint_text.find("Quit") == -1:
+	if bottom_hint_text.find("Quick") == -1 or bottom_hint_text.find("Esc") == -1 or bottom_hint_text.find("Main Menu") == -1:
 		failures.append("%s: bottom controls should expose structured replay quick keycap/action hints" % label)
 	if game_area_panel_color != snapshot.get("board_background_color", Color.TRANSPARENT):
 		failures.append("%s: game area shell should use board background colour" % label)
@@ -205,7 +205,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should not show Quit Replay wording" % label)
 	if left_panel_visible:
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
-	if inspector_hint_text.find("Movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("System") == -1:
+	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("Session") == -1 or inspector_hint_text.find("Navigation") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
 	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click", "Backspace", "Tab", "Esc", "Fit View"]:
 		if inspector_hint_text.find(required) == -1:
@@ -222,8 +222,8 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: game area should remain larger than the inspector column, game=%s inspector=%s" % [label, game_rect, inspector_rect])
 	if replay_game_width > 0.0 and game_rect.size.x <= replay_game_width + 0.5:
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
-	if right_inspector_order.size() < 2 or str(right_inspector_order[0]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[1]) != "InspectorControlHints":
-		failures.append("%s: live right inspector should present controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
+	if right_inspector_order.size() < 3 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[2]) != "InspectorControlHints":
+		failures.append("%s: live right inspector should present onboarding and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
 	return failures
 
 
@@ -259,7 +259,7 @@ func _check_live_control_maps() -> Array:
 		group_names.append(str(group.get("group", "")))
 		for item in group.get("items", []):
 			flattened += "%s %s\n" % [str(item[0]), str(item[1])]
-	for required_group in ["Movement", "Plane Rotation", "Camera", "Mouse Camera", "System"]:
+	for required_group in ["Piece movement", "Plane Rotation", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
 	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click"]:
@@ -273,7 +273,7 @@ func _check_live_control_maps() -> Array:
 	_assert_group_items(
 		failures,
 		group_items,
-		"Movement",
+		"Piece movement",
 		[["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]
 	)
 	_assert_group_items(
@@ -302,8 +302,8 @@ func _check_live_control_maps() -> Array:
 	_assert_group_items(
 		failures,
 		group_items,
-		"System",
-		[["P", "Pause"], ["Backspace", "Reset"], ["Tab", "Replay"], ["Esc", "Back / Quit"]]
+		"Session",
+		[["P", "Pause"], ["Backspace", "Restart Game"]]
 	)
 	if not ReplayHud.quick_control_hint_groups("live_4d").is_empty():
 		failures.append("Live 4D should not expose a partial quick-control map")

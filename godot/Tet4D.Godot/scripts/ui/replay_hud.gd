@@ -10,6 +10,8 @@ const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
+const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onboarding_model.gd")
+const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -30,6 +32,7 @@ signal replay_mode_requested()
 signal live_2d_requested()
 signal live_3d_requested()
 signal live_4d_requested()
+signal main_menu_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -39,10 +42,10 @@ const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
 const SCREEN_ABOUT := "about"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
-const LIVE_2D_HELP_TEXT := "Live 2D controls only: A/D or arrows move, W/Up/X rotates clockwise, Z rotates counter-clockwise, S/Down soft drops, Space hard drops, P pauses, R resets, F fits the board, Tab switches to Live 3D, and Esc quits. Godot sends commands only."
-const LIVE_3D_HELP_TEXT := "Live 3D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Shift soft drops, Space hard drops, R/T rotates XY, F/G rotates XZ, V/B rotates YZ, P pauses, Backspace resets, Tab switches to Live 4D, and Esc quits. Godot sends commands only."
-const LIVE_4D_HELP_TEXT := "Live 4D controls only: A/D or arrows move on X, W/S or Up/Down move on Z, Q/E move across W slices, Shift soft drops, Space hard drops, R/T rotates on XY, F/G on XZ, V/B on YZ, Y/U on XW, H/J on YW, and N/M on ZW. In each plane pair, the left key is CCW and the right key is CW. I/K pitch the camera, O/L yaw, comma/period roll, - zooms out, and =/+ zooms in without dispatching gameplay. Mouse drag orbits, Shift-drag rolls, wheel zooms, and double-click fits the view. P pauses, Backspace resets, Tab returns to Replay, and Esc quits. Q is W- movement in Live 4D. Godot sends commands only."
-const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end is the fastest way to inspect replay demos and try the accepted plain 2D, 3D, and 4D live shells.
+const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
+const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
+const LIVE_4D_HELP_TEXT := "The board uses W slices; Q/E moves the piece between them. Start with one or two of the six rotation planes. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
+const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end lets you inspect replay demos and play the plain-board 2D, 3D, and 4D modes.
 
 Choose a mode:
 Replay Demos - inspect exported gameplay, topology, and endgame traces.
@@ -58,11 +61,9 @@ Demo tour:
 4. Inspect Live Plain 4D with Q/E W movement and Fit View.
 
 Known limitations:
-- Python remains the rules reference implementation.
-- Godot is the product shell and playable front end.
-- Native C++ powers the accepted plain live sessions plus geometry/query helpers; it does not replace Python as the rules source.
-- Topology Playground and broader topology editing still live in the Python launcher.
-- This shell is best for demos, replay inspection, and accepted plain-mode play, not packaging or release polish."""
+- The Python version currently contains the full topology tools.
+- Topology Playground and broader topology editing are not yet available in this front end.
+- Settings persistence and keybinding editing are not available yet."""
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -138,6 +139,13 @@ var _live_3d_paused := false
 var _live_3d_game_over := false
 var _live_4d_paused := false
 var _live_4d_game_over := false
+var _onboarding_model = LiveOnboardingModelScript.new()
+var _onboarding_panel: PanelContainer
+var _last_onboarding_result_signature := ""
+var _screen_focus_targets := {}
+var _main_menu_scroll: ScrollContainer
+var _controls_scroll: ScrollContainer
+var _about_scroll: ScrollContainer
 
 
 static func replay_hint_text() -> String:
@@ -159,29 +167,35 @@ static func live_4d_hint_text() -> String:
 static func replay_control_hint_groups() -> Array:
 	return [
 		{"group": "Replay", "items": [["Space", "Play / Pause"], ["Left/Right", "Previous / Next frame"], ["Up/Down", "Previous / Next case"], ["1/2/3", "Trace family"]]},
-		{"group": "System", "items": [["F", "Fit View"], ["H", "Help / Controls"], ["Tab", "Live 2D"], ["Q/Esc", "Quit Replay"]]},
+		{"group": "Navigation", "items": [["F", "Fit View"], ["H", "How to Play"], ["Tab", "Play 2D"], ["Esc", "Main Menu"]]},
 	]
 
 
 static func live_2d_control_hint_groups() -> Array:
 	return [
-		{"group": "Movement", "items": [["A/D", "Move left / right"], ["Left/Right", "Move left / right"], ["S/Down", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Rotation", "items": [["W/Up/X", "Rotate clockwise"], ["Z", "Rotate counter-clockwise"]]},
-		{"group": "System", "items": [["P", "Pause"], ["R", "Reset"], ["F", "Fit View"], ["Tab", "Live 3D"], ["Esc", "Back / Quit"]]},
+		{"group": "Piece movement", "items": [["A/D", "Move left / right"], ["Left/Right", "Move left / right"]]},
+		{"group": "Piece rotation", "items": [["W/Up/X", "Rotate clockwise"], ["Z", "Rotate counter-clockwise"]]},
+		{"group": "Drop", "items": [["S/Down", "Soft Drop"], ["Space", "Hard Drop"]]},
+		{"group": "Camera", "items": [["F", "Fit View"]]},
+		{"group": "Session", "items": [["P", "Pause"], ["R", "Restart Game"]]},
+		{"group": "Navigation", "items": [["Tab", "Play 3D"], ["Esc", "Main Menu"]]},
 	]
 
 
 static func live_3d_control_hint_groups() -> Array:
 	return [
-		{"group": "Movement", "items": [["A/D", "Move X- / X+"], ["W/S", "Move Z+ / Z-"], ["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"]]},
-		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Tab", "Live 4D"], ["Esc", "Back / Quit"]]},
+		{"group": "Piece movement", "items": [["A/D", "Move X- / X+"], ["W/S", "Move Z+ / Z-"]]},
+		{"group": "Piece rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"]]},
+		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
+		{"group": "Camera", "items": [["Mouse", "Orbit / zoom"], ["F", "Fit View"]]},
+		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
+		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
 	]
 
 
 static func live_4d_control_hint_groups() -> Array:
 	return [
-		{"group": "Movement", "items": [["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]},
+		{"group": "Piece movement", "items": [["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]},
 		{
 			"group": "Plane Rotation",
 			"note": "Left: CCW · Right: CW",
@@ -189,7 +203,9 @@ static func live_4d_control_hint_groups() -> Array:
 		},
 		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
 		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]},
-		{"group": "System", "items": [["P", "Pause"], ["Backspace", "Reset"], ["Tab", "Replay"], ["Esc", "Back / Quit"]]},
+		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
+		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
+		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
 	]
 
 
@@ -198,7 +214,7 @@ static func quick_control_hint_groups(mode: String) -> Array:
 		"live_2d", "live_3d", "live_4d":
 			return []
 		_:
-			return [{"group": "Quick", "items": [["Space", "Play / Pause"], ["Left/Right", "Frame"], ["Up/Down", "Case"], ["1/2/3", "Family"], ["F", "Fit View"], ["Tab", "Live 2D"], ["Q/Esc", "Quit"]]}]
+			return [{"group": "Quick", "items": [["Space", "Play / Pause"], ["Left/Right", "Frame"], ["Up/Down", "Case"], ["1/2/3", "Family"], ["F", "Fit View"], ["Tab", "Play 2D"], ["Esc", "Main Menu"]]}]
 
 
 static func _control_groups_text(groups: Array) -> String:
@@ -278,6 +294,12 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 	if _trace_integrity_label != null:
 		var trace_type := str(snapshot.get("trace_type", ""))
 		if trace_type == "live_2d" or trace_type == "live_3d" or trace_type == "live_4d":
+			_onboarding_model.select_mode(trace_type)
+			var result_signature := "%s|%s|%s|%s" % [trace_type, str(snapshot.get("last_command", "")), str(snapshot.get("last_command_status", "")), str(snapshot.get("state_hash", ""))]
+			if result_signature != _last_onboarding_result_signature:
+				_last_onboarding_result_signature = result_signature
+				_onboarding_model.consume_command_result(str(snapshot.get("last_command", "")), str(snapshot.get("last_command_status", "")))
+			_render_onboarding()
 			var mode_label := "Live Plain 4D" if trace_type == "live_4d" else ("Live Plain 3D" if trace_type == "live_3d" else "Live Plain 2D")
 			var game_over := bool(snapshot.get("game_over", false))
 			var paused_fallback := _live_4d_paused if trace_type == "live_4d" else (_live_3d_paused if trace_type == "live_3d" else _live_2d_paused)
@@ -339,6 +361,8 @@ func set_live_2d_mode(
 ) -> void:
 	_live_2d_paused = paused
 	_live_2d_game_over = game_over
+	_onboarding_model.select_mode("live_2d")
+	_render_onboarding()
 	_set_live_declutter_mode(true)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
@@ -353,7 +377,7 @@ func set_live_2d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. R resets Live 2D." % _game_over_reason_label(game_over_reason) if game_over else "Live Plain 2D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
+		_replay_note.text = "GAME OVER · %s. R restarts Live 2D." % _game_over_reason_label(game_over_reason) if game_over else "Play 2D. Camera controls change the view; movement controls move the piece. P pauses; Esc opens the Main Menu."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -380,6 +404,8 @@ func set_live_3d_mode(
 ) -> void:
 	_live_3d_paused = paused
 	_live_3d_game_over = game_over
+	_onboarding_model.select_mode("live_3d")
+	_render_onboarding()
 	_set_live_declutter_mode(true)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
@@ -394,7 +420,7 @@ func set_live_3d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace resets Live 3D." % _game_over_reason_label(game_over_reason) if game_over else "Live Plain 3D. Godot sends commands only; C++ PlainNDSession keeps this live state. P pauses; paused mode blocks gameplay commands."
+		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 3D." % _game_over_reason_label(game_over_reason) if game_over else "Play 3D. Movement uses X/Z while falling remains separate. Camera controls change only the view."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -421,6 +447,8 @@ func set_live_4d_mode(
 ) -> void:
 	_live_4d_paused = paused
 	_live_4d_game_over = game_over
+	_onboarding_model.select_mode("live_4d")
+	_render_onboarding()
 	_set_live_declutter_mode(true)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
@@ -435,7 +463,7 @@ func set_live_4d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace resets Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Live Plain 4D. W slices open fitted. Q/E move W; Space hard drops; I/K, O/L, ,/., -/= adjust camera; drag orbits; Shift-drag rolls; wheel zooms; double-click fits; Esc quits."
+		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Play 4D uses W slices. Q/E move the piece across W; camera controls change only the view; double-click or Fit View restores it."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -502,6 +530,17 @@ func show_screen(screen_name: String) -> void:
 		if screen != null:
 			screen.visible = key == _current_screen
 	call_deferred("_log_geometry_diagnostics", "screen:%s" % _current_screen)
+	call_deferred("_focus_current_screen")
+
+
+func _focus_current_screen() -> void:
+	var target = _screen_focus_targets.get(_current_screen)
+	if not (target is Control):
+		var screen := _screens.get(_current_screen) as Control
+		var buttons := screen.find_children("*", "Button", true, false) if screen != null else []
+		target = buttons[0] if not buttons.is_empty() else null
+	if target is Control and is_instance_valid(target) and (target as Control).is_visible_in_tree() and (target as Control).focus_mode != Control.FOCUS_NONE:
+		(target as Control).grab_focus()
 
 
 func set_world_root(world_root: Node3D) -> void:
@@ -552,6 +591,12 @@ func layout_contract_snapshot() -> Dictionary:
 		"viewport_hint_text": _collect_label_text(_mode_hint_strip),
 		"bottom_hint_text": _collect_label_text(_hint_label),
 		"inspector_hint_text": _collect_label_text(_inspector_hint_panel),
+		"onboarding": _onboarding_model.snapshot(),
+		"onboarding_panel": _onboarding_panel.deterministic_snapshot() if _onboarding_panel != null else {},
+		"focused_control": get_viewport().gui_get_focus_owner().name if get_viewport() != null and get_viewport().gui_get_focus_owner() != null else "",
+		"main_menu_scroll": _scroll_contract(_main_menu_scroll),
+		"controls_scroll": _scroll_contract(_controls_scroll),
+		"about_scroll": _scroll_contract(_about_scroll),
 		"right_inspector_order": _visible_direct_child_names(_right_column),
 		"top_status_badge_text": _top_state_badge_label.text if _top_state_badge_label != null else "",
 		"top_status_badge_color": _top_state_badge_label.get_theme_color("font_color") if _top_state_badge_label != null else Color.TRANSPARENT,
@@ -578,6 +623,10 @@ func style_manager():
 
 func show_replay_viewer() -> void:
 	show_screen(SCREEN_VIEWER)
+
+
+func current_screen() -> String:
+	return _current_screen
 
 
 func game_viewport_global_rect() -> Rect2:
@@ -662,15 +711,15 @@ static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String)
 
 static func live_command_feedback_text(snapshot: Dictionary) -> String:
 	if bool(snapshot.get("game_over", false)):
-		return "GAME OVER · %s · RESET TO PLAY AGAIN" % _game_over_reason_label(str(snapshot.get("game_over_reason", "")))
+		return "Game over · %s · Restart Game or Main Menu" % _game_over_reason_label(str(snapshot.get("game_over_reason", "")))
 	if bool(snapshot.get("paused", false)):
-		return "PAUSED · GAMEPLAY INPUT HELD"
+		return "Paused · P — Resume · Esc — Main Menu"
 	var command := str(snapshot.get("last_command", "none"))
 	var status := str(snapshot.get("last_command_status", "unknown"))
 	if command == "hard_drop" and status == "accepted":
-		return "LOCK CONFIRMED · HARD DROP ACCEPTED"
+		return "Piece locked"
 	if status not in ["accepted", "reset"]:
-		return "%s · %s" % [_command_display_name(command), status.replace("_", " ").to_upper()]
+		return _blocked_command_feedback(command)
 	return "%s · %s" % [_command_display_name(command), status.to_upper()]
 
 
@@ -679,6 +728,14 @@ static func _command_display_name(command: String) -> String:
 	if normalized.is_empty() or normalized == "none":
 		return "READY"
 	return normalized.replace("_", " ").to_upper()
+
+
+static func _blocked_command_feedback(command: String) -> String:
+	if command.begins_with("rotate"):
+		return "Cannot rotate there"
+	if command in ["soft_drop", "hard_drop", "tick"]:
+		return "Piece cannot drop further"
+	return "Cannot move there"
 
 
 static func _live_feedback_short(snapshot: Dictionary) -> String:
@@ -720,28 +777,36 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		if live_mode:
 			_hash_label.text = ""
 	if _quit_button != null:
-		_quit_button.text = "Back" if live_mode else "Quit Replay"
+		_quit_button.text = "Quit Application"
 	if _diagnostics_panel != null:
 		_diagnostics_panel.set_title("Diagnostics" if live_mode else "Replay Diagnostics")
 	_set_live_inspector_density(live_mode)
+	if not live_mode and _onboarding_panel != null:
+		_onboarding_panel.visible = false
+
+
+func _render_onboarding() -> void:
+	if _onboarding_panel != null:
+		_onboarding_panel.render(_onboarding_model.snapshot())
 
 
 func _set_live_inspector_density(live_mode: bool) -> void:
 	if _right_column == null:
 		return
 	if live_mode:
-		_move_right_column_child(_controls_header, 0)
-		_move_right_column_child(_inspector_hint_panel, 1)
-		_move_right_column_child(_inspector_header, 2)
-		_move_right_column_child(_integrity_panel, 3)
-		_move_right_column_child(_bundle_detail_panel, 4)
-		_move_right_column_child(_view_header, 5)
-		_move_right_column_child(_camera_panel, 6)
-		_move_right_column_child(_diagnostics_header, 7)
-		_move_right_column_child(_diagnostics_panel, 8)
-		_move_right_column_child(_event_panel, 9)
-		_move_right_column_child(_quick_settings_header, 10)
-		_move_right_column_child(_settings_panel, 11)
+		_move_right_column_child(_onboarding_panel, 0)
+		_move_right_column_child(_controls_header, 1)
+		_move_right_column_child(_inspector_hint_panel, 2)
+		_move_right_column_child(_inspector_header, 3)
+		_move_right_column_child(_integrity_panel, 4)
+		_move_right_column_child(_bundle_detail_panel, 5)
+		_move_right_column_child(_view_header, 6)
+		_move_right_column_child(_camera_panel, 7)
+		_move_right_column_child(_diagnostics_header, 8)
+		_move_right_column_child(_diagnostics_panel, 9)
+		_move_right_column_child(_event_panel, 10)
+		_move_right_column_child(_quick_settings_header, 11)
+		_move_right_column_child(_settings_panel, 12)
 		return
 	_move_right_column_child(_inspector_header, 0)
 	_move_right_column_child(_integrity_panel, 1)
@@ -750,11 +815,12 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 	_move_right_column_child(_camera_panel, 4)
 	_move_right_column_child(_controls_header, 5)
 	_move_right_column_child(_inspector_hint_panel, 6)
-	_move_right_column_child(_diagnostics_header, 7)
-	_move_right_column_child(_diagnostics_panel, 8)
-	_move_right_column_child(_event_panel, 9)
-	_move_right_column_child(_quick_settings_header, 10)
-	_move_right_column_child(_settings_panel, 11)
+	_move_right_column_child(_onboarding_panel, 7)
+	_move_right_column_child(_diagnostics_header, 8)
+	_move_right_column_child(_diagnostics_panel, 9)
+	_move_right_column_child(_event_panel, 10)
+	_move_right_column_child(_quick_settings_header, 11)
+	_move_right_column_child(_settings_panel, 12)
 
 
 func _move_right_column_child(node: Node, index: int) -> void:
@@ -1156,6 +1222,13 @@ func _build_layout() -> void:
 	_inspector_hint_panel = _make_control_hint_panel("replay", false)
 	_inspector_hint_panel.name = "InspectorControlHints"
 	_right_column.add_child(_inspector_hint_panel)
+	_onboarding_panel = LiveOnboardingPanelScript.new()
+	_onboarding_panel.visible = false
+	_onboarding_panel.dismiss_requested.connect(func() -> void:
+		_onboarding_model.dismiss()
+		_render_onboarding()
+	)
+	_right_column.add_child(_onboarding_panel)
 	_diagnostics_header = _inspector_section_header("DIAGNOSTICS")
 	_right_column.add_child(_diagnostics_header)
 	_diagnostics_panel = DiagnosticsPanelScript.new()
@@ -1227,13 +1300,14 @@ func _build_layout() -> void:
 		fit_view_requested.emit()
 	)
 	control_group.add_child(fit_button)
-	var quit_button := Button.new()
-	_quit_button = quit_button
-	quit_button.text = "Quit Replay"
-	quit_button.pressed.connect(func() -> void:
-		quit_requested.emit()
+	var footer_menu_button := Button.new()
+	footer_menu_button.text = "Main Menu"
+	footer_menu_button.pressed.connect(func() -> void:
+		main_menu_requested.emit()
 	)
-	control_group.add_child(quit_button)
+	control_group.add_child(footer_menu_button)
+	_quit_button = _make_quit_button("Quit Application")
+	control_group.add_child(_quit_button)
 	var geometry_toggle := CheckBox.new()
 	geometry_toggle.text = "Geom"
 	geometry_toggle.tooltip_text = "Print viewer layout rectangles"
@@ -1330,11 +1404,22 @@ func _make_screen() -> Control:
 
 
 func _build_main_menu_screen(screen: Control) -> void:
+	_main_menu_scroll = ScrollContainer.new()
+	_main_menu_scroll.name = "MainMenuScroll"
+	_main_menu_scroll.focus_mode = Control.FOCUS_ALL
+	_main_menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_main_menu_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_main_menu_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_main_menu_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_fill_parent(_main_menu_scroll)
+	screen.add_child(_main_menu_scroll)
 	var center := CenterContainer.new()
-	_fill_parent(center)
-	screen.add_child(center)
+	center.custom_minimum_size = Vector2(720, 0)
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_main_menu_scroll.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 520)
+	panel.custom_minimum_size = Vector2(720, 0)
 	center.add_child(panel)
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 48)
@@ -1357,51 +1442,56 @@ func _build_main_menu_screen(screen: Control) -> void:
 	layout.add_child(title)
 	var subtitle := Label.new()
 	subtitle.name = "MainMenuSubtitle"
-	subtitle.text = "Inspect replay demos or play accepted plain 2D, 3D, and 4D modes."
+	subtitle.text = "Start with 2D, then explore playable plain-board 3D and 4D modes."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.theme_type_variation = "SecondaryLabel"
 	subtitle.add_theme_font_size_override("font_size", 18)
 	layout.add_child(subtitle)
-	var browser_button := _make_command_card("Replay Demos", "Load exported gameplay, topology, and endgame traces", "Enter")
-	browser_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_BROWSER)
-	)
-	layout.add_child(browser_button)
-	var live_button := _make_command_card("Live Plain 2D", "Best first play mode with classic left, right, rotate, and drop", "2D")
+	layout.add_child(_menu_group_header("PLAY"))
+	var live_button := _make_command_card("Play 2D", "Plain bounded board · best place to start", "2D")
 	live_button.pressed.connect(func() -> void:
 		live_2d_requested.emit()
 	)
 	layout.add_child(live_button)
-	var live_3d_button := _make_command_card("Live Plain 3D", "Playable plain 3D board with direct XY, XZ, and YZ rotations", "3D")
+	var live_3d_button := _make_command_card("Play 3D", "Plain bounded board · direct XY, XZ, and YZ rotations", "3D")
 	live_3d_button.pressed.connect(func() -> void:
 		live_3d_requested.emit()
 	)
 	layout.add_child(live_3d_button)
-	var live_4d_button := _make_command_card("Live Plain 4D", "Playable plain 4D W-slice view with camera recovery and Fit View", "4D")
+	var live_4d_button := _make_command_card("Play 4D", "Plain bounded board · W-slice view and camera recovery", "4D")
 	live_4d_button.pressed.connect(func() -> void:
 		live_4d_requested.emit()
 	)
 	layout.add_child(live_4d_button)
-	var about_button := _make_command_card("About / Demo Path", "What Tet4D is, where topology lives, and known limits", "A")
-	about_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_ABOUT)
+	layout.add_child(_menu_group_header("EXPLORE"))
+	var browser_button := _make_command_card("Replay Demos", "Inspect exported gameplay, topology, and endgame traces", "Enter")
+	browser_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_BROWSER)
 	)
-	layout.add_child(about_button)
-	var controls_button := _make_command_card("Controls", "Mode-specific controls and camera help without opening source", "H")
+	layout.add_child(browser_button)
+	layout.add_child(_menu_group_header("LEARN"))
+	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
 	controls_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_CONTROLS)
 	)
 	layout.add_child(controls_button)
+	var about_button := _make_command_card("About Tet4D", "What is playable, where topology lives, and current limits", "A")
+	about_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_ABOUT)
+	)
+	layout.add_child(about_button)
+	layout.add_child(_menu_group_header("SYSTEM"))
 	var settings_button := _make_command_card("Settings", "Display, replay, diagnostics, and shell options", "S")
 	settings_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_SETTINGS)
 	)
 	layout.add_child(settings_button)
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
-	quit_button.pressed.connect(func() -> void:
-		quit_requested.emit()
-	)
+	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
+	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, browser_button, controls_button, about_button, settings_button, quit_button]
+	_configure_linear_focus(focus_order)
+	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
 
 
 func _build_browser_screen(screen: Control) -> void:
@@ -1449,17 +1539,26 @@ func _build_controls_screen(screen: Control) -> void:
 	layout.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	screen.add_child(layout)
 	layout.add_child(_screen_nav("Controls / Keyboard Hints"))
+	_controls_scroll = ScrollContainer.new()
+	_controls_scroll.name = "ControlsHelpScroll"
+	_controls_scroll.focus_mode = Control.FOCUS_ALL
+	_controls_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_controls_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_controls_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_controls_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(_controls_scroll)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	grid.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	grid.add_theme_constant_override("h_separation", ReplayVisuals.PANEL_GAP)
 	grid.add_theme_constant_override("v_separation", ReplayVisuals.PANEL_GAP)
-	layout.add_child(grid)
+	_controls_scroll.add_child(grid)
 	grid.add_child(_control_mode_card("Replay", "Inspect exported traces frame by frame without moving pieces.", "replay"))
 	grid.add_child(_control_mode_card("Live Plain 2D", "Best first play mode with classic movement, rotation, and drop.", "live_2d"))
 	grid.add_child(_control_mode_card("Live Plain 3D", "Playable plain 3D with direct XY, XZ, and YZ plane rotations.", "live_3d"))
 	grid.add_child(_control_mode_card("Live Plain 4D", "Playable plain 4D with W movement, six rotation planes, and camera recovery.", "live_4d"))
+	_screen_focus_targets[SCREEN_CONTROLS] = _controls_scroll
 
 
 func _build_diagnostics_screen(screen: Control) -> void:
@@ -1488,10 +1587,18 @@ func _build_about_screen(screen: Control) -> void:
 	layout.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	screen.add_child(layout)
 	layout.add_child(_screen_nav("About / Demo Path"))
+	_about_scroll = ScrollContainer.new()
+	_about_scroll.name = "AboutScroll"
+	_about_scroll.focus_mode = Control.FOCUS_ALL
+	_about_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_about_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_about_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_about_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(_about_scroll)
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(panel)
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_about_scroll.add_child(panel)
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 24)
 	margin.add_theme_constant_override("margin_top", 20)
@@ -1506,18 +1613,20 @@ func _build_about_screen(screen: Control) -> void:
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_child(label)
+	_screen_focus_targets[SCREEN_ABOUT] = _about_scroll
 
 
-func _screen_nav(title_text: String) -> HBoxContainer:
-	var nav := HBoxContainer.new()
-	nav.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
+func _screen_nav(title_text: String) -> HFlowContainer:
+	var nav := HFlowContainer.new()
+	nav.add_theme_constant_override("h_separation", ReplayVisuals.CONTROL_GAP)
+	nav.add_theme_constant_override("v_separation", ReplayVisuals.CONTROL_GAP)
 	var title := Label.new()
 	title.text = title_text
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.theme_type_variation = "AccentLabel"
 	nav.add_child(title)
 	var menu_button := Button.new()
-	menu_button.text = "Main Menu"
+	menu_button.text = "Back to Main Menu"
 	menu_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_MAIN_MENU)
 	)
@@ -1570,6 +1679,7 @@ func _screen_nav(title_text: String) -> HBoxContainer:
 		show_screen(SCREEN_SETTINGS)
 	)
 	nav.add_child(settings_button)
+	nav.add_child(_make_quit_button("Quit Application"))
 	return nav
 
 
@@ -1582,6 +1692,40 @@ func _make_command_card(label_text: String, description: String, shortcut: Strin
 	button.add_theme_font_size_override("font_size", 17)
 	button.tooltip_text = "%s - %s" % [label_text, description]
 	return button
+
+
+func _make_quit_button(label_text: String) -> Button:
+	var button := Button.new()
+	button.name = "QuitApplicationButton"
+	button.text = label_text
+	button.pressed.connect(_emit_quit_requested)
+	return button
+
+
+func _emit_quit_requested() -> void:
+	quit_requested.emit()
+
+
+func _menu_group_header(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.theme_type_variation = "SecondaryLabel"
+	label.add_theme_font_size_override("font_size", 12)
+	return label
+
+
+func _configure_linear_focus(controls: Array[Control]) -> void:
+	if controls.is_empty():
+		return
+	for index in range(controls.size()):
+		var control := controls[index]
+		var previous := controls[(index - 1 + controls.size()) % controls.size()]
+		var next := controls[(index + 1) % controls.size()]
+		control.focus_mode = Control.FOCUS_ALL
+		control.focus_neighbor_top = control.get_path_to(previous)
+		control.focus_neighbor_left = control.get_path_to(previous)
+		control.focus_neighbor_bottom = control.get_path_to(next)
+		control.focus_neighbor_right = control.get_path_to(next)
 
 
 func _inspector_section_header(label_text: String) -> Label:
@@ -1788,6 +1932,19 @@ func _control_rect(node: Control) -> Rect2:
 	if node == null:
 		return Rect2()
 	return Rect2(node.global_position, node.size)
+
+
+func _scroll_contract(scroll: ScrollContainer) -> Dictionary:
+	if scroll == null:
+		return {}
+	var content := scroll.get_child(0) as Control if scroll.get_child_count() > 0 else null
+	return {
+		"visible": scroll.visible,
+		"rect": _control_rect(scroll),
+		"content_height": content.size.y if content != null else 0.0,
+		"viewport_height": scroll.size.y,
+		"vertical_scroll_enabled": scroll.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED,
+	}
 
 
 func _panel_style_color(node: Control) -> Color:

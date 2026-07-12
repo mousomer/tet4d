@@ -11,8 +11,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
-- Stage 46 Godot core gameplay completion is active on
-  `codex/godot-core-gameplay-polish`. The bounded audit is recorded in
+- Stage 46 Godot core gameplay completion is complete on the merged `master`
+  baseline. The bounded audit is recorded in
   `docs/architecture/godot_core_gameplay_completion.md`. Live Plain 2D/3D/4D
   retain their accepted native-session command/state paths while primary live
   HUD chrome now exposes native score, clears, current/next piece, command
@@ -20,7 +20,16 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Existing live-loop parity and shell tests protect the real three-mode
   spawn/move/rotate/drop/lock flows and their visible HUD results. Python
   remains semantic authority; topology, replay/parity schemas, native
-  authority, settings, onboarding, and migration bundles are unchanged.
+  authority, settings, and migration bundles are unchanged.
+- Stage 47 Godot guided onboarding and navigation has an implementation, but
+  manual acceptance failed on main-menu/help overflow, keyboard focus, and
+  onboarding discoverability. Stage 47b is the active corrective batch as contextual
+  first-session shell work, not another Stage 42 static-copy pass. The contract
+  lives in `docs/architecture/godot_guided_onboarding_navigation.md`. Compact
+  live guidance consumes accepted existing native command results only;
+  navigation distinguishes Tab cycling, Esc to Main Menu, session restart, and
+  explicit Quit. Stage 48 settings persistence/keybindings and Stage 49
+  topology migration remain ordered deferrals.
 
 - Primary product cleanup still routes through
   `docs/plans/topology_playground_current_authority.md` and

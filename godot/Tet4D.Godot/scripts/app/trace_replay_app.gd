@@ -139,6 +139,10 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _mode == MODE_REPLAY and _hud != null and _hud.current_screen() == ReplayHud.SCREEN_MAIN_MENU and _event_is_escape(event):
+		get_tree().quit()
+		get_viewport().set_input_as_handled()
+		return
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -193,7 +197,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("replay_toggle_help"):
 		_hud.toggle_help()
 	elif _event_action_pressed(event, ["quit", "replay_quit"]):
-		get_tree().quit()
+		if _hud.current_screen() == ReplayHud.SCREEN_MAIN_MENU:
+			get_tree().quit()
+		else:
+			_return_to_main_menu()
 
 	_handle_camera_input(event)
 
@@ -268,7 +275,7 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 		_hud.toggle_help()
 		return true
 	if event.is_action_pressed("quit"):
-		get_tree().quit()
+		_return_to_main_menu()
 		return true
 	if _live_2d_paused or _live_snapshot_game_over():
 		return _event_action_pressed(event, _live_gameplay_action_names())
@@ -307,7 +314,7 @@ func _handle_live_3d_input(event: InputEvent) -> bool:
 		_hud.toggle_help()
 		return true
 	if event.is_action_pressed("quit"):
-		get_tree().quit()
+		_return_to_main_menu()
 		return true
 	if _live_3d_paused or _live_snapshot_game_over():
 		return _event_action_pressed(event, _live_3d_gameplay_action_names())
@@ -363,7 +370,7 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 		_reset_live_4d()
 		return true
 	if _event_is_escape(event):
-		get_tree().quit()
+		_return_to_main_menu()
 		return true
 	if _live_4d_paused or _live_snapshot_game_over():
 		return _event_action_pressed(event, _live_4d_gameplay_action_names())
@@ -515,6 +522,7 @@ func _wire_hud() -> void:
 	_hud.quit_requested.connect(func() -> void:
 		get_tree().quit()
 	)
+	_hud.main_menu_requested.connect(_return_to_main_menu)
 	_hud.live_2d_requested.connect(_enter_live_2d_mode)
 	_hud.live_3d_requested.connect(_enter_live_3d_mode)
 	_hud.live_4d_requested.connect(_enter_live_4d_mode)
@@ -685,7 +693,7 @@ func _fit_view() -> void:
 	if _mode == MODE_LIVE_4D:
 		_camera_rig.fit_bounds(
 			bounds,
-			1.34,
+			CameraRigScript.LIVE_4D_FIT_MARGIN,
 			CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
 			CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
 			CameraRigScript.LIVE_4D_VIEW_PRESET_NAME,
@@ -694,14 +702,14 @@ func _fit_view() -> void:
 	elif _mode == MODE_LIVE_3D:
 		_camera_rig.fit_bounds(
 			bounds,
-			1.2,
+			CameraRigScript.LIVE_3D_FIT_MARGIN,
 			CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
 			CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
 			CameraRigScript.LIVE_3D_VIEW_PRESET_NAME,
 			"above exterior"
 		)
 	else:
-		_camera_rig.fit_bounds(bounds, 1.14)
+		_camera_rig.fit_bounds(bounds, CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else 1.14)
 	_pending_fit_view = false
 	_refresh_camera_status()
 
@@ -860,6 +868,16 @@ func _prepare_live_mode_entry(mode_name: String) -> void:
 	_live_4d_paused = mode_name != MODE_LIVE_4D
 	_live_tick_accumulator = 0.0
 	_reset_live_repeat_state()
+
+
+func _return_to_main_menu() -> void:
+	_state.is_playing = false
+	_live_2d_paused = true
+	_live_3d_paused = true
+	_live_4d_paused = true
+	_reset_live_repeat_state()
+	_hud.set_live_keyboard_capture(false)
+	_hud.show_screen(ReplayHud.SCREEN_MAIN_MENU)
 
 
 func _enter_replay_mode() -> void:

@@ -10,15 +10,15 @@ func run() -> Array:
 	var live_hint := ReplayHudScript.live_2d_hint_text()
 	var live_3d_hint := ReplayHudScript.live_3d_hint_text()
 	var live_4d_hint := ReplayHudScript.live_4d_hint_text()
-	if not live_hint.contains("A/D") or not live_hint.contains("Hard Drop") or not live_hint.contains("Tab Live 3D"):
+	if not live_hint.contains("A/D") or not live_hint.contains("Hard Drop") or not live_hint.contains("Tab Play 3D"):
 		failures.append("live 2D hint text should expose movement, drop, and Tab-to-Live-3D controls")
 	if live_hint.contains("Frame"):
 		failures.append("live 2D hint text should not expose replay frame controls")
 	if replay_hint.contains("Hard Drop") or replay_hint.contains("Rotate CW"):
 		failures.append("replay hint text should not expose live gameplay controls")
-	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Reset"):
+	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Shift Drag Roll") or not live_4d_hint.contains("Tab Replay") or live_4d_hint.contains("Q/Esc Quit"):
+	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Shift Drag Roll") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose W controls, camera controls, six rotation planes, and Esc-only quit")
 	if absf(TraceReplayAppScript.LIVE_GRAVITY_INTERVAL_SECONDS - 0.5) > 0.001:
 		failures.append("live gravity shell interval should default to 0.5 seconds")
@@ -473,18 +473,18 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 	if summary != "Live Plain 3D | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
 		failures.append("live gameplay summary should prioritize score, clears, and piece queue, got %s" % summary)
 	var feedback := ReplayHudScript.live_command_feedback_text(live_snapshot)
-	if feedback != "LOCK CONFIRMED · HARD DROP ACCEPTED":
+	if feedback != "Piece locked":
 		failures.append("accepted hard drop should produce decisive lock feedback, got %s" % feedback)
 	live_snapshot["last_command"] = "move_w_pos"
 	live_snapshot["last_command_status"] = "rejected"
 	feedback = ReplayHudScript.live_command_feedback_text(live_snapshot)
-	if feedback != "MOVE W POS · REJECTED":
+	if feedback != "Cannot move there":
 		failures.append("rejected live command should remain visible, got %s" % feedback)
 	live_snapshot["paused"] = true
-	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "PAUSED · GAMEPLAY INPUT HELD":
+	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "Paused · P — Resume · Esc — Main Menu":
 		failures.append("paused live HUD should explain that gameplay input is held")
 	live_snapshot["paused"] = false
 	live_snapshot["game_over"] = true
 	live_snapshot["game_over_reason"] = "spawn_blocked"
-	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "GAME OVER · Spawn blocked · RESET TO PLAY AGAIN":
+	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "Game over · Spawn blocked · Restart Game or Main Menu":
 		failures.append("game-over HUD should expose the native reason and restart action")

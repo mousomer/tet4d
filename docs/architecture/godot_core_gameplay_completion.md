@@ -1,6 +1,6 @@
 # Stage 46 Godot Core Gameplay Completion
 
-Status: implementation in progress
+Status: complete on merged `master` baseline
 Date: 2026-07-12
 
 ## Authority and scope
@@ -49,9 +49,8 @@ unchanged.
 
 ## Explicit deferrals
 
-- Stage 47: broad UX, onboarding, tutorials, and menu redesign.
+- Stage 47: contextual onboarding and navigation completion, explicitly extending rather than repeating Stage 42's static first-run copy.
 - Stage 48: settings persistence, keybinding configuration, and save behavior.
 - Stage 49: topology-aware Godot gameplay and topology migration.
 - Any Python gameplay-rule change, replay/parity schema change, native
   authority transfer, renderer rewrite, or migration-bundle regeneration.
-
