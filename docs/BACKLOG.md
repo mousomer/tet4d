@@ -35,8 +35,13 @@ score, clears, current/next piece, command outcome, pause/game-over state, and
 hard-drop lock confirmation. Existing Stage 41 live-loop sequences remain the
 parity base, and shell coverage now asserts visible post-lock results in all
 three modes. The bounded audit lives in
-`docs/architecture/godot_core_gameplay_completion.md`. Stage 47 onboarding,
-Stage 48 settings/persistence, and Stage 49 topology remain deferred. Python
+`docs/architecture/godot_core_gameplay_completion.md`. Stage 47 contextual
+onboarding/navigation exists but failed initial manual acceptance; Stage 47b
+repairs viewport-safe scrolling, deterministic focus navigation, and immediate
+onboarding visibility under
+`docs/architecture/godot_guided_onboarding_navigation.md`, extending Stage 42
+without repeating its static copy pass. Stage 48 settings/persistence and Stage
+49 topology remain deferred. Python
 gameplay semantics, topology semantics, replay/parity schemas, native
 authority, and migration bundles are unchanged.
 

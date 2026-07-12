@@ -5,6 +5,8 @@ const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 
 func run() -> Array:
 	var failures: Array = []
+	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_4D_FIT_MARGIN < 1.5:
+		failures.append("live entry fit margins should preserve visible breathing room around the board")
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return ["camera rig test requires SceneTree"]

@@ -41,6 +41,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/godot_visual_style_foundation.md`
 - `docs/architecture/godot_vector_arcade_cockpit_overhaul.md`
 - `docs/architecture/godot_core_gameplay_completion.md`
+- `docs/architecture/godot_guided_onboarding_navigation.md`
 
 ### 3. Active planning
 
@@ -133,6 +134,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 32 Godot visual style foundation | `docs/architecture/godot_visual_style_foundation.md` |
 | Stage 33 Godot Vector Arcade Cockpit UI overhaul | `docs/architecture/godot_vector_arcade_cockpit_overhaul.md` |
 | Stage 46 Godot plain 2D/3D/4D gameplay completion boundary and audit | `docs/architecture/godot_core_gameplay_completion.md` |
+| Stage 47 Godot guided onboarding and navigation contract | `docs/architecture/godot_guided_onboarding_navigation.md` |
 | Stage 22f manual Live 3D acceptance run record | `docs/plans/godot_live_3d_manual_acceptance.md` |
 | Current restart handoff | `CURRENT_STATE.md` |
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |
@@ -216,6 +218,9 @@ It is not the product contract.
 - If you need the Stage 46 plain live gameplay completion scope, audit, or
   later-stage deferrals: use
   `docs/architecture/godot_core_gameplay_completion.md`.
+- If you need the Stage 47 contextual onboarding, navigation, or session-local
+  guidance contract: use
+  `docs/architecture/godot_guided_onboarding_navigation.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
 - If you need task-specific context loading: use the context-switch profiles in

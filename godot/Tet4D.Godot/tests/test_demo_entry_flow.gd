@@ -23,7 +23,7 @@ func run() -> Array:
 	var main_menu_text := str(snapshot.get("main_menu_text", ""))
 	for required in [
 		"Tet4D Vector Arcade Cockpit",
-		"Inspect replay demos or play accepted plain 2D, 3D, and 4D modes.",
+		"Start with 2D",
 	]:
 		if main_menu_text.find(required) == -1:
 			failures.append("main menu should expose %s for first-run demo flow" % required)
@@ -31,17 +31,17 @@ func run() -> Array:
 		failures.append("main menu should avoid governance jargon")
 	for card_label in [
 		"Replay Demos",
-		"Live Plain 2D",
-		"Live Plain 3D",
-		"Live Plain 4D",
-		"About / Demo Path",
-		"Controls",
+		"Play 2D",
+		"Play 3D",
+		"Play 4D",
+		"About Tet4D",
+		"How to Play",
 		"Settings",
 		"Quit",
 	]:
 		if _find_command_card(hud, card_label) == null:
 			failures.append("main menu should expose %s for first-run demo flow" % card_label)
-	var about_card := _find_command_card(hud, "About / Demo Path")
+	var about_card := _find_command_card(hud, "About Tet4D")
 	if about_card == null:
 		failures.append("main menu should expose an About / Demo Path card")
 	else:
@@ -58,8 +58,7 @@ func run() -> Array:
 			"Live Plain 3D",
 			"Live Plain 4D",
 			"Topology Playground",
-			"Python remains the rules reference implementation.",
-			"Godot is the product shell and playable front end.",
+			"The Python version currently contains the full topology tools.",
 		]:
 			if about_text.find(required) == -1:
 				failures.append("about screen should explain %s" % required)
