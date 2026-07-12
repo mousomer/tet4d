@@ -24,6 +24,7 @@ func run() -> Array:
 		failures.append("live gravity shell interval should default to 0.5 seconds")
 	if TraceReplayAppScript.LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS <= 0.0:
 		failures.append("live horizontal repeat interval should be configured")
+	_assert_live_gameplay_hud_copy(failures)
 
 	var scene := load("res://scenes/trace_replay.tscn") as PackedScene
 	if scene == null:
@@ -53,6 +54,8 @@ func run() -> Array:
 		live_snapshot = app._current_snapshot
 		if str(live_snapshot.get("current_piece", "")) != "O":
 			failures.append("live hard drop should route to C++ and spawn O")
+		if str(app._hud._summary_label.text).find("SCORE 5") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
+			failures.append("Live 2D HUD should expose score and lock feedback after hard drop")
 		app._enter_replay_mode()
 		await tree.process_frame
 		var replay_hash := str(app._live_bridge.live_2d_state_hash())
@@ -114,6 +117,8 @@ func run() -> Array:
 		app._dispatch_live_3d_gameplay_command("hard_drop")
 		if str(app._current_snapshot.get("current_piece", "")) != "O3":
 			failures.append("live 3D hard drop should route to C++ and spawn O3")
+		if str(app._hud._summary_label.text).find("O3 > L3") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
+			failures.append("Live 3D HUD should expose the new piece queue and lock feedback")
 		app._enter_replay_mode()
 		await tree.process_frame
 		var replay_3d_hash := str(app._live_bridge.live_3d_state_hash())
@@ -363,6 +368,8 @@ func run() -> Array:
 		app._dispatch_live_4d_gameplay_command("hard_drop")
 		if str(app._current_snapshot.get("current_piece", "")) != "STAIR4":
 			failures.append("live 4D hard drop should route to C++ and spawn STAIR4")
+		if str(app._hud._summary_label.text).find("SCORE 5") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
+			failures.append("Live 4D HUD should expose score and lock feedback after hard drop")
 		var q_event := InputEventKey.new()
 		q_event.keycode = KEY_Q
 		q_event.pressed = true
@@ -449,3 +456,35 @@ func run() -> Array:
 	root.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_live_gameplay_hud_copy(failures: Array) -> void:
+	var live_snapshot := {
+		"current_piece": "O3",
+		"next_piece": "L3",
+		"score": 45,
+		"lines": 1,
+		"last_command": "hard_drop",
+		"last_command_status": "accepted",
+		"paused": false,
+		"game_over": false,
+	}
+	var summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D")
+	if summary != "Live Plain 3D | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
+		failures.append("live gameplay summary should prioritize score, clears, and piece queue, got %s" % summary)
+	var feedback := ReplayHudScript.live_command_feedback_text(live_snapshot)
+	if feedback != "LOCK CONFIRMED · HARD DROP ACCEPTED":
+		failures.append("accepted hard drop should produce decisive lock feedback, got %s" % feedback)
+	live_snapshot["last_command"] = "move_w_pos"
+	live_snapshot["last_command_status"] = "rejected"
+	feedback = ReplayHudScript.live_command_feedback_text(live_snapshot)
+	if feedback != "MOVE W POS · REJECTED":
+		failures.append("rejected live command should remain visible, got %s" % feedback)
+	live_snapshot["paused"] = true
+	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "PAUSED · GAMEPLAY INPUT HELD":
+		failures.append("paused live HUD should explain that gameplay input is held")
+	live_snapshot["paused"] = false
+	live_snapshot["game_over"] = true
+	live_snapshot["game_over_reason"] = "spawn_blocked"
+	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "GAME OVER · Spawn blocked · RESET TO PLAY AGAIN":
+		failures.append("game-over HUD should expose the native reason and restart action")

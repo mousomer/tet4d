@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-10
+Updated: 2026-07-12
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -28,7 +28,19 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Stage 45 Python reference hardening has continued with shared spawn
+Stage 46 Godot core gameplay completion (2026-07-12): keep the accepted Live
+Plain 2D/3D/4D native-session loops and make their primary play state readable
+without moving semantic decisions into Godot. The live HUD now surfaces native
+score, clears, current/next piece, command outcome, pause/game-over state, and
+hard-drop lock confirmation. Existing Stage 41 live-loop sequences remain the
+parity base, and shell coverage now asserts visible post-lock results in all
+three modes. The bounded audit lives in
+`docs/architecture/godot_core_gameplay_completion.md`. Stage 47 onboarding,
+Stage 48 settings/persistence, and Stage 49 topology remain deferred. Python
+gameplay semantics, topology semantics, replay/parity schemas, native
+authority, and migration bundles are unchanged.
+
+Stage 45 Python reference hardening is complete on `master` with shared spawn
 installation/game-over handling, rotation resolve-and-commit, and
 lock/clear/score/analysis state mutation. ND planning now uses the public
 gameplay legality owner, and boundary coverage protects frontend, tutorial, and
