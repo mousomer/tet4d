@@ -11,6 +11,7 @@
 #include <godot_cpp/variant/variant.hpp>
 
 #include <string>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -52,7 +53,13 @@ std::vector<int> ints_from_array(const Array &values, bool &valid) {
 			valid = false;
 			return {};
 		}
-		result.push_back(static_cast<int>(value));
+		const int64_t integer = static_cast<int64_t>(value);
+		if (integer < std::numeric_limits<int>::min() || integer > std::numeric_limits<int>::max()) {
+			ERR_PRINT("Tet4D query integers exceed native range.");
+			valid = false;
+			return {};
+		}
+		result.push_back(static_cast<int>(integer));
 	}
 	valid = true;
 	return result;
@@ -147,18 +154,21 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_plain_nd_parity_status"), &Tet4DCoreApi::get_plain_nd_parity_status);
 	ClassDB::bind_method(D_METHOD("export_plain_nd_trace_json", "case_id"), &Tet4DCoreApi::export_plain_nd_trace_json);
 	ClassDB::bind_method(D_METHOD("get_plain_nd_required_field_parity", "case_id"), &Tet4DCoreApi::get_plain_nd_required_field_parity);
+	ClassDB::bind_method(D_METHOD("live_2d_configure", "board_shape"), &Tet4DCoreApi::live_2d_configure);
 	ClassDB::bind_method(D_METHOD("live_2d_reset"), &Tet4DCoreApi::live_2d_reset);
 	ClassDB::bind_method(D_METHOD("live_2d_apply_command", "command"), &Tet4DCoreApi::live_2d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_2d_tick"), &Tet4DCoreApi::live_2d_tick);
 	ClassDB::bind_method(D_METHOD("live_2d_snapshot_json"), &Tet4DCoreApi::live_2d_snapshot_json);
 	ClassDB::bind_method(D_METHOD("live_2d_status"), &Tet4DCoreApi::live_2d_status);
 	ClassDB::bind_method(D_METHOD("live_2d_state_hash"), &Tet4DCoreApi::live_2d_state_hash);
+	ClassDB::bind_method(D_METHOD("live_3d_configure", "board_shape"), &Tet4DCoreApi::live_3d_configure);
 	ClassDB::bind_method(D_METHOD("live_3d_reset"), &Tet4DCoreApi::live_3d_reset);
 	ClassDB::bind_method(D_METHOD("live_3d_apply_command", "command"), &Tet4DCoreApi::live_3d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_3d_tick"), &Tet4DCoreApi::live_3d_tick);
 	ClassDB::bind_method(D_METHOD("live_3d_snapshot_json"), &Tet4DCoreApi::live_3d_snapshot_json);
 	ClassDB::bind_method(D_METHOD("live_3d_status"), &Tet4DCoreApi::live_3d_status);
 	ClassDB::bind_method(D_METHOD("live_3d_state_hash"), &Tet4DCoreApi::live_3d_state_hash);
+	ClassDB::bind_method(D_METHOD("live_4d_configure", "board_shape"), &Tet4DCoreApi::live_4d_configure);
 	ClassDB::bind_method(D_METHOD("live_4d_reset"), &Tet4DCoreApi::live_4d_reset);
 	ClassDB::bind_method(D_METHOD("live_4d_apply_command", "command"), &Tet4DCoreApi::live_4d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_4d_tick"), &Tet4DCoreApi::live_4d_tick);
@@ -338,6 +348,12 @@ bool Tet4DCoreApi::get_plain_nd_required_field_parity(const String &case_id) con
 	return tet4d::core::get_plain_nd_required_field_parity(to_std_string(case_id));
 }
 
+bool Tet4DCoreApi::live_2d_configure(const Array &board_shape) {
+	bool valid = false;
+	const std::vector<int> dims = ints_from_array(board_shape, valid);
+	return valid && dims.size() == 2 && live_2d_session_.configure(dims[0], dims[1]);
+}
+
 void Tet4DCoreApi::live_2d_reset() {
 	live_2d_session_.reset();
 }
@@ -362,6 +378,12 @@ String Tet4DCoreApi::live_2d_state_hash() const {
 	return to_godot_string(live_2d_session_.state_hash());
 }
 
+bool Tet4DCoreApi::live_3d_configure(const Array &board_shape) {
+	bool valid = false;
+	const std::vector<int> dims = ints_from_array(board_shape, valid);
+	return valid && live_3d_session_.configure(tet4d::core::BoardShapeND{dims});
+}
+
 void Tet4DCoreApi::live_3d_reset() {
 	live_3d_session_.reset();
 }
@@ -384,6 +406,12 @@ String Tet4DCoreApi::live_3d_status() const {
 
 String Tet4DCoreApi::live_3d_state_hash() const {
 	return to_godot_string(live_3d_session_.state_hash());
+}
+
+bool Tet4DCoreApi::live_4d_configure(const Array &board_shape) {
+	bool valid = false;
+	const std::vector<int> dims = ints_from_array(board_shape, valid);
+	return valid && live_4d_session_.configure(tet4d::core::BoardShapeND{dims});
 }
 
 void Tet4DCoreApi::live_4d_reset() {

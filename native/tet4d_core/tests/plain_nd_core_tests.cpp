@@ -2,6 +2,7 @@
 #include "tet4d_core/plain_nd_session.hpp"
 #include "tet4d_core/plain_nd_trace.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -76,6 +77,31 @@ void test_4d_state_stepper() {
 	require(state.active_piece.has_value(), "hard_drop should respawn a 4D active piece");
 	require(state.active_piece->shape.name == "STAIR4", "4D post-lock shape should be STAIR4");
 	require(state.active_piece->pos == tet4d::core::CoordND{{1, -2, 1, 1}}, "4D spawn position mismatch");
+}
+
+void test_configurable_live_plain_nd_sessions() {
+	tet4d::core::PlainNDSession session_3d(3);
+	const std::string standard_3d_hash = session_3d.state_hash();
+	require(session_3d.configure({{8, 16, 8}}), "supported 3D shape should configure");
+	require(session_3d.snapshot_json().find("\"board_shape\":[8,16,8]") != std::string::npos, "configured 3D snapshot shape missing");
+	require(session_3d.state_hash() != standard_3d_hash, "3D shape must contribute to state identity");
+	session_3d.apply_command("hard_drop");
+	session_3d.reset();
+	require(session_3d.snapshot_json().find("\"board_shape\":[8,16,8]") != std::string::npos, "3D reset should preserve configured shape");
+	require(!session_3d.configure({{8, 16, 8, 1}}), "wrong 3D coordinate count should reject");
+	require(!session_3d.configure({{3, 16, 8}}), "3D width below semantic minimum should reject");
+
+	tet4d::core::PlainNDSession session_4d(4);
+	const std::string standard_4d_hash = session_4d.state_hash();
+	require(session_4d.configure({{8, 16, 5, 8}}), "supported W=8 shape should configure");
+	require(session_4d.snapshot_json().find("\"board_shape\":[8,16,5,8]") != std::string::npos, "configured W=8 snapshot shape missing");
+	require(session_4d.snapshot_json().find("\"w_slice_count\":8") != std::string::npos, "configured W=8 slice count missing");
+	require(session_4d.state_hash() != standard_4d_hash, "4D shape must contribute to state identity");
+	session_4d.apply_command("move_w_pos");
+	session_4d.apply_command("hard_drop");
+	session_4d.reset();
+	require(session_4d.snapshot_json().find("\"board_shape\":[8,16,5,8]") != std::string::npos, "4D reset should preserve W=8 shape");
+	require(!session_4d.configure({{8, 16, 5, 13}}), "W above safe maximum should reject");
 }
 
 void test_3d_rotation_stepper() {
@@ -263,15 +289,21 @@ void test_4d_spawn_blocked_stepper() {
 
 void test_trace_exports() {
 	const std::vector<std::string> cases = tet4d::core::list_plain_nd_parity_cases();
-	require(cases.size() == 8, "Stage 20 should expose eight implemented plain ND parity cases");
-	require(cases[0] == "gameplay_plain_3d_short", "first ND case id mismatch");
-	require(cases[1] == "gameplay_plain_4d_short", "second ND case id mismatch");
-	require(cases[2] == "gameplay_plain_3d_rotation_short", "third ND case id mismatch");
-	require(cases[3] == "gameplay_plain_4d_rotation_short", "fourth ND case id mismatch");
-	require(cases[4] == "gameplay_plain_3d_plane_clear_short", "fifth ND case id mismatch");
-	require(cases[5] == "gameplay_plain_4d_plane_clear_short", "sixth ND case id mismatch");
-	require(cases[6] == "gameplay_plain_3d_spawn_blocked_game_over", "seventh ND case id mismatch");
-	require(cases[7] == "gameplay_plain_4d_spawn_blocked_game_over", "eighth ND case id mismatch");
+	require(cases.size() == 10, "plain ND parity should include Stage 49 configurable cases");
+	for (const std::string &expected : {
+			"gameplay_plain_3d_short",
+			"gameplay_plain_4d_short",
+			"gameplay_plain_3d_rotation_short",
+			"gameplay_plain_4d_rotation_short",
+			"gameplay_plain_3d_plane_clear_short",
+			"gameplay_plain_4d_plane_clear_short",
+			"gameplay_plain_3d_spawn_blocked_game_over",
+			"gameplay_plain_4d_spawn_blocked_game_over",
+			"gameplay_plain_3d_configurable",
+			"gameplay_plain_4d_configurable_w8",
+		}) {
+		require(std::find(cases.begin(), cases.end(), expected) != cases.end(), "missing ND parity case: " + expected);
+	}
 	require(tet4d::core::run_builtin_plain_nd_smoke_case(), "plain ND smoke API should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_3d_short"), "3D required fields should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_4d_short"), "4D required fields should pass");
@@ -459,6 +491,7 @@ int main(int argc, char **argv) {
 	test_coord_and_board_model();
 	test_3d_state_stepper();
 	test_4d_state_stepper();
+	test_configurable_live_plain_nd_sessions();
 	test_3d_rotation_stepper();
 	test_4d_rotation_stepper();
 	test_rotation_rejects_invalid_axes_clearly();

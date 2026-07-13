@@ -129,9 +129,13 @@ std::string render_locked_cells_json(const Board2D &board) {
 
 std::string hash_payload_json(
 		const GameState2D &state,
+		int width,
+		int height,
 		std::size_t next_piece_index) {
 	std::ostringstream out;
 	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
+		<< ",\"board_shape\":[" << width << "," << height << "]"
+		<< ",\"dimension\":2"
 		<< ",\"game_over\":" << bool_json(state.game_over)
 		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\""
 		<< ",\"lines\":" << state.lines
@@ -143,12 +147,28 @@ std::string hash_payload_json(
 
 } // namespace
 
-Plain2DSession::Plain2DSession() : state_(6, 6) {
+Plain2DSession::Plain2DSession() : Plain2DSession(6, 6) {
+}
+
+Plain2DSession::Plain2DSession(int width, int height) :
+		width_(is_supported_live_2d_board_shape(width, height) ? width : 6),
+		height_(is_supported_live_2d_board_shape(width, height) ? height : 6),
+		state_(width_, height_) {
 	reset();
 }
 
+bool Plain2DSession::configure(int width, int height) {
+	if (!is_supported_live_2d_board_shape(width, height)) {
+		return false;
+	}
+	width_ = width;
+	height_ = height;
+	reset();
+	return true;
+}
+
 void Plain2DSession::reset() {
-	state_ = GameState2D(6, 6);
+	state_ = GameState2D(width_, height_);
 	next_piece_index_ = 0;
 	spawn_next_piece();
 	last_command_ = "reset";
@@ -222,7 +242,7 @@ std::string Plain2DSession::snapshot_json() const {
 	const int entity_count = static_cast<int>(state_.active_cells().size() + state_.board.cells().size());
 	std::ostringstream out;
 	out << "{\"active_cells\":" << active_cells
-		<< ",\"board_shape\":[6,6]"
+		<< ",\"board_shape\":[" << width_ << "," << height_ << "]"
 		<< ",\"case_id\":\"live_plain_2d\""
 		<< ",\"current_piece\":\"" << current_piece_name() << "\""
 		<< ",\"current_piece_color_id\":" << (state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0)
@@ -288,7 +308,7 @@ std::string Plain2DSession::status() const {
 }
 
 std::string Plain2DSession::state_hash() const {
-	return sha256_hex(hash_payload_json(state_, next_piece_index_));
+	return sha256_hex(hash_payload_json(state_, width_, height_, next_piece_index_));
 }
 
 PieceShape2D Plain2DSession::draw_next_piece_shape() {
@@ -318,6 +338,14 @@ std::string Plain2DSession::command_status(const std::string &command) const {
 	std::ostringstream out;
 	out << "command=" << command << " " << status();
 	return out.str();
+}
+
+bool is_supported_live_2d_board_shape(int width, int height) {
+	constexpr int MIN_WIDTH = 4;
+	constexpr int MIN_HEIGHT = 6;
+	constexpr int MAX_WIDTH = 16;
+	constexpr int MAX_HEIGHT = 30;
+	return width >= MIN_WIDTH && width <= MAX_WIDTH && height >= MIN_HEIGHT && height <= MAX_HEIGHT;
 }
 
 } // namespace tet4d::core

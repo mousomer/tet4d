@@ -11,7 +11,9 @@ namespace tet4d::core {
 class PlainNDSession {
 public:
 	explicit PlainNDSession(int dimension);
+	PlainNDSession(int dimension, BoardShapeND board_shape);
 
+	bool configure(const BoardShapeND &board_shape);
 	void reset();
 	std::string apply_command(const std::string &command);
 	std::string tick();
@@ -35,5 +37,7 @@ private:
 	std::string next_piece_name() const;
 	std::string command_status(const std::string &command) const;
 };
+
+bool is_supported_live_nd_board_shape(int dimension, const BoardShapeND &board_shape);
 
 } // namespace tet4d::core

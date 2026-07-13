@@ -21,6 +21,7 @@ PLAIN_2D_CASES = {
     "gameplay_plain_2d_rotation_short",
     "gameplay_plain_2d_hard_drop_lock",
     "gameplay_plain_2d_line_clear_short",
+    "gameplay_plain_2d_configurable",
 }
 PLAIN_ND_CASES = {
     "gameplay_plain_3d_short",
@@ -31,6 +32,13 @@ PLAIN_ND_CASES = {
     "gameplay_plain_4d_plane_clear_short",
     "gameplay_plain_3d_spawn_blocked_game_over",
     "gameplay_plain_4d_spawn_blocked_game_over",
+    "gameplay_plain_3d_configurable",
+    "gameplay_plain_4d_configurable_w8",
+}
+CONFIGURABLE_CASES = {
+    "gameplay_plain_2d_configurable",
+    "gameplay_plain_3d_configurable",
+    "gameplay_plain_4d_configurable_w8",
 }
 SUPPORTED_CASES = PLAIN_2D_CASES | PLAIN_ND_CASES
 
@@ -200,10 +208,21 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="compare every Stage 15 plain bounded 3D/4D C++ parity case",
     )
+    group.add_argument(
+        "--all-configurable",
+        action="store_true",
+        help="compare Stage 49 alternate-size 2D/3D/4D cases",
+    )
     parser.add_argument("--golden-dir", type=Path, default=DEFAULT_GOLDEN_DIR)
     args = parser.parse_args(argv)
 
-    if args.all_plain_2d:
+    if args.all_configurable:
+        case_ids = [
+            case.case_id
+            for case in GAMEPLAY_TRACE_CASES
+            if case.case_id in CONFIGURABLE_CASES
+        ]
+    elif args.all_plain_2d:
         case_ids = plain_2d_cases()
     elif args.all_plain_nd:
         case_ids = plain_nd_cases()

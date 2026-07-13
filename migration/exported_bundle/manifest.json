@@ -159,19 +159,19 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "0cbe02d3372dd0ba41056c7560f3f06a22ed8e0397c18b42b0825231eb8adeb6",
+        "sha256": "59eb31bb03e96fd419ed5b02d6571b5b6a0dca63ce701754753fd5dc446aa58e",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "d51d4c68333e3ff66591c6f36d365895f6b46b9a7d73ae096d96d4f2640e5ff5",
+        "sha256": "2a61d8f2344fe9c212299ba08084ef2450876f8ffec580922d8744d143311672",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "5eb4519ca761b9aab6ab5a4e498ce6c17f43e8316c12eb6670d50ec3cdcb55e4",
+        "sha256": "023dea1ca8dd2dfab7e557153a645b9464d2a5c8179abcd4cc6a5f3188ae187e",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
@@ -594,6 +594,45 @@
         "trace_version": 1
       },
       {
+        "case_id": "gameplay_plain_2d_configurable",
+        "config_identity": {
+          "axis_sizes": [
+            10,
+            20
+          ],
+          "exploration_mode": false,
+          "settings_digest": "77b80a6ff912f19ff9c0274338806c577ab94255570caebfba4cd61eb31418eb",
+          "topology_mode": "bounded",
+          "wrap_gravity_axis": false
+        },
+        "dimension": 2,
+        "final_state_hash": "1dc3917b422d80166fc3b8d6be56333fe818199afdcd1574a9f4112ea69892fb",
+        "frame_count": 3,
+        "identity_digest": "64c72508b7d68bfa6161a2b64840863d5255a6c98ae3050cd09dbff794aaba47",
+        "path": "traces/gameplay/gameplay_plain_2d_configurable.json",
+        "piece_set_identity": {
+          "piece_set": "classic"
+        },
+        "rng_identity": {
+          "rng_mode": "fixed_seed",
+          "rng_seed": 2049
+        },
+        "sha256": "e259245de8152ba562d5562b013400a1e841608736c2881db9c234896fd1fc12",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_configurable.json",
+        "topology_id": "plain",
+        "topology_identity": {
+          "explorer_profile_digest": null,
+          "topology_id": "plain",
+          "topology_mode": "bounded",
+          "topology_preset": null,
+          "wrap_gravity_axis": false
+        },
+        "topology_preset": null,
+        "trace_schema_version": 1,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
         "case_id": "gameplay_plain_2d_hard_drop_lock",
         "config_identity": {
           "axis_sizes": [
@@ -736,6 +775,46 @@
         },
         "sha256": "3908cf6abb24e3a7e314fbf0279039d444bc56ed8016bf055c1bc96158bb5d85",
         "source_path": "migration/golden_traces/gameplay/gameplay_plain_2d_short.json",
+        "topology_id": "plain",
+        "topology_identity": {
+          "explorer_profile_digest": null,
+          "topology_id": "plain",
+          "topology_mode": "bounded",
+          "topology_preset": null,
+          "wrap_gravity_axis": false
+        },
+        "topology_preset": null,
+        "trace_schema_version": 1,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_3d_configurable",
+        "config_identity": {
+          "axis_sizes": [
+            8,
+            16,
+            8
+          ],
+          "exploration_mode": false,
+          "settings_digest": "952e047108ebd704fde20a7bcfeef546c1d075f5966cc698c87b3e35aac32ff0",
+          "topology_mode": "bounded",
+          "wrap_gravity_axis": false
+        },
+        "dimension": 3,
+        "final_state_hash": "90e18681679ae0bc36035e49ab75686623fcd61c5eb2be3178f75d0f1c7425d2",
+        "frame_count": 3,
+        "identity_digest": "0b13a6f717bc7c568d9303a6ba506557f2edac580a5572728703912380722a10",
+        "path": "traces/gameplay/gameplay_plain_3d_configurable.json",
+        "piece_set_identity": {
+          "piece_set": "native_3d"
+        },
+        "rng_identity": {
+          "rng_mode": "fixed_seed",
+          "rng_seed": 2050
+        },
+        "sha256": "884fa39994a952e45dd35f4c3a7872e8c7010ce8fd9c4085da8c76dc61a9bb48",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_3d_configurable.json",
         "topology_id": "plain",
         "topology_identity": {
           "explorer_profile_digest": null,
@@ -896,6 +975,47 @@
         },
         "sha256": "694a8d496a3a0217b104af363848e76c766a64dae57d317a9283e2ac44311f92",
         "source_path": "migration/golden_traces/gameplay/gameplay_plain_3d_spawn_blocked_game_over.json",
+        "topology_id": "plain",
+        "topology_identity": {
+          "explorer_profile_digest": null,
+          "topology_id": "plain",
+          "topology_mode": "bounded",
+          "topology_preset": null,
+          "wrap_gravity_axis": false
+        },
+        "topology_preset": null,
+        "trace_schema_version": 1,
+        "trace_type": "gameplay",
+        "trace_version": 1
+      },
+      {
+        "case_id": "gameplay_plain_4d_configurable_w8",
+        "config_identity": {
+          "axis_sizes": [
+            8,
+            16,
+            5,
+            8
+          ],
+          "exploration_mode": false,
+          "settings_digest": "21611cd8b7334ed19f487d6c63c1ff71979ac2dcb9889df7bf313abb86b15425",
+          "topology_mode": "bounded",
+          "wrap_gravity_axis": false
+        },
+        "dimension": 4,
+        "final_state_hash": "c77ce1bcf7328fae459628f97c3125164852539e7404fa1c7b213354ac03089e",
+        "frame_count": 3,
+        "identity_digest": "afdc993e14f8cb088bf8312077b88046de9093b52b61a926ed588f5b36fd3030",
+        "path": "traces/gameplay/gameplay_plain_4d_configurable_w8.json",
+        "piece_set_identity": {
+          "piece_set": "standard_4d_5"
+        },
+        "rng_identity": {
+          "rng_mode": "fixed_seed",
+          "rng_seed": 2051
+        },
+        "sha256": "80f3670a67bf81c17b31b390eb7b864d006723d61c6af63d3965c2f60fa4873b",
+        "source_path": "migration/golden_traces/gameplay/gameplay_plain_4d_configurable_w8.json",
         "topology_id": "plain",
         "topology_identity": {
           "explorer_profile_digest": null,

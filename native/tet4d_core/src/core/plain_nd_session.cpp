@@ -250,15 +250,27 @@ std::string hash_payload_json(
 } // namespace
 
 PlainNDSession::PlainNDSession(int dimension) :
+		PlainNDSession(dimension, live_board_shape_for_dimension(dimension)) {
+}
+
+PlainNDSession::PlainNDSession(int dimension, BoardShapeND board_shape) :
 		dimension_(dimension),
-		board_shape_(live_board_shape_for_dimension(dimension)),
+		board_shape_(is_supported_live_nd_board_shape(dimension, board_shape) ? std::move(board_shape) : live_board_shape_for_dimension(dimension)),
 		state_(board_shape_, 1),
 		piece_sequence_(live_piece_sequence_for_dimension(dimension)) {
 	reset();
 }
 
+bool PlainNDSession::configure(const BoardShapeND &board_shape) {
+	if (!is_supported_live_nd_board_shape(dimension_, board_shape)) {
+		return false;
+	}
+	board_shape_ = board_shape;
+	reset();
+	return true;
+}
+
 void PlainNDSession::reset() {
-	board_shape_ = live_board_shape_for_dimension(dimension_);
 	state_ = GameStateND(board_shape_, 1);
 	piece_sequence_ = live_piece_sequence_for_dimension(dimension_);
 	next_piece_index_ = 0;
@@ -485,6 +497,24 @@ std::string PlainNDSession::command_status(const std::string &command) const {
 	std::ostringstream out;
 	out << "command=" << command << " " << status();
 	return out.str();
+}
+
+bool is_supported_live_nd_board_shape(int dimension, const BoardShapeND &board_shape) {
+	if (!board_shape.is_valid() || board_shape.dimension() != dimension) {
+		return false;
+	}
+	if (dimension == 3) {
+		return board_shape.dims[0] >= 4 && board_shape.dims[0] <= 10 &&
+				board_shape.dims[1] >= 6 && board_shape.dims[1] <= 24 &&
+				board_shape.dims[2] >= 2 && board_shape.dims[2] <= 10;
+	}
+	if (dimension == 4) {
+		return board_shape.dims[0] >= 4 && board_shape.dims[0] <= 12 &&
+				board_shape.dims[1] >= 6 && board_shape.dims[1] <= 24 &&
+				board_shape.dims[2] >= 2 && board_shape.dims[2] <= 8 &&
+				board_shape.dims[3] >= 1 && board_shape.dims[3] <= 12;
+	}
+	return false;
 }
 
 } // namespace tet4d::core

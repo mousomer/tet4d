@@ -85,7 +85,7 @@ void test_trace_export_smoke() {
 
 void test_stage11_trace_exports() {
 	const std::vector<std::string> cases = tet4d::core::list_plain_2d_parity_cases();
-	require(cases.size() == 4, "Stage 11 should expose four plain 2D parity cases");
+	require(cases.size() == 5, "plain 2D parity should include the Stage 49 configurable case");
 	for (const std::string &case_id : cases) {
 		const std::string trace = tet4d::core::export_plain_2d_trace_json(case_id);
 		require(trace.find("\"case_id\":\"" + case_id + "\"") != std::string::npos, "Stage 11 trace case id missing");
@@ -151,6 +151,20 @@ void test_live_plain_2d_gravity_tick_sequence() {
 	require(session.state_hash() == initial_hash, "reset after gravity sequence should restore deterministic initial hash");
 }
 
+void test_configurable_live_plain_2d_session() {
+	tet4d::core::Plain2DSession session;
+	const std::string standard_hash = session.state_hash();
+	require(session.configure(10, 20), "supported 2D shape should configure");
+	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "configured 2D snapshot shape missing");
+	require(session.state_hash() != standard_hash, "2D shape must contribute to state identity");
+	session.apply_command("hard_drop");
+	session.reset();
+	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "2D reset should preserve configured shape");
+	require(!session.configure(3, 20), "2D width below semantic minimum should reject");
+	require(!session.configure(10, 31), "2D height above safe maximum should reject");
+	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "invalid configure must preserve session shape");
+}
+
 void test_game_over_spawn_blocked_and_rejected_commands() {
 	tet4d::core::GameState2D blocked_state(6, 6);
 	blocked_state.active_piece = tet4d::core::ActivePiece2D{tet4d::core::trace_dot_shape_2d(), {0, 5}, 0};
@@ -201,6 +215,7 @@ int main(int argc, char **argv) {
 	test_stage11_trace_exports();
 	test_live_plain_2d_session();
 	test_live_plain_2d_gravity_tick_sequence();
+	test_configurable_live_plain_2d_session();
 	test_game_over_spawn_blocked_and_rejected_commands();
 	std::cout << "tet4d_core native plain 2D tests passed\n";
 	return 0;
