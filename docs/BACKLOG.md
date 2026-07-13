@@ -48,7 +48,8 @@ without adding gameplay settings. Its acceptance hardening keeps Quit and menu
 mouse targets fully visible, strengthens Plain-theme selection contrast, and
 removes only the presentation-only live-board fill plane. Advertised menu
 letters/numbers now activate their actions, with mouse and Esc Quit sharing one
-application handler. Python
+application handler. Shortcuts remain active after returning from live play;
+successful preference writes show explicit automatic-save feedback. Python
 gameplay semantics, topology semantics, replay/parity schemas, native
 authority, and migration bundles are unchanged.
 

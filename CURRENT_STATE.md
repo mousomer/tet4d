@@ -21,8 +21,9 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   hit-testable mouse/Quit cards, visible Plain-theme focus, and removes the
   distracting live-board fill plane without changing grid geometry. Displayed
   main-menu letters/numbers now activate their cards, and mouse/Esc Quit route
-  through the same application handler. Stage 49 topology work remains
-  deferred.
+  through the same application handler. Shortcuts remain active after returning
+  from live play, and successful preference changes visibly confirm automatic
+  saving. Stage 49 topology work remains deferred.
 
 - Stage 46 Godot core gameplay completion is complete on the merged `master`
   baseline. The bounded audit is recorded in

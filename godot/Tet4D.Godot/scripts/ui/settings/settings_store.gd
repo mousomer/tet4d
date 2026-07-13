@@ -179,6 +179,7 @@ func _save_persistent_values() -> bool:
 		_report_save_failure("atomic replacement failed with error %s" % rename_error)
 		return false
 	_save_count += 1
+	_diagnostics.append("Shell settings saved automatically.")
 	return true
 
 

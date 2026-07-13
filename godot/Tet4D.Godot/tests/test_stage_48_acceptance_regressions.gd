@@ -56,6 +56,15 @@ func run() -> Array:
 	if not hud.handle_main_menu_shortcut(_key_event(KEY_2)) or live_2d_count[0] != 1:
 		failures.append("advertised 2 shortcut should activate Play 2D")
 	hud.show_screen("main_menu")
+	var app = root.get_node_or_null("App")
+	if app == null:
+		failures.append("shortcut persistence check requires TraceReplayApp")
+	else:
+		app._input(_key_event(KEY_S))
+	await tree.process_frame
+	if hud.current_screen() != "settings":
+		failures.append("menu shortcuts should still work after entering a live mode and returning to Main Menu")
+	hud.show_screen("main_menu")
 	if not hud.handle_main_menu_shortcut(_key_event(KEY_ESCAPE)) or quit_count[0] != 2:
 		failures.append("advertised Esc shortcut should emit Quit exactly once")
 	root.queue_free()

@@ -139,7 +139,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _mode == MODE_REPLAY and _hud != null and _hud.handle_main_menu_shortcut(event):
+	if _hud != null and _hud.handle_main_menu_shortcut(event):
 		get_viewport().set_input_as_handled()
 		return
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):

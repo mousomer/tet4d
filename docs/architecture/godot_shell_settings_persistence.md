@@ -57,6 +57,8 @@ persistence, reset, focus, and semantic whitelist coverage.
 - Stored values: validated JSON-safe booleans, strings, and numbers.
 - Ordering: persistent registry order, producing deterministic canonical JSON.
 - Save timing: validated save-on-change; unchanged values do not write.
+- Save feedback: the Settings screen reports `Shell settings saved automatically.`
+  after a successful write; no separate Save button is required.
 - Replacement: write a sibling temporary file, then replace the destination.
 - Reset: restore registry defaults, apply them immediately, and persist them.
 
@@ -94,7 +96,9 @@ theme, rather than relying on a thin border alone. The live board retains grid
 lines and its boundary outline but no longer renders an additional filled
 mid-board plane. Displayed main-menu shortcuts (`2`, `3`, `4`, `H`, `A`, `S`,
 and `Esc`) dispatch the same actions as their cards. Mouse and Esc Quit share
-one named application-quit handler.
+one named application-quit handler. Shortcut dispatch depends on the visible
+Main Menu rather than the previously played mode, so it remains available
+after returning from Live 2D, 3D, or 4D.
 
 ## Explicit non-goals
 
