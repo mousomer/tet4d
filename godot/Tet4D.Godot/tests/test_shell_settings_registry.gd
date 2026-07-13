@@ -9,8 +9,9 @@ func run() -> Array:
 	var registry = SettingsRegistryScript.new()
 	registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	failures.append_array(registry.validate())
-	_assert_equal(failures, registry.categories.size(), 5, "Stage 29 category count")
-	_assert_equal(failures, registry.settings.size(), 7, "Stage 29 setting count")
+	_assert_equal(failures, registry.schema_version, 1, "Stage 48 registry schema version")
+	_assert_equal(failures, registry.categories.size(), 6, "Stage 48 category count")
+	_assert_equal(failures, registry.settings.size(), 8, "Stage 48 setting count")
 	var setting_ids: Array = []
 	for spec in registry.settings:
 		var setting_id: String = spec.id()
@@ -27,6 +28,10 @@ func run() -> Array:
 			if setting_id.find(token) >= 0 or spec.category().find(token) >= 0:
 				failures.append("%s should not expose forbidden semantic token %s" % [setting_id, token])
 		_validate_shape(failures, spec)
+		if spec.is_persistent() != (spec.persistence() == "local_shell"):
+			failures.append("%s should declare persistence explicitly" % setting_id)
+		if spec.is_persistent() and (spec.label().is_empty() or spec.description().is_empty()):
+			failures.append("%s persistent setting should include player-facing label and description" % setting_id)
 	_assert_has_setting(failures, registry, "replay.playback_speed")
 	_assert_has_setting(failures, registry, "replay.loop_enabled")
 	_assert_has_setting(failures, registry, "display.show_w_labels")
@@ -34,6 +39,11 @@ func run() -> Array:
 	_assert_has_setting(failures, registry, "theme.name")
 	_assert_has_setting(failures, registry, "diagnostics.show_layout_bounds")
 	_assert_has_setting(failures, registry, "controls_help.show_keyboard_hints")
+	_assert_has_setting(failures, registry, "interface.show_onboarding")
+	if registry.persistent_specs().size() != 7:
+		failures.append("Stage 48 should persist exactly seven whitelisted shell preferences")
+	if registry.get_spec("diagnostics.show_layout_bounds").is_persistent():
+		failures.append("layout diagnostics should remain session-only")
 	return failures
 
 

@@ -8,6 +8,7 @@ const ALLOWED_CATEGORIES := [
 	"theme",
 	"diagnostics",
 	"controls_help",
+	"interface",
 ]
 const FORBIDDEN_CATEGORY_TOKENS := [
 	"gameplay",
@@ -26,6 +27,11 @@ const ALLOWED_VALUE_TYPES := ["bool", "int", "float", "enum", "string", "action"
 const ALLOWED_CONTROL_TYPES := ["checkbox", "slider", "dropdown", "text_field", "button", "label"]
 const ALLOWED_AUTHORITIES := ["godot_shell", "python_oracle", "future_parity", "forbidden"]
 const ALLOWED_PERSISTENCE := ["none", "session", "local_shell"]
+const ALLOWED_SPEC_FIELDS := [
+	"id", "label", "description", "category", "value_type", "control_type",
+	"default", "min", "max", "step", "unit", "options", "authority",
+	"persistence", "persist", "action_id",
+]
 const CONTROL_TYPE_BY_VALUE_TYPE := {
 	"bool": "checkbox",
 	"int": "slider",
@@ -79,6 +85,34 @@ func default_value():
 	return data.get("default")
 
 
+func is_persistent() -> bool:
+	return bool(data.get("persist", false)) and persistence() == "local_shell"
+
+
+func validated_value(value) -> Dictionary: # tet4d-semantic-boundary: allow diagnostic-presentation
+	var result := {"ok": false, "value": default_value()}
+	match value_type():
+		"bool":
+			if typeof(value) == TYPE_BOOL:
+				result = {"ok": true, "value": value}
+		"string":
+			if typeof(value) == TYPE_STRING:
+				result = {"ok": true, "value": value}
+		"enum":
+			if typeof(value) == TYPE_STRING:
+				for option in data.get("options", []):
+					if option is Dictionary and str(option.get("value", "")) == value:
+						return {"ok": true, "value": value}
+		"int", "float":
+			if _is_number(value):
+				var numeric := float(value)
+				var minimum := float(data.get("min", numeric))
+				var maximum := float(data.get("max", numeric))
+				if numeric >= minimum and numeric <= maximum:
+					result = {"ok": true, "value": int(round(numeric)) if value_type() == "int" else numeric}
+	return result
+
+
 func is_editable() -> bool:
 	return authority() == "godot_shell"
 
@@ -109,6 +143,13 @@ static func validate(spec_data: Dictionary, known_categories: Array) -> Array:
 		failures.append("%s: Stage 29 registry may only expose godot_shell editable settings" % setting_id)
 	if not ALLOWED_PERSISTENCE.has(persistence):
 		failures.append("%s: unknown persistence %s" % [setting_id, persistence])
+	if typeof(spec_data.get("persist")) != TYPE_BOOL:
+		failures.append("%s: persist must be explicitly true or false" % setting_id)
+	elif bool(spec_data.get("persist", false)) != (persistence == "local_shell"):
+		failures.append("%s: persist must match local_shell persistence" % setting_id)
+	for field in spec_data.keys():
+		if not ALLOWED_SPEC_FIELDS.has(str(field)):
+			failures.append("%s: unsupported registry field %s" % [setting_id, str(field)])
 	for token in FORBIDDEN_CATEGORY_TOKENS:
 		if setting_id.find(token) >= 0 or category_id.find(token) >= 0:
 			failures.append("%s: forbidden semantic token %s in id/category" % [setting_id, token])

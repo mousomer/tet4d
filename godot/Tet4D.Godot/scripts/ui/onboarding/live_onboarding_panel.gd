@@ -33,7 +33,7 @@ func _init() -> void:
 	var dismiss_button := Button.new()
 	dismiss_button.name = "DismissOnboardingButton"
 	dismiss_button.text = "Hide Guide"
-	dismiss_button.tooltip_text = "Hide onboarding for this launch"
+	dismiss_button.tooltip_text = "Hide onboarding until it is re-enabled in Settings"
 	dismiss_button.pressed.connect(func() -> void: dismiss_requested.emit())
 	header.add_child(dismiss_button)
 	_body = Label.new()

@@ -8,6 +8,7 @@ const REGISTRY_PATH := "res://config/shell_settings_registry.json"
 var categories: Array = []
 var settings: Array = []
 var _settings_by_id: Dictionary = {}
+var schema_version := 0
 
 func load_from_path(path: String) -> void:
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -22,6 +23,7 @@ func load_from_path(path: String) -> void:
 
 
 func load_from_data(data: Dictionary) -> void:
+	schema_version = int(data.get("schema_version", 0))
 	categories = data.get("categories", []).duplicate(true)
 	settings = []
 	_settings_by_id.clear()
@@ -34,6 +36,8 @@ func load_from_data(data: Dictionary) -> void:
 
 func validate() -> Array: # tet4d-semantic-boundary: allow diagnostic-presentation
 	var failures: Array = []
+	if schema_version != 1:
+		failures.append("settings registry schema_version must be 1")
 	var category_ids: Array = []
 	for category_data in categories:
 		if not (category_data is Dictionary):
@@ -83,5 +87,20 @@ func get_spec(setting_id: String):
 func default_values() -> Dictionary:
 	var values: Dictionary = {}
 	for spec in settings:
+		values[spec.id()] = spec.default_value()
+	return values
+
+
+func persistent_specs() -> Array:
+	var result: Array = []
+	for spec in settings:
+		if spec.is_persistent():
+			result.append(spec)
+	return result
+
+
+func persistent_default_values() -> Dictionary:
+	var values: Dictionary = {}
+	for spec in persistent_specs():
 		values[spec.id()] = spec.default_value()
 	return values

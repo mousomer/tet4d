@@ -24,6 +24,7 @@ const MODE_STEPS := {
 var _mode := ""
 var _indices := {}
 var _dismissed := false
+var _enabled := true
 
 func select_mode(mode: String) -> void:
 	_mode = mode if MODE_STEPS.has(mode) else ""
@@ -40,8 +41,13 @@ func consume_command_result(command: String, status: String) -> bool:
 func dismiss() -> void:
 	_dismissed = true
 
+func set_enabled(enabled: bool) -> void:
+	_enabled = enabled
+	if enabled:
+		_dismissed = false
+
 func is_visible() -> bool:
-	return not _dismissed and not current_step().is_empty()
+	return _enabled and not _dismissed and not current_step().is_empty()
 
 func current_index() -> int:
 	return int(_indices.get(_mode, 0))
@@ -54,4 +60,4 @@ func current_step() -> Dictionary:
 func snapshot() -> Dictionary:
 	var step := current_step()
 	var steps: Array = MODE_STEPS.get(_mode, [])
-	return {"mode": _mode, "visible": is_visible(), "dismissed": _dismissed, "step_index": current_index(), "step_count": steps.size(), "step_id": str(step.get("id", "")), "title": str(step.get("title", "")), "body": str(step.get("body", ""))}
+	return {"mode": _mode, "visible": is_visible(), "enabled": _enabled, "dismissed": _dismissed, "step_index": current_index(), "step_count": steps.size(), "step_id": str(step.get("id", "")), "title": str(step.get("title", "")), "body": str(step.get("body", ""))}
