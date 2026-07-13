@@ -1,6 +1,6 @@
 # Stage 48 Godot Shell Settings Persistence
 
-Status: implementation in progress
+Status: implementation complete; interactive acceptance pending
 Date: 2026-07-12
 
 ## Authority and scope
@@ -86,6 +86,13 @@ owners. The store never mutates those owners directly.
 The Settings screen remains viewport-safe, gives initial focus to the first
 setting, defines deterministic focus neighbours, and includes a reachable
 `Reset Settings to Defaults` action. Esc continues to return to Main Menu.
+
+Acceptance hardening keeps main-menu command cards compact enough that Quit is
+fully visible and mouse-hit-testable at the supported viewport. Focused and
+hovered cards use the palette's soft accent surface, including the light Plain
+theme, rather than relying on a thin border alone. The live board retains grid
+lines and its boundary outline but no longer renders an additional filled
+mid-board plane.
 
 ## Explicit non-goals
 

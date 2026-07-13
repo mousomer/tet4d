@@ -76,6 +76,17 @@ func run() -> Array:
 		failures.append("changing theme.name should update settings panel style manager")
 	if title != null and title.get_theme_color("font_color") != panel.style_manager().get_color(ShellStyleRolesScript.ACCENT_PRIMARY):
 		failures.append("settings title should refresh when theme changes")
+	var plain_button := Button.new()
+	plain_button.name = "CommandCard__Plain_Focus_Check"
+	ShellControlStyleApplierScript.new().apply_to_tree(plain_button, panel.style_manager())
+	var plain_normal := plain_button.get_theme_stylebox("normal") as StyleBoxFlat
+	var plain_focus := plain_button.get_theme_stylebox("focus") as StyleBoxFlat
+	if plain_normal == null or plain_focus == null:
+		failures.append("plain menu cards should define normal and focused surfaces")
+	elif plain_focus.bg_color != panel.style_manager().get_color(ShellStyleRolesScript.ACCENT_SOFT):
+		failures.append("plain focused menu cards should use the visible soft accent surface")
+	elif plain_focus.bg_color == plain_normal.bg_color:
+		failures.append("plain focused menu cards should remain distinguishable from unselected cards")
 	panel.queue_free()
 	await tree.process_frame
 	failures.append_array(_check_settings_registry())

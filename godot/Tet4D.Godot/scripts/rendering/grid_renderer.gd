@@ -18,7 +18,6 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, l
 		if not slice_bounds.get("ok", false):
 			continue
 		if live_2d and (dimension == 2 or dimension >= 4):
-			_add_live_board_fill(slice_bounds, display_mode)
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(slice_bounds, display_mode)
 		if dimension >= 4 and show_w_labels:
@@ -60,17 +59,6 @@ func _add_line(position: Vector3, scale_value: Vector3, material: Material) -> v
 	mesh_instance.material_override = material
 	mesh_instance.position = position
 	add_child(mesh_instance)
-
-
-func _add_live_board_fill(slice_bounds: Dictionary, display_mode: String) -> void:
-	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
-	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
-	var size := max_pos - min_pos
-	_add_line(
-		Vector3((min_pos.x + max_pos.x) * 0.5, (min_pos.y + max_pos.y) * 0.5, -0.055),
-		Vector3(size.x, size.y, 0.024),
-		ReplayVisuals.live_board_fill_material(display_mode)
-	)
 
 
 func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: String) -> void:

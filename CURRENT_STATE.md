@@ -17,7 +17,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   layer and keeps Stage 47 navigation/onboarding behavior intact. Only
   presentation preferences are eligible; gameplay, live sessions, topology,
   replay/parity schemas, Python config, native authority, migration bundles,
-  and packaging remain unchanged. Stage 49 topology work remains deferred.
+  and packaging remain unchanged. Acceptance hardening restores fully
+  hit-testable mouse/Quit cards, visible Plain-theme focus, and removes the
+  distracting live-board fill plane without changing grid geometry. Stage 49
+  topology work remains deferred.
 
 - Stage 46 Godot core gameplay completion is complete on the merged `master`
   baseline. The bounded audit is recorded in

@@ -1729,7 +1729,7 @@ func _make_command_card(label_text: String, description: String, shortcut: Strin
 	var button := Button.new()
 	button.name = "CommandCard__%s" % label_text.replace(" ", "_")
 	button.text = "%s        %s\n%s" % [label_text, shortcut, description]
-	button.custom_minimum_size = Vector2(480, 66)
+	button.custom_minimum_size = Vector2(480, 54)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", 17)
 	button.tooltip_text = "%s - %s" % [label_text, description]
