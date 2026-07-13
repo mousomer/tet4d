@@ -297,7 +297,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Mouse Camera",
-		[["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
+		[["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]
 	)
 	_assert_group_items(
 		failures,

@@ -258,6 +258,19 @@ func run() -> Array:
 			failures.append("Mouse wheel down should zoom out by increasing orthographic size")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Mouse wheel zoom should not mutate Live 4D gameplay state")
+		var scroll_focus_before: Vector3 = app._camera_rig._target_focus
+		var scroll_size_before: float = live_4d_camera.size if live_4d_camera != null else 0.0
+		var shift_wheel := InputEventMouseButton.new()
+		shift_wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+		shift_wheel.pressed = true
+		shift_wheel.shift_pressed = true
+		app._handle_camera_input(shift_wheel)
+		if app._camera_rig._target_focus == scroll_focus_before or app._camera_rig._current_fit_state != "matrix scroll":
+			failures.append("Shift+wheel should scroll the Live 4D layer matrix")
+		if live_4d_camera != null and absf(live_4d_camera.size - scroll_size_before) > 0.001:
+			failures.append("Matrix scrolling should pan rather than zoom")
+		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
+			failures.append("Matrix scrolling should not dispatch a gameplay command")
 		var drag_event := InputEventMouseButton.new()
 		drag_event.button_index = MOUSE_BUTTON_LEFT
 		drag_event.pressed = true
@@ -468,9 +481,11 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 		"last_command_status": "accepted",
 		"paused": false,
 		"game_over": false,
+		"dimension": 3,
+		"board_shape": [6, 10, 6],
 	}
 	var summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D")
-	if summary != "Live Plain 3D | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
+	if summary != "Live Plain 3D | Board 6 × 10 × 6 | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
 		failures.append("live gameplay summary should prioritize score, clears, and piece queue, got %s" % summary)
 	var feedback := ReplayHudScript.live_command_feedback_text(live_snapshot)
 	if feedback != "Piece locked":

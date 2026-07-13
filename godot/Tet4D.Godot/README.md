@@ -33,9 +33,31 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 
 - Presents the main menu, replay browser, viewer, controls, settings, and diagnostics.
 - Routes accepted plain live-mode inputs to the native bridge.
+- Opens a mode-specific New Game setup flow with curated 2D/3D/4D board-size presets.
 - Renders replay snapshots and live-session snapshots.
 - Exposes controls/help and a demo/limitations summary for first-time users.
 - Saves supported presentation preferences from the Settings screen and restores them at startup.
+
+## Game Setup
+
+Board dimensions are gameplay setup, not shell settings. Choosing Play 2D,
+Play 3D, or Play 4D opens a setup screen that shows each supported preset's
+exact shape. Start Game constructs a new native bounded session with that
+shape; Restart Game keeps the same shape, while Change Setup exits live play
+before another session is constructed.
+
+The last selected preset per mode is stored separately in
+`user://game_setup.json`. The file contains preset IDs only and safely falls
+back to each mode's Standard preset when missing, malformed, or unsupported.
+It never contains active board state, score, pieces, cells, RNG, pause, or
+game-over state and never writes `user://shell_settings.json`.
+
+The Wide W 4D preset uses an adaptive matrix of projected layer boards. Every
+W layer is represented, all active-piece layers receive stronger outlines,
+and Fit View frames the complete matrix. Godot does not currently expose XW or
+ZW view-basis rotation, so identity/W layering remains the accepted live view.
+Shift+mouse-wheel scrolls layer rows without sending gameplay commands; normal
+mouse-wheel zoom remains unchanged, and Fit View restores the matrix overview.
 
 ## Shell Settings
 

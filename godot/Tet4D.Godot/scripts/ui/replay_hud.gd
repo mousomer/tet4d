@@ -14,6 +14,10 @@ const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onbo
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
+const GameSetupModelScript = preload("res://scripts/ui/game_setup/game_setup_model.gd")
+const GameSetupStoreScript = preload("res://scripts/ui/game_setup/game_setup_store.gd")
+const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_panel.gd")
+const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -34,6 +38,8 @@ signal replay_mode_requested()
 signal live_2d_requested()
 signal live_3d_requested()
 signal live_4d_requested()
+signal live_game_start_requested(mode: String, board_shape: Array)
+signal change_setup_requested(mode: String)
 signal main_menu_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
@@ -43,6 +49,7 @@ const SCREEN_SETTINGS := "settings"
 const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
 const SCREEN_ABOUT := "about"
+const SCREEN_GAME_SETUP := "game_setup"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
 const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
@@ -80,6 +87,7 @@ var _settings_screen_panel: SettingsPanel
 var _play_button: Button
 var _reset_button: Button
 var _restart_game_button: Button
+var _change_setup_button: Button
 var _quit_button: Button
 var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
@@ -110,6 +118,7 @@ var _settings_screen: Control
 var _controls_screen: Control
 var _diagnostics_screen: Control
 var _about_screen: Control
+var _game_setup_screen: Control
 var _screens: Dictionary = {}
 var _replay_note: Label
 var _help_panel: PanelContainer
@@ -150,6 +159,10 @@ var _controls_scroll: ScrollContainer
 var _about_scroll: ScrollContainer
 var _settings_registry = SettingsRegistryScript.new()
 var _settings_store
+var _game_setup_model = GameSetupModelScript.new()
+var _game_setup_store = GameSetupStoreScript.new()
+var _game_setup_panel
+var _active_live_mode := ""
 
 
 static func replay_hint_text() -> String:
@@ -206,7 +219,7 @@ static func live_4d_control_hint_groups() -> Array:
 			"items": [["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]],
 		},
 		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]},
+		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]},
 		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
 		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
@@ -233,6 +246,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_settings_registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	_settings_store = SettingsStoreScript.new(_settings_registry)
+	_game_setup_model.apply_last_selected(_game_setup_store.load_last_selected())
 	_style_manager.set_theme(_current_display_mode)
 	_style_manager.theme_changed.connect(func(theme_id: String) -> void:
 		_apply_shell_style()
@@ -366,6 +380,7 @@ func set_live_2d_mode(
 	gravity_interval_seconds: float = 0.5
 ) -> void:
 	_live_2d_paused = paused
+	_active_live_mode = GameSetupSpecScript.MODE_2D
 	_live_2d_game_over = game_over
 	_onboarding_model.select_mode("live_2d")
 	_render_onboarding()
@@ -409,6 +424,7 @@ func set_live_3d_mode(
 	gravity_interval_seconds: float = 0.5
 ) -> void:
 	_live_3d_paused = paused
+	_active_live_mode = GameSetupSpecScript.MODE_3D
 	_live_3d_game_over = game_over
 	_onboarding_model.select_mode("live_3d")
 	_render_onboarding()
@@ -452,6 +468,7 @@ func set_live_4d_mode(
 	gravity_interval_seconds: float = 0.5
 ) -> void:
 	_live_4d_paused = paused
+	_active_live_mode = GameSetupSpecScript.MODE_4D
 	_live_4d_game_over = game_over
 	_onboarding_model.select_mode("live_4d")
 	_render_onboarding()
@@ -547,11 +564,11 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 		return false
 	match key_event.keycode:
 		KEY_2:
-			live_2d_requested.emit()
+			open_game_setup(GameSetupSpecScript.MODE_2D)
 		KEY_3:
-			live_3d_requested.emit()
+			open_game_setup(GameSetupSpecScript.MODE_3D)
 		KEY_4:
-			live_4d_requested.emit()
+			open_game_setup(GameSetupSpecScript.MODE_4D)
 		KEY_H:
 			show_screen(SCREEN_CONTROLS)
 		KEY_A:
@@ -563,6 +580,15 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 		_:
 			return false
 	return true
+
+
+func open_game_setup(mode: String) -> void:
+	if not _game_setup_model.set_mode(mode):
+		return
+	if _game_setup_panel != null:
+		_game_setup_panel.configure(_game_setup_model)
+		_apply_shell_style()
+	show_screen(SCREEN_GAME_SETUP)
 
 
 func _focus_current_screen() -> void:
@@ -758,8 +784,24 @@ func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String) -> 
 static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String) -> String:
 	var current_piece := str(snapshot.get("current_piece", "-")).strip_edges()
 	var next_piece := str(snapshot.get("next_piece", "-")).strip_edges()
-	return "%s | SCORE %d | CLEARS %d | %s > %s | %s" % [
+	var shape: Array = snapshot.get("board_shape", [])
+	var board_text := GameSetupSpecScript.format_shape(shape)
+	var layer_text := ""
+	if int(snapshot.get("dimension", 0)) == 4:
+		var active_layers := []
+		for cell in snapshot.get("active_cells", []):
+			var position: Array = cell.get("position", [])
+			if position.size() > 3 and not active_layers.has(int(position[3])):
+				active_layers.append(int(position[3]))
+		active_layers.sort()
+		var active_labels := []
+		for layer in active_layers:
+			active_labels.append(str(int(layer) + 1))
+		layer_text = " | Layers W · %d | Active %s" % [int(snapshot.get("w_slice_count", shape[3] if shape.size() > 3 else 1)), ",".join(active_labels)]
+	return "%s | Board %s%s | SCORE %d | CLEARS %d | %s > %s | %s" % [
 		mode_label,
+		board_text,
+		layer_text,
 		int(snapshot.get("score", 0)),
 		int(snapshot.get("lines", 0)),
 		current_piece if not current_piece.is_empty() else "-",
@@ -819,6 +861,8 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_bottom_panel.visible = not live_mode
 	if _restart_game_button != null and not live_mode:
 		_restart_game_button.visible = false
+	if _change_setup_button != null:
+		_change_setup_button.visible = live_mode
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = (not live_mode) and _keyboard_hints_visible
 	if _hint_label != null:
@@ -1030,7 +1074,7 @@ func _build_layout() -> void:
 	var menu_button := Button.new()
 	menu_button.text = "Main Menu"
 	menu_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_MAIN_MENU)
+		main_menu_requested.emit()
 	)
 	nav_row_a.add_child(menu_button)
 	var browser_button := Button.new()
@@ -1120,7 +1164,19 @@ func _build_layout() -> void:
 	_restart_game_button.pressed.connect(func() -> void:
 		reset_requested.emit()
 	)
-	top_summary_box.add_child(_restart_game_button)
+	var live_actions := HBoxContainer.new()
+	live_actions.add_theme_constant_override("separation", 8)
+	live_actions.add_child(_restart_game_button)
+	_change_setup_button = Button.new()
+	_change_setup_button.name = "ChangeSetupButton"
+	_change_setup_button.text = "Change Setup"
+	_change_setup_button.visible = false
+	_change_setup_button.pressed.connect(func() -> void:
+		if not _active_live_mode.is_empty():
+			change_setup_requested.emit(_active_live_mode)
+	)
+	live_actions.add_child(_change_setup_button)
+	top_summary_box.add_child(live_actions)
 
 	_authority_panel = PanelContainer.new()
 	_authority_panel.name = "AuthorityPanel"
@@ -1448,6 +1504,9 @@ func _build_layout() -> void:
 	_about_screen = _make_screen()
 	screen_stack.add_child(_about_screen)
 	_build_about_screen(_about_screen)
+	_game_setup_screen = _make_screen()
+	screen_stack.add_child(_game_setup_screen)
+	_build_game_setup_screen(_game_setup_screen)
 	_screens = {
 		SCREEN_MAIN_MENU: _main_menu_screen,
 		SCREEN_BROWSER: _browser_screen,
@@ -1456,6 +1515,7 @@ func _build_layout() -> void:
 		SCREEN_CONTROLS: _controls_screen,
 		SCREEN_DIAGNOSTICS: _diagnostics_screen,
 		SCREEN_ABOUT: _about_screen,
+		SCREEN_GAME_SETUP: _game_setup_screen,
 	}
 	show_screen(SCREEN_MAIN_MENU)
 
@@ -1515,17 +1575,17 @@ func _build_main_menu_screen(screen: Control) -> void:
 	layout.add_child(_menu_group_header("PLAY"))
 	var live_button := _make_command_card("Play 2D", "Plain bounded board · best place to start", "2")
 	live_button.pressed.connect(func() -> void:
-		live_2d_requested.emit()
+		open_game_setup(GameSetupSpecScript.MODE_2D)
 	)
 	layout.add_child(live_button)
 	var live_3d_button := _make_command_card("Play 3D", "Plain bounded board · direct XY, XZ, and YZ rotations", "3")
 	live_3d_button.pressed.connect(func() -> void:
-		live_3d_requested.emit()
+		open_game_setup(GameSetupSpecScript.MODE_3D)
 	)
 	layout.add_child(live_3d_button)
 	var live_4d_button := _make_command_card("Play 4D", "Plain bounded board · W-slice view and camera recovery", "4")
 	live_4d_button.pressed.connect(func() -> void:
-		live_4d_requested.emit()
+		open_game_setup(GameSetupSpecScript.MODE_4D)
 	)
 	layout.add_child(live_4d_button)
 	layout.add_child(_menu_group_header("EXPLORE"))
@@ -1557,6 +1617,23 @@ func _build_main_menu_screen(screen: Control) -> void:
 	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, browser_button, controls_button, about_button, settings_button, quit_button]
 	_configure_linear_focus(focus_order)
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
+
+
+func _build_game_setup_screen(screen: Control) -> void:
+	_game_setup_panel = GameSetupPanelScript.new()
+	_fill_parent(_game_setup_panel)
+	screen.add_child(_game_setup_panel)
+	_game_setup_panel.configure(_game_setup_model)
+	_game_setup_panel.preset_selected.connect(func(_preset_id: String) -> void:
+		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
+	)
+	_game_setup_panel.start_requested.connect(func(mode: String, board_shape: Array) -> void:
+		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
+		live_game_start_requested.emit(mode, board_shape)
+	)
+	_game_setup_panel.back_requested.connect(func() -> void:
+		show_screen(SCREEN_MAIN_MENU)
+	)
 
 
 func _build_browser_screen(screen: Control) -> void:

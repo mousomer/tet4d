@@ -45,6 +45,20 @@ func active_cells() -> Array:
 	return snapshot.get("active_cells", [])
 
 
+func active_layer_indices() -> Array:
+	if dimension < 4:
+		return []
+	var result := []
+	for cell in active_cells():
+		var position: Array = cell.get("position", [])
+		if position.size() > 3:
+			var layer := int(position[3])
+			if not result.has(layer):
+				result.append(layer)
+	result.sort()
+	return result
+
+
 func probe_markers() -> Array:
 	return snapshot.get("probe_markers", [])
 

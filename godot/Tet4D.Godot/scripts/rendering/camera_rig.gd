@@ -18,6 +18,7 @@ const DEFAULT_ORTHOGRAPHIC_SIZE := 16.0
 const MIN_ORTHOGRAPHIC_SIZE := 2.0
 const MAX_ORTHOGRAPHIC_SIZE := 96.0
 const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
+const LIVE_4D_MATRIX_SCROLL_STEP := 4.0
 const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
 
@@ -148,6 +149,12 @@ func nudge_roll(delta_radians: float) -> void:
 func roll(delta: Vector2) -> void:
 	_target_roll += delta.x * orbit_sensitivity
 	_current_fit_state = "manual"
+
+
+func pan_focus(offset: Vector3) -> void:
+	_target_focus += offset
+	_current_fit_state = "matrix scroll"
+	_update_camera()
 
 
 func zoom(step: float) -> void:

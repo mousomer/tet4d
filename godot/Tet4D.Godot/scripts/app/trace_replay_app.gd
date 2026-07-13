@@ -217,11 +217,17 @@ func _handle_camera_input(event: InputEvent) -> void:
 			_mouse_rolling = event.pressed and shift_roll
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
-				_camera_rig.zoom(-1.0)
+				if _mode == MODE_LIVE_4D and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
+					_camera_rig.pan_focus(Vector3.UP * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
+				else:
+					_camera_rig.zoom(-1.0)
 				_refresh_camera_status()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			if _camera_rig != null:
-				_camera_rig.zoom(1.0)
+				if _mode == MODE_LIVE_4D and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
+					_camera_rig.pan_focus(Vector3.DOWN * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
+				else:
+					_camera_rig.zoom(1.0)
 				_refresh_camera_status()
 	elif event is InputEventMouseMotion:
 		if _camera_rig == null:
@@ -523,6 +529,8 @@ func _wire_hud() -> void:
 	_hud.live_2d_requested.connect(_enter_live_2d_mode)
 	_hud.live_3d_requested.connect(_enter_live_3d_mode)
 	_hud.live_4d_requested.connect(_enter_live_4d_mode)
+	_hud.live_game_start_requested.connect(_start_configured_live_game)
+	_hud.change_setup_requested.connect(_change_live_setup)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
 
 
@@ -827,6 +835,30 @@ func _bundle_case_count() -> int:
 	return total
 
 
+func _start_configured_live_game(mode_name: String, board_shape: Array) -> void:
+	var configured := false
+	match mode_name:
+		MODE_LIVE_2D:
+			configured = _live_bridge.live_2d_configure(board_shape)
+			_live_2d_session_started = configured
+		MODE_LIVE_3D:
+			configured = _live_bridge.live_3d_configure(board_shape)
+			_live_3d_session_started = configured
+		MODE_LIVE_4D:
+			configured = _live_bridge.live_4d_configure(board_shape)
+			_live_4d_session_started = configured
+	if not configured:
+		push_error("Native live session rejected board shape %s for %s." % [str(board_shape), mode_name])
+		return
+	match mode_name:
+		MODE_LIVE_2D:
+			_enter_live_2d_mode()
+		MODE_LIVE_3D:
+			_enter_live_3d_mode()
+		MODE_LIVE_4D:
+			_enter_live_4d_mode()
+
+
 func _enter_live_2d_mode() -> void:
 	_prepare_live_mode_entry(MODE_LIVE_2D)
 	if not _live_2d_session_started:
@@ -879,6 +911,16 @@ func _return_to_main_menu() -> void:
 	_reset_live_repeat_state()
 	_hud.set_live_keyboard_capture(false)
 	_hud.show_screen(ReplayHud.SCREEN_MAIN_MENU)
+
+
+func _change_live_setup(mode_name: String) -> void:
+	_state.is_playing = false
+	_live_2d_paused = true
+	_live_3d_paused = true
+	_live_4d_paused = true
+	_reset_live_repeat_state()
+	_hud.set_live_keyboard_capture(false)
+	_hud.open_game_setup(mode_name)
 
 
 func _enter_replay_mode() -> void:

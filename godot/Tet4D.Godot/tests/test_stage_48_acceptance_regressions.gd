@@ -50,11 +50,9 @@ func run() -> Array:
 	hud.show_screen("main_menu")
 	if not hud.handle_main_menu_shortcut(_key_event(KEY_A)) or hud.current_screen() != "about":
 		failures.append("advertised A shortcut should activate About Tet4D")
-	var live_2d_count := [0]
-	hud.live_2d_requested.connect(func() -> void: live_2d_count[0] += 1)
 	hud.show_screen("main_menu")
-	if not hud.handle_main_menu_shortcut(_key_event(KEY_2)) or live_2d_count[0] != 1:
-		failures.append("advertised 2 shortcut should activate Play 2D")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_2)) or hud.current_screen() != hud.SCREEN_GAME_SETUP:
+		failures.append("advertised 2 shortcut should open Play 2D setup")
 	hud.show_screen("main_menu")
 	var app = root.get_node_or_null("App")
 	if app == null:

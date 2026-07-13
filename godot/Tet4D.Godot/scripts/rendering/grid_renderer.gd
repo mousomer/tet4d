@@ -5,7 +5,7 @@ class_name GridRenderer
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 
-func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, live_2d: bool = false, show_w_labels: bool = true) -> void:
+func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, live_2d: bool = false, show_w_labels: bool = true, active_layers: Array = []) -> void:
 	for child in get_children():
 		child.queue_free()
 
@@ -20,13 +20,27 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, l
 		if live_2d and (dimension == 2 or dimension >= 4):
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(slice_bounds, display_mode)
+		if live_2d and dimension >= 4:
+			_add_outline_box(
+				slice_bounds,
+				display_mode,
+				ReplayVisuals.board_outline_material(display_mode),
+				ReplayVisuals.slice_outline_thickness(display_mode) * 1.55
+			)
+		if active_layers.has(w_index):
+			_add_outline_box(
+				slice_bounds,
+				display_mode,
+				ReplayVisuals.live_active_cell_border_material(display_mode),
+				ReplayVisuals.slice_outline_thickness(display_mode) * 2.4
+			)
 		if dimension >= 4 and show_w_labels:
 			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode)
 
 
-func _add_outline_box(slice_bounds: Dictionary, display_mode: String) -> void:
-	var board_material := ReplayVisuals.board_outline_material(display_mode)
-	var thickness := ReplayVisuals.slice_outline_thickness(display_mode)
+func _add_outline_box(slice_bounds: Dictionary, display_mode: String, material_override: Material = null, thickness_override: float = -1.0) -> void:
+	var board_material := ReplayVisuals.board_outline_material(display_mode) if material_override == null else material_override
+	var thickness := ReplayVisuals.slice_outline_thickness(display_mode) if thickness_override < 0.0 else thickness_override
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var x0 := min_pos.x

@@ -80,7 +80,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_presentation.projection.mapper,
 		_display_mode,
 		_presentation.is_live,
-		_show_w_labels
+		_show_w_labels,
+		_presentation.active_layer_indices()
 	)
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode)

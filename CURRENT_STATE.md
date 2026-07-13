@@ -11,6 +11,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- Stage 49 configurable plain-board setup and adaptive 4D layer presentation is
+  complete and PR-ready on `codex/configurable-plain-boards`. Its bounded audit is
+  `docs/architecture/configurable_plain_boards_and_4d_layout.md`. This stage
+  parameterizes only accepted bounded native sessions, adds a separate
+  Godot-owned New Game setup model, and adapts presentation for W greater than
+  four with active-layer emphasis, matrix scrolling, and Fit View recovery.
+  Alternate-size 2D/3D/W=8 traces match Python through `state_hash`; rendered
+  acceptance confirms readable setup and large-board fits. Python rules/defaults
+  and topology/replay semantics remain unchanged; topology migration is postponed
+  until this stage is merged.
+
 - Stage 48 Godot shell settings persistence is active on
   `codex/godot-shell-settings-persistence`. It extends the Stage 29 registry
   foundation with a single Godot-owned, versioned, validated user preference
@@ -23,7 +34,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   main-menu letters/numbers now activate their cards, and mouse/Esc Quit route
   through the same application handler. Shortcuts remain active after returning
   from live play, and successful preference changes visibly confirm automatic
-  saving. Stage 49 topology work remains deferred.
+  saving. Stage 49 topology work remains deferred behind the configurable-board
+  stage now in progress.
 
 - Stage 46 Godot core gameplay completion is complete on the merged `master`
   baseline. The bounded audit is recorded in
