@@ -139,8 +139,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _mode == MODE_REPLAY and _hud != null and _hud.current_screen() == ReplayHud.SCREEN_MAIN_MENU and _event_is_escape(event):
-		get_tree().quit()
+	if _mode == MODE_REPLAY and _hud != null and _hud.handle_main_menu_shortcut(event):
 		get_viewport().set_input_as_handled()
 		return
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
@@ -519,14 +518,16 @@ func _wire_hud() -> void:
 		_refresh_hud()
 	)
 	_hud.fit_view_requested.connect(_fit_view)
-	_hud.quit_requested.connect(func() -> void:
-		get_tree().quit()
-	)
+	_hud.quit_requested.connect(_quit_application)
 	_hud.main_menu_requested.connect(_return_to_main_menu)
 	_hud.live_2d_requested.connect(_enter_live_2d_mode)
 	_hud.live_3d_requested.connect(_enter_live_3d_mode)
 	_hud.live_4d_requested.connect(_enter_live_4d_mode)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
+
+
+func _quit_application() -> void:
+	get_tree().quit(0)
 
 
 func _load_bundle() -> void:

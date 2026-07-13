@@ -46,7 +46,9 @@ without repeating its static copy pass. Stage 48 settings/persistence and Stage
 validated versioned user storage, recovery, reset, and onboarding visibility
 without adding gameplay settings. Its acceptance hardening keeps Quit and menu
 mouse targets fully visible, strengthens Plain-theme selection contrast, and
-removes only the presentation-only live-board fill plane. Python
+removes only the presentation-only live-board fill plane. Advertised menu
+letters/numbers now activate their actions, with mouse and Esc Quit sharing one
+application handler. Python
 gameplay semantics, topology semantics, replay/parity schemas, native
 authority, and migration bundles are unchanged.
 

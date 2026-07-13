@@ -539,6 +539,32 @@ func show_screen(screen_name: String) -> void:
 	call_deferred("_focus_current_screen")
 
 
+func handle_main_menu_shortcut(event: InputEvent) -> bool:
+	if _current_screen != SCREEN_MAIN_MENU or not (event is InputEventKey):
+		return false
+	var key_event := event as InputEventKey
+	if not key_event.is_pressed() or key_event.echo or key_event.alt_pressed or key_event.ctrl_pressed or key_event.meta_pressed:
+		return false
+	match key_event.keycode:
+		KEY_2:
+			live_2d_requested.emit()
+		KEY_3:
+			live_3d_requested.emit()
+		KEY_4:
+			live_4d_requested.emit()
+		KEY_H:
+			show_screen(SCREEN_CONTROLS)
+		KEY_A:
+			show_screen(SCREEN_ABOUT)
+		KEY_S:
+			show_screen(SCREEN_SETTINGS)
+		KEY_ESCAPE:
+			_emit_quit_requested()
+		_:
+			return false
+	return true
+
+
 func _focus_current_screen() -> void:
 	var target = _screen_focus_targets.get(_current_screen)
 	if not (target is Control):
@@ -1487,17 +1513,17 @@ func _build_main_menu_screen(screen: Control) -> void:
 	subtitle.add_theme_font_size_override("font_size", 18)
 	layout.add_child(subtitle)
 	layout.add_child(_menu_group_header("PLAY"))
-	var live_button := _make_command_card("Play 2D", "Plain bounded board · best place to start", "2D")
+	var live_button := _make_command_card("Play 2D", "Plain bounded board · best place to start", "2")
 	live_button.pressed.connect(func() -> void:
 		live_2d_requested.emit()
 	)
 	layout.add_child(live_button)
-	var live_3d_button := _make_command_card("Play 3D", "Plain bounded board · direct XY, XZ, and YZ rotations", "3D")
+	var live_3d_button := _make_command_card("Play 3D", "Plain bounded board · direct XY, XZ, and YZ rotations", "3")
 	live_3d_button.pressed.connect(func() -> void:
 		live_3d_requested.emit()
 	)
 	layout.add_child(live_3d_button)
-	var live_4d_button := _make_command_card("Play 4D", "Plain bounded board · W-slice view and camera recovery", "4D")
+	var live_4d_button := _make_command_card("Play 4D", "Plain bounded board · W-slice view and camera recovery", "4")
 	live_4d_button.pressed.connect(func() -> void:
 		live_4d_requested.emit()
 	)

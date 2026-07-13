@@ -41,6 +41,23 @@ func run() -> Array:
 		await tree.process_frame
 		if quit_count[0] != 1:
 			failures.append("mouse click should emit Quit exactly once; hovered %s; rect %s" % [_hovered_name(tree), quit_button.get_global_rect()])
+	hud.show_screen("main_menu")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_S)) or hud.current_screen() != "settings":
+		failures.append("advertised S shortcut should activate Settings")
+	hud.show_screen("main_menu")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_H)) or hud.current_screen() != "controls":
+		failures.append("advertised H shortcut should activate How to Play")
+	hud.show_screen("main_menu")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_A)) or hud.current_screen() != "about":
+		failures.append("advertised A shortcut should activate About Tet4D")
+	var live_2d_count := [0]
+	hud.live_2d_requested.connect(func() -> void: live_2d_count[0] += 1)
+	hud.show_screen("main_menu")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_2)) or live_2d_count[0] != 1:
+		failures.append("advertised 2 shortcut should activate Play 2D")
+	hud.show_screen("main_menu")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_ESCAPE)) or quit_count[0] != 2:
+		failures.append("advertised Esc shortcut should emit Quit exactly once")
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size
@@ -67,6 +84,13 @@ func _click(tree: SceneTree, control: Control) -> void:
 func _hovered_name(tree: SceneTree) -> String:
 	var hovered := tree.root.gui_get_hovered_control()
 	return "%s:%s" % [hovered.name, hovered.get_class()] if hovered != null else "none"
+
+
+func _key_event(keycode: Key) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.keycode = keycode
+	event.pressed = true
+	return event
 
 
 func _find_command_card(root: Node, label_text: String) -> Button:

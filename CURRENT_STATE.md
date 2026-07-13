@@ -19,8 +19,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   replay/parity schemas, Python config, native authority, migration bundles,
   and packaging remain unchanged. Acceptance hardening restores fully
   hit-testable mouse/Quit cards, visible Plain-theme focus, and removes the
-  distracting live-board fill plane without changing grid geometry. Stage 49
-  topology work remains deferred.
+  distracting live-board fill plane without changing grid geometry. Displayed
+  main-menu letters/numbers now activate their cards, and mouse/Esc Quit route
+  through the same application handler. Stage 49 topology work remains
+  deferred.
 
 - Stage 46 Godot core gameplay completion is complete on the merged `master`
   baseline. The bounded audit is recorded in

@@ -92,7 +92,9 @@ fully visible and mouse-hit-testable at the supported viewport. Focused and
 hovered cards use the palette's soft accent surface, including the light Plain
 theme, rather than relying on a thin border alone. The live board retains grid
 lines and its boundary outline but no longer renders an additional filled
-mid-board plane.
+mid-board plane. Displayed main-menu shortcuts (`2`, `3`, `4`, `H`, `A`, `S`,
+and `Esc`) dispatch the same actions as their cards. Mouse and Esc Quit share
+one named application-quit handler.
 
 ## Explicit non-goals
 
