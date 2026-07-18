@@ -220,6 +220,73 @@ std::vector<PieceShapeND> live_piece_sequence_for_dimension(int dimension) {
 	return {};
 }
 
+std::vector<PieceShapeND> embedded_2d_piece_sequence(int dimension) {
+	const auto coord = [dimension](std::initializer_list<int> values) {
+		std::vector<int> result(values);
+		result.resize(static_cast<std::size_t>(dimension), 0);
+		return CoordND{result};
+	};
+	return {
+		{"I_E2", {coord({-1, 0}), coord({0, 0}), coord({1, 0}), coord({2, 0})}, 1},
+		{"O_E2", {coord({0, 0}), coord({1, 0}), coord({0, 1}), coord({1, 1})}, 2},
+		{"T_E2", {coord({-1, 0}), coord({0, 0}), coord({1, 0}), coord({0, 1})}, 3},
+		{"S_E2", {coord({0, 0}), coord({1, 0}), coord({-1, 1}), coord({0, 1})}, 4},
+		{"Z_E2", {coord({-1, 0}), coord({0, 0}), coord({0, 1}), coord({1, 1})}, 5},
+		{"J_E2", {coord({-1, 0}), coord({-1, 1}), coord({0, 0}), coord({1, 0})}, 6},
+		{"L_E2", {coord({-1, 0}), coord({0, 0}), coord({1, 0}), coord({1, 1})}, 7},
+	};
+}
+
+std::vector<PieceShapeND> native_3d_piece_sequence(int dimension = 3) {
+	const auto coord = [dimension](std::initializer_list<int> values) {
+		std::vector<int> result(values);
+		result.resize(static_cast<std::size_t>(dimension), 0);
+		return CoordND{result};
+	};
+	return {
+		{"I3", {coord({-1, 0, 0}), coord({0, 0, 0}), coord({1, 0, 0}), coord({2, 0, 0})}, 1},
+		{"O3", {coord({0, 0, 0}), coord({1, 0, 0}), coord({0, 1, 0}), coord({1, 1, 0})}, 2},
+		{"L3", {coord({-1, 0, 0}), coord({0, 0, 0}), coord({1, 0, 0}), coord({1, 1, 0})}, 3},
+		{"T3", {coord({-1, 0, 0}), coord({0, 0, 0}), coord({1, 0, 0}), coord({0, 1, 0})}, 4},
+		{"S3", {coord({0, 0, 0}), coord({1, 0, 0}), coord({-1, 1, 0}), coord({0, 1, 0})}, 5},
+		{"J3D", {coord({0, 0, 0}), coord({1, 0, 0}), coord({0, 1, 0}), coord({0, 0, 1})}, 6},
+		{"SCREW3", {coord({0, 0, 0}), coord({1, 0, 0}), coord({1, 1, 0}), coord({1, 1, 1})}, 7},
+	};
+}
+
+std::vector<PieceShapeND> standard_4d_5_piece_sequence() {
+	const auto coord = [](std::initializer_list<int> values) {
+		return CoordND{std::vector<int>(values)};
+	};
+	return {
+		{"CROSS4", {coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 0, 0}), coord({0, 0, 1, 0}), coord({0, 0, 0, 1})}, 1},
+		{"SKEW4_A", {coord({0, 0, 0, 0}), coord({-1, 0, 0, 0}), coord({0, 1, 0, 0}), coord({0, 1, 1, 0}), coord({0, 1, 1, 1})}, 2},
+		{"SKEW4_B", {coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({1, -1, 0, 0}), coord({1, -1, 1, 0}), coord({1, -1, 1, 1})}, 3},
+		{"TEE4", {coord({-1, 0, 0, 0}), coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 1, 0}), coord({0, 1, 1, 1})}, 4},
+		{"CORK4", {coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 0, 0}), coord({1, 1, 1, 0}), coord({1, 1, 1, 1})}, 5},
+		{"STAIR4", {coord({0, 0, 0, 0}), coord({0, 1, 0, 0}), coord({1, 1, 0, 0}), coord({1, 1, 1, 0}), coord({1, 1, 1, 1})}, 6},
+		{"FORK4", {coord({0, 0, 0, 0}), coord({-1, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 0, 1}), coord({0, 0, 1, 1})}, 7},
+	};
+}
+
+std::vector<PieceShapeND> configured_piece_sequence(
+		int dimension,
+		const std::string &piece_set_id) {
+	if (piece_set_id == "embedded_2d") {
+		return embedded_2d_piece_sequence(dimension);
+	}
+	if (dimension == 3 && piece_set_id == "native_3d") {
+		return native_3d_piece_sequence();
+	}
+	if (dimension == 4 && piece_set_id == "embedded_3d") {
+		return native_3d_piece_sequence(4);
+	}
+	if (dimension == 4 && piece_set_id == "standard_4d_5") {
+		return standard_4d_5_piece_sequence();
+	}
+	return {};
+}
+
 BoardShapeND live_board_shape_for_dimension(int dimension) {
 	if (dimension == 4) {
 		return {{5, 10, 4, 4}};
@@ -231,6 +298,39 @@ BoardShapeND live_board_shape_for_dimension(int dimension) {
 }
 
 std::string hash_payload_json(
+		const GameStateND &state,
+		const BoardShapeND &shape,
+		const PlainGameSetup &setup,
+		const std::vector<PieceShapeND> &piece_bag,
+		std::size_t next_piece_index,
+		std::size_t rng_words_consumed) {
+	std::ostringstream out;
+	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
+		<< ",\"board_shape\":" << board_shape_json(shape)
+		<< ",\"dimension\":" << shape.dimension()
+		<< ",\"effective_seed\":" << setup.effective_seed
+		<< ",\"game_over\":" << bool_json(state.game_over)
+		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\""
+		<< ",\"initial_speed_level\":" << setup.initial_speed_level
+		<< ",\"lines\":" << state.lines
+		<< ",\"locked_cells\":" << locked_cells_json(state.board)
+		<< ",\"next_piece_index\":" << next_piece_index
+		<< ",\"piece_bag\":[";
+	for (std::size_t index = 0; index < piece_bag.size(); ++index) {
+		if (index != 0) {
+			out << ",";
+		}
+		out << "\"" << piece_bag[index].name << "\"";
+	}
+	out << "]"
+		<< ",\"piece_set_id\":\"" << setup.piece_set_id << "\""
+		<< ",\"random_mode\":\"" << setup.random_mode << "\""
+		<< ",\"rng_words_consumed\":" << rng_words_consumed
+		<< ",\"score\":" << state.score << "}";
+	return out.str();
+}
+
+std::string legacy_hash_payload_json(
 		const GameStateND &state,
 		const BoardShapeND &shape,
 		std::size_t next_piece_index) {
@@ -256,6 +356,19 @@ PlainNDSession::PlainNDSession(int dimension) :
 PlainNDSession::PlainNDSession(int dimension, BoardShapeND board_shape) :
 		dimension_(dimension),
 		board_shape_(is_supported_live_nd_board_shape(dimension, board_shape) ? std::move(board_shape) : live_board_shape_for_dimension(dimension)),
+		setup_({
+			PLAIN_SETUP_SCHEMA_VERSION,
+			dimension == 4 ? "live_4d" : "live_3d",
+			"standard",
+			board_shape_.dims,
+			dimension == 4 ? "standard_4d_5" : "native_3d",
+			RANDOM_MODE_FIXED_SEED,
+			1337,
+			1337,
+			1,
+			false,
+		}),
+		rng_(static_cast<std::uint32_t>(setup_.effective_seed)),
 		state_(board_shape_, 1),
 		piece_sequence_(live_piece_sequence_for_dimension(dimension)) {
 	reset();
@@ -266,14 +379,49 @@ bool PlainNDSession::configure(const BoardShapeND &board_shape) {
 		return false;
 	}
 	board_shape_ = board_shape;
+	setup_.board_shape = board_shape.dims;
+	reset();
+	return true;
+}
+
+bool PlainNDSession::configure(const PlainGameSetup &requested_setup) {
+	const std::string expected_mode = dimension_ == 4 ? "live_4d" : "live_3d";
+	const BoardShapeND shape{requested_setup.board_shape};
+	if (requested_setup.schema_version != PLAIN_SETUP_SCHEMA_VERSION ||
+			requested_setup.mode != expected_mode ||
+			!is_supported_live_nd_board_shape(dimension_, shape) ||
+			!is_supported_live_nd_piece_set(dimension_, requested_setup.piece_set_id) ||
+			!is_valid_plain_random_mode(requested_setup.random_mode) ||
+			!is_valid_plain_speed(requested_setup.initial_speed_level)) {
+		return false;
+	}
+	if (requested_setup.random_mode == RANDOM_MODE_FIXED_SEED &&
+			(!requested_setup.configured_seed.has_value() ||
+			 !is_valid_plain_seed(*requested_setup.configured_seed))) {
+		return false;
+	}
+	PlainGameSetup validated = requested_setup;
+	validated.shuffle_bag = true;
+	if (validated.random_mode == RANDOM_MODE_TRUE_RANDOM) {
+		validated.configured_seed.reset();
+		validated.effective_seed = generate_effective_seed();
+	} else {
+		validated.effective_seed = *validated.configured_seed;
+	}
+	board_shape_ = shape;
+	setup_ = std::move(validated);
 	reset();
 	return true;
 }
 
 void PlainNDSession::reset() {
 	state_ = GameStateND(board_shape_, 1);
-	piece_sequence_ = live_piece_sequence_for_dimension(dimension_);
+	piece_sequence_ = setup_.shuffle_bag ?
+			configured_piece_sequence(dimension_, setup_.piece_set_id) :
+			live_piece_sequence_for_dimension(dimension_);
+	piece_bag_.clear();
 	next_piece_index_ = 0;
+	rng_.seed(static_cast<std::uint32_t>(setup_.effective_seed));
 	spawn_next_piece();
 	last_command_ = "reset";
 	last_command_status_ = "reset";
@@ -400,6 +548,10 @@ std::string PlainNDSession::snapshot_json() const {
 		<< "\"active_w: " << active_w << "\","
 		<< "\"last_command: " << last_command_ << "\","
 		<< "\"last_command_status: " << last_command_status_ << "\","
+		<< "\"piece_set: " << setup_.piece_set_id << "\","
+		<< "\"random_mode: " << setup_.random_mode << "\","
+		<< "\"effective_seed: " << setup_.effective_seed << "\","
+		<< "\"initial_speed_level: " << setup_.initial_speed_level << "\","
 		<< "\"locked_count: " << state_.board.cells().size() << "\""
 		<< "]"
 		<< ",\"dimension\":" << dimension_
@@ -413,6 +565,14 @@ std::string PlainNDSession::snapshot_json() const {
 		<< ",\"frame_index\":" << command_count_
 		<< ",\"game_over\":" << bool_json(state_.game_over)
 		<< ",\"game_over_reason\":\"" << state_.game_over_reason << "\""
+		<< ",\"configured_seed\":";
+	if (setup_.configured_seed.has_value()) {
+		out << *setup_.configured_seed;
+	} else {
+		out << "null";
+	}
+	out << ",\"effective_seed\":" << setup_.effective_seed
+		<< ",\"initial_speed_level\":" << setup_.initial_speed_level
 		<< ",\"last_command\":\"" << last_command_ << "\""
 		<< ",\"last_command_status\":\"" << last_command_status_ << "\""
 		<< ",\"last_rotation_plane\":\"" << rotation_plane << "\""
@@ -432,9 +592,11 @@ std::string PlainNDSession::snapshot_json() const {
 		<< "\"state_hash: " << hash << "\""
 		<< "]"
 		<< ",\"next_piece\":\"" << next_piece_name() << "\""
+		<< ",\"piece_set_id\":\"" << setup_.piece_set_id << "\""
 		<< ",\"particles\":[]"
 		<< ",\"paused\":false"
 		<< ",\"probe_markers\":[]"
+		<< ",\"random_mode\":\"" << setup_.random_mode << "\""
 		<< ",\"score\":" << state_.score
 		<< ",\"state_hash\":\"" << hash << "\""
 		<< ",\"trace_name\":\"" << live_case_id(dimension_) << "\""
@@ -451,6 +613,10 @@ std::string PlainNDSession::status() const {
 		<< " lines=" << state_.lines
 		<< " current_piece=" << current_piece_name()
 		<< " next_piece=" << next_piece_name()
+		<< " piece_set=" << setup_.piece_set_id
+		<< " random_mode=" << setup_.random_mode
+		<< " effective_seed=" << setup_.effective_seed
+		<< " initial_speed_level=" << setup_.initial_speed_level
 		<< " last_rotation_plane=" << rotation_plane_name(state_.active_piece)
 		<< " active_w=" << active_w_index(state_.active_piece)
 		<< " w_slices=" << w_slice_count
@@ -463,12 +629,35 @@ std::string PlainNDSession::status() const {
 }
 
 std::string PlainNDSession::state_hash() const {
-	return sha256_hex(hash_payload_json(state_, board_shape_, next_piece_index_));
+	if (!setup_.shuffle_bag) {
+		return sha256_hex(legacy_hash_payload_json(state_, board_shape_, next_piece_index_));
+	}
+	return sha256_hex(hash_payload_json(
+		state_,
+		board_shape_,
+		setup_,
+		piece_bag_,
+		next_piece_index_,
+		rng_.words_consumed()
+	));
+}
+
+void PlainNDSession::refill_piece_bag() {
+	piece_bag_ = piece_sequence_;
+	rng_.shuffle(piece_bag_);
 }
 
 PieceShapeND PlainNDSession::draw_next_piece_shape() {
 	if (piece_sequence_.empty()) {
 		return trace_shape_3d();
+	}
+	if (setup_.shuffle_bag) {
+		if (piece_bag_.empty()) {
+			refill_piece_bag();
+		}
+		PieceShapeND shape = piece_bag_.back();
+		piece_bag_.pop_back();
+		return shape;
 	}
 	const PieceShapeND shape = piece_sequence_[next_piece_index_ % piece_sequence_.size()];
 	++next_piece_index_;
@@ -489,6 +678,9 @@ std::string PlainNDSession::current_piece_name() const {
 std::string PlainNDSession::next_piece_name() const {
 	if (piece_sequence_.empty()) {
 		return "none";
+	}
+	if (setup_.shuffle_bag) {
+		return piece_bag_.empty() ? "pending_bag" : piece_bag_.back().name;
 	}
 	return piece_sequence_[next_piece_index_ % piece_sequence_.size()].name;
 }
@@ -513,6 +705,18 @@ bool is_supported_live_nd_board_shape(int dimension, const BoardShapeND &board_s
 				board_shape.dims[1] >= 6 && board_shape.dims[1] <= 24 &&
 				board_shape.dims[2] >= 2 && board_shape.dims[2] <= 8 &&
 				board_shape.dims[3] >= 1 && board_shape.dims[3] <= 12;
+	}
+	return false;
+}
+
+bool is_supported_live_nd_piece_set(int dimension, const std::string &piece_set_id) {
+	if (dimension == 3) {
+		return piece_set_id == "native_3d" || piece_set_id == "embedded_2d";
+	}
+	if (dimension == 4) {
+		return piece_set_id == "standard_4d_5" ||
+				piece_set_id == "embedded_3d" ||
+				piece_set_id == "embedded_2d";
 	}
 	return false;
 }

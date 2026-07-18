@@ -3,6 +3,7 @@
 #include "tet4d_core/sha256.hpp"
 
 #include <sstream>
+#include <utility>
 #include <vector>
 
 namespace tet4d::core {
@@ -131,6 +132,40 @@ std::string hash_payload_json(
 		const GameState2D &state,
 		int width,
 		int height,
+		const PlainGameSetup &setup,
+		const std::vector<PieceShape2D> &piece_bag,
+		std::size_t next_piece_index,
+		std::size_t rng_words_consumed) {
+	std::ostringstream out;
+	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
+		<< ",\"board_shape\":[" << width << "," << height << "]"
+		<< ",\"dimension\":2"
+		<< ",\"effective_seed\":" << setup.effective_seed
+		<< ",\"game_over\":" << bool_json(state.game_over)
+		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\""
+		<< ",\"initial_speed_level\":" << setup.initial_speed_level
+		<< ",\"lines\":" << state.lines
+		<< ",\"locked_cells\":" << locked_cells_json(state.board)
+		<< ",\"next_piece_index\":" << next_piece_index
+		<< ",\"piece_bag\":[";
+	for (std::size_t index = 0; index < piece_bag.size(); ++index) {
+		if (index != 0) {
+			out << ",";
+		}
+		out << "\"" << piece_bag[index].name << "\"";
+	}
+	out << "]"
+		<< ",\"piece_set_id\":\"" << setup.piece_set_id << "\""
+		<< ",\"random_mode\":\"" << setup.random_mode << "\""
+		<< ",\"rng_words_consumed\":" << rng_words_consumed
+		<< ",\"score\":" << state.score << "}";
+	return out.str();
+}
+
+std::string legacy_hash_payload_json(
+		const GameState2D &state,
+		int width,
+		int height,
 		std::size_t next_piece_index) {
 	std::ostringstream out;
 	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
@@ -153,6 +188,19 @@ Plain2DSession::Plain2DSession() : Plain2DSession(6, 6) {
 Plain2DSession::Plain2DSession(int width, int height) :
 		width_(is_supported_live_2d_board_shape(width, height) ? width : 6),
 		height_(is_supported_live_2d_board_shape(width, height) ? height : 6),
+		setup_({
+			PLAIN_SETUP_SCHEMA_VERSION,
+			"live_2d",
+			"standard",
+			{width_, height_},
+			"classic",
+			RANDOM_MODE_FIXED_SEED,
+			1337,
+			1337,
+			1,
+			false,
+		}),
+		rng_(static_cast<std::uint32_t>(setup_.effective_seed)),
 		state_(width_, height_) {
 	reset();
 }
@@ -163,6 +211,41 @@ bool Plain2DSession::configure(int width, int height) {
 	}
 	width_ = width;
 	height_ = height;
+	setup_.board_shape = {width, height};
+	reset();
+	return true;
+}
+
+bool Plain2DSession::configure(const PlainGameSetup &requested_setup) {
+	if (requested_setup.schema_version != PLAIN_SETUP_SCHEMA_VERSION ||
+			requested_setup.mode != "live_2d" ||
+			requested_setup.board_shape.size() != 2 ||
+			requested_setup.piece_set_id != "classic" ||
+			!is_valid_plain_random_mode(requested_setup.random_mode) ||
+			!is_valid_plain_speed(requested_setup.initial_speed_level)) {
+		return false;
+	}
+	const int width = requested_setup.board_shape[0];
+	const int height = requested_setup.board_shape[1];
+	if (!is_supported_live_2d_board_shape(width, height)) {
+		return false;
+	}
+	if (requested_setup.random_mode == RANDOM_MODE_FIXED_SEED &&
+			(!requested_setup.configured_seed.has_value() ||
+			 !is_valid_plain_seed(*requested_setup.configured_seed))) {
+		return false;
+	}
+	PlainGameSetup validated = requested_setup;
+	validated.shuffle_bag = true;
+	if (validated.random_mode == RANDOM_MODE_TRUE_RANDOM) {
+		validated.configured_seed.reset();
+		validated.effective_seed = generate_effective_seed();
+	} else {
+		validated.effective_seed = *validated.configured_seed;
+	}
+	width_ = width;
+	height_ = height;
+	setup_ = std::move(validated);
 	reset();
 	return true;
 }
@@ -170,6 +253,8 @@ bool Plain2DSession::configure(int width, int height) {
 void Plain2DSession::reset() {
 	state_ = GameState2D(width_, height_);
 	next_piece_index_ = 0;
+	piece_bag_.clear();
+	rng_.seed(static_cast<std::uint32_t>(setup_.effective_seed));
 	spawn_next_piece();
 	last_command_ = "reset";
 	last_command_status_ = "reset";
@@ -256,6 +341,10 @@ std::string Plain2DSession::snapshot_json() const {
 		<< "\"next_piece: " << next_piece_name() << "\","
 		<< "\"last_command: " << last_command_ << "\","
 		<< "\"last_command_status: " << last_command_status_ << "\","
+		<< "\"piece_set: " << setup_.piece_set_id << "\","
+		<< "\"random_mode: " << setup_.random_mode << "\","
+		<< "\"effective_seed: " << setup_.effective_seed << "\","
+		<< "\"initial_speed_level: " << setup_.initial_speed_level << "\","
 		<< "\"locked_count: " << state_.board.cells().size() << "\""
 		<< "]"
 		<< ",\"dimension\":2"
@@ -280,11 +369,21 @@ std::string Plain2DSession::snapshot_json() const {
 		<< ",\"probe_markers\":[]"
 		<< ",\"game_over\":" << bool_json(state_.game_over)
 		<< ",\"game_over_reason\":\"" << state_.game_over_reason << "\""
+		<< ",\"configured_seed\":";
+	if (setup_.configured_seed.has_value()) {
+		out << *setup_.configured_seed;
+	} else {
+		out << "null";
+	}
+	out << ",\"effective_seed\":" << setup_.effective_seed
+		<< ",\"initial_speed_level\":" << setup_.initial_speed_level
 		<< ",\"last_command\":\"" << last_command_ << "\""
 		<< ",\"last_command_status\":\"" << last_command_status_ << "\""
 		<< ",\"lines\":" << state_.lines
 		<< ",\"next_piece\":\"" << next_piece_name() << "\""
+		<< ",\"piece_set_id\":\"" << setup_.piece_set_id << "\""
 		<< ",\"paused\":false"
+		<< ",\"random_mode\":\"" << setup_.random_mode << "\""
 		<< ",\"score\":" << state_.score
 		<< ",\"state_hash\":\"" << hash << "\""
 		<< ",\"trace_name\":\"live_plain_2d\""
@@ -299,6 +398,10 @@ std::string Plain2DSession::status() const {
 		<< " lines=" << state_.lines
 		<< " current_piece=" << current_piece_name()
 		<< " next_piece=" << next_piece_name()
+		<< " piece_set=" << setup_.piece_set_id
+		<< " random_mode=" << setup_.random_mode
+		<< " effective_seed=" << setup_.effective_seed
+		<< " initial_speed_level=" << setup_.initial_speed_level
 		<< " game_over=" << bool_json(state_.game_over)
 		<< " game_over_reason=" << state_.game_over_reason
 		<< " paused=false"
@@ -308,10 +411,34 @@ std::string Plain2DSession::status() const {
 }
 
 std::string Plain2DSession::state_hash() const {
-	return sha256_hex(hash_payload_json(state_, width_, height_, next_piece_index_));
+	if (!setup_.shuffle_bag) {
+		return sha256_hex(legacy_hash_payload_json(state_, width_, height_, next_piece_index_));
+	}
+	return sha256_hex(hash_payload_json(
+		state_,
+		width_,
+		height_,
+		setup_,
+		piece_bag_,
+		next_piece_index_,
+		rng_.words_consumed()
+	));
+}
+
+void Plain2DSession::refill_piece_bag() {
+	piece_bag_ = live_piece_sequence();
+	rng_.shuffle(piece_bag_);
 }
 
 PieceShape2D Plain2DSession::draw_next_piece_shape() {
+	if (setup_.shuffle_bag) {
+		if (piece_bag_.empty()) {
+			refill_piece_bag();
+		}
+		PieceShape2D shape = piece_bag_.back();
+		piece_bag_.pop_back();
+		return shape;
+	}
 	const std::vector<PieceShape2D> &sequence = live_piece_sequence();
 	const PieceShape2D shape = sequence[next_piece_index_ % sequence.size()];
 	++next_piece_index_;
@@ -330,6 +457,9 @@ std::string Plain2DSession::current_piece_name() const {
 }
 
 std::string Plain2DSession::next_piece_name() const {
+	if (setup_.shuffle_bag) {
+		return piece_bag_.empty() ? "pending_bag" : piece_bag_.back().name;
+	}
 	const std::vector<PieceShape2D> &sequence = live_piece_sequence();
 	return sequence[next_piece_index_ % sequence.size()].name;
 }

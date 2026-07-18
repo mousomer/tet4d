@@ -25,6 +25,7 @@ mkdir -p "$BUILD_DIR"
 "$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
   -I"$CORE_DIR/include" \
   "$CORE_DIR/src/core/core_api.cpp" \
+  "$CORE_DIR/src/core/plain_game_setup.cpp" \
   "$CORE_DIR/src/core/plain_2d.cpp" \
   "$CORE_DIR/src/core/plain_2d_session.cpp" \
   "$CORE_DIR/src/core/plain_2d_trace.cpp" \
@@ -52,6 +53,7 @@ mkdir -p "$BUILD_DIR"
 "$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
   -I"$CORE_DIR/include" \
   "$CORE_DIR/src/core/core_api.cpp" \
+  "$CORE_DIR/src/core/plain_game_setup.cpp" \
   "$CORE_DIR/src/core/plain_nd.cpp" \
   "$CORE_DIR/src/core/plain_nd_session.cpp" \
   "$CORE_DIR/src/core/plain_nd_trace.cpp" \

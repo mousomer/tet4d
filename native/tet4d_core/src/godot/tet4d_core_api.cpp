@@ -2,6 +2,7 @@
 
 #include "tet4d_core/core_api.hpp"
 #include "tet4d_core/geometry.hpp"
+#include "tet4d_core/plain_game_setup.hpp"
 #include "tet4d_core/query.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
@@ -12,6 +13,8 @@
 
 #include <string>
 #include <limits>
+#include <optional>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -130,6 +133,105 @@ String step_label(const tet4d::core::MoveStepQuery &step) {
 	return String(names[step.axis]) + (step.delta < 0 ? "-" : "+");
 }
 
+std::optional<tet4d::core::PlainGameSetup> plain_setup_from_dictionary(
+		const Dictionary &payload,
+		const std::string &expected_mode) {
+	static const std::set<std::string> allowed_fields = {
+		"schema_version",
+		"mode",
+		"board_preset_id",
+		"board_shape",
+		"piece_set_id",
+		"random_mode",
+		"seed",
+		"initial_speed_level",
+	};
+	const Array keys = payload.keys();
+	for (int64_t index = 0; index < keys.size(); ++index) {
+		const Variant key_value = keys[index];
+		if (key_value.get_type() != Variant::STRING &&
+				key_value.get_type() != Variant::STRING_NAME) {
+			ERR_PRINT("Tet4D live setup keys must be strings.");
+			return std::nullopt;
+		}
+		const std::string key = to_std_string(static_cast<String>(key_value));
+		if (allowed_fields.find(key) == allowed_fields.end()) {
+			ERR_PRINT(("Tet4D live setup contains unsupported field: " + key).c_str());
+			return std::nullopt;
+		}
+	}
+	for (const char *required : {
+			"schema_version",
+			"mode",
+			"board_preset_id",
+			"board_shape",
+			"piece_set_id",
+			"random_mode",
+			"initial_speed_level",
+		}) {
+		if (!payload.has(required)) {
+			ERR_PRINT((std::string("Tet4D live setup missing required field: ") + required).c_str());
+			return std::nullopt;
+		}
+	}
+	const Variant schema_version = payload["schema_version"];
+	const Variant mode = payload["mode"];
+	const Variant preset_id = payload["board_preset_id"];
+	const Variant board_shape = payload["board_shape"];
+	const Variant piece_set_id = payload["piece_set_id"];
+	const Variant random_mode = payload["random_mode"];
+	const Variant speed_level = payload["initial_speed_level"];
+	if (schema_version.get_type() != Variant::INT ||
+			mode.get_type() != Variant::STRING ||
+			preset_id.get_type() != Variant::STRING ||
+			board_shape.get_type() != Variant::ARRAY ||
+			piece_set_id.get_type() != Variant::STRING ||
+			random_mode.get_type() != Variant::STRING ||
+			speed_level.get_type() != Variant::INT) {
+		ERR_PRINT("Tet4D live setup field types are invalid.");
+		return std::nullopt;
+	}
+	bool shape_valid = false;
+	const std::vector<int> dims = ints_from_array(static_cast<Array>(board_shape), shape_valid);
+	if (!shape_valid) {
+		return std::nullopt;
+	}
+	tet4d::core::PlainGameSetup result;
+	result.schema_version = static_cast<int>(static_cast<int64_t>(schema_version));
+	result.mode = to_std_string(static_cast<String>(mode));
+	result.board_preset_id = to_std_string(static_cast<String>(preset_id));
+	result.board_shape = dims;
+	result.piece_set_id = to_std_string(static_cast<String>(piece_set_id));
+	result.random_mode = to_std_string(static_cast<String>(random_mode));
+	result.initial_speed_level = static_cast<int>(static_cast<int64_t>(speed_level));
+	if (result.mode != expected_mode) {
+		ERR_PRINT("Tet4D live setup mode does not match the native session.");
+		return std::nullopt;
+	}
+	if (payload.has("seed")) {
+		const Variant seed = payload["seed"];
+		if (seed.get_type() != Variant::INT) {
+			ERR_PRINT("Tet4D live setup seed must be an integer.");
+			return std::nullopt;
+		}
+		const int64_t raw_seed = static_cast<int64_t>(seed);
+		if (raw_seed < std::numeric_limits<int>::min() ||
+				raw_seed > std::numeric_limits<int>::max()) {
+			ERR_PRINT("Tet4D live setup seed exceeds native integer range.");
+			return std::nullopt;
+		}
+		result.configured_seed = static_cast<int>(raw_seed);
+	} else {
+		result.configured_seed.reset();
+	}
+	if (result.random_mode == tet4d::core::RANDOM_MODE_FIXED_SEED &&
+			!result.configured_seed.has_value()) {
+		ERR_PRINT("Tet4D fixed-seed live setup requires seed.");
+		return std::nullopt;
+	}
+	return result;
+}
+
 } // namespace
 
 void Tet4DCoreApi::_bind_methods() {
@@ -154,21 +256,21 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_plain_nd_parity_status"), &Tet4DCoreApi::get_plain_nd_parity_status);
 	ClassDB::bind_method(D_METHOD("export_plain_nd_trace_json", "case_id"), &Tet4DCoreApi::export_plain_nd_trace_json);
 	ClassDB::bind_method(D_METHOD("get_plain_nd_required_field_parity", "case_id"), &Tet4DCoreApi::get_plain_nd_required_field_parity);
-	ClassDB::bind_method(D_METHOD("live_2d_configure", "board_shape"), &Tet4DCoreApi::live_2d_configure);
+	ClassDB::bind_method(D_METHOD("live_2d_configure", "setup"), &Tet4DCoreApi::live_2d_configure);
 	ClassDB::bind_method(D_METHOD("live_2d_reset"), &Tet4DCoreApi::live_2d_reset);
 	ClassDB::bind_method(D_METHOD("live_2d_apply_command", "command"), &Tet4DCoreApi::live_2d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_2d_tick"), &Tet4DCoreApi::live_2d_tick);
 	ClassDB::bind_method(D_METHOD("live_2d_snapshot_json"), &Tet4DCoreApi::live_2d_snapshot_json);
 	ClassDB::bind_method(D_METHOD("live_2d_status"), &Tet4DCoreApi::live_2d_status);
 	ClassDB::bind_method(D_METHOD("live_2d_state_hash"), &Tet4DCoreApi::live_2d_state_hash);
-	ClassDB::bind_method(D_METHOD("live_3d_configure", "board_shape"), &Tet4DCoreApi::live_3d_configure);
+	ClassDB::bind_method(D_METHOD("live_3d_configure", "setup"), &Tet4DCoreApi::live_3d_configure);
 	ClassDB::bind_method(D_METHOD("live_3d_reset"), &Tet4DCoreApi::live_3d_reset);
 	ClassDB::bind_method(D_METHOD("live_3d_apply_command", "command"), &Tet4DCoreApi::live_3d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_3d_tick"), &Tet4DCoreApi::live_3d_tick);
 	ClassDB::bind_method(D_METHOD("live_3d_snapshot_json"), &Tet4DCoreApi::live_3d_snapshot_json);
 	ClassDB::bind_method(D_METHOD("live_3d_status"), &Tet4DCoreApi::live_3d_status);
 	ClassDB::bind_method(D_METHOD("live_3d_state_hash"), &Tet4DCoreApi::live_3d_state_hash);
-	ClassDB::bind_method(D_METHOD("live_4d_configure", "board_shape"), &Tet4DCoreApi::live_4d_configure);
+	ClassDB::bind_method(D_METHOD("live_4d_configure", "setup"), &Tet4DCoreApi::live_4d_configure);
 	ClassDB::bind_method(D_METHOD("live_4d_reset"), &Tet4DCoreApi::live_4d_reset);
 	ClassDB::bind_method(D_METHOD("live_4d_apply_command", "command"), &Tet4DCoreApi::live_4d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_4d_tick"), &Tet4DCoreApi::live_4d_tick);
@@ -348,10 +450,9 @@ bool Tet4DCoreApi::get_plain_nd_required_field_parity(const String &case_id) con
 	return tet4d::core::get_plain_nd_required_field_parity(to_std_string(case_id));
 }
 
-bool Tet4DCoreApi::live_2d_configure(const Array &board_shape) {
-	bool valid = false;
-	const std::vector<int> dims = ints_from_array(board_shape, valid);
-	return valid && dims.size() == 2 && live_2d_session_.configure(dims[0], dims[1]);
+bool Tet4DCoreApi::live_2d_configure(const Dictionary &setup) {
+	const auto parsed = plain_setup_from_dictionary(setup, "live_2d");
+	return parsed.has_value() && live_2d_session_.configure(*parsed);
 }
 
 void Tet4DCoreApi::live_2d_reset() {
@@ -378,10 +479,9 @@ String Tet4DCoreApi::live_2d_state_hash() const {
 	return to_godot_string(live_2d_session_.state_hash());
 }
 
-bool Tet4DCoreApi::live_3d_configure(const Array &board_shape) {
-	bool valid = false;
-	const std::vector<int> dims = ints_from_array(board_shape, valid);
-	return valid && live_3d_session_.configure(tet4d::core::BoardShapeND{dims});
+bool Tet4DCoreApi::live_3d_configure(const Dictionary &setup) {
+	const auto parsed = plain_setup_from_dictionary(setup, "live_3d");
+	return parsed.has_value() && live_3d_session_.configure(*parsed);
 }
 
 void Tet4DCoreApi::live_3d_reset() {
@@ -408,10 +508,9 @@ String Tet4DCoreApi::live_3d_state_hash() const {
 	return to_godot_string(live_3d_session_.state_hash());
 }
 
-bool Tet4DCoreApi::live_4d_configure(const Array &board_shape) {
-	bool valid = false;
-	const std::vector<int> dims = ints_from_array(board_shape, valid);
-	return valid && live_4d_session_.configure(tet4d::core::BoardShapeND{dims});
+bool Tet4DCoreApi::live_4d_configure(const Dictionary &setup) {
+	const auto parsed = plain_setup_from_dictionary(setup, "live_4d");
+	return parsed.has_value() && live_4d_session_.configure(*parsed);
 }
 
 void Tet4DCoreApi::live_4d_reset() {

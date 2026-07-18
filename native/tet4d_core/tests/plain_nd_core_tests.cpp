@@ -104,6 +104,87 @@ void test_configurable_live_plain_nd_sessions() {
 	require(!session_4d.configure({{8, 16, 5, 13}}), "W above safe maximum should reject");
 }
 
+tet4d::core::PlainGameSetup setup_nd(
+		int dimension,
+		const std::vector<int> &shape,
+		const std::string &piece_set_id,
+		int seed = 1337,
+		int speed_level = 1,
+		const std::string &random_mode = tet4d::core::RANDOM_MODE_FIXED_SEED) {
+	tet4d::core::PlainGameSetup setup;
+	setup.mode = dimension == 4 ? "live_4d" : "live_3d";
+	setup.board_preset_id = "standard";
+	setup.board_shape = shape;
+	setup.piece_set_id = piece_set_id;
+	setup.random_mode = random_mode;
+	setup.configured_seed = seed;
+	setup.initial_speed_level = speed_level;
+	return setup;
+}
+
+void test_stage50_configured_piece_sets_rng_and_restart() {
+	tet4d::core::PlainNDSession native_3d(3);
+	require(native_3d.configure(setup_nd(3, {6, 10, 6}, "native_3d")), "True 3D setup should configure");
+	std::string snapshot = native_3d.snapshot_json();
+	require(snapshot.find("\"current_piece\":\"S3\"") != std::string::npos, "True 3D seed 1337 should match Python shuffle");
+	require(snapshot.find("\"next_piece\":\"SCREW3\"") != std::string::npos, "True 3D next piece should match Python shuffle");
+	const std::string native_3d_hash = native_3d.state_hash();
+	native_3d.apply_command("hard_drop");
+	native_3d.reset();
+	require(native_3d.state_hash() == native_3d_hash, "True 3D restart should restore exact setup and RNG state");
+
+	tet4d::core::PlainNDSession embedded_3d(3);
+	require(embedded_3d.configure(setup_nd(3, {8, 16, 8}, "embedded_2d", 2025, 6)), "3D Embedded 2D alternate setup should configure");
+	snapshot = embedded_3d.snapshot_json();
+	require(snapshot.find("\"piece_set_id\":\"embedded_2d\"") != std::string::npos, "3D embedded setup identity missing");
+	require(snapshot.find("\"initial_speed_level\":6") != std::string::npos, "3D embedded speed missing");
+	require(embedded_3d.state_hash() != native_3d_hash, "3D piece set/shape/seed/speed must change identity");
+
+	tet4d::core::PlainNDSession standard_4d(4);
+	require(standard_4d.configure(setup_nd(4, {5, 10, 4, 4}, "standard_4d_5")), "True 4D setup should configure");
+	snapshot = standard_4d.snapshot_json();
+	require(snapshot.find("\"current_piece\":\"CORK4\"") != std::string::npos, "True 4D seed 1337 should match Python shuffle");
+	require(snapshot.find("\"next_piece\":\"FORK4\"") != std::string::npos, "True 4D next piece should match Python shuffle");
+	const std::string standard_4d_hash = standard_4d.state_hash();
+
+	tet4d::core::PlainNDSession embedded_4d_3d(4);
+	require(embedded_4d_3d.configure(setup_nd(4, {8, 16, 5, 8}, "embedded_3d", 2025, 8)), "4D Embedded 3D setup should configure");
+	require(embedded_4d_3d.snapshot_json().find("\"piece_set_id\":\"embedded_3d\"") != std::string::npos, "4D Embedded 3D identity missing");
+	require(embedded_4d_3d.state_hash() != standard_4d_hash, "4D Embedded 3D identity should differ");
+
+	tet4d::core::PlainNDSession embedded_4d_2d(4);
+	require(embedded_4d_2d.configure(setup_nd(4, {5, 10, 4, 4}, "embedded_2d")), "4D Embedded 2D setup should configure");
+	require(embedded_4d_2d.snapshot_json().find("\"current_piece\":\"Z_E2\"") != std::string::npos, "4D Embedded 2D should use the Python catalog and shuffle");
+
+	tet4d::core::PlainGameSetup invalid = setup_nd(3, {6, 10, 6}, "standard_4d_5");
+	require(!native_3d.configure(invalid), "wrong-dimensional piece set must reject");
+	invalid = setup_nd(4, {5, 10, 4, 4}, "random_cells_4d");
+	require(!standard_4d.configure(invalid), "deferred 4D random-cell set must reject");
+	invalid = setup_nd(4, {5, 10, 4, 4}, "standard_4d_5", 1337, 0);
+	require(!standard_4d.configure(invalid), "out-of-range ND speed must reject");
+}
+
+void test_stage50_nd_true_random_effective_seed() {
+	const tet4d::core::PlainGameSetup setup = setup_nd(
+		3,
+		{6, 10, 6},
+		"native_3d",
+		1337,
+		2,
+		tet4d::core::RANDOM_MODE_TRUE_RANDOM
+	);
+	tet4d::core::PlainNDSession first(3);
+	tet4d::core::PlainNDSession second(3);
+	require(first.configure(setup), "first ND true-random setup should configure");
+	require(second.configure(setup), "second ND true-random setup should configure");
+	require(first.snapshot_json().find("\"configured_seed\":null") != std::string::npos, "ND true-random configured seed should be null");
+	require(first.state_hash() != second.state_hash(), "explicit new ND true-random construction should change effective seed");
+	const std::string initial_hash = first.state_hash();
+	first.apply_command("hard_drop");
+	first.reset();
+	require(first.state_hash() == initial_hash, "ND true-random restart should preserve effective seed");
+}
+
 void test_3d_rotation_stepper() {
 	tet4d::core::GameStateND state({{5, 5, 5}}, 1);
 	state.active_piece = tet4d::core::ActivePieceND::from_shape(tet4d::core::trace_rotation_shape_3d(), {{2, 2, 2}});
@@ -492,6 +573,8 @@ int main(int argc, char **argv) {
 	test_3d_state_stepper();
 	test_4d_state_stepper();
 	test_configurable_live_plain_nd_sessions();
+	test_stage50_configured_piece_sets_rng_and_restart();
+	test_stage50_nd_true_random_effective_seed();
 	test_3d_rotation_stepper();
 	test_4d_rotation_stepper();
 	test_rotation_rejects_invalid_axes_clearly();
