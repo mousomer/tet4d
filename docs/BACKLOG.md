@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-12
+Updated: 2026-07-19
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,17 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Stage 50 plain-game setup completion (2026-07-19, implementation active):
+extend the separate Stage 49 gameplay setup owner with canonical piece-set,
+random-mode, seed, and initial-speed identity; construct existing bounded native
+sessions from that validated identity; preserve the effective seed on restart;
+migrate `user://game_setup.json` to schema version 2; and add representative
+Python/native parity plus Godot navigation and persistence coverage. The bounded
+scope and exposure matrix live in
+`docs/architecture/plain_game_setup_completion.md`. Random-shape/debug bags,
+topology, bots, kicks, challenge/progression editors, endgame/explosion, audio,
+keybindings, and packaging remain deferred.
 
 Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
 (2026-07-15, menu-routing repair verified; manual reacceptance pending): add curated 2D/3D/4D New Game presets, parameterize the existing

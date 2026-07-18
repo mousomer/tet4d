@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-15
+Last updated: 2026-07-19
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -10,6 +10,16 @@ historical ledger, a validation transcript, or a second workflow authority.
 Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Stage 50 plain-game setup completion is active on
+  `codex/configurable-plain-boards` as a direct extension of the accepted Stage
+  49 setup boundary. Its authority audit is
+  `docs/architecture/plain_game_setup_completion.md`. The stage is limited to
+  canonical bounded setup identity, production piece-set selection, fixed or
+  true-random effective seeds, initial speed, strict native construction,
+  deterministic restart, schema-v2 gameplay-setup persistence, and
+  representative parity/UI coverage. Python gameplay rules remain the oracle;
+  topology and all advanced gameplay/setup families remain deferred.
 
 - Stage 49 configurable plain-board setup and adaptive 4D layer presentation has
   an automated-verified menu-routing repair on `codex/configurable-plain-boards`;
