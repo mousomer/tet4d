@@ -28,6 +28,7 @@ func _ready() -> void:
 
 func _rebuild() -> void:
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
 	_preset_buttons.clear()
 	_preset_ids.clear()
@@ -101,6 +102,10 @@ func _rebuild() -> void:
 	_refresh_selection()
 	if not _preset_buttons.is_empty():
 		_preset_buttons[_selected_index()].call_deferred("grab_focus")
+
+
+func first_focus_control() -> Control:
+	return _preset_buttons[_selected_index()] if not _preset_buttons.is_empty() else null
 
 
 func _select(preset_id: String) -> void:

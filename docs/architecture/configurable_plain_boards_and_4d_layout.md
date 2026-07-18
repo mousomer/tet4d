@@ -1,7 +1,7 @@
 # Stage 49 Configurable Plain Boards and Adaptive 4D Layout
 
-Status: implementation complete; automated and rendered acceptance passed  
-Date: 2026-07-13
+Status: implementation complete; menu-routing regression repaired and automated verification passed; manual reacceptance pending
+Date: 2026-07-15
 
 ## Authority and scope
 
@@ -15,6 +15,16 @@ focus. Godot must not calculate legality, spawn, clear, scoring, or game-over.
 This stage does not resize active games. `Restart Game` reconstructs the same
 selected setup; `Change Setup` exits the live session and creates nothing until
 `Start Game`; `Main Menu` leaves live play without applying another shape.
+
+## Menu transition interaction invariant
+
+Leaving a live session for `Main Menu` or `Change Setup` must also leave the
+live-only input-capture state. A hidden viewer rectangle must never consume
+mouse input intended for a visible menu, and the visible screen must receive a
+deterministic focus target that activates with Enter/Space. This invariant is
+required after every 2D, 3D, and 4D live-session transition, not only on fresh
+application startup. Regression coverage must exercise real pointer events and
+keyboard acceptance after those transitions.
 
 ## Current assumptions audit
 

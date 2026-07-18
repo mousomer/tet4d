@@ -49,6 +49,7 @@ const SCREEN_SETTINGS := "settings"
 const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
 const SCREEN_ABOUT := "about"
+const SCREEN_ADVANCED := "advanced"
 const SCREEN_GAME_SETUP := "game_setup"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
@@ -57,14 +58,14 @@ const LIVE_4D_HELP_TEXT := "The board uses W slices; Q/E moves the piece between
 const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end lets you inspect replay demos and play the plain-board 2D, 3D, and 4D modes.
 
 Choose a mode:
-Replay Demos - inspect exported gameplay, topology, and endgame traces.
 Live Plain 2D - the easiest first play mode.
 Live Plain 3D - direct plane rotations on a readable 3D board.
 Live Plain 4D - side-by-side W slices with camera recovery.
+Advanced / Diagnostics - inspect Replay Demos and development diagnostics.
 Topology Playground - still launches from the Python tools, not this Godot shell.
 
 Demo tour:
-1. Open Replay Demos and scrub a gameplay or topology case.
+1. Open Advanced / Diagnostics, then Replay Demos, and scrub a gameplay or topology case.
 2. Return to Main Menu and play Live Plain 2D.
 3. Try Live Plain 3D for direct XY/XZ/YZ rotations.
 4. Inspect Live Plain 4D with Q/E W movement and Fit View.
@@ -72,7 +73,7 @@ Demo tour:
 Known limitations:
 - The Python version currently contains the full topology tools.
 - Topology Playground and broader topology editing are not yet available in this front end.
-- Settings persistence and keybinding editing are not available yet."""
+- Keybinding editing is not available yet."""
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -118,6 +119,7 @@ var _settings_screen: Control
 var _controls_screen: Control
 var _diagnostics_screen: Control
 var _about_screen: Control
+var _advanced_screen: Control
 var _game_setup_screen: Control
 var _screens: Dictionary = {}
 var _replay_note: Label
@@ -575,6 +577,8 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 			show_screen(SCREEN_ABOUT)
 		KEY_S:
 			show_screen(SCREEN_SETTINGS)
+		KEY_D:
+			show_screen(SCREEN_ADVANCED)
 		KEY_ESCAPE:
 			_emit_quit_requested()
 		_:
@@ -587,6 +591,7 @@ func open_game_setup(mode: String) -> void:
 		return
 	if _game_setup_panel != null:
 		_game_setup_panel.configure(_game_setup_model)
+		_screen_focus_targets[SCREEN_GAME_SETUP] = _game_setup_panel.first_focus_control()
 		_apply_shell_style()
 	show_screen(SCREEN_GAME_SETUP)
 
@@ -664,6 +669,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"authority_text": _authority_label.text if _authority_label != null else "",
 		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
 		"main_menu_text": _collect_label_text(_main_menu_screen),
+		"advanced_text": _collect_label_text(_advanced_screen),
 		"about_text": _collect_label_text(_about_screen),
 		"style_theme_id": _style_manager.get_theme_id(),
 		"background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
@@ -688,7 +694,12 @@ func current_screen() -> String:
 
 
 func game_viewport_global_rect() -> Rect2:
-	if _game_viewport_container == null or not _game_viewport_container.is_inside_tree():
+	if (
+		_current_screen != SCREEN_VIEWER
+		or _game_viewport_container == null
+		or not _game_viewport_container.is_inside_tree()
+		or not _game_viewport_container.is_visible_in_tree()
+	):
 		return Rect2()
 	return _game_viewport_container.get_global_rect()
 
@@ -1504,6 +1515,9 @@ func _build_layout() -> void:
 	_about_screen = _make_screen()
 	screen_stack.add_child(_about_screen)
 	_build_about_screen(_about_screen)
+	_advanced_screen = _make_screen()
+	screen_stack.add_child(_advanced_screen)
+	_build_advanced_screen(_advanced_screen)
 	_game_setup_screen = _make_screen()
 	screen_stack.add_child(_game_setup_screen)
 	_build_game_setup_screen(_game_setup_screen)
@@ -1515,6 +1529,7 @@ func _build_layout() -> void:
 		SCREEN_CONTROLS: _controls_screen,
 		SCREEN_DIAGNOSTICS: _diagnostics_screen,
 		SCREEN_ABOUT: _about_screen,
+		SCREEN_ADVANCED: _advanced_screen,
 		SCREEN_GAME_SETUP: _game_setup_screen,
 	}
 	show_screen(SCREEN_MAIN_MENU)
@@ -1588,12 +1603,6 @@ func _build_main_menu_screen(screen: Control) -> void:
 		open_game_setup(GameSetupSpecScript.MODE_4D)
 	)
 	layout.add_child(live_4d_button)
-	layout.add_child(_menu_group_header("EXPLORE"))
-	var browser_button := _make_command_card("Replay Demos", "Inspect exported gameplay, topology, and endgame traces", "Enter")
-	browser_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_BROWSER)
-	)
-	layout.add_child(browser_button)
 	layout.add_child(_menu_group_header("LEARN"))
 	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
 	controls_button.pressed.connect(func() -> void:
@@ -1611,12 +1620,67 @@ func _build_main_menu_screen(screen: Control) -> void:
 		show_screen(SCREEN_SETTINGS)
 	)
 	layout.add_child(settings_button)
+	var advanced_button := _make_command_card("Advanced / Diagnostics", "Replay traces and inspect development diagnostics", "D")
+	advanced_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_ADVANCED)
+	)
+	layout.add_child(advanced_button)
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
-	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, browser_button, controls_button, about_button, settings_button, quit_button]
+	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, controls_button, about_button, settings_button, advanced_button, quit_button]
 	_configure_linear_focus(focus_order)
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
+
+
+func _build_advanced_screen(screen: Control) -> void:
+	var center := CenterContainer.new()
+	_fill_parent(center)
+	screen.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(720, 0)
+	center.add_child(panel)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 48)
+	margin.add_theme_constant_override("margin_top", 44)
+	margin.add_theme_constant_override("margin_right", 48)
+	margin.add_theme_constant_override("margin_bottom", 44)
+	panel.add_child(margin)
+	var layout := VBoxContainer.new()
+	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_theme_constant_override("separation", 18)
+	margin.add_child(layout)
+	var title := Label.new()
+	title.name = "AdvancedMenuTitle"
+	title.text = "Advanced / Diagnostics"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.theme_type_variation = "AccentLabel"
+	title.add_theme_font_size_override("font_size", 30)
+	layout.add_child(title)
+	var description := Label.new()
+	description.text = "Development inspection surfaces. Live play does not require these tools."
+	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	description.theme_type_variation = "SecondaryLabel"
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	layout.add_child(description)
+	var browser_button := _make_command_card("Replay Demos", "Inspect exported gameplay, topology, and endgame traces", "Enter")
+	browser_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_BROWSER)
+	)
+	layout.add_child(browser_button)
+	var diagnostics_button := _make_command_card("Diagnostics", "Inspect trace metadata, events, and shell state", "Down")
+	diagnostics_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_DIAGNOSTICS)
+	)
+	layout.add_child(diagnostics_button)
+	var back_button := _make_command_card("Back to Main Menu", "Return to primary play and learning actions", "Esc")
+	back_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_MAIN_MENU)
+	)
+	layout.add_child(back_button)
+	var focus_order: Array[Control] = [browser_button, diagnostics_button, back_button]
+	_configure_linear_focus(focus_order)
+	_screen_focus_targets[SCREEN_ADVANCED] = browser_button
 
 
 func _build_game_setup_screen(screen: Control) -> void:
@@ -1624,6 +1688,7 @@ func _build_game_setup_screen(screen: Control) -> void:
 	_fill_parent(_game_setup_panel)
 	screen.add_child(_game_setup_panel)
 	_game_setup_panel.configure(_game_setup_model)
+	_screen_focus_targets[SCREEN_GAME_SETUP] = _game_setup_panel.first_focus_control()
 	_game_setup_panel.preset_selected.connect(func(_preset_id: String) -> void:
 		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
 	)
@@ -1777,9 +1842,9 @@ func _screen_nav(title_text: String) -> HFlowContainer:
 	)
 	nav.add_child(menu_button)
 	var browser_button := Button.new()
-	browser_button.text = "Replay Demos"
+	browser_button.text = "Advanced"
 	browser_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_BROWSER)
+		show_screen(SCREEN_ADVANCED)
 	)
 	nav.add_child(browser_button)
 	var viewer_button := Button.new()
@@ -1830,7 +1895,7 @@ func _screen_nav(title_text: String) -> HFlowContainer:
 
 func _make_command_card(label_text: String, description: String, shortcut: String) -> Button:
 	var button := Button.new()
-	button.name = "CommandCard__%s" % label_text.replace(" ", "_")
+	button.name = "CommandCard__%s" % label_text.replace(" ", "_").replace("/", "_")
 	button.text = "%s        %s\n%s" % [label_text, shortcut, description]
 	button.custom_minimum_size = Vector2(480, 54)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT

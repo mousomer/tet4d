@@ -51,6 +51,9 @@ func run() -> Array:
 	if not hud.handle_main_menu_shortcut(_key_event(KEY_A)) or hud.current_screen() != "about":
 		failures.append("advertised A shortcut should activate About Tet4D")
 	hud.show_screen("main_menu")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_D)) or hud.current_screen() != hud.SCREEN_ADVANCED:
+		failures.append("advertised D shortcut should activate Advanced / Diagnostics")
+	hud.show_screen("main_menu")
 	if not hud.handle_main_menu_shortcut(_key_event(KEY_2)) or hud.current_screen() != hud.SCREEN_GAME_SETUP:
 		failures.append("advertised 2 shortcut should open Play 2D setup")
 	hud.show_screen("main_menu")

@@ -29,15 +29,19 @@ background only unless reactivated by a future task.
 ## Active Work
 
 Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
-(2026-07-13, implementation complete and PR-ready): add curated 2D/3D/4D New Game presets, parameterize the existing
+(2026-07-15, menu-routing repair verified; manual reacceptance pending): add curated 2D/3D/4D New Game presets, parameterize the existing
 native bounded-session owner by board shape, preserve restart shape, add
 alternate-size parity evidence, and replace the fixed 4D W row with a
 viewport-aware layer matrix. Gameplay setup remains separate from Stage 48
 shell settings. The bounded audit and limits live in
 `docs/architecture/configurable_plain_boards_and_4d_layout.md`. Python defaults,
 gameplay rules, topology, replay semantics, piece sets, bots, kicks, endgame,
-explosion, and packaging remain unchanged. Rendered acceptance is complete;
-topology migration remains postponed until this stage is merged.
+explosion, and packaging remain unchanged. Leaving any live mode for Main Menu
+or Change Setup now disables hidden live-view mouse capture and restores
+deterministic Enter/Space activation on the visible menu, with transition tests
+covering all three live modes. Replay Demos remains an intact trace/parity
+inspection surface but moves below the primary menu into Advanced / Diagnostics.
+Topology migration remains postponed until this stage is merged.
 
 Stage 46 Godot core gameplay completion (2026-07-12): keep the accepted Live
 Plain 2D/3D/4D native-session loops and make their primary play state readable

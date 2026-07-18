@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-12
+Last updated: 2026-07-15
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -11,16 +11,21 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
-- Stage 49 configurable plain-board setup and adaptive 4D layer presentation is
-  complete and PR-ready on `codex/configurable-plain-boards`. Its bounded audit is
+- Stage 49 configurable plain-board setup and adaptive 4D layer presentation has
+  an automated-verified menu-routing repair on `codex/configurable-plain-boards`;
+  manual reacceptance is pending. Its bounded audit is
   `docs/architecture/configurable_plain_boards_and_4d_layout.md`. This stage
   parameterizes only accepted bounded native sessions, adds a separate
   Godot-owned New Game setup model, and adapts presentation for W greater than
   four with active-layer emphasis, matrix scrolling, and Fit View recovery.
   Alternate-size 2D/3D/W=8 traces match Python through `state_hash`; rendered
-  acceptance confirms readable setup and large-board fits. Python rules/defaults
-  and topology/replay semantics remain unchanged; topology migration is postponed
-  until this stage is merged.
+  acceptance confirms readable setup and large-board fits. The repair
+  prevents hidden live-view input capture from intercepting mouse clicks after
+  Main Menu or Change Setup transitions and restores deterministic keyboard
+  acceptance on those visible menus. Replay Demos is retained for trace/parity
+  inspection under a secondary Advanced / Diagnostics route rather than the
+  primary Main Menu. Python rules/defaults and topology/replay semantics remain
+  unchanged; topology migration is postponed until this stage is merged.
 
 - Stage 48 Godot shell settings persistence is active on
   `codex/godot-shell-settings-persistence`. It extends the Stage 29 registry

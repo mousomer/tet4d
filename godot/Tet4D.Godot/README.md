@@ -5,7 +5,8 @@ end and future product shell.
 
 It currently supports:
 
-- `Replay Demos` for exported gameplay, topology, and endgame traces
+- `Replay Demos` under `Advanced / Diagnostics` for exported gameplay,
+  topology, and endgame traces
 - `Live Plain 2D`
 - `Live Plain 3D`
 - `Live Plain 4D`
@@ -31,7 +32,8 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 
 ## What The Shell Does
 
-- Presents the main menu, replay browser, viewer, controls, settings, and diagnostics.
+- Presents the main menu, secondary advanced/diagnostics routes, replay browser,
+  viewer, controls, and settings.
 - Routes accepted plain live-mode inputs to the native bridge.
 - Opens a mode-specific New Game setup flow with curated 2D/3D/4D board-size presets.
 - Renders replay snapshots and live-session snapshots.
@@ -80,7 +82,8 @@ storing tutorial progress or gameplay state.
 
 ## Notes
 
-- `Replay Demos` is the safest first stop if you want to inspect the project before playing.
+- `Advanced / Diagnostics -> Replay Demos` retains the trace-inspection surface
+  without presenting it as a primary play choice.
 - `Live Plain 2D` is the easiest first play mode.
 - `Live Plain 3D` and `Live Plain 4D` are accepted playable shells, but they are still plain bounded modes rather than the full topology toolchain.
 - Bundle assets under `res://assets/tet4d_bundle/` are copied inputs, not semantic authority.

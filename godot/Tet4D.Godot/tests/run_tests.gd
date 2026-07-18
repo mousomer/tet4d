@@ -31,6 +31,7 @@ func _run_all() -> void:
 		"res://tests/test_player_facing_copy.gd",
 		"res://tests/test_stage_47b_acceptance_contract.gd",
 		"res://tests/test_stage_48_acceptance_regressions.gd",
+		"res://tests/test_live_menu_input_routing.gd",
 		"res://tests/test_live_2d_shell.gd",
 		"res://tests/test_scene_integrity.gd",
 		"res://tests/test_replay_viewer_layout.gd",
@@ -52,6 +53,7 @@ func _run_all() -> void:
 			"res://tests/test_shell_style_application.gd",
 			"res://tests/test_stage_47b_acceptance_contract.gd",
 			"res://tests/test_stage_48_acceptance_regressions.gd",
+			"res://tests/test_live_menu_input_routing.gd",
 		]:
 			failures.append_array(await test_case.run())
 		else:

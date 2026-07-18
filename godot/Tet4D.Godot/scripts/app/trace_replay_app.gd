@@ -142,6 +142,8 @@ func _input(event: InputEvent) -> void:
 	if _hud != null and _hud.handle_main_menu_shortcut(event):
 		get_viewport().set_input_as_handled()
 		return
+	if not _is_live_viewer_active():
+		return
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -155,6 +157,10 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_live_mode() and not _is_live_viewer_active():
+		if _event_action_pressed(event, ["quit", "replay_quit"]) or _event_is_escape(event):
+			_return_to_main_menu()
+		return
 	if _mode == MODE_LIVE_2D:
 		if _handle_live_2d_input(event):
 			return
@@ -1580,6 +1586,10 @@ func _live_4d_gameplay_action_names() -> Array:
 
 func _is_live_mode() -> bool:
 	return _mode == MODE_LIVE_2D or _mode == MODE_LIVE_3D or _mode == MODE_LIVE_4D
+
+
+func _is_live_viewer_active() -> bool:
+	return _is_live_mode() and _hud != null and _hud.current_screen() == ReplayHud.SCREEN_VIEWER
 
 
 func _next_snapshot() -> Dictionary:
