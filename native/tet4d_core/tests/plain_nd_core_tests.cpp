@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -183,6 +184,52 @@ void test_stage50_nd_true_random_effective_seed() {
 	first.apply_command("hard_drop");
 	first.reset();
 	require(first.state_hash() == initial_hash, "ND true-random restart should preserve effective seed");
+}
+
+std::string export_stage50_setup_case_nd(const std::string &case_id) {
+	tet4d::core::PlainGameSetup setup;
+	std::vector<std::string> actions;
+	int dimension = 3;
+	if (case_id == "setup_plain_3d_embedded_2d") {
+		setup = setup_nd(3, {8, 16, 8}, "embedded_2d", 2025, 6);
+		setup.board_preset_id = "large";
+		actions = {"move_z_pos", "rotate_xz_pos", "soft_drop", "hard_drop"};
+	} else if (case_id == "setup_plain_4d_embedded_3d") {
+		dimension = 4;
+		setup = setup_nd(4, {5, 10, 4, 4}, "embedded_3d", 1337, 4);
+		actions = {"move_w_pos", "rotate_xw_pos", "soft_drop", "hard_drop"};
+	} else if (case_id == "setup_plain_4d_embedded_2d") {
+		dimension = 4;
+		setup = setup_nd(4, {5, 10, 4, 4}, "embedded_2d", 2025, 3);
+		actions = {"rotate_xy_pos", "hard_drop"};
+	} else if (case_id == "setup_plain_4d_wide_true") {
+		dimension = 4;
+		setup = setup_nd(4, {8, 16, 5, 8}, "standard_4d_5", 42, 8);
+		setup.board_preset_id = "wide_w";
+		actions = {"move_w_pos", "rotate_xw_pos", "hard_drop"};
+	} else {
+		return "{}";
+	}
+	tet4d::core::PlainNDSession session(dimension);
+	if (!session.configure(setup)) {
+		return "{}";
+	}
+	const std::string initial_hash = session.state_hash();
+	std::ostringstream out;
+	out << "{\"case_id\":\"" << case_id << "\",\"frames\":["
+		<< "{\"action\":\"initial\",\"snapshot\":" << session.snapshot_json() << "}";
+	for (const std::string &action : actions) {
+		session.apply_command(action);
+		out << ",{\"action\":\"" << action << "\",\"snapshot\":" << session.snapshot_json() << "}";
+	}
+	const std::string final_hash = session.state_hash();
+	session.reset();
+	out << "],\"final_hash\":\"" << final_hash << "\""
+		<< ",\"restart_hash\":\"" << session.state_hash() << "\""
+		<< ",\"restart_matches_initial\":" << (session.state_hash() == initial_hash ? "true" : "false")
+		<< ",\"restart_snapshot\":" << session.snapshot_json()
+		<< "}";
+	return out.str();
 }
 
 void test_3d_rotation_stepper() {
@@ -567,6 +614,11 @@ int main(int argc, char **argv) {
 	if (argc >= 2 && std::string(argv[1]) == "--export-plain-nd-trace") {
 		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "gameplay_plain_3d_short";
 		std::cout << tet4d::core::export_plain_nd_trace_json(case_id) << "\n";
+		return 0;
+	}
+	if (argc >= 2 && std::string(argv[1]) == "--export-plain-setup") {
+		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "setup_plain_3d_embedded_2d";
+		std::cout << export_stage50_setup_case_nd(case_id) << "\n";
 		return 0;
 	}
 	test_coord_and_board_model();

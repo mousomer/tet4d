@@ -71,6 +71,12 @@ if [[ "${1:-}" == "--export-plain-2d-trace" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--export-plain-nd-trace" ]]; then
   "$TEST_ND_BIN" "$@"
+elif [[ "${1:-}" == "--export-plain-setup" ]]; then
+  if [[ "${2:-}" == *"_2d_"* ]]; then
+    "$TEST_2D_BIN" "$@"
+  else
+    "$TEST_ND_BIN" "$@"
+  fi
 elif [[ "${1:-}" == "--pilot-stable-hash" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--geometry-parity" ]]; then

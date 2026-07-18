@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string_view>
 #include <string>
 #include <vector>
@@ -227,6 +228,40 @@ void test_stage50_true_random_seed_and_restart() {
 	require(second.state_hash() != initial_hash, "new true-random construction should receive a different effective seed");
 }
 
+std::string export_stage50_setup_case_2d(const std::string &case_id) {
+	tet4d::core::PlainGameSetup setup = setup_2d(1337);
+	std::vector<std::string> actions = {"move_right", "rotate_cw", "soft_drop", "hard_drop"};
+	if (case_id == "setup_plain_2d_alternate") {
+		setup.board_preset_id = "large";
+		setup.board_shape = {10, 20};
+		setup.configured_seed = 2025;
+		setup.initial_speed_level = 7;
+		actions = {"soft_drop", "hard_drop"};
+	} else if (case_id != "setup_plain_2d_standard") {
+		return "{}";
+	}
+	tet4d::core::Plain2DSession session;
+	if (!session.configure(setup)) {
+		return "{}";
+	}
+	const std::string initial_hash = session.state_hash();
+	std::ostringstream out;
+	out << "{\"case_id\":\"" << case_id << "\",\"frames\":["
+		<< "{\"action\":\"initial\",\"snapshot\":" << session.snapshot_json() << "}";
+	for (const std::string &action : actions) {
+		session.apply_command(action);
+		out << ",{\"action\":\"" << action << "\",\"snapshot\":" << session.snapshot_json() << "}";
+	}
+	const std::string final_hash = session.state_hash();
+	session.reset();
+	out << "],\"final_hash\":\"" << final_hash << "\""
+		<< ",\"restart_hash\":\"" << session.state_hash() << "\""
+		<< ",\"restart_matches_initial\":" << (session.state_hash() == initial_hash ? "true" : "false")
+		<< ",\"restart_snapshot\":" << session.snapshot_json()
+		<< "}";
+	return out.str();
+}
+
 void test_game_over_spawn_blocked_and_rejected_commands() {
 	tet4d::core::GameState2D blocked_state(6, 6);
 	blocked_state.active_piece = tet4d::core::ActivePiece2D{tet4d::core::trace_dot_shape_2d(), {0, 5}, 0};
@@ -269,6 +304,11 @@ int main(int argc, char **argv) {
 	if (argc >= 2 && std::string(argv[1]) == "--export-plain-2d-trace") {
 		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "gameplay_plain_2d_short";
 		std::cout << tet4d::core::export_plain_2d_trace_json(case_id) << "\n";
+		return 0;
+	}
+	if (argc >= 2 && std::string(argv[1]) == "--export-plain-setup") {
+		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "setup_plain_2d_standard";
+		std::cout << export_stage50_setup_case_2d(case_id) << "\n";
 		return 0;
 	}
 	test_board_and_piece_cells();
