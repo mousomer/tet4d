@@ -38,8 +38,9 @@ signal replay_mode_requested()
 signal live_2d_requested()
 signal live_3d_requested()
 signal live_4d_requested()
-signal live_game_start_requested(mode: String, board_shape: Array)
+signal live_game_start_requested(setup: Dictionary)
 signal change_setup_requested(mode: String)
+signal new_random_game_requested()
 signal main_menu_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
@@ -88,6 +89,7 @@ var _settings_screen_panel: SettingsPanel
 var _play_button: Button
 var _reset_button: Button
 var _restart_game_button: Button
+var _new_random_game_button: Button
 var _change_setup_button: Button
 var _quit_button: Button
 var _hint_label: VBoxContainer
@@ -346,6 +348,8 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 				]
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
 			_update_live_gameplay_summary(snapshot, mode_label)
+			if _new_random_game_button != null:
+				_new_random_game_button.visible = str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM
 			_trace_integrity_label.text = _format_live_inspector_text(
 				mode_label,
 				state_label,
@@ -666,6 +670,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"top_status_badge_border_color": _label_style_border_color(_top_state_badge_label),
 		"restart_game_button_visible": _restart_game_button.visible if _restart_game_button != null else false,
 		"restart_game_button_text": _restart_game_button.text if _restart_game_button != null else "",
+		"new_random_game_button_visible": _new_random_game_button.visible if _new_random_game_button != null else false,
 		"authority_text": _authority_label.text if _authority_label != null else "",
 		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
 		"main_menu_text": _collect_label_text(_main_menu_screen),
@@ -797,6 +802,11 @@ static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String)
 	var next_piece := str(snapshot.get("next_piece", "-")).strip_edges()
 	var shape: Array = snapshot.get("board_shape", [])
 	var board_text := GameSetupSpecScript.format_shape(shape)
+	var dimension := int(snapshot.get("dimension", 2))
+	var setup_mode := GameSetupSpecScript.MODE_2D if dimension == 2 else (GameSetupSpecScript.MODE_3D if dimension == 3 else GameSetupSpecScript.MODE_4D)
+	var piece_text := GameSetupSpecScript.piece_set_label(setup_mode, str(snapshot.get("piece_set_id", "")))
+	var speed_text := "Speed %d" % int(snapshot.get("initial_speed_level", 1))
+	var seed_text := "Seed %d" % int(snapshot.get("effective_seed", 0))
 	var layer_text := ""
 	if int(snapshot.get("dimension", 0)) == 4:
 		var active_layers := []
@@ -809,10 +819,13 @@ static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String)
 		for layer in active_layers:
 			active_labels.append(str(int(layer) + 1))
 		layer_text = " | Layers W · %d | Active %s" % [int(snapshot.get("w_slice_count", shape[3] if shape.size() > 3 else 1)), ",".join(active_labels)]
-	return "%s | Board %s%s | SCORE %d | CLEARS %d | %s > %s | %s" % [
+	return "%s | Board %s%s | %s | %s | %s | SCORE %d | CLEARS %d | %s > %s | %s" % [
 		mode_label,
 		board_text,
 		layer_text,
+		piece_text,
+		speed_text,
+		seed_text,
 		int(snapshot.get("score", 0)),
 		int(snapshot.get("lines", 0)),
 		current_piece if not current_piece.is_empty() else "-",
@@ -872,6 +885,8 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_bottom_panel.visible = not live_mode
 	if _restart_game_button != null and not live_mode:
 		_restart_game_button.visible = false
+	if _new_random_game_button != null and not live_mode:
+		_new_random_game_button.visible = false
 	if _change_setup_button != null:
 		_change_setup_button.visible = live_mode
 	if _mode_hint_strip != null:
@@ -1178,6 +1193,14 @@ func _build_layout() -> void:
 	var live_actions := HBoxContainer.new()
 	live_actions.add_theme_constant_override("separation", 8)
 	live_actions.add_child(_restart_game_button)
+	_new_random_game_button = Button.new()
+	_new_random_game_button.name = "NewRandomGameButton"
+	_new_random_game_button.text = "New Random Game"
+	_new_random_game_button.visible = false
+	_new_random_game_button.pressed.connect(func() -> void:
+		new_random_game_requested.emit()
+	)
+	live_actions.add_child(_new_random_game_button)
 	_change_setup_button = Button.new()
 	_change_setup_button.name = "ChangeSetupButton"
 	_change_setup_button.text = "Change Setup"
@@ -1689,12 +1712,12 @@ func _build_game_setup_screen(screen: Control) -> void:
 	screen.add_child(_game_setup_panel)
 	_game_setup_panel.configure(_game_setup_model)
 	_screen_focus_targets[SCREEN_GAME_SETUP] = _game_setup_panel.first_focus_control()
-	_game_setup_panel.preset_selected.connect(func(_preset_id: String) -> void:
+	_game_setup_panel.setup_changed.connect(func() -> void:
 		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
 	)
-	_game_setup_panel.start_requested.connect(func(mode: String, board_shape: Array) -> void:
+	_game_setup_panel.start_requested.connect(func(setup: Dictionary) -> void:
 		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
-		live_game_start_requested.emit(mode, board_shape)
+		live_game_start_requested.emit(setup)
 	)
 	_game_setup_panel.back_requested.connect(func() -> void:
 		show_screen(SCREEN_MAIN_MENU)

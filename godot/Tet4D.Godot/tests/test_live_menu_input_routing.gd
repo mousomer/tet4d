@@ -25,7 +25,7 @@ func run() -> Array:
 		"live_4d": [5, 10, 4, 4],
 	}
 	for mode in mode_shapes:
-		app._start_configured_live_game(mode, mode_shapes[mode])
+		app._start_configured_live_game(_setup(mode, mode_shapes[mode]))
 		await tree.process_frame
 		app._return_to_main_menu()
 		await tree.process_frame
@@ -82,6 +82,20 @@ func run() -> Array:
 	await tree.process_frame
 	tree.root.size = original_size
 	return failures
+
+
+func _setup(mode: String, shape: Array) -> Dictionary:
+	var piece_set := "classic" if mode == "live_2d" else ("native_3d" if mode == "live_3d" else "standard_4d_5")
+	return {
+		"schema_version": 2,
+		"mode": mode,
+		"board_preset_id": "standard",
+		"board_shape": shape,
+		"piece_set_id": piece_set,
+		"random_mode": "fixed_seed",
+		"seed": 1337,
+		"initial_speed_level": 1,
+	}
 
 
 func _find_visible_button(root: Node, node_name: String) -> Button:

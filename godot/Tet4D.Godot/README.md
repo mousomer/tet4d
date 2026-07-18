@@ -35,24 +35,37 @@ godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
 - Presents the main menu, secondary advanced/diagnostics routes, replay browser,
   viewer, controls, and settings.
 - Routes accepted plain live-mode inputs to the native bridge.
-- Opens a mode-specific New Game setup flow with curated 2D/3D/4D board-size presets.
+- Opens a mode-specific New Game setup flow with curated board, piece-set,
+  randomness, seed, and starting-speed choices.
 - Renders replay snapshots and live-session snapshots.
 - Exposes controls/help and a demo/limitations summary for first-time users.
 - Saves supported presentation preferences from the Settings screen and restores them at startup.
 
 ## Game Setup
 
-Board dimensions are gameplay setup, not shell settings. Choosing Play 2D,
-Play 3D, or Play 4D opens a setup screen that shows each supported preset's
-exact shape. Start Game constructs a new native bounded session with that
-shape; Restart Game keeps the same shape, while Change Setup exits live play
-before another session is constructed.
+Game-start configuration is gameplay setup, not shell settings. Choosing Play
+2D, Play 3D, or Play 4D opens a setup screen with exact curated board
+dimensions, production piece sets, Fixed Seed or True Random, a validated
+decimal seed, and starting speed 1–10. Start Game constructs one strict native
+bounded session from that canonical setup.
 
-The last selected preset per mode is stored separately in
-`user://game_setup.json`. The file contains preset IDs only and safely falls
-back to each mode's Standard preset when missing, malformed, or unsupported.
-It never contains active board state, score, pieces, cells, RNG, pause, or
-game-over state and never writes `user://shell_settings.json`.
+Restart Game keeps the same board, piece set, random mode, effective seed, and
+starting speed, reproducing the initial piece sequence. True Random still
+captures and displays an effective seed; New Random Game is shown only for that
+mode and requests a new effective seed without changing the other setup
+choices. Change Setup exits live play before another session is constructed.
+
+The last validated setup per mode is stored separately in
+`user://game_setup.json` using schema version 2. Existing Stage 49 preset-only
+schema-version-1 files migrate safely. Missing, malformed, future, or invalid
+mode entries fall back independently. The file stores the user's fixed seed,
+not active/effective runtime seed or board state, score, pieces, cells, pause,
+or game-over state, and it never writes `user://shell_settings.json`.
+
+Production piece sets currently exposed are Classic Tetrominoes in 2D; True 3D
+and Embedded 2D in 3D; and True 4D (5-cell), Embedded 3D, and Embedded 2D in
+4D. Random-shape generators, debug rectangles, and the 6/7/8-cell 4D catalogs
+remain deferred until they have native production and parity coverage.
 
 The Wide W 4D preset uses an adaptive matrix of projected layer boards. Every
 W layer is represented, all active-piece layers receive stronger outlines,

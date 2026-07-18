@@ -20,7 +20,8 @@ const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
 const MODE_LIVE_3D := "live_3d"
 const MODE_LIVE_4D := "live_4d"
-const LIVE_GRAVITY_INTERVAL_SECONDS := 0.5
+const DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS := 0.5
+const LIVE_GRAVITY_INTERVAL_SECONDS := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
 const LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS := 0.22
 const LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS := 0.08
 const LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS := 0.08
@@ -47,6 +48,8 @@ var _live_4d_session_started := false
 var _live_4d_last_rotation_label := "none"
 var _live_4d_last_rotation_status := "none"
 var _live_tick_accumulator := 0.0
+var _live_gravity_interval_seconds := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
+var _active_live_setup: Dictionary = {}
 var _live_repeat_elapsed := {
 	"move_left": 0.0,
 	"move_right": 0.0,
@@ -109,7 +112,7 @@ func _process(delta: float) -> void:
 		if not _live_mode_paused() and not _live_snapshot_game_over():
 			_process_live_input_repeat(delta)
 			_live_tick_accumulator += delta
-			if _live_tick_accumulator >= LIVE_GRAVITY_INTERVAL_SECONDS:
+			if _live_tick_accumulator >= _live_gravity_interval_seconds:
 				_live_tick_accumulator = 0.0
 				if _mode == MODE_LIVE_4D:
 					_live_4d_command("tick")
@@ -537,6 +540,7 @@ func _wire_hud() -> void:
 	_hud.live_4d_requested.connect(_enter_live_4d_mode)
 	_hud.live_game_start_requested.connect(_start_configured_live_game)
 	_hud.change_setup_requested.connect(_change_live_setup)
+	_hud.new_random_game_requested.connect(_start_new_random_game)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
 
 
@@ -788,7 +792,7 @@ func _refresh_hud() -> void:
 			game_over,
 			_live_snapshot_last_command(),
 			_live_snapshot_game_over_reason(),
-			LIVE_GRAVITY_INTERVAL_SECONDS
+			_live_gravity_interval_seconds
 		)
 	elif _mode == MODE_LIVE_3D:
 		var game_over := _live_snapshot_game_over()
@@ -797,7 +801,7 @@ func _refresh_hud() -> void:
 			game_over,
 			_live_snapshot_last_command(),
 			_live_snapshot_game_over_reason(),
-			LIVE_GRAVITY_INTERVAL_SECONDS
+			_live_gravity_interval_seconds
 		)
 	elif _mode == MODE_LIVE_4D:
 		var game_over := _live_snapshot_game_over()
@@ -806,7 +810,7 @@ func _refresh_hud() -> void:
 			game_over,
 			_live_snapshot_last_command(),
 			_live_snapshot_game_over_reason(),
-			LIVE_GRAVITY_INTERVAL_SECONDS
+			_live_gravity_interval_seconds
 		)
 	else:
 		_hud.set_replay_mode_labels(_state.is_playing, _state.playback_speed, _state.diagnostics_visible)
@@ -841,21 +845,24 @@ func _bundle_case_count() -> int:
 	return total
 
 
-func _start_configured_live_game(mode_name: String, board_shape: Array) -> void:
+func _start_configured_live_game(setup: Dictionary) -> void:
+	var mode_name := str(setup.get("mode", ""))
 	var configured := false
 	match mode_name:
 		MODE_LIVE_2D:
-			configured = _live_bridge.live_2d_configure(board_shape)
+			configured = _live_bridge.live_2d_configure(setup)
 			_live_2d_session_started = configured
 		MODE_LIVE_3D:
-			configured = _live_bridge.live_3d_configure(board_shape)
+			configured = _live_bridge.live_3d_configure(setup)
 			_live_3d_session_started = configured
 		MODE_LIVE_4D:
-			configured = _live_bridge.live_4d_configure(board_shape)
+			configured = _live_bridge.live_4d_configure(setup)
 			_live_4d_session_started = configured
 	if not configured:
-		push_error("Native live session rejected board shape %s for %s." % [str(board_shape), mode_name])
+		push_error("Native live session rejected setup %s." % str(setup))
 		return
+	_active_live_setup = setup.duplicate(true)
+	_live_gravity_interval_seconds = _gravity_interval_for_setup(_active_live_setup)
 	match mode_name:
 		MODE_LIVE_2D:
 			_enter_live_2d_mode()
@@ -863,6 +870,27 @@ func _start_configured_live_game(mode_name: String, board_shape: Array) -> void:
 			_enter_live_3d_mode()
 		MODE_LIVE_4D:
 			_enter_live_4d_mode()
+
+
+func _start_new_random_game() -> void:
+	if _active_live_setup.is_empty() or str(_active_live_setup.get("random_mode", "")) != "true_random":
+		return
+	_start_configured_live_game(_active_live_setup.duplicate(true))
+
+
+func _gravity_interval_for_setup(setup: Dictionary) -> float:
+	var config_bundle: Dictionary = _bundle.get("config", {})
+	var source_files: Dictionary = config_bundle.get("source_files", {})
+	var tuning_record: Dictionary = source_files.get("config/gameplay/tuning.json", {})
+	var tuning: Dictionary = tuning_record.get("payload", {})
+	var curves: Dictionary = tuning.get("speed_curve", {})
+	var mode_name := str(setup.get("mode", ""))
+	var curve_key := "2d" if mode_name == MODE_LIVE_2D else ("3d" if mode_name == MODE_LIVE_3D else "4d_plus")
+	var curve: Dictionary = curves.get(curve_key, {})
+	var speed := clampi(int(setup.get("initial_speed_level", 1)), 1, 10)
+	var base_ms := int(curve.get("base_ms", int(DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS * 1000.0)))
+	var min_ms := int(curve.get("min_ms", base_ms))
+	return float(maxi(min_ms, int(base_ms / speed))) / 1000.0
 
 
 func _enter_live_2d_mode() -> void:

@@ -483,9 +483,12 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 		"game_over": false,
 		"dimension": 3,
 		"board_shape": [6, 10, 6],
+		"piece_set_id": "native_3d",
+		"effective_seed": 1337,
+		"initial_speed_level": 1,
 	}
 	var summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D")
-	if summary != "Live Plain 3D | Board 6 × 10 × 6 | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
+	if summary != "Live Plain 3D | Board 6 × 10 × 6 | True 3D | Speed 1 | Seed 1337 | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
 		failures.append("live gameplay summary should prioritize score, clears, and piece queue, got %s" % summary)
 	var feedback := ReplayHudScript.live_command_feedback_text(live_snapshot)
 	if feedback != "Piece locked":

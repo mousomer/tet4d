@@ -17,6 +17,7 @@ func _run_all() -> void:
 		"res://tests/test_shell_settings_store.gd",
 		"res://tests/test_shell_settings_persistence.gd",
 		"res://tests/test_game_setup_model.gd",
+		"res://tests/test_plain_setup_navigation.gd",
 		"res://tests/test_adaptive_4d_layer_layout.gd",
 		"res://tests/test_configurable_live_sessions.gd",
 		"res://tests/test_coordinate_mapper.gd",
@@ -54,6 +55,7 @@ func _run_all() -> void:
 			"res://tests/test_stage_47b_acceptance_contract.gd",
 			"res://tests/test_stage_48_acceptance_regressions.gd",
 			"res://tests/test_live_menu_input_routing.gd",
+			"res://tests/test_plain_setup_navigation.gd",
 		]:
 			failures.append_array(await test_case.run())
 		else:
