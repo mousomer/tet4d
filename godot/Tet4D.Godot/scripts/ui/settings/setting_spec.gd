@@ -9,7 +9,6 @@ const ALLOWED_CATEGORIES := [
 	"diagnostics",
 	"controls_help",
 	"interface",
-	"accessibility",
 	"camera",
 ]
 const FORBIDDEN_CATEGORY_TOKENS := [

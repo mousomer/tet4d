@@ -24,11 +24,8 @@ signal windowed_size_changed(size_value: Array)
 signal ui_scale_changed(scale_id: String)
 signal hud_density_changed(density: String)
 signal board_detail_changed(detail: String)
-signal contrast_mode_changed(mode: String)
-signal animation_mode_changed(mode: String)
 signal camera_sensitivity_changed(sensitivity: String)
 signal camera_invert_y_changed(inverted: bool)
-signal contextual_help_changed(mode: String)
 signal settings_reset()
 
 var registry = SettingsRegistryScript.new()
@@ -86,10 +83,10 @@ func first_focus_control() -> Control:
 	return _focus_controls[0] if not _focus_controls.is_empty() else null
 
 
-func reset_settings_to_defaults() -> void:
+func reset_display_settings_to_defaults() -> void:
 	if store == null:
 		return
-	store.reset_to_defaults()
+	store.reset_categories_to_defaults(["display", "theme", "camera"])
 	refresh_all_controls()
 	settings_reset.emit()
 	apply_initial_settings()
@@ -273,10 +270,6 @@ func _emit_setting(setting_id: String, value) -> void:
 				_style_manager.set_theme(ReplayVisuals.normalize_display_mode(str(value)))
 				apply_shell_style()
 			display_mode_changed.emit(ReplayVisuals.normalize_display_mode(str(value)))
-		"accessibility.contrast_mode":
-			contrast_mode_changed.emit(str(value))
-		"accessibility.animation_mode":
-			animation_mode_changed.emit(str(value))
 		"camera.sensitivity":
 			camera_sensitivity_changed.emit(str(value))
 		"camera.invert_y":
@@ -285,8 +278,6 @@ func _emit_setting(setting_id: String, value) -> void:
 			layout_bounds_visibility_changed.emit(bool(value))
 		"controls_help.show_keyboard_hints":
 			keyboard_hints_visibility_changed.emit(bool(value))
-		"controls_help.contextual_help":
-			contextual_help_changed.emit(str(value))
 		"interface.show_onboarding":
 			onboarding_visibility_changed.emit(bool(value))
 
@@ -319,11 +310,11 @@ func _update_control(setting_id: String, value) -> void:
 
 func _reset_settings_button() -> Button:
 	var button := Button.new()
-	button.name = "ResetSettingsToDefaultsButton"
-	button.text = "Reset Settings to Defaults"
-	button.tooltip_text = "Restore and save the default shell preferences"
+	button.name = "ResetDisplaySettingsButton"
+	button.text = "Reset Display Settings"
+	button.tooltip_text = "Restore and save display, theme, and camera defaults"
 	button.focus_mode = Control.FOCUS_ALL
-	button.pressed.connect(reset_settings_to_defaults)
+	button.pressed.connect(reset_display_settings_to_defaults)
 	_focus_controls.append(button)
 	return button
 

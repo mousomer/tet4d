@@ -15,6 +15,9 @@ USER_SETTINGS_DOC_PATH = PROJECT_ROOT / "docs" / "USER_SETTINGS_REFERENCE.md"
 CONFIG_SCHEMA_DIR = CONFIG_ROOT / "schema"
 MENU_SETTINGS_SCHEMA_PATH = CONFIG_SCHEMA_DIR / "menu_settings.schema.json"
 KEYBINDINGS_DEFAULTS_PATH = CONFIG_ROOT / "keybindings" / "defaults.json"
+GODOT_SHELL_SETTINGS_REGISTRY_PATH = (
+    PROJECT_ROOT / "godot" / "Tet4D.Godot" / "config" / "shell_settings_registry.json"
+)
 MAX_EXAMPLES = 3
 MAX_LITERAL_LENGTH = 72
 
@@ -1122,6 +1125,71 @@ def _keybinding_profile_rows(
     return tuple(rows)
 
 
+def _render_godot_shell_settings_section() -> list[str]:
+    payload = _load_json(GODOT_SHELL_SETTINGS_REGISTRY_PATH)
+    if not isinstance(payload, dict):
+        raise RuntimeError("Godot shell settings registry must be an object")
+    categories = payload.get("categories")
+    settings = payload.get("settings")
+    if not isinstance(categories, list) or not isinstance(settings, list):
+        raise RuntimeError("Godot shell settings registry categories/settings must be arrays")
+    category_labels = {
+        str(category.get("id", "")): str(category.get("label", ""))
+        for category in categories
+        if isinstance(category, dict)
+    }
+    persisted_by_category: dict[str, list[dict[str, object]]] = {}
+    for setting in settings:
+        if not isinstance(setting, dict) or setting.get("persist") is not True:
+            continue
+        category_id = str(setting.get("category", ""))
+        persisted_by_category.setdefault(category_id, []).append(setting)
+
+    lines = [
+        "## Godot shell settings",
+        "",
+        "These Godot-owned presentation preferences are declared in "
+        "`godot/Tet4D.Godot/config/shell_settings_registry.json` and saved in "
+        "`user://shell_settings.json`. Schema version "
+        f"`{payload.get('schema_version')}` migrates valid schema-version-1 "
+        "choices field by field. Game setup remains separate in "
+        "`user://game_setup.json`.",
+        "",
+        "`Reset Display Settings` restores only Display, Theme, and Camera "
+        "preferences. Replay, keyboard-hint, and onboarding choices are preserved.",
+        "",
+    ]
+    for category in categories:
+        if not isinstance(category, dict):
+            continue
+        category_id = str(category.get("id", ""))
+        category_settings = persisted_by_category.get(category_id, [])
+        if not category_settings:
+            continue
+        lines.extend([f"### {category_labels.get(category_id, category_id)}", ""])
+        for setting in category_settings:
+            setting_id = str(setting.get("id", ""))
+            default = _format_literal(setting.get("default"))
+            value_type = str(setting.get("value_type", ""))
+            detail = f"default `{default}`; {value_type}"
+            options = setting.get("options")
+            if isinstance(options, list):
+                option_values = [
+                    str(option.get("value", ""))
+                    for option in options
+                    if isinstance(option, dict)
+                ]
+                detail += "; options: " + ", ".join(option_values)
+            if value_type == "size":
+                detail += (
+                    f"; min {_format_literal(setting.get('min'))};"
+                    f" max {_format_literal(setting.get('max'))}"
+                )
+            lines.append(f"- `{setting_id}`: {detail}")
+        lines.append("")
+    return lines
+
+
 def render_user_settings_reference() -> str:
     defaults_payload = _user_settings_defaults_payload()
     schema_payload = _menu_settings_schema_payload()
@@ -1168,6 +1236,7 @@ def render_user_settings_reference() -> str:
             category_docs_payload=_keybinding_category_docs_payload(),
         )
     )
+    lines.extend(_render_godot_shell_settings_section())
     return "\n".join(lines).rstrip() + "\n"
 
 

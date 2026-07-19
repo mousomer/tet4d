@@ -12,14 +12,11 @@ const UI_SCALE_FACTORS := {
 }
 const HUD_DENSITIES := ["compact", "standard", "detailed"]
 const BOARD_DETAILS := ["minimal", "standard", "full"]
-const CONTRAST_MODES := ["standard", "high"]
-const ANIMATION_MODES := ["reduced", "standard"]
 const CAMERA_SENSITIVITY_FACTORS := {
 	"low": 0.65,
 	"standard": 1.0,
 	"high": 1.45,
 }
-const CONTEXTUAL_HELP_MODES := ["automatic", "always", "hidden"]
 
 
 static func ui_scale_factor(value: String) -> float:

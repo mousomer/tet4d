@@ -35,10 +35,10 @@ func run() -> Array:
 			break
 		visited[current] = true
 		current = current.get_node_or_null(current.focus_neighbor_bottom) as Control
-	var reset := panel.get_node_or_null("SettingsScroll/SettingsContent/ResetSettingsToDefaultsButton") as Button
+	var reset := panel.get_node_or_null("SettingsScroll/SettingsContent/ResetDisplaySettingsButton") as Button
 	if reset == null or not visited.has(reset):
-		failures.append("deterministic arrow-key focus order should reach Reset Settings to Defaults")
-	if visited.size() != 18:
+		failures.append("deterministic arrow-key focus order should reach Reset Display Settings")
+	if visited.size() != 15:
 		failures.append("focus order should include all visible Stage 51 setting controls and reset")
 	var down := InputEventKey.new()
 	down.keycode = KEY_DOWN

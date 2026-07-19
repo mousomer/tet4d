@@ -20,11 +20,8 @@ func run() -> Array:
 		"display.ui_scale": "standard",
 		"display.hud_density": "standard",
 		"display.board_detail": "standard",
-		"accessibility.contrast_mode": "standard",
-		"accessibility.animation_mode": "standard",
 		"camera.sensitivity": "standard",
 		"camera.invert_y": false,
-		"controls_help.contextual_help": "automatic",
 	}
 	for setting_id in expected_defaults:
 		if store.value(setting_id) != expected_defaults[setting_id]:
@@ -41,11 +38,8 @@ func run() -> Array:
 		["display.ui_scale", "extra_large"],
 		["display.hud_density", "detailed"],
 		["display.board_detail", "full"],
-		["accessibility.contrast_mode", "high"],
-		["accessibility.animation_mode", "reduced"],
 		["camera.sensitivity", "high"],
 		["camera.invert_y", true],
-		["controls_help.contextual_help", "hidden"],
 	]:
 		if not store.set_value(str(setting_change[0]), setting_change[1]):
 			failures.append("%s should accept its canonical Stage 51 value" % setting_change[0])
@@ -56,11 +50,8 @@ func run() -> Array:
 		["display.ui_scale", "extra_large"],
 		["display.hud_density", "detailed"],
 		["display.board_detail", "full"],
-		["accessibility.contrast_mode", "high"],
-		["accessibility.animation_mode", "reduced"],
 		["camera.sensitivity", "high"],
 		["camera.invert_y", true],
-		["controls_help.contextual_help", "hidden"],
 	]:
 		if fresh.value(str(setting_change[0])) != setting_change[1]:
 			failures.append("%s should survive a schema-v2 reopen" % setting_change[0])
@@ -86,6 +77,16 @@ func run() -> Array:
 		failures.append("valid siblings should survive invalid Stage 51 fields")
 	if partial.value("interface.show_onboarding") != false:
 		failures.append("field recovery must preserve the separate onboarding preference")
+	partial.set_value("theme.name", "plain")
+	partial.set_value("controls_help.show_keyboard_hints", false)
+	partial.set_value("replay.playback_speed", 2.0)
+	if not partial.reset_categories_to_defaults(["display", "theme", "camera"]):
+		failures.append("display reset should persist canonical category defaults")
+	var reset = StoreScript.new(registry, TEST_PATH)
+	if reset.value("theme.name") != "tron" or reset.value("display.hud_density") != "standard" or reset.value("camera.invert_y") != false:
+		failures.append("display reset should restore display, theme, and camera defaults")
+	if reset.value("controls_help.show_keyboard_hints") != false or reset.value("interface.show_onboarding") != false or reset.value("replay.playback_speed") != 2.0:
+		failures.append("display reset must preserve help, onboarding, and replay preferences")
 
 	var clamped := PreferencesScript.clamp_windowed_size(
 		Vector2i(3000, 2000),

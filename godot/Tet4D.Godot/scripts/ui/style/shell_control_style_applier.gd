@@ -170,10 +170,7 @@ func _flat_box(style_manager, background_role: String, border_role: String, radi
 
 
 func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = 8) -> StyleBoxFlat:
-	var style := _flat_box(style_manager, background_role, border_role, 4, content_margin)
-	if style_manager.contrast_mode() == "high" and border_role == ShellStyleRolesScript.ACCENT_FOCUS:
-		style.set_border_width_all(3)
-	return style
+	return _flat_box(style_manager, background_role, border_role, 4, content_margin)
 
 
 func _keycap_box(style_manager) -> StyleBoxFlat:

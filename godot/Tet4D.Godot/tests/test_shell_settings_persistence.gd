@@ -51,12 +51,12 @@ func run() -> Array:
 	if bool(onboarding.snapshot().get("visible", true)):
 		failures.append("disabled onboarding preference should hide guidance")
 	var live_session := {"score": 320, "paused": true, "active_cells": [[1, 2]]}
-	panel.reset_settings_to_defaults()
+	panel.reset_display_settings_to_defaults()
 	if live_session != {"score": 320, "paused": true, "active_cells": [[1, 2]]}:
-		failures.append("resetting shell preferences must not mutate live-session state")
+		failures.append("resetting display preferences must not mutate live-session state")
 	var reset_store = StoreScript.new(registry, TEST_PATH)
-	if reset_store.value("theme.name") != "tron" or reset_store.value("interface.show_onboarding") != true:
-		failures.append("panel reset should immediately persist registry defaults")
+	if reset_store.value("theme.name") != "tron" or reset_store.value("interface.show_onboarding") != false:
+		failures.append("display reset should restore theme while preserving onboarding")
 	panel.queue_free()
 	await tree.process_frame
 	_cleanup()

@@ -7,7 +7,6 @@
     {"id": "diagnostics", "label": "Diagnostics"},
     {"id": "controls_help", "label": "Controls Help"},
     {"id": "interface", "label": "Interface"},
-    {"id": "accessibility", "label": "Accessibility"},
     {"id": "camera", "label": "Camera"}
   ],
   "settings": [
@@ -150,38 +149,6 @@
       "persist": true
     },
     {
-      "id": "accessibility.contrast_mode",
-      "label": "Contrast",
-      "description": "High Contrast adds stronger outlines and non-colour distinctions.",
-      "category": "accessibility",
-      "value_type": "enum",
-      "control_type": "dropdown",
-      "default": "standard",
-      "options": [
-        {"value": "standard", "label": "Standard"},
-        {"value": "high", "label": "High Contrast"}
-      ],
-      "authority": "godot_shell",
-      "persistence": "local_shell",
-      "persist": true
-    },
-    {
-      "id": "accessibility.animation_mode",
-      "label": "Animation",
-      "description": "Reduced Motion shortens non-essential movement without changing game timing.",
-      "category": "accessibility",
-      "value_type": "enum",
-      "control_type": "dropdown",
-      "default": "standard",
-      "options": [
-        {"value": "reduced", "label": "Reduced Motion"},
-        {"value": "standard", "label": "Standard Motion"}
-      ],
-      "authority": "godot_shell",
-      "persistence": "local_shell",
-      "persist": true
-    },
-    {
       "id": "theme.name",
       "label": "Theme",
       "description": "Selects the Godot shell visual theme.",
@@ -247,23 +214,6 @@
       "value_type": "bool",
       "control_type": "checkbox",
       "default": true,
-      "authority": "godot_shell",
-      "persistence": "local_shell",
-      "persist": true
-    },
-    {
-      "id": "controls_help.contextual_help",
-      "label": "Contextual Help",
-      "description": "Controls when gameplay hints are shown.",
-      "category": "controls_help",
-      "value_type": "enum",
-      "control_type": "dropdown",
-      "default": "automatic",
-      "options": [
-        {"value": "automatic", "label": "Automatic"},
-        {"value": "always", "label": "Always Visible"},
-        {"value": "hidden", "label": "Hidden"}
-      ],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true

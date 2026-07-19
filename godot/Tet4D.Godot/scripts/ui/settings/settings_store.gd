@@ -115,6 +115,21 @@ func reset_to_defaults() -> bool:
 	return saved
 
 
+func reset_categories_to_defaults(category_ids: Array) -> bool:
+	if _registry == null:
+		return false
+	for category_id in category_ids:
+		for spec in _registry.settings_for_category(str(category_id)):
+			if spec.persistence() == "session":
+				_session_values.erase(spec.id())
+			elif spec.is_persistent():
+				_persistent_values[spec.id()] = _safe_copy(spec.default_value())
+	var saved := _save_persistent_values()
+	if saved:
+		_diagnostics.append("Display settings reset to defaults.")
+	return saved
+
+
 func all_values() -> Dictionary:
 	var values: Dictionary = {}
 	if _registry == null:

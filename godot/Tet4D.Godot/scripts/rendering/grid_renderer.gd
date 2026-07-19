@@ -13,8 +13,7 @@ func rebuild(
 	live_2d: bool = false,
 	show_w_labels: bool = true,
 	active_layers: Array = [],
-	board_detail: String = "standard",
-	high_contrast: bool = false
+	board_detail: String = "standard"
 ) -> void:
 	for child in get_children():
 		child.queue_free()
@@ -49,10 +48,10 @@ func rebuild(
 				slice_bounds,
 				display_mode,
 				ReplayVisuals.live_active_cell_border_material(display_mode),
-				ReplayVisuals.slice_outline_thickness(display_mode) * (3.4 if high_contrast else 2.4)
+				ReplayVisuals.slice_outline_thickness(display_mode) * 2.4
 			)
 		if dimension >= 4 and show_w_labels:
-			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode, active_layers.has(w_index), high_contrast)
+			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode, active_layers.has(w_index))
 
 
 func _add_outline_box(slice_bounds: Dictionary, display_mode: String, material_override: Material = null, thickness_override: float = -1.0) -> void:
@@ -117,13 +116,13 @@ func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 		)
 
 
-func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String, selected: bool, high_contrast: bool) -> void:
+func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String, selected: bool) -> void:
 	var label := Label3D.new()
 	label.text = "w%d ◀" % [w_index + 1] if selected else "w%d" % [w_index + 1]
 	label.font_size = ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.modulate = ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
-	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE + (4 if selected and high_contrast else (2 if selected else 0))
+	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE + (2 if selected else 0)
 	label.position = label_position + Vector3(0.0, 0.0, 0.015)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_child(label)

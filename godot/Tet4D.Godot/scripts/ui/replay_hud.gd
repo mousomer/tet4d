@@ -34,9 +34,7 @@ signal replay_loop_changed(enabled: bool)
 signal display_w_labels_changed(visible: bool)
 signal projection_strength_changed(value: float)
 signal board_detail_changed(detail: String)
-signal contrast_mode_changed(mode: String)
-signal animation_mode_changed(mode: String)
-signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, reduced_motion: bool)
+signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool)
 signal fit_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
@@ -151,12 +149,10 @@ var _style_applier = ShellControlStyleApplierScript.new()
 var _current_screen := SCREEN_MAIN_MENU
 var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
-var _contextual_help_mode := "automatic"
 var _hud_density := "standard"
 var _ui_scale_factor := 1.0
 var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
-var _reduced_motion := false
 var _applying_window_change := false
 var _applying_initial_settings := false
 var _bundle_status_text := ""
@@ -750,11 +746,8 @@ func presentation_preferences_snapshot() -> Dictionary:
 		"windowed_size": _settings_store.value("display.windowed_size"),
 		"ui_scale_factor": _ui_scale_factor,
 		"hud_density": _hud_density,
-		"contrast_mode": _style_manager.contrast_mode(),
-		"animation_mode": "reduced" if _reduced_motion else "standard",
 		"camera_sensitivity_factor": _camera_sensitivity_factor,
 		"camera_invert_y": _camera_invert_y,
-		"contextual_help": _contextual_help_mode,
 	}
 
 
@@ -784,8 +777,6 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.board_detail_changed.connect(func(detail: String) -> void:
 		board_detail_changed.emit(detail)
 	)
-	panel.contrast_mode_changed.connect(_apply_contrast_mode)
-	panel.animation_mode_changed.connect(_apply_animation_mode)
 	panel.camera_sensitivity_changed.connect(func(sensitivity: String) -> void:
 		_camera_sensitivity_factor = ShellPresentationPreferencesScript.camera_sensitivity_factor(sensitivity)
 		_emit_camera_preferences()
@@ -794,7 +785,6 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 		_camera_invert_y = inverted
 		_emit_camera_preferences()
 	)
-	panel.contextual_help_changed.connect(_apply_contextual_help)
 	panel.display_mode_changed.connect(func(mode: String) -> void:
 		display_mode_changed.emit(mode)
 	)
@@ -966,7 +956,6 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 	if _diagnostics_panel != null:
 		_diagnostics_panel.set_title("Diagnostics" if live_mode else "Replay Diagnostics")
 	_set_live_inspector_density(live_mode)
-	_apply_contextual_help_visibility(live_mode)
 	if not live_mode and _onboarding_panel != null:
 		_onboarding_panel.visible = false
 
@@ -1097,25 +1086,12 @@ func _set_layout_bounds_visible(visible: bool) -> void:
 
 func _set_keyboard_hints_visible(visible: bool) -> void:
 	_keyboard_hints_visible = visible
-	_apply_contextual_help_visibility(_bottom_panel != null and not _bottom_panel.visible)
+	if _mode_hint_strip != null:
+		_mode_hint_strip.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
+	if _hint_label != null:
+		_hint_label.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
 	if _help_panel != null and not visible:
 		_help_panel.visible = false
-
-
-func _apply_contextual_help(mode: String) -> void:
-	_contextual_help_mode = mode if mode in ShellPresentationPreferencesScript.CONTEXTUAL_HELP_MODES else "automatic"
-	_apply_contextual_help_visibility(_bottom_panel != null and not _bottom_panel.visible)
-
-
-func _apply_contextual_help_visibility(live_mode: bool) -> void:
-	var hints_allowed := _keyboard_hints_visible and _contextual_help_mode != "hidden"
-	var always_visible := _contextual_help_mode == "always"
-	if _mode_hint_strip != null:
-		_mode_hint_strip.visible = hints_allowed and (always_visible or not live_mode)
-	if _hint_label != null:
-		_hint_label.visible = hints_allowed and not live_mode and (_bottom_panel == null or _bottom_panel.visible)
-	if _inspector_hint_panel != null:
-		_inspector_hint_panel.visible = hints_allowed
 
 
 func _apply_ui_scale(scale_id: String) -> void:
@@ -1131,20 +1107,8 @@ func _apply_hud_density(density: String) -> void:
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 
 
-func _apply_contrast_mode(mode: String) -> void:
-	_style_manager.set_contrast_mode(mode)
-	_apply_shell_style()
-	contrast_mode_changed.emit(_style_manager.contrast_mode())
-
-
-func _apply_animation_mode(mode: String) -> void:
-	_reduced_motion = mode == "reduced"
-	animation_mode_changed.emit("reduced" if _reduced_motion else "standard")
-	_emit_camera_preferences()
-
-
 func _emit_camera_preferences() -> void:
-	camera_preferences_changed.emit(_camera_sensitivity_factor, _camera_invert_y, _reduced_motion)
+	camera_preferences_changed.emit(_camera_sensitivity_factor, _camera_invert_y)
 
 
 func _apply_window_mode(mode: String) -> void:
