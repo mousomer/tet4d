@@ -11,6 +11,25 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- Stage 51 display and accessibility completion is implemented locally on
+  `codex/configurable-plain-boards` as a presentation-only extension of the
+  accepted Stage 48–50 shell. Its bounded implementation authority is
+  `docs/architecture/display_accessibility_completion.md`. The Stage 48
+  `user://shell_settings.json` owner now migrates schema 1 to schema 2 and
+  persists safe window mode/size, bounded UI scale, HUD density, board detail,
+  theme-composed contrast, reduced motion, camera response/inversion, and
+  contextual-help preferences. Generated controls remain keyboard reachable;
+  remembered dimensions are automatic; high contrast strengthens focus,
+  active/locked edges, and selected-layer non-colour cues; reduced motion snaps
+  camera interpolation and suppresses presentation pulse only. Automated
+  Godot, Python, native, setup, Wide-W, and state-hash parity checks pass, as
+  does full repository verification. Manual acceptance passed for persisted
+  fullscreen/windowed restoration, Plain high contrast at extra-large scale,
+  viewport-safe Settings/setup screens, all eight Wide-W layers, live inputs,
+  restart, Fit View, and camera response.
+  Python/native gameplay authority, setup/RNG/pieces, topology, replay identity,
+  bindings, controllers, audio, and packaging remain unchanged.
+
 - Stage 50 plain-game setup completion is complete locally on
   `codex/configurable-plain-boards` as a direct extension of the accepted Stage
   49 setup boundary. Its authority audit is
@@ -23,9 +42,9 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   true-random setup, effective-seed replacement through New Random Game, and
   Wide-W adaptive 4D interaction. The live action/status row is protected at
   supported viewport sizes. Python gameplay rules remain the oracle; topology
-  and all advanced gameplay/setup families remain deferred. Stage 51 display,
-  accessibility, and controls is the recommended next bounded roadmap item,
-  but is not active in this batch.
+  and all advanced gameplay/setup families remain deferred. Stage 51 extends
+  only Godot presentation and accessibility; Stage 52 topology remains
+  deferred.
 
 - Stage 49 configurable plain-board setup and adaptive 4D layer presentation has
   an automated-verified menu-routing repair on `codex/configurable-plain-boards`

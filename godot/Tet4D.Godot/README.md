@@ -81,10 +81,21 @@ defaults. Validated user choices are saved as versioned JSON in Godot's writable
 user-data directory at `user://shell_settings.json`; no repository or Python
 configuration file is changed.
 
-Missing or malformed settings recover to registry defaults with a concise
-diagnostic. `Reset Settings to Defaults` restores and saves only shell
-preferences. Onboarding can be disabled and re-enabled from Settings without
-storing tutorial progress or gameplay state.
+Schema version 2 adds Windowed/Fullscreen, an automatically remembered safe
+windowed size, bounded UI scale, Compact/Standard/Detailed HUD density,
+Minimal/Standard/Full board detail, Standard/High Contrast, Standard/Reduced
+Motion, Low/Standard/High camera sensitivity, vertical camera inversion, and
+Automatic/Always Visible/Hidden contextual help. Window size is not an
+arbitrary resolution selector. Contrast composes with the existing themes;
+reduced motion changes camera/feedback presentation only.
+
+Existing schema-version-1 shell settings migrate valid Stage 48 preferences in
+memory while new fields use defaults. Missing, malformed, future, unknown, or
+invalid values recover safely and independently where possible. `Reset
+Settings to Defaults` restores and saves only shell preferences. Contextual
+help and guided onboarding remain separate preferences, and neither shell file
+stores tutorial progress or gameplay state. Game setup remains exclusively in
+`user://game_setup.json`.
 
 ## Boundaries
 

@@ -98,3 +98,17 @@ Every Stage 51 behavior is Godot-owned presentation. Python gameplay/reference
 rules, native gameplay authority and state, RNG, piece sets, board setup,
 topology, replay schemas/identity, scoring, movement, rotation, collision,
 locking, and deterministic restart remain unchanged.
+
+## Verification outcome
+
+Automated acceptance passed for schema migration and recovery, every persisted
+preset, keyboard/focus navigation, maximum-scale viewport safety, theme and
+contrast composition, camera-only response, contextual-help separation,
+renderer propagation, native geometry identity, deterministic setup, Wide-W,
+and state-hash parity. Manual acceptance passed for persisted fullscreen and
+windowed restoration, Plain high contrast at extra-large scale, Settings and
+setup scrolling, all eight Wide-W layers, Q/E, fourth-axis rotation, Fit View,
+hard drop, restart, and camera input. Stage 49's accepted Shift+wheel layer
+navigation path is unchanged and remains covered by the Godot input suite.
+`CODEX_MODE=1 ./scripts/verify.sh` passes. Existing Godot RID/ObjectDB cleanup
+warnings remain non-blocking.

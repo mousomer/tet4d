@@ -28,6 +28,26 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Stage 51 display and accessibility completion (2026-07-19, implemented
+locally): extend the Stage 48 shell-settings owner to schema version 2 with
+safe Stage 48 migration and bounded window, UI scale, HUD density, board
+detail, contrast, motion, camera, and contextual-help preferences. Application
+remains centralized through the Godot shell/HUD into render and camera
+consumers; automatic remembered window size is validated and display-clamped.
+High contrast adds heavier focus/active-layer/cell-edge treatment and an
+explicit selected-layer marker; reduced motion snaps camera interpolation and
+removes rotation pulsing without affecting gameplay timing. Focused Godot
+coverage protects invalid-field isolation, setup-store separation, viewport
+scrolling, Plain/default theme composition, camera-only response, contextual
+help/onboarding separation, geometry identity, and renderer propagation. The
+bounded contract is
+`docs/architecture/display_accessibility_completion.md`. Full repository
+verification and manual fullscreen/windowed, maximum-scale Plain/high-contrast,
+Settings/setup, Wide-W, live-input, restart, Fit View, and camera acceptance
+pass. Key rebinding,
+controllers, audio, arbitrary resolutions, gameplay/setup changes, topology,
+and packaging remain deferred; Stage 52 topology is not active.
+
 Stage 50 plain-game setup completion (2026-07-19, complete locally):
 extend the separate Stage 49 gameplay setup owner with canonical piece-set,
 random-mode, seed, and initial-speed identity; construct existing bounded native
@@ -40,9 +60,8 @@ topology, bots, kicks, challenge/progression editors, endgame/explosion, audio,
 keybindings, and packaging remain deferred. Native/Godot/parity verification
 and manual 2D/3D/4D acceptance passed, including persisted true-random setup,
 New Random effective-seed replacement, mouse and keyboard navigation, and the
-Wide-W eight-layer layout. Stage 51 display, accessibility, and controls is the
-recommended next bounded stage; Stage 52 topology work remains deferred and is
-not active.
+Wide-W eight-layer layout. Stage 51 extends the accepted shell at presentation
+only; Stage 52 topology work remains deferred and is not active.
 
 Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
 (2026-07-15, menu-routing repair and manual reacceptance verified): add curated 2D/3D/4D New Game presets, parameterize the existing
