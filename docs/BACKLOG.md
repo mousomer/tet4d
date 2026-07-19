@@ -46,25 +46,25 @@ code-owned duplicate setting fallbacks while allowing explicit preset
 interpretation mappings. It runs in `scripts/verify.sh`; focused mutation tests
 prove each failure mode.
 
-Stage 51 display and accessibility completion (2026-07-19, implemented
-locally): extend the Stage 48 shell-settings owner to schema version 2 with
-safe Stage 48 migration and bounded window, UI scale, HUD density, board
-detail, contrast, motion, camera, and contextual-help preferences. Application
-remains centralized through the Godot shell/HUD into render and camera
-consumers; automatic remembered window size is validated and display-clamped.
-High contrast adds heavier focus/active-layer/cell-edge treatment and an
-explicit selected-layer marker; reduced motion snaps camera interpolation and
-removes rotation pulsing without affecting gameplay timing. Focused Godot
-coverage protects invalid-field isolation, setup-store separation, viewport
-scrolling, Plain/default theme composition, camera-only response, contextual
-help/onboarding separation, geometry identity, and renderer propagation. The
-bounded contract is
-`docs/architecture/display_accessibility_completion.md`. Full repository
-verification and manual fullscreen/windowed, maximum-scale Plain/high-contrast,
-Settings/setup, Wide-W, live-input, restart, Fit View, and camera acceptance
-pass. Key rebinding,
-controllers, audio, arbitrary resolutions, gameplay/setup changes, topology,
-and packaging remain deferred; Stage 52 topology is not active.
+Stage 51 display infrastructure (2026-07-19, corrective completion in
+progress): retain the Stage 48 registry/store as the canonical shell-settings
+owner, migrate schema 1 to schema 2, and centralize bounded window, remembered
+size, UI scale, theme, HUD density, board detail, and camera preferences through
+the Godot shell/HUD presentation owner into renderer and camera consumers. The
+display-only contract is `docs/architecture/display_infrastructure.md`.
+Accessibility behavior that was prematurely combined into the local baseline
+is being removed from Stage 51 and remains ordered Stage 52 work.
+
+The next product stages are ordered as follows:
+
+1. Stage 51 — Display Infrastructure
+2. Stage 52 — Accessibility
+3. Stage 53A — Topology contract
+4. Stage 53B — Native topology transport
+5. Stage 53C — Topology gameplay
+6. Stage 53D — Topology diagnostics
+7. Stage 53E — Topology Lab
+8. Stage 54 — Controls and Input Configuration
 
 Stage 50 plain-game setup completion (2026-07-19, complete locally):
 extend the separate Stage 49 gameplay setup owner with canonical piece-set,
@@ -79,7 +79,7 @@ keybindings, and packaging remain deferred. Native/Godot/parity verification
 and manual 2D/3D/4D acceptance passed, including persisted true-random setup,
 New Random effective-seed replacement, mouse and keyboard navigation, and the
 Wide-W eight-layer layout. Stage 51 extends the accepted shell at presentation
-only; Stage 52 topology work remains deferred and is not active.
+only; Stage 52 accessibility and Stage 53 topology work remain deferred.
 
 Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
 (2026-07-15, menu-routing repair and manual reacceptance verified): add curated 2D/3D/4D New Game presets, parameterize the existing
