@@ -259,3 +259,18 @@ Stage 53 may consume focus, contrast, motion, hints, and semantic-selection
 roles but cannot be anticipated with topology UI here. Stage 54 may replace
 literal control labels through its binding authority; Stage 52 continues using
 existing action abstractions and does not introduce a binding system.
+
+## 26. Current acceptance status
+
+Schema migration, validation/fallback, guarded persistence, isolated resets,
+policy propagation, focus geometry/restoration, theme composition, non-colour
+renderer cues, motion/hint behavior, layout regression, Python, Godot, native,
+and 2D/ND/configured-setup parity checks pass, including the repository-wide
+`CODEX_MODE=1 ./scripts/verify.sh` gate.
+
+The exercised macOS GUI confirmed a strong main-menu keyboard focus ring and a
+scroll-safe Settings screen at Extra Large scale. The environment then
+exhausted its external-action quota, so the complete keyboard-only,
+all-theme, 2D/3D/4D/Wide-W manual acceptance matrix remains pending. This is a
+platform-exercise limitation, not an automated test failure. Stage 52 must not
+be marked complete until that matrix is finished.

@@ -81,24 +81,28 @@ defaults. Validated user choices are saved as versioned JSON in Godot's writable
 user-data directory at `user://shell_settings.json`; no repository or Python
 configuration file is changed.
 
-Schema version 2 adds Windowed/Fullscreen, an automatically remembered safe
-windowed size, bounded UI scale, Compact/Standard/Detailed HUD density,
-Minimal/Standard/Full board detail, Low/Standard/High camera sensitivity, and
-vertical camera inversion. Window size is not an arbitrary resolution
-selector. The supported shell themes remain Diagnostic, Plain, and Vector
-Arcade.
+Schema version 3 retains the Stage 51 Windowed/Fullscreen, remembered safe
+window size, bounded UI scale, HUD density, board detail, camera sensitivity,
+and vertical camera inversion settings, and adds High Contrast, Reduced
+Motion, and Show Help and Control Hints. High Contrast composes with
+Diagnostic, Plain, and Vector Arcade rather than replacing theme identity.
+Reduced Motion changes presentation smoothing and decorative emphasis only;
+it does not change gameplay or replay timing.
 
-Existing schema-version-1 shell settings migrate valid Stage 48 preferences in
-memory while new fields use defaults. Missing, malformed, future, unknown, or
-invalid values recover safely and independently where possible. `Reset Display
-Settings` restores and saves Display, Theme, and Camera defaults while
-preserving replay, keyboard-hint, and guided-onboarding choices. Neither shell
-file stores tutorial progress or gameplay state. Game setup remains
-exclusively in `user://game_setup.json`.
+Existing schema-version-1 and schema-version-2 shell settings migrate valid
+preferences in memory while new fields use defaults. The legacy keyboard-hint
+preference migrates to Show Help and Control Hints. Missing, malformed, future,
+unknown, or invalid values recover safely and independently where possible.
+`Reset Display Settings` remains display-only. `Reset Accessibility Settings`
+restores only High Contrast, Reduced Motion, and help hints. Both preserve
+replay, guided-onboarding, and separate game-setup choices. Neither shell file
+stores tutorial progress or gameplay state. Game setup remains exclusively in
+`user://game_setup.json`.
 
-Stage 52 will extend this infrastructure with accessibility behavior. Stage 51
-does not expose high contrast, reduced motion, colour-vision presets, or a new
-contextual-help policy.
+Visible focus, keyboard reachability, input isolation, and non-colour essential
+state cues are always-on invariants rather than preferences. Key rebinding,
+controller/touch support, screen-reader integration, speech/audio
+accessibility, arbitrary colour settings, and topology remain deferred.
 
 ## Boundaries
 

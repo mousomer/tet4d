@@ -28,7 +28,8 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Stage 52 accessibility infrastructure (2026-07-20, in progress): extend the
+Stage 52 accessibility infrastructure (2026-07-20, implementation and automated
+acceptance complete; final manual matrix pending): extend the
 accepted Stage 51 registry/store/presentation pipeline to schema version 3 with
 High Contrast, Reduced Motion, and Show Help and Control Hints preferences.
 The durable invariant/preference boundary, focused audit, migration policy,
@@ -38,6 +39,14 @@ classification, and acceptance matrix live in
 preference is migrated rather than duplicated. Gameplay, topology, setup, RNG,
 replay identity, hashes, native authority, controls rebinding, controllers,
 touch, audio accessibility, and packaging remain unchanged.
+Schema-3 migration, field-level recovery, isolated resets, live policy
+propagation, focus restoration, three-theme High Contrast, static non-colour
+cues, Reduced Motion, hint visibility, viewport/layout regression, full Python,
+Godot/native, 2D/ND/setup parity, and the repository verification gate pass.
+macOS GUI inspection accepted the main-menu focus ring and scroll-safe Extra
+Large Settings screen. External input-automation quota exhaustion prevented
+completion of the keyboard-only, all-theme, 2D/3D/4D/Wide-W manual matrix, so
+the stage is not yet marked complete and Stage 53A remains blocked.
 
 PR #36 settings-persistence failure-path hardening (2026-07-19, implemented):
 preserve and restore the previous valid `user://shell_settings.json` through a

@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-19
+Last updated: 2026-07-20
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -10,6 +10,30 @@ historical ledger, a validation transcript, or a second workflow authority.
 Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Stage 52 accessibility infrastructure is implemented on
+  `codex/configurable-plain-boards` as an extension of the accepted Stage 51
+  presentation path. Its durable contract and focused audit are
+  `docs/architecture/accessibility_infrastructure.md`. Shell settings advance
+  from schema 2 to schema 3 with bounded High Contrast, Reduced Motion, and
+  Show Help and Control Hints preferences; the legacy keyboard-hint value
+  migrates into the accessibility section. `SettingsStore` remains the only
+  persistence owner, `ReplayHud` remains the historically named runtime
+  presentation owner, and `Reset Accessibility Settings` preserves display,
+  camera, replay, onboarding, and separate game setup. Static geometric focus,
+  focus restoration, selected/active-layer markers, active/locked cell
+  outlines, textual validation/pause/end-state cues, and input isolation remain
+  mandatory invariants rather than options. High Contrast composes with the
+  three Stage 51 themes; Reduced Motion snaps camera smoothing and suppresses
+  decorative renderer/event pulse without changing gameplay or replay timing;
+  optional hints update live without hiding essential labels. Focused and full
+  Python, Godot, native, persistence, documentation, governance, 2D/ND/setup
+  parity, and `CODEX_MODE=1 ./scripts/verify.sh` checks pass. macOS GUI
+  inspection confirmed the main-menu focus ring and the scroll-safe Extra
+  Large Settings screen, but the environment exhausted its external-action
+  quota before the full keyboard-only, all-theme, 2D/3D/4D/Wide-W manual matrix
+  could be completed. Stage 52 therefore remains pending final manual
+  acceptance; Stage 53A has not begun.
 
 - The PR #36 settings-persistence review on
   `codex/configurable-plain-boards` confirms and hardens two Stage 48 failure
