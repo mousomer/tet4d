@@ -59,7 +59,12 @@ persistence, reset, focus, and semantic whitelist coverage.
 - Save timing: validated save-on-change; unchanged values do not write.
 - Save feedback: the Settings screen reports `Shell settings saved automatically.`
   after a successful write; no separate Save button is required.
-- Replacement: write a sibling temporary file, then replace the destination.
+- Replacement: write a sibling temporary file and first use Godot's
+  overwrite-capable rename. If that operation fails while an existing settings
+  file remains, preserve it as a sibling backup before retrying installation.
+  A failed retry restores the previous file by rename or copy fallback. Clean
+  temporary/backup files where safe; retain the backup and report its path only
+  if restoration itself cannot complete.
 - Reset: restore registry defaults, apply them immediately, and persist them.
 
 The former Stage 29 `user://tet4d_shell_settings.cfg` path is superseded rather
@@ -75,8 +80,12 @@ diagnostic without rewriting the source file. For a structurally valid file,
 known valid values survive; unknown keys are ignored and invalid values are
 replaced by defaults with diagnostics.
 
-Runtime changes use the same registry validation. Save failures leave the
-validated in-memory value available, report the failure, and do not crash.
+Schema versions must be JSON numbers with an exact supported integral value;
+fractional values are never truncated, and strings, booleans, null, arrays,
+and objects are rejected. Runtime changes use the same registry validation.
+Save failures leave the validated in-memory value available, report the
+failure, do not increment the successful-save count, do not emit a success
+diagnostic, and do not crash.
 
 ## Runtime and UI flow
 

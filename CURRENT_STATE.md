@@ -11,6 +11,17 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- The PR #36 settings-persistence review on
+  `codex/configurable-plain-boards` confirms and hardens two Stage 48 failure
+  paths without changing schema identity or migration behavior. Replacement
+  now preserves an existing valid file through a narrow injectable
+  rename/copy/remove seam, restores it after failed installation, and reports
+  failure without a false save count or success diagnostic. Schema loading
+  accepts only exact supported integral JSON numbers and no longer truncates
+  fractional versions. Focused failure injection covers pre-backup failure,
+  post-backup failure, rename/copy restoration, artifact cleanup, diagnostics,
+  and save counts.
+
 - A follow-up quality gate is implemented on `codex/configurable-plain-boards`
   to
   make the Godot shell-settings ownership boundary blocking: declarations and

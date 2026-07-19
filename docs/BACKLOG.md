@@ -28,6 +28,15 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+PR #36 settings-persistence failure-path hardening (2026-07-19, implemented):
+preserve and restore the previous valid `user://shell_settings.json` through a
+small injectable replacement seam when overwrite/install operations fail;
+clean sibling temporary/backup artifacts where safe; and reject fractional or
+non-numeric schema representations without changing schema versions or the
+existing schema-1 migration. Focused Godot tests cover successful overwrite,
+failure before backup, failure after backup, rename/copy restoration, cleanup,
+diagnostics, and save-count behavior.
+
 Godot shell-settings externalization quality gate (2026-07-19, implemented):
 promote the existing registry-default and user-data persistence boundary from
 an implicit implementation convention to a blocking policy-backed verification

@@ -5,9 +5,11 @@ class_name SettingsStore
 const SCHEMA_VERSION := 2
 const MIGRATABLE_SCHEMA_VERSIONS := [1, SCHEMA_VERSION]
 const DEFAULT_PATH := "user://shell_settings.json"
+const BACKUP_SUFFIX := ".bak"
 
 var _registry
 var _storage_path := DEFAULT_PATH
+var _replacement_ops
 var _session_values: Dictionary = {}
 var _persistent_values: Dictionary = {}
 var _diagnostics: Array = []
@@ -15,9 +17,10 @@ var _load_state := "not_loaded"
 var _save_count := 0
 
 
-func _init(registry = null, storage_path: String = DEFAULT_PATH) -> void:
+func _init(registry = null, storage_path: String = DEFAULT_PATH, replacement_ops = null) -> void:
 	_registry = registry
 	_storage_path = storage_path
+	_replacement_ops = replacement_ops
 	if _registry != null:
 		load_settings()
 
@@ -47,7 +50,7 @@ func load_settings() -> void:
 		_recover_all("Settings root must be an object; defaults used.")
 		return
 	var schema_value = parsed.get("schema_version")
-	if typeof(schema_value) not in [TYPE_INT, TYPE_FLOAT] or not MIGRATABLE_SCHEMA_VERSIONS.has(int(schema_value)):
+	if not _is_supported_schema_version(schema_value):
 		_recover_all("Settings schema version is unsupported; defaults used.")
 		return
 	if not parsed.has("settings") or not (parsed.get("settings") is Dictionary):
@@ -156,6 +159,13 @@ func _recover_all(message: String) -> void:
 	_diagnostics.append(message)
 
 
+func _is_supported_schema_version(value) -> bool:
+	if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
+		return false
+	var integer_value := int(value)
+	return float(value) == float(integer_value) and MIGRATABLE_SCHEMA_VERSIONS.has(integer_value)
+
+
 func _save_persistent_values() -> bool:
 	var payload := {
 		"schema_version": SCHEMA_VERSION,
@@ -170,18 +180,119 @@ func _save_persistent_values() -> bool:
 	file.close()
 	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
 	var destination_absolute := ProjectSettings.globalize_path(_storage_path)
-	var rename_error := DirAccess.rename_absolute(temporary_absolute, destination_absolute)
-	if rename_error != OK:
-		if FileAccess.file_exists(_storage_path):
-			DirAccess.remove_absolute(destination_absolute)
-			rename_error = DirAccess.rename_absolute(temporary_absolute, destination_absolute)
-	if rename_error != OK:
-		DirAccess.remove_absolute(temporary_absolute)
-		_report_save_failure("atomic replacement failed with error %s" % rename_error)
+	var replacement := _replace_temporary_file(temporary_absolute, destination_absolute)
+	if not bool(replacement.get("ok", false)):
+		_report_save_failure(str(replacement.get("detail", "replacement failed")))
 		return false
 	_save_count += 1
 	_diagnostics.append("Shell settings saved automatically.")
+	var warning := str(replacement.get("warning", ""))
+	if not warning.is_empty():
+		_diagnostics.append(warning)
 	return true
+
+
+func _replace_temporary_file(temporary_path: String, destination_path: String) -> Dictionary:
+	var backup_path := "%s%s" % [destination_path, BACKUP_SUFFIX]
+	var replace_error := _rename_absolute(temporary_path, destination_path)
+	if replace_error == OK:
+		var stale_cleanup := _remove_if_present(backup_path)
+		return {
+			"ok": true,
+			"warning": _cleanup_warning("stale backup", stale_cleanup),
+		}
+	if not _file_exists(destination_path):
+		var temporary_cleanup := _remove_if_present(temporary_path)
+		return {
+			"ok": false,
+			"detail": "replacement failed with error %s before an existing settings file was modified%s" % [
+				replace_error,
+				_cleanup_detail(temporary_cleanup),
+			],
+		}
+	var stale_backup_cleanup := _remove_if_present(backup_path)
+	if stale_backup_cleanup != OK:
+		_remove_if_present(temporary_path)
+		return {
+			"ok": false,
+			"detail": "stale backup cleanup failed with error %s; previous settings were not modified" % stale_backup_cleanup,
+		}
+	var backup_error := _rename_absolute(destination_path, backup_path)
+	if backup_error != OK:
+		var temporary_cleanup := _remove_if_present(temporary_path)
+		return {
+			"ok": false,
+			"detail": "previous settings could not be backed up (error %s) and were not modified%s" % [
+				backup_error,
+				_cleanup_detail(temporary_cleanup),
+			],
+		}
+	var install_error := _rename_absolute(temporary_path, destination_path)
+	if install_error == OK:
+		var backup_cleanup := _remove_if_present(backup_path)
+		return {
+			"ok": true,
+			"warning": _cleanup_warning("backup", backup_cleanup),
+		}
+	var restore_error := _rename_absolute(backup_path, destination_path)
+	if restore_error != OK:
+		restore_error = _copy_absolute(backup_path, destination_path)
+	var temporary_cleanup := _remove_if_present(temporary_path)
+	if restore_error != OK:
+		return {
+			"ok": false,
+			"detail": "installation failed with error %s; previous settings remain at %s because restoration failed with error %s%s" % [
+				install_error,
+				backup_path,
+				restore_error,
+				_cleanup_detail(temporary_cleanup),
+			],
+		}
+	var backup_cleanup := _remove_if_present(backup_path)
+	return {
+		"ok": false,
+		"detail": "installation failed with error %s; previous settings were restored%s%s" % [
+			install_error,
+			_cleanup_detail(temporary_cleanup),
+			_cleanup_detail(backup_cleanup, "backup"),
+		],
+	}
+
+
+func _file_exists(path: String) -> bool:
+	if _replacement_ops != null:
+		return bool(_replacement_ops.file_exists(path))
+	return FileAccess.file_exists(path)
+
+
+func _rename_absolute(from_path: String, to_path: String) -> Error:
+	if _replacement_ops != null:
+		return _replacement_ops.rename_absolute(from_path, to_path)
+	return DirAccess.rename_absolute(from_path, to_path)
+
+
+func _copy_absolute(from_path: String, to_path: String) -> Error:
+	if _replacement_ops != null:
+		return _replacement_ops.copy_absolute(from_path, to_path)
+	return DirAccess.copy_absolute(from_path, to_path)
+
+
+func _remove_absolute(path: String) -> Error:
+	if _replacement_ops != null:
+		return _replacement_ops.remove_absolute(path)
+	return DirAccess.remove_absolute(path)
+
+
+func _remove_if_present(path: String) -> Error:
+	return _remove_absolute(path) if _file_exists(path) else OK
+
+
+func _cleanup_detail(error: Error, label: String = "temporary file") -> String:
+	return "" if error == OK else "; %s cleanup also failed with error %s" % [label, error]
+
+
+func _cleanup_warning(label: String, error: Error) -> String:
+	return "" if error == OK else "Shell settings saved, but %s cleanup failed with error %s." % [label, error]
 
 
 func _report_save_failure(detail: String) -> void:
