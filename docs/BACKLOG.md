@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-19
+Updated: 2026-07-20
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,17 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Stage 52 accessibility infrastructure (2026-07-20, in progress): extend the
+accepted Stage 51 registry/store/presentation pipeline to schema version 3 with
+High Contrast, Reduced Motion, and Show Help and Control Hints preferences.
+The durable invariant/preference boundary, focused audit, migration policy,
+runtime ownership, focus/navigation contract, non-colour cues, motion
+classification, and acceptance matrix live in
+`docs/architecture/accessibility_infrastructure.md`. The existing keyboard-hint
+preference is migrated rather than duplicated. Gameplay, topology, setup, RNG,
+replay identity, hashes, native authority, controls rebinding, controllers,
+touch, audio accessibility, and packaging remain unchanged.
 
 PR #36 settings-persistence failure-path hardening (2026-07-19, implemented):
 preserve and restore the previous valid `user://shell_settings.json` through a

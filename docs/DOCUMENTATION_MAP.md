@@ -40,6 +40,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/configurable_plain_boards_and_4d_layout.md`
 - `docs/architecture/plain_game_setup_completion.md`
 - `docs/architecture/display_infrastructure.md`
+- `docs/architecture/accessibility_infrastructure.md`
 - `docs/architecture/godot_replay_shell_ux_acceptance.md`
 - `docs/architecture/godot_visual_style_authority.md`
 - `docs/architecture/godot_visual_style_foundation.md`
@@ -143,6 +144,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 49 configurable plain-board setup and adaptive 4D presentation | `docs/architecture/configurable_plain_boards_and_4d_layout.md` |
 | Completed Stage 50 canonical bounded plain-game setup, RNG, piece-set, speed, restart, and acceptance contract | `docs/architecture/plain_game_setup_completion.md` |
 | Stage 51 canonical Godot display settings, persistence, and runtime presentation policy | `docs/architecture/display_infrastructure.md` |
+| Stage 52 Godot accessibility invariants, preferences, persistence, and runtime presentation policy | `docs/architecture/accessibility_infrastructure.md` |
 | Stage 22f manual Live 3D acceptance run record | `docs/plans/godot_live_3d_manual_acceptance.md` |
 | Current restart handoff | `CURRENT_STATE.md` |
 | Open execution backlog and current work footprint | `docs/BACKLOG.md` |
