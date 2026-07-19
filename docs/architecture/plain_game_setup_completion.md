@@ -1,6 +1,7 @@
 # Plain Game Setup Completion
 
-Status: Stage 50 implementation authority audit.
+Status: Stage 50 complete; implementation, parity, persistence, and manual GUI
+acceptance verified on `codex/configurable-plain-boards`.
 
 This document extends the Stage 49 board-configuration boundary documented in
 `configurable_plain_boards_and_4d_layout.md`. Python remains the gameplay and
@@ -153,10 +154,36 @@ construction generates exactly one effective seed. Restart reuses that seed;
 New Random Game constructs a new session and requests a new effective seed.
 Godot never selects or repairs pieces.
 
+The narrow semantic-boundary suppressions on the Godot setup model, store,
+panel, and gravity scheduler are adapter-routing declarations only. They route
+through the canonical setup spec or the bundled Python-authoritative tuning
+curve; they do not grant Godot gameplay-rule authority.
+
 The persistence document advances to schema version 2 and stores a validated
 entry per mode. Schema version 1 preset strings migrate independently to
 version 2 defaults. Malformed/future documents fail safely without touching
 `user://shell_settings.json`.
+
+## Completion evidence
+
+Stage 50 manual GUI acceptance covered readable and unclipped 2D, 3D, and 4D
+setup screens; keyboard and mouse launch paths; fixed-seed restart; alternate
+boards, pieces, seeds, and speeds; 2D/3D movement, rotation, and hard drop; and
+the Wide W 4D matrix with eight cards, active-layer emphasis, Q/E movement,
+fourth-axis rotation, hard drop, restart, and correct HUD identity.
+
+The 3D true-random acceptance run persisted Standard `6 × 10 × 6`, Embedded 2D,
+true-random, and speed 4 across application restart. Its first effective seed
+was `70273464`; the visible `New Random Game` mouse action produced
+`892089889` while retaining every non-seed setup field. Backspace restart was
+also verified to retain the current effective seed and initial sequence.
+
+Manual inspection found the live Restart/New Random/Change Setup row clipped by
+the original 80-pixel summary height. The completion pass raises the summary
+contract to 132 pixels, keeps the status badge elastic, and protects all
+visible live actions with supported-viewport layout assertions. The Plain
+theme keeps the status and action choices readable. Existing Godot RID/ObjectDB
+exit warnings remain non-blocking because the suite exits successfully.
 
 ## Authority and deferrals
 

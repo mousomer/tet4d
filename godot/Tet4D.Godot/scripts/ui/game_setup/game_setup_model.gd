@@ -140,6 +140,7 @@ func canonical_session_setup() -> Dictionary:
 	}
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func is_current_valid() -> bool:
 	return (
 		GameSetupSpecScript.is_supported(current_mode, selected_preset_id())
@@ -165,6 +166,7 @@ func _default_entry(mode: String) -> Dictionary:
 	}
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func _validated_entry(mode: String, raw: Dictionary) -> Dictionary:
 	var result := _default_entry(mode)
 	var preset_id := str(raw.get("board_preset_id", GameSetupSpecScript.STANDARD_PRESET_ID))

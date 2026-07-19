@@ -283,17 +283,25 @@ def _python_setup_state(case: dict[str, Any]) -> GameState | GameStateND:
 
 def _apply_setup_action(state: GameState | GameStateND, action: str) -> None:
     if isinstance(state, GameState):
-        if action == "move_right":
-            state.try_move(1, 0)
-        elif action == "rotate_cw":
-            state.try_rotate(1)
-        elif action == "soft_drop":
-            state.try_soft_drop()
-        elif action == "hard_drop":
-            state.hard_drop()
-        else:
-            raise ValueError(f"unsupported 2D setup parity action: {action}")
+        _apply_setup_action_2d(state, action)
         return
+    _apply_setup_action_nd(state, action)
+
+
+def _apply_setup_action_2d(state: GameState, action: str) -> None:
+    if action == "move_right":
+        state.try_move(1, 0)
+    elif action == "rotate_cw":
+        state.try_rotate(1)
+    elif action == "soft_drop":
+        state.try_soft_drop()
+    elif action == "hard_drop":
+        state.hard_drop()
+    else:
+        raise ValueError(f"unsupported 2D setup parity action: {action}")
+
+
+def _apply_setup_action_nd(state: GameStateND, action: str) -> None:
     if action == "move_z_pos":
         state.try_move_axis(2, 1)
     elif action == "move_w_pos":
@@ -386,7 +394,9 @@ def compare_setup_case(case_id: str) -> list[str]:
     native_frames = native.get("frames", [])
     failures: list[str] = []
     for action_index, expected in enumerate(expected_frames):
-        action = "initial" if action_index == 0 else str(case["actions"][action_index - 1])
+        action = (
+            "initial" if action_index == 0 else str(case["actions"][action_index - 1])
+        )
         actual = (
             _native_setup_projection(native_frames[action_index]["snapshot"])
             if action_index < len(native_frames)
@@ -421,7 +431,9 @@ def compare_setup_case(case_id: str) -> list[str]:
             )
         )
     if not native.get("restart_matches_initial", False):
-        failures.append(f"case={case_id}: restart did not reproduce the initial native state hash")
+        failures.append(
+            f"case={case_id}: restart did not reproduce the initial native state hash"
+        )
     return failures
 
 
@@ -435,6 +447,36 @@ def plain_nd_cases() -> list[str]:
     return [
         case.case_id for case in GAMEPLAY_TRACE_CASES if case.case_id in PLAIN_ND_CASES
     ]
+
+
+def _compare_all_setup_cases() -> int:
+    failures = []
+    for case_id in sorted(PLAIN_SETUP_CASES):
+        failures.extend(compare_setup_case(case_id))
+    if failures:
+        for failure in failures:
+            print(failure, file=sys.stderr)
+        return 1
+    print(
+        "C++ plain setup parity passed for "
+        + ", ".join(sorted(PLAIN_SETUP_CASES))
+        + " (including deterministic native restart hashes)"
+    )
+    return 0
+
+
+def _selected_case_ids(args: argparse.Namespace) -> list[str]:
+    if args.all_configurable:
+        return [
+            case.case_id
+            for case in GAMEPLAY_TRACE_CASES
+            if case.case_id in CONFIGURABLE_CASES
+        ]
+    if args.all_plain_2d:
+        return plain_2d_cases()
+    if args.all_plain_nd:
+        return plain_nd_cases()
+    return [args.case]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -467,31 +509,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.all_plain_setup:
-        failures = []
-        for case_id in sorted(PLAIN_SETUP_CASES):
-            failures.extend(compare_setup_case(case_id))
-        if failures:
-            for failure in failures:
-                print(failure, file=sys.stderr)
-            return 1
-        print(
-            "C++ plain setup parity passed for "
-            + ", ".join(sorted(PLAIN_SETUP_CASES))
-            + " (including deterministic native restart hashes)"
-        )
-        return 0
-    if args.all_configurable:
-        case_ids = [
-            case.case_id
-            for case in GAMEPLAY_TRACE_CASES
-            if case.case_id in CONFIGURABLE_CASES
-        ]
-    elif args.all_plain_2d:
-        case_ids = plain_2d_cases()
-    elif args.all_plain_nd:
-        case_ids = plain_nd_cases()
-    else:
-        case_ids = [args.case]
+        return _compare_all_setup_cases()
+    case_ids = _selected_case_ids(args)
     failures: list[str] = []
     for case_id in case_ids:
         failures.extend(compare_case(case_id, args.golden_dir))

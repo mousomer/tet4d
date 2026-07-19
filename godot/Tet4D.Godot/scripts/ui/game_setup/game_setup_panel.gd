@@ -244,6 +244,7 @@ func _emit_changed() -> void:
 	setup_changed.emit()
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func _validate_seed_text() -> bool:
 	if _model.selected_random_mode() == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM:
 		_seed_error.text = ""

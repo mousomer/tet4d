@@ -11,19 +11,26 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
-- Stage 50 plain-game setup completion is active on
+- Stage 50 plain-game setup completion is complete locally on
   `codex/configurable-plain-boards` as a direct extension of the accepted Stage
   49 setup boundary. Its authority audit is
   `docs/architecture/plain_game_setup_completion.md`. The stage is limited to
   canonical bounded setup identity, production piece-set selection, fixed or
   true-random effective seeds, initial speed, strict native construction,
   deterministic restart, schema-v2 gameplay-setup persistence, and
-  representative parity/UI coverage. Python gameplay rules remain the oracle;
-  topology and all advanced gameplay/setup families remain deferred.
+  representative parity/UI coverage. Manual acceptance passed for setup
+  readability, keyboard and mouse launch, deterministic restart, persisted
+  true-random setup, effective-seed replacement through New Random Game, and
+  Wide-W adaptive 4D interaction. The live action/status row is protected at
+  supported viewport sizes. Python gameplay rules remain the oracle; topology
+  and all advanced gameplay/setup families remain deferred. Stage 51 display,
+  accessibility, and controls is the recommended next bounded roadmap item,
+  but is not active in this batch.
 
 - Stage 49 configurable plain-board setup and adaptive 4D layer presentation has
-  an automated-verified menu-routing repair on `codex/configurable-plain-boards`;
-  manual reacceptance is pending. Its bounded audit is
+  an automated-verified menu-routing repair on `codex/configurable-plain-boards`
+  and its setup/navigation behavior was manually reaccepted during Stage 50.
+  Its bounded audit is
   `docs/architecture/configurable_plain_boards_and_4d_layout.md`. This stage
   parameterizes only accepted bounded native sessions, adds a separate
   Godot-owned New Game setup model, and adapts presentation for W greater than

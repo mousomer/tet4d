@@ -58,6 +58,7 @@ func _defaults() -> Dictionary:
 	return result
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func _validated_entry(mode: String, raw: Dictionary) -> Dictionary:
 	var result := {
 		"board_preset_id": GameSetupSpecScript.STANDARD_PRESET_ID,

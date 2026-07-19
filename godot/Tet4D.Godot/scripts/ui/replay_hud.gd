@@ -670,7 +670,11 @@ func layout_contract_snapshot() -> Dictionary:
 		"top_status_badge_border_color": _label_style_border_color(_top_state_badge_label),
 		"restart_game_button_visible": _restart_game_button.visible if _restart_game_button != null else false,
 		"restart_game_button_text": _restart_game_button.text if _restart_game_button != null else "",
+		"restart_game_button_rect": _control_rect(_restart_game_button),
 		"new_random_game_button_visible": _new_random_game_button.visible if _new_random_game_button != null else false,
+		"new_random_game_button_rect": _control_rect(_new_random_game_button),
+		"change_setup_button_visible": _change_setup_button.visible if _change_setup_button != null else false,
+		"change_setup_button_rect": _control_rect(_change_setup_button),
 		"authority_text": _authority_label.text if _authority_label != null else "",
 		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
 		"main_menu_text": _collect_label_text(_main_menu_screen),
@@ -1181,8 +1185,12 @@ func _build_layout() -> void:
 	_top_state_badge_label.name = "TopStatusBadgeLabel"
 	_top_state_badge_label.text = "[ PAUSED ]"
 	_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
+	_top_state_badge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_top_state_badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	top_summary_box.add_child(_top_state_badge_label)
+	var live_actions := HBoxContainer.new()
+	live_actions.name = "LiveActions"
+	live_actions.add_theme_constant_override("separation", 8)
+	live_actions.add_child(_top_state_badge_label)
 	_restart_game_button = Button.new()
 	_restart_game_button.name = "RestartGameButton"
 	_restart_game_button.text = "Restart Game"
@@ -1190,8 +1198,6 @@ func _build_layout() -> void:
 	_restart_game_button.pressed.connect(func() -> void:
 		reset_requested.emit()
 	)
-	var live_actions := HBoxContainer.new()
-	live_actions.add_theme_constant_override("separation", 8)
 	live_actions.add_child(_restart_game_button)
 	_new_random_game_button = Button.new()
 	_new_random_game_button.name = "NewRandomGameButton"

@@ -28,7 +28,7 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Stage 50 plain-game setup completion (2026-07-19, implementation active):
+Stage 50 plain-game setup completion (2026-07-19, complete locally):
 extend the separate Stage 49 gameplay setup owner with canonical piece-set,
 random-mode, seed, and initial-speed identity; construct existing bounded native
 sessions from that validated identity; preserve the effective seed on restart;
@@ -37,10 +37,15 @@ Python/native parity plus Godot navigation and persistence coverage. The bounded
 scope and exposure matrix live in
 `docs/architecture/plain_game_setup_completion.md`. Random-shape/debug bags,
 topology, bots, kicks, challenge/progression editors, endgame/explosion, audio,
-keybindings, and packaging remain deferred.
+keybindings, and packaging remain deferred. Native/Godot/parity verification
+and manual 2D/3D/4D acceptance passed, including persisted true-random setup,
+New Random effective-seed replacement, mouse and keyboard navigation, and the
+Wide-W eight-layer layout. Stage 51 display, accessibility, and controls is the
+recommended next bounded stage; Stage 52 topology work remains deferred and is
+not active.
 
 Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
-(2026-07-15, menu-routing repair verified; manual reacceptance pending): add curated 2D/3D/4D New Game presets, parameterize the existing
+(2026-07-15, menu-routing repair and manual reacceptance verified): add curated 2D/3D/4D New Game presets, parameterize the existing
 native bounded-session owner by board shape, preserve restart shape, add
 alternate-size parity evidence, and replace the fixed 4D W row with a
 viewport-aware layer matrix. Gameplay setup remains separate from Stage 48

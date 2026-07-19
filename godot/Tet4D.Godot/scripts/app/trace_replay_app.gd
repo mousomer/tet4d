@@ -878,6 +878,7 @@ func _start_new_random_game() -> void:
 	_start_configured_live_game(_active_live_setup.duplicate(true))
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func _gravity_interval_for_setup(setup: Dictionary) -> float:
 	var config_bundle: Dictionary = _bundle.get("config", {})
 	var source_files: Dictionary = config_bundle.get("source_files", {})
