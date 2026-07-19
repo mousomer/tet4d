@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string_view>
 #include <string>
 #include <vector>
@@ -85,7 +86,7 @@ void test_trace_export_smoke() {
 
 void test_stage11_trace_exports() {
 	const std::vector<std::string> cases = tet4d::core::list_plain_2d_parity_cases();
-	require(cases.size() == 4, "Stage 11 should expose four plain 2D parity cases");
+	require(cases.size() == 5, "plain 2D parity should include the Stage 49 configurable case");
 	for (const std::string &case_id : cases) {
 		const std::string trace = tet4d::core::export_plain_2d_trace_json(case_id);
 		require(trace.find("\"case_id\":\"" + case_id + "\"") != std::string::npos, "Stage 11 trace case id missing");
@@ -151,6 +152,116 @@ void test_live_plain_2d_gravity_tick_sequence() {
 	require(session.state_hash() == initial_hash, "reset after gravity sequence should restore deterministic initial hash");
 }
 
+void test_configurable_live_plain_2d_session() {
+	tet4d::core::Plain2DSession session;
+	const std::string standard_hash = session.state_hash();
+	require(session.configure(10, 20), "supported 2D shape should configure");
+	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "configured 2D snapshot shape missing");
+	require(session.state_hash() != standard_hash, "2D shape must contribute to state identity");
+	session.apply_command("hard_drop");
+	session.reset();
+	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "2D reset should preserve configured shape");
+	require(!session.configure(3, 20), "2D width below semantic minimum should reject");
+	require(!session.configure(10, 31), "2D height above safe maximum should reject");
+	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "invalid configure must preserve session shape");
+}
+
+tet4d::core::PlainGameSetup setup_2d(
+		int seed,
+		int speed_level = 1,
+		const std::string &random_mode = tet4d::core::RANDOM_MODE_FIXED_SEED) {
+	tet4d::core::PlainGameSetup setup;
+	setup.mode = "live_2d";
+	setup.board_preset_id = "standard";
+	setup.board_shape = {6, 6};
+	setup.piece_set_id = "classic";
+	setup.random_mode = random_mode;
+	setup.configured_seed = seed;
+	setup.initial_speed_level = speed_level;
+	return setup;
+}
+
+void test_stage50_live_plain_2d_setup_identity() {
+	tet4d::core::Plain2DSession session;
+	require(session.configure(setup_2d(1337)), "valid Stage 50 2D setup should configure");
+	const std::string initial = session.snapshot_json();
+	require(initial.find("\"current_piece\":\"Z\"") != std::string::npos, "seed 1337 should match Python shuffled 2D bag");
+	require(initial.find("\"next_piece\":\"L\"") != std::string::npos, "seed 1337 next piece should match Python");
+	require(initial.find("\"piece_set_id\":\"classic\"") != std::string::npos, "2D snapshot piece-set identity missing");
+	require(initial.find("\"random_mode\":\"fixed_seed\"") != std::string::npos, "2D snapshot random-mode identity missing");
+	require(initial.find("\"configured_seed\":1337") != std::string::npos, "2D configured seed missing");
+	require(initial.find("\"effective_seed\":1337") != std::string::npos, "2D effective seed missing");
+	require(initial.find("\"initial_speed_level\":1") != std::string::npos, "2D initial speed missing");
+	const std::string initial_hash = session.state_hash();
+	session.apply_command("hard_drop");
+	session.reset();
+	require(session.state_hash() == initial_hash, "2D Stage 50 restart should restore setup, bag, RNG, and state");
+
+	tet4d::core::Plain2DSession other_seed;
+	require(other_seed.configure(setup_2d(2025, 7)), "alternate Stage 50 2D setup should configure");
+	require(other_seed.state_hash() != initial_hash, "different seed/speed must change native state identity");
+	require(other_seed.snapshot_json().find("\"initial_speed_level\":7") != std::string::npos, "alternate speed should be visible");
+
+	tet4d::core::PlainGameSetup invalid = setup_2d(1337);
+	invalid.piece_set_id = "debug_rectangles_2d";
+	require(!session.configure(invalid), "unsupported 2D piece set must reject");
+	invalid = setup_2d(1337, 11);
+	require(!session.configure(invalid), "out-of-range 2D speed must reject");
+	invalid = setup_2d(-1);
+	require(!session.configure(invalid), "negative 2D seed must reject");
+}
+
+void test_stage50_true_random_seed_and_restart() {
+	tet4d::core::Plain2DSession first;
+	tet4d::core::PlainGameSetup setup = setup_2d(1337, 3, tet4d::core::RANDOM_MODE_TRUE_RANDOM);
+	require(first.configure(setup), "true-random 2D setup should configure");
+	const std::string snapshot = first.snapshot_json();
+	require(snapshot.find("\"configured_seed\":null") != std::string::npos, "true-random configured seed should be null");
+	require(snapshot.find("\"random_mode\":\"true_random\"") != std::string::npos, "true-random mode should be visible");
+	const std::string initial_hash = first.state_hash();
+	first.apply_command("hard_drop");
+	first.reset();
+	require(first.state_hash() == initial_hash, "true-random restart must reuse the captured effective seed");
+
+	tet4d::core::Plain2DSession second;
+	require(second.configure(setup), "second true-random 2D setup should configure");
+	require(second.state_hash() != initial_hash, "new true-random construction should receive a different effective seed");
+}
+
+std::string export_stage50_setup_case_2d(const std::string &case_id) {
+	tet4d::core::PlainGameSetup setup = setup_2d(1337);
+	std::vector<std::string> actions = {"move_right", "rotate_cw", "soft_drop", "hard_drop"};
+	if (case_id == "setup_plain_2d_alternate") {
+		setup.board_preset_id = "large";
+		setup.board_shape = {10, 20};
+		setup.configured_seed = 2025;
+		setup.initial_speed_level = 7;
+		actions = {"soft_drop", "hard_drop"};
+	} else if (case_id != "setup_plain_2d_standard") {
+		return "{}";
+	}
+	tet4d::core::Plain2DSession session;
+	if (!session.configure(setup)) {
+		return "{}";
+	}
+	const std::string initial_hash = session.state_hash();
+	std::ostringstream out;
+	out << "{\"case_id\":\"" << case_id << "\",\"frames\":["
+		<< "{\"action\":\"initial\",\"snapshot\":" << session.snapshot_json() << "}";
+	for (const std::string &action : actions) {
+		session.apply_command(action);
+		out << ",{\"action\":\"" << action << "\",\"snapshot\":" << session.snapshot_json() << "}";
+	}
+	const std::string final_hash = session.state_hash();
+	session.reset();
+	out << "],\"final_hash\":\"" << final_hash << "\""
+		<< ",\"restart_hash\":\"" << session.state_hash() << "\""
+		<< ",\"restart_matches_initial\":" << (session.state_hash() == initial_hash ? "true" : "false")
+		<< ",\"restart_snapshot\":" << session.snapshot_json()
+		<< "}";
+	return out.str();
+}
+
 void test_game_over_spawn_blocked_and_rejected_commands() {
 	tet4d::core::GameState2D blocked_state(6, 6);
 	blocked_state.active_piece = tet4d::core::ActivePiece2D{tet4d::core::trace_dot_shape_2d(), {0, 5}, 0};
@@ -195,12 +306,20 @@ int main(int argc, char **argv) {
 		std::cout << tet4d::core::export_plain_2d_trace_json(case_id) << "\n";
 		return 0;
 	}
+	if (argc >= 2 && std::string(argv[1]) == "--export-plain-setup") {
+		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "setup_plain_2d_standard";
+		std::cout << export_stage50_setup_case_2d(case_id) << "\n";
+		return 0;
+	}
 	test_board_and_piece_cells();
 	test_command_replay();
 	test_trace_export_smoke();
 	test_stage11_trace_exports();
 	test_live_plain_2d_session();
 	test_live_plain_2d_gravity_tick_sequence();
+	test_configurable_live_plain_2d_session();
+	test_stage50_live_plain_2d_setup_identity();
+	test_stage50_true_random_seed_and_restart();
 	test_game_over_spawn_blocked_and_rejected_commands();
 	std::cout << "tet4d_core native plain 2D tests passed\n";
 	return 0;

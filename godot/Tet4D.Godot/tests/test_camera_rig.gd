@@ -97,6 +97,10 @@ func run() -> Array:
 		failures.append("live 4D Fit View should reset camera roll")
 	if rig.view_status_text().find("fit OK") == -1:
 		failures.append("live 4D Fit View should restore fitted state")
+	var focus_before: Vector3 = rig._target_focus
+	rig.pan_focus(Vector3.DOWN * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
+	if rig._target_focus == focus_before or rig.view_status_text().find("matrix scroll") == -1:
+		failures.append("4D matrix scrolling should pan presentation focus and report its view state")
 
 	rig.queue_free()
 	await tree.process_frame

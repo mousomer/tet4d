@@ -104,21 +104,25 @@ func _apply_button(button: Button, style_manager) -> void:
 	button.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
+	button.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	var margin := 8
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.GRID_MINOR, margin))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin))
 	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin))
 	button.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_PRIMARY, margin))
+	button.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR, margin))
 
 
 func _apply_checkbox(checkbox: CheckBox, style_manager) -> void:
 	checkbox.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	checkbox.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	checkbox.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
+	checkbox.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	checkbox.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR))
 	checkbox.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS))
 	checkbox.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS))
 	checkbox.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_PRIMARY))
+	checkbox.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR))
 	checkbox.add_theme_stylebox_override("unchecked", _checkbox_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.GRID_MINOR))
 	checkbox.add_theme_stylebox_override("unchecked_hover", _checkbox_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.ACCENT_FOCUS))
 	checkbox.add_theme_stylebox_override("checked", _checkbox_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_FOCUS))
@@ -166,7 +170,10 @@ func _flat_box(style_manager, background_role: String, border_role: String, radi
 
 
 func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = 8) -> StyleBoxFlat:
-	return _flat_box(style_manager, background_role, border_role, 4, content_margin)
+	var style := _flat_box(style_manager, background_role, border_role, 4, content_margin)
+	if style_manager.contrast_mode() == "high" and border_role == ShellStyleRolesScript.ACCENT_FOCUS:
+		style.set_border_width_all(3)
+	return style
 
 
 func _keycap_box(style_manager) -> StyleBoxFlat:

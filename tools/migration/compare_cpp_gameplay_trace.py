@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,9 @@ if __package__ in (None, ""):
 
 from tools.migration.trace_schema import canonical_json
 from tools.migration.trace_cases import GAMEPLAY_TRACE_CASES
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_DIR = ROOT / "migration" / "golden_traces" / "gameplay"
@@ -21,6 +25,7 @@ PLAIN_2D_CASES = {
     "gameplay_plain_2d_rotation_short",
     "gameplay_plain_2d_hard_drop_lock",
     "gameplay_plain_2d_line_clear_short",
+    "gameplay_plain_2d_configurable",
 }
 PLAIN_ND_CASES = {
     "gameplay_plain_3d_short",
@@ -31,8 +36,71 @@ PLAIN_ND_CASES = {
     "gameplay_plain_4d_plane_clear_short",
     "gameplay_plain_3d_spawn_blocked_game_over",
     "gameplay_plain_4d_spawn_blocked_game_over",
+    "gameplay_plain_3d_configurable",
+    "gameplay_plain_4d_configurable_w8",
+}
+CONFIGURABLE_CASES = {
+    "gameplay_plain_2d_configurable",
+    "gameplay_plain_3d_configurable",
+    "gameplay_plain_4d_configurable_w8",
 }
 SUPPORTED_CASES = PLAIN_2D_CASES | PLAIN_ND_CASES
+PLAIN_SETUP_CASES = {
+    "setup_plain_2d_standard": {
+        "dimension": 2,
+        "board_preset_id": "standard",
+        "board_shape": (6, 6),
+        "piece_set_id": "classic",
+        "seed": 1337,
+        "speed": 1,
+        "actions": ("move_right", "rotate_cw", "soft_drop", "hard_drop"),
+    },
+    "setup_plain_2d_alternate": {
+        "dimension": 2,
+        "board_preset_id": "large",
+        "board_shape": (10, 20),
+        "piece_set_id": "classic",
+        "seed": 2025,
+        "speed": 7,
+        "actions": ("soft_drop", "hard_drop"),
+    },
+    "setup_plain_3d_embedded_2d": {
+        "dimension": 3,
+        "board_preset_id": "large",
+        "board_shape": (8, 16, 8),
+        "piece_set_id": "embedded_2d",
+        "seed": 2025,
+        "speed": 6,
+        "actions": ("move_z_pos", "rotate_xz_pos", "soft_drop", "hard_drop"),
+    },
+    "setup_plain_4d_embedded_3d": {
+        "dimension": 4,
+        "board_preset_id": "standard",
+        "board_shape": (5, 10, 4, 4),
+        "piece_set_id": "embedded_3d",
+        "seed": 1337,
+        "speed": 4,
+        "actions": ("move_w_pos", "rotate_xw_pos", "soft_drop", "hard_drop"),
+    },
+    "setup_plain_4d_embedded_2d": {
+        "dimension": 4,
+        "board_preset_id": "standard",
+        "board_shape": (5, 10, 4, 4),
+        "piece_set_id": "embedded_2d",
+        "seed": 2025,
+        "speed": 3,
+        "actions": ("rotate_xy_pos", "hard_drop"),
+    },
+    "setup_plain_4d_wide_true": {
+        "dimension": 4,
+        "board_preset_id": "wide_w",
+        "board_shape": (8, 16, 5, 8),
+        "piece_set_id": "standard_4d_5",
+        "seed": 42,
+        "speed": 8,
+        "actions": ("move_w_pos", "rotate_xw_pos", "hard_drop"),
+    },
+}
 
 
 def _load_json(path: Path) -> Any:
@@ -172,6 +240,203 @@ def compare_case(case_id: str, golden_dir: Path) -> list[str]:
     return []
 
 
+def _cpp_setup_case(case_id: str) -> dict[str, Any]:
+    result = subprocess.run(
+        [
+            str(ROOT / "scripts" / "test_godot_tet4d_core.sh"),
+            "--export-plain-setup",
+            case_id,
+        ],
+        check=True,
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    return json.loads(result.stdout)
+
+
+def _python_setup_state(case: dict[str, Any]) -> GameState | GameStateND:
+    dimension = int(case["dimension"])
+    shape = tuple(int(value) for value in case["board_shape"])
+    seed = int(case["seed"])
+    rng = random.Random(seed)
+    if dimension == 2:
+        config = GameConfig(
+            width=shape[0],
+            height=shape[1],
+            piece_set=str(case["piece_set_id"]),
+            rng_mode="fixed_seed",
+            rng_seed=seed,
+            speed_level=int(case["speed"]),
+        )
+        return GameState(config=config, board=BoardND(shape), rng=rng)
+    config_nd = GameConfigND(
+        dims=shape,
+        piece_set_id=str(case["piece_set_id"]),
+        rng_mode="fixed_seed",
+        rng_seed=seed,
+        speed_level=int(case["speed"]),
+    )
+    return GameStateND(config=config_nd, board=BoardND(shape), rng=rng)
+
+
+def _apply_setup_action(state: GameState | GameStateND, action: str) -> None:
+    if isinstance(state, GameState):
+        _apply_setup_action_2d(state, action)
+        return
+    _apply_setup_action_nd(state, action)
+
+
+def _apply_setup_action_2d(state: GameState, action: str) -> None:
+    if action == "move_right":
+        state.try_move(1, 0)
+    elif action == "rotate_cw":
+        state.try_rotate(1)
+    elif action == "soft_drop":
+        state.try_soft_drop()
+    elif action == "hard_drop":
+        state.hard_drop()
+    else:
+        raise ValueError(f"unsupported 2D setup parity action: {action}")
+
+
+def _apply_setup_action_nd(state: GameStateND, action: str) -> None:
+    if action == "move_z_pos":
+        state.try_move_axis(2, 1)
+    elif action == "move_w_pos":
+        state.try_move_axis(3, 1)
+    elif action == "rotate_xy_pos":
+        state.try_rotate(0, 1, 1)
+    elif action == "rotate_xz_pos":
+        state.try_rotate(0, 2, 1)
+    elif action == "rotate_xw_pos":
+        state.try_rotate(0, 3, 1)
+    elif action == "soft_drop":
+        state.try_soft_drop()
+    elif action == "hard_drop":
+        state.hard_drop()
+    else:
+        raise ValueError(f"unsupported ND setup parity action: {action}")
+
+
+def _python_setup_projection(
+    state: GameState | GameStateND,
+    case: dict[str, Any],
+) -> dict[str, Any]:
+    current = state.current_piece
+    active_cells = (
+        sorted(tuple(int(value) for value in cell) for cell in current.cells())
+        if current is not None
+        else []
+    )
+    locked_cells = [
+        {"position": list(coord), "value": int(value)}
+        for coord, value in sorted(state.board.cells.items())
+    ]
+    next_piece = state.next_bag[-1].name if state.next_bag else "pending_bag"
+    return {
+        "active_cells": [list(cell) for cell in active_cells],
+        "board_shape": list(case["board_shape"]),
+        "configured_seed": int(case["seed"]),
+        "current_piece": current.shape.name if current is not None else "none",
+        "effective_seed": int(case["seed"]),
+        "game_over": bool(state.game_over),
+        "game_over_reason": str(getattr(state, "game_over_reason", "")),
+        "initial_speed_level": int(case["speed"]),
+        "lines": int(state.lines_cleared),
+        "locked_cells": locked_cells,
+        "next_piece": next_piece,
+        "piece_set_id": str(case["piece_set_id"]),
+        "random_mode": "fixed_seed",
+        "score": int(state.score),
+    }
+
+
+def _native_setup_projection(snapshot: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "active_cells": sorted(
+            [list(cell["position"]) for cell in snapshot.get("active_cells", [])]
+        ),
+        "board_shape": list(snapshot.get("board_shape", [])),
+        "configured_seed": snapshot.get("configured_seed"),
+        "current_piece": snapshot.get("current_piece"),
+        "effective_seed": snapshot.get("effective_seed"),
+        "game_over": bool(snapshot.get("game_over", False)),
+        "game_over_reason": str(snapshot.get("game_over_reason", "")),
+        "initial_speed_level": snapshot.get("initial_speed_level"),
+        "lines": snapshot.get("lines"),
+        "locked_cells": sorted(
+            [
+                {
+                    "position": list(cell["position"]),
+                    "value": int(cell["color_id"]),
+                }
+                for cell in snapshot.get("locked_cells", [])
+            ],
+            key=lambda item: item["position"],
+        ),
+        "next_piece": snapshot.get("next_piece"),
+        "piece_set_id": snapshot.get("piece_set_id"),
+        "random_mode": snapshot.get("random_mode"),
+        "score": snapshot.get("score"),
+    }
+
+
+def compare_setup_case(case_id: str) -> list[str]:
+    case = PLAIN_SETUP_CASES[case_id]
+    native = _cpp_setup_case(case_id)
+    state = _python_setup_state(case)
+    expected_frames = [_python_setup_projection(state, case)]
+    for action in case["actions"]:
+        _apply_setup_action(state, str(action))
+        expected_frames.append(_python_setup_projection(state, case))
+    native_frames = native.get("frames", [])
+    failures: list[str] = []
+    for action_index, expected in enumerate(expected_frames):
+        action = (
+            "initial" if action_index == 0 else str(case["actions"][action_index - 1])
+        )
+        actual = (
+            _native_setup_projection(native_frames[action_index]["snapshot"])
+            if action_index < len(native_frames)
+            else {}
+        )
+        if expected == actual:
+            continue
+        diffs = _field_diffs(expected, actual)
+        failures.append(
+            " | ".join(
+                [
+                    f"case={case_id}",
+                    f"mode={case['dimension']}d",
+                    f"board_shape={list(case['board_shape'])}",
+                    f"piece_set={case['piece_set_id']}",
+                    "random_mode=fixed_seed",
+                    f"configured_seed={case['seed']}",
+                    f"effective_seed={case['seed']}",
+                    f"initial_speed={case['speed']}",
+                    f"action_index={action_index - 1}",
+                    f"action={action}",
+                    f"expected_state={expected}",
+                    f"actual_state={actual}",
+                    f"expected_cells={expected.get('active_cells')}",
+                    f"actual_cells={actual.get('active_cells')}",
+                    f"expected_next_piece={expected.get('next_piece')}",
+                    f"actual_next_piece={actual.get('next_piece')}",
+                    f"expected_hash={native.get('final_hash')}",
+                    f"actual_hash={native_frames[action_index]['snapshot'].get('state_hash') if action_index < len(native_frames) else None}",
+                    f"diffs={diffs[:12]}",
+                ]
+            )
+        )
+    if not native.get("restart_matches_initial", False):
+        failures.append(
+            f"case={case_id}: restart did not reproduce the initial native state hash"
+        )
+    return failures
+
+
 def plain_2d_cases() -> list[str]:
     return [
         case.case_id for case in GAMEPLAY_TRACE_CASES if case.case_id in PLAIN_2D_CASES
@@ -182,6 +447,36 @@ def plain_nd_cases() -> list[str]:
     return [
         case.case_id for case in GAMEPLAY_TRACE_CASES if case.case_id in PLAIN_ND_CASES
     ]
+
+
+def _compare_all_setup_cases() -> int:
+    failures = []
+    for case_id in sorted(PLAIN_SETUP_CASES):
+        failures.extend(compare_setup_case(case_id))
+    if failures:
+        for failure in failures:
+            print(failure, file=sys.stderr)
+        return 1
+    print(
+        "C++ plain setup parity passed for "
+        + ", ".join(sorted(PLAIN_SETUP_CASES))
+        + " (including deterministic native restart hashes)"
+    )
+    return 0
+
+
+def _selected_case_ids(args: argparse.Namespace) -> list[str]:
+    if args.all_configurable:
+        return [
+            case.case_id
+            for case in GAMEPLAY_TRACE_CASES
+            if case.case_id in CONFIGURABLE_CASES
+        ]
+    if args.all_plain_2d:
+        return plain_2d_cases()
+    if args.all_plain_nd:
+        return plain_nd_cases()
+    return [args.case]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -200,15 +495,22 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="compare every Stage 15 plain bounded 3D/4D C++ parity case",
     )
+    group.add_argument(
+        "--all-configurable",
+        action="store_true",
+        help="compare Stage 49 alternate-size 2D/3D/4D cases",
+    )
+    group.add_argument(
+        "--all-plain-setup",
+        action="store_true",
+        help="compare Stage 50 canonical setup sessions against the Python oracle",
+    )
     parser.add_argument("--golden-dir", type=Path, default=DEFAULT_GOLDEN_DIR)
     args = parser.parse_args(argv)
 
-    if args.all_plain_2d:
-        case_ids = plain_2d_cases()
-    elif args.all_plain_nd:
-        case_ids = plain_nd_cases()
-    else:
-        case_ids = [args.case]
+    if args.all_plain_setup:
+        return _compare_all_setup_cases()
+    case_ids = _selected_case_ids(args)
     failures: list[str] = []
     for case_id in case_ids:
         failures.extend(compare_case(case_id, args.golden_dir))

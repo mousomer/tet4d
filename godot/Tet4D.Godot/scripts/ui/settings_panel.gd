@@ -19,6 +19,16 @@ signal layout_bounds_visibility_changed(visible: bool)
 signal keyboard_hints_visibility_changed(visible: bool)
 signal display_mode_changed(mode: String)
 signal onboarding_visibility_changed(visible: bool)
+signal window_mode_changed(mode: String)
+signal windowed_size_changed(size_value: Array)
+signal ui_scale_changed(scale_id: String)
+signal hud_density_changed(density: String)
+signal board_detail_changed(detail: String)
+signal contrast_mode_changed(mode: String)
+signal animation_mode_changed(mode: String)
+signal camera_sensitivity_changed(sensitivity: String)
+signal camera_invert_y_changed(inverted: bool)
+signal contextual_help_changed(mode: String)
 signal settings_reset()
 
 var registry = SettingsRegistryScript.new()
@@ -148,6 +158,8 @@ func _build_panel() -> void:
 			continue
 		content.add_child(_section_header(registry.category_label(category_id)))
 		for spec in specs:
+			if not spec.is_ui_visible():
+				continue
 			content.add_child(_setting_row(spec))
 	content.add_child(_reset_settings_button())
 	_configure_focus_order()
@@ -238,6 +250,16 @@ func _on_control_value_changed(setting_id: String, value) -> void:
 func _emit_setting(setting_id: String, value) -> void:
 	setting_changed.emit(setting_id, value)
 	match setting_id:
+		"display.window_mode":
+			window_mode_changed.emit(str(value))
+		"display.windowed_size":
+			windowed_size_changed.emit(value.duplicate() if value is Array else [])
+		"display.ui_scale":
+			ui_scale_changed.emit(str(value))
+		"display.hud_density":
+			hud_density_changed.emit(str(value))
+		"display.board_detail":
+			board_detail_changed.emit(str(value))
 		"replay.playback_speed":
 			playback_speed_changed.emit(float(value))
 		"replay.loop_enabled":
@@ -251,10 +273,20 @@ func _emit_setting(setting_id: String, value) -> void:
 				_style_manager.set_theme(ReplayVisuals.normalize_display_mode(str(value)))
 				apply_shell_style()
 			display_mode_changed.emit(ReplayVisuals.normalize_display_mode(str(value)))
+		"accessibility.contrast_mode":
+			contrast_mode_changed.emit(str(value))
+		"accessibility.animation_mode":
+			animation_mode_changed.emit(str(value))
+		"camera.sensitivity":
+			camera_sensitivity_changed.emit(str(value))
+		"camera.invert_y":
+			camera_invert_y_changed.emit(bool(value))
 		"diagnostics.show_layout_bounds":
 			layout_bounds_visibility_changed.emit(bool(value))
 		"controls_help.show_keyboard_hints":
 			keyboard_hints_visibility_changed.emit(bool(value))
+		"controls_help.contextual_help":
+			contextual_help_changed.emit(str(value))
 		"interface.show_onboarding":
 			onboarding_visibility_changed.emit(bool(value))
 

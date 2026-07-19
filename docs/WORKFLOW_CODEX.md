@@ -237,6 +237,15 @@ Menu IA/settings migrations must include smoke coverage (automated or manual) fo
 - Endgame / Explosion page
 - Back/Esc/Q behavior
 
+Godot shell-settings changes must also pass:
+
+```bash
+.venv/bin/python tools/governance/check_godot_settings_externalization.py
+```
+
+This gate enforces checked-in registry ownership of setting declarations and
+defaults, plus separate `user://` JSON persistence of validated user choices.
+
 Focused validation during a batch:
 
 ```bash

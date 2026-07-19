@@ -97,6 +97,10 @@ func get_plain_nd_required_field_parity(case_id: String = "gameplay_plain_3d_sho
 	return bool(_api().get_plain_nd_required_field_parity(case_id))
 
 
+func live_2d_configure(setup: Dictionary) -> bool:
+	return bool(_api().live_2d_configure(setup))
+
+
 func live_2d_reset() -> void:
 	_api().live_2d_reset()
 
@@ -121,6 +125,10 @@ func live_2d_state_hash() -> String:
 	return _api().live_2d_state_hash()
 
 
+func live_3d_configure(setup: Dictionary) -> bool:
+	return bool(_api().live_3d_configure(setup))
+
+
 func live_3d_reset() -> void:
 	_api().live_3d_reset()
 
@@ -143,6 +151,10 @@ func live_3d_status() -> String:
 
 func live_3d_state_hash() -> String:
 	return _api().live_3d_state_hash()
+
+
+func live_4d_configure(setup: Dictionary) -> bool:
+	return bool(_api().live_4d_configure(setup))
 
 
 func live_4d_reset() -> void:

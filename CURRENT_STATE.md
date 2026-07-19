@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-12
+Last updated: 2026-07-19
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -10,6 +10,81 @@ historical ledger, a validation transcript, or a second workflow authority.
 Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- The PR #36 settings-persistence review on
+  `codex/configurable-plain-boards` confirms and hardens two Stage 48 failure
+  paths without changing schema identity or migration behavior. Replacement
+  now preserves an existing valid file through a narrow injectable
+  rename/copy/remove seam, restores it after failed installation, and reports
+  failure without a false save count or success diagnostic. Schema loading
+  accepts only exact supported integral JSON numbers and no longer truncates
+  fractional versions. Focused failure injection covers pre-backup failure,
+  post-backup failure, rename/copy restoration, artifact cleanup, diagnostics,
+  and save counts.
+
+- A follow-up quality gate is implemented on `codex/configurable-plain-boards`
+  to
+  make the Godot shell-settings ownership boundary blocking: declarations and
+  defaults remain in the checked-in registry, validated persistent values
+  remain in the separate `user://shell_settings.json` store, and runtime code
+  may interpret presets but cannot create code-only settings or duplicate
+  setting fallbacks. The machine contract is routed through
+  `config/project/policy_pack.json`; the dedicated checker is part of
+  `scripts/verify.sh` and has focused mutation coverage for missing defaults,
+  persistence drift, schema/path drift, unknown setting IDs, and duplicate
+  runtime fallbacks.
+
+- Stage 51 display and accessibility completion is implemented locally on
+  `codex/configurable-plain-boards` as a presentation-only extension of the
+  accepted Stage 48–50 shell. Its bounded implementation authority is
+  `docs/architecture/display_accessibility_completion.md`. The Stage 48
+  `user://shell_settings.json` owner now migrates schema 1 to schema 2 and
+  persists safe window mode/size, bounded UI scale, HUD density, board detail,
+  theme-composed contrast, reduced motion, camera response/inversion, and
+  contextual-help preferences. Generated controls remain keyboard reachable;
+  remembered dimensions are automatic; high contrast strengthens focus,
+  active/locked edges, and selected-layer non-colour cues; reduced motion snaps
+  camera interpolation and suppresses presentation pulse only. Automated
+  Godot, Python, native, setup, Wide-W, and state-hash parity checks pass, as
+  does full repository verification. Manual acceptance passed for persisted
+  fullscreen/windowed restoration, Plain high contrast at extra-large scale,
+  viewport-safe Settings/setup screens, all eight Wide-W layers, live inputs,
+  restart, Fit View, and camera response.
+  Python/native gameplay authority, setup/RNG/pieces, topology, replay identity,
+  bindings, controllers, audio, and packaging remain unchanged.
+
+- Stage 50 plain-game setup completion is complete locally on
+  `codex/configurable-plain-boards` as a direct extension of the accepted Stage
+  49 setup boundary. Its authority audit is
+  `docs/architecture/plain_game_setup_completion.md`. The stage is limited to
+  canonical bounded setup identity, production piece-set selection, fixed or
+  true-random effective seeds, initial speed, strict native construction,
+  deterministic restart, schema-v2 gameplay-setup persistence, and
+  representative parity/UI coverage. Manual acceptance passed for setup
+  readability, keyboard and mouse launch, deterministic restart, persisted
+  true-random setup, effective-seed replacement through New Random Game, and
+  Wide-W adaptive 4D interaction. The live action/status row is protected at
+  supported viewport sizes. Python gameplay rules remain the oracle; topology
+  and all advanced gameplay/setup families remain deferred. Stage 51 extends
+  only Godot presentation and accessibility; Stage 52 topology remains
+  deferred.
+
+- Stage 49 configurable plain-board setup and adaptive 4D layer presentation has
+  an automated-verified menu-routing repair on `codex/configurable-plain-boards`
+  and its setup/navigation behavior was manually reaccepted during Stage 50.
+  Its bounded audit is
+  `docs/architecture/configurable_plain_boards_and_4d_layout.md`. This stage
+  parameterizes only accepted bounded native sessions, adds a separate
+  Godot-owned New Game setup model, and adapts presentation for W greater than
+  four with active-layer emphasis, matrix scrolling, and Fit View recovery.
+  Alternate-size 2D/3D/W=8 traces match Python through `state_hash`; rendered
+  acceptance confirms readable setup and large-board fits. The repair
+  prevents hidden live-view input capture from intercepting mouse clicks after
+  Main Menu or Change Setup transitions and restores deterministic keyboard
+  acceptance on those visible menus. Replay Demos is retained for trace/parity
+  inspection under a secondary Advanced / Diagnostics route rather than the
+  primary Main Menu. Python rules/defaults and topology/replay semantics remain
+  unchanged; topology migration is postponed until this stage is merged.
 
 - Stage 48 Godot shell settings persistence is active on
   `codex/godot-shell-settings-persistence`. It extends the Stage 29 registry
@@ -23,7 +98,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   main-menu letters/numbers now activate their cards, and mouse/Esc Quit route
   through the same application handler. Shortcuts remain active after returning
   from live play, and successful preference changes visibly confirm automatic
-  saving. Stage 49 topology work remains deferred.
+  saving. Stage 49 topology work remains deferred behind the configurable-board
+  stage now in progress.
 
 - Stage 46 Godot core gameplay completion is complete on the merged `master`
   baseline. The bounded audit is recorded in
@@ -720,7 +796,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.76`
+1. `delivery_size_pressure = 2.77`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

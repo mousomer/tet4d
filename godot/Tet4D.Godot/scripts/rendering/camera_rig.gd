@@ -18,6 +18,7 @@ const DEFAULT_ORTHOGRAPHIC_SIZE := 16.0
 const MIN_ORTHOGRAPHIC_SIZE := 2.0
 const MAX_ORTHOGRAPHIC_SIZE := 96.0
 const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
+const LIVE_4D_MATRIX_SCROLL_STEP := 4.0
 const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
 
@@ -43,6 +44,9 @@ var _last_frame_signature := ""
 var _current_view_preset := REPLAY_DISPLAY_VIEW_PRESET_NAME
 var _current_view_octant := "python replay"
 var _current_fit_state := "initial"
+var _sensitivity_factor := 1.0
+var _invert_y := false
+var _reduced_motion := false
 
 @onready var _camera: Camera3D = $Camera3D
 
@@ -55,7 +59,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	var t: float = clampf(delta * 8.0, 0.0, 1.0)
+	var t: float = 1.0 if _reduced_motion else clampf(delta * 8.0, 0.0, 1.0)
 	_current_focus = _current_focus.lerp(_target_focus, t)
 	_current_distance = lerpf(_current_distance, _target_distance, t)
 	_current_yaw = lerpf(_current_yaw, _target_yaw, t)
@@ -119,35 +123,43 @@ func fit_bounds(
 
 
 func orbit(delta: Vector2) -> void:
-	_target_yaw -= delta.x * orbit_sensitivity
-	_target_pitch = clampf(_target_pitch - delta.y * orbit_sensitivity, -1.2, 1.2)
+	_target_yaw -= delta.x * orbit_sensitivity * _sensitivity_factor
+	var vertical_direction := 1.0 if _invert_y else -1.0
+	_target_pitch = clampf(_target_pitch + delta.y * orbit_sensitivity * _sensitivity_factor * vertical_direction, -1.2, 1.2)
 	_current_fit_state = "manual"
 
 
 func nudge_yaw(delta_radians: float) -> void:
-	_target_yaw += delta_radians
+	_target_yaw += delta_radians * _sensitivity_factor
 	_current_yaw = _target_yaw
 	_current_fit_state = "manual"
 	_update_camera()
 
 
 func nudge_pitch(delta_radians: float) -> void:
-	_target_pitch = clampf(_target_pitch + delta_radians, -1.2, 1.2)
+	var vertical_direction := -1.0 if _invert_y else 1.0
+	_target_pitch = clampf(_target_pitch + delta_radians * _sensitivity_factor * vertical_direction, -1.2, 1.2)
 	_current_pitch = _target_pitch
 	_current_fit_state = "manual"
 	_update_camera()
 
 
 func nudge_roll(delta_radians: float) -> void:
-	_target_roll += delta_radians
+	_target_roll += delta_radians * _sensitivity_factor
 	_current_roll = _target_roll
 	_current_fit_state = "manual"
 	_update_camera()
 
 
 func roll(delta: Vector2) -> void:
-	_target_roll += delta.x * orbit_sensitivity
+	_target_roll += delta.x * orbit_sensitivity * _sensitivity_factor
 	_current_fit_state = "manual"
+
+
+func pan_focus(offset: Vector3) -> void:
+	_target_focus += offset
+	_current_fit_state = "matrix scroll"
+	_update_camera()
 
 
 func zoom(step: float) -> void:
@@ -185,6 +197,23 @@ func view_status_text() -> String:
 		roll_degrees,
 		_current_fit_state,
 	]
+
+
+func set_presentation_preferences(sensitivity_factor: float, invert_y: bool, reduced_motion: bool) -> void:
+	_sensitivity_factor = clampf(sensitivity_factor, 0.25, 2.0)
+	_invert_y = invert_y
+	_reduced_motion = reduced_motion
+
+
+func presentation_snapshot() -> Dictionary:
+	return {
+		"sensitivity_factor": _sensitivity_factor,
+		"invert_y": _invert_y,
+		"reduced_motion": _reduced_motion,
+		"target_yaw": _target_yaw,
+		"target_pitch": _target_pitch,
+		"target_roll": _target_roll,
+	}
 
 
 func _snap_to_targets() -> void:

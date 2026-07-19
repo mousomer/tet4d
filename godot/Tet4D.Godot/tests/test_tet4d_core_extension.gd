@@ -29,7 +29,7 @@ func run() -> Array:
 		"plain 2D parity status"
 	)
 	var cases := bridge.list_plain_2d_parity_cases()
-	_assert_equal(failures, cases.size(), 4, "plain 2D parity case count")
+	_assert_equal(failures, cases.size(), 5, "plain 2D parity case count")
 	for case_id in cases:
 		_assert_equal(failures, bridge.get_plain_2d_required_field_parity(case_id), true, "plain 2D required field parity %s" % case_id)
 	var trace = JSON.parse_string(bridge.export_plain_2d_trace_json())
@@ -113,7 +113,7 @@ func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:
 		"plain ND parity status"
 	)
 	var cases: PackedStringArray = bridge.list_plain_nd_parity_cases()
-	_assert_equal(failures, cases.size(), 8, "plain ND parity case count")
+	_assert_equal(failures, cases.size(), 10, "plain ND parity case count")
 	for case_id in cases:
 		_assert_equal(failures, bridge.get_plain_nd_required_field_parity(case_id), true, "plain ND required field parity %s" % case_id)
 	var trace_3d = JSON.parse_string(bridge.export_plain_nd_trace_json("gameplay_plain_3d_short"))

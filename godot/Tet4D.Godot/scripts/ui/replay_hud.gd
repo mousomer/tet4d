@@ -14,6 +14,11 @@ const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onbo
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
+const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
+const GameSetupModelScript = preload("res://scripts/ui/game_setup/game_setup_model.gd")
+const GameSetupStoreScript = preload("res://scripts/ui/game_setup/game_setup_store.gd")
+const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_panel.gd")
+const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -28,12 +33,19 @@ signal display_mode_changed(mode: String)
 signal replay_loop_changed(enabled: bool)
 signal display_w_labels_changed(visible: bool)
 signal projection_strength_changed(value: float)
+signal board_detail_changed(detail: String)
+signal contrast_mode_changed(mode: String)
+signal animation_mode_changed(mode: String)
+signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, reduced_motion: bool)
 signal fit_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
 signal live_2d_requested()
 signal live_3d_requested()
 signal live_4d_requested()
+signal live_game_start_requested(setup: Dictionary)
+signal change_setup_requested(mode: String)
+signal new_random_game_requested()
 signal main_menu_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
@@ -43,6 +55,8 @@ const SCREEN_SETTINGS := "settings"
 const SCREEN_CONTROLS := "controls"
 const SCREEN_DIAGNOSTICS := "diagnostics"
 const SCREEN_ABOUT := "about"
+const SCREEN_ADVANCED := "advanced"
+const SCREEN_GAME_SETUP := "game_setup"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
 const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
@@ -50,14 +64,14 @@ const LIVE_4D_HELP_TEXT := "The board uses W slices; Q/E moves the piece between
 const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end lets you inspect replay demos and play the plain-board 2D, 3D, and 4D modes.
 
 Choose a mode:
-Replay Demos - inspect exported gameplay, topology, and endgame traces.
 Live Plain 2D - the easiest first play mode.
 Live Plain 3D - direct plane rotations on a readable 3D board.
 Live Plain 4D - side-by-side W slices with camera recovery.
+Advanced / Diagnostics - inspect Replay Demos and development diagnostics.
 Topology Playground - still launches from the Python tools, not this Godot shell.
 
 Demo tour:
-1. Open Replay Demos and scrub a gameplay or topology case.
+1. Open Advanced / Diagnostics, then Replay Demos, and scrub a gameplay or topology case.
 2. Return to Main Menu and play Live Plain 2D.
 3. Try Live Plain 3D for direct XY/XZ/YZ rotations.
 4. Inspect Live Plain 4D with Q/E W movement and Fit View.
@@ -65,7 +79,7 @@ Demo tour:
 Known limitations:
 - The Python version currently contains the full topology tools.
 - Topology Playground and broader topology editing are not yet available in this front end.
-- Settings persistence and keybinding editing are not available yet."""
+- Keybinding editing is not available yet."""
 
 var _bundle_status_label: Label
 var _summary_label: Label
@@ -80,6 +94,8 @@ var _settings_screen_panel: SettingsPanel
 var _play_button: Button
 var _reset_button: Button
 var _restart_game_button: Button
+var _new_random_game_button: Button
+var _change_setup_button: Button
 var _quit_button: Button
 var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
@@ -110,6 +126,8 @@ var _settings_screen: Control
 var _controls_screen: Control
 var _diagnostics_screen: Control
 var _about_screen: Control
+var _advanced_screen: Control
+var _game_setup_screen: Control
 var _screens: Dictionary = {}
 var _replay_note: Label
 var _help_panel: PanelContainer
@@ -133,6 +151,14 @@ var _style_applier = ShellControlStyleApplierScript.new()
 var _current_screen := SCREEN_MAIN_MENU
 var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
+var _contextual_help_mode := "automatic"
+var _hud_density := "standard"
+var _ui_scale_factor := 1.0
+var _camera_sensitivity_factor := 1.0
+var _camera_invert_y := false
+var _reduced_motion := false
+var _applying_window_change := false
+var _applying_initial_settings := false
 var _bundle_status_text := ""
 var _bundle_status_detail := ""
 var _live_2d_paused := false
@@ -150,6 +176,10 @@ var _controls_scroll: ScrollContainer
 var _about_scroll: ScrollContainer
 var _settings_registry = SettingsRegistryScript.new()
 var _settings_store
+var _game_setup_model = GameSetupModelScript.new()
+var _game_setup_store = GameSetupStoreScript.new()
+var _game_setup_panel
+var _active_live_mode := ""
 
 
 static func replay_hint_text() -> String:
@@ -206,7 +236,7 @@ static func live_4d_control_hint_groups() -> Array:
 			"items": [["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]],
 		},
 		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]},
+		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]},
 		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
 		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
@@ -233,6 +263,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_settings_registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	_settings_store = SettingsStoreScript.new(_settings_registry)
+	_game_setup_model.apply_last_selected(_game_setup_store.load_last_selected())
 	_style_manager.set_theme(_current_display_mode)
 	_style_manager.theme_changed.connect(func(theme_id: String) -> void:
 		_apply_shell_style()
@@ -247,6 +278,7 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_inside_tree():
 		call_deferred("_log_geometry_diagnostics", "resize")
+		call_deferred("_remember_current_windowed_size")
 
 
 func set_bundle_status(text: String, detail: String = "") -> void:
@@ -330,6 +362,8 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 				]
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
 			_update_live_gameplay_summary(snapshot, mode_label)
+			if _new_random_game_button != null:
+				_new_random_game_button.visible = str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM
 			_trace_integrity_label.text = _format_live_inspector_text(
 				mode_label,
 				state_label,
@@ -366,6 +400,7 @@ func set_live_2d_mode(
 	gravity_interval_seconds: float = 0.5
 ) -> void:
 	_live_2d_paused = paused
+	_active_live_mode = GameSetupSpecScript.MODE_2D
 	_live_2d_game_over = game_over
 	_onboarding_model.select_mode("live_2d")
 	_render_onboarding()
@@ -409,6 +444,7 @@ func set_live_3d_mode(
 	gravity_interval_seconds: float = 0.5
 ) -> void:
 	_live_3d_paused = paused
+	_active_live_mode = GameSetupSpecScript.MODE_3D
 	_live_3d_game_over = game_over
 	_onboarding_model.select_mode("live_3d")
 	_render_onboarding()
@@ -452,6 +488,7 @@ func set_live_4d_mode(
 	gravity_interval_seconds: float = 0.5
 ) -> void:
 	_live_4d_paused = paused
+	_active_live_mode = GameSetupSpecScript.MODE_4D
 	_live_4d_game_over = game_over
 	_onboarding_model.select_mode("live_4d")
 	_render_onboarding()
@@ -518,6 +555,7 @@ func set_display_mode(mode: String) -> void:
 	_current_display_mode = ReplayVisuals.normalize_display_mode(mode)
 	_style_manager.set_theme(_current_display_mode)
 	theme = ReplayVisuals.build_theme(_current_display_mode)
+	theme.default_base_scale = _ui_scale_factor
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
 	if _replay_note != null:
@@ -547,22 +585,34 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 		return false
 	match key_event.keycode:
 		KEY_2:
-			live_2d_requested.emit()
+			open_game_setup(GameSetupSpecScript.MODE_2D)
 		KEY_3:
-			live_3d_requested.emit()
+			open_game_setup(GameSetupSpecScript.MODE_3D)
 		KEY_4:
-			live_4d_requested.emit()
+			open_game_setup(GameSetupSpecScript.MODE_4D)
 		KEY_H:
 			show_screen(SCREEN_CONTROLS)
 		KEY_A:
 			show_screen(SCREEN_ABOUT)
 		KEY_S:
 			show_screen(SCREEN_SETTINGS)
+		KEY_D:
+			show_screen(SCREEN_ADVANCED)
 		KEY_ESCAPE:
 			_emit_quit_requested()
 		_:
 			return false
 	return true
+
+
+func open_game_setup(mode: String) -> void:
+	if not _game_setup_model.set_mode(mode):
+		return
+	if _game_setup_panel != null:
+		_game_setup_panel.configure(_game_setup_model)
+		_screen_focus_targets[SCREEN_GAME_SETUP] = _game_setup_panel.first_focus_control()
+		_apply_shell_style()
+	show_screen(SCREEN_GAME_SETUP)
 
 
 func _focus_current_screen() -> void:
@@ -635,9 +685,15 @@ func layout_contract_snapshot() -> Dictionary:
 		"top_status_badge_border_color": _label_style_border_color(_top_state_badge_label),
 		"restart_game_button_visible": _restart_game_button.visible if _restart_game_button != null else false,
 		"restart_game_button_text": _restart_game_button.text if _restart_game_button != null else "",
+		"restart_game_button_rect": _control_rect(_restart_game_button),
+		"new_random_game_button_visible": _new_random_game_button.visible if _new_random_game_button != null else false,
+		"new_random_game_button_rect": _control_rect(_new_random_game_button),
+		"change_setup_button_visible": _change_setup_button.visible if _change_setup_button != null else false,
+		"change_setup_button_rect": _control_rect(_change_setup_button),
 		"authority_text": _authority_label.text if _authority_label != null else "",
 		"inspector_status_text": _trace_integrity_label.text if _trace_integrity_label != null else "",
 		"main_menu_text": _collect_label_text(_main_menu_screen),
+		"advanced_text": _collect_label_text(_advanced_screen),
 		"about_text": _collect_label_text(_about_screen),
 		"style_theme_id": _style_manager.get_theme_id(),
 		"background_color": _style_manager.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY),
@@ -662,7 +718,12 @@ func current_screen() -> String:
 
 
 func game_viewport_global_rect() -> Rect2:
-	if _game_viewport_container == null or not _game_viewport_container.is_inside_tree():
+	if (
+		_current_screen != SCREEN_VIEWER
+		or _game_viewport_container == null
+		or not _game_viewport_container.is_inside_tree()
+		or not _game_viewport_container.is_visible_in_tree()
+	):
 		return Rect2()
 	return _game_viewport_container.get_global_rect()
 
@@ -678,7 +739,23 @@ func set_live_keyboard_capture(enabled: bool) -> void:
 
 func apply_shell_settings() -> void:
 	if _settings_panel != null:
+		_applying_initial_settings = true
 		_settings_panel.apply_initial_settings()
+		_applying_initial_settings = false
+
+
+func presentation_preferences_snapshot() -> Dictionary:
+	return {
+		"window_mode": str(_settings_store.value("display.window_mode")),
+		"windowed_size": _settings_store.value("display.windowed_size"),
+		"ui_scale_factor": _ui_scale_factor,
+		"hud_density": _hud_density,
+		"contrast_mode": _style_manager.contrast_mode(),
+		"animation_mode": "reduced" if _reduced_motion else "standard",
+		"camera_sensitivity_factor": _camera_sensitivity_factor,
+		"camera_invert_y": _camera_invert_y,
+		"contextual_help": _contextual_help_mode,
+	}
 
 
 func _wire_settings_panel(panel: SettingsPanel) -> void:
@@ -697,6 +774,27 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.projection_strength_changed.connect(func(value: float) -> void:
 		projection_strength_changed.emit(value)
 	)
+	panel.window_mode_changed.connect(_apply_window_mode)
+	panel.windowed_size_changed.connect(func(_size_value: Array) -> void:
+		if str(_settings_store.value("display.window_mode")) == ShellPresentationPreferencesScript.WINDOWED:
+			_restore_windowed_size()
+	)
+	panel.ui_scale_changed.connect(_apply_ui_scale)
+	panel.hud_density_changed.connect(_apply_hud_density)
+	panel.board_detail_changed.connect(func(detail: String) -> void:
+		board_detail_changed.emit(detail)
+	)
+	panel.contrast_mode_changed.connect(_apply_contrast_mode)
+	panel.animation_mode_changed.connect(_apply_animation_mode)
+	panel.camera_sensitivity_changed.connect(func(sensitivity: String) -> void:
+		_camera_sensitivity_factor = ShellPresentationPreferencesScript.camera_sensitivity_factor(sensitivity)
+		_emit_camera_preferences()
+	)
+	panel.camera_invert_y_changed.connect(func(inverted: bool) -> void:
+		_camera_invert_y = inverted
+		_emit_camera_preferences()
+	)
+	panel.contextual_help_changed.connect(_apply_contextual_help)
 	panel.display_mode_changed.connect(func(mode: String) -> void:
 		display_mode_changed.emit(mode)
 	)
@@ -758,8 +856,32 @@ func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String) -> 
 static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String) -> String:
 	var current_piece := str(snapshot.get("current_piece", "-")).strip_edges()
 	var next_piece := str(snapshot.get("next_piece", "-")).strip_edges()
-	return "%s | SCORE %d | CLEARS %d | %s > %s | %s" % [
+	var shape: Array = snapshot.get("board_shape", [])
+	var board_text := GameSetupSpecScript.format_shape(shape)
+	var dimension := int(snapshot.get("dimension", 2))
+	var setup_mode := GameSetupSpecScript.MODE_2D if dimension == 2 else (GameSetupSpecScript.MODE_3D if dimension == 3 else GameSetupSpecScript.MODE_4D)
+	var piece_text := GameSetupSpecScript.piece_set_label(setup_mode, str(snapshot.get("piece_set_id", "")))
+	var speed_text := "Speed %d" % int(snapshot.get("initial_speed_level", 1))
+	var seed_text := "Seed %d" % int(snapshot.get("effective_seed", 0))
+	var layer_text := ""
+	if int(snapshot.get("dimension", 0)) == 4:
+		var active_layers := []
+		for cell in snapshot.get("active_cells", []):
+			var position: Array = cell.get("position", [])
+			if position.size() > 3 and not active_layers.has(int(position[3])):
+				active_layers.append(int(position[3]))
+		active_layers.sort()
+		var active_labels := []
+		for layer in active_layers:
+			active_labels.append(str(int(layer) + 1))
+		layer_text = " | Layers W · %d | Active %s" % [int(snapshot.get("w_slice_count", shape[3] if shape.size() > 3 else 1)), ",".join(active_labels)]
+	return "%s | Board %s%s | %s | %s | %s | SCORE %d | CLEARS %d | %s > %s | %s" % [
 		mode_label,
+		board_text,
+		layer_text,
+		piece_text,
+		speed_text,
+		seed_text,
 		int(snapshot.get("score", 0)),
 		int(snapshot.get("lines", 0)),
 		current_piece if not current_piece.is_empty() else "-",
@@ -819,6 +941,10 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_bottom_panel.visible = not live_mode
 	if _restart_game_button != null and not live_mode:
 		_restart_game_button.visible = false
+	if _new_random_game_button != null and not live_mode:
+		_new_random_game_button.visible = false
+	if _change_setup_button != null:
+		_change_setup_button.visible = live_mode
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = (not live_mode) and _keyboard_hints_visible
 	if _hint_label != null:
@@ -840,6 +966,7 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 	if _diagnostics_panel != null:
 		_diagnostics_panel.set_title("Diagnostics" if live_mode else "Replay Diagnostics")
 	_set_live_inspector_density(live_mode)
+	_apply_contextual_help_visibility(live_mode)
 	if not live_mode and _onboarding_panel != null:
 		_onboarding_panel.visible = false
 
@@ -858,6 +985,15 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 	if _right_column == null:
 		return
 	if live_mode:
+		var detailed := _hud_density == "detailed"
+		var compact := _hud_density == "compact"
+		_bundle_detail_panel.visible = detailed
+		_camera_panel.visible = not compact
+		_diagnostics_header.visible = false
+		_diagnostics_panel.visible = false
+		_event_panel.visible = false
+		_quick_settings_header.visible = detailed
+		_settings_panel.visible = detailed
 		_move_right_column_child(_onboarding_panel, 0)
 		_move_right_column_child(_controls_header, 1)
 		_move_right_column_child(_inspector_hint_panel, 2)
@@ -872,6 +1008,13 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 		_move_right_column_child(_quick_settings_header, 11)
 		_move_right_column_child(_settings_panel, 12)
 		return
+	_bundle_detail_panel.visible = true
+	_camera_panel.visible = true
+	_diagnostics_header.visible = true
+	_diagnostics_panel.visible = true
+	_event_panel.visible = true
+	_quick_settings_header.visible = true
+	_settings_panel.visible = true
 	_move_right_column_child(_inspector_header, 0)
 	_move_right_column_child(_integrity_panel, 1)
 	_move_right_column_child(_bundle_detail_panel, 2)
@@ -954,12 +1097,95 @@ func _set_layout_bounds_visible(visible: bool) -> void:
 
 func _set_keyboard_hints_visible(visible: bool) -> void:
 	_keyboard_hints_visible = visible
-	if _mode_hint_strip != null:
-		_mode_hint_strip.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
-	if _hint_label != null:
-		_hint_label.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
+	_apply_contextual_help_visibility(_bottom_panel != null and not _bottom_panel.visible)
 	if _help_panel != null and not visible:
 		_help_panel.visible = false
+
+
+func _apply_contextual_help(mode: String) -> void:
+	_contextual_help_mode = mode if mode in ShellPresentationPreferencesScript.CONTEXTUAL_HELP_MODES else "automatic"
+	_apply_contextual_help_visibility(_bottom_panel != null and not _bottom_panel.visible)
+
+
+func _apply_contextual_help_visibility(live_mode: bool) -> void:
+	var hints_allowed := _keyboard_hints_visible and _contextual_help_mode != "hidden"
+	var always_visible := _contextual_help_mode == "always"
+	if _mode_hint_strip != null:
+		_mode_hint_strip.visible = hints_allowed and (always_visible or not live_mode)
+	if _hint_label != null:
+		_hint_label.visible = hints_allowed and not live_mode and (_bottom_panel == null or _bottom_panel.visible)
+	if _inspector_hint_panel != null:
+		_inspector_hint_panel.visible = hints_allowed
+
+
+func _apply_ui_scale(scale_id: String) -> void:
+	_ui_scale_factor = ShellPresentationPreferencesScript.ui_scale_factor(scale_id)
+	if theme != null:
+		theme.default_base_scale = _ui_scale_factor
+	_apply_shell_style()
+	call_deferred("_focus_current_screen")
+
+
+func _apply_hud_density(density: String) -> void:
+	_hud_density = density if density in ShellPresentationPreferencesScript.HUD_DENSITIES else "standard"
+	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
+
+
+func _apply_contrast_mode(mode: String) -> void:
+	_style_manager.set_contrast_mode(mode)
+	_apply_shell_style()
+	contrast_mode_changed.emit(_style_manager.contrast_mode())
+
+
+func _apply_animation_mode(mode: String) -> void:
+	_reduced_motion = mode == "reduced"
+	animation_mode_changed.emit("reduced" if _reduced_motion else "standard")
+	_emit_camera_preferences()
+
+
+func _emit_camera_preferences() -> void:
+	camera_preferences_changed.emit(_camera_sensitivity_factor, _camera_invert_y, _reduced_motion)
+
+
+func _apply_window_mode(mode: String) -> void:
+	var window := get_window()
+	if window == null or DisplayServer.get_name() == "headless":
+		return
+	_applying_window_change = true
+	if mode == ShellPresentationPreferencesScript.FULLSCREEN:
+		if window.mode == Window.MODE_WINDOWED and not _applying_initial_settings:
+			_remember_current_windowed_size()
+		window.mode = Window.MODE_FULLSCREEN
+	else:
+		window.mode = Window.MODE_WINDOWED
+		_restore_windowed_size()
+	_applying_window_change = false
+
+
+func _restore_windowed_size() -> void:
+	var window := get_window()
+	if _settings_store == null or window == null or DisplayServer.get_name() == "headless" or window.mode != Window.MODE_WINDOWED:
+		return
+	var minimum := Vector2i(int(ReplayVisuals.SHELL_MIN_WIDTH), int(ReplayVisuals.SHELL_MIN_HEIGHT))
+	var requested := ShellPresentationPreferencesScript.size_from_value(_settings_store.value("display.windowed_size"))
+	var usable := DisplayServer.screen_get_usable_rect(window.current_screen)
+	var safe_size := ShellPresentationPreferencesScript.clamp_windowed_size(requested, minimum, usable)
+	window.size = safe_size
+	window.position = usable.position + (usable.size - safe_size) / 2
+	if safe_size != requested:
+		_settings_store.set_value("display.windowed_size", ShellPresentationPreferencesScript.size_value(safe_size))
+		_sync_all_setting_controls()
+
+
+func _remember_current_windowed_size() -> void:
+	var window := get_window()
+	if _settings_store == null or _applying_window_change or window == null or DisplayServer.get_name() == "headless" or window.mode != Window.MODE_WINDOWED:
+		return
+	var minimum := Vector2i(int(ReplayVisuals.SHELL_MIN_WIDTH), int(ReplayVisuals.SHELL_MIN_HEIGHT))
+	var usable := DisplayServer.screen_get_usable_rect(window.current_screen)
+	var safe_size := ShellPresentationPreferencesScript.clamp_windowed_size(window.size, minimum, usable)
+	if _settings_store.set_value("display.windowed_size", ShellPresentationPreferencesScript.size_value(safe_size)):
+		_sync_all_setting_controls()
 
 
 func _install_shell_layout_contract() -> void:
@@ -1030,7 +1256,7 @@ func _build_layout() -> void:
 	var menu_button := Button.new()
 	menu_button.text = "Main Menu"
 	menu_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_MAIN_MENU)
+		main_menu_requested.emit()
 	)
 	nav_row_a.add_child(menu_button)
 	var browser_button := Button.new()
@@ -1111,8 +1337,12 @@ func _build_layout() -> void:
 	_top_state_badge_label.name = "TopStatusBadgeLabel"
 	_top_state_badge_label.text = "[ PAUSED ]"
 	_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
+	_top_state_badge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_top_state_badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	top_summary_box.add_child(_top_state_badge_label)
+	var live_actions := HBoxContainer.new()
+	live_actions.name = "LiveActions"
+	live_actions.add_theme_constant_override("separation", 8)
+	live_actions.add_child(_top_state_badge_label)
 	_restart_game_button = Button.new()
 	_restart_game_button.name = "RestartGameButton"
 	_restart_game_button.text = "Restart Game"
@@ -1120,7 +1350,25 @@ func _build_layout() -> void:
 	_restart_game_button.pressed.connect(func() -> void:
 		reset_requested.emit()
 	)
-	top_summary_box.add_child(_restart_game_button)
+	live_actions.add_child(_restart_game_button)
+	_new_random_game_button = Button.new()
+	_new_random_game_button.name = "NewRandomGameButton"
+	_new_random_game_button.text = "New Random Game"
+	_new_random_game_button.visible = false
+	_new_random_game_button.pressed.connect(func() -> void:
+		new_random_game_requested.emit()
+	)
+	live_actions.add_child(_new_random_game_button)
+	_change_setup_button = Button.new()
+	_change_setup_button.name = "ChangeSetupButton"
+	_change_setup_button.text = "Change Setup"
+	_change_setup_button.visible = false
+	_change_setup_button.pressed.connect(func() -> void:
+		if not _active_live_mode.is_empty():
+			change_setup_requested.emit(_active_live_mode)
+	)
+	live_actions.add_child(_change_setup_button)
+	top_summary_box.add_child(live_actions)
 
 	_authority_panel = PanelContainer.new()
 	_authority_panel.name = "AuthorityPanel"
@@ -1448,6 +1696,12 @@ func _build_layout() -> void:
 	_about_screen = _make_screen()
 	screen_stack.add_child(_about_screen)
 	_build_about_screen(_about_screen)
+	_advanced_screen = _make_screen()
+	screen_stack.add_child(_advanced_screen)
+	_build_advanced_screen(_advanced_screen)
+	_game_setup_screen = _make_screen()
+	screen_stack.add_child(_game_setup_screen)
+	_build_game_setup_screen(_game_setup_screen)
 	_screens = {
 		SCREEN_MAIN_MENU: _main_menu_screen,
 		SCREEN_BROWSER: _browser_screen,
@@ -1456,6 +1710,8 @@ func _build_layout() -> void:
 		SCREEN_CONTROLS: _controls_screen,
 		SCREEN_DIAGNOSTICS: _diagnostics_screen,
 		SCREEN_ABOUT: _about_screen,
+		SCREEN_ADVANCED: _advanced_screen,
+		SCREEN_GAME_SETUP: _game_setup_screen,
 	}
 	show_screen(SCREEN_MAIN_MENU)
 
@@ -1515,25 +1771,19 @@ func _build_main_menu_screen(screen: Control) -> void:
 	layout.add_child(_menu_group_header("PLAY"))
 	var live_button := _make_command_card("Play 2D", "Plain bounded board · best place to start", "2")
 	live_button.pressed.connect(func() -> void:
-		live_2d_requested.emit()
+		open_game_setup(GameSetupSpecScript.MODE_2D)
 	)
 	layout.add_child(live_button)
 	var live_3d_button := _make_command_card("Play 3D", "Plain bounded board · direct XY, XZ, and YZ rotations", "3")
 	live_3d_button.pressed.connect(func() -> void:
-		live_3d_requested.emit()
+		open_game_setup(GameSetupSpecScript.MODE_3D)
 	)
 	layout.add_child(live_3d_button)
 	var live_4d_button := _make_command_card("Play 4D", "Plain bounded board · W-slice view and camera recovery", "4")
 	live_4d_button.pressed.connect(func() -> void:
-		live_4d_requested.emit()
+		open_game_setup(GameSetupSpecScript.MODE_4D)
 	)
 	layout.add_child(live_4d_button)
-	layout.add_child(_menu_group_header("EXPLORE"))
-	var browser_button := _make_command_card("Replay Demos", "Inspect exported gameplay, topology, and endgame traces", "Enter")
-	browser_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_BROWSER)
-	)
-	layout.add_child(browser_button)
 	layout.add_child(_menu_group_header("LEARN"))
 	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
 	controls_button.pressed.connect(func() -> void:
@@ -1551,12 +1801,85 @@ func _build_main_menu_screen(screen: Control) -> void:
 		show_screen(SCREEN_SETTINGS)
 	)
 	layout.add_child(settings_button)
+	var advanced_button := _make_command_card("Advanced / Diagnostics", "Replay traces and inspect development diagnostics", "D")
+	advanced_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_ADVANCED)
+	)
+	layout.add_child(advanced_button)
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
-	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, browser_button, controls_button, about_button, settings_button, quit_button]
+	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, controls_button, about_button, settings_button, advanced_button, quit_button]
 	_configure_linear_focus(focus_order)
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
+
+
+func _build_advanced_screen(screen: Control) -> void:
+	var center := CenterContainer.new()
+	_fill_parent(center)
+	screen.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(720, 0)
+	center.add_child(panel)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 48)
+	margin.add_theme_constant_override("margin_top", 44)
+	margin.add_theme_constant_override("margin_right", 48)
+	margin.add_theme_constant_override("margin_bottom", 44)
+	panel.add_child(margin)
+	var layout := VBoxContainer.new()
+	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_theme_constant_override("separation", 18)
+	margin.add_child(layout)
+	var title := Label.new()
+	title.name = "AdvancedMenuTitle"
+	title.text = "Advanced / Diagnostics"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.theme_type_variation = "AccentLabel"
+	title.add_theme_font_size_override("font_size", 30)
+	layout.add_child(title)
+	var description := Label.new()
+	description.text = "Development inspection surfaces. Live play does not require these tools."
+	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	description.theme_type_variation = "SecondaryLabel"
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	layout.add_child(description)
+	var browser_button := _make_command_card("Replay Demos", "Inspect exported gameplay, topology, and endgame traces", "Enter")
+	browser_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_BROWSER)
+	)
+	layout.add_child(browser_button)
+	var diagnostics_button := _make_command_card("Diagnostics", "Inspect trace metadata, events, and shell state", "Down")
+	diagnostics_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_DIAGNOSTICS)
+	)
+	layout.add_child(diagnostics_button)
+	var back_button := _make_command_card("Back to Main Menu", "Return to primary play and learning actions", "Esc")
+	back_button.pressed.connect(func() -> void:
+		show_screen(SCREEN_MAIN_MENU)
+	)
+	layout.add_child(back_button)
+	var focus_order: Array[Control] = [browser_button, diagnostics_button, back_button]
+	_configure_linear_focus(focus_order)
+	_screen_focus_targets[SCREEN_ADVANCED] = browser_button
+
+
+func _build_game_setup_screen(screen: Control) -> void:
+	_game_setup_panel = GameSetupPanelScript.new()
+	_fill_parent(_game_setup_panel)
+	screen.add_child(_game_setup_panel)
+	_game_setup_panel.configure(_game_setup_model)
+	_screen_focus_targets[SCREEN_GAME_SETUP] = _game_setup_panel.first_focus_control()
+	_game_setup_panel.setup_changed.connect(func() -> void:
+		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
+	)
+	_game_setup_panel.start_requested.connect(func(setup: Dictionary) -> void:
+		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
+		live_game_start_requested.emit(setup)
+	)
+	_game_setup_panel.back_requested.connect(func() -> void:
+		show_screen(SCREEN_MAIN_MENU)
+	)
 
 
 func _build_browser_screen(screen: Control) -> void:
@@ -1700,9 +2023,9 @@ func _screen_nav(title_text: String) -> HFlowContainer:
 	)
 	nav.add_child(menu_button)
 	var browser_button := Button.new()
-	browser_button.text = "Replay Demos"
+	browser_button.text = "Advanced"
 	browser_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_BROWSER)
+		show_screen(SCREEN_ADVANCED)
 	)
 	nav.add_child(browser_button)
 	var viewer_button := Button.new()
@@ -1753,7 +2076,7 @@ func _screen_nav(title_text: String) -> HFlowContainer:
 
 func _make_command_card(label_text: String, description: String, shortcut: String) -> Button:
 	var button := Button.new()
-	button.name = "CommandCard__%s" % label_text.replace(" ", "_")
+	button.name = "CommandCard__%s" % label_text.replace(" ", "_").replace("/", "_")
 	button.text = "%s        %s\n%s" % [label_text, shortcut, description]
 	button.custom_minimum_size = Vector2(480, 54)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT

@@ -5,7 +5,17 @@ class_name GridRenderer
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 
-func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, live_2d: bool = false, show_w_labels: bool = true) -> void:
+func rebuild(
+	board_shape: Array,
+	dimension: int,
+	mapper,
+	display_mode: String,
+	live_2d: bool = false,
+	show_w_labels: bool = true,
+	active_layers: Array = [],
+	board_detail: String = "standard",
+	high_contrast: bool = false
+) -> void:
 	for child in get_children():
 		child.queue_free()
 
@@ -17,16 +27,37 @@ func rebuild(board_shape: Array, dimension: int, mapper, display_mode: String, l
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
 		if not slice_bounds.get("ok", false):
 			continue
-		if live_2d and (dimension == 2 or dimension >= 4):
+		if live_2d and (dimension == 2 or dimension >= 4) and board_detail != "minimal":
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(slice_bounds, display_mode)
+		if board_detail == "full":
+			_add_outline_box(
+				slice_bounds,
+				display_mode,
+				ReplayVisuals.live_board_grid_material(display_mode),
+				ReplayVisuals.slice_outline_thickness(display_mode) * 0.72
+			)
+		if live_2d and dimension >= 4:
+			_add_outline_box(
+				slice_bounds,
+				display_mode,
+				ReplayVisuals.board_outline_material(display_mode),
+				ReplayVisuals.slice_outline_thickness(display_mode) * 1.55
+			)
+		if active_layers.has(w_index):
+			_add_outline_box(
+				slice_bounds,
+				display_mode,
+				ReplayVisuals.live_active_cell_border_material(display_mode),
+				ReplayVisuals.slice_outline_thickness(display_mode) * (3.4 if high_contrast else 2.4)
+			)
 		if dimension >= 4 and show_w_labels:
-			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode)
+			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode, active_layers.has(w_index), high_contrast)
 
 
-func _add_outline_box(slice_bounds: Dictionary, display_mode: String) -> void:
-	var board_material := ReplayVisuals.board_outline_material(display_mode)
-	var thickness := ReplayVisuals.slice_outline_thickness(display_mode)
+func _add_outline_box(slice_bounds: Dictionary, display_mode: String, material_override: Material = null, thickness_override: float = -1.0) -> void:
+	var board_material := ReplayVisuals.board_outline_material(display_mode) if material_override == null else material_override
+	var thickness := ReplayVisuals.slice_outline_thickness(display_mode) if thickness_override < 0.0 else thickness_override
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var x0 := min_pos.x
@@ -86,13 +117,13 @@ func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 		)
 
 
-func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String) -> void:
+func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String, selected: bool, high_contrast: bool) -> void:
 	var label := Label3D.new()
-	label.text = "w%d" % [w_index + 1]
+	label.text = "w%d ◀" % [w_index + 1] if selected else "w%d" % [w_index + 1]
 	label.font_size = ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.modulate = ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
-	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE
+	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE + (4 if selected and high_contrast else (2 if selected else 0))
 	label.position = label_position + Vector3(0.0, 0.0, 0.015)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_child(label)

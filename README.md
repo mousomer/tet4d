@@ -58,7 +58,8 @@ godot --path godot/Tet4D.Godot
 
 Godot currently provides:
 
-- `Replay Demos` for exported gameplay, topology, and endgame traces
+- `Replay Demos` under `Advanced / Diagnostics` for exported gameplay,
+  topology, and endgame traces
 - `Live Plain 2D`
 - `Live Plain 3D`
 - `Live Plain 4D`

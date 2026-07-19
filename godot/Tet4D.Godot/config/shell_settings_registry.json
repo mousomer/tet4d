@@ -1,14 +1,99 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "categories": [
     {"id": "replay", "label": "Replay"},
     {"id": "display", "label": "Display"},
     {"id": "theme", "label": "Theme"},
     {"id": "diagnostics", "label": "Diagnostics"},
     {"id": "controls_help", "label": "Controls Help"},
-    {"id": "interface", "label": "Interface"}
+    {"id": "interface", "label": "Interface"},
+    {"id": "accessibility", "label": "Accessibility"},
+    {"id": "camera", "label": "Camera"}
   ],
   "settings": [
+    {
+      "id": "display.window_mode",
+      "label": "Window Mode",
+      "description": "Switches between a resizable window and the current display.",
+      "category": "display",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "windowed",
+      "options": [
+        {"value": "windowed", "label": "Windowed"},
+        {"value": "fullscreen", "label": "Fullscreen"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "display.windowed_size",
+      "label": "Remembered Window Size",
+      "description": "Stores the last safe windowed size automatically.",
+      "category": "display",
+      "value_type": "size",
+      "control_type": "label",
+      "default": [1280, 720],
+      "min": [634, 660],
+      "max": [16384, 16384],
+      "ui_visible": false,
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "display.ui_scale",
+      "label": "UI Scale",
+      "description": "Changes the size of menus, text, and the HUD.",
+      "category": "display",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "standard",
+      "options": [
+        {"value": "small", "label": "Small"},
+        {"value": "standard", "label": "Standard"},
+        {"value": "large", "label": "Large"},
+        {"value": "extra_large", "label": "Extra Large"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "display.hud_density",
+      "label": "HUD Density",
+      "description": "Controls how much player-facing game information is shown.",
+      "category": "display",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "standard",
+      "options": [
+        {"value": "compact", "label": "Compact"},
+        {"value": "standard", "label": "Standard"},
+        {"value": "detailed", "label": "Detailed"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "display.board_detail",
+      "label": "Board Detail",
+      "description": "Changes grid and edge detail without changing gameplay.",
+      "category": "display",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "standard",
+      "options": [
+        {"value": "minimal", "label": "Minimal"},
+        {"value": "standard", "label": "Standard"},
+        {"value": "full", "label": "Full"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
     {
       "id": "replay.playback_speed",
       "label": "Replay speed",
@@ -65,6 +150,38 @@
       "persist": true
     },
     {
+      "id": "accessibility.contrast_mode",
+      "label": "Contrast",
+      "description": "High Contrast adds stronger outlines and non-colour distinctions.",
+      "category": "accessibility",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "standard",
+      "options": [
+        {"value": "standard", "label": "Standard"},
+        {"value": "high", "label": "High Contrast"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "accessibility.animation_mode",
+      "label": "Animation",
+      "description": "Reduced Motion shortens non-essential movement without changing game timing.",
+      "category": "accessibility",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "standard",
+      "options": [
+        {"value": "reduced", "label": "Reduced Motion"},
+        {"value": "standard", "label": "Standard Motion"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
       "id": "theme.name",
       "label": "Theme",
       "description": "Selects the Godot shell visual theme.",
@@ -77,6 +194,35 @@
         {"value": "plain", "label": "Plain"},
         {"value": "tron", "label": "Vector Arcade"}
       ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "camera.sensitivity",
+      "label": "Camera Sensitivity",
+      "description": "Changes how quickly the 3D and 4D camera responds.",
+      "category": "camera",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "standard",
+      "options": [
+        {"value": "low", "label": "Low"},
+        {"value": "standard", "label": "Standard"},
+        {"value": "high", "label": "High"}
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "camera.invert_y",
+      "label": "Invert Vertical Camera",
+      "description": "Reverses vertical camera movement without changing piece or menu controls.",
+      "category": "camera",
+      "value_type": "bool",
+      "control_type": "checkbox",
+      "default": false,
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true
@@ -101,6 +247,23 @@
       "value_type": "bool",
       "control_type": "checkbox",
       "default": true,
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "controls_help.contextual_help",
+      "label": "Contextual Help",
+      "description": "Controls when gameplay hints are shown.",
+      "category": "controls_help",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "automatic",
+      "options": [
+        {"value": "automatic", "label": "Automatic"},
+        {"value": "always", "label": "Always Visible"},
+        {"value": "hidden", "label": "Hidden"}
+      ],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true

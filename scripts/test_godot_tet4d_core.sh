@@ -25,6 +25,7 @@ mkdir -p "$BUILD_DIR"
 "$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
   -I"$CORE_DIR/include" \
   "$CORE_DIR/src/core/core_api.cpp" \
+  "$CORE_DIR/src/core/plain_game_setup.cpp" \
   "$CORE_DIR/src/core/plain_2d.cpp" \
   "$CORE_DIR/src/core/plain_2d_session.cpp" \
   "$CORE_DIR/src/core/plain_2d_trace.cpp" \
@@ -52,6 +53,7 @@ mkdir -p "$BUILD_DIR"
 "$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
   -I"$CORE_DIR/include" \
   "$CORE_DIR/src/core/core_api.cpp" \
+  "$CORE_DIR/src/core/plain_game_setup.cpp" \
   "$CORE_DIR/src/core/plain_nd.cpp" \
   "$CORE_DIR/src/core/plain_nd_session.cpp" \
   "$CORE_DIR/src/core/plain_nd_trace.cpp" \
@@ -69,6 +71,12 @@ if [[ "${1:-}" == "--export-plain-2d-trace" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--export-plain-nd-trace" ]]; then
   "$TEST_ND_BIN" "$@"
+elif [[ "${1:-}" == "--export-plain-setup" ]]; then
+  if [[ "${2:-}" == *"_2d_"* ]]; then
+    "$TEST_2D_BIN" "$@"
+  else
+    "$TEST_ND_BIN" "$@"
+  fi
 elif [[ "${1:-}" == "--pilot-stable-hash" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--geometry-parity" ]]; then

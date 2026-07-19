@@ -30,7 +30,7 @@ func run() -> Array:
 		failures.append("Settings screen should focus its first preference")
 	var visited: Dictionary = {}
 	var current := first
-	for _index in range(16):
+	for _index in range(25):
 		if current == null or visited.has(current):
 			break
 		visited[current] = true
@@ -38,8 +38,8 @@ func run() -> Array:
 	var reset := panel.get_node_or_null("SettingsScroll/SettingsContent/ResetSettingsToDefaultsButton") as Button
 	if reset == null or not visited.has(reset):
 		failures.append("deterministic arrow-key focus order should reach Reset Settings to Defaults")
-	if visited.size() != 9:
-		failures.append("focus order should include all eight setting controls and reset")
+	if visited.size() != 18:
+		failures.append("focus order should include all visible Stage 51 setting controls and reset")
 	var down := InputEventKey.new()
 	down.keycode = KEY_DOWN
 	down.pressed = true

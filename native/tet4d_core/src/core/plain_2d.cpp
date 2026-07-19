@@ -275,7 +275,23 @@ void GameState2D::spawn_piece(const PieceShape2D &shape) {
 	if (game_over) {
 		return;
 	}
-	active_piece = ActivePiece2D{shape, {2, -2}, 0};
+	if (shape.blocks.empty()) {
+		game_over = true;
+		game_over_reason = "spawn_blocked";
+		return;
+	}
+	int min_x = shape.blocks.front().x;
+	int max_x = min_x;
+	int min_y = shape.blocks.front().y;
+	for (const Coord2D &block : shape.blocks) {
+		min_x = std::min(min_x, block.x);
+		max_x = std::max(max_x, block.x);
+		min_y = std::min(min_y, block.y);
+	}
+	const int span_x = max_x - min_x + 1;
+	const int spawn_x = (board.width() - span_x) / 2 - min_x;
+	const int spawn_y = -2 - min_y;
+	active_piece = ActivePiece2D{shape, {spawn_x, spawn_y}, 0};
 	if (!can_exist(*active_piece)) {
 		game_over = true;
 		game_over_reason = "spawn_blocked";

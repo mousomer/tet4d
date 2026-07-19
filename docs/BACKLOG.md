@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-12
+Updated: 2026-07-19
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,74 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+PR #36 settings-persistence failure-path hardening (2026-07-19, implemented):
+preserve and restore the previous valid `user://shell_settings.json` through a
+small injectable replacement seam when overwrite/install operations fail;
+clean sibling temporary/backup artifacts where safe; and reject fractional or
+non-numeric schema representations without changing schema versions or the
+existing schema-1 migration. Focused Godot tests cover successful overwrite,
+failure before backup, failure after backup, rename/copy restoration, cleanup,
+diagnostics, and save-count behavior.
+
+Godot shell-settings externalization quality gate (2026-07-19, implemented):
+promote the existing registry-default and user-data persistence boundary from
+an implicit implementation convention to a blocking policy-backed verification
+gate. The gate must reject incomplete registry declarations, persistence-policy
+drift, registry/store schema or path drift, unknown runtime setting IDs, and
+code-owned duplicate setting fallbacks while allowing explicit preset
+interpretation mappings. It runs in `scripts/verify.sh`; focused mutation tests
+prove each failure mode.
+
+Stage 51 display and accessibility completion (2026-07-19, implemented
+locally): extend the Stage 48 shell-settings owner to schema version 2 with
+safe Stage 48 migration and bounded window, UI scale, HUD density, board
+detail, contrast, motion, camera, and contextual-help preferences. Application
+remains centralized through the Godot shell/HUD into render and camera
+consumers; automatic remembered window size is validated and display-clamped.
+High contrast adds heavier focus/active-layer/cell-edge treatment and an
+explicit selected-layer marker; reduced motion snaps camera interpolation and
+removes rotation pulsing without affecting gameplay timing. Focused Godot
+coverage protects invalid-field isolation, setup-store separation, viewport
+scrolling, Plain/default theme composition, camera-only response, contextual
+help/onboarding separation, geometry identity, and renderer propagation. The
+bounded contract is
+`docs/architecture/display_accessibility_completion.md`. Full repository
+verification and manual fullscreen/windowed, maximum-scale Plain/high-contrast,
+Settings/setup, Wide-W, live-input, restart, Fit View, and camera acceptance
+pass. Key rebinding,
+controllers, audio, arbitrary resolutions, gameplay/setup changes, topology,
+and packaging remain deferred; Stage 52 topology is not active.
+
+Stage 50 plain-game setup completion (2026-07-19, complete locally):
+extend the separate Stage 49 gameplay setup owner with canonical piece-set,
+random-mode, seed, and initial-speed identity; construct existing bounded native
+sessions from that validated identity; preserve the effective seed on restart;
+migrate `user://game_setup.json` to schema version 2; and add representative
+Python/native parity plus Godot navigation and persistence coverage. The bounded
+scope and exposure matrix live in
+`docs/architecture/plain_game_setup_completion.md`. Random-shape/debug bags,
+topology, bots, kicks, challenge/progression editors, endgame/explosion, audio,
+keybindings, and packaging remain deferred. Native/Godot/parity verification
+and manual 2D/3D/4D acceptance passed, including persisted true-random setup,
+New Random effective-seed replacement, mouse and keyboard navigation, and the
+Wide-W eight-layer layout. Stage 51 extends the accepted shell at presentation
+only; Stage 52 topology work remains deferred and is not active.
+
+Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
+(2026-07-15, menu-routing repair and manual reacceptance verified): add curated 2D/3D/4D New Game presets, parameterize the existing
+native bounded-session owner by board shape, preserve restart shape, add
+alternate-size parity evidence, and replace the fixed 4D W row with a
+viewport-aware layer matrix. Gameplay setup remains separate from Stage 48
+shell settings. The bounded audit and limits live in
+`docs/architecture/configurable_plain_boards_and_4d_layout.md`. Python defaults,
+gameplay rules, topology, replay semantics, piece sets, bots, kicks, endgame,
+explosion, and packaging remain unchanged. Leaving any live mode for Main Menu
+or Change Setup now disables hidden live-view mouse capture and restores
+deterministic Enter/Space activation on the visible menu, with transition tests
+covering all three live modes. Replay Demos remains an intact trace/parity
+inspection surface but moves below the primary menu into Advanced / Diagnostics.
+Topology migration remains postponed until this stage is merged.
 
 Stage 46 Godot core gameplay completion (2026-07-12): keep the accepted Live
 Plain 2D/3D/4D native-session loops and make their primary play state readable

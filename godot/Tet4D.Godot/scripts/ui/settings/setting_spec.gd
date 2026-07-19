@@ -9,6 +9,8 @@ const ALLOWED_CATEGORIES := [
 	"diagnostics",
 	"controls_help",
 	"interface",
+	"accessibility",
+	"camera",
 ]
 const FORBIDDEN_CATEGORY_TOKENS := [
 	"gameplay",
@@ -23,14 +25,14 @@ const FORBIDDEN_CATEGORY_TOKENS := [
 	"piece",
 	"keyboard_rebinding",
 ]
-const ALLOWED_VALUE_TYPES := ["bool", "int", "float", "enum", "string", "action", "readonly"]
+const ALLOWED_VALUE_TYPES := ["bool", "int", "float", "enum", "string", "size", "action", "readonly"]
 const ALLOWED_CONTROL_TYPES := ["checkbox", "slider", "dropdown", "text_field", "button", "label"]
 const ALLOWED_AUTHORITIES := ["godot_shell", "python_oracle", "future_parity", "forbidden"]
 const ALLOWED_PERSISTENCE := ["none", "session", "local_shell"]
 const ALLOWED_SPEC_FIELDS := [
 	"id", "label", "description", "category", "value_type", "control_type",
 	"default", "min", "max", "step", "unit", "options", "authority",
-	"persistence", "persist", "action_id",
+	"persistence", "persist", "action_id", "ui_visible",
 ]
 const CONTROL_TYPE_BY_VALUE_TYPE := {
 	"bool": "checkbox",
@@ -38,6 +40,7 @@ const CONTROL_TYPE_BY_VALUE_TYPE := {
 	"float": "slider",
 	"enum": "dropdown",
 	"string": "text_field",
+	"size": "label",
 	"action": "button",
 	"readonly": "label",
 }
@@ -82,7 +85,14 @@ func persistence() -> String:
 
 
 func default_value():
-	return data.get("default")
+	var value = data.get("default")
+	if value_type() == "size" and value is Array and value.size() == 2:
+		return [int(value[0]), int(value[1])]
+	return value.duplicate(true) if value is Array or value is Dictionary else value
+
+
+func is_ui_visible() -> bool:
+	return bool(data.get("ui_visible", true))
 
 
 func is_persistent() -> bool:
@@ -103,6 +113,14 @@ func validated_value(value) -> Dictionary: # tet4d-semantic-boundary: allow diag
 				for option in data.get("options", []):
 					if option is Dictionary and str(option.get("value", "")) == value:
 						return {"ok": true, "value": value}
+		"size":
+			if value is Array and value.size() == 2 and _is_number(value[0]) and _is_number(value[1]):
+				var width := int(value[0])
+				var height := int(value[1])
+				var minimum: Array = data.get("min", [1, 1])
+				var maximum: Array = data.get("max", [16384, 16384])
+				if width >= int(minimum[0]) and height >= int(minimum[1]) and width <= int(maximum[0]) and height <= int(maximum[1]):
+					result = {"ok": true, "value": [width, height]}
 		"int", "float":
 			if _is_number(value):
 				var numeric := float(value)
@@ -196,6 +214,18 @@ static func _validate_default_and_shape(failures: Array, spec_data: Dictionary, 
 				values.append(str(option.get("value", "")))
 		if not values.has(str(default_value)):
 			failures.append("%s: enum default must be in options" % setting_id)
+	elif value_type == "size":
+		for field in ["default", "min", "max"]:
+			var size_value = spec_data.get(field)
+			if not (size_value is Array) or size_value.size() != 2 or not _is_number(size_value[0]) or not _is_number(size_value[1]):
+				failures.append("%s: size %s must contain two numbers" % [setting_id, field])
+				return
+		var minimum: Array = spec_data.get("min")
+		var maximum: Array = spec_data.get("max")
+		if int(minimum[0]) > int(maximum[0]) or int(minimum[1]) > int(maximum[1]):
+			failures.append("%s: size minimum must fit inside maximum" % setting_id)
+		if int(default_value[0]) < int(minimum[0]) or int(default_value[1]) < int(minimum[1]) or int(default_value[0]) > int(maximum[0]) or int(default_value[1]) > int(maximum[1]):
+			failures.append("%s: size default outside range" % setting_id)
 	elif value_type == "action":
 		if str(spec_data.get("action_id", "")).is_empty():
 			failures.append("%s: action setting missing action_id" % setting_id)

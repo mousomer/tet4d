@@ -50,8 +50,11 @@ content overflowed, keyboard focus was not deterministic, and onboarding was
 placed below the full live controls map. Stage 47b therefore requires:
 
 - viewport-safe vertical scrolling for Main Menu, Controls, and About;
-- explicit Play 2D -> Play 3D -> Play 4D -> Replay -> How to Play -> About ->
-  Settings -> Quit focus order, with initial focus on Play 2D;
+- explicit Play 2D -> Play 3D -> Play 4D -> How to Play -> About -> Settings ->
+  Advanced / Diagnostics -> Quit focus order, with initial focus on Play 2D;
+- a secondary Advanced / Diagnostics screen that retains keyboard- and
+  pointer-accessible Replay Demos and Diagnostics routes without presenting
+  replay inspection as a primary play choice;
 - keyboard-scroll focus for help content and a visible Main Menu path;
 - immediate onboarding rendering on live entry, first in inspector order;
 - a prominent onboarding card with an explicit session-only `Hide Guide` action;

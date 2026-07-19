@@ -9,9 +9,9 @@ func run() -> Array:
 	var registry = SettingsRegistryScript.new()
 	registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	failures.append_array(registry.validate())
-	_assert_equal(failures, registry.schema_version, 1, "Stage 48 registry schema version")
-	_assert_equal(failures, registry.categories.size(), 6, "Stage 48 category count")
-	_assert_equal(failures, registry.settings.size(), 8, "Stage 48 setting count")
+	_assert_equal(failures, registry.schema_version, 2, "Stage 51 registry schema version")
+	_assert_equal(failures, registry.categories.size(), 8, "Stage 51 category count")
+	_assert_equal(failures, registry.settings.size(), 18, "Stage 51 setting count")
 	var setting_ids: Array = []
 	for spec in registry.settings:
 		var setting_id: String = spec.id()
@@ -40,8 +40,23 @@ func run() -> Array:
 	_assert_has_setting(failures, registry, "diagnostics.show_layout_bounds")
 	_assert_has_setting(failures, registry, "controls_help.show_keyboard_hints")
 	_assert_has_setting(failures, registry, "interface.show_onboarding")
-	if registry.persistent_specs().size() != 7:
-		failures.append("Stage 48 should persist exactly seven whitelisted shell preferences")
+	for setting_id in [
+		"display.window_mode",
+		"display.windowed_size",
+		"display.ui_scale",
+		"display.hud_density",
+		"display.board_detail",
+		"accessibility.contrast_mode",
+		"accessibility.animation_mode",
+		"camera.sensitivity",
+		"camera.invert_y",
+		"controls_help.contextual_help",
+	]:
+		_assert_has_setting(failures, registry, setting_id)
+	if registry.persistent_specs().size() != 17:
+		failures.append("Stage 51 should persist exactly seventeen whitelisted shell preferences")
+	if registry.get_spec("display.windowed_size").is_ui_visible():
+		failures.append("remembered window size should remain automatic and hidden")
 	if registry.get_spec("diagnostics.show_layout_bounds").is_persistent():
 		failures.append("layout diagnostics should remain session-only")
 	return failures
