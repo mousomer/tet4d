@@ -46,14 +46,19 @@ code-owned duplicate setting fallbacks while allowing explicit preset
 interpretation mappings. It runs in `scripts/verify.sh`; focused mutation tests
 prove each failure mode.
 
-Stage 51 display infrastructure (2026-07-19, corrective completion in
-progress): retain the Stage 48 registry/store as the canonical shell-settings
+Stage 51 display infrastructure (2026-07-19, complete): retain the Stage 48
+registry/store as the canonical shell-settings
 owner, migrate schema 1 to schema 2, and centralize bounded window, remembered
 size, UI scale, theme, HUD density, board detail, and camera preferences through
 the Godot shell/HUD presentation owner into renderer and camera consumers. The
 display-only contract is `docs/architecture/display_infrastructure.md`.
 Accessibility behavior that was prematurely combined into the local baseline
-is being removed from Stage 51 and remains ordered Stage 52 work.
+was removed from Stage 51 and remains ordered Stage 52 work. Focused and full
+Python, Godot, native, persistence, layout, Wide-W, state-hash, configured
+setup, documentation, and governance verification pass. Corrective macOS GUI
+acceptance confirms the real Settings screen at extra-large scale in a
+constrained window; the broader existing fullscreen, theme, camera, and Wide-W
+acceptance remains protected by the passing regression suite.
 
 The next product stages are ordered as follows:
 

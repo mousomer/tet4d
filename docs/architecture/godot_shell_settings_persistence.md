@@ -52,7 +52,8 @@ persistence, reset, focus, and semantic whitelist coverage.
 ## Persistence contract
 
 - Storage path: `user://shell_settings.json`.
-- Schema: JSON object with `schema_version = 1` and a `settings` object.
+- Current schema: JSON object with `schema_version = 2` and a `settings`
+  object. Stage 48 introduced schema 1; Stage 51 migrates it field by field.
 - Stored keys: only registry entries explicitly marked `persist: true`.
 - Stored values: validated JSON-safe booleans, strings, and numbers.
 - Ordering: persistent registry order, producing deterministic canonical JSON.
@@ -65,7 +66,9 @@ persistence, reset, focus, and semantic whitelist coverage.
   A failed retry restores the previous file by rename or copy fallback. Clean
   temporary/backup files where safe; retain the backup and report its path only
   if restoration itself cannot complete.
-- Reset: restore registry defaults, apply them immediately, and persist them.
+- Reset API: the store can restore registry defaults atomically. The Stage 51
+  Settings action scopes reset to Display, Theme, and Camera categories so
+  replay, keyboard-hint, and onboarding preferences remain unchanged.
 
 The former Stage 29 `user://tet4d_shell_settings.cfg` path is superseded rather
 than maintained as a second persistence source. No Python or repository file
@@ -74,11 +77,13 @@ is read or written for runtime preferences.
 ## Validation and recovery
 
 Loading starts with registry defaults. A missing file is a normal default
-state. Malformed JSON, a non-object root, missing/non-object `settings`, or an
+state. Schema 1 retains valid Stage 48 values and defaults Stage 51 fields.
+Malformed JSON, a non-object root, missing/non-object `settings`, or an
 unsupported schema version recovers entirely to defaults and records a concise
-diagnostic without rewriting the source file. For a structurally valid file,
-known valid values survive; unknown keys are ignored and invalid values are
-replaced by defaults with diagnostics.
+diagnostic without rewriting the source file. Future schemas are preserved on
+disk unless the user explicitly changes or resets a setting. For a structurally
+valid file, known valid values survive; unknown keys are ignored and invalid
+values are replaced by defaults with diagnostics.
 
 Schema versions must be JSON numbers with an exact supported integral value;
 fractional values are never truncated, and strings, booleans, null, arrays,
@@ -96,7 +101,7 @@ owners. The store never mutates those owners directly.
 
 The Settings screen remains viewport-safe, gives initial focus to the first
 setting, defines deterministic focus neighbours, and includes a reachable
-`Reset Settings to Defaults` action. Esc continues to return to Main Menu.
+`Reset Display Settings` action. Esc continues to return to Main Menu.
 
 Acceptance hardening keeps main-menu command cards compact enough that Quit is
 fully visible and mouse-hit-testable at the supported viewport. Focused and

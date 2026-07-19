@@ -34,24 +34,26 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   persistence drift, schema/path drift, unknown setting IDs, and duplicate
   runtime fallbacks.
 
-- Stage 51 display and accessibility completion is implemented locally on
-  `codex/configurable-plain-boards` as a presentation-only extension of the
-  accepted Stage 48–50 shell. Its bounded implementation authority is
-  `docs/architecture/display_accessibility_completion.md`. The Stage 48
-  `user://shell_settings.json` owner now migrates schema 1 to schema 2 and
-  persists safe window mode/size, bounded UI scale, HUD density, board detail,
-  theme-composed contrast, reduced motion, camera response/inversion, and
-  contextual-help preferences. Generated controls remain keyboard reachable;
-  remembered dimensions are automatic; high contrast strengthens focus,
-  active/locked edges, and selected-layer non-colour cues; reduced motion snaps
-  camera interpolation and suppresses presentation pulse only. Automated
-  Godot, Python, native, setup, Wide-W, and state-hash parity checks pass, as
-  does full repository verification. Manual acceptance passed for persisted
-  fullscreen/windowed restoration, Plain high contrast at extra-large scale,
-  viewport-safe Settings/setup screens, all eight Wide-W layers, live inputs,
-  restart, Fit View, and camera response.
-  Python/native gameplay authority, setup/RNG/pieces, topology, replay identity,
-  bindings, controllers, audio, and packaging remain unchanged.
+- Stage 51 display infrastructure is the active corrective completion on
+  `codex/configurable-plain-boards`. Its display-only authority is
+  `docs/architecture/display_infrastructure.md`. The Stage 48
+  `user://shell_settings.json` owner migrates schema 1 to schema 2 and persists
+  safe window mode/size, bounded UI scale, HUD density, board detail, theme,
+  and camera response/inversion. `ReplayHud` is the central runtime
+  presentation owner and propagates canonical values to window, theme, HUD,
+  renderer, and camera consumers. `Reset Display Settings` preserves replay,
+  keyboard-hint, onboarding, and separate game-setup choices. High contrast,
+  reduced motion, and contextual-help policy changes were removed from the
+  prematurely combined local baseline and remain deferred to Stage 52.
+  Focused and full Python, Godot, native, persistence, layout, Wide-W,
+  state-hash, configured-setup, documentation, and governance checks pass,
+  including `CODEX_MODE=1 ./scripts/verify.sh`. Corrective macOS GUI acceptance
+  confirms the real Settings screen at extra-large scale in a constrained
+  window, with display-only controls and no Stage 52 section; the broader
+  existing fullscreen, theme, camera, and Wide-W acceptance remains regression
+  protected. Python/native gameplay authority, setup/RNG/pieces, topology,
+  replay identity, bindings, controllers, audio, and packaging remain
+  unchanged.
 
 - Stage 50 plain-game setup completion is complete locally on
   `codex/configurable-plain-boards` as a direct extension of the accepted Stage
@@ -66,8 +68,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Wide-W adaptive 4D interaction. The live action/status row is protected at
   supported viewport sizes. Python gameplay rules remain the oracle; topology
   and all advanced gameplay/setup families remain deferred. Stage 51 extends
-  only Godot presentation and accessibility; Stage 52 topology remains
-  deferred.
+  only Godot display presentation; Stage 52 accessibility and Stage 53
+  topology remain deferred.
 
 - Stage 49 configurable plain-board setup and adaptive 4D layer presentation has
   an automated-verified menu-routing repair on `codex/configurable-plain-boards`

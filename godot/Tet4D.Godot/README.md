@@ -83,19 +83,22 @@ configuration file is changed.
 
 Schema version 2 adds Windowed/Fullscreen, an automatically remembered safe
 windowed size, bounded UI scale, Compact/Standard/Detailed HUD density,
-Minimal/Standard/Full board detail, Standard/High Contrast, Standard/Reduced
-Motion, Low/Standard/High camera sensitivity, vertical camera inversion, and
-Automatic/Always Visible/Hidden contextual help. Window size is not an
-arbitrary resolution selector. Contrast composes with the existing themes;
-reduced motion changes camera/feedback presentation only.
+Minimal/Standard/Full board detail, Low/Standard/High camera sensitivity, and
+vertical camera inversion. Window size is not an arbitrary resolution
+selector. The supported shell themes remain Diagnostic, Plain, and Vector
+Arcade.
 
 Existing schema-version-1 shell settings migrate valid Stage 48 preferences in
 memory while new fields use defaults. Missing, malformed, future, unknown, or
-invalid values recover safely and independently where possible. `Reset
-Settings to Defaults` restores and saves only shell preferences. Contextual
-help and guided onboarding remain separate preferences, and neither shell file
-stores tutorial progress or gameplay state. Game setup remains exclusively in
-`user://game_setup.json`.
+invalid values recover safely and independently where possible. `Reset Display
+Settings` restores and saves Display, Theme, and Camera defaults while
+preserving replay, keyboard-hint, and guided-onboarding choices. Neither shell
+file stores tutorial progress or gameplay state. Game setup remains
+exclusively in `user://game_setup.json`.
+
+Stage 52 will extend this infrastructure with accessibility behavior. Stage 51
+does not expose high contrast, reduced motion, colour-vision presets, or a new
+contextual-help policy.
 
 ## Boundaries
 

@@ -1125,14 +1125,44 @@ def _keybinding_profile_rows(
     return tuple(rows)
 
 
-def _render_godot_shell_settings_section() -> list[str]:
+def _godot_shell_settings_registry() -> tuple[
+    dict[str, object], list[object], list[object]
+]:
     payload = _load_json(GODOT_SHELL_SETTINGS_REGISTRY_PATH)
     if not isinstance(payload, dict):
         raise RuntimeError("Godot shell settings registry must be an object")
     categories = payload.get("categories")
     settings = payload.get("settings")
     if not isinstance(categories, list) or not isinstance(settings, list):
-        raise RuntimeError("Godot shell settings registry categories/settings must be arrays")
+        raise RuntimeError(
+            "Godot shell settings registry categories/settings must be arrays"
+        )
+    return payload, categories, settings
+
+
+def _render_godot_shell_setting(setting: dict[str, object]) -> str:
+    setting_id = str(setting.get("id", ""))
+    default = _format_literal(setting.get("default"))
+    value_type = str(setting.get("value_type", ""))
+    detail = f"default `{default}`; {value_type}"
+    options = setting.get("options")
+    if isinstance(options, list):
+        option_values = [
+            str(option.get("value", ""))
+            for option in options
+            if isinstance(option, dict)
+        ]
+        detail += "; options: " + ", ".join(option_values)
+    if value_type == "size":
+        detail += (
+            f"; min {_format_literal(setting.get('min'))};"
+            f" max {_format_literal(setting.get('max'))}"
+        )
+    return f"- `{setting_id}`: {detail}"
+
+
+def _render_godot_shell_settings_section() -> list[str]:
+    payload, categories, settings = _godot_shell_settings_registry()
     category_labels = {
         str(category.get("id", "")): str(category.get("label", ""))
         for category in categories
@@ -1167,25 +1197,9 @@ def _render_godot_shell_settings_section() -> list[str]:
         if not category_settings:
             continue
         lines.extend([f"### {category_labels.get(category_id, category_id)}", ""])
-        for setting in category_settings:
-            setting_id = str(setting.get("id", ""))
-            default = _format_literal(setting.get("default"))
-            value_type = str(setting.get("value_type", ""))
-            detail = f"default `{default}`; {value_type}"
-            options = setting.get("options")
-            if isinstance(options, list):
-                option_values = [
-                    str(option.get("value", ""))
-                    for option in options
-                    if isinstance(option, dict)
-                ]
-                detail += "; options: " + ", ".join(option_values)
-            if value_type == "size":
-                detail += (
-                    f"; min {_format_literal(setting.get('min'))};"
-                    f" max {_format_literal(setting.get('max'))}"
-                )
-            lines.append(f"- `{setting_id}`: {detail}")
+        lines.extend(
+            _render_godot_shell_setting(setting) for setting in category_settings
+        )
         lines.append("")
     return lines
 
