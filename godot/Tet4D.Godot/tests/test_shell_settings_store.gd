@@ -30,8 +30,8 @@ func run() -> Array:
 	if fresh.value("diagnostics.show_layout_bounds") != false:
 		failures.append("session-only diagnostics should not round-trip")
 	var payload = JSON.parse_string(_read_file())
-	if not (payload is Dictionary) or int(payload.get("schema_version", 0)) != 1:
-		failures.append("saved settings should use schema version 1 JSON")
+	if not (payload is Dictionary) or int(payload.get("schema_version", 0)) != 2:
+		failures.append("saved settings should use schema version 2 JSON")
 	else:
 		var saved: Dictionary = payload.get("settings", {})
 		if saved.size() != registry.persistent_specs().size():
@@ -39,6 +39,12 @@ func run() -> Array:
 		for forbidden in ["score", "lines", "board_state", "active_cells", "locked_cells", "paused", "game_over", "topology", "native_trace_state"]:
 			if saved.has(forbidden): failures.append("settings file must exclude semantic state %s" % forbidden)
 	_test_invalid_inputs(failures, registry)
+	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "plain", "interface.show_onboarding": false}}))
+	var migrated = StoreScript.new(registry, TEST_PATH)
+	if migrated.deterministic_snapshot().get("load_state") != "migrated_v1" or migrated.value("theme.name") != "plain":
+		failures.append("Stage 48 schema should migrate valid preferences in memory")
+	if migrated.value("display.ui_scale") != "standard" or migrated.value("interface.show_onboarding") != false:
+		failures.append("Stage 48 migration should default new fields without resetting onboarding")
 	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "plain", "controls_help.show_keyboard_hints": "wrong", "unknown.key": true}}))
 	var partial = StoreScript.new(registry, TEST_PATH)
 	if partial.value("theme.name") != "plain" or partial.value("controls_help.show_keyboard_hints") != true:
@@ -60,8 +66,8 @@ func _test_invalid_inputs(failures: Array, registry) -> void:
 	for case in [
 		{"text": "{broken", "diagnostic": "malformed"},
 		{"text": "[]", "diagnostic": "root"},
-		{"text": JSON.stringify({"schema_version": 1}), "diagnostic": "values"},
-		{"text": JSON.stringify({"schema_version": 1, "settings": []}), "diagnostic": "values"},
+		{"text": JSON.stringify({"schema_version": 2}), "diagnostic": "values"},
+		{"text": JSON.stringify({"schema_version": 2, "settings": []}), "diagnostic": "values"},
 		{"text": JSON.stringify({"schema_version": 99, "settings": {}}), "diagnostic": "schema"},
 	]:
 		_write_file(str(case.get("text")))

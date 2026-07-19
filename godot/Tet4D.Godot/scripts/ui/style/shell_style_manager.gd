@@ -13,6 +13,7 @@ const REQUIRED_THEME_IDS := ["diagnostic", "plain", "tron"]
 
 var _palettes: Dictionary = {}
 var _active_theme_id := DEFAULT_THEME_ID
+var _high_contrast := false
 
 
 func _init() -> void:
@@ -57,7 +58,20 @@ func get_color(role: String) -> Color:
 	var palette = _palettes.get(_active_theme_id)
 	if palette == null:
 		return Color.WHITE
-	return palette.get_color(role)
+	var color: Color = palette.get_color(role)
+	return _high_contrast_color(role, color, palette) if _high_contrast else color
+
+
+func set_contrast_mode(mode: String) -> void:
+	var high_contrast := mode == "high"
+	if high_contrast == _high_contrast:
+		return
+	_high_contrast = high_contrast
+	theme_changed.emit(_active_theme_id)
+
+
+func contrast_mode() -> String:
+	return "high" if _high_contrast else "standard"
 
 
 func has_role(role: String) -> bool:
@@ -102,3 +116,28 @@ func _first_available_theme() -> String:
 		if _palettes.has(theme_id):
 			return theme_id
 	return ""
+
+
+func _high_contrast_color(role: String, color: Color, palette) -> Color:
+	var background: Color = palette.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY)
+	var dark_background := background.get_luminance() < 0.5
+	if role in [
+		ShellStyleRolesScript.TEXT_PRIMARY,
+		ShellStyleRolesScript.TEXT_SECONDARY,
+		ShellStyleRolesScript.TEXT_MUTED,
+		ShellStyleRolesScript.HINT_KEYCAP_TEXT,
+		ShellStyleRolesScript.HINT_ACTION,
+		ShellStyleRolesScript.HINT_NOTE,
+		ShellStyleRolesScript.LABEL_HINT,
+	]:
+		return Color.WHITE if dark_background else Color.BLACK
+	if role in [
+		ShellStyleRolesScript.ACCENT_FOCUS,
+		ShellStyleRolesScript.GRID_MAJOR,
+		ShellStyleRolesScript.GRID_AXIS,
+		ShellStyleRolesScript.HINT_KEYCAP_BORDER,
+	]:
+		return Color(1.0, 0.85, 0.1) if dark_background else Color(0.0, 0.12, 0.35)
+	if role == ShellStyleRolesScript.GRID_MINOR:
+		return Color(0.64, 0.7, 0.78) if dark_background else Color(0.28, 0.32, 0.38)
+	return color

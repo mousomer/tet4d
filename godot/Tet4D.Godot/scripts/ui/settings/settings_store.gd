@@ -2,7 +2,8 @@ extends RefCounted
 
 class_name SettingsStore
 
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
+const MIGRATABLE_SCHEMA_VERSIONS := [1, SCHEMA_VERSION]
 const DEFAULT_PATH := "user://shell_settings.json"
 
 var _registry
@@ -46,7 +47,7 @@ func load_settings() -> void:
 		_recover_all("Settings root must be an object; defaults used.")
 		return
 	var schema_value = parsed.get("schema_version")
-	if typeof(schema_value) not in [TYPE_INT, TYPE_FLOAT] or int(schema_value) != SCHEMA_VERSION:
+	if typeof(schema_value) not in [TYPE_INT, TYPE_FLOAT] or not MIGRATABLE_SCHEMA_VERSIONS.has(int(schema_value)):
 		_recover_all("Settings schema version is unsupported; defaults used.")
 		return
 	if not parsed.has("settings") or not (parsed.get("settings") is Dictionary):
@@ -63,8 +64,8 @@ func load_settings() -> void:
 			_persistent_values[spec.id()] = validated.get("value")
 		else:
 			_diagnostics.append("Invalid setting %s replaced by its default." % spec.id())
-	_load_state = "loaded"
-	_diagnostics.push_front("Shell settings loaded.")
+	_load_state = "migrated_v1" if int(schema_value) == 1 else "loaded"
+	_diagnostics.push_front("Stage 48 shell settings migrated in memory." if int(schema_value) == 1 else "Shell settings loaded.")
 
 
 func value(setting_id: String):
@@ -72,9 +73,9 @@ func value(setting_id: String):
 	if spec == null:
 		return null
 	if spec.persistence() == "session" and _session_values.has(setting_id):
-		return _session_values.get(setting_id)
+		return _safe_copy(_session_values.get(setting_id))
 	if spec.is_persistent() and _persistent_values.has(setting_id):
-		return _persistent_values.get(setting_id)
+		return _safe_copy(_persistent_values.get(setting_id))
 	return spec.default_value()
 
 
@@ -87,7 +88,7 @@ func set_value(setting_id: String, new_value) -> bool:
 	if not bool(validated.get("ok", false)):
 		_diagnostics.append("Invalid setting %s was not saved." % setting_id)
 		return false
-	var canonical_value = validated.get("value")
+	var canonical_value = _safe_copy(validated.get("value"))
 	if value(setting_id) == canonical_value:
 		return false
 	if spec.persistence() == "session":
@@ -187,3 +188,7 @@ func _report_save_failure(detail: String) -> void:
 	var message := "Shell settings could not be saved: %s." % detail
 	_diagnostics.append(message)
 	push_error(message)
+
+
+func _safe_copy(value):
+	return value.duplicate(true) if value is Array or value is Dictionary else value

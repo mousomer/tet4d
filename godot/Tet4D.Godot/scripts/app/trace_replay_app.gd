@@ -520,6 +520,23 @@ func _wire_hud() -> void:
 		_renderer.set_projection_strength(value)
 		_refresh_render()
 	)
+	_hud.board_detail_changed.connect(func(detail: String) -> void:
+		_renderer.set_board_detail(detail)
+		_refresh_render()
+	)
+	_hud.contrast_mode_changed.connect(func(mode: String) -> void:
+		_renderer.set_contrast_mode(mode)
+		_refresh_render()
+	)
+	_hud.animation_mode_changed.connect(func(mode: String) -> void:
+		_renderer.set_animation_mode(mode)
+		_refresh_render()
+	)
+	_hud.camera_preferences_changed.connect(func(sensitivity_factor: float, invert_y: bool, reduced_motion: bool) -> void:
+		if _camera_rig != null:
+			_camera_rig.set_presentation_preferences(sensitivity_factor, invert_y, reduced_motion)
+			_refresh_camera_status()
+	)
 	_hud.diagnostics_visibility_changed.connect(func(visible: bool) -> void:
 		_state.diagnostics_visible = visible
 		_refresh_hud()

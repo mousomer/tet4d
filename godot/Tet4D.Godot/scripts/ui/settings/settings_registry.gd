@@ -36,8 +36,8 @@ func load_from_data(data: Dictionary) -> void:
 
 func validate() -> Array: # tet4d-semantic-boundary: allow diagnostic-presentation
 	var failures: Array = []
-	if schema_version != 1:
-		failures.append("settings registry schema_version must be 1")
+	if schema_version != 2:
+		failures.append("settings registry schema_version must be 2")
 	var category_ids: Array = []
 	for category_data in categories:
 		if not (category_data is Dictionary):
