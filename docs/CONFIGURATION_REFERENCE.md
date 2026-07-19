@@ -2052,6 +2052,16 @@ Parameters:
 - `governance.drift_protection.tutorial_copy_contract.lessons_path`: `"config/tutorial/lessons.json"` (`string`)
 - `governance.drift_protection.tutorial_copy_contract.overlay_path`: `"src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py"` (`string`)
 - `governance.drift_protection.tutorial_copy_contract.required_overlay_tokens[]`: array[`string`]; examples: `"Do this:"`, `"Tip:"`, `"USE:"`
+- `governance.godot_settings_externalization_contract.forbid_runtime_default_duplicates`: `true` (`bool`)
+- `governance.godot_settings_externalization_contract.non_persistent_policies[]`: array[`string`]; examples: `"none"`, `"session"`
+- `governance.godot_settings_externalization_contract.persistent_policy`: `"local_shell"` (`string`)
+- `governance.godot_settings_externalization_contract.persistent_user_path`: `"user://shell_settings.json"` (`string`)
+- `governance.godot_settings_externalization_contract.registry_loader_path`: `"godot/Tet4D.Godot/scripts/ui/settings/settings_registry.gd"` (`string`)
+- `governance.godot_settings_externalization_contract.registry_path`: `"godot/Tet4D.Godot/config/shell_settings_registry.json"` (`string`)
+- `governance.godot_settings_externalization_contract.required_setting_fields[]`: array[`string`]; examples: `"id"`, `"label"`, `"description"`
+- `governance.godot_settings_externalization_contract.runtime_source_root`: `"godot/Tet4D.Godot/scripts"` (`string`)
+- `governance.godot_settings_externalization_contract.statement`: `"Every Godot shell setting and its default must be declared in the ch...` (`string`)
+- `governance.godot_settings_externalization_contract.store_path`: `"godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd"` (`string`)
 - `governance.menu_control_typing_contract.enum_setup_option_source_tokens[]`: array[`string`]; examples: `"piece_set_labels"`
 - `governance.menu_control_typing_contract.menu_control_types[]`: array[`string`]; examples: `"toggle"`, `"selector"`, `"slider"`
 - `governance.menu_control_typing_contract.selector_options_key_required`: `true` (`bool`)

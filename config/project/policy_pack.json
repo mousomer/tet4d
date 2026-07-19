@@ -177,6 +177,32 @@
         "piece_set_labels"
       ]
     },
+    "godot_settings_externalization_contract": {
+      "registry_path": "godot/Tet4D.Godot/config/shell_settings_registry.json",
+      "registry_loader_path": "godot/Tet4D.Godot/scripts/ui/settings/settings_registry.gd",
+      "store_path": "godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd",
+      "persistent_user_path": "user://shell_settings.json",
+      "runtime_source_root": "godot/Tet4D.Godot/scripts",
+      "required_setting_fields": [
+        "id",
+        "label",
+        "description",
+        "category",
+        "value_type",
+        "control_type",
+        "default",
+        "authority",
+        "persistence",
+        "persist"
+      ],
+      "persistent_policy": "local_shell",
+      "non_persistent_policies": [
+        "none",
+        "session"
+      ],
+      "forbid_runtime_default_duplicates": true,
+      "statement": "Every Godot shell setting and its default must be declared in the checked-in registry; runtime code may map validated preset values but must not introduce a second setting default. Persistent user choices must be written only to the separate user-data JSON store."
+    },
     "contributor_directives": {
       "required_ci_enforced_ids": [
         "verification_required",

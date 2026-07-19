@@ -11,6 +11,18 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- A follow-up quality gate is implemented on `codex/configurable-plain-boards`
+  to
+  make the Godot shell-settings ownership boundary blocking: declarations and
+  defaults remain in the checked-in registry, validated persistent values
+  remain in the separate `user://shell_settings.json` store, and runtime code
+  may interpret presets but cannot create code-only settings or duplicate
+  setting fallbacks. The machine contract is routed through
+  `config/project/policy_pack.json`; the dedicated checker is part of
+  `scripts/verify.sh` and has focused mutation coverage for missing defaults,
+  persistence drift, schema/path drift, unknown setting IDs, and duplicate
+  runtime fallbacks.
+
 - Stage 51 display and accessibility completion is implemented locally on
   `codex/configurable-plain-boards` as a presentation-only extension of the
   accepted Stage 48–50 shell. Its bounded implementation authority is
@@ -773,7 +785,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.76`
+1. `delivery_size_pressure = 2.77`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

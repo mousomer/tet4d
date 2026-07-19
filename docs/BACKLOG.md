@@ -28,6 +28,15 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Godot shell-settings externalization quality gate (2026-07-19, implemented):
+promote the existing registry-default and user-data persistence boundary from
+an implicit implementation convention to a blocking policy-backed verification
+gate. The gate must reject incomplete registry declarations, persistence-policy
+drift, registry/store schema or path drift, unknown runtime setting IDs, and
+code-owned duplicate setting fallbacks while allowing explicit preset
+interpretation mappings. It runs in `scripts/verify.sh`; focused mutation tests
+prove each failure mode.
+
 Stage 51 display and accessibility completion (2026-07-19, implemented
 locally): extend the Stage 48 shell-settings owner to schema version 2 with
 safe Stage 48 migration and bounded window, UI scale, HUD density, board

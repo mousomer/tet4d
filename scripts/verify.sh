@@ -129,6 +129,7 @@ run_step "config_reference" "$PYTHON_BIN" tools/governance/generate_configuratio
 run_step "maintenance_docs" "$PYTHON_BIN" tools/governance/generate_maintenance_docs.py --check
 run_step "secret_scan"    "$PYTHON_BIN" tools/governance/scan_secrets.py
 run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
+run_step "godot_settings_externalization" "$PYTHON_BIN" tools/governance/check_godot_settings_externalization.py
 
 run_step "ruff"           run_module ruff check .
 run_step "ruff_format"    run_module ruff format --check scripts tools
