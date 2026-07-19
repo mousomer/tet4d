@@ -67,7 +67,7 @@ func _test_shell_preferences() -> Array:
 		failures.append("camera preferences should propagate without changing controls")
 	if app != null:
 		var renderer_preferences: Dictionary = app._renderer.presentation_preferences_snapshot()
-		if renderer_preferences != {"board_detail": "full"}:
+		if renderer_preferences.get("board_detail") != "full":
 			failures.append("board detail should reach the shared 2D/3D/4D renderer")
 		var bounds_before: Dictionary = app._renderer.current_bounds().duplicate(true)
 		panel._on_control_value_changed("display.board_detail", "minimal")

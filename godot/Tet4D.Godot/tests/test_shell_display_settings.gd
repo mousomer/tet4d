@@ -67,6 +67,7 @@ func run() -> Array:
 			"camera.sensitivity": "low",
 			"camera.invert_y": true,
 			"interface.show_onboarding": false,
+			"accessibility.high_contrast": true,
 			"unknown.stage51": "ignored",
 		},
 	})
@@ -77,16 +78,45 @@ func run() -> Array:
 		failures.append("valid siblings should survive invalid Stage 51 fields")
 	if partial.value("interface.show_onboarding") != false:
 		failures.append("field recovery must preserve the separate onboarding preference")
+	if partial.value("accessibility.high_contrast") != true:
+		failures.append("valid accessibility fields should survive invalid display fields")
 	partial.set_value("theme.name", "plain")
-	partial.set_value("controls_help.show_keyboard_hints", false)
+	partial.set_value("accessibility.show_help_hints", false)
 	partial.set_value("replay.playback_speed", 2.0)
 	if not partial.reset_categories_to_defaults(["display", "theme", "camera"]):
 		failures.append("display reset should persist canonical category defaults")
 	var reset = StoreScript.new(registry, TEST_PATH)
 	if reset.value("theme.name") != "tron" or reset.value("display.hud_density") != "standard" or reset.value("camera.invert_y") != false:
 		failures.append("display reset should restore display, theme, and camera defaults")
-	if reset.value("controls_help.show_keyboard_hints") != false or reset.value("interface.show_onboarding") != false or reset.value("replay.playback_speed") != 2.0:
+	if reset.value("accessibility.show_help_hints") != false or reset.value("accessibility.high_contrast") != true or reset.value("interface.show_onboarding") != false or reset.value("replay.playback_speed") != 2.0:
 		failures.append("display reset must preserve help, onboarding, and replay preferences")
+	_write_json(TEST_PATH, {
+		"schema_version": 3,
+		"settings": {
+			"display.ui_scale": "large",
+			"camera.invert_y": true,
+			"accessibility.high_contrast": "yes",
+			"accessibility.reduced_motion": 1,
+			"accessibility.show_help_hints": false,
+			"interface.show_onboarding": false,
+			"replay.loop_enabled": false,
+		},
+	})
+	var accessibility_partial = StoreScript.new(registry, TEST_PATH)
+	if accessibility_partial.value("display.ui_scale") != "large" or accessibility_partial.value("camera.invert_y") != true:
+		failures.append("valid display fields should survive invalid accessibility fields")
+	if accessibility_partial.value("accessibility.high_contrast") != false or accessibility_partial.value("accessibility.reduced_motion") != false:
+		failures.append("string and numeric accessibility booleans should fall back independently")
+	if accessibility_partial.value("accessibility.show_help_hints") != false:
+		failures.append("valid accessibility siblings should survive invalid accessibility fields")
+	accessibility_partial.set_value("accessibility.high_contrast", true)
+	if not accessibility_partial.reset_categories_to_defaults(["accessibility"], "Accessibility settings"):
+		failures.append("accessibility reset should persist canonical accessibility defaults")
+	var accessibility_reset = StoreScript.new(registry, TEST_PATH)
+	if accessibility_reset.value("accessibility.high_contrast") != false or accessibility_reset.value("accessibility.reduced_motion") != false or accessibility_reset.value("accessibility.show_help_hints") != true:
+		failures.append("accessibility reset should restore only accessibility defaults")
+	if accessibility_reset.value("display.ui_scale") != "large" or accessibility_reset.value("camera.invert_y") != true or accessibility_reset.value("interface.show_onboarding") != false or accessibility_reset.value("replay.loop_enabled") != false:
+		failures.append("accessibility reset must preserve display, camera, onboarding, and replay preferences")
 
 	var clamped := PreferencesScript.clamp_windowed_size(
 		Vector2i(3000, 2000),

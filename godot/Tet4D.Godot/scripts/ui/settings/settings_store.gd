@@ -2,10 +2,12 @@ extends RefCounted
 
 class_name SettingsStore
 
-const SCHEMA_VERSION := 2
-const MIGRATABLE_SCHEMA_VERSIONS := [1, SCHEMA_VERSION]
+const SCHEMA_VERSION := 3
+const MIGRATABLE_SCHEMA_VERSIONS := [1, 2, SCHEMA_VERSION]
 const DEFAULT_PATH := "user://shell_settings.json"
 const BACKUP_SUFFIX := ".bak"
+const LEGACY_HINT_SETTING_ID := "controls_help.show_keyboard_hints"
+const HINT_SETTING_ID := "accessibility.show_help_hints"
 
 var _registry
 var _storage_path := DEFAULT_PATH
@@ -57,7 +59,17 @@ func load_settings() -> void:
 		_recover_all("Settings values must be an object; defaults used.")
 		return
 	var stored: Dictionary = parsed.get("settings")
+	var schema_version := int(schema_value)
+	if schema_version < SCHEMA_VERSION and stored.has(LEGACY_HINT_SETTING_ID):
+		var hint_spec = _registry.get_spec(HINT_SETTING_ID)
+		var hint_value: Dictionary = hint_spec.validated_value(stored.get(LEGACY_HINT_SETTING_ID)) if hint_spec != null else {}
+		if bool(hint_value.get("ok", false)):
+			_persistent_values[HINT_SETTING_ID] = hint_value.get("value")
+		else:
+			_diagnostics.append("Invalid legacy keyboard-hint setting replaced by its accessibility default.")
 	for setting_id in stored.keys():
+		if str(setting_id) == LEGACY_HINT_SETTING_ID and schema_version < SCHEMA_VERSION:
+			continue
 		var spec = _registry.get_spec(str(setting_id))
 		if spec == null or not spec.is_persistent():
 			_diagnostics.append("Unknown or non-persistent setting %s ignored." % str(setting_id))
@@ -67,8 +79,8 @@ func load_settings() -> void:
 			_persistent_values[spec.id()] = validated.get("value")
 		else:
 			_diagnostics.append("Invalid setting %s replaced by its default." % spec.id())
-	_load_state = "migrated_v1" if int(schema_value) == 1 else "loaded"
-	_diagnostics.push_front("Stage 48 shell settings migrated in memory." if int(schema_value) == 1 else "Shell settings loaded.")
+	_load_state = "loaded" if schema_version == SCHEMA_VERSION else "migrated_v%s" % schema_version
+	_diagnostics.push_front("Shell settings loaded." if schema_version == SCHEMA_VERSION else "Shell settings schema %s migrated to schema 3 in memory." % schema_version)
 
 
 func value(setting_id: String):
@@ -115,7 +127,7 @@ func reset_to_defaults() -> bool:
 	return saved
 
 
-func reset_categories_to_defaults(category_ids: Array) -> bool:
+func reset_categories_to_defaults(category_ids: Array, reset_label: String = "Settings") -> bool:
 	if _registry == null:
 		return false
 	for category_id in category_ids:
@@ -126,7 +138,7 @@ func reset_categories_to_defaults(category_ids: Array) -> bool:
 				_persistent_values[spec.id()] = _safe_copy(spec.default_value())
 	var saved := _save_persistent_values()
 	if saved:
-		_diagnostics.append("Display settings reset to defaults.")
+		_diagnostics.append("%s reset to defaults." % reset_label)
 	return saved
 
 

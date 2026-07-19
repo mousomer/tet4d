@@ -17,6 +17,8 @@ var _display_mode := ReplayVisuals.default_display_mode()
 var _show_w_labels := true
 var _projection_strength := 1.0
 var _board_detail := "standard"
+var _high_contrast := false
+var _reduced_motion := false
 var _last_case_id := ""
 var _last_frame_index := -1
 var _particle_trails: Dictionary = {}
@@ -55,6 +57,11 @@ func set_board_detail(detail: String) -> void:
 	_board_detail = detail if detail in ["minimal", "standard", "full"] else "standard"
 
 
+func set_accessibility_policy(high_contrast: bool, reduced_motion: bool) -> void:
+	_high_contrast = high_contrast
+	_reduced_motion = reduced_motion
+
+
 func render_snapshot(snapshot: Dictionary) -> void:
 	render_interpolated_snapshot(snapshot, {}, 0.0)
 
@@ -87,7 +94,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_presentation.is_live,
 		_show_w_labels,
 		_presentation.active_layer_indices(),
-		_board_detail
+		_board_detail,
+		_high_contrast
 	)
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode)
@@ -157,7 +165,9 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		marker_node.setup(
 			_presentation.world_position(marker.get("position", [])) + Vector3.UP * ReplayVisuals.PROBE_MARKER_HEIGHT,
 			probe_material,
-			_event_scale * 1.05
+			_event_scale * 1.05,
+			1.0,
+			not _reduced_motion
 		)
 
 	for marker in _presentation.event_markers():
@@ -167,7 +177,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 			_presentation.world_position(marker.get("position", [])) + Vector3.UP * ReplayVisuals.EVENT_MARKER_HEIGHT,
 			event_material,
 			_event_scale,
-			1.0 - (alpha * 0.65)
+			1.0 - ((0.0 if _reduced_motion else alpha) * 0.65),
+			not _reduced_motion
 		)
 
 	for particle in _presentation.particles():
@@ -184,7 +195,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 			# interpolation between exported frames, not simulation.
 			particle_position = particle_position.lerp(
 				_presentation.world_position(next_particle.get("position", [])),
-				alpha
+				0.0 if _reduced_motion else alpha
 			)
 		var trail_positions := _trail_positions_for_particle(particle_id, particle_position)
 		particle_node.setup(
@@ -241,6 +252,8 @@ func _live_active_border_material(is_live_3d_snapshot: bool, is_live_snapshot: b
 
 
 func _live_3d_rotation_pulse(snapshot: Dictionary) -> float:
+	if _reduced_motion:
+		return 0.0
 	var last_command := str(snapshot.get("last_command", ""))
 	if not last_command.begins_with("rotate_"):
 		return 0.0
@@ -250,11 +263,14 @@ func _live_3d_rotation_pulse(snapshot: Dictionary) -> float:
 func presentation_preferences_snapshot() -> Dictionary:
 	return {
 		"board_detail": _board_detail,
+		"high_contrast": _high_contrast,
+		"reduced_motion": _reduced_motion,
 	}
 
 
 func _edge_weight() -> float:
-	return 0.9 if _board_detail == "minimal" else (1.25 if _board_detail == "full" else 1.0)
+	var detail_weight := 0.9 if _board_detail == "minimal" else (1.25 if _board_detail == "full" else 1.0)
+	return detail_weight * (1.55 if _high_contrast else 1.0)
 
 
 func _matching_particle(particle_id: int, particles: Array) -> Dictionary:

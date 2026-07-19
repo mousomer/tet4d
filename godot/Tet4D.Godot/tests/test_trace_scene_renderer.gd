@@ -194,9 +194,14 @@ func run() -> Array:
 		var live_4d_grid := grid_root.get_child(0)
 		var w_label_count := 0
 		for child in live_4d_grid.get_children():
-			if child is Label3D and str((child as Label3D).text).begins_with("w"):
+			if child is Label3D and (
+				str((child as Label3D).text).begins_with("w")
+				or str((child as Label3D).text).begins_with("ACTIVE · w")
+			):
 				w_label_count += 1
 				var label := child as Label3D
+				if label.text.begins_with("ACTIVE") and label.text.find("◀") == -1:
+					failures.append("active W layer should retain a textual marker plus arrow cue")
 				if label.text.find("SLICE") != -1:
 					failures.append("live 4D W labels should be subtle markers, not slice headers")
 				if label.font_size != ReplayVisuals.W_SLICE_LABEL_FONT_SIZE:

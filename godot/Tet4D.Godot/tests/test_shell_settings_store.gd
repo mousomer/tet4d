@@ -49,7 +49,7 @@ func run() -> Array:
 	if store.value("theme.name") != "tron" or store.value("interface.show_onboarding") != true:
 		failures.append("registry defaults should seed a missing settings file")
 	store.set_value("theme.name", "plain")
-	store.set_value("controls_help.show_keyboard_hints", false)
+	store.set_value("accessibility.show_help_hints", false)
 	store.set_value("replay.playback_speed", 1.5)
 	store.set_value("diagnostics.show_layout_bounds", true)
 	var save_count := int(store.deterministic_snapshot().get("save_count", 0))
@@ -57,13 +57,13 @@ func run() -> Array:
 	if int(store.deterministic_snapshot().get("save_count", 0)) != save_count:
 		failures.append("unchanged values should not rewrite settings")
 	var fresh = StoreScript.new(registry, TEST_PATH)
-	if fresh.value("theme.name") != "plain" or fresh.value("controls_help.show_keyboard_hints") != false or absf(float(fresh.value("replay.playback_speed")) - 1.5) > 0.001:
+	if fresh.value("theme.name") != "plain" or fresh.value("accessibility.show_help_hints") != false or absf(float(fresh.value("replay.playback_speed")) - 1.5) > 0.001:
 		failures.append("persistent enum, bool, and numeric values should round-trip")
 	if fresh.value("diagnostics.show_layout_bounds") != false:
 		failures.append("session-only diagnostics should not round-trip")
 	var payload = JSON.parse_string(_read_file())
-	if not (payload is Dictionary) or int(payload.get("schema_version", 0)) != 2:
-		failures.append("saved settings should use schema version 2 JSON")
+	if not (payload is Dictionary) or int(payload.get("schema_version", 0)) != 3:
+		failures.append("saved settings should use schema version 3 JSON")
 	else:
 		var saved: Dictionary = payload.get("settings", {})
 		if saved.size() != registry.persistent_specs().size():
@@ -73,17 +73,17 @@ func run() -> Array:
 	_test_invalid_inputs(failures, registry)
 	_test_schema_representations(failures, registry)
 	_test_failure_safe_replacement(failures, registry)
-	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "plain", "interface.show_onboarding": false}}))
+	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "plain", "interface.show_onboarding": false, "controls_help.show_keyboard_hints": false}}))
 	var migrated = StoreScript.new(registry, TEST_PATH)
 	if migrated.deterministic_snapshot().get("load_state") != "migrated_v1" or migrated.value("theme.name") != "plain":
 		failures.append("Stage 48 schema should migrate valid preferences in memory")
-	if migrated.value("display.ui_scale") != "standard" or migrated.value("interface.show_onboarding") != false:
-		failures.append("Stage 48 migration should default new fields without resetting onboarding")
+	if migrated.value("display.ui_scale") != "standard" or migrated.value("interface.show_onboarding") != false or migrated.value("accessibility.show_help_hints") != false:
+		failures.append("Stage 48 migration should default new fields while migrating hints and preserving onboarding")
 	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "plain", "controls_help.show_keyboard_hints": "wrong", "unknown.key": true}}))
 	var partial = StoreScript.new(registry, TEST_PATH)
-	if partial.value("theme.name") != "plain" or partial.value("controls_help.show_keyboard_hints") != true:
+	if partial.value("theme.name") != "plain" or partial.value("accessibility.show_help_hints") != true:
 		failures.append("partially valid files should preserve valid values and default invalid values")
-	if not _diagnostics_contain(partial, "unknown") or not _diagnostics_contain(partial, "Invalid setting"):
+	if not _diagnostics_contain(partial, "unknown") or not _diagnostics_contain(partial, "invalid"):
 		failures.append("partial recovery should report unknown and invalid values")
 	partial.set_value("theme.name", "diagnostic")
 	partial.set_value("interface.show_onboarding", false)
@@ -100,8 +100,8 @@ func _test_invalid_inputs(failures: Array, registry) -> void:
 	for case in [
 		{"text": "{broken", "diagnostic": "malformed"},
 		{"text": "[]", "diagnostic": "root"},
-		{"text": JSON.stringify({"schema_version": 2}), "diagnostic": "values"},
-		{"text": JSON.stringify({"schema_version": 2, "settings": []}), "diagnostic": "values"},
+		{"text": JSON.stringify({"schema_version": 3}), "diagnostic": "values"},
+		{"text": JSON.stringify({"schema_version": 3, "settings": []}), "diagnostic": "values"},
 		{"text": JSON.stringify({"schema_version": 99, "settings": {}}), "diagnostic": "schema"},
 	]:
 		_write_file(str(case.get("text")))
@@ -116,9 +116,11 @@ func _test_invalid_inputs(failures: Array, registry) -> void:
 func _test_schema_representations(failures: Array, registry) -> void:
 	for case in [
 		{"label": "schema 1 integer", "value": 1, "load_state": "migrated_v1"},
-		{"label": "schema 2 integer", "value": 2, "load_state": "loaded"},
+		{"label": "schema 2 integer", "value": 2, "load_state": "migrated_v2"},
+		{"label": "schema 3 integer", "value": 3, "load_state": "loaded"},
 		{"label": "schema 1 integral number", "value": 1.0, "load_state": "migrated_v1"},
-		{"label": "schema 2 integral number", "value": 2.0, "load_state": "loaded"},
+		{"label": "schema 2 integral number", "value": 2.0, "load_state": "migrated_v2"},
+		{"label": "schema 3 integral number", "value": 3.0, "load_state": "loaded"},
 	]:
 		_write_file(JSON.stringify({"schema_version": case.get("value"), "settings": {"theme.name": "plain"}}))
 		var store = StoreScript.new(registry, TEST_PATH)
@@ -127,11 +129,12 @@ func _test_schema_representations(failures: Array, registry) -> void:
 	for case in [
 		{"label": "fractional schema 1", "value": 1.5},
 		{"label": "fractional schema 2", "value": 2.5},
-		{"label": "numeric string", "value": "2"},
+		{"label": "fractional schema 3", "value": 3.5},
+		{"label": "numeric string", "value": "3"},
 		{"label": "boolean", "value": true},
 		{"label": "null", "value": null},
-		{"label": "array", "value": [2]},
-		{"label": "object", "value": {"value": 2}},
+		{"label": "array", "value": [3]},
+		{"label": "object", "value": {"value": 3}},
 	]:
 		_write_file(JSON.stringify({"schema_version": case.get("value"), "settings": {"theme.name": "plain"}}))
 		var original := _read_file()
@@ -215,7 +218,7 @@ func _test_restore_copy_fallback(failures: Array, registry) -> void:
 
 
 func _write_valid_settings(theme_name: String) -> void:
-	_write_file(JSON.stringify({"schema_version": 2, "settings": {"theme.name": theme_name}}))
+	_write_file(JSON.stringify({"schema_version": 3, "settings": {"theme.name": theme_name}}))
 
 
 func _saved_theme() -> String:

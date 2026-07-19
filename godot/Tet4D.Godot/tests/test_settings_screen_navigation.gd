@@ -17,6 +17,7 @@ func run() -> Array:
 	if hud == null:
 		root.queue_free()
 		return ["settings navigation test requires ReplayHud"]
+	var originating_focus := tree.root.gui_get_focus_owner()
 	hud.show_screen("settings")
 	await tree.process_frame
 	var panel = hud._settings_screen_panel
@@ -38,8 +39,11 @@ func run() -> Array:
 	var reset := panel.get_node_or_null("SettingsScroll/SettingsContent/ResetDisplaySettingsButton") as Button
 	if reset == null or not visited.has(reset):
 		failures.append("deterministic arrow-key focus order should reach Reset Display Settings")
-	if visited.size() != 15:
-		failures.append("focus order should include all visible Stage 51 setting controls and reset")
+	var accessibility_reset := panel.get_node_or_null("SettingsScroll/SettingsContent/ResetAccessibilitySettingsButton") as Button
+	if accessibility_reset == null or not visited.has(accessibility_reset):
+		failures.append("deterministic arrow-key focus order should reach Reset Accessibility Settings")
+	if visited.size() != 18:
+		failures.append("focus order should include all visible Stage 52 setting controls and resets")
 	var down := InputEventKey.new()
 	down.keycode = KEY_DOWN
 	down.pressed = true
@@ -51,6 +55,8 @@ func run() -> Array:
 	await tree.process_frame
 	if str(hud.layout_contract_snapshot().get("current_screen", "")) != "main_menu":
 		failures.append("Settings navigation should return to Main Menu")
+	if originating_focus != null and tree.root.gui_get_focus_owner() != originating_focus:
+		failures.append("returning from Settings should restore the originating Main Menu control")
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_viewport_size

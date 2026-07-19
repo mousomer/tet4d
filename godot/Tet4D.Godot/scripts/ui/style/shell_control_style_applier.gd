@@ -3,6 +3,9 @@ extends RefCounted
 class_name ShellControlStyleApplier
 
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
+const STANDARD_BORDER_WIDTH := 1
+const FOCUS_BORDER_WIDTH := 3
+const HIGH_CONTRAST_FOCUS_BORDER_WIDTH := 4
 
 
 func apply_to_tree(root: Control, style_manager) -> void:
@@ -108,7 +111,7 @@ func _apply_button(button: Button, style_manager) -> void:
 	var margin := 8
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.GRID_MINOR, margin))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin))
-	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin))
+	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
 	button.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_PRIMARY, margin))
 	button.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR, margin))
 
@@ -120,7 +123,7 @@ func _apply_checkbox(checkbox: CheckBox, style_manager) -> void:
 	checkbox.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	checkbox.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR))
 	checkbox.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS))
-	checkbox.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS))
+	checkbox.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, 8, _focus_border_width(style_manager)))
 	checkbox.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_PRIMARY))
 	checkbox.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR))
 	checkbox.add_theme_stylebox_override("unchecked", _checkbox_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.GRID_MINOR))
@@ -156,21 +159,21 @@ func _apply_line_edit(line_edit: LineEdit, style_manager) -> void:
 	line_edit.add_theme_color_override("font_placeholder_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	line_edit.add_theme_color_override("caret_color", style_manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS))
 	line_edit.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.GRID_MINOR))
-	line_edit.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.ACCENT_FOCUS))
+	line_edit.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.ACCENT_FOCUS, 8, _focus_border_width(style_manager)))
 
 
-func _flat_box(style_manager, background_role: String, border_role: String, radius: int = 4, content_margin: int = 8) -> StyleBoxFlat:
+func _flat_box(style_manager, background_role: String, border_role: String, radius: int = 4, content_margin: int = 8, border_width: int = STANDARD_BORDER_WIDTH) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = style_manager.get_color(background_role)
 	style.border_color = style_manager.get_color(border_role)
-	style.set_border_width_all(1)
+	style.set_border_width_all(border_width)
 	style.set_corner_radius_all(radius)
 	style.set_content_margin_all(content_margin)
 	return style
 
 
-func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = 8) -> StyleBoxFlat:
-	return _flat_box(style_manager, background_role, border_role, 4, content_margin)
+func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = 8, border_width: int = STANDARD_BORDER_WIDTH) -> StyleBoxFlat:
+	return _flat_box(style_manager, background_role, border_role, 4, content_margin, border_width)
 
 
 func _keycap_box(style_manager) -> StyleBoxFlat:
@@ -200,3 +203,7 @@ func _is_elevated_panel(panel: Control) -> bool:
 		"AuthorityPanel",
 		"BottomReplayControls",
 	].has(panel.name)
+
+
+func _focus_border_width(style_manager) -> int:
+	return HIGH_CONTRAST_FOCUS_BORDER_WIDTH if style_manager.is_high_contrast_enabled() else FOCUS_BORDER_WIDTH

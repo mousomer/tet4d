@@ -1181,12 +1181,15 @@ def _render_godot_shell_settings_section() -> list[str]:
         "These Godot-owned presentation preferences are declared in "
         "`godot/Tet4D.Godot/config/shell_settings_registry.json` and saved in "
         "`user://shell_settings.json`. Schema version "
-        f"`{payload.get('schema_version')}` migrates valid schema-version-1 "
-        "choices field by field. Game setup remains separate in "
+        f"`{payload.get('schema_version')}` migrates valid schema-version-1 and "
+        "schema-version-2 choices field by field, including the legacy keyboard-"
+        "hint preference. Game setup remains separate in "
         "`user://game_setup.json`.",
         "",
         "`Reset Display Settings` restores only Display, Theme, and Camera "
-        "preferences. Replay, keyboard-hint, and onboarding choices are preserved.",
+        "preferences. `Reset Accessibility Settings` restores only High Contrast, "
+        "Reduced Motion, and Show Help and Control Hints. Replay and onboarding "
+        "choices are preserved by both actions.",
         "",
     ]
     for category in categories:

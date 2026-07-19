@@ -46,6 +46,7 @@ var _current_view_octant := "python replay"
 var _current_fit_state := "initial"
 var _sensitivity_factor := 1.0
 var _invert_y := false
+var _interpolation_scale := 1.0
 
 @onready var _camera: Camera3D = $Camera3D
 
@@ -58,7 +59,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	var t: float = clampf(delta * 8.0, 0.0, 1.0)
+	var t: float = 1.0 if _interpolation_scale <= 0.0 else clampf(delta * 8.0 * _interpolation_scale, 0.0, 1.0)
 	_current_focus = _current_focus.lerp(_target_focus, t)
 	_current_distance = lerpf(_current_distance, _target_distance, t)
 	_current_yaw = lerpf(_current_yaw, _target_yaw, t)
@@ -198,15 +199,17 @@ func view_status_text() -> String:
 	]
 
 
-func set_presentation_preferences(sensitivity_factor: float, invert_y: bool) -> void:
+func set_presentation_preferences(sensitivity_factor: float, invert_y: bool, interpolation_scale: float = 1.0) -> void:
 	_sensitivity_factor = clampf(sensitivity_factor, 0.25, 2.0)
 	_invert_y = invert_y
+	_interpolation_scale = clampf(interpolation_scale, 0.0, 1.0)
 
 
 func presentation_snapshot() -> Dictionary:
 	return {
 		"sensitivity_factor": _sensitivity_factor,
 		"invert_y": _invert_y,
+		"interpolation_scale": _interpolation_scale,
 		"target_yaw": _target_yaw,
 		"target_pitch": _target_pitch,
 		"target_roll": _target_roll,

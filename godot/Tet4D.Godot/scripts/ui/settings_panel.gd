@@ -16,7 +16,9 @@ signal display_w_labels_changed(visible: bool)
 signal projection_strength_changed(value: float)
 signal diagnostics_visibility_changed(visible: bool)
 signal layout_bounds_visibility_changed(visible: bool)
-signal keyboard_hints_visibility_changed(visible: bool)
+signal high_contrast_changed(enabled: bool)
+signal reduced_motion_changed(enabled: bool)
+signal help_hints_visibility_changed(visible: bool)
 signal display_mode_changed(mode: String)
 signal onboarding_visibility_changed(visible: bool)
 signal window_mode_changed(mode: String)
@@ -86,7 +88,16 @@ func first_focus_control() -> Control:
 func reset_display_settings_to_defaults() -> void:
 	if store == null:
 		return
-	store.reset_categories_to_defaults(["display", "theme", "camera"])
+	store.reset_categories_to_defaults(["display", "theme", "camera"], "Display settings")
+	refresh_all_controls()
+	settings_reset.emit()
+	apply_initial_settings()
+
+
+func reset_accessibility_settings_to_defaults() -> void:
+	if store == null:
+		return
+	store.reset_categories_to_defaults(["accessibility"], "Accessibility settings")
 	refresh_all_controls()
 	settings_reset.emit()
 	apply_initial_settings()
@@ -159,6 +170,7 @@ func _build_panel() -> void:
 				continue
 			content.add_child(_setting_row(spec))
 	content.add_child(_reset_settings_button())
+	content.add_child(_reset_accessibility_settings_button())
 	_configure_focus_order()
 
 
@@ -276,8 +288,12 @@ func _emit_setting(setting_id: String, value) -> void:
 			camera_invert_y_changed.emit(bool(value))
 		"diagnostics.show_layout_bounds":
 			layout_bounds_visibility_changed.emit(bool(value))
-		"controls_help.show_keyboard_hints":
-			keyboard_hints_visibility_changed.emit(bool(value))
+		"accessibility.high_contrast":
+			high_contrast_changed.emit(bool(value))
+		"accessibility.reduced_motion":
+			reduced_motion_changed.emit(bool(value))
+		"accessibility.show_help_hints":
+			help_hints_visibility_changed.emit(bool(value))
 		"interface.show_onboarding":
 			onboarding_visibility_changed.emit(bool(value))
 
@@ -315,6 +331,17 @@ func _reset_settings_button() -> Button:
 	button.tooltip_text = "Restore and save display, theme, and camera defaults"
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(reset_display_settings_to_defaults)
+	_focus_controls.append(button)
+	return button
+
+
+func _reset_accessibility_settings_button() -> Button:
+	var button := Button.new()
+	button.name = "ResetAccessibilitySettingsButton"
+	button.text = "Reset Accessibility Settings"
+	button.tooltip_text = "Restore and save High Contrast, Reduced Motion, and help-hint defaults"
+	button.focus_mode = Control.FOCUS_ALL
+	button.pressed.connect(reset_accessibility_settings_to_defaults)
 	_focus_controls.append(button)
 	return button
 

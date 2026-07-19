@@ -308,7 +308,11 @@ def test_render_user_settings_reference_is_bucketed_and_label_resolved(
     assert "`display.window_mode`: default `\"windowed\"`; enum; options: windowed, fullscreen" in rendered
     assert "`display.ui_scale`: default `\"standard\"`; enum; options: small, standard, large, extra_large" in rendered
     assert "`camera.invert_y`: default `false`; bool" in rendered
+    assert "`accessibility.high_contrast`: default `false`; bool" in rendered
+    assert "`accessibility.reduced_motion`: default `false`; bool" in rendered
+    assert "`accessibility.show_help_hints`: default `true`; bool" in rendered
     assert "`Reset Display Settings`" in rendered
+    assert "`Reset Accessibility Settings`" in rendered
     assert "## Global settings" in rendered
     assert "### Profiles" in rendered
     assert "### Display" in rendered

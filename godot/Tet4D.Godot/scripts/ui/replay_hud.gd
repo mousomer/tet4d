@@ -15,6 +15,7 @@ const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onbo
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
+const AccessibilityPolicyScript = preload("res://scripts/ui/accessibility/accessibility_policy.gd")
 const GameSetupModelScript = preload("res://scripts/ui/game_setup/game_setup_model.gd")
 const GameSetupStoreScript = preload("res://scripts/ui/game_setup/game_setup_store.gd")
 const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_panel.gd")
@@ -34,7 +35,8 @@ signal replay_loop_changed(enabled: bool)
 signal display_w_labels_changed(visible: bool)
 signal projection_strength_changed(value: float)
 signal board_detail_changed(detail: String)
-signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool)
+signal accessibility_policy_changed(policy: Dictionary)
+signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
 signal fit_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
@@ -149,6 +151,7 @@ var _style_applier = ShellControlStyleApplierScript.new()
 var _current_screen := SCREEN_MAIN_MENU
 var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
+var _accessibility_policy = AccessibilityPolicyScript.new()
 var _hud_density := "standard"
 var _ui_scale_factor := 1.0
 var _camera_sensitivity_factor := 1.0
@@ -167,6 +170,7 @@ var _onboarding_model = LiveOnboardingModelScript.new()
 var _onboarding_panel: PanelContainer
 var _last_onboarding_result_signature := ""
 var _screen_focus_targets := {}
+var _screen_last_focus := {}
 var _main_menu_scroll: ScrollContainer
 var _controls_scroll: ScrollContainer
 var _about_scroll: ScrollContainer
@@ -564,6 +568,16 @@ func set_display_mode(mode: String) -> void:
 
 
 func show_screen(screen_name: String) -> void:
+	var viewport := get_viewport()
+	var previous_screen := _screens.get(_current_screen) as Control
+	var focus_owner := viewport.gui_get_focus_owner() if viewport != null else null
+	if (
+		focus_owner is Control
+		and previous_screen != null
+		and previous_screen.is_ancestor_of(focus_owner)
+		and (focus_owner as Control).is_visible_in_tree()
+	):
+		_screen_last_focus[_current_screen] = focus_owner
 	_current_screen = screen_name if _screens.has(screen_name) else SCREEN_MAIN_MENU
 	for key in _screens.keys():
 		var screen := _screens.get(key) as Control
@@ -612,13 +626,27 @@ func open_game_setup(mode: String) -> void:
 
 
 func _focus_current_screen() -> void:
-	var target = _screen_focus_targets.get(_current_screen)
+	var target = _screen_last_focus.get(_current_screen)
+	if not _valid_focus_target(target):
+		target = _screen_focus_targets.get(_current_screen)
 	if not (target is Control):
 		var screen := _screens.get(_current_screen) as Control
 		var buttons := screen.find_children("*", "Button", true, false) if screen != null else []
 		target = buttons[0] if not buttons.is_empty() else null
-	if target is Control and is_instance_valid(target) and (target as Control).is_visible_in_tree() and (target as Control).focus_mode != Control.FOCUS_NONE:
+	if _valid_focus_target(target):
 		(target as Control).grab_focus()
+
+
+func _valid_focus_target(target) -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	if not (
+		target is Control
+		and (target as Control).is_visible_in_tree()
+		and (target as Control).focus_mode != Control.FOCUS_NONE
+	):
+		return false
+	return not (target is BaseButton and (target as BaseButton).disabled)
 
 
 func set_world_root(world_root: Node3D) -> void:
@@ -748,6 +776,7 @@ func presentation_preferences_snapshot() -> Dictionary:
 		"hud_density": _hud_density,
 		"camera_sensitivity_factor": _camera_sensitivity_factor,
 		"camera_invert_y": _camera_invert_y,
+		"accessibility": _accessibility_policy.deterministic_snapshot(),
 	}
 
 
@@ -777,6 +806,15 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.board_detail_changed.connect(func(detail: String) -> void:
 		board_detail_changed.emit(detail)
 	)
+	panel.high_contrast_changed.connect(func(_enabled: bool) -> void:
+		_apply_accessibility_settings()
+	)
+	panel.reduced_motion_changed.connect(func(_enabled: bool) -> void:
+		_apply_accessibility_settings()
+	)
+	panel.help_hints_visibility_changed.connect(func(_visible: bool) -> void:
+		_apply_accessibility_settings()
+	)
 	panel.camera_sensitivity_changed.connect(func(sensitivity: String) -> void:
 		_camera_sensitivity_factor = ShellPresentationPreferencesScript.camera_sensitivity_factor(sensitivity)
 		_emit_camera_preferences()
@@ -790,9 +828,6 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	)
 	panel.layout_bounds_visibility_changed.connect(func(visible: bool) -> void:
 		_set_layout_bounds_visible(visible)
-	)
-	panel.keyboard_hints_visibility_changed.connect(func(visible: bool) -> void:
-		_set_keyboard_hints_visible(visible)
 	)
 	panel.onboarding_visibility_changed.connect(func(visible: bool) -> void:
 		_set_onboarding_visible(visible)
@@ -1090,8 +1125,29 @@ func _set_keyboard_hints_visible(visible: bool) -> void:
 		_mode_hint_strip.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
 	if _hint_label != null:
 		_hint_label.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
+	if _inspector_hint_panel != null:
+		_inspector_hint_panel.visible = visible
+	if _controls_header != null:
+		_controls_header.visible = visible
 	if _help_panel != null and not visible:
 		_help_panel.visible = false
+
+
+func _apply_accessibility_settings() -> void:
+	if _settings_store == null:
+		return
+	_accessibility_policy.configure(
+		bool(_settings_store.value("accessibility.high_contrast")),
+		bool(_settings_store.value("accessibility.reduced_motion")),
+		bool(_settings_store.value("accessibility.show_help_hints"))
+	)
+	_keyboard_hints_visible = _accessibility_policy.should_show_help_hints()
+	_style_manager.set_high_contrast_enabled(_accessibility_policy.is_high_contrast_enabled())
+	_apply_shell_style()
+	_set_keyboard_hints_visible(_keyboard_hints_visible)
+	var snapshot := _accessibility_policy.deterministic_snapshot()
+	accessibility_policy_changed.emit(snapshot)
+	_emit_camera_preferences()
 
 
 func _apply_ui_scale(scale_id: String) -> void:
@@ -1108,7 +1164,11 @@ func _apply_hud_density(density: String) -> void:
 
 
 func _emit_camera_preferences() -> void:
-	camera_preferences_changed.emit(_camera_sensitivity_factor, _camera_invert_y)
+	camera_preferences_changed.emit(
+		_camera_sensitivity_factor,
+		_camera_invert_y,
+		_accessibility_policy.camera_interpolation_scale()
+	)
 
 
 func _apply_window_mode(mode: String) -> void:
@@ -2361,7 +2421,7 @@ func _select_speed_no_signal(speed: float) -> void:
 
 
 func toggle_help() -> void:
-	if _help_panel != null:
+	if _help_panel != null and _accessibility_policy.should_show_help_hints():
 		_help_panel.visible = not _help_panel.visible
 
 

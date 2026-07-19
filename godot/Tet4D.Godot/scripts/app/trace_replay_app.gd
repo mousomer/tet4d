@@ -524,9 +524,16 @@ func _wire_hud() -> void:
 		_renderer.set_board_detail(detail)
 		_refresh_render()
 	)
-	_hud.camera_preferences_changed.connect(func(sensitivity_factor: float, invert_y: bool) -> void:
+	_hud.accessibility_policy_changed.connect(func(policy: Dictionary) -> void:
+		_renderer.set_accessibility_policy(
+			bool(policy.get("high_contrast", false)),
+			bool(policy.get("reduced_motion", false))
+		)
+		_refresh_render()
+	)
+	_hud.camera_preferences_changed.connect(func(sensitivity_factor: float, invert_y: bool, interpolation_scale: float) -> void:
 		if _camera_rig != null:
-			_camera_rig.set_presentation_preferences(sensitivity_factor, invert_y)
+			_camera_rig.set_presentation_preferences(sensitivity_factor, invert_y, interpolation_scale)
 			_refresh_camera_status()
 	)
 	_hud.diagnostics_visibility_changed.connect(func(visible: bool) -> void:

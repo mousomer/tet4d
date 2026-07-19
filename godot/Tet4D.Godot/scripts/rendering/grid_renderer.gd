@@ -13,7 +13,8 @@ func rebuild(
 	live_2d: bool = false,
 	show_w_labels: bool = true,
 	active_layers: Array = [],
-	board_detail: String = "standard"
+	board_detail: String = "standard",
+	high_contrast: bool = false
 ) -> void:
 	for child in get_children():
 		child.queue_free()
@@ -28,7 +29,12 @@ func rebuild(
 			continue
 		if live_2d and (dimension == 2 or dimension >= 4) and board_detail != "minimal":
 			_add_live_grid(slice_bounds, board_shape, display_mode)
-		_add_outline_box(slice_bounds, display_mode)
+		_add_outline_box(
+			slice_bounds,
+			display_mode,
+			null,
+			ReplayVisuals.slice_outline_thickness(display_mode) * (1.35 if high_contrast else 1.0)
+		)
 		if board_detail == "full":
 			_add_outline_box(
 				slice_bounds,
@@ -48,7 +54,7 @@ func rebuild(
 				slice_bounds,
 				display_mode,
 				ReplayVisuals.live_active_cell_border_material(display_mode),
-				ReplayVisuals.slice_outline_thickness(display_mode) * 2.4
+				ReplayVisuals.slice_outline_thickness(display_mode) * (3.1 if high_contrast else 2.4)
 			)
 		if dimension >= 4 and show_w_labels:
 			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode, active_layers.has(w_index))
@@ -118,7 +124,7 @@ func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 
 func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String, selected: bool) -> void:
 	var label := Label3D.new()
-	label.text = "w%d ◀" % [w_index + 1] if selected else "w%d" % [w_index + 1]
+	label.text = "ACTIVE · w%d ◀" % [w_index + 1] if selected else "w%d" % [w_index + 1]
 	label.font_size = ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.modulate = ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
