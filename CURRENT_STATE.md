@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-20
+Last updated: 2026-07-24
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -10,6 +10,26 @@ historical ledger, a validation transcript, or a second workflow authority.
 Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- PR #37 CI remediation is in progress on
+  `codex/configurable-plain-boards`. GitHub Actions run `30129023553` tested
+  synthetic merge commit `95baf347a5728944bf52d7c0e8fb52c9eb3e9efe`
+  (`master` `c10ed4e6a190daa85976162c1feb866c743b9462` plus branch head
+  `2af0cce40f902d9110c5980f1cc13784c57bced2`) and failed identically on
+  Python 3.11-3.14 during repository Ruff validation. The first reported
+  findings were `RUF100` and `I001` in `cli/front.py`, but reproducing CI's
+  Ruff 0.16.0 exposed 1,025 findings repository-wide. The accepted local
+  environment used Ruff 0.14.1 and passed `./scripts/ci_check.sh`; the
+  unbounded `ruff` development dependency therefore let Ruff's changing
+  default rule set redefine the lint contract in CI. The repair pins the
+  accepted Ruff 0.14.1 toolchain, canonicalizes `cli/front.py` imports and
+  formatting without moving its intentional pre-parse boundary, and retains
+  the valid file-level `E402` suppression required by those delayed imports.
+  Branch-local and current-`master` synthetic-merge verification, then the
+  remote Python 3.11-3.14 matrix, remain required before this incident is
+  complete. This is CI tool-version drift, not a branch-, master-, or
+  merge-result-only source defect; Stage 52 remains pending manual acceptance
+  and Stage 53A remains unstarted.
 
 - Stage 52 accessibility infrastructure is implemented on
   `codex/configurable-plain-boards` as an extension of the accepted Stage 51
@@ -844,7 +864,7 @@ Top 8 live Python hotspots by real LOC:
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 800/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 805/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`

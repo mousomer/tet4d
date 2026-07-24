@@ -196,11 +196,20 @@ Skip unless cross-cutting: unrelated `docs/rds/*`,
      sections change
    - relevant `docs/rds/*`
 10. Keep `CURRENT_STATE.md` as handoff-only; do not reintroduce it as a second
-   workflow authority.
+    workflow authority.
 11. At the end of staged migration work, provide a delta report with files
     added, files modified, files not touched, satisfied acceptance criteria,
     unsatisfied acceptance criteria, remaining old paths, and follow-up
     blockers.
+12. For long-lived branches and pre-merge acceptance, branch-local verification
+    is insufficient. Fetch the current target branch, create a temporary
+    detached worktree from that ref, merge the proposed head without updating
+    either branch, and run the applicable verification commands in that
+    synthetic merge context. Record both tested SHAs and clean up the worktree.
+13. Install the declared development dependencies before acceptance so local
+    and CI checks use the same versioned quality-tool contract. An unbounded
+    local tool version is not evidence that the CI toolchain will behave the
+    same way.
 
 ## Edit discipline
 

@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-20
+Updated: 2026-07-24
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,17 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+PR #37 CI remediation (2026-07-24, in progress): reproduce the failing
+synthetic merge and align the unbounded CI Ruff installation with the accepted
+local Ruff 0.14.1 contract. GitHub Actions run `30129023553` installed Ruff
+0.16.0 and failed all Python 3.11-3.14 jobs with 1,025 repository-wide
+findings, beginning with `RUF100` and `I001` in `cli/front.py`; branch-local
+`./scripts/ci_check.sh` passed under Ruff 0.14.1. Pin the quality tool,
+canonicalize the launcher's imports and formatting while preserving its
+intentional delayed-import boundary, verify both branch head and a temporary
+merge against current `master`, and require a passing remote matrix before
+closure. No Stage 52 behavior or Stage 53A scope is part of this repair.
 
 Stage 52 accessibility infrastructure (2026-07-20, implementation and automated
 acceptance complete; final manual matrix pending): extend the
