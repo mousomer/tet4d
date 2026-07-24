@@ -2,4 +2,4 @@ pygame-ce
 
 [dev]
 pytest
-ruff
+ruff==0.14.1
