@@ -11,7 +11,7 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
-- PR #37 CI remediation is in progress on
+- PR #37 CI remediation is complete on
   `codex/configurable-plain-boards`. GitHub Actions run `30129023553` tested
   synthetic merge commit `95baf347a5728944bf52d7c0e8fb52c9eb3e9efe`
   (`master` `c10ed4e6a190daa85976162c1feb866c743b9462` plus branch head
@@ -25,11 +25,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   accepted Ruff 0.14.1 toolchain, canonicalizes `cli/front.py` imports and
   formatting without moving its intentional pre-parse boundary, and retains
   the valid file-level `E402` suppression required by those delayed imports.
-  Branch-local and current-`master` synthetic-merge verification, then the
-  remote Python 3.11-3.14 matrix, remain required before this incident is
-  complete. This is CI tool-version drift, not a branch-, master-, or
-  merge-result-only source defect; Stage 52 remains pending manual acceptance
-  and Stage 53A remains unstarted.
+  Branch-local and current-`master` synthetic-merge `./scripts/ci_check.sh` and
+  `CODEX_MODE=1 ./scripts/verify.sh` checks passed for the final repair tree.
+  Remediation commits `57433b9e` and `80cbf028` were pushed, and GitHub Actions
+  run `30130580790` passed on Python 3.11, 3.12, 3.13, and 3.14. This was CI
+  tool-version drift, not a branch-, master-, or merge-result-only source
+  defect; Stage 52 remains pending manual acceptance and Stage 53A remains
+  unstarted.
 
 - Stage 52 accessibility infrastructure is implemented on
   `codex/configurable-plain-boards` as an extension of the accepted Stage 51

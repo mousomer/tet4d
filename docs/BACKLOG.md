@@ -28,16 +28,18 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-PR #37 CI remediation (2026-07-24, in progress): reproduce the failing
-synthetic merge and align the unbounded CI Ruff installation with the accepted
-local Ruff 0.14.1 contract. GitHub Actions run `30129023553` installed Ruff
-0.16.0 and failed all Python 3.11-3.14 jobs with 1,025 repository-wide
-findings, beginning with `RUF100` and `I001` in `cli/front.py`; branch-local
-`./scripts/ci_check.sh` passed under Ruff 0.14.1. Pin the quality tool,
-canonicalize the launcher's imports and formatting while preserving its
-intentional delayed-import boundary, verify both branch head and a temporary
-merge against current `master`, and require a passing remote matrix before
-closure. No Stage 52 behavior or Stage 53A scope is part of this repair.
+PR #37 CI remediation (2026-07-24, complete): GitHub Actions run `30129023553`
+installed Ruff 0.16.0 and failed all Python 3.11-3.14 jobs with 1,025
+repository-wide findings, beginning with `RUF100` and `I001` in
+`cli/front.py`; branch-local `./scripts/ci_check.sh` had passed under Ruff
+0.14.1. The repair pins that accepted quality-tool contract and canonicalizes
+the launcher's imports and formatting while preserving its intentional
+delayed-import boundary. Branch head and a temporary merge against `master`
+`c10ed4e6a190daa85976162c1feb866c743b9462` passed both the CI wrapper and full
+verification; GitHub Actions run `30130580790` then passed on Python 3.11,
+3.12, 3.13, and 3.14 for remediation head
+`80cbf028f4d503d58b215714c261d7295bd8673b`. No Stage 52 behavior or Stage 53A
+scope changed.
 
 Stage 52 accessibility infrastructure (2026-07-20, implementation and automated
 acceptance complete; final manual matrix pending): extend the
