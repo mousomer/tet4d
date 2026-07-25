@@ -140,4 +140,9 @@ jobs:
         run: GODOT_BIN="$GODOT_BIN" ./scripts/verify_godot_4_7.sh
 
       - name: Confirm verification left the checkout clean
-        run: test -z "$(git status --short)"
+        run: |
+          status="$(git status --short --ignore-submodules=untracked)"
+          if [[ -n "$status" ]]; then
+            echo "$status"
+            exit 1
+          fi

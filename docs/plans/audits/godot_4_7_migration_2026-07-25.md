@@ -87,6 +87,10 @@ No automatic resource conversion or broad re-save was accepted.
   received the complete generated binding object list directly; the response
   file preserves the identical archive inputs without changing native or
   gameplay behavior.
+- The final CI sanitation gate ignores only untracked files inside the
+  generated godot-cpp build tree. It still rejects staged changes, tracked
+  worktree changes, and root-project untracked files, and prints any rejected
+  paths for diagnosis.
 - Clean removal of the exact ignored binding/native output directories was
   followed by a full binding regeneration and native rebuild.
 - No project-source compiler warning or error was emitted. macOS emitted only
