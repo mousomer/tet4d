@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 
 from tet4d.engine.runtime.project_config import project_constant_float
@@ -9,7 +10,6 @@ from tet4d.ui.pygame.projection3d import (
     ProjectedLineFragment,
     ProjectedLinePrimitive,
 )
-import itertools
 
 _DEPTH_EPSILON = project_constant_float(
     ("rendering", "projected_occlusion", "depth_epsilon"),

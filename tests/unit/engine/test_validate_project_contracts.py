@@ -14,12 +14,7 @@ def _write_backlog(root: Path, text: str) -> None:
 def test_backlog_id_uniqueness_rejects_duplicates(tmp_path, monkeypatch) -> None:
     _write_backlog(
         tmp_path,
-        "\n".join(
-            [
-                "1. [BKL-P2-100] one",
-                "2. [BKL-P2-100] duplicate",
-            ]
-        ),
+        "1. [BKL-P2-100] one\n2. [BKL-P2-100] duplicate",
     )
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
@@ -33,12 +28,7 @@ def test_backlog_id_uniqueness_rejects_duplicates(tmp_path, monkeypatch) -> None
 def test_backlog_id_uniqueness_allows_unique_ids(tmp_path, monkeypatch) -> None:
     _write_backlog(
         tmp_path,
-        "\n".join(
-            [
-                "1. [BKL-P2-101] one",
-                "2. [BKL-P2-102] two",
-            ]
-        ),
+        "1. [BKL-P2-101] one\n2. [BKL-P2-102] two",
     )
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 

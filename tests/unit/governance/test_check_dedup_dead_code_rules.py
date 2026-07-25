@@ -30,23 +30,7 @@ def test_todo_requires_backlog_id(tmp_path: Path, monkeypatch) -> None:
 def test_duplicate_function_body_detected(tmp_path: Path, monkeypatch) -> None:
     gov_dir = tmp_path / "tools" / "governance"
     gov_dir.mkdir(parents=True, exist_ok=True)
-    body = "\n".join(
-        [
-            "def copy_logic(x):",
-            "    a = x + 1",
-            "    b = a + 1",
-            "    c = b + 1",
-            "    d = c + 1",
-            "    e = d + 1",
-            "    f = e + 1",
-            "    g = f + 1",
-            "    h = g + 1",
-            "    i = h + 1",
-            "    j = i + 1",
-            "    k = j + 1",
-            "    return k",
-        ]
-    )
+    body = "def copy_logic(x):\n    a = x + 1\n    b = a + 1\n    c = b + 1\n    d = c + 1\n    e = d + 1\n    f = e + 1\n    g = f + 1\n    h = g + 1\n    i = h + 1\n    j = i + 1\n    k = j + 1\n    return k"
     (gov_dir / "a.py").write_text(body + "\n", encoding="utf-8")
     (gov_dir / "b.py").write_text(body + "\n", encoding="utf-8")
     monkeypatch.setattr(dedup, "ROOT", tmp_path)

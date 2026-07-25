@@ -258,7 +258,7 @@ def _duplicate_findings(symbols: list[Symbol], *, strict: bool) -> list[Finding]
         subsystems = {_subsystem(symbol.path) for symbol in occurrences}
         if len(files) < 2 or len(subsystems) < 2:
             continue
-        first = sorted(occurrences, key=lambda item: (_rel(item.path), item.line))[0]
+        first = min(occurrences, key=lambda item: (_rel(item.path), item.line))
         also = ", ".join(
             f"{_rel(symbol.path)}:{symbol.line}"
             for symbol in sorted(

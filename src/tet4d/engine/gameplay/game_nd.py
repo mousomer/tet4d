@@ -61,7 +61,7 @@ from .topology import (
 
 def _coerce_rng_seed(value: object) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError("rng_seed must be an integer")
+        raise ValueError("rng_seed must be an integer")  # noqa: TRY004 - preserve the established validation contract.
     if not (0 <= value <= 999_999_999):
         raise ValueError("rng_seed must be within [0, 999999999]")
     return int(value)

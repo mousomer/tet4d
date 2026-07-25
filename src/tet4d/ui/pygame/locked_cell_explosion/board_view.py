@@ -58,9 +58,7 @@ def _rotate_xy(point: tuple[float, float], angle_deg: float) -> tuple[float, flo
 def _trace_color(
     color: tuple[int, int, int], *, alpha: float = 1.0
 ) -> tuple[int, int, int, int]:
-    resolved_alpha = max(
-        0, min(255, round(_TRACE_ALPHA * max(0.0, min(1.0, alpha))))
-    )
+    resolved_alpha = max(0, min(255, round(_TRACE_ALPHA * max(0.0, min(1.0, alpha)))))
     return (*color, resolved_alpha)
 
 
@@ -1718,7 +1716,7 @@ def _draw_native_board_4d(
         board_line_primitives = build_projected_grid_primitives(
             dims=basis.dims3,
             grid_mode=grid_mode,
-            project_raw=lambda raw: _project_raw_point(
+            project_raw=lambda raw, center_px=center_px, zoom=zoom: _project_raw_point(
                 raw, basis.dims3, view, center_px, zoom
             ),
             transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
@@ -1818,22 +1816,26 @@ def _draw_native_board_4d(
                 surface=surface,
                 dims=basis.dims3,
                 grid_mode=grid_mode,
-                draw_full_grid=lambda: _draw_board_grid(
-                    surface,
-                    basis.dims3,
-                    dims4,
-                    layer_index,
-                    basis,
-                    view,
-                    draw_rect,
-                    zoom,
+                draw_full_grid=lambda layer_index=layer_index, draw_rect=draw_rect, zoom=zoom: (
+                    _draw_board_grid(
+                        surface,
+                        basis.dims3,
+                        dims4,
+                        layer_index,
+                        basis,
+                        view,
+                        draw_rect,
+                        zoom,
+                    )
                 ),
-                project_raw=lambda raw: _project_raw_point(
-                    raw,
-                    basis.dims3,
-                    view,
-                    center_px,
-                    zoom,
+                project_raw=lambda raw, center_px=center_px, zoom=zoom: (
+                    _project_raw_point(
+                        raw,
+                        basis.dims3,
+                        view,
+                        center_px,
+                        zoom,
+                    )
                 ),
                 transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
                 depth_denominator=_orthographic_depth_denominator,
@@ -1866,12 +1868,14 @@ def _draw_native_board_4d(
                 dims=basis.dims3,
                 gravity_axis=1,
                 grid_mode=GridMode(shadow_mode.value),
-                project_raw=lambda raw: _project_raw_point(
-                    raw,
-                    basis.dims3,
-                    view,
-                    center_px,
-                    zoom,
+                project_raw=lambda raw, center_px=center_px, zoom=zoom: (
+                    _project_raw_point(
+                        raw,
+                        basis.dims3,
+                        view,
+                        center_px,
+                        zoom,
+                    )
                 ),
                 transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
                 depth_denominator=_orthographic_depth_denominator,

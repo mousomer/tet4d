@@ -93,5 +93,5 @@ def _record_leaderboard_session_2d(
             exploration_mode=bool(loop.cfg.exploration_mode),
             draw_background=draw_background,
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 - results recording must not break the game loop.
         return

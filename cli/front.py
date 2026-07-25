@@ -588,7 +588,7 @@ def _menu_action_play_last_custom_topology(
             back_to_menu = front3d_game.run_game_loop(session.screen, cfg, fonts_nd)
         else:
             back_to_menu = front4d_game.run_game_loop(session.screen, cfg, fonts_nd)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - UI boundary reports launch failures.
         state.status = f"Play last custom topology failed: {exc}"
         state.status_error = True
         return False

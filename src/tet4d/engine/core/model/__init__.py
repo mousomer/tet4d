@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from .board import BoardND
 from .game2d_types import Action
 from .game2d_views import GameConfig2DCoreView, GameState2DCoreView

@@ -90,12 +90,18 @@ def _has_lower_and_bool_literals(func: ast.FunctionDef | ast.AsyncFunctionDef) -
     has_lower = False
     has_bool_lits = False
     for node in ast.walk(func):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if node.func.attr == "lower":
-                has_lower = True
-        if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            if node.value.lower() in {"true", "false", "yes", "no", "on", "off"}:
-                has_bool_lits = True
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "lower"
+        ):
+            has_lower = True
+        if (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and node.value.lower() in {"true", "false", "yes", "no", "on", "off"}
+        ):
+            has_bool_lits = True
     return has_lower and has_bool_lits
 
 
@@ -103,12 +109,18 @@ def _has_isdigit_and_int(func: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     has_isdigit = False
     has_int_call = False
     for node in ast.walk(func):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if node.func.attr in {"isdigit", "isnumeric"}:
-                has_isdigit = True
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-            if node.func.id == "int":
-                has_int_call = True
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in {"isdigit", "isnumeric"}
+        ):
+            has_isdigit = True
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "int"
+        ):
+            has_int_call = True
     return has_isdigit and has_int_call
 
 

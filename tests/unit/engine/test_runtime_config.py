@@ -117,11 +117,13 @@ class TestRuntimeConfig(unittest.TestCase):
         valid_policy = {
             "benchmark": {"history_file": "state/bench/custom_history.jsonl"}
         }
-        with mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}):
-            with mock.patch.object(
+        with (
+            mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}),
+            mock.patch.object(
                 runtime_config, "_playbot_policy", return_value=valid_policy
-            ):
-                resolved = playbot_benchmark_history_file()
+            ),
+        ):
+            resolved = playbot_benchmark_history_file()
         self.assertEqual(
             resolved,
             expected_root / "bench/custom_history.jsonl",

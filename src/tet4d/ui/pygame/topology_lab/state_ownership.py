@@ -234,9 +234,12 @@ def current_sandbox_focus_coord(state: TopologyLabState) -> tuple[int, ...]:
         state.dimension,
         getattr(state, "sandbox_focus_coord", None),
     )
-    if current is not None and _coord_in_bounds(current, dims):
-        if not sandbox_cells or current in sandbox_cells:
-            return current
+    if (
+        current is not None
+        and _coord_in_bounds(current, dims)
+        and (not sandbox_cells or current in sandbox_cells)
+    ):
+        return current
     if sandbox_cells:
         return sandbox_cells[0]
     if current is not None and _coord_in_bounds(current, dims):

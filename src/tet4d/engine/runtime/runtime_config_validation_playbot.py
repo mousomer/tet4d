@@ -179,7 +179,7 @@ def _validate_adaptive_fallback(raw_adaptive: object) -> dict[str, Any]:
     adaptive_obj = require_object(raw_adaptive, path="playbot.adaptive_fallback")
     adaptive_enabled = adaptive_obj.get("enabled")
     if not isinstance(adaptive_enabled, bool):
-        raise RuntimeError("playbot.adaptive_fallback.enabled must be a boolean")
+        raise RuntimeError("playbot.adaptive_fallback.enabled must be a boolean")  # noqa: TRY004 - preserve the established validation contract.
 
     lookahead_min_obj = require_object(
         adaptive_obj.get("lookahead_min_budget_ms"),
@@ -333,7 +333,7 @@ def _validate_learning_mode(raw_learning: object) -> dict[str, Any]:
     learning_obj = require_object(raw_learning, path="playbot.learning_mode")
     enabled = learning_obj.get("enabled")
     if not isinstance(enabled, bool):
-        raise RuntimeError("playbot.learning_mode.enabled must be a boolean")
+        raise RuntimeError("playbot.learning_mode.enabled must be a boolean")  # noqa: TRY004 - preserve the established validation contract.
     review_pieces = require_int(
         learning_obj.get("review_pieces"),
         path="playbot.learning_mode.review_pieces",

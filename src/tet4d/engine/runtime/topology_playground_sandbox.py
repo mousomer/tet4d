@@ -421,9 +421,12 @@ def _move_sandbox_piece_explorer(
     assert result.moved_cells is not None
     if len(set(result.moved_cells)) != len(result.moved_cells):
         raise ValueError("sandbox movement collapses cells")
-    if movement_policy == RIGID and result.kind == CELLWISE_DEFORMATION:
-        if not result.rigidly_coherent:
-            raise ValueError("sandbox piece cannot remain rigid across seam crossing")
+    if (
+        movement_policy == RIGID
+        and result.kind == CELLWISE_DEFORMATION
+        and not result.rigidly_coherent
+    ):
+        raise ValueError("sandbox piece cannot remain rigid across seam crossing")
     use_exact_cells = result.kind == CELLWISE_DEFORMATION or (
         movement_policy == CELLWISE_FREE
         and any(cell_step.traversal is not None for cell_step in result.cell_steps)

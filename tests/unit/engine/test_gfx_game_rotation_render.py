@@ -506,7 +506,8 @@ class TestGfxGameRotationRender(unittest.TestCase):
                 front2d_loop.pygame.time,
                 "Clock",
                 return_value=SimpleNamespace(tick=lambda _fps: 0),
-            ),self.assertRaises(StopIteration)
+            ),
+            self.assertRaises(StopIteration),
         ):
             front2d_loop.run_game_loop(
                 screen=screen,

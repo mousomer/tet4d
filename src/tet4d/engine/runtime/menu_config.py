@@ -48,7 +48,7 @@ _EXPLORER_BOARD_DIMENSION_FIELDS = (
 def _read_json_payload(path: Path) -> dict[str, Any]:
     payload = read_json_object_or_raise(path)
     if not isinstance(payload, dict):
-        raise RuntimeError(f"{path} must contain a JSON object")
+        raise RuntimeError(f"{path} must contain a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     return payload
 
 
@@ -133,7 +133,7 @@ def explorer_default_board_dims(dimension: int) -> tuple[int, ...]:
     for attr_name in _EXPLORER_BOARD_DIMENSION_FIELDS[:dim]:
         raw_value = mode_defaults.get(attr_name)
         if isinstance(raw_value, bool) or not isinstance(raw_value, int):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 f"defaults.settings.{mode_key}.{attr_name} must be a positive integer"
             )
         value = int(raw_value)

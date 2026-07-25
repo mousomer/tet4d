@@ -413,8 +413,7 @@ class PieceRotationAnimator2D:
                 if self._tween is not None and self._tween.rigid_rotation
                 else rotation_pivot_2d(
                     tuple(
-                        (round(block[0]), round(block[1]))
-                        for block in self._prev_rel
+                        (round(block[0]), round(block[1])) for block in self._prev_rel
                     )
                 )
             )

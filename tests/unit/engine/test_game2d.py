@@ -566,8 +566,8 @@ class TestGame2D(unittest.TestCase):
                 )
                 assert_repeated_translation_progress(
                     self,
-                    step=lambda: state.try_move(-1, 0),
-                    signature=lambda: state.current_piece_cells_mapped(
+                    step=lambda state=state: state.try_move(-1, 0),
+                    signature=lambda state=state: state.current_piece_cells_mapped(
                         include_above=False
                     ),
                     expected_signatures=expected,

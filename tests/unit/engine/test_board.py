@@ -61,7 +61,7 @@ class TestBoard2D(unittest.TestCase):
         # All full rows removed, other cells shifted down appropriately
         # We can just check that no row is completely full anymore and that count is 2
         self.assertEqual(len(board.cells), 2)
-        for (x, y) in board.cells:
+        for x, y in board.cells:
             self.assertIn(x, range(3))
             self.assertIn(y, range(4))
 

@@ -159,7 +159,7 @@ class GameConfig:
         self.explorer_rigid_play_enabled = _resolve_explorer_rigid_play_enabled_2d(self)
         self.rng_mode = normalize_rng_mode(self.rng_mode)
         if isinstance(self.rng_seed, bool) or not isinstance(self.rng_seed, int):
-            raise ValueError("rng_seed must be an integer")
+            raise ValueError("rng_seed must be an integer")  # noqa: TRY004 - preserve the established validation contract.
         if not (0 <= self.rng_seed <= 999_999_999):
             raise ValueError("rng_seed must be within [0, 999999999]")
         self.topology_mode = normalize_topology_mode(self.topology_mode)

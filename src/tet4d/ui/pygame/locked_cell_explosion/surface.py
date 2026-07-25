@@ -1961,7 +1961,9 @@ def _draw_projection_reference_scene(
         "active_glue_ids": _scene_active_glue_ids(state),
         "basis_arrows": (),
         "preview_dims": _board_dims_for_state(state),
-        "explosion_particles": tuple(() if controller is None else controller.particles),
+        "explosion_particles": tuple(
+            () if controller is None else controller.particles
+        ),
     }
     profile = _topology_input_for_state(state).explorer_topology_profile
     if int(state.dimension) == 2:
@@ -2128,11 +2130,15 @@ def _footer_lines(
             )
             lines.extend(
                 (
-                    f"Particle {int(focus.particle_id)} | m={float(focus.mass):.2f} | "
-                    f"||v||={current_speed:.2f} | prev={previous_speed:.2f}",
-                    f"Heading Δ={float(focus.heading_delta_deg):.1f} deg | "
-                    f"Last contact={focus.last_contact_type} | normal={normal_text} | "
-                    f"flagged={'yes' if focus.flagged_this_step else 'no'}",
+                    (
+                        f"Particle {int(focus.particle_id)} | m={float(focus.mass):.2f} | "
+                        f"||v||={current_speed:.2f} | prev={previous_speed:.2f}"
+                    ),
+                    (
+                        f"Heading Δ={float(focus.heading_delta_deg):.1f} deg | "
+                        f"Last contact={focus.last_contact_type} | normal={normal_text} | "
+                        f"flagged={'yes' if focus.flagged_this_step else 'no'}"
+                    ),
                 )
             )
         if diagnostics_summary.recent_events:
@@ -2907,9 +2913,12 @@ def _handle_launcher_keydown(
     ):
         play_sfx("menu_move")
         return
-    if key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
-        if not _activate_selected_row(state):
-            _restart_from_key(state, pygame.K_r)
+    if key in (
+        pygame.K_RETURN,
+        pygame.K_KP_ENTER,
+        pygame.K_SPACE,
+    ) and not _activate_selected_row(state):
+        _restart_from_key(state, pygame.K_r)
 
 
 def _handle_escape_key(

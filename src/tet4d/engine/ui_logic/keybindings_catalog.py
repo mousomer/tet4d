@@ -13,13 +13,13 @@ _GAMEPLAY_FALLBACK_BUCKET = "other"
 
 def _require_object(value: object, *, path: str) -> dict[str, Any]:
     if not isinstance(value, dict):
-        raise RuntimeError(f"{path} must be an object")
+        raise RuntimeError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     return value
 
 
 def _require_string(value: object, *, path: str, non_empty: bool = False) -> str:
     if not isinstance(value, str):
-        raise RuntimeError(f"{path} must be a string")
+        raise RuntimeError(f"{path} must be a string")  # noqa: TRY004 - preserve the established validation contract.
     if non_empty and not value.strip():
         raise RuntimeError(f"{path} must be non-empty")
     return value.strip() if non_empty else value
@@ -27,7 +27,7 @@ def _require_string(value: object, *, path: str, non_empty: bool = False) -> str
 
 def _require_int(value: object, *, path: str, minimum: int = 0) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
-        raise RuntimeError(f"{path} must be an integer")
+        raise RuntimeError(f"{path} must be an integer")  # noqa: TRY004 - preserve the established validation contract.
     if value < minimum:
         raise RuntimeError(f"{path} must be >= {minimum}")
     return value
@@ -40,7 +40,7 @@ def _require_string_list(
     allow_empty: bool = False,
 ) -> tuple[str, ...]:
     if not isinstance(value, list):
-        raise RuntimeError(f"{path} must be a list")
+        raise RuntimeError(f"{path} must be a list")  # noqa: TRY004 - preserve the established validation contract.
     out = tuple(
         _require_string(item, path=f"{path}[{idx}]", non_empty=True)
         for idx, item in enumerate(value)
@@ -52,7 +52,7 @@ def _require_string_list(
 
 def _require_dimension_list(value: object, *, path: str) -> tuple[int, ...]:
     if not isinstance(value, list):
-        raise RuntimeError(f"{path} must be a list")
+        raise RuntimeError(f"{path} must be a list")  # noqa: TRY004 - preserve the established validation contract.
     dims = tuple(
         _require_int(item, path=f"{path}[{idx}]", minimum=2)
         for idx, item in enumerate(value)
@@ -66,7 +66,7 @@ def _require_dimension_list(value: object, *, path: str) -> tuple[int, ...]:
 def _read_catalog_payload() -> dict[str, Any]:
     payload = read_json_value_or_raise(_CATALOG_PATH)
     if not isinstance(payload, dict):
-        raise RuntimeError("keybinding catalog must be a JSON object")
+        raise RuntimeError("keybinding catalog must be a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     return payload
 
 

@@ -111,9 +111,7 @@ class TutorialSetupApplyTests(unittest.TestCase):
         self.assertTrue(mapped3)
         self.assertTrue(all(coord[cfg3.gravity_axis] >= 0 for coord in mapped3))
         self.assertGreaterEqual(min(coord[cfg3.gravity_axis] for coord in mapped3), 2)
-        gravity_levels3 = {
-            coord[cfg3.gravity_axis] for coord in state3.board.cells
-        }
+        gravity_levels3 = {coord[cfg3.gravity_axis] for coord in state3.board.cells}
         self.assertIn(len(gravity_levels3), {1, 2})
         self.assertTrue(
             all(level >= cfg3.dims[cfg3.gravity_axis] - 2 for level in gravity_levels3)
@@ -140,9 +138,7 @@ class TutorialSetupApplyTests(unittest.TestCase):
         self.assertTrue(mapped4)
         self.assertTrue(all(coord[cfg4.gravity_axis] >= 0 for coord in mapped4))
         self.assertGreaterEqual(min(coord[cfg4.gravity_axis] for coord in mapped4), 2)
-        gravity_levels4 = {
-            coord[cfg4.gravity_axis] for coord in state4.board.cells
-        }
+        gravity_levels4 = {coord[cfg4.gravity_axis] for coord in state4.board.cells}
         self.assertIn(len(gravity_levels4), {1, 2})
         self.assertTrue(
             all(level >= cfg4.dims[cfg4.gravity_axis] - 2 for level in gravity_levels4)

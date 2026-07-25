@@ -194,7 +194,9 @@ def _summary(samples: list[BenchSample]) -> dict[str, float | int]:
         "p50_ms": round(p50, 3),
         "p95_ms": round(p95, 3),
         "max_ms": round(max(ms_values), 3),
-        "avg_candidates": round(statistics.mean(sample.candidates for sample in samples)),
+        "avg_candidates": round(
+            statistics.mean(sample.candidates for sample in samples)
+        ),
     }
 
 

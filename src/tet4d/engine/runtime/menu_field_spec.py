@@ -63,9 +63,12 @@ class FieldSpec:
         for option in self.options:
             if option.value == value:
                 return option
-        if isinstance(value, int) and not isinstance(value, bool):
-            if 0 <= int(value) < len(self.options):
-                return self.options[int(value)]
+        if (
+            isinstance(value, int)
+            and not isinstance(value, bool)
+            and 0 <= int(value) < len(self.options)
+        ):
+            return self.options[int(value)]
         return None
 
     def cycle_enum_value(self, current: object, delta: int) -> Any:

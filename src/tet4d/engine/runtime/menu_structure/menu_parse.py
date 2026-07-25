@@ -298,7 +298,7 @@ def parse_menu_item(raw: object, *, path: str) -> dict[str, Any]:
 def _parse_menu_items(menu_id: str, menu: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     raw_items = menu.get("items")
     if not isinstance(raw_items, list):
-        raise RuntimeError(f"structure.menus.{menu_id}.items must be a list")
+        raise RuntimeError(f"structure.menus.{menu_id}.items must be a list")  # noqa: TRY004 - preserve the established validation contract.
     if not raw_items:
         raise RuntimeError(f"structure.menus.{menu_id}.items must not be empty")
     items = tuple(

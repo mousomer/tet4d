@@ -305,7 +305,9 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                     "boundaries": boundaries,
                     "source_boundary": boundaries[0],
                     "target_boundary": boundaries[-1],
-                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "active_glue_ids": {
+                        boundary.label: "free" for boundary in boundaries
+                    },
                     "basis_arrows": (),
                     "preview_dims": preview_dims,
                     "profile": profile,
@@ -423,7 +425,9 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                     "boundaries": boundaries,
                     "source_boundary": boundaries[0],
                     "target_boundary": boundaries[-1],
-                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "active_glue_ids": {
+                        boundary.label: "free" for boundary in boundaries
+                    },
                     "basis_arrows": (),
                     "preview_dims": preview_dims,
                     "profile": profile,
@@ -506,7 +510,9 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                     "boundaries": boundaries,
                     "source_boundary": boundaries[0],
                     "target_boundary": boundaries[-1],
-                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "active_glue_ids": {
+                        boundary.label: "free" for boundary in boundaries
+                    },
                     "basis_arrows": (),
                     "preview_dims": preview_dims,
                     "profile": profile,
@@ -575,7 +581,9 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                     "boundaries": boundaries,
                     "source_boundary": boundaries[0],
                     "target_boundary": boundaries[-1],
-                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "active_glue_ids": {
+                        boundary.label: "free" for boundary in boundaries
+                    },
                     "basis_arrows": (),
                     "preview_dims": preview_dims,
                     "profile": profile,

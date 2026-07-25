@@ -164,7 +164,7 @@ def _piece_set_payload() -> dict[str, object]:
             f"failed to load piece-set config: {_PIECE_CONFIG_PATH}"
         ) from exc
     if not isinstance(data, dict):
-        raise RuntimeError(f"invalid piece-set config format: {_PIECE_CONFIG_PATH}")
+        raise RuntimeError(f"invalid piece-set config format: {_PIECE_CONFIG_PATH}")  # noqa: TRY004 - preserve the established validation contract.
     return data
 
 
@@ -174,7 +174,7 @@ def _load_piece_records(
     payload = _piece_set_payload()
     records = payload.get(key, [])
     if not isinstance(records, list):
-        raise RuntimeError(f"invalid piece-set records for key: {key}")
+        raise RuntimeError(f"invalid piece-set records for key: {key}")  # noqa: TRY004 - preserve the established validation contract.
     parsed: list[tuple[str, tuple[RelCoordND, ...], int]] = []
     for record in records:
         if not isinstance(record, dict):

@@ -2059,7 +2059,7 @@ def _validate_menu_structure_single_option_menus(
         from tet4d.engine.runtime.menu_runtime_graph import (
             detect_redundant_single_option_menus,
         )
-    except Exception as exc:
+    except ImportError as exc:
         issues.append(
             ValidationIssue(
                 "import",
@@ -2142,7 +2142,7 @@ def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
             load_keybinding_defaults_payload,
         )
         from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
-    except Exception as exc:
+    except ImportError as exc:
         issues.append(
             ValidationIssue(
                 "import",
@@ -2153,7 +2153,7 @@ def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
 
     try:
         load_keybinding_defaults_payload()
-    except Exception as exc:
+    except (OSError, TypeError, ValueError) as exc:
         issues.append(
             ValidationIssue(
                 "content",
@@ -2163,7 +2163,7 @@ def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
 
     try:
         binding_action_ids()
-    except Exception as exc:
+    except (OSError, TypeError, ValueError) as exc:
         issues.append(
             ValidationIssue(
                 "content",

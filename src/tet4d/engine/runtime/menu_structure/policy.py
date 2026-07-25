@@ -137,7 +137,7 @@ def enforce_settings_split_policy(validated: dict[str, Any]) -> None:
 
     settings_root = menus.get(entrypoints["settings"])
     if not isinstance(settings_root, dict):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             "settings split policy violation: settings entrypoint must resolve to a menu"
         )
     top_level_labels = [

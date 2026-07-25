@@ -326,7 +326,7 @@ def _validate_grid_modes(raw_grid_modes: object) -> dict[str, Any]:
     cycle: list[str] = []
     for idx, mode_name in enumerate(raw_cycle):
         if not isinstance(mode_name, str):
-            raise RuntimeError(f"gameplay.grid_modes.cycle[{idx}] must be a string")
+            raise RuntimeError(f"gameplay.grid_modes.cycle[{idx}] must be a string")  # noqa: TRY004 - preserve the established validation contract.
         normalized = mode_name.strip().lower()
         if normalized not in GRID_MODE_NAMES:
             raise RuntimeError(
@@ -336,7 +336,7 @@ def _validate_grid_modes(raw_grid_modes: object) -> dict[str, Any]:
         cycle.append(normalized)
     fallback = grid_modes.get("fallback")
     if not isinstance(fallback, str):
-        raise RuntimeError("gameplay.grid_modes.fallback must be a string")
+        raise RuntimeError("gameplay.grid_modes.fallback must be a string")  # noqa: TRY004 - preserve the established validation contract.
     fallback_mode = fallback.strip().lower()
     if fallback_mode not in cycle:
         raise RuntimeError(

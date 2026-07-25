@@ -90,10 +90,11 @@ except (
             key = _normalized_rel_path(raw_key)
             if not key:
                 continue
-            if normalized == key or normalized.startswith(key + "/"):
-                if len(key) > len(best_key):
-                    best_key = key
-                    best_class = raw_class.strip()
+            if (normalized == key or normalized.startswith(key + "/")) and len(
+                key
+            ) > len(best_key):
+                best_key = key
+                best_class = raw_class.strip()
         return best_class
 
     def classify_folder_path(path: str, class_cfg: dict[str, Any]) -> str:
@@ -531,7 +532,7 @@ def _read_json_if_exists(path: Path) -> dict[str, Any] | None:
         return None
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
-        raise ValueError(f"{path} must contain a JSON object")
+        raise ValueError(f"{path} must contain a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     return data
 
 
@@ -640,9 +641,12 @@ def _apply_folder_policy_row(
     path = str(row.get("path", ""))
     folder_class = classify_folder_path(path, class_cfg)
     mapped_profile = class_to_profile.get(folder_class)
-    if isinstance(mapped_profile, str) and mapped_profile:
-        if bool(row.get("leaf_folder")) or mapped_profile == "non_code_exempt":
-            row["folder_profile"] = mapped_profile
+    if (
+        isinstance(mapped_profile, str)
+        and mapped_profile
+        and (bool(row.get("leaf_folder")) or mapped_profile == "non_code_exempt")
+    ):
+        row["folder_profile"] = mapped_profile
 
     gate_eligible = bool(defaults.get(folder_class, True))
     if path in gate_overrides:
@@ -770,13 +774,13 @@ def _active_backlog_rows() -> list[tuple[str, str, str]]:
         )
     items = payload.get("active_debt_items", [])
     if not isinstance(items, list):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             "config/project/backlog_debt.json active_debt_items must be a list"
         )
     rows: list[tuple[str, str, str]] = []
     for idx, raw in enumerate(items):
         if not isinstance(raw, dict):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 "config/project/backlog_debt.json active_debt_items"
                 f"[{idx}] must be an object"
             )
@@ -1092,7 +1096,7 @@ def _build_keybinding_retention_signal() -> dict[str, Any]:
             rows_for_scope,
             source,
         ) = _load_keybinding_retention_imports()
-    except Exception as exc:  # pragma: no cover - environment/import guard
+    except Exception as exc:  # noqa: BLE001 - optional import boundary
         return {
             "available": False,
             "pressure": 1.0,

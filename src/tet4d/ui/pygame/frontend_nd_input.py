@@ -598,15 +598,19 @@ def route_nd_keydown(
     if system_result is not None:
         return system_result
 
-    if allow_gameplay and not state.game_over and _route_nd_gameplay_action(
-        key,
-        state,
-        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
-        axis_overrides_by_action=axis_overrides_by_action,
-        viewer_axes_by_label=viewer_axes_by_label,
-        sfx_handler=sfx_handler,
-        action_filter=action_filter,
-        action_observer=action_observer,
+    if (
+        allow_gameplay
+        and not state.game_over
+        and _route_nd_gameplay_action(
+            key,
+            state,
+            yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+            axis_overrides_by_action=axis_overrides_by_action,
+            viewer_axes_by_label=viewer_axes_by_label,
+            sfx_handler=sfx_handler,
+            action_filter=action_filter,
+            action_observer=action_observer,
+        )
     ):
         return "continue"
 

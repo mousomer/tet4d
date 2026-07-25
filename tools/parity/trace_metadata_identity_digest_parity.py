@@ -46,15 +46,15 @@ def python_oracle_cases() -> list[MetadataCase]:
     fixture = load_fixture()
     cases = fixture.get("cases")
     if not isinstance(cases, list):
-        raise RuntimeError("trace metadata parity fixture must contain a cases array")
+        raise RuntimeError("trace metadata parity fixture must contain a cases array")  # noqa: TRY004 - preserve the established validation contract.
 
     oracle_cases: list[MetadataCase] = []
     for item in cases:
         if not isinstance(item, dict):
-            raise RuntimeError("trace metadata parity cases must be objects")
+            raise RuntimeError("trace metadata parity cases must be objects")  # noqa: TRY004 - preserve the established validation contract.
         name = item.get("name")
         if not isinstance(name, str):
-            raise RuntimeError("trace metadata parity case missing name")
+            raise RuntimeError("trace metadata parity case missing name")  # noqa: TRY004 - preserve the established validation contract.
         payload = {
             "dimension": item.get("dimension"),
             "mode": item.get("mode"),
@@ -63,19 +63,19 @@ def python_oracle_cases() -> list[MetadataCase]:
             "trace_id": item.get("trace_id"),
         }
         if not isinstance(payload["dimension"], int):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 f"trace metadata parity case {name!r} missing integer dimension"
             )
         if not isinstance(payload["mode"], str):
-            raise RuntimeError(f"trace metadata parity case {name!r} missing mode")
+            raise RuntimeError(f"trace metadata parity case {name!r} missing mode")  # noqa: TRY004 - preserve the established validation contract.
         if not isinstance(payload["schema_version"], int):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 f"trace metadata parity case {name!r} missing integer schema_version"
             )
         if not isinstance(payload["topology"], str):
-            raise RuntimeError(f"trace metadata parity case {name!r} missing topology")
+            raise RuntimeError(f"trace metadata parity case {name!r} missing topology")  # noqa: TRY004 - preserve the established validation contract.
         if not isinstance(payload["trace_id"], str):
-            raise RuntimeError(f"trace metadata parity case {name!r} missing trace_id")
+            raise RuntimeError(f"trace metadata parity case {name!r} missing trace_id")  # noqa: TRY004 - preserve the established validation contract.
         identity = trace_schema.compact_canonical_json(payload)
         digest = trace_schema.stable_hash(payload)
         oracle_cases.append(
@@ -103,11 +103,11 @@ def load_native_cases(command: list[str] | None = None) -> list[dict[str, str]]:
     payload = json.loads(result.stdout)
     cases = payload.get("cases")
     if not isinstance(cases, list):
-        raise RuntimeError("native parity output is missing a cases array")
+        raise RuntimeError("native parity output is missing a cases array")  # noqa: TRY004 - preserve the established validation contract.
     normalized: list[dict[str, str]] = []
     for item in cases:
         if not isinstance(item, dict):
-            raise RuntimeError("native parity cases must be objects")
+            raise RuntimeError("native parity cases must be objects")  # noqa: TRY004 - preserve the established validation contract.
         name = item.get("name")
         identity = item.get("identity")
         digest = item.get("digest")
@@ -116,7 +116,7 @@ def load_native_cases(command: list[str] | None = None) -> list[dict[str, str]]:
             or not isinstance(identity, str)
             or not isinstance(digest, str)
         ):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 "native parity cases must include name, identity, and digest"
             )
         normalized.append({"name": name, "identity": identity, "digest": digest})

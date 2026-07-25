@@ -135,7 +135,7 @@ def _parse_numeric_setup_field(
     )
     raw_max = field.get("max")
     if isinstance(raw_max, bool) or not isinstance(raw_max, (int, str)):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             f"structure.setup_fields.{mode_key}[{idx}].max must be int or dynamic token"
         )
     parsed_field["min"] = min_val
@@ -389,7 +389,7 @@ def resolve_field_max(
     if raw_max == "topology_profile_max":
         return max(0, int(topology_profile_max))
     if isinstance(raw_max, bool) or not isinstance(raw_max, int):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             "structure.setup_fields."
             f"{mode_key}.{attr_name}.max must be int or dynamic max token"
         )

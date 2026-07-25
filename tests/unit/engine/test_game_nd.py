@@ -517,8 +517,8 @@ class TestGameND(unittest.TestCase):
                 state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
                 assert_repeated_translation_progress(
                     self,
-                    step=lambda: state.try_move_axis(0, -1),
-                    signature=lambda: state.current_piece_cells_mapped(
+                    step=lambda state=state: state.try_move_axis(0, -1),
+                    signature=lambda state=state: state.current_piece_cells_mapped(
                         include_above=False
                     ),
                     expected_signatures=expected,
@@ -591,8 +591,8 @@ class TestGameND(unittest.TestCase):
                 state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
                 assert_repeated_translation_progress(
                     self,
-                    step=lambda: state.try_move_axis(3, 1),
-                    signature=lambda: state.current_piece_cells_mapped(
+                    step=lambda state=state: state.try_move_axis(3, 1),
+                    signature=lambda state=state: state.current_piece_cells_mapped(
                         include_above=False
                     ),
                     expected_signatures=expected,

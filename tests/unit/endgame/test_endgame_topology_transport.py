@@ -21,9 +21,7 @@ def _state(profile, *, position, velocity):
         explorer_topology_profile=profile,
     )
     state = build_endgame_state(
-        locked_cells=(
-            ExplosionSeedCell(tuple(round(v) for v in position), 2, "T"),
-        ),
+        locked_cells=(ExplosionSeedCell(tuple(round(v) for v in position), 2, "T"),),
         board_shape=(4, 4, 4, 4),
         dimension=4,
         topology=topology,

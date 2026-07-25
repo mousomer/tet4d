@@ -456,7 +456,7 @@ def build_manifest(
 
 def _require_manifest_object(payload: Any, *, path: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     return payload
 
 
@@ -469,7 +469,7 @@ def _require_manifest_field(payload: dict[str, Any], key: str, *, path: str) -> 
 def _require_manifest_int(payload: dict[str, Any], key: str, *, path: str) -> int:
     value = _require_manifest_field(payload, key, path=path)
     if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{path}.{key} must be an integer")
+        raise ValueError(f"{path}.{key} must be an integer")  # noqa: TRY004 - preserve the established validation contract.
     return int(value)
 
 
@@ -567,7 +567,7 @@ def validate_bundle_manifest(manifest: dict[str, Any]) -> None:
     for trace_type in ("topology", "gameplay", "endgame"):
         entries = _require_manifest_field(traces, trace_type, path="manifest.traces")
         if not isinstance(entries, list):
-            raise ValueError(f"manifest.traces.{trace_type} must be a list")
+            raise ValueError(f"manifest.traces.{trace_type} must be a list")  # noqa: TRY004 - preserve the established validation contract.
         if not entries:
             raise ValueError(f"manifest.traces.{trace_type} must not be empty")
         for index, raw_entry in enumerate(entries):

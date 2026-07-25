@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import json
 import shutil
 import unittest
@@ -94,7 +95,6 @@ from tet4d.ui.pygame.render.front3d_projection_helpers import (
 )
 from tet4d.ui.pygame.render.grid_mode_render import build_projected_grid_primitives
 from tet4d.ui.pygame.topology_lab import projection_scene as topology_projection_scene
-import itertools
 
 
 def _new_workspace_temp_dir(prefix: str) -> Path:

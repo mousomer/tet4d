@@ -511,8 +511,10 @@ class TestGameplayReplay(unittest.TestCase):
                 state.current_piece = ActivePiece2D(shape, pos=start_pos, rotation=0)
                 assert_repeated_translation_progress(
                     self,
-                    step=lambda: front2d.handle_game_keydown(_keydown(key), state, cfg),
-                    signature=lambda: state.current_piece_cells_mapped(
+                    step=lambda key=key, state=state, cfg=cfg: (
+                        front2d.handle_game_keydown(_keydown(key), state, cfg)
+                    ),
+                    signature=lambda state=state: state.current_piece_cells_mapped(
                         include_above=False
                     ),
                     expected_signatures=expected,
@@ -615,10 +617,10 @@ class TestGameplayReplay(unittest.TestCase):
                 state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
                 assert_repeated_translation_progress(
                     self,
-                    step=lambda: frontend_nd_input.handle_game_keydown(
-                        _keydown(key), state
+                    step=lambda key=key, state=state: (
+                        frontend_nd_input.handle_game_keydown(_keydown(key), state)
                     ),
-                    signature=lambda: state.current_piece_cells_mapped(
+                    signature=lambda state=state: state.current_piece_cells_mapped(
                         include_above=False
                     ),
                     expected_signatures=expected,

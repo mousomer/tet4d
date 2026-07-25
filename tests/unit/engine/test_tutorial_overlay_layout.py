@@ -117,18 +117,18 @@ class TestTutorialOverlayLayout(unittest.TestCase):
                 if dimension == 3
                 else tutorial_overlay.front4d_render
             )
-            with self.subTest(dimension=dimension):
-                with (
-                    patch.object(target_module, "MARGIN", 20),
-                    patch.object(target_module, "SIDE_PANEL", 360),
-                ):
-                    rect = tutorial_overlay._panel_rect_for_dimension(
-                        width=width,
-                        height=height,
-                        dimension=dimension,
-                        panel_h=panel_h,
-                        panel_offset=(-5000, 4000),
-                    )
+            with (
+                self.subTest(dimension=dimension),
+                patch.object(target_module, "MARGIN", 20),
+                patch.object(target_module, "SIDE_PANEL", 360),
+            ):
+                rect = tutorial_overlay._panel_rect_for_dimension(
+                    width=width,
+                    height=height,
+                    dimension=dimension,
+                    panel_h=panel_h,
+                    panel_offset=(-5000, 4000),
+                )
             gameplay_rect = area_factory(width, height, 20, 360)
             self.assertGreaterEqual(rect.left, gameplay_rect.right)
             self.assertGreaterEqual(rect.top, 0)

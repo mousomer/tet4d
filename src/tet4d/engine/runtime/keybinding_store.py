@@ -186,7 +186,7 @@ def _validate_action_binding_map(
     allow_key_tokens: bool,
 ) -> None:
     if not isinstance(raw_group, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     action_contracts = _keybinding_action_contracts()
     for action_name, raw_keys in raw_group.items():
         if not isinstance(action_name, str) or not action_name.strip():
@@ -220,7 +220,7 @@ def _validate_dimension_group_map(
     group_name: str,
 ) -> None:
     if not isinstance(raw_group, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     expected_dim_keys = {
         f"d{dimension}"
         for dimension in SUPPORTED_DIMENSIONS
@@ -273,7 +273,7 @@ def _validate_default_profile(profile_name: object, raw_profile: object) -> None
         )
     path = f"keybindings.defaults.profiles.{profile_name}"
     if not isinstance(raw_profile, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     unexpected_groups = sorted(
         set(raw_profile.keys()) - {"system", "game", "explorer", "camera"}
     )
@@ -313,7 +313,7 @@ def _validate_default_profile(profile_name: object, raw_profile: object) -> None
 
 def validate_keybinding_defaults_payload(payload: object) -> dict[str, Any]:
     if not isinstance(payload, dict):
-        raise ValueError("keybindings defaults config must be a JSON object")
+        raise ValueError("keybindings defaults config must be a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     version = payload.get("version")
     if not isinstance(version, int) or isinstance(version, bool) or version < 1:
         raise ValueError("keybindings defaults config must define integer version >= 1")
@@ -369,7 +369,7 @@ def _validate_keybinding_payload_header(
     normalize_profile_name(profile)
     bindings = payload.get("bindings")
     if not isinstance(bindings, dict):
-        raise ValueError("keybinding payload must define a bindings object")
+        raise ValueError("keybinding payload must define a bindings object")  # noqa: TRY004 - preserve the established validation contract.
     return dimension, bindings
 
 
@@ -517,7 +517,7 @@ def validate_keybinding_file_payload(
     allow_partial_bindings: bool = True,
 ) -> dict[str, Any]:
     if not isinstance(payload, dict):
-        raise ValueError("keybinding payload must be a JSON object")
+        raise ValueError("keybinding payload must be a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     dimension, bindings = _validate_keybinding_payload_header(
         payload,
         expected_dimension=expected_dimension,

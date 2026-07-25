@@ -226,7 +226,9 @@ def _is_allowed_number(raw: str, line: str) -> bool:
         return True
     if raw.startswith("-") and raw[1:] in ALLOWED_NUMBERS:
         return True
-    return bool(re.search(r"\b(version|schema_version|trace_version|format_version)\b", line))
+    return bool(
+        re.search(r"\b(version|schema_version|trace_version|format_version)\b", line)
+    )
 
 
 def _line_findings(

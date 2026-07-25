@@ -578,9 +578,7 @@ def _explosion_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
             str(defaults.shadow_mode), str(defaults.shadow_mode)
         ),
         "trace_enabled": lambda: "ON" if bool(defaults.trace_enabled) else "OFF",
-        "trace_retention_ms": lambda: (
-            f"{round(float(defaults.trace_retention_ms))} ms"
-        ),
+        "trace_retention_ms": lambda: f"{round(float(defaults.trace_retention_ms))} ms",
         "speed_preset": lambda: _EXPLOSION_SPEED_PRESET_LABEL_BY_VALUE.get(
             str(defaults.speed_preset), str(defaults.speed_preset)
         ),

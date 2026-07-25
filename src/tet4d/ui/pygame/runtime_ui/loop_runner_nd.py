@@ -424,7 +424,7 @@ def run_nd_loop(
                 exploration_mode=bool(loop.state.config.exploration_mode),
                 draw_background=lambda: draw_frame(screen, None),
             )
-        except Exception:
+        except Exception:  # noqa: BLE001 - results recording is best-effort.
             return
 
     def _restart_with_record() -> None:

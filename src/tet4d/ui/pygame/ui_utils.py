@@ -365,9 +365,7 @@ def compute_slider_row_layout(
         available_text_width - value_width - (text_gap if value_width > 0 else 0),
     )
     label_lines = wrap_text_lines(font, label, label_width)
-    value_lines = (
-        wrap_text_lines(font, value, value_width) if value_width > 0 else ()
-    )
+    value_lines = wrap_text_lines(font, value, value_width) if value_width > 0 else ()
     text_line_count = max(len(label_lines), len(value_lines), 1)
     text_block_height = wrapped_row_height(
         font,

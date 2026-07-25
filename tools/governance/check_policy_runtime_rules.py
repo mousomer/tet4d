@@ -285,11 +285,11 @@ def _parse_selected_file_bans(
     field: str,
 ) -> tuple[SelectedFileBan, ...]:
     if not isinstance(raw, list):
-        raise ValueError(f"{field} must be list[object]")
+        raise ValueError(f"{field} must be list[object]")  # noqa: TRY004 - preserve the established validation contract.
     bans: list[SelectedFileBan] = []
     for idx, entry in enumerate(raw, start=1):
         if not isinstance(entry, dict):
-            raise ValueError(f"{field}[{idx}] must be object")
+            raise ValueError(f"{field}[{idx}] must be object")  # noqa: TRY004 - preserve the established validation contract.
         path = _read_str_field(entry, "path", field=f"{field}[{idx}].path")
         name_regex = _read_str_field(
             entry, "name_regex", field=f"{field}[{idx}].name_regex"
@@ -305,11 +305,11 @@ def _parse_authoritative_sources(
     field: str,
 ) -> tuple[str, ...]:
     if not isinstance(raw, list):
-        raise ValueError(f"{field} must be list[object]")
+        raise ValueError(f"{field} must be list[object]")  # noqa: TRY004 - preserve the established validation contract.
     sources: list[str] = []
     for idx, entry in enumerate(raw, start=1):
         if not isinstance(entry, dict):
-            raise ValueError(f"{field}[{idx}] must be object")
+            raise ValueError(f"{field}[{idx}] must be object")  # noqa: TRY004 - preserve the established validation contract.
         path = _read_str_field(entry, "path", field=f"{field}[{idx}].path")
         sources.append(path)
     return tuple(sources)
@@ -373,12 +373,12 @@ def _read_runtime_constant_enforcement(
 ) -> tuple[str, str, tuple[SelectedFileBan, ...]]:
     enforcement = payload.get("enforcement")
     if not isinstance(enforcement, dict):
-        raise ValueError("config_backed_runtime_constants.enforcement must be object")
+        raise ValueError("config_backed_runtime_constants.enforcement must be object")  # noqa: TRY004 - preserve the established validation contract.
     module_level_assignments_only = enforcement.get(
         "module_level_assignments_only", True
     )
     if not isinstance(module_level_assignments_only, bool):
-        raise ValueError(
+        raise ValueError(  # noqa: TRY004 - preserve the established validation contract.
             "config_backed_runtime_constants.enforcement.module_level_assignments_only must be bool"
         )
     if not module_level_assignments_only:
@@ -387,7 +387,7 @@ def _read_runtime_constant_enforcement(
         )
     name_patterns = enforcement.get("name_patterns")
     if not isinstance(name_patterns, dict):
-        raise ValueError(
+        raise ValueError(  # noqa: TRY004 - preserve the established validation contract.
             "config_backed_runtime_constants.enforcement.name_patterns must be object"
         )
     return (
@@ -417,7 +417,7 @@ def _read_exception_category(
 ) -> dict[str, Any]:
     category = payload.get(key)
     if not isinstance(category, dict):
-        raise ValueError(f"{field} must be object")
+        raise ValueError(f"{field} must be object")  # noqa: TRY004 - preserve the established validation contract.
     return category
 
 
@@ -434,7 +434,7 @@ def _read_runtime_constant_exception_categories(
 ]:
     exception_categories = payload.get("exception_categories")
     if not isinstance(exception_categories, dict):
-        raise ValueError(
+        raise ValueError(  # noqa: TRY004 - preserve the established validation contract.
             "config_backed_runtime_constants.exception_categories must be object"
         )
 

@@ -139,7 +139,7 @@ def _normalize_edge_rules(
     dimension: int,
 ) -> EdgeRules:
     if not isinstance(rules_raw, (list, tuple)):
-        raise ValueError("edge_rules must be a list of axis rules")
+        raise ValueError("edge_rules must be a list of axis rules")  # noqa: TRY004 - preserve the established validation contract.
     if len(rules_raw) != int(dimension):
         raise ValueError("edge_rules axis count must match dimension")
     normalized: list[AxisEdgeRule] = []

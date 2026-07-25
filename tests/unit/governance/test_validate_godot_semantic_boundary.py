@@ -33,12 +33,7 @@ def test_adapter_routing_legal_move_call_with_suppression_does_not_fail(
     script = tmp_path / "godot" / "scripts" / "live_shell.gd"
     _write_text(
         script,
-        "\n".join(
-            [
-                "# tet4d-semantic-boundary: allow adapter-routing",
-                "var legal_moves = core.get_legal_moves(state)",
-            ]
-        ),
+        "# tet4d-semantic-boundary: allow adapter-routing\nvar legal_moves = core.get_legal_moves(state)",
     )
 
     findings, _ = boundary.validate(tmp_path / "godot")
@@ -93,14 +88,7 @@ def test_coordinate_comparison_with_semantic_context_fails(tmp_path: Path) -> No
     script = tmp_path / "godot" / "scripts" / "rules.gd"
     _write_text(
         script,
-        "\n".join(
-            [
-                "var boundary_state = true",
-                "func render_preview():",
-                "\tif x < 0:",
-                "\t\treturn false",
-            ]
-        ),
+        "var boundary_state = true\nfunc render_preview():\n\tif x < 0:\n\t\treturn false",
     )
 
     findings, _ = boundary.validate(tmp_path / "godot")

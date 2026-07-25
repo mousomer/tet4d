@@ -105,7 +105,7 @@ class TestScoreAnalyzer(unittest.TestCase):
         self.assertTrue(ok, msg)
 
     def test_record_event_writes_event_and_summary(self) -> None:
-        with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.dict(os.environ, {}, clear=True):  # noqa: SIM117
             with _workspace_temp_dir("score_analyzer") as tmp_path:
                 config_path = tmp_path / "score_analyzer.json"
                 events_path = tmp_path / "state" / "events.jsonl"
@@ -156,7 +156,7 @@ class TestScoreAnalyzer(unittest.TestCase):
                 reset_score_analyzer_runtime_state()
 
     def test_record_event_sanitizes_output_paths_to_state_dir(self) -> None:
-        with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.dict(os.environ, {}, clear=True):  # noqa: SIM117
             with _workspace_temp_dir("score_analyzer") as tmp_path:
                 config_path = tmp_path / "score_analyzer.json"
                 config_path.write_text(

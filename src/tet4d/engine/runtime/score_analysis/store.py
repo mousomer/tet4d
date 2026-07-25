@@ -11,8 +11,8 @@ def default_config(config_path: Path) -> dict[str, Any]:
         loaded = json.loads(raw)
         if isinstance(loaded, dict):
             return loaded
-    except Exception:
-        pass
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        loaded = None
     return {
         "version": 1,
         "enabled": True,
