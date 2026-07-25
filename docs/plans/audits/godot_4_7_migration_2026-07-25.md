@@ -91,6 +91,11 @@ No automatic resource conversion or broad re-save was accepted.
   generated godot-cpp build tree. It still rejects staged changes, tracked
   worktree changes, and root-project untracked files, and prints any rejected
   paths for diagnosis.
+- Editable installation had been rewriting stale, tracked
+  `src/tet4d.egg-info` build metadata before the Godot lane began. Generated
+  egg-info is no longer versioned and is ignored with the other Python build
+  outputs, so the sanitation gate measures source-tree drift rather than
+  packaging cache churn.
 - Clean removal of the exact ignored binding/native output directories was
   followed by a full binding regeneration and native rebuild.
 - No project-source compiler warning or error was emitted. macOS emitted only
