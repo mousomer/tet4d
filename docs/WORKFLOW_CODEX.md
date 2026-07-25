@@ -210,6 +210,11 @@ Skip unless cross-cutting: unrelated `docs/rds/*`,
     and CI checks use the same versioned quality-tool contract. An unbounded
     local tool version is not evidence that the CI toolchain will behave the
     same way.
+14. Ruff targets the newest stable supported release published on PyPI.
+    Work minimisation is not a version-selection criterion, the canonical
+    development dependency must use an exact pin, and every Ruff minor-version
+    change is an explicit migration. Record its audit and branch, merge-context,
+    and GitHub matrix results in `config/project/policy_pack.json`.
 
 ## Edit discipline
 

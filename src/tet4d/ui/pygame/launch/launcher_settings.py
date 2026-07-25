@@ -1024,7 +1024,7 @@ def _dispatch_unified_key(
     return screen
 
 
-def _handle_unified_non_key_event(
+def _handle_unified_non_key_event(  # noqa: C901 - ordered UI event dispatcher
     screen: pygame.Surface,
     fonts,
     state: _UnifiedSettingsState,

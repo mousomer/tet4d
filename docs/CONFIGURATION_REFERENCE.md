@@ -1823,7 +1823,7 @@ Parameters:
 - `status_order.skewed`: `2` (`int`)
 - `status_order.watch`: `1` (`int`)
 - `tracked_leaf_folders[]`: array[`object`]
-- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `1.0`, `0.95`, `0.94`
+- `tracked_leaf_folders[].baseline_score`: varies (`float`); examples: `1.0`, `0.93`, `0.91`
 - `tracked_leaf_folders[].baseline_status`: varies (`string`); examples: `"balanced"`
 - `tracked_leaf_folders[].path`: varies (`string`); examples: `"src/tet4d/engine/runtime/menu_settings"`, `"src/tet4d/engine/runtime/menu_structure"`, `"src/tet4d/engine/runtime/score_analysis"`
 - `tracked_leaf_folders[].profile`: varies (`string`); examples: `"micro_leaf"`, `"tests_leaf"`
@@ -2096,6 +2096,32 @@ Parameters:
 - `governance.risk_gates.security_ownership.min_sensitive_files`: `5` (`int`)
 - `governance.risk_gates.security_ownership.sensitive_globs[]`: array[`string`]; examples: `"tools/governance/scan_secrets.py"`, `"config/project/policy/manifests/secret_scan.json"`, `"scripts/check_policy_compliance.sh"`
 - `governance.risk_gates.security_ownership.target_min_distinct_authors_per_file`: `2` (`int`)
+- `governance.ruff_toolchain.migration.affected_files_before_migration`: `280` (`int`)
+- `governance.ruff_toolchain.migration.branch_local_result`: `"CODEX_MODE=1 ./scripts/verify.sh passed on the final branch tree"` (`string`)
+- `governance.ruff_toolchain.migration.configuration_changes[]`: array[`string`]; examples: `"Pinned the canonical development dependency to ruff==0.16.0."`, `"Made GitHub Actions print the installed Ruff version."`, `"Made the existing C901 verification gate part of the canonical Ruff ...`
+- `governance.ruff_toolchain.migration.diagnostics_before_migration`: `1023` (`int`)
+- `governance.ruff_toolchain.migration.files_changed`: `332` (`int`)
+- `governance.ruff_toolchain.migration.formatter_differences_before_migration`: `171` (`int`)
+- `governance.ruff_toolchain.migration.github_python_3_11_to_3_14_matrix_result`: `"pending push"` (`string`)
+- `governance.ruff_toolchain.migration.merge_context_result`: `"pending final verification"` (`string`)
+- `governance.ruff_toolchain.migration.narrow_rule_exceptions[]`: array[`object`]
+- `governance.ruff_toolchain.migration.narrow_rule_exceptions[].reason`: varies (`string`); examples: `"Changing established ValueError or RuntimeError contracts caused reg...`, `"These boundaries must report or isolate arbitrary implementation fai...`, `"Explicit nested context-manager lifetime keeps environment restorati...`
+- `governance.ruff_toolchain.migration.narrow_rule_exceptions[].rule`: varies (`string`); examples: `"TRY004"`, `"BLE001"`, `"SIM117"`
+- `governance.ruff_toolchain.migration.narrow_rule_exceptions[].scope`: varies (`string`); examples: `"tested validation and parity exception contracts"`, `"top-level UI, optional-import, and best-effort recording boundaries"`, `"two score-analyzer tests"`
+- `governance.ruff_toolchain.migration.newest_stable_version`: `"0.16.0"` (`string`)
+- `governance.ruff_toolchain.migration.previous_version`: `"0.14.1"` (`string`)
+- `governance.ruff_toolchain.migration.rules_newly_enforced_or_reinterpreted[]`: array[`string`]; examples: `"B023"`, `"BLE001"`, `"C400"`
+- `governance.ruff_toolchain.migration.safe_fixable_diagnostics_before_migration`: `546` (`int`)
+- `governance.ruff_toolchain.migration.selected_version`: `"0.16.0"` (`string`)
+- `governance.ruff_toolchain.migration.selection_date`: `"2026-07-25"` (`string`)
+- `governance.ruff_toolchain.migration.stable_0_17_available`: `false` (`bool`)
+- `governance.ruff_toolchain.migration.technical_blockers[]`: array[`empty`]
+- `governance.ruff_toolchain.migration.unsafe_fixable_diagnostics_before_migration`: `299` (`int`)
+- `governance.ruff_toolchain.policy.exact_pin_required`: `true` (`bool`)
+- `governance.ruff_toolchain.policy.minor_version_changes_are_explicit_migrations`: `true` (`bool`)
+- `governance.ruff_toolchain.policy.package_source`: `"Python Package Index (PyPI)"` (`string`)
+- `governance.ruff_toolchain.policy.target`: `"newest stable supported release"` (`string`)
+- `governance.ruff_toolchain.policy.work_minimisation_is_selection_criterion`: `false` (`bool`)
 - `governance.schema_version`: `1` (`int`)
 - `governance.tech_debt_budget.baseline.arch_stage`: `755` (`int`)
 - `governance.tech_debt_budget.baseline.score`: `15.06` (`float`)

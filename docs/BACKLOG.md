@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-24
+Updated: 2026-07-25
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -28,18 +28,20 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-PR #37 CI remediation (2026-07-24, complete): GitHub Actions run `30129023553`
-installed Ruff 0.16.0 and failed all Python 3.11-3.14 jobs with 1,025
-repository-wide findings, beginning with `RUF100` and `I001` in
-`cli/front.py`; branch-local `./scripts/ci_check.sh` had passed under Ruff
-0.14.1. The repair pins that accepted quality-tool contract and canonicalizes
-the launcher's imports and formatting while preserving its intentional
-delayed-import boundary. Branch head and a temporary merge against `master`
-`c10ed4e6a190daa85976162c1feb866c743b9462` passed both the CI wrapper and full
-verification; GitHub Actions run `30130580790` then passed on Python 3.11,
-3.12, 3.13, and 3.14 for remediation head
-`80cbf028f4d503d58b215714c261d7295bd8673b`. No Stage 52 behavior or Stage 53A
-scope changed.
+PR #37 Ruff migration (2026-07-25, automated acceptance in progress): PyPI
+discovery selected Ruff 0.16.0 as the newest stable supported release; no
+stable 0.17.x release exists. The repository now pins `ruff==0.16.0`, reports
+the installed CI version, and treats future minor-version changes as explicit
+migrations rather than selecting versions by work size. The pre-modification
+audit recorded 1,023 diagnostics across 280 files, 546 safe fixes, 299 unsafe
+fix opportunities, and 171 formatter differences. Controlled mechanical and
+semantic passes make full Ruff lint and format checks pass, remove
+`cli/front.py`'s obsolete blanket suppression, and preserve tested exception
+and compatibility contracts with only narrow manifest-recorded annotations.
+The focused regression set, full Python suite, and branch-local
+`CODEX_MODE=1 ./scripts/verify.sh` pass. Current-`master` synthetic-merge and
+GitHub Python 3.11-3.14 results remain before completion. No Stage 52 behavior
+or Stage 53A scope changed.
 
 Stage 52 accessibility infrastructure (2026-07-20, implementation and automated
 acceptance complete; final manual matrix pending): extend the

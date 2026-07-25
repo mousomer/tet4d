@@ -594,7 +594,7 @@ def _draw_name_prompt(
     return layout
 
 
-def _handle_name_prompt_event(
+def _handle_name_prompt_event(  # noqa: C901 - ordered prompt event dispatcher
     event: pygame.event.Event,
     state: _NamePromptState,
     *,

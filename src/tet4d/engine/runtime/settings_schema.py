@@ -133,7 +133,7 @@ def require_number(
     return num
 
 
-def validate_setting_storage_metadata(
+def validate_setting_storage_metadata(  # noqa: C901 - established schema validator
     parsed: dict[str, Any],
     *,
     semantic_type: str,

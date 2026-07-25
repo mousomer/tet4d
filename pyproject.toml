@@ -28,3 +28,8 @@ include = ["tet4d*"]
 extend-exclude = [
   "native/third_party",
 ]
+
+[tool.ruff.lint]
+extend-select = [
+  "C901",
+]

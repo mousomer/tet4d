@@ -165,7 +165,7 @@ class MenuRunner:
         self._initial_selected = dict(initial_selected or {})
         self._fps = max(1, int(fps))
 
-    def run(self) -> None:
+    def run(self) -> None:  # noqa: C901 - stateful menu event-loop authority
         state = _RunnerState(
             stack=[self._start_menu_id],
             selected_by_menu={
@@ -298,7 +298,7 @@ class MenuRunner:
                 return False
             return _handle_root_escape()
 
-        def _activate_item(
+        def _activate_item(  # noqa: C901 - closure owns menu transition state
             menu_id: str,
             item: dict[str, Any],
             *,

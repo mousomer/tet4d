@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-24
+Last updated: 2026-07-25
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -11,27 +11,22 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
-- PR #37 CI remediation is complete on
-  `codex/configurable-plain-boards`. GitHub Actions run `30129023553` tested
-  synthetic merge commit `95baf347a5728944bf52d7c0e8fb52c9eb3e9efe`
-  (`master` `c10ed4e6a190daa85976162c1feb866c743b9462` plus branch head
-  `2af0cce40f902d9110c5980f1cc13784c57bced2`) and failed identically on
-  Python 3.11-3.14 during repository Ruff validation. The first reported
-  findings were `RUF100` and `I001` in `cli/front.py`, but reproducing CI's
-  Ruff 0.16.0 exposed 1,025 findings repository-wide. The accepted local
-  environment used Ruff 0.14.1 and passed `./scripts/ci_check.sh`; the
-  unbounded `ruff` development dependency therefore let Ruff's changing
-  default rule set redefine the lint contract in CI. The repair pins the
-  accepted Ruff 0.14.1 toolchain, canonicalizes `cli/front.py` imports and
-  formatting without moving its intentional pre-parse boundary, and retains
-  the valid file-level `E402` suppression required by those delayed imports.
-  Branch-local and current-`master` synthetic-merge `./scripts/ci_check.sh` and
-  `CODEX_MODE=1 ./scripts/verify.sh` checks passed for the final repair tree.
-  Remediation commits `57433b9e` and `80cbf028` were pushed, and GitHub Actions
-  run `30130580790` passed on Python 3.11, 3.12, 3.13, and 3.14. This was CI
-  tool-version drift, not a branch-, master-, or merge-result-only source
-  defect; Stage 52 remains pending manual acceptance and Stage 53A remains
-  unstarted.
+- PR #37 now carries the explicit Ruff toolchain migration on
+  `codex/configurable-plain-boards`. PyPI discovery on 2026-07-25 established
+  Ruff 0.16.0 as the newest stable release and confirmed that no stable 0.17.x
+  exists. The canonical pre-modification audit recorded 1,023 diagnostics
+  across 280 files, 546 safe-fixable findings, 299 unsafe-fixable findings,
+  and 171 formatter differences. The migration pins `ruff==0.16.0`, prints the
+  installed version in CI, removes the obsolete `cli/front.py` file-wide
+  suppression, and completes the repository lint/format migration without
+  weakening selection, exclusions, or preview policy. Tested validation and
+  parity exception contracts, intentional application fault boundaries, two
+  context-lifetime tests, and one compatibility facade retain narrow
+  rule-specific annotations recorded in the policy-pack manifest. Ruff lint,
+  Ruff format, the focused regression set, the full Python suite, and
+  branch-local `CODEX_MODE=1 ./scripts/verify.sh` pass. Current-`master`
+  synthetic-merge and GitHub Python 3.11-3.14 results remain to be recorded
+  before the migration is complete.
 
 - Stage 52 accessibility infrastructure is implemented on
   `codex/configurable-plain-boards` as an extension of the accepted Stage 51
@@ -836,15 +831,15 @@ From `python scripts/arch_metrics.py`:
 
 - `deep_imports.engine_to_ui_non_api.count = 0`
 - `deep_imports.engine_to_ai_non_api.count = 0`
-- `deep_imports.ui_to_engine_non_api.count = 258` (allowed under current rule)
+- `deep_imports.ui_to_engine_non_api.count = 290` (allowed under current rule)
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.67` (`low`)
+- `tech_debt.score = 5.71` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.77`
+1. `delivery_size_pressure = 2.80`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -855,22 +850,22 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tools/governance/validate_project_contracts.py`: `3785` real LOC
-2. `tests/unit/engine/test_topology_lab_menu.py`: `3721` real LOC
-3. `tests/unit/render/test_locked_cell_explosion.py`: `3466` real LOC
-4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3039` real LOC
-5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2329` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `2152` real LOC
-7. `scripts/arch_metrics.py`: `1891` real LOC
-8. `src/tet4d/ui/pygame/endgame_animation.py`: `1866` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
+2. `tools/governance/validate_project_contracts.py`: `3784` real LOC
+3. `tests/unit/render/test_locked_cell_explosion.py`: `3762` real LOC
+4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
+5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2240` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
+7. `scripts/arch_metrics.py`: `1899` real LOC
+8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
 
 Thin-wrapper budgets:
 
-1. `cli/front.py: 805/840 real LOC (compatibility launcher wrapper)`
+1. `cli/front.py: 804/840 real LOC (compatibility launcher wrapper)`
 2. `cli/front2d.py: 15/24 real LOC (thin 2D launcher shim)`
 3. `cli/front3d.py: 15/24 real LOC (thin 3D launcher shim)`
 4. `cli/front4d.py: 15/24 real LOC (thin 4D launcher shim)`
-5. `src/tet4d/engine/api.py: 136/160 real LOC (small engine compatibility facade)`
+5. `src/tet4d/engine/api.py: 140/160 real LOC (small engine compatibility facade)`
 6. `src/tet4d/ui/pygame/front2d_game.py: 116/180 real LOC (2D orchestration entrypoint)`
 
 Tutorial wording drift guard:

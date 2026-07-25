@@ -27,6 +27,98 @@
       "replay_manifest": "config/project/policy/manifests/replay_manifest.json",
       "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"
     },
+    "ruff_toolchain": {
+      "policy": {
+        "target": "newest stable supported release",
+        "package_source": "Python Package Index (PyPI)",
+        "work_minimisation_is_selection_criterion": false,
+        "exact_pin_required": true,
+        "minor_version_changes_are_explicit_migrations": true
+      },
+      "migration": {
+        "selection_date": "2026-07-25",
+        "previous_version": "0.14.1",
+        "newest_stable_version": "0.16.0",
+        "selected_version": "0.16.0",
+        "stable_0_17_available": false,
+        "diagnostics_before_migration": 1023,
+        "affected_files_before_migration": 280,
+        "formatter_differences_before_migration": 171,
+        "safe_fixable_diagnostics_before_migration": 546,
+        "unsafe_fixable_diagnostics_before_migration": 299,
+        "files_changed": 332,
+        "configuration_changes": [
+          "Pinned the canonical development dependency to ruff==0.16.0.",
+          "Made GitHub Actions print the installed Ruff version.",
+          "Made the existing C901 verification gate part of the canonical Ruff selection.",
+          "Removed the obsolete cli/front.py file-wide E402 suppression.",
+          "Rebased folder-balance metrics after formatter-only line redistribution.",
+          "Did not weaken lint selection, ignores, exclusions, or preview policy."
+        ],
+        "rules_newly_enforced_or_reinterpreted": [
+          "B023",
+          "BLE001",
+          "C400",
+          "C401",
+          "C408",
+          "C409",
+          "EXE001",
+          "EXE002",
+          "FLY002",
+          "FURB192",
+          "I001",
+          "ISC004",
+          "PERF102",
+          "PIE796",
+          "PIE810",
+          "PLE0605",
+          "RUF007",
+          "RUF046",
+          "RUF059",
+          "RUF100",
+          "S110",
+          "SIM102",
+          "SIM103",
+          "SIM117",
+          "SIM118",
+          "TRY004",
+          "UP006",
+          "UP022",
+          "UP035"
+        ],
+        "narrow_rule_exceptions": [
+          {
+            "rule": "TRY004",
+            "scope": "tested validation and parity exception contracts",
+            "reason": "Changing established ValueError or RuntimeError contracts caused regression failures; rule-specific inline annotations preserve the tested API."
+          },
+          {
+            "rule": "BLE001",
+            "scope": "top-level UI, optional-import, and best-effort recording boundaries",
+            "reason": "These boundaries must report or isolate arbitrary implementation failures without terminating the active application."
+          },
+          {
+            "rule": "SIM117",
+            "scope": "two score-analyzer tests",
+            "reason": "Explicit nested context-manager lifetime keeps environment restoration and temporary-workspace teardown ordering visible."
+          },
+          {
+            "rule": "PLE0605",
+            "scope": "locked-cell explosion compatibility facade",
+            "reason": "The facade deliberately mirrors the complete implementation module, including private test seams used by the existing compatibility contract."
+          },
+          {
+            "rule": "C901",
+            "scope": "six established schema and stateful UI orchestration functions",
+            "reason": "Ruff 0.16 reclassified these existing orchestrators. Splitting them during a lint migration would risk schema validation and keyboard/mouse event-order semantics, so the dedicated complexity gate remains enabled with function-specific annotations pending a separately tested refactor."
+          }
+        ],
+        "technical_blockers": [],
+        "branch_local_result": "CODEX_MODE=1 ./scripts/verify.sh passed on the final branch tree",
+        "merge_context_result": "pending final verification",
+        "github_python_3_11_to_3_14_matrix_result": "pending push"
+      }
+    },
     "policy_index_contract": {
       "required_tokens": [
         "config/project/policy_pack.json",

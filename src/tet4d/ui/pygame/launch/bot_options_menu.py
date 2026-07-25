@@ -408,7 +408,7 @@ def _handle_bot_menu_key(loop: _BotMenuState, key: int) -> None:
         _handle_bot_menu_confirm(loop)
 
 
-def run_bot_options_menu(
+def run_bot_options_menu(  # noqa: C901 - stateful keyboard/mouse event orchestrator
     screen: pygame.Surface,
     fonts,
     *,
