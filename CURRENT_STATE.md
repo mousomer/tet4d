@@ -11,6 +11,20 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- The 2026-07-25 repository static-analysis and formatting audit is recorded in
+  `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` and the
+  policy-pack manifest. Ruff 0.16.0 full lint, C901, and full-tree format checks
+  pass; the audited PR head also passes the GitHub Python 3.11–3.14 matrix.
+  Godot headless tests, scene instantiation, bounded startup, GDExtension build,
+  native standalone tests, six additional native warning probes, and Bash
+  syntax pass locally. The audit also records the exact gaps: CI Ruff format
+  scope is narrower than policy; local Godot 4.7 differs from target 4.6.3;
+  Godot/native build and tests are absent from CI; clang-format, clang-tidy,
+  ShellCheck, shfmt, and gdtoolkit are unavailable; clang-tidy lacks a compile
+  database; and the retained Unity C# spike has no installed or CI compiler
+  path. No tool was installed, no broad formatter ran, and no semantic or
+  authority boundary changed.
+
 - PR #37 now carries the explicit Ruff toolchain migration on
   `codex/configurable-plain-boards`. PyPI discovery on 2026-07-25 established
   Ruff 0.16.0 as the newest stable release and confirmed that no stable 0.17.x

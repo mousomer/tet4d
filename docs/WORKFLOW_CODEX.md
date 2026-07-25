@@ -216,6 +216,36 @@ Skip unless cross-cutting: unrelated `docs/rds/*`,
     change is an explicit migration. Record its audit and branch, merge-context,
     and GitHub matrix results in `config/project/policy_pack.json`.
 
+## Quality-tool category policy
+
+Quality evidence is cumulative. Select tools only for languages and build paths
+that exist in the repository, keep project-owned inputs separate from generated
+and third-party code, and record an exact status when a tool is unavailable.
+
+- A formatter verifies layout. It does not verify correctness.
+- A linter checks configured source rules. It does not replace compilation or
+  runtime tests.
+- A compiler or static analyser checks language and build-aware diagnostics. A
+  static analyser such as clang-tidy is not verified without the real includes,
+  defines, flags, and compilation database.
+- A runtime test verifies exercised behavior. It does not prove that every
+  source, scene, or resource loads.
+- A scene/resource validator verifies load and instantiation viability. Godot
+  headless import does not replace gameplay, parity, or product acceptance.
+- A sanitizer observes selected runtime safety failures. It does not replace
+  compiler warnings, static analysis, or deterministic tests.
+- An architecture/governance validator checks repository contracts and routing.
+  It does not substitute for any language-specific category above.
+
+Examples: clang-format verifies C++ layout but not C++ correctness; Godot
+headless import verifies parse/load viability but not gameplay behavior; and
+`dotnet format` verifies formatting and configured fixable analyser policy but
+does not replace compilation.
+
+The current repository-wide evidence inventory and staged gaps are recorded in
+`docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` and summarized
+in `config/project/policy_pack.json`.
+
 ## Edit discipline
 
 1. Read the exact current file before editing it.

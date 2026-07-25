@@ -119,6 +119,105 @@
         "github_python_3_11_to_3_14_matrix_result": "GitHub Actions pull-request run 30144781389 passed Python 3.11, 3.12, 3.13, and 3.14 for migration head c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2"
       }
     },
+    "static_analysis_formatting_audit": {
+      "audit_date": "2026-07-25",
+      "status": "completed_with_partial_and_unavailable_lanes",
+      "report": "docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md",
+      "audited_branch": "codex/configurable-plain-boards",
+      "audited_head": "ffb57675be13c2de3dd8525db24607ce331e5620",
+      "tracked_language_counts": {
+        "python": 458,
+        "gdscript": 78,
+        "godot_scenes": 1,
+        "godot_resources": 3,
+        "cpp_sources": 18,
+        "cpp_headers": 13,
+        "csharp": 24,
+        "shell": 23
+      },
+      "python": {
+        "ruff_version": "0.16.0",
+        "pinning": "exact development dependency",
+        "lint": "PASS: 0 diagnostics",
+        "format": "PASS: 638 files already formatted",
+        "ci_coverage": "full lint and C901; format limited to scripts and tools",
+        "type_checking": "not configured; shell-level mypy is non-canonical and Pyright is absent",
+        "gaps": [
+          "CI Ruff format scope is narrower than repository formatting policy"
+        ]
+      },
+      "gdscript": {
+        "target_godot_version": "4.6.3-stable",
+        "local_godot_version": "4.7.stable.official.5b4e0cb0f",
+        "parser_static_analysis": "PASS under local 4.7 through editor import and headless tests",
+        "warnings_policy": "no warnings-as-errors, global suppression, or per-warning suppression found",
+        "gdtoolkit": "NOT INSTALLED and not configured",
+        "ci_coverage": "not configured",
+        "gaps": [
+          "target-version local runner is not reproducible",
+          "Godot headless validation is absent from CI"
+        ]
+      },
+      "godot_project": {
+        "project_import": "PASS/PARTIAL under local 4.7; sandbox blocked editor cache writes",
+        "main_scene_startup": "PASS with bounded five-frame headless startup",
+        "scene_resource_validation": "PASS for the only scene plus three theme resources",
+        "gdextension_load": "PASS",
+        "gaps": [
+          "local Godot version differs from project target",
+          "scene/resource and GDExtension checks are absent from CI"
+        ]
+      },
+      "cpp": {
+        "compiler": "Apple Clang 21.0.0",
+        "standard": "C++17",
+        "warning_policy": "-Wall -Wextra -Werror in standalone native tests",
+        "build_and_tests": "PASS",
+        "clang_format": "NOT INSTALLED; configuration present",
+        "clang_tidy": "BLOCKED; tool and compile_commands.json absent",
+        "sanitizers": "NOT CONFIGURED",
+        "ci_coverage": "advisory configuration validation only; no build or tests",
+        "gaps": [
+          "compiler and SCons versions are unpinned",
+          "clang-format is not executable",
+          "clang-tidy lacks a real compilation database",
+          "native build, tests, and sanitizers are absent from CI"
+        ]
+      },
+      "csharp_dotnet": {
+        "applicable": true,
+        "scope": "legacy Unity replay spike, not Godot C#",
+        "project_files": "24 C# files and two Unity assembly definitions; no csproj or solution",
+        "sdk": "NOT INSTALLED",
+        "unity_version": "2022.3.20f1",
+        "roslyn": "BLOCKED without an installed Unity compiler path",
+        "dotnet_format": "NOT APPLICABLE to the assembly-definition-only path",
+        "nullable": "NOT CONFIGURED",
+        "warnings_as_errors": "NOT CONFIGURED",
+        "optional_analysers": "NOT CONFIGURED",
+        "gaps": [
+          "retained Unity C# cannot be built or analysed locally or in CI"
+        ]
+      },
+      "shell": {
+        "dialect": "Bash for all tracked shell scripts",
+        "bash_syntax": "PASS: 23 files",
+        "shellcheck": "NOT INSTALLED and not configured",
+        "shfmt": "NOT INSTALLED and not configured",
+        "ci_coverage": "scripts execute but no shell static-analysis gate exists",
+        "gaps": [
+          "ShellCheck is absent"
+        ]
+      },
+      "ci": {
+        "pull_request": 37,
+        "push_run": 30144884534,
+        "pull_request_run": 30144885222,
+        "head": "ffb57675be13c2de3dd8525db24607ce331e5620",
+        "result": "PASS on Python 3.11, 3.12, 3.13, and 3.14",
+        "full_repository_verification": "PASS"
+      }
+    },
     "policy_index_contract": {
       "required_tokens": [
         "config/project/policy_pack.json",

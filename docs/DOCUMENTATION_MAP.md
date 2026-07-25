@@ -58,6 +58,8 @@ or debt ledgers.
 - `docs/plans/cleanup_master_plan.md`
 - domain-specific active plan files under `docs/plans/`
 - recent planning-adjacent audits under `docs/plans/audits/`
+- current repository quality-tool evidence:
+  `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md`
 
 ### 4. Current execution state
 
@@ -119,6 +121,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Current topology-playground visible shell contract | `docs/plans/topology_playground_shell_redesign_spec.md` |
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
+| Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
 | Live 3D and future Live 4D gameboard visual language | `docs/plans/gameboard_visual_language_design.md` |
 | First subsystem parity pilot | `docs/architecture/first_subsystem_parity_pilot.md` |
 | Future parity-slice promotion gate | `docs/architecture/parity_pilot_audit_and_promotion_gates.md` |

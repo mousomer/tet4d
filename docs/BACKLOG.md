@@ -28,6 +28,21 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Static-analysis and formatting audit (2026-07-25, evidence and governance
+update): inventory all tracked Python, GDScript, Godot scene/resource, native
+C++, Unity C#, Bash, and project-configuration surfaces without installing
+tools or running autofixes. The canonical report is
+`docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md`; its summary
+is in `config/project/policy_pack.json`. Local Ruff lint/C901/full formatting,
+Godot tests/import/startup, scene and GDExtension load, native build/tests,
+selected compiler warning probes, and Bash syntax are known. Follow-up scope is
+staged rather than implemented here: close the narrow CI Ruff format mismatch,
+add reproducible target-version Godot and native build/test lanes, then add
+clang-format, a real clang-tidy compilation database, ShellCheck, and
+ASan/UBSan as separate reviewed stages. Unity C# tooling remains conditional on
+reactivating that legacy spike. This audit changes no gameplay, topology,
+replay, hashing, RNG, or authority behavior.
+
 PR #37 Ruff migration (2026-07-25, automated acceptance in progress): PyPI
 discovery selected Ruff 0.16.0 as the newest stable supported release; no
 stable 0.17.x release exists. The repository now pins `ruff==0.16.0`, reports
