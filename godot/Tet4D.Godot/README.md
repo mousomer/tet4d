@@ -1,6 +1,6 @@
 # Tet4D Godot Front End
 
-This Godot 4.6.3 project is the partial migration of Tet4D into a demo front
+This Godot 4.7.1 project is the partial migration of Tet4D into a demo front
 end and future product shell.
 
 It currently supports:
@@ -20,15 +20,29 @@ feature-complete against the Python game.
 From the repo root:
 
 ```bash
+git submodule update --init --recursive
 ./scripts/build_godot_tet4d_core.sh
-godot --path godot/Tet4D.Godot
+GODOT_BIN=/path/to/Godot
+"$GODOT_BIN" --path godot/Tet4D.Godot
 ```
 
-Headless tests:
+The executable must report
+`4.7.1.stable.official.a13da4feb`. Official Linux and macOS archive URLs,
+SHA-256 checksums, and executable paths are pinned in
+`config/project/policy_pack.json`.
+
+Canonical headless verification:
 
 ```bash
-godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
+GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh
 ```
+
+That command checks the exact engine and godot-cpp pins, extension API
+compatibility, isolated import, all scripts/scenes/resources, the complete
+Godot suite, GDExtension load, and bounded startup. Upgrade proposals must pin
+an official stable patch and checksums, audit the official migration guide,
+advance godot-cpp to a matching immutable API commit, perform a clean native
+rebuild, and update the migration record and CI together.
 
 ## What The Shell Does
 

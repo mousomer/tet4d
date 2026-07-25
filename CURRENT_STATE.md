@@ -11,6 +11,21 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
 
+- Godot product-shell migration from 4.6.3 to the exact official
+  `4.7.1-stable` build is in final acceptance on
+  `codex/configurable-plain-boards`. The machine toolchain manifest pins
+  release assets/checksums and godot-cpp commit
+  `5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731`; the migration audit is
+  `docs/plans/audits/godot_4_7_migration_2026-07-25.md`. The project,
+  descriptor, build API, clean native bindings, native tests, extension API
+  equivalence, Godot import/suite/startup, and Python/native parity pass
+  locally. Real-window macOS review passes for main/setup, live 2D/3D/4D,
+  W-slice/grid rendering, replay, cockpit/status, Settings, typography/themes,
+  and resizing, with no material startup/import/test performance regression.
+  A blocking Linux Godot/native/parity job is added beside the existing Python
+  matrix. Python remains the semantic oracle and no gameplay, topology,
+  replay, hashing, RNG, persistence-schema, or authority boundary changes.
+
 - The 2026-07-25 repository static-analysis and formatting audit is recorded in
   `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` and the
   policy-pack manifest. Ruff 0.16.0 full lint, C901, and full-tree format checks

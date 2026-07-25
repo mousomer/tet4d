@@ -28,6 +28,22 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Godot 4.7 migration (2026-07-25, final acceptance in progress): advance the
+product shell from 4.6.3 to the newest stable 4.7 patch, exact official
+`4.7.1-stable` build, and pin the matching immutable godot-cpp API baseline.
+The manifest now owns release assets/checksums and canonical commands; the
+project, GDExtension floor, native API selection, SCons dependency, isolated
+Godot verifier, current operator docs, and a blocking Linux CI lane advance
+together. Exact-engine pre-change compatibility, a clean native rebuild,
+native tests, extension API comparison, script/resource import, the complete
+Godot suite, bounded startup, persistence recovery, and Python/native parity
+pass locally. Real-window main/setup/live 2D/3D/4D/replay/settings/resize
+review also passes without a material performance regression. Final synthetic
+merge-context and GitHub evidence is recorded in
+`docs/plans/audits/godot_4_7_migration_2026-07-25.md`. No gameplay,
+topology, replay, hash, RNG, persistence-schema, or authority change is in
+scope.
+
 Static-analysis and formatting audit (2026-07-25, evidence and governance
 update): inventory all tracked Python, GDScript, Godot scene/resource, native
 C++, Unity C#, Bash, and project-configuration surfaces without installing

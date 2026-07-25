@@ -45,4 +45,4 @@ target="${SCONS_TARGET:-template_debug}"
 jobs="${SCONS_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 2)}"
 
 cd "$CORE_DIR"
-"${SCONS_CMD[@]}" platform="$platform" target="$target" arch="$arch" -j "$jobs"
+"${SCONS_CMD[@]}" api_version=4.7 platform="$platform" target="$target" arch="$arch" -j "$jobs"

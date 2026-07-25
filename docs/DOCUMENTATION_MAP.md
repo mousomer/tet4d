@@ -60,6 +60,8 @@ or debt ledgers.
 - recent planning-adjacent audits under `docs/plans/audits/`
 - current repository quality-tool evidence:
   `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md`
+- current Godot engine/toolchain migration evidence:
+  `docs/plans/audits/godot_4_7_migration_2026-07-25.md`
 
 ### 4. Current execution state
 
@@ -122,6 +124,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
+| Godot 4.7 engine, godot-cpp, native build, and CI migration evidence | `docs/plans/audits/godot_4_7_migration_2026-07-25.md` |
 | Live 3D and future Live 4D gameboard visual language | `docs/plans/gameboard_visual_language_design.md` |
 | First subsystem parity pilot | `docs/architecture/first_subsystem_parity_pilot.md` |
 | Future parity-slice promotion gate | `docs/architecture/parity_pilot_audit_and_promotion_gates.md` |

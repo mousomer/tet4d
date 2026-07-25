@@ -119,6 +119,80 @@
         "github_python_3_11_to_3_14_matrix_result": "GitHub Actions pull-request run 30144781389 passed Python 3.11, 3.12, 3.13, and 3.14 for migration head c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2"
       }
     },
+    "godot_toolchain": {
+      "migration_date": "2026-07-25",
+      "status": "local_acceptance_complete_ci_pending",
+      "selection_rule": "newest officially published stable Godot 4.7 patch release",
+      "previous_supported_version": "4.6.3-stable",
+      "selected_supported_version": "4.7.1-stable",
+      "release_channel": "stable",
+      "release_date": "2026-07-14",
+      "build_identifier": "4.7.1.stable.official.a13da4feb",
+      "engine_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+      "official_release_url": "https://github.com/godotengine/godot/releases/tag/4.7.1-stable",
+      "assets": {
+        "linux_x86_64": {
+          "name": "Godot_v4.7.1-stable_linux.x86_64.zip",
+          "url": "https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip",
+          "sha256": "c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba",
+          "executable": "Godot_v4.7.1-stable_linux.x86_64"
+        },
+        "macos_universal": {
+          "name": "Godot_v4.7.1-stable_macos.universal.zip",
+          "url": "https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_macos.universal.zip",
+          "sha256": "897cb7f9799796c717ae75f31446aed883dc92b1d6c3b33d893cc7843fff2fa9",
+          "executable": "Godot.app/Contents/MacOS/Godot"
+        }
+      },
+      "godot_cpp": {
+        "repository": "https://github.com/godotengine/godot-cpp.git",
+        "previous_commit": "a7770ef949fc664892e46b7e98a708672e8a44a8",
+        "selected_commit": "5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731",
+        "selection_basis": "official 2026-06-18 commit synchronizing godot-cpp with Godot 4.7-stable commit 5b4e0cb0fd279832bbdd69fed5354d4e5ad26f88",
+        "api_version": "4.7",
+        "api_equivalence": "Godot 4.7.1 and the selected 4.7-stable binding baseline have identical extension API content apart from patch-version header metadata"
+      },
+      "gdextension": {
+        "compatibility_minimum": "4.7",
+        "entry_symbol": "tet4d_core_library_init",
+        "reloadable": true
+      },
+      "build": {
+        "cpp_standard": "C++17",
+        "scons_version": "4.10.1",
+        "local_compiler": "Apple Clang 21.0.0"
+      },
+      "canonical_commands": {
+        "native_build": "./scripts/build_godot_tet4d_core.sh",
+        "native_tests": "./scripts/test_godot_tet4d_core.sh",
+        "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh",
+        "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"
+      },
+      "results": {
+        "migration_guide_audit": "PASS; one compatibility-preserving explicit stretch-aspect setting added and no affected API usage found",
+        "gdscript": "PASS under exact Godot 4.7.1; all 78 scripts register",
+        "scene_resources": "PASS under exact Godot 4.7.1 in an isolated project copy",
+        "native_build": "PASS after clean binding generation and extension rebuild against selected godot-cpp",
+        "native_tests": "PASS after the clean rebuild",
+        "parity": "2D, ND, setup, geometry, and query lanes PASS after the clean rebuild",
+        "visual_review": "PASS on macOS under exact Godot 4.7.1 for main/setup, live 2D/3D/4D, W slices, replay browser, cockpit, settings, typography/theme, and resize",
+        "persistence": "PASS in the full Godot suite, including schema migration and malformed-data recovery",
+        "ci": "blocking Linux godot-4-7 lane added; GitHub result pending",
+        "performance": {
+          "editor_import_seconds_before_after": "3.35 / 3.57",
+          "headless_suite_seconds_before_after": "13.26 / 13.36",
+          "bounded_startup_seconds_before_after": "1.35 / 1.36",
+          "native_tests_seconds_before_after": "19.04 / 16.14",
+          "clean_native_rebuild_seconds": "474.20",
+          "assessment": "no material regression; clean pre-migration build timing was not available for an equivalent build comparison"
+        },
+        "known_limitations": [
+          "macOS is the local development evidence platform",
+          "Linux will be the blocking CI evidence platform",
+          "Windows native packaging remains declared but unverified by this migration"
+        ]
+      }
+    },
     "static_analysis_formatting_audit": {
       "audit_date": "2026-07-25",
       "status": "completed_with_partial_and_unavailable_lanes",

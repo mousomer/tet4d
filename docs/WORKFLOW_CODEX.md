@@ -171,6 +171,39 @@ Skip unless cross-cutting: unrelated `docs/rds/*`,
 - `docs/PROJECT_STRUCTURE.md` owns generated ownership and source-of-truth
   snapshots only.
 
+## Godot 4.7 toolchain workflow
+
+The supported product-shell baseline is Godot `4.7.1-stable`, exact build
+`4.7.1.stable.official.a13da4feb`. Official Linux and macOS download URLs,
+SHA-256 checksums, executable paths, the matching immutable godot-cpp commit,
+and canonical commands are owned by
+`config/project/policy_pack.json["governance"]["godot_toolchain"]`.
+
+For a fresh checkout:
+
+```bash
+git submodule update --init --recursive
+python -m pip install -e .[dev]
+./scripts/build_godot_tet4d_core.sh
+./scripts/test_godot_tet4d_core.sh
+GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh
+```
+
+The verifier requires the exact manifest engine build and godot-cpp commit,
+compares their extension APIs, imports a temporary project copy, runs the full
+Godot suite, loads the GDExtension, and performs bounded startup. The separate
+GitHub `godot-4-7` job reproduces this on Linux and also runs native/Python
+parity. It is blocking evidence in addition to the Python-version matrix.
+
+Engine upgrades are explicit migrations. Select the newest official stable
+patch in the requested minor line, pin immutable release assets and checksums,
+audit the official migration guide against tracked sources/resources/settings,
+select a matching immutable godot-cpp API baseline, delete only the known
+ignored binding/native outputs, rebuild cleanly, run local and synthetic
+merge-context verification, and update the migration audit and CI in the same
+change. Do not use mutable `latest` downloads, arbitrary submodule heads, or
+editor-generated resource rewrites.
+
 ## Required workflow
 
 1. Read the relevant authorities before editing. Do not operate on guessed repo

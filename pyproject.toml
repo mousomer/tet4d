@@ -15,6 +15,7 @@ dependencies = [
 dev = [
   "pytest",
   "ruff==0.16.0",
+  "scons==4.10.1",
 ]
 
 [tool.setuptools]
