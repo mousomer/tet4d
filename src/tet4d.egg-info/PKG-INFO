@@ -8,5 +8,5 @@ License-File: NOTICE
 Requires-Dist: pygame-ce
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
-Requires-Dist: ruff==0.14.1; extra == "dev"
+Requires-Dist: ruff==0.16.0; extra == "dev"
 Dynamic: license-file
