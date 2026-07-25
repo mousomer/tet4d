@@ -39,7 +39,9 @@ semantic passes make full Ruff lint and format checks pass, remove
 `cli/front.py`'s obsolete blanket suppression, and preserve tested exception
 and compatibility contracts with only narrow manifest-recorded annotations.
 The focused regression set, full Python suite, and branch-local
-`CODEX_MODE=1 ./scripts/verify.sh` pass. Current-`master` synthetic-merge and
+`CODEX_MODE=1 ./scripts/verify.sh` pass. The isolated synthetic merge of
+`origin/master` `c10ed4e6a190daa85976162c1feb866c743b9462` with branch
+`32ce84041c559804eef48b9443d8236932016c29` also passes full verification.
 GitHub Python 3.11-3.14 results remain before completion. No Stage 52 behavior
 or Stage 53A scope changed.
 

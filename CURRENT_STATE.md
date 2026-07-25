@@ -24,9 +24,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   context-lifetime tests, and one compatibility facade retain narrow
   rule-specific annotations recorded in the policy-pack manifest. Ruff lint,
   Ruff format, the focused regression set, the full Python suite, and
-  branch-local `CODEX_MODE=1 ./scripts/verify.sh` pass. Current-`master`
-  synthetic-merge and GitHub Python 3.11-3.14 results remain to be recorded
-  before the migration is complete.
+  branch-local `CODEX_MODE=1 ./scripts/verify.sh` passes. An isolated synthetic
+  merge of `origin/master` `c10ed4e6a190daa85976162c1feb866c743b9462`
+  with branch head `32ce84041c559804eef48b9443d8236932016c29`
+  also passes the full verification gate. The GitHub Python 3.11-3.14 result
+  remains to be recorded before the migration is complete.
 
 - Stage 52 accessibility infrastructure is implemented on
   `codex/configurable-plain-boards` as an extension of the accepted Stage 51
