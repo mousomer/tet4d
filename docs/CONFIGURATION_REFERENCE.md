@@ -2093,9 +2093,13 @@ Parameters:
 - `governance.godot_toolchain.previous_supported_version`: `"4.6.3-stable"` (`string`)
 - `governance.godot_toolchain.release_channel`: `"stable"` (`string`)
 - `governance.godot_toolchain.release_date`: `"2026-07-14"` (`string`)
+- `governance.godot_toolchain.results.branch_head`: `"d9e6da3b0868f77aa26a6fd2e3b13496df40f949"` (`string`)
+- `governance.godot_toolchain.results.branch_result`: `"PASS for migration-specific checks and CODEX_MODE=1 ./scripts/verify...` (`string`)
 - `governance.godot_toolchain.results.ci`: `"blocking Linux godot-4-7 lane added; GitHub result pending"` (`string`)
 - `governance.godot_toolchain.results.gdscript`: `"PASS under exact Godot 4.7.1; all 78 scripts register"` (`string`)
 - `governance.godot_toolchain.results.known_limitations[]`: array[`string`]; examples: `"macOS is the local development evidence platform"`, `"Linux will be the blocking CI evidence platform"`, `"Windows native packaging remains declared but unverified by this mig...`
+- `governance.godot_toolchain.results.merge_context`: `"origin/master c10ed4e6a190daa85976162c1feb866c743b9462 plus branch d...` (`string`)
+- `governance.godot_toolchain.results.merge_context_result`: `"PASS for clean native rebuild, native tests, all parity lanes, exact...` (`string`)
 - `governance.godot_toolchain.results.migration_guide_audit`: `"PASS; one compatibility-preserving explicit stretch-aspect setting a...` (`string`)
 - `governance.godot_toolchain.results.native_build`: `"PASS after clean binding generation and extension rebuild against se...` (`string`)
 - `governance.godot_toolchain.results.native_tests`: `"PASS after the clean rebuild"` (`string`)
@@ -2111,7 +2115,7 @@ Parameters:
 - `governance.godot_toolchain.results.visual_review`: `"PASS on macOS under exact Godot 4.7.1 for main/setup, live 2D/3D/4D,...` (`string`)
 - `governance.godot_toolchain.selected_supported_version`: `"4.7.1-stable"` (`string`)
 - `governance.godot_toolchain.selection_rule`: `"newest officially published stable Godot 4.7 patch release"` (`string`)
-- `governance.godot_toolchain.status`: `"local_acceptance_complete_ci_pending"` (`string`)
+- `governance.godot_toolchain.status`: `"local_and_merge_acceptance_complete_ci_pending"` (`string`)
 - `governance.menu_control_typing_contract.enum_setup_option_source_tokens[]`: array[`string`]; examples: `"piece_set_labels"`
 - `governance.menu_control_typing_contract.menu_control_types[]`: array[`string`]; examples: `"toggle"`, `"selector"`, `"slider"`
 - `governance.menu_control_typing_contract.selector_options_key_required`: `true` (`bool`)

@@ -121,7 +121,7 @@
     },
     "godot_toolchain": {
       "migration_date": "2026-07-25",
-      "status": "local_acceptance_complete_ci_pending",
+      "status": "local_and_merge_acceptance_complete_ci_pending",
       "selection_rule": "newest officially published stable Godot 4.7 patch release",
       "previous_supported_version": "4.6.3-stable",
       "selected_supported_version": "4.7.1-stable",
@@ -177,6 +177,10 @@
         "parity": "2D, ND, setup, geometry, and query lanes PASS after the clean rebuild",
         "visual_review": "PASS on macOS under exact Godot 4.7.1 for main/setup, live 2D/3D/4D, W slices, replay browser, cockpit, settings, typography/theme, and resize",
         "persistence": "PASS in the full Godot suite, including schema migration and malformed-data recovery",
+        "branch_head": "d9e6da3b0868f77aa26a6fd2e3b13496df40f949",
+        "branch_result": "PASS for migration-specific checks and CODEX_MODE=1 ./scripts/verify.sh",
+        "merge_context": "origin/master c10ed4e6a190daa85976162c1feb866c743b9462 plus branch d9e6da3b0868f77aa26a6fd2e3b13496df40f949",
+        "merge_context_result": "PASS for clean native rebuild, native tests, all parity lanes, exact Godot verification, and CODEX_MODE=1 ./scripts/verify.sh",
         "ci": "blocking Linux godot-4-7 lane added; GitHub result pending",
         "performance": {
           "editor_import_seconds_before_after": "3.35 / 3.57",

@@ -39,7 +39,8 @@ native tests, extension API comparison, script/resource import, the complete
 Godot suite, bounded startup, persistence recovery, and Python/native parity
 pass locally. Real-window main/setup/live 2D/3D/4D/replay/settings/resize
 review also passes without a material performance regression. Final synthetic
-merge-context and GitHub evidence is recorded in
+merge-context verification passes after a clean native rebuild and all
+Godot/native/parity/repository gates. Final GitHub evidence is recorded in
 `docs/plans/audits/godot_4_7_migration_2026-07-25.md`. No gameplay,
 topology, replay, hash, RNG, persistence-schema, or authority change is in
 scope.

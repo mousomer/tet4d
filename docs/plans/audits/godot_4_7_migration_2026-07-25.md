@@ -183,8 +183,17 @@ tests the extension, runs 2D/ND/setup and geometry/query parity, performs the
 canonical Godot verification, and asserts that import/testing did not dirty
 the checkout. It does not replace the Python 3.11–3.14 matrix.
 
-GitHub and synthetic merge-context results are recorded after the final branch
-head is published; a queued or skipped job is not acceptance.
+Branch head `d9e6da3b0868f77aa26a6fd2e3b13496df40f949` passes the migration-specific
+checks and `CODEX_MODE=1 ./scripts/verify.sh`. An isolated no-commit merge of
+current `origin/master` `c10ed4e6a190daa85976162c1feb866c743b9462` with
+that head also passes a clean native rebuild, native tests, every parity lane,
+the exact Godot verifier, and the full repository verifier. The first
+merge-context full-verifier attempt correctly rejected a Python environment
+installed from the primary worktree; rerunning in a temporary environment
+editable-installed from the merged worktree passed.
+
+GitHub results are recorded after the final branch head is published; a queued
+or skipped job is not acceptance.
 
 ## Explicit acceptance statements
 

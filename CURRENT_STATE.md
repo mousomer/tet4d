@@ -23,8 +23,11 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   W-slice/grid rendering, replay, cockpit/status, Settings, typography/themes,
   and resizing, with no material startup/import/test performance regression.
   A blocking Linux Godot/native/parity job is added beside the existing Python
-  matrix. Python remains the semantic oracle and no gameplay, topology,
-  replay, hashing, RNG, persistence-schema, or authority boundary changes.
+  matrix. Branch-local and current-master synthetic-merge checks pass,
+  including a clean merge-context native rebuild, all parity lanes, exact
+  Godot verification, and the repository gate. Python remains the semantic
+  oracle and no gameplay, topology, replay, hashing, RNG, persistence-schema,
+  or authority boundary changes.
 
 - The 2026-07-25 repository static-analysis and formatting audit is recorded in
   `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` and the
