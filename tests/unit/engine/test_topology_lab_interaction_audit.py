@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pygame
 
 from tet4d.ui.pygame.launch import topology_lab_menu
-from tet4d.ui.pygame.topology_lab import controls_panel_actions
-from tet4d.ui.pygame.topology_lab import controls_panel, piece_sandbox
-from tet4d.ui.pygame.topology_lab import scene_state_canonical
+from tet4d.ui.pygame.topology_lab import (
+    controls_panel,
+    controls_panel_actions,
+    piece_sandbox,
+    scene_state_canonical,
+)
 from tet4d.ui.pygame.topology_lab.interaction_audit import latest_span_for_phase
 
 
@@ -82,7 +85,9 @@ class TestTopologyLabInteractionAudit(unittest.TestCase):
             )
         )
 
-    def test_dimension_change_records_one_canonical_sync_and_scene_refresh(self) -> None:
+    def test_dimension_change_records_one_canonical_sync_and_scene_refresh(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
 
         controls_panel._cycle_dimension(state, 1)

@@ -344,11 +344,15 @@ def _handle_camera_shortcut(
     ):
         return False
     camera_bindings = _camera_bindings_for_dimension(state.dimension)
-    if not camera_bindings or match_bound_action(
-        key,
-        camera_bindings,
-        tuple(camera_bindings),
-    ) is None:
+    if (
+        not camera_bindings
+        or match_bound_action(
+            key,
+            camera_bindings,
+            tuple(camera_bindings),
+        )
+        is None
+    ):
         return False
     return handle_scene_camera_key(state.dimension, key, state.scene_camera)
 

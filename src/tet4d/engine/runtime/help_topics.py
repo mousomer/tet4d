@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from ..ui_logic.keybindings_catalog import binding_action_ids
-from .settings_schema import read_json_value_or_raise
 from .project_config import project_root_path
+from .settings_schema import read_json_value_or_raise
 
 HELP_CONFIG_DIR = project_root_path() / "config" / "help"
 TOPICS_FILE = HELP_CONFIG_DIR / "topics.json"

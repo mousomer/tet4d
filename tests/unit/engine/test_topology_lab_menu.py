@@ -1,12 +1,24 @@
 from __future__ import annotations
 
-from dataclasses import replace
 import unittest
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pygame
 
+from tet4d.engine.gameplay.topology_designer import (
+    GAMEPLAY_MODE_EXPLORER,
+    GAMEPLAY_MODE_NORMAL,
+    default_topology_profile_state,
+)
+from tet4d.engine.runtime.keybinding_runtime_state import KEYBINDING_STATE
+from tet4d.engine.runtime.topology_playground_state import (
+    PLAYABILITY_STATUS_ANALYZING,
+    PLAYABILITY_STATUS_PLAYABLE,
+    TopologyPlaygroundPlayabilityAnalysis,
+    TopologyPlaygroundSandboxPieceState,
+)
 from tet4d.engine.topology_explorer import (
     BoundaryRef,
     BoundaryTransform,
@@ -18,29 +30,24 @@ from tet4d.engine.topology_explorer.presets import (
     sphere_profile_2d,
     sphere_profile_3d,
 )
-
-from tet4d.engine.gameplay.topology_designer import (
-    GAMEPLAY_MODE_EXPLORER,
-    GAMEPLAY_MODE_NORMAL,
-    default_topology_profile_state,
-)
-from tet4d.engine.runtime.topology_playground_state import (
-    PLAYABILITY_STATUS_ANALYZING,
-    PLAYABILITY_STATUS_PLAYABLE,
-    TopologyPlaygroundSandboxPieceState,
-    TopologyPlaygroundPlayabilityAnalysis,
-)
-from tet4d.engine.runtime.keybinding_runtime_state import KEYBINDING_STATE
 from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.keybindings import KEYS_2D, KEYS_3D, KEYS_4D
 from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab import controls_panel as topology_lab_controls_panel
-from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_control_values
+from tet4d.ui.pygame.topology_lab import (
+    controls_panel_values as topology_lab_control_values,
+)
 from tet4d.ui.pygame.topology_lab import explosion as topology_lab_explosion
-from tet4d.ui.pygame.topology_lab import scene_preview_state as topology_lab_scene_preview_state
+from tet4d.ui.pygame.topology_lab import (
+    scene_preview_state as topology_lab_scene_preview_state,
+)
 from tet4d.ui.pygame.topology_lab import scene_state as topology_lab_scene_state
-from tet4d.ui.pygame.topology_lab import scene_state_canonical as topology_lab_scene_state_canonical
-from tet4d.ui.pygame.topology_lab import scene_state_probe as topology_lab_scene_state_probe
+from tet4d.ui.pygame.topology_lab import (
+    scene_state_canonical as topology_lab_scene_state_canonical,
+)
+from tet4d.ui.pygame.topology_lab import (
+    scene_state_probe as topology_lab_scene_state_probe,
+)
 from tet4d.ui.pygame.topology_lab import shell_layout as topology_lab_shell_layout
 from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 from tet4d.ui.pygame.ui_utils import wrap_text_lines
@@ -50,6 +57,7 @@ def _text_fits(font: pygame.font.Font, text: str, max_width: int) -> bool:
     if max_width <= 0:
         return False
     return font.size(str(text))[0] <= int(max_width)
+
 
 class TestTopologyLabMenu(unittest.TestCase):
     def _current_explorer_profile(
@@ -205,14 +213,17 @@ class TestTopologyLabMenu(unittest.TestCase):
             runtime_state.playability_analysis = analysis
             return analysis
 
-        with patch.object(
-            topology_lab_scene_preview_state,
-            "update_topology_playability_analysis",
-            side_effect=_fake_update,
-        ), patch.object(
-            topology_lab_scene_preview_state,
-            "read_cached_playability_analysis",
-            return_value=None,
+        with (
+            patch.object(
+                topology_lab_scene_preview_state,
+                "update_topology_playability_analysis",
+                side_effect=_fake_update,
+            ),
+            patch.object(
+                topology_lab_scene_preview_state,
+                "read_cached_playability_analysis",
+                return_value=None,
+            ),
         ):
             state = topology_lab_menu._initial_topology_lab_state(
                 launch.dimension,
@@ -271,14 +282,17 @@ class TestTopologyLabMenu(unittest.TestCase):
             runtime_state.playability_analysis = analysis
             return analysis
 
-        with patch.object(
-            topology_lab_scene_preview_state,
-            "update_topology_playability_analysis",
-            side_effect=_fake_update,
-        ), patch.object(
-            topology_lab_scene_preview_state,
-            "read_cached_playability_analysis",
-            return_value=None,
+        with (
+            patch.object(
+                topology_lab_scene_preview_state,
+                "update_topology_playability_analysis",
+                side_effect=_fake_update,
+            ),
+            patch.object(
+                topology_lab_scene_preview_state,
+                "read_cached_playability_analysis",
+                return_value=None,
+            ),
         ):
             state = topology_lab_menu._initial_topology_lab_state(
                 launch.dimension,
@@ -306,7 +320,9 @@ class TestTopologyLabMenu(unittest.TestCase):
                 PLAYABILITY_STATUS_PLAYABLE,
             )
 
-    def test_pending_playability_analysis_uses_persistent_cache_when_available(self) -> None:
+    def test_pending_playability_analysis_uses_persistent_cache_when_available(
+        self,
+    ) -> None:
         launch = topology_lab_menu.build_explorer_playground_launch(
             dimension=2,
             entry_source="explorer",
@@ -364,7 +380,9 @@ class TestTopologyLabMenu(unittest.TestCase):
                 runtime_state.playability_analysis.status,
                 PLAYABILITY_STATUS_PLAYABLE,
             )
-            self.assertEqual(runtime_state.playability_analysis.summary, analysis.summary)
+            self.assertEqual(
+                runtime_state.playability_analysis.summary, analysis.summary
+            )
 
     def test_play_launch_forces_pending_playability_analysis(self) -> None:
         launch = topology_lab_menu.build_explorer_playground_launch(
@@ -417,10 +435,12 @@ class TestTopologyLabMenu(unittest.TestCase):
                 initial_tool=launch.initial_tool,
                 play_settings=launch.settings_snapshot,
             )
-            returned_screen, _display_settings = topology_lab_controls_panel._launch_play_preview(
-                state,
-                screen,
-                SimpleNamespace(),
+            returned_screen, _display_settings = (
+                topology_lab_controls_panel._launch_play_preview(
+                    state,
+                    screen,
+                    SimpleNamespace(),
+                )
             )
 
         self.assertIs(returned_screen, screen)
@@ -684,14 +704,18 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertFalse(state.status_error)
         self.assertIn("x+ -> y+", state.status)
 
-        expected_target, _expected_result = topology_lab_controls_panel.advance_explorer_probe(
-            sphere_profile_3d(),
-            dims=(8, 8, 8),
-            coord=(7, 7, 7),
-            step_label="x+",
+        expected_target, _expected_result = (
+            topology_lab_controls_panel.advance_explorer_probe(
+                sphere_profile_3d(),
+                dims=(8, 8, 8),
+                coord=(7, 7, 7),
+                step_label="x+",
+            )
         )
         topology_lab_menu._apply_probe_step(state, "x+")
-        self.assertEqual(topology_lab_scene_state.current_probe_coord(state), expected_target)
+        self.assertEqual(
+            topology_lab_scene_state.current_probe_coord(state), expected_target
+        )
         self.assertEqual(state.canonical_state.probe_state.coord, expected_target)
         self.assertEqual(state.canonical_state.probe_state.frame_permutation, (0, 1, 2))
         self.assertEqual(state.canonical_state.probe_state.frame_signs, (1, 1, 1))
@@ -751,7 +775,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         settings = state.play_settings
         assert settings is not None
 
-        self.assertEqual(topology_lab_menu._select_projection_coord(state, (0, 0, 0)), (0, 0, 0))
+        self.assertEqual(
+            topology_lab_menu._select_projection_coord(state, (0, 0, 0)), (0, 0, 0)
+        )
 
         topology_lab_scene_state_canonical.replace_play_settings(
             state,
@@ -768,7 +794,9 @@ class TestTopologyLabMenu(unittest.TestCase):
 
         assert state.canonical_state is not None
         self.assertEqual(state.canonical_state.axis_sizes, (5, 8, 8))
-        self.assertEqual(topology_lab_controls_panel._board_dims_for_state(state), (5, 8, 8))
+        self.assertEqual(
+            topology_lab_controls_panel._board_dims_for_state(state), (5, 8, 8)
+        )
         self.assertEqual(state.scene_preview_dims, (5, 8, 8))
         self.assertIsNotNone(state.scene_preview_error)
 
@@ -1154,7 +1182,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         handle_camera.assert_not_called()
         cycle_piece.assert_called_once_with(state, 1)
 
-    def test_sandbox_explosion_prepares_dedicated_surface_from_current_cells(self) -> None:
+    def test_sandbox_explosion_prepares_dedicated_surface_from_current_cells(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         topology_lab_menu.spawn_sandbox_piece(state)
@@ -1425,7 +1455,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertFalse(topology_lab_menu._probe_trace_visible(state))
         self.assertIn("Editor trace hidden", state.status)
 
-    def test_editor_probe_neighbors_row_toggles_editor_owned_probe_overlay(self) -> None:
+    def test_editor_probe_neighbors_row_toggles_editor_owned_probe_overlay(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
         row = next(
             row
@@ -1467,7 +1499,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertTrue(state.sandbox.neighbor_search_enabled)
         self.assertIn("neighbor-search enabled", state.status)
 
-    def test_workspace_layout_keeps_helper_external_to_scene_and_editor_panels(self) -> None:
+    def test_workspace_layout_keeps_helper_external_to_scene_and_editor_panels(
+        self,
+    ) -> None:
         (
             tool_rect,
             top_rect,
@@ -1647,7 +1681,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertLessEqual(budgets.label_width + budgets.value_width + 48, 268)
         self.assertGreaterEqual(budgets.value_width, 56)
 
-    def test_compact_controls_lane_wraps_required_row_text_without_overflow(self) -> None:
+    def test_compact_controls_lane_wraps_required_row_text_without_overflow(
+        self,
+    ) -> None:
         fonts = self._fonts()
         state = self._explorer_state(4)
         rows = topology_lab_menu._rows_for_state(state)
@@ -1665,7 +1701,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             if row.label not in required_labels:
                 continue
             checked += 1
-            label_lines = wrap_text_lines(fonts.menu_font, row.label, budgets.label_width)
+            label_lines = wrap_text_lines(
+                fonts.menu_font, row.label, budgets.label_width
+            )
             value_lines = wrap_text_lines(
                 fonts.menu_font,
                 topology_lab_control_values._row_value_text(state, row),
@@ -1674,12 +1712,18 @@ class TestTopologyLabMenu(unittest.TestCase):
             with self.subTest(label=row.label):
                 self.assertGreater(len(label_lines), 0)
                 for line in label_lines:
-                    self.assertTrue(_text_fits(fonts.menu_font, line, budgets.label_width))
+                    self.assertTrue(
+                        _text_fits(fonts.menu_font, line, budgets.label_width)
+                    )
                 for line in value_lines:
-                    self.assertTrue(_text_fits(fonts.menu_font, line, budgets.value_width))
+                    self.assertTrue(
+                        _text_fits(fonts.menu_font, line, budgets.value_width)
+                    )
         self.assertEqual(checked, len(required_labels))
 
-    def test_workspace_layout_preserves_readable_helper_width_in_compact_shell(self) -> None:
+    def test_workspace_layout_preserves_readable_helper_width_in_compact_shell(
+        self,
+    ) -> None:
         (
             _tool_rect,
             top_rect,
@@ -1715,7 +1759,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertLessEqual(layout.panel_rect.bottom, 680)
         self.assertLessEqual(layout.menu_w, 320)
 
-    def test_workspace_layout_preserves_helper_lane_on_narrow_supported_width(self) -> None:
+    def test_workspace_layout_preserves_helper_lane_on_narrow_supported_width(
+        self,
+    ) -> None:
         (
             _tool_rect,
             top_rect,
@@ -1760,7 +1806,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertGreater(len(sections), 0)
         for title, rows in sections:
             with self.subTest(title=title):
-                self.assertTrue(_text_fits(fonts.hint_font, title.upper(), body_width - 20))
+                self.assertTrue(
+                    _text_fits(fonts.hint_font, title.upper(), body_width - 20)
+                )
             for label, keys in rows:
                 with self.subTest(label=label, keys=keys):
                     self.assertTrue(_text_fits(fonts.hint_font, label, row_label_width))
@@ -1812,7 +1860,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         original = tuple(KEYBINDING_STATE.keys_4d["move_w_neg"])
         try:
             KEYBINDING_STATE.keys_4d["move_w_neg"] = (pygame.K_SLASH, pygame.K_q)
-            sections = dict(topology_lab_workspace_shell._workspace_helper_sections(state))
+            sections = dict(
+                topology_lab_workspace_shell._workspace_helper_sections(state)
+            )
             self.assertIn(
                 (
                     "W",
@@ -1829,7 +1879,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         finally:
             KEYBINDING_STATE.keys_4d["move_w_neg"] = original
 
-    def test_workspace_action_buttons_wrap_long_labels_within_button_budget(self) -> None:
+    def test_workspace_action_buttons_wrap_long_labels_within_button_budget(
+        self,
+    ) -> None:
         fonts = self._fonts()
         area = pygame.Rect(0, 0, 520, 36)
         actions = (
@@ -2048,17 +2100,21 @@ class TestTopologyLabMenu(unittest.TestCase):
                 for _ in range(diagonal_pairs):
                     topology_lab_menu._dispatch_key(state, pygame.K_DOWN)
                     topology_lab_menu._dispatch_key(state, pygame.K_RIGHT)
-                    expected_coord, _ = topology_lab_controls_panel.advance_explorer_probe(
-                        sphere_profile_2d(),
-                        dims=dims,
-                        coord=expected_coord,
-                        step_label="y+",
+                    expected_coord, _ = (
+                        topology_lab_controls_panel.advance_explorer_probe(
+                            sphere_profile_2d(),
+                            dims=dims,
+                            coord=expected_coord,
+                            step_label="y+",
+                        )
                     )
-                    expected_coord, _ = topology_lab_controls_panel.advance_explorer_probe(
-                        sphere_profile_2d(),
-                        dims=dims,
-                        coord=expected_coord,
-                        step_label="x+",
+                    expected_coord, _ = (
+                        topology_lab_controls_panel.advance_explorer_probe(
+                            sphere_profile_2d(),
+                            dims=dims,
+                            coord=expected_coord,
+                            step_label="x+",
+                        )
                     )
 
                 self.assertEqual(
@@ -2066,7 +2122,9 @@ class TestTopologyLabMenu(unittest.TestCase):
                     expected_coord,
                 )
                 assert state.canonical_state is not None
-                self.assertEqual(state.canonical_state.probe_state.coord, expected_coord)
+                self.assertEqual(
+                    state.canonical_state.probe_state.coord, expected_coord
+                )
 
                 topology_lab_menu._dispatch_key(state, pygame.K_DOWN)
                 expected_coord, _ = topology_lab_controls_panel.advance_explorer_probe(
@@ -2079,7 +2137,9 @@ class TestTopologyLabMenu(unittest.TestCase):
                     topology_lab_scene_state.current_probe_coord(state),
                     expected_coord,
                 )
-                self.assertEqual(state.canonical_state.probe_state.coord, expected_coord)
+                self.assertEqual(
+                    state.canonical_state.probe_state.coord, expected_coord
+                )
 
     def test_apply_explorer_glue_adds_gluing_to_profile_3d(self) -> None:
         state = self._explorer_state(3)
@@ -2292,9 +2352,7 @@ class TestTopologyLabMenu(unittest.TestCase):
         topology_lab_menu._draw_menu(screen, fonts, state)
         targets = state.mouse_targets or []
         self.assertTrue(any(target.kind == "boundary_pick" for target in targets))
-        self.assertTrue(
-            any(target.kind == "workspace_mode" for target in targets)
-        )
+        self.assertTrue(any(target.kind == "workspace_mode" for target in targets))
         self.assertFalse(any(target.kind == "preset_step" for target in targets))
         self.assertTrue(any(target.kind == "glue_slot" for target in targets))
         self.assertTrue(any(target.kind == "perm_select" for target in targets))
@@ -2467,7 +2525,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             topology_lab_menu._handle_mouse_down(state, (4, 4), 1)
         self.assertNotEqual(self._current_explorer_profile(state), original)
 
-    def test_inspect_mode_right_click_boundary_does_not_start_glue_creation(self) -> None:
+    def test_inspect_mode_right_click_boundary_does_not_start_glue_creation(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         state.mouse_targets = [
@@ -2486,7 +2546,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             4,
         )
 
-    def test_inspect_mode_right_click_boundary_does_not_edit_existing_glue(self) -> None:
+    def test_inspect_mode_right_click_boundary_does_not_edit_existing_glue(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_PROBE)
         topology_lab_menu._apply_explorer_glue(state)
@@ -2799,7 +2861,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             list(state.canonical_state.probe_state.path),
         )
         self.assertTrue(topology_lab_scene_state.probe_trace_visible(state))
-        self.assertEqual(topology_lab_scene_state.current_probe_frame(state), ((0, 1), (1, 1)))
+        self.assertEqual(
+            topology_lab_scene_state.current_probe_frame(state), ((0, 1), (1, 1))
+        )
 
     def test_sync_shell_state_leaves_profile_and_draft_as_fallback_only_storage(
         self,
@@ -2831,7 +2895,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             stale_draft,
         )
 
-    def test_sync_shell_state_keeps_unsynced_selection_and_highlight_mirrors(self) -> None:
+    def test_sync_shell_state_keeps_unsynced_selection_and_highlight_mirrors(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
         topology_lab_scene_state.sync_canonical_playground_state(state)
         assert state.canonical_state is not None
@@ -2847,8 +2913,13 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(state.selected_boundary_index, 5)
         self.assertEqual(state.selected_glue_id, "glue_stale")
         self.assertEqual(state.highlighted_glue_id, "glue_stale_highlight")
-        self.assertEqual(topology_lab_scene_state_canonical.current_selected_boundary_index(state), 2)
-        self.assertEqual(topology_lab_scene_state_canonical.current_selected_glue_id(state), "glue_live")
+        self.assertEqual(
+            topology_lab_scene_state_canonical.current_selected_boundary_index(state), 2
+        )
+        self.assertEqual(
+            topology_lab_scene_state_canonical.current_selected_glue_id(state),
+            "glue_live",
+        )
         self.assertEqual(
             topology_lab_scene_state_probe.current_highlighted_glue_id(state),
             "glue_highlight",
@@ -2919,7 +2990,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         topology_lab_menu._activate_action(state, "editor_probe_reset")
         dims = topology_lab_menu._board_dims_for_state(state)
         expected_coord = tuple(max(0, size // 2) for size in dims)
-        self.assertEqual(topology_lab_scene_state.current_probe_coord(state), expected_coord)
+        self.assertEqual(
+            topology_lab_scene_state.current_probe_coord(state), expected_coord
+        )
         self.assertEqual(topology_lab_scene_state.current_probe_trace(state), [])
         self.assertEqual(
             topology_lab_scene_state.current_probe_path(state),
@@ -3083,7 +3156,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         self.assertEqual(state.active_pane, topology_lab_menu.PANE_SCENE)
         self.assertEqual(state.status, "Selected cell [1, 2, 3, 0]")
 
-    def test_edit_tool_keeps_editor_movement_safe_and_leaves_sandbox_origin_unchanged(self) -> None:
+    def test_edit_tool_keeps_editor_movement_safe_and_leaves_sandbox_origin_unchanged(
+        self,
+    ) -> None:
         state = self._explorer_state(2)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
         topology_lab_menu.ensure_piece_sandbox(state)
@@ -3664,7 +3739,9 @@ class TestTopologyLabMenu(unittest.TestCase):
         topology_lab_menu._refresh_explorer_scene_state(state)
         self.assertEqual(state.scene_active_glue_ids.get("x-"), "free")
         topology_lab_menu._apply_explorer_glue(state)
-        selected_glue_id = topology_lab_scene_state_canonical.current_selected_glue_id(state)
+        selected_glue_id = topology_lab_scene_state_canonical.current_selected_glue_id(
+            state
+        )
         self.assertEqual(state.scene_active_glue_ids.get("x-"), selected_glue_id)
         self.assertEqual(state.scene_active_glue_ids.get("x+"), selected_glue_id)
 
@@ -3819,7 +3896,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             topology_lab_scene_state_canonical.current_selected_boundary_index(state),
             5,
         )
-        self.assertIsNone(topology_lab_scene_state_canonical.current_selected_glue_id(state))
+        self.assertIsNone(
+            topology_lab_scene_state_canonical.current_selected_glue_id(state)
+        )
         assert state.canonical_state is not None
         self.assertEqual(state.canonical_state.selected_boundary, glue.target)
         self.assertIsNone(state.canonical_state.selected_gluing)
@@ -3857,7 +3936,9 @@ class TestTopologyLabMenu(unittest.TestCase):
             patch.object(
                 topology_lab_workspace_shell, "_draw_explorer_scene", return_value=[]
             ) as draw_scene,
-            patch.object(topology_lab_workspace_shell, "draw_transform_editor", return_value=[]),
+            patch.object(
+                topology_lab_workspace_shell, "draw_transform_editor", return_value=[]
+            ),
             patch.object(
                 topology_lab_workspace_shell, "_draw_workspace_helper_panel"
             ) as draw_helper,
@@ -4007,9 +4088,12 @@ class TestTopologyLabMenu(unittest.TestCase):
         with patch.object(topology_lab_menu, "play_sfx"):
             topology_lab_menu._handle_mouse_down(state, (5, 5), 1)
         self.assertEqual(len(self._current_explorer_profile(state).gluings), 1)
-        self.assertIsNotNone(topology_lab_scene_state_canonical.current_selected_glue_id(state))
+        self.assertIsNotNone(
+            topology_lab_scene_state_canonical.current_selected_glue_id(state)
+        )
         self.assertEqual(state.active_tool, topology_lab_menu.TOOL_EDIT)
         self.assertTrue(state.running)
+
 
 if __name__ == "__main__":
     unittest.main()

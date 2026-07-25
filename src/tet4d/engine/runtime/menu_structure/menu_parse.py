@@ -4,8 +4,8 @@ from typing import Any
 
 from ..settings_schema import (
     as_non_empty_string,
-    require_object,
     require_bool,
+    require_object,
     validate_setting_storage_metadata,
 )
 from .parse_helpers import parse_copy_fields
@@ -85,7 +85,9 @@ def _parse_action_group_item(item: dict[str, Any], *, path: str) -> dict[str, An
     }
 
 
-def _parse_setting_storage_metadata(item: dict[str, Any], *, path: str) -> dict[str, Any]:
+def _parse_setting_storage_metadata(
+    item: dict[str, Any], *, path: str
+) -> dict[str, Any]:
     parsed: dict[str, Any] = {}
     raw_storage_type = item.get("storage_type")
     if raw_storage_type is not None:
@@ -95,7 +97,8 @@ def _parse_setting_storage_metadata(item: dict[str, Any], *, path: str) -> dict[
         ).lower()
         if storage_type not in _STORAGE_TYPES:
             raise RuntimeError(
-                f"{path}.storage_type must be one of: " + ", ".join(sorted(_STORAGE_TYPES))
+                f"{path}.storage_type must be one of: "
+                + ", ".join(sorted(_STORAGE_TYPES))
             )
         parsed["storage_type"] = storage_type
     raw_legacy_setting_id = item.get("legacy_setting_id")

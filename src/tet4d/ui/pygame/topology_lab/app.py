@@ -22,9 +22,9 @@ from tet4d.engine.topology_explorer import (
 )
 
 from .scene_state import (
-    ExplorerPlaygroundSettings,
     TOOL_EDIT,
     TOOL_SANDBOX,
+    ExplorerPlaygroundSettings,
 )
 
 EntrySource = Literal["explorer", "launcher", "lab"]
@@ -210,7 +210,7 @@ def build_explorer_playground_settings(
         return int(defaults[name])
 
     rigid_play_mode = (
-        str(getattr(source_settings, "rigid_play_mode"))
+        str(source_settings.rigid_play_mode)
         if source_settings is not None and hasattr(source_settings, "rigid_play_mode")
         else RIGID_PLAY_MODE_AUTO
     )

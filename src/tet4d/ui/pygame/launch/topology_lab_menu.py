@@ -11,24 +11,20 @@ from tet4d.engine.topology_explorer import (
 from tet4d.ui.pygame.launch.topology_lab_state_factory import (
     _initial_topology_lab_state,
 )
-from tet4d.ui.pygame.topology_lab.app import (
-    ExplorerPlaygroundLaunch,
-    build_explorer_playground_launch,
-    build_explorer_playground_settings,  # noqa: F401 - compatibility re-export
+from tet4d.ui.pygame.locked_cell_explosion.launcher import (
+    run_standalone_explosion_launcher,
 )
-from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
+from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.topology_lab import (
-    ExplorerGlueDraft as _ExplorerGlueDraft,
-    ExplorerPlaygroundSettings,  # noqa: F401 - compatibility re-export
     PANE_CONTROLS,  # noqa: F401 - compatibility re-export
     PANE_SCENE,  # noqa: F401 - compatibility re-export
     TOOL_CREATE,  # noqa: F401 - compatibility re-export
     TOOL_EDIT,  # noqa: F401 - compatibility re-export
     TOOL_NAVIGATE,  # noqa: F401 - compatibility re-export
     TOOL_PLAY,  # noqa: F401 - compatibility re-export
-    TOOL_PROBE as _TOOL_PROBE,
     TOOL_SANDBOX,  # noqa: F401 - compatibility re-export
+    ExplorerPlaygroundSettings,  # noqa: F401 - compatibility re-export
     TopologyLabHitTarget,
     apply_boundary_edit_pick,
     apply_boundary_pick,
@@ -44,59 +40,26 @@ from tet4d.ui.pygame.topology_lab import (
     rotate_sandbox_piece,
     sandbox_cells,  # noqa: F401 - compatibility re-export
     spawn_sandbox_piece,
-    set_active_tool as _set_active_tool,
     step_scene_camera,
     tool_is_edit,
     tool_is_sandbox,
     update_hover_target,
 )
-from tet4d.ui.pygame.topology_lab.scene_state import (
-    controls_pane_active as _controls_pane_active,
-    current_dirty as _current_dirty,
-    current_explorer_draft as _current_explorer_draft,
-    current_explorer_profile as _current_explorer_profile,
-    current_probe_coord as _current_probe_coord,  # noqa: F401 - compatibility re-export
-    current_probe_path as _current_probe_path,  # noqa: F401 - compatibility re-export
-    ensure_probe_state as _ensure_probe_state,  # noqa: F401 - compatibility re-export
-    playground_dims_for_state as _board_dims_for_state,  # noqa: F401 - compatibility re-export
-    probe_neighbors_visible as _probe_neighbors_visible,
-    probe_trace_visible as _probe_trace_visible,
-    scene_pane_active as _scene_pane_active,
-    select_projection_coord as _select_projection_coord,
-    set_probe_neighbors_visible as _set_probe_neighbors_visible,
-    set_active_workspace as _set_active_workspace,
-    set_probe_trace_visible as _set_probe_trace_visible,
-    sync_canonical_playground_state as _sync_canonical_state,
-    update_explorer_draft as _update_explorer_draft,
-    WORKSPACE_EDITOR,
-    WORKSPACE_SANDBOX,
-    active_workspace_name as _active_workspace_name,
+from tet4d.ui.pygame.topology_lab import (
+    TOOL_PROBE as _TOOL_PROBE,
 )
-from tet4d.ui.pygame.topology_lab.state_ownership import (
-    select_sandbox_projection_coord as _select_sandbox_projection_coord,
+from tet4d.ui.pygame.topology_lab import (
+    ExplorerGlueDraft as _ExplorerGlueDraft,
 )
-from tet4d.ui.pygame.topology_lab.copy import (
-    display_title_for_state as _copy_display_title_for_state,
+from tet4d.ui.pygame.topology_lab import (
+    set_active_tool as _set_active_tool,
 )
-from tet4d.ui.pygame.topology_lab.controls_panel_values import (
-    _explorer_preset_value_text,  # noqa: F401 - compatibility re-export
-    _playability_shell_chip_text,
-    _row_value_text,
-    _sandbox_neighbor_search_enabled,
-)
-from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
-    _cycle_explorer_preset,
-    _explorer_presets,  # noqa: F401 - compatibility re-export
-    _normalize_explorer_draft,
-    _select_explorer_draft_slot,
-    _toggle_explorer_sign,
-    _toggle_sandbox_neighbor_search,
-)
-from tet4d.ui.pygame.topology_lab.scene_preview_state import (
-    advance_pending_explorer_playability_analysis,
+from tet4d.ui.pygame.topology_lab.app import (
+    ExplorerPlaygroundLaunch,
+    build_explorer_playground_launch,
+    build_explorer_playground_settings,  # noqa: F401 - compatibility re-export
 )
 from tet4d.ui.pygame.topology_lab.controls_panel import (
-    _TopologyLabState,
     _adjust_row,
     _apply_explorer_glue,
     _apply_probe_step,
@@ -108,13 +71,22 @@ from tet4d.ui.pygame.topology_lab.controls_panel import (
     _refresh_explorer_scene_state,  # noqa: F401 - compatibility re-export
     _remove_explorer_glue,
     _reset_probe,
-    _run_export,
     _run_experiments,
+    _run_export,
     _save_profile,
     _set_active_pane_from_target,
     _set_status,
     _sync_explorer_state,  # noqa: F401 - compatibility re-export
+    _TopologyLabState,
     _uses_general_explorer_editor,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
+    _cycle_explorer_preset,
+    _explorer_presets,  # noqa: F401 - compatibility re-export
+    _normalize_explorer_draft,
+    _select_explorer_draft_slot,
+    _toggle_explorer_sign,
+    _toggle_sandbox_neighbor_search,
 )
 from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
     _row_is_status_display,
@@ -122,36 +94,110 @@ from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
     _rows_for_state,
     _selectable_row_indexes,
 )
+from tet4d.ui.pygame.topology_lab.controls_panel_values import (
+    _explorer_preset_value_text,  # noqa: F401 - compatibility re-export
+    _playability_shell_chip_text,
+    _row_value_text,
+    _sandbox_neighbor_search_enabled,
+)
+from tet4d.ui.pygame.topology_lab.copy import (
+    display_title_for_state as _copy_display_title_for_state,
+)
+from tet4d.ui.pygame.topology_lab.explorer_tools import draw_tool_ribbon
 from tet4d.ui.pygame.topology_lab.explosion import (
     consume_pending_scene_explosion_launch,
     step_scene_explosion,
 )
-from tet4d.ui.pygame.locked_cell_explosion.launcher import (
-    run_standalone_explosion_launcher,
+from tet4d.ui.pygame.topology_lab.scene_preview_state import (
+    advance_pending_explorer_playability_analysis,
 )
-from tet4d.ui.pygame.topology_lab.explorer_tools import draw_tool_ribbon
-from tet4d.ui.pygame.topology_lab.workspace_shell import (
-    _action_buttons_for_state,
-    _active_workspace_coord,  # noqa: F401 - compatibility re-export
-    _active_workspace_neighbor_markers,  # noqa: F401 - compatibility re-export
-    _active_workspace_path,  # noqa: F401 - compatibility re-export
-    _draw_explorer_scene as _workspace_draw_explorer_scene,
-    _draw_explorer_workspace,
-    _explorer_workspace_layout as _workspace_shell_layout,
-    _hint_lines_for_state,
-    _workspace_preview_lines,  # noqa: F401 - compatibility re-export
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    WORKSPACE_EDITOR,
+    WORKSPACE_SANDBOX,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    active_workspace_name as _active_workspace_name,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    controls_pane_active as _controls_pane_active,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    current_dirty as _current_dirty,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    current_explorer_draft as _current_explorer_draft,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    current_explorer_profile as _current_explorer_profile,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    current_probe_coord as _current_probe_coord,  # noqa: F401 - compatibility re-export
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    current_probe_path as _current_probe_path,  # noqa: F401 - compatibility re-export
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    ensure_probe_state as _ensure_probe_state,  # noqa: F401 - compatibility re-export
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    playground_dims_for_state as _board_dims_for_state,  # noqa: F401 - compatibility re-export
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    probe_neighbors_visible as _probe_neighbors_visible,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    probe_trace_visible as _probe_trace_visible,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    scene_pane_active as _scene_pane_active,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    select_projection_coord as _select_projection_coord,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    set_active_workspace as _set_active_workspace,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    set_probe_neighbors_visible as _set_probe_neighbors_visible,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    set_probe_trace_visible as _set_probe_trace_visible,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    sync_canonical_playground_state as _sync_canonical_state,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    update_explorer_draft as _update_explorer_draft,
 )
 from tet4d.ui.pygame.topology_lab.shell_layout import (
     build_topology_lab_shell_layout,
     topology_lab_row_text_budgets,
 )
+from tet4d.ui.pygame.topology_lab.state_ownership import (
+    select_sandbox_projection_coord as _select_sandbox_projection_coord,
+)
+from tet4d.ui.pygame.topology_lab.workspace_shell import (
+    _action_buttons_for_state,
+    _active_workspace_coord,  # noqa: F401 - compatibility re-export
+    _active_workspace_neighbor_markers,  # noqa: F401 - compatibility re-export
+    _active_workspace_path,  # noqa: F401 - compatibility re-export
+    _draw_explorer_workspace,
+    _hint_lines_for_state,
+    _workspace_preview_lines,  # noqa: F401 - compatibility re-export
+)
+from tet4d.ui.pygame.topology_lab.workspace_shell import (
+    _draw_explorer_scene as _workspace_draw_explorer_scene,
+)
+from tet4d.ui.pygame.topology_lab.workspace_shell import (
+    _explorer_workspace_layout as _workspace_shell_layout,
+)
 from tet4d.ui.pygame.ui_utils import (
     draw_centered_chip,
     draw_fitted_text_line,
-    draw_selection_highlight,
-    draw_wrapped_label_value_lines,
-    draw_vertical_gradient,
     draw_panel_frame,
+    draw_selection_highlight,
+    draw_vertical_gradient,
+    draw_wrapped_label_value_lines,
     panel_bg,
     wrapped_label_value_layout,
 )
@@ -722,7 +768,9 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
         validity_color = (
             (120, 214, 140)
             if validity_text == "Valid"
-            else (224, 92, 92) if validity_text == "Unsafe" else (238, 158, 116)
+            else (224, 92, 92)
+            if validity_text == "Unsafe"
+            else (238, 158, 116)
         )
         dimension_text = f"{state.dimension}D"
         dimension_rect = layout.top_bar.dimension_chip_rect
@@ -770,9 +818,7 @@ def _draw_menu(screen: pygame.Surface, fonts, state: _TopologyLabState) -> None:
                 if _controls_pane_active(state)
                 else _SCENE_PANE_TITLE
             ),
-            color=(
-                _HIGHLIGHT_COLOR if _controls_pane_active(state) else _MUTED_COLOR
-            ),
+            color=(_HIGHLIGHT_COLOR if _controls_pane_active(state) else _MUTED_COLOR),
             max_width=controls_rect.width - 28,
             x=controls_rect.x + 14,
             y=controls_rect.y + 10,

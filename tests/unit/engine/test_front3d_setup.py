@@ -171,7 +171,9 @@ class TestFront3DSetupDedup(unittest.TestCase):
                 side_effect=[game_screen, return_screen],
             ),
             mock.patch.object(front2d_game, "run_menu") as run_menu_mock,
-            mock.patch.object(front2d_game, "_config_from_settings", side_effect=build_cfg),
+            mock.patch.object(
+                front2d_game, "_config_from_settings", side_effect=build_cfg
+            ),
             mock.patch.object(
                 front2d_game, "run_game_loop", return_value=True
             ) as run_game_loop_mock,

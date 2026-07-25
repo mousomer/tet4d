@@ -5,15 +5,14 @@ from typing import TypeVar
 
 import pygame
 
+from tet4d.ai.playbot.types import bot_mode_from_index
 from tet4d.engine.runtime.menu_config import branding_copy, default_settings_payload
 from tet4d.engine.runtime.menu_settings_state import load_app_settings_payload
-from tet4d.ai.playbot.types import bot_mode_from_index
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
     DisplaySettings,
     capture_windowed_display_settings,
     open_display,
 )
-
 
 _BRANDING = branding_copy()
 _GAME_TITLE = str(_BRANDING["game_title"])

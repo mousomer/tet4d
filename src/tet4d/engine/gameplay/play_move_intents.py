@@ -24,10 +24,9 @@ def crosses_gravity_seam(step_result: object, *, gravity_axis: int) -> bool:
         traversal = getattr(cell_step, "traversal", None)
         if traversal is None:
             continue
-        if (
-            int(traversal.source_boundary.axis) == int(gravity_axis)
-            or int(traversal.target_boundary.axis) == int(gravity_axis)
-        ):
+        if int(traversal.source_boundary.axis) == int(gravity_axis) or int(
+            traversal.target_boundary.axis
+        ) == int(gravity_axis):
             return True
     return False
 

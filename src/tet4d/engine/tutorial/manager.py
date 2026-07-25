@@ -235,7 +235,9 @@ class TutorialManager:
             step_index=self._step_index,
         )
 
-    def event_log_tail(self, *, limit: int = _EVENT_LOG_LIMIT) -> tuple[TutorialEvent, ...]:
+    def event_log_tail(
+        self, *, limit: int = _EVENT_LOG_LIMIT
+    ) -> tuple[TutorialEvent, ...]:
         bounded_limit = max(1, int(limit))
         return tuple(self._event_log[-bounded_limit:])
 

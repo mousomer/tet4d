@@ -6,7 +6,6 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 STRICT_PARITY_ENV = "TET4D_STRICT_PARITY"
 PILOT_COMMAND = [

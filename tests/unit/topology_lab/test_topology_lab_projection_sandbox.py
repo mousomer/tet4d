@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 from unittest import mock
+
 import pygame
 
 from tet4d.engine.gameplay.topology_designer import (
@@ -16,10 +17,13 @@ from tet4d.engine.topology_explorer import (
     GluingDescriptor,
 )
 from tet4d.ui.pygame.launch import topology_lab_menu
-from tet4d.ui.pygame.topology_lab import controls_panel_values as topology_lab_controls_panel_values
-from tet4d.ui.pygame.topology_lab import projection_scene
-from tet4d.ui.pygame.topology_lab import scene2d
-from tet4d.ui.pygame.topology_lab import scene_state_canonical as topology_lab_scene_state_canonical
+from tet4d.ui.pygame.topology_lab import (
+    controls_panel_values as topology_lab_controls_panel_values,
+)
+from tet4d.ui.pygame.topology_lab import projection_scene, scene2d
+from tet4d.ui.pygame.topology_lab import (
+    scene_state_canonical as topology_lab_scene_state_canonical,
+)
 from tet4d.ui.pygame.topology_lab import workspace_shell as topology_lab_workspace_shell
 from tet4d.ui.pygame.topology_lab.scene2d import draw_scene as draw_scene_2d
 from tet4d.ui.pygame.topology_lab.scene3d import draw_scene as draw_scene_3d
@@ -66,7 +70,9 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
             ),
         )
 
-    def test_projection_info_panel_uses_probe_label_for_probe_and_legacy_alias(self) -> None:
+    def test_projection_info_panel_uses_probe_label_for_probe_and_legacy_alias(
+        self,
+    ) -> None:
         self.assertEqual(
             projection_scene._mode_label_for_tool(topology_lab_menu.TOOL_PROBE),
             "Probe",
@@ -96,18 +102,18 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
         control = pygame.Surface(surface_size)
         rendered = pygame.Surface(surface_size)
         draw_scene = draw_scene_3d if dimension == 3 else draw_scene_4d
-        common_kwargs = dict(
-            area=area,
-            boundaries=boundaries,
-            source_boundary=boundaries[0],
-            target_boundary=boundaries[-1],
-            active_glue_ids={boundary.label: "free" for boundary in boundaries},
-            basis_arrows=(),
-            preview_dims=preview_dims,
-            profile=profile,
-            active_tool="piece_sandbox",
-            probe_coord=probe_coord,
-        )
+        common_kwargs = {
+            "area": area,
+            "boundaries": boundaries,
+            "source_boundary": boundaries[0],
+            "target_boundary": boundaries[-1],
+            "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+            "basis_arrows": (),
+            "preview_dims": preview_dims,
+            "profile": profile,
+            "active_tool": "piece_sandbox",
+            "probe_coord": probe_coord,
+        }
         draw_scene(control, fonts, **common_kwargs)
         hits = draw_scene(rendered, fonts, **common_kwargs, sandbox_cells=sandbox_cells)
         target = next(
@@ -141,18 +147,18 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
         control = pygame.Surface(surface_size)
         rendered = pygame.Surface(surface_size)
         draw_scene = draw_scene_3d if dimension == 3 else draw_scene_4d
-        common_kwargs = dict(
-            area=area,
-            boundaries=boundaries,
-            source_boundary=boundaries[0],
-            target_boundary=boundaries[-1],
-            active_glue_ids={boundary.label: "free" for boundary in boundaries},
-            basis_arrows=(),
-            preview_dims=preview_dims,
-            profile=profile,
-            active_tool="piece_sandbox",
-            probe_coord=probe_coord,
-        )
+        common_kwargs = {
+            "area": area,
+            "boundaries": boundaries,
+            "source_boundary": boundaries[0],
+            "target_boundary": boundaries[-1],
+            "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+            "basis_arrows": (),
+            "preview_dims": preview_dims,
+            "profile": profile,
+            "active_tool": "piece_sandbox",
+            "probe_coord": probe_coord,
+        }
         merged_kwargs = dict(common_kwargs)
         merged_kwargs.update(extra_kwargs)
         control_hits = draw_scene(control, fonts, **common_kwargs)
@@ -169,46 +175,46 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
 
     def test_sandbox_cells_render_in_projection_panels(self) -> None:
         for params in (
-            dict(
-                dimension=3,
-                surface_size=(960, 760),
-                area=pygame.Rect(40, 80, 620, 360),
-                preview_dims=(4, 5, 3),
-                probe_coord=(0, 2, 1),
-                sandbox_cells=((1, 2, 1), (2, 2, 1)),
-            ),
-            dict(
-                dimension=4,
-                surface_size=(1100, 820),
-                area=pygame.Rect(40, 80, 760, 420),
-                preview_dims=(3, 4, 5, 2),
-                probe_coord=(0, 2, 3, 0),
-                sandbox_cells=((1, 2, 3, 0), (2, 2, 3, 0)),
-            ),
+            {
+                "dimension": 3,
+                "surface_size": (960, 760),
+                "area": pygame.Rect(40, 80, 620, 360),
+                "preview_dims": (4, 5, 3),
+                "probe_coord": (0, 2, 1),
+                "sandbox_cells": ((1, 2, 1), (2, 2, 1)),
+            },
+            {
+                "dimension": 4,
+                "surface_size": (1100, 820),
+                "area": pygame.Rect(40, 80, 760, 420),
+                "preview_dims": (3, 4, 5, 2),
+                "probe_coord": (0, 2, 3, 0),
+                "sandbox_cells": ((1, 2, 3, 0), (2, 2, 3, 0)),
+            },
         ):
             with self.subTest(dimension=params["dimension"]):
                 self._assert_sandbox_cells_render(**params)
 
     def test_sandbox_cells_remain_visible_when_hidden_slices_differ(self) -> None:
         for params in (
-            dict(
-                dimension=3,
-                surface_size=(960, 760),
-                area=pygame.Rect(40, 80, 620, 360),
-                preview_dims=(4, 5, 4),
-                probe_coord=(0, 2, 0),
-                target_value=(1, 2, 0),
-                extra_kwargs={"sandbox_cells": ((1, 2, 3), (2, 2, 3))},
-            ),
-            dict(
-                dimension=4,
-                surface_size=(1100, 820),
-                area=pygame.Rect(40, 80, 760, 420),
-                preview_dims=(3, 4, 5, 3),
-                probe_coord=(0, 2, 0, 0),
-                target_value=(1, 2, 0, 0),
-                extra_kwargs={"sandbox_cells": ((1, 2, 4, 2), (2, 2, 4, 2))},
-            ),
+            {
+                "dimension": 3,
+                "surface_size": (960, 760),
+                "area": pygame.Rect(40, 80, 620, 360),
+                "preview_dims": (4, 5, 4),
+                "probe_coord": (0, 2, 0),
+                "target_value": (1, 2, 0),
+                "extra_kwargs": {"sandbox_cells": ((1, 2, 3), (2, 2, 3))},
+            },
+            {
+                "dimension": 4,
+                "surface_size": (1100, 820),
+                "area": pygame.Rect(40, 80, 760, 420),
+                "preview_dims": (3, 4, 5, 3),
+                "probe_coord": (0, 2, 0, 0),
+                "target_value": (1, 2, 0, 0),
+                "extra_kwargs": {"sandbox_cells": ((1, 2, 4, 2), (2, 2, 4, 2))},
+            },
         ):
             with self.subTest(dimension=params["dimension"]):
                 self._assert_projection_overlay_projects_hidden_slices(**params)
@@ -237,16 +243,16 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
             for axis in range(2)
             for side in ("-", "+")
         )
-        common_kwargs = dict(
-            area=area,
-            boundaries=boundaries,
-            source_boundary=boundaries[0],
-            target_boundary=boundaries[1],
-            active_glue_ids={boundary.label: "free" for boundary in boundaries},
-            basis_arrows=(),
-            preview_dims=(5, 4),
-            probe_coord=(0, 0),
-        )
+        common_kwargs = {
+            "area": area,
+            "boundaries": boundaries,
+            "source_boundary": boundaries[0],
+            "target_boundary": boundaries[1],
+            "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+            "basis_arrows": (),
+            "preview_dims": (5, 4),
+            "probe_coord": (0, 0),
+        }
         draw_scene_2d(control, fonts, **common_kwargs)
         draw_scene_2d(
             surface,
@@ -257,14 +263,30 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
         board, cell_size = scene2d._board_rect(area, (5, 4))
         marker_center = scene2d._cell_rect(board, cell_size, (1, 1)).center
         midpoint = scene2d._cell_rect(board, cell_size, (2, 1)).center
-        self.assertNotEqual(surface.get_at(marker_center), control.get_at(marker_center))
+        self.assertNotEqual(
+            surface.get_at(marker_center), control.get_at(marker_center)
+        )
         self.assertEqual(surface.get_at(midpoint), control.get_at(midpoint))
 
     def test_neighbor_markers_project_across_hidden_slices_in_3d_and_4d(self) -> None:
         fonts = self._fonts()
         for dimension, surface_size, area, preview_dims, probe_coord, marker_coord in (
-            (3, (960, 760), pygame.Rect(40, 80, 620, 360), (4, 5, 4), (0, 2, 0), (1, 2, 3)),
-            (4, (1100, 820), pygame.Rect(40, 80, 760, 420), (3, 4, 5, 3), (0, 2, 0, 0), (1, 2, 4, 2)),
+            (
+                3,
+                (960, 760),
+                pygame.Rect(40, 80, 620, 360),
+                (4, 5, 4),
+                (0, 2, 0),
+                (1, 2, 3),
+            ),
+            (
+                4,
+                (1100, 820),
+                pygame.Rect(40, 80, 760, 420),
+                (3, 4, 5, 3),
+                (0, 2, 0, 0),
+                (1, 2, 4, 2),
+            ),
         ):
             with self.subTest(dimension=dimension):
                 profile = self._profile_3d() if dimension == 3 else self._profile_4d()
@@ -278,18 +300,18 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 control.fill((0, 0, 0))
                 rendered.fill((0, 0, 0))
                 draw_scene = draw_scene_3d if dimension == 3 else draw_scene_4d
-                common_kwargs = dict(
-                    area=area,
-                    boundaries=boundaries,
-                    source_boundary=boundaries[0],
-                    target_boundary=boundaries[-1],
-                    active_glue_ids={boundary.label: "free" for boundary in boundaries},
-                    basis_arrows=(),
-                    preview_dims=preview_dims,
-                    profile=profile,
-                    active_tool=topology_lab_menu.TOOL_PROBE,
-                    probe_coord=probe_coord,
-                )
+                common_kwargs = {
+                    "area": area,
+                    "boundaries": boundaries,
+                    "source_boundary": boundaries[0],
+                    "target_boundary": boundaries[-1],
+                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "basis_arrows": (),
+                    "preview_dims": preview_dims,
+                    "profile": profile,
+                    "active_tool": topology_lab_menu.TOOL_PROBE,
+                    "probe_coord": probe_coord,
+                }
                 draw_scene(control, fonts, **common_kwargs)
                 draw_scene(
                     rendered,
@@ -324,9 +346,19 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                         break
                 self.assertTrue(changed)
 
-    def test_nd_neighbor_markers_do_not_drop_early_cells_when_many_are_visible(self) -> None:
+    def test_nd_neighbor_markers_do_not_drop_early_cells_when_many_are_visible(
+        self,
+    ) -> None:
         fonts = self._fonts()
-        for dimension, surface_size, area, preview_dims, probe_coord, marker_coords, expected_pairs in (
+        for (
+            dimension,
+            surface_size,
+            area,
+            preview_dims,
+            probe_coord,
+            marker_coords,
+            expected_pairs,
+        ) in (
             (
                 3,
                 (960, 760),
@@ -386,18 +418,18 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 control = pygame.Surface(surface_size)
                 rendered = pygame.Surface(surface_size)
                 draw_scene = draw_scene_3d if dimension == 3 else draw_scene_4d
-                common_kwargs = dict(
-                    area=area,
-                    boundaries=boundaries,
-                    source_boundary=boundaries[0],
-                    target_boundary=boundaries[-1],
-                    active_glue_ids={boundary.label: "free" for boundary in boundaries},
-                    basis_arrows=(),
-                    preview_dims=preview_dims,
-                    profile=profile,
-                    active_tool="piece_sandbox",
-                    probe_coord=probe_coord,
-                )
+                common_kwargs = {
+                    "area": area,
+                    "boundaries": boundaries,
+                    "source_boundary": boundaries[0],
+                    "target_boundary": boundaries[-1],
+                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "basis_arrows": (),
+                    "preview_dims": preview_dims,
+                    "profile": profile,
+                    "active_tool": "piece_sandbox",
+                    "probe_coord": probe_coord,
+                }
                 draw_scene(control, fonts, **common_kwargs)
                 draw_scene(
                     rendered,
@@ -417,17 +449,45 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                     (0, 1),
                 )
                 for pair in expected_pairs:
-                    point = projection_scene._cell_rect(board_rect, cell_size, pair).center
+                    point = projection_scene._cell_rect(
+                        board_rect, cell_size, pair
+                    ).center
                     self.assertNotEqual(
                         rendered.get_at(point),
                         control.get_at(point),
                     )
 
-    def test_sandbox_mode_without_neighbor_markers_does_not_paint_neighbor_cells_in_nd(self) -> None:
+    def test_sandbox_mode_without_neighbor_markers_does_not_paint_neighbor_cells_in_nd(
+        self,
+    ) -> None:
         fonts = self._fonts()
-        for dimension, surface_size, area, preview_dims, probe_coord, sandbox_cells, empty_pair in (
-            (3, (960, 760), pygame.Rect(40, 80, 620, 360), (4, 5, 4), (2, 2, 2), ((2, 2, 2), (3, 2, 2), (2, 3, 2), (2, 2, 3)), (1, 2)),
-            (4, (1100, 820), pygame.Rect(40, 80, 760, 420), (4, 5, 5, 4), (2, 2, 2, 2), ((2, 2, 2, 2), (3, 2, 2, 2), (2, 3, 2, 2), (2, 2, 3, 2), (2, 2, 2, 3)), (1, 2)),
+        for (
+            dimension,
+            surface_size,
+            area,
+            preview_dims,
+            probe_coord,
+            sandbox_cells,
+            empty_pair,
+        ) in (
+            (
+                3,
+                (960, 760),
+                pygame.Rect(40, 80, 620, 360),
+                (4, 5, 4),
+                (2, 2, 2),
+                ((2, 2, 2), (3, 2, 2), (2, 3, 2), (2, 2, 3)),
+                (1, 2),
+            ),
+            (
+                4,
+                (1100, 820),
+                pygame.Rect(40, 80, 760, 420),
+                (4, 5, 5, 4),
+                (2, 2, 2, 2),
+                ((2, 2, 2, 2), (3, 2, 2, 2), (2, 3, 2, 2), (2, 2, 3, 2), (2, 2, 2, 3)),
+                (1, 2),
+            ),
         ):
             with self.subTest(dimension=dimension):
                 profile = self._profile_3d() if dimension == 3 else self._profile_4d()
@@ -441,18 +501,18 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 control.fill((0, 0, 0))
                 rendered.fill((0, 0, 0))
                 draw_scene = draw_scene_3d if dimension == 3 else draw_scene_4d
-                common_kwargs = dict(
-                    area=area,
-                    boundaries=boundaries,
-                    source_boundary=boundaries[0],
-                    target_boundary=boundaries[-1],
-                    active_glue_ids={boundary.label: "free" for boundary in boundaries},
-                    basis_arrows=(),
-                    preview_dims=preview_dims,
-                    profile=profile,
-                    active_tool="piece_sandbox",
-                    probe_coord=probe_coord,
-                )
+                common_kwargs = {
+                    "area": area,
+                    "boundaries": boundaries,
+                    "source_boundary": boundaries[0],
+                    "target_boundary": boundaries[-1],
+                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "basis_arrows": (),
+                    "preview_dims": preview_dims,
+                    "profile": profile,
+                    "active_tool": "piece_sandbox",
+                    "probe_coord": probe_coord,
+                }
                 draw_scene(control, fonts, **common_kwargs)
                 draw_scene(
                     rendered,
@@ -472,7 +532,9 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                     preview_dims,
                     (0, 1),
                 )
-                target_rect = projection_scene._cell_rect(board_rect, cell_size, empty_pair)
+                target_rect = projection_scene._cell_rect(
+                    board_rect, cell_size, empty_pair
+                )
                 self.assertEqual(
                     rendered.get_at(target_rect.center),
                     control.get_at(target_rect.center),
@@ -508,18 +570,18 @@ class TestTopologyLabProjectionSandbox(unittest.TestCase):
                 control = pygame.Surface(surface_size)
                 rendered = pygame.Surface(surface_size)
                 draw_scene = draw_scene_3d if dimension == 3 else draw_scene_4d
-                common_kwargs = dict(
-                    area=area,
-                    boundaries=boundaries,
-                    source_boundary=boundaries[0],
-                    target_boundary=boundaries[-1],
-                    active_glue_ids={boundary.label: "free" for boundary in boundaries},
-                    basis_arrows=(),
-                    preview_dims=preview_dims,
-                    profile=profile,
-                    active_tool="piece_sandbox",
-                    probe_coord=probe_coord,
-                )
+                common_kwargs = {
+                    "area": area,
+                    "boundaries": boundaries,
+                    "source_boundary": boundaries[0],
+                    "target_boundary": boundaries[-1],
+                    "active_glue_ids": {boundary.label: "free" for boundary in boundaries},
+                    "basis_arrows": (),
+                    "preview_dims": preview_dims,
+                    "profile": profile,
+                    "active_tool": "piece_sandbox",
+                    "probe_coord": probe_coord,
+                }
                 draw_scene(control, fonts, **common_kwargs)
                 draw_scene(
                     rendered,
@@ -587,7 +649,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         self.assertIn("3D synced", lines)
         self.assertLessEqual(len(lines), 3)
 
-    def test_helper_lines_scaffold_sandbox_workspace_with_explicit_neighbor_state(self) -> None:
+    def test_helper_lines_scaffold_sandbox_workspace_with_explicit_neighbor_state(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
 
@@ -607,7 +671,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         self.assertIn("Launch from current draft", lines)
         self.assertLessEqual(len(lines), 3)
 
-    def test_sandbox_neighbor_toggle_action_updates_canonical_state_explicitly(self) -> None:
+    def test_sandbox_neighbor_toggle_action_updates_canonical_state_explicitly(
+        self,
+    ) -> None:
         state = self._explorer_state(3)
         topology_lab_menu.set_active_tool(state, topology_lab_menu.TOOL_SANDBOX)
 
@@ -616,7 +682,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         )
         topology_lab_menu._activate_action(state, "sandbox_neighbor_search")
         assert state.canonical_state is not None
-        self.assertFalse(state.canonical_state.sandbox_piece_state.neighbor_search_enabled)
+        self.assertFalse(
+            state.canonical_state.sandbox_piece_state.neighbor_search_enabled
+        )
 
     def test_helper_lines_expose_unified_shell_and_vertical_keys_for_nd(self) -> None:
         state = self._explorer_state(4)
@@ -648,7 +716,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         self.assertTrue(state.canonical_state.probe_state.show_neighbors)
         self.assertTrue(topology_lab_menu._probe_neighbors_visible(state))
 
-    def test_draw_menu_keeps_editor_trace_as_controls_row_not_scene_action(self) -> None:
+    def test_draw_menu_keeps_editor_trace_as_controls_row_not_scene_action(
+        self,
+    ) -> None:
         pygame.init()
         if not pygame.font.get_init():
             pygame.font.init()
@@ -766,7 +836,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
                 self.assertTrue(handled)
                 self.assertFalse(
-                    topology_lab_controls_panel_values._sandbox_neighbor_search_enabled(state)
+                    topology_lab_controls_panel_values._sandbox_neighbor_search_enabled(
+                        state
+                    )
                 )
                 self.assertEqual(
                     topology_lab_menu._active_workspace_neighbor_markers(state),
@@ -790,9 +862,13 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
 
         self.assertEqual(markers, {(1, 2), (4, 2), (2, 1), (3, 1), (2, 3), (3, 3)})
         state.sandbox.neighbor_search_enabled = False
-        self.assertEqual(topology_lab_menu._active_workspace_neighbor_markers(state), [])
+        self.assertEqual(
+            topology_lab_menu._active_workspace_neighbor_markers(state), []
+        )
 
-    def test_editor_probe_neighbor_overlay_derives_from_canonical_probe_state(self) -> None:
+    def test_editor_probe_neighbor_overlay_derives_from_canonical_probe_state(
+        self,
+    ) -> None:
         state = self._explorer_state(2)
         topology_lab_scene_state_canonical.replace_play_settings(
             state,
@@ -807,7 +883,9 @@ class TestTopologyLabWorkspaceShell(unittest.TestCase):
         self.assertEqual(markers, {(1, 2), (3, 2), (2, 1), (2, 3)})
         self.assertEqual(topology_lab_menu._current_probe_coord(state), (2, 2))
         topology_lab_menu._set_probe_neighbors_visible(state, False)
-        self.assertEqual(topology_lab_menu._active_workspace_neighbor_markers(state), [])
+        self.assertEqual(
+            topology_lab_menu._active_workspace_neighbor_markers(state), []
+        )
 
     def test_editor_probe_neighbor_markers_reuse_matching_signature_and_refresh_on_move(
         self,

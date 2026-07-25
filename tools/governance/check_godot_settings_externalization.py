@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 POLICY_PACK_PATH = Path("config/project/policy_pack.json")
 SETTING_TOKEN_RE = re.compile(r"""["']([a-z][a-z0-9_]*\.[a-z][a-z0-9_]*)["']""")
 

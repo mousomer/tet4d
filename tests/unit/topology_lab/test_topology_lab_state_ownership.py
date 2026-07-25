@@ -39,7 +39,9 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
             ),
         )
 
-    def test_ownership_snapshot_separates_inspector_and_sandbox_transients(self) -> None:
+    def test_ownership_snapshot_separates_inspector_and_sandbox_transients(
+        self,
+    ) -> None:
         state = self._state()
         replace_probe_state(
             state,
@@ -60,7 +62,9 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
             snapshot.sandbox.focus_coord,
         )
 
-    def test_projection_click_in_sandbox_does_not_overwrite_inspector_probe_state(self) -> None:
+    def test_projection_click_in_sandbox_does_not_overwrite_inspector_probe_state(
+        self,
+    ) -> None:
         state = self._state()
         replace_probe_state(
             state,
@@ -126,7 +130,9 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
             tuple(topology_lab_menu._active_workspace_neighbor_markers(state)),
         )
 
-    def test_editor_probe_neighbor_overlay_uses_editor_probe_without_hiding_probe(self) -> None:
+    def test_editor_probe_neighbor_overlay_uses_editor_probe_without_hiding_probe(
+        self,
+    ) -> None:
         state = self._state()
         replace_probe_state(
             state,
@@ -183,9 +189,7 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
                             ("y+", 1, 1),
                             ("y-", 1, -1),
                         )
-                        if all(
-                            0 <= cell[axis] + delta < dims[axis] for cell in cells
-                        )
+                        if all(0 <= cell[axis] + delta < dims[axis] for cell in cells)
                     ),
                     None,
                 )
@@ -222,7 +226,6 @@ class TestTopologyLabStateOwnership(unittest.TestCase):
                 state.canonical_state.launch_settings,
                 expected_launch_settings,
             )
-
 
     def test_sandbox_focus_rebinds_to_canonical_dims_after_board_change(self) -> None:
         state = self._state(dimension=3)

@@ -7,7 +7,6 @@ from typing import Any
 from tet4d.engine.runtime.project_config import project_root_path
 from tet4d.engine.runtime.settings_schema import read_json_value_or_raise
 
-
 _CATALOG_PATH = project_root_path() / "config" / "keybindings" / "catalog.json"
 _GAMEPLAY_FALLBACK_BUCKET = "other"
 
@@ -54,7 +53,10 @@ def _require_string_list(
 def _require_dimension_list(value: object, *, path: str) -> tuple[int, ...]:
     if not isinstance(value, list):
         raise RuntimeError(f"{path} must be a list")
-    dims = tuple(_require_int(item, path=f"{path}[{idx}]", minimum=2) for idx, item in enumerate(value))
+    dims = tuple(
+        _require_int(item, path=f"{path}[{idx}]", minimum=2)
+        for idx, item in enumerate(value)
+    )
     invalid = tuple(dim for dim in dims if dim not in {2, 3, 4})
     if invalid:
         raise RuntimeError(f"{path} has unsupported dimensions: {invalid}")
@@ -84,7 +86,9 @@ def _validate_helper_line(
     )
     unknown = tuple(action for action in key_actions if action not in action_ids)
     if unknown:
-        raise RuntimeError(f"{path}.key_actions has unknown actions: {', '.join(unknown)}")
+        raise RuntimeError(
+            f"{path}.key_actions has unknown actions: {', '.join(unknown)}"
+        )
     icon_action_raw = line.get("icon_action")
     icon_action = None
     if icon_action_raw is not None:
@@ -154,7 +158,11 @@ def _validate_reference_groups(
         path="keybindings.catalog.reference_groups.headings",
     )
     reference_headings = {
-        _require_string(key, path="keybindings.catalog.reference_groups.headings keys", non_empty=True): _require_string(
+        _require_string(
+            key,
+            path="keybindings.catalog.reference_groups.headings keys",
+            non_empty=True,
+        ): _require_string(
             value,
             path=f"keybindings.catalog.reference_groups.headings.{key}",
             non_empty=True,
@@ -179,15 +187,25 @@ def _validate_reference_groups(
 
 
 def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
-    version = _require_int(payload.get("version"), path="keybindings.catalog.version", minimum=1)
-    scopes_obj = _require_object(payload.get("scopes"), path="keybindings.catalog.scopes")
-    groups_obj = _require_object(payload.get("groups"), path="keybindings.catalog.groups")
-    editor_obj = _require_object(payload.get("editor"), path="keybindings.catalog.editor")
+    version = _require_int(
+        payload.get("version"), path="keybindings.catalog.version", minimum=1
+    )
+    scopes_obj = _require_object(
+        payload.get("scopes"), path="keybindings.catalog.scopes"
+    )
+    groups_obj = _require_object(
+        payload.get("groups"), path="keybindings.catalog.groups"
+    )
+    editor_obj = _require_object(
+        payload.get("editor"), path="keybindings.catalog.editor"
+    )
     reference_obj = _require_object(
         payload.get("reference_groups"),
         path="keybindings.catalog.reference_groups",
     )
-    actions_obj = _require_object(payload.get("actions"), path="keybindings.catalog.actions")
+    actions_obj = _require_object(
+        payload.get("actions"), path="keybindings.catalog.actions"
+    )
     helper_obj = _require_object(
         payload.get("helper_layout"),
         path="keybindings.catalog.helper_layout",
@@ -243,7 +261,9 @@ def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
             path="keybindings.catalog.groups keys",
             non_empty=True,
         ).lower()
-        group = _require_object(raw_group, path=f"keybindings.catalog.groups.{clean_name}")
+        group = _require_object(
+            raw_group, path=f"keybindings.catalog.groups.{clean_name}"
+        )
         groups[clean_name] = {
             "order": _require_int(
                 group.get("order"),
@@ -281,16 +301,14 @@ def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
             "order": _require_int(
                 bucket.get("order"),
                 path=(
-                    "keybindings.catalog.editor.gameplay_buckets."
-                    f"{clean_bucket}.order"
+                    f"keybindings.catalog.editor.gameplay_buckets.{clean_bucket}.order"
                 ),
                 minimum=0,
             ),
             "label": _require_string(
                 bucket.get("label"),
                 path=(
-                    "keybindings.catalog.editor.gameplay_buckets."
-                    f"{clean_bucket}.label"
+                    f"keybindings.catalog.editor.gameplay_buckets.{clean_bucket}.label"
                 ),
                 non_empty=True,
             ),
@@ -317,7 +335,9 @@ def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
             path="keybindings.catalog.actions keys",
             non_empty=True,
         )
-        action = _require_object(raw_action, path=f"keybindings.catalog.actions.{clean_action}")
+        action = _require_object(
+            raw_action, path=f"keybindings.catalog.actions.{clean_action}"
+        )
         group_name = _require_string(
             action.get("group"),
             path=f"keybindings.catalog.actions.{clean_action}.group",
@@ -370,7 +390,9 @@ def _validate_catalog(payload: dict[str, Any]) -> dict[str, Any]:
     )
     helper_panels_raw = helper_obj.get("panels")
     if not isinstance(helper_panels_raw, list) or not helper_panels_raw:
-        raise RuntimeError("keybindings.catalog.helper_layout.panels must be a non-empty list")
+        raise RuntimeError(
+            "keybindings.catalog.helper_layout.panels must be a non-empty list"
+        )
     helper_layout = {
         "meta": {
             "schema_version": _require_int(
@@ -532,6 +554,8 @@ def binding_action_contracts() -> dict[str, dict[str, object]]:
         }
         for action, entry in actions.items()
     }
+
+
 def binding_action_description(action: str) -> str:
     entry = keybinding_catalog_payload()["actions"].get(action)
     if entry is None:
@@ -591,13 +615,17 @@ def partition_gameplay_actions(
 ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
     ordered = tuple(sorted(dict.fromkeys(actions), key=_action_sort_key))
     translation = tuple(
-        action for action in ordered if gameplay_action_category(action) == "translation"
+        action
+        for action in ordered
+        if gameplay_action_category(action) == "translation"
     )
     rotation = tuple(
         action for action in ordered if gameplay_action_category(action) == "rotation"
     )
     other = tuple(
-        action for action in ordered if gameplay_action_category(action) == _GAMEPLAY_FALLBACK_BUCKET
+        action
+        for action in ordered
+        if gameplay_action_category(action) == _GAMEPLAY_FALLBACK_BUCKET
     )
     return translation, rotation, other
 

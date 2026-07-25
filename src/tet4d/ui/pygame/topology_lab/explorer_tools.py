@@ -13,8 +13,8 @@ from tet4d.ui.pygame.ui_utils import (
 from .common import TopologyLabHitTarget
 from .scene_state import (
     TOPOLOGY_LAB_WORKSPACES,
-    TopologyLabState,
     WORKSPACE_LABELS,
+    TopologyLabState,
     active_workspace_name,
     set_active_workspace,
 )
@@ -40,7 +40,9 @@ def draw_tool_ribbon(
     gap = 8
     button_w = max(72, (area.width - (count - 1) * gap) // count)
     for index, workspace in enumerate(TOPOLOGY_LAB_WORKSPACES):
-        rect = pygame.Rect(area.x + index * (button_w + gap), area.y, button_w, area.height)
+        rect = pygame.Rect(
+            area.x + index * (button_w + gap), area.y, button_w, area.height
+        )
         color = button_active() if workspace == active_workspace else button_bg()
         pygame.draw.rect(surface, color, rect, border_radius=8)
         pygame.draw.rect(surface, button_border(), rect, 1, border_radius=8)

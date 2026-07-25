@@ -15,7 +15,7 @@ REPO_ROOT = _repo_root()
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.governance.tech_debt_budget import refresh_tech_debt_budgets  # noqa: E402
+from tools.governance.tech_debt_budget import refresh_tech_debt_budgets
 
 
 def main() -> int:

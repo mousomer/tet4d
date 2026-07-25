@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
-from typing import Callable
 import math
 import random
+from collections.abc import Callable
+from dataclasses import dataclass, field, replace
 
 from tet4d.engine.runtime.endgame_presets import (
     ENDGAME_BOUNDARY_RESPONSE_ESCAPE,
@@ -24,15 +24,17 @@ from tet4d.ui.pygame.locked_cell_explosion import (
     StandaloneExplosionConfig,
     build_locked_cell_explosion,
 )
-from tet4d.ui.pygame.locked_cell_explosion.model import (
-    canonical_endgame_cell_order,
-    endgame_live_cell_count as model_endgame_live_cell_count,
-    select_endgame_live_cells,
-    split_endgame_cells,
-)
 from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
     ENDGAME_LIVE_CELL_FRACTION_DEFAULT,
     clamp_endgame_live_cell_fraction,
+)
+from tet4d.ui.pygame.locked_cell_explosion.model import (
+    canonical_endgame_cell_order,
+    select_endgame_live_cells,
+    split_endgame_cells,
+)
+from tet4d.ui.pygame.locked_cell_explosion.model import (
+    endgame_live_cell_count as model_endgame_live_cell_count,
 )
 
 Vec3 = tuple[float, float, float]
@@ -729,7 +731,7 @@ def endgame_sfx_events_between(
     tuning: EndgameAnimationTuning,
 ) -> tuple[str, ...]:
     if current_elapsed_ms <= previous_elapsed_ms:
-        return tuple()
+        return ()
     thresholds = (
         (float(tuning.crack_onset_duration_ms), "endgame_crack"),
         (float(tuning.capture_start_ms), "endgame_pop"),
@@ -878,10 +880,11 @@ def _select_shell_artifact_cells(
     if target_count <= 0:
         return ()
     ranked_cells = [
-        (cell, _cell_artifact_score(cell, seed=seed))
-        for cell in canonical_cells
+        (cell, _cell_artifact_score(cell, seed=seed)) for cell in canonical_cells
     ]
-    ranked_cells.sort(key=lambda item: (item[1], item[0].source_coord, item[0].color_id))
+    ranked_cells.sort(
+        key=lambda item: (item[1], item[0].source_coord, item[0].color_id)
+    )
     selected: list[tuple[SnapshotCell, int]] = [ranked_cells[0]]
     remaining = ranked_cells[1:]
     while remaining and len(selected) < target_count:
@@ -926,9 +929,7 @@ def build_endgame_shell_artifacts(
             random_spread_strength=0.38,
             planar=snapshot.dimension == 2,
         )
-        kind = _ENDGAME_SHELL_ARTIFACT_KINDS[
-            score % len(_ENDGAME_SHELL_ARTIFACT_KINDS)
-        ]
+        kind = _ENDGAME_SHELL_ARTIFACT_KINDS[score % len(_ENDGAME_SHELL_ARTIFACT_KINDS)]
         birth_ms = float(
             tuning.capture_start_ms
             + randomizer.uniform(0.0, tuning.shell_artifact_birth_spread_ms)
@@ -1021,8 +1022,12 @@ def build_endgame_grid_break_marks(
                 ),
                 direction=_grid_break_direction_for_artifact(artifact),
                 color_id=int(artifact.color_id),
-                birth_ms=max(0.0, float(artifact.birth_ms - tuning.grid_break_birth_lead_ms)),
-                lifetime_ms=min(float(artifact.lifetime_ms), float(tuning.grid_break_lifetime_ms)),
+                birth_ms=max(
+                    0.0, float(artifact.birth_ms - tuning.grid_break_birth_lead_ms)
+                ),
+                lifetime_ms=min(
+                    float(artifact.lifetime_ms), float(tuning.grid_break_lifetime_ms)
+                ),
                 length=randomizer.uniform(0.35, 0.72),
                 kind=_ENDGAME_GRID_BREAK_KINDS[index % len(_ENDGAME_GRID_BREAK_KINDS)],
                 residue_alpha=max(
@@ -1167,9 +1172,7 @@ def _vec_dot(a: VecN, b: VecN) -> float:
 
 
 def _vec_lerp(a: VecN, b: VecN, progress: float) -> VecN:
-    return tuple(
-        left + ((right - left) * progress) for left, right in zip(a, b)
-    )
+    return tuple(left + ((right - left) * progress) for left, right in zip(a, b))
 
 
 def _vec_len(a: VecN) -> float:
@@ -1208,9 +1211,7 @@ def _random_unit_vector(
     dimension: int,
     planar: bool = False,
 ) -> VecN:
-    values = [
-        randomizer.uniform(-1.0, 1.0) for _ in range(max(0, int(dimension)))
-    ]
+    values = [randomizer.uniform(-1.0, 1.0) for _ in range(max(0, int(dimension)))]
     if planar and len(values) >= 3:
         for idx in range(2, len(values)):
             values[idx] = 0.0
@@ -1307,7 +1308,7 @@ def _field_basis_vectors(
 ) -> tuple[VecN, ...]:
     dimension = len(direction)
     if dimension <= 0:
-        return tuple()
+        return ()
     basis: list[VecN] = []
     candidates: list[VecN] = [
         _normalize_or_default(direction, _unit_axis(dimension, 0)),
@@ -1316,7 +1317,9 @@ def _field_basis_vectors(
         _random_unit_vector(randomizer, dimension=dimension)
         for _ in range(dimension * 2)
     )
-    candidates.extend(_unit_axis(dimension, axis_index) for axis_index in range(dimension))
+    candidates.extend(
+        _unit_axis(dimension, axis_index) for axis_index in range(dimension)
+    )
     for candidate in candidates:
         orthogonal = candidate
         for existing in basis:
@@ -1517,9 +1520,8 @@ def _burst_translation(
         crack_denominator = max(1.0, float(detach_start_ms))
         crack_progress = max(0.0, min(1.0, float(elapsed_ms / crack_denominator)))
         return _vec_add(initial_position, _vec_mul(jitter_offset, crack_progress))
-    travel_seconds = (
-        max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0)
-        * max(0.05, float(speed_scale))
+    travel_seconds = max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0) * max(
+        0.05, float(speed_scale)
     )
     drag = max(0.0, float(drag_per_second))
     linear_scale = (
@@ -1553,9 +1555,8 @@ def _burst_rotation_deg(
 ) -> Vec3:
     if elapsed_ms <= detach_start_ms:
         return (0.0, 0.0, 0.0)
-    travel_seconds = (
-        max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0)
-        * max(0.05, float(speed_scale))
+    travel_seconds = max(0.0, float(elapsed_ms - detach_start_ms) / 1000.0) * max(
+        0.05, float(speed_scale)
     )
     return _wrapped_rotation_deg(_vec_mul(angular_velocity_deg, travel_seconds))
 
@@ -1740,7 +1741,7 @@ def build_endgame_animation_state(
         return EndgameAnimationState(
             snapshot=snapshot,
             tuning=active_tuning,
-            shatter=EndgameShatterState(shell_fragments=tuple()),
+            shatter=EndgameShatterState(shell_fragments=()),
             phase=TERMINAL_PHASE_GAME_OVER_COMPLETE,
             elapsed_ms=float(active_tuning.prompt_ready_ms),
         )
@@ -1902,8 +1903,10 @@ def transform_shell_artifact(
     ) * max(0.1, float(artifact.length_scale))
     tail = _vec_sub(head, _vec_mul(artifact.direction, length_scale))
     fade_start = artifact.lifetime_ms * 0.45
-    alpha = 1.0 if age_ms <= fade_start else 1.0 - (
-        (age_ms - fade_start) / max(1.0, artifact.lifetime_ms - fade_start)
+    alpha = (
+        1.0
+        if age_ms <= fade_start
+        else 1.0 - ((age_ms - fade_start) / max(1.0, artifact.lifetime_ms - fade_start))
     )
     return tail, head, max(0.0, min(1.0, alpha))
 
@@ -2023,6 +2026,11 @@ def transform_shell_geometry(
 
 
 __all__ = [
+    "TERMINAL_PHASE_ENDGAME_RELIC_FIELD",
+    "TERMINAL_PHASE_ENDGAME_SHATTER",
+    "TERMINAL_PHASE_GAME_OVER_ANIMATING",
+    "TERMINAL_PHASE_GAME_OVER_COMPLETE",
+    "TERMINAL_PHASE_PLAYING",
     "EndgameAnimationState",
     "EndgameAnimationTuning",
     "EndgameCellSplit",
@@ -2034,19 +2042,14 @@ __all__ = [
     "EndgameSnapshot",
     "ShellFragment",
     "SnapshotCell",
-    "TERMINAL_PHASE_ENDGAME_RELIC_FIELD",
-    "TERMINAL_PHASE_ENDGAME_SHATTER",
-    "TERMINAL_PHASE_GAME_OVER_ANIMATING",
-    "TERMINAL_PHASE_GAME_OVER_COMPLETE",
-    "TERMINAL_PHASE_PLAYING",
     "board_shell_residue_alpha",
     "build_endgame_animation_state",
     "build_endgame_grid_break_marks",
     "build_endgame_shell_artifacts",
     "create_snapshot",
     "derive_endgame_seed",
-    "endgame_prompt_ready",
     "endgame_preset_registry",
+    "endgame_prompt_ready",
     "endgame_sfx_events_between",
     "ensure_endgame_animation",
     "fragment_alpha",

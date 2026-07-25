@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import pygame
 
@@ -29,8 +30,16 @@ _TEXT_COLOR = (232, 232, 240)
 _HIGHLIGHT_COLOR = (255, 224, 128)
 _MUTED_COLOR = (192, 200, 228)
 
-_ROWS_PER_PAGE = int(project_constant_int(("analytics", "leaderboard_page_rows"), 12, min_value=5, max_value=40))
-_NAME_MAX_LENGTH = int(project_constant_int(("analytics", "leaderboard_name_max_length"), 24, min_value=3, max_value=64))
+_ROWS_PER_PAGE = int(
+    project_constant_int(
+        ("analytics", "leaderboard_page_rows"), 12, min_value=5, max_value=40
+    )
+)
+_NAME_MAX_LENGTH = int(
+    project_constant_int(
+        ("analytics", "leaderboard_name_max_length"), 24, min_value=3, max_value=64
+    )
+)
 
 
 @dataclass
@@ -79,7 +88,7 @@ def _safe_int(value: object, *, default: int = 0) -> int:
 
 
 def _format_duration(seconds: float) -> str:
-    total = max(0, int(round(float(seconds))))
+    total = max(0, round(float(seconds)))
     mins, secs = divmod(total, 60)
     return f"{mins:02d}:{secs:02d}"
 
@@ -102,10 +111,7 @@ def _session_is_recordable(*, outcome: str, exploration_mode: bool) -> bool:
 
 
 def _entry_cells(rank: int, entry: dict[str, object]) -> tuple[str, ...]:
-    name = (
-        sanitize_text(entry.get("player_name"), max_length=64).strip()
-        or "Player"
-    )
+    name = sanitize_text(entry.get("player_name"), max_length=64).strip() or "Player"
     score = _safe_int(entry.get("score"))
     lines = _safe_int(entry.get("lines_cleared"))
     dimension = _safe_int(entry.get("dimension"), default=2)
@@ -143,14 +149,11 @@ def _scaled_column_widths(total_width: int) -> tuple[int, ...]:
     base_total = sum(int(column[1]) for column in columns)
     usable = max(160, int(total_width))
     if usable >= base_total:
-        widths = [
-            int(round((column[1] / base_total) * usable)) for column in columns
-        ]
+        widths = [round((column[1] / base_total) * usable) for column in columns]
     else:
         # On narrow windows, keep all columns visible by allowing tighter cells.
         widths = [
-            max(14, int(round((column[1] / base_total) * usable)))
-            for column in columns
+            max(14, round((column[1] / base_total) * usable)) for column in columns
         ]
     diff = usable - sum(widths)
     widths[-1] += diff
@@ -591,7 +594,7 @@ def _draw_name_prompt(
     return layout
 
 
-def _handle_name_prompt_event(  # noqa: C901
+def _handle_name_prompt_event(
     event: pygame.event.Event,
     state: _NamePromptState,
     *,

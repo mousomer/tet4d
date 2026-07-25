@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from tet4d.ui.pygame.locked_cell_explosion.model import ExplosionParticle, ExplosionSeedCell
+from tet4d.ui.pygame.locked_cell_explosion.model import (
+    ExplosionParticle,
+    ExplosionSeedCell,
+)
 from tet4d.ui.pygame.locked_cell_explosion.simulation import (
     build_endgame_state,
     step_endgame_state,

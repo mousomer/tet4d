@@ -25,8 +25,8 @@ from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 
 from .endgame_animation import (
-    EndgameAnimationState,
     TERMINAL_PHASE_PLAYING,
+    EndgameAnimationState,
 )
 from .front2d_input import handle_game_keydown
 from .front2d_setup import (
@@ -91,11 +91,11 @@ class LoopContext2D:
         auto_speedup_enabled: int = _AUTO_SPEEDUP_ENABLED_DEFAULT,
         lines_per_level: int = _LINES_PER_LEVEL_DEFAULT,
         rotation_animation_mode: str | None = None,
-        rotation_animation_duration_ms: int | float | None = None,
-        translation_animation_duration_ms: int | float | None = None,
+        rotation_animation_duration_ms: float | None = None,
+        translation_animation_duration_ms: float | None = None,
         overlay_transparency: float | None = None,
         tutorial_lesson_id: str | None = None,
-    ) -> "LoopContext2D":
+    ) -> LoopContext2D:
         apply_tutorial_board_profile_2d(
             cfg,
             tutorial_lesson_id=tutorial_lesson_id,

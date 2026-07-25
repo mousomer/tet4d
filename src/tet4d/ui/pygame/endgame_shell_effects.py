@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
 import random
+from dataclasses import dataclass
 from typing import Any
 
 from tet4d.ui.pygame.render.board_boundary import board_boundary_coordinate
@@ -154,7 +154,11 @@ class EndgameShellSoundEvent:
 
 
 def _value(tuning: Any, name: str, default: float) -> float:
-    value = tuning.get(name, default) if isinstance(tuning, dict) else getattr(tuning, name, default)
+    value = (
+        tuning.get(name, default)
+        if isinstance(tuning, dict)
+        else getattr(tuning, name, default)
+    )
     return float(value)
 
 
@@ -171,7 +175,11 @@ def _score(coord: tuple[int, ...], color_id: int, layer: int, seed: int) -> int:
 
 def _norm(vector: VecN, fallback: VecN) -> VecN:
     length = math.sqrt(sum(component * component for component in vector))
-    return fallback if length <= 1e-9 else tuple(component / length for component in vector)
+    return (
+        fallback
+        if length <= 1e-9
+        else tuple(component / length for component in vector)
+    )
 
 
 def _clamp01(value: float) -> float:
@@ -180,7 +188,9 @@ def _clamp01(value: float) -> float:
 
 def _lerp_vec(start: VecN, end: VecN, t: float) -> VecN:
     progress = _clamp01(t)
-    return tuple(float(a) + ((float(b) - float(a)) * progress) for a, b in zip(start, end))
+    return tuple(
+        float(a) + ((float(b) - float(a)) * progress) for a, b in zip(start, end)
+    )
 
 
 def _smoothstep(value: float) -> float:
@@ -194,10 +204,12 @@ def _ease_in_cubic(value: float) -> float:
 
 
 def _cell_parts(cell: Any, dimension: int) -> CellKey:
-    coord = tuple(int(value) for value in getattr(cell, "source_coord"))[:dimension]
-    position = tuple(float(value) for value in getattr(cell, "position", coord))[:dimension]
+    coord = tuple(int(value) for value in cell.source_coord)[:dimension]
+    position = tuple(float(value) for value in getattr(cell, "position", coord))[
+        :dimension
+    ]
     layer = getattr(cell, "layer_index", None)
-    return coord, position, int(getattr(cell, "color_id")), -1 if layer is None else int(layer)
+    return coord, position, int(cell.color_id), -1 if layer is None else int(layer)
 
 
 def boundary_impact_cap_for_dimension(dimension: int, tuning: Any) -> int:
@@ -209,10 +221,20 @@ def board_shard_cap_for_dimension(dimension: int, tuning: Any) -> int:
 
 
 def load_shell_timeline(tuning: Any) -> EndgameShellTimeline:
-    hold_ms = _value(tuning, "shell_preview_hold_ms", _value(tuning, "shell_event_hold_ms", 1150.0))
-    rupture_ms = _value(tuning, "shell_preview_rupture_ms", _value(tuning, "shell_event_rupture_ms", 1250.0))
+    hold_ms = _value(
+        tuning, "shell_preview_hold_ms", _value(tuning, "shell_event_hold_ms", 1150.0)
+    )
+    rupture_ms = _value(
+        tuning,
+        "shell_preview_rupture_ms",
+        _value(tuning, "shell_event_rupture_ms", 1250.0),
+    )
     impact_window_ms = _value(tuning, "shell_event_impact_window_ms", 420.0)
-    shard_drift_ms = _value(tuning, "shell_preview_shard_drift_ms", _value(tuning, "shell_event_shard_drift_ms", 2400.0))
+    shard_drift_ms = _value(
+        tuning,
+        "shell_preview_shard_drift_ms",
+        _value(tuning, "shell_event_shard_drift_ms", 2400.0),
+    )
     return EndgameShellTimeline(
         hold_ms=hold_ms,
         rupture_ms=rupture_ms,
@@ -224,15 +246,24 @@ def load_shell_timeline(tuning: Any) -> EndgameShellTimeline:
 
 def _boundary_bias(coord: tuple[int, ...], board_dims: tuple[int, ...]) -> float:
     edge_distance = min(
-        (min(float(value), float(size - 1 - value)) for value, size in zip(coord, board_dims)),
+        (
+            min(float(value), float(size - 1 - value))
+            for value, size in zip(coord, board_dims)
+        ),
         default=0.0,
     )
     return 1.0 / (1.0 + max(0.0, edge_distance))
 
 
-def _select_cells(cells: tuple[CellKey, ...], board_dims: tuple[int, ...], seed: int, cap: int) -> tuple[CellKey, ...]:
+def _select_cells(
+    cells: tuple[CellKey, ...], board_dims: tuple[int, ...], seed: int, cap: int
+) -> tuple[CellKey, ...]:
     ranked = [
-        (cell, float(_score(cell[0], cell[2], cell[3], seed)) - (_boundary_bias(cell[0], board_dims) * 120_000_000.0))
+        (
+            cell,
+            float(_score(cell[0], cell[2], cell[3], seed))
+            - (_boundary_bias(cell[0], board_dims) * 120_000_000.0),
+        )
         for cell in sorted(cells, key=lambda item: (item[0], item[2], item[3]))
     ]
     ranked.sort(key=lambda item: (item[1], item[0][0], item[0][2], item[0][3]))
@@ -241,41 +272,74 @@ def _select_cells(cells: tuple[CellKey, ...], board_dims: tuple[int, ...], seed:
         best = max(
             range(min(18, len(remaining))),
             key=lambda i: (
-                min(sum(float(a - b) ** 2 for a, b in zip(remaining[i][0][0], item[0][0])) for item in chosen)
-                * 1_000_000.0
-            )
-            - remaining[i][1],
+                (
+                    min(
+                        sum(
+                            float(a - b) ** 2
+                            for a, b in zip(remaining[i][0][0], item[0][0])
+                        )
+                        for item in chosen
+                    )
+                    * 1_000_000.0
+                )
+                - remaining[i][1]
+            ),
         )
         chosen.append(remaining.pop(best))
     return tuple(cell for cell, _rank in chosen)
 
 
-def _impact_for_cell(cell: CellKey, board_dims: tuple[int, ...], seed: int) -> EndgameBoundaryImpact:
+def _impact_for_cell(
+    cell: CellKey, board_dims: tuple[int, ...], seed: int
+) -> EndgameBoundaryImpact:
     coord, start, color_id, layer = cell
     center = tuple((float(size) - 1.0) * 0.5 for size in board_dims)
     fallback_axis = abs(_score(coord, color_id, layer, seed)) % len(board_dims)
     fallback_side = -1 if coord[fallback_axis] <= center[fallback_axis] else 1
     rng = random.Random(_score(coord, color_id, layer, seed ^ 0x45D9F3B))
     jitter = tuple(rng.uniform(-0.18, 0.18) for _ in board_dims)
-    fallback = tuple(float(fallback_side if axis == fallback_axis else 0.0) for axis in range(len(board_dims)))
-    direction = _norm(tuple((start[axis] - center[axis]) + jitter[axis] for axis in range(len(board_dims))), fallback)
+    fallback = tuple(
+        float(fallback_side if axis == fallback_axis else 0.0)
+        for axis in range(len(board_dims))
+    )
+    direction = _norm(
+        tuple(
+            (start[axis] - center[axis]) + jitter[axis]
+            for axis in range(len(board_dims))
+        ),
+        fallback,
+    )
     hits = []
     for axis, component in enumerate(direction):
         if abs(component) > 1e-9:
             side = 1 if component > 0.0 else -1
-            plane = board_boundary_coordinate(dims=board_dims, axis=axis, side="+" if side > 0 else "-")
+            plane = board_boundary_coordinate(
+                dims=board_dims, axis=axis, side="+" if side > 0 else "-"
+            )
             t = (plane - start[axis]) / component
             if t >= 0.0:
                 hits.append((t, axis, side))
     t, axis, side = min(hits) if hits else (0.0, fallback_axis, fallback_side)
     impact = tuple(start[idx] + direction[idx] * t for idx in range(len(board_dims)))
     impact = tuple(
-        board_boundary_coordinate(dims=board_dims, axis=idx, side="+" if side > 0 else "-")
+        board_boundary_coordinate(
+            dims=board_dims, axis=idx, side="+" if side > 0 else "-"
+        )
         if idx == axis
         else max(-0.5, min(float(board_dims[idx]) - 0.5, value))
         for idx, value in enumerate(impact)
     )
-    return EndgameBoundaryImpact(coord, start, impact, direction, color_id, axis, side, rng.uniform(0.65, 1.0), rng.uniform(0.0, 90.0))
+    return EndgameBoundaryImpact(
+        coord,
+        start,
+        impact,
+        direction,
+        color_id,
+        axis,
+        side,
+        rng.uniform(0.65, 1.0),
+        rng.uniform(0.0, 90.0),
+    )
 
 
 def build_boundary_impacts(
@@ -288,7 +352,9 @@ def build_boundary_impacts(
 ) -> tuple[EndgameBoundaryImpact, ...]:
     dims = tuple(int(value) for value in board_dims[: int(dimension)])
     cells = tuple(_cell_parts(cell, len(dims)) for cell in escaping_cells)
-    selected = _select_cells(cells, dims, int(rng_seed), boundary_impact_cap_for_dimension(dimension, tuning))
+    selected = _select_cells(
+        cells, dims, int(rng_seed), boundary_impact_cap_for_dimension(dimension, tuning)
+    )
     return tuple(_impact_for_cell(cell, dims, int(rng_seed)) for cell in selected)
 
 
@@ -309,10 +375,7 @@ def build_escape_events(
     )
     source_lookup = {
         parts[0]: parts
-        for parts in (
-            _cell_parts(cell, int(dimension))
-            for cell in escaping_cells
-        )
+        for parts in (_cell_parts(cell, int(dimension)) for cell in escaping_cells)
     }
     timeline = load_shell_timeline(tuning)
     delay_max_ms = _value(tuning, "shell_event_delay_max_ms", 180.0)
@@ -322,8 +385,15 @@ def build_escape_events(
     progress_max = max(impact_progress_min, impact_progress_max)
     events: list[EndgameEscapeEvent] = []
     for index, impact in enumerate(impacts):
-        coord, start, _color_id, layer = source_lookup[tuple(int(v) for v in impact.source_coord)]
-        rng = random.Random(_mix(_score(coord, impact.color_id, impact.axis, int(rng_seed)), index ^ 0x51ED))
+        coord, start, _color_id, layer = source_lookup[
+            tuple(int(v) for v in impact.source_coord)
+        ]
+        rng = random.Random(
+            _mix(
+                _score(coord, impact.color_id, impact.axis, int(rng_seed)),
+                index ^ 0x51ED,
+            )
+        )
         rupture_delay_ms = rng.uniform(0.0, delay_max_ms)
         impact_progress = rng.uniform(progress_min, progress_max)
         remaining_rupture_ms = max(60.0, float(timeline.rupture_ms) - rupture_delay_ms)
@@ -400,9 +470,20 @@ def build_board_shards(
         )
     for event in event_sequence:
         for shard_index in range(max(1, min(3, cap - len(shards)))):
-            rng = random.Random(_mix(_score(event.source_coord, event.color_id, shard_index, rng_seed), event.event_index))
+            rng = random.Random(
+                _mix(
+                    _score(event.source_coord, event.color_id, shard_index, rng_seed),
+                    event.event_index,
+                )
+            )
             jitter = tuple(rng.uniform(-0.45, 0.45) for _ in event.outward_direction)
-            direction = _norm(tuple((value * 1.8) + jitter[idx] for idx, value in enumerate(event.outward_direction)), event.outward_direction)
+            direction = _norm(
+                tuple(
+                    (value * 1.8) + jitter[idx]
+                    for idx, value in enumerate(event.outward_direction)
+                ),
+                event.outward_direction,
+            )
             shards.append(
                 EndgameBoardShard(
                     source_impact_index=int(event.event_index),
@@ -410,11 +491,20 @@ def build_board_shards(
                     source_coord=tuple(int(v) for v in event.source_coord),
                     start_position=tuple(float(v) for v in event.impact_position),
                     direction=direction,
-                    speed=rng.uniform(_value(tuning, "board_shard_speed_min", 1.2), _value(tuning, "board_shard_speed_max", 4.0)),
-                    spin_deg_per_s=rng.uniform(_value(tuning, "board_shard_spin_min_deg_per_s", -240.0), _value(tuning, "board_shard_spin_max_deg_per_s", 240.0)),
+                    speed=rng.uniform(
+                        _value(tuning, "board_shard_speed_min", 1.2),
+                        _value(tuning, "board_shard_speed_max", 4.0),
+                    ),
+                    spin_deg_per_s=rng.uniform(
+                        _value(tuning, "board_shard_spin_min_deg_per_s", -240.0),
+                        _value(tuning, "board_shard_spin_max_deg_per_s", 240.0),
+                    ),
                     size=rng.uniform(0.18, 0.48) * event.force,
                     birth_ms=float(event.impact_ms) + rng.uniform(0.0, birth_spread_ms),
-                    lifetime_ms=rng.uniform(_value(tuning, "board_shard_lifetime_min_ms", 1200.0), _value(tuning, "board_shard_lifetime_max_ms", 2600.0)),
+                    lifetime_ms=rng.uniform(
+                        _value(tuning, "board_shard_lifetime_min_ms", 1200.0),
+                        _value(tuning, "board_shard_lifetime_max_ms", 2600.0),
+                    ),
                     alpha=max(0.0, min(1.0, _value(tuning, "board_shard_alpha", 0.45))),
                     color_hint=None,
                 )
@@ -452,7 +542,9 @@ def link_shards_to_events(
     )
 
 
-def transform_boundary_impact(impact: EndgameBoundaryImpact, *, elapsed_ms: float, tuning: Any) -> EndgameImpactDrawState | None:
+def transform_boundary_impact(
+    impact: EndgameBoundaryImpact, *, elapsed_ms: float, tuning: Any
+) -> EndgameImpactDrawState | None:
     age = float(elapsed_ms) - impact.birth_ms
     flash_ms = _value(tuning, "impact_flash_duration_ms", 260.0)
     lifetime = max(flash_ms, _value(tuning, "impact_streak_lifetime_ms", 650.0))
@@ -461,20 +553,28 @@ def transform_boundary_impact(impact: EndgameBoundaryImpact, *, elapsed_ms: floa
     return EndgameImpactDrawState(
         impact.impact_position,
         max(0.0, 1.0 - age / max(1.0, lifetime)) * impact.force,
-        _value(tuning, "impact_flash_radius", 5.0) * (0.45 + min(1.0, age / max(1.0, flash_ms))),
+        _value(tuning, "impact_flash_radius", 5.0)
+        * (0.45 + min(1.0, age / max(1.0, flash_ms))),
         _value(tuning, "impact_streak_width", 3.5),
     )
 
 
-def transform_board_shard(shard: EndgameBoardShard, *, elapsed_ms: float, tuning: Any) -> EndgameShardDrawState | None:
+def transform_board_shard(
+    shard: EndgameBoardShard, *, elapsed_ms: float, tuning: Any
+) -> EndgameShardDrawState | None:
     age = float(elapsed_ms) - shard.birth_ms
     if age < 0.0 or age > shard.lifetime_ms:
         return None
     seconds = age / 1000.0
     fade = max(0.0, 1.0 - age / max(1.0, shard.lifetime_ms))
     alpha = min(shard.alpha, _value(tuning, "board_shard_alpha", shard.alpha)) * fade
-    position = tuple(shard.start_position[idx] + shard.direction[idx] * shard.speed * seconds for idx in range(len(shard.start_position)))
-    return EndgameShardDrawState(position, alpha, shard.spin_deg_per_s * seconds, shard.size)
+    position = tuple(
+        shard.start_position[idx] + shard.direction[idx] * shard.speed * seconds
+        for idx in range(len(shard.start_position))
+    )
+    return EndgameShardDrawState(
+        position, alpha, shard.spin_deg_per_s * seconds, shard.size
+    )
 
 
 def _tangent_direction(event: EndgameEscapeEvent) -> VecN:
@@ -486,7 +586,10 @@ def _tangent_direction(event: EndgameEscapeEvent) -> VecN:
     tangent = [0.0 for _ in direction]
     tangent[axis_a] = -direction[axis_b]
     tangent[axis_b] = direction[axis_a]
-    return _norm(tuple(tangent), tuple(1.0 if idx == axis_b else 0.0 for idx in range(len(direction))))
+    return _norm(
+        tuple(tangent),
+        tuple(1.0 if idx == axis_b else 0.0 for idx in range(len(direction))),
+    )
 
 
 def evaluate_escape_event(
@@ -504,19 +607,29 @@ def evaluate_escape_event(
     proxy: EscapeProxyState | None = None
     streak: EscapeStreakState | None = None
     if release_ms <= float(elapsed_ms) < proxy_end_ms:
-        rupture_t = _clamp01((float(elapsed_ms) - release_ms) / max(1.0, float(event.proxy_lifetime_ms)))
+        rupture_t = _clamp01(
+            (float(elapsed_ms) - release_ms) / max(1.0, float(event.proxy_lifetime_ms))
+        )
         distance_t = _ease_in_cubic(rupture_t)
         wobble_t = math.sin(math.pi * rupture_t)
-        tangent_scale = _value(tuning, "shell_event_proxy_tangent_jitter", 0.22) * float(event.force)
+        tangent_scale = _value(
+            tuning, "shell_event_proxy_tangent_jitter", 0.22
+        ) * float(event.force)
         tangent = _tangent_direction(event)
         position = tuple(
             value + (tangent[idx] * tangent_scale * wobble_t)
-            for idx, value in enumerate(_lerp_vec(event.source_position, event.impact_position, distance_t))
+            for idx, value in enumerate(
+                _lerp_vec(event.source_position, event.impact_position, distance_t)
+            )
         )
         alpha = 1.0 if rupture_t <= 0.7 else 1.0 - (((rupture_t - 0.7) / 0.25) * 0.65)
         scale_peak = _value(tuning, "shell_event_proxy_scale_peak", 1.18)
         scale = 1.0 + ((scale_peak - 1.0) * math.sin(math.pi * rupture_t))
-        rotation = float(event.impact_side) * _value(tuning, "shell_event_proxy_rotation_deg", 28.0) * wobble_t
+        rotation = (
+            float(event.impact_side)
+            * _value(tuning, "shell_event_proxy_rotation_deg", 28.0)
+            * wobble_t
+        )
         proxy = EscapeProxyState(
             event_index=int(event.event_index),
             source_coord=tuple(int(v) for v in event.source_coord),
@@ -529,7 +642,11 @@ def evaluate_escape_event(
             layer_index=event.source_layer_index,
         )
         streak_tail_progress = max(0.0, rupture_t - 0.18)
-        tail_base = _lerp_vec(event.source_position, event.impact_position, _ease_in_cubic(streak_tail_progress))
+        tail_base = _lerp_vec(
+            event.source_position,
+            event.impact_position,
+            _ease_in_cubic(streak_tail_progress),
+        )
         streak = EscapeStreakState(
             event_index=int(event.event_index),
             source_coord=tuple(int(v) for v in event.source_coord),
@@ -546,10 +663,15 @@ def evaluate_escape_event(
     impact_flash: ImpactFlashState | None = None
     if flash_start_ms <= float(elapsed_ms) <= flash_end_ms:
         if float(elapsed_ms) <= impact_ms:
-            progress = _clamp01((float(elapsed_ms) - flash_start_ms) / max(1.0, flash_lead_ms))
+            progress = _clamp01(
+                (float(elapsed_ms) - flash_start_ms) / max(1.0, flash_lead_ms)
+            )
             alpha = 0.2 + (0.8 * progress)
         else:
-            progress = _clamp01((float(elapsed_ms) - impact_ms) / max(1.0, float(timeline.impact_window_ms)))
+            progress = _clamp01(
+                (float(elapsed_ms) - impact_ms)
+                / max(1.0, float(timeline.impact_window_ms))
+            )
             alpha = 1.0 - progress
         impact_flash = ImpactFlashState(
             event_index=int(event.event_index),
@@ -565,12 +687,23 @@ def evaluate_escape_event(
         draw_state
         for shard in shards
         if int(shard.event_index) == int(event.event_index)
-        if (draw_state := transform_board_shard(shard, elapsed_ms=float(elapsed_ms), tuning=tuning)) is not None
+        if (
+            draw_state := transform_board_shard(
+                shard, elapsed_ms=float(elapsed_ms), tuning=tuning
+            )
+        )
+        is not None
     )
     residue_alpha = 0.0
     if float(elapsed_ms) >= impact_ms:
-        residue_alpha = _value(tuning, "shell_event_residue_alpha", _value(tuning, "cracked_board_residue_alpha", 0.14))
-        residue_alpha *= _smoothstep((float(elapsed_ms) - impact_ms) / max(1.0, float(timeline.impact_window_ms)))
+        residue_alpha = _value(
+            tuning,
+            "shell_event_residue_alpha",
+            _value(tuning, "cracked_board_residue_alpha", 0.14),
+        )
+        residue_alpha *= _smoothstep(
+            (float(elapsed_ms) - impact_ms) / max(1.0, float(timeline.impact_window_ms))
+        )
     residue = ()
     if residue_alpha > 0.0:
         residue = (
@@ -652,16 +785,20 @@ def shell_sound_events_for_frame(
                 sound_id="endgame_cell_release",
                 trigger_ms=float(timeline.hold_ms) + float(event.rupture_delay_ms),
                 volume=0.28 + (0.32 * float(event.force)),
-                pan_hint=max(-1.0, min(1.0, float(event.outward_direction[0]) if event.outward_direction else 0.0)),
+                pan_hint=max(
+                    -1.0,
+                    min(
+                        1.0,
+                        float(event.outward_direction[0])
+                        if event.outward_direction
+                        else 0.0,
+                    ),
+                ),
                 pitch=0.96 + (0.12 * float(event.force)),
             )
         )
     impact_events = sorted(
-        (
-            event
-            for event in events
-            if crossed(float(event.impact_ms))
-        ),
+        (event for event in events if crossed(float(event.impact_ms))),
         key=lambda event: (float(event.impact_ms), int(event.event_index)),
     )
     if impact_events:
@@ -683,7 +820,15 @@ def shell_sound_events_for_frame(
                 sound_id="endgame_boundary_crack",
                 trigger_ms=float(event.impact_ms),
                 volume=0.34 + (0.42 * float(event.force)),
-                pan_hint=max(-1.0, min(1.0, float(event.outward_direction[0]) if event.outward_direction else 0.0)),
+                pan_hint=max(
+                    -1.0,
+                    min(
+                        1.0,
+                        float(event.outward_direction[0])
+                        if event.outward_direction
+                        else 0.0,
+                    ),
+                ),
                 pitch=0.92 + (0.16 * float(event.force)),
             )
         )

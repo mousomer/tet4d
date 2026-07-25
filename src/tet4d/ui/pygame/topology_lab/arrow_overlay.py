@@ -43,15 +43,30 @@ def _line_hit_rect(
     return pygame.Rect(left, top, width, height)
 
 
-def _glue_style(glue_id: str, selected_glue_id: str | None, highlighted_glue_id: str | None) -> tuple[bool, bool, tuple[int, int, int], int]:
+def _glue_style(
+    glue_id: str, selected_glue_id: str | None, highlighted_glue_id: str | None
+) -> tuple[bool, bool, tuple[int, int, int], int]:
     is_selected = glue_id == selected_glue_id
     is_highlighted = glue_id == highlighted_glue_id
-    bridge_color = (248, 230, 166) if is_selected else (162, 180, 228) if is_highlighted else (86, 96, 132)
+    bridge_color = (
+        (248, 230, 166)
+        if is_selected
+        else (162, 180, 228)
+        if is_highlighted
+        else (86, 96, 132)
+    )
     bridge_width = 6 if is_selected else 4 if is_highlighted else 2
     return is_selected, is_highlighted, bridge_color, bridge_width
 
 
-def _draw_endpoint_badge(surface: pygame.Surface, fonts, *, center: tuple[int, int], label: str, color: tuple[int, int, int]) -> pygame.Rect:
+def _draw_endpoint_badge(
+    surface: pygame.Surface,
+    fonts,
+    *,
+    center: tuple[int, int],
+    label: str,
+    color: tuple[int, int, int],
+) -> pygame.Rect:
     surf = fonts.hint_font.render(label, True, color)
     rect = surf.get_rect(center=center)
     bg = rect.inflate(10, 8)
@@ -91,12 +106,38 @@ def draw_glue_arrows(
             crossing = str(arrow.get("crossing", glue_id))
             start_center = (int(source_rect.centerx), int(source_rect.centery))
             end_center = (int(target_rect.centerx), int(target_rect.centery))
-            pygame.draw.line(surface, bridge_color, start_center, end_center, bridge_width)
-            pygame.draw.circle(surface, bridge_color, start_center, 7 if is_selected else 6 if is_highlighted else 5)
-            pygame.draw.circle(surface, bridge_color, end_center, 7 if is_selected else 6 if is_highlighted else 5)
-            line_rect: pygame.Rect | None = _line_hit_rect(start_center, end_center, padding=14)
-            source_badge = _draw_endpoint_badge(surface, fonts, center=(source_rect.centerx, source_rect.centery - 18), label="S", color=bridge_color)
-            target_badge = _draw_endpoint_badge(surface, fonts, center=(target_rect.centerx, target_rect.centery - 18), label="T", color=bridge_color)
+            pygame.draw.line(
+                surface, bridge_color, start_center, end_center, bridge_width
+            )
+            pygame.draw.circle(
+                surface,
+                bridge_color,
+                start_center,
+                7 if is_selected else 6 if is_highlighted else 5,
+            )
+            pygame.draw.circle(
+                surface,
+                bridge_color,
+                end_center,
+                7 if is_selected else 6 if is_highlighted else 5,
+            )
+            line_rect: pygame.Rect | None = _line_hit_rect(
+                start_center, end_center, padding=14
+            )
+            source_badge = _draw_endpoint_badge(
+                surface,
+                fonts,
+                center=(source_rect.centerx, source_rect.centery - 18),
+                label="S",
+                color=bridge_color,
+            )
+            target_badge = _draw_endpoint_badge(
+                surface,
+                fonts,
+                center=(target_rect.centerx, target_rect.centery - 18),
+                label="T",
+                color=bridge_color,
+            )
             line_rect = line_rect.union(source_badge).union(target_badge)
             basis_pairs = arrow.get("basis_pairs", ())
             for index, pair in enumerate(basis_pairs[:3]):
@@ -148,10 +189,12 @@ def draw_glue_arrows(
             )
             surface.blit(crossing_surf, crossing_rect)
             line_rect = line_rect.union(crossing_bg)
-            hits.append(TopologyLabHitTarget("glue_pick", glue_id, line_rect.clip(clip_rect)))
+            hits.append(
+                TopologyLabHitTarget("glue_pick", glue_id, line_rect.clip(clip_rect))
+            )
     finally:
         surface.set_clip(previous_clip)
     return hits
 
 
-__all__ = ["draw_glue_arrows", "_glue_style"]
+__all__ = ["_glue_style", "draw_glue_arrows"]

@@ -4,15 +4,17 @@ import unittest
 
 import pygame
 
-from tet4d.ui.pygame.launch import topology_lab_menu
-from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
-
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     default_topology_profile_state,
 )
 from tet4d.engine.runtime.project_config import explorer_topology_preview_dims
-from tet4d.engine.topology_explorer.presets import torus_profile_2d, axis_wrap_profile
+from tet4d.engine.topology_explorer.presets import axis_wrap_profile, torus_profile_2d
+from tet4d.ui.pygame.keybindings import KEYS_3D, KEYS_4D
+from tet4d.ui.pygame.launch import topology_lab_menu
 from tet4d.ui.pygame.topology_lab.piece_sandbox import (
     ensure_piece_sandbox,
     move_sandbox_piece,
@@ -22,9 +24,6 @@ from tet4d.ui.pygame.topology_lab.piece_sandbox import (
     sandbox_shapes_for_state,
 )
 from tet4d.ui.pygame.topology_lab.scene_state import TopologyLabState
-from tests.unit.engine._translation_contract import (
-    assert_repeated_translation_progress,
-)
 
 
 class TestTopologyLabSandbox(unittest.TestCase):
@@ -49,7 +48,10 @@ class TestTopologyLabSandbox(unittest.TestCase):
         current = sandbox_cells(state)
         min_x = min(cell[0] for cell in current)
         min_y = min(cell[1] for cell in current)
-        state.sandbox.origin = (state.sandbox.origin[0] + (1 - min_x), state.sandbox.origin[1] + (1 - min_y))
+        state.sandbox.origin = (
+            state.sandbox.origin[0] + (1 - min_x),
+            state.sandbox.origin[1] + (1 - min_y),
+        )
         shifted = sandbox_cells(state)
         self.assertLess(max(cell[1] for cell in shifted), dims[1] - 1)
         before = shifted
@@ -75,7 +77,6 @@ class TestTopologyLabSandbox(unittest.TestCase):
         self.assertTrue(ok, message)
         self.assertTrue(state.sandbox.seam_crossings)
         self.assertEqual(state.sandbox.invalid_message, "")
-
 
     def test_sandbox_spawn_action_creates_piece_in_shell(self) -> None:
         state = self._state()
@@ -155,7 +156,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.sandbox.piece_index = self._first_rotatable_shape_index(
             state, KEYS_3D["rotate_xz_pos"][0]
         )
-        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[
+            state.sandbox.piece_index
+        ].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_3D["rotate_xz_pos"][0])
         after = tuple(sorted(sandbox_cells(state)))
@@ -181,7 +184,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.sandbox.piece_index = self._first_rotatable_shape_index(
             state, KEYS_4D["rotate_xw_pos"][0]
         )
-        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[
+            state.sandbox.piece_index
+        ].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_4D["rotate_xw_pos"][0])
         after = tuple(sorted(sandbox_cells(state)))
@@ -207,7 +212,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.sandbox.piece_index = self._first_rotatable_shape_index(
             state, KEYS_3D["rotate_xy_pos"][0]
         )
-        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[
+            state.sandbox.piece_index
+        ].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_3D["rotate_xy_pos"][0])
         after = tuple(sorted(sandbox_cells(state)))
@@ -233,7 +240,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.sandbox.piece_index = self._first_rotatable_shape_index(
             state, KEYS_4D["rotate_xy_neg"][0]
         )
-        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[
+            state.sandbox.piece_index
+        ].blocks
         before = tuple(sorted(sandbox_cells(state)))
         topology_lab_menu._dispatch_key(state, KEYS_4D["rotate_xy_neg"][0])
         after = tuple(sorted(sandbox_cells(state)))
@@ -284,7 +293,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
             for index, shape in enumerate(sandbox_shapes_for_state(state))
             if shape.name == "O3"
         )
-        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[
+            state.sandbox.piece_index
+        ].blocks
         state.sandbox.origin = (3, 3, 3)
         start_cells = tuple(sorted(sandbox_cells(state)))
         expected = [
@@ -321,7 +332,9 @@ class TestTopologyLabSandbox(unittest.TestCase):
             for index, shape in enumerate(sandbox_shapes_for_state(state))
             if shape.name == "CROSS4"
         )
-        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[
+            state.sandbox.piece_index
+        ].blocks
         state.sandbox.origin = (3, 3, 3, 2)
         start_cells = tuple(sorted(sandbox_cells(state)))
         expected = [
@@ -339,7 +352,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
     def test_sandbox_spawn_uses_canonical_playground_state(self) -> None:
         state = self._state()
 
-        topology_lab_menu._activate_action(state, 'sandbox_spawn')
+        topology_lab_menu._activate_action(state, "sandbox_spawn")
 
         assert state.canonical_state is not None
         assert state.sandbox is not None
@@ -358,7 +371,7 @@ class TestTopologyLabSandbox(unittest.TestCase):
         dims = explorer_topology_preview_dims(2)
         state.sandbox.origin = (dims[0] - 1, 1)
 
-        ok, message = move_sandbox_piece(state, torus_profile_2d(), 'x+')
+        ok, message = move_sandbox_piece(state, torus_profile_2d(), "x+")
 
         self.assertTrue(ok, message)
         self.assertIs(state.sandbox, state.canonical_state.sandbox_piece_state)
@@ -389,13 +402,17 @@ class TestTopologyLabSandbox(unittest.TestCase):
         state.sandbox.piece_index = self._first_rotatable_shape_index(
             state, KEYS_3D["rotate_xz_pos"][0]
         )
-        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[state.sandbox.piece_index].blocks
+        state.sandbox.local_blocks = sandbox_shapes_for_state(state)[
+            state.sandbox.piece_index
+        ].blocks
         before = state.canonical_state.sandbox_piece_state.local_blocks
 
-        topology_lab_menu._dispatch_key(state, KEYS_3D['rotate_xz_pos'][0])
+        topology_lab_menu._dispatch_key(state, KEYS_3D["rotate_xz_pos"][0])
 
         self.assertIs(state.sandbox, state.canonical_state.sandbox_piece_state)
-        self.assertNotEqual(before, state.canonical_state.sandbox_piece_state.local_blocks)
+        self.assertNotEqual(
+            before, state.canonical_state.sandbox_piece_state.local_blocks
+        )
 
 
 if __name__ == "__main__":

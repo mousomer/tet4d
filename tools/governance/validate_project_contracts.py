@@ -7,7 +7,6 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
 POLICY_PACK_REL = "config/project/policy_pack.json"
@@ -1378,14 +1377,13 @@ def _validate_menu_control_storage_type(
                     f"{prefix} storage_type=bool requires semantic_type=bool",
                 )
             )
-    elif storage_type in {"int_index", "string_id"}:
-        if semantic_type != "enum":
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{prefix} storage_type={storage_type} requires semantic_type=enum",
-                )
+    elif storage_type in {"int_index", "string_id"} and semantic_type != "enum":
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} storage_type={storage_type} requires semantic_type=enum",
             )
+        )
 
     if item_type in {"slider", "stepper"} and storage_type not in {"int", "float"}:
         issues.append(

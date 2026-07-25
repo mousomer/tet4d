@@ -22,7 +22,7 @@ def aggregate_audio_events(
     state: ExplosionAudioState,
 ) -> tuple[str, ...]:
     if not sound_enabled or not raw_events:
-        return tuple()
+        return ()
     family_counts: dict[str, int] = {}
     family_strengths: dict[str, float] = {}
     family_max_strengths: dict[str, float] = {}

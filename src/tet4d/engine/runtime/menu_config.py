@@ -5,13 +5,19 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
+from tet4d.engine.gameplay.pieces_nd import (
+    piece_set_label,
+    piece_set_options_for_dimension,
+)
+
 from ..core.rng import RNG_MODE_OPTIONS
-from .menu_field_spec import FieldOption, FieldSpec
 from .endgame_presets import (
     ENDGAME_BOUNDARY_RESPONSES,
     ENDGAME_PARTICLE_COLLISION_MODES,
     ENDGAME_PRESET_IDS,
 )
+from .menu_field_spec import FieldOption, FieldSpec
 from .menu_structure.graph import (
     collect_actions_for_menu_ids,
     collect_reachable_menu_ids,
@@ -26,8 +32,6 @@ from .settings_schema import (
     read_json_object_or_raise,
     validate_defaults_payload,
 )
-from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
-from tet4d.engine.gameplay.pieces_nd import piece_set_label, piece_set_options_for_dimension
 
 CONFIG_DIR = project_root_path() / "config" / "menu"
 DEFAULTS_FILE = CONFIG_DIR / "defaults.json"
@@ -202,9 +206,13 @@ def resolve_runtime_menu_id(
         if item_menu_id is not None:
             return item_menu_id
 
-    compile_result = _structure_payload()["runtime_menu_compile_results"].get(clean_menu_id)
+    compile_result = _structure_payload()["runtime_menu_compile_results"].get(
+        clean_menu_id
+    )
     if compile_result is not None:
-        target_menu_id = str(getattr(compile_result, "target_menu_id", "")).strip().lower()
+        target_menu_id = (
+            str(getattr(compile_result, "target_menu_id", "")).strip().lower()
+        )
         if target_menu_id in runtime_menus:
             return target_menu_id
         inline_items = tuple(getattr(compile_result, "inline_items", ()))
@@ -214,7 +222,9 @@ def resolve_runtime_menu_id(
                 return item_menu_id
 
     if fallback_menu_id:
-        fallback = as_non_empty_string(fallback_menu_id, path="fallback_menu_id").lower()
+        fallback = as_non_empty_string(
+            fallback_menu_id, path="fallback_menu_id"
+        ).lower()
         if fallback in runtime_menus:
             return fallback
     return settings_menu_id()
@@ -376,7 +386,9 @@ def setup_fields_for_dimension(
         semantic_type = str(raw_field["semantic_type"])
         control_family = str(raw_field["control"])
         if semantic_type == "enum":
-            literal_options = tuple(str(option) for option in raw_field.get("options", ()))
+            literal_options = tuple(
+                str(option) for option in raw_field.get("options", ())
+            )
             options_source = str(raw_field.get("options_source", "")).strip().lower()
             option_labels = literal_options
             if options_source:
@@ -464,7 +476,9 @@ def setup_fields_for_settings(
         hidden = {"topology_mode", "topology_advanced", "topology_profile_index"}
         return [field for field in fields if field.attr_name not in hidden]
     if dimension >= 3:
-        fields = [field for field in fields if field.attr_name != "topology_profile_index"]
+        fields = [
+            field for field in fields if field.attr_name != "topology_profile_index"
+        ]
     if bool(topology_advanced):
         return fields
     return [field for field in fields if field.attr_name != "topology_profile_index"]

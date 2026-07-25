@@ -4,11 +4,11 @@ import inspect
 import unittest
 from unittest import mock
 
+from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.api import (
     piece_set_2d_options_gameplay,
     piece_set_options_for_dimension_gameplay,
 )
-from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
@@ -43,8 +43,8 @@ from tet4d.engine.topology_explorer.presets import (
     twisted_y_profile_3d,
     twisted_y_profile_4d,
 )
-from tet4d.ui.pygame.front2d_input import apply_2d_gameplay_action
 from tet4d.ui.pygame import frontend_nd_input
+from tet4d.ui.pygame.front2d_input import apply_2d_gameplay_action
 from tet4d.ui.pygame.keybindings import EXPLORER_KEYS_3D, KEYS_3D
 from tet4d.ui.pygame.topology_lab.play_launch import (
     _topology_playground_return_menu,
@@ -129,7 +129,10 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
 
         self.assertEqual(gravity_state.board.cells, expected_locked_cells)
         self.assertTrue(
-            any(coord[cfg.gravity_axis] < 0 for coord in gravity_state.current_piece.cells())
+            any(
+                coord[cfg.gravity_axis] < 0
+                for coord in gravity_state.current_piece.cells()
+            )
         )
 
     def _assert_hard_drop_matches_repeated_drop_nd(
@@ -278,7 +281,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
             probe_result["traversal"]["target_boundary"],
         )
 
-    def test_launch_rigid_play_setting_can_force_rigid_or_cellwise_transport(self) -> None:
+    def test_launch_rigid_play_setting_can_force_rigid_or_cellwise_transport(
+        self,
+    ) -> None:
         state = default_topology_playground_state(
             dimension=2,
             axis_sizes=(4, 4),
@@ -293,7 +298,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         cellwise_cfg = build_gameplay_config_from_topology_playground_state(state)
         self.assertFalse(cellwise_cfg.explorer_rigid_play_enabled)
 
-    def test_launch_config_uses_gameplay_bindings_instead_of_explorer_traversal(self) -> None:
+    def test_launch_config_uses_gameplay_bindings_instead_of_explorer_traversal(
+        self,
+    ) -> None:
         state = default_topology_playground_state(
             dimension=3,
             axis_sizes=(6, 12, 6),
@@ -332,9 +339,11 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         self.assertIsNotNone(gameplay_state.current_piece)
         self.assertFalse(gameplay_state.game_over)
         self.assertTrue(
-            any(coord[cfg.gravity_axis] < 0 for coord in gameplay_state.current_piece.cells())
+            any(
+                coord[cfg.gravity_axis] < 0
+                for coord in gameplay_state.current_piece.cells()
+            )
         )
-
 
     def test_launch_preserves_full_projective_directed_seam_family(self) -> None:
         cases = (
@@ -379,7 +388,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Explorer gameplay mode"):
             build_gameplay_config_from_topology_playground_state(state)
 
-    def test_3d_play_continues_after_bottom_boundary_traversal_on_live_path(self) -> None:
+    def test_3d_play_continues_after_bottom_boundary_traversal_on_live_path(
+        self,
+    ) -> None:
         cfg = self._playground_cfg_nd(
             dimension=3,
             dims=(4, 4, 4),
@@ -396,7 +407,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         )
         self.assertIsNotNone(first.moved_cells)
         self.assertTrue(state.try_move_axis(1, 1))
-        self.assertEqual(tuple(sorted(state.current_piece.cells())), tuple(sorted(first.moved_cells)))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())), tuple(sorted(first.moved_cells))
+        )
 
         second = cfg.explorer_transport.resolve_piece_step(
             tuple(state.current_piece.cells()),
@@ -412,7 +425,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
             tuple(sorted(second.moved_cells)),
         )
 
-    def test_4d_play_continues_after_bottom_boundary_traversal_on_live_path(self) -> None:
+    def test_4d_play_continues_after_bottom_boundary_traversal_on_live_path(
+        self,
+    ) -> None:
         cfg = self._playground_cfg_nd(
             dimension=4,
             dims=(4, 4, 4, 4),
@@ -429,7 +444,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
         )
         self.assertIsNotNone(first.moved_cells)
         self.assertTrue(state.try_move_axis(1, 1))
-        self.assertEqual(tuple(sorted(state.current_piece.cells())), tuple(sorted(first.moved_cells)))
+        self.assertEqual(
+            tuple(sorted(state.current_piece.cells())), tuple(sorted(first.moved_cells))
+        )
 
         second = cfg.explorer_transport.resolve_piece_step(
             tuple(state.current_piece.cells()),
@@ -512,7 +529,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
             any(coord[cfg.gravity_axis] < 0 for coord in state.current_piece.cells())
         )
 
-    def test_3d_sphere_play_allows_side_entry_into_bottom_layer_before_lock(self) -> None:
+    def test_3d_sphere_play_allows_side_entry_into_bottom_layer_before_lock(
+        self,
+    ) -> None:
         cfg = self._playground_cfg_nd(
             dimension=3,
             dims=(4, 4, 4),
@@ -621,7 +640,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
             pos=(0, 3, 0, 0),
         )
 
-    def test_custom_cross_axis_y_seam_translation_remains_distinct_from_drop(self) -> None:
+    def test_custom_cross_axis_y_seam_translation_remains_distinct_from_drop(
+        self,
+    ) -> None:
         cfg = self._playground_cfg_nd(
             dimension=3,
             dims=(4, 4, 4),
@@ -645,7 +666,9 @@ class TestTopologyPlaygroundLaunchConfig(unittest.TestCase):
             pos=(0, 3, 0),
         )
 
-    def test_rotation_near_twisted_y_seam_does_not_create_drop_continuation(self) -> None:
+    def test_rotation_near_twisted_y_seam_does_not_create_drop_continuation(
+        self,
+    ) -> None:
         cfg = self._playground_cfg_nd(
             dimension=3,
             dims=(4, 4, 4),

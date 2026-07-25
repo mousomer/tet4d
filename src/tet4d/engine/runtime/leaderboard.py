@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-import uuid
 
 from .project_config import (
     leaderboard_file_default_path,
@@ -12,8 +12,10 @@ from .project_config import (
 from .settings_schema import atomic_write_json, read_json_object_or_empty, sanitize_text
 
 _SCHEMA_VERSION = 1
+
+
 def _now_utc_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _max_entries_limit() -> int:
@@ -110,7 +112,9 @@ def _normalize_entry(raw: object) -> dict[str, object]:
             max_length=32,
             fallback="Player",
         ),
-        "dimension": _safe_int(raw.get("dimension"), default=2, min_value=2, max_value=4),
+        "dimension": _safe_int(
+            raw.get("dimension"), default=2, min_value=2, max_value=4
+        ),
         "score": _safe_int(raw.get("score"), default=0, min_value=0),
         "lines_cleared": _safe_int(raw.get("lines_cleared"), default=0, min_value=0),
         "start_speed_level": _safe_int(

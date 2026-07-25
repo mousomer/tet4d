@@ -7,7 +7,6 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_PATH = (
     PROJECT_ROOT / "config" / "project" / "policy" / "manifests" / "secret_scan.json"

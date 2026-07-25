@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.engine.runtime.menu_config import keybindings_menu_id
 from tet4d.engine.runtime.menu_config import menu_items as configured_menu_items
 from tet4d.engine.ui_logic.keybindings_catalog import (
@@ -10,9 +11,7 @@ from tet4d.engine.ui_logic.keybindings_catalog import (
     gameplay_bucket_label,
     partition_gameplay_actions,
 )
-from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.ui.pygame.keybindings import keybinding_file_label
-
 
 SCOPE_ORDER = ("general", "2d", "3d", "4d", "all")
 VALID_SCOPES = tuple(dict.fromkeys((*SCOPE_ORDER, "general", "all")))
@@ -111,7 +110,9 @@ def rows_for_scope(scope: str) -> tuple[list[RenderedRow], list[BindingRow]]:
         title = str(item.get("label", ""))
         description = str(item.get("description", "")).strip()
         rendered.append(RenderedRow(kind="header", text=title))
-        rendered.append(RenderedRow(kind="header", text=f"  {description}" if description else ""))
+        rendered.append(
+            RenderedRow(kind="header", text=f"  {description}" if description else "")
+        )
 
         dimension = int(str(item.get("binding_dimension", "2"))[0])
         group = str(item.get("binding_group", "")).strip().lower()

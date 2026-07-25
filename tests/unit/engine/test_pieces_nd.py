@@ -1,20 +1,20 @@
-import unittest
 import random
+import unittest
 
 from tet4d.engine.gameplay.pieces_nd import (
-    ActivePieceND,
-    PIECE_SET_4D_OPTIONS,
-    PIECE_SET_3D_OPTIONS,
     PIECE_SET_3D_DEBUG,
     PIECE_SET_3D_EMBED_2D,
+    PIECE_SET_3D_OPTIONS,
     PIECE_SET_3D_RANDOM,
     PIECE_SET_4D_DEBUG,
+    PIECE_SET_4D_EIGHT,
     PIECE_SET_4D_EMBED_2D,
     PIECE_SET_4D_EMBED_3D,
+    PIECE_SET_4D_OPTIONS,
     PIECE_SET_4D_RANDOM,
-    PIECE_SET_4D_SIX,
     PIECE_SET_4D_SEVEN,
-    PIECE_SET_4D_EIGHT,
+    PIECE_SET_4D_SIX,
+    ActivePieceND,
     get_piece_shapes_nd,
     get_standard_pieces_nd,
     rotate_point_nd,
@@ -97,7 +97,10 @@ class TestPiecesND(unittest.TestCase):
             self.assertTrue(all(len(values) > 1 for values in axis_values))
 
     def test_4d_larger_piece_sets_span_all_axes(self):
-        for piece_set_id, cell_count in ((PIECE_SET_4D_SEVEN, 7), (PIECE_SET_4D_EIGHT, 8)):
+        for piece_set_id, cell_count in (
+            (PIECE_SET_4D_SEVEN, 7),
+            (PIECE_SET_4D_EIGHT, 8),
+        ):
             shapes = get_standard_pieces_nd(4, piece_set_4d=piece_set_id)
             self.assertTrue(shapes)
             for shape in shapes:

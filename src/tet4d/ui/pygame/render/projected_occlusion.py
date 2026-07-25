@@ -9,6 +9,7 @@ from tet4d.ui.pygame.projection3d import (
     ProjectedLineFragment,
     ProjectedLinePrimitive,
 )
+import itertools
 
 _DEPTH_EPSILON = project_constant_float(
     ("rendering", "projected_occlusion", "depth_epsilon"),
@@ -123,7 +124,7 @@ def _classify_segment_fragments(
     )
 
     classified: list[tuple[ProjectedLineFragment, bool]] = []
-    for start_t, end_t in zip(split_params, split_params[1:]):
+    for start_t, end_t in itertools.pairwise(split_params):
         start = _interpolate_point(segment.start, segment.end, start_t)
         end = _interpolate_point(segment.start, segment.end, end_t)
         if _point_distance(start, end) <= policy.split_epsilon_px:

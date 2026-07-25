@@ -8,11 +8,23 @@ from tet4d.engine.runtime.topology_playground_state import (
     PRESET_SOURCE_CUSTOM,
     PRESET_SOURCE_DESIGNER,
     PRESET_SOURCE_EXPLORER,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundLaunchSettings as RuntimeTopologyPlaygroundLaunchSettings,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundPresetMetadata as RuntimeTopologyPlaygroundPresetMetadata,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundPresetSelection as RuntimeTopologyPlaygroundPresetSelection,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundSandboxPieceState as RuntimeTopologyPlaygroundSandboxPieceState,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundState as RuntimeTopologyPlaygroundState,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundTopologyConfig as RuntimeTopologyPlaygroundTopologyConfig,
 )
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
@@ -256,24 +268,24 @@ def sync_canonical_playground_state(state: TopologyPlaygroundState) -> None:
         explorer_profile=explorer_profile,
         gluing_draft=_runtime_draft_from_ui(state),
     )
-    runtime_kwargs = dict(
-        dimension=state.dimension,
-        axis_sizes=_axis_sizes_from_ui(state),
-        topology_config=topology_config,
-        selected_boundary=_boundary_from_index(
+    runtime_kwargs = {
+        "dimension": state.dimension,
+        "axis_sizes": _axis_sizes_from_ui(state),
+        "topology_config": topology_config,
+        "selected_boundary": _boundary_from_index(
             state.dimension,
             current_selected_boundary_index(state),
         ),
-        selected_gluing=current_selected_glue_id(state),
-        active_tool=state.active_tool,
-        editor_tool=state.editor_tool,
-        probe_state=_runtime_probe_state_from_ui(state),
-        sandbox_piece_state=_runtime_sandbox_state_from_ui(state),
-        launch_settings=_runtime_launch_settings_from_ui(state),
-        transport_policy=None,
-        preset_metadata=_runtime_preset_metadata_from_ui(state),
-        dirty=current_dirty(state),
-    )
+        "selected_gluing": current_selected_glue_id(state),
+        "active_tool": state.active_tool,
+        "editor_tool": state.editor_tool,
+        "probe_state": _runtime_probe_state_from_ui(state),
+        "sandbox_piece_state": _runtime_sandbox_state_from_ui(state),
+        "launch_settings": _runtime_launch_settings_from_ui(state),
+        "transport_policy": None,
+        "preset_metadata": _runtime_preset_metadata_from_ui(state),
+        "dirty": current_dirty(state),
+    }
     if (
         state.canonical_state is None
         or state.canonical_state.dimension != state.dimension
@@ -391,7 +403,9 @@ def update_explorer_draft(
     permutation_index: int | object = _UNSET,
     signs: tuple[int, ...] | object = _UNSET,
 ):
-    draft = current_explorer_draft(state) or default_draft_for_dimension(state.dimension)
+    draft = current_explorer_draft(state) or default_draft_for_dimension(
+        state.dimension
+    )
     updated = type(draft)(
         slot_index=draft.slot_index if slot_index is _UNSET else int(slot_index),
         source_index=(

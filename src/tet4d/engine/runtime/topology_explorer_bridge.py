@@ -5,15 +5,15 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     TopologyProfileState,
 )
+from tet4d.engine.runtime.topology_explorer_preview import (
+    export_explorer_topology_preview,
+)
 from tet4d.engine.topology_explorer import (
     AXIS_NAMES,
     BoundaryRef,
     BoundaryTransform,
     ExplorerTopologyProfile,
     GluingDescriptor,
-)
-from tet4d.engine.runtime.topology_explorer_preview import (
-    export_explorer_topology_preview,
 )
 
 

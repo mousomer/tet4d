@@ -18,7 +18,9 @@ class TutorialRuntimeTests(unittest.TestCase):
     )
 
     @staticmethod
-    def _complete_step_with_repeats(session: object, action_id: str, repeats: int = 4) -> bool:
+    def _complete_step_with_repeats(
+        session: object, action_id: str, repeats: int = 4
+    ) -> bool:
         for _ in range(max(1, repeats)):
             session.observe_action(action_id)
         return bool(session.sync_and_advance(lines_cleared=0))
@@ -47,7 +49,7 @@ class TutorialRuntimeTests(unittest.TestCase):
             session.observe_action(action_id)
             target_percent = step.setup.overlay_target_percent
             if not isinstance(target_percent, int):
-                target_percent = int(round(float(OVERLAY_TRANSPARENCY_MIN) * 100.0))
+                target_percent = round(float(OVERLAY_TRANSPARENCY_MIN) * 100.0)
             target_percent = max(0, min(100, int(target_percent)))
             return bool(
                 session.sync_and_advance(
@@ -59,7 +61,7 @@ class TutorialRuntimeTests(unittest.TestCase):
             session.observe_action(action_id)
             target_percent = step.setup.overlay_target_percent
             if not isinstance(target_percent, int):
-                target_percent = int(round(float(OVERLAY_TRANSPARENCY_MAX) * 100.0))
+                target_percent = round(float(OVERLAY_TRANSPARENCY_MAX) * 100.0)
             target_percent = max(0, min(100, int(target_percent)))
             return bool(
                 session.sync_and_advance(
@@ -70,7 +72,9 @@ class TutorialRuntimeTests(unittest.TestCase):
         event_span_min_ms = max(0, int(step.complete_when.event_span_min_ms))
         if event_span_min_ms > 0:
             interval_ms = (
-                event_span_min_ms // max(1, repeats - 1) if repeats > 1 else event_span_min_ms
+                event_span_min_ms // max(1, repeats - 1)
+                if repeats > 1
+                else event_span_min_ms
             )
             current_ms = {"value": 0}
             with patch(
@@ -79,7 +83,9 @@ class TutorialRuntimeTests(unittest.TestCase):
             ):
                 for index in range(repeats):
                     current_ms["value"] = (
-                        event_span_min_ms if index + 1 >= repeats else interval_ms * index
+                        event_span_min_ms
+                        if index + 1 >= repeats
+                        else interval_ms * index
                     )
                     session.observe_action(action_id)
             return bool(session.sync_and_advance(lines_cleared=0))
@@ -131,7 +137,9 @@ class TutorialRuntimeTests(unittest.TestCase):
             self.assertFalse(session.action_allowed("rotate_xy_pos"))
             payload = session.overlay_payload()
             self.assertEqual(payload.get("segment_title"), "Translations")
-            self.assertIn("System controls", str(payload.get("system_controls_text", "")))
+            self.assertIn(
+                "System controls", str(payload.get("system_controls_text", ""))
+            )
 
             self.assertTrue(self._complete_step_with_repeats(session, "move_x_neg"))
             payload = session.overlay_payload()
@@ -277,7 +285,9 @@ class TutorialRuntimeTests(unittest.TestCase):
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
             self.assertTrue(session.transition_pending())
             self.assertEqual(session.overlay_payload()["step_id"], "move_x_neg")
-            self.assertIn("Next stage in 1s", session.overlay_payload()["status_message"])
+            self.assertIn(
+                "Next stage in 1s", session.overlay_payload()["status_message"]
+            )
 
             with patch("tet4d.engine.tutorial.runtime._now_ms", return_value=1099):
                 self.assertFalse(session.sync_and_advance(lines_cleared=0))
@@ -416,7 +426,9 @@ class TutorialRuntimeTests(unittest.TestCase):
             self.assertEqual(setup_rotate.get("step_id"), "rotate_xy_pos")
             self.assertEqual(setup_rotate.get("setup"), {})
 
-    def test_nd_translation_and_rotation_stages_keep_continuous_setup_state(self) -> None:
+    def test_nd_translation_and_rotation_stages_keep_continuous_setup_state(
+        self,
+    ) -> None:
         with (
             patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime.mark_tutorial_lesson_started"),
@@ -603,7 +615,10 @@ class TutorialRuntimeTests(unittest.TestCase):
                 side_effect=lambda: current_ms["value"],
             ),
         ):
-            for lesson_id, mode in (("tutorial_3d_core", "3d"), ("tutorial_4d_core", "4d")):
+            for lesson_id, mode in (
+                ("tutorial_3d_core", "3d"),
+                ("tutorial_4d_core", "4d"),
+            ):
                 current_ms["value"] = 0
                 session = create_tutorial_runtime_session(
                     lesson_id=lesson_id,
@@ -645,7 +660,9 @@ class TutorialRuntimeTests(unittest.TestCase):
                 session.observe_action("mouse_zoom")
                 self.assertTrue(session.sync_and_advance(lines_cleared=0))
                 expected_next = "zoom_in" if mode == "3d" else "toggle_grid"
-                self.assertEqual(session.overlay_payload().get("step_id"), expected_next)
+                self.assertEqual(
+                    session.overlay_payload().get("step_id"), expected_next
+                )
 
     def test_overlay_stage_completion_uses_declared_exact_target(self) -> None:
         with (
@@ -674,14 +691,18 @@ class TutorialRuntimeTests(unittest.TestCase):
             self.assertTrue(
                 session.sync_and_advance(lines_cleared=0, overlay_transparency=0.05)
             )
-            self.assertEqual(session.overlay_payload().get("step_id"), "overlay_alpha_inc")
+            self.assertEqual(
+                session.overlay_payload().get("step_id"), "overlay_alpha_inc"
+            )
             self.assertIn("Goal: 77%", session.overlay_payload().get("step_hint", ""))
             session.observe_action("overlay_alpha_inc")
             self.assertTrue(
                 session.sync_and_advance(lines_cleared=0, overlay_transparency=0.77)
             )
 
-    def test_overlay_stages_reset_transparency_to_midpoint_for_following_stage(self) -> None:
+    def test_overlay_stages_reset_transparency_to_midpoint_for_following_stage(
+        self,
+    ) -> None:
         with (
             patch("tet4d.engine.tutorial.runtime._TUTORIAL_STAGE_DELAY_MS", 0),
             patch("tet4d.engine.tutorial.runtime._overlay_range", return_value=(0, 90)),

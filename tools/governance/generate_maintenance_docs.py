@@ -6,10 +6,10 @@ import json
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import Iterable
 
 if __package__:
     from . import check_drift_protection as drift_guard
@@ -300,8 +300,7 @@ def _tokenize(text: str) -> tuple[str, ...]:
 def _test_name_tokens(path: str) -> tuple[str, ...]:
     name = Path(path).stem
     prefix = "test_"
-    if name.startswith(prefix):
-        name = name[len(prefix) :]
+    name = name.removeprefix(prefix)
     return _tokenize(name)
 
 
@@ -323,7 +322,7 @@ def _path_affinity_tokens(path: str) -> frozenset[str]:
     return frozenset(tokens)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _read_text_cached(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")

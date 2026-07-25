@@ -215,18 +215,27 @@ def test_likely_test_files_controls_generic_stem_noise() -> None:
         "tests/unit/render/test_render_pipeline.py",
     )
 
-    assert maint_doc._likely_test_files_for_source(
-        "src/tet4d/ui/pygame/render/render.py",
-        tests,
-        max_matches=4,
-    ) == ()
-    assert maint_doc._likely_test_files_for_source(
-        "src/tet4d/engine/runtime/menu.py",
-        tests,
-        max_matches=4,
-    ) == ()
-    assert maint_doc._likely_test_files_for_source(
-        "src/tet4d/engine/runtime/state.py",
-        tests,
-        max_matches=4,
-    ) == ()
+    assert (
+        maint_doc._likely_test_files_for_source(
+            "src/tet4d/ui/pygame/render/render.py",
+            tests,
+            max_matches=4,
+        )
+        == ()
+    )
+    assert (
+        maint_doc._likely_test_files_for_source(
+            "src/tet4d/engine/runtime/menu.py",
+            tests,
+            max_matches=4,
+        )
+        == ()
+    )
+    assert (
+        maint_doc._likely_test_files_for_source(
+            "src/tet4d/engine/runtime/state.py",
+            tests,
+            max_matches=4,
+        )
+        == ()
+    )

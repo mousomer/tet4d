@@ -1,4 +1,3 @@
-# ruff: noqa: E402
 import argparse
 import sys
 from pathlib import Path

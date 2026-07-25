@@ -19,18 +19,19 @@ from tet4d.engine.topology_explorer.presets import (
     projective_plane_profile_2d,
     projective_space_profile_3d,
 )
+from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
     build_explorer_playground_settings,
     mode_settings_snapshot_for_dimension,
 )
-from tet4d.ui.pygame import frontend_nd_setup
 from tet4d.ui.pygame.topology_lab.scene_state import (
-    ExplorerPlaygroundSettings,
     TOOL_EDIT,
     TOOL_SANDBOX,
+    ExplorerPlaygroundSettings,
 )
+
 
 class TestTopologyLabApp(unittest.TestCase):
     def _invalid_profile_3d(self) -> ExplorerTopologyProfile:

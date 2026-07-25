@@ -200,7 +200,7 @@ def _viewer_axis_map_for_yaw(
     cfg: GameConfigND,
     viewer_axes_by_label: Mapping[str, tuple[int, int]] | None = None,
 ) -> dict[str, tuple[int, int]]:
-    quarter_turn = int(round(float(yaw_deg) / 90.0)) % 4
+    quarter_turn = round(float(yaw_deg) / 90.0) % 4
     if quarter_turn == 0:
         local_map = {"x": (0, 1), "z": (2, 1)}
     elif quarter_turn == 1:
@@ -598,18 +598,17 @@ def route_nd_keydown(
     if system_result is not None:
         return system_result
 
-    if allow_gameplay and not state.game_over:
-        if _route_nd_gameplay_action(
-            key,
-            state,
-            yaw_deg_for_view_movement=yaw_deg_for_view_movement,
-            axis_overrides_by_action=axis_overrides_by_action,
-            viewer_axes_by_label=viewer_axes_by_label,
-            sfx_handler=sfx_handler,
-            action_filter=action_filter,
-            action_observer=action_observer,
-        ):
-            return "continue"
+    if allow_gameplay and not state.game_over and _route_nd_gameplay_action(
+        key,
+        state,
+        yaw_deg_for_view_movement=yaw_deg_for_view_movement,
+        axis_overrides_by_action=axis_overrides_by_action,
+        viewer_axes_by_label=viewer_axes_by_label,
+        sfx_handler=sfx_handler,
+        action_filter=action_filter,
+        action_observer=action_observer,
+    ):
+        return "continue"
 
     _route_nd_view_action(
         key,

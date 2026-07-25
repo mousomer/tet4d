@@ -3,18 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from .menu_config import default_settings_payload
-from .project_config import menu_settings_file_path, state_dir_path
-from .settings_schema import (
-    RuntimeSettingDefaults,
-    clamp_animation_duration_ms,
-    clamp_endgame_speed_percent,
-    clamp_game_seed,
-    clamp_lines_per_level,
-    clamp_overlay_transparency,
-    clamp_toggle_index,
-    derive_runtime_setting_defaults,
-    mode_key_for_dimension,
-)
 from .menu_settings.sections import (
     ANIMATION_DURATION_MS_MAX,
     ANIMATION_DURATION_MS_MIN,
@@ -43,6 +31,18 @@ from .menu_settings.store import (
     sanitize_and_save_payload,
     save_payload,
     save_payload_section,
+)
+from .project_config import menu_settings_file_path, state_dir_path
+from .settings_schema import (
+    RuntimeSettingDefaults,
+    clamp_animation_duration_ms,
+    clamp_endgame_speed_percent,
+    clamp_game_seed,
+    clamp_lines_per_level,
+    clamp_overlay_transparency,
+    clamp_toggle_index,
+    derive_runtime_setting_defaults,
+    mode_key_for_dimension,
 )
 
 STATE_DIR = state_dir_path()

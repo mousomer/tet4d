@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 from ..core.model import BoardND, Coord
 from ..core.rules.locking import apply_lock_and_score

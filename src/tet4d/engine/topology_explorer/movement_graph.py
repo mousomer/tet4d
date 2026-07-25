@@ -184,12 +184,10 @@ def serialize_movement_graph_rows(
                                     "side": str(edge.traversal.target_boundary.side),
                                 },
                                 "source_coord": [
-                                    int(value)
-                                    for value in edge.traversal.source_coord
+                                    int(value) for value in edge.traversal.source_coord
                                 ],
                                 "target_coord": [
-                                    int(value)
-                                    for value in edge.traversal.target_coord
+                                    int(value) for value in edge.traversal.target_coord
                                 ],
                                 "entry_step": edge.traversal.entry_step.label,
                             }
@@ -333,4 +331,6 @@ def build_movement_graph(
     dims: Coord,
 ) -> dict[Coord, tuple[MovementEdge, ...]]:
     normalized_dims = _normalized_dims(dims)
-    return movement_graph_from_rows(_build_movement_graph_rows(profile, normalized_dims))
+    return movement_graph_from_rows(
+        _build_movement_graph_rows(profile, normalized_dims)
+    )

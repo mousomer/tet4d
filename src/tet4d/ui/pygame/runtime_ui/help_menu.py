@@ -21,13 +21,13 @@ from tet4d.engine.help_text import (
     help_topic_media_rule,
     help_value_template,
 )
-from tet4d.engine.runtime.help_topics import (
-    help_action_topic_registry,
-    help_topics_for_context,
-)
 from tet4d.engine.runtime.api import (
     active_key_profile_runtime,
     runtime_binding_groups_for_dimension_runtime,
+)
+from tet4d.engine.runtime.help_topics import (
+    help_action_topic_registry,
+    help_topics_for_context,
 )
 from tet4d.engine.runtime.menu_config import settings_help_entries
 from tet4d.engine.ui_logic.keybindings_catalog import (
@@ -45,7 +45,6 @@ from tet4d.ui.pygame.render.control_helper import (
     draw_grouped_control_helper,
 )
 from tet4d.ui.pygame.ui_utils import draw_vertical_gradient, fit_text
-
 
 _HELP_LAYOUT = help_layout_payload()
 _SETTINGS_HELP_ENTRIES = settings_help_entries()
@@ -122,7 +121,7 @@ def paginate_help_lines(
     if rows_per_page <= 0:
         rows_per_page = 1
     if not lines:
-        return (tuple(),)
+        return ((),)
     pages: list[tuple[str, ...]] = []
     for start in range(0, len(lines), rows_per_page):
         pages.append(tuple(lines[start : start + rows_per_page]))
@@ -130,7 +129,9 @@ def paginate_help_lines(
 
 
 def _current_binding_text(dimension: int, action: str, *, group: str = "system") -> str:
-    groups = runtime_binding_groups_for_dimension_runtime(max(2, min(4, int(dimension))))
+    groups = runtime_binding_groups_for_dimension_runtime(
+        max(2, min(4, int(dimension)))
+    )
     keys = tuple(groups.get(group, {}).get(action, ()))
     return format_key_tuple(keys)
 
@@ -593,7 +594,7 @@ def _paginate_control_groups(
     if current:
         pages.append(tuple(current))
     if not pages:
-        pages.append(tuple())
+        pages.append(())
     return tuple(pages)
 
 

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from functools import lru_cache
-from collections.abc import Sequence
-from typing import Mapping
 import re
+from collections.abc import Mapping, Sequence
+from functools import lru_cache
 
 import pygame
 
@@ -13,11 +12,10 @@ from tet4d.engine.help_text import (
 )
 from tet4d.engine.runtime.api import runtime_binding_groups_for_dimension_runtime
 from tet4d.ui.pygame.input.key_display import format_key_tuple
+from tet4d.ui.pygame.ui_utils import fit_text
 
 from .control_icons import draw_action_icon
 from .text_render_cache import render_text_cached
-from tet4d.ui.pygame.ui_utils import fit_text
-
 
 ControlGroup = tuple[str, tuple[str, ...]]
 PlannedGroupRows = tuple[str, tuple[str, ...]]
@@ -376,8 +374,7 @@ def draw_grouped_control_helper(
         )
         y += box_h + 6
 
-    if overflow:
-        if y >= rect.bottom:
-            return rect.bottom - (hint_font.get_height() + 6)
+    if overflow and y >= rect.bottom:
+        return rect.bottom - (hint_font.get_height() + 6)
 
     return y

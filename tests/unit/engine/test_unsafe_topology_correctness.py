@@ -146,16 +146,18 @@ class TestUnsafeTopologyCorrectness(unittest.TestCase):
         )
 
         for label, profile, dims in cases:
-            with self.subTest(case=label):
-                with self.assertRaisesRegex(
+            with (
+                self.subTest(case=label),
+                self.assertRaisesRegex(
                     ValueError,
                     "unsupported for current board dimensions",
-                ):
-                    compile_explorer_topology_preview(
-                        profile,
-                        dims=dims,
-                        source="unsafe_correctness_test",
-                    )
+                ),
+            ):
+                compile_explorer_topology_preview(
+                    profile,
+                    dims=dims,
+                    source="unsafe_correctness_test",
+                )
 
     def test_play_launch_keeps_projective_profiles_across_dimensions(self) -> None:
         cases = (
@@ -270,7 +272,6 @@ class TestUnsafeTopologyCorrectness(unittest.TestCase):
                     actual_cells = tuple(sorted(state.current_piece.cells()))
 
                 self.assertEqual(actual_cells, tuple(sorted(expected.moved_cells)))
-
 
     def test_play_launch_rejects_invalid_non_bijective_profiles_across_dimensions(
         self,

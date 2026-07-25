@@ -55,14 +55,18 @@ if (
 ):
     sys.path.insert(0, str(OPTIONAL_ARCH_METRICS_PATH))
 
-from tools.governance.architecture_metric_budget import (  # noqa: E402
+from tools.governance.architecture_metric_budget import (
     evaluate_architecture_metric_budget_overages,
 )
-from tools.governance.folder_balance_budget import evaluate_folder_balance_gate  # noqa: E402
+from tools.governance.folder_balance_budget import (
+    evaluate_folder_balance_gate,
+)
 
-try:  # noqa: E402
+try:
     from architecture_metrics import classify_folder_path  # type: ignore
-    from architecture_metrics import fuzzy_band_score as shared_fuzzy_band_score  # type: ignore
+    from architecture_metrics import (
+        fuzzy_band_score as shared_fuzzy_band_score,  # type: ignore
+    )
     from architecture_metrics import (
         fuzzy_weighted_status as shared_fuzzy_weighted_status,
     )  # type: ignore

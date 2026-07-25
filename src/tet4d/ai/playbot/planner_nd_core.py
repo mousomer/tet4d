@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from bisect import bisect_right
+from collections.abc import Iterable
 from itertools import product
-from typing import Iterable
 
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.core.piece_transform import block_axis_bounds
@@ -48,8 +48,7 @@ def drop_piece_fast(
             idx = bisect_right(levels, curr_g)
             if idx < len(levels):
                 max_drop = min(max_drop, levels[idx] - 1 - curr_g)
-        if max_drop < drop_limit:
-            drop_limit = max_drop
+        drop_limit = min(drop_limit, max_drop)
         if drop_limit <= 0:
             return piece
 
@@ -71,7 +70,7 @@ def iter_lateral_columns(
 ) -> Iterable[tuple[int, ...]]:
     axis_sizes = [dims[axis] for axis in lateral_axes]
     if not axis_sizes:
-        yield tuple()
+        yield ()
         return
     for values in product(*(range(size) for size in axis_sizes)):
         yield tuple(values)
@@ -162,8 +161,7 @@ def height_features(
         )
         heights[column] = height
         aggregate_height += height
-        if height > max_height:
-            max_height = height
+        max_height = max(max_height, height)
         holes += col_holes
 
     roughness = height_roughness(heights, dims=dims, lateral_axes=lateral_axes)

@@ -3,11 +3,11 @@ import unittest
 
 from tet4d.engine.core.piece_transform import canonicalize_blocks_2d, rotate_blocks_2d
 from tet4d.engine.gameplay.pieces2d import (
-    ActivePiece2D,
     PIECE_SET_2D_OPTIONS,
+    ActivePiece2D,
     PieceShape2D,
-    get_piece_bag_2d,
     get_debug_rectangles_2d,
+    get_piece_bag_2d,
     rotate_point_2d,
 )
 

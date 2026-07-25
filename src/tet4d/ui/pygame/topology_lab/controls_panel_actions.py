@@ -45,13 +45,15 @@ from .interaction_audit import (
 )
 from .scene_preview_state import (
     preview_signature_for_state as _preview_signature_for_state_impl,
+)
+from .scene_preview_state import (
     refresh_explorer_scene_state as _refresh_explorer_scene_state_impl,
 )
 from .scene_state import (
-    ExplorerPlaygroundSettings,
-    ExplorerPreviewCompileSignature,
     TOOL_EDIT,
     TOOL_PROBE,
+    ExplorerPlaygroundSettings,
+    ExplorerPreviewCompileSignature,
     TopologyLabState,
     canonical_playground_state,
     current_editor_tool,
@@ -250,9 +252,7 @@ def _cycle_editor_tool_row(state: _TopologyLabState, step: int) -> None:
     current_index = _EDITOR_TOOL_SEQUENCE.index(current_editor_tool(state))
     set_active_tool(
         state,
-        _EDITOR_TOOL_SEQUENCE[
-            (current_index + step) % len(_EDITOR_TOOL_SEQUENCE)
-        ],
+        _EDITOR_TOOL_SEQUENCE[(current_index + step) % len(_EDITOR_TOOL_SEQUENCE)],
     )
 
 

@@ -49,7 +49,9 @@ class TestTopologyExplorerStore(unittest.TestCase):
 
     def test_round_trip_persists_profile_per_dimension_including_2d(self) -> None:
         root = (
-            state_dir_path() / "pytest_temp" / f"topology_explorer_store_2d_{uuid4().hex}"
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_store_2d_{uuid4().hex}"
         )
         root.mkdir(parents=True, exist_ok=False)
         try:

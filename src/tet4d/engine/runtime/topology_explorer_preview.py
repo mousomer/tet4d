@@ -5,6 +5,8 @@ from pathlib import Path
 
 from tet4d.engine.runtime.project_config import (
     explorer_topology_preview_dims as configured_preview_dims,
+)
+from tet4d.engine.runtime.project_config import (
     explorer_topology_preview_file_default_path,
 )
 from tet4d.engine.runtime.settings_schema import (
@@ -16,6 +18,7 @@ from tet4d.engine.runtime.topology_cache import (
     read_cached_graph_rows,
     read_topology_cache_entry,
 )
+from tet4d.engine.runtime.topology_explorer_audit import record_active_interaction_phase
 from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
     MoveStep,
@@ -34,7 +37,6 @@ from tet4d.engine.topology_explorer.transport_resolver import (
     CellStepResult,
     build_explorer_transport_resolver,
 )
-from tet4d.engine.runtime.topology_explorer_audit import record_active_interaction_phase
 
 _PREVIEW_LOCAL_CACHE_VERSION = TOPOLOGY_CACHE_VERSION
 
@@ -110,9 +112,8 @@ def _compose_probe_frame(
     for source_axis, intermediate_axis in enumerate(permutation):
         target_axis = int(frame_transform.permutation[intermediate_axis])
         composed_permutation[source_axis] = target_axis
-        composed_signs[source_axis] = (
-            int(signs[source_axis])
-            * int(frame_transform.signs[intermediate_axis])
+        composed_signs[source_axis] = int(signs[source_axis]) * int(
+            frame_transform.signs[intermediate_axis]
         )
     return tuple(composed_permutation), tuple(composed_signs)
 
@@ -122,8 +123,8 @@ def _probe_frame_payload(
     signs: tuple[int, ...],
 ) -> dict[str, object]:
     return {
-        'frame_permutation': list(permutation),
-        'frame_signs': list(signs),
+        "frame_permutation": list(permutation),
+        "frame_signs": list(signs),
     }
 
 
@@ -527,7 +528,7 @@ __all__ = [
     "basis_arrow_payload",
     "compile_explorer_topology_preview",
     "explorer_probe_options",
-    "recommended_explorer_probe_coord",
     "export_explorer_topology_preview",
     "preview_dims_for_dimension",
+    "recommended_explorer_probe_coord",
 ]

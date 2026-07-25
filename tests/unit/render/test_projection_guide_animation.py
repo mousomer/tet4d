@@ -9,7 +9,9 @@ except ModuleNotFoundError:  # pragma: no cover - exercised without pygame-ce
     pygame = None
 
 if pygame is None:  # pragma: no cover - exercised without pygame-ce
-    raise unittest.SkipTest("pygame-ce is required for projection-guide animation tests")
+    raise unittest.SkipTest(
+        "pygame-ce is required for projection-guide animation tests"
+    )
 
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
@@ -98,7 +100,9 @@ class TestProjectionGuideAnimation(unittest.TestCase):
             guide_segments.append(tuple(segments))
 
         with (
-            mock.patch.object(gfx_game, "_draw_board_shadow", side_effect=record_shadow),
+            mock.patch.object(
+                gfx_game, "_draw_board_shadow", side_effect=record_shadow
+            ),
             mock.patch.object(
                 gfx_game,
                 "draw_boundary_projection_segments_2d",
@@ -177,7 +181,9 @@ class TestProjectionGuideAnimation(unittest.TestCase):
                     )
                     self.assertEqual(build_presentation.call_count, layer_count)
 
-                    animator.observe(state.current_piece, 60.0, animate_translation=False)
+                    animator.observe(
+                        state.current_piece, 60.0, animate_translation=False
+                    )
                     mid_state = animator.render_state(state.current_piece)
                     assert mid_state is not None
                     front4d_render.draw_game_frame(

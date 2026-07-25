@@ -82,9 +82,9 @@ def export_runtime_explorer_experiments(
 
 
 __all__ = [
-    "resolve_direct_explorer_launch_profile",
-    "export_stored_explorer_topology_preview",
     "compile_runtime_explorer_experiments",
     "export_runtime_explorer_experiments",
+    "export_stored_explorer_topology_preview",
     "load_runtime_explorer_topology_profile",
+    "resolve_direct_explorer_launch_profile",
 ]

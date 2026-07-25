@@ -223,5 +223,5 @@ def runtime_collect_cleared_ghost_cells(*args: Any, **kwargs: Any) -> Any:
 __all__ = [
     name
     for name in globals()
-    if name.endswith("_runtime") or name.endswith("_gameplay")
+    if name.endswith(("_runtime", "_gameplay"))
 ]

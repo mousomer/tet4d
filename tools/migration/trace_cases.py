@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.engine.topology_explorer.presets import (
@@ -15,7 +16,6 @@ from tet4d.engine.topology_explorer.presets import (
     sphere_profile_3d,
     sphere_profile_4d,
 )
-
 
 ProfileFactory = Callable[[], ExplorerTopologyProfile]
 

@@ -23,7 +23,9 @@ class TestPieceTransform(unittest.TestCase):
             canonicalize_blocks_2d(blocks),
         )
 
-    def test_rotate_blocks_2d_even_span_line_rotates_around_geometric_center(self) -> None:
+    def test_rotate_blocks_2d_even_span_line_rotates_around_geometric_center(
+        self,
+    ) -> None:
         """
         Even-span pieces rotate around their true geometric center.
         For a 4-unit line from x=-1 to x=2, the center is at x=0.5.
@@ -42,7 +44,7 @@ class TestPieceTransform(unittest.TestCase):
         self.assertEqual(
             canonicalize_blocks_2d(rotate_blocks_2d(result, -1)),
             canonicalize_blocks_2d(blocks),
-            "Rotation should be reversible"
+            "Rotation should be reversible",
         )
 
     def test_normalize_blocks_2d_preserves_current_local_anchor(self) -> None:

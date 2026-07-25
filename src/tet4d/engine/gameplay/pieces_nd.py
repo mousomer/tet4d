@@ -3,17 +3,19 @@ from __future__ import annotations
 
 import json
 import random
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import List, Sequence, Tuple
 
+from ..core.model import Coord
+from ..core.piece_transform import (
+    normalize_blocks_nd,
+    rotate_blocks_nd,
+    rotate_point_nd,  # noqa: F401
+)
+from ..runtime.project_config import project_root_path
 from .pieces2d import get_standard_tetrominoes
 from .pieces_shared import scaled_span
-from ..core.model import Coord
-from ..core.piece_transform import normalize_blocks_nd, rotate_blocks_nd
-from ..core.piece_transform import rotate_point_nd  # noqa: F401
-from ..runtime.project_config import project_root_path
 
 RelCoordND = Coord
 _PIECE_CONFIG_PATH = project_root_path() / "config" / "gameplay" / "piece_sets_nd.json"
@@ -62,9 +64,9 @@ def _validate_ndim(ndim: int) -> None:
         raise ValueError("ndim must be >= 2")
 
 
-def piece_set_options_for_dimension(ndim: int) -> Tuple[str, ...]:
+def piece_set_options_for_dimension(ndim: int) -> tuple[str, ...]:
     _validate_ndim(ndim)
-    dim_key = 4 if ndim >= 4 else ndim
+    dim_key = min(4, ndim)
     if dim_key in _PIECE_SET_OPTIONS_BY_DIM:
         return _PIECE_SET_OPTIONS_BY_DIM[dim_key]
     # Kept for generic callers; ND gameplay currently starts at 3D.
@@ -111,9 +113,9 @@ def normalize_piece_set_for_dimension(ndim: int, piece_set_id: str | None) -> st
 
 
 def lift_2d_blocks_to_nd(
-    blocks_2d: Sequence[Tuple[int, int]],
+    blocks_2d: Sequence[tuple[int, int]],
     ndim: int,
-) -> Tuple[RelCoordND, ...]:
+) -> tuple[RelCoordND, ...]:
     """
     Embed 2D blocks into N dimensions by appending zeros on extra axes.
     """
@@ -125,7 +127,7 @@ def lift_2d_blocks_to_nd(
 def _embed_blocks_to_nd(
     blocks: Sequence[Sequence[int]],
     ndim: int,
-) -> Tuple[RelCoordND, ...]:
+) -> tuple[RelCoordND, ...]:
     """
     Embed lower-dimensional blocks into ndim by appending trailing zeros.
     """
@@ -158,13 +160,17 @@ def _piece_set_payload() -> dict[str, object]:
         raw = _PIECE_CONFIG_PATH.read_text(encoding="utf-8")
         data = json.loads(raw)
     except Exception as exc:  # pragma: no cover - treated as configuration error
-        raise RuntimeError(f"failed to load piece-set config: {_PIECE_CONFIG_PATH}") from exc
+        raise RuntimeError(
+            f"failed to load piece-set config: {_PIECE_CONFIG_PATH}"
+        ) from exc
     if not isinstance(data, dict):
         raise RuntimeError(f"invalid piece-set config format: {_PIECE_CONFIG_PATH}")
     return data
 
 
-def _load_piece_records(key: str) -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+def _load_piece_records(
+    key: str,
+) -> tuple[tuple[str, tuple[RelCoordND, ...], int], ...]:
     payload = _piece_set_payload()
     records = payload.get(key, [])
     if not isinstance(records, list):
@@ -192,27 +198,27 @@ def _load_piece_records(key: str) -> Tuple[Tuple[str, Tuple[RelCoordND, ...], in
 
 
 @lru_cache(maxsize=1)
-def _pieces_3d_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+def _pieces_3d_records() -> tuple[tuple[str, tuple[RelCoordND, ...], int], ...]:
     return _load_piece_records("pieces_3d")
 
 
 @lru_cache(maxsize=1)
-def _pieces_4d_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+def _pieces_4d_records() -> tuple[tuple[str, tuple[RelCoordND, ...], int], ...]:
     return _load_piece_records("pieces_4d_5")
 
 
 @lru_cache(maxsize=1)
-def _pieces_4d_six_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+def _pieces_4d_six_records() -> tuple[tuple[str, tuple[RelCoordND, ...], int], ...]:
     return _load_piece_records("pieces_4d_6")
 
 
 @lru_cache(maxsize=1)
-def _pieces_4d_seven_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+def _pieces_4d_seven_records() -> tuple[tuple[str, tuple[RelCoordND, ...], int], ...]:
     return _load_piece_records("pieces_4d_7")
 
 
 @lru_cache(maxsize=1)
-def _pieces_4d_eight_records() -> Tuple[Tuple[str, Tuple[RelCoordND, ...], int], ...]:
+def _pieces_4d_eight_records() -> tuple[tuple[str, tuple[RelCoordND, ...], int], ...]:
     return _load_piece_records("pieces_4d_8")
 
 
@@ -220,7 +226,7 @@ def _random_connected_blocks_nd(
     ndim: int,
     cell_count: int,
     rng: random.Random,
-) -> Tuple[RelCoordND, ...]:
+) -> tuple[RelCoordND, ...]:
     _validate_ndim(ndim)
     if cell_count < 1:
         raise ValueError("cell_count must be >= 1")
@@ -252,11 +258,11 @@ def _random_piece_bag_nd(
     cell_count: int,
     bag_size: int = DEFAULT_RANDOM_BAG_SIZE_ND,
     name_prefix: str,
-) -> List["PieceShapeND"]:
+) -> list[PieceShapeND]:
     bag_size = max(1, bag_size)
     cell_count = max(1, cell_count)
-    seen: set[Tuple[RelCoordND, ...]] = set()
-    shapes: List[PieceShapeND] = []
+    seen: set[tuple[RelCoordND, ...]] = set()
+    shapes: list[PieceShapeND] = []
     attempts = 0
     max_attempts = bag_size * 160
     while len(shapes) < bag_size and attempts < max_attempts:
@@ -285,8 +291,8 @@ def _random_piece_bag_nd(
     return shapes
 
 
-def _rect_blocks_nd(size_by_axis: Sequence[int]) -> Tuple[RelCoordND, ...]:
-    coords: list[RelCoordND] = [tuple()]
+def _rect_blocks_nd(size_by_axis: Sequence[int]) -> tuple[RelCoordND, ...]:
+    coords: list[RelCoordND] = [()]
     for axis_size in size_by_axis:
         if axis_size < 1:
             raise ValueError("axis sizes must be >= 1")
@@ -296,7 +302,6 @@ def _rect_blocks_nd(size_by_axis: Sequence[int]) -> Tuple[RelCoordND, ...]:
                 expanded.append((*base, value))
         coords = expanded
     return normalize_blocks_nd(coords)
-
 
 
 def _debug_board_dims(ndim: int, board_dims: Sequence[int] | None) -> tuple[int, ...]:
@@ -317,7 +322,7 @@ def _extend_sizes(head: Sequence[int], ndim: int) -> tuple[int, ...]:
 
 def get_debug_rectangles_nd(
     ndim: int, board_dims: Sequence[int] | None = None
-) -> List["PieceShapeND"]:
+) -> list[PieceShapeND]:
     _validate_ndim(ndim)
     dims = _debug_board_dims(ndim, board_dims)
     x_size = dims[0]
@@ -367,34 +372,44 @@ def get_debug_rectangles_nd(
     ]
 
 
-_PIECES_3D: Tuple[Tuple[str, Tuple[Tuple[int, int, int], ...], int], ...] = _pieces_3d_records()
+_PIECES_3D: tuple[tuple[str, tuple[tuple[int, int, int], ...], int], ...] = (
+    _pieces_3d_records()
+)
 
-_PIECES_4D: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_records()
+_PIECES_4D: tuple[tuple[str, tuple[tuple[int, int, int, int], ...], int], ...] = (
+    _pieces_4d_records()
+)
 
-_PIECES_4D_SIX: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_six_records()
+_PIECES_4D_SIX: tuple[tuple[str, tuple[tuple[int, int, int, int], ...], int], ...] = (
+    _pieces_4d_six_records()
+)
 
-_PIECES_4D_SEVEN: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_seven_records()
+_PIECES_4D_SEVEN: tuple[tuple[str, tuple[tuple[int, int, int, int], ...], int], ...] = (
+    _pieces_4d_seven_records()
+)
 
-_PIECES_4D_EIGHT: Tuple[Tuple[str, Tuple[Tuple[int, int, int, int], ...], int], ...] = _pieces_4d_eight_records()
+_PIECES_4D_EIGHT: tuple[tuple[str, tuple[tuple[int, int, int, int], ...], int], ...] = (
+    _pieces_4d_eight_records()
+)
 
 
 @dataclass(frozen=True)
 class PieceShapeND:
     name: str
-    blocks: Tuple[RelCoordND, ...]
+    blocks: tuple[RelCoordND, ...]
     color_id: int
 
 
 PieceSetFactoryND = Callable[
     [int, random.Random | None, int | None, Sequence[int] | None],
-    List[PieceShapeND],
+    list[PieceShapeND],
 ]
 
 
 def _shape_records_to_nd(
-    records: Sequence[Tuple[str, Sequence[Sequence[int]], int]],
+    records: Sequence[tuple[str, Sequence[Sequence[int]], int]],
     ndim: int,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return [
         PieceShapeND(
             name=name, blocks=_embed_blocks_to_nd(blocks, ndim), color_id=color_id
@@ -403,7 +418,7 @@ def _shape_records_to_nd(
     ]
 
 
-def _embedded_2d_shapes_nd(ndim: int) -> List[PieceShapeND]:
+def _embedded_2d_shapes_nd(ndim: int) -> list[PieceShapeND]:
     return [
         PieceShapeND(
             name=f"{shape.name}_E2",
@@ -419,7 +434,7 @@ def _standard_3d_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     _board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _shape_records_to_nd(_PIECES_3D, ndim)
 
 
@@ -428,7 +443,7 @@ def _embedded_2d_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     _board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _embedded_2d_shapes_nd(ndim)
 
 
@@ -437,7 +452,7 @@ def _debug_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return get_debug_rectangles_nd(ndim, board_dims=board_dims)
 
 
@@ -449,7 +464,7 @@ def _random_piece_set(
     *,
     default_random_cell_count: int,
     name_prefix: str,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     active_rng = rng if rng is not None else random.Random()
     count = (
         default_random_cell_count if random_cell_count is None else random_cell_count
@@ -467,7 +482,7 @@ def _random_3d_piece_set(
     rng: random.Random | None,
     random_cell_count: int | None,
     board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _random_piece_set(
         ndim,
         rng,
@@ -483,7 +498,7 @@ def _standard_4d_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     _board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _shape_records_to_nd(_PIECES_4D, ndim)
 
 
@@ -492,7 +507,7 @@ def _six_cell_4d_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     _board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _shape_records_to_nd(_PIECES_4D_SIX, ndim)
 
 
@@ -501,7 +516,7 @@ def _seven_cell_4d_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     _board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _shape_records_to_nd(_PIECES_4D_SEVEN, ndim)
 
 
@@ -510,7 +525,7 @@ def _eight_cell_4d_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     _board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _shape_records_to_nd(_PIECES_4D_EIGHT, ndim)
 
 
@@ -519,7 +534,7 @@ def _embedded_3d_piece_set(
     _rng: random.Random | None,
     _random_cell_count: int | None,
     _board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _shape_records_to_nd(_PIECES_3D, ndim)
 
 
@@ -528,7 +543,7 @@ def _random_4d_piece_set(
     rng: random.Random | None,
     random_cell_count: int | None,
     board_dims: Sequence[int] | None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     return _random_piece_set(
         ndim,
         rng,
@@ -564,7 +579,7 @@ _PIECE_SET_FACTORIES_BY_DIM = {
 
 
 def _piece_set_factories_for_dimension(ndim: int) -> dict[str, PieceSetFactoryND]:
-    dim_key = 4 if ndim >= 4 else ndim
+    dim_key = min(4, ndim)
     factories = _PIECE_SET_FACTORIES_BY_DIM.get(dim_key)
     if factories is None:
         raise ValueError(f"unsupported piece-set dimension: {ndim}")
@@ -579,7 +594,7 @@ def get_piece_shapes_nd(
     random_cell_count: int | None = None,
     rng: random.Random | None = None,
     board_dims: Sequence[int] | None = None,
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     _validate_ndim(ndim)
 
     if ndim == 2:
@@ -598,7 +613,7 @@ def get_piece_shapes_nd(
 
 def get_standard_pieces_nd(
     ndim: int, piece_set_4d: str | None = None
-) -> List[PieceShapeND]:
+) -> list[PieceShapeND]:
     """
     Backward-compatible API:
     - 2D: classic tetrominoes
@@ -627,8 +642,8 @@ class ActivePieceND:
 
     shape: PieceShapeND
     pos: Coord
-    rel_blocks: Tuple[RelCoordND, ...]
-    last_rotation_plane: Tuple[int, int] | None = None
+    rel_blocks: tuple[RelCoordND, ...]
+    last_rotation_plane: tuple[int, int] | None = None
     last_rotation_steps: int = 0
 
     def __post_init__(self) -> None:
@@ -641,20 +656,20 @@ class ActivePieceND:
                 raise ValueError("block dimension does not match piece position")
 
     @classmethod
-    def from_shape(cls, shape: PieceShapeND, pos: Coord) -> "ActivePieceND":
+    def from_shape(cls, shape: PieceShapeND, pos: Coord) -> ActivePieceND:
         if not shape.blocks:
             raise ValueError("shape has no blocks")
         if len(shape.blocks[0]) != len(pos):
             raise ValueError("shape dimension does not match position dimension")
         return cls(shape=shape, pos=pos, rel_blocks=shape.blocks)
 
-    def cells(self) -> List[Coord]:
-        result: List[Coord] = []
+    def cells(self) -> list[Coord]:
+        result: list[Coord] = []
         for block in self.rel_blocks:
             result.append(tuple(p + b for p, b in zip(self.pos, block)))
         return result
 
-    def moved(self, delta: Sequence[int]) -> "ActivePieceND":
+    def moved(self, delta: Sequence[int]) -> ActivePieceND:
         if len(delta) != len(self.pos):
             raise ValueError("delta dimension mismatch")
         new_pos = tuple(p + d for p, d in zip(self.pos, delta))
@@ -666,7 +681,7 @@ class ActivePieceND:
             last_rotation_steps=self.last_rotation_steps,
         )
 
-    def rotated(self, axis_a: int, axis_b: int, delta_steps: int) -> "ActivePieceND":
+    def rotated(self, axis_a: int, axis_b: int, delta_steps: int) -> ActivePieceND:
         new_blocks = rotate_blocks_nd(
             self.rel_blocks,
             axis_a=axis_a,

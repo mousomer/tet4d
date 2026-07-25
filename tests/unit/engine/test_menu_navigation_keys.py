@@ -11,7 +11,9 @@ from tet4d.ui.pygame.menu import keybindings_menu, menu_navigation_keys
 
 class TestMenuNavigationKeys(unittest.TestCase):
     def test_q_does_not_map_to_escape_for_non_tiny_profiles(self) -> None:
-        with patch.object(menu_navigation_keys, "active_key_profile", return_value="small"):
+        with patch.object(
+            menu_navigation_keys, "active_key_profile", return_value="small"
+        ):
             self.assertEqual(
                 menu_navigation_keys.normalize_menu_navigation_key(pygame.K_q),
                 pygame.K_q,

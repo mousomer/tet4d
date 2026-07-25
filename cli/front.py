@@ -1,4 +1,3 @@
-# ruff: noqa: E402
 import argparse
 import sys
 from dataclasses import dataclass
@@ -146,10 +145,10 @@ class _LauncherSession:
 def _menu_items(menu_id: str) -> tuple[dict[str, str], ...]:
     menu = _MENU_GRAPH.get(menu_id)
     if menu is None:
-        return tuple()
+        return ()
     raw_items = menu.get("items")
     if not isinstance(raw_items, tuple):
-        return tuple()
+        return ()
     return raw_items
 
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-
 _HIDDEN_VISIBILITY_VALUES = {"hidden", "never", "false", "0"}
 _UTILITY_ACTION_IDS = {
     "back",
@@ -113,9 +112,7 @@ def _section_should_survive(
     actionable_count = sum(1 for item in group_items if _is_actionable_item(item))
     if actionable_count >= 2:
         return True
-    if _has_semantic_metadata(section_item):
-        return True
-    return False
+    return bool(_has_semantic_metadata(section_item))
 
 
 def _normalize_sections(
@@ -201,7 +198,9 @@ def detect_redundant_single_option_menus(
             )
         items = tuple(menu.get("items", ()))
         meaningful_items = tuple(
-            item for item in items if isinstance(item, dict) and _is_meaningful_menu_item(item)
+            item
+            for item in items
+            if isinstance(item, dict) and _is_meaningful_menu_item(item)
         )
         if len(meaningful_items) != 1:
             continue
@@ -234,8 +233,8 @@ def _inline_items_for_single_leaf(
         and str(item.get("action_id", "")).strip().lower() != "back"
     ]
     if len(leaf_items) != 1:
-        return tuple()
-    return tuple((leaf_items[0], *utility_items))
+        return ()
+    return (leaf_items[0], *utility_items)
 
 
 def _compile_keep_result(
@@ -334,7 +333,9 @@ def compile_runtime_menu_graph(
                 rewritten["menu_id"] = target_result.target_menu_id
                 compiled_items.append(rewritten)
                 continue
-            compiled_items.extend(dict(inlined) for inlined in target_result.inline_items)
+            compiled_items.extend(
+                dict(inlined) for inlined in target_result.inline_items
+            )
         compiled_tuple = _normalize_sections(tuple(compiled_items))
         result = _collapse_result_for_menu(
             menu_id,
@@ -355,8 +356,7 @@ def compile_runtime_menu_graph(
         if result.kind == "keep" and result.menu is not None
     }
     runtime_entrypoints = {
-        key: authored_entrypoints[key]
-        for key in authored_entrypoints
+        key: authored_entrypoints[key] for key in authored_entrypoints
     }
     return {
         "menus": runtime_menus,

@@ -1,21 +1,25 @@
 # tests/test_game2d.py
-import unittest
 import random
+import unittest
 
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 from tet4d.engine.core.model import BoardND
+from tet4d.engine.core.rules.scoring import score_for_clear
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
-from tet4d.engine.gameplay.pieces2d import PieceShape2D, ActivePiece2D
-from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG, PIECE_SET_2D_RANDOM
+from tet4d.engine.gameplay.pieces2d import (
+    PIECE_SET_2D_DEBUG,
+    PIECE_SET_2D_RANDOM,
+    ActivePiece2D,
+    PieceShape2D,
+)
+from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
 from tet4d.engine.topology_explorer import MoveStep
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
     mobius_strip_profile_2d,
     projective_plane_profile_2d,
-)
-from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
-from tet4d.engine.core.rules.scoring import score_for_clear
-from tests.unit.engine._translation_contract import (
-    assert_repeated_translation_progress,
 )
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 
 class TestWindowsPackagingScript(unittest.TestCase):
@@ -60,21 +60,35 @@ class TestWindowsPackagingScript(unittest.TestCase):
 
         self.assertIn('<MediaTemplate EmbedCab="yes" />', script)
 
-    def test_windows_packaging_script_cleans_stale_artifacts_and_builds_via_temp_output(self) -> None:
+    def test_windows_packaging_script_cleans_stale_artifacts_and_builds_via_temp_output(
+        self,
+    ) -> None:
         script = self._windows_script()
 
         self.assertIn('$TempOutputDir = Join-Path $BuildDir "out"', script)
-        self.assertIn("Remove-PackagingArtifacts -Paths @($ArtifactDir, $BuildDir)", script)
+        self.assertIn(
+            "Remove-PackagingArtifacts -Paths @($ArtifactDir, $BuildDir)", script
+        )
         self.assertIn("Remove-Item $TempOutputDir -Recurse -Force", script)
-        self.assertIn("New-Item -ItemType Directory -Path $TempOutputDir -Force", script)
-        self.assertIn('$TempArtifactPath = Join-Path $TempOutputDir "tet4d-$Version-windows-x64.msi"', script)
+        self.assertIn(
+            "New-Item -ItemType Directory -Path $TempOutputDir -Force", script
+        )
+        self.assertIn(
+            '$TempArtifactPath = Join-Path $TempOutputDir "tet4d-$Version-windows-x64.msi"',
+            script,
+        )
         self.assertIn("-out $TempArtifactPath", script)
-        self.assertIn("Move-Item -Path $TempArtifactPath -Destination $ArtifactPath -Force", script)
+        self.assertIn(
+            "Move-Item -Path $TempArtifactPath -Destination $ArtifactPath -Force",
+            script,
+        )
 
     def test_windows_packaging_script_fails_on_external_cab_output(self) -> None:
         script = self._windows_script()
 
-        self.assertIn("Get-ChildItem -Path $BuildDir -Filter *.cab -File -Recurse", script)
+        self.assertIn(
+            "Get-ChildItem -Path $BuildDir -Filter *.cab -File -Recurse", script
+        )
         self.assertIn("Unexpected external CAB output detected", script)
         self.assertIn("must not contain CAB sidecars", script)
         self.assertIn("expected MSI", script)
@@ -84,17 +98,19 @@ class TestWindowsPackagingScript(unittest.TestCase):
         linux = self._linux_script()
         windows = self._windows_script()
 
-        self.assertIn('SDL_VIDEODRIVER=dummy', macos)
-        self.assertIn('SDL_AUDIODRIVER=dummy', macos)
+        self.assertIn("SDL_VIDEODRIVER=dummy", macos)
+        self.assertIn("SDL_AUDIODRIVER=dummy", macos)
         self.assertIn('"${MACOS_DIR}/tet4d" --runtime-smoke-check', macos)
         self.assertIn('XDG_DATA_HOME="${SMOKE_XDG_DATA_HOME}"', linux)
-        self.assertIn('SDL_VIDEODRIVER=dummy', linux)
-        self.assertIn('SDL_AUDIODRIVER=dummy', linux)
+        self.assertIn("SDL_VIDEODRIVER=dummy", linux)
+        self.assertIn("SDL_AUDIODRIVER=dummy", linux)
         self.assertIn('"${ROOT_DIR}/dist/tet4d/tet4d" --runtime-smoke-check', linux)
-        self.assertIn('$env:APPDATA = $SmokeAppData', windows)
+        self.assertIn("$env:APPDATA = $SmokeAppData", windows)
         self.assertIn('$env:SDL_VIDEODRIVER = "dummy"', windows)
         self.assertIn('$env:SDL_AUDIODRIVER = "dummy"', windows)
-        self.assertIn('& (Join-Path $PayloadRoot "tet4d.exe") --runtime-smoke-check', windows)
+        self.assertIn(
+            '& (Join-Path $PayloadRoot "tet4d.exe") --runtime-smoke-check', windows
+        )
 
     def test_release_workflow_uploads_windows_only_as_msi(self) -> None:
         workflow = self._release_workflow()

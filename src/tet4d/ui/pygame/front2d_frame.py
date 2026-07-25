@@ -1,18 +1,9 @@
 from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import pygame
 
-from tet4d.ui.pygame.endgame_animation import (
-    EndgameRenderContext,
-    SnapshotCell,
-    TERMINAL_PHASE_GAME_OVER_COMPLETE,
-    TERMINAL_PHASE_PLAYING,
-    create_snapshot,
-    endgame_sfx_events_between,
-    ensure_endgame_animation,
-)
 from tet4d.ai.playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
@@ -21,14 +12,23 @@ from tet4d.engine.core.model import Action
 from tet4d.engine.gameplay.leveling import compute_speed_level
 from tet4d.engine.gameplay.topology import default_edge_rules_for_mode
 from tet4d.engine.runtime.menu_settings_state import mode_endgame_settings
-from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
-    mode_explosion_defaults,
-)
 from tet4d.engine.tutorial.api import (
     tutorial_runtime_is_running_runtime,
     tutorial_runtime_sync_and_advance_runtime,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.ui.pygame.endgame_animation import (
+    TERMINAL_PHASE_GAME_OVER_COMPLETE,
+    TERMINAL_PHASE_PLAYING,
+    EndgameRenderContext,
+    SnapshotCell,
+    create_snapshot,
+    endgame_sfx_events_between,
+    ensure_endgame_animation,
+)
+from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
+    mode_explosion_defaults,
+)
 from tet4d.ui.pygame.render.gfx_game import (
     ClearEffect2D,
     GfxFonts,
@@ -42,6 +42,7 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
 from tet4d.ui.pygame.runtime_ui.loop_runner_nd import process_game_events
 
+from .front2d_results import _resolve_loop_decision, _resolve_terminal_status
 from .front2d_session import LoopContext2D
 from .front2d_tutorial import (
     apply_pending_tutorial_setup,
@@ -49,7 +50,6 @@ from .front2d_tutorial import (
     enforce_tutorial_runtime_safety_2d,
     open_help_screen,
 )
-from .front2d_results import _resolve_loop_decision, _resolve_terminal_status
 
 
 def _step_gravity_tick(
@@ -83,7 +83,7 @@ def _update_clear_animation(
 
 def _clear_effect(
     levels: tuple[int, ...], elapsed_ms: float, duration_ms: float
-) -> Optional[ClearEffect2D]:
+) -> ClearEffect2D | None:
     if not levels:
         return None
     return ClearEffect2D(

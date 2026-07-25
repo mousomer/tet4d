@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -26,13 +25,13 @@ try:
 except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment dependent
     raise SystemExit("pygame-ce is required for startup profiling") from exc
 
+from tet4d.engine.runtime import topology_explorer_preview as preview_mod
+from tet4d.engine.runtime import topology_playability_signal as playability_mod
+from tet4d.engine.runtime.settings_schema import atomic_write_text
 from tet4d.engine.runtime.topology_explorer_runtime import (
     compile_runtime_explorer_experiments,
 )
-from tet4d.engine.runtime.settings_schema import atomic_write_text
 from tet4d.engine.runtime.topology_explorer_store import load_explorer_topology_profile
-from tet4d.engine.runtime import topology_playability_signal as playability_mod
-from tet4d.engine.runtime import topology_explorer_preview as preview_mod
 from tet4d.engine.topology_explorer import movement_graph as graph_mod
 from tet4d.engine.topology_explorer.presets import explorer_presets_for_dimension
 from tet4d.ui.pygame.launch import topology_lab_menu

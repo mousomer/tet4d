@@ -1,6 +1,6 @@
 import math
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Optional, Sequence, Tuple
 
 import pygame
 
@@ -23,15 +23,17 @@ from tet4d.ui.pygame.endgame_animation import (
     transform_shell_artifact,
     transform_shell_geometry,
 )
-from tet4d.ui.pygame.render.font_profiles import (
-    GfxFonts,
-    init_fonts as init_fonts_for_profile,
-)
 from tet4d.ui.pygame.render.active_piece_projection_guides import (
     GuideCell2D,
     build_boundary_projection_segments_2d,
     draw_boundary_projection_segments_2d,
     projection_guide_enabled,
+)
+from tet4d.ui.pygame.render.font_profiles import (
+    GfxFonts,
+)
+from tet4d.ui.pygame.render.font_profiles import (
+    init_fonts as init_fonts_for_profile,
 )
 from tet4d.ui.pygame.render.gfx_panel_2d import draw_side_panel_2d
 from tet4d.ui.pygame.render.panel_utils import draw_game_over_banner
@@ -42,8 +44,8 @@ from tet4d.ui.pygame.ui_utils import (
     draw_tron_panel,
     draw_value_slider,
     draw_wrapped_label_value_lines,
-    format_menu_title,
     fit_text,
+    format_menu_title,
     menu_slider_row_min_total_width,
     standard_menu_panel_rect,
     wrapped_label_value_layout,
@@ -81,7 +83,7 @@ COLOR_MAP = {
 }
 
 
-def color_for_cell(cell_id: int) -> Tuple[int, int, int]:
+def color_for_cell(cell_id: int) -> tuple[int, int, int]:
     if cell_id <= 0:
         return (0, 0, 0)
     return COLOR_MAP.get(cell_id, (200, 200, 200))
@@ -89,7 +91,7 @@ def color_for_cell(cell_id: int) -> Tuple[int, int, int]:
 
 @dataclass(frozen=True)
 class ClearEffect2D:
-    levels: Tuple[int, ...]
+    levels: tuple[int, ...]
     progress: float  # 0.0 .. 1.0
 
 
@@ -106,8 +108,8 @@ def init_fonts() -> GfxFonts:
 
 def draw_gradient_background(
     surface: pygame.Surface,
-    top_color: Tuple[int, int, int],
-    bottom_color: Tuple[int, int, int],
+    top_color: tuple[int, int, int],
+    bottom_color: tuple[int, int, int],
 ) -> None:
     """Simple vertical gradient fill."""
     draw_tron_menu_background(surface, top_color=top_color, bottom_color=bottom_color)
@@ -115,13 +117,13 @@ def draw_gradient_background(
 
 def draw_button_with_arrow(
     surface: pygame.Surface,
-    center: Tuple[int, int],
-    size: Tuple[int, int],
-    direction: Optional[str],  # 'up', 'down', 'left', 'right', or None
+    center: tuple[int, int],
+    size: tuple[int, int],
+    direction: str | None,  # 'up', 'down', 'left', 'right', or None
     label: str,
     font: pygame.font.Font,
-    bg_color: Tuple[int, int, int],
-    border_color: Tuple[int, int, int],
+    bg_color: tuple[int, int, int],
+    border_color: tuple[int, int, int],
 ) -> None:
     """
     Draw a rounded rectangular button with an optional arrow icon and a text label.
@@ -190,7 +192,7 @@ def _draw_menu_header(
     screen: pygame.Surface,
     fonts: GfxFonts,
     bindings_file_hint: str | None,
-    extra_hint_lines: Tuple[str, ...],
+    extra_hint_lines: tuple[str, ...],
     bindings_status: str,
     bindings_status_error: bool,
 ) -> int:
@@ -373,9 +375,9 @@ def _draw_menu_settings_panel(
     selected_index: int,
     panel_top: int,
     flash_frames: int = 0,
-    menu_fields: Optional[Sequence[FieldSpec]] = None,
-    value_formatter: Optional[Callable[[FieldSpec, object], str]] = None,
-) -> Tuple[int, int, int, int]:
+    menu_fields: Sequence[FieldSpec] | None = None,
+    value_formatter: Callable[[FieldSpec, object], str] | None = None,
+) -> tuple[int, int, int, int]:
     width, height = screen.get_size()
     panel_w = min(max(340, int(width * 0.6)), width - 24)
     if menu_fields:
@@ -581,12 +583,12 @@ def draw_menu(
     settings,
     selected_index: int,
     bindings_file_hint: str | None = "keybindings/2d.json",
-    extra_hint_lines: Tuple[str, ...] = (),
+    extra_hint_lines: tuple[str, ...] = (),
     bindings_status: str = "",
     bindings_status_error: bool = False,
     flash_frames: int = 0,
-    menu_fields: Optional[Sequence[FieldSpec]] = None,
-    value_formatter: Optional[Callable[[FieldSpec, object], str]] = None,
+    menu_fields: Sequence[FieldSpec] | None = None,
+    value_formatter: Callable[[FieldSpec, object], str] | None = None,
 ) -> None:
     draw_gradient_background(screen, (15, 15, 60), (2, 2, 20))
     header_bottom = _draw_menu_header(
@@ -615,7 +617,7 @@ def draw_menu(
 
 def compute_game_layout(
     screen: pygame.Surface, cfg: GameConfig
-) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+) -> tuple[tuple[int, int], tuple[int, int]]:
     """
     Compute offsets for board and side panel based on current window size.
     Returns (board_offset, panel_offset).
@@ -653,13 +655,21 @@ def _draw_board_edges_only(surface: pygame.Surface, board_rect: pygame.Rect) -> 
     for index in range(board_rect.width // CELL_SIZE):
         left = board_rect.x + index * CELL_SIZE
         right = left + CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (left, board_rect.y), (right, board_rect.y))
-        pygame.draw.line(surface, GRID_COLOR, (left, board_rect.bottom), (right, board_rect.bottom))
+        pygame.draw.line(
+            surface, GRID_COLOR, (left, board_rect.y), (right, board_rect.y)
+        )
+        pygame.draw.line(
+            surface, GRID_COLOR, (left, board_rect.bottom), (right, board_rect.bottom)
+        )
     for index in range(board_rect.height // CELL_SIZE):
         top = board_rect.y + index * CELL_SIZE
         bottom = top + CELL_SIZE
-        pygame.draw.line(surface, GRID_COLOR, (board_rect.x, top), (board_rect.x, bottom))
-        pygame.draw.line(surface, GRID_COLOR, (board_rect.right, top), (board_rect.right, bottom))
+        pygame.draw.line(
+            surface, GRID_COLOR, (board_rect.x, top), (board_rect.x, bottom)
+        )
+        pygame.draw.line(
+            surface, GRID_COLOR, (board_rect.right, top), (board_rect.right, bottom)
+        )
     pygame.draw.rect(surface, (86, 104, 146), board_rect, 2)
 
 
@@ -705,7 +715,7 @@ def _draw_clear_effect(
     surface: pygame.Surface,
     board_rect: pygame.Rect,
     width_cells: int,
-    clear_effect: Optional[ClearEffect2D],
+    clear_effect: ClearEffect2D | None,
 ) -> None:
     if clear_effect is None or not clear_effect.levels:
         return
@@ -792,7 +802,7 @@ def _draw_locked_cells(
     outline: bool,
 ) -> None:
     locked_opacity = 1.0 - max(0.0, min(1.0, float(overlay_transparency)))
-    locked_alpha = max(0, min(255, int(round(255.0 * locked_opacity))))
+    locked_alpha = max(0, min(255, round(255.0 * locked_opacity)))
     if locked_alpha >= 255:
         for (x, y), cell_id in state.board.cells.items():
             if 0 <= x < width_cells and 0 <= y < height_cells:
@@ -821,7 +831,7 @@ def _draw_locked_cells(
 
 
 def _clamp_channel(value: float) -> int:
-    return max(0, min(255, int(round(value))))
+    return max(0, min(255, round(value)))
 
 
 def _shade_color(
@@ -895,7 +905,7 @@ def _clip_polygon_against_edge(
     intersection,
 ) -> tuple[tuple[float, float], ...]:
     if not points:
-        return tuple()
+        return ()
     output: list[tuple[float, float]] = []
     prev = tuple(points[-1])
     prev_inside = bool(is_inside(prev))
@@ -943,7 +953,7 @@ def _clip_polygon_to_rect(
         intersection=lambda a, b: _line_rect_intersection(a, b, axis=1, boundary=ymax),
     )
     if len(clipped) < 3 or abs(_polygon_area(clipped)) <= 1e-9:
-        return tuple()
+        return ()
     return clipped
 
 
@@ -953,7 +963,7 @@ def _overlay_axis_offsets_2d(
     axis: int,
 ) -> tuple[float, ...]:
     policy = state.topology_policy
-    edge_rules = policy.edge_rules or tuple()
+    edge_rules = policy.edge_rules or ()
     if axis >= len(policy.dims) or axis >= len(edge_rules):
         return (0.0,)
     neg_behavior, pos_behavior = edge_rules[axis]
@@ -1005,7 +1015,7 @@ def _localize_mapped_fragment_2d(
     offset_x: float,
     offset_y: float,
 ) -> tuple[tuple[float, float], ...]:
-    edge_rules = state.topology_policy.edge_rules or tuple()
+    edge_rules = state.topology_policy.edge_rules or ()
     wraps_x = len(edge_rules) > 0 and (
         edge_rules[0][0] != "bounded" or edge_rules[0][1] != "bounded"
     )
@@ -1173,14 +1183,10 @@ def _projection_guide_cells_2d(
     height_cells: int,
 ) -> tuple[tuple[GuideCell2D, ...], int | None]:
     if isinstance(overlay, RigidPieceOverlay2D):
-        raw_cells = tuple(
-            (float(coord[0]), float(coord[1])) for coord in overlay.cells
-        )
+        raw_cells = tuple((float(coord[0]), float(coord[1])) for coord in overlay.cells)
         color_id = int(overlay.color_id)
     elif overlay is not None:
-        raw_cells = tuple(
-            (float(coord[0]), float(coord[1])) for coord in overlay[0]
-        )
+        raw_cells = tuple((float(coord[0]), float(coord[1])) for coord in overlay[0])
         color_id = int(overlay[1])
     elif state.current_piece is not None:
         raw_cells = tuple(
@@ -1189,7 +1195,7 @@ def _projection_guide_cells_2d(
         )
         color_id = int(state.current_piece.shape.color_id)
     else:
-        return tuple(), None
+        return (), None
 
     if (
         state.config.exploration_mode
@@ -1323,18 +1329,18 @@ def _draw_endgame_grid_break_marks_2d(
         color = color_for_cell(int(mark.color_id))
         base_width = max(
             1,
-            int(round(float(endgame_animation.tuning.grid_break_line_width))),
+            round(float(endgame_animation.tuning.grid_break_line_width)),
         )
         pygame.draw.line(
             overlay,
-            (0, 0, 0, max(0, min(210, int(round(210 * alpha))))),
+            (0, 0, 0, max(0, min(210, round(210 * alpha)))),
             line_points[0],
             line_points[1],
             base_width,
         )
         pygame.draw.line(
             overlay,
-            (*color, max(0, min(255, int(round(250 * alpha))))),
+            (*color, max(0, min(255, round(250 * alpha)))),
             line_points[0],
             line_points[1],
             1,
@@ -1353,7 +1359,7 @@ def _draw_endgame_board_shell_residue_2d(
     )
     if alpha <= 0.0:
         return
-    color = (*GRID_COLOR, max(0, min(255, int(round(255 * alpha)))))
+    color = (*GRID_COLOR, max(0, min(255, round(255 * alpha))))
     for shell_fragment in endgame_animation.shell_fragments:
         start_local, end_local = shell_fragment.base_geometry
         start_point = (
@@ -1387,7 +1393,7 @@ def _draw_endgame_rupture_flash_2d(
         return
     pygame.draw.rect(
         overlay,
-        (190, 225, 255, max(0, min(255, int(round(255 * flash_alpha))))),
+        (190, 225, 255, max(0, min(255, round(255 * flash_alpha)))),
         board_rect,
     )
 
@@ -1401,7 +1407,7 @@ def _draw_endgame_shell_fragments_2d(
     drag = float(endgame_animation.tuning.burst_drag_per_second)
     line_width = max(
         1,
-        int(round(float(endgame_animation.tuning.shell_fragment_line_width))),
+        round(float(endgame_animation.tuning.shell_fragment_line_width)),
     )
     for shell_fragment in endgame_animation.shell_fragments:
         transformed, alpha = transform_shell_geometry(
@@ -1420,7 +1426,7 @@ def _draw_endgame_shell_fragments_2d(
         )
         pygame.draw.line(
             overlay,
-            (*GRID_COLOR, max(0, min(255, int(round(245 * alpha))))),
+            (*GRID_COLOR, max(0, min(255, round(245 * alpha)))),
             screen_points[0],
             screen_points[1],
             line_width,
@@ -1477,7 +1483,7 @@ def _draw_endgame_board_2d(
         width = 1 if artifact.kind == "spark" else 2
         pygame.draw.line(
             overlay,
-            (*color, max(0, min(255, int(round(210 * alpha))))),
+            (*color, max(0, min(255, round(210 * alpha)))),
             line_points[0],
             line_points[1],
             width,
@@ -1496,8 +1502,7 @@ def _draw_endgame_board_2d(
                 cells=(
                     (
                         tuple(
-                            float(value)
-                            for value in relic_state.render_position[:2]
+                            float(value) for value in relic_state.render_position[:2]
                         ),
                         0.82,
                     ),
@@ -1542,13 +1547,13 @@ def _draw_endgame_board_2d(
                         color[0],
                         color[1],
                         color[2],
-                        max(0, min(255, int(round(172 * float(segment.alpha))))),
+                        max(0, min(255, round(172 * float(segment.alpha)))),
                     ),
                     line_points[0],
                     line_points[1],
                     max(
                         1,
-                        int(round(CELL_SIZE * 0.08 * max(0.35, float(segment.width)))),
+                        round(CELL_SIZE * 0.08 * max(0.35, float(segment.width))),
                     ),
                 )
         position = relic_state.render_position
@@ -1560,8 +1565,8 @@ def _draw_endgame_board_2d(
             board_offset,
             _endgame_cell_quad_points_2d(center=position, rotation_deg=rotation_deg),
         )
-        fill_alpha = max(0, min(255, int(round(255 * alpha))))
-        outline_alpha = max(0, min(255, int(round(220 * alpha))))
+        fill_alpha = max(0, min(255, round(255 * alpha)))
+        outline_alpha = max(0, min(255, round(220 * alpha)))
         shadow_points = tuple((x + 2.0, y + 2.0) for x, y in quad_points)
         pygame.draw.polygon(overlay, (0, 0, 0, min(140, fill_alpha)), shadow_points)
         pygame.draw.polygon(overlay, (*color, fill_alpha), quad_points)
@@ -1573,10 +1578,10 @@ def _draw_endgame_board_2d(
 def draw_board(
     surface: pygame.Surface,
     state: GameState,
-    board_offset: Tuple[int, int],
+    board_offset: tuple[int, int],
     grid_mode: GridMode = GridMode.FULL,
     overlay_transparency: float = 0.25,
-    clear_effect: Optional[ClearEffect2D] = None,
+    clear_effect: ClearEffect2D | None = None,
     active_piece_overlay: ActiveOverlay2D | None = None,
     endgame_animation: EndgameAnimationState | None = None,
 ) -> None:
@@ -1631,7 +1636,7 @@ def _draw_cell(
     x: int,
     y: int,
     cell_id: int,
-    board_offset: Tuple[int, int],
+    board_offset: tuple[int, int],
     outline: bool = False,
 ) -> None:
     ox, oy = board_offset
@@ -1650,7 +1655,7 @@ def _draw_cell(
 def draw_side_panel(
     surface: pygame.Surface,
     state: GameState,
-    panel_offset: Tuple[int, int],
+    panel_offset: tuple[int, int],
     fonts: GfxFonts,
     grid_mode: GridMode = GridMode.FULL,
     bot_lines: Sequence[str] = (),
@@ -1682,7 +1687,7 @@ def draw_game_frame(
     grid_mode: GridMode = GridMode.FULL,
     bot_lines: Sequence[str] = (),
     overlay_transparency: float = 0.25,
-    clear_effect: Optional[ClearEffect2D] = None,
+    clear_effect: ClearEffect2D | None = None,
     active_piece_overlay: ActiveOverlay2D | None = None,
     endgame_animation: EndgameAnimationState | None = None,
 ) -> None:

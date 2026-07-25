@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Callable, Optional, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 import pygame
 
@@ -12,7 +13,6 @@ from tet4d.ui.pygame.runtime_ui.app_runtime import (
     open_display,
 )
 from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_launch
-
 
 SettingsT = TypeVar("SettingsT")
 
@@ -44,7 +44,7 @@ def run_nd_mode_launcher(
     fonts,
     setup_caption: str,
     game_caption: str,
-    run_menu: Callable[[pygame.Surface, object], Optional[SettingsT]],
+    run_menu: Callable[[pygame.Surface, object], SettingsT | None],
     build_config: Callable[[SettingsT], GameConfigND],
     suggested_window_size: Callable[[GameConfigND], tuple[int, int]],
     run_game: Callable[[pygame.Surface, GameConfigND, object, SettingsT], bool],

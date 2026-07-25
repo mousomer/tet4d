@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from tet4d.ui.pygame.launch import topology_lab_menu
@@ -41,7 +41,7 @@ class TestTopologyLabExperiments(unittest.TestCase):
         batch = {
             "experiment_count": 7,
             "valid_experiment_count": 7,
-                "recommendation": {
+            "recommendation": {
                 "label": "3-Torus",
                 "reason": "1 component, 96 boundary traversals, no warnings",
             },
@@ -55,7 +55,11 @@ class TestTopologyLabExperiments(unittest.TestCase):
             patch.object(
                 controls_panel,
                 "export_runtime_explorer_experiments",
-                return_value=(True, "Exported experiment pack to state/topology/explorer_experiments.json", Path("state/topology/explorer_experiments.json")),
+                return_value=(
+                    True,
+                    "Exported experiment pack to state/topology/explorer_experiments.json",
+                    Path("state/topology/explorer_experiments.json"),
+                ),
             ) as export_batch,
             patch.object(controls_panel, "play_sfx") as play_sfx,
         ):
@@ -70,7 +74,7 @@ class TestTopologyLabExperiments(unittest.TestCase):
         state.experiment_batch = {
             "experiment_count": 7,
             "valid_experiment_count": 6,
-                "recommendation": {
+            "recommendation": {
                 "label": "3-Torus",
                 "reason": "1 component, 96 boundary traversals, no warnings",
             },

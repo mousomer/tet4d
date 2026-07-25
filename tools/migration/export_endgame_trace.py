@@ -34,7 +34,6 @@ from tools.migration.trace_schema import (
     write_canonical_json,
 )
 
-
 DEFAULT_ENDGAME_TRACE_OUT = Path("migration/golden_traces/endgame")
 ENDGAME_FLOAT_PRECISION = 6
 

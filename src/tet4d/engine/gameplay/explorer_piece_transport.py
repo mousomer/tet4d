@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import permutations, product
-from typing import Iterable, Literal, Sequence
+from typing import Literal
 
 from tet4d.engine.core.model import Coord
 from tet4d.engine.topology_explorer.transport_resolver import (

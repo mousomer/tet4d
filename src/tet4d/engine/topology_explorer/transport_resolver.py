@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from itertools import product
-from typing import Iterable, Literal, Sequence
+from typing import Literal
 
 from ..core.model import Coord
 from .glue_map import (
@@ -632,10 +633,10 @@ def build_explorer_transport_resolver(
 __all__ = [
     "BLOCKED_MOVE",
     "CELLWISE_DEFORMATION",
-    "DirectedBoundarySeam",
     "PLAIN_TRANSLATION",
     "RIGID_TRANSFORM",
     "CellStepResult",
+    "DirectedBoundarySeam",
     "ExplorerTransportFrameTransform",
     "ExplorerTransportMoveKind",
     "ExplorerTransportResolver",

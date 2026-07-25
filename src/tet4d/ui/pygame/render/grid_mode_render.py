@@ -5,18 +5,17 @@ from typing import TypeAlias
 
 import pygame
 
+from tet4d.engine.ui_logic.view_modes import GridMode
 from tet4d.ui.pygame.projection3d import (
     ProjectedLineFragment,
     ProjectedLinePrimitive,
-    draw_projected_line_fragments,
     draw_projected_box_shadow,
     draw_projected_helper_lattice,
+    draw_projected_line_fragments,
     project_boundary_lattice_primitives,
     project_helper_lattice_primitives,
     project_lattice_primitives,
 )
-from tet4d.engine.ui_logic.view_modes import GridMode
-
 
 MarkSet3: TypeAlias = tuple[set[int], set[int], set[int]]
 

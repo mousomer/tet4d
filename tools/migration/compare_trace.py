@@ -9,8 +9,8 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from tools.migration.export_gameplay_trace import export_cases as export_gameplay_cases
 from tools.migration.export_endgame_trace import export_cases as export_endgame_cases
+from tools.migration.export_gameplay_trace import export_cases as export_gameplay_cases
 from tools.migration.export_topology_trace import export_cases as export_topology_cases
 from tools.migration.trace_cases import (
     ENDGAME_TRACE_CASES,

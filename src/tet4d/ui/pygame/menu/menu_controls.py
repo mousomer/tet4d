@@ -36,6 +36,7 @@ from .menu_keybinding_shortcuts import (
 )
 from .numeric_text_input import append_numeric_text, parse_numeric_text
 
+
 @dataclass(frozen=True)
 class RebindCapture:
     key: int
@@ -156,12 +157,14 @@ def _start_numeric_text_mode(
     state.numeric_text_replace_on_type = True
     pygame.key.start_text_input()
     if incoming_text:
-        state.numeric_text_buffer, state.numeric_text_replace_on_type = append_numeric_text(
-            current_buffer=state.numeric_text_buffer,
-            incoming_text=incoming_text,
-            replace_on_type=state.numeric_text_replace_on_type,
-            max_length=_NUMERIC_TEXT_MAX_LENGTH,
-            sanitize_text=_sanitize_numeric_text,
+        state.numeric_text_buffer, state.numeric_text_replace_on_type = (
+            append_numeric_text(
+                current_buffer=state.numeric_text_buffer,
+                incoming_text=incoming_text,
+                replace_on_type=state.numeric_text_replace_on_type,
+                max_length=_NUMERIC_TEXT_MAX_LENGTH,
+                sanitize_text=_sanitize_numeric_text,
+            )
         )
     _set_numeric_text_status(state)
 
@@ -209,12 +212,16 @@ def _handle_numeric_text_input(
                 return False
             _start_numeric_text_mode(state, fields, incoming_text=action.text)
             return True
-        state.numeric_text_buffer, state.numeric_text_replace_on_type = append_numeric_text(
-            current_buffer=str(getattr(state, "numeric_text_buffer", "")),
-            incoming_text=action.text,
-            replace_on_type=bool(getattr(state, "numeric_text_replace_on_type", False)),
-            max_length=_NUMERIC_TEXT_MAX_LENGTH,
-            sanitize_text=_sanitize_numeric_text,
+        state.numeric_text_buffer, state.numeric_text_replace_on_type = (
+            append_numeric_text(
+                current_buffer=str(getattr(state, "numeric_text_buffer", "")),
+                incoming_text=action.text,
+                replace_on_type=bool(
+                    getattr(state, "numeric_text_replace_on_type", False)
+                ),
+                max_length=_NUMERIC_TEXT_MAX_LENGTH,
+                sanitize_text=_sanitize_numeric_text,
+            )
         )
         _set_numeric_text_status(state)
         return True
@@ -331,7 +338,9 @@ def gather_menu_actions(
         if (
             event.type == pygame.MOUSEBUTTONDOWN
             and int(getattr(event, "button", 0)) == 1
-            and default_menu_back_chip_rect().collidepoint(getattr(event, "pos", (-1, -1)))
+            and default_menu_back_chip_rect().collidepoint(
+                getattr(event, "pos", (-1, -1))
+            )
         ):
             actions.append(MenuAction.QUIT)
             continue
@@ -444,9 +453,7 @@ def _handle_profile_create(state: Any) -> None:
 
 
 def _handle_profile_delete(state: Any) -> None:
-    profile_name = str(
-        getattr(state, "active_profile", active_key_profile())
-    )
+    profile_name = str(getattr(state, "active_profile", active_key_profile()))
     ok, msg = delete_key_profile(profile_name)
     state.active_profile = active_key_profile()
     _set_bindings_status(state, ok, msg)

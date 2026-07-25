@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Iterable, Sequence
 from functools import lru_cache
-from typing import Iterable, Sequence, TypeAlias
+from typing import TypeAlias
 
 Coord2D: TypeAlias = tuple[int, int]
 CoordND: TypeAlias = tuple[int, ...]
@@ -39,7 +40,7 @@ def _resolve_quarter_turns(
 def _coerce_blocks_nd(blocks: Iterable[Sequence[int]]) -> BlocksND:
     coords = tuple(tuple(int(value) for value in block) for block in blocks)
     if not coords:
-        return tuple()
+        return ()
     ndim = len(coords[0])
     for coord in coords:
         if len(coord) != ndim:
@@ -84,15 +85,17 @@ def _canonicalize_blocks_nd_cached(blocks: BlocksND) -> BlocksND:
 def canonicalize_blocks_nd(blocks: Iterable[Sequence[int]]) -> BlocksND:
     coords = _coerce_blocks_nd(blocks)
     if not coords:
-        return tuple()
+        return ()
     return _canonicalize_blocks_nd_cached(coords)
 
 
 def canonicalize_blocks_2d(blocks: Iterable[Sequence[int]]) -> Blocks2D:
     coords = _coerce_blocks_2d(blocks)
     if not coords:
-        return tuple()
-    return tuple((coord[0], coord[1]) for coord in _canonicalize_blocks_nd_cached(coords))
+        return ()
+    return tuple(
+        (coord[0], coord[1]) for coord in _canonicalize_blocks_nd_cached(coords)
+    )
 
 
 def _axis_center_map(coords: BlocksND, *, axes: Iterable[int]) -> dict[int, int]:
@@ -146,7 +149,9 @@ def normalize_blocks_nd(blocks: Iterable[Sequence[int]]) -> BlocksND:
         raise ValueError("piece must contain at least one block")
     ndim = len(coords[0])
     _validate_ndim(ndim)
-    return canonicalize_blocks_nd(_normalize_axes_preserve_order(coords, axes=range(ndim)))
+    return canonicalize_blocks_nd(
+        _normalize_axes_preserve_order(coords, axes=range(ndim))
+    )
 
 
 def rotate_point_2d(
@@ -306,10 +311,12 @@ def _rotate_blocks_nd_cached(
             center_mass_b = sum(b_values) / len(rotated)
 
             # Find closest block to center of mass (in rotation plane only)
-            min_dist_sq = float('inf')
+            min_dist_sq = float("inf")
             pivot_block = rotated[0]
             for block in rotated:
-                dist_sq = (block[axis_a] - center_mass_a) ** 2 + (block[axis_b] - center_mass_b) ** 2
+                dist_sq = (block[axis_a] - center_mass_a) ** 2 + (
+                    block[axis_b] - center_mass_b
+                ) ** 2
                 if dist_sq < min_dist_sq:
                     min_dist_sq = dist_sq
                     pivot_block = block
@@ -332,9 +339,7 @@ def _rotate_blocks_nd_cached(
             new_b = round(new_rel_b + pivot_b)
             # Build new coordinate
             new_coord = tuple(
-                new_a if axis == axis_a
-                else new_b if axis == axis_b
-                else coord[axis]
+                new_a if axis == axis_a else new_b if axis == axis_b else coord[axis]
                 for axis in range(ndim)
             )
             rotated_coords.append(new_coord)
@@ -353,7 +358,7 @@ def rotate_blocks_nd(
 ) -> BlocksND:
     coords = _coerce_blocks_nd(blocks)
     if not coords:
-        return tuple()
+        return ()
     ndim = len(coords[0])
     _validate_ndim(ndim)
     if axis_a == axis_b:
@@ -362,6 +367,7 @@ def rotate_blocks_nd(
         raise ValueError("rotation axis out of bounds")
     turns = _resolve_quarter_turns(quarter_turns, steps_cw=steps_cw)
     return _rotate_blocks_nd_cached(coords, axis_a, axis_b, turns % _QUARTER_TURNS)
+
 
 def rotate_blocks_nd_continuous(
     blocks: Iterable[Sequence[int | float]],
@@ -385,7 +391,7 @@ def rotate_blocks_nd_continuous(
 
     coords_raw = tuple(tuple(float(v) for v in block) for block in blocks)
     if not coords_raw:
-        return tuple()
+        return ()
 
     ndim = len(coords_raw[0])
     _validate_ndim(ndim)
@@ -442,11 +448,7 @@ def rotate_blocks_nd_continuous(
 
     return tuple(
         tuple(
-            v - center_a
-            if i == axis_a
-            else v - center_b
-            if i == axis_b
-            else v
+            v - center_a if i == axis_a else v - center_b if i == axis_b else v
             for i, v in enumerate(coord)
         )
         for coord in rotated_tuple

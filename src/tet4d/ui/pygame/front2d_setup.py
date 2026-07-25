@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Optional
 
 import pygame
 
@@ -9,12 +8,6 @@ from tet4d.ai.playbot import run_dry_run_2d
 from tet4d.ai.playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
-)
-from tet4d.engine.runtime.menu_settings_state import (
-    default_mode_shared_gameplay_settings,
-    get_overlay_transparency,
-    mode_animation_settings,
-    mode_speedup_settings,
 )
 from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_2d
 from tet4d.engine.gameplay.game2d import GameConfig
@@ -26,13 +19,7 @@ from tet4d.engine.gameplay.topology_designer import (
     export_resolved_topology_profile,
     resolve_topology_designer_selection,
 )
-from tet4d.engine.runtime.topology_explorer_runtime import (
-    resolve_direct_explorer_launch_profile,
-)
-from tet4d.engine.topology_explorer.transport_resolver import (
-    build_explorer_transport_resolver,
-)
-from tet4d.engine.runtime.topology_profile_store import load_topology_profile
+from tet4d.engine.runtime.api import active_key_profile_runtime
 from tet4d.engine.runtime.menu_config import (
     default_settings_payload,
     kick_level_name_for_index,
@@ -40,8 +27,20 @@ from tet4d.engine.runtime.menu_config import (
     setup_fields_for_settings,
     setup_hints_for_dimension,
 )
-from tet4d.engine.runtime.api import active_key_profile_runtime
 from tet4d.engine.runtime.menu_field_spec import FieldSpec
+from tet4d.engine.runtime.menu_settings_state import (
+    default_mode_shared_gameplay_settings,
+    get_overlay_transparency,
+    mode_animation_settings,
+    mode_speedup_settings,
+)
+from tet4d.engine.runtime.topology_explorer_runtime import (
+    resolve_direct_explorer_launch_profile,
+)
+from tet4d.engine.runtime.topology_profile_store import load_topology_profile
+from tet4d.engine.topology_explorer.transport_resolver import (
+    build_explorer_transport_resolver,
+)
 from tet4d.ui.pygame.menu.setup_menu_runner import run_setup_menu_loop
 from tet4d.ui.pygame.render.gfx_game import GfxFonts, draw_menu
 
@@ -255,7 +254,7 @@ def _export_topology_profile(state: MenuState) -> None:
     )
 
 
-def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> Optional[GameSettings]:
+def run_menu(screen: pygame.Surface, fonts: GfxFonts) -> GameSettings | None:
     state = MenuState()
 
     def _draw_frame(

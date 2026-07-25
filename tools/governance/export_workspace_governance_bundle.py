@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import shutil
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BUNDLE_ROOT = ROOT / "docs" / "governance" / "workspace_bundle"

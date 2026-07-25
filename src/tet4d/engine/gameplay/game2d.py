@@ -1,24 +1,9 @@
 # tetris_nd/game2d.py
-from dataclasses import dataclass, field
-from typing import List, Optional
 import random
+from dataclasses import dataclass, field
 
 from ..core.model import Action, BoardND, GameConfig2DCoreView, GameState2DCoreView
 from ..core.rng import RNG_MODE_FIXED_SEED, normalize_rng_mode
-from .pieces2d import (
-    ActivePiece2D,
-    PieceShape2D,
-    PIECE_SET_2D_CLASSIC,
-    get_piece_bag_2d,
-    normalize_piece_set_2d,
-)
-from ..runtime.score_analyzer import new_analysis_session_id
-from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
-from .explorer_movement_policy import explorer_movement_policy_from_rigid_play_enabled
-from ..runtime.runtime_config import (
-    normalize_kick_level_name,
-    rotation_kick_candidate_offsets,
-)
 from ..core.rotation_kicks import resolve_and_commit_rotated_piece
 from ..core.rules.lifecycle import (
     advance_or_lock_and_respawn,
@@ -30,11 +15,30 @@ from ..core.rules.piece_placement import (
     piece_placement_is_legal,
 )
 from ..core.step.reducer import step_2d as core_step_2d
+from ..runtime.runtime_config import (
+    normalize_kick_level_name,
+    rotation_kick_candidate_offsets,
+)
+from ..runtime.score_analyzer import new_analysis_session_id
+from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
+from ..topology_explorer import ExplorerTopologyProfile, MoveStep
+from ..topology_explorer.transport_resolver import (
+    ExplorerTransportResolver,
+    build_explorer_transport_resolver,
+)
+from .explorer_movement_policy import explorer_movement_policy_from_rigid_play_enabled
 from .explorer_runtime_2d import (
     move_piece_via_explorer_glue_2d,
     piece_cells_in_bounds_2d,
 )
 from .lock_flow import apply_current_piece_lock_flow
+from .pieces2d import (
+    PIECE_SET_2D_CLASSIC,
+    ActivePiece2D,
+    PieceShape2D,
+    get_piece_bag_2d,
+    normalize_piece_set_2d,
+)
 from .play_move_intents import (
     GRAVITY_INTENT,
     HARD_DROP_INTENT,
@@ -48,11 +52,6 @@ from .topology import (
     TopologyPolicy,
     map_piece_cells,
     normalize_topology_mode,
-)
-from ..topology_explorer import ExplorerTopologyProfile, MoveStep
-from ..topology_explorer.transport_resolver import (
-    ExplorerTransportResolver,
-    build_explorer_transport_resolver,
 )
 
 
@@ -197,8 +196,8 @@ class GameState:
     config: GameConfig
     board: BoardND
     topology_policy: TopologyPolicy = field(init=False, repr=False)
-    current_piece: Optional[ActivePiece2D] = None
-    next_bag: List[PieceShape2D] = field(default_factory=list)
+    current_piece: ActivePiece2D | None = None
+    next_bag: list[PieceShape2D] = field(default_factory=list)
     rng: random.Random = field(default_factory=random.Random)
     score: int = 0
     lines_cleared: int = 0

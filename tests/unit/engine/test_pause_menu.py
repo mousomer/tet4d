@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 import pygame
 
-from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.launch.settings_hub_model import SettingsHubResult
 from tet4d.ui.pygame.runtime_ui import pause_menu
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.ui_utils import text_fits
 
 
@@ -239,9 +239,7 @@ class TestPauseMenuSettingsRouting(unittest.TestCase):
             pause_menu._pause_menu_values(4),
             strict=True,
         ):
-            value_draw_width = (
-                fonts.menu_font.size(value_text)[0] if value_text else 0
-            )
+            value_draw_width = fonts.menu_font.size(value_text)[0] if value_text else 0
             value_x = label_right - min(value_draw_width, value_width)
             label_width = max(
                 64,

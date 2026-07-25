@@ -12,7 +12,7 @@ def _write_text(path: Path, content: str) -> None:
 
 
 def _scratch_root() -> Path:
-    root = Path('.tmp_test_generate_maintenance_docs') / uuid4().hex
+    root = Path(".tmp_test_generate_maintenance_docs") / uuid4().hex
     root.mkdir(parents=True, exist_ok=False)
     return root
 
@@ -50,10 +50,16 @@ def _maintenance_contract() -> dict[str, object]:
                 {"path": "src/tet4d/engine/api.py", "description": "engine facade"}
             ],
             "UI": [
-                {"path": "src/tet4d/ui/pygame/front2d_game.py", "description": "2D orchestration entry"}
+                {
+                    "path": "src/tet4d/ui/pygame/front2d_game.py",
+                    "description": "2D orchestration entry",
+                }
             ],
             "AI": [
-                {"path": "src/tet4d/ai/playbot/controller.py", "description": "playbot runtime controller"}
+                {
+                    "path": "src/tet4d/ai/playbot/controller.py",
+                    "description": "playbot runtime controller",
+                }
             ],
         },
         "sources_of_truth": [
@@ -176,14 +182,20 @@ def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> Non
     monkeypatch.setattr(maint_doc, "CURRENT_STATE_PATH", current_state)
     monkeypatch.setattr(maint_doc, "PROJECT_STRUCTURE_PATH", project_structure)
     monkeypatch.setattr(maint_doc, "_arch_metrics_payload", _metrics_payload)
-    monkeypatch.setattr(maint_doc, "_load_maintenance_doc_contract", _maintenance_contract)
+    monkeypatch.setattr(
+        maint_doc, "_load_maintenance_doc_contract", _maintenance_contract
+    )
     monkeypatch.setattr(
         maint_doc.drift_guard,
         "_load_manifest",
         lambda: {
             "hotspot_scan": {"roots": ["src", "cli"], "top_n": 2},
             "thin_wrapper_budgets": [
-                {"path": "cli/front.py", "max_real_loc": 720, "role": "compatibility launcher wrapper"}
+                {
+                    "path": "cli/front.py",
+                    "max_real_loc": 720,
+                    "role": "compatibility launcher wrapper",
+                }
             ],
             "tutorial_copy_contract": {
                 "lessons_path": "config/tutorial/lessons.json",
@@ -193,31 +205,69 @@ def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> Non
             },
         },
     )
-    monkeypatch.setattr(maint_doc.drift_guard, "_validate_hotspot_scan", lambda payload, issues: ("src", "cli"))
-    monkeypatch.setattr(maint_doc.drift_guard, "collect_top_hotspots", lambda *, roots, top_n: [(42, "src/tet4d/engine/tutorial/setup_apply.py"), (17, "cli/front.py")])
-    monkeypatch.setattr(maint_doc.drift_guard, "count_real_loc", lambda path: 681 if path.as_posix().endswith("cli/front.py") else 0)
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "_validate_hotspot_scan",
+        lambda payload, issues: ("src", "cli"),
+    )
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "collect_top_hotspots",
+        lambda *, roots, top_n: [
+            (42, "src/tet4d/engine/tutorial/setup_apply.py"),
+            (17, "cli/front.py"),
+        ],
+    )
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "count_real_loc",
+        lambda path: 681 if path.as_posix().endswith("cli/front.py") else 0,
+    )
 
     rendered_current = maint_doc.render_current_state_doc()
     rendered_structure = maint_doc.render_project_structure_doc()
 
     assert "`tech_debt.score = 2.03` (`low`)" in rendered_current
     assert "## Live Drift Watch" in rendered_current
-    assert "`src/tet4d/engine/tutorial/setup_apply.py`: `42` real LOC" in rendered_current
-    assert "`cli/front.py: 681/720 real LOC (compatibility launcher wrapper)`" in rendered_current
-    assert "Generated from `tools/governance/check_drift_protection.py` and `config/project/policy_pack.json`." in rendered_current
+    assert (
+        "`src/tet4d/engine/tutorial/setup_apply.py`: `42` real LOC" in rendered_current
+    )
+    assert (
+        "`cli/front.py: 681/720 real LOC (compatibility launcher wrapper)`"
+        in rendered_current
+    )
+    assert (
+        "Generated from `tools/governance/check_drift_protection.py` and `config/project/policy_pack.json`."
+        in rendered_current
+    )
     assert "Manual intro." in rendered_current
     assert "## Canonical Entry Points" in rendered_structure
     assert "`cli/front2d.py`: thin 2D shim" in rendered_structure
     assert "## Verification Contract" in rendered_structure
-    assert "`config/project/policy_pack.json`: single machine-readable governance authority" in rendered_structure
+    assert (
+        "`config/project/policy_pack.json`: single machine-readable governance authority"
+        in rendered_structure
+    )
     assert "## Public Symbol Skim" in rendered_structure
     assert "routing aid" in rendered_structure
-    assert "`src/tet4d/engine/routing.py`: `route_event(board, piece, *, strict=...)`, `Router(board, *, strict=...)`" in rendered_structure
+    assert (
+        "`src/tet4d/engine/routing.py`: `route_event(board, piece, *, strict=...)`, `Router(board, *, strict=...)`"
+        in rendered_structure
+    )
     assert "## Likely Test Files" in rendered_structure
     assert "heuristic links" in rendered_structure
-    assert "They are routing hints only, using tiered exact, prefix, then controlled fallback matching." in rendered_structure
-    assert "`src/tet4d/engine/routing.py`: `tests/unit/engine/test_routing.py` (exact)" in rendered_structure
-    assert "`cli/front.py`: `tests/unit/engine/test_front_smoke.py` (prefix)" in rendered_structure
+    assert (
+        "They are routing hints only, using tiered exact, prefix, then controlled fallback matching."
+        in rendered_structure
+    )
+    assert (
+        "`src/tet4d/engine/routing.py`: `tests/unit/engine/test_routing.py` (exact)"
+        in rendered_structure
+    )
+    assert (
+        "`cli/front.py`: `tests/unit/engine/test_front_smoke.py` (prefix)"
+        in rendered_structure
+    )
     assert "coverage" not in rendered_structure
     assert "Manual midpoint." in rendered_structure
 
@@ -234,14 +284,20 @@ def test_check_generated_docs_detects_stale_output(monkeypatch) -> None:
     monkeypatch.setattr(maint_doc, "CURRENT_STATE_PATH", current_state)
     monkeypatch.setattr(maint_doc, "PROJECT_STRUCTURE_PATH", project_structure)
     monkeypatch.setattr(maint_doc, "_arch_metrics_payload", _metrics_payload)
-    monkeypatch.setattr(maint_doc, "_load_maintenance_doc_contract", _maintenance_contract)
+    monkeypatch.setattr(
+        maint_doc, "_load_maintenance_doc_contract", _maintenance_contract
+    )
     monkeypatch.setattr(
         maint_doc.drift_guard,
         "_load_manifest",
         lambda: {
             "hotspot_scan": {"roots": ["src", "cli"], "top_n": 2},
             "thin_wrapper_budgets": [
-                {"path": "cli/front.py", "max_real_loc": 720, "role": "compatibility launcher wrapper"}
+                {
+                    "path": "cli/front.py",
+                    "max_real_loc": 720,
+                    "role": "compatibility launcher wrapper",
+                }
             ],
             "tutorial_copy_contract": {
                 "lessons_path": "config/tutorial/lessons.json",
@@ -251,9 +307,24 @@ def test_check_generated_docs_detects_stale_output(monkeypatch) -> None:
             },
         },
     )
-    monkeypatch.setattr(maint_doc.drift_guard, "_validate_hotspot_scan", lambda payload, issues: ("src", "cli"))
-    monkeypatch.setattr(maint_doc.drift_guard, "collect_top_hotspots", lambda *, roots, top_n: [(42, "src/tet4d/engine/tutorial/setup_apply.py"), (17, "cli/front.py")])
-    monkeypatch.setattr(maint_doc.drift_guard, "count_real_loc", lambda path: 681 if path.as_posix().endswith("cli/front.py") else 0)
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "_validate_hotspot_scan",
+        lambda payload, issues: ("src", "cli"),
+    )
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "collect_top_hotspots",
+        lambda *, roots, top_n: [
+            (42, "src/tet4d/engine/tutorial/setup_apply.py"),
+            (17, "cli/front.py"),
+        ],
+    )
+    monkeypatch.setattr(
+        maint_doc.drift_guard,
+        "count_real_loc",
+        lambda path: 681 if path.as_posix().endswith("cli/front.py") else 0,
+    )
 
     assert maint_doc.check_generated_docs() == 1
 
@@ -261,8 +332,13 @@ def test_check_generated_docs_detects_stale_output(monkeypatch) -> None:
     _write_text(project_structure, maint_doc.render_project_structure_doc())
 
     rendered_structure = project_structure.read_text(encoding="utf-8")
-    assert "<!-- BEGIN GENERATED:project_structure_symbol_index -->" in rendered_structure
-    assert "<!-- BEGIN GENERATED:project_structure_likely_test_files -->" in rendered_structure
+    assert (
+        "<!-- BEGIN GENERATED:project_structure_symbol_index -->" in rendered_structure
+    )
+    assert (
+        "<!-- BEGIN GENERATED:project_structure_likely_test_files -->"
+        in rendered_structure
+    )
     assert "## Public Symbol Skim" in rendered_structure
     assert "## Likely Test Files" in rendered_structure
     assert maint_doc.check_generated_docs() == 0

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from tet4d.ui.pygame.keybindings import cycle_key_profile
 from tet4d.ui.pygame.launch.launcher_profile_menu import (

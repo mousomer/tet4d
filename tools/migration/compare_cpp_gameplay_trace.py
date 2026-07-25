@@ -12,11 +12,11 @@ from typing import Any
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from tools.migration.trace_schema import canonical_json
-from tools.migration.trace_cases import GAMEPLAY_TRACE_CASES
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tools.migration.trace_cases import GAMEPLAY_TRACE_CASES
+from tools.migration.trace_schema import canonical_json
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_DIR = ROOT / "migration" / "golden_traces" / "gameplay"
@@ -123,8 +123,7 @@ def _cpp_trace(case_id: str) -> dict[str, Any]:
         check=True,
         cwd=ROOT,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
     return json.loads(result.stdout)
 
@@ -250,8 +249,7 @@ def _cpp_setup_case(case_id: str) -> dict[str, Any]:
         check=True,
         cwd=ROOT,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
     return json.loads(result.stdout)
 

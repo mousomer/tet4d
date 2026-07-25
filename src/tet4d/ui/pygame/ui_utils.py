@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import re
 from collections import OrderedDict
 from dataclasses import dataclass
-import re
-from typing import Tuple
 
 import pygame
 
-from tet4d.engine.runtime.project_config import project_constant_color, project_constant_int
+from tet4d.engine.runtime.project_config import (
+    project_constant_color,
+    project_constant_int,
+)
 
-Color3 = Tuple[int, int, int]
+Color3 = tuple[int, int, int]
 
 
 def button_bg() -> Color3:
@@ -34,6 +36,7 @@ def panel_bg() -> Color3:
 
 def panel_border() -> Color3:
     return project_constant_color(("panel", "border"), (76, 84, 112))
+
 
 _GRADIENT_CACHE_MAX = project_constant_int(
     ("cache_limits", "gradient_surface_max"),
@@ -132,11 +135,9 @@ def wrapped_label_value_layout(
         if total_width is None:
             raise ValueError("total_width is required when value_width is omitted")
         value_width = int(total_width * value_width_fraction) if value else 0
-    value_lines = wrap_text_lines(font, value, value_width) if value else tuple()
+    value_lines = wrap_text_lines(font, value, value_width) if value else ()
     value_draw_width = (
-        max(font.size(line)[0] for line in value_lines)
-        if value_lines
-        else 0
+        max(font.size(line)[0] for line in value_lines) if value_lines else 0
     )
     if label_width is None:
         if total_width is None:
@@ -329,7 +330,11 @@ def compute_slider_row_layout(
     )
     max_slider_width = max(
         int(_MENU_SLIDER_TRACK_MIN_WIDTH),
-        safe_total_width - int(_MENU_SLIDER_LABEL_MIN_WIDTH) - int(_MENU_SLIDER_VALUE_MIN_WIDTH) - text_gap - slider_gap,
+        safe_total_width
+        - int(_MENU_SLIDER_LABEL_MIN_WIDTH)
+        - int(_MENU_SLIDER_VALUE_MIN_WIDTH)
+        - text_gap
+        - slider_gap,
     )
     slider_width = max(
         int(_MENU_SLIDER_TRACK_MIN_WIDTH),
@@ -349,17 +354,20 @@ def compute_slider_row_layout(
         int(_MENU_SLIDER_VALUE_MAX_WIDTH),
         max(int(_MENU_SLIDER_VALUE_MIN_WIDTH), raw_value_width),
     )
-    max_value_width = max(0, available_text_width - max(0, int(_MENU_SLIDER_LABEL_MIN_WIDTH) + text_gap))
+    max_value_width = max(
+        0, available_text_width - max(0, int(_MENU_SLIDER_LABEL_MIN_WIDTH) + text_gap)
+    )
     if max_value_width > 0:
         value_width = min(value_width, max_value_width)
-    if value_width <= 0:
-        value_width = 0
+    value_width = max(0, value_width)
     label_width = max(
         1,
         available_text_width - value_width - (text_gap if value_width > 0 else 0),
     )
     label_lines = wrap_text_lines(font, label, label_width)
-    value_lines = wrap_text_lines(font, value, value_width) if value_width > 0 else tuple()
+    value_lines = (
+        wrap_text_lines(font, value, value_width) if value_width > 0 else ()
+    )
     text_line_count = max(len(label_lines), len(value_lines), 1)
     text_block_height = wrapped_row_height(
         font,
@@ -483,7 +491,7 @@ def compute_vertical_scroll_metrics(
     safe_content_height = max(0, int(content_height))
     max_scroll = max(0, safe_content_height - viewport_height)
     safe_offset = max(0, min(max_scroll, int(scroll_offset)))
-    shows_scrollbar = safe_content_height > viewport_height and viewport_height > 0
+    shows_scrollbar = safe_content_height > viewport_height > 0
     reserved_width = menu_scrollbar_reserved_width(shows_scrollbar=shows_scrollbar)
     track_rect = pygame.Rect(0, 0, 0, 0)
     handle_rect = pygame.Rect(0, 0, 0, 0)
@@ -500,13 +508,13 @@ def compute_vertical_scroll_metrics(
         )
         handle_height = max(
             int(_MENU_SCROLLBAR_MIN_HANDLE),
-            int(round(track_rect.height * visible_ratio)),
+            round(track_rect.height * visible_ratio),
         )
         handle_height = min(handle_height, track_rect.height)
         travel = max(0, track_rect.height - handle_height)
         handle_top = track_rect.y
         if max_scroll > 0 and travel > 0:
-            handle_top += int(round((safe_offset / max_scroll) * travel))
+            handle_top += round((safe_offset / max_scroll) * travel)
         handle_rect = pygame.Rect(
             track_rect.x,
             handle_top,
@@ -730,8 +738,12 @@ def draw_tron_panel(
 ) -> None:
     panel = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
     pygame.draw.rect(panel, fill_color, panel.get_rect(), border_radius=border_radius)
-    pygame.draw.rect(panel, glow_color, panel.get_rect(), 3, border_radius=border_radius)
-    pygame.draw.rect(panel, border_color, panel.get_rect(), 1, border_radius=border_radius)
+    pygame.draw.rect(
+        panel, glow_color, panel.get_rect(), 3, border_radius=border_radius
+    )
+    pygame.draw.rect(
+        panel, border_color, panel.get_rect(), 1, border_radius=border_radius
+    )
     surface.blit(panel, rect.topleft)
 
 
@@ -872,9 +884,15 @@ def draw_value_slider(
     flash = max(0.0, min(1.0, float(flash_strength)))
     track = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
     track_radius = max(3, rect.height // 2)
-    pygame.draw.rect(track, (*track_color, 220), track.get_rect(), border_radius=track_radius)
-    pygame.draw.rect(track, border_color, track.get_rect(), 1, border_radius=track_radius)
-    fill_width = max(int(_MENU_SLIDER_THUMB_WIDTH // 2), int((rect.width - 2) * clamped))
+    pygame.draw.rect(
+        track, (*track_color, 220), track.get_rect(), border_radius=track_radius
+    )
+    pygame.draw.rect(
+        track, border_color, track.get_rect(), 1, border_radius=track_radius
+    )
+    fill_width = max(
+        int(_MENU_SLIDER_THUMB_WIDTH // 2), int((rect.width - 2) * clamped)
+    )
     fill_rect = pygame.Rect(1, 1, max(0, fill_width), max(0, rect.height - 2))
     fill = (
         min(255, int(fill_color[0] + (40 * flash))),
@@ -885,7 +903,9 @@ def draw_value_slider(
     pygame.draw.rect(track, fill, fill_rect, border_radius=max(2, track_radius - 1))
     thumb_width = max(6, int(_MENU_SLIDER_THUMB_WIDTH))
     thumb_overhang = max(0, int(_MENU_SLIDER_THUMB_OVERHANG))
-    knob_x = rect.x + max(0, min(rect.width - thumb_width, fill_width - (thumb_width // 2)))
+    knob_x = rect.x + max(
+        0, min(rect.width - thumb_width, fill_width - (thumb_width // 2))
+    )
     surface.blit(track, rect.topleft)
     pygame.draw.rect(
         surface,

@@ -16,7 +16,6 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(_ROOT / "src"))
 
 from tet4d.replay.format import REPLAY_SCHEMA_VERSION
-
 from tools.migration.trace_schema import (
     SCHEMA_VERSION,
     TRACE_VERSION,
@@ -26,7 +25,6 @@ from tools.migration.trace_schema import (
     stable_hash,
     write_canonical_json,
 )
-
 
 BUNDLE_VERSION = 1
 DEFAULT_BUNDLE_OUT = Path("migration/exported_bundle")
@@ -616,7 +614,7 @@ def export_bundle(out_dir: Path) -> list[Path]:
         write_canonical_json(out_dir / "schemas" / "schema_index.json", schema_index),
         _write_readme(out_dir / "README.md"),
     ]
-    for trace_type, entries in trace_index.items():
+    for entries in trace_index.values():
         for entry in entries:
             source = Path(str(entry["source_path"]))
             target = out_dir / str(entry["path"])

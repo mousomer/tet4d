@@ -10,7 +10,11 @@ from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
 )
 
 from .piece_sandbox import ensure_piece_sandbox, sandbox_cells
-from .scene_state import TopologyLabState, current_explorer_profile, playground_dims_for_state
+from .scene_state import (
+    TopologyLabState,
+    current_explorer_profile,
+    playground_dims_for_state,
+)
 
 
 def clear_scene_explosion(state: TopologyLabState) -> None:
@@ -26,12 +30,14 @@ def consume_pending_scene_explosion_launch(state: TopologyLabState):
 
 def scene_explosion_particles(state: TopologyLabState):
     del state
-    return tuple()
+    return ()
 
 
 def start_sandbox_explosion(state: TopologyLabState) -> tuple[bool, str]:
     ensure_piece_sandbox(state)
-    cells = tuple(tuple(int(value) for value in coord) for coord in sandbox_cells(state))
+    cells = tuple(
+        tuple(int(value) for value in coord) for coord in sandbox_cells(state)
+    )
     if not cells:
         return False, "Sandbox explosion requires at least one visible sandbox cell"
     mode_key = f"{int(state.dimension)}d"
@@ -78,7 +84,9 @@ def start_sandbox_explosion(state: TopologyLabState) -> tuple[bool, str]:
     )
     pending = state.pending_explosion_surface_state
     assert pending is not None
-    pending.status = "Explorer launch inherits current sandbox cells; Enter restarts in place."
+    pending.status = (
+        "Explorer launch inherits current sandbox cells; Enter restarts in place."
+    )
     return True, f"Sandbox explosion launched for {len(cells)} cells"
 
 

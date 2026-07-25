@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pygame
 
-from tet4d.ui.pygame.launch import leaderboard_menu
-from tet4d.ui.pygame.launch import launcher_settings, settings_hub_model
+from tet4d.ui.pygame.launch import (
+    launcher_settings,
+    leaderboard_menu,
+    settings_hub_model,
+)
 from tet4d.ui.pygame.menu import menu_runner
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
+from tet4d.ui.pygame.runtime_ui import pause_menu
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
-from tet4d.ui.pygame.runtime_ui import pause_menu
 
 
 class TestMenuMouseInteraction(unittest.TestCase):
@@ -88,8 +91,12 @@ class TestMenuMouseInteraction(unittest.TestCase):
             "get",
             return_value=[
                 pygame.event.Event(pygame.MOUSEMOTION, {"pos": (40, 92)}),
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (40, 92)}),
-                pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": (40, 92)}),
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (40, 92)}
+                ),
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONUP, {"button": 1, "pos": (40, 92)}
+                ),
             ],
         ):
             runner.run()
@@ -101,9 +108,7 @@ class TestMenuMouseInteraction(unittest.TestCase):
         menus = {
             "root": {
                 "title": "Root",
-                "items": (
-                    {"type": "action", "label": "Only", "action_id": "only"},
-                ),
+                "items": ({"type": "action", "label": "Only", "action_id": "only"},),
             }
         }
         registry = ActionRegistry()
@@ -136,8 +141,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
             start_menu_id="root",
             action_registry=registry,
             render_menu=_render_menu,
-            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
-            or True,
+            on_root_escape=lambda: (
+                calls.__setitem__("root_escape", calls["root_escape"] + 1) or True
+            ),
         )
 
         with patch.object(
@@ -146,9 +152,13 @@ class TestMenuMouseInteraction(unittest.TestCase):
             side_effect=[
                 [
                     pygame.event.Event(pygame.MOUSEMOTION, {"pos": (40, 48)}),
-                    pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (40, 48)}),
+                    pygame.event.Event(
+                        pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (40, 48)}
+                    ),
                     pygame.event.Event(pygame.MOUSEMOTION, {"pos": (260, 160)}),
-                    pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": (260, 160)}),
+                    pygame.event.Event(
+                        pygame.MOUSEBUTTONUP, {"button": 1, "pos": (260, 160)}
+                    ),
                 ],
                 [pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})],
             ],
@@ -269,8 +279,10 @@ class TestMenuMouseInteraction(unittest.TestCase):
             initial_item_id="save",
         )
         launcher_settings._draw_unified_settings_menu(screen, fonts, preview_state)
-        selectable_index_by_item = settings_hub_model.selectable_index_by_item_id_for_items(
-            launcher_settings._current_items(preview_state)
+        selectable_index_by_item = (
+            settings_hub_model.selectable_index_by_item_id_for_items(
+                launcher_settings._current_items(preview_state)
+            )
         )
         target_selectable_index = selectable_index_by_item["save"]
         targets = launcher_settings._current_unified_pointer_targets(
@@ -336,7 +348,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
             initial_page_id="settings_gameplay",
         )
 
-        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        targets = launcher_settings._current_unified_pointer_targets(
+            screen, fonts, state
+        )
         kinds = {target.kind for target in targets}
         self.assertTrue({"side_back", "side_escape", "side_quit"}.issubset(kinds))
 
@@ -351,7 +365,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
         launcher_settings._push_page(state, "settings_gameplay")
         self.assertEqual(len(state.page_stack), 2)
 
-        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        targets = launcher_settings._current_unified_pointer_targets(
+            screen, fonts, state
+        )
         side_back = next(target for target in targets if target.kind == "side_back")
         screen, _handled = launcher_settings._handle_unified_non_key_event(
             screen,
@@ -386,7 +402,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
             display_settings=DisplaySettings(),
             initial_page_id="settings_gameplay",
         )
-        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        targets = launcher_settings._current_unified_pointer_targets(
+            screen, fonts, state
+        )
         side_back = next(target for target in targets if target.kind == "side_back")
 
         screen, _handled = launcher_settings._handle_unified_non_key_event(
@@ -424,7 +442,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
         launcher_settings._start_unified_numeric_text_mode(state, "display_width")
         self.assertTrue(state.text_mode_row_key)
 
-        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        targets = launcher_settings._current_unified_pointer_targets(
+            screen, fonts, state
+        )
         side_escape = next(target for target in targets if target.kind == "side_escape")
         screen, _handled = launcher_settings._handle_unified_non_key_event(
             screen,
@@ -461,7 +481,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
         launcher_settings._push_page(state, "settings_gameplay")
         self.assertEqual(len(state.page_stack), 2)
 
-        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        targets = launcher_settings._current_unified_pointer_targets(
+            screen, fonts, state
+        )
         side_escape = next(target for target in targets if target.kind == "side_escape")
         screen, _handled = launcher_settings._handle_unified_non_key_event(
             screen,
@@ -496,7 +518,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
             display_settings=DisplaySettings(),
             initial_page_id="settings_gameplay",
         )
-        targets = launcher_settings._current_unified_pointer_targets(screen, fonts, state)
+        targets = launcher_settings._current_unified_pointer_targets(
+            screen, fonts, state
+        )
         side_escape = next(target for target in targets if target.kind == "side_escape")
 
         screen, _handled = launcher_settings._handle_unified_non_key_event(
@@ -566,7 +590,9 @@ class TestMenuMouseInteraction(unittest.TestCase):
             display_settings=DisplaySettings(),
             initial_page_id="settings_gameplay",
         )
-        out = launcher_settings._dispatch_unified_key(screen, fonts, state_key, pygame.K_q)
+        out = launcher_settings._dispatch_unified_key(
+            screen, fonts, state_key, pygame.K_q
+        )
         self.assertIs(out, screen)
         self.assertTrue(state_key.running)
         self.assertTrue(state_key.keep_running)

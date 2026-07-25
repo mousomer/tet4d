@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 import pygame
 
@@ -20,6 +21,7 @@ from tet4d.engine.gameplay.api import (
 )
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimatorND
+from tet4d.engine.gameplay.topology import default_edge_rules_for_mode
 from tet4d.engine.runtime.menu_settings_state import (
     DEFAULT_OVERLAY_TRANSPARENCY,
     OVERLAY_TRANSPARENCY_STEP,
@@ -30,7 +32,6 @@ from tet4d.engine.runtime.menu_settings_state import (
     mode_rotation_animation_mode,
 )
 from tet4d.engine.runtime.project_config import project_constant_int
-from tet4d.engine.gameplay.topology import default_edge_rules_for_mode
 from tet4d.engine.tutorial.api import (
     tutorial_apply_step_setup_nd_runtime,
     tutorial_board_dims_runtime,
@@ -60,14 +61,11 @@ from tet4d.ui.pygame import (
     frontend_nd_state,
 )
 from tet4d.ui.pygame.endgame_animation import (
+    TERMINAL_PHASE_PLAYING,
     EndgameAnimationState,
     EndgameRenderContext,
     SnapshotCell,
-    TERMINAL_PHASE_PLAYING,
     create_snapshot,
-)
-from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
-    mode_explosion_defaults,
 )
 from tet4d.ui.pygame.input.camera_mouse import (
     MouseOrbitState,
@@ -80,6 +78,9 @@ from tet4d.ui.pygame.launch.launcher_nd_runner import run_nd_mode_launcher
 from tet4d.ui.pygame.launch.launcher_play import (
     game_caption_for_dimension,
     setup_caption_for_dimension,
+)
+from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
+    mode_explosion_defaults,
 )
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
     DisplaySettings,
@@ -237,14 +238,14 @@ def _apply_tutorial_board_profile_3d(
     cfg.dims = _tutorial_board_dims_3d()
 
 
-def _tutorial_required_action_legal_3d(loop: "LoopContext3D", action_id: str) -> bool:
+def _tutorial_required_action_legal_3d(loop: LoopContext3D, action_id: str) -> bool:
     if action_id in _TUTORIAL_ALWAYS_LEGAL_ACTIONS_3D:
         return True
     return _tutorial_can_apply_piece_action_3d(loop, action_id)
 
 
 def _tutorial_can_apply_piece_action_3d(
-    loop: "LoopContext3D",
+    loop: LoopContext3D,
     action_id: str,
 ) -> bool:
     return bool(
@@ -257,7 +258,7 @@ def _tutorial_can_apply_piece_action_3d(
 
 
 def _tutorial_has_legal_action_3d(
-    loop: "LoopContext3D",
+    loop: LoopContext3D,
     action_ids: tuple[str, ...],
 ) -> bool:
     for action_id in action_ids:
@@ -266,7 +267,7 @@ def _tutorial_has_legal_action_3d(
     return False
 
 
-def _maintain_tutorial_runtime_safety(loop: "LoopContext3D") -> None:
+def _maintain_tutorial_runtime_safety(loop: LoopContext3D) -> None:
     maintain_tutorial_runtime_safety(
         loop,
         min_visible_layer=int(_TUTORIAL_MIN_VISIBLE_LAYER),
@@ -289,28 +290,32 @@ def _maintain_tutorial_runtime_safety(loop: "LoopContext3D") -> None:
                 min_visible_layer=min_visible_layer,
             )
         ),
-        tutorial_allowed_actions_blocked=lambda curr_loop,
-        session: tutorial_allowed_actions_blocked(
-            session,
-            allowed_actions_runtime=tutorial_runtime_allowed_actions_runtime,
-            has_legal_action=lambda action_ids: _tutorial_has_legal_action_3d(
-                curr_loop,
-                action_ids,
-            ),
+        tutorial_allowed_actions_blocked=lambda curr_loop, session: (
+            tutorial_allowed_actions_blocked(
+                session,
+                allowed_actions_runtime=tutorial_runtime_allowed_actions_runtime,
+                has_legal_action=lambda action_ids: _tutorial_has_legal_action_3d(
+                    curr_loop,
+                    action_ids,
+                ),
+            )
         ),
-        tutorial_required_action_blocked=lambda curr_loop,
-        session: tutorial_required_action_blocked(
-            session,
-            required_action_runtime=tutorial_runtime_required_action_runtime,
-            required_action_legal=lambda action_id: _tutorial_required_action_legal_3d(
-                curr_loop,
-                action_id,
-            ),
+        tutorial_required_action_blocked=lambda curr_loop, session: (
+            tutorial_required_action_blocked(
+                session,
+                required_action_runtime=tutorial_runtime_required_action_runtime,
+                required_action_legal=lambda action_id: (
+                    _tutorial_required_action_legal_3d(
+                        curr_loop,
+                        action_id,
+                    )
+                ),
+            )
         ),
     )
 
 
-def _apply_tutorial_camera_preset(loop: "LoopContext3D", preset: str) -> None:
+def _apply_tutorial_camera_preset(loop: LoopContext3D, preset: str) -> None:
     clean_preset = str(preset).strip().lower()
     if not clean_preset:
         return
@@ -320,7 +325,7 @@ def _apply_tutorial_camera_preset(loop: "LoopContext3D", preset: str) -> None:
     loop.mouse_orbit.reset()
 
 
-def _apply_pending_tutorial_setup(loop: "LoopContext3D") -> None:
+def _apply_pending_tutorial_setup(loop: LoopContext3D) -> None:
     tutorial_session = getattr(loop, "tutorial_session", None)
     if tutorial_session is None:
         return
@@ -387,7 +392,7 @@ def _camera_action_for_key(key: int) -> str | None:
 
 
 def _capture_endgame_snapshot_3d(
-    loop: "LoopContext3D",
+    loop: LoopContext3D,
 ) -> object:
     (
         preset_id,
@@ -468,7 +473,7 @@ def handle_game_keydown(
 def _spawn_clear_animation_if_needed(
     state: GameStateND,
     last_lines_cleared: int,
-) -> tuple[Optional[ClearAnimation3D], int]:
+) -> tuple[ClearAnimation3D | None, int]:
     if state is None:
         return None, int(last_lines_cleared)
     if state.lines_cleared == last_lines_cleared:
@@ -501,7 +506,7 @@ class LoopContext3D(PanelDragMixin):
         default_factory=lambda: float(DEFAULT_OVERLAY_TRANSPARENCY)
     )
     grid_mode: GridMode = GridMode.FULL
-    clear_anim: Optional[ClearAnimation3D] = None
+    clear_anim: ClearAnimation3D | None = None
     last_lines_cleared: int = 0
     gravity_accumulator: int = 0
     was_game_over: bool = False
@@ -526,10 +531,10 @@ class LoopContext3D(PanelDragMixin):
         overlay_transparency: float | None = None,
         bot_speed_level: int = 7,
         rotation_animation_mode: str | None = None,
-        rotation_animation_duration_ms: int | float | None = None,
-        translation_animation_duration_ms: int | float | None = None,
+        rotation_animation_duration_ms: float | None = None,
+        translation_animation_duration_ms: float | None = None,
         tutorial_lesson_id: str | None = None,
-    ) -> "LoopContext3D":
+    ) -> LoopContext3D:
         _apply_tutorial_board_profile_3d(
             cfg,
             tutorial_lesson_id=tutorial_lesson_id,
@@ -780,16 +785,8 @@ def run_game_loop(
         translation_animation_duration_ms=translation_animation_duration_ms,
         tutorial_lesson_id=tutorial_lesson_id,
     )
-    setattr(
-        loop,
-        "_apply_pending_tutorial_setup",
-        lambda: _apply_pending_tutorial_setup(loop),
-    )
-    setattr(
-        loop,
-        "_maintain_tutorial_safety",
-        lambda: _maintain_tutorial_runtime_safety(loop),
-    )
+    loop._apply_pending_tutorial_setup = lambda: _apply_pending_tutorial_setup(loop)
+    loop._maintain_tutorial_safety = lambda: _maintain_tutorial_runtime_safety(loop)
     _apply_pending_tutorial_setup(loop)
     loop.bot.configure_speed(gravity_interval_ms, bot_speed_level)
     loop.bot.configure_planner(
@@ -828,16 +825,14 @@ def run_game_loop(
         run_pause_menu=run_pause_menu
         if pause_menu_runner is None
         else pause_menu_runner,
-        run_help_menu=lambda target,
-        active_fonts,
-        dim,
-        ctx,
-        on_escape_back=None: run_help_menu(
-            target,
-            active_fonts,
-            dimension=dim,
-            context_label=ctx,
-            on_escape_back=on_escape_back,
+        run_help_menu=lambda target, active_fonts, dim, ctx, on_escape_back=None: (
+            run_help_menu(
+                target,
+                active_fonts,
+                dimension=dim,
+                context_label=ctx,
+                on_escape_back=on_escape_back,
+            )
         ),
         spawn_clear_animation=_spawn_clear_animation_if_needed,
         capture_endgame_snapshot=lambda: _capture_endgame_snapshot_3d(loop),

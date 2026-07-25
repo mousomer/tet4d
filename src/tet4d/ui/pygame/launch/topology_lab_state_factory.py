@@ -8,28 +8,30 @@ from tet4d.engine.gameplay.topology_designer import (
 from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame.topology_lab import (
-    ExplorerPlaygroundSettings,
     PANE_SCENE,
+    ExplorerPlaygroundSettings,
     ensure_explorer_draft,
     ensure_mouse_orbit_state,
     ensure_scene_camera,
     set_active_tool,
 )
 from tet4d.ui.pygame.topology_lab.app import build_explorer_playground_settings
+from tet4d.ui.pygame.topology_lab.controls_panel import (
+    _INITIAL_TOOL_BY_GAMEPLAY_MODE,
+    _refresh_explorer_scene_state,
+    _sync_explorer_state,
+    _TopologyLabState,
+)
 from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
     _normalize_explorer_draft,
 )
-from tet4d.ui.pygame.topology_lab.controls_panel import (
-    _INITIAL_TOOL_BY_GAMEPLAY_MODE,
-    _TopologyLabState,
-    _refresh_explorer_scene_state,
-    _sync_explorer_state,
-)
 from tet4d.ui.pygame.topology_lab.scene_state import (
     current_play_settings,
-    ensure_probe_state as _ensure_probe_state,
     replace_explorer_profile,
     replace_play_settings,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
+    ensure_probe_state as _ensure_probe_state,
 )
 
 _TOPOLOGY_DIMENSIONS = (2, 3, 4)

@@ -41,11 +41,11 @@ def record_replay_nd_ticks(
 
 
 __all__ = [
+    "REPLAY_SCHEMA_VERSION",
     "ReplayEvent2D",
     "ReplayFormatError",
     "ReplayScript2D",
     "ReplayTickScriptND",
-    "REPLAY_SCHEMA_VERSION",
     "play_replay_2d",
     "play_replay_nd_ticks",
     "record_replay_2d",

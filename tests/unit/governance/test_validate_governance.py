@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import tools.governance.check_risk_gates as risk_gates
-import tools.governance.validate_governance as validate_governance
+from tools.governance import validate_governance
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -70,13 +70,14 @@ def test_risk_gates_accept_unified_required_ids() -> None:
 def test_main_executes_policy_runtime_rules_check(monkeypatch, capsys) -> None:
     calls: list[str] = []
 
-    monkeypatch.setattr(validate_governance, "_validate_unified_manifest_shape", lambda: [])
+    monkeypatch.setattr(validate_governance, "_validate_unified_manifest_shape", list)
     monkeypatch.setattr(
         validate_governance,
         "_checks",
         lambda: (
             validate_governance.GovernanceCheck(
-                "policy_runtime_rules", lambda: calls.append("policy_runtime_rules") or 0
+                "policy_runtime_rules",
+                lambda: calls.append("policy_runtime_rules") or 0,
             ),
         ),
     )

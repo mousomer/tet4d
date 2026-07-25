@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-import re
 import json
 import logging
+import re
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from ..core.rng import RNG_MODE_OPTIONS
+from ..gameplay.topology import TOPOLOGY_MODE_OPTIONS
 from .endgame_presets import (
     ENDGAME_BOUNDARY_RESPONSES,
     ENDGAME_PARTICLE_COLLISION_MODES,
@@ -17,8 +20,6 @@ from .endgame_presets import (
     normalize_endgame_preset_id,
 )
 
-from ..core.rng import RNG_MODE_OPTIONS
-from ..gameplay.topology import TOPOLOGY_MODE_OPTIONS
 MODE_KEYS = ("2d", "3d", "4d")
 MODE_KEY_SET = set(MODE_KEYS)
 GRID_MODE_NAMES = (
@@ -132,7 +133,7 @@ def require_number(
     return num
 
 
-def validate_setting_storage_metadata(  # noqa: C901
+def validate_setting_storage_metadata(
     parsed: dict[str, Any],
     *,
     semantic_type: str,
@@ -362,7 +363,9 @@ def _require_enum_id(
 ) -> str:
     normalized = as_non_empty_string(value, path=setting_path).lower()
     if normalized not in allowed:
-        raise RuntimeError(f"{setting_path} must be one of: " + ", ".join(sorted(allowed)))
+        raise RuntimeError(
+            f"{setting_path} must be one of: " + ", ".join(sorted(allowed))
+        )
     return normalized
 
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-
 FieldSemanticType = Literal["bool", "enum", "int", "float"]
 FieldControlFamily = Literal["toggle", "selector", "slider", "stepper"]
 
@@ -95,5 +94,5 @@ class FieldSpec:
         numeric = float(value)
         clamped = max(minimum, min(maximum, numeric))
         if self.semantic_type == "int":
-            return int(round(clamped))
+            return round(clamped)
         return clamped

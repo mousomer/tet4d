@@ -15,11 +15,11 @@ if pygame is None:  # pragma: no cover - exercised without pygame-ce
 
 from tet4d.engine.gameplay.game2d import GameConfig
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
-from tet4d.engine.gameplay.topology import TOPOLOGY_WRAP_ALL
 from tet4d.engine.gameplay.rotation_anim import (
     _RotationTween,
     _screen_rotation_angle_deg,
 )
+from tet4d.engine.gameplay.topology import TOPOLOGY_WRAP_ALL
 from tet4d.ui.pygame import front2d_frame, front2d_loop
 from tet4d.ui.pygame.front2d_session import LoopContext2D
 from tet4d.ui.pygame.keybindings import KEYS_2D
@@ -80,7 +80,9 @@ class TestGfxGameRotationRender(unittest.TestCase):
         *,
         action_id: str = "rotate_xy_pos",
         topology_mode: str = "bounded",
-    ) -> tuple[bytes, list[pygame.Rect], list[dict[str, object]], list[dict[str, object]]]:
+    ) -> tuple[
+        bytes, list[pygame.Rect], list[dict[str, object]], list[dict[str, object]]
+    ]:
         screen = pygame.Surface((1024, 840), pygame.SRCALPHA)
         loop = cls._create_loop(mode_name, topology_mode=topology_mode)
         piece = loop.state.current_piece
@@ -231,17 +233,23 @@ class TestGfxGameRotationRender(unittest.TestCase):
         for call in polygon_calls:
             points = call["points"]
             if len(points) != 4:
-                raise AssertionError(f"expected quads for upright boxes, got {len(points)} points")
+                raise AssertionError(
+                    f"expected quads for upright boxes, got {len(points)} points"
+                )
             top_delta_y = abs(float(points[1][1]) - float(points[0][1]))
             left_delta_x = abs(float(points[3][0]) - float(points[0][0]))
             if top_delta_y > 1e-6:
-                raise AssertionError(f"expected flat top edge, got delta_y={top_delta_y}")
+                raise AssertionError(
+                    f"expected flat top edge, got delta_y={top_delta_y}"
+                )
             if left_delta_x > 1e-6:
-                raise AssertionError(f"expected vertical left edge, got delta_x={left_delta_x}")
+                raise AssertionError(
+                    f"expected vertical left edge, got delta_x={left_delta_x}"
+                )
 
     def test_rigid_midframe_uses_rotated_cell_box_path(self) -> None:
-        frame_bytes, screen_piece_rects, polygon_calls, rotozoom_calls = self._render_mid_rotation_frame(
-            "rigid_piece_rotation"
+        frame_bytes, screen_piece_rects, polygon_calls, rotozoom_calls = (
+            self._render_mid_rotation_frame("rigid_piece_rotation")
         )
         self.assertTrue(frame_bytes)
         self.assertFalse(screen_piece_rects)
@@ -261,11 +269,11 @@ class TestGfxGameRotationRender(unittest.TestCase):
         """_interpolated_rel_rigid_rotation and interpolated_rotation_deg agree."""
         # Build a minimal tween matching the el-piece scenario: 3 blocks, pivot (0.5, 0.5).
         start_rel: tuple[tuple[float, float], ...] = (
-            (0.0, 0.0), (1.0, 0.0), (0.0, 1.0)
+            (0.0, 0.0),
+            (1.0, 0.0),
+            (0.0, 1.0),
         )
-        end_rel: tuple[tuple[float, float], ...] = (
-            (0.0, 1.0), (0.0, 0.0), (1.0, 1.0)
-        )
+        end_rel: tuple[tuple[float, float], ...] = ((0.0, 1.0), (0.0, 0.0), (1.0, 1.0))
         pivot: tuple[float, float] = (0.5, 0.5)
         tween = _RotationTween(
             start_rel=start_rel,
@@ -273,7 +281,7 @@ class TestGfxGameRotationRender(unittest.TestCase):
             start_pos=(0.0, 0.0),
             end_pos=(0.0, 0.0),
             duration_ms=160.0,
-            elapsed_ms=80.0,      # half-way
+            elapsed_ms=80.0,  # half-way
             rotation_plane=(0, 1),
             rotation_steps=1,
             rigid_rotation=True,
@@ -291,17 +299,19 @@ class TestGfxGameRotationRender(unittest.TestCase):
         for bx, by in start_rel:
             rel_a = bx - pivot[0]
             rel_b = by - pivot[1]
-            expected.append((
-                rel_a * cos_t - rel_b * sin_t + pivot[0],
-                rel_a * sin_t + rel_b * cos_t + pivot[1],
-            ))
+            expected.append(
+                (
+                    rel_a * cos_t - rel_b * sin_t + pivot[0],
+                    rel_a * sin_t + rel_b * cos_t + pivot[1],
+                )
+            )
         for (cx, cy), (ex, ey) in zip(cells, expected):
             self.assertAlmostEqual(cx, ex, places=10)
             self.assertAlmostEqual(cy, ey, places=10)
 
     def test_cellwise_midframe_uses_upright_cell_box_path(self) -> None:
-        frame_bytes, screen_piece_rects, polygon_calls, rotozoom_calls = self._render_mid_rotation_frame(
-            "cellwise_sliding"
+        frame_bytes, screen_piece_rects, polygon_calls, rotozoom_calls = (
+            self._render_mid_rotation_frame("cellwise_sliding")
         )
         self.assertTrue(frame_bytes)
         self.assertFalse(screen_piece_rects)
@@ -310,8 +320,8 @@ class TestGfxGameRotationRender(unittest.TestCase):
         self.assertFalse(rotozoom_calls)
 
     def test_midframe_rigid_and_cellwise_frames_differ(self) -> None:
-        rigid_frame, _rigid_rects, _rigid_polygons, _rigid_rotozoom = self._render_mid_rotation_frame(
-            "rigid_piece_rotation"
+        rigid_frame, _rigid_rects, _rigid_polygons, _rigid_rotozoom = (
+            self._render_mid_rotation_frame("rigid_piece_rotation")
         )
         cellwise_frame, _cellwise_rects, _cellwise_polygons, _cellwise_rotozoom = (
             self._render_mid_rotation_frame("cellwise_sliding")
@@ -382,16 +392,28 @@ class TestGfxGameRotationRender(unittest.TestCase):
             )
 
         self.assertGreaterEqual(len(polygon_calls), 2)
-        fragment_min_x = [min(point[0] for point in polygon) for polygon in polygon_calls]
-        fragment_max_x = [max(point[0] for point in polygon) for polygon in polygon_calls]
+        fragment_min_x = [
+            min(point[0] for point in polygon) for polygon in polygon_calls
+        ]
+        fragment_max_x = [
+            max(point[0] for point in polygon) for polygon in polygon_calls
+        ]
         self.assertTrue(
-            any(max_x <= board_offset[0] + (gfx_game.CELL_SIZE * 1.2) for max_x in fragment_max_x)
+            any(
+                max_x <= board_offset[0] + (gfx_game.CELL_SIZE * 1.2)
+                for max_x in fragment_max_x
+            )
         )
         self.assertTrue(
-            any(min_x >= board_right_px - (gfx_game.CELL_SIZE * 1.2) for min_x in fragment_min_x)
+            any(
+                min_x >= board_right_px - (gfx_game.CELL_SIZE * 1.2)
+                for min_x in fragment_min_x
+            )
         )
 
-    def test_cellwise_wrap_seam_cell_renders_partial_fragments_on_both_sides(self) -> None:
+    def test_cellwise_wrap_seam_cell_renders_partial_fragments_on_both_sides(
+        self,
+    ) -> None:
         screen = pygame.Surface((1024, 840), pygame.SRCALPHA)
         loop = self._create_loop(
             "cellwise_sliding",
@@ -421,13 +443,23 @@ class TestGfxGameRotationRender(unittest.TestCase):
             )
 
         self.assertGreaterEqual(len(polygon_calls), 2)
-        fragment_min_x = [min(point[0] for point in polygon) for polygon in polygon_calls]
-        fragment_max_x = [max(point[0] for point in polygon) for polygon in polygon_calls]
+        fragment_min_x = [
+            min(point[0] for point in polygon) for polygon in polygon_calls
+        ]
+        fragment_max_x = [
+            max(point[0] for point in polygon) for polygon in polygon_calls
+        ]
         self.assertTrue(
-            any(max_x <= board_offset[0] + (gfx_game.CELL_SIZE * 1.2) for max_x in fragment_max_x)
+            any(
+                max_x <= board_offset[0] + (gfx_game.CELL_SIZE * 1.2)
+                for max_x in fragment_max_x
+            )
         )
         self.assertTrue(
-            any(min_x >= board_right_px - (gfx_game.CELL_SIZE * 1.2) for min_x in fragment_min_x)
+            any(
+                min_x >= board_right_px - (gfx_game.CELL_SIZE * 1.2)
+                for min_x in fragment_min_x
+            )
         )
 
     def test_saved_rotation_mode_reaches_live_2d_render_loop(self) -> None:
@@ -451,7 +483,9 @@ class TestGfxGameRotationRender(unittest.TestCase):
                 "_handle_loop_event_cycle",
                 return_value=(screen, display_settings, None, False),
             ),
-            patch.object(front2d_frame, "_run_game_frame_2d", side_effect=capture_frame),
+            patch.object(
+                front2d_frame, "_run_game_frame_2d", side_effect=capture_frame
+            ),
             patch.object(front2d_frame, "_configure_game_loop"),
             patch.object(
                 front2d_loop,
@@ -472,15 +506,14 @@ class TestGfxGameRotationRender(unittest.TestCase):
                 front2d_loop.pygame.time,
                 "Clock",
                 return_value=SimpleNamespace(tick=lambda _fps: 0),
-            ),
+            ),self.assertRaises(StopIteration)
         ):
-            with self.assertRaises(StopIteration):
-                front2d_loop.run_game_loop(
-                    screen=screen,
-                    cfg=cfg,
-                    fonts=self.fonts,
-                    display_settings=display_settings,
-                )
+            front2d_loop.run_game_loop(
+                screen=screen,
+                cfg=cfg,
+                fonts=self.fonts,
+                display_settings=display_settings,
+            )
 
         self.assertEqual(observed_modes, ["cellwise_sliding"])
 

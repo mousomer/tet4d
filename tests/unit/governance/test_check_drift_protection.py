@@ -32,7 +32,9 @@ def _manifest() -> dict[str, object]:
     }
 
 
-def test_drift_protection_passes_with_compliant_repo(monkeypatch, tmp_path: Path) -> None:
+def test_drift_protection_passes_with_compliant_repo(
+    monkeypatch, tmp_path: Path
+) -> None:
     _write(tmp_path / "cli/front.py", "def main():\n    return 1\n")
     _write(tmp_path / "src/a.py", "def a():\n    return 1\n")
     _write(
@@ -45,7 +47,10 @@ def test_drift_protection_passes_with_compliant_repo(monkeypatch, tmp_path: Path
                         "steps": [
                             {
                                 "id": "move",
-                                "ui": {"text": "Do this: move the piece", "hint": "Tip: use the prompt"}
+                                "ui": {
+                                    "text": "Do this: move the piece",
+                                    "hint": "Tip: use the prompt",
+                                },
                             }
                         ],
                     }
@@ -66,8 +71,13 @@ def test_drift_protection_passes_with_compliant_repo(monkeypatch, tmp_path: Path
     assert drift.evaluate_drift_protection() == []
 
 
-def test_drift_protection_reports_budget_and_tutorial_copy_drift(monkeypatch, tmp_path: Path) -> None:
-    _write(tmp_path / "cli/front.py", "def main():\n    value = 1\n    other = 2\n    third = 3\n    fourth = 4\n    return value + other + third + fourth\n")
+def test_drift_protection_reports_budget_and_tutorial_copy_drift(
+    monkeypatch, tmp_path: Path
+) -> None:
+    _write(
+        tmp_path / "cli/front.py",
+        "def main():\n    value = 1\n    other = 2\n    third = 3\n    fourth = 4\n    return value + other + third + fourth\n",
+    )
     _write(tmp_path / "src/a.py", "def a():\n    return 1\n")
     _write(
         tmp_path / "config/tutorial/lessons.json",
@@ -79,7 +89,10 @@ def test_drift_protection_reports_budget_and_tutorial_copy_drift(monkeypatch, tm
                         "steps": [
                             {
                                 "id": "move",
-                                "ui": {"text": "Goal: move the piece", "hint": "Action: use the prompt"}
+                                "ui": {
+                                    "text": "Goal: move the piece",
+                                    "hint": "Action: use the prompt",
+                                },
                             }
                         ],
                     }
@@ -101,6 +114,16 @@ def test_drift_protection_reports_budget_and_tutorial_copy_drift(monkeypatch, tm
 
     messages = [issue.message for issue in drift.evaluate_drift_protection()]
     assert any("exceeds drift budget" in message for message in messages)
-    assert any("forbidden prefix 'Goal:'" in message or 'forbidden prefix "Goal:"' in message for message in messages)
-    assert any("forbidden prefix 'Action:'" in message or 'forbidden prefix "Action:"' in message for message in messages)
-    assert any("missing required tutorial overlay token: Tip:" in message for message in messages)
+    assert any(
+        "forbidden prefix 'Goal:'" in message or 'forbidden prefix "Goal:"' in message
+        for message in messages
+    )
+    assert any(
+        "forbidden prefix 'Action:'" in message
+        or 'forbidden prefix "Action:"' in message
+        for message in messages
+    )
+    assert any(
+        "missing required tutorial overlay token: Tip:" in message
+        for message in messages
+    )

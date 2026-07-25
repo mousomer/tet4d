@@ -8,7 +8,6 @@ from tools.migration.export_gameplay_trace import build_gameplay_trace
 from tools.migration.trace_cases import GAMEPLAY_CASES_BY_ID, GAMEPLAY_TRACE_CASES
 from tools.migration.trace_schema import assert_trace_hygiene, stable_hash
 
-
 STAGE17_PLAIN_ND_CASES = {
     "gameplay_plain_3d_rotation_short": 3,
     "gameplay_plain_4d_rotation_short": 4,

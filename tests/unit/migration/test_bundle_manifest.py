@@ -12,7 +12,6 @@ from tools.migration.export_config_bundle import (
     validate_bundle_manifest,
 )
 
-
 _LOCAL_USER_PATH = "/" + "Users" + "/"
 _LOCAL_USER_PATH_WINDOWS = "\\" + "Users" + "\\"
 _FORBIDDEN_TEXT = re.compile(

@@ -13,12 +13,16 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for 4D render tests")
 
-from tet4d.ui.pygame import front4d_render, frontend_nd_setup, frontend_nd_state
-from tet4d.ui.pygame import front4d_game
 from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.ui.pygame import (
+    front4d_game,
+    front4d_render,
+    frontend_nd_setup,
+    frontend_nd_state,
+)
 from tet4d.ui.pygame.keybindings import CAMERA_KEYS_4D
 from tet4d.ui.pygame.projection3d import box_raw_corners, projection_cache_key
-from tet4d.engine.ui_logic.view_modes import GridMode
 
 
 def _key_for(bindings: dict[str, tuple[int, ...]], action: str) -> int:
@@ -79,7 +83,9 @@ class TestFront4DRender(unittest.TestCase):
 
     def test_tutorial_loop_context_uses_exact_4d_board_profile(self) -> None:
         cfg = GameConfigND(dims=(14, 26, 9, 2), gravity_axis=1, speed_level=1)
-        with patch.object(front4d_game, "tutorial_runtime_create_session", return_value=object()):
+        with patch.object(
+            front4d_game, "tutorial_runtime_create_session", return_value=object()
+        ):
             loop = front4d_game.LoopContext4D.create(
                 cfg,
                 tutorial_lesson_id="tutorial_4d_core",

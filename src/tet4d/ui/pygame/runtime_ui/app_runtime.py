@@ -11,12 +11,12 @@ from tet4d.engine.runtime.menu_settings_state import (
     load_app_settings_payload,
     save_display_settings,
 )
+from tet4d.engine.runtime.score_analyzer import set_score_analyzer_logging_enabled
 from tet4d.engine.runtime.settings_schema import (
     MIN_WINDOW_HEIGHT,
     MIN_WINDOW_WIDTH,
     normalize_windowed_size,
 )
-from tet4d.engine.runtime.score_analyzer import set_score_analyzer_logging_enabled
 from tet4d.ui.pygame.keybindings import (
     initialize_keybinding_files,
     load_active_profile_bindings,
@@ -198,5 +198,3 @@ def capture_windowed_display_settings_from_event(
 
     save_display_settings(windowed_size=normalized.windowed_size)
     return normalized
-
-

@@ -45,7 +45,7 @@ def _occupied_coords(
     board_cells: Mapping[Sequence[int], object] | Iterable[Sequence[int]],
 ) -> set[Coord]:
     if isinstance(board_cells, Mapping):
-        return {_normalize_coord(coord) for coord in board_cells.keys()}
+        return {_normalize_coord(coord) for coord in board_cells}
     return {_normalize_coord(coord) for coord in board_cells}
 
 

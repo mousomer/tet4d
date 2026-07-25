@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -10,7 +9,7 @@ import statistics
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -193,7 +192,7 @@ def _summarize_case(
         "p50_ms": round(p50_ms, 3),
         "p95_ms": round(p95_ms, 3),
         "max_ms": round(max(elapsed_samples), 3) if elapsed_samples else 0.0,
-        "avg_candidates": int(round(avg_candidates)),
+        "avg_candidates": round(avg_candidates),
         "threshold_ms": round(threshold_ms, 3),
         "threshold_ratio": round(ratio, 4),
     }
@@ -266,7 +265,7 @@ def main() -> int:
                 base_budget = default_planning_budget_ms(
                     case.ndim, profile, dims=case.dims
                 )
-                budget_ms = max(1, int(round(base_budget * args.budget_scale)))
+                budget_ms = max(1, round(base_budget * args.budget_scale))
                 rows.append(
                     _summarize_case(
                         case=case,
@@ -281,7 +280,7 @@ def main() -> int:
     rows.sort(key=lambda item: (float(item["threshold_ratio"]), float(item["p95_ms"])))
     top_n = max(1, args.show_top)
     payload = {
-        "generated_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_utc": datetime.now(UTC).isoformat(),
         "board_set": args.board_set,
         "runs": int(args.runs),
         "seed_start": int(args.seed_start),

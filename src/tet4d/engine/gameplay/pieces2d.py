@@ -3,15 +3,17 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import List, Tuple
 
 from tet4d.engine.gameplay.pieces_shared import scaled_span
 
-from ..core.piece_transform import normalize_blocks_2d, rotate_blocks_2d
-from ..core.piece_transform import rotate_point_2d  # noqa: F401
+from ..core.piece_transform import (
+    normalize_blocks_2d,
+    rotate_blocks_2d,
+    rotate_point_2d,  # noqa: F401
+)
 
 # Simple 2D relative coordinate
-RelCoord2D = Tuple[int, int]
+RelCoord2D = tuple[int, int]
 
 PIECE_SET_2D_CLASSIC = "classic"
 PIECE_SET_2D_RANDOM = "random_cells_2d"
@@ -28,11 +30,11 @@ DEFAULT_RANDOM_BAG_SIZE_2D = 7
 @dataclass(frozen=True)
 class PieceShape2D:
     name: str
-    blocks: List[RelCoord2D]  # local occupied-cell offsets from the piece origin
+    blocks: list[RelCoord2D]  # local occupied-cell offsets from the piece origin
     color_id: int  # just an int; front-end will map to colors
 
 
-def get_standard_tetrominoes() -> List[PieceShape2D]:
+def get_standard_tetrominoes() -> list[PieceShape2D]:
     """
     Classic 7 tetrominoes using local occupied-cell offsets.
     We'll allow some negative relative coords; the game logic allows pieces
@@ -79,7 +81,7 @@ def _neighbors_2d(
 
 def _random_connected_blocks_2d(
     cell_count: int, rng: random.Random
-) -> Tuple[RelCoord2D, ...]:
+) -> tuple[RelCoord2D, ...]:
     if cell_count < 1:
         raise ValueError("cell_count must be >= 1")
     cells = {(0, 0)}
@@ -105,12 +107,12 @@ def get_random_pieces_2d(
     rng: random.Random,
     cell_count: int = DEFAULT_RANDOM_CELL_COUNT_2D,
     bag_size: int = DEFAULT_RANDOM_BAG_SIZE_2D,
-) -> List[PieceShape2D]:
+) -> list[PieceShape2D]:
     bag_size = max(1, bag_size)
     cell_count = max(1, cell_count)
 
-    seen: set[Tuple[RelCoord2D, ...]] = set()
-    pieces: List[PieceShape2D] = []
+    seen: set[tuple[RelCoord2D, ...]] = set()
+    pieces: list[PieceShape2D] = []
     attempts = 0
     max_attempts = bag_size * 120
     while len(pieces) < bag_size and attempts < max_attempts:
@@ -139,7 +141,7 @@ def _rect_blocks_2d(width: int, height: int) -> list[RelCoord2D]:
 
 def get_debug_rectangles_2d(
     board_dims: tuple[int, int] | None = None,
-) -> List[PieceShape2D]:
+) -> list[PieceShape2D]:
     width, height = board_dims if board_dims is not None else (10, 20)
     width = max(1, int(width))
     height = max(1, int(height))
@@ -168,7 +170,7 @@ def get_piece_bag_2d(
     random_cell_count: int = DEFAULT_RANDOM_CELL_COUNT_2D,
     bag_size: int = DEFAULT_RANDOM_BAG_SIZE_2D,
     board_dims: tuple[int, int] | None = None,
-) -> List[PieceShape2D]:
+) -> list[PieceShape2D]:
     selected = normalize_piece_set_2d(piece_set)
     if selected == PIECE_SET_2D_CLASSIC:
         return get_standard_tetrominoes()
@@ -189,23 +191,23 @@ class ActivePiece2D:
     """
 
     shape: PieceShape2D
-    pos: Tuple[int, int]  # (x, y) of the piece origin on board
+    pos: tuple[int, int]  # (x, y) of the piece origin on board
     rotation: int = 0  # signed quarter-turn count in the canonical x/y plane
 
-    def cells(self) -> List[Tuple[int, int]]:
+    def cells(self) -> list[tuple[int, int]]:
         """
         List of absolute board cells currently occupied by this piece.
         """
         px, py = self.pos
-        result: List[Tuple[int, int]] = []
+        result: list[tuple[int, int]] = []
         for rx, ry in rotate_blocks_2d(self.shape.blocks, self.rotation):
             result.append((px + rx, py + ry))
         return result
 
-    def moved(self, dx: int, dy: int) -> "ActivePiece2D":
+    def moved(self, dx: int, dy: int) -> ActivePiece2D:
         return ActivePiece2D(
             self.shape, (self.pos[0] + dx, self.pos[1] + dy), self.rotation
         )
 
-    def rotated(self, delta_steps: int) -> "ActivePiece2D":
+    def rotated(self, delta_steps: int) -> ActivePiece2D:
         return ActivePiece2D(self.shape, self.pos, (self.rotation + delta_steps) % 4)

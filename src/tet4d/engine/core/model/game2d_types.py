@@ -19,7 +19,7 @@ class GameConfig2DLike(Protocol):
 
 
 class ActivePiece2DLike(Protocol):
-    def moved(self, dx: int, dy: int) -> "ActivePiece2DLike": ...
+    def moved(self, dx: int, dy: int) -> ActivePiece2DLike: ...
 
 
 class BoardCells2DLike(Protocol):
@@ -48,4 +48,4 @@ class GameState2DLike(Protocol):
     def spawn_new_piece(self) -> None: ...
 
 
-__all__ = ["Action", "GameConfig2DLike", "GameState2DLike", "ActivePiece2DLike"]
+__all__ = ["Action", "ActivePiece2DLike", "GameConfig2DLike", "GameState2DLike"]

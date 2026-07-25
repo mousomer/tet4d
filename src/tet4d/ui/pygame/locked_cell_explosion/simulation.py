@@ -20,24 +20,24 @@ from .model import (
     EXPLOSION_TRAIL_MAX_SAMPLES,
     EXPLOSION_TRAIL_MIN_MOVEMENT_SPACING,
     EXPLOSION_TRAIL_MIN_TIME_SPACING_MS,
+    EndgameModelEvent,
     ExplosionAudioEvent,
     ExplosionDiagnosticsEvent,
     ExplosionDiagnosticsSummary,
-    EndgameModelEvent,
     ExplosionParticle,
     ExplosionParticleDiagnostics,
     ExplosionSeedCell,
     ExplosionSimulationState,
-    ExplosionTrailSample,
     ExplosionTopologyInput,
+    ExplosionTrailSample,
     StandaloneExplosionConfig,
-    clamp_trace_retention_ms,
     clamp_collision_elasticity,
     clamp_mass_value,
-    normalize_mass_mode,
-    normalize_mass_range,
+    clamp_trace_retention_ms,
     normalize_boundary_response,
     normalize_diagnostics_mode,
+    normalize_mass_mode,
+    normalize_mass_range,
     normalize_particle_collisions,
     select_endgame_live_cells,
     speed_scale_for_preset,
@@ -462,7 +462,7 @@ def _finish_without_contact(
         position=particle.position_nd,
         velocity=particle.velocity_nd,
     )
-    return tuple()
+    return ()
 
 
 def _handle_seam_contact(
@@ -702,7 +702,7 @@ def _move_to_interior_boundary_position(
     side: str,
     board_dims: tuple[int, ...],
 ) -> tuple[float, ...]:
-    adjusted = list(float(value) for value in position)
+    adjusted = [float(value) for value in position]
     limit = _boundary_limit_for(axis, side, board_dims)
     adjusted[axis] = (
         limit + _INTERIOR_POSITION_EPSILON
@@ -763,7 +763,7 @@ def _step_particle(
     diagnostics: dict[str, object] | None = None,
 ) -> tuple[ExplosionAudioEvent, ...]:
     if not particle.active:
-        return tuple()
+        return ()
     _set_position_velocity_snapshot(
         diagnostics,
         position_key="before_position",
@@ -791,7 +791,7 @@ def _step_particle(
             position=particle.position_nd,
             velocity=particle.velocity_nd,
         )
-        return tuple()
+        return ()
     remaining = float(dt_seconds)
     events: list[ExplosionAudioEvent] = []
     force_end_trail_sample = False
@@ -890,7 +890,7 @@ def _resolve_collisions(
     model_events: list[EndgameModelEvent],
 ) -> tuple[ExplosionAudioEvent, ...]:
     if len(particles) < 2:
-        return tuple()
+        return ()
     restitution = clamp_collision_elasticity(collision_elasticity)
     events: list[ExplosionAudioEvent] = []
     ordered = sorted(particles, key=lambda particle: particle.particle_id)
@@ -1260,7 +1260,7 @@ def step_simulation(
     state.elapsed_ms += max(0.0, float(dt_ms))
     if dt_seconds <= 0.0:
         state.last_step_events = ()
-        return tuple()
+        return ()
     state.diagnostics_step_index += 1
     before_energy = float(state.total_kinetic_energy)
     before_weighted_sum = float(

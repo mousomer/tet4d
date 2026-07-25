@@ -17,10 +17,6 @@ from tet4d.engine.runtime.endgame_presets import (
     ENDGAME_PRESET_IDS,
 )
 from tet4d.engine.runtime.menu_config import explorer_default_board_dims
-from tet4d.engine.runtime.topology_cache import (
-    clear_topology_cache,
-    topology_cache_usage,
-)
 from tet4d.engine.runtime.menu_settings_state import (
     ANIMATION_DURATION_MS_STEP,
     DEFAULT_GAME_SEED,
@@ -43,22 +39,17 @@ from tet4d.engine.runtime.settings_schema import (
     clamp_lines_per_level,
     sanitize_text,
 )
+from tet4d.engine.runtime.topology_cache import (
+    clear_topology_cache,
+    topology_cache_usage,
+)
 from tet4d.engine.topology_explorer import movement_graph as movement_graph_module
-from tet4d.engine.topology_explorer.presets import explorer_preset_sections_for_dimension
+from tet4d.engine.topology_explorer.presets import (
+    explorer_preset_sections_for_dimension,
+)
 from tet4d.engine.topology_explorer.transport_resolver import (
     build_explorer_transport_resolver,
 )
-from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
-from tet4d.ui.pygame.menu.numeric_text_input import (
-    append_numeric_text,
-    parse_numeric_text,
-)
-from tet4d.ui.pygame.runtime_ui.app_runtime import (
-    DisplaySettings,
-    apply_display_mode,
-    normalize_display_settings,
-)
-from tet4d.ui.pygame.runtime_ui.audio import play_sfx, set_audio_settings
 from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
     coerce_explosion_defaults,
     default_explosion_defaults,
@@ -75,39 +66,50 @@ from tet4d.ui.pygame.locked_cell_explosion.model import (
     clamp_mass_value,
     clamp_trace_retention_ms,
 )
+from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
+from tet4d.ui.pygame.menu.numeric_text_input import (
+    append_numeric_text,
+    parse_numeric_text,
+)
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    DisplaySettings,
+    apply_display_mode,
+    normalize_display_settings,
+)
+from tet4d.ui.pygame.runtime_ui.audio import play_sfx, set_audio_settings
 
 from .settings_hub_model import (
     _AUTO_SPEEDUP_DEFAULT,
+    _ENDGAME_BOUNDARY_RESPONSE_DEFAULT,
+    _ENDGAME_PARTICLE_COLLISIONS_DEFAULT,
+    _ENDGAME_PRESET_DEFAULT,
+    _ENDGAME_RELIC_SPEED_DEFAULT,
+    _ENDGAME_SHATTER_SPEED_DEFAULT,
     _KICK_LEVEL_DEFAULT,
     _KICK_LEVEL_LABELS,
     _LINES_PER_LEVEL_DEFAULT,
     _NUMERIC_TEXT_MAX_LENGTH,
     _RANDOM_MODE_DEFAULT,
     _RANDOM_MODE_LABELS,
-    _ENDGAME_BOUNDARY_RESPONSE_DEFAULT,
-    _ENDGAME_PARTICLE_COLLISIONS_DEFAULT,
-    _ENDGAME_RELIC_SPEED_DEFAULT,
-    _ENDGAME_PRESET_DEFAULT,
-    _ENDGAME_SHATTER_SPEED_DEFAULT,
-    _ROTATION_ANIMATION_MODE_DEFAULT,
     _ROTATION_ANIMATION_DURATION_2D_DEFAULT,
     _ROTATION_ANIMATION_DURATION_ND_DEFAULT,
+    _ROTATION_ANIMATION_MODE_DEFAULT,
     _ROTATION_ANIMATION_MODE_VALUES,
     _TOPOLOGY_ADVANCED_DEFAULT,
     _TRANSLATION_ANIMATION_DURATION_DEFAULT,
-    _UnifiedSettingsState,
     _analytics_defaults,
     _audio_defaults,
     _clone_audio_settings,
     _clone_display_settings,
     _display_defaults,
-    _is_unified_text_mode,
     _explosion_defaults_for_mode,
     _explosion_mode_and_field,
+    _is_unified_text_mode,
     _mark_unified_dirty,
     _set_unified_status,
     _text_mode_numeric_value,
     _unified_row_key,
+    _UnifiedSettingsState,
 )
 
 
@@ -305,9 +307,7 @@ def _save_unified_settings(
         state.original_topology_advanced = int(state.topology_advanced)
         state.original_kick_level_index = int(state.kick_level_index)
         state.original_endgame_preset_id = str(state.endgame_preset_id)
-        state.original_endgame_boundary_response = str(
-            state.endgame_boundary_response
-        )
+        state.original_endgame_boundary_response = str(state.endgame_boundary_response)
         state.original_endgame_particle_collisions = str(
             state.endgame_particle_collisions
         )
@@ -661,7 +661,7 @@ def _explosion_cycle_options_for_field(
     }
     handler = handlers.get(field)
     if handler is None:
-        return tuple()
+        return ()
     return tuple(handler())
 
 
@@ -795,7 +795,7 @@ def _adjust_explosion_numeric_field(
     current_value = float(getattr(defaults, field))
     next_value = current_value + (float(delta_sign) * step)
     next_value = _clamped_explosion_numeric_value(field, next_value)
-    payload_value = next_value if field != "seed" else int(round(next_value))
+    payload_value = next_value if field != "seed" else round(next_value)
     updated = replace(defaults, **{field: payload_value})
     updated = coerce_explosion_defaults(serialize_explosion_defaults(updated))
     _set_explosion_defaults_for_mode(state, mode_key, updated)
@@ -813,7 +813,7 @@ def _clamped_explosion_numeric_value(field: str, value: float) -> float:
     if field == "endgame_live_cell_fraction":
         return max(0.0, min(1.0, float(value)))
     if field == "seed":
-        return float(max(0, min(9999, int(round(value)))))
+        return float(max(0, min(9999, round(value))))
     return float(value)
 
 

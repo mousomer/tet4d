@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import hashlib
 import json
-from pathlib import Path
 import shutil
+from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
 from tet4d.engine.runtime.project_config import (
@@ -64,9 +64,7 @@ def topology_cache_key(
         "dims": [int(value) for value in dims],
         "profile": _profile_signature_payload(profile),
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(
-        "utf-8"
-    )
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
@@ -80,7 +78,10 @@ def topology_cache_file_path(
     dims: tuple[int, ...],
     root_dir: Path | None = None,
 ) -> Path:
-    return topology_cache_dir_path(root_dir=root_dir) / f"{topology_cache_key(profile, dims=dims)}.json"
+    return (
+        topology_cache_dir_path(root_dir=root_dir)
+        / f"{topology_cache_key(profile, dims=dims)}.json"
+    )
 
 
 def read_topology_cache_entry(
@@ -213,9 +214,7 @@ def _deserialize_playability_analysis(
             errors=tuple(str(value) for value in payload.get("errors", ())),
             movement_summary=TopologyPlaygroundMovementSummary(
                 cell_count=movement_summary_payload.get("cell_count"),
-                directed_edge_count=movement_summary_payload.get(
-                    "directed_edge_count"
-                ),
+                directed_edge_count=movement_summary_payload.get("directed_edge_count"),
                 boundary_traversal_count=movement_summary_payload.get(
                     "boundary_traversal_count"
                 ),

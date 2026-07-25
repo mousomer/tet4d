@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import pygame
 
 from tet4d.ui.pygame.menu.menu_navigation_keys import normalize_menu_navigation_key
-
 
 ActionHandler = Callable[[], bool]
 RouteHandler = Callable[[str], bool]
@@ -68,7 +68,7 @@ class MenuPointerTarget:
 def _action_group_actions(item: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     raw_actions = item.get("actions", ())
     if not isinstance(raw_actions, tuple):
-        return tuple()
+        return ()
     return tuple(action for action in raw_actions if isinstance(action, dict))
 
 
@@ -165,7 +165,7 @@ class MenuRunner:
         self._initial_selected = dict(initial_selected or {})
         self._fps = max(1, int(fps))
 
-    def run(self) -> None:  # noqa: C901
+    def run(self) -> None:
         state = _RunnerState(
             stack=[self._start_menu_id],
             selected_by_menu={
@@ -177,9 +177,11 @@ class MenuRunner:
         clock = pygame.time.Clock()
         hovered_target: MenuPointerTarget | None = None
         pressed_target: MenuPointerTarget | None = None
-        pointer_targets: tuple[MenuPointerTarget, ...] = tuple()
+        pointer_targets: tuple[MenuPointerTarget, ...] = ()
 
-        def _current_menu_bundle() -> tuple[str, dict[str, object], tuple[dict[str, Any], ...]]:
+        def _current_menu_bundle() -> tuple[
+            str, dict[str, object], tuple[dict[str, Any], ...]
+        ]:
             current_menu_id = state.stack[-1]
             current_menu = self._menus[current_menu_id]
             items_obj = current_menu.get("items")
@@ -200,7 +202,7 @@ class MenuRunner:
             nonlocal hovered_target, pressed_target, pointer_targets
             hovered_target = None
             pressed_target = None
-            pointer_targets = tuple()
+            pointer_targets = ()
 
         def _pointer_target_at_pos(pos: tuple[int, int]) -> MenuPointerTarget | None:
             for target in reversed(pointer_targets):
@@ -221,7 +223,9 @@ class MenuRunner:
                 if selected != target.item_index:
                     state.selected_by_menu[menu_id] = target.item_index
                     changed = True
-            if target.kind == "action_group_action" and 0 <= target.item_index < len(items):
+            if target.kind == "action_group_action" and 0 <= target.item_index < len(
+                items
+            ):
                 item = items[target.item_index]
                 if str(item.get("type", "")).strip().lower() == "action_group":
                     state_key = _action_group_state_key(
@@ -294,7 +298,7 @@ class MenuRunner:
                 return False
             return _handle_root_escape()
 
-        def _activate_item(  # noqa: C901
+        def _activate_item(
             menu_id: str,
             item: dict[str, Any],
             *,
@@ -415,7 +419,8 @@ class MenuRunner:
                     )
                     clicked_target = (
                         hovered_target
-                        if hovered_target is not None and hovered_target == pressed_target
+                        if hovered_target is not None
+                        and hovered_target == pressed_target
                         else None
                     )
                     pressed_target = None

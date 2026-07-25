@@ -25,9 +25,7 @@ def _writable_root() -> Path:
         return PROJECT_ROOT
 
     if sys.platform == "win32":
-        base = Path(
-            os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming"
-        )
+        base = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
     elif sys.platform == "darwin":
         base = Path.home() / "Library" / "Application Support"
     else:

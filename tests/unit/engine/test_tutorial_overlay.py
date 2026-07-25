@@ -36,13 +36,17 @@ class TutorialOverlayKeyPromptTests(unittest.TestCase):
             _base_payload(action_id="mouse_orbit"),
             dimension=3,
         )
-        self.assertTrue(any("USE: RMB + Move Mouse" in text for text, *_ in orbit_lines))
+        self.assertTrue(
+            any("USE: RMB + Move Mouse" in text for text, *_ in orbit_lines)
+        )
 
         zoom_lines = tutorial_overlay._overlay_lines_running(
             _base_payload(action_id="mouse_zoom"),
             dimension=3,
         )
-        self.assertTrue(any("USE: Mouse Wheel Scroll" in text for text, *_ in zoom_lines))
+        self.assertTrue(
+            any("USE: Mouse Wheel Scroll" in text for text, *_ in zoom_lines)
+        )
 
     def test_overlay_does_not_render_next_step_text(self) -> None:
         payload = _base_payload(action_id="move_x_neg")

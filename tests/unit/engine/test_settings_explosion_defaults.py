@@ -4,8 +4,8 @@ import json
 import shutil
 import unittest
 from pathlib import Path
-from uuid import uuid4
 from unittest.mock import patch
+from uuid import uuid4
 
 import pygame
 
@@ -31,7 +31,9 @@ class _TempMenuSettingsRoot:
         self.state_dir = self.root / "state"
         self.patches = [
             patch.object(menu_settings_state, "STATE_DIR", self.state_dir),
-            patch.object(menu_settings_state, "STATE_FILE", self.state_dir / "menu_settings.json"),
+            patch.object(
+                menu_settings_state, "STATE_FILE", self.state_dir / "menu_settings.json"
+            ),
         ]
 
     def start(self) -> None:
@@ -47,9 +49,7 @@ class _TempMenuSettingsRoot:
 class TestExplosionDefaultsSettingsCoverage(unittest.TestCase):
     @staticmethod
     def _defaults_payload() -> dict[str, object]:
-        path = (
-            Path(__file__).resolve().parents[3] / "config" / "menu" / "defaults.json"
-        )
+        path = Path(__file__).resolve().parents[3] / "config" / "menu" / "defaults.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
     def test_explosion_defaults_settings_cover_all_persisted_fields(self) -> None:
@@ -186,7 +186,9 @@ class TestExplosionDefaultsSettingsPersistence(unittest.TestCase):
             base_mass=1.15,
             random_mass_min=float(state.explosion_defaults_2d.random_mass_min),
             random_mass_max=float(state.explosion_defaults_2d.random_mass_max),
-            collision_elasticity=float(state.explosion_defaults_2d.collision_elasticity),
+            collision_elasticity=float(
+                state.explosion_defaults_2d.collision_elasticity
+            ),
             diagnostics_mode=str(state.explosion_defaults_2d.diagnostics_mode),
             grid_mode=str(state.explosion_defaults_2d.grid_mode),
             shadow_mode=str(state.explosion_defaults_2d.shadow_mode),
@@ -201,12 +203,30 @@ class TestExplosionDefaultsSettingsPersistence(unittest.TestCase):
 
         screen = pygame.Surface((16, 16), pygame.SRCALPHA)
         with (
-            patch.object(settings_hub_actions, "apply_display_mode", side_effect=lambda *_a, **_k: screen),
-            patch.object(settings_hub_actions, "save_audio_settings", return_value=(True, "ok")),
-            patch.object(settings_hub_actions, "save_display_settings", return_value=(True, "ok")),
-            patch.object(settings_hub_actions, "save_analytics_settings", return_value=(True, "ok")),
-            patch.object(settings_hub_actions, "save_global_game_seed", return_value=(True, "ok")),
-            patch.object(settings_hub_actions, "save_shared_gameplay_settings", return_value=(True, "ok")),
+            patch.object(
+                settings_hub_actions,
+                "apply_display_mode",
+                side_effect=lambda *_a, **_k: screen,
+            ),
+            patch.object(
+                settings_hub_actions, "save_audio_settings", return_value=(True, "ok")
+            ),
+            patch.object(
+                settings_hub_actions, "save_display_settings", return_value=(True, "ok")
+            ),
+            patch.object(
+                settings_hub_actions,
+                "save_analytics_settings",
+                return_value=(True, "ok"),
+            ),
+            patch.object(
+                settings_hub_actions, "save_global_game_seed", return_value=(True, "ok")
+            ),
+            patch.object(
+                settings_hub_actions,
+                "save_shared_gameplay_settings",
+                return_value=(True, "ok"),
+            ),
             patch.object(settings_hub_actions, "play_sfx", return_value=None),
         ):
             settings_hub_actions._save_unified_settings(screen, state)
@@ -220,4 +240,3 @@ class TestExplosionDefaultsSettingsPersistence(unittest.TestCase):
         self.assertAlmostEqual(persisted.endgame_live_cell_fraction, 0.5, places=6)
         self.assertFalse(persisted.sound_enabled)
         self.assertEqual(persisted.seed, 4242)
-

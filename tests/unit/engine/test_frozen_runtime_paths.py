@@ -25,10 +25,14 @@ class TestFrozenRuntimePathContracts(unittest.TestCase):
             writable_root = Path(tmp) / "AppData" / "Roaming" / "tet4d"
             with (
                 mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": ""}),
-                mock.patch.object(project_config_module, "WRITABLE_ROOT", writable_root),
+                mock.patch.object(
+                    project_config_module, "WRITABLE_ROOT", writable_root
+                ),
             ):
                 expected_root = writable_root.resolve()
-                self.assertEqual(keybindings_dir_path(), (PROJECT_ROOT / "keybindings").resolve())
+                self.assertEqual(
+                    keybindings_dir_path(), (PROJECT_ROOT / "keybindings").resolve()
+                )
                 self.assertEqual(
                     keybindings_defaults_path(),
                     (PROJECT_ROOT / "config/keybindings/defaults.json").resolve(),
@@ -52,7 +56,9 @@ class TestFrozenRuntimePathContracts(unittest.TestCase):
             writable_root = Path(tmp) / "AppData" / "Roaming" / "tet4d"
             with (
                 mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": ""}),
-                mock.patch.object(project_config_module, "WRITABLE_ROOT", writable_root),
+                mock.patch.object(
+                    project_config_module, "WRITABLE_ROOT", writable_root
+                ),
             ):
                 bundled_keybindings = keybindings_dir_path()
                 writable_profiles = keybindings_profiles_dir_path()

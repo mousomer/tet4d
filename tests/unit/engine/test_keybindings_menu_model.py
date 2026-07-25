@@ -9,9 +9,9 @@ except ModuleNotFoundError as exc:  # pragma: no cover - runtime environment gua
         "pygame-ce is required for keybinding menu model tests"
     ) from exc
 
-from tet4d.ui.pygame.menu.keybindings_menu_model import SECTION_MENU, rows_for_scope
-from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
 from tet4d.engine.runtime import menu_config
+from tet4d.ui.pygame.keybindings import runtime_binding_groups_for_dimension
+from tet4d.ui.pygame.menu.keybindings_menu_model import SECTION_MENU, rows_for_scope
 
 
 def _header_titles(scope: str) -> list[str]:

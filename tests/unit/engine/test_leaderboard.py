@@ -5,13 +5,13 @@ from types import SimpleNamespace
 
 import pygame
 
-from tet4d.ui.pygame.launch import leaderboard_menu
 from tet4d.engine.runtime.leaderboard import (
     leaderboard_entry_would_enter,
     leaderboard_payload,
     leaderboard_top_entries,
     record_leaderboard_entry,
 )
+from tet4d.ui.pygame.launch import leaderboard_menu
 
 
 def _record(path: Path, *, score: int, lines: int, dimension: int = 2) -> None:
@@ -35,7 +35,7 @@ def _record(path: Path, *, score: int, lines: int, dimension: int = 2) -> None:
 
 
 def _leaderboard_path(name: str) -> Path:
-    path = Path.cwd() / 'state' / 'analytics' / 'test_outputs' / f'{name}.json'
+    path = Path.cwd() / "state" / "analytics" / "test_outputs" / f"{name}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         path.unlink()
@@ -43,7 +43,7 @@ def _leaderboard_path(name: str) -> Path:
 
 
 def test_leaderboard_records_and_sorts_scores() -> None:
-    path = _leaderboard_path('leaderboard_sort')
+    path = _leaderboard_path("leaderboard_sort")
     _record(path, score=100, lines=5)
     _record(path, score=220, lines=2)
     _record(path, score=160, lines=8)
@@ -55,14 +55,18 @@ def test_leaderboard_records_and_sorts_scores() -> None:
 
 
 def test_leaderboard_keeps_top_ten_per_dimension() -> None:
-    path = _leaderboard_path('leaderboard_per_dimension_limit')
+    path = _leaderboard_path("leaderboard_per_dimension_limit")
     for offset in range(12):
         _record(path, score=300 - offset, lines=offset, dimension=2)
         _record(path, score=500 - offset, lines=offset, dimension=3)
 
     entries = leaderboard_top_entries(path=path, limit=40)
-    dim2_scores = [int(entry["score"]) for entry in entries if int(entry["dimension"]) == 2]
-    dim3_scores = [int(entry["score"]) for entry in entries if int(entry["dimension"]) == 3]
+    dim2_scores = [
+        int(entry["score"]) for entry in entries if int(entry["dimension"]) == 2
+    ]
+    dim3_scores = [
+        int(entry["score"]) for entry in entries if int(entry["dimension"]) == 3
+    ]
 
     assert len(dim2_scores) == 10
     assert len(dim3_scores) == 10
@@ -71,7 +75,7 @@ def test_leaderboard_keeps_top_ten_per_dimension() -> None:
 
 
 def test_leaderboard_clamps_invalid_values() -> None:
-    path = _leaderboard_path('leaderboard_clamps')
+    path = _leaderboard_path("leaderboard_clamps")
     record_leaderboard_entry(
         path=path,
         dimension=9,
@@ -103,7 +107,7 @@ def test_leaderboard_clamps_invalid_values() -> None:
 
 
 def test_leaderboard_keeps_restart_outcome() -> None:
-    path = _leaderboard_path('leaderboard_restart')
+    path = _leaderboard_path("leaderboard_restart")
     record_leaderboard_entry(
         path=path,
         dimension=3,
@@ -128,7 +132,7 @@ def test_leaderboard_keeps_restart_outcome() -> None:
 
 
 def test_leaderboard_entry_would_enter_reports_rank() -> None:
-    path = _leaderboard_path('leaderboard_rank')
+    path = _leaderboard_path("leaderboard_rank")
     _record(path, score=200, lines=3)
     _record(path, score=120, lines=4)
 
@@ -154,7 +158,7 @@ def test_leaderboard_entry_would_enter_reports_rank() -> None:
 
 
 def test_leaderboard_rank_ignores_other_dimensions() -> None:
-    path = _leaderboard_path('leaderboard_rank_per_dimension')
+    path = _leaderboard_path("leaderboard_rank_per_dimension")
     for offset in range(10):
         _record(path, score=600 - offset, lines=offset, dimension=3)
     _record(path, score=190, lines=3, dimension=2)
@@ -182,8 +186,8 @@ def test_leaderboard_rank_ignores_other_dimensions() -> None:
 
 
 def test_leaderboard_payload_falls_back_on_invalid_json() -> None:
-    path = _leaderboard_path('leaderboard_invalid_json')
-    path.write_text('{invalid', encoding='utf-8')
+    path = _leaderboard_path("leaderboard_invalid_json")
+    path.write_text("{invalid", encoding="utf-8")
     payload = leaderboard_payload(path=path)
     assert int(payload["schema_version"]) >= 1
     assert isinstance(payload["updated_at_utc"], str)
@@ -352,7 +356,9 @@ def test_maybe_record_passes_modal_background_and_summary(monkeypatch) -> None:
 
     monkeypatch.setattr(leaderboard_menu, "leaderboard_entry_would_enter", _qualifies)
     monkeypatch.setattr(leaderboard_menu, "prompt_leaderboard_player_name", _prompt)
-    monkeypatch.setattr(leaderboard_menu, "record_leaderboard_entry", lambda **_kwargs: None)
+    monkeypatch.setattr(
+        leaderboard_menu, "record_leaderboard_entry", lambda **_kwargs: None
+    )
     monkeypatch.setattr(
         leaderboard_menu,
         "get_analytics_settings",

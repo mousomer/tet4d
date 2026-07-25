@@ -4,7 +4,6 @@ import time
 from collections.abc import Callable, Sequence
 from typing import TypeVar
 
-
 CandidateT = TypeVar("CandidateT")
 
 

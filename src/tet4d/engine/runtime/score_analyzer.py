@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from copy import deepcopy
 import uuid
-from datetime import datetime, timezone
+from copy import deepcopy
+from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -14,21 +14,29 @@ from .project_config import (
     score_events_file_default_relative,
     score_summary_file_default_relative,
 )
-from .score_analyzer_features import (
-    board_health_features,
-    placement_features,
-    weighted_score,
-)
 from .score_analysis.store import (
     append_json_line as _append_json_line,
+)
+from .score_analysis.store import (
     atomic_write_summary_json as _atomic_write_summary_json,
+)
+from .score_analysis.store import (
     default_config as _default_config_from_store,
+)
+from .score_analysis.store import (
     load_json_object_or_default as _load_json_object_or_default,
+)
+from .score_analysis.store import (
     load_summary as _load_summary_from_store,
 )
 from .score_analysis.validate import (
     validate_score_analysis_event,
     validate_score_analysis_summary,
+)
+from .score_analyzer_features import (
+    board_health_features,
+    placement_features,
+    weighted_score,
 )
 
 _CONFIG_ROOT = PROJECT_ROOT
@@ -189,7 +197,7 @@ def analyze_lock_event(
         else {},
     )
 
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     return {
         "schema_version": int(cfg.get("version", 1)),
         "session_id": session_id,
@@ -217,7 +225,7 @@ def analyze_lock_event(
 def _new_summary() -> dict[str, object]:
     return {
         "schema_version": int(_score_analyzer_config().get("version", 1)),
-        "updated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "updated_at_utc": datetime.now(UTC).isoformat(),
         "totals": {
             "events": 0,
             "cleared_total": 0,
@@ -319,7 +327,7 @@ def _update_summary(
     summary["schema_version"] = int(
         event.get("schema_version", summary.get("schema_version", 1))
     )
-    summary["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
+    summary["updated_at_utc"] = datetime.now(UTC).isoformat()
     return summary
 
 

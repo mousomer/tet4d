@@ -14,7 +14,10 @@ from tet4d.engine.gameplay.topology_designer import (
     topology_profile_state_payload,
 )
 from tet4d.engine.runtime.project_config import topology_profiles_file_default_path
-from tet4d.engine.runtime.settings_schema import read_json_object_or_empty, write_json_object
+from tet4d.engine.runtime.settings_schema import (
+    read_json_object_or_empty,
+    write_json_object,
+)
 
 _TOPOLOGY_DIMENSIONS = (2, 3, 4)
 _DEFAULT_GRAVITY_AXIS = 1

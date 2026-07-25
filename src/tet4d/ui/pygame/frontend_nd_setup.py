@@ -1,36 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Optional, Tuple
 
 import pygame
 
-from tet4d.ui.pygame.render.font_profiles import (
-    GfxFonts,
-    init_fonts as init_fonts_for_profile,
-)
-from tet4d.engine.gameplay.game_nd import GameConfigND
-from tet4d.engine.runtime.api import active_key_profile_runtime
-from tet4d.engine.runtime.menu_field_spec import FieldSpec
-from tet4d.engine.runtime.menu_config import (
-    default_settings_payload,
-    kick_level_name_for_index,
-    random_mode_id_from_index,
-    setup_fields_for_settings,
-    setup_hints_for_dimension,
-    ui_copy_section,
-)
-from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import menu_binding_status_color
-from tet4d.ui.pygame.menu.setup_menu_runner import run_setup_menu_loop
-from tet4d.engine.gameplay.pieces_nd import (
-    piece_set_label,
-    piece_set_options_for_dimension,
-)
-from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_nd
 from tet4d.ai.playbot import run_dry_run_nd
 from tet4d.ai.playbot.types import (
     bot_planner_algorithm_from_index,
     bot_planner_profile_from_index,
+)
+from tet4d.engine.gameplay.exploration_mode import minimal_exploration_dims_nd
+from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.gameplay.pieces_nd import (
+    piece_set_label,
+    piece_set_options_for_dimension,
 )
 from tet4d.engine.gameplay.speed_curve import gravity_interval_ms
 from tet4d.engine.gameplay.topology import topology_mode_from_index
@@ -40,13 +23,31 @@ from tet4d.engine.gameplay.topology_designer import (
     export_resolved_topology_profile,
     resolve_topology_designer_selection,
 )
+from tet4d.engine.runtime.api import active_key_profile_runtime
+from tet4d.engine.runtime.menu_config import (
+    default_settings_payload,
+    kick_level_name_for_index,
+    random_mode_id_from_index,
+    setup_fields_for_settings,
+    setup_hints_for_dimension,
+    ui_copy_section,
+)
+from tet4d.engine.runtime.menu_field_spec import FieldSpec
 from tet4d.engine.runtime.topology_explorer_runtime import (
     resolve_direct_explorer_launch_profile,
 )
+from tet4d.engine.runtime.topology_profile_store import load_topology_profile
 from tet4d.engine.topology_explorer.transport_resolver import (
     build_explorer_transport_resolver,
 )
-from tet4d.engine.runtime.topology_profile_store import load_topology_profile
+from tet4d.ui.pygame.menu.menu_keybinding_shortcuts import menu_binding_status_color
+from tet4d.ui.pygame.menu.setup_menu_runner import run_setup_menu_loop
+from tet4d.ui.pygame.render.font_profiles import (
+    GfxFonts,
+)
+from tet4d.ui.pygame.render.font_profiles import (
+    init_fonts as init_fonts_for_profile,
+)
 from tet4d.ui.pygame.ui_utils import (
     compute_slider_row_layout,
     draw_corner_chip,
@@ -60,7 +61,6 @@ from tet4d.ui.pygame.ui_utils import (
     standard_menu_panel_rect,
     wrapped_label_value_layout,
 )
-
 
 TEXT_COLOR = (230, 230, 230)
 HIGHLIGHT_COLOR = (255, 215, 0)
@@ -76,8 +76,8 @@ def init_fonts() -> GfxFonts:
 
 def draw_gradient_background(
     surface: pygame.Surface,
-    top_color: Tuple[int, int, int],
-    bottom_color: Tuple[int, int, int],
+    top_color: tuple[int, int, int],
+    bottom_color: tuple[int, int, int],
 ) -> None:
     draw_tron_menu_background(surface, top_color=top_color, bottom_color=bottom_color)
 
@@ -260,7 +260,9 @@ def _draw_setup_menu_row(
             + slider_layout.value_width
         )
     if selected:
-        highlight_rect = pygame.Rect(option_x - 8, line_y - 4, option_w + 16, row_height)
+        highlight_rect = pygame.Rect(
+            option_x - 8, line_y - 4, option_w + 16, row_height
+        )
         highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
         pygame.draw.rect(
             highlight_surf,
@@ -305,7 +307,9 @@ def _draw_setup_menu_row(
                 min(
                     1.0,
                     (float(value) - float(field.min_value or 0))
-                    / max(1.0, float(field.max_value or 0) - float(field.min_value or 0)),
+                    / max(
+                        1.0, float(field.max_value or 0) - float(field.min_value or 0)
+                    ),
                 ),
             ),
             flash_strength=max(0.0, min(1.0, flash_frames / 12.0)) if selected else 0.0,
@@ -342,7 +346,11 @@ def draw_menu(
 
     panel_w = min(
         width - 24,
-        max(360, int(width * 0.65), min(menu_slider_row_min_total_width() + 76, width - 24)),
+        max(
+            360,
+            int(width * 0.65),
+            min(menu_slider_row_min_total_width() + 76, width - 24),
+        ),
     )
     hint_line_h = fonts.hint_font.get_height() + 4
     bottom_lines = 4 + (1 if state.bindings_status else 0)
@@ -453,7 +461,7 @@ def _export_topology_profile(state: MenuState, dimension: int) -> None:
 
 def run_menu(
     screen: pygame.Surface, fonts: GfxFonts, dimension: int
-) -> Optional[GameSettingsND]:
+) -> GameSettingsND | None:
     state = MenuState()
 
     def _draw_frame(

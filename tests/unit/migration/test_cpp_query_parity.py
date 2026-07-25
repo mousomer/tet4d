@@ -17,11 +17,15 @@ from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.topology_explorer import MoveStep, build_explorer_transport_resolver
-from tet4d.engine.topology_explorer.presets import axis_wrap_profile, swapped_xz_profile_3d
-
+from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
+    swapped_xz_profile_3d,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-QUERY_TEST_BIN = REPO_ROOT / "native" / "tet4d_core" / "build" / "tests" / "query_core_tests"
+QUERY_TEST_BIN = (
+    REPO_ROOT / "native" / "tet4d_core" / "build" / "tests" / "query_core_tests"
+)
 
 
 def _native_query_payload() -> dict[str, object]:
@@ -163,6 +167,9 @@ def test_cpp_legality_queries_match_python_oracle() -> None:
 
 def test_cpp_topology_queries_match_python_resolver() -> None:
     native = _native_query_payload()
-    actual = {case["name"]: {key: value for key, value in case.items() if key != "name"} for case in native["topology_cases"]}
+    actual = {
+        case["name"]: {key: value for key, value in case.items() if key != "name"}
+        for case in native["topology_cases"]
+    }
 
     assert actual == _topology_cases()

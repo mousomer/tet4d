@@ -178,6 +178,7 @@ from typing import Iterable, Iterator, Literal, Optional
 
 SaveMode = Literal["write_through", "write_back"]
 
+
 @dataclass(frozen=True)
 class FetchConfig:
     max_memory_bytes: int = 256 * 1024 * 1024
@@ -185,6 +186,7 @@ class FetchConfig:
     policy_profile: str = "balanced"
     enable_prefetch: bool = True
     enable_adaptive_optimizer: bool = True
+
 
 @dataclass(frozen=True)
 class FetchStats:
@@ -195,6 +197,7 @@ class FetchStats:
     dirty_entries: int
     evictions: int
     profile: str
+
 
 class FetchManager:
     def __init__(self, config: FetchConfig) -> None: ...
@@ -208,7 +211,9 @@ class FetchManager:
     def set_ttl(self, path: Path, seconds: int) -> None: ...
     def touch(self, path: Path) -> None: ...
 
-    def save(self, path: Path, data: bytes, *, mode: SaveMode = "write_through") -> None: ...
+    def save(
+        self, path: Path, data: bytes, *, mode: SaveMode = "write_through"
+    ) -> None: ...
     def flush(self, path: Optional[Path] = None) -> int: ...
     def checkpoint(self) -> int: ...
 

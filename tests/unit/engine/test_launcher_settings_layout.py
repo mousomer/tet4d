@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 import pygame
@@ -245,7 +245,9 @@ class TestLauncherSettingsLayout(unittest.TestCase):
 
         board_defaults_keys = {
             menu_item_id(item)
-            for item in settings_hub_model.settings_page_items("settings_board_setup_defaults")
+            for item in settings_hub_model.settings_page_items(
+                "settings_board_setup_defaults"
+            )
             if item["type"] != "section"
         }
         self.assertTrue(
@@ -264,7 +266,9 @@ class TestLauncherSettingsLayout(unittest.TestCase):
 
         endgame_keys = {
             menu_item_id(item)
-            for item in settings_hub_model.settings_page_items("settings_endgame_gameplay")
+            for item in settings_hub_model.settings_page_items(
+                "settings_endgame_gameplay"
+            )
             if item["type"] != "section"
         }
         self.assertTrue(
@@ -291,7 +295,9 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertFalse(metrics.shows_scrollbar)
         self.assertEqual(metrics.reserved_width, 0)
 
-    def test_overflow_metrics_show_scrollbar_when_content_exceeds_viewport(self) -> None:
+    def test_overflow_metrics_show_scrollbar_when_content_exceeds_viewport(
+        self,
+    ) -> None:
         metrics = compute_vertical_scroll_metrics(
             viewport_rect=pygame.Rect(10, 10, 320, 180),
             content_height=520,
@@ -439,7 +445,9 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         draw_panel.assert_called_once()
         draw_chip.assert_called_once()
 
-    def test_launcher_menu_falls_back_when_action_group_hint_copy_is_missing(self) -> None:
+    def test_launcher_menu_falls_back_when_action_group_hint_copy_is_missing(
+        self,
+    ) -> None:
         fonts = self._fonts()
         screen = pygame.Surface((960, 640), pygame.SRCALPHA)
         items = (
@@ -499,11 +507,15 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertTrue(state.text_mode_buffer)
 
         screen = pygame.Surface((640, 480))
-        out = launcher_settings._dispatch_unified_text_mode_key(screen, state, pygame.K_ESCAPE)
+        out = launcher_settings._dispatch_unified_text_mode_key(
+            screen, state, pygame.K_ESCAPE
+        )
         self.assertIs(out, screen)
         self.assertEqual(state.text_mode_row_key, "")
 
-    def test_settings_hub_backspace_in_numeric_text_mode_edits_buffer_not_navigation(self) -> None:
+    def test_settings_hub_backspace_in_numeric_text_mode_edits_buffer_not_navigation(
+        self,
+    ) -> None:
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
@@ -517,13 +529,17 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertGreater(len(original_buffer), 1)
 
         screen = pygame.Surface((640, 480))
-        out = launcher_settings._dispatch_unified_key(screen, self._fonts(), state, pygame.K_BACKSPACE)
+        out = launcher_settings._dispatch_unified_key(
+            screen, self._fonts(), state, pygame.K_BACKSPACE
+        )
         self.assertIs(out, screen)
         self.assertEqual(len(state.page_stack), original_stack_depth)
         self.assertTrue(state.running)
         self.assertEqual(state.text_mode_buffer, original_buffer[:-1])
 
-    def test_settings_hub_q_does_not_exit_application_loop_even_in_numeric_text_mode(self) -> None:
+    def test_settings_hub_q_does_not_exit_application_loop_even_in_numeric_text_mode(
+        self,
+    ) -> None:
         state = settings_hub_model.build_unified_settings_state(
             audio_settings=AudioSettings(),
             display_settings=DisplaySettings(),
@@ -533,7 +549,9 @@ class TestLauncherSettingsLayout(unittest.TestCase):
         self.assertTrue(state.text_mode_row_key)
 
         screen = pygame.Surface((640, 480))
-        out = launcher_settings._dispatch_unified_key(screen, self._fonts(), state, pygame.K_q)
+        out = launcher_settings._dispatch_unified_key(
+            screen, self._fonts(), state, pygame.K_q
+        )
         self.assertIs(out, screen)
         self.assertTrue(state.running)
         self.assertTrue(state.keep_running)

@@ -14,7 +14,9 @@ from tet4d.ui.pygame.topology_lab.common import (
 
 def _board_rect(area: pygame.Rect, dims: tuple[int, ...]) -> tuple[pygame.Rect, int]:
     cols, rows = dims[0], dims[1]
-    cell = max(16, min((area.width - 90) // max(1, cols), (area.height - 90) // max(1, rows)))
+    cell = max(
+        16, min((area.width - 90) // max(1, cols), (area.height - 90) // max(1, rows))
+    )
     board = pygame.Rect(0, 0, cell * cols, cell * rows)
     board.center = (area.centerx, area.centery + 12)
     return board, cell
@@ -29,7 +31,9 @@ def _edge_rects(board: pygame.Rect, edge: int) -> dict[str, pygame.Rect]:
     }
 
 
-def _cell_rect(board: pygame.Rect, cell_size: int, coord: tuple[int, int]) -> pygame.Rect:
+def _cell_rect(
+    board: pygame.Rect, cell_size: int, coord: tuple[int, int]
+) -> pygame.Rect:
     return pygame.Rect(
         board.x + coord[0] * cell_size,
         board.y + coord[1] * cell_size,
@@ -39,13 +43,18 @@ def _cell_rect(board: pygame.Rect, cell_size: int, coord: tuple[int, int]) -> py
 
 
 def _draw_grid(
-    surface: pygame.Surface, board: pygame.Rect, cell_size: int, preview_dims: tuple[int, ...]
+    surface: pygame.Surface,
+    board: pygame.Rect,
+    cell_size: int,
+    preview_dims: tuple[int, ...],
 ) -> None:
     pygame.draw.rect(surface, (18, 22, 38), board)
     pygame.draw.rect(surface, (92, 102, 138), board, 2)
     for x in range(preview_dims[0] + 1):
         xpos = board.x + x * cell_size
-        pygame.draw.line(surface, (42, 50, 74), (xpos, board.y), (xpos, board.bottom), 1)
+        pygame.draw.line(
+            surface, (42, 50, 74), (xpos, board.y), (xpos, board.bottom), 1
+        )
     for y in range(preview_dims[1] + 1):
         ypos = board.y + y * cell_size
         pygame.draw.line(surface, (42, 50, 74), (board.x, ypos), (board.right, ypos), 1)
@@ -98,7 +107,7 @@ def draw_probe_path_glyphs(
     cell_size: int,
 ) -> None:
     if len(centers) >= 2:
-        trace_width = max(3, int(round(max(12, cell_size) * 0.1)))
+        trace_width = max(3, round(max(12, cell_size) * 0.1))
         pygame.draw.lines(surface, (88, 170, 214), False, centers, trace_width)
 
 
@@ -179,8 +188,8 @@ def _particle_center(
     if len(coord) < 2:
         return None
     return (
-        int(round(board.x + ((float(coord[0]) + 0.5) * cell_size))),
-        int(round(board.y + ((float(coord[1]) + 0.5) * cell_size))),
+        round(board.x + ((float(coord[0]) + 0.5) * cell_size)),
+        round(board.y + ((float(coord[1]) + 0.5) * cell_size)),
     )
 
 
@@ -192,7 +201,7 @@ def _particle_rect(
     center = _particle_center(board, cell_size, coord)
     if center is None:
         return None
-    size = max(6, int(round(cell_size * 0.58)))
+    size = max(6, round(cell_size * 0.58))
     rect = pygame.Rect(0, 0, size, size)
     rect.center = center
     return rect
@@ -245,11 +254,11 @@ def _draw_explosion_traces(
                         color[0],
                         color[1],
                         color[2],
-                        max(0, min(255, int(round(112 * alpha)))),
+                        max(0, min(255, round(112 * alpha))),
                     ),
                     previous,
                     center,
-                    max(1, int(round((cell_size * 0.08) * max(0.35, width)))),
+                    max(1, round((cell_size * 0.08) * max(0.35, width))),
                 )
             previous = center
     surface.blit(overlay, (0, 0))
@@ -296,19 +305,35 @@ def _draw_boundary_edges(
         pygame.draw.rect(surface, fill, rect, border_radius=8)
         pygame.draw.rect(surface, (18, 20, 26), rect, 2, border_radius=8)
         if boundary == source_boundary:
-            pygame.draw.rect(surface, (255, 226, 120), rect.inflate(6, 6), 2, border_radius=10)
+            pygame.draw.rect(
+                surface, (255, 226, 120), rect.inflate(6, 6), 2, border_radius=10
+            )
         if boundary == target_boundary:
-            pygame.draw.rect(surface, (112, 240, 255), rect.inflate(12, 12), 2, border_radius=12)
+            pygame.draw.rect(
+                surface, (112, 240, 255), rect.inflate(12, 12), 2, border_radius=12
+            )
         if hovered_boundary_index == index:
-            pygame.draw.rect(surface, (244, 244, 244), rect.inflate(2, 2), 1, border_radius=9)
+            pygame.draw.rect(
+                surface, (244, 244, 244), rect.inflate(2, 2), 1, border_radius=9
+            )
         if selected_boundary_index == index:
-            pygame.draw.rect(surface, (184, 204, 255), rect.inflate(10, 10), 2, border_radius=12)
+            pygame.draw.rect(
+                surface, (184, 204, 255), rect.inflate(10, 10), 2, border_radius=12
+            )
         glue_id = active_glue_ids.get(boundary.label, "free")
         label = fonts.menu_font.render(boundary.label, True, (12, 18, 28))
         status = fonts.hint_font.render(glue_id, True, (24, 28, 40))
-        axis_badge = fonts.hint_font.render(boundary.label[0].upper(), True, axis_color(boundary.axis))
+        axis_badge = fonts.hint_font.render(
+            boundary.label[0].upper(), True, axis_color(boundary.axis)
+        )
         surface.blit(label, (rect.centerx - label.get_width() // 2, rect.y + 4))
-        surface.blit(status, (rect.centerx - status.get_width() // 2, rect.bottom - status.get_height() - 4))
+        surface.blit(
+            status,
+            (
+                rect.centerx - status.get_width() // 2,
+                rect.bottom - status.get_height() - 4,
+            ),
+        )
         surface.blit(axis_badge, (rect.right - axis_badge.get_width() - 6, rect.y + 4))
         hits.append(TopologyLabHitTarget("boundary_pick", index, rect.copy()))
     return hits

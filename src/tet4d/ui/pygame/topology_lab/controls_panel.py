@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import pygame
 from dataclasses import dataclass
+
+import pygame
 
 from tet4d.engine.gameplay.topology import (
     EDGE_BEHAVIOR_OPTIONS,
@@ -20,8 +21,10 @@ from tet4d.engine.gameplay.topology_designer import (
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
     advance_explorer_probe,
-    compile_explorer_topology_preview as _compile_explorer_topology_preview,
     export_explorer_topology_preview,
+)
+from tet4d.engine.runtime.topology_explorer_preview import (
+    compile_explorer_topology_preview as _compile_explorer_topology_preview,
 )
 from tet4d.engine.runtime.topology_explorer_runtime import (
     compile_runtime_explorer_experiments,
@@ -34,38 +37,9 @@ from tet4d.engine.runtime.topology_profile_store import (
     save_topology_profile,
 )
 from tet4d.ui.pygame.runtime_ui.audio import play_sfx
-
-from .interaction_audit import (
-    record_interaction_handler,
-    record_interaction_phase,
-)
-from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
-    _RowSpec,
-    _rows_for_state,
-    _selectable_row_indexes,
-)
-from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
-    _adjust_explorer_row,
-    _apply_explorer_glue,
-    _mark_updated,
-    _normalize_explorer_draft as _normalize_explorer_draft_action,
-    _remove_explorer_glue,
-    _reset_explorer_play_settings_to_defaults,
-    _set_topology_status_after_refresh,
-)
-from tet4d.ui.pygame.topology_lab.controls_panel_commands import (
-    run_experiments as _run_experiments_impl,
-    run_export as _run_export_impl,
-    save_profile as _save_profile_impl,
-)
-from tet4d.ui.pygame.topology_lab.controls_panel_launch import (
-    launch_play_preview as _launch_play_preview_impl,
-)
-from tet4d.ui.pygame.topology_lab.controls_panel_routing import (
-    handle_enter_key as _handle_enter_key_impl,
-    handle_navigation_key as _handle_navigation_key_impl,
-    handle_shortcut_key as _handle_shortcut_key_impl,
-    set_active_pane_from_target as _set_active_pane_from_target_impl,
+from tet4d.ui.pygame.topology_lab.app import (
+    build_explorer_playground_settings,
+    mode_settings_snapshot_for_dimension,
 )
 from tet4d.ui.pygame.topology_lab.camera_controls import (
     ensure_mouse_orbit_state,
@@ -75,15 +49,53 @@ from tet4d.ui.pygame.topology_lab.camera_controls import (
 from tet4d.ui.pygame.topology_lab.common import (
     TopologyLabHitTarget,
 )
-from tet4d.ui.pygame.topology_lab.scene_preview_state import (
-    clear_explorer_scene_state as _clear_explorer_scene_state_impl,
-    preview_signature_for_state as _preview_signature_for_state_impl,
-    refresh_explorer_scene_state as _refresh_explorer_scene_state_impl,
+from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
+    _adjust_explorer_row,
+    _apply_explorer_glue,
+    _mark_updated,
+    _remove_explorer_glue,
+    _reset_explorer_play_settings_to_defaults,
+    _set_topology_status_after_refresh,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_actions import (
+    _normalize_explorer_draft as _normalize_explorer_draft_action,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_commands import (
+    run_experiments as _run_experiments_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_commands import (
+    run_export as _run_export_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_commands import (
+    save_profile as _save_profile_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_launch import (
+    launch_play_preview as _launch_play_preview_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_routing import (
+    handle_enter_key as _handle_enter_key_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_routing import (
+    handle_navigation_key as _handle_navigation_key_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_routing import (
+    handle_shortcut_key as _handle_shortcut_key_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_routing import (
+    set_active_pane_from_target as _set_active_pane_from_target_impl,
+)
+from tet4d.ui.pygame.topology_lab.controls_panel_rows import (
+    _rows_for_state,
+    _RowSpec,
+    _selectable_row_indexes,
 )
 from tet4d.ui.pygame.topology_lab.copy import (
     LAB_STATUS_COPY as _LAB_STATUS_COPY,
+)
+from tet4d.ui.pygame.topology_lab.copy import (
     display_title_for_state as _display_title_for_state,
 )
+from tet4d.ui.pygame.topology_lab.explosion import start_sandbox_explosion
 from tet4d.ui.pygame.topology_lab.piece_sandbox import (
     cycle_sandbox_piece,
     ensure_piece_sandbox,
@@ -92,39 +104,75 @@ from tet4d.ui.pygame.topology_lab.piece_sandbox import (
     rotate_sandbox_piece,
     rotate_sandbox_piece_action,
 )
-from tet4d.ui.pygame.topology_lab.explosion import start_sandbox_explosion
+from tet4d.ui.pygame.topology_lab.play_launch import launch_playground_state_gameplay
+from tet4d.ui.pygame.topology_lab.scene_preview_state import (
+    clear_explorer_scene_state as _clear_explorer_scene_state_impl,
+)
+from tet4d.ui.pygame.topology_lab.scene_preview_state import (
+    preview_signature_for_state as _preview_signature_for_state_impl,
+)
+from tet4d.ui.pygame.topology_lab.scene_preview_state import (
+    refresh_explorer_scene_state as _refresh_explorer_scene_state_impl,
+)
 from tet4d.ui.pygame.topology_lab.scene_state import (
-    ExplorerPreviewCompileSignature,
     TOOL_EDIT,
+    ExplorerPreviewCompileSignature,
     TopologyLabState,
     ensure_explorer_draft,
+)
+from tet4d.ui.pygame.topology_lab.scene_state import (
     uses_general_explorer_editor as uses_general_explorer_editor_runtime,
 )
 from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
     current_explorer_draft as _current_explorer_draft,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
     current_explorer_profile as _current_explorer_profile,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
     current_play_settings as _current_play_settings,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
     replace_explorer_profile as _replace_explorer_profile,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
     replace_play_settings as _replace_play_settings,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
     set_dirty as _set_dirty,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_canonical import (
     sync_canonical_playground_state as _sync_canonical_playground_state,
 )
 from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     current_probe_coord as _current_probe_coord,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     current_probe_path as _current_probe_path,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     current_probe_trace as _current_probe_trace,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     ensure_probe_state as _ensure_probe_state,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     playground_dims_for_state as _playground_dims_for_state,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     replace_probe_state as _replace_probe_state,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     reset_probe_state as _reset_probe_state,
+)
+from tet4d.ui.pygame.topology_lab.scene_state_probe import (
     set_highlighted_glue_id as _set_highlighted_glue_id,
 )
-from tet4d.ui.pygame.topology_lab.app import (
-    build_explorer_playground_settings,
-    mode_settings_snapshot_for_dimension,
-)
-from tet4d.ui.pygame.topology_lab.play_launch import launch_playground_state_gameplay
 
+from .interaction_audit import (
+    record_interaction_handler,
+    record_interaction_phase,
+)
 
 _INITIAL_TOOL_BY_GAMEPLAY_MODE = {
     GAMEPLAY_MODE_NORMAL: TOOL_EDIT,
@@ -316,11 +364,11 @@ def _sync_explorer_state(state: _TopologyLabState) -> None:
         state.hovered_glue_id = None
         state.scene_camera = None
         state.scene_mouse_orbit = None
-        setattr(state, "sandbox_focus_coord", None)
-        setattr(state, "sandbox_focus_trace", [])
-        setattr(state, "sandbox_focus_path", [])
-        setattr(state, "sandbox_focus_frame_permutation", None)
-        setattr(state, "sandbox_focus_frame_signs", None)
+        state.sandbox_focus_coord = None
+        state.sandbox_focus_trace = []
+        state.sandbox_focus_path = []
+        state.sandbox_focus_frame_permutation = None
+        state.sandbox_focus_frame_signs = None
         _clear_explorer_scene_state(state)
         return
     _replace_explorer_profile(
@@ -458,11 +506,11 @@ def _cycle_dimension(state: _TopologyLabState, step: int) -> None:
         state.dimension = _TOPOLOGY_DIMENSIONS[(idx + step) % len(_TOPOLOGY_DIMENSIONS)]
         _set_dirty(state, True)
         state.sandbox = None
-        setattr(state, "sandbox_focus_coord", None)
-        setattr(state, "sandbox_focus_trace", [])
-        setattr(state, "sandbox_focus_path", [])
-        setattr(state, "sandbox_focus_frame_permutation", None)
-        setattr(state, "sandbox_focus_frame_signs", None)
+        state.sandbox_focus_coord = None
+        state.sandbox_focus_trace = []
+        state.sandbox_focus_path = []
+        state.sandbox_focus_frame_permutation = None
+        state.sandbox_focus_frame_signs = None
         _sync_profile(state)
         if state.gameplay_mode == GAMEPLAY_MODE_EXPLORER:
             next_settings = state.play_settings_by_dimension.get(state.dimension)
@@ -557,9 +605,7 @@ def _adjust_row(state: _TopologyLabState, row: _RowSpec, step: int) -> bool:
         return True
     if _adjust_explorer_row(state, row, step):
         return True
-    if _adjust_legacy_row(state, row, step):
-        return True
-    return False
+    return bool(_adjust_legacy_row(state, row, step))
 
 
 def _adjust_active_row(state: _TopologyLabState, step: int) -> bool:
@@ -639,7 +685,7 @@ def _launch_play_preview(
     *,
     fonts_2d=None,
     display_settings=None,
-    exploration_mode = False,
+    exploration_mode=False,
 ) -> tuple[pygame.Surface, object | None]:
     return _launch_play_preview_impl(
         state,

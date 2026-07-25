@@ -3,9 +3,9 @@ from __future__ import annotations
 import ast
 import fnmatch
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
 from typing import Any
 
 if __package__:

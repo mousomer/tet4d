@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import unittest
 import io
+import unittest
 from contextlib import redirect_stdout
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -14,8 +14,8 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_NORMAL,
 )
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
-from tet4d.ui.pygame.locked_cell_explosion import launcher as explosion_launcher
 from tet4d.ui.pygame.launch import topology_lab_menu
+from tet4d.ui.pygame.locked_cell_explosion import launcher as explosion_launcher
 from tet4d.ui.pygame.menu.menu_runner import ActionRegistry
 from tet4d.ui.pygame.topology_lab import entrypoint as topology_lab_entrypoint
 
@@ -36,9 +36,15 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         self.assertIsNone(args.topology_playground)
 
     def test_parse_topology_playground_dimension_accepts_supported_values(self) -> None:
-        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("2"), 2)
-        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("3"), 3)
-        self.assertEqual(topology_lab_entrypoint.parse_topology_playground_dimension("4"), 4)
+        self.assertEqual(
+            topology_lab_entrypoint.parse_topology_playground_dimension("2"), 2
+        )
+        self.assertEqual(
+            topology_lab_entrypoint.parse_topology_playground_dimension("3"), 3
+        )
+        self.assertEqual(
+            topology_lab_entrypoint.parse_topology_playground_dimension("4"), 4
+        )
 
     def test_parse_topology_playground_dimension_rejects_invalid_values_cleanly(
         self,
@@ -110,7 +116,9 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             patch.object(
                 front,
                 "load_runtime_explorer_topology_profile",
-                return_value=ExplorerTopologyProfile(dimension=int(mode[0]), gluings=()),
+                return_value=ExplorerTopologyProfile(
+                    dimension=int(mode[0]), gluings=()
+                ),
             ),
             patch.object(
                 front,
@@ -191,7 +199,9 @@ class TestFrontLauncherRoutes(unittest.TestCase):
             }.issubset(row_keys)
         )
 
-    def test_standalone_explosion_launcher_action_routes_directly_to_surface(self) -> None:
+    def test_standalone_explosion_launcher_action_routes_directly_to_surface(
+        self,
+    ) -> None:
         state = front.MainMenuState(last_mode="4d")
         session = SimpleNamespace(
             screen=object(),
@@ -358,12 +368,28 @@ class TestFrontLauncherRoutes(unittest.TestCase):
                 "mode_settings_snapshot_for_dimension",
                 return_value=SimpleNamespace(),
             ),
-            patch.object(front, "load_runtime_explorer_topology_profile", return_value=object()),
-            patch.object(front, "build_explorer_playground_launch", return_value=launch),
-            patch.object(front, "build_explorer_playground_config", return_value=object()),
-            patch.object(front, "open_display", side_effect=lambda display_settings, caption=None: object()),
-            patch.object(front, "capture_windowed_display_settings", side_effect=lambda display_settings: display_settings),
-            patch("tet4d.ui.pygame.front3d_game.run_game_loop", return_value=True) as run_loop,
+            patch.object(
+                front, "load_runtime_explorer_topology_profile", return_value=object()
+            ),
+            patch.object(
+                front, "build_explorer_playground_launch", return_value=launch
+            ),
+            patch.object(
+                front, "build_explorer_playground_config", return_value=object()
+            ),
+            patch.object(
+                front,
+                "open_display",
+                side_effect=lambda display_settings, caption=None: object(),
+            ),
+            patch.object(
+                front,
+                "capture_windowed_display_settings",
+                side_effect=lambda display_settings: display_settings,
+            ),
+            patch(
+                "tet4d.ui.pygame.front3d_game.run_game_loop", return_value=True
+            ) as run_loop,
         ):
             close = front._menu_action_play_last_custom_topology(
                 state,
@@ -388,7 +414,9 @@ class TestFrontLauncherRoutes(unittest.TestCase):
         handler = Mock(return_value=False)
         registry.register("help", handler)
 
-        with patch.dict(front._LAUNCHER_ROUTE_ACTIONS, {"custom_route": "help"}, clear=False):
+        with patch.dict(
+            front._LAUNCHER_ROUTE_ACTIONS, {"custom_route": "help"}, clear=False
+        ):
             close = front._handle_launcher_route(
                 "custom_route",
                 state,

@@ -6,7 +6,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 TRACE_VERSION = 1
 SCHEMA_VERSION = 1
 

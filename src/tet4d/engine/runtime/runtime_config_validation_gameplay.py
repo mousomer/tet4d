@@ -219,7 +219,6 @@ def _validate_rotation_kick_level_order(
     return tuple(level_order), seen_levels, default_level
 
 
-
 def _validate_rotation_kick_level_candidates(
     raw_level_candidates: object,
     *,
@@ -249,7 +248,6 @@ def _validate_rotation_kick_level_candidates(
         level_candidates[level_name] = count
         previous = count
     return level_candidates
-
 
 
 def _validate_rotation_kick_candidate_offsets(
@@ -295,7 +293,6 @@ def _validate_rotation_kick_candidate_offsets(
         seen_offsets.add(offset)
         candidate_offsets.append(offset)
     return tuple(candidate_offsets)
-
 
 
 def _validate_rotation_kicks(raw_rotation_kicks: object) -> dict[str, Any]:

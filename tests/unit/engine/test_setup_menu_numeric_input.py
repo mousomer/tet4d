@@ -60,14 +60,18 @@ def test_numeric_entry_commits_setup_value() -> None:
             FieldSpec("Width", "width", "int", "stepper", min_value=4, max_value=40),
             FieldSpec("Height", "height", "int", "stepper", min_value=8, max_value=60),
         ]
-        with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_2, '2')]):
+        with patch.object(
+            pygame.event, "get", return_value=[_keydown(pygame.K_2, "2")]
+        ):
             _collect_and_apply(state, fields)
         assert state.numeric_text_mode is True
-        assert state.numeric_text_buffer == '2'
-        with patch.object(pygame.event, 'get', return_value=[_textinput('4')]):
+        assert state.numeric_text_buffer == "2"
+        with patch.object(pygame.event, "get", return_value=[_textinput("4")]):
             _collect_and_apply(state, fields)
-        assert state.numeric_text_buffer == '24'
-        with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_RETURN)]):
+        assert state.numeric_text_buffer == "24"
+        with patch.object(
+            pygame.event, "get", return_value=[_keydown(pygame.K_RETURN)]
+        ):
             _collect_and_apply(state, fields)
         assert state.numeric_text_mode is False
         assert state.settings.width == 24
@@ -83,15 +87,21 @@ def test_numeric_entry_backspace_and_cancel_preserves_value() -> None:
             FieldSpec("Width", "width", "int", "stepper", min_value=4, max_value=40),
             FieldSpec("Height", "height", "int", "stepper", min_value=8, max_value=60),
         ]
-        with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_2, '2')]):
+        with patch.object(
+            pygame.event, "get", return_value=[_keydown(pygame.K_2, "2")]
+        ):
             _collect_and_apply(state, fields)
-        with patch.object(pygame.event, 'get', return_value=[_textinput('4')]):
+        with patch.object(pygame.event, "get", return_value=[_textinput("4")]):
             _collect_and_apply(state, fields)
-        assert state.numeric_text_buffer == '24'
-        with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_BACKSPACE)]):
+        assert state.numeric_text_buffer == "24"
+        with patch.object(
+            pygame.event, "get", return_value=[_keydown(pygame.K_BACKSPACE)]
+        ):
             _collect_and_apply(state, fields)
-        assert state.numeric_text_buffer == '2'
-        with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_ESCAPE)]):
+        assert state.numeric_text_buffer == "2"
+        with patch.object(
+            pygame.event, "get", return_value=[_keydown(pygame.K_ESCAPE)]
+        ):
             _collect_and_apply(state, fields)
         assert state.numeric_text_mode is False
         assert state.settings.width == 18
@@ -106,9 +116,13 @@ def test_numeric_entry_clamps_nd_dimension_value() -> None:
         fields = [
             FieldSpec("Fourth", "fourth", "int", "stepper", min_value=2, max_value=8)
         ]
-        with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_9, '9')]):
+        with patch.object(
+            pygame.event, "get", return_value=[_keydown(pygame.K_9, "9")]
+        ):
             _collect_and_apply(state, fields)
-        with patch.object(pygame.event, 'get', return_value=[_keydown(pygame.K_RETURN)]):
+        with patch.object(
+            pygame.event, "get", return_value=[_keydown(pygame.K_RETURN)]
+        ):
             _collect_and_apply(state, fields)
         assert state.settings.fourth == 8
     finally:
@@ -124,7 +138,9 @@ def test_nd_setup_draw_menu_renders_one_frame_for_3d_and_4d() -> None:
         screen = pygame.Surface((960, 720), pygame.SRCALPHA)
         state = frontend_nd_setup.MenuState()
         for dimension in (3, 4):
-            fields = frontend_nd_setup.menu_fields_for_settings(state.settings, dimension)
+            fields = frontend_nd_setup.menu_fields_for_settings(
+                state.settings, dimension
+            )
             assert fields
             assert all(isinstance(field, FieldSpec) for field in fields)
             frontend_nd_setup.draw_menu(
@@ -175,9 +191,13 @@ def test_setup_menu_runner_forwards_fields_to_draw_frame() -> None:
 
         with (
             patch.object(setup_menu_runner, "load_active_profile_bindings"),
-            patch.object(setup_menu_runner, "load_menu_settings", return_value=(False, "nope")),
+            patch.object(
+                setup_menu_runner, "load_menu_settings", return_value=(False, "nope")
+            ),
             patch.object(setup_menu_runner, "set_active_key_profile"),
-            patch.object(setup_menu_runner, "save_menu_settings", return_value=(True, "")),
+            patch.object(
+                setup_menu_runner, "save_menu_settings", return_value=(True, "")
+            ),
             patch.object(setup_menu_runner, "gather_menu_actions", return_value=()),
             patch.object(setup_menu_runner, "apply_menu_actions"),
             patch.object(setup_menu_runner.pygame.display, "flip"),

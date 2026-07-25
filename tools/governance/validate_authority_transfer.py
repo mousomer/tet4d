@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import re
-
 
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL_REL = "docs/architecture/authority_transfer_protocol.md"

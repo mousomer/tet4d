@@ -1,16 +1,19 @@
-import unittest
 import random
+import unittest
 
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.core.rules.piece_placement import (
     build_candidate_piece_placement,
     validate_candidate_piece_placement,
 )
+from tet4d.engine.core.rules.scoring import score_for_clear
 from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import (
-    ActivePieceND,
     PIECE_SET_3D_DEBUG,
     PIECE_SET_3D_EMBED_2D,
     PIECE_SET_3D_RANDOM,
@@ -18,6 +21,7 @@ from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_EMBED_3D,
     PIECE_SET_4D_RANDOM,
     PIECE_SET_4D_SIX,
+    ActivePieceND,
     PieceShapeND,
 )
 from tet4d.engine.gameplay.topology import TOPOLOGY_INVERT_ALL, TOPOLOGY_WRAP_ALL
@@ -27,10 +31,6 @@ from tet4d.engine.topology_explorer.presets import (
     projective_space_profile_3d,
     projective_space_profile_4d,
     swap_xw_profile_4d,
-)
-from tet4d.engine.core.rules.scoring import score_for_clear
-from tests.unit.engine._translation_contract import (
-    assert_repeated_translation_progress,
 )
 
 
@@ -716,7 +716,9 @@ class TestGameND(unittest.TestCase):
         self.assertTrue(state.try_rotate(0, 3, 1))
         # New rotation algorithm doesn't re-center, so rotation succeeds in-place
         # Verify rotation happened (blocks changed)
-        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
+        self.assertNotEqual(
+            tuple(sorted(state.current_piece.rel_blocks)), before_blocks
+        )
 
     def test_4d_xw_rotation_fails_cleanly_at_w_edge(self):
         """With new rotation algorithm, rotation succeeds if piece fits (no kick needed)."""
@@ -734,8 +736,9 @@ class TestGameND(unittest.TestCase):
         # New rotation algorithm doesn't re-center, so this now succeeds
         self.assertTrue(state.try_rotate(0, 3, 1))
         # Verify rotation happened
-        self.assertNotEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
-
+        self.assertNotEqual(
+            tuple(sorted(state.current_piece.rel_blocks)), before_blocks
+        )
 
     def test_atomic_move_ignores_current_piece_source_cells(self):
         cfg = GameConfigND(dims=(5, 5, 5), gravity_axis=1)

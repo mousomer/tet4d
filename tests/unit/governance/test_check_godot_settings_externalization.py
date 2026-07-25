@@ -9,7 +9,6 @@ from tools.governance.check_godot_settings_externalization import (
     validate_repository,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 

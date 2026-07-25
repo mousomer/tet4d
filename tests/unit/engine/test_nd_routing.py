@@ -10,7 +10,6 @@ except ModuleNotFoundError:  # pragma: no cover - exercised without pygame-ce
 if pygame is None:  # pragma: no cover - exercised without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for ND routing tests")
 
-from tet4d.ui.pygame import frontend_nd_input, frontend_nd_state
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
@@ -18,13 +17,14 @@ from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
     projective_space_profile_3d,
 )
+from tet4d.ui.pygame import frontend_nd_input, frontend_nd_state
 from tet4d.ui.pygame.keybindings import (
     CAMERA_KEYS_4D,
     EXPLORER_KEYS_3D,
     EXPLORER_KEYS_4D,
+    KEYBINDING_STATE,
     KEYS_3D,
     KEYS_4D,
-    KEYBINDING_STATE,
     SYSTEM_KEYS,
 )
 
@@ -116,7 +116,9 @@ class TestNdRouting(unittest.TestCase):
         self.assertEqual(state.moves, [(1, 1)])
         self.assertEqual(state.translation_hints, [True])
 
-    def test_soft_drop_routes_to_drop_handler_instead_of_translation_handler(self) -> None:
+    def test_soft_drop_routes_to_drop_handler_instead_of_translation_handler(
+        self,
+    ) -> None:
         cfg = GameConfigND(dims=(6, 10, 6), gravity_axis=1, speed_level=1)
         state = _AxisCaptureState(cfg)
 

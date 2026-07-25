@@ -51,7 +51,7 @@ def _load_json(path: Path, rel: str) -> dict[str, Any]:
 
 
 def _is_ci_enforced(token: str) -> bool:
-    return token.startswith("scripts/") or token.startswith("tools/")
+    return token.startswith(("scripts/", "tools/"))
 
 
 def _check_contributor_directives(

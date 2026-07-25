@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from functools import reduce
 import operator
-from typing import Dict, List
+from functools import reduce
 
 Coord = tuple[int, ...]
 
 
-def full_levels(dims: Coord, cells: Dict[Coord, int], gravity_axis: int) -> List[int]:
+def full_levels(dims: Coord, cells: dict[Coord, int], gravity_axis: int) -> list[int]:
     n_dims = len(dims)
     if not (0 <= gravity_axis < n_dims):
         raise ValueError("Invalid gravity_axis")
@@ -22,7 +21,7 @@ def full_levels(dims: Coord, cells: Dict[Coord, int], gravity_axis: int) -> List
         return []
 
     level_counts = [0] * axis_size
-    for coord in cells.keys():
+    for coord in cells:
         level_counts[coord[gravity_axis]] += 1
 
     return [level for level, count in enumerate(level_counts) if count == max_per_level]
@@ -30,9 +29,9 @@ def full_levels(dims: Coord, cells: Dict[Coord, int], gravity_axis: int) -> List
 
 def clear_planes(
     dims: Coord,
-    cells: Dict[Coord, int],
+    cells: dict[Coord, int],
     gravity_axis: int,
-) -> tuple[int, Dict[Coord, int], List[int], List[tuple[Coord, int]]]:
+) -> tuple[int, dict[Coord, int], list[int], list[tuple[Coord, int]]]:
     n_dims = len(dims)
     if not (0 <= gravity_axis < n_dims):
         raise ValueError("Invalid gravity_axis")
@@ -57,7 +56,7 @@ def clear_planes(
     for g_val in range(axis_size):
         shift[g_val] = sum(1 for lvl in levels if lvl > g_val)
 
-    new_cells: Dict[Coord, int] = {}
+    new_cells: dict[Coord, int] = {}
     for coord, cell_id in cells.items():
         g_val = coord[gravity_axis]
         if g_val in full_set:

@@ -80,7 +80,9 @@ class TestHelpMenu(unittest.TestCase):
         lines: list[str] = []
         help_menu._extend_settings_lines(lines, compact=False)
         text = "\n".join(lines)
-        active_labels = {entry["label"] for entry in menu_config.settings_help_entries()}
+        active_labels = {
+            entry["label"] for entry in menu_config.settings_help_entries()
+        }
         for label in active_labels:
             with self.subTest(label=label):
                 self.assertIn(label, text)
@@ -114,14 +116,16 @@ class TestHelpMenu(unittest.TestCase):
             compact=False,
         )
         text = "\n".join(lines)
-        self.assertIn("Open Topology Playground, switch to Editor, and set Tool to Edit.", text)
+        self.assertIn(
+            "Open Topology Playground, switch to Editor, and set Tool to Edit.", text
+        )
         self.assertIn("Press Apply to commit the seam.", text)
         self.assertIn("Press Remove only after the seam is selected.", text)
 
     def test_help_header_text_fits_compact_window_budget(self) -> None:
         screen = pygame.Surface((640, 420), pygame.SRCALPHA)
-        frame_rect, header_rect, _content_rect, footer_rect = help_menu._help_layout_zones(
-            screen, self.fonts
+        frame_rect, header_rect, _content_rect, footer_rect = (
+            help_menu._help_layout_zones(screen, self.fonts)
         )
         self.assertGreater(frame_rect.width, 0)
         self.assertGreater(footer_rect.width, 0)

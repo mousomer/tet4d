@@ -2,10 +2,28 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional, Tuple
 
 import pygame
 
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces_nd import piece_set_label
+from tet4d.engine.gameplay.rotation_anim import PieceRenderStateND
+from tet4d.engine.gameplay.topology import map_overlay_cells
+from tet4d.engine.runtime.project_config import (
+    project_constant_float,
+    project_constant_int,
+)
+from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
+from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode, grid_mode_label
+from tet4d.ui.pygame.endgame_animation import (
+    EndgameAnimationState,
+    EndgameRenderContext,
+    board_shell_residue_alpha,
+    rupture_flash_alpha,
+    transform_grid_break_mark,
+    transform_shell_artifact,
+    transform_shell_geometry,
+)
 from tet4d.ui.pygame.input.view_controls import YawPitchTurnAnimator
 from tet4d.ui.pygame.projection3d import (
     Cell3,
@@ -18,34 +36,47 @@ from tet4d.ui.pygame.projection3d import (
     projection_cache_key,
     projection_helper_cache_key,
 )
-from tet4d.ui.pygame.endgame_animation import (
-    EndgameAnimationState,
-    EndgameRenderContext,
-    board_shell_residue_alpha,
-    rupture_flash_alpha,
-    transform_grid_break_mark,
-    transform_shell_artifact,
-    transform_shell_geometry,
+from tet4d.ui.pygame.render.active_piece_projection_guides import (
+    GuideCell3D,
+    build_boundary_projection_face_primitives,
+    draw_boundary_projection_faces,
+    projection_guide_enabled,
 )
 from tet4d.ui.pygame.render.font_profiles import (
     GfxFonts,
+)
+from tet4d.ui.pygame.render.font_profiles import (
     init_fonts as init_fonts_for_profile,
+)
+from tet4d.ui.pygame.render.front3d_cell_render import (
+    draw_cells as draw_cells_helper,
 )
 from tet4d.ui.pygame.render.front3d_cell_render import (
     draw_sorted_faces,
     draw_translucent_faces,
-    draw_cells as draw_cells_helper,
-    overlay_opacity_scale as overlay_opacity_scale_3d,
     split_faces_for_cells,
+)
+from tet4d.ui.pygame.render.front3d_cell_render import (
+    overlay_opacity_scale as overlay_opacity_scale_3d,
 )
 from tet4d.ui.pygame.render.front3d_projection_helpers import (
     ProjectionParams3D,
-    build_cell_face_primitives as build_cell_face_primitives_helper,
-    build_cell_faces as build_cell_faces_helper,
     depth_denominator_for_depth,
-    draw_board_grid as draw_board_grid_helper,
     fit_orthographic_zoom_for_rect,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    build_cell_face_primitives as build_cell_face_primitives_helper,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    build_cell_faces as build_cell_faces_helper,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    draw_board_grid as draw_board_grid_helper,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
     project_raw_point as project_raw_point_helper,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
     transform_raw_point as transform_raw_point_helper,
 )
 from tet4d.ui.pygame.render.grid_mode_render import (
@@ -53,30 +84,13 @@ from tet4d.ui.pygame.render.grid_mode_render import (
     draw_projected_grid_mode,
     draw_projected_line_buckets,
 )
-from tet4d.ui.pygame.render.active_piece_projection_guides import (
-    GuideCell3D,
-    build_boundary_projection_face_primitives,
-    draw_boundary_projection_faces,
-    projection_guide_enabled,
-)
 from tet4d.ui.pygame.render.panel_utils import (
     draw_game_over_banner,
     draw_unified_game_side_panel,
 )
 from tet4d.ui.pygame.render.projected_occlusion import resolve_board_line_occlusion
 
-from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
-from tet4d.engine.gameplay.rotation_anim import PieceRenderStateND
 from .frontend_nd_setup import gravity_interval_ms_from_config
-from tet4d.engine.gameplay.pieces_nd import piece_set_label
-from tet4d.engine.gameplay.topology import map_overlay_cells
-from tet4d.engine.runtime.project_config import (
-    project_constant_float,
-    project_constant_int,
-)
-from tet4d.engine.runtime.score_analyzer import hud_analysis_lines
-from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode, grid_mode_label
-
 
 MARGIN = project_constant_int(
     ("rendering", "3d", "margin"), 20, min_value=0, max_value=400
@@ -260,7 +274,7 @@ def _draw_endgame_escaping_artifacts_3d(
         color = color_for_cell_3d(int(artifact.color_id))
         pygame.draw.line(
             overlay,
-            (*color, max(0, min(255, int(round(205 * alpha))))),
+            (*color, max(0, min(255, round(205 * alpha)))),
             start,
             end,
             1 if artifact.kind == "spark" else 2,
@@ -299,18 +313,18 @@ def _draw_endgame_grid_break_marks_3d(
         color = color_for_cell_3d(int(mark.color_id))
         base_width = max(
             1,
-            int(round(float(endgame_animation.tuning.grid_break_line_width))),
+            round(float(endgame_animation.tuning.grid_break_line_width)),
         )
         pygame.draw.line(
             overlay,
-            (0, 0, 0, max(0, min(210, int(round(210 * alpha))))),
+            (0, 0, 0, max(0, min(210, round(210 * alpha)))),
             start,
             end,
             base_width,
         )
         pygame.draw.line(
             overlay,
-            (*color, max(0, min(255, int(round(250 * alpha))))),
+            (*color, max(0, min(255, round(250 * alpha)))),
             start,
             end,
             1,
@@ -377,7 +391,7 @@ def _draw_endgame_board_shell_residue_3d(
     )
     if alpha <= 0.0:
         return
-    color = (*GRID_COLOR, max(0, min(255, int(round(255 * alpha)))))
+    color = (*GRID_COLOR, max(0, min(255, round(255 * alpha))))
     for shell_fragment in endgame_animation.shell_fragments:
         start_local, end_local = shell_fragment.base_geometry
         start_point = (
@@ -411,7 +425,7 @@ def _draw_endgame_rupture_flash_3d(
         return
     pygame.draw.rect(
         overlay,
-        (190, 225, 255, max(0, min(255, int(round(255 * flash_alpha))))),
+        (190, 225, 255, max(0, min(255, round(255 * flash_alpha)))),
         board_rect,
         border_radius=10,
     )
@@ -428,7 +442,7 @@ def _draw_endgame_shell_fragments_3d(
     drag = float(endgame_animation.tuning.burst_drag_per_second)
     line_width = max(
         1,
-        int(round(float(endgame_animation.tuning.shell_fragment_line_width))),
+        round(float(endgame_animation.tuning.shell_fragment_line_width)),
     )
     for shell_fragment in endgame_animation.shell_fragments:
         transformed, alpha = transform_shell_geometry(
@@ -444,7 +458,7 @@ def _draw_endgame_shell_fragments_3d(
             continue
         pygame.draw.line(
             overlay,
-            (*GRID_COLOR, max(0, min(255, int(round(245 * alpha))))),
+            (*GRID_COLOR, max(0, min(255, round(245 * alpha)))),
             start,
             end,
             line_width,
@@ -573,7 +587,7 @@ def _coerce_piece_render_state_3d(
         tuple(float(value) for value in coord) for coord in active_overlay[0]
     )
     return PieceRenderStateND(
-        presentation_cells=tuple(),
+        presentation_cells=(),
         active_cells=active_cells,
         color_id=int(active_overlay[1]),
         animation_active=False,
@@ -755,7 +769,7 @@ def _projection_guide_cells_3d(
             )
         color_id = int(piece_render_state.color_id)
     else:
-        return tuple(), None
+        return (), None
 
     dims = state.config.dims
     cells: list[GuideCell3D] = []
@@ -836,8 +850,8 @@ def _draw_cells_with_occluding_board_lines(
         draw_translucent_faces(
             surface,
             locked_faces,
-            fill_alpha=int(round(255 * locked_alpha)),
-            outline_alpha=max(70, int(round(255 * min(1.0, locked_alpha + 0.12)))),
+            fill_alpha=round(255 * locked_alpha),
+            outline_alpha=max(70, round(255 * min(1.0, locked_alpha + 0.12))),
         )
     if active_faces:
         draw_sorted_faces(surface, active_faces)
@@ -845,9 +859,9 @@ def _draw_cells_with_occluding_board_lines(
         draw_translucent_faces(
             surface,
             overlay_faces,
-            fill_alpha=int(round(255 * _ASSIST_OVERLAY_OPACITY_SCALE)),
+            fill_alpha=round(255 * _ASSIST_OVERLAY_OPACITY_SCALE),
             outline_alpha=max(
-                70, int(round(255 * min(1.0, _ASSIST_OVERLAY_OPACITY_SCALE + 0.12)))
+                70, round(255 * min(1.0, _ASSIST_OVERLAY_OPACITY_SCALE + 0.12))
             ),
         )
     draw_projected_line_buckets(
@@ -861,7 +875,7 @@ def _draw_cells_with_occluding_board_lines(
 
 def _draw_clear_animation(
     surface: pygame.Surface,
-    clear_anim: Optional[ClearAnimation3D],
+    clear_anim: ClearAnimation3D | None,
     camera: Camera3D,
     center_px: Point2,
     dims: Cell3,
@@ -911,7 +925,7 @@ def _draw_board_3d(
     camera: Camera3D,
     board_rect: pygame.Rect,
     grid_mode: GridMode = GridMode.FULL,
-    clear_anim: Optional[ClearAnimation3D] = None,
+    clear_anim: ClearAnimation3D | None = None,
     active_overlay: ActiveOverlay3D | PieceRenderStateND | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
@@ -1107,11 +1121,11 @@ def _draw_endgame_board_3d(
                         color[0],
                         color[1],
                         color[2],
-                        max(0, min(255, int(round(176 * float(segment.alpha))))),
+                        max(0, min(255, round(176 * float(segment.alpha)))),
                     ),
                     tail,
                     head,
-                    max(1, int(round(1.6 * max(0.35, float(segment.width))))),
+                    max(1, round(1.6 * max(0.35, float(segment.width)))),
                 )
         position = relic_state.render_position
         rotation_deg = relic_state.rotation_deg
@@ -1137,8 +1151,8 @@ def _draw_endgame_board_3d(
 
     fragment_faces.sort(key=lambda item: item[0], reverse=True)
     for _depth, polygon, color, alpha in fragment_faces:
-        fill_alpha = max(0, min(255, int(round(255 * alpha))))
-        outline_alpha = max(0, min(255, int(round(230 * alpha))))
+        fill_alpha = max(0, min(255, round(255 * alpha)))
+        outline_alpha = max(0, min(255, round(230 * alpha)))
         pygame.draw.polygon(overlay, (*color, fill_alpha), polygon)
         pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), polygon, 2)
     surface.blit(overlay, (0, 0))
@@ -1205,7 +1219,7 @@ def _draw_side_panel(
 
 def _auto_fit_orthographic_zoom(
     camera: Camera3D,
-    dims: Tuple[int, int, int],
+    dims: tuple[int, int, int],
     board_rect: pygame.Rect,
 ) -> None:
     """
@@ -1238,7 +1252,7 @@ def draw_game_frame(
     fonts: GfxFonts,
     grid_mode: GridMode,
     bot_lines: tuple[str, ...] = (),
-    clear_anim: Optional[ClearAnimation3D] = None,
+    clear_anim: ClearAnimation3D | None = None,
     active_overlay: ActiveOverlay3D | PieceRenderStateND | None = None,
     overlay_transparency: float = 0.25,
     side_panel_offset: tuple[int, int] = (0, 0),
@@ -1307,7 +1321,7 @@ def draw_game_frame(
     )
 
 
-def suggested_window_size(cfg: GameConfigND) -> Tuple[int, int]:
+def suggested_window_size(cfg: GameConfigND) -> tuple[int, int]:
     board_w = int(max(560, cfg.dims[0] * 68))
     board_h = int(max(620, cfg.dims[1] * 30))
     return board_w + SIDE_PANEL + 3 * MARGIN, board_h + 2 * MARGIN

@@ -1,27 +1,10 @@
 # tetris_nd/game_nd.py
-from dataclasses import dataclass, field
 import random
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
+from dataclasses import dataclass, field
 
-from ..core.model import GameConfigNDCoreView, GameStateNDCoreView
-from ..core.model import BoardND
+from ..core.model import BoardND, Coord, GameConfigNDCoreView, GameStateNDCoreView
 from ..core.rng import RNG_MODE_FIXED_SEED, normalize_rng_mode
-from .pieces_nd import (
-    ActivePieceND,
-    PIECE_SET_3D_STANDARD,
-    PIECE_SET_4D_STANDARD,
-    PieceShapeND,
-    get_piece_shapes_nd,
-    normalize_piece_set_for_dimension,
-    normalize_piece_set_4d,  # backward-compatible parameter support
-)
-from ..runtime.score_analyzer import new_analysis_session_id
-from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
-from .explorer_movement_policy import explorer_movement_policy_from_rigid_play_enabled
-from ..runtime.runtime_config import (
-    normalize_kick_level_name,
-    rotation_kick_candidate_offsets,
-)
 from ..core.rotation_kicks import resolve_and_commit_rotated_piece
 from ..core.rules.lifecycle import (
     advance_or_lock_and_respawn,
@@ -33,22 +16,32 @@ from ..core.rules.piece_placement import (
     piece_placement_is_legal,
 )
 from ..core.step.reducer import step_nd as core_step_nd
+from ..runtime.runtime_config import (
+    normalize_kick_level_name,
+    rotation_kick_candidate_offsets,
+)
+from ..runtime.score_analyzer import new_analysis_session_id
+from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
 from ..topology_explorer import ExplorerTopologyProfile, MoveStep
 from ..topology_explorer.transport_resolver import (
     ExplorerTransportFrameTransform,
     ExplorerTransportResolver,
     build_explorer_transport_resolver,
 )
+from .explorer_movement_policy import explorer_movement_policy_from_rigid_play_enabled
 from .explorer_runtime_nd import (
     move_piece_via_explorer_glue_with_frame,
     piece_cells_in_bounds,
 )
 from .lock_flow import apply_current_piece_lock_flow
-from .topology import (
-    TOPOLOGY_BOUNDED,
-    TopologyPolicy,
-    map_piece_cells,
-    normalize_topology_mode,
+from .pieces_nd import (
+    PIECE_SET_3D_STANDARD,
+    PIECE_SET_4D_STANDARD,
+    ActivePieceND,
+    PieceShapeND,
+    get_piece_shapes_nd,
+    normalize_piece_set_4d,  # backward-compatible parameter support
+    normalize_piece_set_for_dimension,
 )
 from .play_move_intents import (
     GRAVITY_INTENT,
@@ -58,7 +51,12 @@ from .play_move_intents import (
     crosses_gravity_seam,
     is_drop_intent,
 )
-from ..core.model import Coord
+from .topology import (
+    TOPOLOGY_BOUNDED,
+    TopologyPolicy,
+    map_piece_cells,
+    normalize_topology_mode,
+)
 
 
 def _coerce_rng_seed(value: object) -> int:
@@ -272,8 +270,8 @@ class GameStateND:
     config: GameConfigND
     board: BoardND
     topology_policy: TopologyPolicy = field(init=False, repr=False)
-    current_piece: Optional[ActivePieceND] = None
-    next_bag: List[PieceShapeND] = field(default_factory=list)
+    current_piece: ActivePieceND | None = None
+    next_bag: list[PieceShapeND] = field(default_factory=list)
     rng: random.Random = field(default_factory=random.Random)
     score: int = 0
     lines_cleared: int = 0

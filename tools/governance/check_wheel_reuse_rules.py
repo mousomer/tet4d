@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import re
 import ast
+import re
+import sys
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
-import sys
 from typing import Any
 
 if __package__:
@@ -146,13 +146,12 @@ def _match_ast_detectors(text: str, detectors: list[str]) -> list[str]:
         elif detector == "custom_numeric_text_parser":
             if any(_has_isdigit_and_int(func) for func in functions):
                 matched.append("ast:custom_numeric_text_parser")
-        elif detector == "custom_clamp_helper":
-            if any(
-                "clamp" in func.name.lower()
-                and any(_is_max_min_call(node) for node in ast.walk(func))
-                for func in functions
-            ):
-                matched.append("ast:custom_clamp_helper")
+        elif detector == "custom_clamp_helper" and any(
+            "clamp" in func.name.lower()
+            and any(_is_max_min_call(node) for node in ast.walk(func))
+            for func in functions
+        ):
+            matched.append("ast:custom_clamp_helper")
     return matched
 
 

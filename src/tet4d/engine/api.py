@@ -6,18 +6,22 @@ from .core.model import Action, BoardND
 from .core.rng import EngineRNG, coerce_random
 from .core.rules.state_queries import (
     board_cells as core_board_cells,
+)
+from .core.rules.state_queries import (
     current_piece_cells as core_current_piece_cells,
+)
+from .core.rules.state_queries import (
     is_game_over as core_is_game_over,
 )
 from .core.step.reducer import step_2d as core_step_2d
 from .core.step.reducer import step_nd as core_step_nd
-from .gameplay.game2d import GameConfig, GameState
-from .gameplay.game_nd import GameConfigND, GameStateND
 from .gameplay.api import (
     piece_pose_legal_gameplay,
     rotated_piece_pose_legal_gameplay,
     translated_piece_pose_legal_gameplay,
 )
+from .gameplay.game2d import GameConfig, GameState
+from .gameplay.game_nd import GameConfigND, GameStateND
 from .tutorial.api import (
     tutorial_board_dims_runtime,
     tutorial_lesson_ids_runtime,
@@ -57,7 +61,7 @@ def new_game_state_nd(
     return GameStateND(config=config, board=board, rng=rng)
 
 
-def new_rng(seed: int | float | str | bytes | bytearray | None = None) -> EngineRNG:
+def new_rng(seed: float | str | bytes | bytearray | None = None) -> EngineRNG:
     return EngineRNG(seed)
 
 

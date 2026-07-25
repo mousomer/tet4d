@@ -28,9 +28,7 @@ class TestControlGroups(unittest.TestCase):
         self.assertTrue(any("\tleft/right\t" in row for row in translation_rows))
         self.assertTrue(any("\thard drop\t" in row for row in translation_rows))
         self.assertTrue(any("\tgrid mode\t" in row for row in camera_rows))
-        self.assertTrue(
-            any("\tlocked cells alpha [,]\t" in row for row in camera_rows)
-        )
+        self.assertTrue(any("\tlocked cells alpha [,]\t" in row for row in camera_rows))
 
     def test_dim3_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(3)
@@ -43,9 +41,7 @@ class TestControlGroups(unittest.TestCase):
         self.assertTrue(any("\tpause menu\t" in row for row in main_rows))
         self.assertTrue(any("\trestart\t" in row for row in main_rows))
         self.assertTrue(any("\tprojection\t" in row for row in camera_rows))
-        self.assertTrue(
-            any("\tlocked cells alpha [,]\t" in row for row in camera_rows)
-        )
+        self.assertTrue(any("\tlocked cells alpha [,]\t" in row for row in camera_rows))
 
     def test_dim4_control_group_layout(self) -> None:
         groups = control_groups_for_dimension(4)
@@ -62,9 +58,7 @@ class TestControlGroups(unittest.TestCase):
         self.assertFalse(any("\tprojection\t" in row for row in camera_rows))
         self.assertTrue(any("\tview x-w +/-90\t" in row for row in camera_rows))
         self.assertTrue(any("\tview z-w +/-90\t" in row for row in camera_rows))
-        self.assertTrue(
-            any("\tlocked cells alpha [,]\t" in row for row in camera_rows)
-        )
+        self.assertTrue(any("\tlocked cells alpha [,]\t" in row for row in camera_rows))
 
     def test_dim4_hides_exploration_rows_when_disabled(self) -> None:
         groups = control_groups_for_dimension(4, include_exploration=False)
@@ -74,16 +68,13 @@ class TestControlGroups(unittest.TestCase):
 
     def test_unified_structure_names_match_all_dimensions(self) -> None:
         names_2d = [
-            name
-            for name, _ in control_groups_for_dimension(2, unified_structure=True)
+            name for name, _ in control_groups_for_dimension(2, unified_structure=True)
         ]
         names_3d = [
-            name
-            for name, _ in control_groups_for_dimension(3, unified_structure=True)
+            name for name, _ in control_groups_for_dimension(3, unified_structure=True)
         ]
         names_4d = [
-            name
-            for name, _ in control_groups_for_dimension(4, unified_structure=True)
+            name for name, _ in control_groups_for_dimension(4, unified_structure=True)
         ]
         self.assertEqual(names_2d, names_3d)
         self.assertEqual(names_3d, names_4d)
