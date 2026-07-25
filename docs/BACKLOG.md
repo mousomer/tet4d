@@ -28,7 +28,7 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
-Godot 4.7 migration (2026-07-25, final acceptance in progress): advance the
+Godot 4.7 migration (2026-07-25, acceptance complete): advance the
 product shell from 4.6.3 to the newest stable 4.7 patch, exact official
 `4.7.1-stable` build, and pin the matching immutable godot-cpp API baseline.
 The manifest now owns release assets/checksums and canonical commands; the

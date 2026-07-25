@@ -12,7 +12,7 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 ## Active Focus
 
 - Godot product-shell migration from 4.6.3 to the exact official
-  `4.7.1-stable` build is in final acceptance on
+  `4.7.1-stable` build is accepted on
   `codex/configurable-plain-boards`. The machine toolchain manifest pins
   release assets/checksums and godot-cpp commit
   `5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731`; the migration audit is
@@ -25,7 +25,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   A blocking Linux Godot/native/parity job is added beside the existing Python
   matrix. Branch-local and current-master synthetic-merge checks pass,
   including a clean merge-context native rebuild, all parity lanes, exact
-  Godot verification, and the repository gate. Python remains the semantic
+  Godot verification, and the repository gate. Final push run `30179384125`
+  and pull-request run `30179385253` pass on implementation head
+  `6bd592e0329547ee03923f01fdaeb7d03aba89e3`, including the Linux clean-build,
+  parity, exact-Godot, and sanitation gates. Python remains the semantic
   oracle and no gameplay, topology, replay, hashing, RNG, persistence-schema,
   or authority boundary changes.
 

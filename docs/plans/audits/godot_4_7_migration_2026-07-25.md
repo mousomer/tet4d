@@ -197,14 +197,26 @@ tests the extension, runs 2D/ND/setup and geometry/query parity, performs the
 canonical Godot verification, and asserts that import/testing did not dirty
 the checkout. It does not replace the Python 3.11–3.14 matrix.
 
-Branch head `d9e6da3b0868f77aa26a6fd2e3b13496df40f949` passes the migration-specific
+Final implementation head `6bd592e0329547ee03923f01fdaeb7d03aba89e3`
+passes the migration-specific
 checks and `CODEX_MODE=1 ./scripts/verify.sh`. An isolated no-commit merge of
 current `origin/master` `c10ed4e6a190daa85976162c1feb866c743b9462` with
-that head also passes a clean native rebuild, native tests, every parity lane,
+the migration implementation also passes a clean native rebuild, native tests,
+every parity lane,
 the exact Godot verifier, and the full repository verifier. The first
 merge-context full-verifier attempt correctly rejected a Python environment
 installed from the primary worktree; rerunning in a temporary environment
 editable-installed from the merged worktree passed.
+
+GitHub Actions push run
+[`30179384125`](https://github.com/mousomer/tet4d/actions/runs/30179384125)
+and pull-request run
+[`30179385253`](https://github.com/mousomer/tet4d/actions/runs/30179385253)
+both pass on final implementation head
+`6bd592e0329547ee03923f01fdaeb7d03aba89e3`. Each run passes the Python
+3.11–3.14 matrix and the blocking Linux Godot 4.7.1 lane: exact download and
+checksum, engine/binding pins, clean native build and native tests, all parity
+lanes, exact Godot verification, and the clean-checkout gate.
 
 GitHub results are recorded after the final branch head is published; a queued
 or skipped job is not acceptance.
