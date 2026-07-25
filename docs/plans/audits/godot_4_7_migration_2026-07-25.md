@@ -82,6 +82,11 @@ No automatic resource conversion or broad re-save was accepted.
 - Debug and release paths remain declared for macOS framework, Linux shared
   library, and Windows DLL outputs.
 - The build remains C++17 and uses the repository's existing SCons graph.
+- Linux static archive creation uses SCons' response-file support. The first
+  GitHub acceptance run exposed Ubuntu's process argument limit when GNU `ar`
+  received the complete generated binding object list directly; the response
+  file preserves the identical archive inputs without changing native or
+  gameplay behavior.
 - Clean removal of the exact ignored binding/native output directories was
   followed by a full binding regeneration and native rebuild.
 - No project-source compiler warning or error was emitted. macOS emitted only
