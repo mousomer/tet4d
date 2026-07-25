@@ -42,8 +42,10 @@ The focused regression set, full Python suite, and branch-local
 `CODEX_MODE=1 ./scripts/verify.sh` pass. The isolated synthetic merge of
 `origin/master` `c10ed4e6a190daa85976162c1feb866c743b9462` with branch
 `32ce84041c559804eef48b9443d8236932016c29` also passes full verification.
-GitHub Python 3.11-3.14 results remain before completion. No Stage 52 behavior
-or Stage 53A scope changed.
+GitHub Actions pull-request run `30144781389` passes Python 3.11, 3.12, 3.13,
+and 3.14 for migration head
+`c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2`; automated Ruff migration
+acceptance is complete. No Stage 52 behavior or Stage 53A scope changed.
 
 Stage 52 accessibility infrastructure (2026-07-20, implementation and automated
 acceptance complete; final manual matrix pending): extend the

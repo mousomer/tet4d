@@ -2102,7 +2102,7 @@ Parameters:
 - `governance.ruff_toolchain.migration.diagnostics_before_migration`: `1023` (`int`)
 - `governance.ruff_toolchain.migration.files_changed`: `332` (`int`)
 - `governance.ruff_toolchain.migration.formatter_differences_before_migration`: `171` (`int`)
-- `governance.ruff_toolchain.migration.github_python_3_11_to_3_14_matrix_result`: `"pending push"` (`string`)
+- `governance.ruff_toolchain.migration.github_python_3_11_to_3_14_matrix_result`: `"GitHub Actions pull-request run 30144781389 passed Python 3.11, 3.12...` (`string`)
 - `governance.ruff_toolchain.migration.merge_context_result`: `"CODEX_MODE=1 ./scripts/verify.sh passed for origin/master c10ed4e6a1...` (`string`)
 - `governance.ruff_toolchain.migration.narrow_rule_exceptions[]`: array[`object`]
 - `governance.ruff_toolchain.migration.narrow_rule_exceptions[].reason`: varies (`string`); examples: `"Changing established ValueError or RuntimeError contracts caused reg...`, `"These boundaries must report or isolate arbitrary implementation fai...`, `"Explicit nested context-manager lifetime keeps environment restorati...`

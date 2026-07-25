@@ -116,7 +116,7 @@
         "technical_blockers": [],
         "branch_local_result": "CODEX_MODE=1 ./scripts/verify.sh passed on the final branch tree",
         "merge_context_result": "CODEX_MODE=1 ./scripts/verify.sh passed for origin/master c10ed4e6a190daa85976162c1feb866c743b9462 plus branch 32ce84041c559804eef48b9443d8236932016c29",
-        "github_python_3_11_to_3_14_matrix_result": "pending push"
+        "github_python_3_11_to_3_14_matrix_result": "GitHub Actions pull-request run 30144781389 passed Python 3.11, 3.12, 3.13, and 3.14 for migration head c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2"
       }
     },
     "policy_index_contract": {
