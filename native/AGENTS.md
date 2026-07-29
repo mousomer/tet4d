@@ -1,64 +1,32 @@
-# Native C++ / GDExtension AGENTS.md
+# Native C++ / GDExtension Dispatch
 
-This directory contains native code for the Godot migration.
+This directory contains provisional native implementation for the Godot
+product-shell migration. Python remains the semantic oracle unless a completed
+authority-transfer record names a transferred subsystem.
 
-See `docs/governance/cpp_safety_policy.md` for native C++ memory-safety rules.
-See `docs/architecture/parity_protocol.md` and
-`docs/architecture/first_subsystem_parity_pilot.md` for parity-pilot rules.
-See `docs/architecture/parity_pilot_audit_and_promotion_gates.md` for second
-slice gates.
-See `docs/architecture/second_parity_slice_candidate_selection.md` before
-Stage 18 parity work.
-See `docs/architecture/trace_metadata_identity_digest_parity.md` for the
-Stage 18 implementation boundary.
-See `docs/architecture/parity_evidence_review_and_third_slice_selection.md`
-for Stage 19 review and third-slice selection.
-See `docs/architecture/topology_identifier_normalization_parity.md` for
-Stage 20 topology identifier normalization parity.
-See `docs/architecture/parity_evidence_package_review.md` before further
-parity expansion.
-See `docs/architecture/trace_schema_version_normalization_parity.md` for
-Stage 22 trace schema/version normalization parity.
-See `docs/architecture/parity_tooling_package_review.md` before moving parity
-harnesses or changing the `tools/migration/` versus `tools/parity/` route.
-See `docs/governance/native_tooling_ci_policy.md` for native tooling CI rules.
-See `docs/architecture/authority_map.md` for semantic authority.
+Read:
+
+- `docs/architecture/authority_map.md` for current ownership;
+- `docs/architecture/parity_protocol.md` for parity implementation/evidence;
+- `docs/architecture/authority_transfer_protocol.md` for authority changes;
+- `docs/governance/cpp_safety_policy.md` for memory and API safety;
+- `docs/governance/native_tooling_ci_policy.md` for build/tooling evidence;
+- the current parity or migration authority routed by
+  `docs/DOCUMENTATION_MAP.md`.
 
 Rules:
 
-- Keep deterministic rule logic independent from Godot where possible.
-- Keep the GDExtension/Godot adapter thin.
-- Convert Godot types to domain/core types and back.
-- Do not implement game rules in adapter glue.
-- Do not duplicate existing Python semantics.
-- No raw owning pointers.
-- No naked `new` or `delete`.
-- Use RAII and explicit ownership.
-- No unsafe casts without written justification.
-- Public APIs must document ownership, lifetime, nullability, invariants,
+- Keep deterministic core logic independent from Godot and keep the adapter
+  thin; convert Godot types at the boundary.
+- Do not duplicate Python semantics or implement rules in adapter glue.
+- Ported behaviour requires Python-oracle parity fixtures and regression tests.
+- Native work remains provisional until explicit authority transfer. Parity
+  evidence, a successful build, and visual correctness do not transfer
+  authority.
+- Preserve documented default/advisory and strict parity behaviour when native
+  output is unavailable.
+- Follow RAII and explicit ownership; no raw owning pointers, naked
+  `new`/`delete`, or unjustified unsafe casts.
+- Public APIs document ownership, lifetime, nullability, invariants,
   preconditions, and failure modes.
-- Ported behavior requires parity tests against Python traces or equivalent
-  fixtures.
-- Treat first-pilot parity output as provisional evidence only.
-- Keep second-slice native work within the selected candidate; native work
-  remains provisional.
-- Keep Stage 18 implementation within the trace metadata identity/digest
-  parity slice only.
-- Keep Stage 20 within identifier-only topology normalization parity and do
-  not expand it into topology movement, seam traversal, neighbor lookup,
-  gameplay, or rendering.
-- Treat the parity evidence package as provisional and keep native work bounded
-  by the selected parity slices.
-- Stage 22 has no safe native/provisional route yet; do not fake native output
-  for trace schema/version normalization.
-- Keep Stage 22 schema/version metadata-only and out of trace events, topology
-  movement, gameplay, rendering, and authority transfer.
-- Stage 24 records the `tools/migration/` versus `tools/parity/` routing
-  decision, and Stage 25 applies that isolated move without authorizing native
-  code or parity logic changes.
-- Forbidden areas remain off-limits until separately selected and routed.
-- Native work remains provisional until explicit authority transfer.
-- Preserve advisory default behavior and strict parity behavior for native
-  unavailability.
-- Do not expand into gameplay semantics or forbidden areas without a routed
-  parity slice that satisfies the promotion gates.
+- Do not expand beyond the routed subsystem or its explicit exclusions.

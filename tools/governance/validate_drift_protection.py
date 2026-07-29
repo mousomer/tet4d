@@ -60,11 +60,7 @@ ROUTER_LINKS = {
         "tools/governance/validate_drift_protection.py",
         "tools/governance/validate_technical_debt.py",
     ),
-    "AGENTS.md": (
-        "docs/governance/workspace_bundle/programming_policy.md",
-        "docs/governance/workspace_bundle/drift_protection_policy.md",
-        "docs/architecture/authority_map.md",
-    ),
+    "AGENTS.md": ("docs/architecture/authority_map.md",),
 }
 
 REACHABILITY_ROOTS = (

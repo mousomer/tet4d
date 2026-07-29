@@ -484,7 +484,6 @@
           "category": "process",
           "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
           "source_docs": [
-            "AGENTS.md",
             "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
@@ -494,9 +493,8 @@
         {
           "id": "rds_backlog_state_sync",
           "category": "process",
-          "statement": "Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope or behavior changes.",
+          "statement": "Update relevant RDS docs and BACKLOG when scope or behavior changes; update CURRENT_STATE only for staged, restart, handoff, restructuring, multi-batch, or phase-dependent work.",
           "source_docs": [
-            "AGENTS.md",
             "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
@@ -521,7 +519,7 @@
           "category": "process",
           "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
           "source_docs": [
-            "AGENTS.md"
+            "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
             "code_review",
@@ -533,7 +531,7 @@
           "category": "process",
           "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
           "source_docs": [
-            "AGENTS.md"
+            "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
             "code_review",
@@ -1496,14 +1494,18 @@
           "Workflow authority",
           "config/project/policy_pack.json",
           "Authority files must be tracked in Git",
-          "## Context-switch profiles",
-          "### review",
-          "### engine",
-          "### menu_ui",
-          "### topology_explorer",
-          "### packaging",
-          "### governance",
-          "### handoff",
+          "## Common preconditions",
+          "## Task profiles",
+          "Narrow review",
+          "Python engine",
+          "Godot product shell",
+          "Native C++/GDExtension",
+          "Topology explorer",
+          "Governance",
+          "Packaging",
+          "Staged migration/handoff",
+          "Ordinary isolated fixes",
+          "Read the full policy pack only for governance",
           "## Boundary model",
           "Machine-readable policy data belongs in `config/project/policy_pack.json`.",
           "`tools/governance/validate_project_contracts.py` owns validation procedure only.",
@@ -1553,6 +1555,7 @@
           "CURRENT_STATE.md",
           "docs/rds/",
           "docs/ARCHITECTURE_CONTRACT.md",
+          "docs/DOCUMENTATION_MAP.md",
           "docs/plans/topology_playground_current_authority.md",
           "CODEX_MODE=1 ./scripts/verify.sh"
         ]

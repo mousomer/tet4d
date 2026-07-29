@@ -2035,8 +2035,8 @@ Parameters:
 - `governance.contributor_directives.directives[].category`: varies (`string`); examples: `"process"`, `"verification"`
 - `governance.contributor_directives.directives[].enforced_by[]`: array[`string`]; examples: `"code_review"`, `"scripts/verify.sh"`, `"scripts/ci_check.sh"`
 - `governance.contributor_directives.directives[].id`: varies (`string`); examples: `"plan_with_acceptance"`, `"rds_backlog_state_sync"`, `"verification_required"`
-- `governance.contributor_directives.directives[].source_docs[]`: array[`string`]; examples: `"AGENTS.md"`, `"docs/WORKFLOW_CODEX.md"`, `"config/project/policy_pack.json"`
-- `governance.contributor_directives.directives[].statement`: varies (`string`); examples: `"Start restructuring or behavior changes with a short plan and accept...`, `"Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope o...`, `"Run verify locally before completion; CI entrypoint remains authorit...`
+- `governance.contributor_directives.directives[].source_docs[]`: array[`string`]; examples: `"docs/WORKFLOW_CODEX.md"`, `"AGENTS.md"`, `"config/project/policy_pack.json"`
+- `governance.contributor_directives.directives[].statement`: varies (`string`); examples: `"Start restructuring or behavior changes with a short plan and accept...`, `"Update relevant RDS docs and BACKLOG when scope or behavior changes;...`, `"Run verify locally before completion; CI entrypoint remains authorit...`
 - `governance.contributor_directives.required_ci_enforced_ids[]`: array[`string`]; examples: `"verification_required"`, `"loc_delta_preference"`, `"quiet_test_default"`
 - `governance.description`: `"Unified governance section nested inside the single-source policy pa...` (`string`)
 - `governance.design_sources[]`: array[`string`]; examples: `"docs/WORKFLOW_CODEX.md"`, `"docs/rds/"`

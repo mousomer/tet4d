@@ -1638,32 +1638,6 @@ def test_parity_pilot_audit_governance_requires_drift_map_entries(
     )
 
 
-def test_parity_pilot_audit_governance_requires_agents_routing(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(tmp_path / "AGENTS.md", "AGENTS\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("AGENTS.md" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_requires_native_agents_warning(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(tmp_path / "native" / "AGENTS.md", "Native\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("native/AGENTS.md" in issue.message for issue in issues)
-
-
 def test_parity_pilot_audit_governance_accepts_baseline(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -1873,34 +1847,6 @@ def test_second_parity_selection_requires_drift_map_entry(
     issues = contracts._validate_second_parity_slice_candidate_selection()
 
     assert any("drift_protection_map.md" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_agents_routing(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(tmp_path / "AGENTS.md", "AGENTS\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("AGENTS.md" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_native_agents_warning(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(tmp_path / "native" / "AGENTS.md", "Native\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("native/AGENTS.md" in issue.message for issue in issues)
 
 
 def test_second_parity_selection_governance_accepts_baseline(
@@ -2214,36 +2160,6 @@ def test_parity_package_review_requires_drift_map_route(
     assert any("drift_protection_map.md" in issue.message for issue in issues)
 
 
-def test_parity_package_review_requires_agents_route(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(tmp_path / "AGENTS.md", "agents\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("AGENTS.md" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_native_agents_warning(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(tmp_path / "native" / "AGENTS.md", "native\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("native/AGENTS.md" in issue.message for issue in issues)
-
-
 def test_godot_semantic_boundary_governance_requires_validator(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -2312,7 +2228,10 @@ def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
     assert "Workflow authority" in must_contain
     assert "config/project/policy_pack.json" in must_contain
     assert "Authority files must be tracked in Git" in must_contain
-    assert "## Context-switch profiles" in must_contain
+    assert "## Common preconditions" in must_contain
+    assert "## Task profiles" in must_contain
+    assert "Ordinary isolated fixes" in must_contain
+    assert "Read the full policy pack only for governance" in must_contain
     assert "## Boundary model" in must_contain
     assert "CODEX_MODE=1 ./scripts/verify.sh" in must_contain
 

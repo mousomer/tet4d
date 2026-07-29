@@ -1,140 +1,74 @@
 # tet4d Dispatch
 
-This file is the thin entrypoint for repo workflow. It dispatches to the
-single machine-readable policy authority and to the human docs that explain how
-to apply it.
-
-tet4d is currently a Python-centered project. The existing Python
-implementation is the semantic oracle for gameplay, topology, trace, rotation,
-collision, movement, scoring, configuration defaults, and replay behavior
-unless an authority document explicitly says otherwise. Godot/C++ governance is
-a migration overlay, not a replacement root constitution.
+tet4d is a Python-centered game and engine with Godot as the product-shell
+direction. Python remains the semantic oracle for gameplay, topology, trace,
+replay, and defaults unless a documented authority transfer says otherwise.
+Native C++/GDExtension receives subsystem authority only through documented
+parity evidence and the authority-transfer process.
 
 ## Canonical authorities
 
-- Machine-readable governance authority: `config/project/policy_pack.json`
-- Human workflow explainer: `docs/WORKFLOW_CODEX.md`
-- Restart handoff only: `CURRENT_STATE.md`
-- Backlog and deferred work tracker: `docs/BACKLOG.md`
-- Product requirements: `docs/rds/`
-- Architecture boundary contract: `docs/ARCHITECTURE_CONTRACT.md`
-- Migration authority map: `docs/architecture/authority_map.md`
-- Governance router: `docs/governance/README.md`
-- Topology-playground current authority:
-  `docs/plans/topology_playground_current_authority.md`
+- Governance and generated-maintenance policy:
+  `config/project/policy_pack.json`
+- Contributor workflow and verification: `docs/WORKFLOW_CODEX.md`
+- Product behaviour: relevant documents under `docs/rds/`
+- Architecture boundaries: `docs/ARCHITECTURE_CONTRACT.md`
+- Migration ownership: `docs/architecture/authority_map.md`
+- Documentation and historical routing: `docs/DOCUMENTATION_MAP.md`
+- Governance policy routing: `docs/governance/README.md`
+- Restart and staged-work handoff only: `CURRENT_STATE.md`
+- Open work and deferred scope: `docs/BACKLOG.md`
 
-## Context-loading order
+## Task routing
 
-1. Read this `AGENTS.md`.
-2. Read `CURRENT_STATE.md` first for long-running refactors, restart handoff,
-   architecture cleanup, or staged migration work.
-3. For topology-playground work, read
-   `docs/plans/topology_playground_current_authority.md` before archived
-   topology-playground plans or audits.
-4. Read `docs/WORKFLOW_CODEX.md` for repo workflow, verification, and update
-   sequencing.
-5. Read the relevant `docs/rds/*` files before changing product behavior.
-6. Read `docs/ARCHITECTURE_CONTRACT.md` before boundary-sensitive refactors or
-   folder moves.
-7. Read `config/project/policy_pack.json` when the task touches governance,
-   validation, generated maintenance docs, or policy-backed tooling.
-8. For migration decisions, read `docs/architecture/authority_map.md`,
-   `docs/architecture/parity_protocol.md`,
-   `docs/architecture/first_subsystem_parity_pilot.md`, and
-   `docs/architecture/parity_pilot_audit_and_promotion_gates.md`, and
-   `docs/governance/README.md`.
-9. For Stage 18 parity work, read
-   `docs/architecture/second_parity_slice_candidate_selection.md` and
-   `docs/architecture/trace_metadata_identity_digest_parity.md`; Stage 18 may
-   only implement the selected candidate and cannot transfer authority.
-10. For parity evidence review or third-slice selection, read
-    `docs/architecture/parity_evidence_review_and_third_slice_selection.md`.
-    That review remains process-only and does not transfer authority.
-11. For Stage 20 topology identifier normalization parity, read
-    `docs/architecture/topology_identifier_normalization_parity.md`; Stage 20
-    is identifier-only and excludes movement, seams, gameplay, and authority
-    transfer.
-12. Before further parity expansion, read
-    `docs/architecture/parity_evidence_package_review.md` and Stage 24
-    `docs/architecture/parity_tooling_package_review.md`; route `tools/migration/`/`tools/parity/`.
-13. For Stage 22 trace schema/version normalization parity, read
-    `docs/architecture/trace_schema_version_normalization_parity.md`; Stage 22
-    is metadata-only and excludes events, topology, gameplay, rendering, and
-    authority transfer.
-14. For Godot UI/product-shell work, also read `godot/AGENTS.md` if present.
-15. For C++/GDExtension/native work, also read `native/AGENTS.md` if present.
+- Narrow review: inspect the changed diff, touched tests, and the authority
+  routed by `docs/DOCUMENTATION_MAP.md`.
+- Python engine or gameplay: read the architecture contract, relevant RDS,
+  touched modules, and tests.
+- Godot UI/product shell: also follow `godot/AGENTS.md` and the relevant
+  product or presentation authority.
+- Native C++/GDExtension: also follow `native/AGENTS.md`, the authority map,
+  and the applicable parity or authority-transfer protocol.
+- Topology explorer: read
+  `docs/plans/topology_playground_current_authority.md`, then the relevant
+  runtime and tests.
+- Governance, validation, generated maintenance docs, policy-backed tooling,
+  manifest contracts, or policy interpretation: read the policy pack,
+  governance router, and affected validators or generators.
+- Packaging: read `docs/rds/RDS_PACKAGING.md`,
+  `docs/RELEASE_CHECKLIST.md`, and affected scripts/tests.
+- Staged migration, restart, architecture restructuring, or multi-batch
+  handoff: read `CURRENT_STATE.md`, `docs/BACKLOG.md`, and the routed
+  architecture authorities.
 
-## Instruction routing
+Use `docs/WORKFLOW_CODEX.md` for detailed workflow and focused checks. Do not
+load `CURRENT_STATE.md` or the full policy pack for an ordinary isolated task
+unless one of the routes above requires it.
 
-- General programming rules follow
-  `docs/governance/workspace_bundle/programming_policy.md`.
-- General drift-protection rules follow
-  `docs/governance/workspace_bundle/drift_protection_policy.md`.
-- tet4d-specific semantic authority follows
-  `docs/architecture/authority_map.md`.
-- Python implementation work follows existing repo/Python governance, relevant
-  `docs/rds/*`, and the current Python tests and traces.
-- Godot UI/product-shell work follows root governance plus `godot/AGENTS.md`
-  and `docs/governance/godot_cpp_policy.md`.
-- C++/GDExtension/native work follows root governance plus `native/AGENTS.md`
-  and `docs/governance/godot_cpp_policy.md`.
-- Testing, constants/config, secrets, and review requirements route through
-  the relevant documents under `docs/governance/` and `docs/policies/`.
+## Universal invariants
 
-## Operating reminders
-
-- `CURRENT_STATE.md` is handoff-only. Do not treat it as a second governance
+- Inspect current code, tests, and owning authority documents before editing;
+  search for existing implementations and policies before adding new ones.
+- Relevant RDS documents own product behaviour. The architecture contract and
+  authority map own boundaries; do not invent a competing authority.
+- Python remains the semantic oracle until a completed transfer record changes
+  a named subsystem. Godot shell work and parity evidence alone do not transfer
   authority.
-- `docs/rds/` owns product behavior. Repo workflow belongs in
-  `docs/WORKFLOW_CODEX.md`.
-- Generated maintenance docs and maintenance validation are driven from
-  `config/project/policy_pack.json`.
-- Do not invent new authority, ownership, routing, or parity decisions outside
-  the canonical governance files listed above.
-- Do not rewrite existing functions unless explicitly asked.
-- Search for existing implementations before adding new code or governance.
-- Reuse existing utilities and policies; do not duplicate rule logic or
-  governance documents.
-- No secrets in source, config, tests, traces, logs, screenshots, prompts, or
-  documentation examples.
-- No nontrivial magic numbers in source; route constants through standard
-  config policy.
-- Behavioral changes require tests.
-- Python remains the semantic oracle until a documented authority transfer
-  occurs.
-- Godot/C++ code must prove parity with Python through tests, traces, or
-  documented verification before it becomes authoritative.
-- Parity contributors must consult the parity protocol, pilot, audit/gate, and
-  slice-specific docs before parity work.
-- A second parity slice requires promotion-gate compliance and does not transfer
-  authority by itself.
-- Stage 18, Stage 20, and Stage 22 remain limited to their documented selected
-  parity slices.
-- Further parity expansion must route through Stage 21/24 package reviews.
-- Do not transfer authority without the authority transfer protocol.
+- Behavioural changes require tests. Preserve security, config, testing,
+  parity, and semantic-boundary guarantees routed by the workflow and policy
+  documents.
+- Nested `AGENTS.md` files may add narrower constraints and cannot weaken this
+  dispatch.
+- Partial satisfaction of acceptance criteria must not be reported as
+  completion.
 
-## Done criteria
+## Verification and completion
 
-Every change must report:
-
-- files changed
-- existing governance files reused or extended
-- new routing/authority decisions introduced
-- tests or checks run
-- risks or unverified areas
-
-## Validation
-
-Run:
+Run focused checks while iterating, then the applicable final gate:
 
 ```bash
 CODEX_MODE=1 ./scripts/verify.sh
 ```
 
-## Python Environment
-
-Use the workspace-managed Python environment when provided: prefer
-`${PYTHON_BIN}`, otherwise use `${WORKSPACE_VENV}/bin/python` when
-`WORKSPACE_VENV` is set, otherwise use the documented verification scripts. Do
-not hardcode machine-local interpreter paths or rely on repo-local virtualenvs
-unless the user explicitly approves that environment for the task.
+Report files changed, authorities reused or extended, any routing/authority
+decision, checks and results, and remaining risks or unverified areas.

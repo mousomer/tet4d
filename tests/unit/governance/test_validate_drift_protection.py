@@ -463,12 +463,12 @@ def test_router_missing_drift_validator_link_fails(tmp_path: Path) -> None:
     )
 
 
-def test_root_agents_missing_workspace_drift_policy_link_fails(tmp_path: Path) -> None:
+def test_root_agents_missing_authority_map_link_fails(tmp_path: Path) -> None:
     _valid_fixture(tmp_path)
     agents = tmp_path / "AGENTS.md"
     agents.write_text(
         agents.read_text(encoding="utf-8").replace(
-            "docs/governance/workspace_bundle/drift_protection_policy.md\n", ""
+            "docs/architecture/authority_map.md\n", ""
         ),
         encoding="utf-8",
     )

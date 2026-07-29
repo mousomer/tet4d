@@ -28,6 +28,15 @@ background only unless reactivated by a future task.
 
 ## Active Work
 
+Agent-governance documentation modernization (2026-07-29): reduce the root
+dispatch to durable authority and task routing; consolidate detailed workflow
+in `docs/WORKFLOW_CODEX.md`; make `CURRENT_STATE.md` conditional on staged,
+handoff, restructuring, or phase-dependent work; retain the policy pack as the
+single machine-readable authority; and move completed parity-stage
+discoverability to documentation/governance indexes instead of root or nested
+agent prompts. Preserve all semantic, parity, transfer, testing, validation,
+security, and generated-document guarantees.
+
 Godot 4.7 migration (2026-07-25, acceptance complete): advance the
 product shell from 4.6.3 to the newest stable 4.7 patch, exact official
 `4.7.1-stable` build, and pin the matching immutable godot-cpp API baseline.
@@ -1453,12 +1462,11 @@ Completed on 2026-03-29:
 
 Current batch:
 
-- docs-authority cleanup in `docs/plans/topology_playground_debt_register.md`,
-  `docs/plans/cleanup_master_plan.md`, and `docs/BACKLOG.md`
-- stale active-debt and cleanup-domain wording removed so current ledgers match
-  the live repo state more closely
-- merged project-structure index work stays in recent-completed reporting
-  instead of the current-batch footprint
+- agent-facing governance dispatch/workflow simplification;
+- completed parity-stage routing moved out of root and nested agent prompts;
+- policy-backed token checks and validators aligned with durable indexed
+  reachability;
+- no runtime, product behaviour, semantic authority, or authority transfer.
 
 ## Historical Milestones
 
