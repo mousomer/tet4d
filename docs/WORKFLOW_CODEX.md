@@ -85,6 +85,45 @@ routing categories. Use `docs/DOCUMENTATION_MAP.md` and
 `docs/governance/README.md` to locate applicable current or historical
 documents; do not infer active scope from an old stage number.
 
+## Stable change classes
+
+Use capability classes for current routing. Stage numbers may identify
+historical evidence, but they do not define universal workflow.
+
+| Change class | Primary authority | Expected verification | Common forbidden scope | Likely manual acceptance |
+| --- | --- | --- | --- | --- |
+| Documentation or philosophy | documentation map and owning document/RDS | docs, links, governance validators | runtime or semantic changes | usually none |
+| Shell, menu, or UI | menu/product RDS, editing guide, or Godot shell authority | focused UI/input/layout tests | gameplay or topology truth in UI code | real-window navigation when behavior is visible |
+| Visual design | visual-system authority, theme/config owner, accessibility contract | theme/UI/headless, focus/scale, deterministic identity checks | gameplay, topology, replay, or native semantics | required for subjective design acceptance |
+| Gameplay semantics | relevant RDS, Python oracle, architecture contract | focused engine tests, deterministic traces, parity | implicit authority transfer or presentation-only truth | representative play when routed |
+| Topology semantics | topology authority, Python profile/resolver, fixtures | topology invariants, trace/endgame/explosion coverage, parity | UI-owned topology truth or silent normalization | representative explorer/play cases when behavior changes |
+| Native core | native rules, authority map, safety/tooling policy | native build/tests, selected parity, adapter smoke | unrecorded semantic ownership | product shell only when exposed |
+| Migration or parity | parity protocol, selected subsystem authority, fixtures | default/strict comparison, synthetic merge when required | adjacent slices or implicit transfer | only for exposed product surfaces |
+| Replay and trace | replay/trace RDS, schema, Python oracle | strict load/round-trip, golden drift, parity | silent schema or event-semantic change | replay usability when presentation changes |
+| Packaging or release | packaging RDS and release checklist | packaging tests, sanitation, platform checks | product semantics and unrelated cleanup | installer/launch checks |
+| Governance | policy pack, governance router, affected validators/generators | governance/docs tests, generation checks, sanitation, full gate | runtime, UI, gameplay, toolchain, or formatting changes | none unless the governance changes a human workflow |
+
+## Task and PR contract
+
+Repository-changing work starts from
+`docs/governance/task_contract.md`. The contract records the objective,
+authority, allowed and forbidden paths, required changes, acceptance criteria,
+automated/manual verification, documentation updates, and explicit deferrals.
+
+- Keep one semantic objective per PR.
+- Separate unrelated formatting from behavioral work.
+- Separate toolchain migrations from product behavior where practical.
+- Deliberately cross-layer integration requires a scope matrix explaining why
+  each layer must change and how it is verified.
+- Do not weaken, delete, or silently redefine tests to fit implementation.
+- Do not continue into the next task, stage, or deferral without a new
+  contract and branch.
+- A branch or draft PR is not completion.
+
+Use `docs/governance/completion_report.md` for final handoff. Distinguish
+implemented, automatically verified, manually inspected, human accepted, and
+merged states.
+
 ## Boundary model
 
 - Machine-readable policy data belongs in `config/project/policy_pack.json`.

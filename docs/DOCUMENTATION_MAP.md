@@ -74,6 +74,8 @@ These files define contributor process, policy, and verification workflow.
 
 - `AGENTS.md`
 - `docs/WORKFLOW_CODEX.md`
+- `docs/governance/task_contract.md`
+- `docs/governance/completion_report.md`
 - `docs/KEYBINDINGS_EDITING.md`
 - `docs/SHORT_KEYBINDINGS_GUIDE.md`
 - `docs/MENU_STRUCTURE_EDITING.md`
@@ -101,6 +103,8 @@ place to define behavior policy.
 These files preserve useful background, completed pass notes, and retired plans.
 
 - `docs/history/*`
+- `docs/history/current_state_archive_2026-07-30.md`
+- `docs/history/backlog_archive_2026-07-30.md`
 - completed parity and migration evidence:
   `docs/architecture/first_subsystem_parity_pilot.md`,
   `docs/architecture/parity_pilot_audit_and_promotion_gates.md`,
@@ -160,20 +164,11 @@ These files preserve useful background, completed pass notes, and retired plans.
 
 ## Precedence
 
-When documents disagree, precedence is:
-
-1. newer task instruction
-2. `config/project/policy_pack.json` for repo governance, validation, and generated maintenance automation
-3. owning active plan `authority` document for the domain
-4. owning active or frozen plan `spec` document for the domain
-5. this file for documentation routing and file ownership
-6. durable RDS contract for the topic
-7. architecture and structure docs
-8. current-state/backlog/generated references
-9. historical docs
-
-If a lower-precedence file conflicts with a higher-precedence file, update or
-move the lower-precedence file in the same batch.
+`docs/WORKFLOW_CODEX.md` owns source-of-truth precedence. This map owns
+documentation roles and routing only; it does not outrank the product or
+architecture authority it helps readers locate. When a routed document is
+stale, follow the workflow precedence and update or archive the stale text in
+the same change.
 
 ## Scope boundaries
 
@@ -239,6 +234,10 @@ It is not the product contract.
   `docs/architecture/configurable_plain_boards_and_4d_layout.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
+- If you need to constrain a repository-changing task: use
+  `docs/governance/task_contract.md`.
+- If you need the required handoff fields: use
+  `docs/governance/completion_report.md`.
 - If you need task-specific context loading: use the context-switch profiles in
   `docs/WORKFLOW_CODEX.md`.
 - If you need to edit keybinding structure or shipped defaults: use

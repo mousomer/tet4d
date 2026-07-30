@@ -5,6 +5,24 @@ replacement for Python/repository governance. The machine-readable authority is
 `config/project/policy_pack.json`; this file routes readers to human policy and
 evidence.
 
+## Three-layer active model
+
+1. **Stable project constitution:** `AGENTS.md` states durable authorities,
+   semantic boundaries, safety, verification, sanitation, and
+   authority-transfer rules.
+2. **Task contract:** `docs/governance/task_contract.md` constrains one
+   objective, authority, allowed/forbidden scope, acceptance, verification,
+   documentation, and deferrals. `docs/WORKFLOW_CODEX.md` routes stable change
+   classes.
+3. **Completion report:** `docs/governance/completion_report.md` records files,
+   semantic/authority impact, automated and manual evidence, warnings,
+   limitations, diffstat, commit, PR, and worktree state.
+
+The review overlay is `docs/governance/review_checklist.md`; new PRs start from
+`.github/pull_request_template.md`. Completed stage evidence is historical
+input for the relevant parity or migration task, not active instruction for
+unrelated work.
+
 ## Core policy routes
 
 | Concern | Read |
@@ -21,7 +39,8 @@ evidence.
 | Secrets/security | `docs/governance/secrets_policy.md`, `config/project/policy/manifests/secret_scan.json` |
 | Dependency/utility reuse | `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, `docs/architecture/utility_index.md`, `tools/governance/validate_utility_reuse.py` |
 | Technical debt | `docs/governance/workspace_bundle/technical_debt_policy.md`, `docs/governance/technical_debt_register.md`, `tools/governance/validate_technical_debt.py` |
-| Review | `docs/governance/review_checklist.md`, `docs/governance/workspace_bundle/review_checklist_template.md`, `.github/pull_request_template.md` |
+| Task/PR scope | `docs/governance/task_contract.md`, `.github/pull_request_template.md` |
+| Review/completion | `docs/governance/review_checklist.md`, `docs/governance/completion_report.md`, `docs/governance/workspace_bundle/review_checklist_template.md` |
 | Drift protection | `docs/governance/drift_protection_map.md`, `tools/governance/validate_drift_protection.py` |
 
 The reusable workspace bundle lives in `docs/governance/workspace_bundle/` and
