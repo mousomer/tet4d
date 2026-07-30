@@ -14,7 +14,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest",
-  "ruff",
+  "ruff==0.16.0",
+  "scons==4.10.1",
 ]
 
 [tool.setuptools]
@@ -27,4 +28,9 @@ include = ["tet4d*"]
 [tool.ruff]
 extend-exclude = [
   "native/third_party",
+]
+
+[tool.ruff.lint]
+extend-select = [
+  "C901",
 ]

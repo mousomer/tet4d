@@ -344,3 +344,44 @@ Explorer-only traversal controls, including upward and downward movement.
 Board orbit, zoom, projection, and overlay controls.
 - 3D: 12 actions
 - 4D: 16 actions
+
+
+## Godot shell settings
+
+These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/config/shell_settings_registry.json` and saved in `user://shell_settings.json`. Schema version `3` migrates valid schema-version-1 and schema-version-2 choices field by field, including the legacy keyboard-hint preference. Game setup remains separate in `user://game_setup.json`.
+
+`Reset Display Settings` restores only Display, Theme, and Camera preferences. `Reset Accessibility Settings` restores only High Contrast, Reduced Motion, and Show Help and Control Hints. Replay and onboarding choices are preserved by both actions.
+
+### Replay
+
+- `replay.playback_speed`: default `1.0`; float
+- `replay.loop_enabled`: default `true`; bool
+
+### Display
+
+- `display.window_mode`: default `"windowed"`; enum; options: windowed, fullscreen
+- `display.windowed_size`: default `[1280, 720]`; size; min [634, 660]; max [16384, 16384]
+- `display.ui_scale`: default `"standard"`; enum; options: small, standard, large, extra_large
+- `display.hud_density`: default `"standard"`; enum; options: compact, standard, detailed
+- `display.board_detail`: default `"standard"`; enum; options: minimal, standard, full
+- `display.show_w_labels`: default `true`; bool
+- `display.projection_strength`: default `1.0`; float
+
+### Theme
+
+- `theme.name`: default `"tron"`; enum; options: diagnostic, plain, tron
+
+### Interface
+
+- `interface.show_onboarding`: default `true`; bool
+
+### Accessibility
+
+- `accessibility.high_contrast`: default `false`; bool
+- `accessibility.reduced_motion`: default `false`; bool
+- `accessibility.show_help_hints`: default `true`; bool
+
+### Camera
+
+- `camera.sensitivity`: default `"standard"`; enum; options: low, standard, high
+- `camera.invert_y`: default `false`; bool

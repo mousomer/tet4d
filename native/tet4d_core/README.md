@@ -43,13 +43,15 @@ The native source tree has two layers:
   wrapper to Godot.
 
 The official `godot-cpp` repository is included as a Git submodule at
-`native/third_party/godot-cpp`. On a fresh checkout, initialize submodules,
-build the local extension, then run the Godot smoke tests:
+`native/third_party/godot-cpp`. The Godot 4.7.1 baseline pins that submodule to
+`5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731` and builds with
+`api_version=4.7`. On a fresh checkout, initialize submodules, build the local
+extension, then run the canonical Godot verification:
 
 ```bash
 git submodule update --init --recursive
 ./scripts/build_godot_tet4d_core.sh
-godot --headless --path godot/Tet4D.Godot --script tests/run_tests.gd
+GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh
 ```
 
 The extension test loads `res://addons/tet4d_core/tet4d_core.gdextension`.
@@ -61,6 +63,12 @@ To rebuild after C++ changes, run:
 ```bash
 ./scripts/build_godot_tet4d_core.sh
 ```
+
+The build uses pinned SCons 4.10.1 from the development dependencies and C++17.
+When the engine or API baseline changes, remove the ignored godot-cpp
+`bin/`/`gen/` outputs, the native `build/` and SCons signature database, and
+the generated extension binaries before rebuilding. Do not reuse generated
+bindings from another engine API.
 
 Allowed Stage 8 API:
 

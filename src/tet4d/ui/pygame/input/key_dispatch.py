@@ -4,7 +4,6 @@ from collections.abc import Callable, Mapping, Sequence
 
 from tet4d.ui.pygame.keybindings import key_matches
 
-
 KeyTuple = tuple[int, ...]
 
 

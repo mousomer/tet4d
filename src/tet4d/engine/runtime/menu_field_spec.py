@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-
 FieldSemanticType = Literal["bool", "enum", "int", "float"]
 FieldControlFamily = Literal["toggle", "selector", "slider", "stepper"]
 
@@ -64,9 +63,12 @@ class FieldSpec:
         for option in self.options:
             if option.value == value:
                 return option
-        if isinstance(value, int) and not isinstance(value, bool):
-            if 0 <= int(value) < len(self.options):
-                return self.options[int(value)]
+        if (
+            isinstance(value, int)
+            and not isinstance(value, bool)
+            and 0 <= int(value) < len(self.options)
+        ):
+            return self.options[int(value)]
         return None
 
     def cycle_enum_value(self, current: object, delta: int) -> Any:
@@ -95,5 +97,5 @@ class FieldSpec:
         numeric = float(value)
         clamped = max(minimum, min(maximum, numeric))
         if self.semantic_type == "int":
-            return int(round(clamped))
+            return round(clamped)
         return clamped

@@ -10,7 +10,6 @@ import pygame
 
 from tet4d.engine.runtime.project_config import project_root_path
 
-
 _ICON_FG = (224, 236, 252)
 _ICON_CACHE_LIMIT = 192
 _ICON_SURFACE_CACHE: dict[tuple[str, int, int], pygame.Surface] = {}
@@ -324,7 +323,7 @@ def _mapped_asset_name(action: str) -> str | None:
 def _icon_candidate_paths(action: str, *, width: int, height: int) -> tuple[Path, ...]:
     asset_name = _mapped_asset_name(action)
     if asset_name is None:
-        return tuple()
+        return ()
     settings = _icon_map_payload()
     root: Path = settings["pack_root"]
     sizes: tuple[int, ...] = settings["available_sizes"]

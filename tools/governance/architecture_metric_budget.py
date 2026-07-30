@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 ARCHITECTURE_METRIC_BUDGETS = {
     "engine_core_purity.violation_count": 0,
     "deep_imports.engine_core_to_engine_non_core_imports.count": 0,

@@ -40,6 +40,11 @@ The registry lives at:
 
 - `godot/Tet4D.Godot/config/shell_settings_registry.json`
 
+This checked-in JSON file is the only declaration/default authority for
+user-facing Godot shell settings. Runtime consumers may define how a validated
+preset is interpreted—for example, the scale factor associated with `large`—
+but may not carry a second fallback/default for the setting itself.
+
 The supporting Godot scripts are:
 
 - `godot/Tet4D.Godot/scripts/ui/settings/setting_spec.gd`
@@ -86,6 +91,28 @@ now written only to Godot user data at:
 The old `user://tet4d_shell_settings.cfg` file is no longer read or written.
 Neither stage writes Python config, gameplay config, migration bundle data,
 golden traces, parity fixtures, or native/C++ settings.
+
+## Externalization quality gate
+
+`tools/governance/check_godot_settings_externalization.py` is a blocking local
+and CI gate, reached from `scripts/verify.sh`. It fails when:
+
+- a registry entry omits its ID, metadata, explicit default, authority, or
+  persistence policy;
+- a persistent setting is not `local_shell` plus `persist: true`, or a
+  session/none setting is marked for disk persistence;
+- the registry schema and store schema diverge;
+- the registry loader or settings store no longer points to the policy-backed
+  registry and `user://shell_settings.json`;
+- the store stops serializing the registry-derived persistent value set;
+- runtime Godot source introduces an unknown setting ID or duplicates a
+  registry setting default as a code fallback.
+
+Tests and fixtures may repeat defaults for assertions. Preset interpretation
+tables are implementation mappings, not setting defaults, and remain allowed.
+Adding a shell setting therefore requires changing the external registry first;
+the gate prevents a code-only setting/default or a repository-owned user save
+file from becoming a second authority.
 
 ## Integration
 

@@ -4,7 +4,6 @@ from collections.abc import Sequence
 
 import pygame
 
-
 _KEY_NAME_OVERRIDES = {
     "escape": "Esc",
     "return": "Enter",

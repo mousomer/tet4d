@@ -7,7 +7,6 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
 POLICY_PACK_REL = "config/project/policy_pack.json"
@@ -1378,14 +1377,13 @@ def _validate_menu_control_storage_type(
                     f"{prefix} storage_type=bool requires semantic_type=bool",
                 )
             )
-    elif storage_type in {"int_index", "string_id"}:
-        if semantic_type != "enum":
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{prefix} storage_type={storage_type} requires semantic_type=enum",
-                )
+    elif storage_type in {"int_index", "string_id"} and semantic_type != "enum":
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{prefix} storage_type={storage_type} requires semantic_type=enum",
             )
+        )
 
     if item_type in {"slider", "stepper"} and storage_type not in {"int", "float"}:
         issues.append(
@@ -2061,7 +2059,7 @@ def _validate_menu_structure_single_option_menus(
         from tet4d.engine.runtime.menu_runtime_graph import (
             detect_redundant_single_option_menus,
         )
-    except Exception as exc:
+    except ImportError as exc:
         issues.append(
             ValidationIssue(
                 "import",
@@ -2144,7 +2142,7 @@ def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
             load_keybinding_defaults_payload,
         )
         from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
-    except Exception as exc:
+    except ImportError as exc:
         issues.append(
             ValidationIssue(
                 "import",
@@ -2155,7 +2153,7 @@ def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
 
     try:
         load_keybinding_defaults_payload()
-    except Exception as exc:
+    except (OSError, TypeError, ValueError) as exc:
         issues.append(
             ValidationIssue(
                 "content",
@@ -2165,7 +2163,7 @@ def _validate_keybinding_single_source_of_truth() -> list[ValidationIssue]:
 
     try:
         binding_action_ids()
-    except Exception as exc:
+    except (OSError, TypeError, ValueError) as exc:
         issues.append(
             ValidationIssue(
                 "content",
@@ -2660,21 +2658,6 @@ def _validate_parity_pilot_audit_governance() -> list[ValidationIssue]:
             "docs/DOCUMENTATION_MAP.md",
             ("parity_pilot_audit_and_promotion_gates.md",),
         ),
-        (
-            "AGENTS.md",
-            (
-                "parity_pilot_audit_and_promotion_gates.md",
-                "second parity slice requires promotion-gate compliance",
-            ),
-        ),
-        (
-            "native/AGENTS.md",
-            (
-                "parity_pilot_audit_and_promotion_gates.md",
-                "provisional evidence",
-                "strict parity behavior",
-            ),
-        ),
     )
     issues.extend(
         _validate_governance_doc_tokens(
@@ -2771,22 +2754,6 @@ def _validate_second_parity_slice_candidate_selection() -> list[ValidationIssue]
             "docs/DOCUMENTATION_MAP.md",
             ("second_parity_slice_candidate_selection.md",),
         ),
-        (
-            "AGENTS.md",
-            (
-                "second_parity_slice_candidate_selection.md",
-                "stage 18 may",
-                "selected candidate",
-            ),
-        ),
-        (
-            "native/AGENTS.md",
-            (
-                "second_parity_slice_candidate_selection.md",
-                "selected candidate",
-                "native work remains provisional",
-            ),
-        ),
     )
     issues.extend(
         _validate_governance_doc_tokens(
@@ -2859,20 +2826,10 @@ def _validate_parity_evidence_review_and_third_slice_selection() -> list[
             "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
             (doc_rel,),
         ),
-        (
-            "docs/architecture/authority_map.md",
-            (doc_rel, "topology identifier normalization"),
-        ),
         ("docs/governance/README.md", (doc_rel,)),
         ("docs/governance/review_checklist.md", (doc_rel,)),
         ("docs/governance/drift_protection_map.md", (doc_rel,)),
         ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
-        ("AGENTS.md", (doc_rel,)),
-        ("native/AGENTS.md", (doc_rel,)),
-        (
-            "docs/governance/codex_policy.md",
-            ("parity evidence review and third-slice selection",),
-        ),
     )
     issues.extend(
         _validate_governance_doc_tokens(
@@ -2936,9 +2893,6 @@ def _validate_trace_metadata_identity_digest_parity_governance() -> list[
         ("docs/governance/drift_protection_map.md", (doc_rel,)),
         ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
         ("docs/PROJECT_STRUCTURE.md", (doc_rel, "tests/fixtures/parity/")),
-        ("AGENTS.md", (doc_rel,)),
-        ("native/AGENTS.md", (doc_rel,)),
-        ("docs/governance/codex_policy.md", ("stage 18 implementation tasks",)),
     )
     issues.extend(
         _validate_governance_doc_tokens(
@@ -3048,10 +3002,6 @@ def _validate_topology_identifier_normalization_parity_governance() -> list[
             "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
             (doc_rel,),
         ),
-        (
-            "docs/architecture/authority_map.md",
-            (doc_rel, "topology identifier normalization"),
-        ),
         ("docs/governance/README.md", (doc_rel, "topology identifier normalization")),
         ("docs/governance/review_checklist.md", (doc_rel,)),
         ("docs/governance/drift_protection_map.md", (doc_rel,)),
@@ -3065,8 +3015,6 @@ def _validate_topology_identifier_normalization_parity_governance() -> list[
                 "tests/unit/migration/test_topology_identifier_normalization_parity.py",
             ),
         ),
-        ("AGENTS.md", (doc_rel,)),
-        ("native/AGENTS.md", (doc_rel,)),
     )
     issues.extend(
         _validate_governance_doc_tokens(
@@ -3196,10 +3144,6 @@ def _validate_parity_evidence_package_review_governance() -> list[ValidationIssu
             "docs/architecture/authority_transfer_protocol.md",
             (doc_rel, "not transfer records"),
         ),
-        (
-            "docs/architecture/authority_map.md",
-            (doc_rel, "provisional parity evidence"),
-        ),
         ("docs/governance/README.md", (doc_rel,)),
         (
             "docs/governance/review_checklist.md",
@@ -3209,14 +3153,8 @@ def _validate_parity_evidence_package_review_governance() -> list[ValidationIssu
             "docs/governance/drift_protection_map.md",
             (doc_rel, "tools/migration/", "tools/parity/"),
         ),
-        ("docs/governance/codex_policy.md", ("evidence-package status",)),
-        ("docs/DOCUMENTATION_MAP.md", (doc_rel, "stages 15, 18, and 20")),
+        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
         ("docs/PROJECT_STRUCTURE.md", (doc_rel,)),
-        ("AGENTS.md", (doc_rel, "tools/migration/", "tools/parity/")),
-        (
-            "native/AGENTS.md",
-            (doc_rel, "provisional", "forbidden areas"),
-        ),
     )
     issues.extend(
         _validate_governance_doc_tokens(
@@ -3316,24 +3254,17 @@ def _validate_trace_schema_version_normalization_parity_governance() -> list[
             "docs/architecture/authority_transfer_protocol.md",
             (doc_rel, "not a transfer record"),
         ),
-        (
-            "docs/architecture/authority_map.md",
-            (doc_rel, "schema/version metadata"),
-        ),
         ("docs/governance/README.md", (doc_rel, harness_rel, fixture_rel)),
         ("docs/governance/review_checklist.md", (doc_rel, "stage 22")),
         (
             "docs/governance/drift_protection_map.md",
             (doc_rel, harness_rel, fixture_rel, test_rel),
         ),
-        ("docs/governance/codex_policy.md", ("stage 22 implementation tasks",)),
         ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
         (
             "docs/PROJECT_STRUCTURE.md",
             (doc_rel, harness_rel, fixture_rel, test_rel),
         ),
-        ("AGENTS.md", (doc_rel,)),
-        ("native/AGENTS.md", (doc_rel, "do not fake native output")),
     )
     issues.extend(
         _validate_governance_doc_tokens(

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Mapping, MutableMapping
 from pathlib import Path
-from typing import Dict, List, Mapping, MutableMapping, Tuple
 
 import pygame
+
 from tet4d.engine.runtime.keybinding_runtime_state import (
-    KEYBINDING_STATE,
     KEY_PROFILE_ENV,  # noqa: F401 - re-exported for callers
-    PROFILE_FULL,  # noqa: F401 - re-exported for callers
+    KEYBINDING_STATE,
+    PROFILE_FULL,
     PROFILE_MACBOOK,  # noqa: F401 - re-exported for callers
     PROFILE_TINY,  # noqa: F401 - re-exported for callers
     REBIND_CONFLICT_CANCEL,  # noqa: F401 - re-exported for callers
@@ -28,16 +29,30 @@ from tet4d.engine.runtime.keybinding_store import (
     PROFILE_SMALL,
     SUPPORTED_DIMENSIONS,
     clone_keybinding_dimension,
-    delete_key_profile as delete_key_profile_files,
-    keybinding_file_path_for_profile as runtime_keybinding_file_path_for_profile,
-    list_key_profiles as list_key_profiles_from_store,
     load_keybindings_payload,
-    next_auto_profile_name as next_auto_profile_name_from_store,
     normalize_profile_name,
-    profile_keybinding_file_path as runtime_profile_keybinding_file_path,
-    rename_key_profile as rename_key_profile_files,
-    resolve_keybinding_io_path as resolve_keybindings_io_path_from_store,
     save_keybindings_payload,
+)
+from tet4d.engine.runtime.keybinding_store import (
+    delete_key_profile as delete_key_profile_files,
+)
+from tet4d.engine.runtime.keybinding_store import (
+    keybinding_file_path_for_profile as runtime_keybinding_file_path_for_profile,
+)
+from tet4d.engine.runtime.keybinding_store import (
+    list_key_profiles as list_key_profiles_from_store,
+)
+from tet4d.engine.runtime.keybinding_store import (
+    next_auto_profile_name as next_auto_profile_name_from_store,
+)
+from tet4d.engine.runtime.keybinding_store import (
+    profile_keybinding_file_path as runtime_profile_keybinding_file_path,
+)
+from tet4d.engine.runtime.keybinding_store import (
+    rename_key_profile as rename_key_profile_files,
+)
+from tet4d.engine.runtime.keybinding_store import (
+    resolve_keybinding_io_path as resolve_keybindings_io_path_from_store,
 )
 from tet4d.engine.ui_logic.keybindings_catalog import (
     binding_action_description,  # noqa: F401 - re-exported for UI callers
@@ -45,6 +60,7 @@ from tet4d.engine.ui_logic.keybindings_catalog import (
     binding_group_label,  # noqa: F401 - re-exported for UI callers
 )
 from tet4d.ui.pygame.input.key_display import display_key_name
+
 
 def default_game_bindings_for_profile(
     profile: str,
@@ -128,7 +144,7 @@ def _sanitize_runtime_bindings(
     )
 
 
-def _serialize_binding_group(bindings: Mapping[str, KeyTuple]) -> Dict[str, List[str]]:
+def _serialize_binding_group(bindings: Mapping[str, KeyTuple]) -> dict[str, list[str]]:
     return {
         action: [pygame.key.name(key) for key in keys]
         for action, keys in bindings.items()
@@ -177,7 +193,7 @@ def _apply_group_payload(
 ) -> None:
     if not isinstance(raw_group, dict):
         return
-    updated: Dict[str, KeyTuple] = dict(target)
+    updated: dict[str, KeyTuple] = dict(target)
     for action in updated:
         if action not in raw_group:
             continue
@@ -193,7 +209,7 @@ def _resolve_keybindings_io_context(
     *,
     file_path: str | None,
     profile: str | None,
-) -> tuple[Dict[str, MutableMapping[str, KeyTuple]], Path, str]:
+) -> tuple[dict[str, MutableMapping[str, KeyTuple]], Path, str]:
     groups = KEYBINDING_STATE.binding_groups_for_dimension(dimension)
     path, selected_profile = resolve_keybindings_io_path_from_store(
         dimension,
@@ -206,11 +222,11 @@ def _resolve_keybindings_io_context(
 
 def runtime_binding_groups_for_dimension(
     dimension: int,
-) -> Dict[str, Mapping[str, KeyTuple]]:
+) -> dict[str, Mapping[str, KeyTuple]]:
     return KEYBINDING_STATE.runtime_binding_groups_for_dimension(dimension)
 
 
-def binding_actions_for_dimension(dimension: int) -> Dict[str, list[str]]:
+def binding_actions_for_dimension(dimension: int) -> dict[str, list[str]]:
     return KEYBINDING_STATE.binding_actions_for_dimension(dimension)
 
 
@@ -301,9 +317,7 @@ def clone_key_profile(
 ) -> tuple[bool, str]:
     target = normalize_profile_name(target_profile)
     source = (
-        normalize_profile_name(source_profile)
-        if source_profile
-        else ACTIVE_KEY_PROFILE
+        normalize_profile_name(source_profile) if source_profile else ACTIVE_KEY_PROFILE
     )
     if target in BUILTIN_PROFILES:
         return False, "cannot overwrite built-in profile"
@@ -366,13 +380,25 @@ def cycle_key_profile(step: int = 1) -> tuple[bool, str, str]:
 
 def _binding_payload_for_dimension(dimension: int, profile: str) -> dict[str, object]:
     game_2d, game_3d, game_4d = default_game_bindings_for_profile(profile)
-    explorer_2d, explorer_3d, explorer_4d = default_explorer_bindings_for_profile(profile)
+    explorer_2d, explorer_3d, explorer_4d = default_explorer_bindings_for_profile(
+        profile
+    )
     camera_3d, camera_4d = default_camera_bindings_for_profile(profile)
     system = default_system_bindings_for_profile(profile)
     group_map = {
         2: {"game": game_2d, "explorer": explorer_2d, "system": system},
-        3: {"game": game_3d, "explorer": explorer_3d, "camera": camera_3d, "system": system},
-        4: {"game": game_4d, "explorer": explorer_4d, "camera": camera_4d, "system": system},
+        3: {
+            "game": game_3d,
+            "explorer": explorer_3d,
+            "camera": camera_3d,
+            "system": system,
+        },
+        4: {
+            "game": game_4d,
+            "explorer": explorer_4d,
+            "camera": camera_4d,
+            "system": system,
+        },
     }
     bindings = group_map.get(dimension)
     if bindings is None:
@@ -425,7 +451,7 @@ def save_keybindings_file(
     dimension: int,
     file_path: str | None = None,
     profile: str | None = None,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     try:
         groups, _path, selected_profile = _resolve_keybindings_io_context(
             dimension,
@@ -459,7 +485,7 @@ def load_keybindings_file(
     dimension: int,
     file_path: str | None = None,
     profile: str | None = None,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     try:
         groups, _path, _selected_profile = _resolve_keybindings_io_context(
             dimension,
@@ -497,7 +523,9 @@ _KEYBINDINGS_INITIALIZED = False
 
 
 def _remove_obsolete_small_profile_dir() -> None:
-    obsolete_dir = profile_keybinding_file_path(2, PROFILE_FULL).parent.parent / PROFILE_SMALL
+    obsolete_dir = (
+        profile_keybinding_file_path(2, PROFILE_FULL).parent.parent / PROFILE_SMALL
+    )
     if not obsolete_dir.exists():
         return
     shutil.rmtree(obsolete_dir, ignore_errors=True)

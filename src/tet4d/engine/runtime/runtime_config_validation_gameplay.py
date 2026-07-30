@@ -219,7 +219,6 @@ def _validate_rotation_kick_level_order(
     return tuple(level_order), seen_levels, default_level
 
 
-
 def _validate_rotation_kick_level_candidates(
     raw_level_candidates: object,
     *,
@@ -249,7 +248,6 @@ def _validate_rotation_kick_level_candidates(
         level_candidates[level_name] = count
         previous = count
     return level_candidates
-
 
 
 def _validate_rotation_kick_candidate_offsets(
@@ -297,7 +295,6 @@ def _validate_rotation_kick_candidate_offsets(
     return tuple(candidate_offsets)
 
 
-
 def _validate_rotation_kicks(raw_rotation_kicks: object) -> dict[str, Any]:
     kicks = require_object(raw_rotation_kicks, path="gameplay.rotation_kicks")
     level_order, seen_levels, default_level = _validate_rotation_kick_level_order(kicks)
@@ -329,7 +326,7 @@ def _validate_grid_modes(raw_grid_modes: object) -> dict[str, Any]:
     cycle: list[str] = []
     for idx, mode_name in enumerate(raw_cycle):
         if not isinstance(mode_name, str):
-            raise RuntimeError(f"gameplay.grid_modes.cycle[{idx}] must be a string")
+            raise RuntimeError(f"gameplay.grid_modes.cycle[{idx}] must be a string")  # noqa: TRY004 - preserve the established validation contract.
         normalized = mode_name.strip().lower()
         if normalized not in GRID_MODE_NAMES:
             raise RuntimeError(
@@ -339,7 +336,7 @@ def _validate_grid_modes(raw_grid_modes: object) -> dict[str, Any]:
         cycle.append(normalized)
     fallback = grid_modes.get("fallback")
     if not isinstance(fallback, str):
-        raise RuntimeError("gameplay.grid_modes.fallback must be a string")
+        raise RuntimeError("gameplay.grid_modes.fallback must be a string")  # noqa: TRY004 - preserve the established validation contract.
     fallback_mode = fallback.strip().lower()
     if fallback_mode not in cycle:
         raise RuntimeError(

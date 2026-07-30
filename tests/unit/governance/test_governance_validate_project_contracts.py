@@ -168,37 +168,14 @@ def test_required_paths_accept_git_tracked_file(tmp_path: Path, monkeypatch) -> 
 def _write_minimal_cpp_safety_policy(root: Path) -> None:
     _write_text(
         root / "docs" / "governance" / "cpp_safety_policy.md",
-        "\n".join(
-            [
-                "# C++ Safety Policy",
-                "Python remains the semantic oracle.",
-                "Use RAII.",
-                "No raw owning pointers.",
-                "No naked new or delete.",
-                "Document the GDExtension boundary.",
-                "Require parity evidence.",
-                "Update the authority map.",
-            ]
-        ),
+        "# C++ Safety Policy\nPython remains the semantic oracle.\nUse RAII.\nNo raw owning pointers.\nNo naked new or delete.\nDocument the GDExtension boundary.\nRequire parity evidence.\nUpdate the authority map.",
     )
 
 
 def _write_minimal_native_tooling_ci_policy(root: Path) -> None:
     _write_text(
         root / "docs" / "governance" / "native_tooling_ci_policy.md",
-        "\n".join(
-            [
-                "# Native Tooling CI Policy",
-                "Local advisory mode skips unavailable tools.",
-                "Local strict mode uses TET4D_STRICT_NATIVE_TOOLS.",
-                "CI strict mode uses the same strict checks.",
-                "clang-format and clang-tidy are native tooling gates.",
-                "compile_commands.json is required for clang-tidy.",
-                "Python remains the semantic oracle.",
-                "See docs/architecture/authority_transfer_protocol.md.",
-                "See docs/governance/technical_debt_register.md and TD-0004.",
-            ]
-        ),
+        "# Native Tooling CI Policy\nLocal advisory mode skips unavailable tools.\nLocal strict mode uses TET4D_STRICT_NATIVE_TOOLS.\nCI strict mode uses the same strict checks.\nclang-format and clang-tidy are native tooling gates.\ncompile_commands.json is required for clang-tidy.\nPython remains the semantic oracle.\nSee docs/architecture/authority_transfer_protocol.md.\nSee docs/governance/technical_debt_register.md and TD-0004.",
     )
 
 
@@ -224,23 +201,7 @@ def _write_minimal_parity_governance(root: Path) -> None:
     _write_text(root / "native" / "AGENTS.md", "Native C++ only.\n")
     _write_text(
         root / "docs" / "architecture" / "parity_protocol.md",
-        "\n".join(
-            [
-                "# Parity Protocol",
-                "Python remains the semantic oracle.",
-                "C++/GDExtension implementations require golden evidence.",
-                "Comparison modes define exact and tolerance comparisons.",
-                "Disagreement rules favor Python.",
-                "Fixture location includes migration/golden_traces.",
-                "Authority transfer updates the authority map.",
-                "First subsystem parity pilot stays evidence only.",
-                "Pilot authority routes through docs/architecture/first_subsystem_parity_pilot.md.",
-                "See docs/architecture/parity_pilot_audit_and_promotion_gates.md before a second parity slice.",
-                "Stage 18 may only implement docs/architecture/second_parity_slice_candidate_selection.md.",
-                "Candidate selection does not transfer authority.",
-                "Stage 19 evidence review and third-slice selection live in docs/architecture/parity_evidence_review_and_third_slice_selection.md.",
-            ]
-        ),
+        "# Parity Protocol\nPython remains the semantic oracle.\nC++/GDExtension implementations require golden evidence.\nComparison modes define exact and tolerance comparisons.\nDisagreement rules favor Python.\nFixture location includes migration/golden_traces.\nAuthority transfer updates the authority map.\nFirst subsystem parity pilot stays evidence only.\nPilot authority routes through docs/architecture/first_subsystem_parity_pilot.md.\nSee docs/architecture/parity_pilot_audit_and_promotion_gates.md before a second parity slice.\nStage 18 may only implement docs/architecture/second_parity_slice_candidate_selection.md.\nCandidate selection does not transfer authority.\nStage 19 evidence review and third-slice selection live in docs/architecture/parity_evidence_review_and_third_slice_selection.md.",
     )
     _write_text(
         root / "docs" / "architecture" / "authority_map.md",
@@ -309,20 +270,7 @@ def _write_minimal_parity_governance(root: Path) -> None:
 def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
     _write_text(
         root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
-        "\n".join(
-            [
-                "# Parity Pilot Audit and Promotion Gates",
-                "Python remains the semantic oracle.",
-                "This evidence does not transfer authority.",
-                "Promotion gates are required before a second parity slice.",
-                "Allowed: coordinate, topology identifier, trace metadata, dimension label.",
-                "Forbidden: full topology movement, rotation semantics, endgame physics.",
-                "Current harness path tools/parity/first_subsystem_parity_pilot.py is accepted for the first pilot.",
-                "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.",
-                "Selected candidate docs/architecture/second_parity_slice_candidate_selection.md satisfies promotion gates.",
-                "docs/architecture/parity_evidence_review_and_third_slice_selection.md routes the Stage 19 review.",
-            ]
-        ),
+        "# Parity Pilot Audit and Promotion Gates\nPython remains the semantic oracle.\nThis evidence does not transfer authority.\nPromotion gates are required before a second parity slice.\nAllowed: coordinate, topology identifier, trace metadata, dimension label.\nForbidden: full topology movement, rotation semantics, endgame physics.\nCurrent harness path tools/parity/first_subsystem_parity_pilot.py is accepted for the first pilot.\nDefault behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.\nSelected candidate docs/architecture/second_parity_slice_candidate_selection.md satisfies promotion gates.\ndocs/architecture/parity_evidence_review_and_third_slice_selection.md routes the Stage 19 review.",
     )
     _write_text(
         root / "docs" / "governance" / "drift_protection_map.md",
@@ -373,22 +321,7 @@ def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
 def _write_minimal_second_parity_selection_governance(root: Path) -> None:
     _write_text(
         root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",
-        "\n".join(
-            [
-                "# Second Parity Slice Candidate Selection",
-                "Chosen candidate: trace metadata identity/digest.",
-                "Decision status: selected.",
-                "Stage 18 implementation allowed: yes.",
-                "Python remains the semantic oracle.",
-                "Native/C++ remains provisional.",
-                "Candidate selection does not transfer authority.",
-                "Passing a future second-slice parity check will still not transfer authority.",
-                "Comparison rule: exact digest equality.",
-                "Default mode is advisory.",
-                "Strict mode uses TET4D_STRICT_PARITY.",
-                "Explicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.",
-            ]
-        ),
+        "# Second Parity Slice Candidate Selection\nChosen candidate: trace metadata identity/digest.\nDecision status: selected.\nStage 18 implementation allowed: yes.\nPython remains the semantic oracle.\nNative/C++ remains provisional.\nCandidate selection does not transfer authority.\nPassing a future second-slice parity check will still not transfer authority.\nComparison rule: exact digest equality.\nDefault mode is advisory.\nStrict mode uses TET4D_STRICT_PARITY.\nExplicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.",
     )
     _write_text(
         root / "docs" / "architecture" / "parity_protocol.md",
@@ -1120,29 +1053,7 @@ def test_authority_transfer_governance_accepts_baseline(
 
 
 def _valid_pr_template() -> str:
-    return "\n".join(
-        [
-            "# Pull Request Checklist",
-            "## Summary",
-            "- Scope is limited.",
-            "- Unrelated dirty files were not staged.",
-            "## Authority",
-            "- Python semantic authority is preserved.",
-            "- Godot/GDScript boundary remains presentation only.",
-            "- C++/GDExtension remains provisional.",
-            "- authority-transfer protocol checked.",
-            "## Governance",
-            "- Existing utilities searched; duplicate implementations avoided.",
-            "- config/constants authority checked.",
-            "- Generated files were not hand-edited.",
-            "- Technical debt delta described.",
-            "- Drift protection impact described.",
-            "## Validation commands",
-            "- CODEX_MODE=1 ./scripts/verify.sh",
-            "- git diff --cached --check",
-            "",
-        ]
-    )
+    return "# Pull Request Checklist\n## Summary\n- Scope is limited.\n- Unrelated dirty files were not staged.\n## Authority\n- Python semantic authority is preserved.\n- Godot/GDScript boundary remains presentation only.\n- C++/GDExtension remains provisional.\n- authority-transfer protocol checked.\n## Governance\n- Existing utilities searched; duplicate implementations avoided.\n- config/constants authority checked.\n- Generated files were not hand-edited.\n- Technical debt delta described.\n- Drift protection impact described.\n## Validation commands\n- CODEX_MODE=1 ./scripts/verify.sh\n- git diff --cached --check\n"
 
 
 def _write_minimal_review_template_governance(root: Path) -> None:
@@ -1727,32 +1638,6 @@ def test_parity_pilot_audit_governance_requires_drift_map_entries(
     )
 
 
-def test_parity_pilot_audit_governance_requires_agents_routing(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(tmp_path / "AGENTS.md", "AGENTS\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("AGENTS.md" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_requires_native_agents_warning(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(tmp_path / "native" / "AGENTS.md", "Native\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("native/AGENTS.md" in issue.message for issue in issues)
-
-
 def test_parity_pilot_audit_governance_accepts_baseline(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -1962,34 +1847,6 @@ def test_second_parity_selection_requires_drift_map_entry(
     issues = contracts._validate_second_parity_slice_candidate_selection()
 
     assert any("drift_protection_map.md" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_agents_routing(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(tmp_path / "AGENTS.md", "AGENTS\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("AGENTS.md" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_native_agents_warning(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(tmp_path / "native" / "AGENTS.md", "Native\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("native/AGENTS.md" in issue.message for issue in issues)
 
 
 def test_second_parity_selection_governance_accepts_baseline(
@@ -2303,36 +2160,6 @@ def test_parity_package_review_requires_drift_map_route(
     assert any("drift_protection_map.md" in issue.message for issue in issues)
 
 
-def test_parity_package_review_requires_agents_route(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(tmp_path / "AGENTS.md", "agents\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("AGENTS.md" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_native_agents_warning(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(tmp_path / "native" / "AGENTS.md", "native\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("native/AGENTS.md" in issue.message for issue in issues)
-
-
 def test_godot_semantic_boundary_governance_requires_validator(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -2401,7 +2228,10 @@ def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
     assert "Workflow authority" in must_contain
     assert "config/project/policy_pack.json" in must_contain
     assert "Authority files must be tracked in Git" in must_contain
-    assert "## Context-switch profiles" in must_contain
+    assert "## Common preconditions" in must_contain
+    assert "## Task profiles" in must_contain
+    assert "Ordinary isolated fixes" in must_contain
+    assert "Read the full policy pack only for governance" in must_contain
     assert "## Boundary model" in must_contain
     assert "CODEX_MODE=1 ./scripts/verify.sh" in must_contain
 

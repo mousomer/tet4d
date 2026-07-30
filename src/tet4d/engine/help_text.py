@@ -7,8 +7,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .runtime.settings_schema import read_json_value_or_raise
 from .runtime.project_config import project_root_path
+from .runtime.settings_schema import read_json_value_or_raise
 from .ui_logic.keybindings_catalog import (
     binding_action_ids,
     binding_reference_group_heading,
@@ -90,7 +90,7 @@ def _require_int(value: object, *, path: str, minimum: int = 0) -> int:
 def _string_lines(raw: object, *, path: str, allow_empty: bool) -> tuple[str, ...]:
     if raw is None:
         if allow_empty:
-            return tuple()
+            return ()
         raise HelpTextValidationError(f"{path} must be a list")
     values = _require_list(raw, path=path)
     lines = tuple(
@@ -138,11 +138,15 @@ def _require_string_list(
     return out
 
 
-def _parse_requirement_expression(expr: str, *, path: str) -> tuple[str, str | None, object]:
+def _parse_requirement_expression(
+    expr: str, *, path: str
+) -> tuple[str, str | None, object]:
     raw_expr = _require_string(expr, path=path, non_empty=True)
     match = _REQUIRE_EXPR_RE.fullmatch(raw_expr)
     if match is None:
-        raise HelpTextValidationError(f"{path} has invalid requirement expression: {raw_expr}")
+        raise HelpTextValidationError(
+            f"{path} has invalid requirement expression: {raw_expr}"
+        )
     name = str(match.group("name"))
     if name not in HELP_CAPABILITY_KEYS:
         raise HelpTextValidationError(f"{path} references unknown capability: {name}")
@@ -263,23 +267,37 @@ def _validate_action_layout_line(
         path=f"{path}.key_actions",
         allow_empty=True,
     )
-    unknown_actions = tuple(action for action in key_actions if action not in known_actions)
+    unknown_actions = tuple(
+        action for action in key_actions if action not in known_actions
+    )
     if unknown_actions:
         joined = ", ".join(unknown_actions)
-        raise HelpTextValidationError(f"{path}.key_actions has unknown actions: {joined}")
+        raise HelpTextValidationError(
+            f"{path}.key_actions has unknown actions: {joined}"
+        )
     icon_action_raw = line.get("icon_action")
     icon_action: str | None = None
     if icon_action_raw is not None:
-        icon_action = _require_string(icon_action_raw, path=f"{path}.icon_action", non_empty=True)
+        icon_action = _require_string(
+            icon_action_raw, path=f"{path}.icon_action", non_empty=True
+        )
         if icon_action not in known_actions:
-            raise HelpTextValidationError(f"{path}.icon_action has unknown action: {icon_action}")
-    template = _require_string(line.get("template"), path=f"{path}.template", non_empty=True)
-    _validate_template_tokens(template, path=f"{path}.template", known_actions=known_actions)
+            raise HelpTextValidationError(
+                f"{path}.icon_action has unknown action: {icon_action}"
+            )
+    template = _require_string(
+        line.get("template"), path=f"{path}.template", non_empty=True
+    )
+    _validate_template_tokens(
+        template, path=f"{path}.template", known_actions=known_actions
+    )
     return {
         "id": line_id,
         "order": _require_int(line.get("order"), path=f"{path}.order", minimum=0),
         "modes": _validate_modes(line.get("modes"), path=f"{path}.modes"),
-        "requires": _validate_requires(line.get("requires", []), path=f"{path}.requires"),
+        "requires": _validate_requires(
+            line.get("requires", []), path=f"{path}.requires"
+        ),
         "key_actions": key_actions,
         "icon_action": icon_action,
         "template": template,
@@ -295,7 +313,9 @@ def _validate_action_layout_panel(
 ) -> dict[str, Any]:
     path = f"help_action_layout.panels[{panel_idx}]"
     panel = _require_object(raw_panel, path=path)
-    panel_id = _register_unique_id(panel.get("id"), path=f"{path}.id", seen_ids=seen_ids)
+    panel_id = _register_unique_id(
+        panel.get("id"), path=f"{path}.id", seen_ids=seen_ids
+    )
     lines_raw = _require_list(panel.get("lines"), path=f"{path}.lines")
     if not lines_raw:
         raise HelpTextValidationError(f"{path}.lines must be non-empty")
@@ -312,9 +332,13 @@ def _validate_action_layout_panel(
     return {
         "id": panel_id,
         "order": _require_int(panel.get("order"), path=f"{path}.order", minimum=0),
-        "title": _require_string(panel.get("title"), path=f"{path}.title", non_empty=True),
+        "title": _require_string(
+            panel.get("title"), path=f"{path}.title", non_empty=True
+        ),
         "modes": _validate_modes(panel.get("modes"), path=f"{path}.modes"),
-        "requires": _validate_requires(panel.get("requires", []), path=f"{path}.requires"),
+        "requires": _validate_requires(
+            panel.get("requires", []), path=f"{path}.requires"
+        ),
         "lines": lines,
     }
 
@@ -514,11 +538,17 @@ def _validate_layout_payload(payload: dict[str, Any]) -> dict[str, Any]:
     action_groups_raw = payload.get("action_groups")
     action_groups: dict[str, tuple[str, ...]] | None = None
     if action_groups_raw is not None:
-        action_groups_obj = _require_object(action_groups_raw, path="help_layout.action_groups")
+        action_groups_obj = _require_object(
+            action_groups_raw, path="help_layout.action_groups"
+        )
         action_groups = {}
         for key in ("runtime_order", "live_order"):
-            ids = _require_list(action_groups_obj.get(key), path=f"help_layout.action_groups.{key}")
-            action_groups[key] = tuple(_require_string(v, path=f"help_layout.action_groups.{key}") for v in ids)
+            ids = _require_list(
+                action_groups_obj.get(key), path=f"help_layout.action_groups.{key}"
+            )
+            action_groups[key] = tuple(
+                _require_string(v, path=f"help_layout.action_groups.{key}") for v in ids
+            )
 
     return {
         "version": _require_int(
@@ -731,7 +761,7 @@ def help_topic_block_lines(topic_id: str, *, compact: bool) -> tuple[str, ...]:
     blocks = help_content_registry()["topic_blocks"]
     raw_id = str(topic_id).strip()
     if not raw_id or raw_id not in blocks:
-        return tuple()
+        return ()
     entry = blocks[raw_id]
     lines = entry["compact_lines"] if compact else entry["full_lines"]
     if lines:

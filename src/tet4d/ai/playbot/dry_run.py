@@ -83,7 +83,9 @@ def _run_dry_run_nd_once(
     budget: int,
     algorithm: BotPlannerAlgorithm,
 ) -> DryRunReport:
-    state = GameStateND(config=cfg, board=BoardND(cfg.dims), rng=coerce_random(seed=seed))
+    state = GameStateND(
+        config=cfg, board=BoardND(cfg.dims), rng=coerce_random(seed=seed)
+    )
     apply_challenge_prefill_nd(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
@@ -138,7 +140,9 @@ def run_dry_run_2d(
     planning_budget_ms: int | None = None,
     planner_algorithm: BotPlannerAlgorithm = BotPlannerAlgorithm.AUTO,
 ) -> DryRunReport:
-    state = GameState(config=cfg, board=BoardND((cfg.width, cfg.height)), rng=coerce_random(seed=seed))
+    state = GameState(
+        config=cfg, board=BoardND((cfg.width, cfg.height)), rng=coerce_random(seed=seed)
+    )
     apply_challenge_prefill_2d(state, layers=cfg.challenge_layers)
     clears_observed = 0
     pieces_dropped = 0
@@ -226,4 +230,3 @@ def run_dry_run_nd(
     if fallback.passed:
         return fallback
     return fallback if fallback.pieces_dropped > primary.pieces_dropped else primary
-

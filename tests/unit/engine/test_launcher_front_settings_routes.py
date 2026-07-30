@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import cli.front as launcher_front
-
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 
 
 class TestLauncherFrontSettingsRoutes(unittest.TestCase):
-    def test_menu_action_settings_passes_initial_page_and_item_to_settings_hub(self) -> None:
+    def test_menu_action_settings_passes_initial_page_and_item_to_settings_hub(
+        self,
+    ) -> None:
         state = launcher_front.MainMenuState()
         session = launcher_front._LauncherSession(
             screen=object(),
@@ -60,9 +61,7 @@ class TestLauncherFrontSettingsRoutes(unittest.TestCase):
             dispatched_action_id="settings_legacy_topology_editor",
         )
         with (
-            patch.object(
-                launcher_front, "run_settings_hub_menu", return_value=result
-            ),
+            patch.object(launcher_front, "run_settings_hub_menu", return_value=result),
             patch.object(
                 launcher_front,
                 "_menu_action_legacy_topology_editor",

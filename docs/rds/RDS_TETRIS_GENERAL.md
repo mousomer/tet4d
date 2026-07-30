@@ -535,9 +535,12 @@ Cross-cutting requirements are defined in:
 7. Keybinding edit flow must support per-action rebind, conflict handling, and local save/load.
 8. Keybindings setup must be reachable from unified main menu and in-game pause menu.
 9. 3D/4D camera keybindings must include in-game overlay-transparency adjustment actions.
-10. Setup menus must expose random-mode controls in 2D/3D/4D; seed control is
-    centralized in the shared Settings hub and applies across 2D/3D/4D unless a
-    mode-specific exception is explicitly justified.
+10. New Game setup menus must expose canonical random-mode and seed controls in
+    2D/3D/4D. Gameplay seed, production piece-set selection, board selection,
+    and initial speed belong to New Game setup and must not be stored in general
+    shell Settings. Fixed-seed restart reproduces the same sequence. A
+    true-random game captures one effective seed, restart reuses it, and only an
+    explicit New Random Game requests another effective seed.
 
 ## 6. Technical Requirements
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from functools import reduce
 from operator import mul
-from typing import Sequence
 
 from tet4d.engine.core.rules.scoring import score_for_clear
 from tet4d.engine.runtime.runtime_config import (
@@ -36,7 +36,7 @@ def _weighted_clear_points(cleared_count: int, plane_cell_count: int) -> int:
     normalized_reference = max(1, int(reference_plane_cells))
     ratio = max(1.0, normalized_plane_cells / normalized_reference)
     scale = math.sqrt(ratio)
-    return int(round(float(base_clear_points) * scale))
+    return round(float(base_clear_points) * scale)
 
 
 def score_with_clear_bonuses(
@@ -55,7 +55,7 @@ def score_with_clear_bonuses(
     if cleared > 0 and int(board_cell_count_after_clear) == 0:
         raw_points += clear_scoring_board_clear_bonus()
     multiplier = max(0.1, float(score_multiplier))
-    awarded_points = max(0, int(round(raw_points * multiplier)))
+    awarded_points = max(0, round(raw_points * multiplier))
     return raw_points, awarded_points
 
 

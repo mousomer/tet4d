@@ -9,8 +9,8 @@ from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.topology_explorer import (
     CELLWISE_DEFORMATION,
-    MoveStep,
     RIGID_TRANSFORM,
+    MoveStep,
     build_explorer_transport_resolver,
     movement_steps_for_dimension,
     neighbors_for_cell,
@@ -245,7 +245,9 @@ class TestExplorerTransportResolver(unittest.TestCase):
 
                 self.assertEqual(forward.target, expected_target)
                 self.assertIsNotNone(forward.traversal)
-                self.assertEqual(forward.traversal.source_boundary.label, expected_source)
+                self.assertEqual(
+                    forward.traversal.source_boundary.label, expected_source
+                )
                 self.assertEqual(forward.traversal.target_boundary.label, expected_dest)
                 self.assertIsNotNone(forward.frame_transform)
                 self.assertEqual(

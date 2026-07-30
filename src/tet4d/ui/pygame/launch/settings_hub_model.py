@@ -46,8 +46,6 @@ from tet4d.engine.topology_explorer.presets import (
     preset_display_label,
 )
 from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode
-from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
     ExplosionDefaults,
     mode_explosion_defaults,
@@ -59,6 +57,8 @@ from tet4d.ui.pygame.locked_cell_explosion.model import (
     EXPLOSION_PARTICLE_COLLISION_MODES,
     EXPLOSION_SPEED_PRESETS,
 )
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 
 TEXT_COLOR = (232, 232, 240)
 HIGHLIGHT_COLOR = (255, 224, 128)
@@ -90,9 +90,15 @@ _EXPLOSION_TOPOLOGY_PRESET_4D_LABELS = tuple(
 _EXPLOSION_SNAPSHOT_SOURCE_LABELS = tuple(
     _SETTINGS_OPTION_LABELS["explosion_snapshot_source"]
 )
-_EXPLOSION_PIECE_SET_2D_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_piece_set_2d"])
-_EXPLOSION_PIECE_SET_3D_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_piece_set_3d"])
-_EXPLOSION_PIECE_SET_4D_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_piece_set_4d"])
+_EXPLOSION_PIECE_SET_2D_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["explosion_piece_set_2d"]
+)
+_EXPLOSION_PIECE_SET_3D_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["explosion_piece_set_3d"]
+)
+_EXPLOSION_PIECE_SET_4D_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["explosion_piece_set_4d"]
+)
 _EXPLOSION_PIECE_SHAPE_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_piece_shape"])
 _EXPLOSION_VIEW_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_view_mode"])
 _EXPLOSION_BOUNDARY_RESPONSE_LABELS = tuple(
@@ -107,7 +113,9 @@ _EXPLOSION_DIAGNOSTICS_MODE_LABELS = tuple(
 )
 _EXPLOSION_GRID_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_grid_mode"])
 _EXPLOSION_SHADOW_MODE_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_shadow_mode"])
-_EXPLOSION_SPEED_PRESET_LABELS = tuple(_SETTINGS_OPTION_LABELS["explosion_speed_preset"])
+_EXPLOSION_SPEED_PRESET_LABELS = tuple(
+    _SETTINGS_OPTION_LABELS["explosion_speed_preset"]
+)
 _EXPLOSION_W_MOVEMENT_STYLE_LABELS = tuple(
     _SETTINGS_OPTION_LABELS["explosion_w_movement_animation_style"]
 )
@@ -394,7 +402,9 @@ def current_settings_page_id(state: _UnifiedSettingsState) -> str:
     return state.page_stack[-1]
 
 
-def current_settings_page_items(state: _UnifiedSettingsState) -> tuple[dict[str, Any], ...]:
+def current_settings_page_items(
+    state: _UnifiedSettingsState,
+) -> tuple[dict[str, Any], ...]:
     return settings_page_items(current_settings_page_id(state))
 
 
@@ -504,7 +514,9 @@ def _explosion_topology_preset_value_text(
     return _topology_preset_label_by_id(int(dimension)).get(preset_id, preset_id)
 
 
-def _explosion_piece_set_value_text(defaults: ExplosionDefaults, *, dimension: int) -> str:
+def _explosion_piece_set_value_text(
+    defaults: ExplosionDefaults, *, dimension: int
+) -> str:
     piece_set_id = str(defaults.piece_set_id)
     if not piece_set_id:
         return "Default"
@@ -534,7 +546,9 @@ def _explosion_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
             defaults, dimension=dimension
         ),
         "piece_shape_name": lambda: (
-            "Default" if not str(defaults.piece_shape_name) else str(defaults.piece_shape_name)
+            "Default"
+            if not str(defaults.piece_shape_name)
+            else str(defaults.piece_shape_name)
         ),
         "view_mode": lambda: _EXPLOSION_VIEW_MODE_LABEL_BY_VALUE.get(
             str(defaults.view_mode), str(defaults.view_mode)
@@ -542,8 +556,10 @@ def _explosion_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         "boundary_response": lambda: _EXPLOSION_BOUNDARY_RESPONSE_LABEL_BY_VALUE.get(
             str(defaults.boundary_response), str(defaults.boundary_response)
         ),
-        "particle_collisions": lambda: _EXPLOSION_PARTICLE_COLLISIONS_LABEL_BY_VALUE.get(
-            str(defaults.particle_collisions), str(defaults.particle_collisions)
+        "particle_collisions": lambda: (
+            _EXPLOSION_PARTICLE_COLLISIONS_LABEL_BY_VALUE.get(
+                str(defaults.particle_collisions), str(defaults.particle_collisions)
+            )
         ),
         "mass_mode": lambda: _EXPLOSION_MASS_MODE_LABEL_BY_VALUE.get(
             str(defaults.mass_mode), str(defaults.mass_mode)
@@ -562,14 +578,19 @@ def _explosion_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
             str(defaults.shadow_mode), str(defaults.shadow_mode)
         ),
         "trace_enabled": lambda: "ON" if bool(defaults.trace_enabled) else "OFF",
-        "trace_retention_ms": lambda: f"{int(round(float(defaults.trace_retention_ms)))} ms",
+        "trace_retention_ms": lambda: f"{round(float(defaults.trace_retention_ms))} ms",
         "speed_preset": lambda: _EXPLOSION_SPEED_PRESET_LABEL_BY_VALUE.get(
             str(defaults.speed_preset), str(defaults.speed_preset)
         ),
-        "w_movement_animation_style": lambda: _EXPLOSION_W_MOVEMENT_STYLE_LABEL_BY_VALUE.get(
-            str(defaults.w_movement_animation_style), str(defaults.w_movement_animation_style)
+        "w_movement_animation_style": lambda: (
+            _EXPLOSION_W_MOVEMENT_STYLE_LABEL_BY_VALUE.get(
+                str(defaults.w_movement_animation_style),
+                str(defaults.w_movement_animation_style),
+            )
         ),
-        "endgame_live_cell_fraction": lambda: f"{int(round(float(defaults.endgame_live_cell_fraction) * 100.0))}%",
+        "endgame_live_cell_fraction": lambda: (
+            f"{round(float(defaults.endgame_live_cell_fraction) * 100.0)}%"
+        ),
         "sound_enabled": lambda: "ON" if bool(defaults.sound_enabled) else "OFF",
         "seed": lambda: str(int(defaults.seed)),
     }
@@ -593,7 +614,7 @@ def _unified_value_text(state: _UnifiedSettingsState, row_key: str) -> str:
         "display_width": str(state.display_settings.windowed_size[0]),
         "display_height": str(state.display_settings.windowed_size[1]),
         "display_overlay_transparency": (
-            f"{int(round(state.overlay_transparency * 100.0))}%"
+            f"{round(state.overlay_transparency * 100.0)}%"
         ),
         "game_seed": str(int(state.game_seed)),
         "analytics_score_logging": "ON" if state.score_logging_enabled else "OFF",
@@ -693,9 +714,7 @@ def build_unified_settings_state(
     endgame_boundary_response = str(mode_gameplay["endgame_boundary_response"])
     endgame_particle_collisions = str(mode_gameplay["endgame_particle_collisions"])
     endgame_relic_speed_percent = int(mode_gameplay["endgame_relic_speed_percent"])
-    endgame_shatter_speed_percent = int(
-        mode_gameplay["endgame_shatter_speed_percent"]
-    )
+    endgame_shatter_speed_percent = int(mode_gameplay["endgame_shatter_speed_percent"])
     auto_speedup_enabled = int(mode_gameplay["auto_speedup_enabled"])
     lines_per_level = int(mode_gameplay["lines_per_level"])
     rotation_animation_mode = str(mode_gameplay["rotation_animation_mode"])

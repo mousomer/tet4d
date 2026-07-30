@@ -5,7 +5,6 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 STRICT_PARITY_ENV = "TET4D_STRICT_PARITY"
 FIXTURE_PATH = ROOT / "tests" / "fixtures" / "parity" / "trace_envelope_validation.json"
@@ -117,7 +116,7 @@ def validate_trace_envelope(trace: object) -> list[str]:
 def _load_fixture() -> dict[str, object]:
     payload = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise RuntimeError("trace envelope validation fixture must be an object")
+        raise RuntimeError("trace envelope validation fixture must be an object")  # noqa: TRY004 - preserve the established validation contract.
     if payload.get("slice") != "trace_envelope_validation":
         raise RuntimeError("trace envelope validation fixture has the wrong slice")
     if payload.get("authority") != "python":
@@ -126,7 +125,7 @@ def _load_fixture() -> dict[str, object]:
         )
     cases = payload.get("cases")
     if not isinstance(cases, list):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve validation contract.
             "trace envelope validation fixture must contain a cases array"
         )
     return payload
@@ -139,21 +138,21 @@ def python_oracle_cases() -> list[EnvelopeValidationCase]:
     validation_cases: list[EnvelopeValidationCase] = []
     for item in cases:
         if not isinstance(item, dict):
-            raise RuntimeError("trace envelope validation cases must be objects")
+            raise RuntimeError("trace envelope validation cases must be objects")  # noqa: TRY004 - preserve the established validation contract.
         name = item.get("name")
         if not isinstance(name, str):
-            raise RuntimeError("trace envelope validation case missing name")
+            raise RuntimeError("trace envelope validation case missing name")  # noqa: TRY004 - preserve the established validation contract.
         if "trace" not in item:
             raise RuntimeError(f"trace envelope validation case {name!r} missing trace")
         expected = item.get("expected")
         if not isinstance(expected, dict):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 f"trace envelope validation case {name!r} missing expected result"
             )
         expected_valid = expected.get("valid")
         expected_diagnostics = expected.get("diagnostics")
         if not isinstance(expected_valid, bool):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 f"trace envelope validation case {name!r} missing expected valid flag"
             )
         if not isinstance(expected_diagnostics, list) or not all(

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import shutil
 import unittest
+import warnings
 from unittest import mock
 from uuid import uuid4
-import warnings
 
 from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_WRAP
 from tet4d.engine.gameplay.topology_designer import (
@@ -12,21 +12,18 @@ from tet4d.engine.gameplay.topology_designer import (
     validate_topology_profile_state,
 )
 from tet4d.engine.runtime.project_config import (
-    explorer_topology_preview_dims,
     explorer_topology_preview_cache_dir_path,
+    explorer_topology_preview_dims,
     explorer_topology_preview_file_default_path,
     state_dir_path,
 )
 from tet4d.engine.runtime.topology_cache import (
     clear_topology_cache,
     read_cached_graph_rows,
-    read_topology_cache_entry,
     read_cached_playability_analysis,
+    read_topology_cache_entry,
     topology_cache_usage,
     write_cached_playability_analysis,
-)
-from tet4d.engine.runtime.topology_playground_state import (
-    TopologyPlaygroundPlayabilityAnalysis,
 )
 from tet4d.engine.runtime.topology_explorer_bridge import (
     explorer_profile_from_legacy_profile,
@@ -39,6 +36,9 @@ from tet4d.engine.runtime.topology_explorer_preview import (
     explorer_probe_options,
     export_explorer_topology_preview,
     recommended_explorer_probe_coord,
+)
+from tet4d.engine.runtime.topology_playground_state import (
+    TopologyPlaygroundPlayabilityAnalysis,
 )
 from tet4d.engine.topology_explorer import MoveStep
 from tet4d.engine.topology_explorer.movement_graph import (

@@ -63,7 +63,10 @@ class PanelDragMixin:
     def _update_panel_drag(self, pos: tuple[int, int]) -> bool:
         if not self.panel_drag_target:
             return False
-        if self.panel_drag_origin_mouse is None or self.panel_drag_origin_offset is None:
+        if (
+            self.panel_drag_origin_mouse is None
+            or self.panel_drag_origin_offset is None
+        ):
             self._reset_panel_drag_state()
             return False
         dx = int(pos[0]) - int(self.panel_drag_origin_mouse[0])
@@ -94,4 +97,3 @@ class PanelDragMixin:
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             return self._stop_panel_drag()
         return False
-

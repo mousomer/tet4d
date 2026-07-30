@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from ..core.model import Coord
 
-
 AXIS_NAMES = ("x", "y", "z", "w")
 SIDE_NEG = "-"
 SIDE_POS = "+"

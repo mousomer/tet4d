@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -7,8 +6,8 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -191,7 +190,7 @@ def main() -> int:
     )
 
     summary = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "tool": "tools/benchmarks/profile_4d_render.py",
         "version": 1,
         "frames": max(1, args.frames),

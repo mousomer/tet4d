@@ -8,7 +8,11 @@ from .interaction_audit import (
 )
 from .scene_preview_state import (
     ensure_explorer_playability_analysis as _ensure_explorer_playability_analysis,
+)
+from .scene_preview_state import (
     preview_signature_for_state as _preview_signature_for_state,
+)
+from .scene_preview_state import (
     refresh_explorer_scene_state as _refresh_explorer_scene_state,
 )
 from .scene_state import (
@@ -106,7 +110,7 @@ def launch_play_preview(
                     display_settings=display_settings,
                     exploration_mode=exploration_mode,
                 )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - UI boundary reports preview failures.
             set_status(state, f"Play preview failed: {exc}", is_error=True)
             return screen, display_settings
         set_status(state, f"Returned from Explorer {state.dimension}D play preview")

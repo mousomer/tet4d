@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-import re
 import json
 import logging
+import re
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from ..core.rng import RNG_MODE_OPTIONS
+from ..gameplay.topology import TOPOLOGY_MODE_OPTIONS
 from .endgame_presets import (
     ENDGAME_BOUNDARY_RESPONSES,
     ENDGAME_PARTICLE_COLLISION_MODES,
@@ -17,8 +20,6 @@ from .endgame_presets import (
     normalize_endgame_preset_id,
 )
 
-from ..core.rng import RNG_MODE_OPTIONS
-from ..gameplay.topology import TOPOLOGY_MODE_OPTIONS
 MODE_KEYS = ("2d", "3d", "4d")
 MODE_KEY_SET = set(MODE_KEYS)
 GRID_MODE_NAMES = (
@@ -83,19 +84,19 @@ def as_non_empty_string(value: object, *, path: str) -> str:
 
 def require_object(value: object, *, path: str) -> dict[str, Any]:
     if not isinstance(value, dict):
-        raise RuntimeError(f"{path} must be an object")
+        raise RuntimeError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     return value
 
 
 def require_list(value: object, *, path: str) -> list[Any]:
     if not isinstance(value, list):
-        raise RuntimeError(f"{path} must be a list")
+        raise RuntimeError(f"{path} must be a list")  # noqa: TRY004 - preserve the established validation contract.
     return value
 
 
 def require_bool(value: object, *, path: str) -> bool:
     if not isinstance(value, bool):
-        raise RuntimeError(f"{path} must be a boolean")
+        raise RuntimeError(f"{path} must be a boolean")  # noqa: TRY004 - preserve the established validation contract.
     return value
 
 
@@ -107,7 +108,7 @@ def require_int(
     max_value: int | None = None,
 ) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
-        raise RuntimeError(f"{path} must be an integer")
+        raise RuntimeError(f"{path} must be an integer")  # noqa: TRY004 - preserve the established validation contract.
     if min_value is not None and value < min_value:
         raise RuntimeError(f"{path} must be >= {min_value}")
     if max_value is not None and value > max_value:
@@ -123,7 +124,7 @@ def require_number(
     max_value: float | None = None,
 ) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise RuntimeError(f"{path} must be a number")
+        raise RuntimeError(f"{path} must be a number")  # noqa: TRY004 - preserve the established validation contract.
     num = float(value)
     if min_value is not None and num < min_value:
         raise RuntimeError(f"{path} must be >= {min_value}")
@@ -132,7 +133,7 @@ def require_number(
     return num
 
 
-def validate_setting_storage_metadata(  # noqa: C901
+def validate_setting_storage_metadata(  # noqa: C901 - established schema validator
     parsed: dict[str, Any],
     *,
     semantic_type: str,
@@ -362,7 +363,9 @@ def _require_enum_id(
 ) -> str:
     normalized = as_non_empty_string(value, path=setting_path).lower()
     if normalized not in allowed:
-        raise RuntimeError(f"{setting_path} must be one of: " + ", ".join(sorted(allowed)))
+        raise RuntimeError(
+            f"{setting_path} must be one of: " + ", ".join(sorted(allowed))
+        )
     return normalized
 
 
@@ -542,7 +545,7 @@ def read_json_object_or_raise(path: Path) -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"Invalid JSON in config file {path}: {exc}") from exc
     if not isinstance(payload, dict):
-        raise RuntimeError(f"Config file {path} must contain a JSON object")
+        raise RuntimeError(f"Config file {path} must contain a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     return payload
 
 

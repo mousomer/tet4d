@@ -12,7 +12,9 @@ def _structure_payload() -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _menu_item(payload: dict[str, object], *, menu_id: str, item_id: str) -> dict[str, object]:
+def _menu_item(
+    payload: dict[str, object], *, menu_id: str, item_id: str
+) -> dict[str, object]:
     menus = payload.get("menus", {})
     if not isinstance(menus, dict):
         raise TypeError("structure payload missing menus object")
@@ -23,7 +25,10 @@ def _menu_item(payload: dict[str, object], *, menu_id: str, item_id: str) -> dic
     if not isinstance(items, list):
         raise TypeError(f"{menu_id}.items must be a list")
     for item in items:
-        if isinstance(item, dict) and str(item.get("id", "")).strip().lower() == item_id:
+        if (
+            isinstance(item, dict)
+            and str(item.get("id", "")).strip().lower() == item_id
+        ):
             return item
     raise KeyError(f"{menu_id}:{item_id}")
 
@@ -31,7 +36,9 @@ def _menu_item(payload: dict[str, object], *, menu_id: str, item_id: str) -> dic
 class TestMenuStructureStorageMetadataValidation(unittest.TestCase):
     def test_selector_rejects_non_enum_semantic_type(self) -> None:
         payload = _structure_payload()
-        item = _menu_item(payload, menu_id="settings_gameplay", item_id="game_random_mode")
+        item = _menu_item(
+            payload, menu_id="settings_gameplay", item_id="game_random_mode"
+        )
         item["semantic_type"] = "int"
         with self.assertRaises(RuntimeError):
             validate_structure_payload(payload)  # type: ignore[arg-type]
@@ -79,4 +86,3 @@ class TestMenuStructureStorageMetadataValidation(unittest.TestCase):
         item["legacy_storage_type"] = "int_bool"
         with self.assertRaises(RuntimeError):
             validate_structure_payload(payload)  # type: ignore[arg-type]
-

@@ -1,8 +1,7 @@
-# ruff: noqa: E402
 import argparse
 import sys
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
 
 def _parse_cli_args(argv=None):
@@ -32,59 +31,12 @@ if __name__ == "__main__":
 
 import pygame
 
-from tet4d.engine.tutorial.api import tutorial_lesson_ids_runtime
-from tet4d.ui.pygame.runtime_ui.app_runtime import (
-    capture_windowed_display_settings,
-    initialize_runtime,
-    open_display,
-)
-from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
-from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
-from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
-from tet4d.ui.pygame.locked_cell_explosion.launcher import (
-    run_standalone_explosion_launcher_action,
-)
-from tet4d.ui.pygame.topology_lab.entrypoint import (
-    parse_topology_playground_dimension,
-    run_direct_topology_playground,
-)
-from tet4d.ui.pygame.topology_lab.app import (
-    build_explorer_playground_config,
-    build_explorer_playground_launch,
-    mode_settings_snapshot_for_dimension,
-)
-from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
-from tet4d.ui.pygame.launch.launcher_profile_menu import (
-    expand_settings_profile_rows,
-    profile_action_id,
-    SETTINGS_PROFILES_MENU_ID,
-)
-from tet4d.ui.pygame.launch.launcher_menu_view import draw_main_menu
-from tet4d.ui.pygame.launch.launcher_runtime_helpers import (
-    handle_launcher_profile_cycle_key,
-    handle_launcher_route,
-    handle_missing_action,
-    play_confirm_sfx,
-    play_move_sfx,
-)
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
-from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
-from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
-from tet4d.ui.pygame.keybindings import (
-    active_key_profile,
-    list_key_profiles,
-    load_active_profile_bindings,
-    set_active_key_profile,
-)
-from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
-from tet4d.ui.pygame.launch.launcher_play import launch_2d, launch_3d, launch_4d
-from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.engine.runtime.menu_config import (
     branding_copy,
-    settings_menu_id,
     launcher_menu_id,
     launcher_route_actions,
     menu_graph,
+    settings_menu_id,
     ui_copy_section,
 )
 from tet4d.engine.runtime.menu_settings_state import (
@@ -96,9 +48,58 @@ from tet4d.engine.runtime.menu_settings_state import (
 from tet4d.engine.runtime.topology_explorer_runtime import (
     load_runtime_explorer_topology_profile,
 )
-from tet4d.ui.pygame.menu.menu_runner import ActionRegistry, MenuRunner
-from tet4d.ui.pygame.menu.menu_runner import MenuPointerTarget
-
+from tet4d.engine.tutorial.api import tutorial_lesson_ids_runtime
+from tet4d.ui.pygame.keybindings import (
+    active_key_profile,
+    list_key_profiles,
+    load_active_profile_bindings,
+    set_active_key_profile,
+)
+from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
+from tet4d.ui.pygame.launch.launcher_menu_view import draw_main_menu
+from tet4d.ui.pygame.launch.launcher_play import launch_2d, launch_3d, launch_4d
+from tet4d.ui.pygame.launch.launcher_profile_menu import (
+    SETTINGS_PROFILES_MENU_ID,
+    expand_settings_profile_rows,
+    profile_action_id,
+)
+from tet4d.ui.pygame.launch.launcher_runtime_helpers import (
+    handle_launcher_profile_cycle_key,
+    handle_launcher_route,
+    handle_missing_action,
+    play_confirm_sfx,
+    play_move_sfx,
+)
+from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
+from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
+from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
+from tet4d.ui.pygame.locked_cell_explosion.launcher import (
+    run_standalone_explosion_launcher_action,
+)
+from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
+from tet4d.ui.pygame.menu.menu_runner import (
+    ActionRegistry,
+    MenuPointerTarget,
+    MenuRunner,
+)
+from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
+from tet4d.ui.pygame.runtime_ui.app_runtime import (
+    DisplaySettings,
+    capture_windowed_display_settings,
+    initialize_runtime,
+    open_display,
+)
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
+from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
+from tet4d.ui.pygame.topology_lab.app import (
+    build_explorer_playground_config,
+    build_explorer_playground_launch,
+    mode_settings_snapshot_for_dimension,
+)
+from tet4d.ui.pygame.topology_lab.entrypoint import (
+    parse_topology_playground_dimension,
+    run_direct_topology_playground,
+)
 
 BG_TOP = (14, 18, 44)
 BG_BOTTOM = (4, 7, 20)
@@ -144,11 +145,12 @@ class _LauncherSession:
 def _menu_items(menu_id: str) -> tuple[dict[str, str], ...]:
     menu = _MENU_GRAPH.get(menu_id)
     if menu is None:
-        return tuple()
+        return ()
     raw_items = menu.get("items")
     if not isinstance(raw_items, tuple):
-        return tuple()
+        return ()
     return raw_items
+
 
 def _sync_launcher_settings_profile_rows() -> None:
     menu = _MENU_GRAPH.get(_LAUNCHER_SETTINGS_PROFILES_MENU_ID)
@@ -545,6 +547,7 @@ def _menu_action_legacy_topology_editor(
     state.status_error = not ok
     return not session.running
 
+
 def _menu_action_play_last_custom_topology(
     state: MainMenuState,
     session: _LauncherSession,
@@ -585,7 +588,7 @@ def _menu_action_play_last_custom_topology(
             back_to_menu = front3d_game.run_game_loop(session.screen, cfg, fonts_nd)
         else:
             back_to_menu = front4d_game.run_game_loop(session.screen, cfg, fonts_nd)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - UI boundary reports launch failures.
         state.status = f"Play last custom topology failed: {exc}"
         state.status_error = True
         return False
@@ -648,7 +651,9 @@ def _build_action_registry(
             fonts_2d,
         ),
     )
-    register("continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d))
+    register(
+        "continue", lambda: _menu_action_continue(state, session, fonts_nd, fonts_2d)
+    )
     register("help", lambda: _menu_action_help(state, session, fonts_nd))
     register("leaderboard", lambda: _menu_action_leaderboard(state, session, fonts_nd))
     register(
@@ -789,6 +794,7 @@ def run() -> None:
     initial_selected = {
         _LAUNCHER_ROOT_MENU_ID: _menu_index_for_mode(state.last_mode),
     }
+
     def _render_launcher_menu(
         menu_id: str,
         title: str,

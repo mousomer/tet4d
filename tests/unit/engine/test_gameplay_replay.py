@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import random
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
-import random
 
 try:
     import pygame
@@ -15,12 +15,21 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
-from tet4d.ui.pygame import front2d_game as front2d
-from tet4d.ui.pygame import frontend_nd_input, frontend_nd_state
-from tet4d.ui.pygame import front3d_game
-from tet4d.ui.pygame import front4d_game
+from tests.unit.engine._translation_contract import (
+    assert_repeated_translation_progress,
+)
 from tet4d.engine.gameplay.game2d import Action, GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
+from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
+from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
+from tet4d.engine.topology_explorer.presets import axis_wrap_profile
+from tet4d.ui.pygame import front2d_game as front2d
+from tet4d.ui.pygame import (
+    front3d_game,
+    front4d_game,
+    frontend_nd_input,
+    frontend_nd_state,
+)
 from tet4d.ui.pygame.keybindings import (
     CAMERA_KEYS_3D,
     CAMERA_KEYS_4D,
@@ -32,15 +41,9 @@ from tet4d.ui.pygame.keybindings import (
     KEYS_4D,
     SYSTEM_KEYS,
 )
-from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
-from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
-from tet4d.engine.topology_explorer.presets import axis_wrap_profile
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_config,
     build_explorer_playground_launch,
-)
-from tests.unit.engine._translation_contract import (
-    assert_repeated_translation_progress,
 )
 
 
@@ -139,7 +142,9 @@ class TestGameplayReplay(unittest.TestCase):
             rng_mode="fixed_seed",
             rng_seed=4242,
         )
-        with patch("tet4d.ui.pygame.front2d_session.random.Random", side_effect=random.Random) as ctor:
+        with patch(
+            "tet4d.ui.pygame.front2d_session.random.Random", side_effect=random.Random
+        ) as ctor:
             state = front2d.create_initial_state(fixed_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with(4242)
@@ -152,7 +157,9 @@ class TestGameplayReplay(unittest.TestCase):
             rng_mode="true_random",
             rng_seed=4242,
         )
-        with patch("tet4d.ui.pygame.front2d_session.random.Random", side_effect=random.Random) as ctor:
+        with patch(
+            "tet4d.ui.pygame.front2d_session.random.Random", side_effect=random.Random
+        ) as ctor:
             state = front2d.create_initial_state(true_random_cfg)
         self.assertIsNotNone(state.current_piece)
         ctor.assert_called_once_with()
@@ -375,14 +382,16 @@ class TestGameplayReplay(unittest.TestCase):
 
         move_down = self._key_for(EXPLORER_KEYS_4D, "move_down")
         self.assertEqual(
-            frontend_nd_input.handle_game_keydown(_keydown(move_down), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(move_down), state),
+            "continue",
         )
         if state.current_piece is not None and pos_before is not None:
             self.assertEqual(state.current_piece.pos[1], pos_before[1])
 
         hard_drop = self._key_for(KEYS_4D, "hard_drop")
         self.assertEqual(
-            frontend_nd_input.handle_game_keydown(_keydown(hard_drop), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(hard_drop), state),
+            "continue",
         )
         self.assertEqual(len(state.board.cells), 0)
         self.assertEqual(state.lines_cleared, 0)
@@ -502,11 +511,17 @@ class TestGameplayReplay(unittest.TestCase):
                 state.current_piece = ActivePiece2D(shape, pos=start_pos, rotation=0)
                 assert_repeated_translation_progress(
                     self,
-                    step=lambda: front2d.handle_game_keydown(_keydown(key), state, cfg),
-                    signature=lambda: state.current_piece_cells_mapped(include_above=False),
+                    step=lambda key=key, state=state, cfg=cfg: (
+                        front2d.handle_game_keydown(_keydown(key), state, cfg)
+                    ),
+                    signature=lambda state=state: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
                     expected_signatures=expected,
                     label=label,
-                    result_assertion=lambda case, result, index: case._assert_continue(result, index),
+                    result_assertion=lambda case, result, index: case._assert_continue(
+                        result, index
+                    ),
                 )
 
     def test_repeated_translation_contract_matches_main_and_explorer_nd(self):
@@ -602,11 +617,17 @@ class TestGameplayReplay(unittest.TestCase):
                 state.current_piece = ActivePieceND.from_shape(shape, pos=start_pos)
                 assert_repeated_translation_progress(
                     self,
-                    step=lambda: frontend_nd_input.handle_game_keydown(_keydown(key), state),
-                    signature=lambda: state.current_piece_cells_mapped(include_above=False),
+                    step=lambda key=key, state=state: (
+                        frontend_nd_input.handle_game_keydown(_keydown(key), state)
+                    ),
+                    signature=lambda state=state: state.current_piece_cells_mapped(
+                        include_above=False
+                    ),
                     expected_signatures=expected,
                     label=label,
-                    result_assertion=lambda case, result, index: case._assert_continue(result, index),
+                    result_assertion=lambda case, result, index: case._assert_continue(
+                        result, index
+                    ),
                 )
 
     def test_2d_controls_smoke(self):
@@ -703,7 +724,9 @@ class TestGameplayReplay(unittest.TestCase):
             signature=lambda: tuple(sorted(state.current_piece.cells())),
             expected_signatures=expected,
             label="explorer_3d_frontend_left",
-            result_assertion=lambda case, result, index: case._assert_continue(result, index),
+            result_assertion=lambda case, result, index: case._assert_continue(
+                result, index
+            ),
         )
 
     def test_explorer_4d_frontend_repeated_left_translation_live(self):
@@ -717,7 +740,9 @@ class TestGameplayReplay(unittest.TestCase):
         state = frontend_nd_state.create_initial_state(cfg)
         state.board.cells.clear()
         state.current_piece = ActivePieceND.from_shape(
-            PieceShapeND("bar4", ((0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0)), color_id=8),
+            PieceShapeND(
+                "bar4", ((0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0)), color_id=8
+            ),
             pos=(2, 2, 1, 1),
         )
         loop = front4d_game.LoopContext4D.create(cfg)
@@ -736,7 +761,9 @@ class TestGameplayReplay(unittest.TestCase):
             signature=lambda: tuple(sorted(loop.state.current_piece.cells())),
             expected_signatures=expected,
             label="explorer_4d_frontend_left",
-            result_assertion=lambda case, result, index: case._assert_continue(result, index),
+            result_assertion=lambda case, result, index: case._assert_continue(
+                result, index
+            ),
         )
 
     def test_explorer_3d_playground_launch_repeated_left_translation_live(self):
@@ -776,11 +803,15 @@ class TestGameplayReplay(unittest.TestCase):
 
         assert_repeated_translation_progress(
             self,
-            step=lambda: front3d_game.handle_game_keydown(_keydown(move_x_neg), state, camera),
+            step=lambda: front3d_game.handle_game_keydown(
+                _keydown(move_x_neg), state, camera
+            ),
             signature=lambda: tuple(sorted(state.current_piece.cells())),
             expected_signatures=expected,
             label="explorer_3d_playground_left",
-            result_assertion=lambda case, result, index: case._assert_continue(result, index),
+            result_assertion=lambda case, result, index: case._assert_continue(
+                result, index
+            ),
         )
 
     def test_explorer_4d_playground_launch_repeated_left_translation_live(self):
@@ -807,7 +838,9 @@ class TestGameplayReplay(unittest.TestCase):
         loop = front4d_game.LoopContext4D.create(cfg)
         loop.state.board.cells.clear()
         loop.state.current_piece = ActivePieceND.from_shape(
-            PieceShapeND("bar4", ((0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0)), color_id=8),
+            PieceShapeND(
+                "bar4", ((0, 0, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0)), color_id=8
+            ),
             pos=(2, 2, 1, 1),
         )
         loop.view.yaw_deg = 0.0
@@ -824,7 +857,9 @@ class TestGameplayReplay(unittest.TestCase):
             signature=lambda: tuple(sorted(loop.state.current_piece.cells())),
             expected_signatures=expected,
             label="explorer_4d_playground_left",
-            result_assertion=lambda case, result, index: case._assert_continue(result, index),
+            result_assertion=lambda case, result, index: case._assert_continue(
+                result, index
+            ),
         )
 
     def test_3d_controls_and_camera_smoke(self):
@@ -911,25 +946,29 @@ class TestGameplayReplay(unittest.TestCase):
 
         before_blocks = tuple(sorted(state.current_piece.rel_blocks))
         self.assertEqual(
-            frontend_nd_input.handle_game_keydown(_keydown(move_z_neg), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(move_z_neg), state),
+            "continue",
         )
         self.assertEqual(state.current_piece.pos, (2, 2, 2, 1))
         self.assertEqual(tuple(sorted(state.current_piece.rel_blocks)), before_blocks)
 
         self.assertEqual(
-            frontend_nd_input.handle_game_keydown(_keydown(move_w_pos), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(move_w_pos), state),
+            "continue",
         )
         self.assertEqual(state.current_piece.pos, (2, 2, 2, 2))
 
         self.assertEqual(
-            frontend_nd_input.handle_game_keydown(_keydown(rotate_xw), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(rotate_xw), state),
+            "continue",
         )
         self.assertNotEqual(
             tuple(sorted(state.current_piece.rel_blocks)), before_blocks
         )
 
         self.assertEqual(
-            frontend_nd_input.handle_game_keydown(_keydown(hard_drop), state), "continue"
+            frontend_nd_input.handle_game_keydown(_keydown(hard_drop), state),
+            "continue",
         )
         self.assertGreater(len(state.board.cells), 0)
 
@@ -1032,4 +1071,3 @@ class TestGameplayReplay(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

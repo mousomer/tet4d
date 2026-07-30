@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from collections import Counter
 import re
 import subprocess
 import sys
-
+from collections import Counter
+from dataclasses import dataclass
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTER_REL = "docs/governance/technical_debt_register.md"

@@ -120,7 +120,9 @@ class KeybindingRuntimeState:
         payload = defaults_payload or load_keybinding_defaults_payload()
         self._profile_map = payload.get("profiles", {})
         self.defaults_version = int(payload.get("version", 1))
-        self.disabled_keys_2d = tuple(int(key) for key in payload.get("disabled_keys_2d", ()))
+        self.disabled_keys_2d = tuple(
+            int(key) for key in payload.get("disabled_keys_2d", ())
+        )
         self._active_profile = normalize_builtin_profile(active_profile)
         self.system_keys: KeyBindingMap = {}
         self.keys_2d: KeyBindingMap = {}
@@ -207,7 +209,9 @@ class KeybindingRuntimeState:
     ) -> None:
         selected = self.selected_profile(profile)
         keys_2d, keys_3d, keys_4d = self.default_game_bindings_for_profile(selected)
-        explorer_2d, explorer_3d, explorer_4d = self.default_explorer_bindings_for_profile(selected)
+        explorer_2d, explorer_3d, explorer_4d = (
+            self.default_explorer_bindings_for_profile(selected)
+        )
         camera_3d, camera_4d = self.default_camera_bindings_for_profile(selected)
         system_keys = self.default_system_bindings_for_profile(selected)
         _replace_map(self.system_keys, system_keys)
@@ -253,7 +257,11 @@ class KeybindingRuntimeState:
             if not filtered:
                 filtered = fallback_camera_4d.get(action, ())
                 filtered = tuple(key for key in filtered if key not in occupied)
-            if action == "reset" and not filtered and reset_camera_key_fallback is not None:
+            if (
+                action == "reset"
+                and not filtered
+                and reset_camera_key_fallback is not None
+            ):
                 filtered = (reset_camera_key_fallback,)
             sanitized_camera_4d[action] = filtered
         _replace_map(self.camera_keys_4d, sanitized_camera_4d)
@@ -346,6 +354,4 @@ KEY_PROFILE_ENV = runtime_keybinding_store.KEY_PROFILE_ENV
 PROFILE_FULL = runtime_keybinding_store.PROFILE_FULL
 PROFILE_MACBOOK = runtime_keybinding_store.PROFILE_MACBOOK
 PROFILE_TINY = runtime_keybinding_store.PROFILE_TINY
-KEYBINDING_STATE = KeybindingRuntimeState(
-    active_profile=active_key_profile_from_env()
-)
+KEYBINDING_STATE = KeybindingRuntimeState(active_profile=active_key_profile_from_env())

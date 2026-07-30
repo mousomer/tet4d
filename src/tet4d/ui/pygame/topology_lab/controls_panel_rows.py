@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from tet4d.engine.gameplay.topology_designer import GAMEPLAY_MODE_NORMAL
 
 from .scene_state import (
-    TopologyLabState,
     WORKSPACE_EDITOR,
     WORKSPACE_SANDBOX,
+    TopologyLabState,
     active_workspace_name,
     uses_general_explorer_editor,
 )

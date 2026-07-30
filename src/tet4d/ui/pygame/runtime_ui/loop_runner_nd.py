@@ -13,9 +13,9 @@ from tet4d.engine.tutorial.api import (
     tutorial_runtime_skip_runtime,
 )
 from tet4d.ui.pygame.endgame_animation import (
-    EndgameSnapshot,
     TERMINAL_PHASE_GAME_OVER_COMPLETE,
     TERMINAL_PHASE_PLAYING,
+    EndgameSnapshot,
     endgame_prompt_ready,
     endgame_sfx_events_between,
     ensure_endgame_animation,
@@ -108,9 +108,7 @@ def _restart_tutorial_if_running_nd(loop: Any) -> bool:
 
 
 def _pause_tutorial_restart_nd(loop: Any) -> bool:
-    if not _restart_tutorial_if_running_nd(loop):
-        return False
-    return True
+    return _restart_tutorial_if_running_nd(loop)
 
 
 def _pause_tutorial_skip_nd(loop: Any) -> bool:
@@ -176,7 +174,10 @@ def _advance_simulation_step(
     gravity_interval_ms: int,
     tutorial_step_pause_active: bool = False,
 ) -> None:
-    if getattr(loop, "terminal_phase", TERMINAL_PHASE_PLAYING) != TERMINAL_PHASE_PLAYING:
+    if (
+        getattr(loop, "terminal_phase", TERMINAL_PHASE_PLAYING)
+        != TERMINAL_PHASE_PLAYING
+    ):
         loop.gravity_accumulator = 0
         return
     if tutorial_step_pause_active:
@@ -361,7 +362,9 @@ def _run_optional_tutorial_safety(loop: Any) -> None:
         maintain_tutorial_safety()
 
 
-def _maybe_sync_tutorial(tutorial_sync: Callable[[int], bool] | None, loop: Any) -> None:
+def _maybe_sync_tutorial(
+    tutorial_sync: Callable[[int], bool] | None, loop: Any
+) -> None:
     if tutorial_sync is not None:
         tutorial_sync(int(loop.state.lines_cleared))
 
@@ -421,7 +424,7 @@ def run_nd_loop(
                 exploration_mode=bool(loop.state.config.exploration_mode),
                 draw_background=lambda: draw_frame(screen, None),
             )
-        except Exception:
+        except Exception:  # noqa: BLE001 - results recording is best-effort.
             return
 
     def _restart_with_record() -> None:
@@ -497,13 +500,10 @@ def run_nd_loop(
             active_overlay=active_overlay,
             loop=loop,
         )
-        if (
-            not endgame_session_handled
-            and (
-                endgame_prompt_ready(getattr(loop, "endgame_animation", None))
-                or getattr(loop, "terminal_phase", TERMINAL_PHASE_PLAYING)
-                == TERMINAL_PHASE_GAME_OVER_COMPLETE
-            )
+        if not endgame_session_handled and (
+            endgame_prompt_ready(getattr(loop, "endgame_animation", None))
+            or getattr(loop, "terminal_phase", TERMINAL_PHASE_PLAYING)
+            == TERMINAL_PHASE_GAME_OVER_COMPLETE
         ):
             _record_session("game_over")
             endgame_session_handled = True

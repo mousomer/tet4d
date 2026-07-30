@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import itertools
 import json
+import shutil
+import unittest
 from dataclasses import replace
 from pathlib import Path
-import shutil
 from types import SimpleNamespace
-import unittest
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -13,7 +14,6 @@ import pygame
 
 from tet4d.engine.runtime import menu_settings_state
 from tet4d.engine.runtime.project_config import state_dir_path
-from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode
 from tet4d.engine.topology_explorer.glue_model import BoundaryRef
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
@@ -24,6 +24,9 @@ from tet4d.engine.topology_explorer.presets import (
 from tet4d.engine.topology_explorer.transport_resolver import (
     build_explorer_transport_resolver,
 )
+from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode
+from tet4d.ui.pygame import endgame_shell_effects
+from tet4d.ui.pygame.front3d_render import Camera3D
 from tet4d.ui.pygame.locked_cell_explosion import (
     EXPLOSION_BOUNDARY_RESPONSE_BOUNCE,
     EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
@@ -40,34 +43,22 @@ from tet4d.ui.pygame.locked_cell_explosion import (
     EXPLOSION_TRAIL_RETENTION_MAX_MS,
     EXPLOSION_TRAIL_RETENTION_MIN_MS,
     ExplosionSeedCell,
-    ExplosionTrailSample,
     ExplosionTopologyInput,
+    ExplosionTrailSample,
     StandaloneExplosionConfig,
     build_locked_cell_explosion,
 )
-from tet4d.ui.pygame.locked_cell_explosion.audio import aggregate_audio_events
 from tet4d.ui.pygame.locked_cell_explosion import board_view as explosion_board_view
-from tet4d.ui.pygame.locked_cell_explosion import defaults_store as explosion_defaults_store
-from tet4d.ui.pygame.locked_cell_explosion import endgame_preview as explosion_endgame_preview
+from tet4d.ui.pygame.locked_cell_explosion import (
+    defaults_store as explosion_defaults_store,
+)
+from tet4d.ui.pygame.locked_cell_explosion import (
+    endgame_preview as explosion_endgame_preview,
+)
 from tet4d.ui.pygame.locked_cell_explosion import launcher as explosion_launcher
 from tet4d.ui.pygame.locked_cell_explosion import simulation as explosion_simulation
 from tet4d.ui.pygame.locked_cell_explosion import surface as explosion_surface
-from tet4d.ui.pygame import endgame_shell_effects
-from tet4d.ui.pygame.topology_lab import projection_scene as topology_projection_scene
-from tet4d.ui.pygame.front3d_render import Camera3D
-from tet4d.ui.pygame.render.front3d_projection_helpers import (
-    ProjectionParams3D,
-    build_cell_faces as build_cell_faces_3d,
-    project_raw_point as project_raw_point_3d,
-)
-from tet4d.ui.pygame.projection3d import box_raw_corners
-from tet4d.ui.pygame.render.active_piece_projection_guides import (
-    build_boundary_projection_face_primitives,
-    build_boundary_projection_segments_2d,
-    boundary_targets_for_mode,
-)
-from tet4d.ui.pygame.render.board_boundary import board_boundary_coordinate
-from tet4d.ui.pygame.render.grid_mode_render import build_projected_grid_primitives
+from tet4d.ui.pygame.locked_cell_explosion.audio import aggregate_audio_events
 from tet4d.ui.pygame.locked_cell_explosion.model import (
     ExplosionAudioEvent,
     ExplosionAudioState,
@@ -83,7 +74,27 @@ from tet4d.ui.pygame.locked_cell_explosion.simulation import (
     total_kinetic_energy_for_particles,
     velocity_norm_sq_sum_for_particles,
 )
-from tet4d.ui.pygame.locked_cell_explosion.topology import build_explosion_topology_adapter
+from tet4d.ui.pygame.locked_cell_explosion.topology import (
+    build_explosion_topology_adapter,
+)
+from tet4d.ui.pygame.projection3d import box_raw_corners
+from tet4d.ui.pygame.render.active_piece_projection_guides import (
+    boundary_targets_for_mode,
+    build_boundary_projection_face_primitives,
+    build_boundary_projection_segments_2d,
+)
+from tet4d.ui.pygame.render.board_boundary import board_boundary_coordinate
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    ProjectionParams3D,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    build_cell_faces as build_cell_faces_3d,
+)
+from tet4d.ui.pygame.render.front3d_projection_helpers import (
+    project_raw_point as project_raw_point_3d,
+)
+from tet4d.ui.pygame.render.grid_mode_render import build_projected_grid_primitives
+from tet4d.ui.pygame.topology_lab import projection_scene as topology_projection_scene
 
 
 def _new_workspace_temp_dir(prefix: str) -> Path:
@@ -202,7 +213,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         lead.trail_elapsed_ms = 0.0
         return controller, lead
 
-    def _frame_diagnostics_for_i3_bounce(self, *, frames: int = 8, dt_ms: float = 16.666667):
+    def _frame_diagnostics_for_i3_bounce(
+        self, *, frames: int = 8, dt_ms: float = 16.666667
+    ):
         controller, lead = self._build_i3_bounce_controller_3d()
         camera = Camera3D()
         params = ProjectionParams3D(
@@ -230,14 +243,18 @@ class TestLockedCellExplosion(unittest.TestCase):
             contact_position = None
             if axis >= 0 and hit_time <= dt_seconds:
                 contact_position = tuple(
-                    float(lead.position_nd[index] + (lead.velocity_nd[index] * hit_time))
+                    float(
+                        lead.position_nd[index] + (lead.velocity_nd[index] * hit_time)
+                    )
                     for index in range(3)
                 )
             nudge_vector = None
             if contact_position is not None:
                 nudge = [0.0, 0.0, 0.0]
                 nudge[axis] = (
-                    _INTERIOR_POSITION_EPSILON if side == "-" else -_INTERIOR_POSITION_EPSILON
+                    _INTERIOR_POSITION_EPSILON
+                    if side == "-"
+                    else -_INTERIOR_POSITION_EPSILON
                 )
                 nudge_vector = tuple(nudge)
             controller.step(dt_ms)
@@ -285,7 +302,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                     )
                     if next_axis >= 0 and next_hit_time <= dt_seconds
                     else None,
-                    "render_center_board": tuple(float(value) for value in rendered.render_position),
+                    "render_center_board": tuple(
+                        float(value) for value in rendered.render_position
+                    ),
                     "render_center_projected": projected_center,
                     "trace_samples": tuple(
                         tuple(float(value) for value in sample.position_nd)
@@ -433,7 +452,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         controller = build_locked_cell_explosion(config)
         particle = controller.simulation.particles[0]
 
-        self.assertEqual(particle.trail_max_lifetime_ms, EXPLOSION_TRAIL_RETENTION_MAX_MS)
+        self.assertEqual(
+            particle.trail_max_lifetime_ms, EXPLOSION_TRAIL_RETENTION_MAX_MS
+        )
         self.assertGreater(particle.trail_max_samples, EXPLOSION_TRAIL_MAX_SAMPLES)
 
     def test_old_trail_samples_expire(self) -> None:
@@ -591,14 +612,12 @@ class TestLockedCellExplosion(unittest.TestCase):
         particle = controller.simulation.particles[0]
         particle.position_nd = (3.4, 1.5)
         particle.velocity_nd = (2.0, 0.0)
-        particle.trail_samples = (
-            [
-                ExplosionTrailSample(
-                    position_nd=(3.4, 1.5),
-                    elapsed_ms=0.0,
-                )
-            ]
-        )
+        particle.trail_samples = [
+            ExplosionTrailSample(
+                position_nd=(3.4, 1.5),
+                elapsed_ms=0.0,
+            )
+        ]
         controller.simulation.particles[1].active = False
 
         controller.step(200.0)
@@ -700,14 +719,12 @@ class TestLockedCellExplosion(unittest.TestCase):
         particle = controller.simulation.particles[0]
         particle.position_nd = (3.4, 1.5)
         particle.velocity_nd = (2.0, 0.0)
-        particle.trail_samples = (
-            [
-                ExplosionTrailSample(
-                    position_nd=(3.4, 1.5),
-                    elapsed_ms=0.0,
-                )
-            ]
-        )
+        particle.trail_samples = [
+            ExplosionTrailSample(
+                position_nd=(3.4, 1.5),
+                elapsed_ms=0.0,
+            )
+        ]
         controller.simulation.particles[1].active = False
 
         controller.step(200.0)
@@ -721,7 +738,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
         )
 
-    def test_3d_i3_bounce_render_center_matches_simulation_path_frame_by_frame(self) -> None:
+    def test_3d_i3_bounce_render_center_matches_simulation_path_frame_by_frame(
+        self,
+    ) -> None:
         frames = self._frame_diagnostics_for_i3_bounce()
 
         for frame in frames:
@@ -730,7 +749,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                 frame["after_pos"],
             )
 
-    def test_3d_i3_bounce_trace_keeps_contact_and_immediate_post_contact_continuation(self) -> None:
+    def test_3d_i3_bounce_trace_keeps_contact_and_immediate_post_contact_continuation(
+        self,
+    ) -> None:
         frames = self._frame_diagnostics_for_i3_bounce()
         bounce_frame = next(frame for frame in frames if frame["boundary_contact"])
         contact = bounce_frame["contact_position"]
@@ -748,15 +769,15 @@ class TestLockedCellExplosion(unittest.TestCase):
     def test_3d_i3_bounce_has_no_fake_repeated_near_wall_recontact(self) -> None:
         frames = self._frame_diagnostics_for_i3_bounce()
         bounce_indices = [
-            frame["frame"]
-            for frame in frames
-            if frame["boundary_contact"]
+            frame["frame"] for frame in frames if frame["boundary_contact"]
         ]
 
         self.assertEqual(bounce_indices, [4])
         self.assertIsNone(frames[4]["next_contact"])
 
-    def test_3d_i3_bounce_draws_projected_trace_segment_for_immediate_post_contact_continuation(self) -> None:
+    def test_3d_i3_bounce_draws_projected_trace_segment_for_immediate_post_contact_continuation(
+        self,
+    ) -> None:
         rendered, dims, params, center_px = self._rendered_bounce_state_for_i3_3d()
         line_calls = []
         overlay = pygame.Surface((960, 720), pygame.SRCALPHA)
@@ -781,8 +802,16 @@ class TestLockedCellExplosion(unittest.TestCase):
         expected_segment = next(
             (
                 (
-                    tuple(project_raw_point_3d(segment.tail_render_position, dims, params, center_px)),
-                    tuple(project_raw_point_3d(segment.head_render_position, dims, params, center_px)),
+                    tuple(
+                        project_raw_point_3d(
+                            segment.tail_render_position, dims, params, center_px
+                        )
+                    ),
+                    tuple(
+                        project_raw_point_3d(
+                            segment.head_render_position, dims, params, center_px
+                        )
+                    ),
                 )
                 for segment in rendered.trail_segments
                 if abs(float(segment.tail_position_nd[0]) - 3.5) <= 1e-6
@@ -831,7 +860,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertLess(particle.position_nd[0], 3.5)
         self.assertIn("explosion_bounce_soft", events)
 
-    def test_bounce_containment_keeps_particles_inside_board_in_2d_3d_and_4d(self) -> None:
+    def test_bounce_containment_keeps_particles_inside_board_in_2d_3d_and_4d(
+        self,
+    ) -> None:
         for dimension in (2, 3, 4):
             with self.subTest(dimension=dimension):
                 dims = tuple(4 for _ in range(dimension))
@@ -883,7 +914,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                 self.assertLess(particle.position_nd[0], 3.5)
                 self.assertLess(particle.velocity_nd[0], 0.0)
 
-    def test_boundary_targets_reuse_true_boundary_coordinates_in_2d_3d_and_4d(self) -> None:
+    def test_boundary_targets_reuse_true_boundary_coordinates_in_2d_3d_and_4d(
+        self,
+    ) -> None:
         for dims in ((4, 5), (4, 5, 6), (4, 5, 6, 7)):
             with self.subTest(dims=dims):
                 all_targets = boundary_targets_for_mode(
@@ -915,7 +948,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                     board_boundary_coordinate(dims=dims, axis=1, side="+"),
                 )
 
-    def test_seam_transport_contact_stays_on_true_boundary_in_2d_3d_and_4d(self) -> None:
+    def test_seam_transport_contact_stays_on_true_boundary_in_2d_3d_and_4d(
+        self,
+    ) -> None:
         for dimension in (2, 3, 4):
             with self.subTest(dimension=dimension):
                 controller = build_locked_cell_explosion(
@@ -963,15 +998,17 @@ class TestLockedCellExplosion(unittest.TestCase):
         controller.simulation.particles[1].active = False
         particle.position_nd = (3.4, 1.5, 1.5)
         particle.velocity_nd = (2.0, 0.25, -0.5)
-        initial = 0.5 * particle.collision_mass * (
-            (2.0 * 2.0) + (0.25 * 0.25) + (0.5 * 0.5)
+        initial = (
+            0.5 * particle.collision_mass * ((2.0 * 2.0) + (0.25 * 0.25) + (0.5 * 0.5))
         )
 
         controller.step(55.0)
 
         self.assertAlmostEqual(controller.total_kinetic_energy, initial, delta=1e-6)
 
-    def test_3d_particle_collision_preserves_kinetic_energy_within_tolerance(self) -> None:
+    def test_3d_particle_collision_preserves_kinetic_energy_within_tolerance(
+        self,
+    ) -> None:
         controller = build_locked_cell_explosion(
             self._config(
                 dimension=3,
@@ -1173,7 +1210,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             fonts=fonts,
         )
         save_rect = row_rects[
-            next(index for index, row in enumerate(row_layouts) if row.row_key == "save")
+            next(
+                index for index, row in enumerate(row_layouts) if row.row_key == "save"
+            )
         ]
         click_event = pygame.event.Event(
             pygame.MOUSEBUTTONDOWN,
@@ -1189,7 +1228,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                 )
             )
 
-        self.assertEqual(explosion_defaults_store.mode_explosion_defaults("3d").seed, 6161)
+        self.assertEqual(
+            explosion_defaults_store.mode_explosion_defaults("3d").seed, 6161
+        )
 
     def test_endgame_live_fraction_row_is_available_and_clamped(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
@@ -1211,7 +1252,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         )
         self.assertEqual(state.endgame_live_cell_fraction, 0.0)
 
-    def test_elastic_free_flight_diagnostics_do_not_flag_false_energy_loss(self) -> None:
+    def test_elastic_free_flight_diagnostics_do_not_flag_false_energy_loss(
+        self,
+    ) -> None:
         controller = build_locked_cell_explosion(
             self._config(
                 dimension=3,
@@ -1286,7 +1329,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         assert summary is not None
         self.assertEqual(summary.suspicious_count, 0)
 
-    def test_inelastic_collision_diagnostics_allow_collision_stage_energy_loss(self) -> None:
+    def test_inelastic_collision_diagnostics_allow_collision_stage_energy_loss(
+        self,
+    ) -> None:
         controller = build_locked_cell_explosion(
             self._config(
                 dimension=3,
@@ -1312,7 +1357,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         assert summary is not None
         self.assertLess(summary.delta_kinetic_energy, 0.0)
         self.assertFalse(
-            any(event.stage == "collision_resolution" for event in summary.recent_events)
+            any(
+                event.stage == "collision_resolution" for event in summary.recent_events
+            )
         )
 
     def test_diagnostics_flag_heading_change_without_contact(self) -> None:
@@ -1341,14 +1388,19 @@ class TestLockedCellExplosion(unittest.TestCase):
                     diagnostics["after_finalize_velocity"] = particle.velocity_nd
             return events
 
-        with patch.object(explosion_simulation, "_step_particle", side_effect=_bad_step_particle):
+        with patch.object(
+            explosion_simulation, "_step_particle", side_effect=_bad_step_particle
+        ):
             controller.step(16.0)
 
         summary = controller.diagnostics_summary
         self.assertIsNotNone(summary)
         assert summary is not None
         self.assertTrue(
-            any("heading change without contact" in event.message for event in summary.recent_events)
+            any(
+                "heading change without contact" in event.message
+                for event in summary.recent_events
+            )
         )
 
     def test_heading_change_with_boundary_contact_is_not_falsely_flagged(self) -> None:
@@ -1372,7 +1424,10 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertIsNotNone(summary)
         assert summary is not None
         self.assertFalse(
-            any("heading change without contact" in event.message for event in summary.recent_events)
+            any(
+                "heading change without contact" in event.message
+                for event in summary.recent_events
+            )
         )
 
     def test_diagnostics_flag_energy_change_in_wrong_substage(self) -> None:
@@ -1401,7 +1456,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                     diagnostics["after_finalize_velocity"] = particle.velocity_nd
             return events
 
-        with patch.object(explosion_simulation, "_step_particle", side_effect=_bad_finalize_step):
+        with patch.object(
+            explosion_simulation, "_step_particle", side_effect=_bad_finalize_step
+        ):
             controller.step(16.0)
 
         summary = controller.diagnostics_summary
@@ -1463,7 +1520,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             delta=1e-6,
         )
 
-    def test_particle_collisions_off_does_not_resolve_particle_particle_contacts(self) -> None:
+    def test_particle_collisions_off_does_not_resolve_particle_particle_contacts(
+        self,
+    ) -> None:
         controller = build_locked_cell_explosion(
             self._config(
                 dimension=2,
@@ -1525,22 +1584,21 @@ class TestLockedCellExplosion(unittest.TestCase):
         seam = adapter.seam_for_boundary(directed_seam.source_boundary)
         assert seam is not None
         sample_source, sample_target = directed_seam.boundary_coord_map[0]
-        boundary_position = list(float(value) for value in sample_source)
-        boundary_position[directed_seam.source_boundary.axis] += (
-            0.5 * float(directed_seam.exit_step.delta)
+        boundary_position = [float(value) for value in sample_source]
+        boundary_position[directed_seam.source_boundary.axis] += 0.5 * float(
+            directed_seam.exit_step.delta
         )
-        expected_position = list(float(value) for value in sample_target)
-        expected_position[directed_seam.target_boundary.axis] -= (
-            0.5 * float(directed_seam.entry_step.delta)
+        expected_position = [float(value) for value in sample_target]
+        expected_position[directed_seam.target_boundary.axis] -= 0.5 * float(
+            directed_seam.entry_step.delta
         )
         velocity = (1.25, -0.75)
         expected_velocity = [0.0, 0.0]
         for source_axis, target_axis in enumerate(
             directed_seam.piece_frame_transform.permutation
         ):
-            expected_velocity[int(target_axis)] = (
-                float(velocity[source_axis])
-                * float(directed_seam.piece_frame_transform.signs[source_axis])
+            expected_velocity[int(target_axis)] = float(velocity[source_axis]) * float(
+                directed_seam.piece_frame_transform.signs[source_axis]
             )
 
         resolved_position = seam.transform_position(tuple(boundary_position))
@@ -1565,7 +1623,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                 explorer_transport=resolver,
             )
         )
-        seam = adapter.seam_for_boundary(next(iter(resolver.directed_seams)).source_boundary)
+        seam = adapter.seam_for_boundary(
+            next(iter(resolver.directed_seams)).source_boundary
+        )
         assert seam is not None
         velocity = (1.25, -0.75)
 
@@ -1577,7 +1637,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             delta=1e-9,
         )
 
-    def test_standalone_surface_uses_explorer_preset_registry_for_topology(self) -> None:
+    def test_standalone_surface_uses_explorer_preset_registry_for_topology(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
         preset_ids = {
             str(preset.preset_id) for preset in explorer_presets_for_dimension(3)
@@ -1604,7 +1666,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             flattened,
         )
 
-    def test_explorer_seeded_surface_inherits_profile_and_locks_topology_rows(self) -> None:
+    def test_explorer_seeded_surface_inherits_profile_and_locks_topology_rows(
+        self,
+    ) -> None:
         profile = axis_wrap_profile(dimension=2, wrapped_axes=(0,))
         seed_cells = (
             explosion_launcher.ExplosionSeedCell(source_coord=(1, 1), color_id=2),
@@ -1637,7 +1701,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         )
 
         with (
-            patch.object(explosion_surface, "_draw_native_board_preview") as draw_native,
+            patch.object(
+                explosion_surface, "_draw_native_board_preview"
+            ) as draw_native,
             patch.object(
                 explosion_surface,
                 "_draw_projection_reference_scene",
@@ -1665,7 +1731,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.view_mode = explosion_launcher._VIEW_MODE_PROJECTION_REFERENCE
 
         with (
-            patch.object(explosion_surface, "_draw_native_board_preview") as draw_native,
+            patch.object(
+                explosion_surface, "_draw_native_board_preview"
+            ) as draw_native,
             patch.object(
                 explosion_surface,
                 "_draw_projection_reference_scene",
@@ -1682,7 +1750,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertFalse(draw_native.called)
         self.assertTrue(draw_projection.called)
 
-    def test_simulator_projection_reference_suppresses_explorer_only_projection_ui(self) -> None:
+    def test_simulator_projection_reference_suppresses_explorer_only_projection_ui(
+        self,
+    ) -> None:
         for dimension, scene_module in (
             (3, "tet4d.ui.pygame.topology_lab.scene3d"),
             (4, "tet4d.ui.pygame.topology_lab.scene4d"),
@@ -1735,11 +1805,15 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertTrue(draw_board.called)
         self.assertTrue(draw_board.call_args.kwargs["show_trace"])
         self.assertEqual(draw_board.call_args.kwargs["grid_mode"], GridMode.FULL)
-        self.assertEqual(draw_board.call_args.kwargs["shadow_mode"], ShadowMode.ALL_BOUNDARIES)
+        self.assertEqual(
+            draw_board.call_args.kwargs["shadow_mode"], ShadowMode.ALL_BOUNDARIES
+        )
 
     def test_4d_w_movement_animation_routes_to_native_board_preview(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
-        state.w_movement_animation_style = explosion_launcher._W_MOVEMENT_ANIMATION_BOX_SIZE
+        state.w_movement_animation_style = (
+            explosion_launcher._W_MOVEMENT_ANIMATION_BOX_SIZE
+        )
 
         with patch.object(explosion_surface, "draw_native_board_view") as draw_board:
             explosion_surface._draw_native_board_preview(
@@ -1758,47 +1832,92 @@ class TestLockedCellExplosion(unittest.TestCase):
     def test_shell_preview_toggle_and_cache_build_use_escaping_complement(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
         self.assertFalse(state.shell_preview_enabled)
-        self.assertIn("shell_preview_enabled", explosion_launcher._dynamic_row_keys(state))
-        self.assertIn("shell_preview_time_scale", explosion_launcher._dynamic_row_keys(state))
-        self.assertEqual(explosion_launcher._row_control_kind("shell_preview_enabled"), "dropdown")
-        self.assertEqual(explosion_launcher._row_control_kind("shell_preview_time_scale"), "dropdown")
-        self.assertTrue(explosion_launcher._adjust_simulation_row(state, row_key="shell_preview_enabled", step=1))
+        self.assertIn(
+            "shell_preview_enabled", explosion_launcher._dynamic_row_keys(state)
+        )
+        self.assertIn(
+            "shell_preview_time_scale", explosion_launcher._dynamic_row_keys(state)
+        )
+        self.assertEqual(
+            explosion_launcher._row_control_kind("shell_preview_enabled"), "dropdown"
+        )
+        self.assertEqual(
+            explosion_launcher._row_control_kind("shell_preview_time_scale"), "dropdown"
+        )
+        self.assertTrue(
+            explosion_launcher._adjust_simulation_row(
+                state, row_key="shell_preview_enabled", step=1
+            )
+        )
         self.assertTrue(state.shell_preview_enabled)
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         state.piece_set_id = "classic"
         state.piece_shape_name = "O"
         state.endgame_live_cell_fraction = 0.25
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
-        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state, source_cells=source_cells, board_dims=board_dims
+        )
         assert cache is not None
-        self.assertEqual(len(cache.source_cells), len(cache.survivor_cells) + len(cache.escaping_cells))
-        self.assertTrue({impact.source_coord for impact in cache.impacts}.issubset({cell.source_coord for cell in cache.escaping_cells}))
-        self.assertTrue({shard.source_impact_index for shard in cache.shards}.issubset(set(range(len(cache.impacts)))))
+        self.assertEqual(
+            len(cache.source_cells),
+            len(cache.survivor_cells) + len(cache.escaping_cells),
+        )
+        self.assertTrue(
+            {impact.source_coord for impact in cache.impacts}.issubset(
+                {cell.source_coord for cell in cache.escaping_cells}
+            )
+        )
+        self.assertTrue(
+            {shard.source_impact_index for shard in cache.shards}.issubset(
+                set(range(len(cache.impacts)))
+            )
+        )
 
-    def test_shell_preview_source_map_binds_hold_cells_and_escaping_impacts(self) -> None:
+    def test_shell_preview_source_map_binds_hold_cells_and_escaping_impacts(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         state.piece_set_id = "classic"
         state.piece_shape_name = "O"
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
-        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state, source_cells=source_cells, board_dims=board_dims
+        )
 
         assert cache is not None
         source_map = explosion_endgame_preview.preview_source_cell_map(cache)
-        self.assertEqual({cell.source_coord for cell in cache.source_cells}, set(source_map))
-        self.assertTrue({cell.source_coord for cell in cache.escaping_source_cells}.issubset(set(source_map)))
+        self.assertEqual(
+            {cell.source_coord for cell in cache.source_cells}, set(source_map)
+        )
+        self.assertTrue(
+            {cell.source_coord for cell in cache.escaping_source_cells}.issubset(
+                set(source_map)
+            )
+        )
         for impact in cache.impacts:
-            self.assertEqual(impact.start_position, source_map[impact.source_coord].position)
+            self.assertEqual(
+                impact.start_position, source_map[impact.source_coord].position
+            )
 
-    def test_shell_preview_cache_builds_escape_events_and_event_linked_shards(self) -> None:
+    def test_shell_preview_cache_builds_escape_events_and_event_linked_shards(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         cache = explosion_endgame_preview.ensure_shell_preview_cache(
             state,
             source_cells=source_cells,
@@ -1817,12 +1936,16 @@ class TestLockedCellExplosion(unittest.TestCase):
                 self.assertEqual(shard.source_coord, event.source_coord)
                 self.assertEqual(shard.start_position, event.impact_position)
 
-    def test_shell_preview_hold_phase_keeps_frozen_source_cells_without_overlay(self) -> None:
+    def test_shell_preview_hold_phase_keeps_frozen_source_cells_without_overlay(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
 
         frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
@@ -1832,23 +1955,34 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         assert frame is not None
         self.assertEqual(frame.phase, "hold")
-        self.assertEqual(tuple(cell.source_coord for cell in frame.frozen_cells), tuple(cell.source_coord for cell in source_cells))
+        self.assertEqual(
+            tuple(cell.source_coord for cell in frame.frozen_cells),
+            tuple(cell.source_coord for cell in source_cells),
+        )
         self.assertEqual(frame.escaping_proxy_cells, ())
         self.assertEqual(frame.impact_frames, ())
         self.assertEqual(frame.shard_frames, ())
         self.assertEqual(frame.residue_frames, ())
 
-    def test_shell_preview_proxy_states_derive_from_impacts_and_escaping_sources_only(self) -> None:
+    def test_shell_preview_proxy_states_derive_from_impacts_and_escaping_sources_only(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         state.piece_set_id = "classic"
         state.piece_shape_name = "O"
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
-        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state, source_cells=source_cells, board_dims=board_dims
+        )
         tuning = explosion_endgame_preview._tuning()
-        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.4)
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (
+            float(tuning["shell_preview_rupture_ms"]) * 0.4
+        )
         frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
@@ -1873,7 +2007,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.endgame_live_cell_fraction = 0.1
         board_dims = (5, 5, 5, 5)
         source_cells = tuple(
-            ExplosionSeedCell(source_coord=(x, y, z, w), color_id=((x + y + z + w) % 7) + 1)
+            ExplosionSeedCell(
+                source_coord=(x, y, z, w), color_id=((x + y + z + w) % 7) + 1
+            )
             for x in range(3)
             for y in range(3)
             for z in range(3)
@@ -1885,7 +2021,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             board_dims=board_dims,
         )
         tuning = explosion_endgame_preview._tuning()
-        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.4)
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (
+            float(tuning["shell_preview_rupture_ms"]) * 0.4
+        )
         frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
@@ -1897,12 +2035,16 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertEqual(len(frame.escaping_proxy_cells), len(cache.impacts))
         self.assertEqual(len(frame.escaping_proxy_cells), 40)
 
-    def test_escape_event_frame_tracks_continuous_source_proxy_impact_shard_and_residue_states(self) -> None:
+    def test_escape_event_frame_tracks_continuous_source_proxy_impact_shard_and_residue_states(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         cache = explosion_endgame_preview.ensure_shell_preview_cache(
             state,
             source_cells=source_cells,
@@ -1922,7 +2064,8 @@ class TestLockedCellExplosion(unittest.TestCase):
         )
         rupture_frame = endgame_shell_effects.evaluate_escape_event(
             event,
-            elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms) + (event.proxy_lifetime_ms * 0.5),
+            elapsed_ms=(timeline.hold_ms + event.rupture_delay_ms)
+            + (event.proxy_lifetime_ms * 0.5),
             timeline=timeline,
             shards=cache.shards,
             tuning=tuning,
@@ -1955,14 +2098,18 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertEqual(aftermath_frame.residue[0].source_coord, event.source_coord)
         self.assertTrue(aftermath_frame.shards)
 
-    def test_shell_sound_events_trigger_once_when_time_crosses_release_and_impact(self) -> None:
+    def test_shell_sound_events_trigger_once_when_time_crosses_release_and_impact(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         state.piece_set_id = "classic"
         state.piece_shape_name = "I"
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         cache = explosion_endgame_preview.ensure_shell_preview_cache(
             state,
             source_cells=source_cells,
@@ -2036,7 +2183,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.endgame_live_cell_fraction = 0.1
         board_dims = (5, 5, 5, 5)
         source_cells = tuple(
-            ExplosionSeedCell(source_coord=(x, y, z, w), color_id=((x + y + z + w) % 7) + 1)
+            ExplosionSeedCell(
+                source_coord=(x, y, z, w), color_id=((x + y + z + w) % 7) + 1
+            )
             for x in range(3)
             for y in range(3)
             for z in range(3)
@@ -2067,7 +2216,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             2,
         )
         self.assertEqual(
-            sum(1 for item in sound_events if item.sound_id == "endgame_boundary_crack"),
+            sum(
+                1 for item in sound_events if item.sound_id == "endgame_boundary_crack"
+            ),
             3,
         )
 
@@ -2078,15 +2229,21 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.piece_set_id = "classic"
         state.piece_shape_name = "I"
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         hold_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
             board_dims=board_dims,
         )
-        explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        explosion_endgame_preview.ensure_shell_preview_cache(
+            state, source_cells=source_cells, board_dims=board_dims
+        )
         tuning = explosion_endgame_preview._tuning()
-        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.35)
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (
+            float(tuning["shell_preview_rupture_ms"]) * 0.35
+        )
         rupture_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
@@ -2095,7 +2252,9 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         assert hold_frame is not None
         assert rupture_frame is not None
-        frozen_map = {cell.source_coord: cell.position for cell in hold_frame.frozen_cells}
+        frozen_map = {
+            cell.source_coord: cell.position for cell in hold_frame.frozen_cells
+        }
         for impact, _draw_state in rupture_frame.impact_frames:
             self.assertEqual(impact.start_position, frozen_map[impact.source_coord])
 
@@ -2106,7 +2265,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.piece_set_id = "classic"
         state.piece_shape_name = "I"
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         tuning = explosion_endgame_preview._tuning()
         explosion_endgame_preview.ensure_shell_preview_cache(
             state,
@@ -2132,15 +2293,21 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         hold_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
             board_dims=board_dims,
         )
-        explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        explosion_endgame_preview.ensure_shell_preview_cache(
+            state, source_cells=source_cells, board_dims=board_dims
+        )
         tuning = explosion_endgame_preview._tuning()
-        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.35)
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (
+            float(tuning["shell_preview_rupture_ms"]) * 0.35
+        )
         rupture_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
@@ -2149,7 +2316,9 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         assert hold_frame is not None
         assert rupture_frame is not None
-        frozen_map = {cell.source_coord: cell.position for cell in hold_frame.frozen_cells}
+        frozen_map = {
+            cell.source_coord: cell.position for cell in hold_frame.frozen_cells
+        }
         for impact, _draw_state in rupture_frame.impact_frames:
             self.assertEqual(impact.start_position, frozen_map[impact.source_coord])
 
@@ -2160,7 +2329,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.piece_set_id = "classic"
         state.piece_shape_name = "I"
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         explosion_endgame_preview.ensure_shell_preview_cache(
             state,
             source_cells=source_cells,
@@ -2186,17 +2357,27 @@ class TestLockedCellExplosion(unittest.TestCase):
         proxy = frame.escaping_proxy_cells[0]
         self.assertNotEqual(tuple(proxy.render_position), tuple(proxy.source_position))
         self.assertLess(
-            sum((float(a) - float(b)) ** 2 for a, b in zip(proxy.source_position, proxy.render_position)),
-            sum((float(a) - float(b)) ** 2 for a, b in zip(proxy.source_position, impact.impact_position)),
+            sum(
+                (float(a) - float(b)) ** 2
+                for a, b in zip(proxy.source_position, proxy.render_position)
+            ),
+            sum(
+                (float(a) - float(b)) ** 2
+                for a, b in zip(proxy.source_position, impact.impact_position)
+            ),
         )
         self.assertEqual(frame.shard_frames, ())
 
-    def test_shell_preview_shards_begin_after_rupture_onset_not_at_time_zero(self) -> None:
+    def test_shell_preview_shards_begin_after_rupture_onset_not_at_time_zero(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         explosion_endgame_preview.ensure_shell_preview_cache(
             state,
             source_cells=source_cells,
@@ -2217,7 +2398,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             source_cells=source_cells,
             board_dims=board_dims,
         )
-        state.shell_preview_elapsed_ms = hold_ms + rupture_ms + (float(tuning["shell_preview_shard_drift_ms"]) * 0.6)
+        state.shell_preview_elapsed_ms = (
+            hold_ms + rupture_ms + (float(tuning["shell_preview_shard_drift_ms"]) * 0.6)
+        )
         residue_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
@@ -2241,15 +2424,21 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         hold_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
             board_dims=board_dims,
         )
-        explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        explosion_endgame_preview.ensure_shell_preview_cache(
+            state, source_cells=source_cells, board_dims=board_dims
+        )
         tuning = explosion_endgame_preview._tuning()
-        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (float(tuning["shell_preview_rupture_ms"]) * 0.35)
+        state.shell_preview_elapsed_ms = float(tuning["shell_preview_hold_ms"]) + (
+            float(tuning["shell_preview_rupture_ms"]) * 0.35
+        )
         rupture_frame = explosion_endgame_preview.build_shell_preview_frame_for_state(
             state,
             source_cells=source_cells,
@@ -2258,7 +2447,9 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         assert hold_frame is not None
         assert rupture_frame is not None
-        render_context = explosion_board_view._render_context_for_4d(state.view_4d, tuple(int(v) for v in board_dims))
+        render_context = explosion_board_view._render_context_for_4d(
+            state.view_4d, tuple(int(v) for v in board_dims)
+        )
         frozen_map = {cell.source_coord: cell for cell in hold_frame.frozen_cells}
         for impact, _draw_state in rupture_frame.impact_frames:
             source_cell = frozen_map[impact.source_coord]
@@ -2274,14 +2465,18 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
             self.assertEqual(mapped_start, mapped_source)
         for proxy in rupture_frame.escaping_proxy_cells:
-            self.assertEqual(proxy.layer_index, frozen_map[proxy.source_coord].layer_index)
+            self.assertEqual(
+                proxy.layer_index, frozen_map[proxy.source_coord].layer_index
+            )
 
     def test_shell_preview_source_binding_is_stable_under_reversed_input(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
         forward = explosion_endgame_preview.ensure_shell_preview_cache(
             state,
             source_cells=source_cells,
@@ -2297,8 +2492,14 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         assert forward is not None
         self.assertEqual(
-            sorted((impact.source_coord, impact.start_position) for impact in forward.impacts),
-            sorted((impact.source_coord, impact.start_position) for impact in reversed_cache.impacts),
+            sorted(
+                (impact.source_coord, impact.start_position)
+                for impact in forward.impacts
+            ),
+            sorted(
+                (impact.source_coord, impact.start_position)
+                for impact in reversed_cache.impacts
+            ),
         )
 
     def test_shell_preview_time_scale_changes_elapsed_only_for_preview(self) -> None:
@@ -2318,7 +2519,9 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         self.assertEqual(state.shell_preview_elapsed_ms, 100.0)
 
-    def test_shell_preview_uses_survivors_for_controller_and_restart_reset(self) -> None:
+    def test_shell_preview_uses_survivors_for_controller_and_restart_reset(
+        self,
+    ) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=2)
         state.shell_preview_enabled = True
         state.snapshot_source_id = explosion_launcher._SNAPSHOT_SOURCE_SINGLE_PIECE
@@ -2327,13 +2530,23 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.endgame_live_cell_fraction = 0.25
         controller = explosion_launcher.restart_standalone_explosion(state)
         board_dims = explosion_launcher._board_dims_for_state(state)
-        source_cells = explosion_launcher._source_cells_for_state(state, board_dims=board_dims)
-        cache = explosion_endgame_preview.ensure_shell_preview_cache(state, source_cells=source_cells, board_dims=board_dims)
+        source_cells = explosion_launcher._source_cells_for_state(
+            state, board_dims=board_dims
+        )
+        cache = explosion_endgame_preview.ensure_shell_preview_cache(
+            state, source_cells=source_cells, board_dims=board_dims
+        )
         config = explosion_launcher.build_standalone_explosion_config(state)
         assert cache is not None
         self.assertEqual(config.occupied_cells, cache.survivor_cells)
-        self.assertEqual(len(controller.simulation.particles), len(cache.survivor_cells))
-        self.assertTrue({particle.source_coord for particle in controller.simulation.particles}.isdisjoint({cell.source_coord for cell in cache.escaping_cells}))
+        self.assertEqual(
+            len(controller.simulation.particles), len(cache.survivor_cells)
+        )
+        self.assertTrue(
+            {
+                particle.source_coord for particle in controller.simulation.particles
+            }.isdisjoint({cell.source_coord for cell in cache.escaping_cells})
+        )
         first = state.shell_preview_cache
         state.shell_preview_elapsed_ms = 125.0
         first_signature = state.shell_preview_signature
@@ -2348,12 +2561,20 @@ class TestLockedCellExplosion(unittest.TestCase):
         fonts = self._fonts()
         for dimension in (2, 3, 4):
             with self.subTest(dimension=dimension):
-                state = explosion_launcher.build_standalone_explosion_surface_state(dimension=dimension)
+                state = explosion_launcher.build_standalone_explosion_surface_state(
+                    dimension=dimension
+                )
                 state.shell_preview_enabled = True
                 state.endgame_live_cell_fraction = 0.25
                 explosion_launcher.restart_standalone_explosion(state)
                 screen = pygame.Surface((960, 720), pygame.SRCALPHA)
-                explosion_surface._draw_native_board_preview(screen, fonts=fonts, area=pygame.Rect(0, 0, 640, 420), controller=state.controller, state=state)
+                explosion_surface._draw_native_board_preview(
+                    screen,
+                    fonts=fonts,
+                    area=pygame.Rect(0, 0, 640, 420),
+                    controller=state.controller,
+                    state=state,
+                )
                 self.assertIsNotNone(state.shell_preview_cache)
 
     def test_shell_preview_surface_route_delegates_to_preview_helper(self) -> None:
@@ -2387,7 +2608,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertTrue(build_preview.called)
         self.assertIs(draw_board.call_args.kwargs["shell_preview"], preview_frame)
 
-    def test_shell_preview_2d_draw_path_renders_proxies_without_controller_particles(self) -> None:
+    def test_shell_preview_2d_draw_path_renders_proxies_without_controller_particles(
+        self,
+    ) -> None:
         preview_frame = SimpleNamespace(
             phase="rupture",
             frozen_cells=(),
@@ -2407,7 +2630,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             shard_frames=(),
             residue_frames=(),
         )
-        controller = SimpleNamespace(render_particles=lambda *, render_context: tuple())
+        controller = SimpleNamespace(render_particles=lambda *, render_context: ())
 
         with patch.object(explosion_board_view, "_draw_2d_particles") as draw_particles:
             explosion_board_view.draw_native_board_view(
@@ -2429,10 +2652,17 @@ class TestLockedCellExplosion(unittest.TestCase):
             if call.kwargs["rendered_particles"]
         ]
         self.assertEqual(len(proxy_calls), 1)
-        self.assertEqual(proxy_calls[0][0].render_position, preview_frame.escaping_proxy_cells[0].render_position)
-        self.assertEqual(draw_particles.call_args_list[-1].kwargs["rendered_particles"], ())
+        self.assertEqual(
+            proxy_calls[0][0].render_position,
+            preview_frame.escaping_proxy_cells[0].render_position,
+        )
+        self.assertEqual(
+            draw_particles.call_args_list[-1].kwargs["rendered_particles"], ()
+        )
 
-    def test_shell_preview_3d_draw_path_renders_proxies_without_controller_particles(self) -> None:
+    def test_shell_preview_3d_draw_path_renders_proxies_without_controller_particles(
+        self,
+    ) -> None:
         preview_frame = SimpleNamespace(
             phase="rupture",
             frozen_cells=(),
@@ -2452,9 +2682,11 @@ class TestLockedCellExplosion(unittest.TestCase):
             shard_frames=(),
             residue_frames=(),
         )
-        controller = SimpleNamespace(render_particles=lambda *, render_context: tuple())
+        controller = SimpleNamespace(render_particles=lambda *, render_context: ())
 
-        with patch("tet4d.ui.pygame.render.front3d_cell_render.draw_cells") as draw_cells:
+        with patch(
+            "tet4d.ui.pygame.render.front3d_cell_render.draw_cells"
+        ) as draw_cells:
             explosion_board_view.draw_native_board_view(
                 pygame.Surface((800, 600), pygame.SRCALPHA),
                 rect=pygame.Rect(0, 0, 420, 320),
@@ -2497,12 +2729,18 @@ class TestLockedCellExplosion(unittest.TestCase):
         self.assertTrue(draw_scene.call_args.kwargs["explosion_trace_enabled"])
 
     def test_numeric_rows_use_shared_numeric_control_kind(self) -> None:
-        self.assertEqual(explosion_launcher._row_control_kind("trace_retention"), "numeric")
+        self.assertEqual(
+            explosion_launcher._row_control_kind("trace_retention"), "numeric"
+        )
         self.assertEqual(explosion_launcher._row_control_kind("seed"), "numeric")
         self.assertEqual(explosion_launcher._row_control_kind("cell_x"), "numeric")
         self.assertEqual(explosion_launcher._row_control_kind("grid_mode"), "dropdown")
-        self.assertEqual(explosion_launcher._row_control_kind("shadow_mode"), "dropdown")
-        self.assertEqual(explosion_launcher._row_control_kind("boundary_response"), "dropdown")
+        self.assertEqual(
+            explosion_launcher._row_control_kind("shadow_mode"), "dropdown"
+        )
+        self.assertEqual(
+            explosion_launcher._row_control_kind("boundary_response"), "dropdown"
+        )
 
     def test_trace_retention_adjustment_updates_live_controller_budget(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
@@ -2562,7 +2800,9 @@ class TestLockedCellExplosion(unittest.TestCase):
     def test_seed_numeric_text_entry_commits(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
 
-        started = explosion_launcher._start_numeric_text_mode(state, "seed", incoming_text="42")
+        started = explosion_launcher._start_numeric_text_mode(
+            state, "seed", incoming_text="42"
+        )
         changed = explosion_launcher._commit_numeric_text_mode(state)
 
         self.assertTrue(started)
@@ -2662,7 +2902,7 @@ class TestLockedCellExplosion(unittest.TestCase):
                 return_value=SimpleNamespace(
                     ensure_scene_camera=real_camera_module.ensure_scene_camera,
                     ensure_mouse_orbit_state=real_camera_module.ensure_mouse_orbit_state,
-                    handle_scene_camera_mouse_event=Mock(return_value=True)
+                    handle_scene_camera_mouse_event=Mock(return_value=True),
                 ),
             ) as camera_module_factory,
         ):
@@ -2693,7 +2933,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             render_particles=lambda *, render_context: (particle,),
         )
 
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line") as draw_line:
+        with patch(
+            "tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line"
+        ) as draw_line:
             explosion_board_view.draw_native_board_view(
                 surface,
                 rect=pygame.Rect(0, 0, 320, 240),
@@ -2705,7 +2947,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
             without_trace = draw_line.call_count
 
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line") as draw_line:
+        with patch(
+            "tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line"
+        ) as draw_line:
             explosion_board_view.draw_native_board_view(
                 surface,
                 rect=pygame.Rect(0, 0, 320, 240),
@@ -2719,12 +2963,19 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         self.assertGreater(with_trace, without_trace)
 
-    def test_3d_trace_projects_actual_particle_center_without_half_cell_offset(self) -> None:
+    def test_3d_trace_projects_actual_particle_center_without_half_cell_offset(
+        self,
+    ) -> None:
         surface = pygame.Surface((320, 240), pygame.SRCALPHA)
         line_calls: list[tuple[tuple[float, float], tuple[float, float]]] = []
 
         def record_line(_surface, _color, start, end, _width=1):
-            line_calls.append((tuple(float(value) for value in start), tuple(float(value) for value in end)))
+            line_calls.append(
+                (
+                    tuple(float(value) for value in start),
+                    tuple(float(value) for value in end),
+                )
+            )
 
         particle = SimpleNamespace(
             source_coord=(1, 2, 3),
@@ -2780,7 +3031,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             dims=dims,
             active=True,
         )
-        face_points = [point for _depth, polygon, _color, _active in faces for point in polygon]
+        face_points = [
+            point for _depth, polygon, _color, _active in faces for point in polygon
+        ]
         face_center = (
             sum(point[0] for point in face_points) / len(face_points),
             sum(point[1] for point in face_points) / len(face_points),
@@ -2888,10 +3141,16 @@ class TestLockedCellExplosion(unittest.TestCase):
 
         self.assertTrue(primitives)
         self.assertNotEqual(primitives, full_primitives)
-        self.assertTrue(any(fragment.source_type == "gridline" for fragment in primitives))
-        self.assertTrue(any(fragment.source_type == "box_edge" for fragment in primitives))
+        self.assertTrue(
+            any(fragment.source_type == "gridline" for fragment in primitives)
+        )
+        self.assertTrue(
+            any(fragment.source_type == "box_edge" for fragment in primitives)
+        )
 
-    def test_projected_box_and_edge_grid_share_canonical_boundary_coordinates(self) -> None:
+    def test_projected_box_and_edge_grid_share_canonical_boundary_coordinates(
+        self,
+    ) -> None:
         dims = (4, 5, 6)
         expected = {
             board_boundary_coordinate(dims=dims, axis=axis, side=side)
@@ -2951,7 +3210,10 @@ class TestLockedCellExplosion(unittest.TestCase):
         def record_line(_surface, _color, start, end, _width=1):
             line_calls.append((tuple(start), tuple(end)))
 
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line", side_effect=record_line):
+        with patch(
+            "tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line",
+            side_effect=record_line,
+        ):
             explosion_board_view._draw_2d_grid(
                 surface,
                 board_rect=pygame.Rect(20, 20, 80, 80),
@@ -2962,7 +3224,10 @@ class TestLockedCellExplosion(unittest.TestCase):
             )
         edge_calls = len(line_calls)
         line_calls.clear()
-        with patch("tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line", side_effect=record_line):
+        with patch(
+            "tet4d.ui.pygame.locked_cell_explosion.board_view.pygame.draw.line",
+            side_effect=record_line,
+        ):
             explosion_board_view._draw_2d_grid(
                 surface,
                 board_rect=pygame.Rect(20, 20, 80, 80),
@@ -3000,9 +3265,7 @@ class TestLockedCellExplosion(unittest.TestCase):
     def test_dropdown_layout_reserves_space_for_affordance(self) -> None:
         fonts = self._fonts()
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
-        state.topology_label_override = (
-            "A Very Long Topology Label That Would Previously Sit Under The Dropdown Button"
-        )
+        state.topology_label_override = "A Very Long Topology Label That Would Previously Sit Under The Dropdown Button"
         layout = explosion_launcher._surface_layout(
             screen_size=(1280, 820),
             fonts=fonts,
@@ -3078,17 +3341,27 @@ class TestLockedCellExplosion(unittest.TestCase):
             layout=layout,
             fonts=fonts,
         )
-        row_rect = row_rects[next(index for index, row in enumerate(row_layouts) if row.row_key == "grid_mode")]
+        row_rect = row_rects[
+            next(
+                index
+                for index, row in enumerate(row_layouts)
+                if row.row_key == "grid_mode"
+            )
+        ]
         menu_rect = explosion_launcher._dropdown_menu_rect(
             row_rect,
-            option_count=len(explosion_launcher._dropdown_values_for_row(state, "grid_mode")),
+            option_count=len(
+                explosion_launcher._dropdown_values_for_row(state, "grid_mode")
+            ),
             viewport=layout.row_viewport,
             font=fonts.menu_font,
         )
         option_rects = explosion_launcher._dropdown_option_rects(
             state,
             menu_rect=menu_rect,
-            option_count=len(explosion_launcher._dropdown_values_for_row(state, "grid_mode")),
+            option_count=len(
+                explosion_launcher._dropdown_values_for_row(state, "grid_mode")
+            ),
             font=fonts.menu_font,
         )
         select_event = pygame.event.Event(
@@ -3129,21 +3402,28 @@ class TestLockedCellExplosion(unittest.TestCase):
         state.open_dropdown_row_key = "grid_mode"
         menu_rect = explosion_launcher._dropdown_menu_rect(
             row_rect,
-            option_count=len(explosion_launcher._dropdown_values_for_row(state, "grid_mode")),
+            option_count=len(
+                explosion_launcher._dropdown_values_for_row(state, "grid_mode")
+            ),
             viewport=layout.row_viewport,
             font=fonts.menu_font,
         )
         option_rects = explosion_launcher._dropdown_option_rects(
             state,
             menu_rect=menu_rect,
-            option_count=len(explosion_launcher._dropdown_values_for_row(state, "grid_mode")),
+            option_count=len(
+                explosion_launcher._dropdown_values_for_row(state, "grid_mode")
+            ),
             font=fonts.menu_font,
         )
         hover_pos = option_rects[0][1].center
         move_event = pygame.event.Event(pygame.MOUSEMOTION, {"pos": hover_pos})
         outside_event = pygame.event.Event(
             pygame.MOUSEBUTTONDOWN,
-            {"button": 1, "pos": (layout.right_rect.centerx, layout.right_rect.centery)},
+            {
+                "button": 1,
+                "pos": (layout.right_rect.centerx, layout.right_rect.centery),
+            },
         )
 
         with patch("pygame.event.get", return_value=[move_event, outside_event]):
@@ -3181,7 +3461,9 @@ class TestLockedCellExplosion(unittest.TestCase):
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=4)
         state.w_movement_animation_style = explosion_launcher._W_MOVEMENT_ANIMATION_FADE
 
-        self.assertIn("w_movement_animation", explosion_launcher._dynamic_row_keys(state))
+        self.assertIn(
+            "w_movement_animation", explosion_launcher._dynamic_row_keys(state)
+        )
         changed = explosion_launcher._adjust_simulation_row(
             state,
             row_key="w_movement_animation",
@@ -3207,7 +3489,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                     layer_weights=((1, 1.0),) if dimension == 4 else (),
                 )
                 controller = SimpleNamespace(
-                    render_particles=lambda *, render_context, _particle=particle: (_particle,),
+                    render_particles=lambda *, render_context, _particle=particle: (
+                        _particle,
+                    ),
                 )
                 with patch(
                     "tet4d.ui.pygame.locked_cell_explosion.board_view.resolve_board_line_occlusion"
@@ -3225,7 +3509,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                     )
                 self.assertTrue(resolve_occlusion.called)
 
-    def test_shadow_modes_emit_render_only_boundary_guides_in_2d_3d_and_4d(self) -> None:
+    def test_shadow_modes_emit_render_only_boundary_guides_in_2d_3d_and_4d(
+        self,
+    ) -> None:
         surface = pygame.Surface((320, 240), pygame.SRCALPHA)
         for dimension in (2, 3, 4):
             with self.subTest(dimension=dimension):
@@ -3238,7 +3524,9 @@ class TestLockedCellExplosion(unittest.TestCase):
                     layer_weights=((1, 1.0),) if dimension == 4 else (),
                 )
                 controller = SimpleNamespace(
-                    render_particles=lambda *, render_context, _particle=particle: (_particle,),
+                    render_particles=lambda *, render_context, _particle=particle: (
+                        _particle,
+                    ),
                 )
                 patch_target = (
                     "tet4d.ui.pygame.locked_cell_explosion.board_view.draw_boundary_projection_segments_2d"
@@ -3496,7 +3784,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             "K = 10.00 = 1/2 1.00 [2.00^2 + 4.00^2]",
         )
 
-    def test_kinetic_energy_formula_text_uses_weighted_form_for_non_uniform_masses(self) -> None:
+    def test_kinetic_energy_formula_text_uses_weighted_form_for_non_uniform_masses(
+        self,
+    ) -> None:
         controller = build_locked_cell_explosion(self._config(dimension=3))
         left = controller.simulation.particles[0]
         right = controller.simulation.particles[1]
@@ -3689,11 +3979,15 @@ class TestLockedCellExplosion(unittest.TestCase):
     def test_collision_elasticity_control_serializes_into_runtime_config(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
 
-        explosion_launcher._set_numeric_value_for_row(state, "collision_elasticity", 0.35)
+        explosion_launcher._set_numeric_value_for_row(
+            state, "collision_elasticity", 0.35
+        )
         config = explosion_launcher.build_standalone_explosion_config(state)
 
         self.assertAlmostEqual(config.collision_elasticity, 0.35, delta=1e-6)
-        self.assertAlmostEqual(state.controller.simulation.collision_elasticity, 0.35, delta=1e-6)
+        self.assertAlmostEqual(
+            state.controller.simulation.collision_elasticity, 0.35, delta=1e-6
+        )
 
     def test_mass_range_controls_normalize_invalid_order_cleanly(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
@@ -3720,7 +4014,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             fonts=self._fonts(),
             max_width=720,
         )
-        self.assertTrue(any("K = 2.00 = 1/2 1.00 [2.00^2]" in line for line in initial_lines))
+        self.assertTrue(
+            any("K = 2.00 = 1/2 1.00 [2.00^2]" in line for line in initial_lines)
+        )
         self.assertFalse(any("Kinetic energy:" in line for line in initial_lines))
         self.assertFalse(any("Σ||v||² =" in line for line in initial_lines))
 
@@ -3731,7 +4027,9 @@ class TestLockedCellExplosion(unittest.TestCase):
             fonts=self._fonts(),
             max_width=720,
         )
-        self.assertTrue(any("K = 8.00 = 1/2 1.00 [4.00^2]" in line for line in updated_lines))
+        self.assertTrue(
+            any("K = 8.00 = 1/2 1.00 [4.00^2]" in line for line in updated_lines)
+        )
 
     def test_surface_layout_wraps_long_text_without_overlapping_footer(self) -> None:
         fonts = self._fonts()
@@ -3783,7 +4081,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             rects.append(rect)
             running_y += layout.row_height + row_gap
 
-        for previous, current in zip(rects, rects[1:]):
+        for previous, current in itertools.pairwise(rects):
             self.assertLessEqual(previous.bottom, current.top)
 
     def test_audio_aggregation_keeps_seams_audible_under_dense_motion(self) -> None:
@@ -3801,9 +4099,7 @@ class TestLockedCellExplosion(unittest.TestCase):
             state=ExplosionAudioState(),
         )
 
-        self.assertTrue(
-            any(event.startswith("explosion_seam_") for event in playback)
-        )
+        self.assertTrue(any(event.startswith("explosion_seam_") for event in playback))
         self.assertLessEqual(len(playback), 2)
 
     def test_audio_aggregation_strongly_caps_dense_collision_windows(self) -> None:

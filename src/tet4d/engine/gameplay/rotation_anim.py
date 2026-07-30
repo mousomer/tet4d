@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 from ..core.piece_transform import (
     canonicalize_blocks_2d,
     canonicalize_blocks_nd,
-    rotation_pivot_2d,
-    rotate_point_2d,
     rotate_blocks_2d,
+    rotate_point_2d,
+    rotation_pivot_2d,
 )
 from ..runtime.project_config import project_constant_float
 
@@ -183,12 +183,14 @@ class _RotationTween:
             center_mass_a = sum(a_values) / len(self.start_rel)
             center_mass_b = sum(b_values) / len(self.start_rel)
 
-            min_dist_sq = float('inf')
+            min_dist_sq = float("inf")
             pivot_a = self.start_rel[0][axis_a]
             pivot_b = self.start_rel[0][axis_b]
 
             for block in self.start_rel:
-                dist_sq = (block[axis_a] - center_mass_a) ** 2 + (block[axis_b] - center_mass_b) ** 2
+                dist_sq = (block[axis_a] - center_mass_a) ** 2 + (
+                    block[axis_b] - center_mass_b
+                ) ** 2
                 if dist_sq < min_dist_sq:
                     min_dist_sq = dist_sq
                     pivot_a = float(block[axis_a])
@@ -355,18 +357,18 @@ class PieceRotationAnimator2D:
     rotation_animation_mode: str = ROTATION_ANIMATION_MODE_RIGID_PIECE_ROTATION
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, int], ...] | None = None
-    _prev_rel: tuple[CoordF, ...] = tuple()
+    _prev_rel: tuple[CoordF, ...] = ()
     _prev_shape_name: str | None = None
-    _prev_pos: Coord2F = tuple()
+    _prev_pos: Coord2F = ()
     _prev_visible: bool = False
     _prev_rotation: int | None = None
 
     def reset(self) -> None:
         self._tween = None
         self._prev_rel_sig = None
-        self._prev_rel = tuple()
+        self._prev_rel = ()
         self._prev_shape_name = None
-        self._prev_pos = tuple()
+        self._prev_pos = ()
         self._prev_visible = False
         self._prev_rotation = None
 
@@ -410,7 +412,9 @@ class PieceRotationAnimator2D:
                 self._tween.rotation_pivot
                 if self._tween is not None and self._tween.rigid_rotation
                 else rotation_pivot_2d(
-                    tuple((int(round(block[0])), int(round(block[1]))) for block in self._prev_rel)
+                    tuple(
+                        (round(block[0]), round(block[1])) for block in self._prev_rel
+                    )
                 )
             )
         self._tween = _build_tween(
@@ -489,7 +493,7 @@ class PieceRotationAnimator2D:
             self._prev_shape_name is not None and curr_shape != self._prev_shape_name
         )
         rel_changed = self._prev_rel_sig is not None and curr_sig != self._prev_rel_sig
-        pos_changed = self._prev_pos != tuple() and curr_pos != self._prev_pos
+        pos_changed = self._prev_pos != () and curr_pos != self._prev_pos
 
         should_animate_rotation = (
             curr_visible and self._prev_visible and float(self.duration_ms) > 0.0
@@ -514,9 +518,8 @@ class PieceRotationAnimator2D:
                 )
             else:
                 self._tween = None
-        elif pos_changed:
-            if self._tween is not None:
-                self._shift_active_tween(curr_pos)
+        elif pos_changed and self._tween is not None:
+            self._shift_active_tween(curr_pos)
 
         self._prev_rel_sig = curr_sig
         self._prev_rel = curr_rel
@@ -564,17 +567,17 @@ class PieceRotationAnimatorND:
     rotation_animation_mode: str = ROTATION_ANIMATION_MODE_CELLWISE_SLIDING
     _tween: _RotationTween | None = None
     _prev_rel_sig: tuple[tuple[int, ...], ...] | None = None
-    _prev_rel: tuple[CoordF, ...] = tuple()
+    _prev_rel: tuple[CoordF, ...] = ()
     _prev_shape_name: str | None = None
-    _prev_pos: CoordF = tuple()
+    _prev_pos: CoordF = ()
     _prev_visible: bool = False
 
     def reset(self) -> None:
         self._tween = None
         self._prev_rel_sig = None
-        self._prev_rel = tuple()
+        self._prev_rel = ()
         self._prev_shape_name = None
-        self._prev_pos = tuple()
+        self._prev_pos = ()
         self._prev_visible = False
 
     def _start_translation_tween(
@@ -636,7 +639,7 @@ class PieceRotationAnimatorND:
             self._prev_shape_name is not None and curr_shape != self._prev_shape_name
         )
         rel_changed = self._prev_rel_sig is not None and curr_sig != self._prev_rel_sig
-        pos_changed = self._prev_pos != tuple() and curr_pos != self._prev_pos
+        pos_changed = self._prev_pos != () and curr_pos != self._prev_pos
 
         if shape_changed:
             self._tween = None
@@ -649,11 +652,7 @@ class PieceRotationAnimatorND:
         ):
             self._start_translation_tween(curr_rel=curr_rel, curr_pos=curr_pos)
         elif rel_changed:
-            if (
-                curr_visible
-                and self._prev_visible
-                and float(self.duration_ms) > 0.0
-            ):
+            if curr_visible and self._prev_visible and float(self.duration_ms) > 0.0:
                 start_rel = (
                     self._tween.interpolated_rel()
                     if self._tween is not None
@@ -681,7 +680,9 @@ class PieceRotationAnimatorND:
         elif pos_changed and self._tween is None:
             pass
         elif pos_changed and self._tween is not None:
-            delta = tuple(curr_pos[idx] - self._prev_pos[idx] for idx in range(self.ndim))
+            delta = tuple(
+                curr_pos[idx] - self._prev_pos[idx] for idx in range(self.ndim)
+            )
             self._tween.start_pos = tuple(
                 self._tween.start_pos[idx] + delta[idx] for idx in range(self.ndim)
             )

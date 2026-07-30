@@ -36,7 +36,9 @@ def tutorial_plan_file_path():
     return project_root_path() / _PLAN_RELATIVE_PATH
 
 
-def _plan_text(raw: object, *, path: str, max_length: int = _MAX_PLAN_TOKEN_LENGTH) -> str:
+def _plan_text(
+    raw: object, *, path: str, max_length: int = _MAX_PLAN_TOKEN_LENGTH
+) -> str:
     value = as_non_empty_string(raw, path=path)
     cleaned = sanitize_text(value, max_length=max_length).strip()
     if not cleaned:
@@ -123,7 +125,9 @@ def _parse_tutorial_plan_payload(raw: dict[str, Any]) -> dict[str, Any]:
         seen_stage_ids.add(stage_id)
         order = int(stage["order"])
         if order <= last_order:
-            raise RuntimeError("tutorial_plan.stages must be strictly ordered by 'order'")
+            raise RuntimeError(
+                "tutorial_plan.stages must be strictly ordered by 'order'"
+            )
         last_order = order
         stages.append(stage)
     return {
@@ -168,7 +172,9 @@ def tutorial_board_dims_for_mode(mode: str) -> tuple[int, ...]:
     if clean_mode not in {"2d", "3d", "4d"}:
         raise RuntimeError("tutorial.mode must be one of: 2d, 3d, 4d")
     payload = load_tutorial_payload()
-    return tuple(int(value) for value in payload.board_profiles.dims_for_mode(clean_mode))
+    return tuple(
+        int(value) for value in payload.board_profiles.dims_for_mode(clean_mode)
+    )
 
 
 def clear_tutorial_content_cache() -> None:

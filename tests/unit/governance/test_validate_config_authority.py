@@ -16,16 +16,7 @@ def _write_required_policy_docs(
     _write_text(
         root / "docs" / "governance" / "config_policy.md",
         config_policy
-        or "\n".join(
-            [
-                "# Config Policy",
-                "Config authority routes through docs/policies/POLICY_NO_MAGIC_NUMBERS.md.",
-                "Python configuration remains authoritative.",
-                "Use config/project/constants.json.",
-                "Use config/gameplay/tuning.json.",
-                "Use config/menu/defaults.json.",
-            ]
-        ),
+        or "# Config Policy\nConfig authority routes through docs/policies/POLICY_NO_MAGIC_NUMBERS.md.\nPython configuration remains authoritative.\nUse config/project/constants.json.\nUse config/gameplay/tuning.json.\nUse config/menu/defaults.json.",
     )
     _write_text(
         root / "docs" / "policies" / "POLICY_NO_MAGIC_NUMBERS.md",
@@ -33,15 +24,7 @@ def _write_required_policy_docs(
     )
     _write_text(
         root / "docs" / "policies" / "POLICY_CONFIGURATION_DOCUMENTATION.md",
-        "\n".join(
-            [
-                "config/project/policy_pack.json",
-                "config/project/constants.json",
-                "config/gameplay/tuning.json",
-                "config/menu/defaults.json",
-                "docs/CONFIGURATION_REFERENCE.md",
-            ]
-        ),
+        "config/project/policy_pack.json\nconfig/project/constants.json\nconfig/gameplay/tuning.json\nconfig/menu/defaults.json\ndocs/CONFIGURATION_REFERENCE.md",
     )
     _write_text(root / "docs" / "policies" / "INDEX.md", "config policies\n")
 

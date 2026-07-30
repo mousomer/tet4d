@@ -4,10 +4,6 @@ import inspect
 import unittest
 from unittest.mock import patch
 
-from tet4d.engine.topology_explorer.transport_resolver import (
-    CELLWISE_DEFORMATION,
-    build_explorer_transport_resolver,
-)
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     default_topology_profile_state,
@@ -21,10 +17,10 @@ from tet4d.engine.runtime.topology_playground_sandbox import (
 )
 from tet4d.engine.runtime.topology_playground_state import (
     PLAYABILITY_STATUS_ANALYZING,
-    RIGID_PLAYABILITY_UNKNOWN,
-    TOPOLOGY_VALIDITY_VALID,
     RIGID_PLAY_MODE_ON,
+    RIGID_PLAYABILITY_UNKNOWN,
     TOOL_SANDBOX,
+    TOPOLOGY_VALIDITY_VALID,
     TopologyPlaygroundPlayabilityAnalysis,
     TopologyPlaygroundSandboxPieceState,
     TopologyPlaygroundState,
@@ -42,6 +38,10 @@ from tet4d.engine.topology_explorer.presets import (
     sphere_profile_4d,
     swap_xw_profile_4d,
     torus_profile_2d,
+)
+from tet4d.engine.topology_explorer.transport_resolver import (
+    CELLWISE_DEFORMATION,
+    build_explorer_transport_resolver,
 )
 
 
@@ -114,7 +114,9 @@ class TestTopologyPlaygroundSandbox(unittest.TestCase):
         self.assertEqual(state.sandbox_piece_state.trace, ())
         self.assertEqual(state.sandbox_piece_state.seam_crossings, ())
 
-    def test_explicit_neighbor_search_flag_survives_runtime_state_normalization(self) -> None:
+    def test_explicit_neighbor_search_flag_survives_runtime_state_normalization(
+        self,
+    ) -> None:
         state = self._explorer_state(
             3,
             axis_sizes=(4, 4, 4),

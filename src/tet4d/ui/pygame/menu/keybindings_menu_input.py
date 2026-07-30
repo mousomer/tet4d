@@ -22,7 +22,9 @@ def process_menu_events(
         if (
             event.type == pygame.MOUSEBUTTONDOWN
             and int(getattr(event, "button", 0)) == 1
-            and default_menu_back_chip_rect().collidepoint(getattr(event, "pos", (-1, -1)))
+            and default_menu_back_chip_rect().collidepoint(
+                getattr(event, "pos", (-1, -1))
+            )
         ):
             if state.section_mode or not state.allow_scope_sections:
                 pygame.key.stop_text_input()

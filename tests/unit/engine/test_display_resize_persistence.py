@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pygame
 
-from tet4d.ui.pygame import front2d_game as front2d
-from tet4d.ui.pygame import front2d_frame, front2d_results
 from tet4d.engine.gameplay.game2d import GameConfig
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.ui.pygame import front2d_frame, front2d_results
+from tet4d.ui.pygame import front2d_game as front2d
 from tet4d.ui.pygame.launch import launcher_nd_runner
 from tet4d.ui.pygame.runtime_ui import app_runtime, loop_runner_nd
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
-from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 
 
 class RuntimeResizePersistenceTests(unittest.TestCase):

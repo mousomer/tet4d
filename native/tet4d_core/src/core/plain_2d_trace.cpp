@@ -25,6 +25,8 @@ struct Plain2DCase {
 	std::vector<InitialLockedCell2D> initial_locked_cells;
 	std::vector<std::string> notes;
 	PieceShape2D post_lock_spawn_shape;
+	int width = 6;
+	int height = 6;
 };
 
 std::string stable_hash(std::string_view compact_canonical_json) {
@@ -203,21 +205,23 @@ std::string commands_json(const std::vector<GameCommand2D> &commands) {
 	return out.str();
 }
 
-std::string settings_json() {
-	return "{\"axis_sizes\":[6,6],\"exploration_mode\":false"
+std::string settings_json(const Plain2DCase &trace_case) {
+	std::ostringstream out;
+	out << "{\"axis_sizes\":[" << trace_case.width << "," << trace_case.height << "],\"exploration_mode\":false"
 		",\"explorer_profile_digest\":null"
 		",\"explorer_rigid_play_enabled\":null"
 		",\"gravity_axis\":1"
 		",\"piece_set\":\"classic\""
 		",\"topology_mode\":\"bounded\""
 		",\"wrap_gravity_axis\":false}";
+	return out.str();
 }
 
 std::string initial_json(const Plain2DCase &trace_case, const GameState2D &state) {
-	const std::string settings = settings_json();
+	const std::string settings = settings_json(trace_case);
 	std::ostringstream out;
 	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
-		<< ",\"board_shape\":[6,6]"
+		<< ",\"board_shape\":[" << trace_case.width << "," << trace_case.height << "]"
 		<< ",\"launch_parity\":null"
 		<< ",\"locked_cells\":" << locked_cells_json(state.board)
 		<< ",\"notes\":" << string_array_json(trace_case.notes)
@@ -284,6 +288,22 @@ std::vector<Plain2DCase> plain_2d_cases() {
 			classic_i_shape_2d(),
 		},
 		{
+			"gameplay_plain_2d_configurable",
+			2049,
+			{"TRACE_2D", {{-1, 0}, {0, 0}, {1, 0}, {2, 0}}, 8},
+			{4, 8},
+			{
+				{"move_right", GameCommandKind2D::Move, 1, 0},
+				{"rotate_cw", GameCommandKind2D::Rotate, 1, 0},
+				{"hard_drop", GameCommandKind2D::HardDrop, 0, 0},
+			},
+			{},
+			{"Stage 49 alternate-size 2D board-shape parity."},
+			{"T", {{-1, 0}, {0, 0}, {1, 0}, {0, 1}}, 3},
+			10,
+			20,
+		},
+		{
 			"gameplay_plain_2d_hard_drop_lock",
 			2012,
 			trace_dot_shape_2d(),
@@ -324,7 +344,7 @@ const Plain2DCase *find_case(const std::string &case_id) {
 }
 
 GameState2D make_state(const Plain2DCase &trace_case) {
-	GameState2D state(6, 6);
+	GameState2D state(trace_case.width, trace_case.height);
 	state.active_piece = ActivePiece2D{trace_case.active_shape, trace_case.active_pos, 0};
 	state.post_lock_spawn_shape = trace_case.post_lock_spawn_shape;
 	for (const InitialLockedCell2D &cell : trace_case.initial_locked_cells) {

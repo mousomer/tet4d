@@ -7,7 +7,9 @@ from .interaction_audit import (
     record_interaction_handler,
     record_interaction_phase,
 )
-from .scene_preview_state import preview_signature_for_state as _preview_signature_for_state
+from .scene_preview_state import (
+    preview_signature_for_state as _preview_signature_for_state,
+)
 from .scene_state import (
     TopologyLabState,
     current_explorer_profile,

@@ -6,7 +6,6 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 STRICT_PARITY_ENV = "TET4D_STRICT_PARITY"
 PILOT_COMMAND = [
@@ -73,15 +72,15 @@ def load_native_cases(
     payload = json.loads(result.stdout)
     cases = payload.get("cases")
     if not isinstance(cases, list):
-        raise RuntimeError("native parity pilot output is missing a cases array")
+        raise RuntimeError("native parity pilot output is missing a cases array")  # noqa: TRY004 - preserve the established validation contract.
     normalized: list[dict[str, str]] = []
     for item in cases:
         if not isinstance(item, dict):
-            raise RuntimeError("native parity pilot cases must be objects")
+            raise RuntimeError("native parity pilot cases must be objects")  # noqa: TRY004 - preserve the established validation contract.
         input_text = item.get("input")
         native_hash = item.get("native_hash")
         if not isinstance(input_text, str) or not isinstance(native_hash, str):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 "native parity pilot cases must include input and native_hash"
             )
         normalized.append({"input": input_text, "native_hash": native_hash})

@@ -22,7 +22,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         menus = {
             "root": {
                 "title": "Root",
-                "items": ({"type": "action", "label": "Resume", "action_id": "resume"},),
+                "items": (
+                    {"type": "action", "label": "Resume", "action_id": "resume"},
+                ),
             }
         }
         registry = ActionRegistry()
@@ -34,8 +36,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
             start_menu_id="root",
             action_registry=registry,
             render_menu=lambda *_args: None,
-            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
-            or True,
+            on_root_escape=lambda: (
+                calls.__setitem__("root_escape", calls["root_escape"] + 1) or True
+            ),
             on_quit_event=lambda: calls.__setitem__("quit", calls["quit"] + 1) or True,
         )
 
@@ -56,7 +59,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         menus = {
             "root": {
                 "title": "Root",
-                "items": ({"type": "action", "label": "Resume", "action_id": "resume"},),
+                "items": (
+                    {"type": "action", "label": "Resume", "action_id": "resume"},
+                ),
             }
         }
         registry = ActionRegistry()
@@ -68,8 +73,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
             start_menu_id="root",
             action_registry=registry,
             render_menu=lambda *_args: None,
-            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
-            or True,
+            on_root_escape=lambda: (
+                calls.__setitem__("root_escape", calls["root_escape"] + 1) or True
+            ),
             on_quit_event=lambda: calls.__setitem__("quit", calls["quit"] + 1) or True,
         )
 
@@ -87,7 +93,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         menus = {
             "root": {
                 "title": "Root",
-                "items": ({"type": "action", "label": "Resume", "action_id": "resume"},),
+                "items": (
+                    {"type": "action", "label": "Resume", "action_id": "resume"},
+                ),
             }
         }
         registry = ActionRegistry()
@@ -99,8 +107,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
             start_menu_id="root",
             action_registry=registry,
             render_menu=lambda *_args: None,
-            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
-            or True,
+            on_root_escape=lambda: (
+                calls.__setitem__("root_escape", calls["root_escape"] + 1) or True
+            ),
         )
 
         with patch.object(
@@ -133,15 +142,15 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
 
         def _render_menu(menu_id, *_args):
             seen.append(str(menu_id))
-            return None
 
         runner = MenuRunner(
             menus=menus,
             start_menu_id="root",
             action_registry=registry,
             render_menu=_render_menu,
-            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
-            or True,
+            on_root_escape=lambda: (
+                calls.__setitem__("root_escape", calls["root_escape"] + 1) or True
+            ),
         )
 
         with patch.object(
@@ -166,7 +175,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         menus = {
             "root": {
                 "title": "Root",
-                "items": ({"type": "action", "label": "Resume", "action_id": "resume"},),
+                "items": (
+                    {"type": "action", "label": "Resume", "action_id": "resume"},
+                ),
             }
         }
         registry = ActionRegistry()
@@ -183,8 +194,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
                     rect=pygame.Rect(18, 18, 80, 34),
                 ),
             ),
-            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
-            or True,
+            on_root_escape=lambda: (
+                calls.__setitem__("root_escape", calls["root_escape"] + 1) or True
+            ),
         )
 
         with patch.object(
@@ -213,7 +225,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         menus = {
             "root": {
                 "title": "Root",
-                "items": ({"type": "action", "label": "Resume", "action_id": "resume"},),
+                "items": (
+                    {"type": "action", "label": "Resume", "action_id": "resume"},
+                ),
             }
         }
         registry = ActionRegistry()
@@ -230,8 +244,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
                     rect=pygame.Rect(18, 18, 140, 34),
                 ),
             ),
-            on_root_escape=lambda: calls.__setitem__("root_escape", calls["root_escape"] + 1)
-            or True,
+            on_root_escape=lambda: (
+                calls.__setitem__("root_escape", calls["root_escape"] + 1) or True
+            ),
         )
 
         with patch.object(
@@ -239,8 +254,12 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
             "get",
             return_value=[
                 pygame.event.Event(pygame.MOUSEMOTION, {"pos": (24, 24)}),
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (24, 24)}),
-                pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": (24, 24)}),
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (24, 24)}
+                ),
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONUP, {"button": 1, "pos": (24, 24)}
+                ),
             ],
         ):
             runner.run()
@@ -251,7 +270,9 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
         menus = {
             "root": {
                 "title": "Root",
-                "items": ({"type": "action", "label": "Resume", "action_id": "resume"},),
+                "items": (
+                    {"type": "action", "label": "Resume", "action_id": "resume"},
+                ),
             }
         }
         registry = ActionRegistry()
@@ -276,8 +297,12 @@ class TestMenuRunnerNavigationPolicy(unittest.TestCase):
             "get",
             return_value=[
                 pygame.event.Event(pygame.MOUSEMOTION, {"pos": (24, 24)}),
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (24, 24)}),
-                pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": (24, 24)}),
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (24, 24)}
+                ),
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONUP, {"button": 1, "pos": (24, 24)}
+                ),
             ],
         ):
             runner.run()

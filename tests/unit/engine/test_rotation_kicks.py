@@ -50,9 +50,9 @@ class TestRotationKicks(unittest.TestCase):
             axis_b=1,
             gravity_axis=1,
             kick_level="light",
-            plane_offsets_for_level=lambda level: ((1, 0), (-1, 0))
-            if level == "light"
-            else (),
+            plane_offsets_for_level=lambda level: (
+                ((1, 0), (-1, 0)) if level == "light" else ()
+            ),
             move_piece=lambda piece, vector: (
                 piece[0] + vector[0],
                 piece[1] + vector[1],

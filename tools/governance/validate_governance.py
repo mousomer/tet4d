@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -112,22 +112,24 @@ def _validate_unified_manifest_shape() -> list[str]:
 
 
 def _checks() -> tuple[GovernanceCheck, ...]:
-    from tools.governance import check_dedup_dead_code_rules
-    from tools.governance import check_drift_protection
-    from tools.governance import check_loc_guidance
-    from tools.governance import lint_menu_graph
-    from tools.governance import check_policy_runtime_rules
-    from tools.governance import check_risk_gates
-    from tools.governance import check_wheel_reuse_rules
-    from tools.governance import validate_authority_transfer
-    from tools.governance import validate_config_authority
-    from tools.governance import validate_drift_protection
-    from tools.governance import validate_godot_semantic_boundary
-    from tools.governance import validate_native_cpp_tooling
-    from tools.governance import validate_project_contracts
-    from tools.governance import validate_technical_debt
-    from tools.governance import validate_utility_reuse
-    from tools.governance import validate_workspace_bundle
+    from tools.governance import (
+        check_dedup_dead_code_rules,
+        check_drift_protection,
+        check_loc_guidance,
+        check_policy_runtime_rules,
+        check_risk_gates,
+        check_wheel_reuse_rules,
+        lint_menu_graph,
+        validate_authority_transfer,
+        validate_config_authority,
+        validate_drift_protection,
+        validate_godot_semantic_boundary,
+        validate_native_cpp_tooling,
+        validate_project_contracts,
+        validate_technical_debt,
+        validate_utility_reuse,
+        validate_workspace_bundle,
+    )
 
     return (
         GovernanceCheck("contracts", validate_project_contracts.main),

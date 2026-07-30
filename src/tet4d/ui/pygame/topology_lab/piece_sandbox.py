@@ -2,17 +2,39 @@ from __future__ import annotations
 
 from tet4d.engine.runtime.topology_playground_sandbox import (
     SandboxShape,
-    cycle_sandbox_piece as cycle_sandbox_piece_runtime,
     ensure_piece_sandbox_state,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
+    cycle_sandbox_piece as cycle_sandbox_piece_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     move_sandbox_piece as move_sandbox_piece_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     reset_sandbox_piece as reset_sandbox_piece_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     rotate_sandbox_piece as rotate_sandbox_piece_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     rotate_sandbox_piece_action as rotate_sandbox_piece_action_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     sandbox_cells as sandbox_cells_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     sandbox_lines as sandbox_lines_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     sandbox_shape as sandbox_shape_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     sandbox_shapes_for_state as sandbox_shapes_for_state_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     sandbox_validity as sandbox_validity_runtime,
+)
+from tet4d.engine.runtime.topology_playground_sandbox import (
     spawn_sandbox_piece as spawn_sandbox_piece_runtime,
 )
 from tet4d.engine.runtime.topology_playground_state import (
@@ -45,7 +67,7 @@ def _runtime_state_for_sandbox(
         sync_canonical_playground_state(state)
         runtime_state = canonical_playground_state(state)
     if runtime_state is None:
-        raise ValueError('sandbox requires canonical playground state')
+        raise ValueError("sandbox requires canonical playground state")
     ensure_sandbox_state(state)
     state.sandbox = runtime_state.sandbox_piece_state
     return runtime_state
@@ -84,6 +106,8 @@ def rotate_sandbox_piece_action(
         _runtime_state_for_sandbox(state, profile=profile),
         action,
     )
+
+
 def sandbox_validity(
     state: TopologyLabState,
     profile: ExplorerTopologyProfile,
@@ -113,7 +137,9 @@ def rotate_sandbox_piece(
     state: TopologyLabState,
     profile: ExplorerTopologyProfile,
 ) -> tuple[bool, str]:
-    return rotate_sandbox_piece_runtime(_runtime_state_for_sandbox(state, profile=profile))
+    return rotate_sandbox_piece_runtime(
+        _runtime_state_for_sandbox(state, profile=profile)
+    )
 
 
 def cycle_sandbox_piece(state: TopologyLabState, step: int) -> None:
@@ -137,16 +163,16 @@ def sandbox_lines(
 
 
 __all__ = [
-    'cycle_sandbox_piece',
-    'ensure_piece_sandbox',
-    'move_sandbox_piece',
-    'reset_sandbox_piece',
-    'spawn_sandbox_piece',
-    'rotate_sandbox_piece',
-    'rotate_sandbox_piece_action',
-    'sandbox_cells',
-    'sandbox_lines',
-    'sandbox_shape',
-    'sandbox_shapes_for_state',
-    'sandbox_validity',
+    "cycle_sandbox_piece",
+    "ensure_piece_sandbox",
+    "move_sandbox_piece",
+    "reset_sandbox_piece",
+    "rotate_sandbox_piece",
+    "rotate_sandbox_piece_action",
+    "sandbox_cells",
+    "sandbox_lines",
+    "sandbox_shape",
+    "sandbox_shapes_for_state",
+    "sandbox_validity",
+    "spawn_sandbox_piece",
 ]

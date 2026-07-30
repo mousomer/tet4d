@@ -39,7 +39,6 @@ from tet4d.ui.pygame.ui_utils import (
     standard_menu_panel_rect,
 )
 
-
 _BG_TOP = (14, 18, 44)
 _BG_BOTTOM = (4, 7, 20)
 _TEXT_COLOR = (232, 232, 240)
@@ -297,9 +296,7 @@ def _draw_bot_options_menu(
         screen.blit(label, (label_left, draw_rect.y))
         if value_surf is not None:
             screen.blit(value_surf, (value_x, draw_rect.y))
-        targets.append(
-            _BotPointerTarget(kind="item", rect=draw_rect.copy(), index=idx)
-        )
+        targets.append(_BotPointerTarget(kind="item", rect=draw_rect.copy(), index=idx))
     screen.set_clip(previous_clip)
     draw_vertical_scrollbar(screen, metrics=metrics)
     _draw_hints(
@@ -327,9 +324,7 @@ def _adjust_bot_value(loop: _BotMenuState, key: int) -> bool:
     mode_settings = _bot_mode_settings(loop)
     if loop.selected == 1:
         value = mode_settings["bot_mode_index"] + delta
-        mode_settings["bot_mode_index"] = max(
-            0, min(len(BOT_MODE_OPTIONS) - 1, value)
-        )
+        mode_settings["bot_mode_index"] = max(0, min(len(BOT_MODE_OPTIONS) - 1, value))
     elif loop.selected == 2:
         value = mode_settings["bot_algorithm_index"] + delta
         mode_settings["bot_algorithm_index"] = max(
@@ -413,7 +408,7 @@ def _handle_bot_menu_key(loop: _BotMenuState, key: int) -> None:
         _handle_bot_menu_confirm(loop)
 
 
-def run_bot_options_menu(  # noqa: C901
+def run_bot_options_menu(  # noqa: C901 - stateful keyboard/mouse event orchestrator
     screen: pygame.Surface,
     fonts,
     *,
@@ -448,9 +443,7 @@ def run_bot_options_menu(  # noqa: C901
                 loop.running = False
                 break
             if event.type == pygame.MOUSEMOTION:
-                hovered_target = _pointer_target_at_pos(
-                    getattr(event, "pos", (-1, -1))
-                )
+                hovered_target = _pointer_target_at_pos(getattr(event, "pos", (-1, -1)))
                 if (
                     hovered_target is not None
                     and hovered_target.kind == "item"
@@ -463,9 +456,7 @@ def run_bot_options_menu(  # noqa: C901
                 event.type == pygame.MOUSEBUTTONDOWN
                 and int(getattr(event, "button", 0)) == 1
             ):
-                hovered_target = _pointer_target_at_pos(
-                    getattr(event, "pos", (-1, -1))
-                )
+                hovered_target = _pointer_target_at_pos(getattr(event, "pos", (-1, -1)))
                 if (
                     hovered_target is not None
                     and hovered_target.kind == "item"
@@ -479,9 +470,7 @@ def run_bot_options_menu(  # noqa: C901
                 event.type == pygame.MOUSEBUTTONUP
                 and int(getattr(event, "button", 0)) == 1
             ):
-                hovered_target = _pointer_target_at_pos(
-                    getattr(event, "pos", (-1, -1))
-                )
+                hovered_target = _pointer_target_at_pos(getattr(event, "pos", (-1, -1)))
                 clicked_target = (
                     hovered_target
                     if hovered_target is not None and hovered_target == pressed_target

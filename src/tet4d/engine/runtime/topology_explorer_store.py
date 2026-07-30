@@ -59,7 +59,7 @@ def _profile_payload(profile: ExplorerTopologyProfile) -> dict[str, object]:
 
 def _axis_index(raw: object) -> int:
     if isinstance(raw, bool):
-        raise ValueError("axis must be a string or integer index")
+        raise ValueError("axis must be a string or integer index")  # noqa: TRY004 - preserve the established validation contract.
     if isinstance(raw, int):
         return int(raw)
     if isinstance(raw, str):
@@ -71,7 +71,7 @@ def _axis_index(raw: object) -> int:
 
 def _boundary_from_payload(payload: object, *, dimension: int) -> BoundaryRef:
     if not isinstance(payload, dict):
-        raise ValueError("boundary payload must be an object")
+        raise ValueError("boundary payload must be an object")  # noqa: TRY004 - preserve the established validation contract.
     return BoundaryRef(
         dimension=dimension,
         axis=_axis_index(payload.get("axis")),
@@ -81,11 +81,11 @@ def _boundary_from_payload(payload: object, *, dimension: int) -> BoundaryRef:
 
 def _transform_from_payload(payload: object, *, dimension: int) -> BoundaryTransform:
     if not isinstance(payload, dict):
-        raise ValueError("transform payload must be an object")
+        raise ValueError("transform payload must be an object")  # noqa: TRY004 - preserve the established validation contract.
     permutation_raw = payload.get("permutation")
     signs_raw = payload.get("signs")
     if not isinstance(permutation_raw, list) or not isinstance(signs_raw, list):
-        raise ValueError("transform payload requires permutation and signs lists")
+        raise ValueError("transform payload requires permutation and signs lists")  # noqa: TRY004 - preserve the established validation contract.
     if len(permutation_raw) != dimension - 1 or len(signs_raw) != dimension - 1:
         raise ValueError("transform tangent rank must match dimension - 1")
     return BoundaryTransform(
@@ -96,7 +96,7 @@ def _transform_from_payload(payload: object, *, dimension: int) -> BoundaryTrans
 
 def _glue_from_payload(payload: object, *, dimension: int) -> GluingDescriptor:
     if not isinstance(payload, dict):
-        raise ValueError("gluing payload must be an object")
+        raise ValueError("gluing payload must be an object")  # noqa: TRY004 - preserve the established validation contract.
     return GluingDescriptor(
         glue_id=str(payload.get("id", "")),
         enabled=bool(payload.get("enabled", True)),

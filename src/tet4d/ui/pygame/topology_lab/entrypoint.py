@@ -6,12 +6,12 @@ from tet4d.engine.runtime.topology_explorer_runtime import (
     load_runtime_explorer_topology_profile,
 )
 from tet4d.ui.pygame.launch.topology_lab_menu import run_explorer_playground
+from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.runtime_ui.app_runtime import (
     DisplaySettings,
     initialize_runtime,
     open_display,
 )
-from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
 from tet4d.ui.pygame.topology_lab.app import (
     build_explorer_playground_launch,
     mode_settings_snapshot_for_dimension,

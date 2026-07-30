@@ -4,7 +4,6 @@ import pygame
 
 from tet4d.engine.runtime.project_config import project_constant_int
 
-
 _TUTORIAL_MOVE_DELAY_MS = project_constant_int(
     ("tutorial", "action_delay_ms", "movement"),
     170,
@@ -47,6 +46,7 @@ def tutorial_action_delay_ms(action_id: str) -> int:
     if action_id.startswith("move_"):
         return int(_TUTORIAL_MOVE_DELAY_MS)
     return 0
+
 
 def tutorial_overlay_start_from_setup(payload: dict[str, object]) -> float | None:
     setup_payload = payload.get("setup")
@@ -255,5 +255,3 @@ def tutorial_sync(
         loop.tutorial_session = None
         loop.tutorial_action_cooldown_ms = 0
     return bool(progressed)
-
-

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_INVERT, EDGE_WRAP
 from tet4d.engine.topology_explorer.glue_model import BoundaryRef, MoveStep
@@ -133,7 +133,9 @@ def _synthetic_seam(
     )
 
 
-def _adapter_from_edge_rules(topology: ExplosionTopologyInput) -> ExplosionTopologyAdapter:
+def _adapter_from_edge_rules(
+    topology: ExplosionTopologyInput,
+) -> ExplosionTopologyAdapter:
     dims = tuple(int(value) for value in topology.board_dims)
     edge_rules = tuple(topology.topology_edge_rules or ())
     wrapped_axes = frozenset(
@@ -160,7 +162,9 @@ def _adapter_from_edge_rules(topology: ExplosionTopologyInput) -> ExplosionTopol
     return ExplosionTopologyAdapter(board_dims=dims, seams_by_boundary=seams)
 
 
-def _adapter_from_transport(resolver: ExplorerTransportResolver) -> ExplosionTopologyAdapter:
+def _adapter_from_transport(
+    resolver: ExplorerTransportResolver,
+) -> ExplosionTopologyAdapter:
     seams: dict[BoundaryRef, ExplosionSeam] = {}
     for seam in resolver.directed_seams:
         seams[seam.source_boundary] = ExplosionSeam(
@@ -169,7 +173,9 @@ def _adapter_from_transport(resolver: ExplorerTransportResolver) -> ExplosionTop
             target_boundary=seam.target_boundary,
             entry_step=seam.entry_step,
             exit_step=seam.exit_step,
-            permutation=tuple(int(value) for value in seam.piece_frame_transform.permutation),
+            permutation=tuple(
+                int(value) for value in seam.piece_frame_transform.permutation
+            ),
             signs=tuple(int(value) for value in seam.piece_frame_transform.signs),
             translation=_continuous_translation_for_seam(seam),
         )
@@ -192,4 +198,3 @@ def build_explosion_topology_adapter(
             )
         )
     return _adapter_from_edge_rules(topology)
-

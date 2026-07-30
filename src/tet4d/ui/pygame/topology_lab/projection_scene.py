@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from itertools import combinations
 from math import ceil
-from typing import Iterable, Sequence
 
 import pygame
 
@@ -170,7 +170,7 @@ def _full_coord_for_panel_cell(
     pair_coord: tuple[int, int],
     selected_coord: Sequence[int],
 ) -> tuple[int, ...]:
-    full = list(int(value) for value in selected_coord)
+    full = [int(value) for value in selected_coord]
     full[axes[0]] = int(pair_coord[0])
     full[axes[1]] = int(pair_coord[1])
     return tuple(full)
@@ -326,14 +326,16 @@ def _draw_explosion_particles(
         return
     clip_rect = area.inflate(36, 36)
     for particle in explosion_particles:
-        coord = tuple(float(value) for value in tuple(getattr(particle, "position_nd", ())))
+        coord = tuple(
+            float(value) for value in tuple(getattr(particle, "position_nd", ()))
+        )
         if len(coord) <= max(axes):
             continue
         center = (
-            int(round(board_rect.x + ((coord[axes[0]] + 0.5) * cell_size))),
-            int(round(board_rect.y + ((coord[axes[1]] + 0.5) * cell_size))),
+            round(board_rect.x + ((coord[axes[0]] + 0.5) * cell_size)),
+            round(board_rect.y + ((coord[axes[1]] + 0.5) * cell_size)),
         )
-        size = max(5, int(round(cell_size * 0.46)))
+        size = max(5, round(cell_size * 0.46))
         rect = pygame.Rect(0, 0, size, size)
         rect.center = center
         if not clip_rect.colliderect(rect):
@@ -374,13 +376,15 @@ def _draw_explosion_traces(
             if getattr(sample, "segment_break", False):
                 previous = None
                 continue
-            coord = tuple(float(value) for value in tuple(getattr(sample, "position_nd", ())))
+            coord = tuple(
+                float(value) for value in tuple(getattr(sample, "position_nd", ()))
+            )
             if len(coord) <= max(axes):
                 previous = None
                 continue
             center = (
-                int(round(board_rect.x + ((coord[axes[0]] + 0.5) * cell_size))),
-                int(round(board_rect.y + ((coord[axes[1]] + 0.5) * cell_size))),
+                round(board_rect.x + ((coord[axes[0]] + 0.5) * cell_size)),
+                round(board_rect.y + ((coord[axes[1]] + 0.5) * cell_size)),
             )
             if previous is not None:
                 alpha, width = _trail_sample_style(
@@ -393,11 +397,11 @@ def _draw_explosion_traces(
                         color[0],
                         color[1],
                         color[2],
-                        max(0, min(255, int(round(112 * alpha)))),
+                        max(0, min(255, round(112 * alpha))),
                     ),
                     previous,
                     center,
-                    max(1, int(round((cell_size * 0.08) * max(0.35, width)))),
+                    max(1, round((cell_size * 0.08) * max(0.35, width))),
                 )
             previous = center
     surface.blit(overlay, (0, 0))
@@ -1006,7 +1010,7 @@ def draw_projection_scene(
             highlighted_glue_id=highlighted_glue_id,
         )
     focused_glue_id = highlighted_glue_id or selected_glue_id
-    panels, info_rect = _layout_projection_panels(
+    panels, _info_rect = _layout_projection_panels(
         area,
         dimension=dimension,
         header_height=header_height + _PANEL_GAP,

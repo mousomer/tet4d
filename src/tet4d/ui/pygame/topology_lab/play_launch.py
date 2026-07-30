@@ -8,7 +8,9 @@ from tet4d.engine.runtime.topology_playground_launch import (
 from tet4d.engine.runtime.topology_playground_state import TopologyPlaygroundState
 
 
-def _topology_playground_return_menu(screen: pygame.Surface, *_args, **_kwargs) -> tuple[str, pygame.Surface]:
+def _topology_playground_return_menu(
+    screen: pygame.Surface, *_args, **_kwargs
+) -> tuple[str, pygame.Surface]:
     return "menu", screen
 
 
@@ -23,7 +25,9 @@ def launch_playground_state_gameplay(
     exploration_mode=None,
 ) -> tuple[pygame.Surface, object | None]:
     from tet4d.ui.pygame import front2d_game, front3d_game, front4d_game
-    from tet4d.ui.pygame.render.font_profiles import init_fonts as init_fonts_for_profile
+    from tet4d.ui.pygame.render.font_profiles import (
+        init_fonts as init_fonts_for_profile,
+    )
     from tet4d.ui.pygame.runtime_ui.app_runtime import (
         capture_windowed_display_settings,
         open_display,
@@ -66,6 +70,7 @@ def launch_playground_state_gameplay(
         display_settings = capture_windowed_display_settings(display_settings)
         screen = open_display(display_settings, caption=return_caption)
     return screen, display_settings
+
 
 __all__ = [
     "_topology_playground_return_menu",

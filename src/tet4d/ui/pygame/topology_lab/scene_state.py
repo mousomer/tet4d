@@ -18,14 +18,26 @@ from tet4d.engine.runtime.topology_playground_state import (
     TOOL_PROBE,
     TOOL_SANDBOX,
     TOPOLOGY_PLAYGROUND_TOOLS,
-    TopologyPlaygroundGluingDraft as RuntimeTopologyPlaygroundGluingDraft,
-    TopologyPlaygroundPlayabilityAnalysis as RuntimeTopologyPlaygroundPlayabilityAnalysis,
-    TopologyPlaygroundSandboxPieceState as RuntimeTopologyPlaygroundSandboxPieceState,
-    TopologyPlaygroundState as RuntimeTopologyPlaygroundState,
     WORKSPACE_EDITOR,
     WORKSPACE_PLAY,
     WORKSPACE_SANDBOX,
+)
+from tet4d.engine.runtime.topology_playground_state import (
+    TopologyPlaygroundGluingDraft as RuntimeTopologyPlaygroundGluingDraft,
+)
+from tet4d.engine.runtime.topology_playground_state import (
+    TopologyPlaygroundPlayabilityAnalysis as RuntimeTopologyPlaygroundPlayabilityAnalysis,
+)
+from tet4d.engine.runtime.topology_playground_state import (
+    TopologyPlaygroundSandboxPieceState as RuntimeTopologyPlaygroundSandboxPieceState,
+)
+from tet4d.engine.runtime.topology_playground_state import (
+    TopologyPlaygroundState as RuntimeTopologyPlaygroundState,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     canonical_tool_name as runtime_canonical_tool_name,
+)
+from tet4d.engine.runtime.topology_playground_state import (
     workspace_for_tool as runtime_workspace_for_tool,
 )
 from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
@@ -364,8 +376,8 @@ def scene_pane_active(state: TopologyPlaygroundState) -> bool:
 # Focused helper modules own canonical runtime sync/write logic and probe-state
 # selectors/mutations. This facade only re-exports the broad state selectors
 # that remain part of the shared shell surface.
-from . import scene_state_canonical as _scene_state_canonical  # noqa: E402
-from . import scene_state_probe as _scene_state_probe  # noqa: E402
+from . import scene_state_canonical as _scene_state_canonical
+from . import scene_state_probe as _scene_state_probe
 
 sync_shell_state_from_canonical = _scene_state_canonical.sync_shell_state_from_canonical
 sync_canonical_playground_state = _scene_state_canonical.sync_canonical_playground_state
@@ -449,8 +461,6 @@ def cycle_active_pane(state: TopologyPlaygroundState, step: int) -> None:
 
 
 __all__ = [
-    "ExplorerPlayabilityArtifacts",
-    "ExplorerPlaygroundSettings",
     "PANE_CONTROLS",
     "PANE_LABELS",
     "PANE_SCENE",
@@ -463,44 +473,46 @@ __all__ = [
     "TOOL_SANDBOX",
     "TOPOLOGY_LAB_TOOLS",
     "TOPOLOGY_LAB_WORKSPACES",
-    "TopologyLabState",
-    "TopologyPlaygroundState",
     "WORKSPACE_EDITOR",
     "WORKSPACE_LABELS",
     "WORKSPACE_PLAY",
     "WORKSPACE_SANDBOX",
+    "ExplorerPlayabilityArtifacts",
+    "ExplorerPlaygroundSettings",
+    "TopologyLabState",
+    "TopologyPlaygroundState",
     "active_workspace_name",
     "canonical_playground_state",
     "canonical_tool_name",
     "controls_pane_active",
+    "current_dirty",
     "current_editor_tool",
     "current_explorer_draft",
     "current_explorer_profile",
-    "current_dirty",
     "current_play_settings",
     "current_probe_coord",
     "current_probe_frame",
     "current_probe_path",
     "current_probe_trace",
-    "probe_neighbors_visible",
-    "probe_trace_visible",
     "cycle_active_pane",
     "ensure_explorer_draft",
     "ensure_probe_state",
     "ensure_sandbox_state",
     "playground_dims_for_state",
+    "probe_neighbors_visible",
+    "probe_trace_visible",
     "replace_explorer_draft",
     "replace_explorer_profile",
     "replace_play_settings",
     "replace_probe_state",
-    "select_projection_coord",
     "reset_probe_state",
     "scene_pane_active",
-    "set_probe_neighbors_visible",
-    "set_probe_trace_visible",
+    "select_projection_coord",
     "set_active_tool",
     "set_active_workspace",
     "set_dirty",
+    "set_probe_neighbors_visible",
+    "set_probe_trace_visible",
     "sync_canonical_playground_state",
     "sync_shell_state_from_canonical",
     "tool_is_edit",

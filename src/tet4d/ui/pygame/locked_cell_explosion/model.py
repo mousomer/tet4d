@@ -165,7 +165,7 @@ def clamp_collision_elasticity(value: object) -> float:
 def trail_sample_budget_for_lifetime_ms(value: object) -> int:
     lifetime_ms = clamp_trace_retention_ms(value)
     ratio = lifetime_ms / EXPLOSION_TRAIL_MAX_LIFETIME_MS
-    scaled = int(round(EXPLOSION_TRAIL_MAX_SAMPLES * ratio))
+    scaled = round(EXPLOSION_TRAIL_MAX_SAMPLES * ratio)
     return max(18, min(EXPLOSION_TRAIL_MAX_SAMPLES * 2, scaled))
 
 
@@ -201,11 +201,11 @@ def _stable_seed_mix(accumulator: int, value: int) -> int:
 
 
 def _cell_coord(cell: object) -> tuple[int, ...]:
-    return tuple(int(value) for value in getattr(cell, "source_coord"))
+    return tuple(int(value) for value in cell.source_coord)
 
 
 def _cell_color(cell: object) -> int:
-    return int(getattr(cell, "color_id"))
+    return int(cell.color_id)
 
 
 def _cell_layer(cell: object) -> int | None:
@@ -278,10 +278,11 @@ def select_endgame_live_cells(
     if target_count >= len(canonical_cells):
         return canonical_cells
     ranked_cells = [
-        (cell, _cell_selection_score(cell, seed=int(seed)))
-        for cell in canonical_cells
+        (cell, _cell_selection_score(cell, seed=int(seed))) for cell in canonical_cells
     ]
-    ranked_cells.sort(key=lambda item: (item[1], _cell_coord(item[0]), _cell_color(item[0])))
+    ranked_cells.sort(
+        key=lambda item: (item[1], _cell_coord(item[0]), _cell_color(item[0]))
+    )
     selected: list[tuple[_CellT, int]] = [ranked_cells[0]]
     remaining = ranked_cells[1:]
     candidate_window = 16
@@ -348,7 +349,7 @@ class ExplosionParticle:
     trail_elapsed_ms: float = 0.0
     trail_max_lifetime_ms: float = EXPLOSION_TRAIL_MAX_LIFETIME_MS
     trail_max_samples: int = EXPLOSION_TRAIL_MAX_SAMPLES
-    trail_samples: list["ExplosionTrailSample"] = field(default_factory=list)
+    trail_samples: list[ExplosionTrailSample] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -414,7 +415,7 @@ class ExplosionRenderParticle:
     color_id: int
     layer_weights: tuple[tuple[int, float], ...] = ()
     layer_scales: tuple[tuple[int, float], ...] = ()
-    trail_segments: tuple["ExplosionRenderTrailSegment", ...] = ()
+    trail_segments: tuple[ExplosionRenderTrailSegment, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -476,8 +477,14 @@ class ExplosionSimulationState:
     total_kinetic_energy: float = 0.0
     diagnostics_mode: str = EXPLOSION_DIAGNOSTICS_MODE_OFF
     diagnostics_step_index: int = 0
-    diagnostics_last_contact_step_by_particle: dict[int, int] = field(default_factory=dict)
-    diagnostics_previous_speed_sq_by_particle: dict[int, float] = field(default_factory=dict)
-    diagnostics_recent_events: list[ExplosionDiagnosticsEvent] = field(default_factory=list)
+    diagnostics_last_contact_step_by_particle: dict[int, int] = field(
+        default_factory=dict
+    )
+    diagnostics_previous_speed_sq_by_particle: dict[int, float] = field(
+        default_factory=dict
+    )
+    diagnostics_recent_events: list[ExplosionDiagnosticsEvent] = field(
+        default_factory=list
+    )
     diagnostics_summary: ExplosionDiagnosticsSummary | None = None
     last_step_events: tuple[EndgameModelEvent, ...] = ()

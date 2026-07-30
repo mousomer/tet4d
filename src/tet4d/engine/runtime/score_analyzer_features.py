@@ -29,11 +29,10 @@ def _iter_columns(dims: tuple[int, ...], gravity_axis: int):
     axes = _lateral_axes(dims, gravity_axis)
     ranges = [range(max(1, dims[axis])) for axis in axes]
     if not ranges:
-        yield tuple()
+        yield ()
         return
     for values in product(*ranges):
         yield tuple(values)
-
 
 
 def _neighbor_coords(coord: tuple[int, ...]) -> tuple[tuple[int, ...], ...]:
@@ -395,7 +394,3 @@ def weighted_score(features: dict[str, float], score_obj: dict[str, Any]) -> flo
         weight = float(weights.get(key, 0.0))
         value += weight * float(feature_value)
     return round(_clamp01(value), 6)
-
-
-
-

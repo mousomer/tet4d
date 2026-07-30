@@ -5,11 +5,11 @@ from enum import Enum
 from math import prod
 from typing import TypeVar
 
-#from importlib import import_module
-#def _runtime_config():
+# from importlib import import_module
+# def _runtime_config():
 #    return import_module("tet4d.engine.runtime.runtime_config")
-
 from tet4d.engine.runtime import runtime_config as _runtime_config
+
 
 def playbot_adaptive_candidate_cap_for_ndim(ndim: int):
     return _runtime_config.playbot_adaptive_candidate_cap_for_ndim(ndim)
@@ -134,6 +134,7 @@ def bot_mode_index_from_id(mode_id: object) -> int:
     except ValueError:
         return 0
 
+
 def bot_planner_profile_label(profile: BotPlannerProfile) -> str:
     return _enum_label(profile)
 
@@ -156,6 +157,7 @@ def bot_planner_profile_index_from_id(profile_id: object) -> int:
     except ValueError:
         return 0
 
+
 def bot_planner_algorithm_label(algorithm: BotPlannerAlgorithm) -> str:
     return _enum_label(algorithm)
 
@@ -177,6 +179,7 @@ def bot_planner_algorithm_index_from_id(algorithm_id: object) -> int:
         return values.index(normalized)
     except ValueError:
         return 0
+
 
 def _board_size_scale(ndim: int, dims: tuple[int, ...] | None) -> float:
     if not dims:
@@ -205,7 +208,7 @@ def default_planning_budget_ms(
         base = ultra
     else:
         base = balanced
-    scaled = int(round(base * _board_size_scale(ndim, dims)))
+    scaled = round(base * _board_size_scale(ndim, dims))
     return max(1, scaled)
 
 
@@ -263,7 +266,7 @@ def adaptive_candidate_cap(
         return 1_000_000
     per_ms, cap_min, cap_max = playbot_adaptive_candidate_cap_for_ndim(ndim)
     scale = _board_size_scale(ndim, dims)
-    candidate_cap = int(round(float(budget_ms) * per_ms * scale))
+    candidate_cap = round(float(budget_ms) * per_ms * scale)
     return max(int(cap_min), min(int(cap_max), candidate_cap))
 
 

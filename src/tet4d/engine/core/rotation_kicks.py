@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from typing import TypeVar
 
-
 Coord = tuple[int, ...]
 PlaneOffset = tuple[int, int]
 _DEFAULT_KICK_LEVEL = "off"

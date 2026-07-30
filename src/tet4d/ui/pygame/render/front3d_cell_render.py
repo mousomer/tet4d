@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import pygame
 
@@ -88,16 +88,16 @@ def draw_cells(
         draw_translucent_faces(
             surface,
             locked_faces,
-            fill_alpha=int(round(255 * locked_alpha)),
-            outline_alpha=max(70, int(round(255 * min(1.0, locked_alpha + 0.12)))),
+            fill_alpha=round(255 * locked_alpha),
+            outline_alpha=max(70, round(255 * min(1.0, locked_alpha + 0.12))),
         )
     draw_sorted_faces(surface, active_faces)
     if overlay_faces:
         draw_translucent_faces(
             surface,
             overlay_faces,
-            fill_alpha=int(round(255 * assist_overlay_opacity_scale)),
+            fill_alpha=round(255 * assist_overlay_opacity_scale),
             outline_alpha=max(
-                70, int(round(255 * min(1.0, assist_overlay_opacity_scale + 0.12)))
+                70, round(255 * min(1.0, assist_overlay_opacity_scale + 0.12))
             ),
         )

@@ -9,7 +9,6 @@ from tet4d.ui.pygame.projection3d import (
     smoothstep01,
 )
 
-
 _MAX_SAFE_ABS_PITCH = 74.0
 
 

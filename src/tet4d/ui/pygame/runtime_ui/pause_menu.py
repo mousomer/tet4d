@@ -1,30 +1,34 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Literal
 
 import pygame
 
 from tet4d.engine.runtime.menu_config import menu_items, pause_copy, pause_menu_id
-from tet4d.engine.runtime.menu_settings_state import get_audio_settings, get_display_settings
+from tet4d.engine.runtime.menu_settings_state import (
+    get_audio_settings,
+    get_display_settings,
+)
 from tet4d.ui.pygame.keybindings import (
     active_key_profile,
     cycle_key_profile,
     load_keybindings_file,
     save_keybindings_file,
 )
-from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 from tet4d.ui.pygame.launch.bot_options_menu import run_bot_options_menu
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
-from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
-from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.launch.launcher_settings import run_settings_hub_menu
 from tet4d.ui.pygame.launch.leaderboard_menu import run_leaderboard_menu
+from tet4d.ui.pygame.menu.keybindings_menu import run_keybindings_menu
 from tet4d.ui.pygame.menu.menu_runner import (
     ActionRegistry,
     MenuPointerTarget,
     MenuRunner,
 )
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
+from tet4d.ui.pygame.runtime_ui.help_menu import run_help_menu
 from tet4d.ui.pygame.ui_utils import (
     draw_corner_chip,
     draw_side_button_stack,
@@ -34,7 +38,6 @@ from tet4d.ui.pygame.ui_utils import (
     format_menu_title,
     standard_menu_panel_rect,
 )
-
 
 PauseDecision = Literal["resume", "restart", "menu", "quit"]
 
@@ -156,7 +159,9 @@ def _draw_list_menu_panel(
     option_bottom = panel_y + panel_h - 8
     label_left = panel_x + 20
     label_right = panel_x + panel_w - 20
-    targets: list[MenuPointerTarget] = [MenuPointerTarget(kind="back", rect=back_rect.copy())]
+    targets: list[MenuPointerTarget] = [
+        MenuPointerTarget(kind="back", rect=back_rect.copy())
+    ]
     for kind, rect in side_rects.items():
         targets.append(MenuPointerTarget(kind=kind, rect=rect.copy()))
     for idx, row in enumerate(rows):
@@ -513,9 +518,7 @@ def _pause_action_dispatcher(
         state.decision = "quit"
         state.running = False
         return True
-    if not state.running:
-        return True
-    return False
+    return bool(not state.running)
 
 
 def _pause_root_escape(

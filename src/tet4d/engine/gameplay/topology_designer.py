@@ -20,7 +20,6 @@ from .topology import (
     normalize_topology_mode,
 )
 
-
 GAMEPLAY_MODE_NORMAL = "normal"
 GAMEPLAY_MODE_EXPLORER = "explorer"
 TOPOLOGY_GAMEPLAY_MODE_OPTIONS = (
@@ -140,7 +139,7 @@ def _normalize_edge_rules(
     dimension: int,
 ) -> EdgeRules:
     if not isinstance(rules_raw, (list, tuple)):
-        raise ValueError("edge_rules must be a list of axis rules")
+        raise ValueError("edge_rules must be a list of axis rules")  # noqa: TRY004 - preserve the established validation contract.
     if len(rules_raw) != int(dimension):
         raise ValueError("edge_rules axis count must match dimension")
     normalized: list[AxisEdgeRule] = []
@@ -304,7 +303,9 @@ def _profiles_from_mode_payload(
 
 
 @lru_cache(maxsize=1)
-def _profiles_by_mode_and_dimension() -> dict[str, dict[int, tuple[TopologyDesignerProfile, ...]]]:
+def _profiles_by_mode_and_dimension() -> dict[
+    str, dict[int, tuple[TopologyDesignerProfile, ...]]
+]:
     payload = _read_json_payload(_DESIGNER_PRESETS_FILE)
     profiles = _profiles_from_mode_payload(payload)
     if profiles:
@@ -414,7 +415,9 @@ def topology_profile_state_from_payload(
         except ValueError:
             edge_rules = default_state.edge_rules
     raw_preset_id = payload.get("preset_id")
-    preset_id = raw_preset_id if isinstance(raw_preset_id, str) else default_state.preset_id
+    preset_id = (
+        raw_preset_id if isinstance(raw_preset_id, str) else default_state.preset_id
+    )
     try:
         return validate_topology_profile_state(
             gameplay_mode=gameplay_mode,

@@ -4,19 +4,19 @@
     {
       "purpose": "Current migration and handoff state.",
       "role": "restart_handoff",
-      "sha256": "0cbe02d3372dd0ba41056c7560f3f06a22ed8e0397c18b42b0825231eb8adeb6",
+      "sha256": "59eb31bb03e96fd419ed5b02d6571b5b6a0dca63ce701754753fd5dc446aa58e",
       "source_path": "CURRENT_STATE.md"
     },
     {
       "purpose": "Active migration follow-up tracker.",
       "role": "backlog",
-      "sha256": "d51d4c68333e3ff66591c6f36d365895f6b46b9a7d73ae096d96d4f2640e5ff5",
+      "sha256": "2a61d8f2344fe9c212299ba08084ef2450876f8ffec580922d8744d143311672",
       "source_path": "docs/BACKLOG.md"
     },
     {
       "purpose": "Generated package layout and source-of-truth inventory.",
       "role": "project_structure",
-      "sha256": "5eb4519ca761b9aab6ab5a4e498ce6c17f43e8316c12eb6670d50ec3cdcb55e4",
+      "sha256": "023dea1ca8dd2dfab7e557153a645b9464d2a5c8179abcd4cc6a5f3188ae187e",
       "source_path": "docs/PROJECT_STRUCTURE.md"
     },
     {

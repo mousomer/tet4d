@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from functools import lru_cache
+from functools import cache, lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,6 @@ from .runtime_config_validation_gameplay import (
 )
 from .runtime_config_validation_playbot import validate_playbot_policy_payload
 from .settings_schema import read_json_object_or_raise
-
 
 CONFIG_DIR = project_root_path() / "config"
 GAMEPLAY_TUNING_FILE = CONFIG_DIR / "gameplay" / "tuning.json"
@@ -126,7 +125,7 @@ def assist_kick_factor(level_name: str) -> float:
     return float(factors.get(normalized, factors[kick_default_level()]))
 
 
-@lru_cache(maxsize=None)
+@cache
 def rotation_kick_candidate_offsets(level_name: object) -> tuple[tuple[int, int], ...]:
     kicks = _gameplay_tuning()["rotation_kicks"]
     normalized = normalize_kick_level_name(level_name)

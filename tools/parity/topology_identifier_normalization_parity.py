@@ -6,7 +6,6 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 STRICT_PARITY_ENV = "TET4D_STRICT_PARITY"
 FIXTURE_PATH = (
@@ -81,7 +80,7 @@ def normalize_topology_identifier(raw: str) -> str:
 def _load_fixture() -> dict[str, object]:
     payload = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve validation contract.
             "topology identifier normalization fixture must be an object"
         )
     if payload.get("slice") != "topology_identifier_normalization":
@@ -94,7 +93,7 @@ def _load_fixture() -> dict[str, object]:
         )
     cases = payload.get("cases")
     if not isinstance(cases, list):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             "topology identifier normalization fixture must contain a cases array"
         )
     return payload
@@ -107,20 +106,20 @@ def python_oracle_cases() -> list[TopologyIdentifierCase]:
     normalized: list[TopologyIdentifierCase] = []
     for item in cases:
         if not isinstance(item, dict):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve validation contract.
                 "topology identifier normalization cases must be objects"
             )
         name = item.get("name")
         input_value = item.get("input")
         expected = item.get("expected")
         if not isinstance(name, str):
-            raise RuntimeError("topology identifier normalization case missing name")
+            raise RuntimeError("topology identifier normalization case missing name")  # noqa: TRY004 - preserve the established validation contract.
         if not isinstance(input_value, str):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 f"topology identifier normalization case {name!r} missing input"
             )
         if not isinstance(expected, str):
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
                 f"topology identifier normalization case {name!r} missing expected"
             )
         actual = normalize_topology_identifier(input_value)

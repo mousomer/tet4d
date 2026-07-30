@@ -3,11 +3,6 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass
 
-from .menu_action_contracts import (
-    LAUNCHER_ACTION_IDS,
-    PARITY_ACTION_IDS,
-    PAUSE_ACTION_IDS,
-)
 from ..runtime.menu_config import (
     default_settings_payload,
     keybindings_menu_id,
@@ -16,6 +11,11 @@ from ..runtime.menu_config import (
     pause_menu_id,
     reachable_action_ids,
     settings_menu_id,
+)
+from .menu_action_contracts import (
+    LAUNCHER_ACTION_IDS,
+    PARITY_ACTION_IDS,
+    PAUSE_ACTION_IDS,
 )
 
 
@@ -211,6 +211,7 @@ def _validate_launcher_root_ia(
     )
     _validate_launcher_root_rows(raw_items, issues=issues)
 
+
 def _validate_launcher_root_labels(
     menus: dict[str, dict[str, object]],
     raw_items: tuple[dict[str, object], ...],
@@ -234,7 +235,8 @@ def _validate_launcher_root_labels(
         issues.append(
             MenuGraphIssue(
                 "ia",
-                "launcher root contains forbidden labels: " + ", ".join(forbidden_present),
+                "launcher root contains forbidden labels: "
+                + ", ".join(forbidden_present),
             )
         )
     if "launcher_play" in menus:
@@ -245,9 +247,14 @@ def _validate_launcher_root_labels(
             )
         )
     if any(str(item.get("menu_id", "")) == "launcher_play" for item in raw_items):
-        issues.append(MenuGraphIssue("ia", "launcher root must not route to launcher_play submenu"))
+        issues.append(
+            MenuGraphIssue(
+                "ia", "launcher root must not route to launcher_play submenu"
+            )
+        )
     if any(str(item.get("label", "")).strip().lower() == "quit" for item in raw_items):
         issues.append(MenuGraphIssue("ia", "launcher root must not include a Quit row"))
+
 
 def _validate_launcher_root_rows(
     raw_items: tuple[dict[str, object], ...],
@@ -304,15 +311,25 @@ def _validate_launcher_root_action_groups(
     for idx, expected in enumerate(("2D", "3D", "4D")):
         item = raw_items[idx]
         if str(item.get("type", "")).strip().lower() != "action_group":
-            issues.append(MenuGraphIssue("ia", f"launcher root row {idx+1} must be action_group"))
+            issues.append(
+                MenuGraphIssue(
+                    "ia", f"launcher root row {idx + 1} must be action_group"
+                )
+            )
             continue
         if str(item.get("label", "")) != expected:
             continue
         if str(item.get("default_action_id", "")) != "play":
-            issues.append(MenuGraphIssue("ia", f"launcher root '{expected}' must default to Play"))
+            issues.append(
+                MenuGraphIssue("ia", f"launcher root '{expected}' must default to Play")
+            )
         actions = item.get("actions")
         if not isinstance(actions, tuple) or len(actions) != 2:
-            issues.append(MenuGraphIssue("ia", f"launcher root '{expected}' must expose Play/Setup actions"))
+            issues.append(
+                MenuGraphIssue(
+                    "ia", f"launcher root '{expected}' must expose Play/Setup actions"
+                )
+            )
             continue
         expected_action_ids = (
             f"play_{expected.lower()}",
@@ -339,11 +356,14 @@ def _validate_launcher_root_row(
     issues: list[MenuGraphIssue],
 ) -> None:
     item = raw_items[index]
-    if str(item.get("type", "")).strip().lower() != expected_type or str(item.get("label", "")) != expected_label:
+    if (
+        str(item.get("type", "")).strip().lower() != expected_type
+        or str(item.get("label", "")) != expected_label
+    ):
         issues.append(
             MenuGraphIssue(
                 "ia",
-                f"launcher root row {index+1} must be '{expected_label}' {expected_type}",
+                f"launcher root row {index + 1} must be '{expected_label}' {expected_type}",
             )
         )
         return
@@ -398,7 +418,9 @@ def _validate_launcher_advanced_menu(
         )
     for item in raw_items:
         if str(item.get("type", "")).strip().lower() != "action":
-            issues.append(MenuGraphIssue("ia", f"{menu_id} must contain action items only"))
+            issues.append(
+                MenuGraphIssue("ia", f"{menu_id} must contain action items only")
+            )
             continue
         label = str(item.get("label", ""))
         if label not in expected_actions:
@@ -550,7 +572,9 @@ def _validate_explosion_defaults_settings_coverage(
     defaults = default_settings_payload()
     defaults_root = defaults.get("explosion_defaults")
     if not isinstance(defaults_root, dict):
-        issues.append(MenuGraphIssue("schema", "defaults.explosion_defaults must be an object"))
+        issues.append(
+            MenuGraphIssue("schema", "defaults.explosion_defaults must be an object")
+        )
         return
 
     for mode_key in ("2d", "3d", "4d"):

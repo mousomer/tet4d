@@ -38,7 +38,9 @@ def draw_game_over_banner(
     banner_rect.midtop = (rect.centerx, rect.y + 14)
     banner = pygame.Surface((banner_rect.width, banner_rect.height), pygame.SRCALPHA)
     pygame.draw.rect(banner, (18, 8, 18, 196), banner.get_rect(), border_radius=18)
-    pygame.draw.rect(banner, (255, 104, 112, 232), banner.get_rect(), 2, border_radius=18)
+    pygame.draw.rect(
+        banner, (255, 104, 112, 232), banner.get_rect(), 2, border_radius=18
+    )
     title = render_text_cached(
         font=fonts.title_font,
         text="GAME OVER",
@@ -96,7 +98,7 @@ def _draw_meter(
     clamped = max(0.0, min(1.0, float(value)))
     label_surf = render_text_cached(
         font=fonts.hint_font,
-        text=f"{label}: {int(round(clamped * 100.0))}%",
+        text=f"{label}: {round(clamped * 100.0)}%",
         color=(196, 208, 236),
     )
     surface.blit(label_surf, (panel_rect.x + 12, y))

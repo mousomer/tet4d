@@ -8,13 +8,6 @@ from tet4d.engine.core.rules.piece_placement import (
     build_candidate_piece_placement,
     validate_candidate_piece_placement,
 )
-from tet4d.engine.topology_explorer.transport_resolver import (
-    BLOCKED_MOVE,
-    CELLWISE_DEFORMATION,
-    ExplorerTransportFrameTransform,
-    PieceStepResult,
-    build_explorer_transport_resolver,
-)
 from tet4d.engine.gameplay.api import piece_set_options_for_dimension_gameplay
 from tet4d.engine.gameplay.explorer_movement_policy import (
     CELLWISE_FREE,
@@ -33,6 +26,7 @@ from tet4d.engine.gameplay.pieces_nd import (
     get_piece_shapes_nd,
     piece_set_label,
 )
+from tet4d.engine.runtime.topology_playability_signal import resolve_rigid_play_enabled
 from tet4d.engine.runtime.topology_playground_state import (
     PLAYABILITY_STATUS_ANALYZING,
     RIGID_PLAY_MODE_AUTO,
@@ -40,9 +34,15 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundSandboxPieceState,
     TopologyPlaygroundState,
 )
-from tet4d.engine.runtime.topology_playability_signal import resolve_rigid_play_enabled
 from tet4d.engine.topology_explorer import movement_steps_for_dimension
 from tet4d.engine.topology_explorer.glue_model import MoveStep, coord_in_bounds
+from tet4d.engine.topology_explorer.transport_resolver import (
+    BLOCKED_MOVE,
+    CELLWISE_DEFORMATION,
+    ExplorerTransportFrameTransform,
+    PieceStepResult,
+    build_explorer_transport_resolver,
+)
 
 
 @dataclass(frozen=True)
@@ -421,9 +421,12 @@ def _move_sandbox_piece_explorer(
     assert result.moved_cells is not None
     if len(set(result.moved_cells)) != len(result.moved_cells):
         raise ValueError("sandbox movement collapses cells")
-    if movement_policy == RIGID and result.kind == CELLWISE_DEFORMATION:
-        if not result.rigidly_coherent:
-            raise ValueError("sandbox piece cannot remain rigid across seam crossing")
+    if (
+        movement_policy == RIGID
+        and result.kind == CELLWISE_DEFORMATION
+        and not result.rigidly_coherent
+    ):
+        raise ValueError("sandbox piece cannot remain rigid across seam crossing")
     use_exact_cells = result.kind == CELLWISE_DEFORMATION or (
         movement_policy == CELLWISE_FREE
         and any(cell_step.traversal is not None for cell_step in result.cell_steps)

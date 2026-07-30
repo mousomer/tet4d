@@ -3,9 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from tet4d.engine import api
+from tet4d.engine.core.rules.piece_placement import piece_placement_is_legal
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
-from tet4d.engine.core.rules.piece_placement import piece_placement_is_legal
 
 
 def _central_2d_pose_legal(state: api.GameState2D, piece: object) -> bool:

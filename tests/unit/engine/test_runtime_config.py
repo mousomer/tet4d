@@ -14,8 +14,8 @@ from tet4d.engine.runtime.runtime_config import (
     gameplay_tuning_payload,
     grid_mode_cycle_names,
     playbot_adaptive_fallback_enabled,
-    playbot_benchmark_p95_thresholds,
     playbot_benchmark_history_file,
+    playbot_benchmark_p95_thresholds,
     playbot_board_size_scaling_policy_for_ndim,
     playbot_budget_table_for_ndim,
     playbot_default_hard_drop_after_soft_drops,
@@ -117,11 +117,13 @@ class TestRuntimeConfig(unittest.TestCase):
         valid_policy = {
             "benchmark": {"history_file": "state/bench/custom_history.jsonl"}
         }
-        with mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}):
-            with mock.patch.object(
+        with (
+            mock.patch.dict(os.environ, {"TET4D_STATE_ROOT": override_root}),
+            mock.patch.object(
                 runtime_config, "_playbot_policy", return_value=valid_policy
-            ):
-                resolved = playbot_benchmark_history_file()
+            ),
+        ):
+            resolved = playbot_benchmark_history_file()
         self.assertEqual(
             resolved,
             expected_root / "bench/custom_history.jsonl",

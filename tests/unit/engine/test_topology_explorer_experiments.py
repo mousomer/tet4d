@@ -18,7 +18,9 @@ from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 
 
 class TestTopologyExplorerExperiments(unittest.TestCase):
-    def test_compile_parallel_explorer_experiments_recommends_full_wrap_for_3d(self) -> None:
+    def test_compile_parallel_explorer_experiments_recommends_full_wrap_for_3d(
+        self,
+    ) -> None:
         batch = compile_parallel_explorer_experiments(
             ExplorerTopologyProfile(dimension=3, gluings=()),
             dims=(4, 4, 4),

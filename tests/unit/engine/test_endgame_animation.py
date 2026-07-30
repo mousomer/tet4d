@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import replace
 import inspect
-from pathlib import Path
-from types import SimpleNamespace
 import shutil
 import unittest
+from dataclasses import replace
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -26,10 +26,12 @@ from tet4d.ui.pygame import (
     front4d_render,
 )
 from tet4d.ui.pygame.front2d_session import LoopContext2D
-from tet4d.ui.pygame.locked_cell_explosion import defaults_store as explosion_defaults_store
 from tet4d.ui.pygame.locked_cell_explosion import (
     ExplosionRenderTrailSegment,
     build_standalone_explosion_surface_state,
+)
+from tet4d.ui.pygame.locked_cell_explosion import (
+    defaults_store as explosion_defaults_store,
 )
 from tet4d.ui.pygame.render import gfx_game
 from tet4d.ui.pygame.runtime_ui import loop_runner_nd
@@ -258,7 +260,9 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertAlmostEqual(snapshot.shatter_speed_scale, 0.8)
         self.assertEqual(len(snapshot.persistent_live_cells), 1)
 
-    def test_saved_explosion_defaults_feed_endgame_snapshot_and_controller(self) -> None:
+    def test_saved_explosion_defaults_feed_endgame_snapshot_and_controller(
+        self,
+    ) -> None:
         self._temp_settings_root()
         saved_defaults = explosion_defaults_store.ExplosionDefaults(
             boundary_response="bounce",
@@ -336,8 +340,12 @@ class TestEndgameAnimation(unittest.TestCase):
 
         animation = endgame_animation.build_endgame_animation_state(snapshot)
 
-        self.assertEqual(animation.explosion_controller.config.boundary_response, "bounce")
-        self.assertEqual(animation.explosion_controller.config.particle_collisions, "on")
+        self.assertEqual(
+            animation.explosion_controller.config.boundary_response, "bounce"
+        )
+        self.assertEqual(
+            animation.explosion_controller.config.particle_collisions, "on"
+        )
         self.assertEqual(animation.explosion_controller.config.mass_mode, "random")
         self.assertAlmostEqual(animation.explosion_controller.config.base_mass, 1.6)
         self.assertAlmostEqual(
@@ -349,7 +357,9 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertAlmostEqual(
             animation.explosion_controller.config.collision_elasticity, 0.3
         )
-        self.assertEqual(animation.explosion_controller.config.diagnostics_mode, "summary")
+        self.assertEqual(
+            animation.explosion_controller.config.diagnostics_mode, "summary"
+        )
         self.assertAlmostEqual(
             animation.explosion_controller.config.trace_retention_ms, 1800.0
         )
@@ -384,7 +394,9 @@ class TestEndgameAnimation(unittest.TestCase):
             snapshot.topology.topology_edge_rules,
             front3d_game._endgame_topology_edge_rules_3d(cfg),
         )
-        self.assertEqual(snapshot.topology.topology_edge_rules[1], (EDGE_WRAP, EDGE_WRAP))
+        self.assertEqual(
+            snapshot.topology.topology_edge_rules[1], (EDGE_WRAP, EDGE_WRAP)
+        )
 
     def test_bounded_wrap_and_invert_topology_change_runtime_adapter(self) -> None:
         def _animation_for_mode(mode: str):
@@ -628,9 +640,7 @@ class TestEndgameAnimation(unittest.TestCase):
             with patch.object(
                 front4d_render,
                 "build_oriented_cube_faces",
-                return_value=(
-                    (0.0, [(0, 0), (8, 0), (8, 8)], (10, 20, 30), True),
-                ),
+                return_value=((0.0, [(0, 0), (8, 0), (8, 8)], (10, 20, 30), True),),
             ) as build_faces:
                 front4d_render._draw_endgame_layer_board(
                     surface,
@@ -698,7 +708,9 @@ class TestEndgameAnimation(unittest.TestCase):
             1,
         )
 
-    def test_endgame_live_cell_selection_is_deterministic_and_order_stable(self) -> None:
+    def test_endgame_live_cell_selection_is_deterministic_and_order_stable(
+        self,
+    ) -> None:
         locked_cells = (
             endgame_animation.SnapshotCell(
                 source_coord=(3, 0, 1),
@@ -1029,7 +1041,10 @@ class TestEndgameAnimation(unittest.TestCase):
 
         self.assertTrue(animation.grid_break_marks)
         self.assertTrue(
-            all(mark.source_coord in artifact_coords for mark in animation.grid_break_marks)
+            all(
+                mark.source_coord in artifact_coords
+                for mark in animation.grid_break_marks
+            )
         )
 
     def test_grid_break_marks_are_deterministic_for_same_input(self) -> None:
@@ -1221,7 +1236,9 @@ class TestEndgameAnimation(unittest.TestCase):
         self.assertEqual(pop_events, ("endgame_pop",))
         self.assertEqual(boom_events, ("endgame_boom",))
 
-    def test_draw_native_board_view_has_no_extra_render_particles_argument(self) -> None:
+    def test_draw_native_board_view_has_no_extra_render_particles_argument(
+        self,
+    ) -> None:
         from tet4d.ui.pygame.locked_cell_explosion.board_view import (
             draw_native_board_view,
         )
@@ -1402,7 +1419,9 @@ class TestEndgameAnimation(unittest.TestCase):
                 assert loop.endgame_animation is not None
                 assert loop.endgame_animation.explosion_controller is not None
                 self.assertEqual(
-                    len(loop.endgame_animation.explosion_controller.simulation.particles),
+                    len(
+                        loop.endgame_animation.explosion_controller.simulation.particles
+                    ),
                     len(loop.endgame_animation.snapshot.persistent_live_cells),
                 )
                 self.assertGreater(len(loop.endgame_animation.shell_fragments), 0)
@@ -1433,48 +1452,90 @@ def _shell_tuning() -> dict[str, object]:
     return constants_payload()["animation"]["endgame"]
 
 
-def _shell_cells(dims: tuple[int, ...], count: int) -> tuple[endgame_animation.SnapshotCell, ...]:
+def _shell_cells(
+    dims: tuple[int, ...], count: int
+) -> tuple[endgame_animation.SnapshotCell, ...]:
     cells: list[endgame_animation.SnapshotCell] = []
     for index in range(count):
         rem, coord = index, []
         for size in dims:
             coord.append(rem % size)
             rem //= size
-        cells.append(endgame_animation.SnapshotCell(tuple(coord), tuple(float(v) for v in coord), (index % 7) + 1, coord[3] if len(coord) == 4 else None))
+        cells.append(
+            endgame_animation.SnapshotCell(
+                tuple(coord),
+                tuple(float(v) for v in coord),
+                (index % 7) + 1,
+                coord[3] if len(coord) == 4 else None,
+            )
+        )
     return tuple(cells)
 
 
-def _shell_escaping(dims: tuple[int, ...], count: int) -> tuple[endgame_animation.SnapshotCell, ...]:
+def _shell_escaping(
+    dims: tuple[int, ...], count: int
+) -> tuple[endgame_animation.SnapshotCell, ...]:
     return endgame_animation.split_endgame_locked_cells(
-        locked_cells=_shell_cells(dims, count), dimension=len(dims), seed=2026, live_fraction=0.12
+        locked_cells=_shell_cells(dims, count),
+        dimension=len(dims),
+        seed=2026,
+        live_fraction=0.12,
     ).escaping_cells
 
 
-def _shell_impacts(dims: tuple[int, ...], seed: int = 43) -> tuple[endgame_shell_effects.EndgameBoundaryImpact, ...]:
+def _shell_impacts(
+    dims: tuple[int, ...], seed: int = 43
+) -> tuple[endgame_shell_effects.EndgameBoundaryImpact, ...]:
     return endgame_shell_effects.build_boundary_impacts(
-        escaping_cells=_shell_escaping(dims, 300), board_dims=dims, rng_seed=seed, dimension=len(dims), tuning=_shell_tuning()
+        escaping_cells=_shell_escaping(dims, 300),
+        board_dims=dims,
+        rng_seed=seed,
+        dimension=len(dims),
+        tuning=_shell_tuning(),
     )
 
 
 def test_shell_impacts_derive_from_escaping_cells_and_are_capped() -> None:
     escaping = _shell_escaping((12, 12, 8), 120)
     impacts = endgame_shell_effects.build_boundary_impacts(
-        escaping_cells=escaping, board_dims=(12, 12, 8), rng_seed=17, dimension=3, tuning=_shell_tuning()
+        escaping_cells=escaping,
+        board_dims=(12, 12, 8),
+        rng_seed=17,
+        dimension=3,
+        tuning=_shell_tuning(),
     )
-    assert {impact.source_coord for impact in impacts}.issubset({cell.source_coord for cell in escaping})
+    assert {impact.source_coord for impact in impacts}.issubset(
+        {cell.source_coord for cell in escaping}
+    )
     for dims in ((20, 20), (12, 12, 8), (8, 8, 6, 4)):
-        assert len(_shell_impacts(dims)) <= endgame_shell_effects.boundary_impact_cap_for_dimension(len(dims), _shell_tuning())
+        assert len(
+            _shell_impacts(dims)
+        ) <= endgame_shell_effects.boundary_impact_cap_for_dimension(
+            len(dims), _shell_tuning()
+        )
 
 
 def test_shell_impacts_hit_boundary_planes_and_are_reversed_input_stable() -> None:
     dims = (12, 12, 8)
     for impact in _shell_impacts(dims):
-        assert impact.impact_position[impact.axis] in {-0.5, float(dims[impact.axis]) - 0.5}
+        assert impact.impact_position[impact.axis] in {
+            -0.5,
+            float(dims[impact.axis]) - 0.5,
+        }
         assert impact.side in {-1, 1}
     escaping, tuning = _shell_escaping((8, 8, 6, 4), 260), _shell_tuning()
-    kwargs = {"board_dims": (8, 8, 6, 4), "rng_seed": 43, "dimension": 4, "tuning": tuning}
-    forward = endgame_shell_effects.build_boundary_impacts(escaping_cells=escaping, **kwargs)
-    backward = endgame_shell_effects.build_boundary_impacts(escaping_cells=tuple(reversed(escaping)), **kwargs)
+    kwargs = {
+        "board_dims": (8, 8, 6, 4),
+        "rng_seed": 43,
+        "dimension": 4,
+        "tuning": tuning,
+    }
+    forward = endgame_shell_effects.build_boundary_impacts(
+        escaping_cells=escaping, **kwargs
+    )
+    backward = endgame_shell_effects.build_boundary_impacts(
+        escaping_cells=tuple(reversed(escaping)), **kwargs
+    )
     assert forward == backward
 
 
@@ -1484,8 +1545,12 @@ def test_shell_board_shards_derive_from_impacts_and_are_capped() -> None:
         shards = endgame_shell_effects.build_board_shards(
             impacts=impacts, rng_seed=47, dimension=len(dims), tuning=_shell_tuning()
         )
-        assert len(shards) <= endgame_shell_effects.board_shard_cap_for_dimension(len(dims), _shell_tuning())
-        assert {shard.source_impact_index for shard in shards}.issubset(set(range(len(impacts))))
+        assert len(shards) <= endgame_shell_effects.board_shard_cap_for_dimension(
+            len(dims), _shell_tuning()
+        )
+        assert {shard.source_impact_index for shard in shards}.issubset(
+            set(range(len(impacts)))
+        )
 
 
 def test_shell_transforms_expire_and_return_plain_draw_state() -> None:
@@ -1502,7 +1567,12 @@ def test_shell_transforms_expire_and_return_plain_draw_state() -> None:
     assert isinstance(impact_state, endgame_shell_effects.EndgameImpactDrawState)
     assert isinstance(shard_state, endgame_shell_effects.EndgameShardDrawState)
     expired_ms = shard.birth_ms + shard.lifetime_ms + 1.0
-    assert endgame_shell_effects.transform_board_shard(shard, elapsed_ms=expired_ms, tuning=tuning) is None
+    assert (
+        endgame_shell_effects.transform_board_shard(
+            shard, elapsed_ms=expired_ms, tuning=tuning
+        )
+        is None
+    )
 
 
 def test_shell_model_has_no_pygame_or_shared_explosion_dependency() -> None:

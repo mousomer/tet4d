@@ -1,178 +1,53 @@
 # Codex Policy
 
-This policy extends the reusable workspace governance in
-`docs/governance/workspace_bundle/`.
-
-## Purpose
-
-Codex must preserve the Python-centered authority structure while supporting
-the Godot/C++ migration.
+This project overlay extends
+`docs/governance/workspace_bundle/programming_policy.md`. Detailed contributor
+workflow and verification live in `docs/WORKFLOW_CODEX.md`.
 
 ## Before editing
 
-Codex must inspect existing files and search for existing implementations,
-helpers, utilities, libraries, or policies before adding new ones.
-
-Use searches equivalent to:
-
-```bash
-rg "<function_or_concept>" .
-rg "TODO|FIXME|HACK|legacy|deprecated|governance|policy|authority|oracle|migration" .
-```
-
-For governance work, Codex must identify whether an existing document already
-covers the topic and extend it instead of creating a duplicate.
-
-Before adding a new helper, adapter, parser, config loader, trace reader,
-topology helper, projection helper, subprocess wrapper, or test fixture tool,
-Codex must search by concept, likely function/class name, related config key,
-and subsystem name. Shared reusable helpers must be checked against
+Inspect the current files, tests, and owning authority. Search for existing
+implementations, helpers, utilities, libraries, policies, and validators before
+adding new ones. For governance work, extend an existing owner instead of
+creating a duplicate authority. Check shared utilities against
 `docs/architecture/utility_index.md`.
-
-## Review reporting
-
-Codex tasks must use `docs/governance/review_checklist.md` for final review
-coverage. When a task changes governance, migration, generated outputs, or
-cross-layer behavior, the final report must include changed files, created
-files, preserved areas, checks run, technical-debt delta, drift/authority
-implications, and remaining risks.
-
-Parity tasks must also report routing, authority boundary, Python oracle,
-fixture evidence, comparison command, strict/default behavior, and validation
-results.
-
-Second parity slice tasks must also report the selected candidate, explicit
-exclusions, Stage 18 boundary, authority boundary, routing, and validation.
-
-Parity evidence review and third-slice selection tasks must also report the
-reviewed evidence, chosen candidate, explicit exclusions, Stage 20 boundary,
-authority boundary, routing, and validation.
-
-Parity evidence package review tasks must also report evidence-package status,
-selected next candidate or blocked status, `tools/migration/` versus
-`tools/parity/` route decision, authority-transfer readiness, authority
-boundary, routing, and validation.
-
-Stage 18 implementation tasks must also report the committed implementation
-doc, exact fixture set, comparison mode, native command, and any provisional
-native fallback behavior.
-
-Stage 22 implementation tasks must also report the committed implementation
-doc, trace schema/version fixture set, Python oracle, native/provisional route
-status, default advisory behavior, `TET4D_STRICT_PARITY=1` blocking behavior,
-explicit exclusions, authority boundary, routing, and validation.
 
 ## Task routing
 
-### Python task
+- Python behaviour: relevant RDS, architecture contract, current modules/tests.
+- Godot product shell: `godot/AGENTS.md`, Godot/C++ policy, authority map, and
+  relevant product/presentation authority.
+- Native C++/GDExtension: `native/AGENTS.md`, safety/tooling policies,
+  authority map, and applicable parity/transfer protocol.
+- Parity implementation: selected subsystem document, Python oracle, fixtures,
+  comparison command, strict/default behaviour, and tests.
+- Parity evidence review: promotion gates and the applicable evidence package.
+- Authority transfer: transfer protocol, fallback, evidence, transfer record,
+  and authority-map update.
+- Governance: policy pack, router, affected validators/generators/tests.
 
-Examples:
+Use `docs/DOCUMENTATION_MAP.md` to locate current or historical documents.
+Completed stage numbers are not universal task context.
 
-- gameplay rule fix
-- topology semantics
-- trace generation
-- existing pygame/Python behavior
-- Python test update
-- current implementation refactor
+## Change discipline
 
-Read:
+- Preserve Python semantic authority unless an explicit completed transfer
+  record changes a named subsystem.
+- Do not duplicate semantic rules in Godot, GDScript, or adapter glue.
+- Do not rewrite existing functions or governance documents wholesale unless
+  the task requests a rewrite or the owning document requires coherent
+  restructuring.
+- Preserve links and validator coverage when consolidating or splitting
+  governance.
+- Do not treat partial acceptance as completion.
 
-- root `AGENTS.md`
-- existing Python governance and relevant `docs/rds/*`
-- governance router
-- architecture authority map
-- testing policy
+## Review reporting
 
-### Godot task
+Use `docs/governance/review_checklist.md`. Report changed and deliberately
+untouched files, authorities reused, routing/authority implications, checks,
+and remaining risks.
 
-Examples:
-
-- menu
-- scene
-- UI layout
-- camera
-- animation
-- product-shell readability
-- inspector/probe panel
-- visual diagnostics
-
-Read:
-
-- root `AGENTS.md`
-- `godot/AGENTS.md`
-- governance router
-- Godot/C++ migration policy
-- authority map
-
-### C++ / GDExtension / native task
-
-Examples:
-
-- native core API
-- Godot adapter
-- C++ test
-- memory safety
-- native build
-- CMake/SCons/native library configuration
-
-Read:
-
-- root `AGENTS.md`
-- local native/GDExtension `AGENTS.md`
-- governance router
-- Godot/C++ migration policy
-- authority map
-- testing policy
-- config policy
-
-### Mixed migration task
-
-Examples:
-
-- port Python rule to C++
-- expose C++ rule to Godot
-- replace replay-only behavior with real core behavior
-- compare Python trace with Godot/C++ output
-
-Read all relevant policies:
-
-- root `AGENTS.md`
-- existing Python governance
-- local Godot/C++ `AGENTS.md`
-- governance router
-- authority map
-- migration plan
-- testing policy
-- config policy
-
-## No-rewrite rule
-
-Codex must not rewrite existing functions or governance documents wholesale
-unless the task explicitly asks for a rewrite.
-
-Allowed:
-
-- append a routing section
-- add a clarification
-- add cross-links
-- add a small new document when no equivalent exists
-- split a bloated document only if all links are preserved
-
-Not allowed:
-
-- delete existing governance
-- move all governance under Godot
-- silently replace Python authority with Godot/C++ authority
-- duplicate existing policy under a new name
-
-## Final response requirements
-
-Codex must report:
-
-- files changed
-- files intentionally not changed
-- existing governance reused
-- new governance created
-- conflicts found and how they were resolved
-- checks run
-- unresolved risks
+Parity work additionally reports the Python oracle, fixture evidence,
+comparison command, default/strict behaviour, exclusions, and authority
+status. Authority-transfer work additionally reports the transfer record,
+fallback path, map update, and validation.

@@ -45,7 +45,9 @@ def test_resolve_and_commit_rotated_piece_commits_only_legal_candidate() -> None
                 piece[1] + vector[1],
             ),
             can_place=can_place,
-            commit_piece=lambda piece: committed.append(piece) or True,
+            commit_piece=lambda piece, committed=committed: (
+                committed.append(piece) or True
+            ),
         )
 
         assert result is bool(expected_commits)

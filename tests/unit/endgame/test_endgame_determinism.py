@@ -7,7 +7,9 @@ from tet4d.ui.pygame.locked_cell_explosion.simulation import (
 )
 
 
-def _state_sequence(seed: int) -> tuple[tuple[tuple[float, ...], tuple[float, ...]], ...]:
+def _state_sequence(
+    seed: int,
+) -> tuple[tuple[tuple[float, ...], tuple[float, ...]], ...]:
     state = build_endgame_state(
         locked_cells=(
             ExplosionSeedCell((0, 1, 1, 1), 2, "A"),

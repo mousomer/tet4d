@@ -37,4 +37,3 @@ def __getattr__(name: str):
         mod = import_module("tet4d.ai.playbot.types")
         return getattr(mod, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-

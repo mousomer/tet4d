@@ -99,7 +99,10 @@ def build_topology_lab_shell_layout(
     menu_w_floor = 248 if compact_width else (272 if scene_pane_active else 296)
     menu_w = min(
         menu_w_cap,
-        max(menu_w_floor, int(content_rect.width * (0.30 if scene_pane_active else 0.33))),
+        max(
+            menu_w_floor,
+            int(content_rect.width * (0.30 if scene_pane_active else 0.33)),
+        ),
     )
     controls_rect = pygame.Rect(panel_x + 10, content_y, menu_w - 12, content_h)
     top_bar_rect = pygame.Rect(panel_x + 10, panel_y + 10, panel_w - 20, top_bar_h)

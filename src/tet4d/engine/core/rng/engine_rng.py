@@ -10,12 +10,10 @@ RNG_MODE_OPTIONS = (RNG_MODE_FIXED_SEED, RNG_MODE_TRUE_RANDOM)
 class EngineRNG(random.Random):
     """Seedable RNG wrapper with a stable engine-facing type."""
 
-    def __init__(
-        self, seed: int | float | str | bytes | bytearray | None = None
-    ) -> None:
+    def __init__(self, seed: float | str | bytes | bytearray | None = None) -> None:
         super().__init__(seed)
 
-    def fork(self) -> "EngineRNG":
+    def fork(self) -> EngineRNG:
         clone = EngineRNG()
         clone.setstate(self.getstate())
         return clone
@@ -24,7 +22,7 @@ class EngineRNG(random.Random):
 def coerce_random(
     *,
     rng: random.Random | None = None,
-    seed: int | float | str | bytes | bytearray | None = None,
+    seed: float | str | bytes | bytearray | None = None,
 ) -> random.Random:
     if rng is not None and seed is not None:
         raise ValueError("provide either rng or seed, not both")
@@ -43,10 +41,10 @@ def normalize_rng_mode(mode: str | None) -> str:
 
 
 __all__ = [
+    "RNG_MODE_FIXED_SEED",
+    "RNG_MODE_OPTIONS",
+    "RNG_MODE_TRUE_RANDOM",
     "EngineRNG",
     "coerce_random",
-    "RNG_MODE_FIXED_SEED",
-    "RNG_MODE_TRUE_RANDOM",
-    "RNG_MODE_OPTIONS",
     "normalize_rng_mode",
 ]

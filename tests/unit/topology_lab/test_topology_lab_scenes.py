@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 import pygame
@@ -12,9 +12,8 @@ from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
     GluingDescriptor,
 )
+from tet4d.ui.pygame.topology_lab import projection_scene, scene2d
 from tet4d.ui.pygame.topology_lab.arrow_overlay import _glue_style
-from tet4d.ui.pygame.topology_lab import projection_scene
-from tet4d.ui.pygame.topology_lab import scene2d
 from tet4d.ui.pygame.topology_lab.projection_scene import (
     projection_hidden_label,
     projection_pairs_for_dimension,
@@ -114,7 +113,9 @@ class TestTopologyLabScenes(unittest.TestCase):
         cell_hits = [target for target in hits if target.kind == "projection_cell"]
         glue_hits = [target for target in hits if target.kind == "glue_pick"]
         boundary_hits = [target for target in hits if target.kind == "boundary_pick"]
-        self.assertEqual(sorted(target.value for target in panel_hits), ["xy", "xz", "yz"])
+        self.assertEqual(
+            sorted(target.value for target in panel_hits), ["xy", "xz", "yz"]
+        )
         self.assertGreater(len(cell_hits), 0)
         self.assertEqual(len(glue_hits), 1)
         self.assertEqual(len(boundary_hits), 6)
@@ -227,7 +228,9 @@ class TestTopologyLabScenes(unittest.TestCase):
             )
         )
 
-    def test_explorer_projection_scene_keeps_hidden_labels_probe_dot_and_ribbon(self) -> None:
+    def test_explorer_projection_scene_keeps_hidden_labels_probe_dot_and_ribbon(
+        self,
+    ) -> None:
         surface = pygame.Surface((960, 760))
         fonts = self._fonts()
         profile = self._profile_3d()
@@ -331,7 +334,9 @@ class TestTopologyLabScenes(unittest.TestCase):
 
         with (
             mock.patch.object(scene2d.pygame.draw, "rect") as draw_rect,
-            mock.patch.object(scene2d, "draw_probe_center_glyph") as draw_probe_center_glyph,
+            mock.patch.object(
+                scene2d, "draw_probe_center_glyph"
+            ) as draw_probe_center_glyph,
         ):
             scene2d._draw_probe(
                 surface,
@@ -348,15 +353,15 @@ class TestTopologyLabScenes(unittest.TestCase):
             cell_size=40,
         )
 
-    def test_sandbox_focus_and_cells_keep_box_semantics_in_projection_scene(self) -> None:
+    def test_sandbox_focus_and_cells_keep_box_semantics_in_projection_scene(
+        self,
+    ) -> None:
         surface = pygame.Surface((240, 240))
         board_rect = pygame.Rect(20, 20, 160, 160)
 
         with (
             mock.patch.object(projection_scene.pygame.draw, "rect") as draw_rect,
-            mock.patch.object(
-                projection_scene.pygame.draw, "circle"
-            ) as draw_circle,
+            mock.patch.object(projection_scene.pygame.draw, "circle") as draw_circle,
         ):
             projection_scene._draw_selected_cell(
                 surface,
@@ -384,7 +389,10 @@ class TestTopologyLabScenes(unittest.TestCase):
     def test_neighbor_markers_render_as_dots_in_projection_scene(self) -> None:
         surface = pygame.Surface((240, 240))
         board_rect = pygame.Rect(20, 20, 160, 160)
-        expected_centers = [pygame.Rect(20, 60, 40, 40).center, pygame.Rect(100, 60, 40, 40).center]
+        expected_centers = [
+            pygame.Rect(20, 60, 40, 40).center,
+            pygame.Rect(100, 60, 40, 40).center,
+        ]
 
         with (
             mock.patch.object(projection_scene.pygame.draw, "rect") as draw_rect,

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
 from tet4d.ai.playbot.types import (
@@ -386,4 +386,3 @@ def plan_best_2d_move(
             planning_ms=elapsed_ms,
         ),
     )
-

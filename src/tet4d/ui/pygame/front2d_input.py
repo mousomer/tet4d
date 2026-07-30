@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import pygame
 
@@ -86,7 +86,9 @@ def apply_2d_gameplay_action(state: GameState, action: str) -> None:
         "rotate_xy_neg": lambda: state.try_rotate(-1),
         "hard_drop": state.hard_drop,
         "soft_drop": (
-            state.try_soft_drop if hasattr(state, "try_soft_drop") else lambda: state.try_move(0, 1)
+            state.try_soft_drop
+            if hasattr(state, "try_soft_drop")
+            else lambda: state.try_move(0, 1)
         ),
         "move_up": lambda: state.try_move(0, -1, animate_translation=True),
         "move_down": lambda: state.try_move(0, 1, animate_translation=True),
@@ -118,7 +120,7 @@ def handle_game_keydown(
     allow_gameplay: bool = True,
     action_filter: Callable[[str], bool] | None = None,
     action_observer: Callable[[str], None] | None = None,
-) -> Optional[str]:
+) -> str | None:
     key = event.key
 
     system_decision = system_decision_for_key(key)

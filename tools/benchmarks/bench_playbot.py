@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
 import gc
 import json
-from math import ceil
 import random
 import statistics
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from math import ceil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -195,8 +194,8 @@ def _summary(samples: list[BenchSample]) -> dict[str, float | int]:
         "p50_ms": round(p50, 3),
         "p95_ms": round(p95, 3),
         "max_ms": round(max(ms_values), 3),
-        "avg_candidates": int(
-            round(statistics.mean(sample.candidates for sample in samples))
+        "avg_candidates": round(
+            statistics.mean(sample.candidates for sample in samples)
         ),
     }
 
@@ -221,7 +220,7 @@ def _append_trend_sample(
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     record = {
-        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "timestamp_utc": datetime.now(UTC).isoformat(),
         "algorithm": algorithm.value,
         "profile": profile.value,
         "runs": int(runs),

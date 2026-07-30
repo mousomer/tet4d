@@ -6,7 +6,11 @@ from pathlib import Path
 
 from tools.migration.export_endgame_trace import build_endgame_trace, export_cases
 from tools.migration.trace_cases import ENDGAME_CASES_BY_ID, ENDGAME_TRACE_CASES
-from tools.migration.trace_schema import assert_trace_hygiene, canonical_json, stable_hash
+from tools.migration.trace_schema import (
+    assert_trace_hygiene,
+    canonical_json,
+    stable_hash,
+)
 
 
 def test_endgame_trace_export_is_deterministic() -> None:
@@ -35,13 +39,17 @@ def test_endgame_trace_records_particles_events_energy_and_w_motion() -> None:
 def test_endgame_export_is_byte_identical_when_repeated(tmp_path: Path) -> None:
     export_cases(list(ENDGAME_TRACE_CASES), tmp_path)
     first = {
-        path.name: canonical_json(__import__("json").loads(path.read_text(encoding="utf-8")))
+        path.name: canonical_json(
+            __import__("json").loads(path.read_text(encoding="utf-8"))
+        )
         for path in sorted(tmp_path.glob("*.json"))
     }
 
     export_cases(list(ENDGAME_TRACE_CASES), tmp_path)
     second = {
-        path.name: canonical_json(__import__("json").loads(path.read_text(encoding="utf-8")))
+        path.name: canonical_json(
+            __import__("json").loads(path.read_text(encoding="utf-8"))
+        )
         for path in sorted(tmp_path.glob("*.json"))
     }
 

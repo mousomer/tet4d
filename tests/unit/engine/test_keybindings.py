@@ -6,8 +6,8 @@ import shutil
 import unittest
 from dataclasses import dataclass, field
 from pathlib import Path
-from uuid import uuid4
 from unittest.mock import patch
+from uuid import uuid4
 
 try:
     import pygame
@@ -19,12 +19,11 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for keybinding runtime tests")
 
-from tet4d.ui.pygame import keybindings
-from tet4d.engine.runtime import keybinding_store, menu_settings_state
+from tet4d.engine.runtime import keybinding_store, menu_config, menu_settings_state
 from tet4d.engine.runtime.keybinding_runtime_state import KEYBINDING_STATE
-from tet4d.engine.runtime import menu_config
 from tet4d.engine.runtime.project_config import state_dir_path
 from tet4d.engine.ui_logic import keybindings_catalog
+from tet4d.ui.pygame import keybindings
 
 
 @dataclass
@@ -92,12 +91,7 @@ class _SplitRootKeybindingLayout:
         self.bundle_root = self.root / "_internal"
         self.keybindings_dir = self.bundle_root / "keybindings"
         self.profiles_dir = (
-            self.root
-            / "AppData"
-            / "Roaming"
-            / "tet4d"
-            / "keybindings"
-            / "profiles"
+            self.root / "AppData" / "Roaming" / "tet4d" / "keybindings" / "profiles"
         )
         self.state_dir = self.root / "AppData" / "Roaming" / "tet4d" / "state"
         self.files = {
@@ -303,7 +297,7 @@ class TestKeybindingProfiles(unittest.TestCase):
 
     def test_save_rejects_path_outside_keybindings_dir(self) -> None:
         outside = self.tmp_root.root.parent / "outside-bindings.json"
-        ok, msg = keybindings.save_keybindings_file(2, file_path=str(outside))
+        ok, _msg = keybindings.save_keybindings_file(2, file_path=str(outside))
         self.assertFalse(ok)
 
     def test_initialize_allows_split_frozen_profile_root(self) -> None:
@@ -443,7 +437,9 @@ class TestKeybindingProfiles(unittest.TestCase):
         payload["bindings"]["system"]["quit"] = ["q", "escape"]
         path.write_text(json.dumps(payload), encoding="utf-8")
 
-        ok, msg = keybindings.load_keybindings_file(4, profile=keybindings.PROFILE_SMALL)
+        ok, msg = keybindings.load_keybindings_file(
+            4, profile=keybindings.PROFILE_SMALL
+        )
         self.assertTrue(ok, msg)
         self.assertEqual(keybindings.SYSTEM_KEYS["quit"], (pygame.K_ESCAPE,))
 
@@ -984,8 +980,8 @@ class TestMenuSettingsPersistence(unittest.TestCase):
     def test_settings_schema_clamp_helpers(self) -> None:
         from tet4d.engine.runtime.settings_schema import (
             clamp_animation_duration_ms,
-            clamp_lines_per_level,
             clamp_game_seed,
+            clamp_lines_per_level,
             clamp_overlay_transparency,
             clamp_toggle_index,
             sanitize_text,

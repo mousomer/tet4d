@@ -3,7 +3,6 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-
 DEFAULT_STATUS_ORDER = {
     "balanced": 0,
     "watch": 1,

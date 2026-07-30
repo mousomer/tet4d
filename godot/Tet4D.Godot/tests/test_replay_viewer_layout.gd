@@ -44,6 +44,7 @@ func run() -> Array:
 		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
 		await tree.process_frame
 		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size, replay_game_rect.size.x))
+		failures.append_array(await _check_true_random_action_layout(hud, viewport_size))
 		hud.set_replay_mode_labels(false, 1.0, false)
 		await tree.process_frame
 		var restored_snapshot: Dictionary = hud.layout_contract_snapshot()
@@ -152,6 +153,28 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 	return failures
 
 
+func _check_true_random_action_layout(hud: Node, viewport_size: Vector2i) -> Array:
+	var failures: Array = []
+	hud.set_snapshot({
+		"trace_type": "live_4d",
+		"random_mode": "true_random",
+		"paused": false,
+		"game_over": false,
+		"last_command": "none",
+		"last_command_status": "none",
+		"state_hash": "manual-layout",
+	}, false)
+	await Engine.get_main_loop().process_frame
+	var snapshot: Dictionary = hud.layout_contract_snapshot()
+	var button_rect: Rect2 = snapshot.get("new_random_game_button_rect", Rect2())
+	var body_rect: Rect2 = snapshot.get("body", Rect2())
+	if not bool(snapshot.get("new_random_game_button_visible", false)):
+		failures.append("live 4D viewport %s: true-random setup should expose New Random Game" % str(viewport_size))
+	if button_rect.size.x <= 0.0 or button_rect.end.y > body_rect.position.y + 0.5:
+		failures.append("live 4D viewport %s: visible New Random Game action should fit above the live body, button=%s body=%s" % [str(viewport_size), button_rect, body_rect])
+	return failures
+
+
 func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_game_width: float) -> Array:
 	var failures: Array = []
 	var snapshot: Dictionary = hud.layout_contract_snapshot()
@@ -164,6 +187,9 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	var top_summary_text := str(snapshot.get("top_summary_text", ""))
 	var restart_game_button_visible := bool(snapshot.get("restart_game_button_visible", false))
 	var restart_game_button_text := str(snapshot.get("restart_game_button_text", ""))
+	var restart_game_button_rect: Rect2 = snapshot.get("restart_game_button_rect", Rect2())
+	var change_setup_button_visible := bool(snapshot.get("change_setup_button_visible", false))
+	var change_setup_button_rect: Rect2 = snapshot.get("change_setup_button_rect", Rect2())
 	var top_detail_text := str(snapshot.get("top_detail_text", ""))
 	var authority_text := str(snapshot.get("authority_text", ""))
 	var inspector_status_text := str(snapshot.get("inspector_status_text", ""))
@@ -174,6 +200,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	var right_inspector_order: Array = snapshot.get("right_inspector_order", [])
 	var game_rect: Rect2 = snapshot.get("game_area", Rect2())
 	var inspector_rect: Rect2 = snapshot.get("right_inspector", Rect2())
+	var body_rect: Rect2 = snapshot.get("body", Rect2())
 	var status_badge_color: Color = snapshot.get("top_status_badge_color", Color.TRANSPARENT)
 	var status_badge_border_color: Color = snapshot.get("top_status_badge_border_color", Color.TRANSPARENT)
 	var style_manager = hud.style_manager()
@@ -189,6 +216,10 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: game-over status badge should use error styling" % label)
 	if not restart_game_button_visible or restart_game_button_text != "Restart Game":
 		failures.append("%s: live game-over status should expose a Restart Game button" % label)
+	if restart_game_button_rect.size.x <= 0.0 or restart_game_button_rect.end.y > body_rect.position.y + 0.5:
+		failures.append("%s: visible Restart Game action should fit above the live body, button=%s body=%s" % [label, restart_game_button_rect, body_rect])
+	if not change_setup_button_visible or change_setup_button_rect.size.x <= 0.0 or change_setup_button_rect.end.y > body_rect.position.y + 0.5:
+		failures.append("%s: visible Change Setup action should fit above the live body, button=%s body=%s" % [label, change_setup_button_rect, body_rect])
 	if top_status_badge_text.find("out_of_bounds") != -1 or top_summary_text.find("out_of_bounds") != -1 or inspector_status_text.find("out_of_bounds") != -1:
 		failures.append("%s: user-facing live status should not expose raw out_of_bounds reason" % label)
 	if inspector_status_text.find("SESSION") == -1 or inspector_status_text.find("STATUS") == -1 or inspector_status_text.find("VIEW") == -1:
@@ -297,7 +328,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Mouse Camera",
-		[["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
+		[["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]
 	)
 	_assert_group_items(
 		failures,

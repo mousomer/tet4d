@@ -51,7 +51,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
 
             self._advance_to_step(session, "mouse_orbit")
             loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (300, 260)})
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (300, 260)}
+                )
             )
             for index, time_ms in enumerate((0, 700, 1400, 2100)):
                 current_ms["value"] = time_ms
@@ -67,7 +69,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             for index, time_ms in enumerate((2200, 2900, 3600, 4300)):
                 current_ms["value"] = time_ms
                 loop.pointer_event_handler(
-                    pygame.event.Event(pygame.MOUSEWHEEL, {"y": 1 if index % 2 == 0 else -1})
+                    pygame.event.Event(
+                        pygame.MOUSEWHEEL, {"y": 1 if index % 2 == 0 else -1}
+                    )
                 )
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
             self.assertEqual(session.overlay_payload().get("step_id"), "zoom_in")
@@ -94,7 +98,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
 
             self._advance_to_step(session, "mouse_orbit")
             loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (320, 280)})
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (320, 280)}
+                )
             )
             for index, time_ms in enumerate((0, 700, 1400, 2100)):
                 current_ms["value"] = time_ms
@@ -110,7 +116,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             for index, time_ms in enumerate((2200, 2900, 3600, 4300)):
                 current_ms["value"] = time_ms
                 loop.pointer_event_handler(
-                    pygame.event.Event(pygame.MOUSEWHEEL, {"y": -1 if index % 2 == 0 else 1})
+                    pygame.event.Event(
+                        pygame.MOUSEWHEEL, {"y": -1 if index % 2 == 0 else 1}
+                    )
                 )
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
             self.assertEqual(session.overlay_payload().get("step_id"), "toggle_grid")
@@ -139,7 +147,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             start_pitch = float(loop.camera.pitch_deg)
             self.assertFalse(session.action_allowed("mouse_orbit"))
             loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (260, 220)})
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (260, 220)}
+                )
             )
             current_ms["value"] = 400
             loop.pointer_event_handler(
@@ -159,7 +169,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             self.assertEqual(session.overlay_payload().get("step_id"), "mouse_orbit")
 
             loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (330, 290)})
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (330, 290)}
+                )
             )
             for index, time_ms in enumerate((1000, 1600, 2200, 3100)):
                 current_ms["value"] = time_ms
@@ -196,7 +208,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             start_pitch = float(loop.view.pitch_deg)
             self.assertFalse(session.action_allowed("mouse_orbit"))
             loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (280, 240)})
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (280, 240)}
+                )
             )
             current_ms["value"] = 400
             loop.pointer_event_handler(
@@ -216,7 +230,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             self.assertEqual(session.overlay_payload().get("step_id"), "mouse_orbit")
 
             loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (350, 310)})
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": (350, 310)}
+                )
             )
             for index, time_ms in enumerate((1000, 1600, 2200, 3100)):
                 current_ms["value"] = time_ms
@@ -252,9 +268,7 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             self._advance_to_step(session, "mouse_zoom")
             loop.camera.zoom = 140.0
             current_ms["value"] = 500
-            loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEWHEEL, {"y": 1})
-            )
+            loop.pointer_event_handler(pygame.event.Event(pygame.MOUSEWHEEL, {"y": 1}))
             self.assertFalse(session.sync_and_advance(lines_cleared=0))
             self.assertEqual(session.overlay_payload().get("step_id"), "mouse_zoom")
             self.assertEqual(float(loop.camera.zoom), 140.0)
@@ -262,7 +276,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             for index, time_ms in enumerate((1000, 1700, 2400, 3100)):
                 current_ms["value"] = time_ms
                 loop.pointer_event_handler(
-                    pygame.event.Event(pygame.MOUSEWHEEL, {"y": -1 if index % 2 == 0 else 1})
+                    pygame.event.Event(
+                        pygame.MOUSEWHEEL, {"y": -1 if index % 2 == 0 else 1}
+                    )
                 )
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
             self.assertEqual(session.overlay_payload().get("step_id"), "zoom_in")
@@ -290,9 +306,7 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             self._advance_to_step(session, "mouse_zoom")
             loop.view.zoom_scale = 2.6
             current_ms["value"] = 500
-            loop.pointer_event_handler(
-                pygame.event.Event(pygame.MOUSEWHEEL, {"y": 1})
-            )
+            loop.pointer_event_handler(pygame.event.Event(pygame.MOUSEWHEEL, {"y": 1}))
             self.assertFalse(session.sync_and_advance(lines_cleared=0))
             self.assertEqual(session.overlay_payload().get("step_id"), "mouse_zoom")
             self.assertEqual(float(loop.view.zoom_scale), 2.6)
@@ -300,7 +314,9 @@ class TutorialMouseCameraControlsTests(unittest.TestCase):
             for index, time_ms in enumerate((1000, 1700, 2400, 3100)):
                 current_ms["value"] = time_ms
                 loop.pointer_event_handler(
-                    pygame.event.Event(pygame.MOUSEWHEEL, {"y": -1 if index % 2 == 0 else 1})
+                    pygame.event.Event(
+                        pygame.MOUSEWHEEL, {"y": -1 if index % 2 == 0 else 1}
+                    )
                 )
             self.assertTrue(session.sync_and_advance(lines_cleared=0))
             self.assertEqual(session.overlay_payload().get("step_id"), "toggle_grid")

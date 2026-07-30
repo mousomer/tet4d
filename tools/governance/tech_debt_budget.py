@@ -3,7 +3,6 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-
 DEFAULT_STATUS_ORDER = {
     "low": 0,
     "moderate": 1,
@@ -120,8 +119,10 @@ def _score_violations(
         ceiling = baseline_score + epsilon
         if current_score > ceiling:
             return [
-                "score regressed above baseline ceiling "
-                f"({current_score:.2f} > {baseline_score:.2f} + epsilon {epsilon:.2f})"
+                (
+                    "score regressed above baseline ceiling "
+                    f"({current_score:.2f} > {baseline_score:.2f} + epsilon {epsilon:.2f})"
+                )
             ]
         return []
 
@@ -129,15 +130,19 @@ def _score_violations(
         threshold = baseline_score - epsilon
         if current_score >= threshold:
             return [
-                "score must strictly decrease for stage advance "
-                f"({current_score:.2f} >= {baseline_score:.2f} - epsilon {epsilon:.2f})"
+                (
+                    "score must strictly decrease for stage advance "
+                    f"({current_score:.2f} >= {baseline_score:.2f} - epsilon {epsilon:.2f})"
+                )
             ]
         return []
     ceiling = baseline_score + epsilon
     if current_score > ceiling:
         return [
-            "score regressed within baseline stage "
-            f"({current_score:.2f} > {baseline_score:.2f} + epsilon {epsilon:.2f})"
+            (
+                "score regressed within baseline stage "
+                f"({current_score:.2f} > {baseline_score:.2f} + epsilon {epsilon:.2f})"
+            )
         ]
     return []
 

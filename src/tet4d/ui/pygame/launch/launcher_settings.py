@@ -65,18 +65,18 @@ from .settings_hub_actions import (
     _sync_audio_preview,
 )
 from .settings_hub_model import (
+    _NUMERIC_TEXT_EDIT_ROWS,
+    _SETTINGS_HUB_COPY,
     BG_BOTTOM,
     BG_TOP,
     HIGHLIGHT_COLOR,
     MUTED_COLOR,
     TEXT_COLOR,
     SettingsHubResult,
-    _NUMERIC_TEXT_EDIT_ROWS,
-    _SETTINGS_HUB_COPY,
-    _UnifiedSettingsState,
     _explosion_defaults_for_mode,
     _explosion_mode_and_field,
     _unified_value_text,
+    _UnifiedSettingsState,
     _validate_unified_layout_against_policy,
     build_unified_settings_state,
     current_page_selectable_indexes,
@@ -202,11 +202,19 @@ def _slider_fraction_for_row(
     return _explosion_slider_fraction(state, row_key)
 
 
-def _duration_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> float | None:
+def _duration_slider_fraction(
+    state: _UnifiedSettingsState, row_key: str
+) -> float | None:
     duration_values = {
-        "rotation_animation_duration_ms_2d": int(state.rotation_animation_duration_ms_2d),
-        "rotation_animation_duration_ms_nd": int(state.rotation_animation_duration_ms_nd),
-        "translation_animation_duration_ms": int(state.translation_animation_duration_ms),
+        "rotation_animation_duration_ms_2d": int(
+            state.rotation_animation_duration_ms_2d
+        ),
+        "rotation_animation_duration_ms_nd": int(
+            state.rotation_animation_duration_ms_nd
+        ),
+        "translation_animation_duration_ms": int(
+            state.translation_animation_duration_ms
+        ),
     }
     duration_value = duration_values.get(row_key)
     if duration_value is None:
@@ -214,7 +222,9 @@ def _duration_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> flo
     return min(1.0, max(0.0, int(duration_value) / 300.0))
 
 
-def _percent_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> float | None:
+def _percent_slider_fraction(
+    state: _UnifiedSettingsState, row_key: str
+) -> float | None:
     def _percent_fraction(value: int, *, minimum: int, maximum: int) -> float:
         span = max(1, maximum - minimum)
         return min(1.0, max(0.0, (int(value) - minimum) / span))
@@ -233,7 +243,9 @@ def _percent_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> floa
     )
 
 
-def _explosion_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> float | None:
+def _explosion_slider_fraction(
+    state: _UnifiedSettingsState, row_key: str
+) -> float | None:
     explosion = _explosion_mode_and_field(row_key)
     if explosion is None:
         return None
@@ -246,17 +258,25 @@ def _explosion_slider_fraction(state: _UnifiedSettingsState, row_key: str) -> fl
         value = float(getattr(defaults, field))
         return min(1.0, max(0.0, (value - float(EXPLOSION_MASS_MIN)) / span))
     if field == "collision_elasticity":
-        span = float(EXPLOSION_COLLISION_ELASTICITY_MAX) - float(EXPLOSION_COLLISION_ELASTICITY_MIN)
+        span = float(EXPLOSION_COLLISION_ELASTICITY_MAX) - float(
+            EXPLOSION_COLLISION_ELASTICITY_MIN
+        )
         if span <= 0.0:
             return None
         value = float(defaults.collision_elasticity)
-        return min(1.0, max(0.0, (value - float(EXPLOSION_COLLISION_ELASTICITY_MIN)) / span))
+        return min(
+            1.0, max(0.0, (value - float(EXPLOSION_COLLISION_ELASTICITY_MIN)) / span)
+        )
     if field == "trace_retention_ms":
-        span = float(EXPLOSION_TRAIL_RETENTION_MAX_MS) - float(EXPLOSION_TRAIL_RETENTION_MIN_MS)
+        span = float(EXPLOSION_TRAIL_RETENTION_MAX_MS) - float(
+            EXPLOSION_TRAIL_RETENTION_MIN_MS
+        )
         if span <= 0.0:
             return None
         value = float(defaults.trace_retention_ms)
-        return min(1.0, max(0.0, (value - float(EXPLOSION_TRAIL_RETENTION_MIN_MS)) / span))
+        return min(
+            1.0, max(0.0, (value - float(EXPLOSION_TRAIL_RETENTION_MIN_MS)) / span)
+        )
     if field == "endgame_live_cell_fraction":
         return min(1.0, max(0.0, float(defaults.endgame_live_cell_fraction)))
     return None
@@ -620,7 +640,9 @@ def _draw_unified_settings_menu(
     title = draw_fitted_text_line(
         screen,
         font=fonts.title_font,
-        text=format_menu_title(settings_title_for_page(current_settings_page_id(state))),
+        text=format_menu_title(
+            settings_title_for_page(current_settings_page_id(state))
+        ),
         color=TEXT_COLOR,
         max_width=width - 28,
         center_x=width // 2,
@@ -651,7 +673,9 @@ def _draw_unified_settings_menu(
     panel_rect = standard_menu_panel_rect(
         screen,
         panel_w=min(width - 40, 820),
-        panel_h=max(220, height - (title.get_height() + 44) - (bottom_lines * line_h) - 46),
+        panel_h=max(
+            220, height - (title.get_height() + 44) - (bottom_lines * line_h) - 46
+        ),
         panel_top=44 + title.get_height() + 18,
         bottom_reserved=(bottom_lines * line_h) + 10,
     )
@@ -739,7 +763,9 @@ def _draw_unified_settings_menu(
 
     hy = panel_rect.y + panel_rect.height + 8
     hint_budget = max(0, (height - hy - 6) // max(1, line_h))
-    for line in tuple(_SETTINGS_HUB_COPY["hints"])[: hint_budget - (1 if state.status else 0)]:
+    for line in tuple(_SETTINGS_HUB_COPY["hints"])[
+        : hint_budget - (1 if state.status else 0)
+    ]:
         surf = draw_fitted_text_line(
             screen,
             font=fonts.hint_font,
@@ -902,7 +928,9 @@ def _handle_unified_exit_navigation_key(
     return None
 
 
-def _quit_unified_settings(screen: pygame.Surface, state: _UnifiedSettingsState) -> pygame.Surface:
+def _quit_unified_settings(
+    screen: pygame.Surface, state: _UnifiedSettingsState
+) -> pygame.Surface:
     _stop_unified_text_mode(state)
     state.keep_running = False
     state.running = False
@@ -959,7 +987,10 @@ def _dispatch_unified_key(
 
     selectable = _current_selectable_indexes(state)
     if not selectable:
-        if normalize_menu_navigation_key(key) == pygame.K_ESCAPE and len(state.page_stack) <= 1:
+        if (
+            normalize_menu_navigation_key(key) == pygame.K_ESCAPE
+            and len(state.page_stack) <= 1
+        ):
             state.running = False
         return screen
 
@@ -977,7 +1008,12 @@ def _dispatch_unified_key(
         return screen
     item_type = str(item.get("type", "")).lower()
     item_id = menu_item_id(item)
-    if item_type in {"toggle", "selector", "slider", "stepper"} and _adjust_unified_with_arrows(
+    if item_type in {
+        "toggle",
+        "selector",
+        "slider",
+        "stepper",
+    } and _adjust_unified_with_arrows(
         state,
         key,
         row_key=item_id,
@@ -988,7 +1024,7 @@ def _dispatch_unified_key(
     return screen
 
 
-def _handle_unified_non_key_event(  # noqa: C901
+def _handle_unified_non_key_event(  # noqa: C901 - ordered UI event dispatcher
     screen: pygame.Surface,
     fonts,
     state: _UnifiedSettingsState,
@@ -1001,8 +1037,8 @@ def _handle_unified_non_key_event(  # noqa: C901
             pointer_targets,
             getattr(event, "pos", (-1, -1)),
         )
-        setattr(state, "hovered_target_kind", target.kind if target is not None else "")
-        setattr(state, "hover_back", target is not None and target.kind == "back")
+        state.hovered_target_kind = target.kind if target is not None else ""
+        state.hover_back = target is not None and target.kind == "back"
         _apply_unified_pointer_focus(state, target)
         return screen, True
     if event.type == pygame.MOUSEBUTTONDOWN and int(getattr(event, "button", 0)) == 1:
@@ -1010,10 +1046,10 @@ def _handle_unified_non_key_event(  # noqa: C901
             pointer_targets,
             getattr(event, "pos", (-1, -1)),
         )
-        setattr(state, "_pointer_pressed_target", target)
-        setattr(state, "pressed_target_kind", target.kind if target is not None else "")
-        setattr(state, "hover_back", target is not None and target.kind == "back")
-        setattr(state, "pressed_back", target is not None and target.kind == "back")
+        state._pointer_pressed_target = target
+        state.pressed_target_kind = target.kind if target is not None else ""
+        state.hover_back = target is not None and target.kind == "back"
+        state.pressed_back = target is not None and target.kind == "back"
         _apply_unified_pointer_focus(state, target)
         return screen, True
     if event.type == pygame.MOUSEBUTTONUP and int(getattr(event, "button", 0)) == 1:
@@ -1022,11 +1058,11 @@ def _handle_unified_non_key_event(  # noqa: C901
             getattr(event, "pos", (-1, -1)),
         )
         pressed_target = getattr(state, "_pointer_pressed_target", None)
-        setattr(state, "_pointer_pressed_target", None)
-        setattr(state, "pressed_back", False)
-        setattr(state, "pressed_target_kind", "")
-        setattr(state, "hovered_target_kind", target.kind if target is not None else "")
-        setattr(state, "hover_back", target is not None and target.kind == "back")
+        state._pointer_pressed_target = None
+        state.pressed_back = False
+        state.pressed_target_kind = ""
+        state.hovered_target_kind = target.kind if target is not None else ""
+        state.hover_back = target is not None and target.kind == "back"
         if target is None or target != pressed_target:
             return screen, True
         if target.kind == "back":

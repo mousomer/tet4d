@@ -6,11 +6,15 @@ import shutil
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from uuid import uuid4
 from unittest import mock
+from uuid import uuid4
 
 from tet4d.engine.runtime import score_analyzer
-from tet4d.engine.runtime.project_config import PROJECT_ROOT, WRITABLE_ROOT, state_dir_path
+from tet4d.engine.runtime.project_config import (
+    PROJECT_ROOT,
+    WRITABLE_ROOT,
+    state_dir_path,
+)
 from tet4d.engine.runtime.score_analyzer import (
     analyze_lock_event,
     hud_analysis_lines,
@@ -101,7 +105,7 @@ class TestScoreAnalyzer(unittest.TestCase):
         self.assertTrue(ok, msg)
 
     def test_record_event_writes_event_and_summary(self) -> None:
-        with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.dict(os.environ, {}, clear=True):  # noqa: SIM117
             with _workspace_temp_dir("score_analyzer") as tmp_path:
                 config_path = tmp_path / "score_analyzer.json"
                 events_path = tmp_path / "state" / "events.jsonl"
@@ -152,7 +156,7 @@ class TestScoreAnalyzer(unittest.TestCase):
                 reset_score_analyzer_runtime_state()
 
     def test_record_event_sanitizes_output_paths_to_state_dir(self) -> None:
-        with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.dict(os.environ, {}, clear=True):  # noqa: SIM117
             with _workspace_temp_dir("score_analyzer") as tmp_path:
                 config_path = tmp_path / "score_analyzer.json"
                 config_path.write_text(
@@ -184,8 +188,12 @@ class TestScoreAnalyzer(unittest.TestCase):
                         self._sample_event(seq=1, session_id="sanitized")
                     )
 
-                    safe_events = tmp_path / "state" / "analytics" / "score_events.jsonl"
-                    safe_summary = tmp_path / "state" / "analytics" / "score_summary.json"
+                    safe_events = (
+                        tmp_path / "state" / "analytics" / "score_events.jsonl"
+                    )
+                    safe_summary = (
+                        tmp_path / "state" / "analytics" / "score_summary.json"
+                    )
                     self.assertTrue(safe_events.exists())
                     self.assertTrue(safe_summary.exists())
                     self.assertFalse(
@@ -232,9 +240,15 @@ class TestScoreAnalyzer(unittest.TestCase):
     def test_summary_snapshot_isolated_from_nested_sessions_mutation(self) -> None:
         reset_score_analyzer_runtime_state()
         summary = score_analysis_summary_snapshot()
-        summary["sessions"]["mutated"] = {"events": 7, "last_seq": 7, "last_timestamp_utc": "x"}
+        summary["sessions"]["mutated"] = {
+            "events": 7,
+            "last_seq": 7,
+            "last_timestamp_utc": "x",
+        }
 
         fresh = score_analysis_summary_snapshot()
         self.assertNotIn("mutated", fresh["sessions"])
+
+
 if __name__ == "__main__":
     unittest.main()

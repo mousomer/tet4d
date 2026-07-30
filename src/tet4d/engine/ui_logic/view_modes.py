@@ -7,7 +7,7 @@ from ..runtime.runtime_config import grid_mode_cycle_names, grid_mode_fallback_n
 
 class GridMode(str, Enum):
     OFF = "off"
-    SHADOW = "off"  # Legacy alias
+    SHADOW = OFF  # Legacy alias
     BOTTOM_BOUNDARY = "bottom_boundary"
     EDGE = "edge"
     FULL = "full"

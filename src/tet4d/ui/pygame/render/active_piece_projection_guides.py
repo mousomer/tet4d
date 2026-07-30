@@ -6,20 +6,19 @@ from typing import TypeAlias
 import pygame
 
 from tet4d.engine.ui_logic.view_modes import GridMode
+from tet4d.ui.pygame.projection3d import (
+    DepthDenominatorFn,
+    Point2,
+    Point3,
+    ProjectedFacePrimitive,
+    ProjectRawFn,
+    TransformRawFn,
+)
 from tet4d.ui.pygame.render.board_boundary import (
     BoardBoundaryPlane,
     board_boundary_coordinate,
     board_boundary_planes,
 )
-from tet4d.ui.pygame.projection3d import (
-    DepthDenominatorFn,
-    Point2,
-    Point3,
-    ProjectRawFn,
-    ProjectedFacePrimitive,
-    TransformRawFn,
-)
-
 
 Coord2F: TypeAlias = tuple[float, float]
 Coord3F: TypeAlias = tuple[float, float, float]
@@ -161,7 +160,12 @@ def _boundary_quad_vertices(
     center = (float(cell[0]) + 0.5, float(cell[1]) + 0.5, float(cell[2]) + 0.5)
     tangent_axes = tuple(axis for axis in range(3) if axis != target.axis)
     vertices: list[Point3] = []
-    for offset_a, offset_b in ((-half, -half), (half, -half), (half, half), (-half, half)):
+    for offset_a, offset_b in (
+        (-half, -half),
+        (half, -half),
+        (half, half),
+        (-half, half),
+    ):
         raw = [center[0], center[1], center[2]]
         raw[target.axis] = float(target.coordinate)
         raw[tangent_axes[0]] += float(offset_a)
@@ -194,7 +198,9 @@ def build_boundary_projection_face_primitives(
         if _clamp_scale(scale) <= 0.0:
             continue
         for target in targets:
-            raw_vertices = _boundary_quad_vertices(cell=cell, scale=scale, target=target)
+            raw_vertices = _boundary_quad_vertices(
+                cell=cell, scale=scale, target=target
+            )
             projected: list[Point2] = []
             depths: list[float] = []
             denominators: list[float] = []

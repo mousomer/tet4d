@@ -4,4 +4,4 @@ from . import surface as _surface
 
 globals().update(vars(_surface))
 
-__all__ = getattr(_surface, "__all__", ())
+__all__ = getattr(_surface, "__all__", ())  # noqa: PLE0605 - compatibility facade

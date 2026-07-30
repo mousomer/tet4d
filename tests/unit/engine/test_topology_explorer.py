@@ -171,7 +171,16 @@ class TestTopologyExplorer(unittest.TestCase):
             ),
         )
 
-        for label, profile, dims, origin, exit_step, reverse_step, expected, target_boundary in cases:
+        for (
+            label,
+            profile,
+            dims,
+            origin,
+            exit_step,
+            reverse_step,
+            expected,
+            target_boundary,
+        ) in cases:
             with self.subTest(case=label):
                 traversal = map_boundary_exit(
                     profile,
@@ -204,19 +213,19 @@ class TestTopologyExplorer(unittest.TestCase):
         self.assertIn("projective_2d", unsafe_ids)
         self.assertIn("sphere_2d", unsafe_ids)
 
-
     def test_3d_presets_include_unsafe_projective_and_sphere(self) -> None:
         presets = explorer_presets_for_dimension(3)
         preset_ids = {preset.preset_id for preset in presets}
         self.assertIn("full_wrap_3d", preset_ids)
         self.assertIn("projective_3d", preset_ids)
         self.assertIn("sphere_3d", preset_ids)
-        full_wrap = next(preset for preset in presets if preset.preset_id == "full_wrap_3d")
+        full_wrap = next(
+            preset for preset in presets if preset.preset_id == "full_wrap_3d"
+        )
         self.assertEqual(full_wrap.label, "3-Torus")
         unsafe_ids = {preset.preset_id for preset in presets if preset.unsafe}
         self.assertIn("projective_3d", unsafe_ids)
         self.assertIn("sphere_3d", unsafe_ids)
-
 
     def test_4d_presets_include_full_wrap_and_twist(self) -> None:
         presets = explorer_presets_for_dimension(4)
@@ -225,26 +234,31 @@ class TestTopologyExplorer(unittest.TestCase):
         self.assertIn("twist_y_4d", preset_ids)
         self.assertIn("projective_4d", preset_ids)
         self.assertIn("sphere_4d", preset_ids)
-        full_wrap = next(preset for preset in presets if preset.preset_id == "full_wrap_4d")
+        full_wrap = next(
+            preset for preset in presets if preset.preset_id == "full_wrap_4d"
+        )
         self.assertEqual(full_wrap.label, "4-Torus")
         self.assertEqual(full_wrap.profile.dimension, 4)
         self.assertEqual(len(full_wrap.profile.gluings), 4)
 
-
-    def test_unsafe_projective_and_sphere_presets_validate_for_preview_dims(self) -> None:
+    def test_unsafe_projective_and_sphere_presets_validate_for_preview_dims(
+        self,
+    ) -> None:
         for dimension, projective_id, sphere_id in (
             (2, "projective_2d", "sphere_2d"),
             (3, "projective_3d", "sphere_3d"),
             (4, "projective_4d", "sphere_4d"),
         ):
-            presets = {preset.preset_id: preset for preset in explorer_presets_for_dimension(dimension)}
+            presets = {
+                preset.preset_id: preset
+                for preset in explorer_presets_for_dimension(dimension)
+            }
             for preset_id in (projective_id, sphere_id):
                 preset = presets[preset_id]
                 validated = validate_explorer_topology_profile(
                     preset.profile, dims=tuple(4 for _ in range(dimension))
                 )
                 self.assertEqual(validated.dimension, dimension)
-
 
     def test_build_movement_graph_validates_profile_once(self) -> None:
         profile = mobius_strip_profile_2d()

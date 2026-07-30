@@ -11,9 +11,19 @@ from tet4d.engine.topology_explorer import (
     movement_steps_for_dimension,
 )
 from tet4d.ui.pygame.input.key_display import format_key_tuple
+from tet4d.ui.pygame.ui_utils import (
+    draw_centered_chip,
+    draw_fitted_text_line,
+    draw_panel_frame,
+    draw_wrapped_label_value_lines,
+    panel_bg,
+    panel_border,
+    wrap_text_lines,
+    wrapped_row_height,
+)
 
+from .camera_controls import scene_camera_availability
 from .common import TopologyLabHitTarget
-from .copy import LAB_HINTS as _LAB_HINTS
 from .controls_panel_values import (
     _explorer_active_glue_ids,
     _explorer_boundaries,
@@ -24,12 +34,13 @@ from .controls_panel_values import (
     _explorer_transform_label,
     _sandbox_neighbor_search_enabled,
 )
+from .copy import LAB_HINTS as _LAB_HINTS
+from .explosion import scene_explosion_particles
 from .piece_sandbox import (
     ensure_piece_sandbox,
     sandbox_cells,
     sandbox_validity,
 )
-from .explosion import scene_explosion_particles
 from .preview import build_preview_lines
 from .scene2d import draw_scene as draw_scene_2d
 from .scene3d import draw_scene as draw_scene_3d
@@ -42,26 +53,58 @@ from .scene_state import (
     WORKSPACE_LABELS,
     WORKSPACE_PLAY,
     WORKSPACE_SANDBOX,
-    active_workspace_name as _active_workspace_name,
-    controls_pane_active as _controls_pane_active,
-    current_editor_tool as _current_editor_tool,
-    current_explorer_draft as _current_explorer_draft,
-    current_explorer_profile as _current_explorer_profile,
-    current_probe_coord as _current_probe_coord,
-    current_probe_frame as _current_probe_frame,
-    current_probe_path as _current_probe_path,
-    current_probe_trace as _current_probe_trace,
-    ensure_probe_state as _ensure_probe_state,
-    playground_dims_for_state as _board_dims_for_state,
-    probe_neighbors_visible as _probe_neighbors_visible,
-    probe_trace_visible as _probe_trace_visible,
-    scene_pane_active as _scene_pane_active,
     tool_is_edit,
     tool_is_sandbox,
+)
+from .scene_state import (
+    active_workspace_name as _active_workspace_name,
+)
+from .scene_state import (
+    controls_pane_active as _controls_pane_active,
+)
+from .scene_state import (
+    current_editor_tool as _current_editor_tool,
+)
+from .scene_state import (
+    current_explorer_draft as _current_explorer_draft,
+)
+from .scene_state import (
+    current_explorer_profile as _current_explorer_profile,
+)
+from .scene_state import (
+    current_probe_coord as _current_probe_coord,
+)
+from .scene_state import (
+    current_probe_frame as _current_probe_frame,
+)
+from .scene_state import (
+    current_probe_path as _current_probe_path,
+)
+from .scene_state import (
+    current_probe_trace as _current_probe_trace,
+)
+from .scene_state import (
+    ensure_probe_state as _ensure_probe_state,
+)
+from .scene_state import (
+    playground_dims_for_state as _board_dims_for_state,
+)
+from .scene_state import (
+    probe_neighbors_visible as _probe_neighbors_visible,
+)
+from .scene_state import (
+    probe_trace_visible as _probe_trace_visible,
+)
+from .scene_state import (
+    scene_pane_active as _scene_pane_active,
+)
+from .scene_state import (
     uses_general_explorer_editor as _uses_general_explorer_editor,
 )
 from .scene_state_canonical import (
     current_selected_boundary_index as _current_selected_boundary_index,
+)
+from .scene_state_canonical import (
     current_selected_glue_id as _current_selected_glue_id,
 )
 from .scene_state_probe import (
@@ -69,25 +112,22 @@ from .scene_state_probe import (
 )
 from .state_ownership import (
     current_sandbox_focus_coord as _current_sandbox_focus_coord,
+)
+from .state_ownership import (
     current_sandbox_focus_frame as _current_sandbox_focus_frame,
+)
+from .state_ownership import (
     current_sandbox_focus_path as _current_sandbox_focus_path,
+)
+from .state_ownership import (
     current_sandbox_focus_trace as _current_sandbox_focus_trace,
 )
 from .transform_editor import draw_transform_editor
-from .camera_controls import scene_camera_availability
-from tet4d.ui.pygame.ui_utils import (
-    draw_centered_chip,
-    draw_fitted_text_line,
-    draw_panel_frame,
-    draw_wrapped_label_value_lines,
-    panel_bg,
-    panel_border,
-    wrap_text_lines,
-    wrapped_row_height,
-)
 
 
-def _binding_groups_for_dimension(dimension: int) -> dict[str, dict[str, tuple[int, ...]]]:
+def _binding_groups_for_dimension(
+    dimension: int,
+) -> dict[str, dict[str, tuple[int, ...]]]:
     return {
         str(group_name): {
             str(action): tuple(int(key) for key in keys)
@@ -195,7 +235,9 @@ def _explorer_workspace_layout(
     )
 
 
-def _sandbox_scene_payload(state) -> tuple[tuple[tuple[int, ...], ...] | None, bool | None, str]:
+def _sandbox_scene_payload(
+    state,
+) -> tuple[tuple[tuple[int, ...], ...] | None, bool | None, str]:
     if not tool_is_sandbox(state.active_tool):
         return None, None, ""
     ensure_piece_sandbox(state)
@@ -227,7 +269,9 @@ def _active_workspace_coord(state) -> tuple[int, ...] | None:
 
 
 def _active_workspace_path(state) -> list[tuple[int, ...]]:
-    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_trace_visible(state):
+    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_trace_visible(
+        state
+    ):
         return _current_probe_path(state)
     return []
 
@@ -336,7 +380,9 @@ def _active_workspace_trace(state) -> list[str]:
         if not _sandbox_neighbor_search_enabled(state):
             return []
         return _current_sandbox_focus_trace(state)
-    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_trace_visible(state):
+    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_trace_visible(
+        state
+    ):
         return _current_probe_trace(state)
     return []
 
@@ -365,28 +411,28 @@ def _draw_explorer_scene(
     sandbox_ok: bool | None,
     sandbox_message: str,
 ) -> list[TopologyLabHitTarget]:
-    scene_kwargs = dict(
-        area=area,
-        boundaries=boundaries,
-        source_boundary=source_boundary,
-        target_boundary=target_boundary,
-        active_glue_ids=active_glue_ids,
-        basis_arrows=basis_arrows,
-        preview_dims=preview_dims,
-        selected_glue_id=_current_selected_glue_id(state),
-        highlighted_glue_id=(
+    scene_kwargs = {
+        "area": area,
+        "boundaries": boundaries,
+        "source_boundary": source_boundary,
+        "target_boundary": target_boundary,
+        "active_glue_ids": active_glue_ids,
+        "basis_arrows": basis_arrows,
+        "preview_dims": preview_dims,
+        "selected_glue_id": _current_selected_glue_id(state),
+        "highlighted_glue_id": (
             state.hovered_glue_id or _current_highlighted_glue_id(state)
         ),
-        hovered_boundary_index=state.hovered_boundary_index,
-        selected_boundary_index=_current_selected_boundary_index(state),
-        probe_coord=_active_workspace_coord(state),
-        probe_path=tuple(_active_workspace_path(state)),
-        neighbor_markers=tuple(_active_workspace_neighbor_markers(state)),
-        sandbox_cells=sandbox_cells_payload,
-        sandbox_valid=sandbox_ok,
-        sandbox_message=sandbox_message,
-        explosion_particles=tuple(scene_explosion_particles(state)),
-    )
+        "hovered_boundary_index": state.hovered_boundary_index,
+        "selected_boundary_index": _current_selected_boundary_index(state),
+        "probe_coord": _active_workspace_coord(state),
+        "probe_path": tuple(_active_workspace_path(state)),
+        "neighbor_markers": tuple(_active_workspace_neighbor_markers(state)),
+        "sandbox_cells": sandbox_cells_payload,
+        "sandbox_valid": sandbox_ok,
+        "sandbox_message": sandbox_message,
+        "explosion_particles": tuple(scene_explosion_particles(state)),
+    }
     if state.dimension == 2:
         return draw_scene_2d(screen, fonts, **scene_kwargs)
     scene_kwargs["profile"] = _current_explorer_profile(state)
@@ -692,7 +738,7 @@ def _draw_workspace_helper_panel(
             draw_wrapped_label_value_lines(
                 surface,
                 font=fonts.hint_font,
-                label_lines=tuple(),
+                label_lines=(),
                 value_lines=key_lines,
                 label_x=label_rect.right + 8,
                 value_right=label_rect.right + 8 + row_value_width,
@@ -760,7 +806,7 @@ def _draw_explorer_workspace(
     assert profile is not None
     draft = _current_explorer_draft(state)
     assert draft is not None
-    tool_rect, top_rect, editor_rect, helper_rect, _probe_rect, action_rect = (
+    _tool_rect, top_rect, editor_rect, helper_rect, _probe_rect, action_rect = (
         _explorer_workspace_layout(
             panel_x=panel_x,
             panel_y=panel_y,
@@ -804,7 +850,7 @@ def _draw_explorer_workspace(
     source_boundary = boundaries[draft.source_index]
     target_boundary = boundaries[draft.target_index]
     active_glue_ids = _explorer_active_glue_ids(state)
-    preview, _preview_error = _explorer_preview_payload(state)
+    _preview, _preview_error = _explorer_preview_payload(state)
     basis_arrows = list(state.scene_basis_arrows)
     preview_dims = state.scene_preview_dims or _board_dims_for_state(state)
     sandbox_cells_payload, sandbox_ok, sandbox_message = _sandbox_scene_payload(state)

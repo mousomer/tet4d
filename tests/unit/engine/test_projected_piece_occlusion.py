@@ -16,7 +16,12 @@ from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
 from tet4d.engine.gameplay.rotation_anim import PieceRotationAnimatorND
 from tet4d.engine.ui_logic.view_modes import GridMode
-from tet4d.ui.pygame import front3d_render, front4d_game, front4d_render, frontend_nd_state
+from tet4d.ui.pygame import (
+    front3d_render,
+    front4d_game,
+    front4d_render,
+    frontend_nd_state,
+)
 from tet4d.ui.pygame.projection3d import (
     ProjectedFacePrimitive,
     ProjectedLinePrimitive,

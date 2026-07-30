@@ -4,12 +4,12 @@ import json
 
 import pytest
 
+from tools.migration.export_endgame_trace import ENDGAME_FLOAT_PRECISION
 from tools.migration.trace_schema import (
     assert_trace_hygiene,
     canonical_json,
     stable_hash,
 )
-from tools.migration.export_endgame_trace import ENDGAME_FLOAT_PRECISION
 
 
 def test_canonical_json_sorts_keys_and_ends_with_newline() -> None:

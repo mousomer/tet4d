@@ -14,7 +14,7 @@ def _write_text(path: Path, content: str) -> None:
 
 
 def _scratch_root() -> Path:
-    root = Path('.tmp_test_generate_configuration_reference') / uuid4().hex
+    root = Path(".tmp_test_generate_configuration_reference") / uuid4().hex
     root.mkdir(parents=True, exist_ok=False)
     return root
 
@@ -304,6 +304,21 @@ def test_render_user_settings_reference_is_bucketed_and_label_resolved(
     rendered = config_doc.render_user_settings_reference()
 
     assert "# User Settings Reference" in rendered
+    assert "## Godot shell settings" in rendered
+    assert (
+        '`display.window_mode`: default `"windowed"`; enum; options: windowed, fullscreen'
+        in rendered
+    )
+    assert (
+        '`display.ui_scale`: default `"standard"`; enum; options: small, standard, large, extra_large'
+        in rendered
+    )
+    assert "`camera.invert_y`: default `false`; bool" in rendered
+    assert "`accessibility.high_contrast`: default `false`; bool" in rendered
+    assert "`accessibility.reduced_motion`: default `false`; bool" in rendered
+    assert "`accessibility.show_help_hints`: default `true`; bool" in rendered
+    assert "`Reset Display Settings`" in rendered
+    assert "`Reset Accessibility Settings`" in rendered
     assert "## Global settings" in rendered
     assert "### Profiles" in rendered
     assert "### Display" in rendered
@@ -314,8 +329,7 @@ def test_render_user_settings_reference_is_bucketed_and_label_resolved(
     assert "#### General / System" in rendered
     assert "#### Camera / View" in rendered
     assert (
-        '`settings.2d.piece_set_index`: `0`; integer; min: 0; '
-        'default option: Classic'
+        "`settings.2d.piece_set_index`: `0`; integer; min: 0; default option: Classic"
     ) in rendered
     assert "choices: 0=Classic, 1=Random cells, 2=Debug rectangles" in rendered
     assert "default option: Default bounded" in rendered
@@ -360,7 +374,7 @@ def test_render_user_settings_reference_fails_on_unbucketed_setting(
     monkeypatch.setattr(
         config_doc,
         "_settings_option_labels_payload",
-        lambda: {},
+        dict,
     )
     monkeypatch.setattr(
         config_doc,
@@ -436,7 +450,7 @@ def test_render_user_settings_reference_fails_on_unknown_keybinding_group(
     monkeypatch.setattr(
         config_doc,
         "_settings_option_labels_payload",
-        lambda: {},
+        dict,
     )
     monkeypatch.setattr(
         config_doc,

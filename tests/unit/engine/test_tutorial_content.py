@@ -9,8 +9,8 @@ from tet4d.engine.gameplay.pieces_nd import (
     PIECE_SET_4D_STANDARD,
     get_piece_shapes_nd,
 )
-from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
 from tet4d.engine.tutorial import content
+from tet4d.engine.ui_logic.keybindings_catalog import binding_action_ids
 
 
 class TutorialContentTests(unittest.TestCase):
@@ -37,10 +37,18 @@ class TutorialContentTests(unittest.TestCase):
         self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["board_profiles"]["2d"], {"width": 10, "height": 20})
         self.assertEqual(payload["board_profiles"]["3d"], {"x": 6, "y": 18, "z": 6})
-        self.assertEqual(payload["board_profiles"]["4d"], {"x": 8, "y": 20, "z": 7, "w": 6})
-        self.assertTrue(any(lesson_id == "tutorial_2d_core" for lesson_id in lesson_ids))
-        self.assertTrue(any(lesson_id == "tutorial_3d_core" for lesson_id in lesson_ids))
-        self.assertTrue(any(lesson_id == "tutorial_4d_core" for lesson_id in lesson_ids))
+        self.assertEqual(
+            payload["board_profiles"]["4d"], {"x": 8, "y": 20, "z": 7, "w": 6}
+        )
+        self.assertTrue(
+            any(lesson_id == "tutorial_2d_core" for lesson_id in lesson_ids)
+        )
+        self.assertTrue(
+            any(lesson_id == "tutorial_3d_core" for lesson_id in lesson_ids)
+        )
+        self.assertTrue(
+            any(lesson_id == "tutorial_4d_core" for lesson_id in lesson_ids)
+        )
 
     def test_api_exposes_tutorial_board_dims_runtime(self) -> None:
         self.assertEqual(engine_api.tutorial_board_dims_runtime("2d"), (10, 20))
@@ -66,9 +74,7 @@ class TutorialContentTests(unittest.TestCase):
         def _event_set(lesson_id: str) -> set[str]:
             lesson = lessons[lesson_id]
             return {
-                event
-                for step in lesson.steps
-                for event in step.complete_when.events
+                event for step in lesson.steps for event in step.complete_when.events
             }
 
         expected_2d = {
@@ -278,9 +284,13 @@ class TutorialContentTests(unittest.TestCase):
     def test_2d_line_and_full_clear_goals_do_not_require_grid_toggle(self) -> None:
         payload = content.load_tutorial_payload()
         lesson_2d = next(
-            lesson for lesson in payload.lessons if lesson.lesson_id == "tutorial_2d_core"
+            lesson
+            for lesson in payload.lessons
+            if lesson.lesson_id == "tutorial_2d_core"
         )
-        line_fill = next(step for step in lesson_2d.steps if step.step_id == "line_fill")
+        line_fill = next(
+            step for step in lesson_2d.steps if step.step_id == "line_fill"
+        )
         full_clear = next(
             step for step in lesson_2d.steps if step.step_id == "full_clear_bonus"
         )
@@ -290,9 +300,13 @@ class TutorialContentTests(unittest.TestCase):
     def test_2d_line_fill_uses_i_piece_target_preset(self) -> None:
         payload = content.load_tutorial_payload()
         lesson_2d = next(
-            lesson for lesson in payload.lessons if lesson.lesson_id == "tutorial_2d_core"
+            lesson
+            for lesson in payload.lessons
+            if lesson.lesson_id == "tutorial_2d_core"
         )
-        line_fill = next(step for step in lesson_2d.steps if step.step_id == "line_fill")
+        line_fill = next(
+            step for step in lesson_2d.steps if step.step_id == "line_fill"
+        )
         self.assertEqual(line_fill.setup.starter_piece_id, "I")
         self.assertEqual(line_fill.setup.board_preset, "2d_almost_line_i")
 
@@ -313,7 +327,9 @@ class TutorialContentTests(unittest.TestCase):
     def test_grid_tutorial_step_cycles_all_grid_types(self) -> None:
         payload = content.load_tutorial_payload()
         for lesson in payload.lessons:
-            grid_step = next(step for step in lesson.steps if step.step_id == "toggle_grid")
+            grid_step = next(
+                step for step in lesson.steps if step.step_id == "toggle_grid"
+            )
             self.assertEqual(grid_step.complete_when.event_count_required, 6)
             hint = (grid_step.ui.hint or "").lower()
             self.assertIn("bottom boundary", hint)
@@ -332,14 +348,20 @@ class TutorialContentTests(unittest.TestCase):
         self.assertLess(order_2d.index("move_x_pos"), order_2d.index("rotate_xy_pos"))
         self.assertLess(order_2d.index("rotate_xy_neg"), order_2d.index("soft_drop"))
         self.assertLess(order_2d.index("soft_drop"), order_2d.index("hard_drop"))
-        self.assertLess(order_2d.index("toggle_grid"), order_2d.index("overlay_alpha_dec"))
+        self.assertLess(
+            order_2d.index("toggle_grid"), order_2d.index("overlay_alpha_dec")
+        )
         self.assertLess(
             order_2d.index("overlay_alpha_dec"),
             order_2d.index("overlay_alpha_inc"),
         )
-        self.assertLess(order_2d.index("overlay_alpha_inc"), order_2d.index("line_fill"))
+        self.assertLess(
+            order_2d.index("overlay_alpha_inc"), order_2d.index("line_fill")
+        )
         self.assertLess(order_2d.index("line_fill"), order_2d.index("full_clear_bonus"))
-        self.assertLess(order_2d.index("full_clear_bonus"), order_2d.index("target_drop"))
+        self.assertLess(
+            order_2d.index("full_clear_bonus"), order_2d.index("target_drop")
+        )
 
         lesson_3d = lessons["tutorial_3d_core"]
         order_3d = [step.step_id for step in lesson_3d.steps]
@@ -407,7 +429,9 @@ class TutorialContentTests(unittest.TestCase):
             order_3d.index("overlay_alpha_dec"),
             order_3d.index("overlay_alpha_inc"),
         )
-        self.assertLess(order_3d.index("overlay_alpha_inc"), order_3d.index("toggle_grid"))
+        self.assertLess(
+            order_3d.index("overlay_alpha_inc"), order_3d.index("toggle_grid")
+        )
 
         lesson_4d = lessons["tutorial_4d_core"]
         order_4d = [step.step_id for step in lesson_4d.steps]

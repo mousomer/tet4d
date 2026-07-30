@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 from tet4d.ai.playbot.planner_2d import plan_best_2d_move
 from tet4d.ai.playbot.planner_nd import plan_best_nd_move
@@ -217,11 +217,11 @@ class PlayBotController:
         self._accumulator_ms = 0
         self._step_requested = False
         self._piece_token = None
-        self._assist_preview_cells = tuple()
+        self._assist_preview_cells = ()
         self._target_rot_2d = None
         self._target_x_2d = None
         self._target_blocks_nd = None
-        self._target_lateral_nd = tuple()
+        self._target_lateral_nd = ()
         self._rotation_plan_nd = []
         self._soft_drop_count_2d = 0
         self._soft_drop_count_nd = 0
@@ -236,12 +236,10 @@ class PlayBotController:
         lines = [f"Bot: {bot_mode_label(self.mode)}"]
         lines.append(f"Bot speed: {self.speed_level}/10 ({self.action_interval_ms} ms)")
         lines.append(
-            (
-                "Bot planner: "
-                f"{bot_planner_profile_label(self.planner_profile)} / "
-                f"{bot_planner_algorithm_label(self.planner_algorithm)} "
-                f"({self.planning_budget_ms} ms)"
-            )
+            "Bot planner: "
+            f"{bot_planner_profile_label(self.planner_profile)} / "
+            f"{bot_planner_algorithm_label(self.planner_algorithm)} "
+            f"({self.planning_budget_ms} ms)"
         )
         if self.last_stats is not None:
             lines.append(f"Bot candidates: {self.last_stats.candidate_count}")
@@ -365,7 +363,7 @@ class PlayBotController:
         )
         if plan is None:
             self.last_error = "no valid plan"
-            self._assist_preview_cells = tuple()
+            self._assist_preview_cells = ()
             self._target_rot_2d = None
             self._target_x_2d = None
             return
@@ -396,9 +394,9 @@ class PlayBotController:
         )
         if plan is None:
             self.last_error = "no valid plan"
-            self._assist_preview_cells = tuple()
+            self._assist_preview_cells = ()
             self._target_blocks_nd = None
-            self._target_lateral_nd = tuple()
+            self._target_lateral_nd = ()
             self._rotation_plan_nd = []
             return
 
@@ -409,7 +407,7 @@ class PlayBotController:
         start_blocks = (
             _canonical_blocks(state.current_piece.rel_blocks)
             if state.current_piece
-            else tuple()
+            else ()
         )
         target_blocks = _canonical_blocks(plan.final_piece.rel_blocks)
         self._rotation_plan_nd = _rotation_sequence_nd(

@@ -13,7 +13,9 @@ def test_boundary_planes_use_cell_extent_coordinates() -> None:
     for dims in ((4, 5), (4, 5, 6), (4, 5, 6, 7)):
         for axis, size in enumerate(dims):
             assert board_boundary_coordinate(dims=dims, axis=axis, side="-") == -0.5
-            assert board_boundary_coordinate(dims=dims, axis=axis, side="+") == size - 0.5
+            assert (
+                board_boundary_coordinate(dims=dims, axis=axis, side="+") == size - 0.5
+            )
 
 
 def test_min_and_max_boundary_contact_times_use_canonical_planes() -> None:

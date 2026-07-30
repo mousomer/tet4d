@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from ..model.board import BoardND
 from .scoring import score_for_clear
@@ -31,7 +31,7 @@ def apply_lock_and_score(
     cleared = board.clear_planes(gravity_axis)
     raw_points = int(lock_piece_points) + score_for_clear(cleared)
     mult = max(0.1, float(score_multiplier))
-    awarded_points = max(0, int(round(raw_points * mult)))
+    awarded_points = max(0, round(raw_points * mult))
     return LockScoreResult(
         cleared=cleared,
         raw_points=raw_points,

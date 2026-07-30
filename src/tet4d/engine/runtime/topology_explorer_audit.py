@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from timeit import default_timer
-from typing import Iterator
 
 
 @dataclass(frozen=True)
@@ -234,8 +234,8 @@ __all__ = [
     "ExplorerInteractionAuditEvent",
     "ExplorerInteractionAuditSpan",
     "current_audit_action",
-    "record_active_interaction_phase",
     "latest_span_for_phase",
+    "record_active_interaction_phase",
     "record_interaction_handler",
     "record_interaction_phase",
 ]

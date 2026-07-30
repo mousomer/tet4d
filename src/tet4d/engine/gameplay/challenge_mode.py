@@ -3,9 +3,9 @@ from __future__ import annotations
 import random
 from itertools import product
 
+from ..runtime.runtime_config import challenge_prefill_ratio
 from .game2d import GameState
 from .game_nd import GameStateND
-from ..runtime.runtime_config import challenge_prefill_ratio
 
 
 def apply_challenge_prefill_2d(

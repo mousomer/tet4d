@@ -6,7 +6,6 @@ from pathlib import Path
 from tet4d.ui.pygame.locked_cell_explosion.model import ExplosionSeedCell
 from tet4d.ui.pygame.locked_cell_explosion.simulation import build_endgame_state
 
-
 ROOT = Path(__file__).resolve().parents[3]
 
 

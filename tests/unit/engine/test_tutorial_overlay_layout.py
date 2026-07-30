@@ -24,7 +24,9 @@ class TestTutorialOverlayLayout(unittest.TestCase):
         pygame.quit()
 
     @staticmethod
-    def _board_rect_3d(width: int, height: int, margin: int, side_panel: int) -> pygame.Rect:
+    def _board_rect_3d(
+        width: int, height: int, margin: int, side_panel: int
+    ) -> pygame.Rect:
         return pygame.Rect(
             margin,
             margin,
@@ -33,7 +35,9 @@ class TestTutorialOverlayLayout(unittest.TestCase):
         )
 
     @staticmethod
-    def _layers_rect_4d(width: int, height: int, margin: int, side_panel: int) -> pygame.Rect:
+    def _layers_rect_4d(
+        width: int, height: int, margin: int, side_panel: int
+    ) -> pygame.Rect:
         return pygame.Rect(
             margin,
             margin,
@@ -113,18 +117,18 @@ class TestTutorialOverlayLayout(unittest.TestCase):
                 if dimension == 3
                 else tutorial_overlay.front4d_render
             )
-            with self.subTest(dimension=dimension):
-                with (
-                    patch.object(target_module, "MARGIN", 20),
-                    patch.object(target_module, "SIDE_PANEL", 360),
-                ):
-                    rect = tutorial_overlay._panel_rect_for_dimension(
-                        width=width,
-                        height=height,
-                        dimension=dimension,
-                        panel_h=panel_h,
-                        panel_offset=(-5000, 4000),
-                    )
+            with (
+                self.subTest(dimension=dimension),
+                patch.object(target_module, "MARGIN", 20),
+                patch.object(target_module, "SIDE_PANEL", 360),
+            ):
+                rect = tutorial_overlay._panel_rect_for_dimension(
+                    width=width,
+                    height=height,
+                    dimension=dimension,
+                    panel_h=panel_h,
+                    panel_offset=(-5000, 4000),
+                )
             gameplay_rect = area_factory(width, height, 20, 360)
             self.assertGreaterEqual(rect.left, gameplay_rect.right)
             self.assertGreaterEqual(rect.top, 0)
@@ -133,10 +137,7 @@ class TestTutorialOverlayLayout(unittest.TestCase):
 
     def test_wrap_text_line_breaks_long_content(self) -> None:
         font = pygame.font.Font(None, 24)
-        line = (
-            "F5/F6: Prev/Next stage | F7: Redo | "
-            "F8: Main menu | F9: Restart"
-        )
+        line = "F5/F6: Prev/Next stage | F7: Redo | F8: Main menu | F9: Restart"
 
         wrapped = tutorial_overlay._wrap_text_line(font, line, max_width=220)
 
@@ -188,8 +189,6 @@ class TestTutorialOverlayLayout(unittest.TestCase):
                 "format_key_tuple",
                 return_value="Page Up/Page Down",
             ),
-
-
             patch.object(tutorial_overlay.front3d_render, "MARGIN", 20),
             patch.object(tutorial_overlay.front3d_render, "SIDE_PANEL", 360),
             patch.object(tutorial_overlay.front4d_render, "MARGIN", 20),

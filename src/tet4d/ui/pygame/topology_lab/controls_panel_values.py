@@ -6,8 +6,8 @@ from tet4d.engine.gameplay.api import (
     piece_set_label_gameplay,
     piece_set_options_for_dimension_gameplay,
 )
-from tet4d.engine.gameplay.topology_designer import designer_profiles_for_dimension
 from tet4d.engine.gameplay.topology import topology_mode_label
+from tet4d.engine.gameplay.topology_designer import designer_profiles_for_dimension
 from tet4d.engine.runtime.topology_playability_signal import resolve_rigid_play_enabled
 from tet4d.engine.runtime.topology_playground_state import (
     RIGID_PLAY_MODE_OFF,
@@ -189,7 +189,9 @@ def _playability_launch_note_text(state: TopologyLabState) -> str:
             "Play uses cellwise seam transport because the user forced cellwise play."
         )
     if analysis.status == "analyzing":
-        return "Play transport is being analyzed and will finalize after the first frame."
+        return (
+            "Play transport is being analyzed and will finalize after the first frame."
+        )
     if analysis.summary:
         return (
             "Play uses rigid transport automatically for this topology."
@@ -478,8 +480,8 @@ __all__ = [
     "_explorer_permutation_labels",
     "_explorer_piece_set_label",
     "_explorer_preset_value_text",
-    "_explorer_preview_payload",
     "_explorer_presets",
+    "_explorer_preview_payload",
     "_explorer_transform_label",
     "_playability_panel_lines",
     "_playability_shell_chip_text",

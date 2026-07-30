@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import io
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-from tokenize import COMMENT, generate_tokens
+from tokenize import COMMENT, TokenError, generate_tokens
 from typing import Any
 
 if __package__:
@@ -53,7 +53,7 @@ def _comment_line_numbers(text: str) -> set[int]:
             if token.type == COMMENT:
                 for line_no in range(token.start[0], token.end[0] + 1):
                     comment_lines.add(line_no)
-    except Exception:
+    except (IndentationError, TokenError):
         return set()
     return comment_lines
 

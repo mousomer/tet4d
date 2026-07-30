@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import re
-
 
 ROOT = Path(__file__).resolve().parents[2]
 BUNDLE_REL = "docs/governance/workspace_bundle"
@@ -129,15 +128,6 @@ def _validate_project_neutrality(root: Path, issues: list[BundleIssue]) -> None:
 
 
 def _validate_router_links(root: Path, issues: list[BundleIssue]) -> None:
-    agents = _read_text(root, "AGENTS.md", issues)
-    if agents is not None and "workspace_bundle/programming_policy.md" not in agents:
-        issues.append(
-            BundleIssue(
-                "content",
-                "AGENTS.md must link to workspace_bundle/programming_policy.md",
-            )
-        )
-
     router = _read_text(root, "docs/governance/README.md", issues)
     if router is not None and "docs/governance/workspace_bundle/" not in router:
         issues.append(

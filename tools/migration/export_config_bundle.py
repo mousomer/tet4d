@@ -16,7 +16,6 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(_ROOT / "src"))
 
 from tet4d.replay.format import REPLAY_SCHEMA_VERSION
-
 from tools.migration.trace_schema import (
     SCHEMA_VERSION,
     TRACE_VERSION,
@@ -26,7 +25,6 @@ from tools.migration.trace_schema import (
     stable_hash,
     write_canonical_json,
 )
-
 
 BUNDLE_VERSION = 1
 DEFAULT_BUNDLE_OUT = Path("migration/exported_bundle")
@@ -458,7 +456,7 @@ def build_manifest(
 
 def _require_manifest_object(payload: Any, *, path: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     return payload
 
 
@@ -471,7 +469,7 @@ def _require_manifest_field(payload: dict[str, Any], key: str, *, path: str) -> 
 def _require_manifest_int(payload: dict[str, Any], key: str, *, path: str) -> int:
     value = _require_manifest_field(payload, key, path=path)
     if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{path}.{key} must be an integer")
+        raise ValueError(f"{path}.{key} must be an integer")  # noqa: TRY004 - preserve the established validation contract.
     return int(value)
 
 
@@ -569,7 +567,7 @@ def validate_bundle_manifest(manifest: dict[str, Any]) -> None:
     for trace_type in ("topology", "gameplay", "endgame"):
         entries = _require_manifest_field(traces, trace_type, path="manifest.traces")
         if not isinstance(entries, list):
-            raise ValueError(f"manifest.traces.{trace_type} must be a list")
+            raise ValueError(f"manifest.traces.{trace_type} must be a list")  # noqa: TRY004 - preserve the established validation contract.
         if not entries:
             raise ValueError(f"manifest.traces.{trace_type} must not be empty")
         for index, raw_entry in enumerate(entries):
@@ -616,7 +614,7 @@ def export_bundle(out_dir: Path) -> list[Path]:
         write_canonical_json(out_dir / "schemas" / "schema_index.json", schema_index),
         _write_readme(out_dir / "README.md"),
     ]
-    for trace_type, entries in trace_index.items():
+    for entries in trace_index.values():
         for entry in entries:
             source = Path(str(entry["source_path"]))
             target = out_dir / str(entry["path"])

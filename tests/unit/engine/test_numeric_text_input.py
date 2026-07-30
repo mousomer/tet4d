@@ -48,9 +48,7 @@ def test_append_numeric_text_appends_until_max_length() -> None:
 
 def test_parse_numeric_text_returns_none_for_invalid_input() -> None:
     assert parse_numeric_text("", max_length=8, sanitize_text=_sanitize_text) is None
-    assert (
-        parse_numeric_text("abc", max_length=8, sanitize_text=_sanitize_text) is None
-    )
+    assert parse_numeric_text("abc", max_length=8, sanitize_text=_sanitize_text) is None
 
 
 def test_parse_numeric_text_returns_integer() -> None:

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 from types import SimpleNamespace
 
 import pygame
+
 from tet4d.engine.ui_logic.view_modes import GridMode, ShadowMode
 from tet4d.ui.pygame.render.active_piece_projection_guides import (
     build_boundary_projection_face_primitives,
@@ -54,17 +55,21 @@ def _rotate_xy(point: tuple[float, float], angle_deg: float) -> tuple[float, flo
     )
 
 
-def _trace_color(color: tuple[int, int, int], *, alpha: float = 1.0) -> tuple[int, int, int, int]:
-    resolved_alpha = max(0, min(255, int(round(_TRACE_ALPHA * max(0.0, min(1.0, alpha))))))
+def _trace_color(
+    color: tuple[int, int, int], *, alpha: float = 1.0
+) -> tuple[int, int, int, int]:
+    resolved_alpha = max(0, min(255, round(_TRACE_ALPHA * max(0.0, min(1.0, alpha)))))
     return (*color, resolved_alpha)
 
 
 def _trace_width(base_width: float, width_scale: float) -> int:
-    return max(2, int(round(max(1.5, base_width) * max(0.85, float(width_scale)))))
+    return max(2, round(max(1.5, base_width) * max(0.85, float(width_scale))))
 
 
-def _overlay_color(color: tuple[int, int, int], alpha: float) -> tuple[int, int, int, int]:
-    return (*color, max(0, min(255, int(round(255 * max(0.0, min(1.0, alpha)))))))
+def _overlay_color(
+    color: tuple[int, int, int], alpha: float
+) -> tuple[int, int, int, int]:
+    return (*color, max(0, min(255, round(255 * max(0.0, min(1.0, alpha))))))
 
 
 def _board_center_2d(
@@ -91,23 +96,31 @@ def _draw_2d_grid(
     pygame.draw.rect(surface, _FRAME, board_rect, 2)
     if grid_mode == GridMode.EDGE:
         for index in range(width_cells):
-            left = int(round(board_rect.x + (index * cell_size)))
-            right = int(round(board_rect.x + ((index + 1) * cell_size)))
-            pygame.draw.line(surface, _GRID, (left, board_rect.y), (right, board_rect.y), 1)
-            pygame.draw.line(surface, _GRID, (left, board_rect.bottom), (right, board_rect.bottom), 1)
+            left = round(board_rect.x + (index * cell_size))
+            right = round(board_rect.x + ((index + 1) * cell_size))
+            pygame.draw.line(
+                surface, _GRID, (left, board_rect.y), (right, board_rect.y), 1
+            )
+            pygame.draw.line(
+                surface, _GRID, (left, board_rect.bottom), (right, board_rect.bottom), 1
+            )
         for index in range(height_cells):
-            top = int(round(board_rect.y + (index * cell_size)))
-            bottom = int(round(board_rect.y + ((index + 1) * cell_size)))
-            pygame.draw.line(surface, _GRID, (board_rect.x, top), (board_rect.x, bottom), 1)
-            pygame.draw.line(surface, _GRID, (board_rect.right, top), (board_rect.right, bottom), 1)
+            top = round(board_rect.y + (index * cell_size))
+            bottom = round(board_rect.y + ((index + 1) * cell_size))
+            pygame.draw.line(
+                surface, _GRID, (board_rect.x, top), (board_rect.x, bottom), 1
+            )
+            pygame.draw.line(
+                surface, _GRID, (board_rect.right, top), (board_rect.right, bottom), 1
+            )
         return
     if grid_mode != GridMode.FULL:
         return
     for index in range(1, width_cells):
-        x = int(round(board_rect.x + (index * cell_size)))
+        x = round(board_rect.x + (index * cell_size))
         pygame.draw.line(surface, _GRID, (x, board_rect.y), (x, board_rect.bottom), 1)
     for index in range(1, height_cells):
-        y = int(round(board_rect.y + (index * cell_size)))
+        y = round(board_rect.y + (index * cell_size))
         pygame.draw.line(surface, _GRID, (board_rect.x, y), (board_rect.right, y), 1)
 
 
@@ -126,7 +139,9 @@ def _draw_2d_shadow_guides(
     all_segments = []
     for particle in rendered_particles:
         segments = build_boundary_projection_segments_2d(
-            cells=((tuple(float(value) for value in particle.render_position[:2]), 0.82),),
+            cells=(
+                (tuple(float(value) for value in particle.render_position[:2]), 0.82),
+            ),
             dims=dims,
             gravity_axis=1,
             grid_mode=GridMode(shadow_mode.value),
@@ -137,7 +152,7 @@ def _draw_2d_shadow_guides(
         surface,
         segments=tuple(all_segments),
         board_offset=(board_rect.x, board_rect.y),
-        cell_size=max(1, int(round(cell_size))),
+        cell_size=max(1, round(cell_size)),
     )
 
 
@@ -156,7 +171,9 @@ def _draw_2d_traces(
             source = _board_center_2d(
                 board_rect,
                 cell_size,
-                tuple(float(value) for value in getattr(particle, "source_coord", ())[:2]),
+                tuple(
+                    float(value) for value in getattr(particle, "source_coord", ())[:2]
+                ),
             )
             current = _board_center_2d(
                 board_rect,
@@ -217,9 +234,20 @@ def _draw_2d_particles(
                 )
             )
         color = color_for_cell(int(particle.color_id))
-        pygame.draw.polygon(overlay, (0, 0, 0, max(0, min(255, int(round(90 * alpha))))), tuple((x + 2.0, y + 2.0) for x, y in corners))
-        pygame.draw.polygon(overlay, (*color, max(0, min(255, int(round(244 * alpha))))), corners)
-        pygame.draw.polygon(overlay, (255, 255, 255, max(0, min(255, int(round(210 * alpha))))), corners, 2)
+        pygame.draw.polygon(
+            overlay,
+            (0, 0, 0, max(0, min(255, round(90 * alpha)))),
+            tuple((x + 2.0, y + 2.0) for x, y in corners),
+        )
+        pygame.draw.polygon(
+            overlay, (*color, max(0, min(255, round(244 * alpha)))), corners
+        )
+        pygame.draw.polygon(
+            overlay,
+            (255, 255, 255, max(0, min(255, round(210 * alpha)))),
+            corners,
+            2,
+        )
 
 
 def _draw_shell_preview_2d(
@@ -236,8 +264,19 @@ def _draw_shell_preview_2d(
         color = color_for_cell(int(impact.color_id))
         start = _board_center_2d(board_rect, cell_size, impact.start_position)
         end = _board_center_2d(board_rect, cell_size, draw_state.position)
-        pygame.draw.line(overlay, _overlay_color(color, draw_state.alpha), start, end, max(2, int(round(draw_state.streak_width))))
-        pygame.draw.circle(overlay, _overlay_color((255, 255, 255), draw_state.alpha), (int(round(end[0])), int(round(end[1]))), max(2, int(round(draw_state.radius))))
+        pygame.draw.line(
+            overlay,
+            _overlay_color(color, draw_state.alpha),
+            start,
+            end,
+            max(2, round(draw_state.streak_width)),
+        )
+        pygame.draw.circle(
+            overlay,
+            _overlay_color((255, 255, 255), draw_state.alpha),
+            (round(end[0]), round(end[1])),
+            max(2, round(draw_state.radius)),
+        )
     preview_particles = tuple(
         SimpleNamespace(
             render_position=tuple(float(value) for value in cell.render_position[:2]),
@@ -262,16 +301,20 @@ def _draw_shell_preview_2d(
         corners = []
         for local in ((0.9, 0.0), (-0.45, 0.55), (-0.45, -0.55)):
             rotated = _rotate_xy(local, float(draw_state.rotation_deg))
-            corners.append((center[0] + rotated[0] * size, center[1] + rotated[1] * size))
+            corners.append(
+                (center[0] + rotated[0] * size, center[1] + rotated[1] * size)
+            )
         pygame.draw.polygon(overlay, _overlay_color(color, draw_state.alpha), corners)
-        pygame.draw.polygon(overlay, _overlay_color((255, 255, 255), draw_state.alpha), corners, 1)
+        pygame.draw.polygon(
+            overlay, _overlay_color((255, 255, 255), draw_state.alpha), corners, 1
+        )
     for impact, alpha in getattr(shell_preview, "residue_frames", ()):
         center = _board_center_2d(board_rect, cell_size, impact.impact_position)
         pygame.draw.circle(
             overlay,
             _overlay_color(color_for_cell(int(impact.color_id)), alpha),
-            (int(round(center[0])), int(round(center[1]))),
-            max(3, int(round(cell_size * 0.24))),
+            (round(center[0]), round(center[1])),
+            max(3, round(cell_size * 0.24)),
             2,
         )
 
@@ -349,7 +392,9 @@ def _draw_3d_traces(
         trail_segments = tuple(getattr(particle, "trail_segments", ()))
         if not trail_segments:
             source = project_raw_point(
-                tuple(float(value) for value in getattr(particle, "source_coord", ())[:3]),
+                tuple(
+                    float(value) for value in getattr(particle, "source_coord", ())[:3]
+                ),
                 dims,
                 params,
                 center_px,
@@ -401,13 +446,28 @@ def _draw_shell_preview_3d(
     if shell_preview is None:
         return
     for impact, draw_state in shell_preview.impact_frames:
-        start = project_raw_point(tuple(float(v) for v in impact.start_position[:3]), dims, params, center_px)
-        end = project_raw_point(tuple(float(v) for v in draw_state.position[:3]), dims, params, center_px)
+        start = project_raw_point(
+            tuple(float(v) for v in impact.start_position[:3]), dims, params, center_px
+        )
+        end = project_raw_point(
+            tuple(float(v) for v in draw_state.position[:3]), dims, params, center_px
+        )
         if start is None or end is None:
             continue
         color = color_for_cell_3d(int(impact.color_id))
-        pygame.draw.line(overlay, _overlay_color(color, draw_state.alpha), start, end, max(2, int(round(draw_state.streak_width))))
-        pygame.draw.circle(overlay, _overlay_color((255, 255, 255), draw_state.alpha), (int(round(end[0])), int(round(end[1]))), max(2, int(round(draw_state.radius))))
+        pygame.draw.line(
+            overlay,
+            _overlay_color(color, draw_state.alpha),
+            start,
+            end,
+            max(2, round(draw_state.streak_width)),
+        )
+        pygame.draw.circle(
+            overlay,
+            _overlay_color((255, 255, 255), draw_state.alpha),
+            (round(end[0]), round(end[1])),
+            max(2, round(draw_state.radius)),
+        )
     for impact, _shard, draw_state in shell_preview.shard_frames:
         color = color_for_cell_3d(int(impact.color_id))
         center = tuple(float(v) for v in draw_state.position[:3])
@@ -415,20 +475,35 @@ def _draw_shell_preview_3d(
         points = []
         for local in ((0.9, 0.0), (-0.45, 0.55), (-0.45, -0.55)):
             rotated = _rotate_xy(local, float(draw_state.rotation_deg))
-            projected = project_raw_point((center[0] + rotated[0] * size, center[1] + rotated[1] * size, center[2]), dims, params, center_px)
+            projected = project_raw_point(
+                (
+                    center[0] + rotated[0] * size,
+                    center[1] + rotated[1] * size,
+                    center[2],
+                ),
+                dims,
+                params,
+                center_px,
+            )
             if projected is not None:
                 points.append(projected)
         if len(points) == 3:
-            pygame.draw.polygon(overlay, _overlay_color(color, draw_state.alpha), points)
-            pygame.draw.polygon(overlay, _overlay_color((255, 255, 255), draw_state.alpha), points, 1)
+            pygame.draw.polygon(
+                overlay, _overlay_color(color, draw_state.alpha), points
+            )
+            pygame.draw.polygon(
+                overlay, _overlay_color((255, 255, 255), draw_state.alpha), points, 1
+            )
     for impact, alpha in getattr(shell_preview, "residue_frames", ()):
-        center = project_raw_point(tuple(float(v) for v in impact.impact_position[:3]), dims, params, center_px)
+        center = project_raw_point(
+            tuple(float(v) for v in impact.impact_position[:3]), dims, params, center_px
+        )
         if center is None:
             continue
         pygame.draw.circle(
             overlay,
             _overlay_color(color_for_cell_3d(int(impact.color_id)), alpha),
-            (int(round(center[0])), int(round(center[1]))),
+            (round(center[0]), round(center[1])),
             5,
             2,
         )
@@ -457,7 +532,16 @@ def _draw_escaping_proxy_cells_3d(
     ]
     if not proxy_cells:
         return
-    opacity = max(0.0, min(1.0, max(float(cell.alpha) for cell in getattr(shell_preview, "escaping_proxy_cells", ()))))
+    opacity = max(
+        0.0,
+        min(
+            1.0,
+            max(
+                float(cell.alpha)
+                for cell in getattr(shell_preview, "escaping_proxy_cells", ())
+            ),
+        ),
+    )
     draw_cells(
         overlay,
         cells=proxy_cells,
@@ -527,10 +611,10 @@ def _draw_native_board_2d(
     board_width = cell_size * width_cells
     board_height = cell_size * height_cells
     board_rect = pygame.Rect(
-        int(round(rect.centerx - (board_width * 0.5))),
-        int(round(rect.centery - (board_height * 0.5))),
-        int(round(board_width)),
-        int(round(board_height)),
+        round(rect.centerx - (board_width * 0.5)),
+        round(rect.centery - (board_height * 0.5)),
+        round(board_width),
+        round(board_height),
     )
     _draw_2d_grid(
         surface,
@@ -543,8 +627,12 @@ def _draw_native_board_2d(
     if controller is None:
         return
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-    hold_preview = shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
-    rendered_particles = tuple() if hold_preview else controller.render_particles(render_context=None)
+    hold_preview = (
+        shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    )
+    rendered_particles = (
+        () if hold_preview else controller.render_particles(render_context=None)
+    )
     _draw_2d_shadow_guides(
         surface,
         board_rect=board_rect,
@@ -605,8 +693,8 @@ def _draw_native_board_3d(
         ProjectionParams3D,
         build_cell_face_primitives,
         build_cell_faces,
-        draw_board_grid,
         depth_denominator_for_depth,
+        draw_board_grid,
         fit_orthographic_zoom_for_rect,
         project_raw_point,
         transform_raw_point,
@@ -663,9 +751,11 @@ def _draw_native_board_3d(
         )
         return
     rendered_particles = controller.render_particles(render_context=None)
-    hold_preview = shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    hold_preview = (
+        shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    )
     if hold_preview:
-        rendered_particles = tuple()
+        rendered_particles = ()
     trace_overlay = None
     if show_trace and not hold_preview:
         trace_overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
@@ -836,7 +926,9 @@ def _map_4d_coord_for_render(
     for axis, sign in render_context.basis_axis_map[:4]:
         axis_index = int(axis)
         value = float(coord[axis_index]) if 0 <= axis_index < len(coord) else 0.0
-        size = float(board_dims[axis_index]) if 0 <= axis_index < len(board_dims) else 1.0
+        size = (
+            float(board_dims[axis_index]) if 0 <= axis_index < len(board_dims) else 1.0
+        )
         mapped.append(value if int(sign) > 0 else (size - 1.0 - value))
     while len(mapped) < 4:
         mapped.append(0.0)
@@ -865,7 +957,9 @@ def _draw_native_board_4d_traces(
             layer_weight = next(
                 (
                     float(weight)
-                    for candidate_layer, weight in getattr(particle, "layer_weights", ())
+                    for candidate_layer, weight in getattr(
+                        particle, "layer_weights", ()
+                    )
                     if int(candidate_layer) == layer_index
                 ),
                 0.0,
@@ -949,7 +1043,9 @@ def _draw_native_board_4d_traces(
             )
 
 
-def _layer_alpha_for_preview(mapped_coord: tuple[float, float, float, float], layer_index: int) -> float:
+def _layer_alpha_for_preview(
+    mapped_coord: tuple[float, float, float, float], layer_index: int
+) -> float:
     return max(0.0, 1.0 - abs(float(mapped_coord[3]) - float(layer_index)))
 
 
@@ -969,19 +1065,46 @@ def _draw_shell_preview_4d_impacts(
     color_map,
 ) -> None:
     for impact, draw_state in shell_preview.impact_frames:
-        start_render = _map_4d_coord_for_render(tuple(float(v) for v in impact.start_position[:4]), board_dims=dims4, render_context=render_context)
-        end_render = _map_4d_coord_for_render(tuple(float(v) for v in draw_state.position[:4]), board_dims=dims4, render_context=render_context)
+        start_render = _map_4d_coord_for_render(
+            tuple(float(v) for v in impact.start_position[:4]),
+            board_dims=dims4,
+            render_context=render_context,
+        )
+        end_render = _map_4d_coord_for_render(
+            tuple(float(v) for v in draw_state.position[:4]),
+            board_dims=dims4,
+            render_context=render_context,
+        )
         alpha_scale = _layer_alpha_for_preview(start_render, layer_index)
         if alpha_scale <= 0.0:
             continue
-        start = project_raw_point(tuple(float(v) for v in start_render[:3]), basis.dims3, view, center_px, zoom)
-        end = project_raw_point(tuple(float(v) for v in end_render[:3]), basis.dims3, view, center_px, zoom)
+        start = project_raw_point(
+            tuple(float(v) for v in start_render[:3]),
+            basis.dims3,
+            view,
+            center_px,
+            zoom,
+        )
+        end = project_raw_point(
+            tuple(float(v) for v in end_render[:3]), basis.dims3, view, center_px, zoom
+        )
         if start is None or end is None:
             continue
         color = color_for_cell(int(impact.color_id), color_map)
         alpha = float(draw_state.alpha) * alpha_scale
-        pygame.draw.line(overlay, _overlay_color(color, alpha), start, end, max(2, int(round(draw_state.streak_width))))
-        pygame.draw.circle(overlay, _overlay_color((255, 255, 255), alpha), (int(round(end[0])), int(round(end[1]))), max(2, int(round(draw_state.radius))))
+        pygame.draw.line(
+            overlay,
+            _overlay_color(color, alpha),
+            start,
+            end,
+            max(2, round(draw_state.streak_width)),
+        )
+        pygame.draw.circle(
+            overlay,
+            _overlay_color((255, 255, 255), alpha),
+            (round(end[0]), round(end[1])),
+            max(2, round(draw_state.radius)),
+        )
 
 
 def _draw_shell_preview_4d_shards(
@@ -1001,8 +1124,14 @@ def _draw_shell_preview_4d_shards(
 ) -> None:
     for impact, _shard, draw_state in shell_preview.shard_frames:
         color = color_for_cell(int(impact.color_id), color_map)
-        center_render = _map_4d_coord_for_render(tuple(float(v) for v in draw_state.position[:4]), board_dims=dims4, render_context=render_context)
-        alpha = float(draw_state.alpha) * _layer_alpha_for_preview(center_render, layer_index)
+        center_render = _map_4d_coord_for_render(
+            tuple(float(v) for v in draw_state.position[:4]),
+            board_dims=dims4,
+            render_context=render_context,
+        )
+        alpha = float(draw_state.alpha) * _layer_alpha_for_preview(
+            center_render, layer_index
+        )
         if alpha <= 0.0:
             continue
         center = tuple(float(v) for v in center_render[:3])
@@ -1010,12 +1139,24 @@ def _draw_shell_preview_4d_shards(
         points = []
         for local in ((0.9, 0.0), (-0.45, 0.55), (-0.45, -0.55)):
             rotated = _rotate_xy(local, float(draw_state.rotation_deg))
-            projected = project_raw_point((center[0] + rotated[0] * size, center[1] + rotated[1] * size, center[2]), basis.dims3, view, center_px, zoom)
+            projected = project_raw_point(
+                (
+                    center[0] + rotated[0] * size,
+                    center[1] + rotated[1] * size,
+                    center[2],
+                ),
+                basis.dims3,
+                view,
+                center_px,
+                zoom,
+            )
             if projected is not None:
                 points.append(projected)
         if len(points) == 3:
             pygame.draw.polygon(overlay, _overlay_color(color, alpha), points)
-            pygame.draw.polygon(overlay, _overlay_color((255, 255, 255), alpha), points, 1)
+            pygame.draw.polygon(
+                overlay, _overlay_color((255, 255, 255), alpha), points, 1
+            )
 
 
 def _draw_shell_preview_4d_residue(
@@ -1034,17 +1175,31 @@ def _draw_shell_preview_4d_residue(
     color_map,
 ) -> None:
     for impact, alpha in getattr(shell_preview, "residue_frames", ()):
-        center_render = _map_4d_coord_for_render(tuple(float(v) for v in impact.impact_position[:4]), board_dims=dims4, render_context=render_context)
-        resolved_alpha = float(alpha) * _layer_alpha_for_preview(center_render, layer_index)
+        center_render = _map_4d_coord_for_render(
+            tuple(float(v) for v in impact.impact_position[:4]),
+            board_dims=dims4,
+            render_context=render_context,
+        )
+        resolved_alpha = float(alpha) * _layer_alpha_for_preview(
+            center_render, layer_index
+        )
         if resolved_alpha <= 0.0:
             continue
-        center = project_raw_point(tuple(float(v) for v in center_render[:3]), basis.dims3, view, center_px, zoom)
+        center = project_raw_point(
+            tuple(float(v) for v in center_render[:3]),
+            basis.dims3,
+            view,
+            center_px,
+            zoom,
+        )
         if center is None:
             continue
         pygame.draw.circle(
             overlay,
-            _overlay_color(color_for_cell(int(impact.color_id), color_map), resolved_alpha),
-            (int(round(center[0])), int(round(center[1]))),
+            _overlay_color(
+                color_for_cell(int(impact.color_id), color_map), resolved_alpha
+            ),
+            (round(center[0]), round(center[1])),
             5,
             2,
         )
@@ -1125,7 +1280,9 @@ def _collect_native_board_4d_faces(
     color_map,
     build_oriented_cube_faces,
 ) -> list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]]:
-    faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]] = []
+    faces: list[
+        tuple[float, list[tuple[float, float]], tuple[int, int, int], float]
+    ] = []
     for particle in rendered_particles:
         layer_weight = next(
             (
@@ -1205,11 +1362,19 @@ def _hold_preview_faces_4d(
     build_cell_face_primitives,
     color_for_cell,
     color_map,
-) -> tuple[list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list]:
-    faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]] = []
+) -> tuple[
+    list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list
+]:
+    faces: list[
+        tuple[float, list[tuple[float, float]], tuple[int, int, int], float]
+    ] = []
     active_piece_faces: list = []
     for cell in getattr(shell_preview, "frozen_cells", ()):
-        mapped = _map_4d_coord_for_render(tuple(float(value) for value in cell.position[:4]), board_dims=dims4, render_context=render_context)
+        mapped = _map_4d_coord_for_render(
+            tuple(float(value) for value in cell.position[:4]),
+            board_dims=dims4,
+            render_context=render_context,
+        )
         layer_weight = _layer_alpha_for_preview(mapped, layer_index)
         if layer_weight <= 0.0:
             continue
@@ -1219,7 +1384,9 @@ def _hold_preview_faces_4d(
             for depth, polygon, color, _active in build_oriented_cube_faces(
                 center=tuple(float(value) for value in mapped[:3]),
                 color=cell_color,
-                project_raw=lambda raw: project_raw_point(raw, basis.dims3, view, center_px, zoom),
+                project_raw=lambda raw: project_raw_point(
+                    raw, basis.dims3, view, center_px, zoom
+                ),
                 transform_raw=lambda raw: transform_raw_point(raw, basis.dims3, view),
                 active=True,
                 rotation_deg=(0.0, 0.0, 0.0),
@@ -1236,7 +1403,7 @@ def _hold_preview_faces_4d(
                 zoom=zoom,
                 active=True,
             )
-    )
+        )
     return faces, active_piece_faces
 
 
@@ -1256,8 +1423,12 @@ def _proxy_preview_faces_4d(
     build_cell_face_primitives,
     color_for_cell,
     color_map,
-) -> tuple[list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list]:
-    faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]] = []
+) -> tuple[
+    list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list
+]:
+    faces: list[
+        tuple[float, list[tuple[float, float]], tuple[int, int, int], float]
+    ] = []
     active_piece_faces: list = []
     for cell in getattr(shell_preview, "escaping_proxy_cells", ()):
         mapped_source = _map_4d_coord_for_render(
@@ -1282,7 +1453,9 @@ def _proxy_preview_faces_4d(
             for depth, polygon, color, _active in build_oriented_cube_faces(
                 center=tuple(float(value) for value in mapped[:3]),
                 color=cell_color,
-                project_raw=lambda raw: project_raw_point(raw, basis.dims3, view, center_px, zoom),
+                project_raw=lambda raw: project_raw_point(
+                    raw, basis.dims3, view, center_px, zoom
+                ),
                 transform_raw=lambda raw: transform_raw_point(raw, basis.dims3, view),
                 active=True,
                 rotation_deg=tuple(float(value) for value in cell.rotation_deg),
@@ -1299,7 +1472,7 @@ def _proxy_preview_faces_4d(
                 zoom=zoom,
                 active=True,
             )
-    )
+        )
     return faces, active_piece_faces
 
 
@@ -1322,7 +1495,9 @@ def _preview_faces_for_layer_4d(
     color_map,
     faces: list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]],
     active_piece_faces: list,
-) -> tuple[list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list]:
+) -> tuple[
+    list[tuple[float, list[tuple[float, float]], tuple[int, int, int], float]], list
+]:
     if hold_preview:
         return _hold_preview_faces_4d(
             shell_preview=shell_preview,
@@ -1391,7 +1566,9 @@ def _draw_empty_native_board_4d_layer(
             draw_rect,
             zoom,
         ),
-        project_raw=lambda raw: project_raw_point(raw, basis.dims3, view, center_px, zoom),
+        project_raw=lambda raw: project_raw_point(
+            raw, basis.dims3, view, center_px, zoom
+        ),
         transform_raw=lambda raw: transform_raw_point(raw, basis.dims3, view),
         depth_denominator=orthographic_depth_denominator,
         helper_marks=(set(), set(), set()),
@@ -1486,7 +1663,9 @@ def _draw_native_board_4d(
         int(board_dims[3]),
     )
     basis = _basis_for_view(view, dims4)
-    layer_rects = _layer_rects_by_layer(area=rect, layer_count=max(1, basis.layer_count))
+    layer_rects = _layer_rects_by_layer(
+        area=rect, layer_count=max(1, basis.layer_count)
+    )
     render_context = _render_context_for_4d(view, dims4)
     render_context = _RenderContext4D(
         basis_axis_map=render_context.basis_axis_map,
@@ -1502,13 +1681,15 @@ def _draw_native_board_4d(
         w_movement_animation_style=str(w_movement_animation_style),
     )
     rendered_particles = (
-        tuple()
+        ()
         if controller is None
         else controller.render_particles(render_context=render_context)
     )
-    hold_preview = shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    hold_preview = (
+        shell_preview is not None and getattr(shell_preview, "phase", "") == "hold"
+    )
     if hold_preview:
-        rendered_particles = tuple()
+        rendered_particles = ()
     for layer_index in range(max(1, basis.layer_count)):
         layer_rect = layer_rects.get(layer_index)
         if layer_rect is None:
@@ -1527,13 +1708,17 @@ def _draw_native_board_4d(
             layer_rect.width - 12,
             layer_rect.height - 30,
         )
-        zoom = _fit_zoom(basis.dims3, view, draw_rect) * max(0.5, float(view.zoom_scale))
+        zoom = _fit_zoom(basis.dims3, view, draw_rect) * max(
+            0.5, float(view.zoom_scale)
+        )
         zoom = max(8.0, min(170.0, zoom))
         center_px = (draw_rect.centerx, draw_rect.centery)
         board_line_primitives = build_projected_grid_primitives(
             dims=basis.dims3,
             grid_mode=grid_mode,
-            project_raw=lambda raw: _project_raw_point(raw, basis.dims3, view, center_px, zoom),
+            project_raw=lambda raw, center_px=center_px, zoom=zoom: _project_raw_point(
+                raw, basis.dims3, view, center_px, zoom
+            ),
             transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
             depth_denominator=_orthographic_depth_denominator,
         )
@@ -1631,22 +1816,26 @@ def _draw_native_board_4d(
                 surface=surface,
                 dims=basis.dims3,
                 grid_mode=grid_mode,
-                draw_full_grid=lambda: _draw_board_grid(
-                    surface,
-                    basis.dims3,
-                    dims4,
-                    layer_index,
-                    basis,
-                    view,
-                    draw_rect,
-                    zoom,
+                draw_full_grid=lambda layer_index=layer_index, draw_rect=draw_rect, zoom=zoom: (
+                    _draw_board_grid(
+                        surface,
+                        basis.dims3,
+                        dims4,
+                        layer_index,
+                        basis,
+                        view,
+                        draw_rect,
+                        zoom,
+                    )
                 ),
-                project_raw=lambda raw: _project_raw_point(
-                    raw,
-                    basis.dims3,
-                    view,
-                    center_px,
-                    zoom,
+                project_raw=lambda raw, center_px=center_px, zoom=zoom: (
+                    _project_raw_point(
+                        raw,
+                        basis.dims3,
+                        view,
+                        center_px,
+                        zoom,
+                    )
                 ),
                 transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
                 depth_denominator=_orthographic_depth_denominator,
@@ -1654,8 +1843,8 @@ def _draw_native_board_4d(
             )
         faces.sort(key=lambda item: item[0], reverse=True)
         for _depth, polygon, color, alpha in faces:
-            fill_alpha = max(0, min(255, int(round(255 * alpha))))
-            outline_alpha = max(0, min(255, int(round(220 * alpha))))
+            fill_alpha = max(0, min(255, round(255 * alpha)))
+            outline_alpha = max(0, min(255, round(220 * alpha)))
             pygame.draw.polygon(overlay, (*color, fill_alpha), polygon)
             pygame.draw.polygon(overlay, (255, 255, 255, outline_alpha), polygon, 2)
         surface.blit(overlay, (0, 0))
@@ -1673,16 +1862,20 @@ def _draw_native_board_4d(
             for candidate_layer, weight in getattr(particle, "layer_weights", ())
             if int(candidate_layer) == layer_index and float(weight) > 0.0
             for primitive in build_boundary_projection_face_primitives(
-                cells=((tuple(float(value) for value in particle.render_position), 0.9),),
+                cells=(
+                    (tuple(float(value) for value in particle.render_position), 0.9),
+                ),
                 dims=basis.dims3,
                 gravity_axis=1,
                 grid_mode=GridMode(shadow_mode.value),
-                project_raw=lambda raw: _project_raw_point(
-                    raw,
-                    basis.dims3,
-                    view,
-                    center_px,
-                    zoom,
+                project_raw=lambda raw, center_px=center_px, zoom=zoom: (
+                    _project_raw_point(
+                        raw,
+                        basis.dims3,
+                        view,
+                        center_px,
+                        zoom,
+                    )
                 ),
                 transform_raw=lambda raw: _transform_raw_point(raw, basis.dims3, view),
                 depth_denominator=_orthographic_depth_denominator,

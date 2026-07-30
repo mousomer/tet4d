@@ -96,9 +96,7 @@ def _is_move_or_rotate_step(step_id: str | None) -> bool:
     if not step_id:
         return False
     return (
-        step_id.startswith(_MOVE_PREFIX)
-        or step_id.startswith(_ROTATE_PREFIX)
-        or step_id in _DROP_STEP_IDS
+        step_id.startswith((_MOVE_PREFIX, _ROTATE_PREFIX)) or step_id in _DROP_STEP_IDS
     )
 
 
@@ -111,9 +109,7 @@ def _is_continuous_control_step(step_id: str | None) -> bool:
         return True
     if step_id in _CAMERA_CONTROL_STEP_IDS:
         return True
-    if step_id in _OVERLAY_STEP_IDS:
-        return True
-    return False
+    return step_id in _OVERLAY_STEP_IDS
 
 
 def _is_translation_step(step_id: str | None) -> bool:
@@ -153,17 +149,17 @@ def _is_overlay_target_step(step_id: str | None) -> bool:
 def _overlay_percent(value: object) -> int | None:
     if isinstance(value, bool) or not isinstance(value, (float, int)):
         return None
-    return max(0, min(100, int(round(float(value) * 100.0))))
+    return max(0, min(100, round(float(value) * 100.0)))
 
 
 def _overlay_range() -> tuple[int, int]:
     low = max(
         0,
-        min(100, int(round(float(OVERLAY_TRANSPARENCY_MIN) * 100.0))),
+        min(100, round(float(OVERLAY_TRANSPARENCY_MIN) * 100.0)),
     )
     high = max(
         0,
-        min(100, int(round(float(OVERLAY_TRANSPARENCY_MAX) * 100.0))),
+        min(100, round(float(OVERLAY_TRANSPARENCY_MAX) * 100.0)),
     )
     if high < low:
         low, high = high, low
@@ -171,10 +167,14 @@ def _overlay_range() -> tuple[int, int]:
 
 
 def _overlay_target_percent_for_step(step: Any) -> int | None:
-    step_id = sanitize_text(
-        getattr(step, "step_id", ""),
-        max_length=96,
-    ).strip().lower()
+    step_id = (
+        sanitize_text(
+            getattr(step, "step_id", ""),
+            max_length=96,
+        )
+        .strip()
+        .lower()
+    )
     clamp_min, clamp_max = _overlay_range()
     if step_id == "overlay_alpha_dec":
         return clamp_min
@@ -441,9 +441,9 @@ class TutorialRuntimeSession:
         ) and _is_continuous_control_step(snapshot.step_id)
         if keep_stage_state:
             setup_payload = _suppress_board_piece_setup(setup_payload)
-        if _is_overlay_target_step(self._transition_from_step_id) and not _is_overlay_target_step(
-            snapshot.step_id
-        ):
+        if _is_overlay_target_step(
+            self._transition_from_step_id
+        ) and not _is_overlay_target_step(snapshot.step_id):
             setup_payload["overlay_start_percent"] = 50
         return {
             "lesson_id": lesson.lesson_id,
@@ -492,7 +492,10 @@ class TutorialRuntimeSession:
             mode=self.mode,
         )
         hint_text = step.ui.hint or ""
-        if _is_overlay_target_step(step.step_id) and self._overlay_current_percent is not None:
+        if (
+            _is_overlay_target_step(step.step_id)
+            and self._overlay_current_percent is not None
+        ):
             hint_text = f"{hint_text} Current transparency: {self._overlay_current_percent}%.".strip()
             target_percent = _overlay_target_percent_for_step(step)
             if target_percent is not None:
@@ -500,9 +503,7 @@ class TutorialRuntimeSession:
         payload["step_hint"] = hint_text
         payload["key_prompts"] = list(step.ui.key_prompts)
         payload["highlights"] = list(step.ui.highlights)
-        payload["progress_text"] = (
-            f"Step {snapshot.step_index + 1}/{len(lesson.steps)}"
-        )
+        payload["progress_text"] = f"Step {snapshot.step_index + 1}/{len(lesson.steps)}"
         payload["system_controls_text"] = "System controls: Help, Menu, Restart, Quit."
         return payload
 
@@ -557,7 +558,9 @@ class TutorialRuntimeSession:
         return
 
 
-def create_tutorial_runtime_session(*, lesson_id: str, mode: str) -> TutorialRuntimeSession:
+def create_tutorial_runtime_session(
+    *, lesson_id: str, mode: str
+) -> TutorialRuntimeSession:
     lessons = tutorial_lesson_map()
     clean_id = sanitize_text(lesson_id, max_length=96).strip().lower()
     lesson = lessons.get(clean_id)

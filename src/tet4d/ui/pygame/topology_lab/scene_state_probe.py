@@ -72,7 +72,9 @@ def _runtime_probe_state_from_ui(
         path = ()
         trace = ()
         highlighted_gluing = (
-            None if state.highlighted_glue_id is None else str(state.highlighted_glue_id)
+            None
+            if state.highlighted_glue_id is None
+            else str(state.highlighted_glue_id)
         )
     frame_permutation, frame_signs = current_probe_frame(state)
     return RuntimeTopologyPlaygroundProbeState(

@@ -3,12 +3,12 @@ from __future__ import annotations
 import random
 import unittest
 
-from tet4d.engine.core.model import BoardND
-from tet4d.engine.gameplay.game2d import GameConfig, GameState
-from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_CLASSIC
 from tet4d.ai.playbot import PlayBotController, plan_best_2d_move
 from tet4d.ai.playbot.types import BotMode, BotPlannerProfile
+from tet4d.engine.core.model import BoardND
 from tet4d.engine.gameplay.api import runtime_assist_combined_score_multiplier
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_CLASSIC
 from tet4d.engine.ui_logic.view_modes import GridMode
 
 combined_score_multiplier = runtime_assist_combined_score_multiplier

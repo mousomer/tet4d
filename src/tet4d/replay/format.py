@@ -147,7 +147,7 @@ class ReplayEvent2D:
         return {"action": self.action}
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "ReplayEvent2D":
+    def from_dict(cls, payload: dict[str, Any]) -> ReplayEvent2D:
         event = _require_object(payload, path="replay.events[]")
         _reject_unknown_fields(event, allowed={"action"}, path="replay.events[]")
         if "action" not in event:
@@ -171,7 +171,7 @@ class ReplayScript2D:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "ReplayScript2D":
+    def from_dict(cls, payload: dict[str, Any]) -> ReplayScript2D:
         replay = _require_object(payload, path="replay")
         _reject_unknown_fields(
             replay,
@@ -212,7 +212,7 @@ class ReplayTickScriptND:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "ReplayTickScriptND":
+    def from_dict(cls, payload: dict[str, Any]) -> ReplayTickScriptND:
         replay = _require_object(payload, path="replay")
         _reject_unknown_fields(
             replay,

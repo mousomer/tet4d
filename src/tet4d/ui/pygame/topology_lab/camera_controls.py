@@ -14,7 +14,6 @@ from tet4d.ui.pygame.input.camera_mouse import (
 )
 from tet4d.ui.pygame.input.key_dispatch import dispatch_bound_action
 
-
 SceneCamera = Camera3D | LayerView3D | None
 
 
@@ -73,18 +72,18 @@ def _handle_camera_key_3d(key: int, camera: Camera3D) -> bool:
         key,
         _camera_bindings_for_dimension(3),
         {
-            'yaw_fine_neg': lambda: camera.start_yaw_turn(-15.0),
-            'yaw_neg': lambda: camera.start_yaw_turn(-90.0),
-            'yaw_pos': lambda: camera.start_yaw_turn(90.0),
-            'yaw_fine_pos': lambda: camera.start_yaw_turn(15.0),
-            'pitch_pos': lambda: camera.start_pitch_turn(90.0),
-            'pitch_neg': lambda: camera.start_pitch_turn(-90.0),
-            'zoom_in': lambda: setattr(camera, 'zoom', min(140.0, camera.zoom + 3.0)),
-            'zoom_out': lambda: setattr(camera, 'zoom', max(18.0, camera.zoom - 3.0)),
-            'reset': camera.reset,
-            'cycle_projection': camera.cycle_projection,
-            'overlay_alpha_dec': lambda: None,
-            'overlay_alpha_inc': lambda: None,
+            "yaw_fine_neg": lambda: camera.start_yaw_turn(-15.0),
+            "yaw_neg": lambda: camera.start_yaw_turn(-90.0),
+            "yaw_pos": lambda: camera.start_yaw_turn(90.0),
+            "yaw_fine_pos": lambda: camera.start_yaw_turn(15.0),
+            "pitch_pos": lambda: camera.start_pitch_turn(90.0),
+            "pitch_neg": lambda: camera.start_pitch_turn(-90.0),
+            "zoom_in": lambda: setattr(camera, "zoom", min(140.0, camera.zoom + 3.0)),
+            "zoom_out": lambda: setattr(camera, "zoom", max(18.0, camera.zoom - 3.0)),
+            "reset": camera.reset,
+            "cycle_projection": camera.cycle_projection,
+            "overlay_alpha_dec": lambda: None,
+            "overlay_alpha_inc": lambda: None,
         },
     )
     return action is not None
@@ -99,16 +98,18 @@ def handle_scene_camera_key(dimension: int, key: int, camera: SceneCamera) -> bo
 
 
 def step_scene_camera(camera: SceneCamera, dt_ms: float) -> None:
-    if camera is None or not hasattr(camera, 'step_animation'):
+    if camera is None or not hasattr(camera, "step_animation"):
         return
     camera.step_animation(float(dt_ms))
 
 
 def _normalize_orbit_event(event: pygame.event.Event) -> pygame.event.Event:
-    if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, 'button', None) == 2:
-        return pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'button': 3, 'pos': event.pos})
-    if event.type == pygame.MOUSEBUTTONUP and getattr(event, 'button', None) == 2:
-        return pygame.event.Event(pygame.MOUSEBUTTONUP, {'button': 3, 'pos': event.pos})
+    if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", None) == 2:
+        return pygame.event.Event(
+            pygame.MOUSEBUTTONDOWN, {"button": 3, "pos": event.pos}
+        )
+    if event.type == pygame.MOUSEBUTTONUP and getattr(event, "button", None) == 2:
+        return pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 3, "pos": event.pos})
     return event
 
 
@@ -141,7 +142,10 @@ def handle_scene_camera_mouse_event(
         if changed:
             camera.yaw_deg = yaw
             camera.pitch_deg = pitch
-        return changed or orbit_event.type in {pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP}
+        return changed or orbit_event.type in {
+            pygame.MOUSEBUTTONDOWN,
+            pygame.MOUSEBUTTONUP,
+        }
     if dim == 4 and isinstance(camera, LayerView3D):
         yaw, pitch, changed = apply_mouse_orbit_event(
             orbit_event,
@@ -152,17 +156,20 @@ def handle_scene_camera_mouse_event(
         if changed:
             camera.yaw_deg = yaw
             camera.pitch_deg = pitch
-        return changed or orbit_event.type in {pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP}
+        return changed or orbit_event.type in {
+            pygame.MOUSEBUTTONDOWN,
+            pygame.MOUSEBUTTONUP,
+        }
     return False
 
 
 __all__ = [
-    'CameraAvailability',
-    'SceneCamera',
-    'ensure_mouse_orbit_state',
-    'ensure_scene_camera',
-    'handle_scene_camera_key',
-    'handle_scene_camera_mouse_event',
-    'scene_camera_availability',
-    'step_scene_camera',
+    "CameraAvailability",
+    "SceneCamera",
+    "ensure_mouse_orbit_state",
+    "ensure_scene_camera",
+    "handle_scene_camera_key",
+    "handle_scene_camera_mouse_event",
+    "scene_camera_availability",
+    "step_scene_camera",
 ]

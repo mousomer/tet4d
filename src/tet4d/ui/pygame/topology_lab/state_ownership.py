@@ -43,9 +43,7 @@ def _coord_in_bounds(
     coord: tuple[int, ...],
     dims: tuple[int, ...],
 ) -> bool:
-    return all(
-        0 <= int(value) < int(dims[index]) for index, value in enumerate(coord)
-    )
+    return all(0 <= int(value) < int(dims[index]) for index, value in enumerate(coord))
 
 
 def _sandbox_visible_cells(state: TopologyLabState) -> tuple[tuple[int, ...], ...]:
@@ -236,9 +234,12 @@ def current_sandbox_focus_coord(state: TopologyLabState) -> tuple[int, ...]:
         state.dimension,
         getattr(state, "sandbox_focus_coord", None),
     )
-    if current is not None and _coord_in_bounds(current, dims):
-        if not sandbox_cells or current in sandbox_cells:
-            return current
+    if (
+        current is not None
+        and _coord_in_bounds(current, dims)
+        and (not sandbox_cells or current in sandbox_cells)
+    ):
+        return current
     if sandbox_cells:
         return sandbox_cells[0]
     if current is not None and _coord_in_bounds(current, dims):
@@ -295,21 +296,19 @@ def replace_sandbox_focus_state(
     normalized_trace = [str(entry) for entry in (trace or ())]
     normalized_path = _normalize_path(state.dimension, dims, path)
     if normalized_coord is None:
-        setattr(state, "sandbox_focus_coord", None)
-        setattr(state, "sandbox_focus_trace", normalized_trace)
-        setattr(state, "sandbox_focus_path", [])
+        state.sandbox_focus_coord = None
+        state.sandbox_focus_trace = normalized_trace
+        state.sandbox_focus_path = []
     else:
-        setattr(state, "sandbox_focus_coord", normalized_coord)
-        setattr(state, "sandbox_focus_trace", normalized_trace)
-        setattr(
-            state,
-            "sandbox_focus_path",
+        state.sandbox_focus_coord = normalized_coord
+        state.sandbox_focus_trace = normalized_trace
+        state.sandbox_focus_path = (
             normalized_path
             if normalized_path and normalized_path[-1] == normalized_coord
-            else [normalized_coord],
+            else [normalized_coord]
         )
-    setattr(state, "sandbox_focus_frame_permutation", normalized_permutation)
-    setattr(state, "sandbox_focus_frame_signs", normalized_signs)
+    state.sandbox_focus_frame_permutation = normalized_permutation
+    state.sandbox_focus_frame_signs = normalized_signs
 
 
 def select_sandbox_projection_coord(

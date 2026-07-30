@@ -486,8 +486,7 @@ def parse_tutorial_payload(payload: dict[str, Any]) -> TutorialPayload:
         lesson = _parse_lesson(lesson_raw, path=f"tutorial.lessons[{lesson_index}]")
         if lesson.lesson_id in seen_lesson_ids:
             raise RuntimeError(
-                "tutorial.lessons contains duplicate lesson_id: "
-                + lesson.lesson_id
+                "tutorial.lessons contains duplicate lesson_id: " + lesson.lesson_id
             )
         seen_lesson_ids.add(lesson.lesson_id)
         parsed_lessons.append(lesson)

@@ -85,7 +85,7 @@ class TutorialSetupApplyTests(unittest.TestCase):
         self.assertTrue(mapped)
         self.assertTrue(all(y >= 0 for _, y in mapped))
         self.assertGreaterEqual(min(y for _, y in mapped), 2)
-        gravity_levels = {coord[1] for coord in state.board.cells.keys()}
+        gravity_levels = {coord[1] for coord in state.board.cells}
         self.assertIn(len(gravity_levels), {1, 2})
         self.assertTrue(all(level >= cfg.height - 2 for level in gravity_levels))
 
@@ -111,9 +111,7 @@ class TutorialSetupApplyTests(unittest.TestCase):
         self.assertTrue(mapped3)
         self.assertTrue(all(coord[cfg3.gravity_axis] >= 0 for coord in mapped3))
         self.assertGreaterEqual(min(coord[cfg3.gravity_axis] for coord in mapped3), 2)
-        gravity_levels3 = {
-            coord[cfg3.gravity_axis] for coord in state3.board.cells.keys()
-        }
+        gravity_levels3 = {coord[cfg3.gravity_axis] for coord in state3.board.cells}
         self.assertIn(len(gravity_levels3), {1, 2})
         self.assertTrue(
             all(level >= cfg3.dims[cfg3.gravity_axis] - 2 for level in gravity_levels3)
@@ -140,9 +138,7 @@ class TutorialSetupApplyTests(unittest.TestCase):
         self.assertTrue(mapped4)
         self.assertTrue(all(coord[cfg4.gravity_axis] >= 0 for coord in mapped4))
         self.assertGreaterEqual(min(coord[cfg4.gravity_axis] for coord in mapped4), 2)
-        gravity_levels4 = {
-            coord[cfg4.gravity_axis] for coord in state4.board.cells.keys()
-        }
+        gravity_levels4 = {coord[cfg4.gravity_axis] for coord in state4.board.cells}
         self.assertIn(len(gravity_levels4), {1, 2})
         self.assertTrue(
             all(level >= cfg4.dims[cfg4.gravity_axis] - 2 for level in gravity_levels4)
@@ -634,7 +630,9 @@ class TutorialSetupApplyTests(unittest.TestCase):
             self.assertIsNotNone(state.current_piece)
             assert state.current_piece is not None
             moved = state.current_piece.moved((0, 0, 0, expected_delta))
-            self.assertTrue(state._can_exist(moved), msg=f"{step_id} not legal from spawn")
+            self.assertTrue(
+                state._can_exist(moved), msg=f"{step_id} not legal from spawn"
+            )
 
     def test_nd_setup_failure_restores_existing_state(self) -> None:
         cfg, state = _new_state_3d()

@@ -192,13 +192,15 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
         self.assertIsInstance(rows, list)
 
     def test_backlog_debt_missing_json_raises(self) -> None:
-        with patch.object(
-            self.mod,
-            "BACKLOG_DEBT_PATH",
-            PROJECT_ROOT / "config/project/does_not_exist_backlog_debt.json",
+        with (
+            patch.object(
+                self.mod,
+                "BACKLOG_DEBT_PATH",
+                PROJECT_ROOT / "config/project/does_not_exist_backlog_debt.json",
+            ),
+            self.assertRaises(RuntimeError),
         ):
-            with self.assertRaises(RuntimeError):
-                self.mod._active_backlog_rows()
+            self.mod._active_backlog_rows()
 
     def test_script_output_preserves_core_keys_and_adds_folder_balance_fields(
         self,
@@ -308,9 +310,15 @@ class TestArchMetricsFolderBalance(unittest.TestCase):
         self.assertEqual(core_step_row["folder_class"], "micro_core_leaf")
         self.assertEqual(core_rng_row["folder_class"], "micro_core_leaf")
         self.assertEqual(runtime_row["folder_class"], "code_default")
-        self.assertEqual(runtime_menu_settings_row["folder_class"], "micro_feature_leaf")
-        self.assertEqual(runtime_menu_structure_row["folder_class"], "micro_feature_leaf")
-        self.assertEqual(runtime_score_analysis_row["folder_class"], "micro_feature_leaf")
+        self.assertEqual(
+            runtime_menu_settings_row["folder_class"], "micro_feature_leaf"
+        )
+        self.assertEqual(
+            runtime_menu_structure_row["folder_class"], "micro_feature_leaf"
+        )
+        self.assertEqual(
+            runtime_score_analysis_row["folder_class"], "micro_feature_leaf"
+        )
         self.assertEqual(tests_row["folder_class"], "tests_lenient")
         self.assertTrue(runtime_row["gate_eligible"])
         self.assertFalse(runtime_row["exclude_from_code_balance"])

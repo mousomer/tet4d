@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from tet4d.engine.ui_logic.keybindings_catalog import binding_action_contracts
 
@@ -120,10 +121,7 @@ def _is_int_list(value: object) -> bool:
 
 def _is_key_token_list(value: object) -> bool:
     return isinstance(value, list) and all(
-        (
-            isinstance(item, int)
-            and not isinstance(item, bool)
-        )
+        (isinstance(item, int) and not isinstance(item, bool))
         or (isinstance(item, str) and bool(item.strip()))
         for item in value
     )
@@ -188,7 +186,7 @@ def _validate_action_binding_map(
     allow_key_tokens: bool,
 ) -> None:
     if not isinstance(raw_group, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     action_contracts = _keybinding_action_contracts()
     for action_name, raw_keys in raw_group.items():
         if not isinstance(action_name, str) or not action_name.strip():
@@ -222,7 +220,7 @@ def _validate_dimension_group_map(
     group_name: str,
 ) -> None:
     if not isinstance(raw_group, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     expected_dim_keys = {
         f"d{dimension}"
         for dimension in SUPPORTED_DIMENSIONS
@@ -258,7 +256,9 @@ def _validate_dimension_group_map(
         expected_actions = set(
             _expected_actions_for_group(group_name=group_name, dimension=dimension)
         )
-        actual_actions = set(raw_dim_group.keys()) if isinstance(raw_dim_group, dict) else set()
+        actual_actions = (
+            set(raw_dim_group.keys()) if isinstance(raw_dim_group, dict) else set()
+        )
         missing_actions = sorted(expected_actions - actual_actions)
         if missing_actions:
             raise ValueError(
@@ -268,10 +268,12 @@ def _validate_dimension_group_map(
 
 def _validate_default_profile(profile_name: object, raw_profile: object) -> None:
     if not isinstance(profile_name, str) or not profile_name.strip():
-        raise ValueError("keybindings defaults config profiles must use non-empty string keys")
+        raise ValueError(
+            "keybindings defaults config profiles must use non-empty string keys"
+        )
     path = f"keybindings.defaults.profiles.{profile_name}"
     if not isinstance(raw_profile, dict):
-        raise ValueError(f"{path} must be an object")
+        raise ValueError(f"{path} must be an object")  # noqa: TRY004 - preserve the established validation contract.
     unexpected_groups = sorted(
         set(raw_profile.keys()) - {"system", "game", "explorer", "camera"}
     )
@@ -311,7 +313,7 @@ def _validate_default_profile(profile_name: object, raw_profile: object) -> None
 
 def validate_keybinding_defaults_payload(payload: object) -> dict[str, Any]:
     if not isinstance(payload, dict):
-        raise ValueError("keybindings defaults config must be a JSON object")
+        raise ValueError("keybindings defaults config must be a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     version = payload.get("version")
     if not isinstance(version, int) or isinstance(version, bool) or version < 1:
         raise ValueError("keybindings defaults config must define integer version >= 1")
@@ -343,7 +345,9 @@ def _validate_keybinding_payload_header(
             or isinstance(schema_version, bool)
             or schema_version < 1
         ):
-            raise ValueError("keybinding payload schema_version must be an integer >= 1")
+            raise ValueError(
+                "keybinding payload schema_version must be an integer >= 1"
+            )
         if schema_version > KEYBINDING_PAYLOAD_SCHEMA_VERSION:
             raise ValueError(
                 "keybinding payload schema_version is newer than this runtime supports"
@@ -365,7 +369,7 @@ def _validate_keybinding_payload_header(
     normalize_profile_name(profile)
     bindings = payload.get("bindings")
     if not isinstance(bindings, dict):
-        raise ValueError("keybinding payload must define a bindings object")
+        raise ValueError("keybinding payload must define a bindings object")  # noqa: TRY004 - preserve the established validation contract.
     return dimension, bindings
 
 
@@ -447,7 +451,7 @@ def _validate_no_duplicate_keycodes(bindings: dict[str, object], *, path: str) -
 
     if all(
         isinstance(action_name, str) and action_name in _keybinding_action_contracts()
-        for action_name in bindings.keys()
+        for action_name in bindings
     ):
         for action_name, raw_keys in bindings.items():
             _register_keybinding_owners(
@@ -513,15 +517,14 @@ def validate_keybinding_file_payload(
     allow_partial_bindings: bool = True,
 ) -> dict[str, Any]:
     if not isinstance(payload, dict):
-        raise ValueError("keybinding payload must be a JSON object")
+        raise ValueError("keybinding payload must be a JSON object")  # noqa: TRY004 - preserve the established validation contract.
     dimension, bindings = _validate_keybinding_payload_header(
         payload,
         expected_dimension=expected_dimension,
     )
     legacy_2d_flat = dimension == 2 and all(
-        isinstance(action_name, str)
-        and action_name in _keybinding_action_contracts()
-        for action_name in bindings.keys()
+        isinstance(action_name, str) and action_name in _keybinding_action_contracts()
+        for action_name in bindings
     )
     if legacy_2d_flat:
         _validate_legacy_2d_binding_payload(
@@ -572,16 +575,13 @@ def safe_resolve_keybinding_path(path: Path) -> Path:
     resolved = path.expanduser().resolve()
     roots = tuple(
         dict.fromkeys(
-            root.resolve()
-            for root in (KEYBINDINGS_DIR, KEYBINDINGS_PROFILES_DIR)
+            root.resolve() for root in (KEYBINDINGS_DIR, KEYBINDINGS_PROFILES_DIR)
         )
     )
     if any(resolved == root or root in resolved.parents for root in roots):
         return resolved
     canonical_roots = ", ".join(str(root) for root in roots)
-    raise ValueError(
-        f"path must be within keybindings directories: {canonical_roots}"
-    )
+    raise ValueError(f"path must be within keybindings directories: {canonical_roots}")
 
 
 def default_keybinding_file_path(dimension: int) -> Path:
@@ -596,7 +596,9 @@ def profile_keybinding_file_path(dimension: int, profile: str) -> Path:
     if normalized == PROFILE_SMALL:
         return safe_resolve_keybinding_path(default_keybinding_file_path(dimension))
     filename = default_keybinding_file_path(dimension).name
-    return safe_resolve_keybinding_path(KEYBINDINGS_PROFILES_DIR / normalized / filename)
+    return safe_resolve_keybinding_path(
+        KEYBINDINGS_PROFILES_DIR / normalized / filename
+    )
 
 
 def keybinding_file_path_for_profile(

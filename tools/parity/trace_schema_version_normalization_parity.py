@@ -6,7 +6,6 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 STRICT_PARITY_ENV = "TET4D_STRICT_PARITY"
 FIXTURE_PATH = (
@@ -79,7 +78,7 @@ class ParityResult:
 
 def _normalize_label(raw: object, *, field: str) -> str:
     if not isinstance(raw, str):
-        raise ValueError(f"{field} must be a string")
+        raise ValueError(f"{field} must be a string")  # noqa: TRY004 - preserve the established validation contract.
     cleaned = raw.strip().lower().replace("-", "_")
     cleaned = re.sub(r"\s+", "_", cleaned)
     cleaned = re.sub(r"_+", "_", cleaned).strip("_")
@@ -90,7 +89,7 @@ def _normalize_label(raw: object, *, field: str) -> str:
 
 def normalize_schema_version(raw: object) -> int:
     if isinstance(raw, bool):
-        raise ValueError("schema_version must be an integer or version string")
+        raise ValueError("schema_version must be an integer or version string")  # noqa: TRY004 - preserve the established validation contract.
     if isinstance(raw, int):
         version = raw
     elif isinstance(raw, str):
@@ -100,7 +99,7 @@ def normalize_schema_version(raw: object) -> int:
             raise ValueError(f"unknown schema_version {raw!r}")
         version = int(match.group(1))
     else:
-        raise ValueError("schema_version must be an integer or version string")
+        raise ValueError("schema_version must be an integer or version string")  # noqa: TRY004 - preserve the established validation contract.
     if version != 1:
         raise ValueError(f"unknown schema_version {raw!r}; expected version 1")
     return version
@@ -151,14 +150,14 @@ def normalize_trace_schema_version(metadata: dict[str, object]) -> dict[str, obj
 def _load_fixture() -> dict[str, object]:
     payload = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise RuntimeError("trace schema/version fixture must be an object")
+        raise RuntimeError("trace schema/version fixture must be an object")  # noqa: TRY004 - preserve the established validation contract.
     if payload.get("slice") != "trace_schema_version_normalization":
         raise RuntimeError("trace schema/version fixture has the wrong slice")
     if payload.get("authority") != "python":
         raise RuntimeError("trace schema/version fixture must declare python authority")
     cases = payload.get("cases")
     if not isinstance(cases, list):
-        raise RuntimeError("trace schema/version fixture must contain a cases array")
+        raise RuntimeError("trace schema/version fixture must contain a cases array")  # noqa: TRY004 - preserve the established validation contract.
     return payload
 
 
@@ -169,16 +168,16 @@ def python_oracle_cases() -> list[SchemaVersionCase]:
     normalized: list[SchemaVersionCase] = []
     for item in cases:
         if not isinstance(item, dict):
-            raise RuntimeError("trace schema/version cases must be objects")
+            raise RuntimeError("trace schema/version cases must be objects")  # noqa: TRY004 - preserve the established validation contract.
         name = item.get("name")
         metadata = item.get("metadata")
         expected = item.get("expected")
         if not isinstance(name, str):
-            raise RuntimeError("trace schema/version case missing name")
+            raise RuntimeError("trace schema/version case missing name")  # noqa: TRY004 - preserve the established validation contract.
         if not isinstance(metadata, dict):
-            raise RuntimeError(f"trace schema/version case {name!r} missing metadata")
+            raise RuntimeError(f"trace schema/version case {name!r} missing metadata")  # noqa: TRY004 - preserve the established validation contract.
         if not isinstance(expected, dict):
-            raise RuntimeError(f"trace schema/version case {name!r} missing expected")
+            raise RuntimeError(f"trace schema/version case {name!r} missing expected")  # noqa: TRY004 - preserve the established validation contract.
         actual = normalize_trace_schema_version(metadata)
         normalized.append(
             SchemaVersionCase(

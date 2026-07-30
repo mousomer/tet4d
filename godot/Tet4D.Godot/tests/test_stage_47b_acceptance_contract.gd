@@ -24,12 +24,12 @@ func run() -> Array:
 	_send_key(KEY_ENTER)
 	await tree.process_frame
 	await tree.process_frame
-	if str(hud.layout_contract_snapshot().get("current_screen", "")) != hud.SCREEN_VIEWER:
-		failures.append("Enter should activate the focused Play 3D action")
+	if str(hud.layout_contract_snapshot().get("current_screen", "")) != hud.SCREEN_GAME_SETUP:
+		failures.append("Enter should open setup for the focused Play 3D action")
 	_send_key(KEY_ESCAPE)
 	await tree.process_frame
 	if str(hud.layout_contract_snapshot().get("current_screen", "")) != hud.SCREEN_MAIN_MENU:
-		failures.append("Esc should return from live play to Main Menu")
+		failures.append("Esc should return from game setup to Main Menu")
 	hud.show_screen(hud.SCREEN_CONTROLS)
 	await tree.process_frame
 	snapshot = hud.layout_contract_snapshot()

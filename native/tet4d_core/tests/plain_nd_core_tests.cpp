@@ -2,8 +2,10 @@
 #include "tet4d_core/plain_nd_session.hpp"
 #include "tet4d_core/plain_nd_trace.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -76,6 +78,158 @@ void test_4d_state_stepper() {
 	require(state.active_piece.has_value(), "hard_drop should respawn a 4D active piece");
 	require(state.active_piece->shape.name == "STAIR4", "4D post-lock shape should be STAIR4");
 	require(state.active_piece->pos == tet4d::core::CoordND{{1, -2, 1, 1}}, "4D spawn position mismatch");
+}
+
+void test_configurable_live_plain_nd_sessions() {
+	tet4d::core::PlainNDSession session_3d(3);
+	const std::string standard_3d_hash = session_3d.state_hash();
+	require(session_3d.configure({{8, 16, 8}}), "supported 3D shape should configure");
+	require(session_3d.snapshot_json().find("\"board_shape\":[8,16,8]") != std::string::npos, "configured 3D snapshot shape missing");
+	require(session_3d.state_hash() != standard_3d_hash, "3D shape must contribute to state identity");
+	session_3d.apply_command("hard_drop");
+	session_3d.reset();
+	require(session_3d.snapshot_json().find("\"board_shape\":[8,16,8]") != std::string::npos, "3D reset should preserve configured shape");
+	require(!session_3d.configure({{8, 16, 8, 1}}), "wrong 3D coordinate count should reject");
+	require(!session_3d.configure({{3, 16, 8}}), "3D width below semantic minimum should reject");
+
+	tet4d::core::PlainNDSession session_4d(4);
+	const std::string standard_4d_hash = session_4d.state_hash();
+	require(session_4d.configure({{8, 16, 5, 8}}), "supported W=8 shape should configure");
+	require(session_4d.snapshot_json().find("\"board_shape\":[8,16,5,8]") != std::string::npos, "configured W=8 snapshot shape missing");
+	require(session_4d.snapshot_json().find("\"w_slice_count\":8") != std::string::npos, "configured W=8 slice count missing");
+	require(session_4d.state_hash() != standard_4d_hash, "4D shape must contribute to state identity");
+	session_4d.apply_command("move_w_pos");
+	session_4d.apply_command("hard_drop");
+	session_4d.reset();
+	require(session_4d.snapshot_json().find("\"board_shape\":[8,16,5,8]") != std::string::npos, "4D reset should preserve W=8 shape");
+	require(!session_4d.configure({{8, 16, 5, 13}}), "W above safe maximum should reject");
+}
+
+tet4d::core::PlainGameSetup setup_nd(
+		int dimension,
+		const std::vector<int> &shape,
+		const std::string &piece_set_id,
+		int seed = 1337,
+		int speed_level = 1,
+		const std::string &random_mode = tet4d::core::RANDOM_MODE_FIXED_SEED) {
+	tet4d::core::PlainGameSetup setup;
+	setup.mode = dimension == 4 ? "live_4d" : "live_3d";
+	setup.board_preset_id = "standard";
+	setup.board_shape = shape;
+	setup.piece_set_id = piece_set_id;
+	setup.random_mode = random_mode;
+	setup.configured_seed = seed;
+	setup.initial_speed_level = speed_level;
+	return setup;
+}
+
+void test_stage50_configured_piece_sets_rng_and_restart() {
+	tet4d::core::PlainNDSession native_3d(3);
+	require(native_3d.configure(setup_nd(3, {6, 10, 6}, "native_3d")), "True 3D setup should configure");
+	std::string snapshot = native_3d.snapshot_json();
+	require(snapshot.find("\"current_piece\":\"S3\"") != std::string::npos, "True 3D seed 1337 should match Python shuffle");
+	require(snapshot.find("\"next_piece\":\"SCREW3\"") != std::string::npos, "True 3D next piece should match Python shuffle");
+	const std::string native_3d_hash = native_3d.state_hash();
+	native_3d.apply_command("hard_drop");
+	native_3d.reset();
+	require(native_3d.state_hash() == native_3d_hash, "True 3D restart should restore exact setup and RNG state");
+
+	tet4d::core::PlainNDSession embedded_3d(3);
+	require(embedded_3d.configure(setup_nd(3, {8, 16, 8}, "embedded_2d", 2025, 6)), "3D Embedded 2D alternate setup should configure");
+	snapshot = embedded_3d.snapshot_json();
+	require(snapshot.find("\"piece_set_id\":\"embedded_2d\"") != std::string::npos, "3D embedded setup identity missing");
+	require(snapshot.find("\"initial_speed_level\":6") != std::string::npos, "3D embedded speed missing");
+	require(embedded_3d.state_hash() != native_3d_hash, "3D piece set/shape/seed/speed must change identity");
+
+	tet4d::core::PlainNDSession standard_4d(4);
+	require(standard_4d.configure(setup_nd(4, {5, 10, 4, 4}, "standard_4d_5")), "True 4D setup should configure");
+	snapshot = standard_4d.snapshot_json();
+	require(snapshot.find("\"current_piece\":\"CORK4\"") != std::string::npos, "True 4D seed 1337 should match Python shuffle");
+	require(snapshot.find("\"next_piece\":\"FORK4\"") != std::string::npos, "True 4D next piece should match Python shuffle");
+	const std::string standard_4d_hash = standard_4d.state_hash();
+
+	tet4d::core::PlainNDSession embedded_4d_3d(4);
+	require(embedded_4d_3d.configure(setup_nd(4, {8, 16, 5, 8}, "embedded_3d", 2025, 8)), "4D Embedded 3D setup should configure");
+	require(embedded_4d_3d.snapshot_json().find("\"piece_set_id\":\"embedded_3d\"") != std::string::npos, "4D Embedded 3D identity missing");
+	require(embedded_4d_3d.state_hash() != standard_4d_hash, "4D Embedded 3D identity should differ");
+
+	tet4d::core::PlainNDSession embedded_4d_2d(4);
+	require(embedded_4d_2d.configure(setup_nd(4, {5, 10, 4, 4}, "embedded_2d")), "4D Embedded 2D setup should configure");
+	require(embedded_4d_2d.snapshot_json().find("\"current_piece\":\"Z_E2\"") != std::string::npos, "4D Embedded 2D should use the Python catalog and shuffle");
+
+	tet4d::core::PlainGameSetup invalid = setup_nd(3, {6, 10, 6}, "standard_4d_5");
+	require(!native_3d.configure(invalid), "wrong-dimensional piece set must reject");
+	invalid = setup_nd(4, {5, 10, 4, 4}, "random_cells_4d");
+	require(!standard_4d.configure(invalid), "deferred 4D random-cell set must reject");
+	invalid = setup_nd(4, {5, 10, 4, 4}, "standard_4d_5", 1337, 0);
+	require(!standard_4d.configure(invalid), "out-of-range ND speed must reject");
+}
+
+void test_stage50_nd_true_random_effective_seed() {
+	const tet4d::core::PlainGameSetup setup = setup_nd(
+		3,
+		{6, 10, 6},
+		"native_3d",
+		1337,
+		2,
+		tet4d::core::RANDOM_MODE_TRUE_RANDOM
+	);
+	tet4d::core::PlainNDSession first(3);
+	tet4d::core::PlainNDSession second(3);
+	require(first.configure(setup), "first ND true-random setup should configure");
+	require(second.configure(setup), "second ND true-random setup should configure");
+	require(first.snapshot_json().find("\"configured_seed\":null") != std::string::npos, "ND true-random configured seed should be null");
+	require(first.state_hash() != second.state_hash(), "explicit new ND true-random construction should change effective seed");
+	const std::string initial_hash = first.state_hash();
+	first.apply_command("hard_drop");
+	first.reset();
+	require(first.state_hash() == initial_hash, "ND true-random restart should preserve effective seed");
+}
+
+std::string export_stage50_setup_case_nd(const std::string &case_id) {
+	tet4d::core::PlainGameSetup setup;
+	std::vector<std::string> actions;
+	int dimension = 3;
+	if (case_id == "setup_plain_3d_embedded_2d") {
+		setup = setup_nd(3, {8, 16, 8}, "embedded_2d", 2025, 6);
+		setup.board_preset_id = "large";
+		actions = {"move_z_pos", "rotate_xz_pos", "soft_drop", "hard_drop"};
+	} else if (case_id == "setup_plain_4d_embedded_3d") {
+		dimension = 4;
+		setup = setup_nd(4, {5, 10, 4, 4}, "embedded_3d", 1337, 4);
+		actions = {"move_w_pos", "rotate_xw_pos", "soft_drop", "hard_drop"};
+	} else if (case_id == "setup_plain_4d_embedded_2d") {
+		dimension = 4;
+		setup = setup_nd(4, {5, 10, 4, 4}, "embedded_2d", 2025, 3);
+		actions = {"rotate_xy_pos", "hard_drop"};
+	} else if (case_id == "setup_plain_4d_wide_true") {
+		dimension = 4;
+		setup = setup_nd(4, {8, 16, 5, 8}, "standard_4d_5", 42, 8);
+		setup.board_preset_id = "wide_w";
+		actions = {"move_w_pos", "rotate_xw_pos", "hard_drop"};
+	} else {
+		return "{}";
+	}
+	tet4d::core::PlainNDSession session(dimension);
+	if (!session.configure(setup)) {
+		return "{}";
+	}
+	const std::string initial_hash = session.state_hash();
+	std::ostringstream out;
+	out << "{\"case_id\":\"" << case_id << "\",\"frames\":["
+		<< "{\"action\":\"initial\",\"snapshot\":" << session.snapshot_json() << "}";
+	for (const std::string &action : actions) {
+		session.apply_command(action);
+		out << ",{\"action\":\"" << action << "\",\"snapshot\":" << session.snapshot_json() << "}";
+	}
+	const std::string final_hash = session.state_hash();
+	session.reset();
+	out << "],\"final_hash\":\"" << final_hash << "\""
+		<< ",\"restart_hash\":\"" << session.state_hash() << "\""
+		<< ",\"restart_matches_initial\":" << (session.state_hash() == initial_hash ? "true" : "false")
+		<< ",\"restart_snapshot\":" << session.snapshot_json()
+		<< "}";
+	return out.str();
 }
 
 void test_3d_rotation_stepper() {
@@ -263,15 +417,21 @@ void test_4d_spawn_blocked_stepper() {
 
 void test_trace_exports() {
 	const std::vector<std::string> cases = tet4d::core::list_plain_nd_parity_cases();
-	require(cases.size() == 8, "Stage 20 should expose eight implemented plain ND parity cases");
-	require(cases[0] == "gameplay_plain_3d_short", "first ND case id mismatch");
-	require(cases[1] == "gameplay_plain_4d_short", "second ND case id mismatch");
-	require(cases[2] == "gameplay_plain_3d_rotation_short", "third ND case id mismatch");
-	require(cases[3] == "gameplay_plain_4d_rotation_short", "fourth ND case id mismatch");
-	require(cases[4] == "gameplay_plain_3d_plane_clear_short", "fifth ND case id mismatch");
-	require(cases[5] == "gameplay_plain_4d_plane_clear_short", "sixth ND case id mismatch");
-	require(cases[6] == "gameplay_plain_3d_spawn_blocked_game_over", "seventh ND case id mismatch");
-	require(cases[7] == "gameplay_plain_4d_spawn_blocked_game_over", "eighth ND case id mismatch");
+	require(cases.size() == 10, "plain ND parity should include Stage 49 configurable cases");
+	for (const std::string &expected : {
+			"gameplay_plain_3d_short",
+			"gameplay_plain_4d_short",
+			"gameplay_plain_3d_rotation_short",
+			"gameplay_plain_4d_rotation_short",
+			"gameplay_plain_3d_plane_clear_short",
+			"gameplay_plain_4d_plane_clear_short",
+			"gameplay_plain_3d_spawn_blocked_game_over",
+			"gameplay_plain_4d_spawn_blocked_game_over",
+			"gameplay_plain_3d_configurable",
+			"gameplay_plain_4d_configurable_w8",
+		}) {
+		require(std::find(cases.begin(), cases.end(), expected) != cases.end(), "missing ND parity case: " + expected);
+	}
 	require(tet4d::core::run_builtin_plain_nd_smoke_case(), "plain ND smoke API should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_3d_short"), "3D required fields should pass");
 	require(tet4d::core::get_plain_nd_required_field_parity("gameplay_plain_4d_short"), "4D required fields should pass");
@@ -456,9 +616,17 @@ int main(int argc, char **argv) {
 		std::cout << tet4d::core::export_plain_nd_trace_json(case_id) << "\n";
 		return 0;
 	}
+	if (argc >= 2 && std::string(argv[1]) == "--export-plain-setup") {
+		const std::string case_id = argc >= 3 ? std::string(argv[2]) : "setup_plain_3d_embedded_2d";
+		std::cout << export_stage50_setup_case_nd(case_id) << "\n";
+		return 0;
+	}
 	test_coord_and_board_model();
 	test_3d_state_stepper();
 	test_4d_state_stepper();
+	test_configurable_live_plain_nd_sessions();
+	test_stage50_configured_piece_sets_rng_and_restart();
+	test_stage50_nd_true_random_effective_seed();
 	test_3d_rotation_stepper();
 	test_4d_rotation_stepper();
 	test_rotation_rejects_invalid_axes_clearly();

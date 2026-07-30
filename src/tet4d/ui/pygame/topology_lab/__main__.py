@@ -1,4 +1,5 @@
 """Standalone entry point for the topology explorer playground."""
+
 from __future__ import annotations
 
 import sys

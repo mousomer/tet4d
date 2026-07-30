@@ -16,9 +16,18 @@ signal display_w_labels_changed(visible: bool)
 signal projection_strength_changed(value: float)
 signal diagnostics_visibility_changed(visible: bool)
 signal layout_bounds_visibility_changed(visible: bool)
-signal keyboard_hints_visibility_changed(visible: bool)
+signal high_contrast_changed(enabled: bool)
+signal reduced_motion_changed(enabled: bool)
+signal help_hints_visibility_changed(visible: bool)
 signal display_mode_changed(mode: String)
 signal onboarding_visibility_changed(visible: bool)
+signal window_mode_changed(mode: String)
+signal windowed_size_changed(size_value: Array)
+signal ui_scale_changed(scale_id: String)
+signal hud_density_changed(density: String)
+signal board_detail_changed(detail: String)
+signal camera_sensitivity_changed(sensitivity: String)
+signal camera_invert_y_changed(inverted: bool)
 signal settings_reset()
 
 var registry = SettingsRegistryScript.new()
@@ -76,10 +85,19 @@ func first_focus_control() -> Control:
 	return _focus_controls[0] if not _focus_controls.is_empty() else null
 
 
-func reset_settings_to_defaults() -> void:
+func reset_display_settings_to_defaults() -> void:
 	if store == null:
 		return
-	store.reset_to_defaults()
+	store.reset_categories_to_defaults(["display", "theme", "camera"], "Display settings")
+	refresh_all_controls()
+	settings_reset.emit()
+	apply_initial_settings()
+
+
+func reset_accessibility_settings_to_defaults() -> void:
+	if store == null:
+		return
+	store.reset_categories_to_defaults(["accessibility"], "Accessibility settings")
 	refresh_all_controls()
 	settings_reset.emit()
 	apply_initial_settings()
@@ -148,8 +166,11 @@ func _build_panel() -> void:
 			continue
 		content.add_child(_section_header(registry.category_label(category_id)))
 		for spec in specs:
+			if not spec.is_ui_visible():
+				continue
 			content.add_child(_setting_row(spec))
 	content.add_child(_reset_settings_button())
+	content.add_child(_reset_accessibility_settings_button())
 	_configure_focus_order()
 
 
@@ -238,6 +259,16 @@ func _on_control_value_changed(setting_id: String, value) -> void:
 func _emit_setting(setting_id: String, value) -> void:
 	setting_changed.emit(setting_id, value)
 	match setting_id:
+		"display.window_mode":
+			window_mode_changed.emit(str(value))
+		"display.windowed_size":
+			windowed_size_changed.emit(value.duplicate() if value is Array else [])
+		"display.ui_scale":
+			ui_scale_changed.emit(str(value))
+		"display.hud_density":
+			hud_density_changed.emit(str(value))
+		"display.board_detail":
+			board_detail_changed.emit(str(value))
 		"replay.playback_speed":
 			playback_speed_changed.emit(float(value))
 		"replay.loop_enabled":
@@ -251,10 +282,18 @@ func _emit_setting(setting_id: String, value) -> void:
 				_style_manager.set_theme(ReplayVisuals.normalize_display_mode(str(value)))
 				apply_shell_style()
 			display_mode_changed.emit(ReplayVisuals.normalize_display_mode(str(value)))
+		"camera.sensitivity":
+			camera_sensitivity_changed.emit(str(value))
+		"camera.invert_y":
+			camera_invert_y_changed.emit(bool(value))
 		"diagnostics.show_layout_bounds":
 			layout_bounds_visibility_changed.emit(bool(value))
-		"controls_help.show_keyboard_hints":
-			keyboard_hints_visibility_changed.emit(bool(value))
+		"accessibility.high_contrast":
+			high_contrast_changed.emit(bool(value))
+		"accessibility.reduced_motion":
+			reduced_motion_changed.emit(bool(value))
+		"accessibility.show_help_hints":
+			help_hints_visibility_changed.emit(bool(value))
 		"interface.show_onboarding":
 			onboarding_visibility_changed.emit(bool(value))
 
@@ -287,11 +326,22 @@ func _update_control(setting_id: String, value) -> void:
 
 func _reset_settings_button() -> Button:
 	var button := Button.new()
-	button.name = "ResetSettingsToDefaultsButton"
-	button.text = "Reset Settings to Defaults"
-	button.tooltip_text = "Restore and save the default shell preferences"
+	button.name = "ResetDisplaySettingsButton"
+	button.text = "Reset Display Settings"
+	button.tooltip_text = "Restore and save display, theme, and camera defaults"
 	button.focus_mode = Control.FOCUS_ALL
-	button.pressed.connect(reset_settings_to_defaults)
+	button.pressed.connect(reset_display_settings_to_defaults)
+	_focus_controls.append(button)
+	return button
+
+
+func _reset_accessibility_settings_button() -> Button:
+	var button := Button.new()
+	button.name = "ResetAccessibilitySettingsButton"
+	button.text = "Reset Accessibility Settings"
+	button.tooltip_text = "Restore and save High Contrast, Reduced Motion, and help-hint defaults"
+	button.focus_mode = Control.FOCUS_ALL
+	button.pressed.connect(reset_accessibility_settings_to_defaults)
 	_focus_controls.append(button)
 	return button
 

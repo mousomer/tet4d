@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import os
-from pathlib import Path
 import re
-
+from dataclasses import dataclass
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -227,9 +226,9 @@ def _is_allowed_number(raw: str, line: str) -> bool:
         return True
     if raw.startswith("-") and raw[1:] in ALLOWED_NUMBERS:
         return True
-    if re.search(r"\b(version|schema_version|trace_version|format_version)\b", line):
-        return True
-    return False
+    return bool(
+        re.search(r"\b(version|schema_version|trace_version|format_version)\b", line)
+    )
 
 
 def _line_findings(

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List
 
 Coord = tuple[int, ...]
 
@@ -14,9 +14,9 @@ class BoardND:
     """
 
     dims: Coord
-    cells: Dict[Coord, int] = field(default_factory=dict)
-    last_cleared_levels: List[int] = field(default_factory=list)
-    last_cleared_cells: List[tuple[Coord, int]] = field(default_factory=list)
+    cells: dict[Coord, int] = field(default_factory=dict)
+    last_cleared_levels: list[int] = field(default_factory=list)
+    last_cleared_cells: list[tuple[Coord, int]] = field(default_factory=list)
 
     def inside_bounds(self, coord: Coord) -> bool:
         if len(coord) != len(self.dims):
@@ -38,7 +38,7 @@ class BoardND:
                 return False
         return True
 
-    def full_levels(self, gravity_axis: int) -> List[int]:
+    def full_levels(self, gravity_axis: int) -> list[int]:
         from ..rules.board_rules import full_levels as full_levels_rule
 
         return full_levels_rule(self.dims, self.cells, gravity_axis)

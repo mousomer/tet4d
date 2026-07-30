@@ -27,6 +27,275 @@
       "replay_manifest": "config/project/policy/manifests/replay_manifest.json",
       "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"
     },
+    "ruff_toolchain": {
+      "policy": {
+        "target": "newest stable supported release",
+        "package_source": "Python Package Index (PyPI)",
+        "work_minimisation_is_selection_criterion": false,
+        "exact_pin_required": true,
+        "minor_version_changes_are_explicit_migrations": true
+      },
+      "migration": {
+        "selection_date": "2026-07-25",
+        "previous_version": "0.14.1",
+        "newest_stable_version": "0.16.0",
+        "selected_version": "0.16.0",
+        "stable_0_17_available": false,
+        "diagnostics_before_migration": 1023,
+        "affected_files_before_migration": 280,
+        "formatter_differences_before_migration": 171,
+        "safe_fixable_diagnostics_before_migration": 546,
+        "unsafe_fixable_diagnostics_before_migration": 299,
+        "files_changed": 332,
+        "configuration_changes": [
+          "Pinned the canonical development dependency to ruff==0.16.0.",
+          "Made GitHub Actions print the installed Ruff version.",
+          "Made the existing C901 verification gate part of the canonical Ruff selection.",
+          "Removed the obsolete cli/front.py file-wide E402 suppression.",
+          "Rebased folder-balance metrics after formatter-only line redistribution.",
+          "Did not weaken lint selection, ignores, exclusions, or preview policy."
+        ],
+        "rules_newly_enforced_or_reinterpreted": [
+          "B023",
+          "BLE001",
+          "C400",
+          "C401",
+          "C408",
+          "C409",
+          "EXE001",
+          "EXE002",
+          "FLY002",
+          "FURB192",
+          "I001",
+          "ISC004",
+          "PERF102",
+          "PIE796",
+          "PIE810",
+          "PLE0605",
+          "RUF007",
+          "RUF046",
+          "RUF059",
+          "RUF100",
+          "S110",
+          "SIM102",
+          "SIM103",
+          "SIM117",
+          "SIM118",
+          "TRY004",
+          "UP006",
+          "UP022",
+          "UP035"
+        ],
+        "narrow_rule_exceptions": [
+          {
+            "rule": "TRY004",
+            "scope": "tested validation and parity exception contracts",
+            "reason": "Changing established ValueError or RuntimeError contracts caused regression failures; rule-specific inline annotations preserve the tested API."
+          },
+          {
+            "rule": "BLE001",
+            "scope": "top-level UI, optional-import, and best-effort recording boundaries",
+            "reason": "These boundaries must report or isolate arbitrary implementation failures without terminating the active application."
+          },
+          {
+            "rule": "SIM117",
+            "scope": "two score-analyzer tests",
+            "reason": "Explicit nested context-manager lifetime keeps environment restoration and temporary-workspace teardown ordering visible."
+          },
+          {
+            "rule": "PLE0605",
+            "scope": "locked-cell explosion compatibility facade",
+            "reason": "The facade deliberately mirrors the complete implementation module, including private test seams used by the existing compatibility contract."
+          },
+          {
+            "rule": "C901",
+            "scope": "six established schema and stateful UI orchestration functions",
+            "reason": "Ruff 0.16 reclassified these existing orchestrators. Splitting them during a lint migration would risk schema validation and keyboard/mouse event-order semantics, so the dedicated complexity gate remains enabled with function-specific annotations pending a separately tested refactor."
+          }
+        ],
+        "technical_blockers": [],
+        "branch_local_result": "CODEX_MODE=1 ./scripts/verify.sh passed on the final branch tree",
+        "merge_context_result": "CODEX_MODE=1 ./scripts/verify.sh passed for origin/master c10ed4e6a190daa85976162c1feb866c743b9462 plus branch 32ce84041c559804eef48b9443d8236932016c29",
+        "github_python_3_11_to_3_14_matrix_result": "GitHub Actions pull-request run 30144781389 passed Python 3.11, 3.12, 3.13, and 3.14 for migration head c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2"
+      }
+    },
+    "godot_toolchain": {
+      "migration_date": "2026-07-25",
+      "status": "accepted",
+      "selection_rule": "newest officially published stable Godot 4.7 patch release",
+      "previous_supported_version": "4.6.3-stable",
+      "selected_supported_version": "4.7.1-stable",
+      "release_channel": "stable",
+      "release_date": "2026-07-14",
+      "build_identifier": "4.7.1.stable.official.a13da4feb",
+      "engine_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+      "official_release_url": "https://github.com/godotengine/godot/releases/tag/4.7.1-stable",
+      "assets": {
+        "linux_x86_64": {
+          "name": "Godot_v4.7.1-stable_linux.x86_64.zip",
+          "url": "https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip",
+          "sha256": "c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba",
+          "executable": "Godot_v4.7.1-stable_linux.x86_64"
+        },
+        "macos_universal": {
+          "name": "Godot_v4.7.1-stable_macos.universal.zip",
+          "url": "https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_macos.universal.zip",
+          "sha256": "897cb7f9799796c717ae75f31446aed883dc92b1d6c3b33d893cc7843fff2fa9",
+          "executable": "Godot.app/Contents/MacOS/Godot"
+        }
+      },
+      "godot_cpp": {
+        "repository": "https://github.com/godotengine/godot-cpp.git",
+        "previous_commit": "a7770ef949fc664892e46b7e98a708672e8a44a8",
+        "selected_commit": "5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731",
+        "selection_basis": "official 2026-06-18 commit synchronizing godot-cpp with Godot 4.7-stable commit 5b4e0cb0fd279832bbdd69fed5354d4e5ad26f88",
+        "api_version": "4.7",
+        "api_equivalence": "Godot 4.7.1 and the selected 4.7-stable binding baseline have identical extension API content apart from patch-version header metadata"
+      },
+      "gdextension": {
+        "compatibility_minimum": "4.7",
+        "entry_symbol": "tet4d_core_library_init",
+        "reloadable": true
+      },
+      "build": {
+        "cpp_standard": "C++17",
+        "scons_version": "4.10.1",
+        "local_compiler": "Apple Clang 21.0.0"
+      },
+      "canonical_commands": {
+        "native_build": "./scripts/build_godot_tet4d_core.sh",
+        "native_tests": "./scripts/test_godot_tet4d_core.sh",
+        "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh",
+        "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"
+      },
+      "results": {
+        "migration_guide_audit": "PASS; one compatibility-preserving explicit stretch-aspect setting added and no affected API usage found",
+        "gdscript": "PASS under exact Godot 4.7.1; all 78 scripts register",
+        "scene_resources": "PASS under exact Godot 4.7.1 in an isolated project copy",
+        "native_build": "PASS after clean binding generation and extension rebuild against selected godot-cpp",
+        "native_tests": "PASS after the clean rebuild",
+        "parity": "2D, ND, setup, geometry, and query lanes PASS after the clean rebuild",
+        "visual_review": "PASS on macOS under exact Godot 4.7.1 for main/setup, live 2D/3D/4D, W slices, replay browser, cockpit, settings, typography/theme, and resize",
+        "persistence": "PASS in the full Godot suite, including schema migration and malformed-data recovery",
+        "branch_head": "6bd592e0329547ee03923f01fdaeb7d03aba89e3",
+        "branch_result": "PASS for migration-specific checks and CODEX_MODE=1 ./scripts/verify.sh",
+        "merge_context": "origin/master c10ed4e6a190daa85976162c1feb866c743b9462 plus branch d9e6da3b0868f77aa26a6fd2e3b13496df40f949",
+        "merge_context_result": "PASS for clean native rebuild, native tests, all parity lanes, exact Godot verification, and CODEX_MODE=1 ./scripts/verify.sh",
+        "ci": "PASS on final implementation head 6bd592e0329547ee03923f01fdaeb7d03aba89e3: push run 30179384125 and pull-request run 30179385253 passed Python 3.11-3.14 plus the blocking Linux Godot 4.7.1 native build, native tests, parity, exact Godot verification, and clean-checkout gate",
+        "performance": {
+          "editor_import_seconds_before_after": "3.35 / 3.57",
+          "headless_suite_seconds_before_after": "13.26 / 13.36",
+          "bounded_startup_seconds_before_after": "1.35 / 1.36",
+          "native_tests_seconds_before_after": "19.04 / 16.14",
+          "clean_native_rebuild_seconds": "474.20",
+          "assessment": "no material regression; clean pre-migration build timing was not available for an equivalent build comparison"
+        },
+        "known_limitations": [
+          "macOS is the local development evidence platform",
+          "Linux acceptance is headless GitHub Actions evidence",
+          "Windows native packaging remains declared but unverified by this migration"
+        ]
+      }
+    },
+    "static_analysis_formatting_audit": {
+      "audit_date": "2026-07-25",
+      "status": "completed_with_partial_and_unavailable_lanes",
+      "report": "docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md",
+      "audited_branch": "codex/configurable-plain-boards",
+      "audited_head": "ffb57675be13c2de3dd8525db24607ce331e5620",
+      "tracked_language_counts": {
+        "python": 458,
+        "gdscript": 78,
+        "godot_scenes": 1,
+        "godot_resources": 3,
+        "cpp_sources": 18,
+        "cpp_headers": 13,
+        "csharp": 24,
+        "shell": 23
+      },
+      "python": {
+        "ruff_version": "0.16.0",
+        "pinning": "exact development dependency",
+        "lint": "PASS: 0 diagnostics",
+        "format": "PASS: 638 files already formatted",
+        "ci_coverage": "full lint and C901; format limited to scripts and tools",
+        "type_checking": "not configured; shell-level mypy is non-canonical and Pyright is absent",
+        "gaps": [
+          "CI Ruff format scope is narrower than repository formatting policy"
+        ]
+      },
+      "gdscript": {
+        "target_godot_version": "4.6.3-stable",
+        "local_godot_version": "4.7.stable.official.5b4e0cb0f",
+        "parser_static_analysis": "PASS under local 4.7 through editor import and headless tests",
+        "warnings_policy": "no warnings-as-errors, global suppression, or per-warning suppression found",
+        "gdtoolkit": "NOT INSTALLED and not configured",
+        "ci_coverage": "not configured",
+        "gaps": [
+          "target-version local runner is not reproducible",
+          "Godot headless validation is absent from CI"
+        ]
+      },
+      "godot_project": {
+        "project_import": "PASS/PARTIAL under local 4.7; sandbox blocked editor cache writes",
+        "main_scene_startup": "PASS with bounded five-frame headless startup",
+        "scene_resource_validation": "PASS for the only scene plus three theme resources",
+        "gdextension_load": "PASS",
+        "gaps": [
+          "local Godot version differs from project target",
+          "scene/resource and GDExtension checks are absent from CI"
+        ]
+      },
+      "cpp": {
+        "compiler": "Apple Clang 21.0.0",
+        "standard": "C++17",
+        "warning_policy": "-Wall -Wextra -Werror in standalone native tests",
+        "build_and_tests": "PASS",
+        "clang_format": "NOT INSTALLED; configuration present",
+        "clang_tidy": "BLOCKED; tool and compile_commands.json absent",
+        "sanitizers": "NOT CONFIGURED",
+        "ci_coverage": "advisory configuration validation only; no build or tests",
+        "gaps": [
+          "compiler and SCons versions are unpinned",
+          "clang-format is not executable",
+          "clang-tidy lacks a real compilation database",
+          "native build, tests, and sanitizers are absent from CI"
+        ]
+      },
+      "csharp_dotnet": {
+        "applicable": true,
+        "scope": "legacy Unity replay spike, not Godot C#",
+        "project_files": "24 C# files and two Unity assembly definitions; no csproj or solution",
+        "sdk": "NOT INSTALLED",
+        "unity_version": "2022.3.20f1",
+        "roslyn": "BLOCKED without an installed Unity compiler path",
+        "dotnet_format": "NOT APPLICABLE to the assembly-definition-only path",
+        "nullable": "NOT CONFIGURED",
+        "warnings_as_errors": "NOT CONFIGURED",
+        "optional_analysers": "NOT CONFIGURED",
+        "gaps": [
+          "retained Unity C# cannot be built or analysed locally or in CI"
+        ]
+      },
+      "shell": {
+        "dialect": "Bash for all tracked shell scripts",
+        "bash_syntax": "PASS: 23 files",
+        "shellcheck": "NOT INSTALLED and not configured",
+        "shfmt": "NOT INSTALLED and not configured",
+        "ci_coverage": "scripts execute but no shell static-analysis gate exists",
+        "gaps": [
+          "ShellCheck is absent"
+        ]
+      },
+      "ci": {
+        "pull_request": 37,
+        "push_run": 30144884534,
+        "pull_request_run": 30144885222,
+        "head": "ffb57675be13c2de3dd8525db24607ce331e5620",
+        "result": "PASS on Python 3.11, 3.12, 3.13, and 3.14",
+        "full_repository_verification": "PASS"
+      }
+    },
     "policy_index_contract": {
       "required_tokens": [
         "config/project/policy_pack.json",
@@ -177,6 +446,32 @@
         "piece_set_labels"
       ]
     },
+    "godot_settings_externalization_contract": {
+      "registry_path": "godot/Tet4D.Godot/config/shell_settings_registry.json",
+      "registry_loader_path": "godot/Tet4D.Godot/scripts/ui/settings/settings_registry.gd",
+      "store_path": "godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd",
+      "persistent_user_path": "user://shell_settings.json",
+      "runtime_source_root": "godot/Tet4D.Godot/scripts",
+      "required_setting_fields": [
+        "id",
+        "label",
+        "description",
+        "category",
+        "value_type",
+        "control_type",
+        "default",
+        "authority",
+        "persistence",
+        "persist"
+      ],
+      "persistent_policy": "local_shell",
+      "non_persistent_policies": [
+        "none",
+        "session"
+      ],
+      "forbid_runtime_default_duplicates": true,
+      "statement": "Every Godot shell setting and its default must be declared in the checked-in registry; runtime code may map validated preset values but must not introduce a second setting default. Persistent user choices must be written only to the separate user-data JSON store."
+    },
     "contributor_directives": {
       "required_ci_enforced_ids": [
         "verification_required",
@@ -189,7 +484,6 @@
           "category": "process",
           "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
           "source_docs": [
-            "AGENTS.md",
             "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
@@ -199,9 +493,8 @@
         {
           "id": "rds_backlog_state_sync",
           "category": "process",
-          "statement": "Update relevant RDS docs plus BACKLOG and CURRENT_STATE when scope or behavior changes.",
+          "statement": "Update relevant RDS docs and BACKLOG when scope or behavior changes; update CURRENT_STATE only for staged, restart, handoff, restructuring, multi-batch, or phase-dependent work.",
           "source_docs": [
-            "AGENTS.md",
             "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
@@ -226,7 +519,7 @@
           "category": "process",
           "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
           "source_docs": [
-            "AGENTS.md"
+            "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
             "code_review",
@@ -238,7 +531,7 @@
           "category": "process",
           "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
           "source_docs": [
-            "AGENTS.md"
+            "docs/WORKFLOW_CODEX.md"
           ],
           "enforced_by": [
             "code_review",
@@ -1201,14 +1494,18 @@
           "Workflow authority",
           "config/project/policy_pack.json",
           "Authority files must be tracked in Git",
-          "## Context-switch profiles",
-          "### review",
-          "### engine",
-          "### menu_ui",
-          "### topology_explorer",
-          "### packaging",
-          "### governance",
-          "### handoff",
+          "## Common preconditions",
+          "## Task profiles",
+          "Narrow review",
+          "Python engine",
+          "Godot product shell",
+          "Native C++/GDExtension",
+          "Topology explorer",
+          "Governance",
+          "Packaging",
+          "Staged migration/handoff",
+          "Ordinary isolated fixes",
+          "Read the full policy pack only for governance",
           "## Boundary model",
           "Machine-readable policy data belongs in `config/project/policy_pack.json`.",
           "`tools/governance/validate_project_contracts.py` owns validation procedure only.",
@@ -1258,6 +1555,7 @@
           "CURRENT_STATE.md",
           "docs/rds/",
           "docs/ARCHITECTURE_CONTRACT.md",
+          "docs/DOCUMENTATION_MAP.md",
           "docs/plans/topology_playground_current_authority.md",
           "CODEX_MODE=1 ./scripts/verify.sh"
         ]

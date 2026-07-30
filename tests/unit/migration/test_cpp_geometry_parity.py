@@ -14,7 +14,6 @@ from tet4d.engine.core.piece_transform import (
 )
 from tools.parity.first_subsystem_parity_pilot import python_oracle_stable_hash_text
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GEOMETRY_TEST_BIN = (
     REPO_ROOT / "native" / "tet4d_core" / "build" / "tests" / "geometry_core_tests"

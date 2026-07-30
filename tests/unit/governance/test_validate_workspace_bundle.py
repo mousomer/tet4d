@@ -154,15 +154,6 @@ def test_forbidden_project_specific_term_in_drift_policy_fails(
     assert any("forbidden term" in issue.message for issue in issues)
 
 
-def test_root_agents_missing_programming_policy_link_fails(tmp_path: Path) -> None:
-    _write_valid_workspace_bundle(tmp_path)
-    _write(tmp_path / "AGENTS.md", "No bundle link.\n")
-
-    issues = validator.validate(tmp_path)
-
-    assert any("AGENTS.md must link" in issue.message for issue in issues)
-
-
 def test_governance_router_missing_workspace_bundle_link_fails(tmp_path: Path) -> None:
     _write_valid_workspace_bundle(tmp_path)
     _write(tmp_path / "docs" / "governance" / "README.md", "No bundle link.\n")

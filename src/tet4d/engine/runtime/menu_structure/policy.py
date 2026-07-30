@@ -54,7 +54,9 @@ def validate_launcher_route_actions(
 
 
 def enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
-    menus: dict[str, dict[str, Any]] = validated.get("runtime_menus", validated["menus"])
+    menus: dict[str, dict[str, Any]] = validated.get(
+        "runtime_menus", validated["menus"]
+    )
     entrypoints: dict[str, str] = validated.get(
         "runtime_menu_entrypoints",
         validated["menu_entrypoints"],
@@ -62,7 +64,9 @@ def enforce_menu_entrypoint_parity(validated: dict[str, Any]) -> None:
     launcher_actions = _entrypoint_reachability(
         menus, start_menu_id=entrypoints["launcher"]
     )[1]
-    pause_actions = _entrypoint_reachability(menus, start_menu_id=entrypoints["pause"])[1]
+    pause_actions = _entrypoint_reachability(menus, start_menu_id=entrypoints["pause"])[
+        1
+    ]
     settings_actions = _entrypoint_reachability(
         menus, start_menu_id=entrypoints["settings"]
     )[1]
@@ -111,10 +115,7 @@ def enforce_settings_split_policy(validated: dict[str, Any]) -> None:
         # The settled IA keeps one scrolling Game page as the single gameplay
         # settings authority instead of splitting it into more micro-pages.
         exempt_flat_game_page = category_id == "game_settings"
-        if (
-            not exempt_flat_game_page
-            and int(entry.get("field_count", 0)) > max_fields
-        ):
+        if not exempt_flat_game_page and int(entry.get("field_count", 0)) > max_fields:
             raise RuntimeError(
                 "settings split policy violation: "
                 f"{category_id} exceeds max_top_level_fields"
@@ -136,7 +137,7 @@ def enforce_settings_split_policy(validated: dict[str, Any]) -> None:
 
     settings_root = menus.get(entrypoints["settings"])
     if not isinstance(settings_root, dict):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             "settings split policy violation: settings entrypoint must resolve to a menu"
         )
     top_level_labels = [

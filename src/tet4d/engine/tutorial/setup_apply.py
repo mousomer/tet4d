@@ -6,11 +6,12 @@ from typing import Any
 
 from tet4d.engine.runtime.settings_schema import sanitize_text
 
+from ..core.piece_transform import block_axis_bounds, rotate_blocks_2d
+from ..gameplay.api import piece_pose_legal_gameplay
 from ..gameplay.challenge_mode import (
     apply_challenge_prefill_2d,
     apply_challenge_prefill_nd,
 )
-from ..gameplay.api import piece_pose_legal_gameplay
 from ..gameplay.game2d import GameConfig, GameState
 from ..gameplay.game_nd import GameConfigND, GameStateND
 from ..gameplay.pieces2d import (
@@ -19,7 +20,6 @@ from ..gameplay.pieces2d import (
     PieceShape2D,
     get_piece_bag_2d,
 )
-from ..core.piece_transform import block_axis_bounds, rotate_blocks_2d
 from ..gameplay.pieces_nd import (
     PIECE_SET_3D_STANDARD,
     PIECE_SET_4D_STANDARD,
@@ -65,8 +65,7 @@ def _normalize_bottom_layers(setup: dict[str, Any]) -> tuple[int, int]:
     )
     bounded_min = max(_BOTTOM_LAYERS_HARD_MIN, min(_BOTTOM_LAYERS_HARD_MAX, raw_min))
     bounded_max = max(_BOTTOM_LAYERS_HARD_MIN, min(_BOTTOM_LAYERS_HARD_MAX, raw_max))
-    if bounded_max < bounded_min:
-        bounded_max = bounded_min
+    bounded_max = max(bounded_max, bounded_min)
     return bounded_min, bounded_max
 
 

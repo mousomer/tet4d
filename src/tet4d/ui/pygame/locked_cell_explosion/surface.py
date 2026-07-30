@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
 import random
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 import pygame
@@ -40,6 +40,7 @@ from tet4d.ui.pygame.ui_utils import (
     wrapped_label_value_layout,
 )
 
+from . import endgame_preview
 from .board_view import draw_native_board_view
 from .controller import LockedCellExplosionController, build_locked_cell_explosion
 from .defaults_store import (
@@ -49,24 +50,18 @@ from .defaults_store import (
     mode_explosion_defaults,
     save_mode_explosion_defaults,
 )
-from . import endgame_preview
-from .simulation import (
-    assign_particle_masses,
-    total_kinetic_energy_for_particles,
-    velocity_norm_sq_sum_for_particles,
-)
 from .model import (
-    EXPLOSION_BOUNDARY_RESPONSES,
     EXPLOSION_BOUNDARY_RESPONSE_ESCAPE,
+    EXPLOSION_BOUNDARY_RESPONSES,
     EXPLOSION_COLLISION_ELASTICITY_MAX,
     EXPLOSION_COLLISION_ELASTICITY_MIN,
-    EXPLOSION_DIAGNOSTICS_MODES,
     EXPLOSION_DIAGNOSTICS_MODE_FULL,
     EXPLOSION_DIAGNOSTICS_MODE_OFF,
-    EXPLOSION_MASS_MODE_UNIFORM,
-    EXPLOSION_MASS_MODES,
+    EXPLOSION_DIAGNOSTICS_MODES,
     EXPLOSION_MASS_MAX,
     EXPLOSION_MASS_MIN,
+    EXPLOSION_MASS_MODE_UNIFORM,
+    EXPLOSION_MASS_MODES,
     EXPLOSION_PARTICLE_COLLISION_MODES,
     EXPLOSION_PARTICLE_COLLISIONS_OFF,
     EXPLOSION_SPEED_NORMAL,
@@ -80,10 +75,15 @@ from .model import (
     clamp_collision_elasticity,
     clamp_mass_value,
     clamp_trace_retention_ms,
+    normalize_diagnostics_mode,
     normalize_mass_mode,
     normalize_mass_range,
-    normalize_diagnostics_mode,
     trail_sample_budget_for_lifetime_ms,
+)
+from .simulation import (
+    assign_particle_masses,
+    total_kinetic_energy_for_particles,
+    velocity_norm_sq_sum_for_particles,
 )
 
 if TYPE_CHECKING:
@@ -94,6 +94,7 @@ def _camera_controls_module():
     from tet4d.ui.pygame.topology_lab import camera_controls
 
     return camera_controls
+
 
 _BG_TOP = (14, 18, 44)
 _BG_BOTTOM = (4, 7, 20)
@@ -401,7 +402,9 @@ def _dynamic_row_keys(
         if snapshot_source_id == _SNAPSHOT_SOURCE_SINGLE_PIECE:
             rows.append("piece_shape")
         if snapshot_source_id == _SNAPSHOT_SOURCE_SINGLE_CELL:
-            rows.extend(f"cell_{axis.lower()}" for axis in _AXIS_LABELS[: int(state.dimension)])
+            rows.extend(
+                f"cell_{axis.lower()}" for axis in _AXIS_LABELS[: int(state.dimension)]
+            )
     rows.extend(
         (
             "boundary_response",
@@ -600,7 +603,13 @@ def _normalize_simulation_settings(
         state.endgame_live_cell_fraction
     )
     if float(state.shell_preview_time_scale) not in _SHELL_PREVIEW_TIME_SCALES:
-        nearest = min(_SHELL_PREVIEW_TIME_SCALES, key=lambda value: abs(float(value) - float(state.shell_preview_time_scale or default_preview_scale)))
+        nearest = min(
+            _SHELL_PREVIEW_TIME_SCALES,
+            key=lambda value: abs(
+                float(value)
+                - float(state.shell_preview_time_scale or default_preview_scale)
+            ),
+        )
         state.shell_preview_time_scale = float(nearest)
     if not str(state.trace_retention_input_text).strip():
         state.trace_retention_input_text = _trace_retention_input_text(
@@ -693,7 +702,9 @@ def _apply_explosion_defaults(
 def _apply_persisted_explosion_defaults(
     state: StandaloneExplosionSurfaceState,
 ) -> None:
-    _apply_explosion_defaults(state, mode_explosion_defaults(_mode_key_for_state(state)))
+    _apply_explosion_defaults(
+        state, mode_explosion_defaults(_mode_key_for_state(state))
+    )
 
 
 def _persistent_defaults_from_state(
@@ -789,9 +800,12 @@ def _single_piece_source_cells(
     return tuple(
         ExplosionSeedCell(
             source_coord=tuple(
-                int(origin[axis]) + int(block[axis]) for axis in range(int(state.dimension))
+                int(origin[axis]) + int(block[axis])
+                for axis in range(int(state.dimension))
             ),
-            color_id=_COLOR_CYCLE[(int(shape.color_id) - 1 + index) % len(_COLOR_CYCLE)],
+            color_id=_COLOR_CYCLE[
+                (int(shape.color_id) - 1 + index) % len(_COLOR_CYCLE)
+            ],
             source_group_id=str(shape.name),
         )
         for index, block in enumerate(blocks)
@@ -828,7 +842,9 @@ def _piece_change_shapes_for_state(
             board=None,
             rng=random.Random(seed),
         )
-    current_shape = runtime.current_piece.shape if runtime.current_piece is not None else None
+    current_shape = (
+        runtime.current_piece.shape if runtime.current_piece is not None else None
+    )
     if current_shape is None:
         shapes = _piece_shapes_for_state(state, board_dims=board_dims)
         return shapes[0], shapes[min(1, len(shapes) - 1)]
@@ -841,7 +857,9 @@ def _piece_change_source_cells(
     *,
     board_dims: tuple[int, ...],
 ) -> tuple[ExplosionSeedCell, ...]:
-    current_shape, next_shape = _piece_change_shapes_for_state(state, board_dims=board_dims)
+    current_shape, next_shape = _piece_change_shapes_for_state(
+        state, board_dims=board_dims
+    )
     cell_map: dict[tuple[int, ...], ExplosionSeedCell] = {}
     for shape, group_id in (
         (current_shape, f"{current_shape.name}:current"),
@@ -851,11 +869,14 @@ def _piece_change_source_cells(
         origin = _exploration_spawn_origin(blocks, board_dims)
         for index, block in enumerate(blocks):
             coord = tuple(
-                int(origin[axis]) + int(block[axis]) for axis in range(int(state.dimension))
+                int(origin[axis]) + int(block[axis])
+                for axis in range(int(state.dimension))
             )
             cell_map[coord] = ExplosionSeedCell(
                 source_coord=coord,
-                color_id=_COLOR_CYCLE[(int(shape.color_id) - 1 + index) % len(_COLOR_CYCLE)],
+                color_id=_COLOR_CYCLE[
+                    (int(shape.color_id) - 1 + index) % len(_COLOR_CYCLE)
+                ],
                 source_group_id=group_id,
             )
     return tuple(cell_map[coord] for coord in sorted(cell_map))
@@ -866,7 +887,10 @@ def _source_cells_for_state(
     *,
     board_dims: tuple[int, ...],
 ) -> tuple[ExplosionSeedCell, ...]:
-    if state.occupied_cells_override is not None and str(state.snapshot_source_id) == _SNAPSHOT_SOURCE_INHERITED:
+    if (
+        state.occupied_cells_override is not None
+        and str(state.snapshot_source_id) == _SNAPSHOT_SOURCE_INHERITED
+    ):
         return tuple(state.occupied_cells_override)
     snapshot_source_id = str(state.snapshot_source_id)
     if snapshot_source_id == _SNAPSHOT_SOURCE_SINGLE_CELL:
@@ -943,7 +967,9 @@ def build_explorer_explosion_surface_state(
             particle_collisions or saved_defaults.particle_collisions
         ),
         mass_mode=str(mass_mode or saved_defaults.mass_mode),
-        base_mass=float(base_mass if base_mass is not None else saved_defaults.base_mass),
+        base_mass=float(
+            base_mass if base_mass is not None else saved_defaults.base_mass
+        ),
         random_mass_min=float(
             random_mass_min
             if random_mass_min is not None
@@ -970,7 +996,9 @@ def build_explorer_explosion_surface_state(
         speed_preset=str(speed_preset or saved_defaults.speed_preset),
         w_movement_animation_style=str(saved_defaults.w_movement_animation_style),
         endgame_live_cell_fraction=float(saved_defaults.endgame_live_cell_fraction),
-        sound_enabled=bool(sound_enabled if sound_enabled is not None else saved_defaults.sound_enabled),
+        sound_enabled=bool(
+            sound_enabled if sound_enabled is not None else saved_defaults.sound_enabled
+        ),
         seed=int(random_seed if random_seed is not None else saved_defaults.seed),
         launch_speed_scale_override=float(launch_speed_scale),
         time_scale_override=float(time_scale),
@@ -1144,7 +1172,7 @@ def _format_numeric_value(
     decimals: int,
 ) -> str:
     if decimals <= 0:
-        return str(int(round(value)))
+        return str(round(value))
     return f"{value:.{decimals}f}"
 
 
@@ -1158,7 +1186,9 @@ def _numeric_display_text_for_row(
     if state.numeric_text_row_key == row_key:
         return f"{state.numeric_text_buffer or ''}{spec.unit_suffix}"
     if row_key == "trace_retention":
-        return f"{_trace_retention_input_text(state.trace_retention_ms)}{spec.unit_suffix}"
+        return (
+            f"{_trace_retention_input_text(state.trace_retention_ms)}{spec.unit_suffix}"
+        )
     return f"{_format_numeric_value(_numeric_value_for_row(state, row_key), decimals=spec.decimals)}{spec.unit_suffix}"
 
 
@@ -1182,7 +1212,7 @@ def _set_numeric_value_for_row(
         state.endgame_live_cell_fraction = clamp_endgame_live_cell_fraction(clamped)
         return
     if row_key == "seed":
-        state.seed = int(round(clamped))
+        state.seed = round(clamped)
         _normalize_surface_state(state)
         _apply_live_mass_and_collision_settings(state)
         return
@@ -1211,7 +1241,7 @@ def _set_numeric_value_for_row(
     if row_key.startswith("cell_"):
         axis_index = _AXIS_LABELS.index(row_key.split("_", 1)[1].upper())
         updated = list(state.cell_origin)
-        updated[axis_index] = int(round(clamped))
+        updated[axis_index] = round(clamped)
         state.cell_origin = tuple(updated)
         _normalize_surface_state(state)
         return
@@ -1258,7 +1288,9 @@ def _append_numeric_text_input(
     filtered = "".join(ch for ch in incoming_text if ch in allowed_chars)
     if not filtered:
         return False
-    next_buffer = "" if state.numeric_text_replace_on_type else state.numeric_text_buffer
+    next_buffer = (
+        "" if state.numeric_text_replace_on_type else state.numeric_text_buffer
+    )
     for char in filtered:
         if char == "." and "." in next_buffer:
             continue
@@ -1338,7 +1370,8 @@ def _slider_fraction_for_row(
         0.0,
         min(
             1.0,
-            (float(_numeric_value_for_row(state, row_key)) - float(spec.minimum)) / span,
+            (float(_numeric_value_for_row(state, row_key)) - float(spec.minimum))
+            / span,
         ),
     )
 
@@ -1346,7 +1379,15 @@ def _slider_fraction_for_row(
 def _row_control_kind(row_key: str) -> str:
     if row_key in {"save", "restart", "back"}:
         return "action"
-    if row_key in {"trace_retention", "endgame_live_cell_fraction", "seed", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"} or row_key.startswith("cell_"):
+    if row_key in {
+        "trace_retention",
+        "endgame_live_cell_fraction",
+        "seed",
+        "base_mass",
+        "random_mass_min",
+        "random_mass_max",
+        "collision_elasticity",
+    } or row_key.startswith("cell_"):
         return "numeric"
     if row_key in {
         "dimension",
@@ -1396,7 +1437,9 @@ def _apply_live_trace_retention(state: StandaloneExplosionSurfaceState) -> None:
         particle.trail_samples = retained
 
 
-def _apply_live_mass_and_collision_settings(state: StandaloneExplosionSurfaceState) -> None:
+def _apply_live_mass_and_collision_settings(
+    state: StandaloneExplosionSurfaceState,
+) -> None:
     controller = state.controller
     if controller is None:
         return
@@ -1460,7 +1503,9 @@ def _adjust_selection_row(
     step: int,
 ) -> bool:
     if row_key == "dimension":
-        state.dimension = int(_cycle_option(str(state.dimension), ("2", "3", "4"), step))
+        state.dimension = int(
+            _cycle_option(str(state.dimension), ("2", "3", "4"), step)
+        )
         _normalize_surface_state(state)
         return True
     if row_key == "view_mode":
@@ -1516,11 +1561,30 @@ def _adjust_simulation_row(
     row_key: str,
     step: int,
 ) -> bool:
-    if row_key in {"boundary_response", "particle_collisions", "mass_mode", "grid_mode", "shadow_mode"}:
+    if row_key in {
+        "boundary_response",
+        "particle_collisions",
+        "mass_mode",
+        "grid_mode",
+        "shadow_mode",
+    }:
         return _adjust_option_cycle_row(state, row_key=row_key, step=step)
     if row_key == "diagnostics_mode":
         return _adjust_option_cycle_row(state, row_key=row_key, step=step)
-    if row_key in {"speed_preset", "trace_retention", "trace_enabled", "shell_preview_enabled", "shell_preview_time_scale", "sound_enabled", "w_movement_animation", "seed", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"}:
+    if row_key in {
+        "speed_preset",
+        "trace_retention",
+        "trace_enabled",
+        "shell_preview_enabled",
+        "shell_preview_time_scale",
+        "sound_enabled",
+        "w_movement_animation",
+        "seed",
+        "base_mass",
+        "random_mass_min",
+        "random_mass_max",
+        "collision_elasticity",
+    }:
         return _adjust_misc_simulation_row(state, row_key=row_key, step=step)
     return False
 
@@ -1601,7 +1665,14 @@ def _adjust_misc_simulation_row(
             step,
         )
         return True
-    if row_key in {"trace_retention", "endgame_live_cell_fraction", "base_mass", "random_mass_min", "random_mass_max", "collision_elasticity"}:
+    if row_key in {
+        "trace_retention",
+        "endgame_live_cell_fraction",
+        "base_mass",
+        "random_mass_min",
+        "random_mass_max",
+        "collision_elasticity",
+    }:
         return _step_numeric_row(state, row_key=row_key, direction=step)
     if row_key == "trace_enabled":
         state.trace_enabled = not bool(state.trace_enabled)
@@ -1642,7 +1713,9 @@ def _adjust_selected_row(
     row_key = row_keys[int(state.selected_index)]
     if row_key in state.locked_rows:
         return False
-    return _adjust_selection_row(state, row_key=row_key, step=step) or _adjust_simulation_row(
+    return _adjust_selection_row(
+        state, row_key=row_key, step=step
+    ) or _adjust_simulation_row(
         state,
         row_key=row_key,
         step=step,
@@ -1695,7 +1768,9 @@ def _row_value_overrides(
         "piece_shape": str(state.piece_shape_name),
         "mass_mode": str(state.mass_mode).upper(),
         "grid_mode": (
-            "NONE" if state.grid_mode == GridMode.OFF else grid_mode_label(state.grid_mode)
+            "NONE"
+            if state.grid_mode == GridMode.OFF
+            else grid_mode_label(state.grid_mode)
         ),
         "shadow_mode": shadow_mode_label(state.shadow_mode),
         "w_movement_animation": _W_MOVEMENT_ANIMATION_LABELS[
@@ -1711,7 +1786,9 @@ def _row_value_overrides(
         "base_mass": _numeric_display_text_for_row(state, "base_mass"),
         "random_mass_min": _numeric_display_text_for_row(state, "random_mass_min"),
         "random_mass_max": _numeric_display_text_for_row(state, "random_mass_max"),
-        "collision_elasticity": _numeric_display_text_for_row(state, "collision_elasticity"),
+        "collision_elasticity": _numeric_display_text_for_row(
+            state, "collision_elasticity"
+        ),
         "diagnostics_mode": str(state.diagnostics_mode).upper(),
         "sound_enabled": "ON" if state.sound_enabled else "OFF",
         "seed": _numeric_display_text_for_row(state, "seed"),
@@ -1722,7 +1799,9 @@ def _dynamic_row_value_text(
     state: StandaloneExplosionSurfaceState,
     row_key: str,
 ) -> str:
-    if _numeric_spec_for_row(state, row_key) is not None and row_key.startswith("cell_"):
+    if _numeric_spec_for_row(state, row_key) is not None and row_key.startswith(
+        "cell_"
+    ):
         return _numeric_display_text_for_row(state, row_key)
     overrides = _row_value_overrides(state)
     if row_key in overrides:
@@ -1774,7 +1853,10 @@ def _topology_value_text(state: StandaloneExplosionSurfaceState) -> str:
 
 
 def _snapshot_value_text(state: StandaloneExplosionSurfaceState) -> str:
-    if state.snapshot_label_override and str(state.snapshot_source_id) == _SNAPSHOT_SOURCE_INHERITED:
+    if (
+        state.snapshot_label_override
+        and str(state.snapshot_source_id) == _SNAPSHOT_SOURCE_INHERITED
+    ):
         return str(state.snapshot_label_override)
     return _SNAPSHOT_SOURCE_LABELS[str(state.snapshot_source_id)]
 
@@ -1801,7 +1883,8 @@ def _scene_active_glue_ids(
     state: StandaloneExplosionSurfaceState,
 ) -> dict[str, str]:
     active = {
-        boundary.label: "free" for boundary in _boundaries_for_dimension(int(state.dimension))
+        boundary.label: "free"
+        for boundary in _boundaries_for_dimension(int(state.dimension))
     }
     profile = _topology_input_for_state(state).explorer_topology_profile
     if profile is None:
@@ -1870,16 +1953,18 @@ def _draw_projection_reference_scene(
     state: StandaloneExplosionSurfaceState,
 ) -> None:
     boundaries, source_boundary, target_boundary = _scene_focus_boundaries(state)
-    base_kwargs = dict(
-        area=area,
-        boundaries=boundaries,
-        source_boundary=source_boundary,
-        target_boundary=target_boundary,
-        active_glue_ids=_scene_active_glue_ids(state),
-        basis_arrows=(),
-        preview_dims=_board_dims_for_state(state),
-        explosion_particles=tuple(() if controller is None else controller.particles),
-    )
+    base_kwargs = {
+        "area": area,
+        "boundaries": boundaries,
+        "source_boundary": source_boundary,
+        "target_boundary": target_boundary,
+        "active_glue_ids": _scene_active_glue_ids(state),
+        "basis_arrows": (),
+        "preview_dims": _board_dims_for_state(state),
+        "explosion_particles": tuple(
+            () if controller is None else controller.particles
+        ),
+    }
     profile = _topology_input_for_state(state).explorer_topology_profile
     if int(state.dimension) == 2:
         _draw_scene_2d(
@@ -1945,14 +2030,14 @@ def _apply_nonrestart_row_status(
     row_key: str,
 ) -> None:
     if row_key == "view_mode":
-        state.status = f"View mode switched to {_VIEW_MODE_LABELS[str(state.view_mode)]}"
+        state.status = (
+            f"View mode switched to {_VIEW_MODE_LABELS[str(state.view_mode)]}"
+        )
         state.status_error = False
         return
     if row_key == "trace_enabled":
         state.status = (
-            "Trace overlay enabled"
-            if state.trace_enabled
-            else "Trace overlay disabled"
+            "Trace overlay enabled" if state.trace_enabled else "Trace overlay disabled"
         )
         state.status_error = False
         return
@@ -1988,7 +2073,9 @@ def _preview_header_text(state: StandaloneExplosionSurfaceState) -> str:
     return f"{mode_label}: {_topology_value_text(state)}{preview}"
 
 
-def _footer_lines(state: StandaloneExplosionSurfaceState, *, fonts, max_width: int) -> tuple[str, ...]:
+def _footer_lines(
+    state: StandaloneExplosionSurfaceState, *, fonts, max_width: int
+) -> tuple[str, ...]:
     diagnostics_summary = (
         None if state.controller is None else state.controller.diagnostics_summary
     )
@@ -2017,7 +2104,10 @@ def _footer_lines(state: StandaloneExplosionSurfaceState, *, fonts, max_width: i
                 f"Suspicious = {int(diagnostics_summary.suspicious_count)}"
             )
         )
-    if diagnostics_mode == EXPLOSION_DIAGNOSTICS_MODE_FULL and diagnostics_summary is not None:
+    if (
+        diagnostics_mode == EXPLOSION_DIAGNOSTICS_MODE_FULL
+        and diagnostics_summary is not None
+    ):
         focus = next(
             (
                 detail
@@ -2034,15 +2124,21 @@ def _footer_lines(state: StandaloneExplosionSurfaceState, *, fonts, max_width: i
             normal_text = (
                 "none"
                 if focus.last_contact_normal is None
-                else ", ".join(f"{float(value):+.2f}" for value in focus.last_contact_normal)
+                else ", ".join(
+                    f"{float(value):+.2f}" for value in focus.last_contact_normal
+                )
             )
             lines.extend(
                 (
-                    f"Particle {int(focus.particle_id)} | m={float(focus.mass):.2f} | "
-                    f"||v||={current_speed:.2f} | prev={previous_speed:.2f}",
-                    f"Heading Δ={float(focus.heading_delta_deg):.1f} deg | "
-                    f"Last contact={focus.last_contact_type} | normal={normal_text} | "
-                    f"flagged={'yes' if focus.flagged_this_step else 'no'}",
+                    (
+                        f"Particle {int(focus.particle_id)} | m={float(focus.mass):.2f} | "
+                        f"||v||={current_speed:.2f} | prev={previous_speed:.2f}"
+                    ),
+                    (
+                        f"Heading Δ={float(focus.heading_delta_deg):.1f} deg | "
+                        f"Last contact={focus.last_contact_type} | normal={normal_text} | "
+                        f"flagged={'yes' if focus.flagged_this_step else 'no'}"
+                    ),
                 )
             )
         if diagnostics_summary.recent_events:
@@ -2074,7 +2170,11 @@ def _draw_dropdown_affordance(
     selected: bool,
     disabled: bool,
 ) -> None:
-    border = _DISABLED_COLOR if disabled else (_HIGHLIGHT_COLOR if selected else _MUTED_COLOR)
+    border = (
+        _DISABLED_COLOR
+        if disabled
+        else (_HIGHLIGHT_COLOR if selected else _MUTED_COLOR)
+    )
     fill = _PANEL_COLOR if disabled else _PANEL_ALT_COLOR
     pygame.draw.rect(screen, fill, rect, border_radius=8)
     pygame.draw.rect(screen, border, rect, 1, border_radius=8)
@@ -2166,7 +2266,9 @@ def _row_rects(
     return tuple(rects)
 
 
-def _slider_rect_for_row(row_rect: pygame.Rect, row_layout: _RowLayout) -> pygame.Rect | None:
+def _slider_rect_for_row(
+    row_rect: pygame.Rect, row_layout: _RowLayout
+) -> pygame.Rect | None:
     if row_layout.slider_layout is None:
         return None
     return pygame.Rect(
@@ -2191,9 +2293,7 @@ def _dropdown_values_for_row(
         "particle_collisions": tuple(
             (value, value.upper()) for value in EXPLOSION_PARTICLE_COLLISION_MODES
         ),
-        "mass_mode": tuple(
-            (value, value.upper()) for value in EXPLOSION_MASS_MODES
-        ),
+        "mass_mode": tuple((value, value.upper()) for value in EXPLOSION_MASS_MODES),
         "diagnostics_mode": tuple(
             (value, value.upper()) for value in EXPLOSION_DIAGNOSTICS_MODES
         ),
@@ -2214,14 +2314,21 @@ def _dropdown_values_for_row(
         ),
         "trace_enabled": (("off", "OFF"), ("on", "ON")),
         "shell_preview_enabled": (("off", "OFF"), ("on", "ON")),
-        "shell_preview_time_scale": tuple((f"{value:g}", f"{value:g}x") for value in _SHELL_PREVIEW_TIME_SCALES),
-        "speed_preset": tuple((value, value.upper()) for value in EXPLOSION_SPEED_PRESETS),
+        "shell_preview_time_scale": tuple(
+            (f"{value:g}", f"{value:g}x") for value in _SHELL_PREVIEW_TIME_SCALES
+        ),
+        "speed_preset": tuple(
+            (value, value.upper()) for value in EXPLOSION_SPEED_PRESETS
+        ),
         "sound_enabled": (("off", "OFF"), ("on", "ON")),
     }
     if row_key == "dimension":
         return tuple((value, f"{value}D") for value in ("2", "3", "4"))
     if row_key == "view_mode":
-        return tuple((value, _VIEW_MODE_LABELS[value]) for value in _view_mode_options_for_state(state))
+        return tuple(
+            (value, _VIEW_MODE_LABELS[value])
+            for value in _view_mode_options_for_state(state)
+        )
     if row_key == "topology":
         return tuple(
             (
@@ -2307,7 +2414,9 @@ def _apply_simple_dropdown_value(
                     state.controller.config,
                     diagnostics_mode=str(state.diagnostics_mode),
                 )
-                state.controller.simulation.diagnostics_mode = str(state.diagnostics_mode)
+                state.controller.simulation.diagnostics_mode = str(
+                    state.diagnostics_mode
+                )
             if row_key == "mass_mode":
                 _apply_live_mass_and_collision_settings(state)
         return True
@@ -2439,7 +2548,9 @@ def _surface_layout(
         left_rect.width - 36,
         max(24, left_rect.bottom - row_viewport.bottom - 18),
     )
-    preview_header_height = len(preview_header_lines) * (fonts.hint_font.get_height() + 4) + 10
+    preview_header_height = (
+        len(preview_header_lines) * (fonts.hint_font.get_height() + 4) + 10
+    )
     preview_header_rect = pygame.Rect(
         right_rect.x + 18,
         right_rect.y + 16,
@@ -2556,12 +2667,23 @@ def _draw_rows(
             value_lines=row_layout.value_lines,
             label_x=row_rect.x + 12,
             value_right=row_rect.right - row_layout.value_right_padding,
-            top_y=row_rect.y + 6 + (row_layout.slider_layout.text_top_padding if row_layout.slider_layout is not None else 0),
+            top_y=row_rect.y
+            + 6
+            + (
+                row_layout.slider_layout.text_top_padding
+                if row_layout.slider_layout is not None
+                else 0
+            ),
             label_color=_DISABLED_COLOR if locked else _TEXT_COLOR,
-            value_color=_DISABLED_COLOR if locked else (_HIGHLIGHT_COLOR if selected else _MUTED_COLOR),
+            value_color=_DISABLED_COLOR
+            if locked
+            else (_HIGHLIGHT_COLOR if selected else _MUTED_COLOR),
             line_gap=3,
         )
-        if row_layout.slider_layout is not None and row_layout.slider_fraction is not None:
+        if (
+            row_layout.slider_layout is not None
+            and row_layout.slider_fraction is not None
+        ):
             slider_rect = _slider_rect_for_row(row_rect, row_layout)
             assert slider_rect is not None
             draw_value_slider(
@@ -2641,7 +2763,8 @@ def _draw_open_dropdown_menu(
             True,
             (
                 _HIGHLIGHT_COLOR
-                if option_value == current_value or state.dropdown_hover_index == option_index
+                if option_value == current_value
+                or state.dropdown_hover_index == option_index
                 else _TEXT_COLOR
             ),
         )
@@ -2725,7 +2848,9 @@ def run_standalone_explosion_launcher(
     clock = pygame.time.Clock()
     while state.running:
         dt_ms = float(clock.tick(60))
-        _camera_controls_module().step_scene_camera(_scene_camera_for_state(state), dt_ms)
+        _camera_controls_module().step_scene_camera(
+            _scene_camera_for_state(state), dt_ms
+        )
         if not _process_launcher_events(state, screen=screen, fonts=fonts):
             return False, "Explosion simulator closed"
         if state.controller is not None:
@@ -2788,9 +2913,12 @@ def _handle_launcher_keydown(
     ):
         play_sfx("menu_move")
         return
-    if key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
-        if not _activate_selected_row(state):
-            _restart_from_key(state, pygame.K_r)
+    if key in (
+        pygame.K_RETURN,
+        pygame.K_KP_ENTER,
+        pygame.K_SPACE,
+    ) and not _activate_selected_row(state):
+        _restart_from_key(state, pygame.K_r)
 
 
 def _handle_escape_key(
@@ -2832,11 +2960,16 @@ def _handle_numeric_text_keydown(
 ) -> bool:
     if _numeric_spec_for_row(state, row_key) is None:
         return False
-    if state.numeric_text_row_key != row_key and key not in (
-        pygame.K_BACKSPACE,
-        pygame.K_PERIOD,
-        pygame.K_KP_PERIOD,
-    ) and not (pygame.K_0 <= key <= pygame.K_9):
+    if (
+        state.numeric_text_row_key != row_key
+        and key
+        not in (
+            pygame.K_BACKSPACE,
+            pygame.K_PERIOD,
+            pygame.K_KP_PERIOD,
+        )
+        and not (pygame.K_0 <= key <= pygame.K_9)
+    ):
         return False
     if state.numeric_text_row_key != row_key:
         _start_numeric_text_mode(state, row_key)
@@ -2845,7 +2978,11 @@ def _handle_numeric_text_keydown(
         return True
     if key in (pygame.K_PERIOD, pygame.K_KP_PERIOD):
         spec = _numeric_spec_for_row(state, row_key)
-        if spec is not None and spec.decimals > 0 and "." not in str(state.numeric_text_buffer):
+        if (
+            spec is not None
+            and spec.decimals > 0
+            and "." not in str(state.numeric_text_buffer)
+        ):
             state.numeric_text_buffer = f"{state.numeric_text_buffer}."
         return True
     if pygame.K_0 <= key <= pygame.K_9:
@@ -2879,7 +3016,7 @@ def _row_index_at_position(
     fonts,
     position: tuple[int, int],
 ) -> int | None:
-    row_layouts, row_rects = _interactive_row_geometry(
+    _row_layouts, row_rects = _interactive_row_geometry(
         state,
         layout=layout,
         fonts=fonts,
@@ -3081,7 +3218,9 @@ def _handle_dropdown_scroll(
         font=fonts.menu_font,
     )
     del start, end
-    state.dropdown_scroll_offset = max(0, int(state.dropdown_scroll_offset) - int(event.y))
+    state.dropdown_scroll_offset = max(
+        0, int(state.dropdown_scroll_offset) - int(event.y)
+    )
     return True
 
 
@@ -3209,7 +3348,11 @@ def _handle_pointer_routed_event(
     _update_hover_state(state, event, layout=layout, fonts=fonts)
     return any(
         handler(state, event, layout=layout, fonts=fonts)
-        for handler in (_handle_dropdown_scroll, _handle_slider_pointer_event, _handle_left_click)
+        for handler in (
+            _handle_dropdown_scroll,
+            _handle_slider_pointer_event,
+            _handle_left_click,
+        )
     ) or _route_camera_mouse_event(state, event, layout=layout)
 
 
@@ -3220,7 +3363,9 @@ def _handle_text_input_event(
     if event.type != pygame.TEXTINPUT:
         return False
     row_key = _dynamic_row_keys(state)[int(state.selected_index)]
-    if not (state.numeric_text_row_key or _numeric_spec_for_row(state, row_key) is not None):
+    if not (
+        state.numeric_text_row_key or _numeric_spec_for_row(state, row_key) is not None
+    ):
         return False
     if not state.numeric_text_row_key:
         _start_numeric_text_mode(state, row_key)
@@ -3246,7 +3391,9 @@ def _route_camera_mouse_event(
     ):
         return False
     position = getattr(event, "pos", (0, 0))
-    if event.type != pygame.MOUSEWHEEL and not layout.preview_scene_rect.collidepoint(position):
+    if event.type != pygame.MOUSEWHEEL and not layout.preview_scene_rect.collidepoint(
+        position
+    ):
         return False
     return _camera_controls_module().handle_scene_camera_mouse_event(
         int(state.dimension),
@@ -3263,7 +3410,9 @@ def _handle_left_click(
     layout: _SurfaceLayout,
     fonts,
 ) -> bool:
-    if not (event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", None) == 1):
+    if not (
+        event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", None) == 1
+    ):
         return False
     position = event.pos if hasattr(event, "pos") else pygame.mouse.get_pos()
     if _open_dropdown_selection_from_click(
@@ -3283,7 +3432,11 @@ def _handle_left_click(
         state.open_dropdown_row_key = None
         return False
     previous_row = _dynamic_row_keys(state)[int(state.selected_index)]
-    if state.numeric_text_row_key and previous_row == state.numeric_text_row_key and row_index != int(state.selected_index):
+    if (
+        state.numeric_text_row_key
+        and previous_row == state.numeric_text_row_key
+        and row_index != int(state.selected_index)
+    ):
         _commit_numeric_text_mode(state, allow_partial=False)
     state.selected_index = int(row_index)
     row_key = _dynamic_row_keys(state)[int(state.selected_index)]
@@ -3293,7 +3446,10 @@ def _handle_left_click(
         state.dropdown_hover_index = None
     else:
         state.open_dropdown_row_key = None
-    if _numeric_spec_for_row(state, row_key) is not None and state.hovered_row_key == row_key:
+    if (
+        _numeric_spec_for_row(state, row_key) is not None
+        and state.hovered_row_key == row_key
+    ):
         _start_numeric_text_mode(state, row_key)
     if row_key in {"save", "restart", "back"}:
         _activate_selected_row(state)
@@ -3329,6 +3485,6 @@ __all__ = [
     "build_standalone_explosion_surface_state",
     "launcher_row_keys",
     "restart_standalone_explosion",
-    "run_standalone_explosion_launcher_action",
     "run_standalone_explosion_launcher",
+    "run_standalone_explosion_launcher_action",
 ]

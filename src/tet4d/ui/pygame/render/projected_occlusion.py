@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 
 from tet4d.engine.runtime.project_config import project_constant_float
@@ -123,7 +124,7 @@ def _classify_segment_fragments(
     )
 
     classified: list[tuple[ProjectedLineFragment, bool]] = []
-    for start_t, end_t in zip(split_params, split_params[1:]):
+    for start_t, end_t in itertools.pairwise(split_params):
         start = _interpolate_point(segment.start, segment.end, start_t)
         end = _interpolate_point(segment.start, segment.end, end_t)
         if _point_distance(start, end) <= policy.split_epsilon_px:

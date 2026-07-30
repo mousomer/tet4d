@@ -29,7 +29,9 @@ def _draw_background(surface: pygame.Surface) -> None:
     draw_tron_menu_background(surface, top_color=(14, 18, 42), bottom_color=(4, 7, 20))
 
 
-def _draw_menu_header(surface: pygame.Surface, fonts, state: Any, scope_label_fn) -> None:
+def _draw_menu_header(
+    surface: pygame.Surface, fonts, state: Any, scope_label_fn
+) -> None:
     width, _ = surface.get_size()
     title = fonts.title_font.render(
         format_menu_title(_KEYBINDINGS_MENU_COPY["title"]), True, (232, 232, 240)

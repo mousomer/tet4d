@@ -11,16 +11,16 @@ from tet4d.engine.runtime.project_config import (
     WRITABLE_ROOT,
     _writable_root,
     explorer_topology_experiments_file_default_path,
-    explorer_topology_profiles_file_default_path,
-    keybindings_defaults_path,
-    keybindings_dir_path,
-    keybindings_dir_relative,
-    keybindings_profiles_dir_path,
     explorer_topology_preview_cache_dir_path,
     explorer_topology_preview_cache_dir_relative,
     explorer_topology_preview_dims,
     explorer_topology_preview_file_default_path,
     explorer_topology_preview_file_default_relative,
+    explorer_topology_profiles_file_default_path,
+    keybindings_defaults_path,
+    keybindings_dir_path,
+    keybindings_dir_relative,
+    keybindings_profiles_dir_path,
     leaderboard_file_default_path,
     leaderboard_file_default_relative,
     menu_settings_file_path,
@@ -36,8 +36,8 @@ from tet4d.engine.runtime.project_config import (
     score_summary_file_default_path,
     state_dir_path,
     state_dir_relative,
-    topology_profile_export_file_default_relative,
     topology_profile_export_file_default_path,
+    topology_profile_export_file_default_relative,
     topology_profiles_file_default_path,
     tutorial_progress_file_default_path,
 )
@@ -164,7 +164,9 @@ class TestProjectConfig(unittest.TestCase):
             ),
         ):
             self.assertEqual(state_dir_relative(), "data")
-            self.assertEqual(menu_settings_file_path(), expected_root / "menu_settings.json")
+            self.assertEqual(
+                menu_settings_file_path(), expected_root / "menu_settings.json"
+            )
 
     def test_default_state_backed_paths_use_writable_root(self) -> None:
         with mock.patch.dict(os.environ, {}, clear=True):

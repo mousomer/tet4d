@@ -9,8 +9,12 @@ from ..settings_sanitize import (
     merge_loaded_payload,
     sanitize_payload,
 )
-from ..settings_schema import MODE_KEYS, PROFILE_NAME_RE, atomic_write_json, read_json_value_or_raise
-
+from ..settings_schema import (
+    MODE_KEYS,
+    PROFILE_NAME_RE,
+    atomic_write_json,
+    read_json_value_or_raise,
+)
 
 _MODE_KEYS = set(MODE_KEYS)
 
@@ -79,7 +83,9 @@ def load_payload(
     base_default_payload: dict[str, Any],
     defaults: Any,
 ) -> dict[str, Any]:
-    payload = default_settings_payload_for_runtime(base_default_payload, defaults=defaults)
+    payload = default_settings_payload_for_runtime(
+        base_default_payload, defaults=defaults
+    )
     if not state_file.exists():
         return payload
     try:

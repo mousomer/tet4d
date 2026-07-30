@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-12
+Updated: 2026-07-30
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,187 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Accepted Godot foundation closure (2026-07-30): PR #37 is accepted at
+`bb9d5b6ac9477b0a06cc0529296edf04eb64f43b`. Its integrated scope includes
+configurable bounded boards; piece-set, seed, deterministic restart, and
+initial-speed setup; display and accessibility infrastructure; hardened
+settings persistence; Godot 4.7.1 and pinned native dependencies; blocking
+Godot/native/parity CI; Ruff 0.16 migration; and associated
+governance/documentation work. Automated and manual acceptance cover the
+integrated head. The default Godot visual theme remains a product-quality
+concern, visual design is not finished, Godot topology gameplay has not begun,
+and Godot endgame/topology/explosion integration remains unfinished.
+
+The ordered active trajectory is:
+
+1. close and merge the accepted foundation;
+2. simplify Codex governance without product/runtime changes;
+3. consolidate Godot visual design without semantic changes and obtain human
+   visual acceptance;
+4. establish the versioned canonical topology contract before native
+   transport or topology-aware Godot gameplay;
+5. continue native topology transport, Godot topology gameplay/diagnostics,
+   Godot Topology Lab, and unified endgame/explosion launch integration as
+   separately reviewed work.
+
+## Accepted Foundation Detail
+
+Agent-governance documentation modernization (2026-07-29): reduce the root
+dispatch to durable authority and task routing; consolidate detailed workflow
+in `docs/WORKFLOW_CODEX.md`; make `CURRENT_STATE.md` conditional on staged,
+handoff, restructuring, or phase-dependent work; retain the policy pack as the
+single machine-readable authority; and move completed parity-stage
+discoverability to documentation/governance indexes instead of root or nested
+agent prompts. Preserve all semantic, parity, transfer, testing, validation,
+security, and generated-document guarantees.
+
+Godot 4.7 migration (2026-07-25, acceptance complete): advance the
+product shell from 4.6.3 to the newest stable 4.7 patch, exact official
+`4.7.1-stable` build, and pin the matching immutable godot-cpp API baseline.
+The manifest now owns release assets/checksums and canonical commands; the
+project, GDExtension floor, native API selection, SCons dependency, isolated
+Godot verifier, current operator docs, and a blocking Linux CI lane advance
+together. Exact-engine pre-change compatibility, a clean native rebuild,
+native tests, extension API comparison, script/resource import, the complete
+Godot suite, bounded startup, persistence recovery, and Python/native parity
+pass locally. Real-window main/setup/live 2D/3D/4D/replay/settings/resize
+review also passes without a material performance regression. Final synthetic
+merge-context verification passes after a clean native rebuild and all
+Godot/native/parity/repository gates. Final GitHub evidence is recorded in
+`docs/plans/audits/godot_4_7_migration_2026-07-25.md`. No gameplay,
+topology, replay, hash, RNG, persistence-schema, or authority change is in
+scope.
+
+Static-analysis and formatting audit (2026-07-25, evidence and governance
+update): inventory all tracked Python, GDScript, Godot scene/resource, native
+C++, Unity C#, Bash, and project-configuration surfaces without installing
+tools or running autofixes. The canonical report is
+`docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md`; its summary
+is in `config/project/policy_pack.json`. Local Ruff lint/C901/full formatting,
+Godot tests/import/startup, scene and GDExtension load, native build/tests,
+selected compiler warning probes, and Bash syntax are known. Follow-up scope is
+staged rather than implemented here: close the narrow CI Ruff format mismatch,
+add reproducible target-version Godot and native build/test lanes, then add
+clang-format, a real clang-tidy compilation database, ShellCheck, and
+ASan/UBSan as separate reviewed stages. Unity C# tooling remains conditional on
+reactivating that legacy spike. This audit changes no gameplay, topology,
+replay, hashing, RNG, or authority behavior.
+
+PR #37 Ruff migration (2026-07-25, accepted as part of the integrated
+foundation): PyPI
+discovery selected Ruff 0.16.0 as the newest stable supported release; no
+stable 0.17.x release exists. The repository now pins `ruff==0.16.0`, reports
+the installed CI version, and treats future minor-version changes as explicit
+migrations rather than selecting versions by work size. The pre-modification
+audit recorded 1,023 diagnostics across 280 files, 546 safe fixes, 299 unsafe
+fix opportunities, and 171 formatter differences. Controlled mechanical and
+semantic passes make full Ruff lint and format checks pass, remove
+`cli/front.py`'s obsolete blanket suppression, and preserve tested exception
+and compatibility contracts with only narrow manifest-recorded annotations.
+The focused regression set, full Python suite, and branch-local
+`CODEX_MODE=1 ./scripts/verify.sh` pass. The isolated synthetic merge of
+`origin/master` `c10ed4e6a190daa85976162c1feb866c743b9462` with branch
+`32ce84041c559804eef48b9443d8236932016c29` also passes full verification.
+GitHub Actions pull-request run `30144781389` passes Python 3.11, 3.12, 3.13,
+and 3.14 for migration head
+`c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2`; automated Ruff migration
+acceptance is complete. No Stage 52 behavior or Stage 53A scope changed.
+
+Stage 52 accessibility infrastructure (2026-07-20, accepted as part of the
+integrated foundation): extend the
+accepted Stage 51 registry/store/presentation pipeline to schema version 3 with
+High Contrast, Reduced Motion, and Show Help and Control Hints preferences.
+The durable invariant/preference boundary, focused audit, migration policy,
+runtime ownership, focus/navigation contract, non-colour cues, motion
+classification, and acceptance matrix live in
+`docs/architecture/accessibility_infrastructure.md`. The existing keyboard-hint
+preference is migrated rather than duplicated. Gameplay, topology, setup, RNG,
+replay identity, hashes, native authority, controls rebinding, controllers,
+touch, audio accessibility, and packaging remain unchanged.
+Schema-3 migration, field-level recovery, isolated resets, live policy
+propagation, focus restoration, three-theme High Contrast, static non-colour
+cues, Reduced Motion, hint visibility, viewport/layout regression, full Python,
+Godot/native, 2D/ND/setup parity, and the repository verification gate pass.
+macOS GUI inspection accepted the main-menu focus ring and scroll-safe Extra
+Large Settings screen. An earlier focused run did not finish the complete
+keyboard-only, all-theme, 2D/3D/4D/Wide-W matrix because input-automation quota
+was exhausted; the integrated head was subsequently manually accepted at
+`bb9d5b6a`. Stage 53A remains separate and has not begun.
+
+PR #36 settings-persistence failure-path hardening (2026-07-19, implemented):
+preserve and restore the previous valid `user://shell_settings.json` through a
+small injectable replacement seam when overwrite/install operations fail;
+clean sibling temporary/backup artifacts where safe; and reject fractional or
+non-numeric schema representations without changing schema versions or the
+existing schema-1 migration. Focused Godot tests cover successful overwrite,
+failure before backup, failure after backup, rename/copy restoration, cleanup,
+diagnostics, and save-count behavior.
+
+Godot shell-settings externalization quality gate (2026-07-19, implemented):
+promote the existing registry-default and user-data persistence boundary from
+an implicit implementation convention to a blocking policy-backed verification
+gate. The gate must reject incomplete registry declarations, persistence-policy
+drift, registry/store schema or path drift, unknown runtime setting IDs, and
+code-owned duplicate setting fallbacks while allowing explicit preset
+interpretation mappings. It runs in `scripts/verify.sh`; focused mutation tests
+prove each failure mode.
+
+Stage 51 display infrastructure (2026-07-19, complete): retain the Stage 48
+registry/store as the canonical shell-settings
+owner, migrate schema 1 to schema 2, and centralize bounded window, remembered
+size, UI scale, theme, HUD density, board detail, and camera preferences through
+the Godot shell/HUD presentation owner into renderer and camera consumers. The
+display-only contract is `docs/architecture/display_infrastructure.md`.
+Accessibility behavior that was prematurely combined into the local baseline
+was removed from Stage 51 and delivered separately in Stage 52. Focused and full
+Python, Godot, native, persistence, layout, Wide-W, state-hash, configured
+setup, documentation, and governance verification pass. Corrective macOS GUI
+acceptance confirms the real Settings screen at extra-large scale in a
+constrained window; the broader existing fullscreen, theme, camera, and Wide-W
+acceptance remains protected by the passing regression suite.
+
+The foundation stages are complete; the next product stages are ordered as
+follows:
+
+1. Godot visual-design consolidation — presentation only
+2. Stage 53A — Topology contract
+3. Stage 53B — Native topology transport
+4. Stage 53C — Topology gameplay
+5. Stage 53D — Topology diagnostics
+6. Stage 53E — Topology Lab
+7. Later — unified gameplay/endgame/explosion launch contract
+8. Stage 54 — Controls and Input Configuration
+
+Stage 50 plain-game setup completion (2026-07-19, complete):
+extend the separate Stage 49 gameplay setup owner with canonical piece-set,
+random-mode, seed, and initial-speed identity; construct existing bounded native
+sessions from that validated identity; preserve the effective seed on restart;
+migrate `user://game_setup.json` to schema version 2; and add representative
+Python/native parity plus Godot navigation and persistence coverage. The bounded
+scope and exposure matrix live in
+`docs/architecture/plain_game_setup_completion.md`. Random-shape/debug bags,
+topology, bots, kicks, challenge/progression editors, endgame/explosion, audio,
+keybindings, and packaging remain deferred. Native/Godot/parity verification
+and manual 2D/3D/4D acceptance passed, including persisted true-random setup,
+New Random effective-seed replacement, mouse and keyboard navigation, and the
+Wide-W eight-layer layout. Stage 51 display and Stage 52 accessibility are
+complete; Stage 53 topology remains deferred.
+
+Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
+(2026-07-15, menu-routing repair and manual reacceptance verified): add curated 2D/3D/4D New Game presets, parameterize the existing
+native bounded-session owner by board shape, preserve restart shape, add
+alternate-size parity evidence, and replace the fixed 4D W row with a
+viewport-aware layer matrix. Gameplay setup remains separate from Stage 48
+shell settings. The bounded audit and limits live in
+`docs/architecture/configurable_plain_boards_and_4d_layout.md`. Python defaults,
+gameplay rules, topology, replay semantics, piece sets, bots, kicks, endgame,
+explosion, and packaging remain unchanged. Leaving any live mode for Main Menu
+or Change Setup now disables hidden live-view mouse capture and restores
+deterministic Enter/Space activation on the visible menu, with transition tests
+covering all three live modes. Replay Demos remains an intact trace/parity
+inspection surface but moves below the primary menu into Advanced / Diagnostics.
+Topology migration remains a separate Stage 53 sequence.
 
 Stage 46 Godot core gameplay completion (2026-07-12): keep the accepted Live
 Plain 2D/3D/4D native-session loops and make their primary play state readable
@@ -1309,12 +1490,11 @@ Completed on 2026-03-29:
 
 Current batch:
 
-- docs-authority cleanup in `docs/plans/topology_playground_debt_register.md`,
-  `docs/plans/cleanup_master_plan.md`, and `docs/BACKLOG.md`
-- stale active-debt and cleanup-domain wording removed so current ledgers match
-  the live repo state more closely
-- merged project-structure index work stays in recent-completed reporting
-  instead of the current-batch footprint
+- agent-facing governance dispatch/workflow simplification;
+- completed parity-stage routing moved out of root and nested agent prompts;
+- policy-backed token checks and validators aligned with durable indexed
+  reachability;
+- no runtime, product behaviour, semantic authority, or authority transfer.
 
 ## Historical Milestones
 

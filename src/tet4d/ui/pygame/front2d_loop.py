@@ -6,24 +6,30 @@ import pygame
 
 from tet4d.ai.playbot.types import BotMode
 from tet4d.engine.gameplay.game2d import GameConfig
+from tet4d.engine.runtime import menu_settings_state
 from tet4d.engine.runtime.project_config import project_constant_float
-from tet4d.ui.pygame.render.gfx_game import GfxFonts
-from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 from tet4d.ui.pygame.endgame_animation import (
     TERMINAL_PHASE_GAME_OVER_COMPLETE,
     endgame_prompt_ready,
 )
-
-from tet4d.engine.runtime import menu_settings_state
+from tet4d.ui.pygame.render.gfx_game import GfxFonts
+from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
 
 from . import front2d_frame, front2d_results
 from .front2d_session import LoopContext2D
 from .front2d_setup import (
     load_animation_settings_for_mode as _load_animation_settings_for_mode,
+)
+from .front2d_setup import (
     load_overlay_transparency_for_runtime_2d as _load_overlay_transparency_for_runtime_2d,
+)
+from .front2d_setup import (
     load_speedup_settings_for_mode as _load_speedup_settings_for_mode,
 )
-from .front2d_tutorial import apply_pending_tutorial_setup, restart_tutorial_if_running_2d
+from .front2d_tutorial import (
+    apply_pending_tutorial_setup,
+    restart_tutorial_if_running_2d,
+)
 
 
 def run_game_loop(
@@ -136,12 +142,9 @@ def run_game_loop(
             dt=dt,
             clear_anim_duration_ms=clear_anim_duration_ms,
         )
-        if (
-            not endgame_session_handled
-            and (
-                endgame_prompt_ready(loop.endgame_animation)
-                or loop.terminal_phase == TERMINAL_PHASE_GAME_OVER_COMPLETE
-            )
+        if not endgame_session_handled and (
+            endgame_prompt_ready(loop.endgame_animation)
+            or loop.terminal_phase == TERMINAL_PHASE_GAME_OVER_COMPLETE
         ):
             _record_session("game_over")
             endgame_session_handled = True

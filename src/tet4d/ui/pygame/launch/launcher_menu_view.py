@@ -59,7 +59,7 @@ def _draw_action_group_row(
     selected_action_indexes: dict[str, int],
 ) -> tuple[MenuPointerTarget, ...]:
     raw_actions = item.get("actions", ())
-    actions = raw_actions if isinstance(raw_actions, tuple) else tuple()
+    actions = raw_actions if isinstance(raw_actions, tuple) else ()
     active_index = _action_group_index(
         item,
         selected_action_indexes=selected_action_indexes,
@@ -94,7 +94,9 @@ def _draw_action_group_row(
     targets: list[MenuPointerTarget] = [
         MenuPointerTarget(
             kind="item",
-            rect=pygame.Rect(panel_x + 16, y - 4, row_right - panel_x - 4, row_step - 4),
+            rect=pygame.Rect(
+                panel_x + 16, y - 4, row_right - panel_x - 4, row_step - 4
+            ),
             item_index=item_index,
             item_id=str(item.get("id", "")).strip().lower(),
         )
@@ -243,7 +245,9 @@ def draw_main_menu(
     y = panel_y + 20
     row_margin = 28
     row_right = panel_x + panel_w - row_margin
-    targets: list[MenuPointerTarget] = [MenuPointerTarget(kind="back", rect=back_rect.copy())]
+    targets: list[MenuPointerTarget] = [
+        MenuPointerTarget(kind="back", rect=back_rect.copy())
+    ]
     for kind, rect in side_rects.items():
         targets.append(MenuPointerTarget(kind=kind, rect=rect.copy()))
     for idx, item in enumerate(items):
@@ -258,25 +262,27 @@ def draw_main_menu(
         if item_type == "action_group":
             targets.extend(
                 _draw_action_group_row(
-                screen,
-                fonts=fonts,
-                item=item,
-                item_index=idx,
-                label=label,
-                y=y,
-                row_step=row_step,
-                panel_x=panel_x,
-                row_margin=row_margin,
-                row_right=row_right,
-                color=color,
-                highlight_color=highlight_color,
-                muted_color=muted_color,
-                selected_action_indexes=selected_action_indexes,
+                    screen,
+                    fonts=fonts,
+                    item=item,
+                    item_index=idx,
+                    label=label,
+                    y=y,
+                    row_step=row_step,
+                    panel_x=panel_x,
+                    row_margin=row_margin,
+                    row_right=row_right,
+                    color=color,
+                    highlight_color=highlight_color,
+                    muted_color=muted_color,
+                    selected_action_indexes=selected_action_indexes,
                 )
             )
             y += row_step
             continue
-        label_text = fit_text(fonts.menu_font, label, row_right - (panel_x + row_margin))
+        label_text = fit_text(
+            fonts.menu_font, label, row_right - (panel_x + row_margin)
+        )
         text = fonts.menu_font.render(label_text, True, color)
         row_rect = text.get_rect(topleft=(panel_x + row_margin, y))
         screen.blit(text, row_rect.topleft)
@@ -299,7 +305,9 @@ def draw_main_menu(
         else launcher_copy["escape_hint_quit"]
     )
     info_lines = [
-        launcher_copy["info_active_profile_template"].format(profile=active_key_profile()),
+        launcher_copy["info_active_profile_template"].format(
+            profile=active_key_profile()
+        ),
         launcher_copy["info_continue_mode_template"].format(mode=last_mode.upper()),
         _controls_hint_text(
             launcher_copy=launcher_copy,

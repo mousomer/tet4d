@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from itertools import product
-from typing import Iterable, Sequence
 
 from ..core.model import Coord
-
 
 TOPOLOGY_BOUNDED = "bounded"
 TOPOLOGY_WRAP_ALL = "wrap_all"
@@ -257,7 +256,7 @@ def _resolve_invert_piece_mapping(
     details: Sequence[tuple[tuple[float, ...], frozenset[int], tuple[int, ...]]],
 ) -> tuple[tuple[float, ...], ...] | None:
     if not details:
-        return tuple()
+        return ()
     wrap_axes = details[0][2]
     if not wrap_axes:
         return tuple(base for base, _crossed, _wrap_axes in details)
@@ -316,7 +315,7 @@ def _map_piece_cells_common(
             continue
         details.append(detail)
     if not details:
-        return tuple()
+        return ()
 
     mapped_cells = tuple(
         _apply_invert_crossings(
@@ -368,5 +367,5 @@ def map_overlay_cells(
         require_unique=False,
     )
     if mapped is None:
-        return tuple()
+        return ()
     return mapped

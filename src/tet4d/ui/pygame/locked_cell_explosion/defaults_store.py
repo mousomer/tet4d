@@ -84,7 +84,9 @@ def _normalize_mode_key(mode_key: str) -> str:
     return normalized
 
 
-def _normalize_string_choice(value: object, *, allowed: tuple[str, ...], default: str) -> str:
+def _normalize_string_choice(
+    value: object, *, allowed: tuple[str, ...], default: str
+) -> str:
     normalized = str(value).strip().lower()
     if normalized not in allowed:
         return str(default)
@@ -121,15 +123,21 @@ def coerce_explosion_defaults(
         payload.get("random_mass_max", fallback.random_mass_max),
     )
     return ExplosionDefaults(
-        topology_preset_id=str(payload.get("topology_preset_id", fallback.topology_preset_id)),
+        topology_preset_id=str(
+            payload.get("topology_preset_id", fallback.topology_preset_id)
+        ),
         snapshot_source_id=_normalize_string_choice(
             payload.get("snapshot_source_id", fallback.snapshot_source_id),
             allowed=_SNAPSHOT_SOURCES,
             default=fallback.snapshot_source_id,
         ),
         piece_set_id=str(payload.get("piece_set_id", fallback.piece_set_id)),
-        piece_shape_name=str(payload.get("piece_shape_name", fallback.piece_shape_name)),
-        cell_origin=_normalize_cell_origin(payload.get("cell_origin", fallback.cell_origin)),
+        piece_shape_name=str(
+            payload.get("piece_shape_name", fallback.piece_shape_name)
+        ),
+        cell_origin=_normalize_cell_origin(
+            payload.get("cell_origin", fallback.cell_origin)
+        ),
         view_mode=_normalize_string_choice(
             payload.get("view_mode", fallback.view_mode),
             allowed=_VIEW_MODES,
@@ -232,8 +240,8 @@ def save_mode_explosion_defaults(
 
 
 __all__ = [
-    "ExplosionDefaults",
     "ENDGAME_LIVE_CELL_FRACTION_DEFAULT",
+    "ExplosionDefaults",
     "clamp_endgame_live_cell_fraction",
     "coerce_explosion_defaults",
     "default_explosion_defaults",

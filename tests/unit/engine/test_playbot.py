@@ -4,35 +4,38 @@ import random
 import unittest
 from unittest import mock
 
-from tet4d.engine.core.model import BoardND
-from tet4d.engine.gameplay.game2d import GameConfig, GameState
-from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
-from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
-from tet4d.engine.gameplay.pieces2d import PIECE_SET_2D_DEBUG
-from tet4d.engine.gameplay.pieces_nd import (
-    ActivePieceND,
-    PIECE_SET_3D_DEBUG,
-    PIECE_SET_4D_DEBUG,
-    PieceShapeND,
-)
 from tet4d.ai.playbot import (
     PlayBotController,
-    run_dry_run_2d,
-    run_dry_run_nd,
     plan_best_2d_move,
     plan_best_nd_move,
+    run_dry_run_2d,
+    run_dry_run_nd,
 )
 from tet4d.ai.playbot.controller import _rotation_sequence_nd
 from tet4d.ai.playbot.lookahead_common import choose_best_with_followup
-from tet4d.ai.playbot.planner_nd_search import enumerate_orientations
 from tet4d.ai.playbot.planner_nd_core import greedy_key_4d, simulate_lock_board
+from tet4d.ai.playbot.planner_nd_search import enumerate_orientations
 from tet4d.ai.playbot.types import (
     BotMode,
     BotPlannerAlgorithm,
     BotPlannerProfile,
 )
-from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
+from tet4d.engine.core.model import BoardND
+from tet4d.engine.gameplay.game2d import GameConfig, GameState
+from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
+from tet4d.engine.gameplay.pieces2d import (
+    PIECE_SET_2D_DEBUG,
+    ActivePiece2D,
+    PieceShape2D,
+)
+from tet4d.engine.gameplay.pieces_nd import (
+    PIECE_SET_3D_DEBUG,
+    PIECE_SET_4D_DEBUG,
+    ActivePieceND,
+    PieceShapeND,
+)
 from tet4d.engine.topology_explorer.presets import twisted_y_profile_3d
+from tet4d.engine.ui_logic.view_modes import GridMode, cycle_grid_mode
 
 
 class TestPlaybot(unittest.TestCase):

@@ -9,10 +9,10 @@ from tet4d.ui.pygame.render.control_helper import control_groups_for_dimension
 from tet4d.ui.pygame.render.panel_utils import (
     _append_stats_group,
     _compute_controls_rect,
-    _stats_group_rows,
-    draw_game_over_banner,
     _join_sections,
     _merge_summary_into_main_group,
+    _stats_group_rows,
+    draw_game_over_banner,
 )
 from tet4d.ui.pygame.ui_utils import text_fits, wrap_text_lines
 
@@ -84,11 +84,11 @@ class TestPanelUtils(unittest.TestCase):
         )
 
     def test_stats_group_rows_placeholder_when_empty(self) -> None:
-        self.assertEqual(_stats_group_rows(tuple()), ("\tno runtime stats\t",))
+        self.assertEqual(_stats_group_rows(()), ("\tno runtime stats\t",))
 
     def test_append_stats_group_always_adds_stats_panel(self) -> None:
         groups = [("Main", ("A\tpause menu\t",))]
-        with_stats = _append_stats_group(control_groups=groups, stats_lines=tuple())
+        with_stats = _append_stats_group(control_groups=groups, stats_lines=())
         self.assertEqual(with_stats[-1][0], "Stats")
         self.assertEqual(with_stats[-1][1], ("\tno runtime stats\t",))
 
@@ -98,7 +98,7 @@ class TestPanelUtils(unittest.TestCase):
                 control_groups=control_groups_for_dimension(
                     dim, unified_structure=True
                 ),
-                stats_lines=tuple(),
+                stats_lines=(),
             )
             self.assertEqual(
                 [name for name, _ in groups],

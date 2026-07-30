@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import json
+import unittest
 from pathlib import Path
 from types import SimpleNamespace
-import unittest
 from unittest import mock
 
-from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
 from tet4d.engine.runtime import menu_config, menu_runtime_graph
 from tet4d.engine.ui_logic import menu_graph_linter
-from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
+from tet4d.ui.pygame.launch import settings_hub_actions, settings_hub_model
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
+from tet4d.ui.pygame.runtime_ui.audio import AudioSettings
 
 
 class TestMenuPolicy(unittest.TestCase):
@@ -78,13 +78,7 @@ class TestMenuPolicy(unittest.TestCase):
     def test_menu_graph_linter_reports_missing_submenu_target(self) -> None:
         issues: list[menu_graph_linter.MenuGraphIssue] = []
         menu_graph_linter._validate_submenu_targets(
-            {
-                "root": {
-                    "items": (
-                        {"type": "submenu", "menu_id": "missing_child"},
-                    )
-                }
-            },
+            {"root": {"items": ({"type": "submenu", "menu_id": "missing_child"},)}},
             issues=issues,
         )
 
@@ -110,16 +104,30 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "submenu", "submenu", "submenu", "action"],
+            [
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "action",
+            ],
         )
 
         controls_menu = menu_config.authored_menu_definition("settings_controls")
         controls_item_labels = [item["label"] for item in controls_menu["items"]]
         self.assertIn("Keyboard Bindings", controls_item_labels)
 
-        explosion_root = menu_config.authored_menu_definition("settings_endgame_explosion")
+        explosion_root = menu_config.authored_menu_definition(
+            "settings_endgame_explosion"
+        )
         self.assertEqual(
-            [item["label"] for item in explosion_root["items"] if item["type"] == "submenu"],
+            [
+                item["label"]
+                for item in explosion_root["items"]
+                if item["type"] == "submenu"
+            ],
             [
                 "Shared Gameplay Endgame",
                 "2D Explosion Defaults",
@@ -144,7 +152,15 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "submenu", "submenu", "submenu", "action"],
+            [
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "action",
+            ],
         )
 
     def test_setup_fields_include_only_safe_topology_preset_controls(self) -> None:
@@ -393,11 +409,21 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(
             [item["type"] for item in settings_menu["items"]],
-            ["submenu", "submenu", "submenu", "submenu", "submenu", "submenu", "action"],
+            [
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "submenu",
+                "action",
+            ],
         )
 
     def test_keybindings_scopes_are_declared_in_canonical_menu_config(self) -> None:
-        keybindings_menu = menu_config.menu_definition(menu_config.keybindings_menu_id())
+        keybindings_menu = menu_config.menu_definition(
+            menu_config.keybindings_menu_id()
+        )
         self.assertEqual(
             [item["label"] for item in keybindings_menu["items"]],
             ["General", "2D", "3D", "4D", "All"],
@@ -422,11 +448,9 @@ class TestMenuPolicy(unittest.TestCase):
         )
         self.assertEqual(topology_item["type"], "action")
         self.assertNotIn("menu_id", topology_item)
-        launcher_actions = set(
-            item["action_id"]
-            for item in root_items
-            if item["type"] == "action"
-        )
+        launcher_actions = {
+            item["action_id"] for item in root_items if item["type"] == "action"
+        }
         self.assertNotIn("settings_legacy_topology_editor", launcher_actions)
         settings_actions = set(
             menu_config.reachable_action_ids(menu_config.settings_menu_id())
@@ -442,7 +466,9 @@ class TestMenuPolicy(unittest.TestCase):
         controls_submenu = next(
             item for item in settings_menu["items"] if item["label"] == "Controls"
         )
-        controls_settings_menu = menu_config.menu_definition(controls_submenu["menu_id"])
+        controls_settings_menu = menu_config.menu_definition(
+            controls_submenu["menu_id"]
+        )
         controls_settings = next(
             item
             for item in controls_settings_menu["items"]
@@ -510,7 +536,12 @@ class TestMenuPolicy(unittest.TestCase):
                                 "label": "Open",
                                 "action_id": "open",
                             },
-                            {"id": "back", "type": "action", "label": "Back", "action_id": "back"},
+                            {
+                                "id": "back",
+                                "type": "action",
+                                "label": "Back",
+                                "action_id": "back",
+                            },
                         ),
                     }
                 },
@@ -531,7 +562,12 @@ class TestMenuPolicy(unittest.TestCase):
                                 "semantic_type": "bool",
                                 "setting_id": "enabled",
                             },
-                            {"id": "back", "type": "action", "label": "Back", "action_id": "back"},
+                            {
+                                "id": "back",
+                                "type": "action",
+                                "label": "Back",
+                                "action_id": "back",
+                            },
                         ),
                     }
                 },
@@ -592,7 +628,8 @@ class TestMenuPolicy(unittest.TestCase):
                     "action_group",
                     "legacy_dispatch",
                 }
-                and item.get("action_id") not in {"back", "save", "reset", "display_apply"}
+                and item.get("action_id")
+                not in {"back", "save", "reset", "display_apply"}
             ]
             submenu_count = sum(1 for item in nonutility if item["type"] == "submenu")
             setting_count = sum(
@@ -763,7 +800,9 @@ class TestMenuPolicy(unittest.TestCase):
         self.assertEqual(by_id["lines_per_level"]["type"], "stepper")
 
     def test_setup_fields_preserve_semantic_types_and_control_families(self) -> None:
-        fields = {field.attr_name: field for field in menu_config.setup_fields_for_settings(4)}
+        fields = {
+            field.attr_name: field for field in menu_config.setup_fields_for_settings(4)
+        }
         self.assertEqual(fields["piece_set_index"].semantic_type, "enum")
         self.assertEqual(fields["piece_set_index"].control_family, "selector")
         self.assertEqual(fields["topology_mode"].semantic_type, "enum")
@@ -909,9 +948,7 @@ class TestMenuPolicy(unittest.TestCase):
             "Sphere",
         )
         self.assertEqual(
-            settings_hub_model._unified_value_text(
-                state, "endgame_boundary_response"
-            ),
+            settings_hub_model._unified_value_text(state, "endgame_boundary_response"),
             "Bounce",
         )
         self.assertEqual(

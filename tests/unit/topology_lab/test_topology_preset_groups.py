@@ -27,7 +27,9 @@ class TestTopologyPresetGroups(unittest.TestCase):
         self.assertFalse(sphere.gravity_safe)
         self.assertIn("Sphere-Like", sphere.label)
 
-    def test_sections_keep_sphere_like_family_out_of_clean_quotient_groups(self) -> None:
+    def test_sections_keep_sphere_like_family_out_of_clean_quotient_groups(
+        self,
+    ) -> None:
         sections = explorer_preset_sections_for_dimension(4)
         grouped_ids = {
             section.group: {preset.preset_id for preset in section.presets}
@@ -42,11 +44,7 @@ class TestTopologyPresetGroups(unittest.TestCase):
 
     def test_flat_list_reuses_grouped_section_authority(self) -> None:
         sections = explorer_preset_sections_for_dimension(2)
-        flattened = tuple(
-            preset
-            for section in sections
-            for preset in section.presets
-        )
+        flattened = tuple(preset for section in sections for preset in section.presets)
 
         self.assertEqual(flattened, explorer_presets_for_dimension(2))
 
@@ -62,7 +60,9 @@ class TestTopologyPresetGroups(unittest.TestCase):
             "Sphere-Like / Compactified Transport: Sphere-Like Transport [unsafe]",
         )
 
-    def test_grouped_display_label_marks_advanced_quotient_presets_separately(self) -> None:
+    def test_grouped_display_label_marks_advanced_quotient_presets_separately(
+        self,
+    ) -> None:
         projective = next(
             preset
             for preset in explorer_presets_for_dimension(2)

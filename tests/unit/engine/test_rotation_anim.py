@@ -25,7 +25,7 @@ from tet4d.engine.topology_explorer.presets import (
 def _centroid(cells: tuple[tuple[float, ...], ...]) -> tuple[float, ...]:
     dims = len(cells[0]) if cells else 0
     if dims == 0:
-        return tuple()
+        return ()
     return tuple(sum(cell[idx] for cell in cells) / len(cells) for idx in range(dims))
 
 
@@ -78,7 +78,9 @@ class TestRotationAnim(unittest.TestCase):
                 for cell in cells_mid
             )
         )
-        self.assertAlmostEqual(_pairwise_distance(cells_mid[0], cells_mid[1]), 1.0, places=4)
+        self.assertAlmostEqual(
+            _pairwise_distance(cells_mid[0], cells_mid[1]), 1.0, places=4
+        )
 
         rigid_state = anim.overlay_state(visible_rot)
         self.assertIsInstance(rigid_state, RigidPieceOverlay2D)
@@ -106,9 +108,7 @@ class TestRotationAnim(unittest.TestCase):
         self.assertIsNotNone(overlay)
         assert overlay is not None
         cells_mid, _ = overlay
-        self.assertTrue(
-            any(abs(cell[0] - round(cell[0])) > 1e-4 for cell in cells_mid)
-        )
+        self.assertTrue(any(abs(cell[0] - round(cell[0])) > 1e-4 for cell in cells_mid))
         self.assertTrue(all(abs(cell[1] - round(cell[1])) < 1e-4 for cell in cells_mid))
 
     def test_2d_translation_tween_disabled_at_zero_duration(self) -> None:
@@ -225,7 +225,9 @@ class TestRotationAnim(unittest.TestCase):
         assert moved_piece is not None
         self.assertEqual(tuple(moved_piece.cells()), expected.moved_cells)
         self.assertEqual(
-            tuple(tuple(float(value) for value in coord) for coord in moved_piece.cells()),
+            tuple(
+                tuple(float(value) for value in coord) for coord in moved_piece.cells()
+            ),
             (
                 (3.0, 3.0, 3.0, 3.0),
                 (0.0, 0.0, 0.0, 0.0),
@@ -244,7 +246,8 @@ class TestRotationAnim(unittest.TestCase):
         self.assertEqual(
             anim._tween.end_rel,
             tuple(
-                tuple(float(value) for value in block) for block in moved_piece.rel_blocks
+                tuple(float(value) for value in block)
+                for block in moved_piece.rel_blocks
             ),
         )
 
@@ -279,7 +282,9 @@ class TestRotationAnim(unittest.TestCase):
         assert start_piece is not None
         transport = cfg.explorer_transport
         assert transport is not None
-        expected = transport.resolve_piece_step(start_piece.cells(), MoveStep(axis=0, delta=1))
+        expected = transport.resolve_piece_step(
+            start_piece.cells(), MoveStep(axis=0, delta=1)
+        )
         self.assertTrue(expected.rigidly_coherent)
 
         anim = PieceRotationAnimator2D(
@@ -423,7 +428,9 @@ class TestRotationAnim(unittest.TestCase):
         )
 
         # Verify actual circular motion: block should be on the arc
-        self.assertGreater(abs(block0_rel[0]), 0.1, "Block should still have x component")
+        self.assertGreater(
+            abs(block0_rel[0]), 0.1, "Block should still have x component"
+        )
         self.assertGreater(abs(block0_rel[2]), 0.1, "Block should have moved in z-axis")
 
     def test_2d_rotation_uses_circular_motion(self) -> None:

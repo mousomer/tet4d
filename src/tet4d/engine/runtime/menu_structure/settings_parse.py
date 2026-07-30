@@ -135,7 +135,7 @@ def _parse_numeric_setup_field(
     )
     raw_max = field.get("max")
     if isinstance(raw_max, bool) or not isinstance(raw_max, (int, str)):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             f"structure.setup_fields.{mode_key}[{idx}].max must be int or dynamic token"
         )
     parsed_field["min"] = min_val
@@ -173,7 +173,9 @@ def _parse_setup_field(
                 + ", ".join(sorted(_STORAGE_TYPES))
             )
         parsed_field["storage_type"] = storage_type
-    semantic_type, control = _parse_setup_field_semantics(field, mode_key=mode_key, idx=idx)
+    semantic_type, control = _parse_setup_field_semantics(
+        field, mode_key=mode_key, idx=idx
+    )
     parsed_field["semantic_type"] = semantic_type
     parsed_field["control"] = control
     if semantic_type == "enum":
@@ -267,12 +269,14 @@ def parse_settings_option_labels(payload: dict[str, Any]) -> dict[str, tuple[str
             "structure.settings_option_labels.game_random_mode must define at least two labels"
         )
     return parsed
+
+
 def parse_settings_category_docs(
     payload: dict[str, Any],
 ) -> tuple[dict[str, str], ...]:
     raw = payload.get("settings_category_docs")
     if raw is None:
-        return tuple()
+        return ()
     rows = require_list(raw, path="structure.settings_category_docs")
     docs: list[dict[str, str]] = []
     for idx, raw_doc in enumerate(rows):
@@ -356,7 +360,9 @@ def parse_settings_category_metrics(
             ),
             "action_count": require_int(
                 entry.get("action_count"),
-                path=(f"structure.settings_category_metrics.{category_id}.action_count"),
+                path=(
+                    f"structure.settings_category_metrics.{category_id}.action_count"
+                ),
                 min_value=0,
             ),
             "mode_specific": require_bool(
@@ -383,7 +389,7 @@ def resolve_field_max(
     if raw_max == "topology_profile_max":
         return max(0, int(topology_profile_max))
     if isinstance(raw_max, bool) or not isinstance(raw_max, int):
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: TRY004 - preserve the established validation contract.
             "structure.setup_fields."
             f"{mode_key}.{attr_name}.max must be int or dynamic max token"
         )

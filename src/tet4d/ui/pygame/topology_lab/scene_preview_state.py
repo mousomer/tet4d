@@ -191,9 +191,10 @@ def _apply_playability_analysis(
     if runtime_state is None:
         _clear_pending_playability_analysis(state)
         return
-    if include_rigid_scan:
-        if _restore_cached_playability_analysis(state, signature=signature):
-            return
+    if include_rigid_scan and _restore_cached_playability_analysis(
+        state, signature=signature
+    ):
+        return
     analysis = update_topology_playability_analysis(
         runtime_state,
         preview=state.scene_preview,

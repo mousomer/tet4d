@@ -121,6 +121,11 @@ Main Menu
 - Redundant single-option menus are forbidden unless they carry an explicit
   `allow_single_option: true` exemption with a documented reason or use one
   of the existing exempt `layout_role` values.
+- In the partial Godot migration shell, live Play routes are the primary Main
+  Menu actions. The exported-trace browser remains available for development,
+  parity inspection, and non-live topology/endgame demonstrations, but routes
+  through a secondary `Advanced / Diagnostics` screen rather than competing
+  with Play as a top-level action.
 
 ### 4.2 In-game pause menu map
 

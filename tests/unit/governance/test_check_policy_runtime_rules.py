@@ -123,7 +123,9 @@ def test_rejects_hardcoded_runtime_constant_without_loader_import(
 
     assert warnings == []
     messages = [issue.message for issue in issues]
-    assert any("repo-owned runtime constant 'MARGIN'" in message for message in messages)
+    assert any(
+        "repo-owned runtime constant 'MARGIN'" in message for message in messages
+    )
 
 
 def test_accepts_value_loaded_through_approved_config_path(
@@ -134,7 +136,7 @@ def test_accepts_value_loaded_through_approved_config_path(
         tmp_path / "src/tet4d/engine/runtime/leaderboard.py",
         (
             "from tet4d.engine.runtime.project_config import project_constant_int\n"
-            "MARGIN = project_constant_int((\"rendering\", \"3d\", \"margin\"), 20)\n"
+            'MARGIN = project_constant_int(("rendering", "3d", "margin"), 20)\n'
         ),
     )
 
@@ -152,7 +154,7 @@ def test_accepts_imported_third_party_api_constants(
     _seed_authoritative_sources(tmp_path)
     _write(
         tmp_path / "src/tet4d/engine/runtime/leaderboard.py",
-        "from pygame import K_SPACE as SPACE_KEY\n__all__ = [\"SPACE_KEY\"]\n",
+        'from pygame import K_SPACE as SPACE_KEY\n__all__ = ["SPACE_KEY"]\n',
     )
 
     monkeypatch.setattr(runtime_rules, "ROOT", tmp_path)
@@ -167,7 +169,7 @@ def test_accepts_explicit_exception_categories(monkeypatch, tmp_path: Path) -> N
     _seed_authoritative_sources(tmp_path)
     _write(
         tmp_path / "src/tet4d/engine/runtime/leaderboard.py",
-        "_SCHEMA_VERSION = 1\n_MISSING = \"missing\"\n",
+        '_SCHEMA_VERSION = 1\n_MISSING = "missing"\n',
     )
 
     monkeypatch.setattr(runtime_rules, "ROOT", tmp_path)
