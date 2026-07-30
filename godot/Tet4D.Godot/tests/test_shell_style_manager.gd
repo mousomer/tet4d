@@ -7,10 +7,8 @@ const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.
 func run() -> Array:
 	var failures: Array = []
 	var manager = ShellStyleManagerScript.new()
-	_assert_equal(failures, manager.get_theme_id(), "tron", "active theme should default to tron")
+	_assert_equal(failures, manager.get_theme_id(), "plain", "active theme should default to Instrument")
 	_assert_color(failures, manager.get_color(ShellStyleRolesScript.ACCENT_PRIMARY), "default accent")
-	manager.set_theme("plain")
-	_assert_equal(failures, manager.get_theme_id(), "plain", "set_theme plain")
 	manager.set_theme("diagnostic")
 	_assert_equal(failures, manager.get_theme_id(), "diagnostic", "set_theme diagnostic")
 	var emissions := []
@@ -22,7 +20,7 @@ func run() -> Array:
 	if emissions != ["tron"]:
 		failures.append("theme_changed should emit once for valid change, got %s" % emissions)
 	manager.set_theme("missing")
-	_assert_equal(failures, manager.get_theme_id(), "tron", "unknown theme should fall back to tron")
+	_assert_equal(failures, manager.get_theme_id(), "plain", "unknown theme should fall back to Instrument")
 	_assert_color(failures, manager.get_color("not.a.role"), "unknown role fallback")
 	return failures
 

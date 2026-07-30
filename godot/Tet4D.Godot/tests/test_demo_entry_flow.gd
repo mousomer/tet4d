@@ -24,8 +24,8 @@ func run() -> Array:
 		failures.append("demo shell should start on the main menu")
 	var main_menu_text := str(snapshot.get("main_menu_text", ""))
 	for required in [
-		"Tet4D Vector Arcade Cockpit",
-		"Start with 2D",
+		"Tet4D",
+		"geometry instrument",
 	]:
 		if main_menu_text.find(required) == -1:
 			failures.append("main menu should expose %s for first-run demo flow" % required)

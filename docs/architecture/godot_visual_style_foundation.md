@@ -1,4 +1,9 @@
-# Godot Visual Style Foundation
+# Godot Visual Style Foundation (Implementation Record)
+
+Current presentation direction is owned by
+`docs/design/godot_visual_system.md`. This document records the earlier
+foundation and Vector Arcade implementation; it is not the current default
+theme decision.
 
 Stage 32 implements the Godot product-shell visual style foundation defined by
 `docs/architecture/godot_visual_style_authority.md`. This is a Godot

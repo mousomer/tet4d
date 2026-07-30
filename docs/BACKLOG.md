@@ -20,22 +20,6 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ## Active Work
 
-### Governance trajectory simplification
-
-Objective: reduce active procedural duplication while preserving semantic,
-safety, testing, parity, sanitation, documentation, and authority-transfer
-controls.
-
-Acceptance:
-
-- root governance is a concise stable constitution and dispatch;
-- reusable task-contract and completion-report formats exist;
-- workflow routing uses stable change classes rather than completed stages;
-- universal review and drift surfaces contain durable rules only;
-- historical evidence remains discoverable but is not active instruction;
-- governance validators, documentation checks, sanitation, and the repository
-  gate pass.
-
 ### Godot visual-design consolidation
 
 Objective: make the Godot shell restrained, coherent, and board-first using the

@@ -8,7 +8,7 @@ const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.
 signal theme_changed(theme_id: String)
 
 const PALETTE_PATH := "res://config/shell_theme_palettes.json"
-const DEFAULT_THEME_ID := "tron"
+const DEFAULT_THEME_ID := "plain"
 const REQUIRED_THEME_IDS := ["diagnostic", "plain", "tron"]
 
 var _palettes: Dictionary = {}
@@ -128,6 +128,7 @@ func _high_contrast_color(role: String, color: Color, palette) -> Color:
 		ShellStyleRolesScript.HINT_ACTION,
 		ShellStyleRolesScript.HINT_NOTE,
 		ShellStyleRolesScript.LABEL_HINT,
+		ShellStyleRolesScript.CONTROL_DISABLED,
 	]:
 		return Color.WHITE if dark_background else Color.BLACK
 	if role in [
@@ -135,6 +136,8 @@ func _high_contrast_color(role: String, color: Color, palette) -> Color:
 		ShellStyleRolesScript.GRID_MAJOR,
 		ShellStyleRolesScript.GRID_AXIS,
 		ShellStyleRolesScript.HINT_KEYCAP_BORDER,
+		ShellStyleRolesScript.CONTROL_SELECTED,
+		ShellStyleRolesScript.LAYER_ACTIVE,
 	]:
 		return Color(1.0, 0.85, 0.1) if dark_background else Color(0.0, 0.12, 0.35)
 	if role == ShellStyleRolesScript.GRID_MINOR:

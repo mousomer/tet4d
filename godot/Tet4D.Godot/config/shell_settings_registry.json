@@ -156,10 +156,10 @@
       "category": "theme",
       "value_type": "enum",
       "control_type": "dropdown",
-      "default": "tron",
+      "default": "plain",
       "options": [
         {"value": "diagnostic", "label": "Diagnostic"},
-        {"value": "plain", "label": "Plain"},
+        {"value": "plain", "label": "Instrument"},
         {"value": "tron", "label": "Vector Arcade"}
       ],
       "authority": "godot_shell",

@@ -1,8 +1,12 @@
 # Godot Vector Arcade Cockpit Overhaul
 
-Status: active Godot product-shell visual UX stage
+Status: historical Godot product-shell visual UX implementation record
 Date: 2026-06-22
 Scope: Godot UI shell, visual presentation, menus, settings, inspector, hints
+
+Current presentation authority is `docs/design/godot_visual_system.md`.
+Vector Arcade remains an optional theme identity rather than the product
+default.
 
 ## Purpose
 

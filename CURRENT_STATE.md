@@ -19,14 +19,18 @@ history ledger. Detailed history is preserved in
   Godot/native/parity CI, and Ruff 0.16 migration.
 - Python remains the semantic oracle. No topology, replay, endgame/explosion,
   or broader gameplay authority transferred to Godot or native C++.
+- Governance trajectory simplification is merged on `master` at `f7e519b0`.
+  Active routing now uses the stable constitution, task contract, change
+  classes, and completion report; completed stage detail remains historical.
 - The current ordered trajectory is:
-  1. simplify active governance around stable task contracts;
-  2. consolidate Godot visual design without semantic changes and obtain human
+  1. consolidate Godot visual design without semantic changes and obtain human
      visual acceptance;
-  3. establish the versioned canonical topology contract before native
+  2. establish the versioned canonical topology contract before native
      topology transport or topology-aware Godot gameplay.
-- The current Godot theme is functional but not the accepted final visual
-  language. Godot topology gameplay and unified Godot
+- Godot visual consolidation is active on
+  `codex/godot-visual-design-consolidation`; automated and real-window
+  evidence plus explicit human acceptance remain required before merge.
+  Godot topology gameplay and unified Godot
   endgame/topology/explosion integration have not begun.
 
 ## Current Authority
@@ -123,7 +127,6 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-- Complete and merge the governance-only simplification PR.
-- Create the separate Godot visual-design branch from updated `master`.
-- Stop at the visual PR checkpoint for explicit human acceptance.
+- Complete automated and real-window validation for the Godot visual-design
+  branch, open its focused PR, and stop for explicit human acceptance.
 - Keep topology audit results available for the later canonical-contract branch.

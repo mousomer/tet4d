@@ -99,9 +99,12 @@ Schema version 3 retains the Stage 51 Windowed/Fullscreen, remembered safe
 window size, bounded UI scale, HUD density, board detail, camera sensitivity,
 and vertical camera inversion settings, and adds High Contrast, Reduced
 Motion, and Show Help and Control Hints. High Contrast composes with
-Diagnostic, Plain, and Vector Arcade rather than replacing theme identity.
+Diagnostic, Instrument (`plain`), and Vector Arcade rather than replacing
+theme identity.
 Reduced Motion changes presentation smoothing and decorative emphasis only;
-it does not change gameplay or replay timing.
+it does not change gameplay or replay timing. Instrument (`plain`) is the
+calm, board-first default; Diagnostic and Vector Arcade remain selectable for
+inspection and a more energetic presentation respectively.
 
 Existing schema-version-1 and schema-version-2 shell settings migrate valid
 preferences in memory while new fields use defaults. The legacy keyboard-hint

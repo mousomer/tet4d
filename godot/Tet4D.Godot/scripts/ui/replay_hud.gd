@@ -9,6 +9,7 @@ const EventListPanelScript = preload("res://scripts/ui/event_list_panel.gd")
 const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onboarding_model.gd")
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
@@ -542,7 +543,7 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 	if _mode_hint_strip != null:
 		_update_control_hint_panel(_mode_hint_strip, "replay")
 	if _replay_note != null:
-		_replay_note.text = "Replay shell only. Vector Arcade is the product display default; Godot does not implement gameplay."
+		_replay_note.text = "Replay shell only. Instrument is the product display default; Godot does not implement gameplay."
 	if _hint_label != null:
 		_update_control_hint_panel(_hint_label, "replay")
 	if _inspector_hint_panel != null:
@@ -559,7 +560,7 @@ func set_display_mode(mode: String) -> void:
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
 	if _replay_note != null:
-		_replay_note.text = "Replay shell only. Vector Arcade is the product display default; Godot does not implement gameplay."
+		_replay_note.text = "Replay shell only. Instrument is the product display default; Godot does not implement gameplay."
 	if _settings_panel != null:
 		_settings_panel.set_display_mode(_current_display_mode)
 	if _settings_screen_panel != null:
@@ -866,7 +867,13 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 		_authority_label.text = "%s | C++ PlainNDSession | Godot shell" % mode_label
 	if _top_state_badge_label != null:
 		_top_state_badge_label.text = _status_badge_text(state_label, reason)
-		_top_state_badge_label.theme_type_variation = "StatusErrorLabel" if state_label == "Game Over" else "StatusAccentLabel"
+		match state_label:
+			"Game Over":
+				_top_state_badge_label.theme_type_variation = "StatusGameOverLabel"
+			"Paused":
+				_top_state_badge_label.theme_type_variation = "StatusPausedLabel"
+			_:
+				_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
 		_style_applier.apply_to_tree(_top_state_badge_label, _style_manager)
 	if _restart_game_button != null:
 		_restart_game_button.visible = state_label == "Game Over"
@@ -1655,7 +1662,7 @@ func _build_layout() -> void:
 	control_group.add_child(geometry_toggle)
 
 	_replay_note = Label.new()
-	_replay_note.text = "Replay shell only. Vector Arcade is the product display default; Godot does not implement gameplay."
+	_replay_note.text = "Replay shell only. Instrument is the product display default; Godot does not implement gameplay."
 	_replay_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_replay_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_replay_note.theme_type_variation = "SecondaryLabel"
@@ -1767,30 +1774,30 @@ func _build_main_menu_screen(screen: Control) -> void:
 	panel.custom_minimum_size = Vector2(720, 0)
 	center.add_child(panel)
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 48)
-	margin.add_theme_constant_override("margin_top", 44)
-	margin.add_theme_constant_override("margin_right", 48)
-	margin.add_theme_constant_override("margin_bottom", 44)
+	margin.add_theme_constant_override("margin_left", ShellDesignTokensScript.SPACE_6)
+	margin.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_6)
+	margin.add_theme_constant_override("margin_right", ShellDesignTokensScript.SPACE_6)
+	margin.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_6)
 	panel.add_child(margin)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.alignment = BoxContainer.ALIGNMENT_CENTER
-	layout.add_theme_constant_override("separation", 18)
+	layout.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_4)
 	margin.add_child(layout)
 	var title := Label.new()
 	title.name = "MainMenuTitle"
-	title.text = "Tet4D Vector Arcade Cockpit"
+	title.text = "Tet4D"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.theme_type_variation = "AccentLabel"
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_DISPLAY)
 	layout.add_child(title)
 	var subtitle := Label.new()
 	subtitle.name = "MainMenuSubtitle"
-	subtitle.text = "Start with 2D, then explore playable plain-board 3D and 4D modes."
+	subtitle.text = "A geometry instrument across two, three, and four dimensions."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.theme_type_variation = "SecondaryLabel"
-	subtitle.add_theme_font_size_override("font_size", 18)
+	subtitle.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
 	layout.add_child(subtitle)
 	layout.add_child(_menu_group_header("PLAY"))
 	var live_button := _make_command_card("Play 2D", "Plain bounded board · best place to start", "2")
@@ -2046,36 +2053,12 @@ func _screen_nav(title_text: String) -> HFlowContainer:
 		show_screen(SCREEN_MAIN_MENU)
 	)
 	nav.add_child(menu_button)
-	var browser_button := Button.new()
-	browser_button.text = "Advanced"
-	browser_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_ADVANCED)
-	)
-	nav.add_child(browser_button)
 	var viewer_button := Button.new()
 	viewer_button.text = "Viewer"
 	viewer_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_VIEWER)
 	)
 	nav.add_child(viewer_button)
-	var live_button := Button.new()
-	live_button.text = "Live 2D"
-	live_button.pressed.connect(func() -> void:
-		live_2d_requested.emit()
-	)
-	nav.add_child(live_button)
-	var live_3d_button := Button.new()
-	live_3d_button.text = "Live 3D"
-	live_3d_button.pressed.connect(func() -> void:
-		live_3d_requested.emit()
-	)
-	nav.add_child(live_3d_button)
-	var live_4d_button := Button.new()
-	live_4d_button.text = "Live 4D"
-	live_4d_button.pressed.connect(func() -> void:
-		live_4d_requested.emit()
-	)
-	nav.add_child(live_4d_button)
 	var diagnostics_button := Button.new()
 	diagnostics_button.text = "Diagnostics"
 	diagnostics_button.pressed.connect(func() -> void:
@@ -2102,9 +2085,9 @@ func _make_command_card(label_text: String, description: String, shortcut: Strin
 	var button := Button.new()
 	button.name = "CommandCard__%s" % label_text.replace(" ", "_").replace("/", "_")
 	button.text = "%s        %s\n%s" % [label_text, shortcut, description]
-	button.custom_minimum_size = Vector2(480, 54)
+	button.custom_minimum_size = Vector2(480, 52)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.add_theme_font_size_override("font_size", 17)
+	button.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
 	button.tooltip_text = "%s - %s" % [label_text, description]
 	return button
 
@@ -2125,7 +2108,7 @@ func _menu_group_header(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.theme_type_variation = "SecondaryLabel"
-	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SECTION)
 	return label
 
 

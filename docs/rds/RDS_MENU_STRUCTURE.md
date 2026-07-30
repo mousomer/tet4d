@@ -187,9 +187,10 @@ Pause Menu
 6. Visible button-like controls in that shared shell must expose mouse
    hitboxes aligned to their rendered bounds; hover, press, and release must
    resolve against the same control instead of a stale keyboard-only row model.
-6. Shared shell backgrounds should keep the dark high-contrast base but add a
-   restrained grid/glow treatment that reads as lightly Tron-inspired rather
-   than a flat gradient.
+6. Shared shell backgrounds should use the calm, dark Instrument system from
+   `docs/design/godot_visual_system.md`: quiet structure, restrained depth, and
+   no decorative glow competing with the board. Vector Arcade may retain a
+   more energetic optional treatment.
 7. When menu content exceeds the available panel height, the menu must switch
    to a shared scrolling viewport with reserved scrollbar width rather than
    clipping rows or shrinking text.

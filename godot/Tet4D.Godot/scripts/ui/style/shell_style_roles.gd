@@ -39,6 +39,12 @@ const DIAGNOSTIC_METADATA := "diagnostic.metadata"
 const STATE_WARNING := "state.warning"
 const STATE_ERROR := "state.error"
 const STATE_SUCCESS := "state.success"
+const STATE_PAUSED := "state.paused"
+const STATE_GAME_OVER := "state.game_over"
+const LAYER_ACTIVE := "layer.active"
+const LAYER_INACTIVE := "layer.inactive"
+const CONTROL_SELECTED := "control.selected"
+const CONTROL_DISABLED := "control.disabled"
 
 const REQUIRED_COLOR_ROLES := [
 	BACKGROUND_PRIMARY,
@@ -78,6 +84,12 @@ const REQUIRED_COLOR_ROLES := [
 	STATE_WARNING,
 	STATE_ERROR,
 	STATE_SUCCESS,
+	STATE_PAUSED,
+	STATE_GAME_OVER,
+	LAYER_ACTIVE,
+	LAYER_INACTIVE,
+	CONTROL_SELECTED,
+	CONTROL_DISABLED,
 ]
 
 

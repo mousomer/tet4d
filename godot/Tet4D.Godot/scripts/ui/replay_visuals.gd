@@ -128,7 +128,7 @@ static var _palette_cache := {}
 
 
 static func default_display_mode() -> String:
-	return DISPLAY_MODE_TRON
+	return DISPLAY_MODE_PLAIN
 
 
 static func supported_shell_minimum_size() -> Vector2:
@@ -136,7 +136,7 @@ static func supported_shell_minimum_size() -> Vector2:
 
 
 static func normalize_display_mode(mode: String) -> String:
-	return mode if DISPLAY_MODES.has(mode) else DISPLAY_MODE_TRON
+	return mode if DISPLAY_MODES.has(mode) else DISPLAY_MODE_PLAIN
 
 
 static func display_mode_label(mode: String) -> String:
@@ -146,7 +146,7 @@ static func display_mode_label(mode: String) -> String:
 		DISPLAY_MODE_TRON:
 			return "Vector Arcade"
 		DISPLAY_MODE_PLAIN:
-			return "Plain"
+			return "Instrument"
 		_:
 			return DISPLAY_MODE_DIAGNOSTIC.capitalize()
 
@@ -155,12 +155,12 @@ static func authority_label(mode: String) -> String:
 	return "REPLAY · PYTHON ORACLE · %s DISPLAY" % display_mode_label(mode).to_upper()
 
 
-static func color_for_role(role: String, mode: String = DISPLAY_MODE_TRON) -> Color:
+static func color_for_role(role: String, mode: String = DISPLAY_MODE_PLAIN) -> Color:
 	var palette := _palette(normalize_display_mode(mode))
 	return palette.get(role, palette.get(ROLE_TEXT, Color.WHITE))
 
 
-static func build_theme(mode: String = DISPLAY_MODE_TRON) -> Theme:
+static func build_theme(mode: String = DISPLAY_MODE_PLAIN) -> Theme:
 	var display_mode := normalize_display_mode(mode)
 	var theme_path := DIAGNOSTIC_THEME_PATH
 	match display_mode:
@@ -171,102 +171,102 @@ static func build_theme(mode: String = DISPLAY_MODE_TRON) -> Theme:
 	return load(theme_path).duplicate() as Theme
 
 
-static func active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
+static func active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> StandardMaterial3D:
 	return _role_material(ROLE_ACTIVE_CELL, mode, _role_emission(ROLE_ACTIVE_CELL, mode))
 
 
-static func gameplay_active_cell_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func gameplay_active_cell_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_ACTIVE_CELL, mode, _role_emission(ROLE_ACTIVE_CELL, mode))
 
 
-static func live_active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
+static func live_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.08)
 	return _make_material(base, _role_emission(ROLE_ACTIVE_CELL, mode) + 0.1, false)
 
 
-static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
+static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.14)
 	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode), false)
 
 
-static func live_4d_active_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
+static func live_4d_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
 	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72, false)
 
 
-static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> Dictionary:
+static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> Dictionary:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.13)
 	return _live_3d_face_materials(base, mode, true)
 
 
-static func live_4d_active_face_materials(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> Dictionary:
+static func live_4d_active_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> Dictionary:
 	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
 	return _live_3d_face_materials(base, mode, true, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72)
 
 
-static func locked_cell_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func locked_cell_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_LOCKED_CELL, mode, _role_emission(ROLE_LOCKED_CELL, mode))
 
 
-static func live_locked_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
+static func live_locked_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).darkened(0.22).lerp(color_for_role(ROLE_LOCKED_CELL, mode), 0.18)
 	return _make_material(base, _role_emission(ROLE_LOCKED_CELL, mode), false)
 
 
-static func live_3d_locked_cell_material(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> StandardMaterial3D:
+static func live_3d_locked_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> StandardMaterial3D:
 	var base := _trace_color(color_id, false).darkened(0.42).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.28)
 	return _make_lit_material(base, _role_emission(ROLE_LIVE_3D_LOCKED, mode), false)
 
 
-static func live_3d_locked_face_materials(mode: String = DISPLAY_MODE_TRON, color_id: int = 1) -> Dictionary:
+static func live_3d_locked_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1) -> Dictionary:
 	var base := _trace_color(color_id, false).darkened(0.42).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.28)
 	return _live_3d_face_materials(base, mode, false)
 
 
-static func live_active_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func live_active_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_CELL_ACTIVE_BORDER, mode, _role_emission(ROLE_LIVE_CELL_ACTIVE_BORDER, mode))
 
 
-static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_CELL_LOCKED_BORDER, mode, _role_emission(ROLE_LIVE_CELL_LOCKED_BORDER, mode))
 
 
-static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode))
 
 
-static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_3D_LOCKED_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_LOCKED_OUTLINE, mode))
 
 
-static func live_3d_origin_marker_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func live_3d_origin_marker_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_LIVE_3D_ORIGIN_MARKER, mode, _role_emission(ROLE_LIVE_3D_ORIGIN_MARKER, mode))
 
 
-static func live_board_fill_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func live_board_fill_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	var material := _role_material(ROLE_LIVE_BOARD_FILL, mode, _role_emission(ROLE_LIVE_BOARD_FILL, mode))
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = _with_alpha(material.albedo_color, 0.80)
 	return material
 
 
-static func live_board_grid_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func live_board_grid_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	var material := _role_material(ROLE_LIVE_BOARD_GRID, mode, _role_emission(ROLE_LIVE_BOARD_GRID, mode))
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = _with_alpha(material.albedo_color.darkened(0.18), 0.64)
 	return material
 
 
-static func probe_before_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func probe_before_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_PROBE_BEFORE, mode, _role_emission(ROLE_PROBE_BEFORE, mode))
 
 
-static func probe_after_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func probe_after_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_PROBE_AFTER, mode, _role_emission(ROLE_PROBE_AFTER, mode))
 
 
 static func particle_material(
-	mode: String = DISPLAY_MODE_TRON,
+	mode: String = DISPLAY_MODE_PLAIN,
 	escaped: bool = false,
 	color_id: int = 0
 ) -> StandardMaterial3D:
@@ -278,7 +278,7 @@ static func particle_material(
 
 
 static func particle_core_material(
-	mode: String = DISPLAY_MODE_TRON,
+	mode: String = DISPLAY_MODE_PLAIN,
 	escaped: bool = false,
 	color_id: int = 0
 ) -> StandardMaterial3D:
@@ -291,7 +291,7 @@ static func particle_core_material(
 
 
 static func particle_trail_material(
-	mode: String = DISPLAY_MODE_TRON,
+	mode: String = DISPLAY_MODE_PLAIN,
 	escaped: bool = false,
 	color_id: int = 0
 ) -> StandardMaterial3D:
@@ -302,30 +302,30 @@ static func particle_trail_material(
 	return material
 
 
-static func board_outline_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func board_outline_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_BOARD_OUTLINE, mode, _role_emission(ROLE_BOARD_OUTLINE, mode))
 
 
-static func slice_outline_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func slice_outline_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_W_SLICE_OUTLINE, mode, _role_emission(ROLE_W_SLICE_OUTLINE, mode))
 
 
-static func event_marker_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func event_marker_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	return _role_material(ROLE_EVENT_MARKER, mode, _role_emission(ROLE_EVENT_MARKER, mode))
 
 
-static func slice_label_color(mode: String = DISPLAY_MODE_TRON) -> Color:
+static func slice_label_color(mode: String = DISPLAY_MODE_PLAIN) -> Color:
 	return color_for_role(ROLE_W_SLICE_LABEL, mode)
 
 
-static func slice_label_chip_material(mode: String = DISPLAY_MODE_TRON) -> StandardMaterial3D:
+static func slice_label_chip_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	var material := _role_material(ROLE_PANEL_ALT, mode, 0.28)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = _with_alpha(color_for_role(ROLE_PANEL_ALT, mode), 0.96)
 	return material
 
 
-static func slice_outline_thickness(mode: String = DISPLAY_MODE_TRON) -> float:
+static func slice_outline_thickness(mode: String = DISPLAY_MODE_PLAIN) -> float:
 	return GRID_LINE_THICKNESS * 1.45
 
 
@@ -359,7 +359,7 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_PARTICLE_CORE: manager.get_color(ShellStyleRolesScript.CELL_PREVIEW),
 		ROLE_PARTICLE_CORE_ESCAPED: manager.get_color(ShellStyleRolesScript.STATE_SUCCESS),
 		ROLE_BOARD_OUTLINE: manager.get_color(ShellStyleRolesScript.GRID_MAJOR),
-		ROLE_LIVE_CELL_ACTIVE_BORDER: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS),
+		ROLE_LIVE_CELL_ACTIVE_BORDER: manager.get_color(ShellStyleRolesScript.LAYER_ACTIVE),
 		ROLE_LIVE_CELL_LOCKED_BORDER: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
 		ROLE_LIVE_3D_ACTIVE: manager.get_color(ShellStyleRolesScript.CELL_ACTIVE),
 		ROLE_LIVE_3D_LOCKED: manager.get_color(ShellStyleRolesScript.CELL_LOCKED),
@@ -370,7 +370,7 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_LIVE_3D_ORIGIN_MARKER: manager.get_color(ShellStyleRolesScript.GRID_AXIS),
 		ROLE_LIVE_BOARD_FILL: manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
 		ROLE_LIVE_BOARD_GRID: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
-		ROLE_W_SLICE_OUTLINE: manager.get_color(ShellStyleRolesScript.GRID_MAJOR),
+		ROLE_W_SLICE_OUTLINE: manager.get_color(ShellStyleRolesScript.LAYER_INACTIVE),
 		ROLE_W_SLICE_LABEL: manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER),
 		ROLE_VIEWPORT_FRAME: manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
 	}
@@ -384,46 +384,46 @@ static func _role_material(role: String, mode: String, emission_strength: float)
 
 static func _role_emission(role: String, mode: String) -> float:
 	var normalized_mode := normalize_display_mode(mode)
-	var tron_boost := 0.12 if normalized_mode == DISPLAY_MODE_TRON else 0.0
+	var mode_boost := 0.22 if normalized_mode == DISPLAY_MODE_TRON else (0.06 if normalized_mode == DISPLAY_MODE_DIAGNOSTIC else 0.0)
 	match role:
 		ROLE_ACTIVE_CELL:
-			return 1.2 + tron_boost
+			return 0.18 + mode_boost
 		ROLE_LOCKED_CELL:
-			return 0.82 + tron_boost
+			return 0.04 + mode_boost
 		ROLE_PARTICLE, ROLE_PARTICLE_ESCAPED:
-			return 1.05 + tron_boost
+			return 0.28 + mode_boost
 		ROLE_PARTICLE_CORE, ROLE_PARTICLE_CORE_ESCAPED:
-			return 1.3 + tron_boost
+			return 0.42 + mode_boost
 		ROLE_PROBE_BEFORE, ROLE_PROBE_AFTER:
-			return 1.05 + tron_boost
+			return 0.24 + mode_boost
 		ROLE_EVENT_MARKER:
-			return 1.08 + tron_boost
+			return 0.24 + mode_boost
 		ROLE_BOARD_OUTLINE, ROLE_W_SLICE_OUTLINE:
-			return 0.72 + tron_boost
+			return 0.04 + mode_boost
 		ROLE_LIVE_CELL_ACTIVE_BORDER:
-			return 1.0 + tron_boost
+			return 0.18 + mode_boost
 		ROLE_LIVE_CELL_LOCKED_BORDER:
-			return 0.5 + tron_boost
+			return 0.02 + mode_boost
 		ROLE_LIVE_3D_ACTIVE:
-			return 0.34 + tron_boost
+			return 0.06 + mode_boost
 		ROLE_LIVE_3D_LOCKED:
-			return 0.04 + tron_boost
+			return mode_boost * 0.25
 		ROLE_LIVE_3D_OUTLINE:
-			return 0.18 + tron_boost
+			return 0.02 + mode_boost
 		ROLE_LIVE_3D_ACTIVE_OUTLINE:
-			return 0.9 + tron_boost
+			return 0.2 + mode_boost
 		ROLE_LIVE_3D_LOCKED_OUTLINE:
-			return 0.1 + tron_boost
+			return 0.01 + mode_boost
 		ROLE_LIVE_3D_FACE_HIGHLIGHT:
-			return 0.2 + tron_boost
+			return 0.04 + mode_boost
 		ROLE_LIVE_3D_ORIGIN_MARKER:
-			return 1.1 + tron_boost
+			return 0.28 + mode_boost
 		ROLE_LIVE_BOARD_FILL:
-			return 0.2 + tron_boost
+			return mode_boost * 0.25
 		ROLE_LIVE_BOARD_GRID:
-			return 0.74 + tron_boost
+			return 0.03 + mode_boost
 		_:
-			return 0.9 + tron_boost
+			return 0.08 + mode_boost
 
 
 static func _trace_color(color_id: int, escaped: bool) -> Color:

@@ -59,7 +59,7 @@ The Stage 51 model is:
 | `display.window_mode` | `windowed`, `fullscreen` | `windowed` |
 | `display.windowed_size` | two validated integers | `[1280, 720]` |
 | `display.ui_scale` | `small`, `standard`, `large`, `extra_large` | `standard` |
-| `theme.name` | `diagnostic`, `plain`, `tron` | `tron` |
+| `theme.name` | `diagnostic`, `plain`, `tron` | `plain` |
 | `display.hud_density` | `compact`, `standard`, `detailed` | `standard` |
 | `display.board_detail` | `minimal`, `standard`, `full` | `standard` |
 | `camera.sensitivity` | `low`, `standard`, `high` | `standard` |
@@ -138,11 +138,13 @@ native input. Scroll containers expose overflow at constrained viewports.
 
 ## 9. Theme policy
 
-The persisted IDs remain `diagnostic`, `plain`, and `tron`; `tron` is the
-accepted default and is presented to players as Vector Arcade. The canonical
-model owns the selected ID. `ShellStyleManager`, `ReplayVisuals`, and the
-runtime presentation owner apply semantic style roles to shell and board
-consumers. Unknown IDs fall back through registry validation to `tron`.
+The persisted IDs remain `diagnostic`, `plain`, and `tron`; `plain` is the
+accepted default and is presented to players as Instrument. `diagnostic`
+remains the inspection theme and `tron` is the optional Vector Arcade variant.
+The canonical model owns the selected ID. `ShellStyleManager`,
+`ReplayVisuals`, and the runtime presentation owner apply semantic style roles
+to shell and board consumers. Unknown IDs fall back through registry
+validation to `plain`.
 
 Theme changes apply live and do not reconstruct gameplay state.
 
@@ -194,10 +196,9 @@ settings.
 ## 14. Default compatibility contract
 
 With no settings file, the shell starts windowed at a safe `1280 x 720`,
-standard UI scale, Vector Arcade (`tron`) theme, standard HUD, standard board
-detail, standard camera sensitivity, and non-inverted pitch. These values
-preserve the accepted Stage 50 presentation as closely as practical. Existing
-Stage 48 defaults remain unchanged.
+standard UI scale, Instrument (`plain`) theme, standard HUD, standard board
+detail, standard camera sensitivity, and non-inverted pitch. The stable
+persisted IDs and schema remain unchanged; only the visual default changes.
 
 ## 15. Error and fallback behavior
 

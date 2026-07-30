@@ -88,6 +88,7 @@ var _live_bridge := Tet4DCoreBridgeScript.new()
 var _world_root: Node3D
 var _renderer: TraceSceneRenderer
 var _camera_rig: CameraRig
+var _world_environment: WorldEnvironment
 @onready var _hud: ReplayHud = get_parent().get_node("ReplayHud") as ReplayHud
 
 
@@ -100,6 +101,7 @@ func _deferred_ready() -> void:
 	_wire_hud()
 	_build_world_in_game_viewport()
 	_renderer.set_display_mode(_state.display_mode)
+	_apply_world_palette(_state.display_mode)
 	_hud.set_display_mode(_state.display_mode)
 	_hud.apply_shell_settings()
 	_load_bundle()
@@ -543,6 +545,7 @@ func _wire_hud() -> void:
 	_hud.display_mode_changed.connect(func(display_mode: String) -> void:
 		_state.display_mode = ReplayVisuals.normalize_display_mode(display_mode)
 		_renderer.set_display_mode(_state.display_mode)
+		_apply_world_palette(_state.display_mode)
 		_hud.set_display_mode(_state.display_mode)
 		if not _current_snapshot.is_empty():
 			_refresh_render()
@@ -786,18 +789,27 @@ func _build_world_in_game_viewport() -> void:
 
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color(0.0196078, 0.027451, 0.0392157, 1)
+	environment.background_color = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, _state.display_mode)
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color(0.95, 0.98, 1, 1)
 	environment.ambient_light_energy = 1.85
 	environment.glow_enabled = false
-	var world_environment := WorldEnvironment.new()
-	world_environment.name = "AmbientWorld"
-	world_environment.environment = environment
-	_world_root.add_child(world_environment)
+	_world_environment = WorldEnvironment.new()
+	_world_environment.name = "AmbientWorld"
+	_world_environment.environment = environment
+	_world_root.add_child(_world_environment)
 
 	_hud.set_world_root(_world_root)
 	_refresh_camera_status()
+
+
+func _apply_world_palette(display_mode: String) -> void:
+	if _world_environment == null or _world_environment.environment == null:
+		return
+	_world_environment.environment.background_color = ReplayVisuals.color_for_role(
+		ReplayVisuals.ROLE_BACKGROUND,
+		display_mode
+	)
 
 
 func _refresh_hud() -> void:

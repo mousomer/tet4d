@@ -86,7 +86,7 @@ func run() -> Array:
 	if not partial.reset_categories_to_defaults(["display", "theme", "camera"]):
 		failures.append("display reset should persist canonical category defaults")
 	var reset = StoreScript.new(registry, TEST_PATH)
-	if reset.value("theme.name") != "tron" or reset.value("display.hud_density") != "standard" or reset.value("camera.invert_y") != false:
+	if reset.value("theme.name") != "plain" or reset.value("display.hud_density") != "standard" or reset.value("camera.invert_y") != false:
 		failures.append("display reset should restore display, theme, and camera defaults")
 	if reset.value("accessibility.show_help_hints") != false or reset.value("accessibility.high_contrast") != true or reset.value("interface.show_onboarding") != false or reset.value("replay.playback_speed") != 2.0:
 		failures.append("display reset must preserve help, onboarding, and replay preferences")

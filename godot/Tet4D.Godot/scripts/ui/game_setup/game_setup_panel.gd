@@ -3,6 +3,7 @@ extends Control
 class_name GameSetupPanel
 
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 signal start_requested(setup: Dictionary)
 signal back_requested()
@@ -52,15 +53,15 @@ func _rebuild() -> void:
 	center.add_child(panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 30)
+		margin.add_theme_constant_override("margin_%s" % side, ShellDesignTokensScript.SPACE_5)
 	panel.add_child(margin)
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_3)
 	margin.add_child(layout)
 	_title = Label.new()
 	_title.text = GameSetupSpecScript.mode_label(_model.current_mode)
 	_title.theme_type_variation = "AccentLabel"
-	_title.add_theme_font_size_override("font_size", 30)
+	_title.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SCREEN_TITLE)
 	layout.add_child(_title)
 	var prompt := Label.new()
 	prompt.text = "Choose the bounded game setup. These values are fixed for the session."
@@ -91,7 +92,7 @@ func _rebuild() -> void:
 	_random_description = _add_description(layout)
 
 	_seed_row = VBoxContainer.new()
-	(_seed_row as VBoxContainer).add_theme_constant_override("separation", 4)
+	(_seed_row as VBoxContainer).add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
 	layout.add_child(_seed_row)
 	var seed_label := Label.new()
 	seed_label.text = "Seed"
@@ -118,7 +119,7 @@ func _rebuild() -> void:
 	speed_note.text = "1 is relaxed; 10 is the fastest starting gravity cadence."
 
 	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 12)
+	actions.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_3)
 	layout.add_child(actions)
 	_start_button = Button.new()
 	_start_button.name = "StartGameButton"

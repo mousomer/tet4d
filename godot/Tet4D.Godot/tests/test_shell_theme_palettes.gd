@@ -24,14 +24,21 @@ func run() -> Array:
 	var plain = manager.palette("plain")
 	var tron = manager.palette("tron")
 	if diagnostic != null and plain != null and tron != null:
-		if _brightness(plain.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY)) <= _brightness(diagnostic.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY)):
-			failures.append("plain background.primary should be lighter than diagnostic")
-		if _brightness(plain.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY)) <= _brightness(tron.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY)):
-			failures.append("plain background.primary should be lighter than tron")
+		if _brightness(plain.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY)) >= 0.12:
+			failures.append("Instrument background.primary should remain a restrained dark surface")
 		if tron.get_color(ShellStyleRolesScript.ACCENT_PRIMARY) == diagnostic.get_color(ShellStyleRolesScript.ACCENT_PRIMARY):
 			failures.append("tron accent.primary should differ from diagnostic")
 		if tron.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY) == diagnostic.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY):
 			failures.append("tron should not be identical to diagnostic")
+		_assert_color(failures, plain.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY), Color.html("#080A0F"), "Instrument background.primary")
+		_assert_color(failures, plain.get_color(ShellStyleRolesScript.BACKGROUND_PANEL), Color.html("#10141D"), "Instrument background.panel")
+		_assert_color(failures, plain.get_color(ShellStyleRolesScript.ACCENT_PRIMARY), Color.html("#C7A45A"), "Instrument accent.primary")
+		_assert_color(failures, plain.get_color(ShellStyleRolesScript.ACCENT_FOCUS), Color.html("#E6C66E"), "Instrument accent.focus")
+		_assert_color(failures, plain.get_color(ShellStyleRolesScript.GRID_MINOR), Color.html("#252C3A"), "Instrument grid.minor")
+		_assert_color(failures, plain.get_color(ShellStyleRolesScript.LAYER_ACTIVE), Color.html("#B9C8E3"), "Instrument active W layer")
+		_assert_color(failures, plain.get_color(ShellStyleRolesScript.LAYER_INACTIVE), Color.html("#52617E"), "Instrument inactive W layer")
+		if plain.get_color(ShellStyleRolesScript.CONTROL_SELECTED) == plain.get_color(ShellStyleRolesScript.CONTROL_DISABLED):
+			failures.append("Instrument selected and disabled states should remain visually distinct")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.BACKGROUND_PRIMARY), Color.html("#05080E"), "tron Calm Blueprint background.primary")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.ACCENT_PRIMARY), Color.html("#2FB7C8"), "tron Calm Blueprint accent.primary")
 		_assert_color(failures, tron.get_color(ShellStyleRolesScript.ACCENT_SOFT), Color.html("#3F6F7C"), "tron Calm Blueprint accent.soft")
