@@ -1,6 +1,7 @@
 # Stage 49 Configurable Plain Boards and Adaptive 4D Layout
 
-Status: implementation complete; menu-routing regression repaired and automated verification passed; manual reacceptance pending
+Status: complete; menu-routing regression repaired, automated verification
+passed, and manual reacceptance recorded on integrated head `bb9d5b6a`
 Date: 2026-07-15
 
 ## Authority and scope

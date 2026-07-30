@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-25
+Last updated: 2026-07-30
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -10,6 +10,35 @@ historical ledger, a validation transcript, or a second workflow authority.
 Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- PR #37 is accepted at
+  `bb9d5b6ac9477b0a06cc0529296edf04eb64f43b`. The integrated foundation
+  includes configurable bounded boards, game setup, production piece-set
+  selection, fixed/true-random seed handling, deterministic restart, initial
+  speed, display and accessibility infrastructure, hardened settings
+  persistence, Godot `4.7.1-stable`, pinned Godot/native dependencies, blocking
+  Linux Godot/native/parity CI, Ruff 0.16 migration, and the associated
+  governance/documentation updates.
+- Automated acceptance covers Python 3.11-3.14 CI, Godot 4.7.1/native parity
+  CI, focused Python/Godot/native/settings/parity checks, sanitation, and the
+  repository gate. Manual acceptance of the integrated head is recorded;
+  earlier focused GUI checks covered main/setup, live 2D/3D/4D including
+  Wide-W, replay, Settings, themes, focus, constrained scaling, restart, and
+  navigation.
+- Python remains the semantic oracle. The foundation does not transfer
+  topology, gameplay, trace, replay, RNG, hashing, or endgame/explosion
+  authority to Godot.
+- Product visual design remains unfinished. The current default theme is
+  functional and accessible but is not the accepted final visual language.
+- Godot topology gameplay has not begun. The next migration stage starts by
+  making the existing Python topology semantics an explicit, versioned
+  cross-runtime contract; native transport, topology-aware Godot gameplay,
+  diagnostics, and a Godot Topology Lab remain later stages.
+- Endgame, topology, and explosion-simulator product integration in Godot
+  remains unfinished. Existing Python/Pygame behavior and traces continue to
+  define the reference boundary.
+
+## Accepted Foundation Detail
 
 - Godot product-shell migration from 4.6.3 to the exact official
   `4.7.1-stable` build is accepted on
@@ -38,15 +67,13 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   pass; the audited PR head also passes the GitHub Python 3.11–3.14 matrix.
   Godot headless tests, scene instantiation, bounded startup, GDExtension build,
   native standalone tests, six additional native warning probes, and Bash
-  syntax pass locally. The audit also records the exact gaps: CI Ruff format
-  scope is narrower than policy; local Godot 4.7 differs from target 4.6.3;
-  Godot/native build and tests are absent from CI; clang-format, clang-tidy,
-  ShellCheck, shfmt, and gdtoolkit are unavailable; clang-tidy lacks a compile
-  database; and the retained Unity C# spike has no installed or CI compiler
-  path. No tool was installed, no broad formatter ran, and no semantic or
-  authority boundary changed.
+  syntax pass locally. Its recorded target-Godot and CI gaps were resolved by
+  the accepted 4.7.1 migration and blocking Linux Godot/native/parity lane.
+  Remaining historical audit gaps are clang-format, clang-tidy, ShellCheck,
+  shfmt, gdtoolkit, a clang-tidy compilation database, and a compiler path for
+  the retained Unity C# spike. No semantic or authority boundary changed.
 
-- PR #37 now carries the explicit Ruff toolchain migration on
+- PR #37 carries the completed Ruff toolchain migration on
   `codex/configurable-plain-boards`. PyPI discovery on 2026-07-25 established
   Ruff 0.16.0 as the newest stable release and confirmed that no stable 0.17.x
   exists. The canonical pre-modification audit recorded 1,023 diagnostics
@@ -66,7 +93,7 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   `30144781389` passes Python 3.11, 3.12, 3.13, and 3.14 for migration head
   `c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2`; the Ruff migration is complete.
 
-- Stage 52 accessibility infrastructure is implemented on
+- Stage 52 accessibility infrastructure is accepted on
   `codex/configurable-plain-boards` as an extension of the accepted Stage 51
   presentation path. Its durable contract and focused audit are
   `docs/architecture/accessibility_infrastructure.md`. Shell settings advance
@@ -86,9 +113,9 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   parity, and `CODEX_MODE=1 ./scripts/verify.sh` checks pass. macOS GUI
   inspection confirmed the main-menu focus ring and the scroll-safe Extra
   Large Settings screen, but the environment exhausted its external-action
-  quota before the full keyboard-only, all-theme, 2D/3D/4D/Wide-W manual matrix
-  could be completed. Stage 52 therefore remains pending final manual
-  acceptance; Stage 53A has not begun.
+  quota before that earlier focused run completed its full keyboard-only,
+  all-theme, 2D/3D/4D/Wide-W matrix. The integrated head was subsequently
+  manually accepted at `bb9d5b6a`; Stage 53A has not begun.
 
 - The PR #36 settings-persistence review on
   `codex/configurable-plain-boards` confirms and hardens two Stage 48 failure
@@ -113,7 +140,7 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   persistence drift, schema/path drift, unknown setting IDs, and duplicate
   runtime fallbacks.
 
-- Stage 51 display infrastructure is the active corrective completion on
+- Stage 51 display infrastructure is complete on
   `codex/configurable-plain-boards`. Its display-only authority is
   `docs/architecture/display_infrastructure.md`. The Stage 48
   `user://shell_settings.json` owner migrates schema 1 to schema 2 and persists
@@ -123,7 +150,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   renderer, and camera consumers. `Reset Display Settings` preserves replay,
   keyboard-hint, onboarding, and separate game-setup choices. High contrast,
   reduced motion, and contextual-help policy changes were removed from the
-  prematurely combined local baseline and remain deferred to Stage 52.
+  prematurely combined local baseline and were delivered separately by Stage
+  52.
   Focused and full Python, Godot, native, persistence, layout, Wide-W,
   state-hash, configured-setup, documentation, and governance checks pass,
   including `CODEX_MODE=1 ./scripts/verify.sh`. Corrective macOS GUI acceptance
@@ -134,7 +162,7 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   replay identity, bindings, controllers, audio, and packaging remain
   unchanged.
 
-- Stage 50 plain-game setup completion is complete locally on
+- Stage 50 plain-game setup completion is complete on
   `codex/configurable-plain-boards` as a direct extension of the accepted Stage
   49 setup boundary. Its authority audit is
   `docs/architecture/plain_game_setup_completion.md`. The stage is limited to
@@ -147,8 +175,8 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   Wide-W adaptive 4D interaction. The live action/status row is protected at
   supported viewport sizes. Python gameplay rules remain the oracle; topology
   and all advanced gameplay/setup families remain deferred. Stage 51 extends
-  only Godot display presentation; Stage 52 accessibility and Stage 53
-  topology remain deferred.
+  only Godot display presentation. Stage 52 accessibility is complete; Stage
+  53 topology remains deferred.
 
 - Stage 49 configurable plain-board setup and adaptive 4D layer presentation has
   an automated-verified menu-routing repair on `codex/configurable-plain-boards`
@@ -165,10 +193,10 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   acceptance on those visible menus. Replay Demos is retained for trace/parity
   inspection under a secondary Advanced / Diagnostics route rather than the
   primary Main Menu. Python rules/defaults and topology/replay semantics remain
-  unchanged; topology migration is postponed until this stage is merged.
+  unchanged; topology migration remains the next separate semantic sequence.
 
-- Stage 48 Godot shell settings persistence is active on
-  `codex/godot-shell-settings-persistence`. It extends the Stage 29 registry
+- Stage 48 Godot shell settings persistence is complete on the accepted
+  foundation. It extends the Stage 29 registry
   foundation with a single Godot-owned, versioned, validated user preference
   layer and keeps Stage 47 navigation/onboarding behavior intact. Only
   presentation preferences are eligible; gameplay, live sessions, topology,
@@ -179,8 +207,7 @@ Historical rollout detail belongs in `docs/history/DONE_SUMMARIES.md`.
   main-menu letters/numbers now activate their cards, and mouse/Esc Quit route
   through the same application handler. Shortcuts remain active after returning
   from live play, and successful preference changes visibly confirm automatic
-  saving. Stage 49 topology work remains deferred behind the configurable-board
-  stage now in progress.
+  saving. Topology work remains deferred to the Stage 53 sequence.
 
 - Stage 46 Godot core gameplay completion is complete on the merged `master`
   baseline. The bounded audit is recorded in
@@ -936,11 +963,12 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-- Continue topology-playground cleanup from `docs/BACKLOG.md` without reopening
-  the frozen shell contract.
-- Continue trimming only the remaining real shell-entry seams in
-  `controls_panel.py` and `scene_state.py` without collapsing the focused
-  helper splits back into one file.
+- Simplify the active Codex governance surface around a stable constitution,
+  reusable task contracts, stable change classes, and completion reports.
+- Consolidate the Godot visual system using the restrained Pygame hierarchy as
+  the strongest internal reference, without changing gameplay or topology.
+- Establish the canonical, versioned topology contract and parity evidence
+  before native topology transport or topology-aware Godot gameplay.
 - Keep the hardened preview/playability contract explicit: same-signature
   refreshes restore cached results when available, invalid preview states do
   not queue pointless rigid scans, and play-preview launch only forces
@@ -969,6 +997,3 @@ CODEX_MODE=1 ./scripts/verify.sh
   `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, and
   `tools/governance/validate_utility_reuse.py`; duplicate-helper findings are
   advisory unless strict utility-reuse mode is explicitly enabled.
-- Next migration task after Stage 12 verification is to harden the live plain
-  2D shell against Python behavior with additional parity traces before
-  expanding to 3D/4D/topology.

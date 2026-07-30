@@ -1,6 +1,6 @@
 # Accessibility Infrastructure
 
-Status: Stage 52 architecture contract and focused audit.
+Status: Stage 52 accepted on integrated foundation head `bb9d5b6a`.
 
 ## 1. Purpose
 
@@ -269,8 +269,8 @@ and 2D/ND/configured-setup parity checks pass, including the repository-wide
 `CODEX_MODE=1 ./scripts/verify.sh` gate.
 
 The exercised macOS GUI confirmed a strong main-menu keyboard focus ring and a
-scroll-safe Settings screen at Extra Large scale. The environment then
-exhausted its external-action quota, so the complete keyboard-only,
-all-theme, 2D/3D/4D/Wide-W manual acceptance matrix remains pending. This is a
-platform-exercise limitation, not an automated test failure. Stage 52 must not
-be marked complete until that matrix is finished.
+scroll-safe Settings screen at Extra Large scale. That focused run exhausted
+its external-action quota before completing the entire keyboard-only,
+all-theme, 2D/3D/4D/Wide-W matrix. The integrated foundation head was
+subsequently manually accepted at `bb9d5b6a`; the incomplete earlier matrix is
+retained here as historical test detail, not as an active Stage 52 blocker.

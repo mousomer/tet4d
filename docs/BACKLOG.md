@@ -1,7 +1,7 @@
 # Consolidated Backlog
 
 Generated: 2026-02-18  
-Updated: 2026-07-25
+Updated: 2026-07-30
 Scope: active open backlog, governance watchlist, and compact recent change footprint.
 
 ## Current Authority
@@ -27,6 +27,31 @@ Older topology-playground manifests and older batch notes are historical
 background only unless reactivated by a future task.
 
 ## Active Work
+
+Accepted Godot foundation closure (2026-07-30): PR #37 is accepted at
+`bb9d5b6ac9477b0a06cc0529296edf04eb64f43b`. Its integrated scope includes
+configurable bounded boards; piece-set, seed, deterministic restart, and
+initial-speed setup; display and accessibility infrastructure; hardened
+settings persistence; Godot 4.7.1 and pinned native dependencies; blocking
+Godot/native/parity CI; Ruff 0.16 migration; and associated
+governance/documentation work. Automated and manual acceptance cover the
+integrated head. The default Godot visual theme remains a product-quality
+concern, visual design is not finished, Godot topology gameplay has not begun,
+and Godot endgame/topology/explosion integration remains unfinished.
+
+The ordered active trajectory is:
+
+1. close and merge the accepted foundation;
+2. simplify Codex governance without product/runtime changes;
+3. consolidate Godot visual design without semantic changes and obtain human
+   visual acceptance;
+4. establish the versioned canonical topology contract before native
+   transport or topology-aware Godot gameplay;
+5. continue native topology transport, Godot topology gameplay/diagnostics,
+   Godot Topology Lab, and unified endgame/explosion launch integration as
+   separately reviewed work.
+
+## Accepted Foundation Detail
 
 Agent-governance documentation modernization (2026-07-29): reduce the root
 dispatch to durable authority and task routing; consolidate detailed workflow
@@ -69,7 +94,8 @@ ASan/UBSan as separate reviewed stages. Unity C# tooling remains conditional on
 reactivating that legacy spike. This audit changes no gameplay, topology,
 replay, hashing, RNG, or authority behavior.
 
-PR #37 Ruff migration (2026-07-25, automated acceptance in progress): PyPI
+PR #37 Ruff migration (2026-07-25, accepted as part of the integrated
+foundation): PyPI
 discovery selected Ruff 0.16.0 as the newest stable supported release; no
 stable 0.17.x release exists. The repository now pins `ruff==0.16.0`, reports
 the installed CI version, and treats future minor-version changes as explicit
@@ -88,8 +114,8 @@ and 3.14 for migration head
 `c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2`; automated Ruff migration
 acceptance is complete. No Stage 52 behavior or Stage 53A scope changed.
 
-Stage 52 accessibility infrastructure (2026-07-20, implementation and automated
-acceptance complete; final manual matrix pending): extend the
+Stage 52 accessibility infrastructure (2026-07-20, accepted as part of the
+integrated foundation): extend the
 accepted Stage 51 registry/store/presentation pipeline to schema version 3 with
 High Contrast, Reduced Motion, and Show Help and Control Hints preferences.
 The durable invariant/preference boundary, focused audit, migration policy,
@@ -104,9 +130,10 @@ propagation, focus restoration, three-theme High Contrast, static non-colour
 cues, Reduced Motion, hint visibility, viewport/layout regression, full Python,
 Godot/native, 2D/ND/setup parity, and the repository verification gate pass.
 macOS GUI inspection accepted the main-menu focus ring and scroll-safe Extra
-Large Settings screen. External input-automation quota exhaustion prevented
-completion of the keyboard-only, all-theme, 2D/3D/4D/Wide-W manual matrix, so
-the stage is not yet marked complete and Stage 53A remains blocked.
+Large Settings screen. An earlier focused run did not finish the complete
+keyboard-only, all-theme, 2D/3D/4D/Wide-W matrix because input-automation quota
+was exhausted; the integrated head was subsequently manually accepted at
+`bb9d5b6a`. Stage 53A remains separate and has not begun.
 
 PR #36 settings-persistence failure-path hardening (2026-07-19, implemented):
 preserve and restore the previous valid `user://shell_settings.json` through a
@@ -133,25 +160,26 @@ size, UI scale, theme, HUD density, board detail, and camera preferences through
 the Godot shell/HUD presentation owner into renderer and camera consumers. The
 display-only contract is `docs/architecture/display_infrastructure.md`.
 Accessibility behavior that was prematurely combined into the local baseline
-was removed from Stage 51 and remains ordered Stage 52 work. Focused and full
+was removed from Stage 51 and delivered separately in Stage 52. Focused and full
 Python, Godot, native, persistence, layout, Wide-W, state-hash, configured
 setup, documentation, and governance verification pass. Corrective macOS GUI
 acceptance confirms the real Settings screen at extra-large scale in a
 constrained window; the broader existing fullscreen, theme, camera, and Wide-W
 acceptance remains protected by the passing regression suite.
 
-The next product stages are ordered as follows:
+The foundation stages are complete; the next product stages are ordered as
+follows:
 
-1. Stage 51 — Display Infrastructure
-2. Stage 52 — Accessibility
-3. Stage 53A — Topology contract
-4. Stage 53B — Native topology transport
-5. Stage 53C — Topology gameplay
-6. Stage 53D — Topology diagnostics
-7. Stage 53E — Topology Lab
+1. Godot visual-design consolidation — presentation only
+2. Stage 53A — Topology contract
+3. Stage 53B — Native topology transport
+4. Stage 53C — Topology gameplay
+5. Stage 53D — Topology diagnostics
+6. Stage 53E — Topology Lab
+7. Later — unified gameplay/endgame/explosion launch contract
 8. Stage 54 — Controls and Input Configuration
 
-Stage 50 plain-game setup completion (2026-07-19, complete locally):
+Stage 50 plain-game setup completion (2026-07-19, complete):
 extend the separate Stage 49 gameplay setup owner with canonical piece-set,
 random-mode, seed, and initial-speed identity; construct existing bounded native
 sessions from that validated identity; preserve the effective seed on restart;
@@ -163,8 +191,8 @@ topology, bots, kicks, challenge/progression editors, endgame/explosion, audio,
 keybindings, and packaging remain deferred. Native/Godot/parity verification
 and manual 2D/3D/4D acceptance passed, including persisted true-random setup,
 New Random effective-seed replacement, mouse and keyboard navigation, and the
-Wide-W eight-layer layout. Stage 51 extends the accepted shell at presentation
-only; Stage 52 accessibility and Stage 53 topology work remain deferred.
+Wide-W eight-layer layout. Stage 51 display and Stage 52 accessibility are
+complete; Stage 53 topology remains deferred.
 
 Stage 49 configurable plain-board dimensions and adaptive 4D layer layout
 (2026-07-15, menu-routing repair and manual reacceptance verified): add curated 2D/3D/4D New Game presets, parameterize the existing
@@ -179,7 +207,7 @@ or Change Setup now disables hidden live-view mouse capture and restores
 deterministic Enter/Space activation on the visible menu, with transition tests
 covering all three live modes. Replay Demos remains an intact trace/parity
 inspection surface but moves below the primary menu into Advanced / Diagnostics.
-Topology migration remains postponed until this stage is merged.
+Topology migration remains a separate Stage 53 sequence.
 
 Stage 46 Godot core gameplay completion (2026-07-12): keep the accepted Live
 Plain 2D/3D/4D native-session loops and make their primary play state readable
