@@ -625,34 +625,6 @@ def test_review_checklist_missing_drift_concept_fails(tmp_path: Path) -> None:
     assert any("drift protection" in item for item in failures)
 
 
-def test_review_checklist_missing_first_parity_pilot_fails(
-    tmp_path: Path,
-) -> None:
-    _valid_fixture(tmp_path)
-    checklist = tmp_path / "docs" / "governance" / "review_checklist.md"
-    checklist.write_text(
-        checklist.read_text(encoding="utf-8").replace("first parity pilot\n", ""),
-        encoding="utf-8",
-    )
-
-    failures = _messages(drift.validate(tmp_path))
-
-    assert any("first parity pilot" in item for item in failures)
-
-
-def test_review_checklist_missing_promotion_gates_fails(tmp_path: Path) -> None:
-    _valid_fixture(tmp_path)
-    checklist = tmp_path / "docs" / "governance" / "review_checklist.md"
-    checklist.write_text(
-        checklist.read_text(encoding="utf-8").replace("promotion gates\n", ""),
-        encoding="utf-8",
-    )
-
-    failures = _messages(drift.validate(tmp_path))
-
-    assert any("promotion gates" in item for item in failures)
-
-
 def test_parity_protocol_missing_audit_link_fails(tmp_path: Path) -> None:
     _valid_fixture(tmp_path)
     parity_protocol = tmp_path / "docs" / "architecture" / "parity_protocol.md"

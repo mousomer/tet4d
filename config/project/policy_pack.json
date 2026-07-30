@@ -1458,11 +1458,10 @@
         "must_contain": [
           "## Current Authority",
           "## Active Work",
-          "Current sub-batch",
-          "Acceptance bar:",
+          "## Explicit Deferrals",
           "## Governance Watchlist",
-          "## Recent Completed Work",
-          "## Historical Milestones"
+          "## Completion Boundary",
+          "docs/history/backlog_archive_2026-07-30.md"
         ],
         "must_not_contain": [
           "No currently open gaps",
@@ -1970,14 +1969,48 @@
         ]
       },
       {
+        "file": "docs/governance/task_contract.md",
+        "must_contain": [
+          "## Objective",
+          "## Current Authority",
+          "## Allowed Systems and Paths",
+          "## Required Changes",
+          "## Forbidden Changes",
+          "## Acceptance Criteria",
+          "## Automated Verification",
+          "## Manual Verification",
+          "## Documentation Updates",
+          "## Explicit Deferrals"
+        ]
+      },
+      {
+        "file": "docs/governance/completion_report.md",
+        "must_contain": [
+          "## Summary",
+          "## Files Changed",
+          "## Semantic Impact",
+          "## Authority Changes",
+          "## Tests and Verification",
+          "## Manual Checks",
+          "## Known Warnings",
+          "## Unresolved Limitations",
+          "## Diffstat",
+          "## Commit SHA",
+          "## PR URL",
+          "## Worktree State"
+        ]
+      },
+      {
         "file": "CURRENT_STATE.md",
         "must_contain": [
           "tools/governance/generate_maintenance_docs.py",
           "## Active Focus",
+          "## Current Authority",
           "## Known Watchouts",
           "## Restart Checklist",
           "docs/PROJECT_STRUCTURE.md",
           "docs/history/DONE_SUMMARIES.md",
+          "docs/history/current_state_archive_2026-07-30.md",
           "<!-- BEGIN GENERATED:current_state_metric_snapshot -->",
           "<!-- BEGIN GENERATED:current_state_drift_watch -->"
         ],

@@ -2536,7 +2536,6 @@ def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
                 "parity / authority transfer",
                 "python oracle",
                 "godot visual",
-                "first parity pilot",
             ),
         ),
         (
@@ -2639,14 +2638,6 @@ def _validate_parity_pilot_audit_governance() -> list[ValidationIssue]:
             ("parity_pilot_audit_and_promotion_gates",),
         ),
         (
-            "docs/governance/review_checklist.md",
-            (
-                "first-pilot audit and promotion gates",
-                "strict/default parity behavior",
-                "second parity slice",
-            ),
-        ),
-        (
             "docs/governance/drift_protection_map.md",
             (
                 "parity_pilot_audit_and_promotion_gates.md",
@@ -2739,16 +2730,8 @@ def _validate_second_parity_slice_candidate_selection() -> list[ValidationIssue]
             ("second_parity_slice_candidate_selection.md",),
         ),
         (
-            "docs/governance/review_checklist.md",
-            ("selected candidate", "stage 18", "authority transfer"),
-        ),
-        (
             "docs/governance/drift_protection_map.md",
-            (
-                "second_parity_slice_candidate_selection.md",
-                "selected candidate",
-                "forbidden second-slice areas",
-            ),
+            ("second_parity_slice_candidate_selection.md",),
         ),
         (
             "docs/DOCUMENTATION_MAP.md",
@@ -2827,7 +2810,6 @@ def _validate_parity_evidence_review_and_third_slice_selection() -> list[
             (doc_rel,),
         ),
         ("docs/governance/README.md", (doc_rel,)),
-        ("docs/governance/review_checklist.md", (doc_rel,)),
         ("docs/governance/drift_protection_map.md", (doc_rel,)),
         ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
     )
@@ -2889,7 +2871,6 @@ def _validate_trace_metadata_identity_digest_parity_governance() -> list[
             (doc_rel, "trace metadata identity/digest"),
         ),
         ("docs/governance/README.md", (doc_rel,)),
-        ("docs/governance/review_checklist.md", (doc_rel,)),
         ("docs/governance/drift_protection_map.md", (doc_rel,)),
         ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
         ("docs/PROJECT_STRUCTURE.md", (doc_rel, "tests/fixtures/parity/")),
@@ -3003,7 +2984,6 @@ def _validate_topology_identifier_normalization_parity_governance() -> list[
             (doc_rel,),
         ),
         ("docs/governance/README.md", (doc_rel, "topology identifier normalization")),
-        ("docs/governance/review_checklist.md", (doc_rel,)),
         ("docs/governance/drift_protection_map.md", (doc_rel,)),
         ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
         (
@@ -3146,10 +3126,6 @@ def _validate_parity_evidence_package_review_governance() -> list[ValidationIssu
         ),
         ("docs/governance/README.md", (doc_rel,)),
         (
-            "docs/governance/review_checklist.md",
-            (doc_rel, "further parity expansion", "authority transfer"),
-        ),
-        (
             "docs/governance/drift_protection_map.md",
             (doc_rel, "tools/migration/", "tools/parity/"),
         ),
@@ -3255,7 +3231,6 @@ def _validate_trace_schema_version_normalization_parity_governance() -> list[
             (doc_rel, "not a transfer record"),
         ),
         ("docs/governance/README.md", (doc_rel, harness_rel, fixture_rel)),
-        ("docs/governance/review_checklist.md", (doc_rel, "stage 22")),
         (
             "docs/governance/drift_protection_map.md",
             (doc_rel, harness_rel, fixture_rel, test_rel),

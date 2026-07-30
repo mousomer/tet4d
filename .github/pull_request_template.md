@@ -1,64 +1,78 @@
-# Pull Request Checklist
+# Pull Request Contract
 
-## Summary
+## Objective
 
-- [ ] Change purpose is described.
-- [ ] Scope is limited to the stated task.
-- [ ] Unrelated dirty files were not staged.
+<!-- State one semantic objective. -->
 
-## Authority and architecture
+## Scope
 
-- [ ] Python semantic authority is preserved unless a completed
-      authority-transfer record exists.
-- [ ] Godot/GDScript changes are presentation, routing, diagnostics, or
-      adapter work only, unless explicitly covered by authority transfer.
-- [ ] C++/GDExtension changes remain provisional unless covered by parity
-      evidence and authority transfer.
-- [ ] Authority-map and parity/transfer docs were updated if authority claims
-      changed.
+Allowed systems/paths:
 
-## Workspace governance
+- <!-- allowed path -->
 
-- [ ] Existing implementation/utilities were searched before adding helpers.
-- [ ] No unnecessary rewrite or duplicate implementation was introduced.
-- [ ] No secrets, local absolute paths, or machine-specific state were added.
-- [ ] Nontrivial constants route through config/constants authority.
-- [ ] Generated outputs were not hand-edited.
+Forbidden changes and explicit deferrals:
 
-## Validation
+- <!-- deferral -->
 
-- [ ] Relevant focused tests were run.
-- [ ] `tools/governance/validate_governance.py` was run for governance changes.
-- [ ] Native tooling changes checked local advisory mode and strict
-      `TET4D_STRICT_NATIVE_TOOLS=1` behavior, or documented the blocker.
-- [ ] `CODEX_MODE=1 ./scripts/verify.sh` was run, or skipped with reason.
-- [ ] Failures/skips are documented below.
+<!-- Add this matrix only for deliberate cross-layer integration. -->
 
-## Technical debt and drift
+| Layer | Why it must change | Allowed paths | Verification |
+| --- | --- | --- | --- |
+|  |  |  |  |
 
-- [ ] New suppressions/advisories are removed, justified, or recorded as debt.
-- [ ] Technical-debt delta is described.
-- [ ] New governance files are reachable from a router/index/manifest/local
-      `AGENTS.md`.
-- [ ] New validators are wired into the governance runner.
-- [ ] Drift protection impact is described.
+## Authority and semantic impact
 
-## Generated files and staging
+- Current authority:
+- Behavior/schema/identity impact:
+- Authority change or transfer: None
 
-- [ ] Generated files were committed separately where practical.
-- [ ] Mixed files were staged with `git add -p`.
-- [ ] The staged diff was checked with `git diff --cached --check`.
+## Verification
 
-## Notes
+- [ ] Relevant focused checks passed.
+- [ ] `git diff --check`
+- [ ] `./scripts/check_git_sanitation_repo.sh`
+- [ ] `CODEX_MODE=1 ./scripts/verify.sh`
+- [ ] Governance changes ran the governance validators and generated-doc checks.
+- [ ] Native tooling changes exercised `TET4D_STRICT_NATIVE_TOOLS=1`, or the
+      blocker is recorded.
+- [ ] Tests were not weakened to fit implementation.
 
-Validation commands run:
+Validation commands and results:
 
 ```text
 <commands and results>
 ```
 
-Remaining risks:
+## Manual verification
 
-```text
-<known risks>
-```
+<!-- Environment, checks, and result; write None when not applicable. -->
+
+## Warnings and limitations
+
+New warnings:
+
+- None
+
+Known advisories:
+
+- None
+
+Unresolved limitations:
+
+- None
+
+## Governance and repository hygiene
+
+- [ ] One semantic objective; no silent continuation into deferred work.
+- [ ] Python semantic authority is preserved unless a completed
+      authority-transfer protocol record applies.
+- [ ] Godot/GDScript remains presentation/adapter code where applicable.
+- [ ] C++/GDExtension remains provisional where authority is not transferred.
+- [ ] Existing utilities were searched and no unnecessary duplicate helper was
+      introduced.
+- [ ] Config/constants authority remains explicit.
+- [ ] Technical debt and drift protection impact reviewed.
+- [ ] Generated outputs identify their source and were not hand-edited.
+- [ ] Unrelated formatting/toolchain work is separated where practical.
+- [ ] Staging is intentional; `git diff --cached --check` passed.
+- [ ] No secrets, machine-local paths, or unrelated dirty files are included.

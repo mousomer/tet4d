@@ -16,6 +16,8 @@ parity evidence and the authority-transfer process.
 - Migration ownership: `docs/architecture/authority_map.md`
 - Documentation and historical routing: `docs/DOCUMENTATION_MAP.md`
 - Governance policy routing: `docs/governance/README.md`
+- Repository-changing task boundary: `docs/governance/task_contract.md`
+- Completion evidence format: `docs/governance/completion_report.md`
 - Restart and staged-work handoff only: `CURRENT_STATE.md`
 - Open work and deferred scope: `docs/BACKLOG.md`
 
@@ -57,6 +59,12 @@ unless one of the routes above requires it.
 - Behavioural changes require tests. Preserve security, config, testing,
   parity, and semantic-boundary guarantees routed by the workflow and policy
   documents.
+- Keep one semantic objective per PR. Separate unrelated formatting and
+  toolchain migrations from product behavior where practical; use a scope
+  matrix when cross-layer integration is deliberate.
+- Preserve deterministic identity, parity evidence, repository sanitation, and
+  explicit deferrals. Never weaken tests or silently continue into the next
+  task.
 - Nested `AGENTS.md` files may add narrower constraints and cannot weaken this
   dispatch.
 - Partial satisfaction of acceptance criteria must not be reported as

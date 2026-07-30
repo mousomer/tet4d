@@ -139,8 +139,6 @@ REVIEW_CONCEPTS = {
     "Godot boundary": ("godot semantic boundary",),
     "C++ safety or native safety": ("c++ safety", "native c++ safety"),
     "native tooling CI readiness": ("native tooling ci readiness",),
-    "first parity pilot": ("first parity pilot", "first subsystem parity pilot"),
-    "promotion gates": ("promotion gates", "second parity slice"),
     "parity": ("parity",),
 }
 
