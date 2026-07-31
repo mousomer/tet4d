@@ -36,6 +36,7 @@ signal replay_loop_changed(enabled: bool)
 signal display_w_labels_changed(visible: bool)
 signal projection_strength_changed(value: float)
 signal board_detail_changed(detail: String)
+signal grid_visibility_changed(visible: bool)
 signal accessibility_policy_changed(policy: Dictionary)
 signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
 signal fit_view_requested()
@@ -59,9 +60,9 @@ const SCREEN_ABOUT := "about"
 const SCREEN_ADVANCED := "advanced"
 const SCREEN_GAME_SETUP := "game_setup"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
-const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
-const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
-const LIVE_4D_HELP_TEXT := "The board uses W slices; Q/E moves the piece between them. Start with one or two of the six rotation planes. Camera controls change the view; movement controls move the piece. Esc returns to the Main Menu."
+const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
+const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
+const LIVE_4D_HELP_TEXT := "The board uses W slices; Q/E moves the piece between them. Start with one or two of the six rotation planes. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
 const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end lets you inspect replay demos and play the plain-board 2D, 3D, and 4D modes.
 
 Choose a mode:
@@ -102,6 +103,9 @@ var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
 var _viewport_hint: Label
+var _live_view_actions: HBoxContainer
+var _quick_settings_button: Button
+var _grid_toggle_button: Button
 var _frame_slider: HSlider
 var _frame_label: Label
 var _hash_label: Label
@@ -154,6 +158,7 @@ var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
 var _accessibility_policy = AccessibilityPolicyScript.new()
 var _hud_density := "standard"
+var _grid_visible := true
 var _ui_scale_factor := 1.0
 var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
@@ -406,6 +411,8 @@ func set_live_2d_mode(
 	_onboarding_model.select_mode("live_2d")
 	_render_onboarding()
 	_set_live_declutter_mode(true)
+	if _live_view_actions != null:
+		_live_view_actions.visible = true
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Reset Live"
@@ -450,6 +457,8 @@ func set_live_3d_mode(
 	_onboarding_model.select_mode("live_3d")
 	_render_onboarding()
 	_set_live_declutter_mode(true)
+	if _live_view_actions != null:
+		_live_view_actions.visible = true
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 3D"
@@ -494,6 +503,8 @@ func set_live_4d_mode(
 	_onboarding_model.select_mode("live_4d")
 	_render_onboarding()
 	_set_live_declutter_mode(true)
+	if _live_view_actions != null:
+		_live_view_actions.visible = true
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 4D"
@@ -527,6 +538,8 @@ func set_live_4d_mode(
 
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
 	_set_live_declutter_mode(false)
+	if _live_view_actions != null:
+		_live_view_actions.visible = false
 	set_playback_state(is_playing, speed, diagnostics_visible)
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
@@ -1168,6 +1181,26 @@ func _apply_ui_scale(scale_id: String) -> void:
 func _apply_hud_density(density: String) -> void:
 	_hud_density = density if density in ShellPresentationPreferencesScript.HUD_DENSITIES else "standard"
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
+	_update_live_view_action_labels()
+
+
+func _toggle_quick_settings() -> void:
+	var next_density := "standard" if _hud_density == "detailed" else "detailed"
+	_set_persistent_setting("display.hud_density", next_density)
+	_apply_hud_density(next_density)
+
+
+func _toggle_grid_visibility() -> void:
+	_grid_visible = not _grid_visible
+	_update_live_view_action_labels()
+	grid_visibility_changed.emit(_grid_visible)
+
+
+func _update_live_view_action_labels() -> void:
+	if _quick_settings_button != null:
+		_quick_settings_button.text = "Hide Quick Settings" if _hud_density == "detailed" else "Show Quick Settings"
+	if _grid_toggle_button != null:
+		_grid_toggle_button.text = "Grid: On" if _grid_visible else "Grid: Off"
 
 
 func _emit_camera_preferences() -> void:
@@ -1475,6 +1508,26 @@ func _build_layout() -> void:
 	_viewport_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_viewport_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_viewport_hint)
+	_live_view_actions = HBoxContainer.new()
+	_live_view_actions.name = "LiveViewOptions"
+	_live_view_actions.visible = false
+	_live_view_actions.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
+	var view_options_label := Label.new()
+	view_options_label.text = "View Options"
+	view_options_label.theme_type_variation = "SecondaryLabel"
+	_live_view_actions.add_child(view_options_label)
+	_quick_settings_button = Button.new()
+	_quick_settings_button.name = "QuickSettingsToggle"
+	_quick_settings_button.tooltip_text = "Show or hide the Quick Settings section in the right inspector"
+	_quick_settings_button.pressed.connect(_toggle_quick_settings)
+	_live_view_actions.add_child(_quick_settings_button)
+	_grid_toggle_button = Button.new()
+	_grid_toggle_button.name = "GridVisibilityToggle"
+	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail; the outer orientation cage remains visible"
+	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
+	_live_view_actions.add_child(_grid_toggle_button)
+	viewport_box.add_child(_live_view_actions)
+	_update_live_view_action_labels()
 	_mode_hint_strip = _make_control_hint_panel("replay", true)
 	_mode_hint_strip.name = "ViewportControlHints"
 	_mode_hint_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -526,6 +526,10 @@ func _wire_hud() -> void:
 		_renderer.set_board_detail(detail)
 		_refresh_render()
 	)
+	_hud.grid_visibility_changed.connect(func(visible: bool) -> void:
+		_renderer.set_grid_visible(visible)
+		_refresh_render()
+	)
 	_hud.accessibility_policy_changed.connect(func(policy: Dictionary) -> void:
 		_renderer.set_accessibility_policy(
 			bool(policy.get("high_contrast", false)),

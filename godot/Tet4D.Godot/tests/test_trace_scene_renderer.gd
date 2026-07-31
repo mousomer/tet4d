@@ -95,6 +95,13 @@ func run() -> Array:
 		var live_grid := grid_root.get_child(0)
 		if live_grid.get_child_count() <= 12:
 			failures.append("live renderer should include board fill/grid lines beyond the outline")
+		renderer.set_grid_visible(false)
+		renderer.render_snapshot(renderer._presentation.snapshot)
+		await tree.process_frame
+		var hidden_grid := (renderer.get_node_or_null("GridRoot") as Node).get_child(0)
+		if hidden_grid.get_child_count() != 12:
+			failures.append("grid toggle should hide internal detail while retaining the 12-edge orientation cage")
+		renderer.set_grid_visible(true)
 
 	renderer.render_snapshot({
 		"case_id": "live_plain_3d",

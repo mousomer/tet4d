@@ -14,7 +14,8 @@ func rebuild(
 	show_w_labels: bool = true,
 	active_layers: Array = [],
 	board_detail: String = "standard",
-	high_contrast: bool = false
+	high_contrast: bool = false,
+	show_grid: bool = true
 ) -> void:
 	for child in get_children():
 		child.queue_free()
@@ -27,7 +28,7 @@ func rebuild(
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
 		if not slice_bounds.get("ok", false):
 			continue
-		if live_2d and (dimension == 2 or dimension >= 4) and board_detail != "minimal":
+		if show_grid and live_2d and (dimension == 2 or dimension >= 4) and board_detail != "minimal":
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(
 			slice_bounds,
@@ -35,7 +36,7 @@ func rebuild(
 			null,
 			ReplayVisuals.slice_outline_thickness(display_mode) * (1.35 if high_contrast else 1.0)
 		)
-		if board_detail == "full":
+		if show_grid and board_detail == "full":
 			_add_outline_box(
 				slice_bounds,
 				display_mode,

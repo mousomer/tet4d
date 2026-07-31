@@ -98,6 +98,10 @@ wireframe envelope. Locking changes emphasis, not geometry: the wireframe stays
 visibly present in a quieter warm-gray role, and the settled stack must not
 acquire artificial gaps. The default 4D
 fit keeps the complete W-slice matrix visible without making it feel remote.
+Active cell wireframes remain crisp but subordinate to piece fill rather than
+forming a bright cage. Live boards keep persistent View Options above the board
+for restoring Quick Settings and toggling internal grid detail; the outer
+orientation cage remains visible when grid detail is off.
 
 Main menu, setup, settings, onboarding, replay, live HUD, diagnostics, pause,
 and game-over surfaces all use the same tokens. Diagnostic density may be

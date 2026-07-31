@@ -34,6 +34,8 @@ Acceptance:
 - Quick Settings remains comfortably readable, default 4D framing is close
   enough for inspection, and locking a 3D/4D piece preserves its cell body and
   wireframe envelope without introducing visual gaps;
+- live View Options make Quick Settings recovery and grid-detail toggling
+  discoverable without relying on hidden settings or undocumented shortcuts;
 - accessibility, scaling, focus, scrolling, and input isolation preserved;
 - deterministic gameplay/parity state unchanged;
 - real-window before/after evidence is attached to the PR;

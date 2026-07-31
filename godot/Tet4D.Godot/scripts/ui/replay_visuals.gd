@@ -237,13 +237,13 @@ static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) 
 
 static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	if normalize_display_mode(mode) == DISPLAY_MODE_PLAIN:
-		return _make_material(color_for_role(ROLE_TEXT, mode), 0.06, false)
+		return _make_material(color_for_role(ROLE_TEXT, mode).darkened(0.12), 0.02, false)
 	return _role_material(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode))
 
 
 static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	if normalize_display_mode(mode) == DISPLAY_MODE_PLAIN:
-		return _make_material(color_for_role(ROLE_TEXT, mode).darkened(0.15), 0.025, false)
+		return _make_material(color_for_role(ROLE_TEXT, mode).darkened(0.25), 0.01, false)
 	return _role_material(ROLE_LIVE_3D_LOCKED_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_LOCKED_OUTLINE, mode))
 
 

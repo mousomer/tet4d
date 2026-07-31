@@ -32,7 +32,9 @@ history ledger. Detailed history is preserved in
   evidence plus explicit human acceptance remain required before merge.
   Human review accepted the surrounding shell. Follow-up review requested a
   larger Quick Settings surface, closer default 4D framing, and persistent
-  equal-size 3D/4D cell and wireframe envelopes after locking.
+  equal-size 3D/4D cell and wireframe envelopes after locking. The next review
+  requested a quieter active wireframe plus discoverable Quick Settings and
+  grid-detail actions.
   Godot topology gameplay and unified Godot
   endgame/topology/explosion integration have not begun.
 
