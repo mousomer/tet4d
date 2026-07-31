@@ -35,7 +35,8 @@ history ledger. Detailed history is preserved in
   equal-size 3D/4D cell and wireframe envelopes after locking. The next review
   requested a quieter active wireframe plus discoverable Quick Settings and
   grid-detail actions. The wireframe passed; the remaining grid review requires
-  boundary-aligned rectangles on the rear face rather than through the board.
+  camera-relative boundary rectangles on all three rear faces of every
+  volumetric section, leaving all three front faces clear.
   Godot topology gameplay and unified Godot
   endgame/topology/explosion integration have not begun.
 

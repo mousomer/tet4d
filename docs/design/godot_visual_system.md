@@ -102,9 +102,10 @@ Active cell wireframes remain crisp but subordinate to piece fill rather than
 forming a bright cage. Live boards keep persistent View Options above the board
 for restoring Quick Settings and toggling internal grid detail; the outer
 orientation cage remains visible when grid detail is off.
-On volumetric boards, grid rectangles belong to the rear boundary plane of
-each box. They must never bisect the play volume, and the front boundary stays
-free of grid detail so cells remain unobstructed.
+On volumetric boards, grid rectangles belong to the three camera-relative rear
+faces of each box: one face per axis. As the camera orbits, rear-face selection
+updates so the three front faces remain free of grid detail. Grids must never
+bisect the play volume or obstruct cells on a front face.
 
 Main menu, setup, settings, onboarding, replay, live HUD, diagnostics, pause,
 and game-over surfaces all use the same tokens. Diagnostic density may be

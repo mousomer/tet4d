@@ -199,12 +199,10 @@ func run() -> Array:
 		failures.append("live 4D renderer should keep one shared grid renderer")
 	else:
 		var live_4d_grid := grid_root.get_child(0)
-		var first_grid_line := live_4d_grid.get_child(0) as MeshInstance3D
-		var first_slice_bounds: Dictionary = renderer._presentation.projection.mapper.slice_bounds(0)
-		var rear_z := (first_slice_bounds.get("min", Vector3.ZERO) as Vector3).z
-		var front_z := (first_slice_bounds.get("max", Vector3.ZERO) as Vector3).z
-		if first_grid_line == null or absf(first_grid_line.position.z - rear_z) >= absf(first_grid_line.position.z - front_z):
-			failures.append("live 4D grid should sit on the rear boundary rather than bisecting or covering the front of each box")
+		live_4d_grid._update_rear_grid_faces(Vector3(100.0, 100.0, 100.0))
+		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, -1.0, "positive camera octant")
+		live_4d_grid._update_rear_grid_faces(Vector3(-100.0, -100.0, -100.0))
+		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, 1.0, "negative camera octant")
 		var w_label_count := 0
 		for child in live_4d_grid.get_children():
 			if child is Label3D and (
@@ -322,6 +320,26 @@ func _assert_rotation_pulse_outline(failures: Array, cell: Node3D, label: String
 		failures.append("%s first outline edge should use box mesh" % label)
 	elif minf(box.size.y, box.size.z) <= 0.016:
 		failures.append("%s should thicken active outline briefly after rotation" % label)
+
+
+func _assert_three_rear_grid_faces_per_slice(
+	failures: Array,
+	grid: Node3D,
+	slice_count: int,
+	expected_sign: float,
+	label: String
+) -> void:
+	var visible_faces := 0
+	for child in grid.get_children():
+		if not child.has_meta("grid_axis") or not (child as Node3D).visible:
+			continue
+		visible_faces += 1
+		if float(child.get_meta("grid_sign", 0.0)) != expected_sign:
+			failures.append("%s should show only camera-relative rear grid faces" % label)
+		if child.get_child_count() == 0:
+			failures.append("%s rear grid face should contain boundary rectangles" % label)
+	if visible_faces != slice_count * 3:
+		failures.append("%s should show exactly three rear grid faces per section, got %d" % [label, visible_faces])
 
 
 func _assert_live_3d_active_priority(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:

@@ -36,8 +36,9 @@ Acceptance:
   wireframe envelope without introducing visual gaps;
 - live View Options make Quick Settings recovery and grid-detail toggling
   discoverable without relying on hidden settings or undocumented shortcuts;
-- volumetric grid rectangles sit on rear box boundaries rather than through
-  the middle or across the front of the play volume;
+- every volumetric section shows grid rectangles on exactly three
+  camera-relative rear faces, switching as the camera orbits so the three front
+  faces stay clear;
 - accessibility, scaling, focus, scrolling, and input isolation preserved;
 - deterministic gameplay/parity state unchanged;
 - real-window before/after evidence is attached to the PR;
