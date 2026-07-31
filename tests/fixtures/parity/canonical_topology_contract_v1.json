@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "slice": "canonical_topology_contract_v1",
+  "cases": [
+    {
+      "name": "bounded_2d",
+      "contract": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [3, 4],
+        "gluings": []
+      }
+    },
+    {
+      "name": "reflected_2d",
+      "contract": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [5, 7],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {"axis": "x", "side": "-"},
+            "target": {"axis": "x", "side": "+"},
+            "transform": {"permutation": [0], "signs": [-1]}
+          }
+        ]
+      }
+    },
+    {
+      "name": "cross_axis_3d",
+      "contract": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 3,
+        "board_dimensions": [4, 6, 4],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {"axis": "x", "side": "-"},
+            "target": {"axis": "z", "side": "+"},
+            "transform": {"permutation": [1, 0], "signs": [1, 1]}
+          }
+        ]
+      }
+    },
+    {
+      "name": "reflected_4d",
+      "contract": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 4,
+        "board_dimensions": [4, 5, 6, 7],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {"axis": "w", "side": "-"},
+            "target": {"axis": "w", "side": "+"},
+            "transform": {"permutation": [0, 1, 2], "signs": [-1, 1, 1]}
+          }
+        ]
+      }
+    }
+  ]
+}

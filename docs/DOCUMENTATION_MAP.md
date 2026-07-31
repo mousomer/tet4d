@@ -131,6 +131,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Current topology-playground architecture and invariants | `docs/plans/topology_playground_current_authority.md` |
 | Current topology-playground visible shell contract | `docs/plans/topology_playground_shell_redesign_spec.md` |
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
+| Canonical topology interchange, identity, and migration contract | `docs/architecture/canonical_topology_contract.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
 | Godot 4.7 engine, godot-cpp, native build, and CI migration evidence | `docs/plans/audits/godot_4_7_migration_2026-07-25.md` |

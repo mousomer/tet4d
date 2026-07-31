@@ -20,30 +20,6 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ## Active Work
 
-### Godot visual-design consolidation
-
-Objective: make the Godot shell restrained, coherent, and board-first using the
-strongest Pygame hierarchy as the primary internal reference.
-
-Acceptance:
-
-- one maintainable semantic palette and numeric/component token surface;
-- consistent default, diagnostic, and arcade variants;
-- active and locked cell boxes retain crisp, individually parseable edges at
-  2D, 3D, 4D, and wide-W overview scales;
-- Quick Settings remains comfortably readable, default 4D framing is close
-  enough for inspection, and locking a 3D/4D piece preserves its cell body and
-  wireframe envelope without introducing visual gaps;
-- live View Options make Quick Settings recovery and grid-detail toggling
-  discoverable without relying on hidden settings or undocumented shortcuts;
-- every volumetric section shows grid rectangles on exactly three
-  camera-relative rear faces, switching as the camera orbits so the three front
-  faces stay clear;
-- accessibility, scaling, focus, scrolling, and input isolation preserved;
-- deterministic gameplay/parity state unchanged;
-- real-window before/after evidence is attached to the PR;
-- explicit human visual acceptance is required before merge.
-
 ### Canonical topology contract
 
 Objective: define the versioned topology representation shared by Python,
@@ -57,6 +33,16 @@ Acceptance:
   representative 2D/3D/4D parity are explicit and tested;
 - no complete topology-aware Godot game loop or editor is introduced;
 - any behavior-changing semantic decision is surfaced for review.
+
+Implementation boundary:
+
+- contract v1 covers modern inverse-paired explorer seams and includes board
+  dimensions in stable identity;
+- the forgiving profile settings store remains separate from strict contract
+  loading;
+- legacy asymmetric per-side rules remain unsupported rather than being
+  silently converted;
+- native/Godot work is limited to parity evidence and a data-facing surface.
 
 ## Explicit Deferrals
 

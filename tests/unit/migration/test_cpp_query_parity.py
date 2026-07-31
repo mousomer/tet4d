@@ -16,7 +16,14 @@ from tet4d.engine.gameplay.game2d import GameConfig, GameState
 from tet4d.engine.gameplay.game_nd import GameConfigND, GameStateND
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D
 from tet4d.engine.gameplay.pieces_nd import ActivePieceND, PieceShapeND
-from tet4d.engine.topology_explorer import MoveStep, build_explorer_transport_resolver
+from tet4d.engine.topology_explorer import (
+    BoundaryRef,
+    BoundaryTransform,
+    ExplorerTopologyProfile,
+    GluingDescriptor,
+    MoveStep,
+    build_explorer_transport_resolver,
+)
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
     swapped_xz_profile_3d,
@@ -116,6 +123,34 @@ def _topology_cases() -> dict[str, dict[str, object]]:
         (3, 4),
     )
     swapped = build_explorer_transport_resolver(swapped_xz_profile_3d(), (4, 4, 4))
+    reflected_2d = build_explorer_transport_resolver(
+        ExplorerTopologyProfile(
+            2,
+            (
+                GluingDescriptor(
+                    "reflect_x",
+                    BoundaryRef(2, 0, "-"),
+                    BoundaryRef(2, 0, "+"),
+                    BoundaryTransform((0,), (-1,)),
+                ),
+            ),
+        ),
+        (5, 7),
+    )
+    reflected_4d = build_explorer_transport_resolver(
+        ExplorerTopologyProfile(
+            4,
+            (
+                GluingDescriptor(
+                    "reflect_w",
+                    BoundaryRef(4, 3, "-"),
+                    BoundaryRef(4, 3, "+"),
+                    BoundaryTransform((0, 1, 2), (-1, 1, 1)),
+                ),
+            ),
+        ),
+        (4, 5, 6, 7),
+    )
     cases = {
         "bounded_2d_y_plus_blocked": bounded.resolve_cell_step(
             (1, 3),
@@ -130,6 +165,12 @@ def _topology_cases() -> dict[str, dict[str, object]]:
         "cross_axis_reverse_z_plus": swapped.resolve_cell_step(
             (2, 1, 3),
             MoveStep(axis=2, delta=1),
+        ),
+        "reflect_2d_x_minus": reflected_2d.resolve_cell_step(
+            (0, 2), MoveStep(axis=0, delta=-1)
+        ),
+        "reflect_4d_w_minus": reflected_4d.resolve_cell_step(
+            (1, 2, 3, 0), MoveStep(axis=3, delta=-1)
         ),
     }
     return {
@@ -152,6 +193,20 @@ def _topology_cases() -> dict[str, dict[str, object]]:
                 if result.traversal is None
                 else result.traversal.entry_step.label
             ),
+            "frame_transform": None
+            if result.frame_transform is None
+            else {
+                "permutation": list(result.frame_transform.permutation),
+                "signs": list(result.frame_transform.signs),
+                "translation": list(result.frame_transform.translation),
+            },
+            "piece_frame_transform": None
+            if result.piece_frame_transform is None
+            else {
+                "permutation": list(result.piece_frame_transform.permutation),
+                "signs": list(result.piece_frame_transform.signs),
+                "translation": list(result.piece_frame_transform.translation),
+            },
             "error": "",
         }
         for name, result in cases.items()

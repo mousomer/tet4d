@@ -15,6 +15,7 @@ using tet4d::core::CoordND;
 using tet4d::core::GluingQueryDescriptor;
 using tet4d::core::MoveStepQuery;
 using tet4d::core::TopologyQueryProfile;
+using tet4d::core::TopologyFrameQueryTransform;
 
 void require(bool condition, const std::string &message) {
 	if (!condition) {
@@ -53,6 +54,25 @@ std::string optional_string_json(const std::optional<std::string> &value) {
 	return value.has_value() ? "\"" + *value + "\"" : "null";
 }
 
+std::string optional_frame_json(const std::optional<TopologyFrameQueryTransform> &frame) {
+	if (!frame.has_value()) {
+		return "null";
+	}
+	auto vector_json = [](const std::vector<int> &values) {
+		std::ostringstream stream;
+		stream << "[";
+		for (std::size_t index = 0; index < values.size(); ++index) {
+			if (index > 0) stream << ",";
+			stream << values[index];
+		}
+		stream << "]";
+		return stream.str();
+	};
+	return "{\"permutation\":" + vector_json(frame->permutation) +
+			",\"signs\":" + vector_json(frame->signs) +
+			",\"translation\":" + coord_json(frame->translation) + "}";
+}
+
 std::string step_label(MoveStepQuery step) {
 	const char *names[] = {"x", "y", "z", "w"};
 	return std::string(names[step.axis]) + (step.delta < 0 ? "-" : "+");
@@ -71,6 +91,16 @@ TopologyQueryProfile swapped_xz_profile_3d() {
 			},
 		},
 	};
+}
+
+TopologyQueryProfile reflected_x_profile_2d() {
+	return TopologyQueryProfile{2, {GluingQueryDescriptor{
+		"reflect_x", {2, 0, -1}, {2, 0, 1}, {{0}, {-1}}, true}}};
+}
+
+TopologyQueryProfile reflected_w_profile_4d() {
+	return TopologyQueryProfile{4, {GluingQueryDescriptor{
+		"reflect_w", {4, 3, -1}, {4, 3, 1}, {{0, 1, 2}, {-1, 1, 1}}, true}}};
 }
 
 void print_legality_case(
@@ -95,6 +125,8 @@ void print_topology_case(
 			  << ",\"source_boundary\":" << optional_boundary_label_json(result.source_boundary)
 			  << ",\"target_boundary\":" << optional_boundary_label_json(result.target_boundary)
 			  << ",\"entry_step\":\"" << step_label(result.entry_step) << "\""
+			  << ",\"frame_transform\":" << optional_frame_json(result.frame_transform)
+			  << ",\"piece_frame_transform\":" << optional_frame_json(result.piece_frame_transform)
 			  << ",\"error\":\"" << result.error << "\"}";
 	if (!last) {
 		std::cout << ",";
@@ -148,6 +180,9 @@ void test_topology_queries() {
 			{0, -1});
 	require(cross_axis.target == CoordND{{2, 1, 3}}, "cross-axis seam should match resolver target");
 	require(cross_axis.entry_step.axis == 2 && cross_axis.entry_step.delta == -1, "cross-axis seam should report inward entry step");
+	const auto invalid_extents = tet4d::core::resolve_topology_cell_step_query(
+			swapped_xz_profile_3d(), BoardShapeND{{4, 5, 7}}, {{0, 1, 2}}, {0, -1});
+	require(!invalid_extents.ok && invalid_extents.error == "non_bijective_boundary_extents", "cross-axis seam should reject incompatible extents");
 }
 
 void print_query_parity_json() {
@@ -170,7 +205,9 @@ void print_query_parity_json() {
 	print_topology_case("torus_2d_x_plus", tet4d::core::resolve_topology_cell_step_query(torus, BoardShapeND{{3, 4}}, {{2, 2}}, {0, 1}), false);
 	print_topology_case("torus_2d_y_plus", tet4d::core::resolve_topology_cell_step_query(torus, BoardShapeND{{3, 4}}, {{1, 3}}, {1, 1}), false);
 	print_topology_case("cross_axis_x_minus_to_z_plus", tet4d::core::resolve_topology_cell_step_query(swapped_xz_profile_3d(), BoardShapeND{{4, 4, 4}}, {{0, 1, 2}}, {0, -1}), false);
-	print_topology_case("cross_axis_reverse_z_plus", tet4d::core::resolve_topology_cell_step_query(swapped_xz_profile_3d(), BoardShapeND{{4, 4, 4}}, {{2, 1, 3}}, {2, 1}), true);
+	print_topology_case("cross_axis_reverse_z_plus", tet4d::core::resolve_topology_cell_step_query(swapped_xz_profile_3d(), BoardShapeND{{4, 4, 4}}, {{2, 1, 3}}, {2, 1}), false);
+	print_topology_case("reflect_2d_x_minus", tet4d::core::resolve_topology_cell_step_query(reflected_x_profile_2d(), BoardShapeND{{5, 7}}, {{0, 2}}, {0, -1}), false);
+	print_topology_case("reflect_4d_w_minus", tet4d::core::resolve_topology_cell_step_query(reflected_w_profile_4d(), BoardShapeND{{4, 5, 6, 7}}, {{1, 2, 3, 0}}, {3, -1}), true);
 	std::cout << "  ]\n";
 	std::cout << "}\n";
 }

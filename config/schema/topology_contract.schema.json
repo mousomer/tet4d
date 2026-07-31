@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/schema/topology_contract.schema.json",
+  "title": "Tet4D canonical topology contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "schema_version", "dimension", "board_dimensions", "gluings"],
+  "properties": {
+    "schema": {"const": "tet4d.topology_contract"},
+    "schema_version": {"const": 1},
+    "dimension": {"type": "integer", "minimum": 2, "maximum": 4},
+    "board_dimensions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {"type": "integer", "minimum": 1}
+    },
+    "gluings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/gluing"}
+    }
+  },
+  "$defs": {
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["axis", "side"],
+      "properties": {
+        "axis": {"enum": ["x", "y", "z", "w"]},
+        "side": {"enum": ["-", "+"]}
+      }
+    },
+    "transform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["permutation", "signs"],
+      "properties": {
+        "permutation": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 2}},
+        "signs": {"type": "array", "items": {"enum": [-1, 1]}}
+      }
+    },
+    "gluing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "target", "transform"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^seam_[0-9]{3}$"},
+        "source": {"$ref": "#/$defs/boundary"},
+        "target": {"$ref": "#/$defs/boundary"},
+        "transform": {"$ref": "#/$defs/transform"}
+      }
+    }
+  }
+}
