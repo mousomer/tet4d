@@ -28,7 +28,7 @@ func rebuild(
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
 		if not slice_bounds.get("ok", false):
 			continue
-		if show_grid and live_2d and (dimension == 2 or dimension >= 4) and board_detail != "minimal":
+		if show_grid and live_2d and dimension >= 2 and board_detail != "minimal":
 			_add_live_grid(slice_bounds, board_shape, display_mode)
 		_add_outline_box(
 			slice_bounds,
@@ -107,17 +107,20 @@ func _add_live_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var thickness := ReplayVisuals.GRID_LINE_THICKNESS * 0.55
 	var material := ReplayVisuals.live_board_grid_material(display_mode)
+	# Keep volumetric grids on the rear boundary. A grid through z=0 bisects
+	# the play volume; the back face preserves depth cues without covering cells.
+	var grid_z := min_pos.z + thickness * 0.55 if max_pos.z - min_pos.z > thickness else min_pos.z - 0.02
 	for x in range(width + 1):
 		var x_pos := min_pos.x + float(x)
 		_add_line(
-			Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, -0.02),
+			Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, grid_z),
 			Vector3(thickness, max_pos.y - min_pos.y, thickness),
 			material
 		)
 	for y in range(height + 1):
 		var y_pos := min_pos.y + float(y)
 		_add_line(
-			Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, -0.018),
+			Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, grid_z + 0.002),
 			Vector3(max_pos.x - min_pos.x, thickness, thickness),
 			material
 		)

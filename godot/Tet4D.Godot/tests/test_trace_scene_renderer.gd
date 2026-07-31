@@ -199,6 +199,12 @@ func run() -> Array:
 		failures.append("live 4D renderer should keep one shared grid renderer")
 	else:
 		var live_4d_grid := grid_root.get_child(0)
+		var first_grid_line := live_4d_grid.get_child(0) as MeshInstance3D
+		var first_slice_bounds: Dictionary = renderer._presentation.projection.mapper.slice_bounds(0)
+		var rear_z := (first_slice_bounds.get("min", Vector3.ZERO) as Vector3).z
+		var front_z := (first_slice_bounds.get("max", Vector3.ZERO) as Vector3).z
+		if first_grid_line == null or absf(first_grid_line.position.z - rear_z) >= absf(first_grid_line.position.z - front_z):
+			failures.append("live 4D grid should sit on the rear boundary rather than bisecting or covering the front of each box")
 		var w_label_count := 0
 		for child in live_4d_grid.get_children():
 			if child is Label3D and (

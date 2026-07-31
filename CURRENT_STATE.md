@@ -34,7 +34,8 @@ history ledger. Detailed history is preserved in
   larger Quick Settings surface, closer default 4D framing, and persistent
   equal-size 3D/4D cell and wireframe envelopes after locking. The next review
   requested a quieter active wireframe plus discoverable Quick Settings and
-  grid-detail actions.
+  grid-detail actions. The wireframe passed; the remaining grid review requires
+  boundary-aligned rectangles on the rear face rather than through the board.
   Godot topology gameplay and unified Godot
   endgame/topology/explosion integration have not begun.
 
