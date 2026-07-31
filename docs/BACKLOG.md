@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-07-30
+Updated: 2026-07-31
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -29,6 +29,8 @@ Acceptance:
 
 - one maintainable semantic palette and numeric/component token surface;
 - consistent default, diagnostic, and arcade variants;
+- active and locked cell boxes retain crisp, individually parseable edges at
+  2D, 3D, 4D, and wide-W overview scales;
 - accessibility, scaling, focus, scrolling, and input isolation preserved;
 - deterministic gameplay/parity state unchanged;
 - real-window before/after evidence is attached to the PR;

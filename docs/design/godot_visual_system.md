@@ -86,10 +86,12 @@ bright frame.
 
 Board bounds and grids support orientation. They must remain quieter than
 active pieces, locked cells, the selected W layer, and terminal state. Active
-pieces use crisp outlines with restrained or zero emission in the Instrument
-theme. Locked cells are darker but remain solid and parseable. The Pygame
-diagrammatic exterior view and stable W-slice rhythm remain the comparison
-standard.
+pieces use crisp, warm-white edge outlines with restrained or zero emission in
+the Instrument theme. Piece fill owns gameplay colour; the outline separates
+every constituent cell clearly even at 3D/4D overview scale. Locked cells are
+darker and use quieter edges, but adjacent cells must remain individually
+parseable. The Pygame diagrammatic exterior view, clean cube-edge separation,
+and stable W-slice rhythm remain the comparison standard.
 
 Main menu, setup, settings, onboarding, replay, live HUD, diagnostics, pause,
 and game-over surfaces all use the same tokens. Diagnostic density may be

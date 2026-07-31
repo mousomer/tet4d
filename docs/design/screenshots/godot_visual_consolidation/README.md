@@ -2,7 +2,9 @@
 
 These captures are the durable human-review baseline for the Godot visual
 system introduced by PR #39. They document the accepted foundation immediately
-before consolidation and the candidate Instrument system at commit `7249900a`.
+before consolidation and the current candidate Instrument system. The live
+2D/3D/4D captures were refreshed after human review requested clearer,
+Python-like cell-box edges.
 
 The `before_*` set covers the prior main menu, setup, settings, live 2D, live
 3D, live 4D, and wide-W presentation. The `after_*` set covers equivalent

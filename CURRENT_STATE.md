@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-30
+Last updated: 2026-07-31
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -30,6 +30,8 @@ history ledger. Detailed history is preserved in
 - Godot visual consolidation is active on
   `codex/godot-visual-design-consolidation`; automated and real-window
   evidence plus explicit human acceptance remain required before merge.
+  Human review accepted the surrounding shell but requested clearer,
+  Python-like gameplay cell-box edges before final visual acceptance.
   Godot topology gameplay and unified Godot
   endgame/topology/explosion integration have not begun.
 
