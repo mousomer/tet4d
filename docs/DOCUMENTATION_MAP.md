@@ -67,6 +67,7 @@ These files define durable behavior contracts and product requirements.
 
 - `docs/rds/README.md`
 - `docs/rds/*.md`
+- `docs/design/godot_visual_system.md`
 
 ### 6. Contributor workflow and policy
 
@@ -133,6 +134,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
 | Godot 4.7 engine, godot-cpp, native build, and CI migration evidence | `docs/plans/audits/godot_4_7_migration_2026-07-25.md` |
+| Current Godot product-shell visual system | `docs/design/godot_visual_system.md` |
 | Live 3D and future Live 4D gameboard visual language | `docs/plans/gameboard_visual_language_design.md` |
 | Parity implementation and evidence process | `docs/architecture/parity_protocol.md`, `docs/governance/README.md` |
 | Authority transfer | `docs/architecture/authority_transfer_protocol.md`, `docs/architecture/authority_map.md` |
@@ -211,14 +213,12 @@ It is not the product contract.
   `docs/plans/topology_playground_shell_redesign_spec.md`.
 - If you need Live 3D or future Live 4D gameboard visual-language rules: use
   `docs/plans/gameboard_visual_language_design.md`.
-- If you need Godot visual style, theme roles, typography, spacing, component
-  styling, board/replay visual language, or the Godot shell MVP visual
-  baseline: use `docs/architecture/godot_visual_style_authority.md`.
-- If you need the current Godot implementation route for shell palette tokens
-  and style application: use
-  `docs/architecture/godot_visual_style_foundation.md`.
-- If you need the current Godot Vector Arcade Cockpit UI overhaul status,
-  acceptance criteria, or boundary: use
+- If you need current Godot visual direction, theme purposes, semantic roles,
+  typography, spacing, component states, accessibility composition, or
+  board/shell hierarchy: use `docs/design/godot_visual_system.md`.
+- If you need earlier palette-token implementation context or the historical
+  Vector Arcade overhaul record: use
+  `docs/architecture/godot_visual_style_foundation.md` and
   `docs/architecture/godot_vector_arcade_cockpit_overhaul.md`.
 - If you need the Stage 46 plain live gameplay completion scope, audit, or
   later-stage deferrals: use

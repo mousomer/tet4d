@@ -3,9 +3,7 @@ extends RefCounted
 class_name ShellControlStyleApplier
 
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
-const STANDARD_BORDER_WIDTH := 1
-const FOCUS_BORDER_WIDTH := 3
-const HIGH_CONTRAST_FOCUS_BORDER_WIDTH := 4
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 
 func apply_to_tree(root: Control, style_manager) -> void:
@@ -21,20 +19,22 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 	if panel == null or style_manager == null:
 		return
 	var background_role := ShellStyleRolesScript.BACKGROUND_ELEVATED if elevated else ShellStyleRolesScript.BACKGROUND_PANEL
-	var border_role := ShellStyleRolesScript.ACCENT_PRIMARY
+	var border_role := ShellStyleRolesScript.GRID_MINOR
 	if panel.name == "GameArea" or panel.theme_type_variation == "ViewportFrame":
 		background_role = ShellStyleRolesScript.BACKGROUND_BOARD
 		border_role = ShellStyleRolesScript.GRID_MAJOR
 	elif panel.name.find("ControlModeCard") >= 0:
 		background_role = ShellStyleRolesScript.BACKGROUND_ELEVATED
-		border_role = ShellStyleRolesScript.ACCENT_PRIMARY
+		border_role = ShellStyleRolesScript.GRID_MINOR
 	elif panel.name.find("SettingRow") >= 0:
 		background_role = ShellStyleRolesScript.BACKGROUND_ELEVATED
 		border_role = ShellStyleRolesScript.GRID_MINOR
 	elif _is_inspector_panel(panel):
 		background_role = ShellStyleRolesScript.BACKGROUND_PANEL
 		border_role = ShellStyleRolesScript.GRID_MINOR
-	var style := _panel_box(style_manager, background_role, border_role, 12)
+	elif _is_elevated_panel(panel):
+		border_role = ShellStyleRolesScript.GRID_MAJOR
+	var style := _panel_box(style_manager, background_role, border_role, ShellDesignTokensScript.COMPACT_PADDING)
 	panel.add_theme_stylebox_override("panel", style)
 	panel.set_meta("shell_style_theme_id", style_manager.get_theme_id())
 
@@ -73,6 +73,10 @@ func _apply_label(label: Label, style_manager) -> void:
 			role = ShellStyleRolesScript.ACCENT_PRIMARY
 		"StatusErrorLabel":
 			role = ShellStyleRolesScript.STATE_ERROR
+		"StatusPausedLabel":
+			role = ShellStyleRolesScript.STATE_PAUSED
+		"StatusGameOverLabel":
+			role = ShellStyleRolesScript.STATE_GAME_OVER
 		"CockpitValueLabel":
 			role = ShellStyleRolesScript.DIAGNOSTIC_METADATA
 		"WLayerLabel":
@@ -95,11 +99,28 @@ func _apply_label(label: Label, style_manager) -> void:
 		role = ShellStyleRolesScript.DIAGNOSTIC_METADATA
 	elif label.name.find("WLayer") >= 0 or label.name.find("Slice") >= 0:
 		role = ShellStyleRolesScript.LABEL_W_LAYER
+	elif label.name.find("Paused") >= 0:
+		role = ShellStyleRolesScript.STATE_PAUSED
+	elif label.name.find("GameOver") >= 0:
+		role = ShellStyleRolesScript.STATE_GAME_OVER
 	label.add_theme_color_override("font_color", style_manager.get_color(role))
+	if label.name.find("Title") >= 0 and label.name.find("Subtitle") < 0:
+		label.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SCREEN_TITLE)
+	elif label.name.find("SectionHeader") >= 0:
+		label.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SECTION)
+	elif label.theme_type_variation in ["DimLabel", "SecondaryLabel"]:
+		label.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SUPPORTING)
 	if label.theme_type_variation == "KeycapLabel":
 		label.add_theme_stylebox_override("normal", _keycap_box(style_manager))
 	elif label.name.find("StatusBadge") >= 0:
-		var badge_border := ShellStyleRolesScript.STATE_ERROR if label.theme_type_variation == "StatusErrorLabel" else ShellStyleRolesScript.ACCENT_PRIMARY
+		var badge_border := ShellStyleRolesScript.ACCENT_PRIMARY
+		match label.theme_type_variation:
+			"StatusErrorLabel":
+				badge_border = ShellStyleRolesScript.STATE_ERROR
+			"StatusPausedLabel":
+				badge_border = ShellStyleRolesScript.STATE_PAUSED
+			"StatusGameOverLabel":
+				badge_border = ShellStyleRolesScript.STATE_GAME_OVER
 		label.add_theme_stylebox_override("normal", _badge_box(style_manager, badge_border))
 
 
@@ -108,12 +129,12 @@ func _apply_button(button: Button, style_manager) -> void:
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
 	button.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
-	var margin := 8
+	var margin := ShellDesignTokensScript.CONTROL_PADDING
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.GRID_MINOR, margin))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin))
-	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
+	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
 	button.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_PRIMARY, margin))
-	button.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR, margin))
+	button.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.CONTROL_DISABLED, margin))
 
 
 func _apply_checkbox(checkbox: CheckBox, style_manager) -> void:
@@ -123,13 +144,13 @@ func _apply_checkbox(checkbox: CheckBox, style_manager) -> void:
 	checkbox.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	checkbox.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR))
 	checkbox.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS))
-	checkbox.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, 8, _focus_border_width(style_manager)))
+	checkbox.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, ShellDesignTokensScript.CONTROL_PADDING, _focus_border_width(style_manager)))
 	checkbox.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_PRIMARY))
-	checkbox.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.GRID_MINOR))
+	checkbox.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.CONTROL_DISABLED))
 	checkbox.add_theme_stylebox_override("unchecked", _checkbox_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.GRID_MINOR))
 	checkbox.add_theme_stylebox_override("unchecked_hover", _checkbox_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.ACCENT_FOCUS))
-	checkbox.add_theme_stylebox_override("checked", _checkbox_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_FOCUS))
-	checkbox.add_theme_stylebox_override("checked_hover", _checkbox_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_FOCUS))
+	checkbox.add_theme_stylebox_override("checked", _checkbox_box(style_manager, ShellStyleRolesScript.CONTROL_SELECTED, ShellStyleRolesScript.ACCENT_FOCUS))
+	checkbox.add_theme_stylebox_override("checked_hover", _checkbox_box(style_manager, ShellStyleRolesScript.CONTROL_SELECTED, ShellStyleRolesScript.ACCENT_FOCUS))
 
 
 func _apply_slider(slider: HSlider, style_manager) -> void:
@@ -162,7 +183,7 @@ func _apply_line_edit(line_edit: LineEdit, style_manager) -> void:
 	line_edit.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.ACCENT_FOCUS, 8, _focus_border_width(style_manager)))
 
 
-func _flat_box(style_manager, background_role: String, border_role: String, radius: int = 4, content_margin: int = 8, border_width: int = STANDARD_BORDER_WIDTH) -> StyleBoxFlat:
+func _flat_box(style_manager, background_role: String, border_role: String, radius: int = ShellDesignTokensScript.RADIUS_PANEL, content_margin: int = ShellDesignTokensScript.CONTROL_PADDING, border_width: int = ShellDesignTokensScript.BORDER_STANDARD) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = style_manager.get_color(background_role)
 	style.border_color = style_manager.get_color(border_role)
@@ -172,24 +193,24 @@ func _flat_box(style_manager, background_role: String, border_role: String, radi
 	return style
 
 
-func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = 8, border_width: int = STANDARD_BORDER_WIDTH) -> StyleBoxFlat:
-	return _flat_box(style_manager, background_role, border_role, 4, content_margin, border_width)
+func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = ShellDesignTokensScript.CONTROL_PADDING, border_width: int = ShellDesignTokensScript.BORDER_STANDARD) -> StyleBoxFlat:
+	return _flat_box(style_manager, background_role, border_role, ShellDesignTokensScript.RADIUS_CONTROL, content_margin, border_width)
 
 
 func _keycap_box(style_manager) -> StyleBoxFlat:
-	return _flat_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.HINT_KEYCAP_BORDER, 3, 4)
+	return _flat_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.HINT_KEYCAP_BORDER, ShellDesignTokensScript.RADIUS_KEYCAP, ShellDesignTokensScript.SPACE_1)
 
 
 func _badge_box(style_manager, border_role: String) -> StyleBoxFlat:
-	return _flat_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, border_role, 4, 5)
+	return _flat_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, border_role, ShellDesignTokensScript.RADIUS_CONTROL, 5)
 
 
 func _panel_box(style_manager, background_role: String, border_role: String, content_margin: int) -> StyleBoxFlat:
-	return _flat_box(style_manager, background_role, border_role, 4, content_margin)
+	return _flat_box(style_manager, background_role, border_role, ShellDesignTokensScript.RADIUS_PANEL, content_margin)
 
 
 func _checkbox_box(style_manager, background_role: String, border_role: String) -> StyleBoxFlat:
-	return _flat_box(style_manager, background_role, border_role, 3, 4)
+	return _flat_box(style_manager, background_role, border_role, ShellDesignTokensScript.RADIUS_CONTROL, ShellDesignTokensScript.SPACE_1)
 
 
 func _is_inspector_panel(panel: Control) -> bool:
@@ -206,4 +227,4 @@ func _is_elevated_panel(panel: Control) -> bool:
 
 
 func _focus_border_width(style_manager) -> int:
-	return HIGH_CONTRAST_FOCUS_BORDER_WIDTH if style_manager.is_high_contrast_enabled() else FOCUS_BORDER_WIDTH
+	return ShellDesignTokensScript.BORDER_FOCUS_HIGH_CONTRAST if style_manager.is_high_contrast_enabled() else ShellDesignTokensScript.BORDER_FOCUS

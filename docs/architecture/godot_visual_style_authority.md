@@ -1,4 +1,10 @@
-# Godot Visual Style Authority
+# Godot Visual Style Authority (Foundation Record)
+
+Current visual-system authority is
+`docs/design/godot_visual_system.md`. This document preserves the original
+Stage 31 palette and shell-direction decisions as implementation history.
+Where the two differ, the current visual-system authority governs presentation;
+semantic and authority boundaries below remain unchanged.
 
 Stage 31 defines the visual style authority for the Godot product shell. It
 codifies the intended visual direction and MVP baseline for future Godot visual

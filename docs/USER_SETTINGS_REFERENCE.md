@@ -369,7 +369,7 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 
 ### Theme
 
-- `theme.name`: default `"tron"`; enum; options: diagnostic, plain, tron
+- `theme.name`: default `"plain"`; enum; options: diagnostic, plain, tron
 
 ### Interface
 

@@ -24,7 +24,7 @@ func run() -> Array:
 	await tree.process_frame
 	var applied: Dictionary = {}
 	panel.setting_changed.connect(func(setting_id: String, value) -> void: applied[setting_id] = value)
-	panel._on_control_value_changed("theme.name", "plain")
+	panel._on_control_value_changed("theme.name", "tron")
 	var hints_checkbox := panel.generated_control("accessibility.show_help_hints") as CheckBox
 	if hints_checkbox == null:
 		failures.append("keyboard-hints preference should expose a real checkbox")
@@ -32,10 +32,10 @@ func run() -> Array:
 		hints_checkbox.button_pressed = false
 		await tree.process_frame
 	panel._on_control_value_changed("display.projection_strength", 0.75)
-	if applied.get("theme.name") != "plain" or applied.get("accessibility.show_help_hints") != false:
+	if applied.get("theme.name") != "tron" or applied.get("accessibility.show_help_hints") != false:
 		failures.append("validated changes should apply immediately through SettingsPanel signals")
 	var fresh = StoreScript.new(registry, TEST_PATH)
-	if fresh.value("theme.name") != "plain" or fresh.value("accessibility.show_help_hints") != false:
+	if fresh.value("theme.name") != "tron" or fresh.value("accessibility.show_help_hints") != false:
 		failures.append("fresh shell stores should restore persisted interface and appearance values")
 	if absf(float(fresh.value("display.projection_strength")) - 0.75) > 0.001:
 		failures.append("fresh shell stores should restore persisted numeric values")
@@ -55,7 +55,7 @@ func run() -> Array:
 	if live_session != {"score": 320, "paused": true, "active_cells": [[1, 2]]}:
 		failures.append("resetting display preferences must not mutate live-session state")
 	var reset_store = StoreScript.new(registry, TEST_PATH)
-	if reset_store.value("theme.name") != "tron" or reset_store.value("interface.show_onboarding") != false:
+	if reset_store.value("theme.name") != "plain" or reset_store.value("interface.show_onboarding") != false:
 		failures.append("display reset should restore theme while preserving onboarding")
 	panel.queue_free()
 	await tree.process_frame

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/app/trace_replay_app.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/replay_hud.gd" id="4"]
-[ext_resource type="Theme" path="res://themes/replay_diagnostic_theme.tres" id="5"]
+[ext_resource type="Theme" path="res://themes/replay_theme.tres" id="5"]
 
 [node name="TraceReplayRoot" type="Control"]
 layout_mode = 3

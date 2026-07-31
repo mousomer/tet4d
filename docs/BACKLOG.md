@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-07-30
+Updated: 2026-07-31
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -20,22 +20,6 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ## Active Work
 
-### Governance trajectory simplification
-
-Objective: reduce active procedural duplication while preserving semantic,
-safety, testing, parity, sanitation, documentation, and authority-transfer
-controls.
-
-Acceptance:
-
-- root governance is a concise stable constitution and dispatch;
-- reusable task-contract and completion-report formats exist;
-- workflow routing uses stable change classes rather than completed stages;
-- universal review and drift surfaces contain durable rules only;
-- historical evidence remains discoverable but is not active instruction;
-- governance validators, documentation checks, sanitation, and the repository
-  gate pass.
-
 ### Godot visual-design consolidation
 
 Objective: make the Godot shell restrained, coherent, and board-first using the
@@ -45,6 +29,16 @@ Acceptance:
 
 - one maintainable semantic palette and numeric/component token surface;
 - consistent default, diagnostic, and arcade variants;
+- active and locked cell boxes retain crisp, individually parseable edges at
+  2D, 3D, 4D, and wide-W overview scales;
+- Quick Settings remains comfortably readable, default 4D framing is close
+  enough for inspection, and locking a 3D/4D piece preserves its cell body and
+  wireframe envelope without introducing visual gaps;
+- live View Options make Quick Settings recovery and grid-detail toggling
+  discoverable without relying on hidden settings or undocumented shortcuts;
+- every volumetric section shows grid rectangles on exactly three
+  camera-relative rear faces, switching as the camera orbits so the three front
+  faces stay clear;
 - accessibility, scaling, focus, scrolling, and input isolation preserved;
 - deterministic gameplay/parity state unchanged;
 - real-window before/after evidence is attached to the PR;

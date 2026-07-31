@@ -95,6 +95,13 @@ func run() -> Array:
 		var live_grid := grid_root.get_child(0)
 		if live_grid.get_child_count() <= 12:
 			failures.append("live renderer should include board fill/grid lines beyond the outline")
+		renderer.set_grid_visible(false)
+		renderer.render_snapshot(renderer._presentation.snapshot)
+		await tree.process_frame
+		var hidden_grid := (renderer.get_node_or_null("GridRoot") as Node).get_child(0)
+		if hidden_grid.get_child_count() != 12:
+			failures.append("grid toggle should hide internal detail while retaining the 12-edge orientation cage")
+		renderer.set_grid_visible(true)
 
 	renderer.render_snapshot({
 		"case_id": "live_plain_3d",
@@ -192,6 +199,10 @@ func run() -> Array:
 		failures.append("live 4D renderer should keep one shared grid renderer")
 	else:
 		var live_4d_grid := grid_root.get_child(0)
+		live_4d_grid._update_rear_grid_faces(Vector3(100.0, 100.0, 100.0))
+		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, -1.0, "positive camera octant")
+		live_4d_grid._update_rear_grid_faces(Vector3(-100.0, -100.0, -100.0))
+		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, 1.0, "negative camera octant")
 		var w_label_count := 0
 		for child in live_4d_grid.get_children():
 			if child is Label3D and (
@@ -311,6 +322,26 @@ func _assert_rotation_pulse_outline(failures: Array, cell: Node3D, label: String
 		failures.append("%s should thicken active outline briefly after rotation" % label)
 
 
+func _assert_three_rear_grid_faces_per_slice(
+	failures: Array,
+	grid: Node3D,
+	slice_count: int,
+	expected_sign: float,
+	label: String
+) -> void:
+	var visible_faces := 0
+	for child in grid.get_children():
+		if not child.has_meta("grid_axis") or not (child as Node3D).visible:
+			continue
+		visible_faces += 1
+		if float(child.get_meta("grid_sign", 0.0)) != expected_sign:
+			failures.append("%s should show only camera-relative rear grid faces" % label)
+		if child.get_child_count() == 0:
+			failures.append("%s rear grid face should contain boundary rectangles" % label)
+	if visible_faces != slice_count * 3:
+		failures.append("%s should show exactly three rear grid faces per section, got %d" % [label, visible_faces])
+
+
 func _assert_live_3d_active_priority(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:
 	var active_top := active_cell.get_child(0) as MeshInstance3D
 	var locked_top := locked_cell.get_child(0) as MeshInstance3D
@@ -335,6 +366,23 @@ func _assert_live_3d_active_priority(failures: Array, active_cell: Node3D, locke
 		failures.append("live 3D active priority test needs outline materials")
 	elif active_outline_material.albedo_color == locked_outline_material.albedo_color:
 		failures.append("live 3D active and locked outlines should not share the same visual role")
+	_assert_matching_cell_envelope(failures, active_cell, locked_cell)
+
+
+func _assert_matching_cell_envelope(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:
+	var active_face := (active_cell.get_child(0) as MeshInstance3D).mesh as BoxMesh
+	var locked_face := (locked_cell.get_child(0) as MeshInstance3D).mesh as BoxMesh
+	var active_outline := (active_cell.get_child(6) as MeshInstance3D).mesh as BoxMesh
+	var locked_outline := (locked_cell.get_child(6) as MeshInstance3D).mesh as BoxMesh
+	if active_face == null or locked_face == null or active_outline == null or locked_outline == null:
+		failures.append("live exterior cells need comparable face and outline meshes")
+		return
+	if absf(active_face.size.x - locked_face.size.x) > 0.001:
+		failures.append("locked exterior cells should retain the active cell body scale")
+	if absf(active_outline.size.x - locked_outline.size.x) > 0.001:
+		failures.append("locked exterior cells should retain the active wireframe envelope")
+	if active_outline.size.x - active_face.size.x > 0.051:
+		failures.append("exterior cell bodies should nearly fill their wireframe envelope")
 
 
 func _assert_live_4d_active_restrained(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:

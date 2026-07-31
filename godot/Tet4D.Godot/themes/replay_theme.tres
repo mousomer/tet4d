@@ -1,28 +1,46 @@
-[gd_resource type="Theme" load_steps=2 format=3]
+[gd_resource type="Theme" load_steps=3 format=3]
 
-[ext_resource type="Theme" path="res://themes/replay_diagnostic_theme.tres" id="1"]
+[ext_resource type="Theme" path="res://themes/replay_tron_theme.tres" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="InstrumentQuietPanel"]
+bg_color = Color(0.0627451, 0.0784314, 0.113725, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.145098, 0.172549, 0.227451, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 10
+content_margin_top = 10
+content_margin_right = 10
+content_margin_bottom = 10
 
 [resource]
 base_theme = ExtResource("1")
-Button/colors/font_color = Color(0.94902, 0.941176, 0.917647, 1)
-Button/colors/font_hover_color = Color(0.94902, 0.941176, 0.917647, 1)
-Button/colors/font_pressed_color = Color(0.0666667, 0.0745098, 0.0862745, 1)
-CheckBox/colors/font_color = Color(0.94902, 0.941176, 0.917647, 1)
-HSlider/colors/guide_color = Color(0.654902, 0.623529, 0.560784, 1)
-ItemList/colors/font_color = Color(0.94902, 0.941176, 0.917647, 1)
-ItemList/colors/font_color_selected = Color(0.0666667, 0.0745098, 0.0862745, 1)
-ItemList/colors/selection_color = Color(0.894118, 0.721569, 0.372549, 1)
-Label/colors/font_color = Color(0.94902, 0.941176, 0.917647, 1)
-LineEdit/colors/caret_color = Color(0.894118, 0.721569, 0.372549, 1)
-LineEdit/colors/cursor_color = Color(0.894118, 0.721569, 0.372549, 1)
-LineEdit/colors/cursor_uneditable_color = Color(0.894118, 0.721569, 0.372549, 1)
-LineEdit/colors/font_color = Color(0.94902, 0.941176, 0.917647, 1)
-LineEdit/colors/font_placeholder_color = Color(0.654902, 0.623529, 0.560784, 1)
-OptionButton/colors/font_color = Color(0.94902, 0.941176, 0.917647, 1)
-OptionButton/colors/font_hover_color = Color(0.94902, 0.941176, 0.917647, 1)
-OptionButton/colors/font_pressed_color = Color(0.0666667, 0.0745098, 0.0862745, 1)
-RichTextLabel/colors/default_color = Color(0.94902, 0.941176, 0.917647, 1)
-SecondaryLabel/colors/font_color = Color(0.788235, 0.760784, 0.698039, 1)
-DimLabel/colors/font_color = Color(0.654902, 0.623529, 0.560784, 1)
-AccentLabel/colors/font_color = Color(0.894118, 0.721569, 0.372549, 1)
-WarningLabel/colors/font_color = Color(0.894118, 0.721569, 0.372549, 1)
+Button/colors/font_color = Color(0.92549, 0.913725, 0.882353, 1)
+Button/colors/font_hover_color = Color(0.92549, 0.913725, 0.882353, 1)
+Button/colors/font_pressed_color = Color(0.0431373, 0.0509804, 0.0705882, 1)
+CheckBox/colors/font_color = Color(0.92549, 0.913725, 0.882353, 1)
+HSlider/colors/guide_color = Color(0.321569, 0.380392, 0.494118, 1)
+ItemList/colors/font_color = Color(0.92549, 0.913725, 0.882353, 1)
+ItemList/colors/font_color_selected = Color(0.0431373, 0.0509804, 0.0705882, 1)
+ItemList/colors/selection_color = Color(0.780392, 0.643137, 0.352941, 1)
+ItemList/styles/panel = SubResource("InstrumentQuietPanel")
+Label/colors/font_color = Color(0.92549, 0.913725, 0.882353, 1)
+LineEdit/colors/caret_color = Color(0.901961, 0.776471, 0.431373, 1)
+LineEdit/colors/cursor_color = Color(0.901961, 0.776471, 0.431373, 1)
+LineEdit/colors/cursor_uneditable_color = Color(0.901961, 0.776471, 0.431373, 1)
+LineEdit/colors/font_color = Color(0.92549, 0.913725, 0.882353, 1)
+LineEdit/colors/font_placeholder_color = Color(0.505882, 0.52549, 0.572549, 1)
+OptionButton/colors/font_color = Color(0.92549, 0.913725, 0.882353, 1)
+OptionButton/colors/font_hover_color = Color(0.92549, 0.913725, 0.882353, 1)
+OptionButton/colors/font_pressed_color = Color(0.0431373, 0.0509804, 0.0705882, 1)
+RichTextLabel/colors/default_color = Color(0.92549, 0.913725, 0.882353, 1)
+RichTextLabel/styles/panel = SubResource("InstrumentQuietPanel")
+SecondaryLabel/colors/font_color = Color(0.760784, 0.752941, 0.721569, 1)
+DimLabel/colors/font_color = Color(0.505882, 0.52549, 0.572549, 1)
+AccentLabel/colors/font_color = Color(0.780392, 0.643137, 0.352941, 1)
+WarningLabel/colors/font_color = Color(0.85098, 0.643137, 0.254902, 1)

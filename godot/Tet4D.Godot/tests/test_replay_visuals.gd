@@ -8,14 +8,20 @@ func run() -> Array:
 	_assert_equal(
 		failures,
 		ReplayVisuals.default_display_mode(),
-		ReplayVisuals.DISPLAY_MODE_TRON,
-		"tron should be the startup display mode"
+		ReplayVisuals.DISPLAY_MODE_PLAIN,
+		"Instrument should be the startup display mode"
 	)
 	_assert_equal(
 		failures,
 		ReplayVisuals.display_mode_label(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC),
 		"Diagnostic",
 		"diagnostic display label"
+	)
+	_assert_equal(
+		failures,
+		ReplayVisuals.display_mode_label(ReplayVisuals.DISPLAY_MODE_PLAIN),
+		"Instrument",
+		"plain should present as Instrument"
 	)
 	_assert_equal(
 		failures,
@@ -74,6 +80,23 @@ func run() -> Array:
 		failures.append("W-slice labels should not use large backing chips by default")
 	if ReplayVisuals.slice_label_color("tron").a >= 0.9:
 		failures.append("W-slice labels should be muted orientation markers")
+	var instrument_outline := ReplayVisuals.live_3d_active_cell_border_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
+	var instrument_locked_outline := ReplayVisuals.live_3d_locked_cell_border_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
+	var instrument_active_faces := ReplayVisuals.live_3d_active_face_materials(ReplayVisuals.DISPLAY_MODE_PLAIN, 5)
+	var instrument_active_front := instrument_active_faces.get("front") as StandardMaterial3D
+	var arcade_outline := ReplayVisuals.live_3d_active_cell_border_material(ReplayVisuals.DISPLAY_MODE_TRON)
+	if instrument_outline.emission_energy_multiplier >= arcade_outline.emission_energy_multiplier:
+		failures.append("Instrument should remain calmer than Vector Arcade emission")
+	if _color_brightness(instrument_outline.albedo_color) <= _color_brightness(instrument_active_front.albedo_color) + 0.20:
+		failures.append("Instrument active boxes should use a crisp high-contrast edge")
+	if _color_brightness(instrument_locked_outline.albedo_color) >= _color_brightness(instrument_outline.albedo_color):
+		failures.append("Instrument locked boxes should remain quieter than active boxes")
+	if ReplayVisuals.LIVE_CELL_BORDER_DELTA < 0.07 or ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA < 0.05:
+		failures.append("live box edges should remain legible at overview scale")
+	if ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE != ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE:
+		failures.append("locking should preserve the live exterior cell body scale")
+	if ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA != ReplayVisuals.LIVE_3D_LOCKED_CELL_BORDER_DELTA:
+		failures.append("locking should preserve the live exterior wireframe envelope")
 	_assert_material_alpha(failures, "diagnostic locked cell", ReplayVisuals.locked_cell_material(), 0.90)
 	_assert_material_alpha(failures, "diagnostic particle", ReplayVisuals.particle_material(), 0.95)
 	_assert_material_alpha(failures, "diagnostic board outline", ReplayVisuals.board_outline_material(), 0.90)

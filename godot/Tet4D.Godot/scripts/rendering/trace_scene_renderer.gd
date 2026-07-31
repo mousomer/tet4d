@@ -17,6 +17,7 @@ var _display_mode := ReplayVisuals.default_display_mode()
 var _show_w_labels := true
 var _projection_strength := 1.0
 var _board_detail := "standard"
+var _show_grid := true
 var _high_contrast := false
 var _reduced_motion := false
 var _last_case_id := ""
@@ -57,6 +58,10 @@ func set_board_detail(detail: String) -> void:
 	_board_detail = detail if detail in ["minimal", "standard", "full"] else "standard"
 
 
+func set_grid_visible(visible: bool) -> void:
+	_show_grid = visible
+
+
 func set_accessibility_policy(high_contrast: bool, reduced_motion: bool) -> void:
 	_high_contrast = high_contrast
 	_reduced_motion = reduced_motion
@@ -95,7 +100,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_show_w_labels,
 		_presentation.active_layer_indices(),
 		_board_detail,
-		_high_contrast
+		_high_contrast,
+		_show_grid
 	)
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode)
