@@ -335,6 +335,23 @@ func _assert_live_3d_active_priority(failures: Array, active_cell: Node3D, locke
 		failures.append("live 3D active priority test needs outline materials")
 	elif active_outline_material.albedo_color == locked_outline_material.albedo_color:
 		failures.append("live 3D active and locked outlines should not share the same visual role")
+	_assert_matching_cell_envelope(failures, active_cell, locked_cell)
+
+
+func _assert_matching_cell_envelope(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:
+	var active_face := (active_cell.get_child(0) as MeshInstance3D).mesh as BoxMesh
+	var locked_face := (locked_cell.get_child(0) as MeshInstance3D).mesh as BoxMesh
+	var active_outline := (active_cell.get_child(6) as MeshInstance3D).mesh as BoxMesh
+	var locked_outline := (locked_cell.get_child(6) as MeshInstance3D).mesh as BoxMesh
+	if active_face == null or locked_face == null or active_outline == null or locked_outline == null:
+		failures.append("live exterior cells need comparable face and outline meshes")
+		return
+	if absf(active_face.size.x - locked_face.size.x) > 0.001:
+		failures.append("locked exterior cells should retain the active cell body scale")
+	if absf(active_outline.size.x - locked_outline.size.x) > 0.001:
+		failures.append("locked exterior cells should retain the active wireframe envelope")
+	if active_outline.size.x - active_face.size.x > 0.051:
+		failures.append("exterior cell bodies should nearly fill their wireframe envelope")
 
 
 func _assert_live_4d_active_restrained(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:

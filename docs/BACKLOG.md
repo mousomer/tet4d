@@ -31,6 +31,9 @@ Acceptance:
 - consistent default, diagnostic, and arcade variants;
 - active and locked cell boxes retain crisp, individually parseable edges at
   2D, 3D, 4D, and wide-W overview scales;
+- Quick Settings remains comfortably readable, default 4D framing is close
+  enough for inspection, and locking a 3D/4D piece preserves its cell body and
+  wireframe envelope without introducing visual gaps;
 - accessibility, scaling, focus, scrolling, and input isolation preserved;
 - deterministic gameplay/parity state unchanged;
 - real-window before/after evidence is attached to the PR;

@@ -91,8 +91,12 @@ func run() -> Array:
 		failures.append("Instrument active boxes should use a crisp high-contrast edge")
 	if _color_brightness(instrument_locked_outline.albedo_color) >= _color_brightness(instrument_outline.albedo_color):
 		failures.append("Instrument locked boxes should remain quieter than active boxes")
-	if ReplayVisuals.LIVE_CELL_BORDER_DELTA < 0.07 or ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA < 0.09:
+	if ReplayVisuals.LIVE_CELL_BORDER_DELTA < 0.07 or ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA < 0.05:
 		failures.append("live box edges should remain legible at overview scale")
+	if ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE != ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE:
+		failures.append("locking should preserve the live exterior cell body scale")
+	if ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA != ReplayVisuals.LIVE_3D_LOCKED_CELL_BORDER_DELTA:
+		failures.append("locking should preserve the live exterior wireframe envelope")
 	_assert_material_alpha(failures, "diagnostic locked cell", ReplayVisuals.locked_cell_material(), 0.90)
 	_assert_material_alpha(failures, "diagnostic particle", ReplayVisuals.particle_material(), 0.95)
 	_assert_material_alpha(failures, "diagnostic board outline", ReplayVisuals.board_outline_material(), 0.90)

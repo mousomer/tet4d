@@ -93,6 +93,12 @@ darker and use quieter edges, but adjacent cells must remain individually
 parseable. The Pygame diagrammatic exterior view, clean cube-edge separation,
 and stable W-slice rhythm remain the comparison standard.
 
+In 3D and 4D, active and locked cells retain the same body scale and structural
+wireframe envelope. Locking changes emphasis, not geometry: the wireframe stays
+visibly present in a quieter warm-gray role, and the settled stack must not
+acquire artificial gaps. The default 4D
+fit keeps the complete W-slice matrix visible without making it feel remote.
+
 Main menu, setup, settings, onboarding, replay, live HUD, diagnostics, pause,
 and game-over surfaces all use the same tokens. Diagnostic density may be
 higher, but diagnostic framing must not leak into primary play.

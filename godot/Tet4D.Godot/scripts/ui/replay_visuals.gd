@@ -44,7 +44,7 @@ const SPEED_GROUP_GAP := 6
 const CASE_BROWSER_MIN_HEIGHT := 340
 const DIAGNOSTICS_MIN_HEIGHT := 260
 const EVENTS_MIN_HEIGHT := 170
-const SETTINGS_MIN_HEIGHT := 112
+const SETTINGS_MIN_HEIGHT := 220
 
 const CELL_SCALE := 0.9
 const ACTIVE_GAMEPLAY_CELL_SCALE := 0.72
@@ -52,11 +52,11 @@ const LIVE_ACTIVE_CELL_SCALE := 0.86
 const LIVE_LOCKED_CELL_SCALE := 0.82
 const LIVE_CELL_DEPTH := 0.08
 const LIVE_CELL_BORDER_DELTA := 0.07
-const LIVE_3D_ACTIVE_CELL_SCALE := 0.86
-const LIVE_3D_LOCKED_CELL_SCALE := 0.78
+const LIVE_3D_ACTIVE_CELL_SCALE := 0.90
+const LIVE_3D_LOCKED_CELL_SCALE := 0.90
 const LIVE_3D_CELL_BORDER_DELTA := 0.045
-const LIVE_3D_ACTIVE_CELL_BORDER_DELTA := 0.09
-const LIVE_3D_LOCKED_CELL_BORDER_DELTA := 0.065
+const LIVE_3D_ACTIVE_CELL_BORDER_DELTA := 0.05
+const LIVE_3D_LOCKED_CELL_BORDER_DELTA := 0.05
 const LIVE_3D_ORIGIN_MARKER_SCALE := 0.18
 const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
@@ -243,7 +243,7 @@ static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_PLAI
 
 static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	if normalize_display_mode(mode) == DISPLAY_MODE_PLAIN:
-		return _make_material(color_for_role(ROLE_TEXT_SECONDARY, mode).darkened(0.18), 0.01, false)
+		return _make_material(color_for_role(ROLE_TEXT, mode).darkened(0.15), 0.025, false)
 	return _role_material(ROLE_LIVE_3D_LOCKED_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_LOCKED_OUTLINE, mode))
 
 
