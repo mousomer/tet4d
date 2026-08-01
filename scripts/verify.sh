@@ -123,6 +123,7 @@ run_step "editable_install" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_editabl
 run_step "policy_compliance" ./scripts/check_policy_compliance.sh
 run_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
 run_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
+run_step "topology_contract_codegen" "$PYTHON_BIN" tools/codegen/generate_topology_contract.py --check
 
 run_step "governance"     "$PYTHON_BIN" tools/governance/validate_governance.py
 run_step "config_reference" "$PYTHON_BIN" tools/governance/generate_configuration_reference.py --check

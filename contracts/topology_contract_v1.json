@@ -1,0 +1,17 @@
+{
+  "axis_length": {
+    "maximum": 1000000,
+    "minimum": 1
+  },
+  "axis_names": ["x", "y", "z", "w"],
+  "boundary_sides": ["-", "+"],
+  "contract": "tet4d.topology_contract",
+  "contract_version": 1,
+  "maximum_indexable_volume": 9223372036854775807,
+  "movement_deltas": [-1, 1],
+  "rank": {
+    "maximum": 4,
+    "minimum": 2
+  },
+  "transform_signs": [-1, 1]
+}

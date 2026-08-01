@@ -2366,6 +2366,14 @@
         "description": "Stage 25 topology Godot/C++ core-port planning authority"
       },
       {
+        "path": "contracts/topology_contract_v1.json",
+        "description": "versioned language-neutral topology scalar contract"
+      },
+      {
+        "path": "docs/architecture/topology_contract_foundation.md",
+        "description": "shared topology scalar binding and fingerprint authority"
+      },
+      {
         "path": "docs/ARCHITECTURE_CONTRACT.md",
         "description": "dependency contract"
       },
@@ -2423,6 +2431,7 @@
         "scripts/check_architecture_boundaries.sh",
         "scripts/check_engine_core_purity.sh",
         "scripts/arch_metrics.py",
+        "tools/codegen/generate_topology_contract.py",
         "tools/governance/architecture_metric_budget.py"
       ]
     }

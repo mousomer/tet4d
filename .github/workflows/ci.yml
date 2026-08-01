@@ -121,6 +121,7 @@ jobs:
 
       - name: Build and test the native extension
         run: |
+          python tools/codegen/generate_topology_contract.py --check
           ./scripts/build_godot_tet4d_core.sh
           ./scripts/test_godot_tet4d_core.sh
 
@@ -134,7 +135,8 @@ jobs:
             --all-plain-setup
           python -m pytest -q \
             tests/unit/migration/test_cpp_geometry_parity.py \
-            tests/unit/migration/test_cpp_query_parity.py
+            tests/unit/migration/test_cpp_query_parity.py \
+            tests/unit/migration/test_cpp_topology_contract_foundation.py
 
       - name: Verify Godot import, scripts, resources, GDExtension, and startup
         run: GODOT_BIN="$GODOT_BIN" ./scripts/verify_godot_4_7.sh

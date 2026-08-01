@@ -2,18 +2,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tet4d.generated.topology_contract_v1 import (
+    AXIS_NAMES,
+    MAXIMUM_RANK,
+    MINIMUM_RANK,
+    VALID_BOUNDARY_SIDES,
+    VALID_MOVEMENT_DELTAS,
+    VALID_TRANSFORM_SIGNS,
+)
+
 from ..core.model import Coord
 
-AXIS_NAMES = ("x", "y", "z", "w")
-SIDE_NEG = "-"
-SIDE_POS = "+"
-_SIDE_SET = frozenset((SIDE_NEG, SIDE_POS))
+SIDE_NEG, SIDE_POS = VALID_BOUNDARY_SIDES
+_SIDE_SET = frozenset(VALID_BOUNDARY_SIDES)
 
 
 def normalize_dimension(dimension: int) -> int:
     value = int(dimension)
-    if value < 2 or value > len(AXIS_NAMES):
-        raise ValueError("dimension must be between 2 and 4")
+    if value < MINIMUM_RANK or value > MAXIMUM_RANK:
+        raise ValueError(f"dimension must be between {MINIMUM_RANK} and {MAXIMUM_RANK}")
     return value
 
 
@@ -74,7 +81,7 @@ class BoundaryTransform:
         expected = tuple(range(len(permutation)))
         if tuple(sorted(permutation)) != expected:
             raise ValueError("permutation must be a complete index permutation")
-        if any(value not in (-1, 1) for value in signs):
+        if any(value not in VALID_TRANSFORM_SIGNS for value in signs):
             raise ValueError("signs must contain only -1 or +1")
         object.__setattr__(self, "permutation", permutation)
         object.__setattr__(self, "signs", signs)
@@ -149,7 +156,7 @@ class MoveStep:
         delta = int(self.delta)
         if axis < 0:
             raise ValueError("move axis must be non-negative")
-        if delta not in (-1, 1):
+        if delta not in VALID_MOVEMENT_DELTAS:
             raise ValueError("move delta must be -1 or +1")
         object.__setattr__(self, "axis", axis)
         object.__setattr__(self, "delta", delta)

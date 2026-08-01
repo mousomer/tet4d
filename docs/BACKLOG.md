@@ -20,9 +20,31 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ## Active Work
 
+### Shared topology contract foundation
+
+Status: implemented and automatically verified on
+`codex/topology-contract-foundation`; awaiting merge.
+
+Objective:
+
+- make `contracts/topology_contract_v1.json` the shared scalar authority;
+- generate deterministic Python, C++, and canonical-schema bindings;
+- reject scalar coercion at the canonical Python boundary;
+- preserve existing valid canonical identities;
+- unblock native topology transport without implementing it.
+
+Explicit boundary:
+
+- no persistence migration or forgiving-adapter rewrite;
+- no broad constructor or resolver hardening;
+- no native topology transport behavior;
+- no topology-aware gameplay or UI;
+- Python remains the semantic oracle.
+
 ### Native topology transport
 
-Status: ordered next; implementation has not begun.
+Status: ordered after the shared foundation merges; the existing downstream
+branch remains unchanged.
 
 Objective:
 
@@ -45,11 +67,12 @@ Acceptance boundaries:
 
 Subsequent order:
 
-1. broader native topology transport;
-2. topology-aware Godot gameplay;
-3. Godot topology diagnostics;
-4. Godot Topology Lab/editor;
-5. unified gameplay, topology, endgame, and explosion launch integration.
+1. merge shared topology contract foundation;
+2. broader native topology transport;
+3. topology-aware Godot gameplay;
+4. Godot topology diagnostics;
+5. Godot Topology Lab/editor;
+6. unified gameplay, topology, endgame, and explosion launch integration.
 
 These remain separate reviewable slices unless a later task contract explicitly
 authorizes an integration PR.

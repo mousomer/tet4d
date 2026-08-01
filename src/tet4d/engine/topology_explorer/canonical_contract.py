@@ -5,6 +5,23 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from tet4d.generated.topology_contract_v1 import (
+    CONTRACT_NAME,
+    CONTRACT_VERSION,
+    MAXIMUM_AXIS_LENGTH,
+    MAXIMUM_RANK,
+    MINIMUM_AXIS_LENGTH,
+    MINIMUM_RANK,
+    VALID_TRANSFORM_SIGNS,
+)
+
+from .contract_validation import (
+    checked_dimension_product,
+    require_bounded_json_int,
+    require_json_int,
+    require_json_int_sequence,
+    require_json_string,
+)
 from .glue_model import (
     AXIS_NAMES,
     BoundaryRef,
@@ -14,8 +31,8 @@ from .glue_model import (
 )
 from .glue_validate import validate_explorer_topology_profile
 
-TOPOLOGY_CONTRACT_SCHEMA = "tet4d.topology_contract"
-TOPOLOGY_CONTRACT_VERSION = 1
+TOPOLOGY_CONTRACT_SCHEMA = CONTRACT_NAME
+TOPOLOGY_CONTRACT_VERSION = CONTRACT_VERSION
 
 
 def _canonical_json(payload: Mapping[str, object]) -> str:
@@ -49,7 +66,16 @@ def canonical_topology_payload(
     Disabled editor rows, input order, direction, and user-facing glue IDs do not
     change topology identity. Active seams receive deterministic contract IDs.
     """
-    normalized_dims = tuple(int(size) for size in dims)
+    if len(dims) != profile.dimension:
+        raise ValueError("board_dimensions length must match dimension")
+    normalized_dims = require_json_int_sequence(
+        dims,
+        "board_dimensions",
+        minimum=MINIMUM_AXIS_LENGTH,
+        maximum=MAXIMUM_AXIS_LENGTH,
+        require_list=False,
+    )
+    checked_dimension_product(normalized_dims)
     validate_explorer_topology_profile(profile, dims=normalized_dims)
     rows = [_canonical_glue(glue) for glue in profile.active_gluings()]
     rows.sort(
@@ -107,9 +133,7 @@ def _require_sequence(value: object, path: str) -> Sequence[object]:
 
 
 def _axis_index(value: object, dimension: int, path: str) -> int:
-    if not isinstance(value, str):
-        raise ValueError(f"{path} must be an axis name")  # noqa: TRY004 - one strict contract error type.
-    normalized = value.strip().lower()
+    normalized = require_json_string(value, path).strip().lower()
     if normalized not in AXIS_NAMES[:dimension]:
         raise ValueError(f"{path} is outside the contract dimension")
     return AXIS_NAMES.index(normalized)
@@ -121,7 +145,7 @@ def _boundary_from_payload(value: object, dimension: int, path: str) -> Boundary
     return BoundaryRef(
         dimension=dimension,
         axis=_axis_index(row.get("axis"), dimension, f"{path}.axis"),
-        side=str(row.get("side", "")),
+        side=require_json_string(row.get("side"), f"{path}.side"),
     )
 
 
@@ -137,20 +161,25 @@ def topology_contract_profile(
     )
     if payload.get("schema") != TOPOLOGY_CONTRACT_SCHEMA:
         raise ValueError("unsupported topology contract schema")
-    if payload.get("schema_version") != TOPOLOGY_CONTRACT_VERSION:
+    version = require_json_int(payload.get("schema_version"), "schema_version")
+    if version != TOPOLOGY_CONTRACT_VERSION:
         raise ValueError("unsupported topology contract schema version")
-    dimension = payload.get("dimension")
-    if isinstance(dimension, bool) or not isinstance(dimension, int):
-        raise ValueError("dimension must be an integer")  # noqa: TRY004 - one strict contract error type.
+    dimension = require_bounded_json_int(
+        payload.get("dimension"),
+        "dimension",
+        minimum=MINIMUM_RANK,
+        maximum=MAXIMUM_RANK,
+    )
     dims_raw = _require_sequence(payload.get("board_dimensions"), "board_dimensions")
     if len(dims_raw) != dimension:
         raise ValueError("board_dimensions length must match dimension")
-    if any(
-        isinstance(size, bool) or not isinstance(size, int) or size <= 0
-        for size in dims_raw
-    ):
-        raise ValueError("board_dimensions must contain positive integers")
-    dims = tuple(int(size) for size in dims_raw)
+    dims = require_json_int_sequence(
+        dims_raw,
+        "board_dimensions",
+        minimum=MINIMUM_AXIS_LENGTH,
+        maximum=MAXIMUM_AXIS_LENGTH,
+    )
+    checked_dimension_product(dims)
     glues_raw = _require_sequence(payload.get("gluings"), "gluings")
     gluings: list[GluingDescriptor] = []
     for index, value in enumerate(glues_raw):
@@ -167,15 +196,18 @@ def topology_contract_profile(
             transform_row.get("permutation"), f"{path}.transform.permutation"
         )
         signs = _require_sequence(transform_row.get("signs"), f"{path}.transform.signs")
-        if any(
-            isinstance(item, bool) or not isinstance(item, int) for item in permutation
-        ):
-            raise ValueError(f"{path}.transform.permutation must contain integers")
-        if any(isinstance(item, bool) or not isinstance(item, int) for item in signs):
-            raise ValueError(f"{path}.transform.signs must contain integers")
-        glue_id = row.get("id")
-        if not isinstance(glue_id, str):
-            raise ValueError(f"{path}.id must be a string")  # noqa: TRY004 - one strict contract error type.
+        normalized_permutation = require_json_int_sequence(
+            permutation,
+            f"{path}.transform.permutation",
+            minimum=0,
+            maximum=dimension - 2,
+        )
+        normalized_signs = require_json_int_sequence(
+            signs,
+            f"{path}.transform.signs",
+            allowed=VALID_TRANSFORM_SIGNS,
+        )
+        glue_id = require_json_string(row.get("id"), f"{path}.id")
         gluings.append(
             GluingDescriptor(
                 glue_id=glue_id,
@@ -186,8 +218,8 @@ def topology_contract_profile(
                     row.get("target"), dimension, f"{path}.target"
                 ),
                 transform=BoundaryTransform(
-                    permutation=tuple(int(item) for item in permutation),
-                    signs=tuple(int(item) for item in signs),
+                    permutation=normalized_permutation,
+                    signs=normalized_signs,
                 ),
             )
         )
