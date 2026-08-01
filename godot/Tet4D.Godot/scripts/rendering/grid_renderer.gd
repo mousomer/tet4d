@@ -5,6 +5,7 @@ class_name GridRenderer
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 var _rear_grid_faces: Array[Node3D] = []
+var _slice_labels: Array[Label3D] = []
 
 
 func _process(_delta: float) -> void:
@@ -12,7 +13,9 @@ func _process(_delta: float) -> void:
 		return
 	var camera := get_viewport().get_camera_3d()
 	if camera != null:
-		_update_rear_grid_faces(to_local(camera.global_position))
+		var camera_position := to_local(camera.global_position)
+		_update_rear_grid_faces(camera_position)
+		_update_slice_labels(camera_position)
 
 
 func rebuild(
@@ -30,6 +33,7 @@ func rebuild(
 	for child in get_children():
 		child.queue_free()
 	_rear_grid_faces.clear()
+	_slice_labels.clear()
 
 	if board_shape.is_empty():
 		return
@@ -74,10 +78,12 @@ func rebuild(
 				ReplayVisuals.slice_outline_thickness(display_mode) * (1.9 if high_contrast else 1.45)
 			)
 		if dimension >= 4 and show_w_labels:
-			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode, active_layers.has(w_index))
+			_add_w_label(w_index, w_size, slice_bounds, display_mode, active_layers.has(w_index))
 	var camera := get_viewport().get_camera_3d()
 	if camera != null:
-		_update_rear_grid_faces(to_local(camera.global_position))
+		var camera_position := to_local(camera.global_position)
+		_update_rear_grid_faces(camera_position)
+		_update_slice_labels(camera_position)
 
 
 func _add_outline_box(slice_bounds: Dictionary, display_mode: String, material_override: Material = null, thickness_override: float = -1.0) -> void:
@@ -224,17 +230,37 @@ func _update_rear_grid_faces(camera_position: Vector3) -> void:
 		face.visible = sign_value * camera_delta <= 0.0
 
 
-func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String, selected: bool) -> void:
+func _add_w_label(w_index: int, _w_size: int, slice_bounds: Dictionary, display_mode: String, selected: bool) -> void:
 	var label := Label3D.new()
-	label.text = "ACTIVE · w%d ◀" % [w_index + 1] if selected else "w%d" % [w_index + 1]
+	label.text = "w%d" % [w_index + 1]
 	label.font_size = ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.pixel_size = ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE
 	label.modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_TEXT, display_mode) if selected else ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
 	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE + (2 if selected else 0)
-	label.position = label_position + Vector3(0.0, 0.0, 0.015)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.set_meta("slice_bounds_min", slice_bounds.get("min", Vector3.ZERO))
+	label.set_meta("slice_bounds_max", slice_bounds.get("max", Vector3.ZERO))
+	label.set_meta("selected_slice", selected)
 	add_child(label)
+	_slice_labels.append(label)
+
+
+func _update_slice_labels(camera_position: Vector3) -> void:
+	for label in _slice_labels:
+		var min_pos: Vector3 = label.get_meta("slice_bounds_min", Vector3.ZERO)
+		var max_pos: Vector3 = label.get_meta("slice_bounds_max", Vector3.ZERO)
+		var center := (min_pos + max_pos) * 0.5
+		var camera_delta := camera_position - center
+		var axis := Vector3.AXIS_X if absf(camera_delta.x) >= absf(camera_delta.z) else Vector3.AXIS_Z
+		var sign_value := -1.0 if camera_delta[axis] >= 0.0 else 1.0
+		var inward_offset := 0.035
+		var position := Vector3(center.x, max_pos.y - 0.55, center.z)
+		position[axis] = (min_pos[axis] + inward_offset) if sign_value < 0.0 else (max_pos[axis] - inward_offset)
+		label.position = position
+		label.set_meta("rear_face_axis", axis)
+		label.set_meta("rear_face_sign", sign_value)
 
 
 func _add_w_label_chip(label_position: Vector3, display_mode: String) -> void:

@@ -160,8 +160,8 @@ Relevant tests:
 2. `x-z` layer clearing works and scores correctly.
 3. Camera controls do not interfere with gameplay controls.
 4. Pointer camera controls provide orbit, pan, zoom, and a live XYZ orientation
-   marker without mutating gameplay state; Shift-wheel camera translation must
-   not also dispatch soft drop.
+   marker without mutating gameplay state; Ctrl owns soft drop so Shift remains
+   available exclusively as a camera modifier.
 5. Replay/smoke tests pass.
 6. Embedded 2D and random-cell 3D sets are selectable and playable.
 7. Debug 3D piece set is selectable and supports fast layer-fill validation.

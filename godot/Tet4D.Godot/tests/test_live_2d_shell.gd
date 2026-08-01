@@ -290,21 +290,19 @@ func run() -> Array:
 			failures.append("Mouse wheel down should zoom out by increasing orthographic size")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Mouse wheel zoom should not mutate Live 4D gameplay state")
-		var scroll_focus_before: Vector3 = app._camera_rig._target_focus
-		var scroll_size_before: float = live_4d_camera.size if live_4d_camera != null else 0.0
+		var shifted_wheel_focus_before: Vector3 = app._camera_rig._target_focus
+		var shifted_wheel_size_before: float = live_4d_camera.size if live_4d_camera != null else 0.0
 		var shift_wheel := InputEventMouseButton.new()
 		shift_wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
 		shift_wheel.pressed = true
 		shift_wheel.shift_pressed = true
 		app._handle_camera_input(shift_wheel)
-		if app._camera_rig._target_focus == scroll_focus_before or app._camera_rig._current_fit_state != "matrix scroll":
-			failures.append("Shift+wheel should scroll the Live 4D layer matrix")
-		if live_4d_camera != null and absf(live_4d_camera.size - scroll_size_before) > 0.001:
-			failures.append("Matrix scrolling should pan rather than zoom")
+		if app._camera_rig._target_focus != shifted_wheel_focus_before:
+			failures.append("Shift+wheel should not translate the view; pointer drag owns pan")
+		if live_4d_camera != null and live_4d_camera.size <= shifted_wheel_size_before:
+			failures.append("Wheel should remain zoom even when Shift is held")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
-			failures.append("Matrix scrolling should not dispatch a gameplay command")
-		if app._camera_soft_drop_guard_seconds <= 0.0 or bool(app._live_repeat_held.get("soft_drop", true)):
-			failures.append("Shift+wheel should guard camera translation from the soft-drop repeat path")
+			failures.append("Shift+wheel zoom should not dispatch a gameplay command")
 		var drag_event := InputEventMouseButton.new()
 		drag_event.button_index = MOUSE_BUTTON_LEFT
 		drag_event.pressed = true
@@ -512,6 +510,15 @@ func run() -> Array:
 	]:
 		if not InputMap.has_action(action_name):
 			failures.append("InputMap missing %s" % action_name)
+	for soft_drop_action in ["live_3d_soft_drop", "live_4d_soft_drop"]:
+		var has_ctrl := false
+		var has_shift := false
+		for binding in InputMap.action_get_events(soft_drop_action):
+			if binding is InputEventKey:
+				has_ctrl = has_ctrl or (binding as InputEventKey).keycode == KEY_CTRL
+				has_shift = has_shift or (binding as InputEventKey).keycode == KEY_SHIFT
+		if not has_ctrl or has_shift:
+			failures.append("%s should bind Ctrl and must not bind Shift" % soft_drop_action)
 	root.queue_free()
 	await tree.process_frame
 	return failures

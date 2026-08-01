@@ -259,25 +259,29 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
 	if right_inspector_order.size() < 3 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[2]) != "InspectorControlHints":
 		failures.append("%s: live right inspector should present onboarding and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
-	var view_actions := hud.find_child("LiveViewOptions", true, false) as Control
+	var view_actions := hud.find_child("ViewerActionButtons", true, false) as Control
 	var quick_settings := hud.find_child("QuickSettingsToggle", true, false) as Button
 	var grid_toggle := hud.find_child("GridVisibilityToggle", true, false) as Button
 	if view_actions == null or not view_actions.visible:
-		failures.append("%s: live board should expose persistent View Options" % label)
+		failures.append("%s: live navigation should expose persistent action buttons" % label)
 	if quick_settings == null or quick_settings.text.find("Quick Settings") == -1:
-		failures.append("%s: View Options should expose a discoverable Quick Settings toggle" % label)
+		failures.append("%s: action row should expose a discoverable Quick Settings toggle" % label)
 	elif quick_settings.text == "Show Quick Settings":
 		quick_settings.pressed.emit()
 		if quick_settings.text != "Hide Quick Settings":
 			failures.append("%s: Quick Settings action should expose and report the detailed inspector" % label)
 		quick_settings.pressed.emit()
 	if grid_toggle == null or grid_toggle.text != "Grid: On":
-		failures.append("%s: View Options should expose the current grid state" % label)
+		failures.append("%s: action row should expose the current grid state" % label)
 	else:
 		grid_toggle.pressed.emit()
 		if grid_toggle.text != "Grid: Off":
 			failures.append("%s: grid action should report the hidden-detail state" % label)
 		grid_toggle.pressed.emit()
+	if quick_settings != null and (quick_settings.get_parent() != view_actions or quick_settings.get_meta("semantic_role", "") != "action_button" or quick_settings.get_theme_stylebox("normal") == null):
+		failures.append("%s: Quick Settings should be an unmistakable styled action button" % label)
+	if grid_toggle != null and (grid_toggle.get_parent() != view_actions or grid_toggle.get_meta("semantic_role", "") != "action_button" or grid_toggle.get_theme_stylebox("normal") == null):
+		failures.append("%s: Grid should be an unmistakable styled action button" % label)
 	return failures
 
 
@@ -351,8 +355,9 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Mouse Camera",
-		[["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Translate view"], ["Double-click", "Fit View"]]
+		[["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
 	)
+	_assert_group_items(failures, group_items, "Drop", [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]])
 	_assert_group_items(
 		failures,
 		group_items,

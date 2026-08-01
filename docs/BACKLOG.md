@@ -29,7 +29,7 @@ spatial orientation cues.
 Acceptance:
 
 - middle/right drag pans without changing gameplay identity;
-- Shift-wheel translates the view without entering the soft-drop repeat path;
+- right/middle drag translates the view, wheel zooms, and Ctrl owns soft drop;
 - live 4D opens with live-session presentation rather than retained replay state;
 - each volumetric section has a distinct gravity floor;
 - active-slice emphasis is restrained and W labels remain readable at fit scale;

@@ -26,7 +26,6 @@ const LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS := 0.22
 const LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS := 0.08
 const LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS := 0.08
 const LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS := 0.055
-const CAMERA_SHIFT_WHEEL_SOFT_DROP_GUARD_SECONDS := 0.24
 
 var _bundle: Dictionary = {}
 var _state := TracePlaybackState.new()
@@ -37,7 +36,6 @@ var _playback_accumulator := 0.0
 var _mouse_orbiting := false
 var _mouse_rolling := false
 var _mouse_panning := false
-var _camera_soft_drop_guard_seconds := 0.0
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
 var _live_2d_paused := false
@@ -113,7 +111,6 @@ func _deferred_ready() -> void:
 
 
 func _process(delta: float) -> void:
-	_camera_soft_drop_guard_seconds = maxf(_camera_soft_drop_guard_seconds - delta, 0.0)
 	if _pending_fit_view:
 		_fit_view()
 	if _is_live_mode():
@@ -237,19 +234,11 @@ func _handle_camera_input(event: InputEvent) -> void:
 			_mouse_panning = event.pressed
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
-				if _mode in [MODE_LIVE_3D, MODE_LIVE_4D] and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
-					_guard_camera_modifier_from_soft_drop()
-					_camera_rig.pan_focus(Vector3.UP * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
-				else:
-					_camera_rig.zoom(-1.0)
+				_camera_rig.zoom(-1.0)
 				_refresh_camera_status()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			if _camera_rig != null:
-				if _mode in [MODE_LIVE_3D, MODE_LIVE_4D] and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
-					_guard_camera_modifier_from_soft_drop()
-					_camera_rig.pan_focus(Vector3.DOWN * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
-				else:
-					_camera_rig.zoom(1.0)
+				_camera_rig.zoom(1.0)
 				_refresh_camera_status()
 	elif event is InputEventMouseMotion:
 		if _camera_rig == null:
@@ -277,11 +266,6 @@ func _event_is_camera_mouse_input(event: InputEvent) -> bool:
 			MOUSE_BUTTON_WHEEL_DOWN,
 		]
 	return false
-
-
-func _guard_camera_modifier_from_soft_drop() -> void:
-	_camera_soft_drop_guard_seconds = CAMERA_SHIFT_WHEEL_SOFT_DROP_GUARD_SECONDS
-	_reset_live_repeat_action("soft_drop")
 
 
 func _mouse_event_in_game_viewport(event: InputEvent) -> bool:
@@ -1220,7 +1204,7 @@ func _process_live_3d_input_repeat(delta: float) -> void:
 		)
 	_process_live_repeat_action(
 		"soft_drop",
-		_any_action_pressed(["live_3d_soft_drop"]) and _camera_soft_drop_guard_seconds <= 0.0,
+		_any_action_pressed(["live_3d_soft_drop"]),
 		"soft_drop",
 		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
 		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
@@ -1297,7 +1281,7 @@ func _process_live_4d_input_repeat(delta: float) -> void:
 		)
 	_process_live_repeat_action(
 		"soft_drop",
-		_any_action_pressed(["live_4d_soft_drop"]) and _camera_soft_drop_guard_seconds <= 0.0,
+		_any_action_pressed(["live_4d_soft_drop"]),
 		"soft_drop",
 		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
 		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
@@ -1751,7 +1735,8 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("live_3d_move_z_neg", KEY_W)
 	_ensure_key_action("live_3d_move_z_pos", KEY_DOWN)
 	_ensure_key_action("live_3d_move_z_pos", KEY_S)
-	_ensure_key_action("live_3d_soft_drop", KEY_SHIFT)
+	_remove_key_action("live_3d_soft_drop", KEY_SHIFT)
+	_ensure_key_action("live_3d_soft_drop", KEY_CTRL)
 	_ensure_key_action("live_3d_hard_drop", KEY_SPACE)
 	_ensure_key_action("live_3d_rotate_xy_neg", KEY_R)
 	_ensure_key_action("live_3d_rotate_xy_pos", KEY_T)
@@ -1771,7 +1756,8 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("live_4d_move_z_pos", KEY_S)
 	_ensure_key_action("live_4d_move_w_neg", KEY_Q)
 	_ensure_key_action("live_4d_move_w_pos", KEY_E)
-	_ensure_key_action("live_4d_soft_drop", KEY_SHIFT)
+	_remove_key_action("live_4d_soft_drop", KEY_SHIFT)
+	_ensure_key_action("live_4d_soft_drop", KEY_CTRL)
 	_ensure_key_action("live_4d_hard_drop", KEY_SPACE)
 	_ensure_key_action("live_4d_rotate_xy_neg", KEY_R)
 	_ensure_key_action("live_4d_rotate_xy_pos", KEY_T)
