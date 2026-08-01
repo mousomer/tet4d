@@ -227,8 +227,8 @@ static func live_3d_control_hint_groups() -> Array:
 	return [
 		{"group": "Piece movement", "items": [["A/D", "Move X- / X+"], ["W/S", "Move Z+ / Z-"]]},
 		{"group": "Piece rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"]]},
-		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Wheel", "Zoom"], ["Shift Wheel", "Translate view"], ["F", "Fit View"]]},
+		{"group": "Drop", "items": [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]]},
+		{"group": "Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Wheel", "Zoom"], ["F", "Fit View"]]},
 		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
 	]
@@ -243,8 +243,8 @@ static func live_4d_control_hint_groups() -> Array:
 			"items": [["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]],
 		},
 		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Translate view"], ["Double-click", "Fit View"]]},
-		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
+		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]},
+		{"group": "Drop", "items": [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]]},
 		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
 	]
@@ -1319,7 +1319,7 @@ func _build_layout() -> void:
 	outer.add_child(top_bar)
 
 	var viewer_nav := VBoxContainer.new()
-	viewer_nav.custom_minimum_size = Vector2(220, ReplayVisuals.TOP_BAR_HEIGHT)
+	viewer_nav.custom_minimum_size = Vector2(270, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_child(viewer_nav)
 	var nav_row_a := HBoxContainer.new()
 	nav_row_a.add_theme_constant_override("separation", 6)
@@ -1363,6 +1363,26 @@ func _build_layout() -> void:
 		live_4d_requested.emit()
 	)
 	nav_row_b.add_child(live_4d_button)
+	_live_view_actions = HBoxContainer.new()
+	_live_view_actions.name = "ViewerActionButtons"
+	_live_view_actions.visible = false
+	_live_view_actions.add_theme_constant_override("separation", 6)
+	viewer_nav.add_child(_live_view_actions)
+	_quick_settings_button = Button.new()
+	_quick_settings_button.name = "QuickSettingsToggle"
+	_quick_settings_button.custom_minimum_size = Vector2(168, 34)
+	_quick_settings_button.tooltip_text = "Show or hide Quick Settings in the right inspector"
+	_quick_settings_button.set_meta("semantic_role", "action_button")
+	_quick_settings_button.pressed.connect(_toggle_quick_settings)
+	_live_view_actions.add_child(_quick_settings_button)
+	_grid_toggle_button = Button.new()
+	_grid_toggle_button.name = "GridVisibilityToggle"
+	_grid_toggle_button.custom_minimum_size = Vector2(84, 34)
+	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail"
+	_grid_toggle_button.set_meta("semantic_role", "action_button")
+	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
+	_live_view_actions.add_child(_grid_toggle_button)
+	_update_live_view_action_labels()
 
 	_top_status_panel = PanelContainer.new()
 	_top_status_panel.name = "TopStatusPanel"
@@ -1519,26 +1539,6 @@ func _build_layout() -> void:
 	_viewport_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_viewport_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_viewport_hint)
-	_live_view_actions = HBoxContainer.new()
-	_live_view_actions.name = "LiveViewOptions"
-	_live_view_actions.visible = false
-	_live_view_actions.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
-	var view_options_label := Label.new()
-	view_options_label.text = "View Options"
-	view_options_label.theme_type_variation = "SecondaryLabel"
-	_live_view_actions.add_child(view_options_label)
-	_quick_settings_button = Button.new()
-	_quick_settings_button.name = "QuickSettingsToggle"
-	_quick_settings_button.tooltip_text = "Show or hide the Quick Settings section in the right inspector"
-	_quick_settings_button.pressed.connect(_toggle_quick_settings)
-	_live_view_actions.add_child(_quick_settings_button)
-	_grid_toggle_button = Button.new()
-	_grid_toggle_button.name = "GridVisibilityToggle"
-	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail; the outer orientation cage remains visible"
-	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
-	_live_view_actions.add_child(_grid_toggle_button)
-	viewport_box.add_child(_live_view_actions)
-	_update_live_view_action_labels()
 	_mode_hint_strip = _make_control_hint_panel("replay", true)
 	_mode_hint_strip.name = "ViewportControlHints"
 	_mode_hint_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL

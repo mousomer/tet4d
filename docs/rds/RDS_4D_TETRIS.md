@@ -247,8 +247,9 @@ Relevant tests:
 12. Quarter-turn `xw` / `zw` view turns change board decomposition by axis basis with deterministic layer count/dims mapping.
 13. Starting a live 4D session must render the configured live snapshot directly;
     a retained replay document or replay camera state must not become its first view.
-14. Pointer camera controls provide orbit, pan, zoom, Shift-wheel translation,
-    and a live XYZ orientation marker without dispatching gameplay commands.
+14. Pointer camera controls provide orbit, right/middle-drag pan, zoom, and a
+    live XYZ orientation marker without dispatching gameplay commands. Ctrl
+    owns soft drop; Shift remains exclusively a camera modifier.
 
 ## 11. Implementation Status (2026-02-19)
 

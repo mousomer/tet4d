@@ -114,8 +114,11 @@ excessive thickness. Live 3D/4D views include a compact, screen-anchored XYZ
 orientation marker whose arrows track the world axes as the camera moves.
 
 Pointer controls use left drag to orbit, Shift-left drag to roll, middle or
-right drag to pan, wheel to zoom, and Shift-wheel to translate the fitted view.
-Camera-modified pointer input must never dispatch a gameplay soft drop.
+right drag to pan, and wheel to zoom. Shift remains a camera modifier and must
+not also own gameplay input; 3D/4D soft drop uses Ctrl.
+
+In 4D, each slice ID is attached to its camera-relative rear vertical face.
+Selection is conveyed through visual emphasis, without adding "active" text.
 
 Main menu, setup, settings, onboarding, replay, live HUD, diagnostics, pause,
 and game-over surfaces all use the same tokens. Diagnostic density may be
