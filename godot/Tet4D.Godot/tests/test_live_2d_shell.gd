@@ -2,6 +2,7 @@ extends RefCounted
 
 const ReplayHudScript = preload("res://scripts/ui/replay_hud.gd")
 const TraceReplayAppScript = preload("res://scripts/app/trace_replay_app.gd")
+const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 
 
 func run() -> Array:
@@ -18,8 +19,15 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Shift Drag Roll") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Shift + Left Drag Roll") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose W controls, camera controls, six rotation planes, and Esc-only quit")
+	for action_name in LiveInputContractScript.ACTION_SPECS:
+		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
+		if not spec.get("keys", []).has(spec.get("display_key")):
+			failures.append("%s helper display key must come from its registered binding list" % action_name)
+		for forbidden_key in spec.get("forbidden_keys", []):
+			if spec.get("keys", []).has(forbidden_key):
+				failures.append("%s must not register a forbidden helper/input key" % action_name)
 	if absf(TraceReplayAppScript.LIVE_GRAVITY_INTERVAL_SECONDS - 0.5) > 0.001:
 		failures.append("live gravity shell interval should default to 0.5 seconds")
 	if TraceReplayAppScript.LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS <= 0.0:
@@ -174,6 +182,8 @@ func run() -> Array:
 		app._enter_live_4d_mode()
 		if app._mode != TraceReplayAppScript.MODE_LIVE_4D:
 			failures.append("app should enter Live 4D mode on direct call, got %s" % str(app._mode))
+		if app._current_document != null:
+			failures.append("live 4D entry must discard the retained replay document before rendering")
 		var direct_live_4d_snapshot = JSON.parse_string(app._live_bridge.live_4d_snapshot_json())
 		if typeof(direct_live_4d_snapshot) == TYPE_DICTIONARY and str(direct_live_4d_snapshot.get("trace_type", "")) != "live_4d":
 			failures.append("direct native live 4D snapshot had trace type %s" % str(direct_live_4d_snapshot.get("trace_type", "")))
@@ -190,6 +200,18 @@ func run() -> Array:
 			failures.append("live 4D should open in the fitted W-slice camera preset")
 		if app._camera_rig._current_fit_state != "fit OK":
 			failures.append("live 4D should open already fitted")
+		var orientation_gizmo := app._camera_rig.get_node_or_null("OrientationGizmo") as Node3D
+		if orientation_gizmo == null or not orientation_gizmo.visible or orientation_gizmo.get_child_count() < 10:
+			failures.append("Live 4D should show a compact XYZ ball-and-arrow orientation marker")
+		elif orientation_gizmo.get_node_or_null("XArrow") == null or orientation_gizmo.get_node_or_null("YArrow") == null or orientation_gizmo.get_node_or_null("ZArrow") == null:
+			failures.append("orientation marker should expose explicit X, Y, and Z arrowheads")
+		else:
+			var gizmo_position_before: Vector3 = orientation_gizmo.global_position
+			app._camera_rig.orbit(Vector2(8.0, -4.0))
+			app._camera_rig._process(1.0)
+			if orientation_gizmo.global_position == gizmo_position_before:
+				failures.append("orientation marker should update with camera movement in real time")
+			app._fit_view()
 		var camera_hash_before := str(app._live_bridge.live_4d_state_hash())
 		var live_4d_camera := app._camera_rig.get_node_or_null("Camera3D") as Camera3D
 		if live_4d_camera == null:
@@ -276,19 +298,19 @@ func run() -> Array:
 			failures.append("Mouse wheel down should zoom out by increasing orthographic size")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Mouse wheel zoom should not mutate Live 4D gameplay state")
-		var scroll_focus_before: Vector3 = app._camera_rig._target_focus
-		var scroll_size_before: float = live_4d_camera.size if live_4d_camera != null else 0.0
+		var shifted_wheel_focus_before: Vector3 = app._camera_rig._target_focus
+		var shifted_wheel_size_before: float = live_4d_camera.size if live_4d_camera != null else 0.0
 		var shift_wheel := InputEventMouseButton.new()
 		shift_wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
 		shift_wheel.pressed = true
 		shift_wheel.shift_pressed = true
 		app._handle_camera_input(shift_wheel)
-		if app._camera_rig._target_focus == scroll_focus_before or app._camera_rig._current_fit_state != "matrix scroll":
-			failures.append("Shift+wheel should scroll the Live 4D layer matrix")
-		if live_4d_camera != null and absf(live_4d_camera.size - scroll_size_before) > 0.001:
-			failures.append("Matrix scrolling should pan rather than zoom")
+		if app._camera_rig._target_focus != shifted_wheel_focus_before:
+			failures.append("Shift+wheel should not translate the view; pointer drag owns pan")
+		if live_4d_camera != null and live_4d_camera.size <= shifted_wheel_size_before:
+			failures.append("Wheel should remain zoom even when Shift is held")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
-			failures.append("Matrix scrolling should not dispatch a gameplay command")
+			failures.append("Shift+wheel zoom should not dispatch a gameplay command")
 		var drag_event := InputEventMouseButton.new()
 		drag_event.button_index = MOUSE_BUTTON_LEFT
 		drag_event.pressed = true
@@ -314,6 +336,18 @@ func run() -> Array:
 			failures.append("Shift-drag should roll camera view")
 		shift_drag_event.pressed = false
 		app._handle_camera_input(shift_drag_event)
+		var pan_button := InputEventMouseButton.new()
+		pan_button.button_index = MOUSE_BUTTON_MIDDLE
+		pan_button.pressed = true
+		app._handle_camera_input(pan_button)
+		var focus_before_pan: Vector3 = app._camera_rig._target_focus
+		var pan_motion := InputEventMouseMotion.new()
+		pan_motion.relative = Vector2(18.0, -9.0)
+		app._handle_camera_input(pan_motion)
+		if app._camera_rig._target_focus == focus_before_pan or app._camera_rig._current_fit_state != "manual pan":
+			failures.append("Middle-drag should pan the gameboard view")
+		pan_button.pressed = false
+		app._handle_camera_input(pan_button)
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Mouse camera controls should not mutate Live 4D gameplay state")
 		app._fit_view()
@@ -484,6 +518,22 @@ func run() -> Array:
 	]:
 		if not InputMap.has_action(action_name):
 			failures.append("InputMap missing %s" % action_name)
+	for soft_drop_action in ["live_3d_soft_drop", "live_4d_soft_drop"]:
+		var has_ctrl := false
+		var has_shift := false
+		for binding in InputMap.action_get_events(soft_drop_action):
+			if binding is InputEventKey:
+				has_ctrl = has_ctrl or (binding as InputEventKey).keycode == KEY_CTRL
+				has_shift = has_shift or (binding as InputEventKey).keycode == KEY_SHIFT
+		if not has_ctrl or has_shift:
+			failures.append("%s should bind Ctrl and must not bind Shift" % soft_drop_action)
+	for action_name in LiveInputContractScript.ACTION_SPECS:
+		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
+		for required_key in spec.get("keys", []):
+			var expected_event := InputEventKey.new()
+			expected_event.keycode = int(required_key)
+			if not InputMap.action_has_event(str(action_name), expected_event):
+				failures.append("InputMap %s should consume the shared contract binding %s" % [action_name, str(required_key)])
 	root.queue_free()
 	await tree.process_frame
 	return failures

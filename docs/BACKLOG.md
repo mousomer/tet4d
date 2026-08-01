@@ -20,6 +20,25 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ## Active Work
 
+### Godot volumetric viewport usability
+
+Objective: finish the accepted 3D/4D shell with direct camera translation,
+unambiguous modified-wheel input, stronger W-slice readability, and persistent
+spatial orientation cues.
+
+Acceptance:
+
+- middle/right drag pans without changing gameplay identity;
+- right/middle drag translates the view, wheel zooms, and Ctrl owns soft drop;
+- runtime bindings and visible control helpers consume one live-input contract;
+- windowed mode survives settings-driven and OS-driven fullscreen transitions;
+- live 4D opens with live-session presentation rather than retained replay state;
+- each volumetric section has a distinct gravity floor;
+- active-slice emphasis is restrained and W labels remain readable at fit scale;
+- a compact live XYZ ball-and-arrow marker follows camera orientation;
+- exact Godot, input, deterministic identity, and full repository gates pass;
+- real-window 3D/4D inspection is reported separately from human acceptance.
+
 ### Canonical topology contract
 
 Objective: define the versioned topology representation shared by Python,

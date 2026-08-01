@@ -122,6 +122,10 @@ func _check_control_hint_palette(manager) -> Array:
 	action.text = "X- / X+"
 	action.theme_type_variation = "SecondaryLabel"
 	group.add_child(action)
+	var action_button := Button.new()
+	action_button.text = "Show Quick Settings"
+	action_button.set_meta("semantic_role", "action_button")
+	group.add_child(action_button)
 	var note := Label.new()
 	note.name = "ControlHintNote"
 	note.text = "Left: CCW"
@@ -157,6 +161,14 @@ func _check_control_hint_palette(manager) -> Array:
 		failures.append("control section headers should use hint.section")
 	if keycap.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_KEYCAP_TEXT):
 		failures.append("keycap text should use hint.keycap.text")
+	var action_button_box := action_button.get_theme_stylebox("normal") as StyleBoxFlat
+	if action_button_box == null:
+		failures.append("application actions should receive a dedicated clickable button style")
+	elif keycap_box != null and (
+		action_button_box.border_color == keycap_box.border_color
+		or action_button_box.border_width_left <= keycap_box.border_width_left
+	):
+		failures.append("action buttons should use stronger depth and border treatment than passive helper tags")
 	if action.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_ACTION):
 		failures.append("control action text should use hint.action")
 	if note.get_theme_color("font_color") != manager.get_color(ShellStyleRolesScript.HINT_NOTE):

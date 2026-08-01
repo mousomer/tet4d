@@ -26,6 +26,10 @@ func run() -> Array:
 	for setting_id in expected_defaults:
 		if store.value(setting_id) != expected_defaults[setting_id]:
 			failures.append("%s should use its bounded Stage 51 default" % setting_id)
+	if PreferencesScript.window_mode_value(Window.MODE_WINDOWED) != PreferencesScript.WINDOWED:
+		failures.append("windowed OS state should canonicalize to the persistent windowed preference")
+	if PreferencesScript.window_mode_value(Window.MODE_FULLSCREEN) != PreferencesScript.FULLSCREEN or PreferencesScript.window_mode_value(Window.MODE_EXCLUSIVE_FULLSCREEN) != PreferencesScript.FULLSCREEN:
+		failures.append("fullscreen OS states should canonicalize to the persistent fullscreen preference")
 	var mutable_size: Array = store.value("display.windowed_size")
 	mutable_size[0] = 1
 	if store.value("display.windowed_size") != [1280, 720]:
@@ -55,6 +59,11 @@ func run() -> Array:
 	]:
 		if fresh.value(str(setting_change[0])) != setting_change[1]:
 			failures.append("%s should survive a schema-v2 reopen" % setting_change[0])
+	if not fresh.set_value("display.window_mode", "windowed"):
+		failures.append("returning from fullscreen should persist windowed mode")
+	var reopened_windowed = StoreScript.new(registry, TEST_PATH)
+	if reopened_windowed.value("display.window_mode") != "windowed":
+		failures.append("windowed mode should survive a settings-store restart")
 	if _read_json(GAME_SETUP_SENTINEL_PATH) != {"setup": "untouched"}:
 		failures.append("shell display persistence must not touch game_setup storage")
 

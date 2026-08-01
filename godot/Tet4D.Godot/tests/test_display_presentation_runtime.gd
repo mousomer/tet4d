@@ -31,6 +31,13 @@ func _test_camera_preferences(failures: Array) -> void:
 	inverted.orbit(Vector2(0, 10))
 	if signf(float(normal.presentation_snapshot().get("target_pitch")) - CameraRigScript.PYTHON_DISPLAY_PITCH_RAD) == signf(float(inverted.presentation_snapshot().get("target_pitch")) - CameraRigScript.PYTHON_DISPLAY_PITCH_RAD):
 		failures.append("vertical inversion should reverse camera pitch direction")
+	var panned = CameraRigScript.new()
+	var pan_before: Vector3 = panned.presentation_snapshot().get("target_focus", Vector3.ZERO)
+	# The pure camera contract can be exercised before tree attachment; the
+	# app-level test covers the viewport-scaled drag path after readiness.
+	panned.pan_focus(Vector3(1.0, 2.0, 0.0))
+	if panned.presentation_snapshot().get("target_focus", Vector3.ZERO) == pan_before:
+		failures.append("camera translation should update only the view focus")
 
 
 func _test_shell_preferences() -> Array:

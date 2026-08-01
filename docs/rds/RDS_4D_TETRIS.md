@@ -245,6 +245,11 @@ Relevant tests:
 11. Outer `w` layers remain in-bounds under hyper-view turns (`xw`/`zw`).
 12. Terminal animation reuses the shared projected layer-board renderer instead of a separate 4D-only effect pipeline, and the relic field remains populated without drifting into unbounded empty space.
 12. Quarter-turn `xw` / `zw` view turns change board decomposition by axis basis with deterministic layer count/dims mapping.
+13. Starting a live 4D session must render the configured live snapshot directly;
+    a retained replay document or replay camera state must not become its first view.
+14. Pointer camera controls provide orbit, right/middle-drag pan, zoom, and a
+    live XYZ orientation marker without dispatching gameplay commands. Ctrl
+    owns soft drop; Shift remains exclusively a camera modifier.
 
 ## 11. Implementation Status (2026-02-19)
 

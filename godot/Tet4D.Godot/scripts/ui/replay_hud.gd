@@ -16,6 +16,7 @@ const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onbo
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
+const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const AccessibilityPolicyScript = preload("res://scripts/ui/accessibility/accessibility_policy.gd")
 const GameSetupModelScript = preload("res://scripts/ui/game_setup/game_setup_model.gd")
 const GameSetupStoreScript = preload("res://scripts/ui/game_setup/game_setup_store.gd")
@@ -135,6 +136,7 @@ var _advanced_screen: Control
 var _game_setup_screen: Control
 var _screens: Dictionary = {}
 var _replay_note: Label
+var _summary_title: Label
 var _help_panel: PanelContainer
 var _trace_integrity_label: Label
 var _bundle_detail_label: Label
@@ -164,6 +166,8 @@ var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
 var _applying_window_change := false
 var _applying_initial_settings := false
+var _observed_window_mode := -1
+var _window_mode_poll_accumulator := 0.0
 var _bundle_status_text := ""
 var _bundle_status_detail := ""
 var _live_2d_paused := false
@@ -212,41 +216,15 @@ static func replay_control_hint_groups() -> Array:
 
 
 static func live_2d_control_hint_groups() -> Array:
-	return [
-		{"group": "Piece movement", "items": [["A/D", "Move left / right"], ["Left/Right", "Move left / right"]]},
-		{"group": "Piece rotation", "items": [["W/Up/X", "Rotate clockwise"], ["Z", "Rotate counter-clockwise"]]},
-		{"group": "Drop", "items": [["S/Down", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Camera", "items": [["F", "Fit View"]]},
-		{"group": "Session", "items": [["P", "Pause"], ["R", "Restart Game"]]},
-		{"group": "Navigation", "items": [["Tab", "Play 3D"], ["Esc", "Main Menu"]]},
-	]
+	return LiveInputContractScript.control_hint_groups("live_2d")
 
 
 static func live_3d_control_hint_groups() -> Array:
-	return [
-		{"group": "Piece movement", "items": [["A/D", "Move X- / X+"], ["W/S", "Move Z+ / Z-"]]},
-		{"group": "Piece rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"]]},
-		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Camera", "items": [["Mouse", "Orbit / zoom"], ["F", "Fit View"]]},
-		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
-		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
-	]
+	return LiveInputContractScript.control_hint_groups("live_3d")
 
 
 static func live_4d_control_hint_groups() -> Array:
-	return [
-		{"group": "Piece movement", "items": [["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]},
-		{
-			"group": "Plane Rotation",
-			"note": "Left: CCW · Right: CW",
-			"items": [["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]],
-		},
-		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]},
-		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
-		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
-	]
+	return LiveInputContractScript.control_hint_groups("live_4d")
 
 
 static func quick_control_hint_groups(mode: String) -> Array:
@@ -269,6 +247,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_settings_registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	_settings_store = SettingsStoreScript.new(_settings_registry)
+	var initial_window := get_window()
+	if initial_window != null:
+		_observed_window_mode = initial_window.mode
 	_game_setup_model.apply_last_selected(_game_setup_store.load_last_selected())
 	_style_manager.set_theme(_current_display_mode)
 	_style_manager.theme_changed.connect(func(theme_id: String) -> void:
@@ -281,10 +262,19 @@ func _ready() -> void:
 	call_deferred("_log_geometry_diagnostics", "ready")
 
 
+func _process(delta: float) -> void:
+	_window_mode_poll_accumulator += delta
+	if _window_mode_poll_accumulator < 0.2:
+		return
+	_window_mode_poll_accumulator = 0.0
+	_sync_observed_window_mode()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_inside_tree():
 		call_deferred("_log_geometry_diagnostics", "resize")
 		call_deferred("_remember_current_windowed_size")
+		call_deferred("_sync_observed_window_mode")
 
 
 func set_bundle_status(text: String, detail: String = "") -> void:
@@ -417,6 +407,8 @@ func set_live_2d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live" if paused else "Running Live")
+	if _summary_title != null:
+		_summary_title.text = "Live Session"
 	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
 	_update_live_status_strip("Live Plain 2D", state_text, game_over_reason, "live_2d")
 	if _viewport_title != null:
@@ -463,6 +455,8 @@ func set_live_3d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 3D"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 3D" if paused else "Running Live 3D")
+	if _summary_title != null:
+		_summary_title.text = "Live Session"
 	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
 	_update_live_status_strip("Live Plain 3D", state_text, game_over_reason, "live_3d")
 	if _viewport_title != null:
@@ -509,6 +503,8 @@ func set_live_4d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 4D"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 4D" if paused else "Running Live 4D")
+	if _summary_title != null:
+		_summary_title.text = "Live Session"
 	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
 	_update_live_status_strip("Live Plain 4D", state_text, game_over_reason, "live_4d")
 	if _viewport_title != null:
@@ -537,6 +533,8 @@ func set_live_4d_mode(
 
 
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
+	if _summary_title != null:
+		_summary_title.text = "Replay"
 	_set_live_declutter_mode(false)
 	if _live_view_actions != null:
 		_live_view_actions.visible = false
@@ -704,6 +702,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"world_parent": _game_viewport.get_node_or_null("WorldRoot") if _game_viewport != null else null,
 		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
 		"top_summary_text": _summary_label.text if _summary_label != null else "",
+		"top_summary_title": _summary_title.text if _summary_title != null else "",
 		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
 		"camera_status_text": _camera_status_label.text if _camera_status_label != null else "",
 		"top_detail_text": _hash_label.text if _hash_label != null and _hash_label.visible else "",
@@ -1223,7 +1222,28 @@ func _apply_window_mode(mode: String) -> void:
 	else:
 		window.mode = Window.MODE_WINDOWED
 		_restore_windowed_size()
+	_observed_window_mode = window.mode
 	_applying_window_change = false
+
+
+func _sync_observed_window_mode() -> void:
+	var window := get_window()
+	if (
+		_settings_store == null
+		or window == null
+		or DisplayServer.get_name() == "headless"
+		or _applying_initial_settings
+		or _applying_window_change
+	):
+		return
+	if _observed_window_mode == window.mode:
+		return
+	_observed_window_mode = window.mode
+	var canonical_mode := ShellPresentationPreferencesScript.window_mode_value(window.mode)
+	if _settings_store.set_value("display.window_mode", canonical_mode):
+		_sync_all_setting_controls()
+	if canonical_mode == ShellPresentationPreferencesScript.WINDOWED:
+		_remember_current_windowed_size()
 
 
 func _restore_windowed_size() -> void:
@@ -1309,7 +1329,7 @@ func _build_layout() -> void:
 	outer.add_child(top_bar)
 
 	var viewer_nav := VBoxContainer.new()
-	viewer_nav.custom_minimum_size = Vector2(220, ReplayVisuals.TOP_BAR_HEIGHT)
+	viewer_nav.custom_minimum_size = Vector2(270, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_child(viewer_nav)
 	var nav_row_a := HBoxContainer.new()
 	nav_row_a.add_theme_constant_override("separation", 6)
@@ -1353,6 +1373,26 @@ func _build_layout() -> void:
 		live_4d_requested.emit()
 	)
 	nav_row_b.add_child(live_4d_button)
+	_live_view_actions = HBoxContainer.new()
+	_live_view_actions.name = "ViewerActionButtons"
+	_live_view_actions.visible = false
+	_live_view_actions.add_theme_constant_override("separation", 6)
+	viewer_nav.add_child(_live_view_actions)
+	_quick_settings_button = Button.new()
+	_quick_settings_button.name = "QuickSettingsToggle"
+	_quick_settings_button.custom_minimum_size = Vector2(168, 34)
+	_quick_settings_button.tooltip_text = "Show or hide Quick Settings in the right inspector"
+	_quick_settings_button.set_meta("semantic_role", "action_button")
+	_quick_settings_button.pressed.connect(_toggle_quick_settings)
+	_live_view_actions.add_child(_quick_settings_button)
+	_grid_toggle_button = Button.new()
+	_grid_toggle_button.name = "GridVisibilityToggle"
+	_grid_toggle_button.custom_minimum_size = Vector2(84, 34)
+	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail"
+	_grid_toggle_button.set_meta("semantic_role", "action_button")
+	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
+	_live_view_actions.add_child(_grid_toggle_button)
+	_update_live_view_action_labels()
 
 	_top_status_panel = PanelContainer.new()
 	_top_status_panel.name = "TopStatusPanel"
@@ -1387,6 +1427,7 @@ func _build_layout() -> void:
 	top_summary_root.add_child(top_summary_box)
 	var summary_title := Label.new()
 	summary_title.text = "Replay"
+	_summary_title = summary_title
 	summary_title.theme_type_variation = "SecondaryLabel"
 	top_summary_box.add_child(summary_title)
 	_summary_label = Label.new()
@@ -1508,26 +1549,6 @@ func _build_layout() -> void:
 	_viewport_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_viewport_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_viewport_hint)
-	_live_view_actions = HBoxContainer.new()
-	_live_view_actions.name = "LiveViewOptions"
-	_live_view_actions.visible = false
-	_live_view_actions.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
-	var view_options_label := Label.new()
-	view_options_label.text = "View Options"
-	view_options_label.theme_type_variation = "SecondaryLabel"
-	_live_view_actions.add_child(view_options_label)
-	_quick_settings_button = Button.new()
-	_quick_settings_button.name = "QuickSettingsToggle"
-	_quick_settings_button.tooltip_text = "Show or hide the Quick Settings section in the right inspector"
-	_quick_settings_button.pressed.connect(_toggle_quick_settings)
-	_live_view_actions.add_child(_quick_settings_button)
-	_grid_toggle_button = Button.new()
-	_grid_toggle_button.name = "GridVisibilityToggle"
-	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail; the outer orientation cage remains visible"
-	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
-	_live_view_actions.add_child(_grid_toggle_button)
-	viewport_box.add_child(_live_view_actions)
-	_update_live_view_action_labels()
 	_mode_hint_strip = _make_control_hint_panel("replay", true)
 	_mode_hint_strip.name = "ViewportControlHints"
 	_mode_hint_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
