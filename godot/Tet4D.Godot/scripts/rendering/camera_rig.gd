@@ -21,6 +21,9 @@ const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
 const LIVE_4D_MATRIX_SCROLL_STEP := 4.0
 const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
+const ORIENTATION_GIZMO_SCREEN_SCALE := 0.060
+const ORIENTATION_GIZMO_EDGE_OFFSET := 0.41
+const ORIENTATION_GIZMO_CAMERA_DEPTH := 2.0
 
 @export var min_distance := 8.0
 @export var max_distance := 80.0
@@ -47,6 +50,7 @@ var _current_fit_state := "initial"
 var _sensitivity_factor := 1.0
 var _invert_y := false
 var _interpolation_scale := 1.0
+var _orientation_gizmo: Node3D
 
 @onready var _camera: Camera3D = $Camera3D
 
@@ -55,6 +59,7 @@ func _ready() -> void:
 	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	_camera.size = DEFAULT_ORTHOGRAPHIC_SIZE
 	_base_orthographic_size = _camera.size
+	_build_orientation_gizmo()
 	_update_camera()
 
 
@@ -159,7 +164,31 @@ func roll(delta: Vector2) -> void:
 func pan_focus(offset: Vector3) -> void:
 	_target_focus += offset
 	_current_fit_state = "matrix scroll"
+	if _camera != null:
+		_update_camera()
+
+
+func pan_screen(delta: Vector2) -> void:
+	if _camera == null:
+		return
+	var viewport := _camera.get_viewport()
+	var viewport_height := 1.0
+	if viewport != null:
+		viewport_height = maxf(viewport.get_visible_rect().size.y, 1.0)
+	var world_units_per_pixel := _camera.size / viewport_height
+	var offset := (
+		-_camera.global_basis.x * delta.x
+		+ _camera.global_basis.y * delta.y
+	) * world_units_per_pixel
+	_target_focus += offset
+	_current_focus = _target_focus
+	_current_fit_state = "manual pan"
 	_update_camera()
+
+
+func set_orientation_gizmo_visible(visible: bool) -> void:
+	if _orientation_gizmo != null:
+		_orientation_gizmo.visible = visible
 
 
 func zoom(step: float) -> void:
@@ -213,6 +242,8 @@ func presentation_snapshot() -> Dictionary:
 		"target_yaw": _target_yaw,
 		"target_pitch": _target_pitch,
 		"target_roll": _target_roll,
+		"target_focus": _target_focus,
+		"orientation_gizmo_visible": _orientation_gizmo != null and _orientation_gizmo.visible,
 	}
 
 
@@ -236,6 +267,91 @@ func _update_camera() -> void:
 	var forward := (_current_focus - _camera.global_position).normalized()
 	var rolled_up := Basis(forward, _current_roll) * Vector3.UP
 	_camera.look_at(_current_focus, rolled_up)
+	_update_orientation_gizmo()
+
+
+func _build_orientation_gizmo() -> void:
+	_orientation_gizmo = Node3D.new()
+	_orientation_gizmo.name = "OrientationGizmo"
+	_orientation_gizmo.top_level = true
+	_orientation_gizmo.visible = false
+	add_child(_orientation_gizmo)
+
+	var center := MeshInstance3D.new()
+	center.name = "AxisOrigin"
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.13
+	sphere.height = 0.26
+	center.mesh = sphere
+	center.material_override = _gizmo_material(Color("d8dde3"))
+	_orientation_gizmo.add_child(center)
+
+	_add_gizmo_axis("X", Vector3.RIGHT, Color("ef6b66"))
+	_add_gizmo_axis("Y", Vector3.UP, Color("79c98d"))
+	_add_gizmo_axis("Z", Vector3.BACK, Color("6f9ee8"))
+
+
+func _add_gizmo_axis(label_text: String, direction: Vector3, color: Color) -> void:
+	var material := _gizmo_material(color)
+	var shaft := MeshInstance3D.new()
+	shaft.name = "%sAxis" % label_text
+	var shaft_mesh := CylinderMesh.new()
+	shaft_mesh.top_radius = 0.035
+	shaft_mesh.bottom_radius = 0.035
+	shaft_mesh.height = 0.58
+	shaft.mesh = shaft_mesh
+	shaft.material_override = material
+	shaft.position = direction * 0.35
+	shaft.quaternion = Quaternion(Vector3.UP, direction)
+	_orientation_gizmo.add_child(shaft)
+
+	var arrow := MeshInstance3D.new()
+	arrow.name = "%sArrow" % label_text
+	var arrow_mesh := CylinderMesh.new()
+	arrow_mesh.top_radius = 0.0
+	arrow_mesh.bottom_radius = 0.10
+	arrow_mesh.height = 0.22
+	arrow.mesh = arrow_mesh
+	arrow.material_override = material
+	arrow.position = direction * 0.75
+	arrow.quaternion = Quaternion(Vector3.UP, direction)
+	_orientation_gizmo.add_child(arrow)
+
+	var label := Label3D.new()
+	label.name = "%sLabel" % label_text
+	label.text = label_text
+	label.font_size = 36
+	label.pixel_size = 0.006
+	label.modulate = color
+	label.outline_modulate = Color("10151b")
+	label.outline_size = 8
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.position = direction * 1.02
+	_orientation_gizmo.add_child(label)
+
+
+func _gizmo_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = color
+	material.no_depth_test = true
+	return material
+
+
+func _update_orientation_gizmo() -> void:
+	if _orientation_gizmo == null or _camera == null or not _orientation_gizmo.visible:
+		return
+	var aspect := _viewport_aspect()
+	var right := _camera.global_basis.x
+	var up := _camera.global_basis.y
+	var forward := -_camera.global_basis.z
+	_orientation_gizmo.global_position = (
+		_camera.global_position
+		+ forward * ORIENTATION_GIZMO_CAMERA_DEPTH
+		- right * _camera.size * aspect * ORIENTATION_GIZMO_EDGE_OFFSET
+		- up * _camera.size * ORIENTATION_GIZMO_EDGE_OFFSET
+	)
+	_orientation_gizmo.global_basis = Basis.IDENTITY.scaled(Vector3.ONE * _camera.size * ORIENTATION_GIZMO_SCREEN_SCALE)
 
 
 func _projected_orthographic_size(min_pos: Vector3, max_pos: Vector3, yaw: float, pitch: float, margin: float) -> float:

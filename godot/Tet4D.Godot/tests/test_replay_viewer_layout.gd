@@ -43,11 +43,15 @@ func run() -> Array:
 		var replay_game_rect: Rect2 = replay_snapshot.get("game_area", Rect2())
 		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
 		await tree.process_frame
+		if str(hud.layout_contract_snapshot().get("top_summary_title", "")) != "Live Session":
+			failures.append("live 4D must not retain the Replay summary heading")
 		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size, replay_game_rect.size.x))
 		failures.append_array(await _check_true_random_action_layout(hud, viewport_size))
 		hud.set_replay_mode_labels(false, 1.0, false)
 		await tree.process_frame
 		var restored_snapshot: Dictionary = hud.layout_contract_snapshot()
+		if str(restored_snapshot.get("top_summary_title", "")) != "Replay":
+			failures.append("replay mode should restore the Replay summary heading")
 		if str(restored_snapshot.get("bundle_status_text", "")).find("Bundle: OK") == -1:
 			failures.append("replay mode should restore bundle status after live mode")
 		root.queue_free()
@@ -347,7 +351,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Mouse Camera",
-		[["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]
+		[["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Translate view"], ["Double-click", "Fit View"]]
 	)
 	_assert_group_items(
 		failures,

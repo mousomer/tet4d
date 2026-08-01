@@ -174,6 +174,8 @@ func run() -> Array:
 		app._enter_live_4d_mode()
 		if app._mode != TraceReplayAppScript.MODE_LIVE_4D:
 			failures.append("app should enter Live 4D mode on direct call, got %s" % str(app._mode))
+		if app._current_document != null:
+			failures.append("live 4D entry must discard the retained replay document before rendering")
 		var direct_live_4d_snapshot = JSON.parse_string(app._live_bridge.live_4d_snapshot_json())
 		if typeof(direct_live_4d_snapshot) == TYPE_DICTIONARY and str(direct_live_4d_snapshot.get("trace_type", "")) != "live_4d":
 			failures.append("direct native live 4D snapshot had trace type %s" % str(direct_live_4d_snapshot.get("trace_type", "")))
@@ -190,6 +192,18 @@ func run() -> Array:
 			failures.append("live 4D should open in the fitted W-slice camera preset")
 		if app._camera_rig._current_fit_state != "fit OK":
 			failures.append("live 4D should open already fitted")
+		var orientation_gizmo := app._camera_rig.get_node_or_null("OrientationGizmo") as Node3D
+		if orientation_gizmo == null or not orientation_gizmo.visible or orientation_gizmo.get_child_count() < 10:
+			failures.append("Live 4D should show a compact XYZ ball-and-arrow orientation marker")
+		elif orientation_gizmo.get_node_or_null("XArrow") == null or orientation_gizmo.get_node_or_null("YArrow") == null or orientation_gizmo.get_node_or_null("ZArrow") == null:
+			failures.append("orientation marker should expose explicit X, Y, and Z arrowheads")
+		else:
+			var gizmo_position_before: Vector3 = orientation_gizmo.global_position
+			app._camera_rig.orbit(Vector2(8.0, -4.0))
+			app._camera_rig._process(1.0)
+			if orientation_gizmo.global_position == gizmo_position_before:
+				failures.append("orientation marker should update with camera movement in real time")
+			app._fit_view()
 		var camera_hash_before := str(app._live_bridge.live_4d_state_hash())
 		var live_4d_camera := app._camera_rig.get_node_or_null("Camera3D") as Camera3D
 		if live_4d_camera == null:
@@ -289,6 +303,8 @@ func run() -> Array:
 			failures.append("Matrix scrolling should pan rather than zoom")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Matrix scrolling should not dispatch a gameplay command")
+		if app._camera_soft_drop_guard_seconds <= 0.0 or bool(app._live_repeat_held.get("soft_drop", true)):
+			failures.append("Shift+wheel should guard camera translation from the soft-drop repeat path")
 		var drag_event := InputEventMouseButton.new()
 		drag_event.button_index = MOUSE_BUTTON_LEFT
 		drag_event.pressed = true
@@ -314,6 +330,18 @@ func run() -> Array:
 			failures.append("Shift-drag should roll camera view")
 		shift_drag_event.pressed = false
 		app._handle_camera_input(shift_drag_event)
+		var pan_button := InputEventMouseButton.new()
+		pan_button.button_index = MOUSE_BUTTON_MIDDLE
+		pan_button.pressed = true
+		app._handle_camera_input(pan_button)
+		var focus_before_pan: Vector3 = app._camera_rig._target_focus
+		var pan_motion := InputEventMouseMotion.new()
+		pan_motion.relative = Vector2(18.0, -9.0)
+		app._handle_camera_input(pan_motion)
+		if app._camera_rig._target_focus == focus_before_pan or app._camera_rig._current_fit_state != "manual pan":
+			failures.append("Middle-drag should pan the gameboard view")
+		pan_button.pressed = false
+		app._handle_camera_input(pan_button)
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Mouse camera controls should not mutate Live 4D gameplay state")
 		app._fit_view()

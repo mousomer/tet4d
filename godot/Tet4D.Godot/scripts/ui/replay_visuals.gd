@@ -62,8 +62,10 @@ const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
 const SLICE_PADDING := 2.0
 const GRID_LINE_THICKNESS := 0.058
-const W_SLICE_LABEL_FONT_SIZE := 34
-const W_SLICE_LABEL_OUTLINE_SIZE := 7
+const W_SLICE_LABEL_FONT_SIZE := 48
+const W_SLICE_LABEL_SELECTED_FONT_SIZE := 56
+const W_SLICE_LABEL_PIXEL_SIZE := 0.015
+const W_SLICE_LABEL_OUTLINE_SIZE := 9
 const W_SLICE_LABEL_CHIP_WIDTH := 0.0
 const W_SLICE_LABEL_CHIP_HEIGHT := 0.0
 const W_SLICE_LABEL_CHIP_DEPTH := 0.0
@@ -93,6 +95,7 @@ const ROLE_LIVE_3D_LOCKED_OUTLINE := "live_3d_locked_outline"
 const ROLE_LIVE_3D_FACE_HIGHLIGHT := "live_3d_face_highlight"
 const ROLE_LIVE_3D_ORIGIN_MARKER := "live_3d_origin_marker"
 const ROLE_LIVE_BOARD_FILL := "live_board_fill"
+const ROLE_LIVE_BOARD_FLOOR := "live_board_floor"
 const ROLE_LIVE_BOARD_GRID := "live_board_grid"
 const ROLE_W_SLICE_OUTLINE := "w_slice_outline"
 const ROLE_W_SLICE_LABEL := "w_slice_label"
@@ -326,6 +329,13 @@ static func slice_label_color(mode: String = DISPLAY_MODE_PLAIN) -> Color:
 	return color_for_role(ROLE_W_SLICE_LABEL, mode)
 
 
+static func live_board_floor_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
+	var floor_color := color_for_role(ROLE_LIVE_BOARD_FLOOR, mode)
+	var material := _make_lit_material(_with_alpha(floor_color, 0.72), 0.015, true)
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return material
+
+
 static func slice_label_chip_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
 	var material := _role_material(ROLE_PANEL_ALT, mode, 0.28)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -334,7 +344,7 @@ static func slice_label_chip_material(mode: String = DISPLAY_MODE_PLAIN) -> Stan
 
 
 static func slice_outline_thickness(mode: String = DISPLAY_MODE_PLAIN) -> float:
-	return GRID_LINE_THICKNESS * 1.45
+	return GRID_LINE_THICKNESS * 1.18
 
 
 static func _palette(mode: String) -> Dictionary:
@@ -377,6 +387,7 @@ static func _palette(mode: String) -> Dictionary:
 		ROLE_LIVE_3D_FACE_HIGHLIGHT: manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS),
 		ROLE_LIVE_3D_ORIGIN_MARKER: manager.get_color(ShellStyleRolesScript.GRID_AXIS),
 		ROLE_LIVE_BOARD_FILL: manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD),
+		ROLE_LIVE_BOARD_FLOOR: manager.get_color(ShellStyleRolesScript.BACKGROUND_ELEVATED).lightened(0.08),
 		ROLE_LIVE_BOARD_GRID: manager.get_color(ShellStyleRolesScript.GRID_MINOR),
 		ROLE_W_SLICE_OUTLINE: manager.get_color(ShellStyleRolesScript.LAYER_INACTIVE),
 		ROLE_W_SLICE_LABEL: manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER),
