@@ -74,12 +74,12 @@ func run() -> Array:
 		failures.append("live 3D active outline should have stronger emphasis than locked outline")
 	if ReplayVisuals.slice_outline_thickness(ReplayVisuals.DISPLAY_MODE_TRON) <= ReplayVisuals.GRID_LINE_THICKNESS:
 		failures.append("W-slice card outline should be stronger than internal grid thickness")
-	if ReplayVisuals.W_SLICE_LABEL_FONT_SIZE >= 60:
-		failures.append("W-slice labels should be demoted below Stage 33a header size")
+	if ReplayVisuals.W_SLICE_LABEL_FONT_SIZE < 44 or ReplayVisuals.W_SLICE_LABEL_FONT_SIZE >= 60:
+		failures.append("W-slice labels should remain readable without becoming scene headers")
 	if ReplayVisuals.W_SLICE_LABEL_CHIP_WIDTH != 0.0 or ReplayVisuals.W_SLICE_LABEL_CHIP_HEIGHT != 0.0:
 		failures.append("W-slice labels should not use large backing chips by default")
-	if ReplayVisuals.slice_label_color("tron").a >= 0.9:
-		failures.append("W-slice labels should be muted orientation markers")
+	if ReplayVisuals.slice_label_color("tron").a < 0.85:
+		failures.append("W-slice labels should retain readable opacity at fitted overview scale")
 	var instrument_outline := ReplayVisuals.live_3d_active_cell_border_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
 	var instrument_locked_outline := ReplayVisuals.live_3d_locked_cell_border_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
 	var instrument_active_faces := ReplayVisuals.live_3d_active_face_materials(ReplayVisuals.DISPLAY_MODE_PLAIN, 5)

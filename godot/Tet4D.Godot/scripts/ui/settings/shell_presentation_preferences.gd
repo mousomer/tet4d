@@ -27,6 +27,12 @@ static func camera_sensitivity_factor(value: String) -> float:
 	return float(CAMERA_SENSITIVITY_FACTORS.get(value, CAMERA_SENSITIVITY_FACTORS["standard"]))
 
 
+static func window_mode_value(window_mode: int) -> String:
+	if window_mode in [Window.MODE_FULLSCREEN, Window.MODE_EXCLUSIVE_FULLSCREEN]:
+		return FULLSCREEN
+	return WINDOWED
+
+
 static func clamp_windowed_size(requested: Vector2i, minimum: Vector2i, usable_rect: Rect2i) -> Vector2i:
 	var usable_size := usable_rect.size
 	if usable_size.x <= 0 or usable_size.y <= 0:

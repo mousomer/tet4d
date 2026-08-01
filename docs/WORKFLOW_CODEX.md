@@ -61,6 +61,20 @@ routine implementation context. Do not split the pack without concrete
 maintenance evidence and corresponding schema, validator, generator,
 documentation, and test updates.
 
+## GitHub publication identity
+
+Tet4D is published solely through the owner of the canonical `origin`
+repository. Before any push, pull-request mutation, release, or other GitHub
+write, verify locally that the target is `origin` and that the active transport
+or CLI identity matches its owner. Never use an unrelated personal or
+organization account. If the identity is ambiguous or does not match, stop
+before writing.
+
+The verification result is a local safety check, not public evidence. Do not
+copy unrelated account identifiers, local credential or identity paths, token
+details, private email addresses, or machine-specific paths into tracked files,
+PR descriptions, issues, comments, or other public GitHub metadata.
+
 ## Task profiles
 
 Use the smallest matching profile. Every profile inherits the common

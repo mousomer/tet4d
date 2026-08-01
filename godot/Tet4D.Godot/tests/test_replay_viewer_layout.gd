@@ -43,11 +43,15 @@ func run() -> Array:
 		var replay_game_rect: Rect2 = replay_snapshot.get("game_area", Rect2())
 		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
 		await tree.process_frame
+		if str(hud.layout_contract_snapshot().get("top_summary_title", "")) != "Live Session":
+			failures.append("live 4D must not retain the Replay summary heading")
 		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size, replay_game_rect.size.x))
 		failures.append_array(await _check_true_random_action_layout(hud, viewport_size))
 		hud.set_replay_mode_labels(false, 1.0, false)
 		await tree.process_frame
 		var restored_snapshot: Dictionary = hud.layout_contract_snapshot()
+		if str(restored_snapshot.get("top_summary_title", "")) != "Replay":
+			failures.append("replay mode should restore the Replay summary heading")
 		if str(restored_snapshot.get("bundle_status_text", "")).find("Bundle: OK") == -1:
 			failures.append("replay mode should restore bundle status after live mode")
 		root.queue_free()
@@ -238,7 +242,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
 	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("Session") == -1 or inspector_hint_text.find("Navigation") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click", "Backspace", "Tab", "Esc", "Fit View"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Shift + Left Drag", "Wheel", "Double-click", "Backspace", "Tab", "Esc", "Fit View"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D full controls should include %s" % [label, required])
 	if inspector_hint_text.find("Left: CCW") == -1 or inspector_hint_text.find("Right: CW") == -1:
@@ -255,25 +259,29 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
 	if right_inspector_order.size() < 3 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[2]) != "InspectorControlHints":
 		failures.append("%s: live right inspector should present onboarding and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
-	var view_actions := hud.find_child("LiveViewOptions", true, false) as Control
+	var view_actions := hud.find_child("ViewerActionButtons", true, false) as Control
 	var quick_settings := hud.find_child("QuickSettingsToggle", true, false) as Button
 	var grid_toggle := hud.find_child("GridVisibilityToggle", true, false) as Button
 	if view_actions == null or not view_actions.visible:
-		failures.append("%s: live board should expose persistent View Options" % label)
+		failures.append("%s: live navigation should expose persistent action buttons" % label)
 	if quick_settings == null or quick_settings.text.find("Quick Settings") == -1:
-		failures.append("%s: View Options should expose a discoverable Quick Settings toggle" % label)
+		failures.append("%s: action row should expose a discoverable Quick Settings toggle" % label)
 	elif quick_settings.text == "Show Quick Settings":
 		quick_settings.pressed.emit()
 		if quick_settings.text != "Hide Quick Settings":
 			failures.append("%s: Quick Settings action should expose and report the detailed inspector" % label)
 		quick_settings.pressed.emit()
 	if grid_toggle == null or grid_toggle.text != "Grid: On":
-		failures.append("%s: View Options should expose the current grid state" % label)
+		failures.append("%s: action row should expose the current grid state" % label)
 	else:
 		grid_toggle.pressed.emit()
 		if grid_toggle.text != "Grid: Off":
 			failures.append("%s: grid action should report the hidden-detail state" % label)
 		grid_toggle.pressed.emit()
+	if quick_settings != null and (quick_settings.get_parent() != view_actions or quick_settings.get_meta("semantic_role", "") != "action_button" or quick_settings.get_theme_stylebox("normal") == null):
+		failures.append("%s: Quick Settings should be an unmistakable styled action button" % label)
+	if grid_toggle != null and (grid_toggle.get_parent() != view_actions or grid_toggle.get_meta("semantic_role", "") != "action_button" or grid_toggle.get_theme_stylebox("normal") == null):
+		failures.append("%s: Grid should be an unmistakable styled action button" % label)
 	return failures
 
 
@@ -312,7 +320,7 @@ func _check_live_control_maps() -> Array:
 	for required_group in ["Piece movement", "Plane Rotation", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Shift + Left Drag", "Wheel", "Double-click"]:
 		if flattened.find(required) == -1:
 			failures.append("Live 4D control map should include %s" % required)
 	var group_items := {}
@@ -347,8 +355,9 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Mouse Camera",
-		[["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]
+		[["Left Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift + Left Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
 	)
+	_assert_group_items(failures, group_items, "Drop", [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]])
 	_assert_group_items(
 		failures,
 		group_items,

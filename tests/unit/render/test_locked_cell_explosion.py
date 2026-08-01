@@ -14,6 +14,10 @@ import pygame
 
 from tet4d.engine.runtime import menu_settings_state
 from tet4d.engine.runtime.project_config import state_dir_path
+from tet4d.engine.topology_explorer import (
+    CanonicalTopologyContract,
+    canonical_topology_payload,
+)
 from tet4d.engine.topology_explorer.glue_model import BoundaryRef
 from tet4d.engine.topology_explorer.presets import (
     axis_wrap_profile,
@@ -1636,6 +1640,25 @@ class TestLockedCellExplosion(unittest.TestCase):
             sum(component * component for component in velocity),
             delta=1e-9,
         )
+
+    def test_canonical_contract_round_trip_preserves_explosion_seams(self) -> None:
+        profile = mobius_strip_profile_2d()
+        contract = CanonicalTopologyContract.from_payload(
+            canonical_topology_payload(profile, (5, 4))
+        )
+
+        adapter = build_explosion_topology_adapter(
+            ExplosionTopologyInput(
+                board_dims=contract.dims,
+                explorer_topology_profile=contract.profile,
+            )
+        )
+
+        self.assertEqual(adapter.board_dims, contract.dims)
+        self.assertEqual(len(adapter.seams_by_boundary), 2)
+        seam = adapter.seam_for_boundary(BoundaryRef(2, 0, "-"))
+        assert seam is not None
+        self.assertEqual(seam.transform_velocity((1.25, -0.75)), (1.25, 0.75))
 
     def test_standalone_surface_uses_explorer_preset_registry_for_topology(
         self,

@@ -225,6 +225,11 @@ Both menu contexts must expose the same keybinding profile actions:
 2. In-game pause menu: load profile, save profile, rebind controls, reset profile to defaults.
 3. Behavior and confirmation UX must be equivalent in both contexts.
 
+Godot shell scenes that own runtime-created `InputMap` actions must register
+their complete action set synchronously during scene readiness. Deferred UI,
+renderer, bundle, or native initialization must not leave an interval in which
+an input callback can query an undeclared action.
+
 ### 5.3 Load and save from menu
 
 1. Menu shortcut `L`-> load selected profile for current dimension.

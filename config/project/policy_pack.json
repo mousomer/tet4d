@@ -27,6 +27,20 @@
       "replay_manifest": "config/project/policy/manifests/replay_manifest.json",
       "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"
     },
+    "github_publication": {
+      "canonical_target": "origin",
+      "require_remote_owner_identity": true,
+      "forbid_non_owner_accounts": true,
+      "verify_identity_before_write": true,
+      "public_metadata_forbidden_details": [
+        "unrelated account identifiers",
+        "local credential or identity paths",
+        "tokens or secrets",
+        "private email addresses",
+        "machine-specific paths"
+      ],
+      "record_identity_check_result": false
+    },
     "ruff_toolchain": {
       "policy": {
         "target": "newest stable supported release",

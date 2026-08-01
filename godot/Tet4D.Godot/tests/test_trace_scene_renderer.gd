@@ -199,26 +199,38 @@ func run() -> Array:
 		failures.append("live 4D renderer should keep one shared grid renderer")
 	else:
 		var live_4d_grid := grid_root.get_child(0)
+		var floor_count := 0
+		for child in live_4d_grid.get_children():
+			if child.has_meta("boundary_role") and str(child.get_meta("boundary_role")) == "gravity_floor":
+				floor_count += 1
+		if floor_count != 4:
+			failures.append("live 4D should distinguish the bottom boundary on every W section")
 		live_4d_grid._update_rear_grid_faces(Vector3(100.0, 100.0, 100.0))
 		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, -1.0, "positive camera octant")
 		live_4d_grid._update_rear_grid_faces(Vector3(-100.0, -100.0, -100.0))
+		live_4d_grid._update_slice_labels(Vector3(-100.0, -100.0, -100.0))
 		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, 1.0, "negative camera octant")
 		var w_label_count := 0
 		for child in live_4d_grid.get_children():
-			if child is Label3D and (
-				str((child as Label3D).text).begins_with("w")
-				or str((child as Label3D).text).begins_with("ACTIVE · w")
-			):
+			if child is Label3D and str((child as Label3D).text).begins_with("w"):
 				w_label_count += 1
 				var label := child as Label3D
-				if label.text.begins_with("ACTIVE") and label.text.find("◀") == -1:
-					failures.append("active W layer should retain a textual marker plus arrow cue")
-				if label.text.find("SLICE") != -1:
-					failures.append("live 4D W labels should be subtle markers, not slice headers")
-				if label.font_size != ReplayVisuals.W_SLICE_LABEL_FONT_SIZE:
-					failures.append("live 4D W labels should use the demoted label size")
-				if label.modulate.a >= 0.9:
-					failures.append("live 4D W labels should be muted below cells and outlines")
+				if label.text.find("ACTIVE") != -1:
+					failures.append("W labels should contain only the slice ID")
+				var selected := bool(label.get_meta("selected_slice", false))
+				var expected_font_size := ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
+				if label.font_size != expected_font_size or absf(label.pixel_size - ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE) > 0.0001:
+					failures.append("live 4D W labels should remain readable at fitted overview scale")
+				var rear_axis := int(label.get_meta("rear_face_axis", -1))
+				var rear_sign := float(label.get_meta("rear_face_sign", 0.0))
+				var label_min: Vector3 = label.get_meta("slice_bounds_min", Vector3.ZERO)
+				var label_max: Vector3 = label.get_meta("slice_bounds_max", Vector3.ZERO)
+				if rear_axis not in [Vector3.AXIS_X, Vector3.AXIS_Z]:
+					failures.append("W labels should attach to a camera-relative rear vertical face")
+				else:
+					var expected_face := label_min[rear_axis] if rear_sign < 0.0 else label_max[rear_axis]
+					if absf(label.position[rear_axis] - expected_face) > 0.05:
+						failures.append("W labels should attach to a camera-relative rear vertical face")
 		if w_label_count < 4:
 			failures.append("live 4D renderer should label each W slice")
 

@@ -15,6 +15,7 @@ const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
+const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 
 const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
@@ -35,6 +36,7 @@ var _current_snapshot: Dictionary = {}
 var _playback_accumulator := 0.0
 var _mouse_orbiting := false
 var _mouse_rolling := false
+var _mouse_panning := false
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
 var _live_2d_paused := false
@@ -93,11 +95,13 @@ var _world_environment: WorldEnvironment
 
 
 func _ready() -> void:
+	# Input can arrive before deferred scene construction completes. Register the
+	# action contract synchronously so every input callback sees a valid map.
+	_ensure_input_map()
 	call_deferred("_deferred_ready")
 
 
 func _deferred_ready() -> void:
-	_ensure_input_map()
 	_wire_hud()
 	_build_world_in_game_viewport()
 	_renderer.set_display_mode(_state.display_mode)
@@ -217,28 +221,25 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_camera_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
+		if event.button_index == LiveInputContractScript.CAMERA_ORBIT_BUTTON:
 			if event.pressed and event.double_click:
 				_mouse_orbiting = false
 				_mouse_rolling = false
+				_mouse_panning = false
 				_fit_view()
 				return
-			var shift_roll: bool = event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)
+			var shift_roll: bool = event.shift_pressed or Input.is_key_pressed(LiveInputContractScript.CAMERA_ROLL_MODIFIER)
 			_mouse_orbiting = event.pressed and not shift_roll
 			_mouse_rolling = event.pressed and shift_roll
+		elif event.button_index in LiveInputContractScript.CAMERA_PAN_BUTTONS:
+			_mouse_panning = event.pressed
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
-				if _mode == MODE_LIVE_4D and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
-					_camera_rig.pan_focus(Vector3.UP * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
-				else:
-					_camera_rig.zoom(-1.0)
+				_camera_rig.zoom(-1.0)
 				_refresh_camera_status()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			if _camera_rig != null:
-				if _mode == MODE_LIVE_4D and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
-					_camera_rig.pan_focus(Vector3.DOWN * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
-				else:
-					_camera_rig.zoom(1.0)
+				_camera_rig.zoom(1.0)
 				_refresh_camera_status()
 	elif event is InputEventMouseMotion:
 		if _camera_rig == null:
@@ -249,14 +250,19 @@ func _handle_camera_input(event: InputEvent) -> void:
 		elif _mouse_rolling:
 			_camera_rig.roll(event.relative)
 			_refresh_camera_status()
+		elif _mouse_panning:
+			_camera_rig.pan_screen(event.relative)
+			_refresh_camera_status()
 
 
 func _event_is_camera_mouse_input(event: InputEvent) -> bool:
 	if event is InputEventMouseMotion:
-		return _mouse_orbiting or _mouse_rolling
+		return _mouse_orbiting or _mouse_rolling or _mouse_panning
 	if event is InputEventMouseButton:
 		return event.button_index in [
-			MOUSE_BUTTON_LEFT,
+			LiveInputContractScript.CAMERA_ORBIT_BUTTON,
+			LiveInputContractScript.CAMERA_PAN_BUTTONS[0],
+			LiveInputContractScript.CAMERA_PAN_BUTTONS[1],
 			MOUSE_BUTTON_WHEEL_UP,
 			MOUSE_BUTTON_WHEEL_DOWN,
 		]
@@ -752,6 +758,7 @@ func _fit_view() -> void:
 		)
 	else:
 		_camera_rig.fit_bounds(bounds, CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else 1.14)
+	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
 	_refresh_camera_status()
 
@@ -961,6 +968,9 @@ func _enter_live_4d_mode() -> void:
 func _prepare_live_mode_entry(mode_name: String) -> void:
 	_mode = mode_name
 	_state.is_playing = false
+	if mode_name == MODE_LIVE_4D:
+		# A live 4D launch must never inherit a replay document as its first view.
+		_current_document = null
 	_hud.set_live_keyboard_capture(true)
 	_clear_live_ui_focus()
 	_live_2d_paused = mode_name != MODE_LIVE_2D
@@ -1698,82 +1708,16 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("replay_quit", KEY_ESCAPE)
 	_ensure_key_action("quit", KEY_ESCAPE)
 	_ensure_key_action("mode_toggle_replay_live", KEY_TAB)
-	_ensure_key_action("live_move_left", KEY_LEFT)
-	_ensure_key_action("live_move_left", KEY_A)
-	_ensure_key_action("live_move_right", KEY_RIGHT)
-	_ensure_key_action("live_move_right", KEY_D)
-	_ensure_key_action("live_rotate_cw", KEY_UP)
-	_ensure_key_action("live_rotate_cw", KEY_W)
-	_ensure_key_action("live_rotate_cw", KEY_X)
-	_ensure_key_action("live_rotate_ccw", KEY_Z)
-	_ensure_key_action("live_soft_drop", KEY_DOWN)
-	_ensure_key_action("live_soft_drop", KEY_S)
-	_ensure_key_action("live_hard_drop", KEY_SPACE)
-	_ensure_key_action("live_pause", KEY_P)
-	_ensure_key_action("live_reset", KEY_R)
-	_ensure_key_action("live_2d_move_left", KEY_LEFT)
-	_ensure_key_action("live_2d_move_right", KEY_RIGHT)
-	_ensure_key_action("live_2d_rotate_cw", KEY_UP)
-	_ensure_key_action("live_2d_rotate_ccw", KEY_Z)
-	_ensure_key_action("live_2d_soft_drop", KEY_DOWN)
-	_ensure_key_action("live_2d_hard_drop", KEY_SPACE)
-	_ensure_key_action("live_2d_pause", KEY_P)
-	_ensure_key_action("live_3d_move_x_neg", KEY_LEFT)
-	_ensure_key_action("live_3d_move_x_neg", KEY_A)
-	_ensure_key_action("live_3d_move_x_pos", KEY_RIGHT)
-	_ensure_key_action("live_3d_move_x_pos", KEY_D)
-	_ensure_key_action("live_3d_move_z_neg", KEY_UP)
-	_ensure_key_action("live_3d_move_z_neg", KEY_W)
-	_ensure_key_action("live_3d_move_z_pos", KEY_DOWN)
-	_ensure_key_action("live_3d_move_z_pos", KEY_S)
-	_ensure_key_action("live_3d_soft_drop", KEY_SHIFT)
-	_ensure_key_action("live_3d_hard_drop", KEY_SPACE)
-	_ensure_key_action("live_3d_rotate_xy_neg", KEY_R)
-	_ensure_key_action("live_3d_rotate_xy_pos", KEY_T)
-	_ensure_key_action("live_3d_rotate_xz_neg", KEY_F)
-	_ensure_key_action("live_3d_rotate_xz_pos", KEY_G)
-	_ensure_key_action("live_3d_rotate_yz_neg", KEY_V)
-	_ensure_key_action("live_3d_rotate_yz_pos", KEY_B)
-	_ensure_key_action("live_3d_pause", KEY_P)
-	_ensure_key_action("live_3d_reset", KEY_BACKSPACE)
-	_ensure_key_action("live_4d_move_x_neg", KEY_LEFT)
-	_ensure_key_action("live_4d_move_x_neg", KEY_A)
-	_ensure_key_action("live_4d_move_x_pos", KEY_RIGHT)
-	_ensure_key_action("live_4d_move_x_pos", KEY_D)
-	_ensure_key_action("live_4d_move_z_neg", KEY_UP)
-	_ensure_key_action("live_4d_move_z_neg", KEY_W)
-	_ensure_key_action("live_4d_move_z_pos", KEY_DOWN)
-	_ensure_key_action("live_4d_move_z_pos", KEY_S)
-	_ensure_key_action("live_4d_move_w_neg", KEY_Q)
-	_ensure_key_action("live_4d_move_w_pos", KEY_E)
-	_ensure_key_action("live_4d_soft_drop", KEY_SHIFT)
-	_ensure_key_action("live_4d_hard_drop", KEY_SPACE)
-	_ensure_key_action("live_4d_rotate_xy_neg", KEY_R)
-	_ensure_key_action("live_4d_rotate_xy_pos", KEY_T)
-	_ensure_key_action("live_4d_rotate_xz_neg", KEY_F)
-	_ensure_key_action("live_4d_rotate_xz_pos", KEY_G)
-	_ensure_key_action("live_4d_rotate_yz_neg", KEY_V)
-	_ensure_key_action("live_4d_rotate_yz_pos", KEY_B)
-	_ensure_key_action("live_4d_rotate_xw_neg", KEY_Y)
-	_ensure_key_action("live_4d_rotate_xw_pos", KEY_U)
-	_ensure_key_action("live_4d_rotate_yw_neg", KEY_H)
-	_ensure_key_action("live_4d_rotate_yw_pos", KEY_J)
-	_ensure_key_action("live_4d_rotate_zw_neg", KEY_N)
-	_ensure_key_action("live_4d_rotate_zw_pos", KEY_M)
-	_ensure_key_action("live_4d_pause", KEY_P)
-	_ensure_key_action("live_4d_reset", KEY_BACKSPACE)
-	_ensure_key_action("live_4d_camera_pitch_up", KEY_I)
-	_ensure_key_action("live_4d_camera_pitch_down", KEY_K)
-	_ensure_key_action("live_4d_camera_yaw_left", KEY_O)
-	_ensure_key_action("live_4d_camera_yaw_right", KEY_L)
-	_ensure_key_action("live_4d_camera_roll_left", KEY_COMMA)
-	_ensure_key_action("live_4d_camera_roll_right", KEY_PERIOD)
-	_ensure_key_action("live_4d_camera_zoom_in", KEY_EQUAL)
-	_ensure_key_action("live_4d_camera_zoom_in", KEY_PLUS)
-	_ensure_key_action("live_4d_camera_zoom_in", KEY_KP_ADD)
-	_ensure_key_action("live_4d_camera_zoom_out", KEY_MINUS)
-	_ensure_key_action("live_4d_camera_zoom_out", KEY_KP_SUBTRACT)
-	_ensure_mouse_action("camera_orbit", MOUSE_BUTTON_LEFT)
+	var live_action_specs := LiveInputContractScript.action_specs()
+	for action_name in live_action_specs:
+		var spec: Dictionary = live_action_specs.get(action_name, {})
+		for forbidden_key in spec.get("forbidden_keys", []):
+			_remove_key_action(str(action_name), int(forbidden_key) as Key)
+		for keycode in spec.get("keys", []):
+			_ensure_key_action(str(action_name), int(keycode) as Key)
+	_ensure_mouse_action("camera_orbit", LiveInputContractScript.CAMERA_ORBIT_BUTTON)
+	for pan_button in LiveInputContractScript.CAMERA_PAN_BUTTONS:
+		_ensure_mouse_action("camera_pan", int(pan_button) as MouseButton)
 	_ensure_mouse_action("camera_zoom", MOUSE_BUTTON_WHEEL_UP)
 
 

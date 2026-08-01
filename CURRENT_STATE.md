@@ -23,8 +23,12 @@ history ledger. Detailed history is preserved in
   Active routing now uses the stable constitution, task contract, change
   classes, and completion report; completed stage detail remains historical.
 - Godot visual consolidation was human accepted and merged at `6e06e00a`.
-  Camera-relative grid rectangles occupy the three rear faces of every
-  volumetric section while the three front faces remain clear.
+  Its viewport-control and persistence recovery was manually accepted and
+  merged at `6bedb75a`. Camera-relative grid rectangles occupy the three rear
+  faces of every volumetric section while the three front faces remain clear;
+  the recovered shell keeps Ctrl-only soft drop, direct mouse orbit/pan/zoom,
+  persistent windowed state, readable W-slice labels, and restrained slice
+  framing.
 - Canonical topology contract version 1 is active on
   `codex/canonical-topology-contract`. It makes the existing paired-seam Python
   semantics strict, normalized, versioned, and identity-bearing, and extends

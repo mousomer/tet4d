@@ -65,6 +65,13 @@ unless one of the routes above requires it.
 - Preserve deterministic identity, parity evidence, repository sanitation, and
   explicit deferrals. Never weaken tests or silently continue into the next
   task.
+- All GitHub writes for this repository, including pushes, pull requests,
+  releases, and metadata edits, must target the canonical `origin` repository
+  and authenticate as that repository's owner. Never use an unrelated personal
+  or organization account. Verify the active GitHub and transport identity
+  locally before writing; stop if it cannot be confirmed. Do not publish the
+  checked account name, local identity-file path, token details, private email,
+  or machine-specific paths in tracked files or GitHub metadata.
 - Nested `AGENTS.md` files may add narrower constraints and cannot weaken this
   dispatch.
 - Partial satisfaction of acceptance criteria must not be reported as

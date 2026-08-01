@@ -1,0 +1,176 @@
+extends RefCounted
+
+class_name LiveInputContract
+
+const CAMERA_ORBIT_BUTTON := MOUSE_BUTTON_LEFT
+const CAMERA_PAN_BUTTONS := [MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT]
+const CAMERA_ZOOM_BUTTONS := [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]
+const CAMERA_ROLL_MODIFIER := KEY_SHIFT
+
+const ACTION_SPECS := {
+	"live_move_left": {"keys": [KEY_LEFT, KEY_A], "display_key": KEY_A},
+	"live_move_right": {"keys": [KEY_RIGHT, KEY_D], "display_key": KEY_D},
+	"live_rotate_cw": {"keys": [KEY_UP, KEY_W, KEY_X], "display_key": KEY_W},
+	"live_rotate_ccw": {"keys": [KEY_Z], "display_key": KEY_Z},
+	"live_soft_drop": {"keys": [KEY_DOWN, KEY_S], "display_key": KEY_S},
+	"live_hard_drop": {"keys": [KEY_SPACE], "display_key": KEY_SPACE},
+	"live_pause": {"keys": [KEY_P], "display_key": KEY_P},
+	"live_reset": {"keys": [KEY_R], "display_key": KEY_R},
+	"live_2d_move_left": {"keys": [KEY_LEFT], "display_key": KEY_LEFT},
+	"live_2d_move_right": {"keys": [KEY_RIGHT], "display_key": KEY_RIGHT},
+	"live_2d_rotate_cw": {"keys": [KEY_UP], "display_key": KEY_UP},
+	"live_2d_rotate_ccw": {"keys": [KEY_Z], "display_key": KEY_Z},
+	"live_2d_soft_drop": {"keys": [KEY_DOWN], "display_key": KEY_DOWN},
+	"live_2d_hard_drop": {"keys": [KEY_SPACE], "display_key": KEY_SPACE},
+	"live_2d_pause": {"keys": [KEY_P], "display_key": KEY_P},
+	"live_3d_move_x_neg": {"keys": [KEY_LEFT, KEY_A], "display_key": KEY_A},
+	"live_3d_move_x_pos": {"keys": [KEY_RIGHT, KEY_D], "display_key": KEY_D},
+	"live_3d_move_z_neg": {"keys": [KEY_UP, KEY_W], "display_key": KEY_W},
+	"live_3d_move_z_pos": {"keys": [KEY_DOWN, KEY_S], "display_key": KEY_S},
+	"live_3d_soft_drop": {"keys": [KEY_CTRL], "display_key": KEY_CTRL, "forbidden_keys": [KEY_SHIFT]},
+	"live_3d_hard_drop": {"keys": [KEY_SPACE], "display_key": KEY_SPACE},
+	"live_3d_rotate_xy_neg": {"keys": [KEY_R], "display_key": KEY_R},
+	"live_3d_rotate_xy_pos": {"keys": [KEY_T], "display_key": KEY_T},
+	"live_3d_rotate_xz_neg": {"keys": [KEY_F], "display_key": KEY_F},
+	"live_3d_rotate_xz_pos": {"keys": [KEY_G], "display_key": KEY_G},
+	"live_3d_rotate_yz_neg": {"keys": [KEY_V], "display_key": KEY_V},
+	"live_3d_rotate_yz_pos": {"keys": [KEY_B], "display_key": KEY_B},
+	"live_3d_pause": {"keys": [KEY_P], "display_key": KEY_P},
+	"live_3d_reset": {"keys": [KEY_BACKSPACE], "display_key": KEY_BACKSPACE},
+	"live_4d_move_x_neg": {"keys": [KEY_LEFT, KEY_A], "display_key": KEY_A},
+	"live_4d_move_x_pos": {"keys": [KEY_RIGHT, KEY_D], "display_key": KEY_D},
+	"live_4d_move_z_neg": {"keys": [KEY_UP, KEY_W], "display_key": KEY_W},
+	"live_4d_move_z_pos": {"keys": [KEY_DOWN, KEY_S], "display_key": KEY_S},
+	"live_4d_move_w_neg": {"keys": [KEY_Q], "display_key": KEY_Q},
+	"live_4d_move_w_pos": {"keys": [KEY_E], "display_key": KEY_E},
+	"live_4d_soft_drop": {"keys": [KEY_CTRL], "display_key": KEY_CTRL, "forbidden_keys": [KEY_SHIFT]},
+	"live_4d_hard_drop": {"keys": [KEY_SPACE], "display_key": KEY_SPACE},
+	"live_4d_rotate_xy_neg": {"keys": [KEY_R], "display_key": KEY_R},
+	"live_4d_rotate_xy_pos": {"keys": [KEY_T], "display_key": KEY_T},
+	"live_4d_rotate_xz_neg": {"keys": [KEY_F], "display_key": KEY_F},
+	"live_4d_rotate_xz_pos": {"keys": [KEY_G], "display_key": KEY_G},
+	"live_4d_rotate_yz_neg": {"keys": [KEY_V], "display_key": KEY_V},
+	"live_4d_rotate_yz_pos": {"keys": [KEY_B], "display_key": KEY_B},
+	"live_4d_rotate_xw_neg": {"keys": [KEY_Y], "display_key": KEY_Y},
+	"live_4d_rotate_xw_pos": {"keys": [KEY_U], "display_key": KEY_U},
+	"live_4d_rotate_yw_neg": {"keys": [KEY_H], "display_key": KEY_H},
+	"live_4d_rotate_yw_pos": {"keys": [KEY_J], "display_key": KEY_J},
+	"live_4d_rotate_zw_neg": {"keys": [KEY_N], "display_key": KEY_N},
+	"live_4d_rotate_zw_pos": {"keys": [KEY_M], "display_key": KEY_M},
+	"live_4d_pause": {"keys": [KEY_P], "display_key": KEY_P},
+	"live_4d_reset": {"keys": [KEY_BACKSPACE], "display_key": KEY_BACKSPACE},
+	"live_4d_camera_pitch_up": {"keys": [KEY_I], "display_key": KEY_I},
+	"live_4d_camera_pitch_down": {"keys": [KEY_K], "display_key": KEY_K},
+	"live_4d_camera_yaw_left": {"keys": [KEY_O], "display_key": KEY_O},
+	"live_4d_camera_yaw_right": {"keys": [KEY_L], "display_key": KEY_L},
+	"live_4d_camera_roll_left": {"keys": [KEY_COMMA], "display_key": KEY_COMMA},
+	"live_4d_camera_roll_right": {"keys": [KEY_PERIOD], "display_key": KEY_PERIOD},
+	"live_4d_camera_zoom_in": {"keys": [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD], "display_key": KEY_EQUAL},
+	"live_4d_camera_zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "display_key": KEY_MINUS},
+}
+
+
+static func action_specs() -> Dictionary:
+	return ACTION_SPECS.duplicate(true)
+
+
+static func control_hint_groups(mode: String) -> Array:
+	match mode:
+		"live_2d":
+			return _live_2d_groups()
+		"live_3d":
+			return _live_3d_groups()
+		"live_4d":
+			return _live_4d_groups()
+		_:
+			return []
+
+
+static func _live_2d_groups() -> Array:
+	return [
+		{"group": "Piece movement", "items": [[_pair("live_move_left", "live_move_right"), "Move left / right"], [_pair("live_2d_move_left", "live_2d_move_right"), "Move left / right"]]},
+		{"group": "Piece rotation", "items": [[_all_keys("live_rotate_cw"), "Rotate clockwise"], [_display_key("live_rotate_ccw"), "Rotate counter-clockwise"]]},
+		{"group": "Drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop"], [_display_key("live_hard_drop"), "Hard Drop"]]},
+		{"group": "Camera", "items": [["F", "Fit View"]]},
+		{"group": "Session", "items": [[_display_key("live_pause"), "Pause"], [_display_key("live_reset"), "Restart Game"]]},
+		{"group": "Navigation", "items": [["Tab", "Play 3D"], ["Esc", "Main Menu"]]},
+	]
+
+
+static func _live_3d_groups() -> Array:
+	return [
+		{"group": "Piece movement", "items": [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "Move X- / X+"], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Move Z+ / Z-"]]},
+		{"group": "Piece rotation", "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY- / XY+"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ- / XZ+"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ- / YZ+"]]},
+		{"group": "Drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop"], [_display_key("live_3d_hard_drop"), "Hard Drop"]]},
+		{"group": "Camera", "items": _pointer_items(false) + [["F", "Fit View"]]},
+		{"group": "Session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
+		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
+	]
+
+
+static func _live_4d_groups() -> Array:
+	return [
+		{"group": "Piece movement", "items": [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "X- / X+"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Z+ / Z-"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W- / W+"]]},
+		{"group": "Plane Rotation", "note": "Left: CCW · Right: CW", "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
+		{"group": "Camera", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"], [_pair("live_4d_camera_roll_left", "live_4d_camera_roll_right", " / "), "Roll left / right"], ["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"]]},
+		{"group": "Mouse Camera", "items": _pointer_items(true)},
+		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
+		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
+		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
+	]
+
+
+static func _pointer_items(include_roll: bool) -> Array:
+	var items := [["Left Drag", "Orbit"], ["Middle / Right Drag", "Pan"]]
+	if include_roll:
+		items.append(["Shift + Left Drag", "Roll"])
+	items.append(["Wheel", "Zoom"])
+	items.append(["Double-click", "Fit View"])
+	return items
+
+
+static func _pair(first_action: String, second_action: String, separator: String = "/") -> String:
+	return "%s%s%s" % [_display_key(first_action), separator, _display_key(second_action)]
+
+
+static func _display_key(action_name: String) -> String:
+	var spec: Dictionary = ACTION_SPECS.get(action_name, {})
+	return _key_label(int(spec.get("display_key", KEY_NONE)))
+
+
+static func _all_keys(action_name: String) -> String:
+	var spec: Dictionary = ACTION_SPECS.get(action_name, {})
+	var labels: Array[String] = []
+	for keycode in spec.get("keys", []):
+		labels.append(_key_label(int(keycode)))
+	return "/".join(labels)
+
+
+static func _key_label(keycode: int) -> String:
+	match keycode:
+		KEY_LEFT:
+			return "Left"
+		KEY_RIGHT:
+			return "Right"
+		KEY_UP:
+			return "Up"
+		KEY_DOWN:
+			return "Down"
+		KEY_SPACE:
+			return "Space"
+		KEY_CTRL:
+			return "Ctrl"
+		KEY_SHIFT:
+			return "Shift"
+		KEY_BACKSPACE:
+			return "Backspace"
+		KEY_COMMA:
+			return ","
+		KEY_PERIOD:
+			return "."
+		KEY_EQUAL:
+			return "="
+		KEY_MINUS:
+			return "-"
+		_:
+			return OS.get_keycode_string(keycode)
