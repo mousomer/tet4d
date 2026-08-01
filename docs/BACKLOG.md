@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-07-31
+Updated: 2026-08-01
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -19,30 +19,6 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 - Machine governance: `config/project/policy_pack.json`
 
 ## Active Work
-
-### Godot visual-design consolidation
-
-Objective: make the Godot shell restrained, coherent, and board-first using the
-strongest Pygame hierarchy as the primary internal reference.
-
-Acceptance:
-
-- one maintainable semantic palette and numeric/component token surface;
-- consistent default, diagnostic, and arcade variants;
-- active and locked cell boxes retain crisp, individually parseable edges at
-  2D, 3D, 4D, and wide-W overview scales;
-- Quick Settings remains comfortably readable, default 4D framing is close
-  enough for inspection, and locking a 3D/4D piece preserves its cell body and
-  wireframe envelope without introducing visual gaps;
-- live View Options make Quick Settings recovery and grid-detail toggling
-  discoverable without relying on hidden settings or undocumented shortcuts;
-- every volumetric section shows grid rectangles on exactly three
-  camera-relative rear faces, switching as the camera orbits so the three front
-  faces stay clear;
-- accessibility, scaling, focus, scrolling, and input isolation preserved;
-- deterministic gameplay/parity state unchanged;
-- real-window before/after evidence is attached to the PR;
-- explicit human visual acceptance is required before merge.
 
 ### Canonical topology contract
 
