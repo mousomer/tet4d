@@ -36,6 +36,24 @@ func run() -> Array:
 		return failures
 	var root := scene.instantiate() as Control
 	tree.root.add_child(root)
+	for action_name in [
+		"mode_toggle_replay_live",
+		"replay_prev_frame",
+		"replay_next_frame",
+		"replay_play_pause",
+		"replay_reset",
+		"replay_prev_case",
+		"replay_next_case",
+		"replay_topology_family",
+		"replay_gameplay_family",
+		"replay_endgame_family",
+		"replay_fit_view",
+		"replay_toggle_help",
+		"replay_quit",
+		"quit",
+	]:
+		if not InputMap.has_action(action_name):
+			failures.append("InputMap action %s must exist before deferred startup" % action_name)
 	await tree.process_frame
 	await tree.process_frame
 	var app := root.get_node_or_null("App")

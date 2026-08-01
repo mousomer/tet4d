@@ -93,11 +93,13 @@ var _world_environment: WorldEnvironment
 
 
 func _ready() -> void:
+	# Input can arrive before deferred scene construction completes. Register the
+	# action contract synchronously so every input callback sees a valid map.
+	_ensure_input_map()
 	call_deferred("_deferred_ready")
 
 
 func _deferred_ready() -> void:
-	_ensure_input_map()
 	_wire_hud()
 	_build_world_in_game_viewport()
 	_renderer.set_display_mode(_state.display_mode)
