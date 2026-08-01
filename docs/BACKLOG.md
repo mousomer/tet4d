@@ -20,33 +20,42 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ## Active Work
 
-### Canonical topology contract
+### Native topology transport
 
-Objective: define the versioned topology representation shared by Python,
-fixtures/traces, native C++, Godot transport, topology exploration, and
-endgame/explosion consumers.
+Status: ordered next; implementation has not begun.
 
-Acceptance:
+Objective:
 
-- existing Python semantics remain the oracle;
-- normalization, validation, serialization, identity, invariants, and
-  representative 2D/3D/4D parity are explicit and tested;
-- no complete topology-aware Godot game loop or editor is introduced;
-- any behavior-changing semantic decision is surfaced for review.
+- extend native C++ topology transport beyond the contract/parity surface;
+- consume canonical topology contract v1;
+- preserve exact parity with the Python topology oracle;
+- avoid introducing topology-aware Godot gameplay in the same slice.
 
-Implementation boundary:
+Acceptance boundaries:
 
-- contract v1 covers modern inverse-paired explorer seams and includes board
-  dimensions in stable identity;
-- the forgiving profile settings store remains separate from strict contract
-  loading;
-- legacy asymmetric per-side rules remain unsupported rather than being
-  silently converted;
-- native/Godot work is limited to parity evidence and a data-facing surface.
+- Python remains authoritative;
+- representative bounded, wrapped, reflected, cross-axis, inverse,
+  coordinate-frame, and piece-frame cases remain parity-backed;
+- board extents and contract identity remain explicit;
+- legacy asymmetric per-side rules receive no silent support;
+- no complete Godot topology game loop;
+- no Godot Topology Lab;
+- no unified gameplay/endgame/explosion integration;
+- no unrelated visual, toolchain, governance, packaging, or release work.
+
+Subsequent order:
+
+1. broader native topology transport;
+2. topology-aware Godot gameplay;
+3. Godot topology diagnostics;
+4. Godot Topology Lab/editor;
+5. unified gameplay, topology, endgame, and explosion launch integration.
+
+These remain separate reviewable slices unless a later task contract explicitly
+authorizes an integration PR.
 
 ## Explicit Deferrals
 
-- native topology transport beyond the contract/parity slice;
 - topology-aware Godot gameplay and diagnostics;
 - Godot Topology Lab/editor;
 - unified gameplay/endgame/explosion launch integration;

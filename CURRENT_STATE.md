@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -29,11 +29,15 @@ history ledger. Detailed history is preserved in
   the recovered shell keeps Ctrl-only soft drop, direct mouse orbit/pan/zoom,
   persistent windowed state, readable W-slice labels, and restrained slice
   framing.
-- Canonical topology contract version 1 is active on
-  `codex/canonical-topology-contract`. It makes the existing paired-seam Python
-  semantics strict, normalized, versioned, and identity-bearing, and extends
-  the provisional native query parity slice with frame transport and board-
-  extent validation. Python authority does not transfer.
+- Canonical topology contract version 1 is merged on `master` at `86906eb8`.
+  It makes the existing paired-seam Python semantics strict, normalized,
+  versioned, and identity-bearing, and extends the provisional native query
+  parity surface with frame transport and board-extent validation. The merge
+  does not transfer Python topology authority to native C++ or Godot; Godot
+  carries only the documented DTO, adapter, parity, and query-facing surfaces.
+- Broader native topology transport based on canonical topology contract v1 is
+  the next ordered technical objective. That separate parity-backed slice has
+  not begun and must not transfer Python authority.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -51,8 +55,8 @@ history ledger. Detailed history is preserved in
 
 ## Known Watchouts
 
-- Do not begin native or Godot topology semantics before the canonical contract
-  is explicit, versioned, and parity-backed.
+- Broader native topology transport must consume canonical contract v1 and
+  remain parity-backed against the Python oracle.
 - Do not move Python semantic authority through implementation convenience or
   visual plausibility; use the authority-transfer protocol.
 - Do not let completed stage narratives return to universal agent prompts,
@@ -130,6 +134,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-- Complete canonical topology contract parity evidence and merge its focused
-  PR if no behavior-changing semantic decision is exposed.
-- Begin broader native topology transport only in a later, separate contract.
+- Broader native topology transport based on canonical topology contract v1,
+  implemented as a separate parity-backed slice without transferring Python
+  authority. No implementation branch or PR for this objective currently
+  exists.
