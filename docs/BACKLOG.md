@@ -22,8 +22,7 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ### Shared topology contract foundation
 
-Status: implemented and automatically verified on
-`codex/topology-contract-foundation`; awaiting merge.
+Status: merged and verified on `master` at `af01bbd6`.
 
 Objective:
 
@@ -43,8 +42,9 @@ Explicit boundary:
 
 ### Native topology transport
 
-Status: ordered after the shared foundation merges; the existing downstream
-branch remains unchanged.
+Status: unblocked; `codex/native-topology-transport` is based on the shared
+foundation merge at `af01bbd6`. No transport behavior was advanced by the
+integration and branch-reconciliation task.
 
 Objective:
 
@@ -67,12 +67,11 @@ Acceptance boundaries:
 
 Subsequent order:
 
-1. merge shared topology contract foundation;
-2. broader native topology transport;
-3. topology-aware Godot gameplay;
-4. Godot topology diagnostics;
-5. Godot Topology Lab/editor;
-6. unified gameplay, topology, endgame, and explosion launch integration.
+1. broader native topology transport;
+2. topology-aware Godot gameplay;
+3. Godot topology diagnostics;
+4. Godot Topology Lab/editor;
+5. unified gameplay, topology, endgame, and explosion launch integration.
 
 These remain separate reviewable slices unless a later task contract explicitly
 authorizes an integration PR.

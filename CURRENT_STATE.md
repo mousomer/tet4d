@@ -35,15 +35,13 @@ history ledger. Detailed history is preserved in
   parity surface with frame transport and board-extent validation. The merge
   does not transfer Python topology authority to native C++ or Godot; Godot
   carries only the documented DTO, adapter, parity, and query-facing surfaces.
-- Shared topology contract foundation work is implemented on
-  `codex/topology-contract-foundation` from `8017671d`. It adds one
-  language-neutral scalar source, deterministic Python/C++ bindings, strict
-  canonical scalar acceptance, and generated-binding drift checks. It must be
-  merged before the unchanged downstream `codex/native-topology-transport`
-  branch resumes.
-- Merging the shared topology contract foundation is the immediate prerequisite.
-  Broader native topology transport remains the next implementation objective
-  after that merge and must not transfer Python authority.
+- Shared topology contract foundation work is merged on `master` at
+  `af01bbd6`. It adds one language-neutral scalar source, deterministic
+  Python/C++ bindings, strict canonical scalar acceptance, and
+  generated-binding drift checks.
+- The unchanged `codex/native-topology-transport` branch is based on
+  `af01bbd6`, so broader native topology transport is unblocked. This
+  reconciliation did not add transport behavior or transfer Python authority.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -141,7 +139,6 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-- Merge the automatically verified shared topology contract foundation.
-- Rebase the unchanged `codex/native-topology-transport` branch onto the
-  resulting `master`, then implement the separate parity-backed transport slice
-  without transferring Python authority.
+- Begin the separate parity-backed native topology transport slice from
+  `codex/native-topology-transport` under its own task contract, without
+  transferring Python authority.
