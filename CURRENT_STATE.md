@@ -35,9 +35,15 @@ history ledger. Detailed history is preserved in
   parity surface with frame transport and board-extent validation. The merge
   does not transfer Python topology authority to native C++ or Godot; Godot
   carries only the documented DTO, adapter, parity, and query-facing surfaces.
-- Broader native topology transport based on canonical topology contract v1 is
-  the next ordered technical objective. That separate parity-backed slice has
-  not begun and must not transfer Python authority.
+- Shared topology contract foundation work is implemented on
+  `codex/topology-contract-foundation` from `8017671d`. It adds one
+  language-neutral scalar source, deterministic Python/C++ bindings, strict
+  canonical scalar acceptance, and generated-binding drift checks. It must be
+  merged before the unchanged downstream `codex/native-topology-transport`
+  branch resumes.
+- Merging the shared topology contract foundation is the immediate prerequisite.
+  Broader native topology transport remains the next implementation objective
+  after that merge and must not transfer Python authority.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -56,7 +62,8 @@ history ledger. Detailed history is preserved in
 ## Known Watchouts
 
 - Broader native topology transport must consume canonical contract v1 and
-  remain parity-backed against the Python oracle.
+  its generated scalar binding, and remain parity-backed against the Python
+  oracle.
 - Do not move Python semantic authority through implementation convenience or
   visual plausibility; use the authority-transfer protocol.
 - Do not let completed stage narratives return to universal agent prompts,
@@ -78,12 +85,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.72` (`low`)
+- `tech_debt.score = 6.10` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.81`
-2. `code_balance = 1.91`
+1. `delivery_size_pressure = 2.83`
+2. `code_balance = 2.27`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -134,7 +141,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-- Broader native topology transport based on canonical topology contract v1,
-  implemented as a separate parity-backed slice without transferring Python
-  authority. No implementation branch or PR for this objective currently
-  exists.
+- Merge the automatically verified shared topology contract foundation.
+- Rebase the unchanged `codex/native-topology-transport` branch onto the
+  resulting `master`, then implement the separate parity-backed transport slice
+  without transferring Python authority.

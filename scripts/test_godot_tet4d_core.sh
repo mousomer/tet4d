@@ -9,6 +9,7 @@ TEST_ND_BIN="$BUILD_DIR/plain_nd_core_tests"
 TEST_GEOMETRY_BIN="$BUILD_DIR/geometry_core_tests"
 TEST_QUERY_BIN="$BUILD_DIR/query_core_tests"
 TEST_TRACE_METADATA_BIN="$BUILD_DIR/trace_metadata_identity_digest_tests"
+TEST_TOPOLOGY_CONTRACT_BIN="$BUILD_DIR/topology_contract_foundation_tests"
 
 if [[ -n "${CXX:-}" ]]; then
   CXX_BIN="$CXX"
@@ -67,6 +68,11 @@ mkdir -p "$BUILD_DIR"
   "$CORE_DIR/tests/trace_metadata_identity_digest_tests.cpp" \
   -o "$TEST_TRACE_METADATA_BIN"
 
+"$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
+  -I"$CORE_DIR/include" \
+  "$CORE_DIR/tests/topology_contract_foundation_tests.cpp" \
+  -o "$TEST_TOPOLOGY_CONTRACT_BIN"
+
 if [[ "${1:-}" == "--export-plain-2d-trace" ]]; then
   "$TEST_2D_BIN" "$@"
 elif [[ "${1:-}" == "--export-plain-nd-trace" ]]; then
@@ -85,9 +91,12 @@ elif [[ "${1:-}" == "--query-parity" ]]; then
   "$TEST_QUERY_BIN" "$@"
 elif [[ "${1:-}" == "--trace-metadata-identity-digest" ]]; then
   "$TEST_TRACE_METADATA_BIN" "$@"
+elif [[ "${1:-}" == "--topology-contract-metadata" ]]; then
+  "$TEST_TOPOLOGY_CONTRACT_BIN" --contract-metadata
 else
   "$TEST_2D_BIN" "$@"
   "$TEST_ND_BIN"
   "$TEST_GEOMETRY_BIN"
   "$TEST_QUERY_BIN"
+  "$TEST_TOPOLOGY_CONTRACT_BIN"
 fi

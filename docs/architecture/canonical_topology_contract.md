@@ -6,6 +6,8 @@ Schema: `tet4d.topology_contract` version `1`
 
 Semantic authority: Python
 
+Shared scalar authority: `contracts/topology_contract_v1.json`
+
 ## Scope and ownership
 
 The contract is the deterministic interchange form for the modern Python
@@ -13,6 +15,11 @@ The contract is the deterministic interchange form for the modern Python
 maps are bijective. Python remains the semantic oracle. Native C++ currently
 provides a provisional cell-step parity slice; Godot receives the contract as a
 data document and must not calculate topology truth in GDScript.
+
+The language-neutral scalar source and generated bindings are governed by
+`docs/architecture/topology_contract_foundation.md`. Contract version, rank,
+axis-length and volume limits, axes, sides, signs, and unit movement deltas
+must not be restated independently by Python or native C++.
 
 The forgiving explorer-profile settings store remains a user persistence
 boundary. It is not the strict migration contract and malformed stored input
@@ -33,7 +40,9 @@ authority-transfer records are outside this change.
 ## Version 1 representation
 
 - `dimension`: integer `2`, `3`, or `4`;
-- `board_dimensions`: one positive integer per axis, included in identity;
+- `board_dimensions`: one exact integer from `1` through `1,000,000` per
+  axis, included in identity, with total indexable volume no greater than
+  signed 64-bit maximum;
 - axes: `x`, `y`, `z`, `w` up to the selected dimension;
 - sides: `-` and `+`;
 - each gluing: an unordered pair of distinct boundaries and a signed
@@ -59,7 +68,8 @@ canonical IDs. Canonicalizing an already canonical document is idempotent.
    plus translation. Reflection and cross-axis orientation are preserved.
 7. Serialization round-trips without semantic drift; equivalent descriptions
    normalize to the same payload and identity.
-8. Unsupported schemas, versions, or malformed contracts fail strictly.
+8. Unsupported schemas, versions, malformed contracts, and scalar coercions
+   fail strictly. Booleans, floats, and numeric strings are not integers.
 
 Legacy asymmetric per-side edge rules are not representable as an inverse
 paired seam and are intentionally outside version 1. Sandbox cellwise seam
@@ -70,7 +80,7 @@ does not collapse those move classes.
 
 | Stage | Consumer | Contract use | Explicit deferral |
 | --- | --- | --- | --- |
-| 53A | Python, fixtures, native query, Godot DTO | normalize, validate, identify, and prove cell/frame parity | gameplay ownership |
+| 53A | Python, fixtures, native query, Godot DTO | normalize, validate, identify, prove cell/frame parity, and generate shared scalar bindings | gameplay ownership |
 | 53B | Native topology transport | consume generic contract and implement wider transport parity | authority transfer without evidence |
 | 53C | Topology-aware Godot gameplay | route native transport into live movement under Python goldens | Godot-owned rules |
 | 53D | Topology diagnostics | expose seam, neighbor, frame, and failure evidence | editor workflow |

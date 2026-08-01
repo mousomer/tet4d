@@ -117,14 +117,16 @@ The current rule is one-way:
 5. `docs/rds/`: durable product requirements
 6. `docs/plans/gameboard_visual_language_design.md`: Live 3D and future Live 4D gameboard visual-language authority
 7. `docs/plans/topology_godot_core_port_plan.md`: Stage 25 topology Godot/C++ core-port planning authority
-8. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
-9. `docs/BACKLOG.md`: active backlog and current change footprint
-10. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
-11. `config/menu/defaults.json`: default persisted settings payload
-12. `config/tutorial/lessons.json`: tutorial packs and board profiles
-13. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
-14. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
-15. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
+8. `contracts/topology_contract_v1.json`: versioned language-neutral topology scalar contract
+9. `docs/architecture/topology_contract_foundation.md`: shared topology scalar binding and fingerprint authority
+10. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
+11. `docs/BACKLOG.md`: active backlog and current change footprint
+12. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
+13. `config/menu/defaults.json`: default persisted settings payload
+14. `config/tutorial/lessons.json`: tutorial packs and board profiles
+15. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
+16. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
+17. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
 
 ### Stage 20 Topology Identifier Normalization Parity
 
@@ -263,7 +265,8 @@ Authoritative enforcement is backed by:
 2. `scripts/check_architecture_boundaries.sh`
 3. `scripts/check_engine_core_purity.sh`
 4. `scripts/arch_metrics.py`
-5. `tools/governance/architecture_metric_budget.py`
+5. `tools/codegen/generate_topology_contract.py`
+6. `tools/governance/architecture_metric_budget.py`
 <!-- END GENERATED:project_structure_verification_contract -->
 
 <!-- BEGIN GENERATED:project_structure_symbol_index -->
@@ -362,6 +365,7 @@ It is a public symbol skim for navigation, not full API documentation, and it do
 - `src/tet4d/engine/runtime/topology_playground_state.py`: `TopologyPlaygroundLaunchSettings`, `TopologyPlaygroundGluingDraft`, `TopologyPlaygroundTopologyConfig`, `TopologyPlaygroundProbeState`, `TopologyPlaygroundSandboxPieceState`, `TopologyPlaygroundGravityMode`, `TopologyPlaygroundTransportPolicy`, `TopologyPlaygroundMovementSummary`, `TopologyPlaygroundPlayabilityAnalysis`, `TopologyPlaygroundPresetSelection`, `TopologyPlaygroundPresetMetadata`, `TopologyPlaygroundCanonicalOwnershipState`, ...
 - `src/tet4d/engine/runtime/topology_profile_store.py`: `load_topology_profiles_payload(root_dir=...)`, `load_topology_profile(gameplay_mode, dimension, *, root_dir=...)`, `save_topology_profile(profile, *, root_dir=...)`, `topology_profile_note(gameplay_mode)`
 - `src/tet4d/engine/topology_explorer/canonical_contract.py`: `canonical_topology_payload(profile, dims)`, `topology_contract_identity(payload)`, `topology_contract_profile(payload)`, `canonicalize_topology_contract(payload)`, `CanonicalTopologyContract`
+- `src/tet4d/engine/topology_explorer/contract_validation.py`: `require_json_int(value, path)`, `require_json_bool(value, path)`, `require_json_string(value, path)`, `require_bounded_json_int(value, path, *, minimum, maximum)`, `require_json_int_sequence(value, path, *, minimum=..., maximum=..., ...)`, `checked_dimension_product(dimensions, path=..., *, maximum=...)`
 - `src/tet4d/engine/topology_explorer/glue_map.py`: `BoundaryTraversal`, `map_boundary_exit(profile, *, dims, coord, step)`, `move_cell(profile, *, dims, coord, step)`
 - `src/tet4d/engine/topology_explorer/glue_model.py`: `normalize_dimension(dimension)`, `axis_name(axis)`, `normalize_side(side)`, `BoundaryRef`, `boundary_label(boundary)`, `tangent_axes_for_boundary(boundary)`, `BoundaryTransform`, `GluingDescriptor`, `ExplorerTopologyProfile`, `MoveStep`, `movement_steps_for_dimension(dimension)`, `coord_in_bounds(coord, dims)`
 - `src/tet4d/engine/topology_explorer/glue_validate.py`: `validate_topology_structure(profile)`, `validate_topology_bijection(profile, *, dims)`, `validate_explorer_topology_profile(profile, *, dims)`
@@ -534,6 +538,7 @@ Match labels are shown inline as `(exact)`, `(prefix)`, or `(fallback)`.
 - `src/tet4d/engine/runtime/topology_playground_state.py`: `tests/unit/engine/test_topology_playground_state.py` (exact)
 - `src/tet4d/engine/runtime/topology_profile_store.py`: `tests/unit/engine/test_topology_profile_store.py` (exact)
 - `src/tet4d/engine/topology_explorer/canonical_contract.py`: `tests/unit/engine/test_canonical_topology_contract.py` (fallback)
+- `src/tet4d/engine/topology_explorer/contract_validation.py`: `tests/unit/engine/test_topology_contract_validation.py` (fallback)
 - `src/tet4d/engine/topology_explorer/transport_resolver.py`: `tests/unit/engine/test_explorer_transport_resolver.py` (fallback)
 - `src/tet4d/engine/tutorial/setup_apply.py`: `tests/unit/engine/test_tutorial_setup_apply.py` (fallback)
 - `src/tet4d/engine/ui_logic/menu_layout.py`: `tests/unit/engine/test_menu_layout.py` (exact)
