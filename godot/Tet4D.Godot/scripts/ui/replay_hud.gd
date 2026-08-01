@@ -135,6 +135,7 @@ var _advanced_screen: Control
 var _game_setup_screen: Control
 var _screens: Dictionary = {}
 var _replay_note: Label
+var _summary_title: Label
 var _help_panel: PanelContainer
 var _trace_integrity_label: Label
 var _bundle_detail_label: Label
@@ -227,7 +228,7 @@ static func live_3d_control_hint_groups() -> Array:
 		{"group": "Piece movement", "items": [["A/D", "Move X- / X+"], ["W/S", "Move Z+ / Z-"]]},
 		{"group": "Piece rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"]]},
 		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Camera", "items": [["Mouse", "Orbit / zoom"], ["F", "Fit View"]]},
+		{"group": "Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Wheel", "Zoom"], ["Shift Wheel", "Translate view"], ["F", "Fit View"]]},
 		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
 	]
@@ -242,7 +243,7 @@ static func live_4d_control_hint_groups() -> Array:
 			"items": [["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]],
 		},
 		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Scroll layer rows"], ["Double-click", "Fit View"]]},
+		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Shift Wheel", "Translate view"], ["Double-click", "Fit View"]]},
 		{"group": "Drop", "items": [["Shift", "Soft Drop"], ["Space", "Hard Drop"]]},
 		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
@@ -417,6 +418,8 @@ func set_live_2d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live" if paused else "Running Live")
+	if _summary_title != null:
+		_summary_title.text = "Live Session"
 	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
 	_update_live_status_strip("Live Plain 2D", state_text, game_over_reason, "live_2d")
 	if _viewport_title != null:
@@ -463,6 +466,8 @@ func set_live_3d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 3D"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 3D" if paused else "Running Live 3D")
+	if _summary_title != null:
+		_summary_title.text = "Live Session"
 	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
 	_update_live_status_strip("Live Plain 3D", state_text, game_over_reason, "live_3d")
 	if _viewport_title != null:
@@ -509,6 +514,8 @@ func set_live_4d_mode(
 	if _reset_button != null:
 		_reset_button.text = "Reset Live 4D"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 4D" if paused else "Running Live 4D")
+	if _summary_title != null:
+		_summary_title.text = "Live Session"
 	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
 	_update_live_status_strip("Live Plain 4D", state_text, game_over_reason, "live_4d")
 	if _viewport_title != null:
@@ -537,6 +544,8 @@ func set_live_4d_mode(
 
 
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
+	if _summary_title != null:
+		_summary_title.text = "Replay"
 	_set_live_declutter_mode(false)
 	if _live_view_actions != null:
 		_live_view_actions.visible = false
@@ -704,6 +713,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"world_parent": _game_viewport.get_node_or_null("WorldRoot") if _game_viewport != null else null,
 		"bundle_status_text": _bundle_status_label.text if _bundle_status_label != null else "",
 		"top_summary_text": _summary_label.text if _summary_label != null else "",
+		"top_summary_title": _summary_title.text if _summary_title != null else "",
 		"bundle_detail_text": _bundle_detail_label.text if _bundle_detail_label != null else "",
 		"camera_status_text": _camera_status_label.text if _camera_status_label != null else "",
 		"top_detail_text": _hash_label.text if _hash_label != null and _hash_label.visible else "",
@@ -1387,6 +1397,7 @@ func _build_layout() -> void:
 	top_summary_root.add_child(top_summary_box)
 	var summary_title := Label.new()
 	summary_title.text = "Replay"
+	_summary_title = summary_title
 	summary_title.theme_type_variation = "SecondaryLabel"
 	top_summary_box.add_child(summary_title)
 	_summary_label = Label.new()

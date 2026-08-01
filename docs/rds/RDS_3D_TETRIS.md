@@ -159,11 +159,14 @@ Relevant tests:
 1. 3D mode is playable from menu to game-over.
 2. `x-z` layer clearing works and scores correctly.
 3. Camera controls do not interfere with gameplay controls.
-4. Replay/smoke tests pass.
-5. Embedded 2D and random-cell 3D sets are selectable and playable.
-6. Debug 3D piece set is selectable and supports fast layer-fill validation.
-7. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
-8. Terminal animation reuses the shared projected renderer rather than a separate one-off effect path, and the relic field remains compositionally stable instead of emptying the screen over time.
+4. Pointer camera controls provide orbit, pan, zoom, and a live XYZ orientation
+   marker without mutating gameplay state; Shift-wheel camera translation must
+   not also dispatch soft drop.
+5. Replay/smoke tests pass.
+6. Embedded 2D and random-cell 3D sets are selectable and playable.
+7. Debug 3D piece set is selectable and supports fast layer-fill validation.
+8. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
+9. Terminal animation reuses the shared projected renderer rather than a separate one-off effect path, and the relic field remains compositionally stable instead of emptying the screen over time.
 
 ## 10. Mode-aware topology split (2026-03-08)
 

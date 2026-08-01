@@ -44,6 +44,8 @@ func rebuild(
 				_add_flat_grid(slice_bounds, board_shape, display_mode)
 			else:
 				_add_volumetric_boundary_grids(slice_bounds, board_shape, display_mode)
+		if live_2d and dimension >= 3:
+			_add_floor_face(slice_bounds, display_mode)
 		_add_outline_box(
 			slice_bounds,
 			display_mode,
@@ -69,7 +71,7 @@ func rebuild(
 				slice_bounds,
 				display_mode,
 				ReplayVisuals.live_active_cell_border_material(display_mode),
-				ReplayVisuals.slice_outline_thickness(display_mode) * (3.1 if high_contrast else 2.4)
+				ReplayVisuals.slice_outline_thickness(display_mode) * (1.9 if high_contrast else 1.45)
 			)
 		if dimension >= 4 and show_w_labels:
 			_add_w_label(w_index, w_size, mapper.slice_label_position(w_index), display_mode, active_layers.has(w_index))
@@ -114,6 +116,20 @@ func _add_line(position: Vector3, scale_value: Vector3, material: Material, pare
 	mesh_instance.position = position
 	var target_parent: Node3D = self if parent == null else parent
 	target_parent.add_child(mesh_instance)
+
+
+func _add_floor_face(slice_bounds: Dictionary, display_mode: String) -> void:
+	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
+	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
+	var floor := MeshInstance3D.new()
+	floor.name = "GravityFloor"
+	floor.set_meta("boundary_role", "gravity_floor")
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(max_pos.x - min_pos.x, 0.025, max_pos.z - min_pos.z)
+	floor.mesh = mesh
+	floor.material_override = ReplayVisuals.live_board_floor_material(display_mode)
+	floor.position = Vector3((min_pos.x + max_pos.x) * 0.5, min_pos.y + 0.0125, (min_pos.z + max_pos.z) * 0.5)
+	add_child(floor)
 
 
 func _add_flat_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: String) -> void:
@@ -211,8 +227,9 @@ func _update_rear_grid_faces(camera_position: Vector3) -> void:
 func _add_w_label(w_index: int, w_size: int, label_position: Vector3, display_mode: String, selected: bool) -> void:
 	var label := Label3D.new()
 	label.text = "ACTIVE · w%d ◀" % [w_index + 1] if selected else "w%d" % [w_index + 1]
-	label.font_size = ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
-	label.modulate = ReplayVisuals.slice_label_color(display_mode)
+	label.font_size = ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
+	label.pixel_size = ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE
+	label.modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_TEXT, display_mode) if selected else ReplayVisuals.slice_label_color(display_mode)
 	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
 	label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE + (2 if selected else 0)
 	label.position = label_position + Vector3(0.0, 0.0, 0.015)

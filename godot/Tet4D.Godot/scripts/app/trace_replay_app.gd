@@ -26,6 +26,7 @@ const LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS := 0.22
 const LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS := 0.08
 const LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS := 0.08
 const LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS := 0.055
+const CAMERA_SHIFT_WHEEL_SOFT_DROP_GUARD_SECONDS := 0.24
 
 var _bundle: Dictionary = {}
 var _state := TracePlaybackState.new()
@@ -35,6 +36,8 @@ var _current_snapshot: Dictionary = {}
 var _playback_accumulator := 0.0
 var _mouse_orbiting := false
 var _mouse_rolling := false
+var _mouse_panning := false
+var _camera_soft_drop_guard_seconds := 0.0
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
 var _live_2d_paused := false
@@ -110,6 +113,7 @@ func _deferred_ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_camera_soft_drop_guard_seconds = maxf(_camera_soft_drop_guard_seconds - delta, 0.0)
 	if _pending_fit_view:
 		_fit_view()
 	if _is_live_mode():
@@ -223,21 +227,26 @@ func _handle_camera_input(event: InputEvent) -> void:
 			if event.pressed and event.double_click:
 				_mouse_orbiting = false
 				_mouse_rolling = false
+				_mouse_panning = false
 				_fit_view()
 				return
 			var shift_roll: bool = event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)
 			_mouse_orbiting = event.pressed and not shift_roll
 			_mouse_rolling = event.pressed and shift_roll
+		elif event.button_index in [MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT]:
+			_mouse_panning = event.pressed
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
-				if _mode == MODE_LIVE_4D and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
+				if _mode in [MODE_LIVE_3D, MODE_LIVE_4D] and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
+					_guard_camera_modifier_from_soft_drop()
 					_camera_rig.pan_focus(Vector3.UP * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
 				else:
 					_camera_rig.zoom(-1.0)
 				_refresh_camera_status()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			if _camera_rig != null:
-				if _mode == MODE_LIVE_4D and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
+				if _mode in [MODE_LIVE_3D, MODE_LIVE_4D] and (event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)):
+					_guard_camera_modifier_from_soft_drop()
 					_camera_rig.pan_focus(Vector3.DOWN * CameraRigScript.LIVE_4D_MATRIX_SCROLL_STEP)
 				else:
 					_camera_rig.zoom(1.0)
@@ -251,18 +260,28 @@ func _handle_camera_input(event: InputEvent) -> void:
 		elif _mouse_rolling:
 			_camera_rig.roll(event.relative)
 			_refresh_camera_status()
+		elif _mouse_panning:
+			_camera_rig.pan_screen(event.relative)
+			_refresh_camera_status()
 
 
 func _event_is_camera_mouse_input(event: InputEvent) -> bool:
 	if event is InputEventMouseMotion:
-		return _mouse_orbiting or _mouse_rolling
+		return _mouse_orbiting or _mouse_rolling or _mouse_panning
 	if event is InputEventMouseButton:
 		return event.button_index in [
 			MOUSE_BUTTON_LEFT,
+			MOUSE_BUTTON_MIDDLE,
+			MOUSE_BUTTON_RIGHT,
 			MOUSE_BUTTON_WHEEL_UP,
 			MOUSE_BUTTON_WHEEL_DOWN,
 		]
 	return false
+
+
+func _guard_camera_modifier_from_soft_drop() -> void:
+	_camera_soft_drop_guard_seconds = CAMERA_SHIFT_WHEEL_SOFT_DROP_GUARD_SECONDS
+	_reset_live_repeat_action("soft_drop")
 
 
 func _mouse_event_in_game_viewport(event: InputEvent) -> bool:
@@ -754,6 +773,7 @@ func _fit_view() -> void:
 		)
 	else:
 		_camera_rig.fit_bounds(bounds, CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else 1.14)
+	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
 	_refresh_camera_status()
 
@@ -963,6 +983,9 @@ func _enter_live_4d_mode() -> void:
 func _prepare_live_mode_entry(mode_name: String) -> void:
 	_mode = mode_name
 	_state.is_playing = false
+	if mode_name == MODE_LIVE_4D:
+		# A live 4D launch must never inherit a replay document as its first view.
+		_current_document = null
 	_hud.set_live_keyboard_capture(true)
 	_clear_live_ui_focus()
 	_live_2d_paused = mode_name != MODE_LIVE_2D
@@ -1197,7 +1220,7 @@ func _process_live_3d_input_repeat(delta: float) -> void:
 		)
 	_process_live_repeat_action(
 		"soft_drop",
-		_any_action_pressed(["live_3d_soft_drop"]),
+		_any_action_pressed(["live_3d_soft_drop"]) and _camera_soft_drop_guard_seconds <= 0.0,
 		"soft_drop",
 		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
 		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
@@ -1274,7 +1297,7 @@ func _process_live_4d_input_repeat(delta: float) -> void:
 		)
 	_process_live_repeat_action(
 		"soft_drop",
-		_any_action_pressed(["live_4d_soft_drop"]),
+		_any_action_pressed(["live_4d_soft_drop"]) and _camera_soft_drop_guard_seconds <= 0.0,
 		"soft_drop",
 		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
 		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
