@@ -16,6 +16,7 @@ const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onbo
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
+const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const AccessibilityPolicyScript = preload("res://scripts/ui/accessibility/accessibility_policy.gd")
 const GameSetupModelScript = preload("res://scripts/ui/game_setup/game_setup_model.gd")
 const GameSetupStoreScript = preload("res://scripts/ui/game_setup/game_setup_store.gd")
@@ -165,6 +166,8 @@ var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
 var _applying_window_change := false
 var _applying_initial_settings := false
+var _observed_window_mode := -1
+var _window_mode_poll_accumulator := 0.0
 var _bundle_status_text := ""
 var _bundle_status_detail := ""
 var _live_2d_paused := false
@@ -213,41 +216,15 @@ static func replay_control_hint_groups() -> Array:
 
 
 static func live_2d_control_hint_groups() -> Array:
-	return [
-		{"group": "Piece movement", "items": [["A/D", "Move left / right"], ["Left/Right", "Move left / right"]]},
-		{"group": "Piece rotation", "items": [["W/Up/X", "Rotate clockwise"], ["Z", "Rotate counter-clockwise"]]},
-		{"group": "Drop", "items": [["S/Down", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Camera", "items": [["F", "Fit View"]]},
-		{"group": "Session", "items": [["P", "Pause"], ["R", "Restart Game"]]},
-		{"group": "Navigation", "items": [["Tab", "Play 3D"], ["Esc", "Main Menu"]]},
-	]
+	return LiveInputContractScript.control_hint_groups("live_2d")
 
 
 static func live_3d_control_hint_groups() -> Array:
-	return [
-		{"group": "Piece movement", "items": [["A/D", "Move X- / X+"], ["W/S", "Move Z+ / Z-"]]},
-		{"group": "Piece rotation", "items": [["R/T", "Rotate XY- / XY+"], ["F/G", "Rotate XZ- / XZ+"], ["V/B", "Rotate YZ- / YZ+"]]},
-		{"group": "Drop", "items": [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Wheel", "Zoom"], ["F", "Fit View"]]},
-		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
-		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
-	]
+	return LiveInputContractScript.control_hint_groups("live_3d")
 
 
 static func live_4d_control_hint_groups() -> Array:
-	return [
-		{"group": "Piece movement", "items": [["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]},
-		{
-			"group": "Plane Rotation",
-			"note": "Left: CCW · Right: CW",
-			"items": [["R / T", "XY"], ["F / G", "XZ"], ["V / B", "YZ"], ["Y / U", "XW"], ["H / J", "YW"], ["N / M", "ZW"]],
-		},
-		{"group": "Camera", "items": [["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": [["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]},
-		{"group": "Drop", "items": [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]]},
-		{"group": "Session", "items": [["P", "Pause"], ["Backspace", "Restart Game"]]},
-		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
-	]
+	return LiveInputContractScript.control_hint_groups("live_4d")
 
 
 static func quick_control_hint_groups(mode: String) -> Array:
@@ -270,6 +247,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_settings_registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	_settings_store = SettingsStoreScript.new(_settings_registry)
+	var initial_window := get_window()
+	if initial_window != null:
+		_observed_window_mode = initial_window.mode
 	_game_setup_model.apply_last_selected(_game_setup_store.load_last_selected())
 	_style_manager.set_theme(_current_display_mode)
 	_style_manager.theme_changed.connect(func(theme_id: String) -> void:
@@ -282,10 +262,19 @@ func _ready() -> void:
 	call_deferred("_log_geometry_diagnostics", "ready")
 
 
+func _process(delta: float) -> void:
+	_window_mode_poll_accumulator += delta
+	if _window_mode_poll_accumulator < 0.2:
+		return
+	_window_mode_poll_accumulator = 0.0
+	_sync_observed_window_mode()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_inside_tree():
 		call_deferred("_log_geometry_diagnostics", "resize")
 		call_deferred("_remember_current_windowed_size")
+		call_deferred("_sync_observed_window_mode")
 
 
 func set_bundle_status(text: String, detail: String = "") -> void:
@@ -1233,7 +1222,28 @@ func _apply_window_mode(mode: String) -> void:
 	else:
 		window.mode = Window.MODE_WINDOWED
 		_restore_windowed_size()
+	_observed_window_mode = window.mode
 	_applying_window_change = false
+
+
+func _sync_observed_window_mode() -> void:
+	var window := get_window()
+	if (
+		_settings_store == null
+		or window == null
+		or DisplayServer.get_name() == "headless"
+		or _applying_initial_settings
+		or _applying_window_change
+	):
+		return
+	if _observed_window_mode == window.mode:
+		return
+	_observed_window_mode = window.mode
+	var canonical_mode := ShellPresentationPreferencesScript.window_mode_value(window.mode)
+	if _settings_store.set_value("display.window_mode", canonical_mode):
+		_sync_all_setting_controls()
+	if canonical_mode == ShellPresentationPreferencesScript.WINDOWED:
+		_remember_current_windowed_size()
 
 
 func _restore_windowed_size() -> void:

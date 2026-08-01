@@ -242,7 +242,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
 	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("Session") == -1 or inspector_hint_text.find("Navigation") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click", "Backspace", "Tab", "Esc", "Fit View"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Shift + Left Drag", "Wheel", "Double-click", "Backspace", "Tab", "Esc", "Fit View"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D full controls should include %s" % [label, required])
 	if inspector_hint_text.find("Left: CCW") == -1 or inspector_hint_text.find("Right: CW") == -1:
@@ -320,7 +320,7 @@ func _check_live_control_maps() -> Array:
 	for required_group in ["Piece movement", "Plane Rotation", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Drag", "Shift Drag", "Wheel", "Double-click"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Shift + Left Drag", "Wheel", "Double-click"]:
 		if flattened.find(required) == -1:
 			failures.append("Live 4D control map should include %s" % required)
 	var group_items := {}
@@ -355,7 +355,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Mouse Camera",
-		[["Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
+		[["Left Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift + Left Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
 	)
 	_assert_group_items(failures, group_items, "Drop", [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]])
 	_assert_group_items(

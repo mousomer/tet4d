@@ -117,6 +117,12 @@ Pointer controls use left drag to orbit, Shift-left drag to roll, middle or
 right drag to pan, and wheel to zoom. Shift remains a camera modifier and must
 not also own gameplay input; 3D/4D soft drop uses Ctrl.
 
+Live control helpers and runtime `InputMap` registration consume the same
+binding contract. Helper copy must not duplicate key assignments. Application
+actions use a stronger clickable-button treatment than passive key-reference
+tags. Windowed/fullscreen state, including OS-driven mode changes, is persisted
+and restored with the other shell presentation preferences.
+
 In 4D, each slice ID is attached to its camera-relative rear vertical face.
 Selection is conveyed through visual emphasis, without adding "active" text.
 

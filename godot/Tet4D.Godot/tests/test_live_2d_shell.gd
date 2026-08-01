@@ -2,6 +2,7 @@ extends RefCounted
 
 const ReplayHudScript = preload("res://scripts/ui/replay_hud.gd")
 const TraceReplayAppScript = preload("res://scripts/app/trace_replay_app.gd")
+const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 
 
 func run() -> Array:
@@ -18,8 +19,15 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Shift Drag Roll") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Shift + Left Drag Roll") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose W controls, camera controls, six rotation planes, and Esc-only quit")
+	for action_name in LiveInputContractScript.ACTION_SPECS:
+		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
+		if not spec.get("keys", []).has(spec.get("display_key")):
+			failures.append("%s helper display key must come from its registered binding list" % action_name)
+		for forbidden_key in spec.get("forbidden_keys", []):
+			if spec.get("keys", []).has(forbidden_key):
+				failures.append("%s must not register a forbidden helper/input key" % action_name)
 	if absf(TraceReplayAppScript.LIVE_GRAVITY_INTERVAL_SECONDS - 0.5) > 0.001:
 		failures.append("live gravity shell interval should default to 0.5 seconds")
 	if TraceReplayAppScript.LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS <= 0.0:
@@ -519,6 +527,13 @@ func run() -> Array:
 				has_shift = has_shift or (binding as InputEventKey).keycode == KEY_SHIFT
 		if not has_ctrl or has_shift:
 			failures.append("%s should bind Ctrl and must not bind Shift" % soft_drop_action)
+	for action_name in LiveInputContractScript.ACTION_SPECS:
+		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
+		for required_key in spec.get("keys", []):
+			var expected_event := InputEventKey.new()
+			expected_event.keycode = int(required_key)
+			if not InputMap.action_has_event(str(action_name), expected_event):
+				failures.append("InputMap %s should consume the shared contract binding %s" % [action_name, str(required_key)])
 	root.queue_free()
 	await tree.process_frame
 	return failures
