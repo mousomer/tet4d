@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-01
+Updated: 2026-08-02
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -42,16 +42,16 @@ Explicit boundary:
 
 ### Native topology transport
 
-Status: unblocked; `codex/native-topology-transport` is based on the shared
-foundation merge at `af01bbd6`. No transport behavior was advanced by the
-integration and branch-reconciliation task.
+Status: implemented and locally verified on `codex/native-topology-transport`;
+review and integration remain open.
 
 Objective:
 
-- extend native C++ topology transport beyond the contract/parity surface;
-- consume canonical topology contract v1;
-- preserve exact parity with the Python topology oracle;
-- avoid introducing topology-aware Godot gameplay in the same slice.
+- transport strict version-1 topology profiles and resolver queries through
+  native C++ and the Godot `Variant` boundary;
+- consume the generated canonical topology contract constants;
+- preserve exact acceptance parity with the Python topology oracle;
+- retain deterministic structured errors without scalar coercion.
 
 Acceptance boundaries:
 
@@ -65,9 +65,16 @@ Acceptance boundaries:
 - no unified gameplay/endgame/explosion integration;
 - no unrelated visual, toolchain, governance, packaging, or release work.
 
+Native topology transport accepts only values that satisfy the shared topology
+contract and the runtime query contract. It does not coerce malformed scalar
+values into valid topology data.
+
+Stage 53B transports and validates topology data but does not transfer semantic
+authority from Python to C++.
+
 Subsequent order:
 
-1. broader native topology transport;
+1. review and integrate Stage 53B native topology transport;
 2. topology-aware Godot gameplay;
 3. Godot topology diagnostics;
 4. Godot Topology Lab/editor;
@@ -84,6 +91,9 @@ authorizes an integration PR.
 - control remapping, audio, tutorials, and unrelated cleanup;
 - visual changes in the topology-contract PR;
 - gameplay or toolchain changes in the governance PR.
+- strict topology domain constructors outside the Stage 53B DTO;
+- explicit persistence and legacy recovery adapters;
+- repository-wide configuration ownership and coercion governance.
 
 ## Governance Watchlist
 

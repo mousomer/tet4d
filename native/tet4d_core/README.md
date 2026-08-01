@@ -124,6 +124,19 @@ Allowed Stage 40 legality/topology diagnostic query API:
 - `query_piece_pose_legal(dims, piece_cells, occupied_cells)`
 - `query_topology_axis_wrap_cell_step(dims, wrapped_axes, coord, axis, delta)`
 
+Allowed Stage 53B strict topology transport API:
+
+- `topology_transport_profile(profile)`
+- `topology_transport_resolve_cell_step(profile, query)`
+
+The Stage 53B methods accept untyped Godot values so the adapter can classify
+the exact incoming `Variant` type before extraction. They return deterministic
+structured errors for malformed profiles and runtime queries, consume the
+generated topology-contract constants, and reuse the existing provisional
+native resolver after validation. They do not perform persistence recovery,
+calculate canonical identity, add topology-aware gameplay, or transfer Python
+semantic authority.
+
 Run native C++ tests and trace parity with:
 
 ```bash
