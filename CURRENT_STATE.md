@@ -22,23 +22,20 @@ history ledger. Detailed history is preserved in
 - Governance trajectory simplification is merged on `master` at `f7e519b0`.
   Active routing now uses the stable constitution, task contract, change
   classes, and completion report; completed stage detail remains historical.
-- The current ordered trajectory is:
-  1. consolidate Godot visual design without semantic changes and obtain human
-     visual acceptance;
-  2. establish the versioned canonical topology contract before native
-     topology transport or topology-aware Godot gameplay.
-- Godot visual consolidation is active on
-  `codex/godot-visual-design-consolidation`; automated and real-window
-  evidence plus explicit human acceptance remain required before merge.
-  Human review accepted the surrounding shell. Follow-up review requested a
-  larger Quick Settings surface, closer default 4D framing, and persistent
-  equal-size 3D/4D cell and wireframe envelopes after locking. The next review
-  requested a quieter active wireframe plus discoverable Quick Settings and
-  grid-detail actions. The wireframe passed; the remaining grid review requires
-  camera-relative boundary rectangles on all three rear faces of every
-  volumetric section, leaving all three front faces clear.
-  Godot topology gameplay and unified Godot
-  endgame/topology/explosion integration have not begun.
+- Godot visual consolidation was human accepted and merged at `6e06e00a`.
+  Its viewport-control and persistence recovery was manually accepted and
+  merged at `6bedb75a`. Camera-relative grid rectangles occupy the three rear
+  faces of every volumetric section while the three front faces remain clear;
+  the recovered shell keeps Ctrl-only soft drop, direct mouse orbit/pan/zoom,
+  persistent windowed state, readable W-slice labels, and restrained slice
+  framing.
+- Canonical topology contract version 1 is active on
+  `codex/canonical-topology-contract`. It makes the existing paired-seam Python
+  semantics strict, normalized, versioned, and identity-bearing, and extends
+  the provisional native query parity slice with frame transport and board-
+  extent validation. Python authority does not transfer.
+- Godot topology gameplay, the Godot Topology Lab, and unified Godot
+  gameplay/endgame/topology/explosion integration have not begun.
 
 ## Current Authority
 
@@ -54,7 +51,6 @@ history ledger. Detailed history is preserved in
 
 ## Known Watchouts
 
-- Do not treat the current Godot visual baseline as final design acceptance.
 - Do not begin native or Godot topology semantics before the canonical contract
   is explicit, versioned, and parity-backed.
 - Do not move Python semantic authority through implementation convenience or
@@ -78,11 +74,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.71` (`low`)
+- `tech_debt.score = 5.72` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.80`
+1. `delivery_size_pressure = 2.81`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -94,7 +90,7 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
-2. `tests/unit/render/test_locked_cell_explosion.py`: `3762` real LOC
+2. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 3. `tools/governance/validate_project_contracts.py`: `3692` real LOC
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
 5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2183` real LOC
@@ -134,6 +130,6 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-- Complete automated and real-window validation for the Godot visual-design
-  branch, open its focused PR, and stop for explicit human acceptance.
-- Keep topology audit results available for the later canonical-contract branch.
+- Complete canonical topology contract parity evidence and merge its focused
+  PR if no behavior-changing semantic decision is exposed.
+- Begin broader native topology transport only in a later, separate contract.

@@ -102,6 +102,18 @@ func _assert_query_helpers(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, torus.get("ok"), true, "query topology ok")
 	_assert_equal(failures, torus.get("target"), [0, 2], "query topology torus target")
 	_assert_equal(failures, torus.get("glue_id"), "wrap_0", "query topology glue")
+	_assert_equal(
+		failures,
+		torus.get("frame_transform"),
+		{"permutation": [0, 1], "signs": [-1, 1], "translation": [2, 0]},
+		"query topology coordinate frame"
+	)
+	_assert_equal(
+		failures,
+		torus.get("piece_frame_transform"),
+		{"permutation": [0, 1], "signs": [1, 1], "translation": [-2, 0]},
+		"query topology piece frame"
+	)
 
 
 func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:

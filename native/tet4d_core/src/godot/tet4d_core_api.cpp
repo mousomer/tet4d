@@ -133,6 +133,25 @@ String step_label(const tet4d::core::MoveStepQuery &step) {
 	return String(names[step.axis]) + (step.delta < 0 ? "-" : "+");
 }
 
+Variant frame_to_variant(const std::optional<tet4d::core::TopologyFrameQueryTransform> &frame) {
+	if (!frame.has_value()) {
+		return Variant();
+	}
+	Dictionary result;
+	Array permutation;
+	Array signs;
+	for (const int value : frame->permutation) {
+		permutation.push_back(value);
+	}
+	for (const int value : frame->signs) {
+		signs.push_back(value);
+	}
+	result["permutation"] = permutation;
+	result["signs"] = signs;
+	result["translation"] = coord_to_array(frame->translation);
+	return result;
+}
+
 std::optional<tet4d::core::PlainGameSetup> plain_setup_from_dictionary(
 		const Dictionary &payload,
 		const std::string &expected_mode) {
@@ -399,6 +418,8 @@ Dictionary Tet4DCoreApi::query_topology_axis_wrap_cell_step(const Array &dims, c
 	dictionary["source_boundary"] = result.source_boundary.has_value() ? boundary_label(*result.source_boundary) : String();
 	dictionary["target_boundary"] = result.target_boundary.has_value() ? boundary_label(*result.target_boundary) : String();
 	dictionary["entry_step"] = step_label(result.entry_step);
+	dictionary["frame_transform"] = frame_to_variant(result.frame_transform);
+	dictionary["piece_frame_transform"] = frame_to_variant(result.piece_frame_transform);
 	return dictionary;
 }
 

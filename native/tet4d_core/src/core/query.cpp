@@ -204,6 +204,14 @@ std::optional<std::string> validate_topology_query_inputs(
 			return "invalid_transform";
 		}
 		if (glue.enabled) {
+			const std::vector<int> source_extents = boundary_extents(shape, glue.source);
+			const std::vector<int> target_extents = boundary_extents(shape, glue.target);
+			for (std::size_t source_index = 0; source_index < glue.transform.permutation.size(); ++source_index) {
+				const int target_index = glue.transform.permutation[source_index];
+				if (source_extents[source_index] != target_extents[static_cast<std::size_t>(target_index)]) {
+					return "non_bijective_boundary_extents";
+				}
+			}
 			const auto source_key = std::make_pair(glue.source.axis, glue.source.side);
 			const auto target_key = std::make_pair(glue.target.axis, glue.target.side);
 			if (used_boundaries.count(source_key) != 0 || used_boundaries.count(target_key) != 0) {
@@ -214,6 +222,36 @@ std::optional<std::string> validate_topology_query_inputs(
 		}
 	}
 	return std::nullopt;
+}
+
+TopologyFrameQueryTransform frame_transform_for_crossing(
+		const BoundaryQueryRef &source,
+		const BoundaryQueryRef &target,
+		const BoundaryQueryTransform &transform,
+		const CoordND &source_coord,
+		const CoordND &target_coord,
+		int normal_sign) {
+	TopologyFrameQueryTransform frame;
+	frame.permutation.assign(static_cast<std::size_t>(source.dimension), 0);
+	frame.signs.assign(static_cast<std::size_t>(source.dimension), 1);
+	const std::vector<int> source_axes = tangent_axes_for_boundary(source);
+	const std::vector<int> target_axes = tangent_axes_for_boundary(target);
+	for (std::size_t source_index = 0; source_index < transform.permutation.size(); ++source_index) {
+		const int source_axis = source_axes[source_index];
+		const int target_axis = target_axes[static_cast<std::size_t>(transform.permutation[source_index])];
+		frame.permutation[static_cast<std::size_t>(source_axis)] = target_axis;
+		frame.signs[static_cast<std::size_t>(source_axis)] = transform.signs[source_index];
+	}
+	frame.permutation[static_cast<std::size_t>(source.axis)] = target.axis;
+	frame.signs[static_cast<std::size_t>(source.axis)] = normal_sign;
+	frame.translation.values.assign(static_cast<std::size_t>(source.dimension), 0);
+	for (int source_axis = 0; source_axis < source.dimension; ++source_axis) {
+		const int target_axis = frame.permutation[static_cast<std::size_t>(source_axis)];
+		frame.translation.values[static_cast<std::size_t>(target_axis)] =
+				target_coord.values[static_cast<std::size_t>(target_axis)] -
+				frame.signs[static_cast<std::size_t>(source_axis)] * source_coord.values[static_cast<std::size_t>(source_axis)];
+	}
+	return frame;
 }
 
 TopologyCellStepQueryResult error_result(
@@ -385,6 +423,11 @@ TopologyCellStepQueryResult resolve_topology_cell_step_query(
 	result.source_boundary = *source_boundary;
 	result.target_boundary = target_boundary;
 	result.entry_step = inward_step(target_boundary);
+	result.frame_transform = frame_transform_for_crossing(
+			*source_boundary, target_boundary, transform, coord, target, -1);
+	const int piece_normal_sign = step.delta == result.entry_step.delta ? 1 : -1;
+	result.piece_frame_transform = frame_transform_for_crossing(
+			*source_boundary, target_boundary, transform, coord, target, piece_normal_sign);
 	return result;
 }
 

@@ -62,6 +62,12 @@ struct MoveStepQuery {
 	int delta = 0;
 };
 
+struct TopologyFrameQueryTransform {
+	std::vector<int> permutation;
+	std::vector<int> signs;
+	CoordND translation;
+};
+
 struct TopologyCellStepQueryResult {
 	CoordND source;
 	MoveStepQuery step;
@@ -70,6 +76,8 @@ struct TopologyCellStepQueryResult {
 	std::optional<BoundaryQueryRef> source_boundary;
 	std::optional<BoundaryQueryRef> target_boundary;
 	MoveStepQuery entry_step;
+	std::optional<TopologyFrameQueryTransform> frame_transform;
+	std::optional<TopologyFrameQueryTransform> piece_frame_transform;
 	bool ok = true;
 	std::string error;
 };
