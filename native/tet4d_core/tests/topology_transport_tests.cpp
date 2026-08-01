@@ -148,6 +148,10 @@ void test_contract_limits_and_overflow() {
 	require(exact_maximum.ok(), "exact maximum volume should decode");
 	require_error(tet4d::core::decode_topology_transport_profile(profile(
 			integer(1), integer(4),
+			array({integer(454279), integer(337), integer(92737), integer(649658)}),
+			array({}))), "volume_overflow", "profile.dimensions");
+	require_error(tet4d::core::decode_topology_transport_profile(profile(
+			integer(1), integer(4),
 			array({integer(1000000), integer(1000000), integer(1000000), integer(1000000)}),
 			array({}))), "volume_overflow", "profile.dimensions");
 	require_error(tet4d::core::decode_topology_transport_profile(profile(

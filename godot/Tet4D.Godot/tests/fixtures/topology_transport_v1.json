@@ -70,6 +70,7 @@
     {"id": "dimension_negative", "base": "wrapped_2d", "path": ["dimensions", 0], "value": -1, "code": "out_of_range", "error_path": "profile.dimensions[0]"},
     {"id": "dimension_above_maximum", "base": "wrapped_2d", "path": ["dimensions", 0], "value": 1000001, "code": "out_of_range", "error_path": "profile.dimensions[0]"},
     {"id": "dimension_count", "base": "wrapped_2d", "path": ["dimensions"], "value": [3], "code": "invalid_dimension_count", "error_path": "profile.dimensions"},
+    {"id": "volume_one_above_maximum", "base": "exact_maximum_volume_4d", "path": ["dimensions", 3], "value": 649658, "code": "volume_overflow", "error_path": "profile.dimensions"},
     {"id": "volume_overflow", "base": "disabled_nonidentity_4d", "path": ["dimensions"], "value": [1000000, 1000000, 1000000, 1000000], "code": "volume_overflow", "error_path": "profile.dimensions"},
     {"id": "axis_boolean", "base": "wrapped_2d", "path": ["seams", 0, "source", "axis"], "value": true, "code": "wrong_type", "error_path": "profile.seams[0].source.axis"},
     {"id": "axis_float", "base": "wrapped_2d", "path": ["seams", 0, "source", "axis"], "value": 0.9, "code": "wrong_type", "error_path": "profile.seams[0].source.axis"},
