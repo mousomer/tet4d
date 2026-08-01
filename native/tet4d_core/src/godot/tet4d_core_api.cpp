@@ -1,9 +1,12 @@
 #include "tet4d_core_api.h"
 
+#include "topology_transport_variant.h"
+
 #include "tet4d_core/core_api.hpp"
 #include "tet4d_core/geometry.hpp"
 #include "tet4d_core/plain_game_setup.hpp"
 #include "tet4d_core/query.hpp"
+#include "tet4d_core/topology_transport.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/error_macros.hpp>
@@ -152,6 +155,24 @@ Variant frame_to_variant(const std::optional<tet4d::core::TopologyFrameQueryTran
 	return result;
 }
 
+Dictionary topology_query_result_to_dictionary(const tet4d::core::TopologyCellStepQueryResult &result) {
+	Dictionary dictionary;
+	dictionary["ok"] = result.ok;
+	dictionary["error"] = to_godot_string(result.error);
+	if (result.target.has_value()) {
+		dictionary["target"] = coord_to_array(*result.target);
+	} else {
+		dictionary["target"] = Variant();
+	}
+	dictionary["glue_id"] = result.glue_id.has_value() ? to_godot_string(*result.glue_id) : String();
+	dictionary["source_boundary"] = result.source_boundary.has_value() ? boundary_label(*result.source_boundary) : String();
+	dictionary["target_boundary"] = result.target_boundary.has_value() ? boundary_label(*result.target_boundary) : String();
+	dictionary["entry_step"] = step_label(result.entry_step);
+	dictionary["frame_transform"] = frame_to_variant(result.frame_transform);
+	dictionary["piece_frame_transform"] = frame_to_variant(result.piece_frame_transform);
+	return dictionary;
+}
+
 std::optional<tet4d::core::PlainGameSetup> plain_setup_from_dictionary(
 		const Dictionary &payload,
 		const std::string &expected_mode) {
@@ -265,6 +286,8 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("geometry_hash_blocks", "blocks"), &Tet4DCoreApi::geometry_hash_blocks);
 	ClassDB::bind_method(D_METHOD("query_piece_pose_legal", "dims", "piece_cells", "occupied_cells"), &Tet4DCoreApi::query_piece_pose_legal);
 	ClassDB::bind_method(D_METHOD("query_topology_axis_wrap_cell_step", "dims", "wrapped_axes", "coord", "axis", "delta"), &Tet4DCoreApi::query_topology_axis_wrap_cell_step);
+	ClassDB::bind_method(D_METHOD("topology_transport_profile", "profile"), &Tet4DCoreApi::topology_transport_profile);
+	ClassDB::bind_method(D_METHOD("topology_transport_resolve_cell_step", "profile", "query"), &Tet4DCoreApi::topology_transport_resolve_cell_step);
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
 	ClassDB::bind_method(D_METHOD("list_plain_2d_parity_cases"), &Tet4DCoreApi::list_plain_2d_parity_cases);
 	ClassDB::bind_method(D_METHOD("get_plain_2d_parity_status"), &Tet4DCoreApi::get_plain_2d_parity_status);
@@ -406,21 +429,47 @@ Dictionary Tet4DCoreApi::query_topology_axis_wrap_cell_step(const Array &dims, c
 			tet4d::core::BoardShapeND{converted_dims},
 			converted_coord,
 			tet4d::core::MoveStepQuery{static_cast<int>(axis), static_cast<int>(delta)});
-	Dictionary dictionary;
-	dictionary["ok"] = result.ok;
-	dictionary["error"] = to_godot_string(result.error);
-	if (result.target.has_value()) {
-		dictionary["target"] = coord_to_array(*result.target);
-	} else {
-		dictionary["target"] = Variant();
+	return topology_query_result_to_dictionary(result);
+}
+
+Dictionary Tet4DCoreApi::topology_transport_profile(const Variant &profile) const {
+	auto transported = topology_transport_value_from_variant(profile, "profile");
+	if (!transported.ok()) {
+		return topology_transport_error_dictionary(*transported.error);
 	}
-	dictionary["glue_id"] = result.glue_id.has_value() ? to_godot_string(*result.glue_id) : String();
-	dictionary["source_boundary"] = result.source_boundary.has_value() ? boundary_label(*result.source_boundary) : String();
-	dictionary["target_boundary"] = result.target_boundary.has_value() ? boundary_label(*result.target_boundary) : String();
-	dictionary["entry_step"] = step_label(result.entry_step);
-	dictionary["frame_transform"] = frame_to_variant(result.frame_transform);
-	dictionary["piece_frame_transform"] = frame_to_variant(result.piece_frame_transform);
-	return dictionary;
+	auto decoded = tet4d::core::decode_topology_transport_profile(*transported.value);
+	if (!decoded.ok()) {
+		return topology_transport_error_dictionary(*decoded.error);
+	}
+	return topology_transport_profile_dictionary(*decoded.value);
+}
+
+Dictionary Tet4DCoreApi::topology_transport_resolve_cell_step(const Variant &profile, const Variant &query) const {
+	auto transported_profile = topology_transport_value_from_variant(profile, "profile");
+	if (!transported_profile.ok()) {
+		return topology_transport_error_dictionary(*transported_profile.error);
+	}
+	auto decoded_profile = tet4d::core::decode_topology_transport_profile(*transported_profile.value);
+	if (!decoded_profile.ok()) {
+		return topology_transport_error_dictionary(*decoded_profile.error);
+	}
+	auto transported_query = topology_transport_value_from_variant(query, "query");
+	if (!transported_query.ok()) {
+		return topology_transport_error_dictionary(*transported_query.error);
+	}
+	auto decoded_query = tet4d::core::decode_topology_transport_query(*transported_query.value, *decoded_profile.value);
+	if (!decoded_query.ok()) {
+		return topology_transport_error_dictionary(*decoded_query.error);
+	}
+	const auto result = tet4d::core::resolve_topology_transport_query(*decoded_profile.value, *decoded_query.value);
+	if (!result.ok) {
+		return topology_transport_error_dictionary({
+				"unknown_required_value", "query", "valid resolver query", result.error,
+				"validated topology query was rejected by the native resolver"});
+	}
+	Dictionary response = topology_query_result_to_dictionary(result);
+	response["query"] = topology_transport_query_dictionary(*decoded_query.value);
+	return response;
 }
 
 bool Tet4DCoreApi::run_builtin_plain_2d_smoke_case() const {
