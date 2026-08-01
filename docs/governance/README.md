@@ -37,6 +37,7 @@ unrelated work.
 | Authority transfer | `docs/architecture/authority_transfer_protocol.md`, `tools/governance/validate_authority_transfer.py` |
 | Config/constants | `docs/governance/config_policy.md`, `tools/governance/validate_config_authority.py` |
 | Secrets/security | `docs/governance/secrets_policy.md`, `config/project/policy/manifests/secret_scan.json` |
+| GitHub publication identity | `config/project/policy_pack.json`, `AGENTS.md`, `docs/WORKFLOW_CODEX.md` |
 | Dependency/utility reuse | `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, `docs/architecture/utility_index.md`, `tools/governance/validate_utility_reuse.py` |
 | Technical debt | `docs/governance/workspace_bundle/technical_debt_policy.md`, `docs/governance/technical_debt_register.md`, `tools/governance/validate_technical_debt.py` |
 | Task/PR scope | `docs/governance/task_contract.md`, `.github/pull_request_template.md` |

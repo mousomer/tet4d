@@ -2052,6 +2052,12 @@ Parameters:
 - `governance.drift_protection.tutorial_copy_contract.lessons_path`: `"config/tutorial/lessons.json"` (`string`)
 - `governance.drift_protection.tutorial_copy_contract.overlay_path`: `"src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py"` (`string`)
 - `governance.drift_protection.tutorial_copy_contract.required_overlay_tokens[]`: array[`string`]; examples: `"Do this:"`, `"Tip:"`, `"USE:"`
+- `governance.github_publication.canonical_target`: `"origin"` (`string`)
+- `governance.github_publication.forbid_non_owner_accounts`: `true` (`bool`)
+- `governance.github_publication.public_metadata_forbidden_details[]`: array[`string`]; examples: `"unrelated account identifiers"`, `"local credential or identity paths"`, `"tokens or secrets"`
+- `governance.github_publication.record_identity_check_result`: `false` (`bool`)
+- `governance.github_publication.require_remote_owner_identity`: `true` (`bool`)
+- `governance.github_publication.verify_identity_before_write`: `true` (`bool`)
 - `governance.godot_settings_externalization_contract.forbid_runtime_default_duplicates`: `true` (`bool`)
 - `governance.godot_settings_externalization_contract.non_persistent_policies[]`: array[`string`]; examples: `"none"`, `"session"`
 - `governance.godot_settings_externalization_contract.persistent_policy`: `"local_shell"` (`string`)

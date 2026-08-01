@@ -54,6 +54,8 @@ Acceptance:
 - Keep Python authority and transfer records aligned with actual ownership.
 - Keep generated outputs tied to their source authority and generator.
 - Record new warnings separately from known advisories.
+- Keep all Tet4D GitHub writes on the verified owner identity for canonical
+  `origin`, without publishing unrelated account or local identity details.
 
 ## Completion Boundary
 
