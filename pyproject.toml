@@ -26,6 +26,7 @@ where = ["src"]
 include = ["tet4d*"]
 
 [tool.ruff]
+line-length = 88
 extend-exclude = [
   "native/third_party",
 ]

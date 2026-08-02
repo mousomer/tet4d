@@ -166,7 +166,11 @@ merged states.
    handoff information changed. Do not add generic workflow rules there.
 6. Never treat partial progress as completion. Every stated acceptance
    criterion must be explicitly satisfied or reported as unsatisfied.
-7. Track LOC delta and prefer net reduction for non-feature refactors.
+7. For substantial non-feature refactors, compare formatted production diff
+   size with the base revision. When multiline formatting materially distorts
+   that comparison, use Python AST statement count as secondary evidence.
+   These are review signals, not quotas: do not compress expressions, calls,
+   or literals merely to improve either metric.
 
 For long-lived branches or pre-merge acceptance, branch-local verification may
 be insufficient. When required by the task, test a non-destructive synthetic
