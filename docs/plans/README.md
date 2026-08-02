@@ -123,6 +123,7 @@ to inform current work and are explicitly labeled as `Role: audit`.
 Current audit files:
 
 - `audits/dead_code_vulture_report_2026-03-24.md`
+- `audits/python_boundary_audit_2026-08-02.md`
 
 Recent audits live under:
 

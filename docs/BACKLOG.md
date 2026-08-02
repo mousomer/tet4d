@@ -76,19 +76,21 @@ authority from Python to C++.
 The remaining short-term sequence precedes the medium-term professional
 playable 2D/3D/4D game programme:
 
-1. **53D — explicit persistence and legacy recovery adapters.** Implemented on
-   the active Stage 53D branch: persistence v1 is strict, unversioned legacy v0
-   has a named evidence-backed adapter, and every migration, seam discard, or
-   profile fallback is structured and observable. Integration remains pending.
-2. **53E — repository-wide Python coercion and boundary audit.** Classify
-   canonical and identity-bearing inputs, replay/state-hash inputs, public
-   constructors, transport boundaries, persistence and human-input adapters,
-   numerical internals, active runtime modules, migration tools, and dead or
-   retirement-candidate paths.
-3. **53F — targeted repository-wide hardening and governance.** Fix high-risk
-   semantic coercions, retire dead code, add boundary-specific checks, prevent
-   duplicated scalar policies, preserve legitimate parsing/formatting, and
-   close short-term governance acceptance.
+1. **53D — explicit persistence and legacy recovery adapters.** Merged on
+   `master` at `c7243828`: persistence v1 is strict, unversioned legacy v0 has
+   a named evidence-backed adapter, and every migration, seam discard, or
+   profile fallback is structured and observable.
+2. **53E — repository-wide Python boundary audit and lightweight manifest
+   strengthening.** Inventory canonical and identity-bearing inputs,
+   replay/state-hash inputs, public constructors, transport boundaries,
+   persistence and human-input adapters, numerical internals, active runtime
+   modules, migration tools, and retirement candidates. Audit Ruff complexity
+   rules and make only low-workload formatting/workflow policy explicit.
+3. **53F — targeted repository-wide hardening and drift prevention.** Fix
+   high-risk semantic coercions, retire dead code, add boundary-specific
+   checks, prevent duplicated scalar policies, preserve legitimate
+   parsing/formatting, and close short-term governance acceptance. Enable only
+   complexity rules that the 53E audit proves low-noise.
 
 Repository-wide Python coercion hardening is a short-term governance objective,
 but it must be driven by boundary classification rather than a mechanical ban
@@ -101,10 +103,10 @@ on conversion functions.
 - unified gameplay/endgame/explosion launch integration;
 - control remapping, audio, tutorials, and unrelated cleanup;
 - visual changes in the topology-contract PR;
-- gameplay or toolchain changes in the governance PR.
-- integration of the implemented Stage 53D persistence recovery policy;
-- repository-wide coercion inventory (Stage 53E) and targeted fixes (Stage
-  53F);
+- gameplay or toolchain changes in the governance PR;
+- targeted fixes from the Stage 53E boundary and complexity audit (Stage 53F),
+  including replay/config/cache/hash boundaries and proven retirement
+  candidates;
 - topology-aware Godot gameplay and diagnostics, Godot Topology Lab/editor,
   and unified gameplay/endgame/explosion integration remain separate later
   migration slices.

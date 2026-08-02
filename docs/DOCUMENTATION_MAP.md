@@ -139,6 +139,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Explorer topology persistence versions, strict loading, and legacy recovery | `docs/architecture/topology_persistence_recovery.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
+| Current Python semantic-boundary, coercion, retirement, and complexity audit | `docs/plans/audits/python_boundary_audit_2026-08-02.md` |
 | Godot 4.7 engine, godot-cpp, native build, and CI migration evidence | `docs/plans/audits/godot_4_7_migration_2026-07-25.md` |
 | Current Godot product-shell visual system | `docs/design/godot_visual_system.md` |
 | Live 3D and future Live 4D gameboard visual language | `docs/plans/gameboard_visual_language_design.md` |

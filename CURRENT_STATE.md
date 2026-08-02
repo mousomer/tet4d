@@ -45,9 +45,11 @@ history ledger. Detailed history is preserved in
   shared Python/Godot-native acceptance fixtures. It reuses the existing
   provisional native resolver and does not transfer Python authority.
 - Stage 53C strict Python topology constructors are merged on `master` at
-  `36972384`. Stage 53D is the active short-term slice: make current topology
-  persistence strict and route evidence-backed legacy recovery through a named,
-  diagnostic adapter without changing domain or canonical semantics.
+  `36972384`. Stage 53D explicit topology persistence and legacy recovery is
+  merged on `master` at `c7243828`. Stage 53E is the active short-term slice:
+  audit Python semantic boundaries and Ruff complexity rules, make the Ruff
+  formatting width explicit, and identify targeted 53F remediation without
+  changing runtime behavior.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -149,9 +151,11 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. 53D: integrate the implemented strict-v1 and unversioned-v0 persistence
-   adapters and their structured recovery diagnostics.
-2. 53E: audit repository-wide Python coercion by boundary class.
-3. 53F: apply targeted hardening and final drift governance.
+1. 53E: complete the repository-wide Python boundary/coercion and complexity
+   audit with lightweight Ruff/workflow strengthening.
+2. 53F: apply targeted semantic hardening, retire superseded paths, and add
+   narrow drift prevention at actual boundaries.
+3. Close the short-term governance programme with explicit remaining
+   deferrals.
 4. Begin the medium-term professional playable 2D/3D/4D game programme,
    including later topology-aware Godot gameplay and tooling slices.
