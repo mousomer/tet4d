@@ -12,6 +12,12 @@ from tet4d.engine.gameplay.topology_designer import (
     default_topology_profile_state,
 )
 from tet4d.engine.topology_explorer import BoundaryRef, ExplorerTopologyProfile
+from tet4d.engine.topology_explorer.domain_validation import (
+    require_exact_bool,
+    require_integral_sequence,
+    require_non_negative_integral,
+)
+from tet4d.engine.topology_explorer.glue_model import normalize_dimension
 
 # Canonical tool ids now follow the settled Probe-first Editor model.
 # Older serialized/input aliases are accepted only through
@@ -183,14 +189,14 @@ _VALID_PRESET_SOURCES = frozenset(
 
 
 def _normalize_dimension(dimension: int) -> int:
-    value = int(dimension)
+    value = normalize_dimension(dimension)
     if value not in _VALID_DIMENSIONS:
         raise ValueError("dimension must be one of: 2, 3, 4")
     return value
 
 
 def _normalize_axis_sizes(dimension: int, axis_sizes: Coord) -> Coord:
-    normalized = tuple(int(value) for value in axis_sizes)
+    normalized = require_integral_sequence(axis_sizes, "axis_sizes")
     if len(normalized) != dimension:
         raise ValueError("axis_sizes length must match dimension")
     if any(value <= 0 for value in normalized):
@@ -199,16 +205,14 @@ def _normalize_axis_sizes(dimension: int, axis_sizes: Coord) -> Coord:
 
 
 def _normalize_coord(name: str, coord: Coord, *, dimension: int) -> Coord:
-    normalized = tuple(int(value) for value in coord)
+    normalized = require_integral_sequence(coord, name)
     if len(normalized) != dimension:
         raise ValueError(f"{name} must match the active dimension")
     return normalized
 
 
 def _coord_in_bounds(coord: Coord, axis_sizes: Coord) -> bool:
-    return all(
-        0 <= int(value) < int(axis_sizes[index]) for index, value in enumerate(coord)
-    )
+    return all(0 <= value < axis_sizes[index] for index, value in enumerate(coord))
 
 
 def _center_coord(axis_sizes: Coord) -> Coord:
@@ -229,19 +233,21 @@ def _normalize_probe_frame(
     normalized_permutation = (
         default_permutation
         if permutation is None
-        else tuple(int(value) for value in permutation)
+        else require_integral_sequence(permutation, "probe.frame_permutation")
     )
     normalized_signs = (
-        default_signs if signs is None else tuple(int(value) for value in signs)
+        default_signs
+        if signs is None
+        else require_integral_sequence(signs, "probe.frame_signs")
     )
     if len(normalized_permutation) != dimension:
-        normalized_permutation = default_permutation
+        raise ValueError("probe frame permutation must match dimension")
     if len(normalized_signs) != dimension:
-        normalized_signs = default_signs
+        raise ValueError("probe frame signs must match dimension")
     if tuple(sorted(normalized_permutation)) != tuple(range(dimension)):
-        normalized_permutation = default_permutation
+        raise ValueError("probe frame permutation must be a complete permutation")
     if any(value not in (-1, 1) for value in normalized_signs):
-        normalized_signs = default_signs
+        raise ValueError("probe frame signs must contain only -1 or +1")
     return normalized_permutation, normalized_signs
 
 
@@ -274,7 +280,18 @@ class TopologyPlaygroundGluingDraft:
     enabled: bool = True
 
     def normalize(self, *, dimension: int) -> None:
-        self.slot_index = max(0, int(self.slot_index))
+        self.slot_index = require_non_negative_integral(
+            self.slot_index,
+            "gluing_draft.slot_index",
+        )
+        if self.source_boundary is not None and not isinstance(
+            self.source_boundary, BoundaryRef
+        ):
+            raise ValueError("source_boundary must be a BoundaryRef or None")
+        if self.target_boundary is not None and not isinstance(
+            self.target_boundary, BoundaryRef
+        ):
+            raise ValueError("target_boundary must be a BoundaryRef or None")
         if (
             self.source_boundary is not None
             and self.source_boundary.dimension != dimension
@@ -288,13 +305,16 @@ class TopologyPlaygroundGluingDraft:
         tangent_dimension = dimension - 1
         permutation = (
             tuple(range(tangent_dimension))
-            if not self.permutation
-            else tuple(int(value) for value in self.permutation)
+            if self.permutation == ()
+            else require_integral_sequence(
+                self.permutation,
+                "gluing_draft.permutation",
+            )
         )
         signs = (
             tuple(1 for _ in range(tangent_dimension))
-            if not self.signs
-            else tuple(int(value) for value in self.signs)
+            if self.signs == ()
+            else require_integral_sequence(self.signs, "gluing_draft.signs")
         )
         if len(permutation) != tangent_dimension:
             raise ValueError("gluing draft permutation must match tangent rank")
@@ -306,7 +326,7 @@ class TopologyPlaygroundGluingDraft:
             raise ValueError("gluing draft signs must contain only -1 or +1")
         self.permutation = permutation
         self.signs = signs
-        self.enabled = bool(self.enabled)
+        self.enabled = require_exact_bool(self.enabled, "gluing_draft.enabled")
 
 
 @dataclass

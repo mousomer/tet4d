@@ -7,6 +7,14 @@ from itertools import product
 from typing import Literal
 
 from ..core.model import Coord
+from .domain_validation import (
+    require_exact_bool,
+    require_instance,
+    require_instance_sequence,
+    require_integral_sequence,
+    require_sequence,
+    require_string,
+)
 from .glue_map import (
     BoundaryTraversal,
     _apply_transform,
@@ -45,9 +53,15 @@ class ExplorerTransportFrameTransform:
     translation: Coord
 
     def __post_init__(self) -> None:
-        permutation = tuple(int(value) for value in self.permutation)
-        signs = tuple(int(value) for value in self.signs)
-        translation = tuple(int(value) for value in self.translation)
+        permutation = require_integral_sequence(
+            self.permutation,
+            "frame_transform.permutation",
+        )
+        signs = require_integral_sequence(self.signs, "frame_transform.signs")
+        translation = require_integral_sequence(
+            self.translation,
+            "frame_transform.translation",
+        )
         dimension = len(permutation)
         if dimension == 0:
             raise ValueError("frame transform requires at least one axis")
@@ -67,7 +81,7 @@ class ExplorerTransportFrameTransform:
         ) and self.signs == tuple(1 for _ in self.permutation)
 
     def apply_linear(self, coord: Sequence[int]) -> Coord:
-        values = tuple(int(value) for value in coord)
+        values = require_integral_sequence(coord, "coord")
         if len(values) != len(self.permutation):
             raise ValueError("coord dimension must match frame transform")
         mapped = [0] * len(values)
@@ -80,6 +94,58 @@ class ExplorerTransportFrameTransform:
         return tuple(
             mapped[axis] + self.translation[axis] for axis in range(len(mapped))
         )
+
+
+def _validate_directed_seam_types(
+    *,
+    glue_id: object,
+    source_boundary: object,
+    target_boundary: object,
+    seam_transform: object,
+    frame_transform: object,
+    piece_frame_transform: object,
+) -> str:
+    normalized_id = require_string(glue_id, "directed_seam.glue_id")
+    if not normalized_id:
+        raise ValueError("directed seam glue_id must be non-empty")
+    require_instance(source_boundary, "directed_seam.source", BoundaryRef)
+    require_instance(target_boundary, "directed_seam.target", BoundaryRef)
+    require_instance(
+        seam_transform,
+        "directed_seam.transform",
+        BoundaryTransform,
+    )
+    require_instance(
+        frame_transform,
+        "directed_seam.frame_transform",
+        ExplorerTransportFrameTransform,
+    )
+    require_instance(
+        piece_frame_transform,
+        "directed_seam.piece_frame_transform",
+        ExplorerTransportFrameTransform,
+    )
+    return normalized_id
+
+
+def _normalize_boundary_coord_map(value: object) -> tuple[tuple[Coord, Coord], ...]:
+    rows = require_sequence(value, "directed_seam.boundary_coord_map")
+    mapping: list[tuple[Coord, Coord]] = []
+    for index, row in enumerate(rows):
+        pair = require_sequence(row, f"directed_seam.boundary_coord_map[{index}]")
+        if len(pair) != 2:
+            raise ValueError("directed seam mapping rows must contain two coords")
+        mapping.append(
+            (
+                require_integral_sequence(
+                    pair[0], f"directed_seam.boundary_coord_map[{index}].source"
+                ),
+                require_integral_sequence(
+                    pair[1], f"directed_seam.boundary_coord_map[{index}].target"
+                ),
+            )
+        )
+    return tuple(mapping)
 
 
 @dataclass(frozen=True)
@@ -96,14 +162,16 @@ class DirectedBoundarySeam:
     _target_lookup: dict[Coord, Coord] = field(repr=False, compare=False)
 
     def __post_init__(self) -> None:
-        mapping = tuple(
-            (
-                tuple(int(value) for value in source_coord),
-                tuple(int(value) for value in target_coord),
-            )
-            for source_coord, target_coord in self.boundary_coord_map
+        glue_id = _validate_directed_seam_types(
+            glue_id=self.glue_id,
+            source_boundary=self.source_boundary,
+            target_boundary=self.target_boundary,
+            seam_transform=self.seam_transform,
+            frame_transform=self.frame_transform,
+            piece_frame_transform=self.piece_frame_transform,
         )
-        if not mapping:
+        normalized_mapping = _normalize_boundary_coord_map(self.boundary_coord_map)
+        if not normalized_mapping:
             raise ValueError("directed seam requires at least one boundary coordinate")
         dimension = self.source_boundary.dimension
         if self.target_boundary.dimension != dimension:
@@ -113,7 +181,7 @@ class DirectedBoundarySeam:
         if len(self.piece_frame_transform.translation) != dimension:
             raise ValueError("directed seam piece-frame transform dimension mismatch")
         lookup: dict[Coord, Coord] = {}
-        for source_coord, target_coord in mapping:
+        for source_coord, target_coord in normalized_mapping:
             if len(source_coord) != dimension or len(target_coord) != dimension:
                 raise ValueError("directed seam coord map must match seam dimension")
             if source_coord in lookup:
@@ -121,11 +189,12 @@ class DirectedBoundarySeam:
                     "directed seam boundary map contains duplicate source coords"
                 )
             lookup[source_coord] = target_coord
-        object.__setattr__(self, "boundary_coord_map", mapping)
+        object.__setattr__(self, "boundary_coord_map", normalized_mapping)
         object.__setattr__(self, "_target_lookup", lookup)
+        object.__setattr__(self, "glue_id", glue_id)
 
     def target_for_source_coord(self, coord: Sequence[int]) -> Coord:
-        normalized = tuple(int(value) for value in coord)
+        normalized = require_integral_sequence(coord, "coord")
         try:
             return self._target_lookup[normalized]
         except KeyError as exc:
@@ -148,6 +217,34 @@ class CellStepResult:
         return self.target is None
 
 
+def _validate_piece_step_header(
+    step: object,
+    kind: object,
+    rigidly_coherent: object,
+) -> tuple[ExplorerTransportMoveKind, bool]:
+    require_instance(step, "piece_step.step", MoveStep)
+    normalized_kind = require_string(kind, "piece_step.kind")
+    if normalized_kind not in (
+        BLOCKED_MOVE,
+        PLAIN_TRANSLATION,
+        RIGID_TRANSFORM,
+        CELLWISE_DEFORMATION,
+    ):
+        raise ValueError("piece_step.kind is unsupported")
+    normalized_rigidity = require_exact_bool(
+        rigidly_coherent,
+        "piece_step.rigidly_coherent",
+    )
+    return normalized_kind, normalized_rigidity  # type: ignore[return-value]
+
+
+def _normalize_coord_rows(value: object, path: str) -> tuple[Coord, ...]:
+    return tuple(
+        require_integral_sequence(coord, f"{path}[{index}]")
+        for index, coord in enumerate(require_sequence(value, path))
+    )
+
+
 @dataclass(frozen=True)
 class PieceStepResult:
     step: MoveStep
@@ -159,16 +256,21 @@ class PieceStepResult:
     rigidly_coherent: bool = False
 
     def __post_init__(self) -> None:
-        source_cells = tuple(
-            tuple(int(value) for value in coord) for coord in self.source_cells
+        kind, provided_rigidly_coherent = _validate_piece_step_header(
+            self.step,
+            self.kind,
+            self.rigidly_coherent,
         )
-        cell_steps = tuple(self.cell_steps)
+        source_cells = _normalize_coord_rows(self.source_cells, "source_cells")
+        cell_steps = require_instance_sequence(
+            self.cell_steps,
+            "cell_steps",
+            CellStepResult,
+        )
         moved_cells = (
             None
             if self.moved_cells is None
-            else tuple(
-                tuple(int(value) for value in coord) for coord in self.moved_cells
-            )
+            else _normalize_coord_rows(self.moved_cells, "moved_cells")
         )
         if not source_cells:
             raise ValueError("source_cells must be non-empty")
@@ -180,18 +282,18 @@ class PieceStepResult:
             raise ValueError("all moved_cells must share the source dimension")
         if len(cell_steps) != len(source_cells):
             raise ValueError("piece-step cell_steps must match source_cells")
-        if self.kind == BLOCKED_MOVE:
+        if kind == BLOCKED_MOVE:
             if moved_cells is not None or self.frame_transform is not None:
                 raise ValueError(
                     "blocked piece transport must not include moved cells or a frame transform"
                 )
             rigidly_coherent = False
-        elif self.kind == CELLWISE_DEFORMATION:
+        elif kind == CELLWISE_DEFORMATION:
             if moved_cells is None or self.frame_transform is not None:
                 raise ValueError(
                     "cellwise deformation requires moved cells and no frame transform"
                 )
-            rigidly_coherent = bool(self.rigidly_coherent)
+            rigidly_coherent = provided_rigidly_coherent
         else:
             if moved_cells is None or self.frame_transform is None:
                 raise ValueError(
@@ -202,6 +304,7 @@ class PieceStepResult:
         object.__setattr__(self, "moved_cells", moved_cells)
         object.__setattr__(self, "cell_steps", cell_steps)
         object.__setattr__(self, "rigidly_coherent", rigidly_coherent)
+        object.__setattr__(self, "kind", kind)
 
 
 def _identity_frame_transform(

@@ -62,7 +62,7 @@ existing `TopologyQueryProfile`, `BoardShapeND`, `CoordND`, and
 `MoveStepQuery`, then calls `resolve_topology_cell_step_query`. Existing frame
 and piece-frame results are returned unchanged.
 
-Deferred work includes strict topology domain constructors outside this DTO,
-forgiving persistence and legacy recovery adapters, repository-wide
-configuration ownership, topology-aware gameplay, diagnostics, the Godot
-Topology Lab, and any authority transfer.
+Stage 53C owns strict topology domain constructors outside this DTO. Deferred
+work includes Stage 53D persistence and legacy recovery adapters, the Stage
+53E–53F repository-wide boundary-classification programme, topology-aware
+gameplay, diagnostics, the Godot Topology Lab, and any authority transfer.

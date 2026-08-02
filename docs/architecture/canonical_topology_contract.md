@@ -82,9 +82,11 @@ does not collapse those move classes.
 | --- | --- | --- | --- |
 | 53A | Python, fixtures, native query, Godot DTO | normalize, validate, identify, prove cell/frame parity, and generate shared scalar bindings | gameplay ownership |
 | 53B | Native topology transport | consume generic contract and implement wider transport parity | authority transfer without evidence |
-| 53C | Topology-aware Godot gameplay | route native transport into live movement under Python goldens | Godot-owned rules |
-| 53D | Topology diagnostics | expose seam, neighbor, frame, and failure evidence | editor workflow |
-| 53E | Godot Topology Lab | edit and launch the exact canonical contract | silent fallback or reconstruction |
+| 53C | Python topology domain model | validate semantic types before normalization | persistence recovery policy |
+| 53D | Persistence and legacy adapters | recover only explicitly supported source formats | constructor leniency |
+| 53E | Python coercion audit | classify conversion boundaries repository-wide | mechanical conversion bans |
+| 53F | Targeted Python hardening | fix audited risks and add drift governance | unrelated product changes |
+| Later | Topology-aware Godot gameplay, diagnostics, and Lab | consume the accepted contract under Python goldens | Godot-owned rules or silent reconstruction |
 | Later | gameplay/endgame/explosion launch | share the same contract identity and transport | unified integration in 53A |
 
 Before any authority transfer, the named subsystem still needs versioned

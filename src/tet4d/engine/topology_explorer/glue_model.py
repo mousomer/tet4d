@@ -12,27 +12,42 @@ from tet4d.generated.topology_contract_v1 import (
 )
 
 from ..core.model import Coord
+from .domain_validation import (
+    require_bounded_integral,
+    require_exact_bool,
+    require_instance,
+    require_instance_sequence,
+    require_integral,
+    require_integral_sequence,
+    require_non_negative_integral,
+    require_string,
+)
 
 SIDE_NEG, SIDE_POS = VALID_BOUNDARY_SIDES
 _SIDE_SET = frozenset(VALID_BOUNDARY_SIDES)
 
 
 def normalize_dimension(dimension: int) -> int:
-    value = int(dimension)
-    if value < MINIMUM_RANK or value > MAXIMUM_RANK:
-        raise ValueError(f"dimension must be between {MINIMUM_RANK} and {MAXIMUM_RANK}")
-    return value
+    return require_bounded_integral(
+        dimension,
+        "dimension",
+        minimum=MINIMUM_RANK,
+        maximum=MAXIMUM_RANK,
+    )
 
 
 def axis_name(axis: int) -> str:
-    index = int(axis)
-    if not (0 <= index < len(AXIS_NAMES)):
-        raise ValueError("invalid axis index")
+    index = require_bounded_integral(
+        axis,
+        "axis",
+        minimum=0,
+        maximum=len(AXIS_NAMES) - 1,
+    )
     return AXIS_NAMES[index]
 
 
 def normalize_side(side: str) -> str:
-    normalized = str(side).strip()
+    normalized = require_string(side, "side").strip()
     if normalized not in _SIDE_SET:
         raise ValueError("side must be '-' or '+'")
     return normalized
@@ -46,9 +61,12 @@ class BoundaryRef:
 
     def __post_init__(self) -> None:
         dimension = normalize_dimension(self.dimension)
-        axis = int(self.axis)
-        if not (0 <= axis < dimension):
-            raise ValueError("boundary axis must exist in the given dimension")
+        axis = require_bounded_integral(
+            self.axis,
+            "boundary.axis",
+            minimum=0,
+            maximum=dimension - 1,
+        )
         object.__setattr__(self, "dimension", dimension)
         object.__setattr__(self, "axis", axis)
         object.__setattr__(self, "side", normalize_side(self.side))
@@ -72,8 +90,14 @@ class BoundaryTransform:
     signs: tuple[int, ...]
 
     def __post_init__(self) -> None:
-        permutation = tuple(int(value) for value in self.permutation)
-        signs = tuple(int(value) for value in self.signs)
+        permutation = require_integral_sequence(
+            self.permutation,
+            "boundary_transform.permutation",
+        )
+        signs = require_integral_sequence(
+            self.signs,
+            "boundary_transform.signs",
+        )
         if len(permutation) == 0:
             raise ValueError("boundary transform must have at least one tangent axis")
         if len(permutation) != len(signs):
@@ -111,19 +135,30 @@ class GluingDescriptor:
     enabled: bool = True
 
     def __post_init__(self) -> None:
-        glue_id = str(self.glue_id).strip()
+        glue_id = require_string(self.glue_id, "gluing.glue_id").strip()
         if not glue_id:
             raise ValueError("glue_id must be non-empty")
-        if self.source.dimension != self.target.dimension:
+        source = require_instance(self.source, "gluing.source", BoundaryRef)
+        target = require_instance(self.target, "gluing.target", BoundaryRef)
+        transform = require_instance(
+            self.transform,
+            "gluing.transform",
+            BoundaryTransform,
+        )
+        if source.dimension != target.dimension:
             raise ValueError("source and target boundaries must share a dimension")
-        if self.source == self.target:
+        if source == target:
             raise ValueError("source and target boundaries must be distinct")
-        if self.transform.tangent_dimension != self.source.dimension - 1:
+        if transform.tangent_dimension != source.dimension - 1:
             raise ValueError(
                 "transform tangent dimension must match boundary tangent rank"
             )
         object.__setattr__(self, "glue_id", glue_id)
-        object.__setattr__(self, "enabled", bool(self.enabled))
+        object.__setattr__(
+            self,
+            "enabled",
+            require_exact_bool(self.enabled, "gluing.enabled"),
+        )
 
 
 @dataclass(frozen=True)
@@ -133,7 +168,11 @@ class ExplorerTopologyProfile:
 
     def __post_init__(self) -> None:
         dimension = normalize_dimension(self.dimension)
-        gluings = tuple(self.gluings)
+        gluings = require_instance_sequence(
+            self.gluings,
+            "profile.gluings",
+            GluingDescriptor,
+        )
         for glue in gluings:
             if glue.source.dimension != dimension or glue.target.dimension != dimension:
                 raise ValueError(
@@ -152,10 +191,8 @@ class MoveStep:
     delta: int
 
     def __post_init__(self) -> None:
-        axis = int(self.axis)
-        delta = int(self.delta)
-        if axis < 0:
-            raise ValueError("move axis must be non-negative")
+        axis = require_non_negative_integral(self.axis, "move.axis")
+        delta = require_integral(self.delta, "move.delta")
         if delta not in VALID_MOVEMENT_DELTAS:
             raise ValueError("move delta must be -1 or +1")
         object.__setattr__(self, "axis", axis)

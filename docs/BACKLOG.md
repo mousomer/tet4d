@@ -42,8 +42,7 @@ Explicit boundary:
 
 ### Native topology transport
 
-Status: implemented and locally verified on `codex/native-topology-transport`;
-review and integration remain open.
+Status: merged and verified on `master` at `fe867627`.
 
 Objective:
 
@@ -72,16 +71,31 @@ values into valid topology data.
 Stage 53B transports and validates topology data but does not transfer semantic
 authority from Python to C++.
 
-Subsequent order:
+### Short-term Python boundary governance
 
-1. review and integrate Stage 53B native topology transport;
-2. topology-aware Godot gameplay;
-3. Godot topology diagnostics;
-4. Godot Topology Lab/editor;
-5. unified gameplay, topology, endgame, and explosion launch integration.
+The remaining short-term sequence precedes the medium-term professional
+playable 2D/3D/4D game programme:
 
-These remain separate reviewable slices unless a later task contract explicitly
-authorizes an integration PR.
+1. **53C — strict active Python topology domain model.** Reject malformed
+   semantic scalars and sequence members before normalization while preserving
+   valid topology behavior and identity.
+2. **53D — explicit persistence and legacy recovery adapters.** Decide and
+   test source-specific handling for Boolean aliases, numeric strings, missing
+   fields, malformed seam rows, legacy transform formats, unknown fields, and
+   profile fallback.
+3. **53E — repository-wide Python coercion and boundary audit.** Classify
+   canonical and identity-bearing inputs, replay/state-hash inputs, public
+   constructors, transport boundaries, persistence and human-input adapters,
+   numerical internals, active runtime modules, migration tools, and dead or
+   retirement-candidate paths.
+4. **53F — targeted repository-wide hardening and governance.** Fix high-risk
+   semantic coercions, retire dead code, add boundary-specific checks, prevent
+   duplicated scalar policies, preserve legitimate parsing/formatting, and
+   close short-term governance acceptance.
+
+Repository-wide Python coercion hardening is a short-term governance objective,
+but it must be driven by boundary classification rather than a mechanical ban
+on conversion functions.
 
 ## Explicit Deferrals
 
@@ -91,9 +105,12 @@ authorizes an integration PR.
 - control remapping, audio, tutorials, and unrelated cleanup;
 - visual changes in the topology-contract PR;
 - gameplay or toolchain changes in the governance PR.
-- strict topology domain constructors outside the Stage 53B DTO;
-- explicit persistence and legacy recovery adapters;
-- repository-wide configuration ownership and coercion governance.
+- final malformed persistence and legacy recovery policy (Stage 53D);
+- repository-wide coercion inventory (Stage 53E) and targeted fixes (Stage
+  53F);
+- topology-aware Godot gameplay and diagnostics, Godot Topology Lab/editor,
+  and unified gameplay/endgame/explosion integration remain separate later
+  migration slices.
 
 ## Governance Watchlist
 
