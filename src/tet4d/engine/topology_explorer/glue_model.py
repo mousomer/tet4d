@@ -80,6 +80,10 @@ def boundary_label(boundary: BoundaryRef) -> str:
     return f"{axis_name(boundary.axis)}{boundary.side}"
 
 
+def boundary_sort_key(boundary: BoundaryRef) -> tuple[int, int]:
+    return boundary.axis, 0 if boundary.side == SIDE_NEG else 1
+
+
 def tangent_axes_for_boundary(boundary: BoundaryRef) -> tuple[int, ...]:
     return tuple(axis for axis in range(boundary.dimension) if axis != boundary.axis)
 
@@ -158,6 +162,24 @@ class GluingDescriptor:
             self,
             "enabled",
             require_exact_bool(self.enabled, "gluing.enabled"),
+        )
+
+    def canonical_geometry(
+        self,
+    ) -> tuple[BoundaryRef, BoundaryRef, BoundaryTransform]:
+        if boundary_sort_key(self.source) <= boundary_sort_key(self.target):
+            return self.source, self.target, self.transform
+        return self.target, self.source, self.transform.inverse()
+
+    def geometry_key(self) -> tuple[object, ...]:
+        source, target, transform = self.canonical_geometry()
+        return (
+            source.axis,
+            source.side,
+            target.axis,
+            target.side,
+            transform.permutation,
+            transform.signs,
         )
 
 

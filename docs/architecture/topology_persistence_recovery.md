@@ -43,6 +43,31 @@ values retain the historically supported exact integer index or string label;
 the writer emits normalized labels. Transform arrays must have the exact
 tangent rank and contain a complete integer permutation and signs `-1` or `1`.
 
+## Loader architecture
+
+Current v1 and legacy v0 use one structural parsing engine but select distinct
+immutable format policies through explicitly named adapters.
+
+`CURRENT_V1_POLICY` and `LEGACY_V0_POLICY` declare only genuine representation
+differences: source/migration metadata, Boolean representation, missing
+`enabled`, missing profile dimension, allowed fields, and the ordered set of
+known obsolete fields. Named `_load_current_topology_profile_v1` and
+`_load_legacy_topology_profile_v0` adapters select those policies before calling
+the shared `_load_profile_document` parser. The policy behavior fields use
+closed literal states; they are not permissive Boolean switches.
+
+Exact decoded-JSON container and scalar checks come from
+`topology_explorer.contract_validation`. Axis bounds, side normalization,
+signed-permutation validity, gluing construction, canonical direction, and
+geometry keys come from the strict Stage 53C domain model. Persistence adds
+only format policy, stable diagnostic translation, and recovery behavior.
+Policies cannot weaken those invariants or enable lossy coercion.
+
+The shared parser requires an explicit policy and has no implicit legacy or
+current default. File I/O, missing-file handling, JSON decoding, warning
+emission, trusted-rank selection, and all-profile normalization remain in the
+storage wrappers rather than the semantic parser.
+
 ## Legacy unversioned v0
 
 The named v0 adapter shares strict structural primitives with v1 but owns all

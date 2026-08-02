@@ -18,6 +18,7 @@ from tet4d.generated.topology_contract_v1 import (
 from .contract_validation import (
     checked_dimension_product,
     require_bounded_json_int,
+    require_json_array,
     require_json_int,
     require_json_int_sequence,
     require_json_string,
@@ -28,6 +29,7 @@ from .glue_model import (
     BoundaryTransform,
     ExplorerTopologyProfile,
     GluingDescriptor,
+    boundary_sort_key,
 )
 from .glue_validate import validate_explorer_topology_profile
 
@@ -41,20 +43,8 @@ def _canonical_json(payload: Mapping[str, object]) -> str:
     )
 
 
-def _boundary_key(boundary: BoundaryRef) -> tuple[int, int]:
-    return boundary.axis, 0 if boundary.side == "-" else 1
-
-
 def _boundary_payload(boundary: BoundaryRef) -> dict[str, object]:
     return {"axis": AXIS_NAMES[boundary.axis], "side": boundary.side}
-
-
-def _canonical_glue(
-    glue: GluingDescriptor,
-) -> tuple[BoundaryRef, BoundaryRef, BoundaryTransform]:
-    if _boundary_key(glue.source) <= _boundary_key(glue.target):
-        return glue.source, glue.target, glue.transform
-    return glue.target, glue.source, glue.transform.inverse()
 
 
 def canonical_topology_payload(
@@ -77,11 +67,11 @@ def canonical_topology_payload(
     )
     checked_dimension_product(normalized_dims)
     validate_explorer_topology_profile(profile, dims=normalized_dims)
-    rows = [_canonical_glue(glue) for glue in profile.active_gluings()]
+    rows = [glue.canonical_geometry() for glue in profile.active_gluings()]
     rows.sort(
         key=lambda row: (
-            _boundary_key(row[0]),
-            _boundary_key(row[1]),
+            boundary_sort_key(row[0]),
+            boundary_sort_key(row[1]),
             row[2].permutation,
             row[2].signs,
         )
@@ -126,12 +116,6 @@ def _require_keys(
         raise ValueError(f"{path} fields must be exactly {', '.join(sorted(expected))}")
 
 
-def _require_sequence(value: object, path: str) -> Sequence[object]:
-    if not isinstance(value, list):
-        raise ValueError(f"{path} must be an array")  # noqa: TRY004 - one strict contract error type.
-    return value
-
-
 def _axis_index(value: object, dimension: int, path: str) -> int:
     normalized = require_json_string(value, path).strip().lower()
     if normalized not in AXIS_NAMES[:dimension]:
@@ -170,7 +154,7 @@ def topology_contract_profile(
         minimum=MINIMUM_RANK,
         maximum=MAXIMUM_RANK,
     )
-    dims_raw = _require_sequence(payload.get("board_dimensions"), "board_dimensions")
+    dims_raw = require_json_array(payload.get("board_dimensions"), "board_dimensions")
     if len(dims_raw) != dimension:
         raise ValueError("board_dimensions length must match dimension")
     dims = require_json_int_sequence(
@@ -180,7 +164,7 @@ def topology_contract_profile(
         maximum=MAXIMUM_AXIS_LENGTH,
     )
     checked_dimension_product(dims)
-    glues_raw = _require_sequence(payload.get("gluings"), "gluings")
+    glues_raw = require_json_array(payload.get("gluings"), "gluings")
     gluings: list[GluingDescriptor] = []
     for index, value in enumerate(glues_raw):
         path = f"gluings[{index}]"
@@ -192,10 +176,12 @@ def topology_contract_profile(
             frozenset(("permutation", "signs")),
             f"{path}.transform",
         )
-        permutation = _require_sequence(
+        permutation = require_json_array(
             transform_row.get("permutation"), f"{path}.transform.permutation"
         )
-        signs = _require_sequence(transform_row.get("signs"), f"{path}.transform.signs")
+        signs = require_json_array(
+            transform_row.get("signs"), f"{path}.transform.signs"
+        )
         normalized_permutation = require_json_int_sequence(
             permutation,
             f"{path}.transform.permutation",
