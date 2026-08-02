@@ -12,7 +12,10 @@ from tet4d.engine.runtime.topology_explorer_preview import (
     export_explorer_topology_preview,
     preview_dims_for_dimension,
 )
-from tet4d.engine.runtime.topology_explorer_store import load_explorer_topology_profile
+from tet4d.engine.runtime.topology_explorer_store import (
+    load_explorer_topology_profile,
+    report_topology_persistence_diagnostics,
+)
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 
 
@@ -38,7 +41,9 @@ def resolve_direct_explorer_launch_profile(
 
 
 def load_runtime_explorer_topology_profile(dimension: int) -> ExplorerTopologyProfile:
-    return load_explorer_topology_profile(dimension)
+    result = load_explorer_topology_profile(dimension)
+    report_topology_persistence_diagnostics(result)
+    return result.profile
 
 
 def export_stored_explorer_topology_preview(

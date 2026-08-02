@@ -1,187 +1,92 @@
 from __future__ import annotations
 
+import json
+import logging
+import warnings
 from pathlib import Path
-from typing import Any
 
 from tet4d.engine.runtime.project_config import (
     explorer_topology_profiles_file_default_path,
 )
 from tet4d.engine.runtime.settings_schema import (
-    read_json_object_or_empty,
+    read_json_value_or_raise,
     write_json_object,
 )
-from tet4d.engine.topology_explorer import (
-    AXIS_NAMES,
-    BoundaryRef,
-    BoundaryTransform,
-    ExplorerTopologyProfile,
-    GluingDescriptor,
+from tet4d.engine.runtime.topology_persistence import (
+    TOPOLOGY_PERSISTENCE_DIMENSIONS,
+    PersistenceDiagnostic,
+    TopologyProfileLoadResult,
+    empty_topology_profile,
+    fallback_topology_profile,
+    load_topology_profile_document,
+    topology_profiles_document,
 )
-from tet4d.engine.topology_explorer.contract_validation import (
-    require_json_bool,
-    require_json_int,
-    require_json_int_sequence,
-    require_json_string,
-)
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.engine.topology_explorer.glue_model import normalize_dimension
 
-_TOPOLOGY_DIMENSIONS = (2, 3, 4)
-_AXIS_TO_INDEX = {axis_name: index for index, axis_name in enumerate(AXIS_NAMES)}
-
-
-def _empty_profile(dimension: int) -> ExplorerTopologyProfile:
-    return ExplorerTopologyProfile(dimension=normalize_dimension(dimension), gluings=())
-
-
-def _boundary_payload(boundary: BoundaryRef) -> dict[str, object]:
-    return {
-        "axis": AXIS_NAMES[boundary.axis],
-        "side": boundary.side,
-    }
-
-
-def _transform_payload(transform: BoundaryTransform) -> dict[str, object]:
-    return {
-        "permutation": list(transform.permutation),
-        "signs": list(transform.signs),
-    }
-
-
-def _glue_payload(glue: GluingDescriptor) -> dict[str, object]:
-    return {
-        "id": glue.glue_id,
-        "enabled": glue.enabled,
-        "source": _boundary_payload(glue.source),
-        "target": _boundary_payload(glue.target),
-        "transform": _transform_payload(glue.transform),
-    }
-
-
-def _profile_payload(profile: ExplorerTopologyProfile) -> dict[str, object]:
-    return {
-        "dimension": profile.dimension,
-        "gluings": [_glue_payload(glue) for glue in profile.gluings],
-    }
-
-
-def _axis_index(raw: object) -> int:
-    if isinstance(raw, bool):
-        raise ValueError("axis must be a string or integer index")  # noqa: TRY004 - preserve the established validation contract.
-    if type(raw) is int:
-        return require_json_int(raw, "boundary.axis")
-    if isinstance(raw, str):
-        axis = raw.strip().lower()
-        if axis in _AXIS_TO_INDEX:
-            return _AXIS_TO_INDEX[axis]
-    raise ValueError("axis must be a valid axis label")
-
-
-def _boundary_from_payload(payload: object, *, dimension: int) -> BoundaryRef:
-    if not isinstance(payload, dict):
-        raise ValueError("boundary payload must be an object")  # noqa: TRY004 - preserve the established validation contract.
-    return BoundaryRef(
-        dimension=dimension,
-        axis=_axis_index(payload.get("axis")),
-        side=require_json_string(payload.get("side"), "boundary.side"),
-    )
-
-
-def _transform_from_payload(payload: object, *, dimension: int) -> BoundaryTransform:
-    if not isinstance(payload, dict):
-        raise ValueError("transform payload must be an object")  # noqa: TRY004 - preserve the established validation contract.
-    permutation_raw = payload.get("permutation")
-    signs_raw = payload.get("signs")
-    if not isinstance(permutation_raw, list) or not isinstance(signs_raw, list):
-        raise ValueError("transform payload requires permutation and signs lists")  # noqa: TRY004 - preserve the established validation contract.
-    if len(permutation_raw) != dimension - 1 or len(signs_raw) != dimension - 1:
-        raise ValueError("transform tangent rank must match dimension - 1")
-    return BoundaryTransform(
-        permutation=require_json_int_sequence(
-            permutation_raw,
-            "transform.permutation",
-        ),
-        signs=require_json_int_sequence(signs_raw, "transform.signs"),
-    )
-
-
-def _glue_from_payload(payload: object, *, dimension: int) -> GluingDescriptor:
-    if not isinstance(payload, dict):
-        raise ValueError("gluing payload must be an object")  # noqa: TRY004 - preserve the established validation contract.
-    return GluingDescriptor(
-        glue_id=require_json_string(payload.get("id"), "gluing.id"),
-        enabled=require_json_bool(payload.get("enabled", True), "gluing.enabled"),
-        source=_boundary_from_payload(payload.get("source"), dimension=dimension),
-        target=_boundary_from_payload(payload.get("target"), dimension=dimension),
-        transform=_transform_from_payload(
-            payload.get("transform"), dimension=dimension
-        ),
-    )
-
-
-def _profile_from_payload(dimension: int, payload: object) -> ExplorerTopologyProfile:
-    default_profile = _empty_profile(dimension)
-    if not isinstance(payload, dict):
-        return default_profile
-    raw_gluings = payload.get("gluings")
-    if not isinstance(raw_gluings, list):
-        return default_profile
-    try:
-        gluings = tuple(
-            _glue_from_payload(raw_glue, dimension=dimension)
-            for raw_glue in raw_gluings
-        )
-        return ExplorerTopologyProfile(dimension=dimension, gluings=gluings)
-    except ValueError:
-        return default_profile
-
-
-def _default_payload() -> dict[str, Any]:
-    return {
-        "version": 1,
-        "explorer_topology_profiles": {
-            f"{dimension}d": _profile_payload(_empty_profile(dimension))
-            for dimension in _TOPOLOGY_DIMENSIONS
-        },
-    }
+logger = logging.getLogger(__name__)
 
 
 def _file_path(root_dir: Path | None = None) -> Path:
     return explorer_topology_profiles_file_default_path(root_dir=root_dir)
 
 
-def _load_payload(root_dir: Path | None = None) -> dict[str, Any]:
-    payload = _default_payload()
-    loaded = read_json_object_or_empty(_file_path(root_dir=root_dir))
-    loaded_profiles = loaded.get("explorer_topology_profiles")
-    if not isinstance(loaded_profiles, dict):
-        return payload
-    payload_profiles = payload["explorer_topology_profiles"]
-    assert isinstance(payload_profiles, dict)
-    for dimension in _TOPOLOGY_DIMENSIONS:
-        dim_key = f"{dimension}d"
-        payload_profiles[dim_key] = _profile_payload(
-            _profile_from_payload(dimension, loaded_profiles.get(dim_key))
-        )
-    return payload
+def _read_document(root_dir: Path | None = None) -> tuple[object | None, str | None]:
+    path = _file_path(root_dir=root_dir)
+    try:
+        return read_json_value_or_raise(path), None
+    except FileNotFoundError:
+        return None, None
+    except OSError as exc:
+        return None, f"Failed reading explorer topology persistence: {exc}"
+    except json.JSONDecodeError as exc:
+        return None, f"Invalid explorer topology persistence JSON: {exc}"
 
 
-def load_explorer_topology_profiles_payload(
-    root_dir: Path | None = None,
-) -> dict[str, Any]:
-    return _load_payload(root_dir=root_dir)
+def _io_fallback(dimension: int, message: str) -> TopologyProfileLoadResult:
+    return fallback_topology_profile(
+        dimension,
+        PersistenceDiagnostic("error", "malformed_json", "$", message),
+    )
 
 
 def load_explorer_topology_profile(
     dimension: int,
     *,
     root_dir: Path | None = None,
-) -> ExplorerTopologyProfile:
+) -> TopologyProfileLoadResult:
     normalized_dimension = normalize_dimension(dimension)
-    if normalized_dimension not in _TOPOLOGY_DIMENSIONS:
-        raise ValueError("dimension must be 2, 3, or 4 for explorer topology profiles")
-    payload = _load_payload(root_dir=root_dir)
-    raw = payload.get("explorer_topology_profiles", {}).get(f"{normalized_dimension}d")
-    return _profile_from_payload(normalized_dimension, raw)
+    document, error = _read_document(root_dir=root_dir)
+    if error is not None:
+        return _io_fallback(normalized_dimension, error)
+    if document is None:
+        return TopologyProfileLoadResult(empty_topology_profile(normalized_dimension))
+    return load_topology_profile_document(document, normalized_dimension)
+
+
+def load_explorer_topology_profiles_payload(
+    root_dir: Path | None = None,
+) -> dict[str, object]:
+    results = tuple(
+        load_explorer_topology_profile(dimension, root_dir=root_dir)
+        for dimension in TOPOLOGY_PERSISTENCE_DIMENSIONS
+    )
+    for result in results:
+        report_topology_persistence_diagnostics(result)
+    profiles = tuple(result.profile for result in results)
+    return topology_profiles_document(profiles)
+
+
+def report_topology_persistence_diagnostics(
+    result: TopologyProfileLoadResult,
+) -> None:
+    for diagnostic in result.diagnostics:
+        message = (
+            f"Topology persistence {diagnostic.code} at {diagnostic.path}: "
+            f"{diagnostic.message}"
+        )
+        warnings.warn(message, RuntimeWarning, stacklevel=2)
+        logger.warning(message)
 
 
 def save_explorer_topology_profile(
@@ -189,24 +94,31 @@ def save_explorer_topology_profile(
     *,
     root_dir: Path | None = None,
 ) -> tuple[bool, str]:
-    if profile.dimension not in _TOPOLOGY_DIMENSIONS:
-        return False, "dimension must be 2, 3, or 4 for explorer topology profiles"
-    payload = _load_payload(root_dir=root_dir)
-    profiles = payload.setdefault("explorer_topology_profiles", {})
-    if not isinstance(profiles, dict):
-        profiles = {}
-        payload["explorer_topology_profiles"] = profiles
-    profiles[f"{profile.dimension}d"] = _profile_payload(profile)
+    results = {
+        dimension: load_explorer_topology_profile(dimension, root_dir=root_dir)
+        for dimension in TOPOLOGY_PERSISTENCE_DIMENSIONS
+    }
+    profiles = tuple(
+        profile if dimension == profile.dimension else results[dimension].profile
+        for dimension in TOPOLOGY_PERSISTENCE_DIMENSIONS
+    )
     path = _file_path(root_dir=root_dir)
     try:
-        write_json_object(path, payload)
+        write_json_object(path, topology_profiles_document(profiles))
     except OSError as exc:
         return False, f"Failed saving explorer topology profile: {exc}"
-    return True, f"Saved explorer topology profile for {profile.dimension}D"
+    recovery_count = sum(len(result.diagnostics) for result in results.values())
+    suffix = (
+        f"; recovered {recovery_count} stored persistence issue(s)"
+        if recovery_count
+        else ""
+    )
+    return True, f"Saved explorer topology profile for {profile.dimension}D{suffix}"
 
 
 __all__ = [
     "load_explorer_topology_profile",
     "load_explorer_topology_profiles_payload",
+    "report_topology_persistence_diagnostics",
     "save_explorer_topology_profile",
 ]

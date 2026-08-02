@@ -40,13 +40,11 @@ gameplay/replay hashes, and Python semantic authority do not change in Stage
 
 ## Source adapters and deferrals
 
-The explorer-profile store is a persistence adapter. Stage 53C keeps valid
-stored profiles working and prevents malformed scalar values from acquiring
-meaning through domain coercion. Stage 53D owns explicit recovery decisions
-for string or numeric Boolean aliases, numeric strings, missing fields,
-malformed seam rows, legacy transform shapes, unknown fields, and whole-profile
-fallback behavior. Human-input parsing likewise belongs in an explicitly named
-editor adapter rather than a domain constructor.
+The explorer-profile store is a persistence adapter. Stage 53D defines its
+strict current loader, named legacy-v0 adapter, structured diagnostics, and
+recovery granularity in `topology_persistence_recovery.md`. Human-input parsing
+likewise belongs in an explicitly named editor adapter rather than a domain
+constructor.
 
 Repository-wide Python coercion hardening is a short-term governance objective,
 but it must be driven by boundary classification rather than a mechanical ban
