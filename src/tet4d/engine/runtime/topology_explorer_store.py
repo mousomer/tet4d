@@ -17,13 +17,20 @@ from tet4d.engine.topology_explorer import (
     ExplorerTopologyProfile,
     GluingDescriptor,
 )
+from tet4d.engine.topology_explorer.contract_validation import (
+    require_json_bool,
+    require_json_int,
+    require_json_int_sequence,
+    require_json_string,
+)
+from tet4d.engine.topology_explorer.glue_model import normalize_dimension
 
 _TOPOLOGY_DIMENSIONS = (2, 3, 4)
 _AXIS_TO_INDEX = {axis_name: index for index, axis_name in enumerate(AXIS_NAMES)}
 
 
 def _empty_profile(dimension: int) -> ExplorerTopologyProfile:
-    return ExplorerTopologyProfile(dimension=int(dimension), gluings=())
+    return ExplorerTopologyProfile(dimension=normalize_dimension(dimension), gluings=())
 
 
 def _boundary_payload(boundary: BoundaryRef) -> dict[str, object]:
@@ -60,8 +67,8 @@ def _profile_payload(profile: ExplorerTopologyProfile) -> dict[str, object]:
 def _axis_index(raw: object) -> int:
     if isinstance(raw, bool):
         raise ValueError("axis must be a string or integer index")  # noqa: TRY004 - preserve the established validation contract.
-    if isinstance(raw, int):
-        return int(raw)
+    if type(raw) is int:
+        return require_json_int(raw, "boundary.axis")
     if isinstance(raw, str):
         axis = raw.strip().lower()
         if axis in _AXIS_TO_INDEX:
@@ -75,7 +82,7 @@ def _boundary_from_payload(payload: object, *, dimension: int) -> BoundaryRef:
     return BoundaryRef(
         dimension=dimension,
         axis=_axis_index(payload.get("axis")),
-        side=str(payload.get("side", "")),
+        side=require_json_string(payload.get("side"), "boundary.side"),
     )
 
 
@@ -89,8 +96,11 @@ def _transform_from_payload(payload: object, *, dimension: int) -> BoundaryTrans
     if len(permutation_raw) != dimension - 1 or len(signs_raw) != dimension - 1:
         raise ValueError("transform tangent rank must match dimension - 1")
     return BoundaryTransform(
-        permutation=tuple(int(value) for value in permutation_raw),
-        signs=tuple(int(value) for value in signs_raw),
+        permutation=require_json_int_sequence(
+            permutation_raw,
+            "transform.permutation",
+        ),
+        signs=require_json_int_sequence(signs_raw, "transform.signs"),
     )
 
 
@@ -98,8 +108,8 @@ def _glue_from_payload(payload: object, *, dimension: int) -> GluingDescriptor:
     if not isinstance(payload, dict):
         raise ValueError("gluing payload must be an object")  # noqa: TRY004 - preserve the established validation contract.
     return GluingDescriptor(
-        glue_id=str(payload.get("id", "")),
-        enabled=bool(payload.get("enabled", True)),
+        glue_id=require_json_string(payload.get("id"), "gluing.id"),
+        enabled=require_json_bool(payload.get("enabled", True), "gluing.enabled"),
         source=_boundary_from_payload(payload.get("source"), dimension=dimension),
         target=_boundary_from_payload(payload.get("target"), dimension=dimension),
         transform=_transform_from_payload(
@@ -166,7 +176,7 @@ def load_explorer_topology_profile(
     *,
     root_dir: Path | None = None,
 ) -> ExplorerTopologyProfile:
-    normalized_dimension = int(dimension)
+    normalized_dimension = normalize_dimension(dimension)
     if normalized_dimension not in _TOPOLOGY_DIMENSIONS:
         raise ValueError("dimension must be 2, 3, or 4 for explorer topology profiles")
     payload = _load_payload(root_dir=root_dir)

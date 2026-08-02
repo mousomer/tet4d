@@ -4,7 +4,11 @@ import shutil
 import unittest
 from uuid import uuid4
 
-from tet4d.engine.runtime.project_config import state_dir_path
+from tet4d.engine.runtime.project_config import (
+    explorer_topology_profiles_file_default_path,
+    state_dir_path,
+)
+from tet4d.engine.runtime.settings_schema import write_json_object
 from tet4d.engine.runtime.topology_explorer_store import (
     load_explorer_topology_profile,
     save_explorer_topology_profile,
@@ -18,6 +22,59 @@ from tet4d.engine.topology_explorer import (
 
 
 class TestTopologyExplorerStore(unittest.TestCase):
+    def test_malformed_persistence_scalars_fall_back_without_domain_coercion(
+        self,
+    ) -> None:
+        valid_gluing = {
+            "id": "wrap_x",
+            "enabled": True,
+            "source": {"axis": "x", "side": "-"},
+            "target": {"axis": "x", "side": "+"},
+            "transform": {"permutation": [0], "signs": [1]},
+        }
+        mutations = (
+            ("string boolean", ("enabled",), "false"),
+            ("numeric boolean", ("enabled",), 1),
+            ("numeric axis string", ("source", "axis"), "0"),
+            ("fractional permutation", ("transform", "permutation"), [0.9]),
+            ("fractional sign", ("transform", "signs"), [1.8]),
+            ("non-string side", ("source", "side"), -1),
+            ("non-string id", ("id",), 7),
+        )
+        for label, path, malformed_value in mutations:
+            with self.subTest(case=label):
+                root = (
+                    state_dir_path()
+                    / "pytest_temp"
+                    / f"topology_explorer_store_malformed_{uuid4().hex}"
+                )
+                root.mkdir(parents=True, exist_ok=False)
+                try:
+                    gluing = {
+                        **valid_gluing,
+                        "source": dict(valid_gluing["source"]),
+                        "target": dict(valid_gluing["target"]),
+                        "transform": dict(valid_gluing["transform"]),
+                    }
+                    owner = gluing
+                    for key in path[:-1]:
+                        owner = owner[key]
+                    owner[path[-1]] = malformed_value
+                    write_json_object(
+                        explorer_topology_profiles_file_default_path(root_dir=root),
+                        {
+                            "version": 1,
+                            "explorer_topology_profiles": {
+                                "2d": {"dimension": 2, "gluings": [gluing]},
+                            },
+                        },
+                    )
+
+                    loaded = load_explorer_topology_profile(2, root_dir=root)
+                    self.assertEqual(loaded, ExplorerTopologyProfile(2, ()))
+                finally:
+                    shutil.rmtree(root, ignore_errors=True)
+
     def test_round_trip_persists_profile_per_dimension(self) -> None:
         root = (
             state_dir_path() / "pytest_temp" / f"topology_explorer_store_{uuid4().hex}"
