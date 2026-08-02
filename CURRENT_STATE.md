@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -35,15 +35,16 @@ history ledger. Detailed history is preserved in
   parity surface with frame transport and board-extent validation. The merge
   does not transfer Python topology authority to native C++ or Godot; Godot
   carries only the documented DTO, adapter, parity, and query-facing surfaces.
-- Shared topology contract foundation work is implemented on
-  `codex/topology-contract-foundation` from `8017671d`. It adds one
-  language-neutral scalar source, deterministic Python/C++ bindings, strict
-  canonical scalar acceptance, and generated-binding drift checks. It must be
-  merged before the unchanged downstream `codex/native-topology-transport`
-  branch resumes.
-- Merging the shared topology contract foundation is the immediate prerequisite.
-  Broader native topology transport remains the next implementation objective
-  after that merge and must not transfer Python authority.
+- Shared topology contract foundation work is merged on `master` at
+  `af01bbd6`. It adds one language-neutral scalar source, deterministic
+  Python/C++ bindings, strict canonical scalar acceptance, and
+  generated-binding drift checks.
+- The unchanged `codex/native-topology-transport` branch is based on
+  `af01bbd6`. Stage 53B now implements a strict native profile and resolver-
+  query DTO, exact Godot `Variant` decoding, checked dimension products,
+  structured errors, and shared Python/Godot-native acceptance fixtures. It
+  reuses the existing provisional native resolver and does not transfer Python
+  authority.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -61,9 +62,11 @@ history ledger. Detailed history is preserved in
 
 ## Known Watchouts
 
-- Broader native topology transport must consume canonical contract v1 and
-  its generated scalar binding, and remain parity-backed against the Python
-  oracle.
+- Native topology transport accepts only values that satisfy the shared
+  topology contract and the runtime query contract. It does not coerce
+  malformed scalar values into valid topology data.
+- Stage 53B transports and validates topology data but does not transfer
+  semantic authority from Python to C++.
 - Do not move Python semantic authority through implementation convenience or
   visual plausibility; use the authority-transfer protocol.
 - Do not let completed stage narratives return to universal agent prompts,
@@ -85,11 +88,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.10` (`low`)
+- `tech_debt.score = 6.11` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.83`
+1. `delivery_size_pressure = 2.85`
 2. `code_balance = 2.27`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -141,7 +144,5 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-- Merge the automatically verified shared topology contract foundation.
-- Rebase the unchanged `codex/native-topology-transport` branch onto the
-  resulting `master`, then implement the separate parity-backed transport slice
-  without transferring Python authority.
+- Complete review and integration of the parity-backed Stage 53B native
+  topology transport slice before beginning topology-aware Godot gameplay.

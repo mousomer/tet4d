@@ -122,6 +122,13 @@ env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --editor --path "$PROJECT_COPY" --quit
 env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
+TOPOLOGY_TRANSPORT_PARITY_LOG="$VERIFY_ROOT/topology_transport_parity.log"
+env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+  --headless --path "$PROJECT_COPY" --script tests/run_topology_transport_parity.gd \
+  >"$TOPOLOGY_TRANSPORT_PARITY_LOG" 2>&1
+PYTHONPATH="$ROOT_DIR/src" "$PYTHON_BIN" \
+  "$ROOT_DIR/tools/migration/compare_topology_transport.py" \
+  --native-output "$TOPOLOGY_TRANSPORT_PARITY_LOG"
 env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --quit-after 5
 

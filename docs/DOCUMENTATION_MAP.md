@@ -134,6 +134,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
 | Canonical topology interchange, identity, and migration contract | `docs/architecture/canonical_topology_contract.md` |
 | Shared topology scalar limits, generated bindings, and fingerprint | `contracts/topology_contract_v1.json`, `docs/architecture/topology_contract_foundation.md` |
+| Strict native/Godot topology profile and resolver-query transport | `docs/architecture/native_topology_transport.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
 | Godot 4.7 engine, godot-cpp, native build, and CI migration evidence | `docs/plans/audits/godot_4_7_migration_2026-07-25.md` |

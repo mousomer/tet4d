@@ -32,9 +32,11 @@ plausibility is not semantic evidence.
 
 Native code contains parity-backed implementations and query/session surfaces,
 including accepted plain bounded gameplay and later deterministic geometry and
-legality/topology diagnostic slices. Their implementation responsibilities are
-documented in current plans, tests, and `CURRENT_STATE.md` when phase context is
-needed.
+legality/topology diagnostic slices. Stage 53B also owns strict implementation
+of the native topology profile and resolver-query transport boundary described
+in `native_topology_transport.md`; this is transport implementation ownership,
+not topology semantic authority. Implementation responsibilities are documented
+in current plans, tests, and `CURRENT_STATE.md` when phase context is needed.
 
 Those implementations remain provisional semantic ports. No active transfer
 record currently moves semantic authority from Python. A native subsystem

@@ -28,6 +28,11 @@ from .glue_validate import (
     validate_topology_structure,
 )
 from .movement_graph import build_movement_graph, neighbors_for_cell
+from .topology_transport import (
+    TopologyTransportError,
+    validate_topology_transport_profile,
+    validate_topology_transport_query,
+)
 from .transport_resolver import (
     BLOCKED_MOVE,
     CELLWISE_DEFORMATION,
@@ -63,6 +68,7 @@ __all__ = [
     "GluingDescriptor",
     "MoveStep",
     "PieceStepResult",
+    "TopologyTransportError",
     "axis_name",
     "boundary_label",
     "build_explorer_transport_resolver",
@@ -79,4 +85,6 @@ __all__ = [
     "validate_explorer_topology_profile",
     "validate_topology_bijection",
     "validate_topology_structure",
+    "validate_topology_transport_profile",
+    "validate_topology_transport_query",
 ]

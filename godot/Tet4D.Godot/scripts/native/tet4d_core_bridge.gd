@@ -57,6 +57,14 @@ func query_topology_axis_wrap_cell_step(dims: Array, wrapped_axes: Array, coord:
 	return _api().query_topology_axis_wrap_cell_step(dims, wrapped_axes, coord, axis, delta)
 
 
+func topology_transport_profile(profile) -> Dictionary:
+	return _api().topology_transport_profile(profile)
+
+
+func native_topology_transport_query(profile, query) -> Dictionary:
+	return _api().topology_transport_resolve_cell_step(profile, query)
+
+
 func run_builtin_plain_2d_smoke_case() -> bool:
 	return bool(_api().run_builtin_plain_2d_smoke_case())
 
