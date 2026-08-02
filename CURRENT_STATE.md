@@ -44,9 +44,10 @@ history ledger. Detailed history is preserved in
   `Variant` decoding, checked dimension products, structured errors, and 59
   shared Python/Godot-native acceptance fixtures. It reuses the existing
   provisional native resolver and does not transfer Python authority.
-- Stage 53C is the active short-term slice: make Python topology domain
-  constructors validate semantic types before normalization while preserving
-  canonical identity, transport parity, and valid persistence meaning.
+- Stage 53C strict Python topology constructors are merged on `master` at
+  `36972384`. Stage 53D is the active short-term slice: make current topology
+  persistence strict and route evidence-backed legacy recovery through a named,
+  diagnostic adapter without changing domain or canonical semantics.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -92,11 +93,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.12` (`low`)
+- `tech_debt.score = 6.14` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.86`
+1. `delivery_size_pressure = 2.87`
 2. `code_balance = 2.27`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -148,9 +149,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. 53C: complete strict active Python topology domain constructors.
-2. 53D: define explicit persistence and legacy recovery adapters.
-3. 53E: audit repository-wide Python coercion by boundary class.
-4. 53F: apply targeted hardening and final drift governance.
-5. Begin the medium-term professional playable 2D/3D/4D game programme,
+1. 53D: integrate the implemented strict-v1 and unversioned-v0 persistence
+   adapters and their structured recovery diagnostics.
+2. 53E: audit repository-wide Python coercion by boundary class.
+3. 53F: apply targeted hardening and final drift governance.
+4. Begin the medium-term professional playable 2D/3D/4D game programme,
    including later topology-aware Godot gameplay and tooling slices.

@@ -1,0 +1,200 @@
+{
+  "cases": [
+    {
+      "id": "current_empty_2d",
+      "source_version": 1,
+      "document": {
+        "version": 1,
+        "explorer_topology_profiles": {
+          "2d": {"dimension": 2, "gluings": []}
+        }
+      },
+      "dimension": 2,
+      "expected_outcome": "strict_profile",
+      "expected_glue_count": 0,
+      "expected_diagnostics": [],
+      "migrated": false,
+      "used_fallback": false
+    },
+    {
+      "id": "current_valid_disabled_and_reflected",
+      "source_version": 1,
+      "document": {
+        "version": 1,
+        "explorer_topology_profiles": {
+          "3d": {
+            "dimension": 3,
+            "gluings": [
+              {
+                "id": "reflect_x",
+                "enabled": false,
+                "source": {"axis": "x", "side": "-"},
+                "target": {"axis": "x", "side": "+"},
+                "transform": {"permutation": [0, 1], "signs": [-1, 1]}
+              }
+            ]
+          }
+        }
+      },
+      "dimension": 3,
+      "expected_outcome": "strict_profile",
+      "expected_glue_count": 1,
+      "expected_diagnostics": [],
+      "migrated": false,
+      "used_fallback": false
+    },
+    {
+      "id": "current_boolean_alias_discarded",
+      "source_version": 1,
+      "document": {
+        "version": 1,
+        "explorer_topology_profiles": {
+          "2d": {
+            "dimension": 2,
+            "gluings": [
+              {
+                "id": "bad",
+                "enabled": "false",
+                "source": {"axis": "x", "side": "-"},
+                "target": {"axis": "x", "side": "+"},
+                "transform": {"permutation": [0], "signs": [1]}
+              }
+            ]
+          }
+        }
+      },
+      "dimension": 2,
+      "expected_outcome": "recovered_profile",
+      "expected_glue_count": 0,
+      "expected_diagnostics": ["invalid_enabled", "malformed_seam_discarded"],
+      "migrated": false,
+      "used_fallback": false
+    },
+    {
+      "id": "current_unknown_field_fallback",
+      "source_version": 1,
+      "document": {
+        "version": 1,
+        "explorer_topology_profiles": {
+          "2d": {"dimension": 2, "gluing": []}
+        }
+      },
+      "dimension": 2,
+      "expected_outcome": "fallback",
+      "expected_glue_count": 0,
+      "expected_diagnostics": ["missing_required_field", "malformed_profile_fallback"],
+      "migrated": false,
+      "used_fallback": true
+    },
+    {
+      "id": "unknown_future_version",
+      "source_version": 2,
+      "document": {
+        "version": 2,
+        "explorer_topology_profiles": {
+          "2d": {"dimension": 2, "gluings": []}
+        }
+      },
+      "dimension": 2,
+      "expected_outcome": "fallback",
+      "expected_glue_count": 0,
+      "expected_diagnostics": ["unsupported_version", "malformed_profile_fallback"],
+      "migrated": false,
+      "used_fallback": true
+    },
+    {
+      "id": "legacy_boolean_alias_and_defaults",
+      "source_version": 0,
+      "document": {
+        "metadata": {"source": "legacy explorer store"},
+        "explorer_topology_profiles": {
+          "2d": {
+            "name": "old profile",
+            "gluings": [
+              {
+                "id": "wrap_x",
+                "enabled": " FALSE ",
+                "source": {"axis": 0, "side": "-"},
+                "target": {"axis": "X", "side": "+"},
+                "transform": {"permutation": [0], "signs": [1]},
+                "metadata": {"color": "old"}
+              },
+              {
+                "id": "wrap_y",
+                "source": {"axis": "y", "side": "-"},
+                "target": {"axis": "y", "side": "+"},
+                "transform": {"permutation": [0], "signs": [-1]}
+              }
+            ]
+          }
+        }
+      },
+      "dimension": 2,
+      "expected_outcome": "migrated_profile",
+      "expected_glue_count": 2,
+      "expected_diagnostics": [
+        "missing_version",
+        "unknown_field_ignored",
+        "unknown_field_ignored",
+        "missing_optional_field_defaulted",
+        "unknown_field_ignored",
+        "legacy_boolean_alias",
+        "missing_optional_field_defaulted"
+      ],
+      "migrated": true,
+      "used_fallback": false
+    },
+    {
+      "id": "legacy_numeric_boolean_rejected",
+      "source_version": 0,
+      "document": {
+        "explorer_topology_profiles": {
+          "2d": {
+            "dimension": 2,
+            "gluings": [
+              {
+                "id": "bad",
+                "enabled": 1,
+                "source": {"axis": "x", "side": "-"},
+                "target": {"axis": "x", "side": "+"},
+                "transform": {"permutation": [0], "signs": [1]}
+              }
+            ]
+          }
+        }
+      },
+      "dimension": 2,
+      "expected_outcome": "migrated_recovery",
+      "expected_glue_count": 0,
+      "expected_diagnostics": ["missing_version", "invalid_enabled", "malformed_seam_discarded"],
+      "migrated": true,
+      "used_fallback": false
+    },
+    {
+      "id": "legacy_malformed_transform_discarded",
+      "source_version": 0,
+      "document": {
+        "explorer_topology_profiles": {
+          "2d": {
+            "dimension": 2,
+            "gluings": [
+              {
+                "id": "bad_transform",
+                "enabled": true,
+                "source": {"axis": "x", "side": "-"},
+                "target": {"axis": "x", "side": "+"},
+                "transform": {"permutation": [0.0], "signs": [1]}
+              }
+            ]
+          }
+        }
+      },
+      "dimension": 2,
+      "expected_outcome": "migrated_recovery",
+      "expected_glue_count": 0,
+      "expected_diagnostics": ["missing_version", "wrong_type", "malformed_seam_discarded"],
+      "migrated": true,
+      "used_fallback": false
+    }
+  ]
+}

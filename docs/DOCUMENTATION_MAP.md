@@ -136,6 +136,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Shared topology scalar limits, generated bindings, and fingerprint | `contracts/topology_contract_v1.json`, `docs/architecture/topology_contract_foundation.md` |
 | Strict native/Godot topology profile and resolver-query transport | `docs/architecture/native_topology_transport.md` |
 | Strict internal Python topology constructor and source-adapter boundary | `docs/architecture/python_topology_domain_model.md` |
+| Explorer topology persistence versions, strict loading, and legacy recovery | `docs/architecture/topology_persistence_recovery.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
 | Godot 4.7 engine, godot-cpp, native build, and CI migration evidence | `docs/plans/audits/godot_4_7_migration_2026-07-25.md` |
