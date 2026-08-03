@@ -225,23 +225,22 @@ The project already has:
 
 ### Stage 54A status
 
-Stage 54A is implemented and locally committed at `bfeb23dc`.
+Stage 54A is complete, human accepted, and merged.
 
-It establishes:
+It established:
 
 - Ctrl-only soft drop;
 - left-drag camera rotation;
 - right-drag camera translation;
 - ordinary wheel zoom;
-- no Shift-wheel translation;
-- one runtime/helper input authority;
-- correct cockpit ownership for interactive controls;
+- shared runtime/helper input authority;
+- cockpit-panel ownership for interactive controls;
 - clearer button/helper distinction;
-- improved W labels;
+- rear-face W labels;
 - restrained active-slice framing.
 
-Automated verification passed. Human visual acceptance remains pending because
-the implementation environment could not capture a valid viewport.
+Further visual defects are handled through later evidence-driven playability
+review rather than reopening Stage 54A.
 
 ## 6. Phase I — Professional Core Game
 
@@ -250,11 +249,10 @@ Priority: highest
 
 ### Stage 54A — Control and cockpit coherence
 
-Status: implemented locally; publication and later human visual acceptance
-pending.
+Status: complete and merged
 
-Do not reopen the settled functional scope unless visible-GUI review identifies
-a defect.
+Do not reopen the settled functional scope unless later visible-GUI review
+identifies a concrete defect.
 
 ### Stage 54B — Complete custom board configuration
 
@@ -449,11 +447,32 @@ Godot provides:
 - empty, available, and unavailable states;
 - readable previews in 2D, 3D, and 4D.
 
+#### Deterministic identity and compatibility
+
+Hold authority establishment must define snapshot, state-hash, replay, trace,
+and compatibility behaviour before implementation is accepted.
+
 Snapshots, hashes, replay/session identity, and restart behaviour represent:
 
 - held piece or empty state;
 - Hold availability;
 - Hold enablement where it affects gameplay.
+
+Existing replay formats created before Hold must remain readable through an
+explicit compatibility rule, such as treating Hold as disabled with an empty
+slot, or through a deliberate schema-version boundary. The implementation must
+not silently reinterpret old replay identity.
+
+The eventual Stage 54D authority-establishment record must identify:
+
+- Hold state owner;
+- queue-transition owner;
+- snapshot fields;
+- replay schema/version behaviour;
+- old-replay compatibility;
+- state-hash inclusion;
+- restart semantics;
+- fallback or safe-failure behaviour.
 
 ### Stage 54E — Visible-GUI professional playability review
 
@@ -466,7 +485,7 @@ This is evidence-driven. It does not begin with a speculative rewrite list.
 
 Review:
 
-- Stage 54A visual acceptance;
+- visual regressions in the settled Stage 54A scope;
 - custom setup usability;
 - basis-rotation comprehension;
 - Hold usability and preview clarity;
@@ -477,6 +496,8 @@ Review:
 - menu and button hierarchy;
 - pause, restart, setup, and game-over usability;
 - responsiveness and representative board-size performance;
+- grid contrast and visibility across representative 3D/4D views, display
+  settings, and accessibility combinations;
 - minimum viewport and accessibility composition.
 
 Implement only defects observed during review.
@@ -931,19 +952,18 @@ Near-term RDS reconciliation includes:
 
 ## 14. Immediate Execution Order
 
-1. Publish and integrate Stage 54A.
-2. Stage 54B: complete custom per-axis board configuration.
-3. Stage 54C: game-safe 4D basis quarter-turns and focused instruction.
-4. Stage 54D: one-slot Hold gameplay.
-5. Stage 54E: visible-GUI professional playability review and correction.
-6. Stage 54F: professional gaming-experience and release hardening.
-7. Pass `PROFESSIONAL_CORE_GAME_READY`.
-8. Stage 55A: first-class 2D Bounded, Strip, and Möbius games.
-9. Extend selected topology play to 3D and 4D.
-10. Build the Godot Explorer as a complete spatial-practice mode.
-11. Build the challenge runner and 4D challenge campaign.
-12. Connect Play, Explorer, Challenge, topology, endgame, and simulation.
-13. Transfer inherited semantics or establish new authority only at explicit
+1. Stage 54B — custom per-axis board configuration.
+2. Stage 54C — game-safe 4D slice-basis rotations.
+3. Stage 54D — Hold-piece gameplay.
+4. Stage 54E — visible-GUI review and evidence-driven correction.
+5. Stage 54F — release and professional gaming-experience hardening.
+6. Pass `PROFESSIONAL_CORE_GAME_READY`.
+7. Stage 55A — first-class 2D Bounded, Strip, and Möbius games.
+8. Extend selected topology play to 3D and 4D.
+9. Build the Godot Explorer as a complete spatial-practice mode.
+10. Build the challenge runner and 4D challenge campaign.
+11. Connect Play, Explorer, Challenge, topology, endgame, and simulation.
+12. Transfer inherited semantics or establish new authority only at explicit
     subsystem boundaries.
 
 A later stage must not be pulled forward merely because its infrastructure is
