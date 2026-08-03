@@ -25,11 +25,13 @@ Stable references: `docs/architecture/authority_map.md`,
 
 - [ ] Owning RDS/architecture authorities were consulted and updated when
       behaviour or boundaries changed.
-- [ ] The named subsystem authority matches
+- [ ] The named subsystem authority matches the authority map in
       `docs/architecture/authority_map.md`.
 - [ ] For inherited, untransferred behaviour, the Python oracle/reference
       remains authoritative unless a completed transfer record changes the
       named subsystem.
+- [ ] Parity evidence and known exclusions were reviewed for every inherited
+      transfer claim.
 - [ ] New behaviour without a predecessor has a normative contract, named
       implementation/data owners, conformance evidence, and an establishment
       record where semantic authority is claimed.
