@@ -5,6 +5,7 @@ import json
 import math
 import shutil
 from dataclasses import asdict
+from itertools import product
 from pathlib import Path
 from typing import Any
 
@@ -20,20 +21,49 @@ from tet4d.engine.runtime.topology_playground_state import (
     TopologyPlaygroundPlayabilityAnalysis,
 )
 from tet4d.engine.topology_explorer import ExplorerTopologyProfile
+from tet4d.engine.topology_explorer.contract_validation import (
+    require_json_int,
+    require_json_int_sequence,
+    require_json_object,
+    require_json_string,
+)
 from tet4d.engine.topology_explorer.domain_validation import (
     require_instance,
     require_integral,
     require_integral_sequence,
 )
+from tet4d.engine.topology_explorer.glue_model import MoveStep
+from tet4d.engine.topology_explorer.glue_validate import (
+    validate_explorer_topology_profile,
+)
 from tet4d.engine.topology_explorer.movement_graph import (
+    MOVEMENT_GRAPH_ALGORITHM_VERSION,
+    MovementEdge,
     deserialize_movement_graph_rows,
-    movement_graph_rows,
+    movement_graph_rows,  # noqa: F401 - cold-read tests instrument the actual cache-module boundary.
     serialize_movement_graph_rows,
 )
+from tet4d.engine.topology_explorer.transport_resolver import (
+    build_explorer_transport_resolver,
+)
 
-TOPOLOGY_CACHE_VERSION = 3
-_CACHE_DATA_FIELDS = frozenset({"graph_rows", "playability_analysis"})
-_CACHE_METADATA_FIELDS = frozenset({"cache_key", "cache_version", "dims"})
+TOPOLOGY_CACHE_VERSION = 4
+_CACHE_DATA_FIELDS = frozenset(
+    {
+        "graph_directed_edge_count",
+        "graph_row_count",
+        "graph_rows",
+        "playability_analysis",
+    }
+)
+_CACHE_METADATA_FIELDS = frozenset(
+    {
+        "cache_key",
+        "cache_version",
+        "dims",
+        "graph_algorithm_version",
+    }
+)
 _PLAYABILITY_FIELDS = frozenset(
     {
         "status",
@@ -106,6 +136,7 @@ def topology_cache_key(
         raise ValueError("dims must contain only positive integers")
     payload = {
         "cache_version": TOPOLOGY_CACHE_VERSION,
+        "graph_algorithm_version": MOVEMENT_GRAPH_ALGORITHM_VERSION,
         "dims": list(normalized_dims),
         "profile": _profile_signature_payload(validated_profile),
     }
@@ -129,6 +160,10 @@ def topology_cache_file_path(
     )
 
 
+def _cache_digest_file_path(cache_path: Path) -> Path:
+    return cache_path.with_suffix(cache_path.suffix + ".sha256")
+
+
 def _cache_entry_metadata_matches(
     payload: object,
     *,
@@ -136,26 +171,37 @@ def _cache_entry_metadata_matches(
     expected_version: int,
     expected_dims: tuple[int, ...],
 ) -> bool:
-    if type(payload) is not dict or not payload:
+    try:
+        document = require_json_object(payload, "cache")
+        if not document or not _CACHE_METADATA_FIELDS.issubset(document):
+            return False
+        if set(document) - _CACHE_METADATA_FIELDS - _CACHE_DATA_FIELDS:
+            return False
+        if (
+            require_json_int(document["cache_version"], "cache.cache_version")
+            != expected_version
+        ):
+            return False
+        if (
+            require_json_int(
+                document["graph_algorithm_version"],
+                "cache.graph_algorithm_version",
+            )
+            != MOVEMENT_GRAPH_ALGORITHM_VERSION
+        ):
+            return False
+        if (
+            require_json_string(document["cache_key"], "cache.cache_key")
+            != expected_key
+        ):
+            return False
+        stored_dims = require_json_int_sequence(document["dims"], "cache.dims")
+        if stored_dims != expected_dims:
+            return False
+        _validate_cache_json_value(document)
+        return True
+    except (KeyError, TypeError, ValueError):
         return False
-    if not _CACHE_METADATA_FIELDS.issubset(payload):
-        return False
-    if set(payload) - _CACHE_METADATA_FIELDS - _CACHE_DATA_FIELDS:
-        return False
-    if type(payload.get("cache_version")) is not int:
-        return False
-    if payload["cache_version"] != expected_version:
-        return False
-    if type(payload.get("cache_key")) is not str:
-        return False
-    if payload["cache_key"] != expected_key:
-        return False
-    stored_dims = payload.get("dims")
-    if type(stored_dims) is not list:
-        return False
-    if any(type(value) is not int for value in stored_dims):
-        return False
-    return tuple(stored_dims) == expected_dims
 
 
 def read_topology_cache_entry(
@@ -172,7 +218,13 @@ def read_topology_cache_entry(
     if not cache_path.exists():
         return None
     try:
-        payload = read_json_value_or_raise(cache_path)
+        encoded = cache_path.read_bytes()
+        stored_digest = read_json_value_or_raise(_cache_digest_file_path(cache_path))
+        if type(stored_digest) is not str:
+            return None
+        if hashlib.sha256(encoded).hexdigest() != stored_digest:
+            return None
+        payload = json.loads(encoded)
     except (OSError, ValueError):
         return None
     if not _cache_entry_metadata_matches(
@@ -230,10 +282,15 @@ def write_topology_cache_entry(
         )
     payload = {key: value for key, value in entry.items() if key in _CACHE_DATA_FIELDS}
     payload["cache_version"] = normalized_version
+    payload["graph_algorithm_version"] = MOVEMENT_GRAPH_ALGORITHM_VERSION
     payload["cache_key"] = cache_key
     payload["dims"] = list(normalized_dims)
     _validate_cache_json_value(payload)
     atomic_write_json(cache_path, payload)
+    atomic_write_json(
+        _cache_digest_file_path(cache_path),
+        hashlib.sha256(cache_path.read_bytes()).hexdigest(),
+    )
 
 
 def merge_topology_cache_entry(
@@ -284,11 +341,54 @@ def read_cached_graph_rows(
     )
     if cached_rows is None:
         return None
-    # A structurally valid cache still cannot define topology semantics. Compare
-    # it with the authoritative profile/resolver result before reuse.
-    if cached_rows != movement_graph_rows(profile, dims=dims):
+    row_count = entry.get("graph_row_count")
+    if type(row_count) is not int or row_count != len(cached_rows):
+        return None
+    directed_edge_count = entry.get("graph_directed_edge_count")
+    actual_edge_count = sum(len(edges) for _, edges in cached_rows)
+    if type(directed_edge_count) is not int or directed_edge_count != actual_edge_count:
+        return None
+    if not _cached_boundary_rows_match_profile(
+        profile,
+        dims=dims,
+        cached_rows=cached_rows,
+    ):
         return None
     return cached_rows
+
+
+def _cached_boundary_rows_match_profile(
+    profile: ExplorerTopologyProfile,
+    *,
+    dims: tuple[int, ...],
+    cached_rows: tuple[tuple[tuple[int, ...], tuple[MovementEdge, ...]], ...],
+) -> bool:
+    validated_profile = validate_explorer_topology_profile(profile, dims=dims)
+    resolver = build_explorer_transport_resolver(validated_profile, dims)
+    edges_by_coord = {
+        coord: {edge.step: edge for edge in edges} for coord, edges in cached_rows
+    }
+    for axis, size in enumerate(dims):
+        for boundary_value, delta in ((0, -1), (size - 1, 1)):
+            step = MoveStep(axis=axis, delta=delta)
+            face_ranges = [range(value) for value in dims]
+            face_ranges[axis] = (boundary_value,)
+            for raw_coord in product(*face_ranges):
+                coord = tuple(raw_coord)
+                result = resolver.resolve_cell_step(coord, step)
+                actual = edges_by_coord[coord].get(step)
+                expected = (
+                    None
+                    if result.target is None
+                    else MovementEdge(
+                        step=step,
+                        target=result.target,
+                        traversal=result.traversal,
+                    )
+                )
+                if actual != expected:
+                    return False
+    return True
 
 
 def write_cached_graph_rows(
@@ -299,12 +399,15 @@ def write_cached_graph_rows(
     cache_version: int = TOPOLOGY_CACHE_VERSION,
     root_dir: Path | None = None,
 ) -> None:
+    serialized_rows = serialize_movement_graph_rows(graph_rows, dims=dims)
     merge_topology_cache_entry(
         profile,
         dims=dims,
         cache_version=cache_version,
         root_dir=root_dir,
-        graph_rows=serialize_movement_graph_rows(graph_rows, dims=dims),
+        graph_rows=serialized_rows,
+        graph_row_count=len(serialized_rows),
+        graph_directed_edge_count=sum(len(row["edges"]) for row in serialized_rows),
     )
 
 

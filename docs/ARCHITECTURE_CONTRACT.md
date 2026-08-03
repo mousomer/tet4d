@@ -136,6 +136,18 @@ topology inputs rebuild them. Distinct topology stores may retain their source
 format only through named adapters that ultimately construct strict Python
 topology domain state.
 
+Persistent movement-graph cache identity commits the cache schema, graph
+algorithm, dimensions, and complete topology-profile signature. An adjacent
+digest binds the exact cache document bytes. Normal cold reads validate those
+identities, declared counts, canonical coordinates and moves, references,
+traversal structure, and the complete boundary surface against the
+authoritative resolver; they do not construct or compare the complete
+authoritative graph. Any mismatch is a silent derived-data miss, after which
+the caller builds once from authoritative inputs and may replace each cache
+artifact atomically; an interrupted document/digest pair is therefore only a
+future miss. Full graph comparison is reserved for tests or explicit
+diagnostics, not production cache acceptance.
+
 ## Package Placement Rules
 
 1. Pure deterministic logic goes in `src/tet4d/engine/core/`.

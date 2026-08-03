@@ -113,7 +113,7 @@ Boundary classifications:
 | Replay decoding and recording | **fixed** | replay v1 now has exact current-schema readers for containers, scalar fields, actions, dimensions, and edge rules; recorders accept only validated config/action objects and semantic integers; malformed current data rejects the whole replay |
 | Trace and state-hash materialization | **fixed** | the trace helper accepts only the documented deterministic JSON value domain, rejects arbitrary objects/non-string keys/non-finite floats, preserves bool/int distinction and canonical mapping order, and retains exact valid hash fixtures |
 | Public gameplay configuration | **fixed** | `GameConfig` and `GameConfigND` validate semantic integers, exact booleans, strings/enums, dimensions, ranges, edge-rule shapes, and explorer objects before normalization |
-| Movement-cache decoding | **fixed** | cache metadata is bound to exact version/key/dimensions; graph and playability payloads use strict schemas and invariants; invalid derived data becomes a cache miss and rebuilds from authoritative topology inputs |
+| Movement-cache decoding | **fixed** | cache schema 4 binds exact schema, graph-algorithm, key, dimensions, full profile identity, and an adjacent exact-document digest; strict graph decoding checks canonical rows, counts, moves, references, traversals, and the complete boundary surface through the authoritative resolver; normal cold hits never build the full graph, while invalid derived data becomes a miss and rebuilds once from authoritative inputs |
 | Separate topology-profile store | **fixed** | the active `profiles.json` edge-rule workspace format is explicitly versioned and decoded by `topology_profile_store_v1_state_from_payload`; malformed documents fall back as a whole and the existing named bridge produces the canonical Stage 53C explorer domain |
 | Retirement candidates | **deferred** | all candidates retain an active caller, RDS/policy/benchmark role, or compatibility obligation; no zero-caller and zero-obligation candidate was proven removable |
 | Piece/config-bundle import readers and unrelated settings recovery | **deferred** | these lower-priority format-specific boundaries are outside the five selected owners; no evidence justifies broadening the closure batch or imposing a generic conversion policy |
@@ -123,6 +123,12 @@ legacy replay adapter was added. The topology profile workspace format is
 distinct from Stage 53D gluing persistence and therefore keeps a separately
 named strict adapter rather than being silently routed through the Stage 53D
 format.
+
+The cache correction reuses Stage 53C exact JSON object, integer, integer-
+sequence, and string validators for representation rules. Cache field layout,
+identity, checksum, count, strict graph-row, and miss/rebuild policy remain
+cache-local; rank and seam semantics remain enforced by the topology profile
+validator and transport resolver. No cross-format schema parser was added.
 
 > The short-term Python boundary-governance programme is complete. Strictness
 > is enforced at identity-bearing, replay, trace, gameplay-configuration,

@@ -14,8 +14,8 @@ from tet4d.engine.runtime.settings_schema import (
 )
 from tet4d.engine.runtime.topology_cache import (
     TOPOLOGY_CACHE_VERSION,
-    merge_topology_cache_entry,
     read_cached_graph_rows,
+    write_cached_graph_rows,
 )
 from tet4d.engine.runtime.topology_explorer_audit import record_active_interaction_phase
 from tet4d.engine.topology_explorer import (
@@ -33,7 +33,6 @@ from tet4d.engine.topology_explorer.domain_validation import (
 from tet4d.engine.topology_explorer.movement_graph import (
     movement_graph_from_rows,
     movement_graph_rows,
-    serialize_movement_graph_rows,
 )
 from tet4d.engine.topology_explorer.transport_resolver import (
     CellStepResult,
@@ -365,12 +364,12 @@ def _write_cached_preview_graph_rows(
     graph_rows,
     root_dir: Path | None = None,
 ) -> None:
-    merge_topology_cache_entry(
+    write_cached_graph_rows(
         profile,
         dims=dims,
         cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
         root_dir=root_dir,
-        graph_rows=serialize_movement_graph_rows(graph_rows, dims=dims),
+        graph_rows=graph_rows,
     )
 
 
@@ -390,13 +389,18 @@ def compile_explorer_topology_preview(
         glue_count=len(profile.gluings),
         source=source,
     ):
-        graph_rows = read_cached_graph_rows(
-            profile,
-            dims=normalized_dims,
-            cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
-            root_dir=root_dir,
+        graph_rows = (
+            read_cached_graph_rows(
+                profile,
+                dims=normalized_dims,
+                cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
+                root_dir=root_dir,
+            )
+            if use_local_cache
+            else None
         )
-        if graph_rows is None:
+        cache_miss = graph_rows is None
+        if cache_miss:
             graph_rows = movement_graph_rows(profile, dims=normalized_dims)
         graph = movement_graph_from_rows(graph_rows)
         degree_histogram = Counter(len(edges) for edges in graph.values())
@@ -429,7 +433,7 @@ def compile_explorer_topology_preview(
             "warnings": _preview_warnings(profile, component_count=component_count),
             "axes": [axis_name(index) for index in range(profile.dimension)],
         }
-        if use_local_cache:
+        if use_local_cache and cache_miss:
             try:
                 _write_cached_preview_graph_rows(
                     profile,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import unittest
@@ -12,6 +13,7 @@ from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     validate_topology_profile_state,
 )
+from tet4d.engine.runtime import topology_cache as topology_cache_module
 from tet4d.engine.runtime.project_config import (
     explorer_topology_preview_cache_dir_path,
     explorer_topology_preview_dims,
@@ -23,7 +25,9 @@ from tet4d.engine.runtime.topology_cache import (
     read_cached_graph_rows,
     read_cached_playability_analysis,
     read_topology_cache_entry,
+    topology_cache_file_path,
     topology_cache_usage,
+    write_cached_graph_rows,
     write_cached_playability_analysis,
 )
 from tet4d.engine.runtime.topology_explorer_bridge import (
@@ -43,6 +47,7 @@ from tet4d.engine.runtime.topology_playground_state import (
 )
 from tet4d.engine.topology_explorer import MoveStep
 from tet4d.engine.topology_explorer.movement_graph import (
+    _build_movement_graph_rows,
     build_movement_graph,
     movement_graph_from_rows,
     movement_graph_rows,
@@ -58,6 +63,13 @@ from tet4d.engine.topology_explorer.transport_resolver import (
 
 
 class TestTopologyExplorerPreview(unittest.TestCase):
+    @staticmethod
+    def _refresh_cache_digest(cache_file) -> None:
+        topology_cache_module._cache_digest_file_path(cache_file).write_text(
+            json.dumps(hashlib.sha256(cache_file.read_bytes()).hexdigest()),
+            encoding="utf-8",
+        )
+
     def test_bridge_converts_symmetric_wrap_profile(self) -> None:
         legacy = validate_topology_profile_state(
             gameplay_mode=GAMEPLAY_MODE_EXPLORER,
@@ -305,6 +317,37 @@ class TestTopologyExplorerPreview(unittest.TestCase):
         finally:
             shutil.rmtree(root, ignore_errors=True)
 
+    def test_cold_graph_cache_hit_does_not_call_cache_module_builder(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_cold_cache_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            expected = movement_graph_rows(profile, dims=(6, 6))
+            write_cached_graph_rows(
+                profile,
+                dims=(6, 6),
+                graph_rows=expected,
+                root_dir=root,
+            )
+            _build_movement_graph_rows.cache_clear()
+            with mock.patch(
+                "tet4d.engine.runtime.topology_cache.movement_graph_rows",
+                side_effect=AssertionError("cold cache hit rebuilt the graph"),
+            ) as build_graph:
+                cached = read_cached_graph_rows(
+                    profile,
+                    dims=(6, 6),
+                    root_dir=root,
+                )
+            build_graph.assert_not_called()
+            self.assertEqual(cached, expected)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
     def test_missing_local_cache_file_is_silent_cache_miss(self) -> None:
         root = (
             state_dir_path()
@@ -498,12 +541,15 @@ class TestTopologyExplorerPreview(unittest.TestCase):
             wrong_key = json.loads(json.dumps(original))
             wrong_key["cache_key"] = "0" * 64
             cases.append(wrong_key)
+            wrong_algorithm = json.loads(json.dumps(original))
+            wrong_algorithm["graph_algorithm_version"] += 1
+            cases.append(wrong_algorithm)
             wrong_dims = json.loads(json.dumps(original))
             wrong_dims["dims"] = [6, 7]
             cases.append(wrong_dims)
-
             for case in cases:
                 cache_file.write_text(json.dumps(case), encoding="utf-8")
+                self._refresh_cache_digest(cache_file)
                 self.assertIsNone(
                     read_topology_cache_entry(
                         profile,
@@ -521,6 +567,35 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                     rebuilt["movement_graph"],
                     authoritative["movement_graph"],
                 )
+
+            topology_cache_module._cache_digest_file_path(cache_file).write_text(
+                json.dumps("0" * 64),
+                encoding="utf-8",
+            )
+            self.assertIsNone(
+                read_cached_graph_rows(
+                    profile,
+                    dims=(6, 6),
+                    root_dir=root,
+                )
+            )
+            self._refresh_cache_digest(cache_file)
+
+            other_profile = sphere_profile_2d()
+            other_cache_file = topology_cache_file_path(
+                other_profile,
+                dims=(6, 6),
+                root_dir=root,
+            )
+            other_cache_file.write_text(json.dumps(original), encoding="utf-8")
+            self._refresh_cache_digest(other_cache_file)
+            self.assertIsNone(
+                read_topology_cache_entry(
+                    other_profile,
+                    dims=(6, 6),
+                    root_dir=root,
+                )
+            )
         finally:
             shutil.rmtree(root, ignore_errors=True)
 
@@ -546,16 +621,54 @@ class TestTopologyExplorerPreview(unittest.TestCase):
             malformed_rows = []
 
             bad_coord = json.loads(json.dumps(original))
-            bad_coord["graph_rows"][0]["coord"][0] = True
+            bad_coord["graph_rows"][0]["coord"].append(0)
             malformed_rows.append(bad_coord)
 
-            bad_step = json.loads(json.dumps(original))
-            bad_step["graph_rows"][0]["edges"][0]["step"] = 1
-            malformed_rows.append(bad_step)
+            out_of_bounds_coord = json.loads(json.dumps(original))
+            out_of_bounds_coord["graph_rows"][0]["coord"][0] = 6
+            malformed_rows.append(out_of_bounds_coord)
 
-            bad_target = json.loads(json.dumps(original))
-            bad_target["graph_rows"][0]["edges"][0]["target"][0] = "1"
-            malformed_rows.append(bad_target)
+            duplicate_coord = json.loads(json.dumps(original))
+            duplicate_coord["graph_rows"][1]["coord"] = list(
+                duplicate_coord["graph_rows"][0]["coord"]
+            )
+            malformed_rows.append(duplicate_coord)
+
+            missing_reference = json.loads(json.dumps(original))
+            missing_reference["graph_rows"][0]["edges"][0]["target"][0] = 6
+            malformed_rows.append(missing_reference)
+
+            invalid_axis = json.loads(json.dumps(original))
+            invalid_axis["graph_rows"][0]["edges"][0]["step"] = "q+"
+            malformed_rows.append(invalid_axis)
+
+            invalid_delta = json.loads(json.dumps(original))
+            invalid_delta["graph_rows"][0]["edges"][0]["step"] = "x+2"
+            malformed_rows.append(invalid_delta)
+
+            malformed_traversal = json.loads(json.dumps(original))
+            for row in malformed_traversal["graph_rows"]:
+                traversal = next(
+                    (
+                        edge["traversal"]
+                        for edge in row["edges"]
+                        if edge["traversal"] is not None
+                    ),
+                    None,
+                )
+                if traversal is not None:
+                    del traversal["glue_id"]
+                    break
+            malformed_rows.append(malformed_traversal)
+
+            omitted_in_bounds = json.loads(json.dumps(original))
+            interior_row = next(
+                row for row in omitted_in_bounds["graph_rows"] if row["coord"] == [1, 1]
+            )
+            interior_row["edges"] = [
+                edge for edge in interior_row["edges"] if edge["step"] != "x+"
+            ]
+            malformed_rows.append(omitted_in_bounds)
 
             omitted_seam = json.loads(json.dumps(original))
             seam_removed = False
@@ -570,8 +683,17 @@ class TestTopologyExplorerPreview(unittest.TestCase):
             self.assertTrue(seam_removed)
             malformed_rows.append(omitted_seam)
 
+            wrong_row_count = json.loads(json.dumps(original))
+            wrong_row_count["graph_row_count"] += 1
+            malformed_rows.append(wrong_row_count)
+
+            wrong_edge_count = json.loads(json.dumps(original))
+            wrong_edge_count["graph_directed_edge_count"] += 1
+            malformed_rows.append(wrong_edge_count)
+
             for malformed in malformed_rows:
                 cache_file.write_text(json.dumps(malformed), encoding="utf-8")
+                self._refresh_cache_digest(cache_file)
                 self.assertIsNone(
                     read_cached_graph_rows(
                         profile,
@@ -579,6 +701,65 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                         root_dir=root,
                     )
                 )
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_cache_miss_rebuilds_once_and_rewritten_cache_is_a_cold_hit(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_cache_rebuild_once_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            expected = compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="rebuild_once_seed",
+                root_dir=root,
+            )
+            cache_file = next(
+                explorer_topology_preview_cache_dir_path(root_dir=root).glob("*.json")
+            )
+            topology_cache_module._cache_digest_file_path(cache_file).write_text(
+                json.dumps("0" * 64),
+                encoding="utf-8",
+            )
+
+            with mock.patch(
+                "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
+                wraps=movement_graph_rows,
+            ) as build_graph:
+                rebuilt = compile_explorer_topology_preview(
+                    profile,
+                    dims=(6, 6),
+                    source="rebuild_once_fallback",
+                    root_dir=root,
+                )
+            build_graph.assert_called_once_with(profile, dims=(6, 6))
+            self.assertEqual(rebuilt["movement_graph"], expected["movement_graph"])
+
+            _build_movement_graph_rows.cache_clear()
+            with (
+                mock.patch(
+                    "tet4d.engine.runtime.topology_cache.movement_graph_rows",
+                    side_effect=AssertionError("cache reader rebuilt the graph"),
+                ) as cache_builder,
+                mock.patch(
+                    "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
+                    side_effect=AssertionError("caller rebuilt the graph"),
+                ) as caller_builder,
+            ):
+                cached = compile_explorer_topology_preview(
+                    profile,
+                    dims=(6, 6),
+                    source="rebuild_once_cold_hit",
+                    root_dir=root,
+                )
+            cache_builder.assert_not_called()
+            caller_builder.assert_not_called()
+            self.assertEqual(cached["movement_graph"], expected["movement_graph"])
         finally:
             shutil.rmtree(root, ignore_errors=True)
 
@@ -621,6 +802,7 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                     near_miss
                 )
                 cache_file.write_text(json.dumps(malformed), encoding="utf-8")
+                self._refresh_cache_digest(cache_file)
                 self.assertIsNone(
                     read_cached_playability_analysis(
                         profile,

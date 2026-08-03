@@ -23,6 +23,8 @@ from .glue_model import (
 from .glue_validate import validate_explorer_topology_profile
 from .transport_resolver import build_explorer_transport_resolver
 
+MOVEMENT_GRAPH_ALGORITHM_VERSION = 1
+
 
 @dataclass(frozen=True)
 class MovementEdge:
@@ -394,6 +396,8 @@ def deserialize_movement_graph_rows(
             edge_steps = tuple(edge.step for edge in edges)
             if len(set(edge_steps)) != len(edge_steps):
                 raise ValueError("cache graph contains duplicate moves for one cell")
+            if edge_steps != tuple(step for step in steps if step in edge_steps):
+                raise ValueError("cache graph movement edges must use canonical order")
             for step in steps:
                 neighbor = list(coord)
                 neighbor[step.axis] += step.delta
@@ -403,8 +407,8 @@ def deserialize_movement_graph_rows(
                 ):
                     raise ValueError("cache graph omits an in-bounds movement edge")
             rows.append((coord, edges))
-        expected_coords = set(product(*(range(size) for size in normalized_dims)))
-        if seen_coords != expected_coords:
+        expected_coords = tuple(product(*(range(size) for size in normalized_dims)))
+        if tuple(coord for coord, _ in rows) != expected_coords:
             raise ValueError(
                 "cache graph must contain every board coordinate exactly once"
             )
