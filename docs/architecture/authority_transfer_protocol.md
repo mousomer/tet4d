@@ -11,9 +11,12 @@ This document does not move or establish authority by itself.
 
 - `docs/architecture/authority_map.md` records current subsystem authority.
 - `docs/architecture/parity_protocol.md` defines reusable parity evidence.
+- `docs/architecture/first_subsystem_parity_pilot.md` is the first subsystem
+  parity pilot and remains evidence only; it must not be recorded as an
+  authority transfer.
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md` defines the
   reusable promotion gate for inherited parity work. The pilot and its audit
-  are evidence-only pilot material; they are not transfer records.
+  are evidence-only material; they are not transfer records.
 - `docs/architecture/parity_evidence_package_review.md` reviews parity evidence
   packaging. Evidence-package reviews are not transfer records.
 - `docs/architecture/trace_schema_version_normalization_parity.md` records a
