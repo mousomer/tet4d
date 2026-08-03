@@ -9,8 +9,9 @@ This policy applies to native C++ and GDExtension code used by Tet4D.
 
 It does not make C++ universally authoritative.
 
-Inherited behaviour remains provisional in C++ until parity evidence, a
-completed transfer record in
+For inherited, untransferred subsystems, Python remains the semantic oracle and
+reference authority. Native behaviour remains provisional until parity
+evidence, a completed transfer record in
 `docs/architecture/authority_transfer_protocol.md`, and an authority-map update
 say otherwise.
 
