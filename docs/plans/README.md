@@ -30,7 +30,13 @@ Meaning:
 General planning/routing files are not topology-playground-specific.
 
 - `plan_authority_map.md`
+- `professional_godot_game_programme.md`
 - `cleanup_master_plan.md`
+
+`professional_godot_game_programme.md` owns product-programme priorities,
+phase sequencing, and the professional-core-game completion gate. It does not
+replace durable RDS behaviour, subsystem authority records, or current
+execution status.
 
 These files exist so topology-playground-specific files do not have to carry
 general planning redirection or repo-wide ownership notes.
