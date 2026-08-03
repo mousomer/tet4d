@@ -4,6 +4,7 @@ from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_INVERT, EDGE_WRAP
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     TopologyProfileState,
+    validate_topology_profile_state,
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
     export_explorer_topology_preview,
@@ -59,11 +60,12 @@ def explorer_profile_from_edge_rules(
     edge_rules: tuple[tuple[str, str], ...],
 ) -> ExplorerTopologyProfile:
     return explorer_profile_from_legacy_profile(
-        TopologyProfileState(
+        validate_topology_profile_state(
             gameplay_mode=GAMEPLAY_MODE_EXPLORER,
-            dimension=int(dimension),
-            topology_mode=str(topology_mode),
-            edge_rules=tuple((str(neg), str(pos)) for neg, pos in edge_rules),
+            dimension=dimension,
+            gravity_axis=1,
+            topology_mode=topology_mode,
+            edge_rules=edge_rules,
         )
     )
 
