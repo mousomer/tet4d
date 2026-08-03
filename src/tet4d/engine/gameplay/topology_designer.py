@@ -11,6 +11,10 @@ from ..runtime.project_config import (
     topology_profile_export_file_default_path,
 )
 from ..runtime.settings_schema import read_json_object_or_empty, write_json_object
+from ..topology_explorer.contract_validation import (
+    require_json_array,
+    require_json_object,
+)
 from ..topology_explorer.domain_validation import (
     require_bounded_integral,
     require_sequence,
@@ -450,14 +454,15 @@ def topology_profile_store_v1_state_from_payload(
     gameplay_mode: str,
     payload: object,
 ) -> TopologyProfileState:
-    if type(payload) is not dict:
-        raise ValueError("topology profile store entry must be an object")
+    payload = require_json_object(payload, "topology profile store entry")
     expected_fields = {"topology_mode", "preset_id", "edge_rules"}
     if set(payload) != expected_fields:
         raise ValueError("topology profile store entry fields are invalid")
-    raw_rules = payload["edge_rules"]
-    if type(raw_rules) is not list or any(type(rule) is not list for rule in raw_rules):
-        raise ValueError("topology profile store edge_rules must be arrays")
+    raw_rules = require_json_array(
+        payload["edge_rules"], "topology profile store entry.edge_rules"
+    )
+    for axis, rule in enumerate(raw_rules):
+        require_json_array(rule, f"topology profile store entry.edge_rules[{axis}]")
     preset_id = payload["preset_id"]
     if preset_id is not None and type(preset_id) is not str:
         raise ValueError("topology profile store preset_id must be a string or null")

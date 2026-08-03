@@ -148,6 +148,21 @@ artifact atomically; an interrupted document/digest pair is therefore only a
 future miss. Full graph comparison is reserved for tests or explicit
 diagnostics, not production cache acceptance.
 
+The active topology-profile store distinguishes missing, valid, and invalid
+documents. Read-only consumers may use a default recovery view for missing or
+invalid storage, but that view carries no mutation authority. Ordinary saves
+create missing storage, update a freshly validated document while preserving
+unrelated slots, and refuse invalid existing storage before writing. A content
+snapshot is rechecked immediately before the atomic document replacement so a
+load/write race becomes a typed save failure. Destructive backup and
+reinitialization, if ever needed, requires a separately named recovery
+operation; ordinary save never performs it implicitly.
+
+Shared scalar representation rules are reused where semantics are identical.
+Domain invariants remain authoritative in domain constructors. Source-format,
+diagnostic, fallback, cache, and file-mutation policy remains local to the
+owning adapter.
+
 ## Package Placement Rules
 
 1. Pure deterministic logic goes in `src/tet4d/engine/core/`.

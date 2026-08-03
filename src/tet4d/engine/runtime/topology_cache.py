@@ -14,6 +14,7 @@ from tet4d.engine.runtime.project_config import (
 )
 from tet4d.engine.runtime.settings_schema import (
     atomic_write_json,
+    read_file_bytes,
     read_json_value_or_raise,
 )
 from tet4d.engine.runtime.topology_playground_state import (
@@ -218,7 +219,7 @@ def read_topology_cache_entry(
     if not cache_path.exists():
         return None
     try:
-        encoded = cache_path.read_bytes()
+        encoded = read_file_bytes(cache_path)
         stored_digest = read_json_value_or_raise(_cache_digest_file_path(cache_path))
         if type(stored_digest) is not str:
             return None
@@ -289,7 +290,7 @@ def write_topology_cache_entry(
     atomic_write_json(cache_path, payload)
     atomic_write_json(
         _cache_digest_file_path(cache_path),
-        hashlib.sha256(cache_path.read_bytes()).hexdigest(),
+        hashlib.sha256(read_file_bytes(cache_path)).hexdigest(),
     )
 
 

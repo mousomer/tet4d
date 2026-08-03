@@ -104,6 +104,10 @@ authority-map owners; do not reopen generic boundary-governance stages.
 - Require a scope matrix for deliberately cross-layer integration PRs.
 - Never weaken tests to fit an implementation.
 - Keep Python authority and transfer records aligned with actual ownership.
+- Keep persistent topology-cache acceptance bounded; valid cold reads must not
+  reconstruct the full authoritative graph.
+- Keep invalid topology-profile storage non-saveable through ordinary update
+  paths; read-only fallback is not mutation authority.
 - Keep generated outputs tied to their source authority and generator.
 - Record new warnings separately from known advisories.
 - Keep all Tet4D GitHub writes on the verified owner identity for canonical

@@ -114,7 +114,7 @@ Boundary classifications:
 | Trace and state-hash materialization | **fixed** | the trace helper accepts only the documented deterministic JSON value domain, rejects arbitrary objects/non-string keys/non-finite floats, preserves bool/int distinction and canonical mapping order, and retains exact valid hash fixtures |
 | Public gameplay configuration | **fixed** | `GameConfig` and `GameConfigND` validate semantic integers, exact booleans, strings/enums, dimensions, ranges, edge-rule shapes, and explorer objects before normalization |
 | Movement-cache decoding | **fixed** | cache schema 4 binds exact schema, graph-algorithm, key, dimensions, full profile identity, and an adjacent exact-document digest; strict graph decoding checks canonical rows, counts, moves, references, traversals, and the complete boundary surface through the authoritative resolver; normal cold hits never build the full graph, while invalid derived data becomes a miss and rebuilds once from authoritative inputs |
-| Separate topology-profile store | **fixed** | the active `profiles.json` edge-rule workspace format is explicitly versioned and decoded by `topology_profile_store_v1_state_from_payload`; malformed documents fall back as a whole and the existing named bridge produces the canonical Stage 53C explorer domain |
+| Separate topology-profile store | **fixed** | the active `profiles.json` edge-rule workspace format has explicit `MISSING`/`VALID`/`INVALID` load states; its strict v1 adapter builds Stage 53C domain state, read-only invalid fallback cannot authorize mutation, ordinary save re-loads and content-checks its source, and invalid existing bytes are never overwritten implicitly |
 | Retirement candidates | **deferred** | all candidates retain an active caller, RDS/policy/benchmark role, or compatibility obligation; no zero-caller and zero-obligation candidate was proven removable |
 | Piece/config-bundle import readers and unrelated settings recovery | **deferred** | these lower-priority format-specific boundaries are outside the five selected owners; no evidence justifies broadening the closure batch or imposing a generic conversion policy |
 
@@ -129,6 +129,34 @@ sequence, and string validators for representation rules. Cache field layout,
 identity, checksum, count, strict graph-row, and miss/rebuild policy remain
 cache-local; rank and seam semantics remain enforced by the topology profile
 validator and transport resolver. No cross-format schema parser was added.
+
+The store correction reuses `require_json_object`, `require_json_array`, and
+`require_json_int` for exact decoded-JSON representation. The v1 slot adapter
+still delegates topology mode, edge behavior, rank, gameplay-mode, and preset
+invariants to `TopologyProfileState` construction. Missing/invalid fallback,
+source snapshots, save refusal, and atomic file replacement remain local to
+`runtime/topology_profile_store.py`; Stage 53D gluing persistence is not
+duplicated or routed through this distinct edge-rule workspace format.
+
+## Corrective validation-ownership matrix
+
+| Rule/helper | Replay | Config | Cache | Topology store | Trace/hash | Canonical owner |
+| --- | --- | --- | --- | --- | --- | --- |
+| Exact Boolean | `_require_bool_value` local for `ReplayFormatError` paths | `require_exact_bool` | local JSON-domain walk only | delegated to strict slot/domain parsing | local deterministic-value walk | `domain_validation.require_exact_bool` when domain semantics and error model match |
+| Exact JSON integer | `_require_int` local for replay paths | N/A; constructor inputs are semantic integers | `contract_validation.require_json_int` | `contract_validation.require_json_int` | local deterministic-value walk | `contract_validation.require_json_int` |
+| Semantic integer | recording uses `require_integral` | `require_integral` / bounded variants | public semantic arguments use `require_integral` | `TopologyProfileState` constructor | coordinate adapters validate `Integral` before conversion | `domain_validation` and owning constructors |
+| Mapping/sequence shape | exact replay-local object/list readers | domain `require_sequence` | exact JSON object/int-sequence helpers plus graph-local schema | exact JSON object/array helpers, then domain sequence validation | local because tuples are accepted and canonicalized | shared representation helper only when accepted containers match |
+| Finite exact float | N/A | source/domain-specific | cache-local finite JSON walk | N/A | trace/hash-local finite validation and rounding policy | owning materializer; semantics differ |
+| Version validation | replay-local | N/A | cache-local schema/algorithm policy | store-local v1 policy | trace-local | source adapter |
+| Rank and bounds | constructor | constructor | strict row decoder plus profile validator/resolver | `TopologyProfileState` constructor | N/A | domain constructor/resolver |
+| Field-path diagnostics | replay-local | constructor/local adapter | cache-local | store/slot-local | trace-local | source adapter |
+| Recovery/fallback | whole replay rejects | N/A | silent miss and one authoritative rebuild | read-only defaults; ordinary save refuses invalid source | materializer rejects | boundary owner |
+
+Repeated replay, cache-row, store-layout, and trace dictionary traversal remains
+intentional because field sets, diagnostics, accepted containers, and recovery
+policy differ. The audit removed duplicated exact JSON mapping, array, and
+integer checks where the Stage 53C error model fits; it did not introduce a
+universal schema framework or weaken path-specific diagnostics.
 
 > The short-term Python boundary-governance programme is complete. Strictness
 > is enforced at identity-bearing, replay, trace, gameplay-configuration,

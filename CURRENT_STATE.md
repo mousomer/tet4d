@@ -50,7 +50,10 @@ history ledger. Detailed history is preserved in
   is complete and verified on `codex/targeted-python-boundary-hardening`.
   Replay, trace/hash, gameplay-config, movement-cache, and active topology-
   profile boundaries are strict, while named adapters retain evidenced source
-  leniency. The short-term Python boundary-governance programme is closed.
+  leniency. Its corrective follow-up keeps valid cold cache reads free of full
+  graph construction and prevents ordinary saves from overwriting invalid
+  topology-profile storage. The short-term Python boundary-governance
+  programme is closed.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -80,7 +83,9 @@ history ledger. Detailed history is preserved in
   them into semantic state.
 - `state/topology/profiles.json` is a distinct version-1 edge-rule workspace
   format. Its strict named adapter and explicit Stage 53C explorer bridge must
-  not be replaced by permissive default overlay.
+  not be replaced by permissive default overlay. Invalid existing storage may
+  provide read-only defaults but must block ordinary save; destructive
+  replacement requires an explicit future recovery operation.
 - Do not move Python semantic authority through implementation convenience or
   visual plausibility; use the authority-transfer protocol.
 - Do not let completed stage narratives return to universal agent prompts,
@@ -102,12 +107,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.15` (`low`)
+- `tech_debt.score = 6.04` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.89`
-2. `code_balance = 2.27`
+1. `delivery_size_pressure = 2.90`
+2. `code_balance = 2.15`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->

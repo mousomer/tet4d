@@ -535,6 +535,10 @@ def read_json_value_or_raise(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def read_file_bytes(path: Path) -> bytes:
+    return path.read_bytes()
+
+
 def read_json_object_or_raise(path: Path) -> dict[str, Any]:
     try:
         raw = path.read_text(encoding="utf-8")
