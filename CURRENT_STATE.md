@@ -47,8 +47,7 @@ history ledger. Detailed history is preserved in
 - Stage 53C strict Python topology constructors are merged on `master` at
   `36972384`. Stage 53D explicit topology persistence and legacy recovery is
   merged on `master` at `c7243828`. Stage 53E merged at `22938485`; Stage 53F
-  is complete and verified on `codex/targeted-python-boundary-hardening`,
-  pending publication.
+  is merged and verified on `master` at `91b901f3`.
   Replay, trace/hash, gameplay-config, movement-cache, and active topology-
   profile boundaries are strict, while named adapters retain evidenced source
   leniency. Its corrective follow-up keeps valid cold cache reads free of full
@@ -57,6 +56,13 @@ history ledger. Detailed history is preserved in
   programme is closed.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
+- Stage 54A Godot cockpit control coherence and visual-affordance correction is
+  human accepted and ready for integration. Live 3D/4D uses
+  Ctrl-only soft drop, left-drag camera rotation, right-drag camera
+  translation, and wheel zoom; Shift has no soft-drop or special wheel action.
+  `LiveInputContract` is the shared action/helper authority. Quick Settings and
+  grid visibility are grouped in the cockpit button panel; W labels use rear
+  faces without active wording, and the active-slice frame is restrained.
 
 ## Current Authority
 
@@ -166,9 +172,10 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Begin the medium-term professional playable 2D/3D/4D game programme,
-   prioritizing stable gameplay, Godot integration, controls, UI/UX, tutorials,
-   topology gameplay, endgame/explosion, and user-visible performance.
+1. Integrate human-accepted Stage 54A, then continue the medium-term
+   professional playable 2D/3D/4D game programme with later controls, UI/UX,
+   tutorials, topology gameplay, endgame/explosion, and user-visible
+   performance slices.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals; address them only with owning-format
    evidence rather than another generic governance stage.

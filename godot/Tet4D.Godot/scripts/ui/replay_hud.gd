@@ -1374,7 +1374,8 @@ func _build_layout() -> void:
 	)
 	nav_row_b.add_child(live_4d_button)
 	_live_view_actions = HBoxContainer.new()
-	_live_view_actions.name = "ViewerActionButtons"
+	_live_view_actions.name = "CockpitButtonPanel"
+	_live_view_actions.set_meta("semantic_role", "interactive_button_panel")
 	_live_view_actions.visible = false
 	_live_view_actions.add_theme_constant_override("separation", 6)
 	viewer_nav.add_child(_live_view_actions)

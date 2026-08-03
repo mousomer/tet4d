@@ -84,17 +84,26 @@ authority from Python to C++.
 ### Professional playable 2D/3D/4D game programme
 
 Stage 53E is complete and merged at `22938485`. Stage 53F, including its
-corrective follow-up, is complete locally on
-`codex/targeted-python-boundary-hardening` pending publication. Its strict
-replay, trace/hash, configuration, movement-cache, topology-store, and
+corrective follow-up, is merged and verified on `master` at `91b901f3`. Its
+strict replay, trace/hash, configuration, movement-cache, topology-store, and
 validation-ownership work is complete; the cache-performance deferral below is
-not incomplete correctness.
+not incomplete correctness. The short-term Python boundary-governance programme
+is closed.
 
 The primary objective is a professional playable 2D/3D/4D game: stable
 gameplay, Godot integration, clear controls, UI/UX, tutorials and onboarding,
 topology gameplay, endgame/explosion presentation, and user-visible
 performance. Plan product slices through the relevant RDS and authority-map
 owners; do not reopen generic boundary-governance stages.
+
+Stage 54A, Godot cockpit control coherence and visual-affordance correction,
+is human accepted and ready for integration. It establishes one
+Godot control/helper authority; Ctrl-only soft drop; left-drag rotation,
+right-drag translation, and wheel zoom; cockpit-panel ownership for Quick
+Settings and grid visibility; clearer passive helper tags; rear-face W labels;
+and restrained active-slice framing. Control remapping, controller support,
+tutorials, topology gameplay, audio, and broader menu work remain later
+product slices.
 
 ## Explicit Deferrals
 

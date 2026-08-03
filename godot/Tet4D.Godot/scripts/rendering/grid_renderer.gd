@@ -75,7 +75,7 @@ func rebuild(
 				slice_bounds,
 				display_mode,
 				ReplayVisuals.live_active_cell_border_material(display_mode),
-				ReplayVisuals.slice_outline_thickness(display_mode) * (1.9 if high_contrast else 1.45)
+				ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER)
 			)
 		if dimension >= 4 and show_w_labels:
 			_add_w_label(w_index, w_size, slice_bounds, display_mode, active_layers.has(w_index))

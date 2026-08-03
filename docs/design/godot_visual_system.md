@@ -113,9 +113,9 @@ fitted overview scale, while the active-slice frame uses emphasis rather than
 excessive thickness. Live 3D/4D views include a compact, screen-anchored XYZ
 orientation marker whose arrows track the world axes as the camera moves.
 
-Pointer controls use left drag to orbit, Shift-left drag to roll, middle or
-right drag to pan, and wheel to zoom. Shift remains a camera modifier and must
-not also own gameplay input; 3D/4D soft drop uses Ctrl.
+Pointer controls use left drag to rotate, right drag to translate, and wheel
+to zoom. Shift has no live camera or soft-drop binding; 3D/4D soft drop uses
+Ctrl only.
 
 Live control helpers and runtime `InputMap` registration consume the same
 binding contract. Helper copy must not duplicate key assignments. Application

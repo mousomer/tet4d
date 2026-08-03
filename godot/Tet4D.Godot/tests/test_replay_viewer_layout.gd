@@ -242,7 +242,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
 	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("Session") == -1 or inspector_hint_text.find("Navigation") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Shift + Left Drag", "Wheel", "Double-click", "Backspace", "Tab", "Esc", "Fit View"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Right Drag", "Wheel", "Backspace", "Tab", "Esc"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D full controls should include %s" % [label, required])
 	if inspector_hint_text.find("Left: CCW") == -1 or inspector_hint_text.find("Right: CW") == -1:
@@ -259,10 +259,10 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
 	if right_inspector_order.size() < 3 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[2]) != "InspectorControlHints":
 		failures.append("%s: live right inspector should present onboarding and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
-	var view_actions := hud.find_child("ViewerActionButtons", true, false) as Control
+	var view_actions := hud.find_child("CockpitButtonPanel", true, false) as Control
 	var quick_settings := hud.find_child("QuickSettingsToggle", true, false) as Button
 	var grid_toggle := hud.find_child("GridVisibilityToggle", true, false) as Button
-	if view_actions == null or not view_actions.visible:
+	if view_actions == null or not view_actions.visible or view_actions.get_meta("semantic_role", "") != "interactive_button_panel":
 		failures.append("%s: live navigation should expose persistent action buttons" % label)
 	if quick_settings == null or quick_settings.text.find("Quick Settings") == -1:
 		failures.append("%s: action row should expose a discoverable Quick Settings toggle" % label)
@@ -320,7 +320,7 @@ func _check_live_control_maps() -> Array:
 	for required_group in ["Piece movement", "Plane Rotation", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Shift + Left Drag", "Wheel", "Double-click"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Right Drag", "Wheel"]:
 		if flattened.find(required) == -1:
 			failures.append("Live 4D control map should include %s" % required)
 	var group_items := {}
@@ -355,7 +355,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Mouse Camera",
-		[["Left Drag", "Orbit"], ["Middle / Right Drag", "Pan"], ["Shift + Left Drag", "Roll"], ["Wheel", "Zoom"], ["Double-click", "Fit View"]]
+		[["Left Drag", "Rotate camera"], ["Right Drag", "Translate camera"], ["Wheel", "Zoom"]]
 	)
 	_assert_group_items(failures, group_items, "Drop", [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]])
 	_assert_group_items(
