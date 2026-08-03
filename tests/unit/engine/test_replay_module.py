@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from copy import deepcopy
+
 import pytest
 
 from tet4d.engine import api
@@ -213,3 +215,145 @@ def test_replay_loader_rejects_missing_or_unknown_schema_version() -> None:
     payload["replay_schema_version"] = REPLAY_SCHEMA_VERSION + 1
     with pytest.raises(ReplayFormatError, match="not supported"):
         ReplayScript2D.from_dict(payload)
+
+
+@pytest.mark.parametrize("near_miss", [True, 7.0, "7"])
+def test_replay_loader_rejects_seed_near_misses(near_miss: object) -> None:
+    payload = record_replay_2d(
+        config=api.GameConfig(width=8, height=16),
+        seed=7,
+        actions=(),
+    ).to_dict()
+    payload["seed"] = near_miss
+
+    with pytest.raises(ReplayFormatError, match="replay.seed must be an integer"):
+        ReplayScript2D.from_dict(payload)
+
+
+@pytest.mark.parametrize("near_miss", [1, 0, "false", None])
+def test_replay_loader_rejects_boolean_near_misses(near_miss: object) -> None:
+    payload = record_replay_2d(
+        config=api.GameConfig(width=8, height=16),
+        seed=7,
+        actions=(),
+    ).to_dict()
+    payload["config"]["wrap_gravity_axis"] = near_miss
+
+    with pytest.raises(ReplayFormatError, match="must be a boolean"):
+        ReplayScript2D.from_dict(payload)
+
+
+@pytest.mark.parametrize("near_miss", [True, 12.0, "12"])
+def test_replay_loader_rejects_dimension_member_near_misses(
+    near_miss: object,
+) -> None:
+    payload = record_replay_nd_ticks(
+        config=api.GameConfigND(dims=(6, 12, 4), gravity_axis=1),
+        seed=7,
+        ticks=1,
+    ).to_dict()
+    payload["config"]["dims"][1] = near_miss
+
+    with pytest.raises(ReplayFormatError, match="must be an integer"):
+        ReplayTickScriptND.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    "malformed_rules",
+    [
+        "bounded",
+        [["bounded"]],
+        [["bounded", True], ["bounded", "bounded"]],
+    ],
+)
+def test_replay_loader_rejects_malformed_edge_rules(
+    malformed_rules: object,
+) -> None:
+    payload = record_replay_2d(
+        config=api.GameConfig(width=8, height=16),
+        seed=7,
+        actions=(),
+    ).to_dict()
+    payload["config"]["topology_edge_rules"] = malformed_rules
+
+    with pytest.raises(ReplayFormatError, match="topology_edge_rules"):
+        ReplayScript2D.from_dict(payload)
+
+
+@pytest.mark.parametrize("near_miss", [1, True, None, "MOVE_SIDEWAYS"])
+def test_replay_loader_rejects_invalid_actions(near_miss: object) -> None:
+    payload = record_replay_2d(
+        config=api.GameConfig(width=8, height=16),
+        seed=7,
+        actions=(api.Action.NONE,),
+    ).to_dict()
+    payload["events"][0]["action"] = near_miss
+
+    with pytest.raises(ReplayFormatError):
+        ReplayScript2D.from_dict(payload)
+
+
+def test_replay_loader_rejects_missing_current_config_field() -> None:
+    payload = record_replay_2d(
+        config=api.GameConfig(width=8, height=16),
+        seed=7,
+        actions=(),
+    ).to_dict()
+    del payload["config"]["rng_seed"]
+
+    with pytest.raises(ReplayFormatError, match="missing required field"):
+        ReplayScript2D.from_dict(payload)
+
+
+@pytest.mark.parametrize("near_miss", [True, 7.0, "7"])
+def test_replay_recorders_reject_seed_near_misses(near_miss: object) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        record_replay_2d(
+            config=api.GameConfig(),
+            seed=near_miss,
+            actions=(),
+        )
+
+    with pytest.raises((TypeError, ValueError)):
+        record_replay_nd_ticks(
+            config=api.GameConfigND(),
+            seed=near_miss,
+            ticks=0,
+        )
+
+
+@pytest.mark.parametrize("near_miss", [True, -1, 1.0, "1"])
+def test_replay_tick_recorder_rejects_invalid_ticks(near_miss: object) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        record_replay_nd_ticks(
+            config=api.GameConfigND(),
+            seed=7,
+            ticks=near_miss,
+        )
+
+
+@pytest.mark.parametrize("near_miss", ["NONE", 0, None])
+def test_replay_action_recorder_rejects_non_action_values(
+    near_miss: object,
+) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        record_replay_2d(
+            config=api.GameConfig(),
+            seed=7,
+            actions=(near_miss,),
+        )
+
+
+def test_replay_loader_rejects_one_malformed_event_without_partial_repair() -> None:
+    payload = record_replay_2d(
+        config=api.GameConfig(),
+        seed=7,
+        actions=(api.Action.NONE, api.Action.MOVE_LEFT),
+    ).to_dict()
+    malformed = deepcopy(payload)
+    malformed["events"][1]["action"] = "MOVE_SIDEWAYS"
+
+    with pytest.raises(ReplayFormatError, match="unsupported replay action"):
+        ReplayScript2D.from_dict(malformed)
+
+    assert ReplayScript2D.from_dict(payload).to_dict() == payload

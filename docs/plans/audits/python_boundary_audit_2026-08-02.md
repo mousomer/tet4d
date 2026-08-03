@@ -2,7 +2,7 @@
 
 Role: audit
 
-Status: active
+Status: complete
 
 Source of truth: repository code and the routed semantic authorities
 
@@ -74,6 +74,104 @@ Risk meanings:
 7. Review stored settings schemas individually and move evidenced recovery to
    named adapters; do not impose topology policy on unrelated settings.
 
+## Stage 53F ownership reconciliation
+
+Stage 53F is limited to the five priority boundaries named by this audit. The
+following matrix records the verified raw source, current risk, owning
+boundary, and selected action before implementation:
+
+| Boundary | Raw source | Current conversion | Semantic risk | Owner | Stage 53F action |
+| --- | --- | --- | --- | --- | --- |
+| Replay decode | decoded replay v1 JSON | event names stringify; ND dimensions and edge rules coerce members | malformed current data can acquire deterministic replay meaning | `tet4d.replay.format` | require exact current-format containers/scalars and reject the whole replay; no legacy replay adapter exists |
+| Replay recording | runtime config, seed, tick count, and actions | seed/ticks coerce and negative ticks clamp | recorder can emit a different replay identity than its inputs | `tet4d.replay` recorder helpers | require validated domain objects, actions, and non-negative semantic integers |
+| Trace and state hash | Python oracle trace fields | generic object/key stringification and unconstrained float conversion | unsupported values can enter golden identity material | `tools/migration/trace_schema.py` | restrict canonical material to an explicit deterministic JSON value domain and adapt known event records explicitly |
+| Gameplay configuration | public Python constructor arguments | Boolean truthiness and comparison-based integer acceptance | near-types can silently alter gameplay semantics | `GameConfig`, `GameConfigND` | reuse Stage 53C semantic scalar helpers, validate before normalization, and retain UI/settings parsing upstream |
+| Movement cache | decoded derived cache JSON | version, coordinates, movement labels, and traversal fields coerce | malformed derived data can change graph or playability results | `runtime/topology_cache.py` plus movement-row decoder | require exact version and input identity, validate derived structures, discard invalid entries, and let existing callers rebuild |
+| Topology profile store | decoded `state/topology/profiles.json` | defaults overlay malformed slots and a permissive profile parser | active normal/explorer preset state can drift from strict topology policy | `runtime/topology_profile_store.py` | keep the distinct edge-rule workspace format, add a named strict v1 adapter, and preserve the existing explicit bridge to Stage 53C explorer profiles |
+
+Boundary classifications:
+
+- replay v1, public gameplay constructors, and trace/hash materialization are
+  strict boundaries requiring rejection;
+- UI/settings construction remains a named human-input source-adapter concern;
+- movement graph and playability files are derived caches that may be
+  discarded and rebuilt from authoritative topology inputs;
+- the normal/explorer edge-rule profile store is an active distinct source
+  format, not a second encoding of Stage 53D explorer gluing persistence;
+- the listed retirement candidates retain documented compatibility,
+  benchmark, policy-pack, or active-caller obligations and are not removable
+  in Stage 53F;
+- imported piece records, migration/config-bundle manifest readers, and
+  unrelated stored settings remain explicitly deferred. They do not share the
+  five selected owners and require separate format-specific evidence rather
+  than expansion of this closure batch.
+
+## Stage 53F closure
+
+| Stage 53E priority | Status | Closure evidence |
+| --- | --- | --- |
+| Replay decoding and recording | **fixed** | replay v1 now has exact current-schema readers for containers, scalar fields, actions, dimensions, and edge rules; recorders accept only validated config/action objects and semantic integers; malformed current data rejects the whole replay |
+| Trace and state-hash materialization | **fixed** | the trace helper accepts only the documented deterministic JSON value domain, rejects arbitrary objects/non-string keys/non-finite floats, preserves bool/int distinction and canonical mapping order, and retains exact valid hash fixtures |
+| Public gameplay configuration | **fixed** | `GameConfig` and `GameConfigND` validate semantic integers, exact booleans, strings/enums, dimensions, ranges, edge-rule shapes, and explorer objects before normalization |
+| Movement-cache decoding | **fixed** | cache schema 4 binds exact schema, graph-algorithm, key, dimensions, full profile identity, and an adjacent exact-document digest; strict graph decoding checks canonical rows, counts, moves, references, traversals, and the complete boundary surface through the authoritative resolver; normal cold hits never build the full graph, while invalid derived data becomes a miss and rebuilds once from authoritative inputs |
+| Separate topology-profile store | **fixed** | the active `profiles.json` edge-rule workspace format has explicit `MISSING`/`VALID`/`INVALID` load states; its strict v1 adapter builds Stage 53C domain state, read-only invalid fallback cannot authorize mutation, ordinary save re-loads and content-checks its source, and invalid existing bytes are never overwritten implicitly |
+| Retirement candidates | **deferred** | all candidates retain an active caller, RDS/policy/benchmark role, or compatibility obligation; no zero-caller and zero-obligation candidate was proven removable |
+| Piece/config-bundle import readers and unrelated settings recovery | **deferred** | these lower-priority format-specific boundaries are outside the five selected owners; no evidence justifies broadening the closure batch or imposing a generic conversion policy |
+
+No legacy replay format is recognized by the current replay schema, so no
+legacy replay adapter was added. The topology profile workspace format is
+distinct from Stage 53D gluing persistence and therefore keeps a separately
+named strict adapter rather than being silently routed through the Stage 53D
+format.
+
+The cache correction reuses Stage 53C exact JSON object, integer, integer-
+sequence, and string validators for representation rules. Cache field layout,
+identity, checksum, count, strict graph-row, and miss/rebuild policy remain
+cache-local; rank and seam semantics remain enforced by the topology profile
+validator and transport resolver. No cross-format schema parser was added.
+
+The store correction reuses `require_json_object`, `require_json_array`, and
+`require_json_int` for exact decoded-JSON representation. The v1 slot adapter
+still delegates topology mode, edge behavior, rank, gameplay-mode, and preset
+invariants to `TopologyProfileState` construction. Missing/invalid fallback,
+source snapshots, save refusal, and atomic file replacement remain local to
+`runtime/topology_profile_store.py`; Stage 53D gluing persistence is not
+duplicated or routed through this distinct edge-rule workspace format.
+
+Cache performance disposition: Stage 53F's cache correctness closure is
+complete, but the diagnostic 20³ measurement found direct graph construction at
+approximately `.054` seconds and a cold strict JSON cache read at approximately
+`.318` seconds. This is a setup/topology-transition concern, not a
+steady-state gameplay or frame-rate result. The C++-dependent redesign decision
+is intentionally deferred in `docs/BACKLOG.md`; it is not remaining Stage 53F
+correctness scope.
+
+## Corrective validation-ownership matrix
+
+| Rule/helper | Replay | Config | Cache | Topology store | Trace/hash | Canonical owner |
+| --- | --- | --- | --- | --- | --- | --- |
+| Exact Boolean | `_require_bool_value` local for `ReplayFormatError` paths | `require_exact_bool` | local JSON-domain walk only | delegated to strict slot/domain parsing | local deterministic-value walk | `domain_validation.require_exact_bool` when domain semantics and error model match |
+| Exact JSON integer | `_require_int` local for replay paths | N/A; constructor inputs are semantic integers | `contract_validation.require_json_int` | `contract_validation.require_json_int` | local deterministic-value walk | `contract_validation.require_json_int` |
+| Semantic integer | recording uses `require_integral` | `require_integral` / bounded variants | public semantic arguments use `require_integral` | `TopologyProfileState` constructor | coordinate adapters validate `Integral` before conversion | `domain_validation` and owning constructors |
+| Mapping/sequence shape | exact replay-local object/list readers | domain `require_sequence` | exact JSON object/int-sequence helpers plus graph-local schema | exact JSON object/array helpers, then domain sequence validation | local because tuples are accepted and canonicalized | shared representation helper only when accepted containers match |
+| Finite exact float | N/A | source/domain-specific | cache-local finite JSON walk | N/A | trace/hash-local finite validation and rounding policy | owning materializer; semantics differ |
+| Version validation | replay-local | N/A | cache-local schema/algorithm policy | store-local v1 policy | trace-local | source adapter |
+| Rank and bounds | constructor | constructor | strict row decoder plus profile validator/resolver | `TopologyProfileState` constructor | N/A | domain constructor/resolver |
+| Field-path diagnostics | replay-local | constructor/local adapter | cache-local | store/slot-local | trace-local | source adapter |
+| Recovery/fallback | whole replay rejects | N/A | silent miss and one authoritative rebuild | read-only defaults; ordinary save refuses invalid source | materializer rejects | boundary owner |
+
+Repeated replay, cache-row, store-layout, and trace dictionary traversal remains
+intentional because field sets, diagnostics, accepted containers, and recovery
+policy differ. The audit removed duplicated exact JSON mapping, array, and
+integer checks where the Stage 53C error model fits; it did not introduce a
+universal schema framework or weaken path-specific diagnostics.
+
+> The short-term Python boundary-governance programme is complete. Strictness
+> is enforced at identity-bearing, replay, trace, gameplay-configuration,
+> cache, and active topology-persistence boundaries. Leniency remains confined
+> to named source adapters. Remaining low-risk findings are explicitly
+> deferred.
+
 ## Retirement candidates
 
 These paths should be removed rather than hardened once their callers and
@@ -115,7 +213,6 @@ reported no additional failure in this combined run.
 Decision: do **not** enable `PLR0912` or `PLR0915` repository-wide in Stage
 53E. The finding set is small but heterogeneous and dominated by orchestration,
 drawing, and tests; enabling either rule would require cleanup or a suppression
-inventory without protecting the high-risk semantic boundaries above.
 `PLR0913` is also not enabled: parameter count was not shown to correlate with
 boundary risk. Retain `C901` as the current low-noise complexity gate.
 

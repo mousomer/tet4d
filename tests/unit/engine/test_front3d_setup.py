@@ -15,6 +15,7 @@ from tet4d.engine.gameplay.pieces_nd import (
     piece_set_options_for_dimension,
 )
 from tet4d.engine.runtime.project_config import state_dir_path
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame import front2d_setup, front3d_game, frontend_nd_setup
 from tet4d.ui.pygame.launch import launcher_play
 from tet4d.ui.pygame.runtime_ui.app_runtime import DisplaySettings
@@ -497,7 +498,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
         normal_profile = mock.Mock(
             topology_mode="bounded", edge_rules=(("bounded", "bounded"),) * 4
         )
-        explorer_profile = SimpleNamespace(dimension=4, gluings=())
+        explorer_profile = ExplorerTopologyProfile(dimension=4, gluings=())
         with (
             mock.patch.object(
                 frontend_nd_setup,
@@ -516,7 +517,7 @@ class TestFront3DSetupDedup(unittest.TestCase):
             mock.patch.object(
                 frontend_nd_setup,
                 "build_explorer_transport_resolver",
-                return_value=SimpleNamespace(dims=(8, 9, 7, 6)),
+                wraps=frontend_nd_setup.build_explorer_transport_resolver,
             ) as build_transport,
         ):
             normal_cfg = frontend_nd_setup.build_config(

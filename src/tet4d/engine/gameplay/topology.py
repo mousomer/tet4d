@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from itertools import product
 
 from ..core.model import Coord
+from ..topology_explorer.domain_validation import require_sequence, require_string
 
 TOPOLOGY_BOUNDED = "bounded"
 TOPOLOGY_WRAP_ALL = "wrap_all"
@@ -94,25 +95,46 @@ def default_edge_rules_for_mode(
 
 
 def _normalize_edge_rules(
-    rules: Sequence[Sequence[str]],
+    rules: object,
     *,
     axis_count: int,
     gravity_axis: int,
     wrap_gravity_axis: bool,
 ) -> EdgeRules:
-    if len(rules) != axis_count:
+    rule_sequence = require_sequence(rules, "edge_rules")
+    if len(rule_sequence) != axis_count:
         raise ValueError("edge_rules axis count must match dims")
     normalized: list[AxisEdgeRule] = []
-    for axis, axis_rule in enumerate(rules):
+    for axis, axis_rule_raw in enumerate(rule_sequence):
+        axis_rule = require_sequence(axis_rule_raw, f"edge_rules[{axis}]")
         if len(axis_rule) != 2:
             raise ValueError("each axis edge rule must contain two behaviors (neg/pos)")
-        neg = normalize_edge_behavior(axis_rule[0])
-        pos = normalize_edge_behavior(axis_rule[1])
+        neg = normalize_edge_behavior(
+            require_string(axis_rule[0], f"edge_rules[{axis}][0]")
+        )
+        pos = normalize_edge_behavior(
+            require_string(axis_rule[1], f"edge_rules[{axis}][1]")
+        )
         if axis == gravity_axis and not wrap_gravity_axis:
             neg = EDGE_BOUNDED
             pos = EDGE_BOUNDED
         normalized.append((neg, pos))
     return tuple(normalized)
+
+
+def normalize_edge_rules(
+    rules: object,
+    *,
+    axis_count: int,
+    gravity_axis: int,
+    wrap_gravity_axis: bool,
+) -> EdgeRules:
+    return _normalize_edge_rules(
+        rules,
+        axis_count=axis_count,
+        gravity_axis=gravity_axis,
+        wrap_gravity_axis=wrap_gravity_axis,
+    )
 
 
 @dataclass(frozen=True)

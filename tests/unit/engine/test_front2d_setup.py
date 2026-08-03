@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
+from tet4d.engine.topology_explorer import ExplorerTopologyProfile
 from tet4d.ui.pygame import front2d_setup
 
 
@@ -21,7 +21,7 @@ class TestFront2DSetup(unittest.TestCase):
         normal_profile = mock.Mock(
             topology_mode="bounded", edge_rules=(("bounded", "bounded"),) * 2
         )
-        explorer_profile = SimpleNamespace(dimension=2, gluings=())
+        explorer_profile = ExplorerTopologyProfile(dimension=2, gluings=())
         with (
             mock.patch.object(
                 front2d_setup,
@@ -40,7 +40,7 @@ class TestFront2DSetup(unittest.TestCase):
             mock.patch.object(
                 front2d_setup,
                 "build_explorer_transport_resolver",
-                return_value=SimpleNamespace(dims=(8, 8)),
+                wraps=front2d_setup.build_explorer_transport_resolver,
             ) as build_transport,
         ):
             normal_cfg = front2d_setup.config_from_settings(

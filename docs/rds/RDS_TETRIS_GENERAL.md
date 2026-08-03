@@ -53,6 +53,13 @@ Cross-cutting requirements are defined in:
 28. 3D/4D mouse tutorial stages must display explicit mouse prompts and require sustained mouse orbit/zoom interaction for at least 2 seconds before completion.
 29. Tutorial board dimensions must use explicit per-mode tutorial profiles and must not inherit or clamp against the user's normal gameplay board settings.
 
+### 2.1 Responsiveness review signal
+
+Normal game start and ordinary topology selection should preferably complete
+within approximately one second on supported hardware. This is a product review
+signal rather than a hard automated threshold until representative hardware and
+C++ ownership are established.
+
 ## 3. Shared Rules and Axis Conventions
 
 1. Axis `0`=`x`(horizontal), axis`1`=`y` (gravity/downward).
@@ -124,6 +131,16 @@ it does not transfer semantic authority or redefine Play drop/lock policy.
    until a replacement core passes trace parity.
 5. Stage 3 adds locked-cell endgame traces to the same migration replay
    contract.
+6. Current replay documents and deterministic trace/hash material must
+   validate scalar and container representations before normalization.
+   Boolean and integer domains are distinct, mappings have string keys and
+   canonical ordering, non-finite floats and unsupported objects are rejected,
+   and malformed current-format data must not acquire meaning through
+   coercion or legacy fallback.
+7. Public Python gameplay configuration constructors accept validated semantic
+   values only. Human-readable UI or CLI text is parsed by the owning adapter
+   before construction; valid defaults and fixed-seed gameplay behavior remain
+   unchanged.
 
 ### 3.2c Endgame golden trace rules
 

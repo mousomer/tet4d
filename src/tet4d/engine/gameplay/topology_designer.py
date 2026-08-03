@@ -11,6 +11,15 @@ from ..runtime.project_config import (
     topology_profile_export_file_default_path,
 )
 from ..runtime.settings_schema import read_json_object_or_empty, write_json_object
+from ..topology_explorer.contract_validation import (
+    require_json_array,
+    require_json_object,
+)
+from ..topology_explorer.domain_validation import (
+    require_bounded_integral,
+    require_sequence,
+    require_string,
+)
 from .topology import (
     EDGE_BOUNDED,
     AxisEdgeRule,
@@ -57,6 +66,37 @@ class TopologyProfileState:
     topology_mode: str
     edge_rules: EdgeRules
     preset_id: str | None = None
+
+    def __post_init__(self) -> None:
+        dimension = require_bounded_integral(
+            self.dimension,
+            "topology profile dimension",
+            minimum=2,
+            maximum=4,
+        )
+        gameplay_mode = normalize_topology_gameplay_mode(
+            require_string(self.gameplay_mode, "topology profile gameplay_mode")
+        )
+        topology_mode = normalize_topology_mode(
+            require_string(self.topology_mode, "topology profile topology_mode")
+        )
+        edge_rules = _normalize_edge_rules(self.edge_rules, dimension=dimension)
+        edge_rules = _validate_gameplay_mode_rules(
+            gameplay_mode=gameplay_mode,
+            dimension=dimension,
+            gravity_axis=1,
+            rules=edge_rules,
+        )
+        preset_id = self.preset_id
+        if preset_id is not None:
+            preset_id = require_string(preset_id, "topology profile preset_id").strip()
+            if _PROFILE_ID_RE.fullmatch(preset_id) is None:
+                raise ValueError("topology profile preset_id is invalid")
+        object.__setattr__(self, "gameplay_mode", gameplay_mode)
+        object.__setattr__(self, "dimension", dimension)
+        object.__setattr__(self, "topology_mode", topology_mode)
+        object.__setattr__(self, "edge_rules", edge_rules)
+        object.__setattr__(self, "preset_id", preset_id)
 
 
 def normalize_topology_gameplay_mode(mode: str | None) -> str:
@@ -138,16 +178,20 @@ def _normalize_edge_rules(
     *,
     dimension: int,
 ) -> EdgeRules:
-    if not isinstance(rules_raw, (list, tuple)):
-        raise ValueError("edge_rules must be a list of axis rules")  # noqa: TRY004 - preserve the established validation contract.
-    if len(rules_raw) != int(dimension):
+    rules = require_sequence(rules_raw, "edge_rules")
+    if len(rules) != dimension:
         raise ValueError("edge_rules axis count must match dimension")
     normalized: list[AxisEdgeRule] = []
-    for axis_rule in rules_raw:
-        if not isinstance(axis_rule, (list, tuple)) or len(axis_rule) != 2:
+    for axis, axis_rule_raw in enumerate(rules):
+        axis_rule = require_sequence(axis_rule_raw, f"edge_rules[{axis}]")
+        if len(axis_rule) != 2:
             raise ValueError("each edge rule must contain [neg, pos]")
-        neg = normalize_edge_behavior(axis_rule[0])
-        pos = normalize_edge_behavior(axis_rule[1])
+        neg = normalize_edge_behavior(
+            require_string(axis_rule[0], f"edge_rules[{axis}][0]")
+        )
+        pos = normalize_edge_behavior(
+            require_string(axis_rule[1], f"edge_rules[{axis}][1]")
+        )
         normalized.append((neg, pos))
     return tuple(normalized)
 
@@ -206,7 +250,7 @@ def _validate_gameplay_mode_rules(
             raise ValueError(
                 "normal gameplay topology cannot wrap or invert the gravity axis"
             )
-    return tuple((str(neg), str(pos)) for neg, pos in rules)
+    return tuple(rules)
 
 
 def validate_topology_profile_state(
@@ -218,23 +262,39 @@ def validate_topology_profile_state(
     edge_rules: EdgeRules,
     preset_id: str | None = None,
 ) -> TopologyProfileState:
-    if dimension not in _DIMENSION_KEYS:
-        raise ValueError("dimension must be one of: 2, 3, 4")
-    normalized_mode = normalize_topology_mode(topology_mode)
+    normalized_dimension = require_bounded_integral(
+        dimension,
+        "dimension",
+        minimum=2,
+        maximum=4,
+    )
+    normalized_gravity_axis = require_bounded_integral(
+        gravity_axis,
+        "gravity_axis",
+        minimum=0,
+        maximum=normalized_dimension - 1,
+    )
+    normalized_gameplay_mode = normalize_topology_gameplay_mode(
+        require_string(gameplay_mode, "gameplay_mode")
+    )
+    normalized_mode = normalize_topology_mode(
+        require_string(topology_mode, "topology_mode")
+    )
     validated_rules = _validate_gameplay_mode_rules(
-        gameplay_mode=gameplay_mode,
-        dimension=dimension,
-        gravity_axis=gravity_axis,
-        rules=edge_rules,
+        gameplay_mode=normalized_gameplay_mode,
+        dimension=normalized_dimension,
+        gravity_axis=normalized_gravity_axis,
+        rules=_normalize_edge_rules(edge_rules, dimension=normalized_dimension),
     )
     normalized_preset_id = None
-    if isinstance(preset_id, str) and preset_id.strip():
-        candidate = preset_id.strip()
-        if _PROFILE_ID_RE.match(candidate) is not None:
-            normalized_preset_id = candidate
+    if preset_id is not None:
+        candidate = require_string(preset_id, "preset_id").strip()
+        if _PROFILE_ID_RE.fullmatch(candidate) is None:
+            raise ValueError("preset_id is invalid")
+        normalized_preset_id = candidate
     return TopologyProfileState(
-        gameplay_mode=normalize_topology_gameplay_mode(gameplay_mode),
-        dimension=int(dimension),
+        gameplay_mode=normalized_gameplay_mode,
+        dimension=normalized_dimension,
         topology_mode=normalized_mode,
         edge_rules=validated_rules,
         preset_id=normalized_preset_id,
@@ -387,48 +447,36 @@ def default_topology_profile_state(
     )
 
 
-def topology_profile_state_from_payload(
+def topology_profile_store_v1_state_from_payload(
     *,
     dimension: int,
     gravity_axis: int,
     gameplay_mode: str,
     payload: object,
 ) -> TopologyProfileState:
-    default_state = default_topology_profile_state(
+    payload = require_json_object(payload, "topology profile store entry")
+    expected_fields = {"topology_mode", "preset_id", "edge_rules"}
+    if set(payload) != expected_fields:
+        raise ValueError("topology profile store entry fields are invalid")
+    raw_rules = require_json_array(
+        payload["edge_rules"], "topology profile store entry.edge_rules"
+    )
+    for axis, rule in enumerate(raw_rules):
+        require_json_array(rule, f"topology profile store entry.edge_rules[{axis}]")
+    preset_id = payload["preset_id"]
+    if preset_id is not None and type(preset_id) is not str:
+        raise ValueError("topology profile store preset_id must be a string or null")
+    return validate_topology_profile_state(
+        gameplay_mode=gameplay_mode,
         dimension=dimension,
         gravity_axis=gravity_axis,
-        gameplay_mode=gameplay_mode,
+        topology_mode=require_string(
+            payload["topology_mode"],
+            "topology profile store topology_mode",
+        ),
+        edge_rules=_normalize_edge_rules(raw_rules, dimension=dimension),
+        preset_id=preset_id,
     )
-    if not isinstance(payload, dict):
-        return default_state
-    raw_topology_mode = payload.get("topology_mode", default_state.topology_mode)
-    try:
-        normalized_mode = normalize_topology_mode(raw_topology_mode)
-    except ValueError:
-        normalized_mode = default_state.topology_mode
-    raw_edge_rules = payload.get("edge_rules")
-    if raw_edge_rules is None:
-        edge_rules = default_state.edge_rules
-    else:
-        try:
-            edge_rules = _normalize_edge_rules(raw_edge_rules, dimension=dimension)
-        except ValueError:
-            edge_rules = default_state.edge_rules
-    raw_preset_id = payload.get("preset_id")
-    preset_id = (
-        raw_preset_id if isinstance(raw_preset_id, str) else default_state.preset_id
-    )
-    try:
-        return validate_topology_profile_state(
-            gameplay_mode=gameplay_mode,
-            dimension=dimension,
-            gravity_axis=gravity_axis,
-            topology_mode=normalized_mode,
-            edge_rules=edge_rules,
-            preset_id=preset_id,
-        )
-    except ValueError:
-        return default_state
 
 
 def topology_profile_state_payload(profile: TopologyProfileState) -> dict[str, object]:

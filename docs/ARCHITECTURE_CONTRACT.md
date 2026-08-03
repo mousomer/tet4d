@@ -107,6 +107,66 @@ engine-owned helpers, but direct engine or UI imports are acceptable when they
 measure UI-specific behavior or when they remove wrapper duplication without
 creating reverse dependencies.
 
+## Semantic Boundary Validation
+
+Identity-bearing replay, trace/hash, gameplay-configuration, derived-cache,
+and topology-persistence inputs follow one dependency pattern:
+
+```text
+external, persisted, cached, or decoded representation
+    -> source-owned adapter and representation validation
+    -> strict Python runtime/domain object
+    -> canonical gameplay, replay, trace, hash, or topology behavior
+```
+
+Conversion is permitted only after the owning boundary has validated the
+representation. Exact decoded-JSON integers require built-in `int` and reject
+booleans. Internal semantic integers may accept `numbers.Integral`, excluding
+booleans, before normalization. Boolean fields require built-in `bool`, and
+strings must be validated before trimming or enum normalization.
+
+Replay owns strict current-format decoding and explicitly named migrations;
+current malformed data cannot be routed through a legacy adapter. Gameplay
+configuration constructors own strict semantic values, while UI and CLI text
+parsing remains in their adapters. Trace/hash helpers own the allowed
+deterministic JSON value domain and must reject incidental object
+representations. Derived movement/playability caches own no semantic
+authority: incompatible or malformed entries are discarded and authoritative
+topology inputs rebuild them. Distinct topology stores may retain their source
+format only through named adapters that ultimately construct strict Python
+topology domain state.
+
+Persistent movement-graph cache identity commits the cache schema, graph
+algorithm, dimensions, and complete topology-profile signature. An adjacent
+digest binds the exact cache document bytes. Normal cold reads validate those
+identities, declared counts, canonical coordinates and moves, references,
+traversal structure, and the complete boundary surface against the
+authoritative resolver; they do not construct or compare the complete
+authoritative graph. Any mismatch is a silent derived-data miss, after which
+the caller builds once from authoritative inputs and may replace each cache
+artifact atomically; an interrupted document/digest pair is therefore only a
+future miss. Full graph comparison is reserved for tests or explicit
+diagnostics, not production cache acceptance. This correctness boundary makes
+no cold-start throughput claim: cache-performance redesign remains deferred
+until C++ movement-graph authority and representation are designed, or
+realistic product setup/topology-transition latency crosses the RDS review
+signal.
+
+The active topology-profile store distinguishes missing, valid, and invalid
+documents. Read-only consumers may use a default recovery view for missing or
+invalid storage, but that view carries no mutation authority. Ordinary saves
+create missing storage, update a freshly validated document while preserving
+unrelated slots, and refuse invalid existing storage before writing. A content
+snapshot is rechecked immediately before the atomic document replacement so a
+load/write race becomes a typed save failure. Destructive backup and
+reinitialization, if ever needed, requires a separately named recovery
+operation; ordinary save never performs it implicitly.
+
+Shared scalar representation rules are reused where semantics are identical.
+Domain invariants remain authoritative in domain constructors. Source-format,
+diagnostic, fallback, cache, and file-mutation policy remains local to the
+owning adapter.
+
 ## Package Placement Rules
 
 1. Pure deterministic logic goes in `src/tet4d/engine/core/`.
