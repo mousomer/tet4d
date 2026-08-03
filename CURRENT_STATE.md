@@ -47,8 +47,7 @@ history ledger. Detailed history is preserved in
 - Stage 53C strict Python topology constructors are merged on `master` at
   `36972384`. Stage 53D explicit topology persistence and legacy recovery is
   merged on `master` at `c7243828`. Stage 53E merged at `22938485`; Stage 53F
-  is complete and verified on `codex/targeted-python-boundary-hardening`,
-  pending publication.
+  is merged and verified on `master` at `91b901f3`.
   Replay, trace/hash, gameplay-config, movement-cache, and active topology-
   profile boundaries are strict, while named adapters retain evidenced source
   leniency. Its corrective follow-up keeps valid cold cache reads free of full

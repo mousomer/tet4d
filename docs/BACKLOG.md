@@ -84,11 +84,11 @@ authority from Python to C++.
 ### Professional playable 2D/3D/4D game programme
 
 Stage 53E is complete and merged at `22938485`. Stage 53F, including its
-corrective follow-up, is complete locally on
-`codex/targeted-python-boundary-hardening` pending publication. Its strict
-replay, trace/hash, configuration, movement-cache, topology-store, and
+corrective follow-up, is merged and verified on `master` at `91b901f3`. Its
+strict replay, trace/hash, configuration, movement-cache, topology-store, and
 validation-ownership work is complete; the cache-performance deferral below is
-not incomplete correctness.
+not incomplete correctness. The short-term Python boundary-governance programme
+is closed.
 
 The primary objective is a professional playable 2D/3D/4D game: stable
 gameplay, Godot integration, clear controls, UI/UX, tutorials and onboarding,
