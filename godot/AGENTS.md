@@ -15,8 +15,9 @@ Rules:
 - Do not independently implement inherited topology, legal movement,
   collision, gravity, piece rotation, scoring, trace, or replay semantics in
   GDScript.
-- Route inherited semantic decisions through documented authoritative core
-  APIs, native adapters, or reference fixtures/traces.
+- GDScript must not compute inherited semantic truth. Route those decisions
+  through documented authoritative core APIs, native adapters, or reference
+  fixtures/traces.
 - Route new deterministic game or geometry rules through the named native/data
   authority defined by the owning contract; do not hide them in UI glue.
 - UI constants must follow the repo config/theme policy.
