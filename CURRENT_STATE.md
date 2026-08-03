@@ -57,7 +57,7 @@ history ledger. Detailed history is preserved in
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 - Stage 54A Godot cockpit control coherence and visual-affordance correction is
-  implemented locally and pending human visual acceptance. Live 3D/4D uses
+  human accepted and ready for integration. Live 3D/4D uses
   Ctrl-only soft drop, left-drag camera rotation, right-drag camera
   translation, and wheel zoom; Shift has no soft-drop or special wheel action.
   `LiveInputContract` is the shared action/helper authority. Quick Settings and
@@ -172,7 +172,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Obtain human visual acceptance for Stage 54A, then continue the medium-term
+1. Integrate human-accepted Stage 54A, then continue the medium-term
    professional playable 2D/3D/4D game programme with later controls, UI/UX,
    tutorials, topology gameplay, endgame/explosion, and user-visible
    performance slices.

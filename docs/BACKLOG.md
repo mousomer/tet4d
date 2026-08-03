@@ -97,7 +97,7 @@ performance. Plan product slices through the relevant RDS and authority-map
 owners; do not reopen generic boundary-governance stages.
 
 Stage 54A, Godot cockpit control coherence and visual-affordance correction,
-is implemented locally and pending human visual acceptance. It establishes one
+is human accepted and ready for integration. It establishes one
 Godot control/helper authority; Ctrl-only soft drop; left-drag rotation,
 right-drag translation, and wheel zoom; cockpit-panel ownership for Quick
 Settings and grid visibility; clearer passive helper tags; rear-face W labels;
