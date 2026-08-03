@@ -19,9 +19,9 @@ Use the actual repository structure and preserve these boundaries:
 - Godot: product shell, UI, rendering, input routing, animation, diagnostics,
   accessibility, camera, view-basis presentation, Explorer interaction, and
   challenge/campaign presentation;
-- C++/GDExtension/native code: parity-backed implementation of inherited
-  deterministic logic and direct authority candidate for genuinely new
-  deterministic subsystems;
+- C++/GDExtension/native code: provisional, parity-backed implementation of
+  inherited deterministic logic and direct authority candidate for genuinely
+  new deterministic subsystems;
 - versioned declarative data: authority for challenge/campaign content and
   other named product data;
 - adapter layer: thin conversion boundary between Godot and deterministic
@@ -29,8 +29,9 @@ Use the actual repository structure and preserve these boundaries:
 
 Implementation alone does not transfer inherited authority or establish new
 authority. Both operations route through
-`docs/architecture/authority_transfer_protocol.md` and
-`docs/architecture/authority_map.md`.
+`docs/architecture/authority_transfer_protocol.md` and the current authority
+map in `docs/architecture/authority_map.md`. Inherited parity work follows
+`docs/architecture/parity_protocol.md`.
 
 ## Inherited versus new behaviour
 
@@ -85,7 +86,13 @@ Godot must not duplicate inherited deterministic semantics such as:
 - trace semantics;
 - replay correctness.
 
+## Godot semantic boundary
+
 Godot may display, animate, route, request, and compose authoritative state.
+It must not independently compute inherited topology, movement, collision,
+gravity, piece-rotation legality, scoring, trace correctness, or replay
+correctness.
+
 Deterministic rules that must be shared across Play, Explore, and Challenge
 belong in the named core authority rather than GDScript UI glue.
 
@@ -199,7 +206,7 @@ core/data owner.
 ## Tests and authority evidence
 
 Every inherited port needs parity or equivalent conformance evidence against
-its accepted reference.
+its accepted reference under `docs/architecture/parity_protocol.md`.
 
 Every new deterministic subsystem needs conformance evidence against its
 normative contract.
