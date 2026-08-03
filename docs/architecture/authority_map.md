@@ -1,8 +1,9 @@
 # Authority Map
 
-This map defines current migration and product-subsystem ownership. It
-complements `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`,
-`docs/ARCHITECTURE_CONTRACT.md`, relevant `docs/rds/*`, and
+This map defines current semantics ownership, migration ownership, and product-
+subsystem authority. It complements `config/project/policy_pack.json`,
+`docs/WORKFLOW_CODEX.md`, `docs/ARCHITECTURE_CONTRACT.md`, relevant
+`docs/rds/*`, `docs/architecture/parity_protocol.md`, and
 `docs/plans/professional_godot_game_programme.md`; it does not replace them.
 
 ## Authority principle
@@ -93,7 +94,8 @@ An inherited subsystem receives transferred authority only when:
 
 1. the current Python/reference owner and observable behaviour are identified;
 2. versioned traces, fixtures, or equivalent conformance evidence exist;
-3. the candidate implementation passes the documented comparison;
+3. the candidate implementation passes the documented comparison under
+   `docs/architecture/parity_protocol.md`;
 4. Godot or adapter code does not duplicate the semantics;
 5. fallback/reversion is documented;
 6. an explicit transfer record has status `transferred`;
@@ -123,8 +125,8 @@ Its authority is established when:
 
 Use durable work categories rather than loading every completed slice:
 
-- inherited parity implementation: parity protocol plus the selected subsystem
-  contract, fixtures, and tests;
+- inherited parity implementation: `docs/architecture/parity_protocol.md` plus
+  the selected subsystem contract, fixtures, and tests;
 - parity evidence review: promotion gates and affected comparisons;
 - inherited authority transfer: transfer protocol, evidence, fallback, and this
   map;
