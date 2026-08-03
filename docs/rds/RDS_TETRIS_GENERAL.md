@@ -124,6 +124,16 @@ it does not transfer semantic authority or redefine Play drop/lock policy.
    until a replacement core passes trace parity.
 5. Stage 3 adds locked-cell endgame traces to the same migration replay
    contract.
+6. Current replay documents and deterministic trace/hash material must
+   validate scalar and container representations before normalization.
+   Boolean and integer domains are distinct, mappings have string keys and
+   canonical ordering, non-finite floats and unsupported objects are rejected,
+   and malformed current-format data must not acquire meaning through
+   coercion or legacy fallback.
+7. Public Python gameplay configuration constructors accept validated semantic
+   values only. Human-readable UI or CLI text is parsed by the owning adapter
+   before construction; valid defaults and fixed-seed gameplay behavior remain
+   unchanged.
 
 ### 3.2c Endgame golden trace rules
 

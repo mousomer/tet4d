@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-02
+Last updated: 2026-08-03
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -46,10 +46,11 @@ history ledger. Detailed history is preserved in
   provisional native resolver and does not transfer Python authority.
 - Stage 53C strict Python topology constructors are merged on `master` at
   `36972384`. Stage 53D explicit topology persistence and legacy recovery is
-  merged on `master` at `c7243828`. Stage 53E is the active short-term slice:
-  audit Python semantic boundaries and Ruff complexity rules, make the Ruff
-  formatting width explicit, and identify targeted 53F remediation without
-  changing runtime behavior.
+  merged on `master` at `c7243828`. Stage 53E merged at `22938485`; Stage 53F
+  is complete and verified on `codex/targeted-python-boundary-hardening`.
+  Replay, trace/hash, gameplay-config, movement-cache, and active topology-
+  profile boundaries are strict, while named adapters retain evidenced source
+  leniency. The short-term Python boundary-governance programme is closed.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
 
@@ -74,6 +75,12 @@ history ledger. Detailed history is preserved in
   semantic authority from Python to C++.
 - Lenient persistence or human-input recovery must stay in named source
   adapters rather than topology domain constructors.
+- Invalid topology movement caches are derived-data misses: discard and
+  rebuild them from the authoritative profile and dimensions; never repair
+  them into semantic state.
+- `state/topology/profiles.json` is a distinct version-1 edge-rule workspace
+  format. Its strict named adapter and explicit Stage 53C explorer bridge must
+  not be replaced by permissive default overlay.
 - Do not move Python semantic authority through implementation convenience or
   visual plausibility; use the authority-transfer protocol.
 - Do not let completed stage narratives return to universal agent prompts,
@@ -95,11 +102,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.14` (`low`)
+- `tech_debt.score = 6.15` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.87`
+1. `delivery_size_pressure = 2.89`
 2. `code_balance = 2.27`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -151,11 +158,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. 53E: complete the repository-wide Python boundary/coercion and complexity
-   audit with lightweight Ruff/workflow strengthening.
-2. 53F: apply targeted semantic hardening, retire superseded paths, and add
-   narrow drift prevention at actual boundaries.
-3. Close the short-term governance programme with explicit remaining
-   deferrals.
-4. Begin the medium-term professional playable 2D/3D/4D game programme,
+1. Begin the medium-term professional playable 2D/3D/4D game programme,
    including later topology-aware Godot gameplay and tooling slices.
+2. Keep piece/config-bundle import readers and unrelated settings recovery as
+   bounded, format-specific deferrals; address them only with owning-format
+   evidence rather than another generic governance stage.

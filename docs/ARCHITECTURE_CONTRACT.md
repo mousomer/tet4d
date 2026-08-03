@@ -107,6 +107,35 @@ engine-owned helpers, but direct engine or UI imports are acceptable when they
 measure UI-specific behavior or when they remove wrapper duplication without
 creating reverse dependencies.
 
+## Semantic Boundary Validation
+
+Identity-bearing replay, trace/hash, gameplay-configuration, derived-cache,
+and topology-persistence inputs follow one dependency pattern:
+
+```text
+external, persisted, cached, or decoded representation
+    -> source-owned adapter and representation validation
+    -> strict Python runtime/domain object
+    -> canonical gameplay, replay, trace, hash, or topology behavior
+```
+
+Conversion is permitted only after the owning boundary has validated the
+representation. Exact decoded-JSON integers require built-in `int` and reject
+booleans. Internal semantic integers may accept `numbers.Integral`, excluding
+booleans, before normalization. Boolean fields require built-in `bool`, and
+strings must be validated before trimming or enum normalization.
+
+Replay owns strict current-format decoding and explicitly named migrations;
+current malformed data cannot be routed through a legacy adapter. Gameplay
+configuration constructors own strict semantic values, while UI and CLI text
+parsing remains in their adapters. Trace/hash helpers own the allowed
+deterministic JSON value domain and must reject incidental object
+representations. Derived movement/playability caches own no semantic
+authority: incompatible or malformed entries are discarded and authoritative
+topology inputs rebuild them. Distinct topology stores may retain their source
+format only through named adapters that ultimately construct strict Python
+topology domain state.
+
 ## Package Placement Rules
 
 1. Pure deterministic logic goes in `src/tet4d/engine/core/`.

@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-02
+Updated: 2026-08-03
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -71,30 +71,12 @@ values into valid topology data.
 Stage 53B transports and validates topology data but does not transfer semantic
 authority from Python to C++.
 
-### Short-term Python boundary governance
+### Professional playable 2D/3D/4D game programme
 
-The remaining short-term sequence precedes the medium-term professional
-playable 2D/3D/4D game programme:
-
-1. **53D — explicit persistence and legacy recovery adapters.** Merged on
-   `master` at `c7243828`: persistence v1 is strict, unversioned legacy v0 has
-   a named evidence-backed adapter, and every migration, seam discard, or
-   profile fallback is structured and observable.
-2. **53E — repository-wide Python boundary audit and lightweight manifest
-   strengthening.** Inventory canonical and identity-bearing inputs,
-   replay/state-hash inputs, public constructors, transport boundaries,
-   persistence and human-input adapters, numerical internals, active runtime
-   modules, migration tools, and retirement candidates. Audit Ruff complexity
-   rules and make only low-workload formatting/workflow policy explicit.
-3. **53F — targeted repository-wide hardening and drift prevention.** Fix
-   high-risk semantic coercions, retire dead code, add boundary-specific
-   checks, prevent duplicated scalar policies, preserve legitimate
-   parsing/formatting, and close short-term governance acceptance. Enable only
-   complexity rules that the 53E audit proves low-noise.
-
-Repository-wide Python coercion hardening is a short-term governance objective,
-but it must be driven by boundary classification rather than a mechanical ban
-on conversion functions.
+The Stage 53A–53F short-term topology and Python-boundary governance sequence
+is closed. The next primary objective is the medium-term professional playable
+2D/3D/4D game programme. Plan product slices through the relevant RDS and
+authority-map owners; do not reopen generic boundary-governance stages.
 
 ## Explicit Deferrals
 
@@ -104,9 +86,12 @@ on conversion functions.
 - control remapping, audio, tutorials, and unrelated cleanup;
 - visual changes in the topology-contract PR;
 - gameplay or toolchain changes in the governance PR;
-- targeted fixes from the Stage 53E boundary and complexity audit (Stage 53F),
-  including replay/config/cache/hash boundaries and proven retirement
-  candidates;
+- piece-record and migration/config-bundle import readers identified by the
+  Stage 53E audit, pending owning-format evidence and focused acceptance tests;
+- unrelated settings recovery identified by Stage 53E, pending individual
+  stored-schema review and named migration-adapter evidence;
+- Stage 53E retirement candidates that retain active callers, policy/RDS or
+  benchmark roles, or released compatibility obligations;
 - topology-aware Godot gameplay and diagnostics, Godot Topology Lab/editor,
   and unified gameplay/endgame/explosion integration remain separate later
   migration slices.
