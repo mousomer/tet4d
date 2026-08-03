@@ -6,6 +6,13 @@ from itertools import product
 from typing import Any
 
 from ..core.model import Coord
+from .contract_validation import (
+    require_json_array,
+    require_json_int_sequence,
+    require_json_object,
+    require_json_string,
+)
+from .domain_validation import require_integral_sequence
 from .glue_map import BoundaryTraversal
 from .glue_model import (
     BoundaryRef,
@@ -25,7 +32,7 @@ class MovementEdge:
 
 
 def _normalized_dims(dims: Coord) -> Coord:
-    return tuple(int(value) for value in dims)
+    return require_integral_sequence(dims, "movement graph dimensions")
 
 
 def _neighbors_for_validated_cell(
@@ -160,35 +167,33 @@ def movement_graph_from_rows(
 
 def serialize_movement_graph_rows(
     rows: tuple[tuple[Coord, tuple[MovementEdge, ...]], ...],
+    *,
+    dims: Coord,
 ) -> list[dict[str, Any]]:
     payload: list[dict[str, Any]] = []
     for coord, edges in rows:
         payload.append(
             {
-                "coord": [int(value) for value in coord],
+                "coord": list(coord),
                 "edges": [
                     {
                         "step": edge.step.label,
-                        "target": [int(value) for value in edge.target],
+                        "target": list(edge.target),
                         "traversal": (
                             None
                             if edge.traversal is None
                             else {
                                 "glue_id": edge.traversal.glue_id,
                                 "source_boundary": {
-                                    "axis": int(edge.traversal.source_boundary.axis),
-                                    "side": str(edge.traversal.source_boundary.side),
+                                    "axis": edge.traversal.source_boundary.axis,
+                                    "side": edge.traversal.source_boundary.side,
                                 },
                                 "target_boundary": {
-                                    "axis": int(edge.traversal.target_boundary.axis),
-                                    "side": str(edge.traversal.target_boundary.side),
+                                    "axis": edge.traversal.target_boundary.axis,
+                                    "side": edge.traversal.target_boundary.side,
                                 },
-                                "source_coord": [
-                                    int(value) for value in edge.traversal.source_coord
-                                ],
-                                "target_coord": [
-                                    int(value) for value in edge.traversal.target_coord
-                                ],
+                                "source_coord": list(edge.traversal.source_coord),
+                                "target_coord": list(edge.traversal.target_coord),
                                 "entry_step": edge.traversal.entry_step.label,
                             }
                         ),
@@ -197,6 +202,8 @@ def serialize_movement_graph_rows(
                 ],
             }
         )
+    if deserialize_movement_graph_rows(payload, dims=dims) is None:
+        raise ValueError("movement graph rows do not satisfy the strict cache format")
     return payload
 
 
@@ -204,66 +211,141 @@ def _deserialize_boundary_ref(
     payload: object,
     *,
     dimension: int,
-) -> BoundaryRef | None:
-    if not isinstance(payload, dict):
-        return None
-    try:
-        return BoundaryRef(
-            dimension=int(dimension),
-            axis=int(payload["axis"]),
-            side=str(payload["side"]),
-        )
-    except (KeyError, TypeError, ValueError):
-        return None
+) -> BoundaryRef:
+    boundary = require_json_object(payload, "cache.boundary")
+    if set(boundary) != {"axis", "side"}:
+        raise ValueError("cache boundary fields must be exactly axis and side")
+    axis = require_json_int_sequence(
+        [boundary["axis"]],
+        "cache.boundary.axis",
+        minimum=0,
+        maximum=dimension - 1,
+    )[0]
+    return BoundaryRef(
+        dimension=dimension,
+        axis=axis,
+        side=require_json_string(boundary["side"], "cache.boundary.side"),
+    )
+
+
+def _deserialize_coord(payload: object, *, dims: Coord, path: str) -> Coord:
+    coord = require_json_int_sequence(payload, path)
+    if len(coord) != len(dims):
+        raise ValueError(f"{path} rank must match cache dimensions")
+    if any(value < 0 or value >= dims[axis] for axis, value in enumerate(coord)):
+        raise ValueError(f"{path} must be within cache dimensions")
+    return coord
+
+
+def _require_exact_fields(
+    payload: dict[str, object],
+    expected: set[str],
+    *,
+    path: str,
+) -> None:
+    if set(payload) != expected:
+        raise ValueError(f"{path} fields must be exactly {', '.join(sorted(expected))}")
 
 
 def _deserialize_movement_edge(
     payload: object,
     *,
-    dimension: int,
+    dims: Coord,
+    source_coord: Coord,
     step_by_label: dict[str, MoveStep],
-) -> MovementEdge | None:
-    if not isinstance(payload, dict):
-        return None
-    step = step_by_label.get(str(payload.get("step", "")))
+) -> MovementEdge:
+    edge_payload = require_json_object(payload, "cache.edge")
+    _require_exact_fields(
+        edge_payload,
+        {"step", "target", "traversal"},
+        path="cache.edge",
+    )
+    step_label = require_json_string(edge_payload["step"], "cache.edge.step")
+    step = step_by_label.get(step_label)
     if step is None:
-        return None
-    try:
-        target = tuple(int(value) for value in payload.get("target", ()))
-    except (TypeError, ValueError):
-        return None
-    traversal_payload = payload.get("traversal")
+        raise ValueError(f"cache.edge.step is unsupported: {step_label!r}")
+    target = _deserialize_coord(
+        edge_payload["target"],
+        dims=dims,
+        path="cache.edge.target",
+    )
+    traversal_payload = edge_payload["traversal"]
     if traversal_payload is None:
+        expected_target = list(source_coord)
+        expected_target[step.axis] += step.delta
+        if tuple(expected_target) != target:
+            raise ValueError("non-traversal cache edge must be one unit movement")
         return MovementEdge(step=step, target=target, traversal=None)
-    if not isinstance(traversal_payload, dict):
-        return None
+    traversal_obj = require_json_object(traversal_payload, "cache.edge.traversal")
+    _require_exact_fields(
+        traversal_obj,
+        {
+            "glue_id",
+            "source_boundary",
+            "target_boundary",
+            "source_coord",
+            "target_coord",
+            "entry_step",
+        },
+        path="cache.edge.traversal",
+    )
     source_boundary = _deserialize_boundary_ref(
-        traversal_payload.get("source_boundary"),
-        dimension=dimension,
+        traversal_obj["source_boundary"],
+        dimension=len(dims),
     )
     target_boundary = _deserialize_boundary_ref(
-        traversal_payload.get("target_boundary"),
-        dimension=dimension,
+        traversal_obj["target_boundary"],
+        dimension=len(dims),
     )
-    entry_step = step_by_label.get(str(traversal_payload.get("entry_step", "")))
-    if source_boundary is None or target_boundary is None or entry_step is None:
-        return None
-    try:
-        traversal = BoundaryTraversal(
-            glue_id=str(traversal_payload["glue_id"]),
-            source_boundary=source_boundary,
-            target_boundary=target_boundary,
-            source_coord=tuple(
-                int(value) for value in traversal_payload.get("source_coord", ())
-            ),
-            target_coord=tuple(
-                int(value) for value in traversal_payload.get("target_coord", ())
-            ),
-            exit_step=step,
-            entry_step=entry_step,
-        )
-    except (KeyError, TypeError, ValueError):
-        return None
+    entry_step_label = require_json_string(
+        traversal_obj["entry_step"],
+        "cache.edge.traversal.entry_step",
+    )
+    entry_step = step_by_label.get(entry_step_label)
+    if entry_step is None:
+        raise ValueError("cache traversal entry step is unsupported")
+    traversal_source = _deserialize_coord(
+        traversal_obj["source_coord"],
+        dims=dims,
+        path="cache.edge.traversal.source_coord",
+    )
+    traversal_target = _deserialize_coord(
+        traversal_obj["target_coord"],
+        dims=dims,
+        path="cache.edge.traversal.target_coord",
+    )
+    expected_source_boundary = _boundary_ref_for_exit(
+        dims,
+        coord=source_coord,
+        step=step,
+    )
+    if expected_source_boundary != source_boundary:
+        raise ValueError("cache traversal source boundary does not match its exit")
+    if traversal_source != source_coord or traversal_target != target:
+        raise ValueError("cache traversal coordinates must match their edge")
+    expected_entry_delta = 1 if target_boundary.side == "-" else -1
+    if entry_step != MoveStep(axis=target_boundary.axis, delta=expected_entry_delta):
+        raise ValueError("cache traversal entry step must point inward")
+    expected_target_axis_value = (
+        0 if target_boundary.side == "-" else dims[target_boundary.axis] - 1
+    )
+    if target[target_boundary.axis] != expected_target_axis_value:
+        raise ValueError("cache traversal target must lie on its target boundary")
+    glue_id = require_json_string(
+        traversal_obj["glue_id"],
+        "cache.edge.traversal.glue_id",
+    ).strip()
+    if not glue_id:
+        raise ValueError("cache traversal glue_id must be non-empty")
+    traversal = BoundaryTraversal(
+        glue_id=glue_id,
+        source_boundary=source_boundary,
+        target_boundary=target_boundary,
+        source_coord=traversal_source,
+        target_coord=traversal_target,
+        exit_step=step,
+        entry_step=entry_step,
+    )
     return MovementEdge(
         step=step,
         target=target,
@@ -274,36 +356,61 @@ def _deserialize_movement_edge(
 def deserialize_movement_graph_rows(
     payload: object,
     *,
-    dimension: int,
+    dims: Coord,
 ) -> tuple[tuple[Coord, tuple[MovementEdge, ...]], ...] | None:
-    if not isinstance(payload, list):
-        return None
-    step_by_label = {
-        step.label: step for step in movement_steps_for_dimension(int(dimension))
-    }
-    rows: list[tuple[Coord, tuple[MovementEdge, ...]]] = []
-    for row_payload in payload:
-        if not isinstance(row_payload, dict):
-            return None
-        try:
-            coord = tuple(int(value) for value in row_payload.get("coord", ()))
-        except (TypeError, ValueError):
-            return None
-        edges_payload = row_payload.get("edges", ())
-        if not isinstance(edges_payload, list):
-            return None
-        edges: list[MovementEdge] = []
-        for edge_payload in edges_payload:
-            edge = _deserialize_movement_edge(
-                edge_payload,
-                dimension=int(dimension),
-                step_by_label=step_by_label,
+    try:
+        normalized_dims = require_integral_sequence(dims, "cache dims")
+        if len(normalized_dims) < 2 or any(value <= 0 for value in normalized_dims):
+            raise ValueError("cache dimensions must be positive and have rank >= 2")
+        rows_payload = require_json_array(payload, "cache.graph_rows")
+        steps = movement_steps_for_dimension(len(normalized_dims))
+        step_by_label = {step.label: step for step in steps}
+        rows: list[tuple[Coord, tuple[MovementEdge, ...]]] = []
+        seen_coords: set[Coord] = set()
+        for row_index, row_raw in enumerate(rows_payload):
+            row_path = f"cache.graph_rows[{row_index}]"
+            row_payload = require_json_object(row_raw, row_path)
+            _require_exact_fields(row_payload, {"coord", "edges"}, path=row_path)
+            coord = _deserialize_coord(
+                row_payload["coord"],
+                dims=normalized_dims,
+                path=f"{row_path}.coord",
             )
-            if edge is None:
-                return None
-            edges.append(edge)
-        rows.append((coord, tuple(edges)))
-    return tuple(rows)
+            if coord in seen_coords:
+                raise ValueError("cache graph coordinates must be unique")
+            seen_coords.add(coord)
+            edges_payload = require_json_array(
+                row_payload["edges"], f"{row_path}.edges"
+            )
+            edges = tuple(
+                _deserialize_movement_edge(
+                    edge_payload,
+                    dims=normalized_dims,
+                    source_coord=coord,
+                    step_by_label=step_by_label,
+                )
+                for edge_payload in edges_payload
+            )
+            edge_steps = tuple(edge.step for edge in edges)
+            if len(set(edge_steps)) != len(edge_steps):
+                raise ValueError("cache graph contains duplicate moves for one cell")
+            for step in steps:
+                neighbor = list(coord)
+                neighbor[step.axis] += step.delta
+                if (
+                    0 <= neighbor[step.axis] < normalized_dims[step.axis]
+                    and step not in edge_steps
+                ):
+                    raise ValueError("cache graph omits an in-bounds movement edge")
+            rows.append((coord, edges))
+        expected_coords = set(product(*(range(size) for size in normalized_dims)))
+        if seen_coords != expected_coords:
+            raise ValueError(
+                "cache graph must contain every board coordinate exactly once"
+            )
+        return tuple(rows)
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def neighbors_for_cell(

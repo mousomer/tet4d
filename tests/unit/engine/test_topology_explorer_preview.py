@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import unittest
 import warnings
@@ -325,6 +326,13 @@ class TestTopologyExplorerPreview(unittest.TestCase):
         finally:
             shutil.rmtree(root, ignore_errors=True)
 
+    def test_preview_cache_identity_rejects_dimension_near_misses(self) -> None:
+        profile = mobius_strip_profile_2d()
+
+        for dims in ((6, True), (6, 6.0), (6, "6")):
+            with self.subTest(dims=dims), self.assertRaises(ValueError):
+                compile_explorer_topology_preview(profile, dims=dims)
+
     def test_compile_preview_recomputes_when_cache_version_changes(self) -> None:
         root = (
             state_dir_path()
@@ -380,10 +388,14 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                 explorer_topology_preview_cache_dir_path(root_dir=root).glob("*.json")
             )
             cache_file.write_text("{not-json", encoding="utf-8")
-            with mock.patch(
-                "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
-                wraps=movement_graph_rows,
-            ) as build_graph:
+            with (
+                warnings.catch_warnings(record=True) as caught,
+                mock.patch(
+                    "tet4d.engine.runtime.topology_explorer_preview.movement_graph_rows",
+                    wraps=movement_graph_rows,
+                ) as build_graph,
+            ):
+                warnings.simplefilter("always")
                 preview = compile_explorer_topology_preview(
                     profile,
                     dims=(6, 6),
@@ -391,6 +403,7 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                     root_dir=root,
                 )
             build_graph.assert_called_once_with(profile, dims=(6, 6))
+            self.assertEqual(caught, [])
             self.assertEqual(preview["source"], "local_cache_rebuild")
         finally:
             shutil.rmtree(root, ignore_errors=True)
@@ -455,6 +468,166 @@ class TestTopologyExplorerPreview(unittest.TestCase):
                 root_dir=root,
             )
             self.assertEqual(cached, analysis)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_cache_metadata_near_misses_are_identity_misses_and_rebuild(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_cache_identity_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            authoritative = compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="identity_seed",
+                root_dir=root,
+            )
+            cache_file = next(
+                explorer_topology_preview_cache_dir_path(root_dir=root).glob("*.json")
+            )
+            original = json.loads(cache_file.read_text(encoding="utf-8"))
+            cases = []
+            for near_miss in (True, 3.0, "3"):
+                case = json.loads(json.dumps(original))
+                case["cache_version"] = near_miss
+                cases.append(case)
+            wrong_key = json.loads(json.dumps(original))
+            wrong_key["cache_key"] = "0" * 64
+            cases.append(wrong_key)
+            wrong_dims = json.loads(json.dumps(original))
+            wrong_dims["dims"] = [6, 7]
+            cases.append(wrong_dims)
+
+            for case in cases:
+                cache_file.write_text(json.dumps(case), encoding="utf-8")
+                self.assertIsNone(
+                    read_topology_cache_entry(
+                        profile,
+                        dims=(6, 6),
+                        root_dir=root,
+                    )
+                )
+                rebuilt = compile_explorer_topology_preview(
+                    profile,
+                    dims=(6, 6),
+                    source="identity_rebuild",
+                    root_dir=root,
+                )
+                self.assertEqual(
+                    rebuilt["movement_graph"],
+                    authoritative["movement_graph"],
+                )
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_cached_graph_rows_reject_semantic_near_misses(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_graph_strict_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="graph_strict_seed",
+                root_dir=root,
+            )
+            cache_file = next(
+                explorer_topology_preview_cache_dir_path(root_dir=root).glob("*.json")
+            )
+            original = json.loads(cache_file.read_text(encoding="utf-8"))
+            malformed_rows = []
+
+            bad_coord = json.loads(json.dumps(original))
+            bad_coord["graph_rows"][0]["coord"][0] = True
+            malformed_rows.append(bad_coord)
+
+            bad_step = json.loads(json.dumps(original))
+            bad_step["graph_rows"][0]["edges"][0]["step"] = 1
+            malformed_rows.append(bad_step)
+
+            bad_target = json.loads(json.dumps(original))
+            bad_target["graph_rows"][0]["edges"][0]["target"][0] = "1"
+            malformed_rows.append(bad_target)
+
+            omitted_seam = json.loads(json.dumps(original))
+            seam_removed = False
+            for row in omitted_seam["graph_rows"]:
+                for edge_index, edge in enumerate(row["edges"]):
+                    if edge["traversal"] is not None:
+                        row["edges"].pop(edge_index)
+                        seam_removed = True
+                        break
+                if seam_removed:
+                    break
+            self.assertTrue(seam_removed)
+            malformed_rows.append(omitted_seam)
+
+            for malformed in malformed_rows:
+                cache_file.write_text(json.dumps(malformed), encoding="utf-8")
+                self.assertIsNone(
+                    read_cached_graph_rows(
+                        profile,
+                        dims=(6, 6),
+                        root_dir=root,
+                    )
+                )
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_cached_playability_rejects_count_near_misses(self) -> None:
+        root = (
+            state_dir_path()
+            / "pytest_temp"
+            / f"topology_explorer_playability_strict_{uuid4().hex}"
+        )
+        root.mkdir(parents=True, exist_ok=False)
+        try:
+            profile = mobius_strip_profile_2d()
+            compile_explorer_topology_preview(
+                profile,
+                dims=(6, 6),
+                source="playability_strict_seed",
+                root_dir=root,
+            )
+            analysis = TopologyPlaygroundPlayabilityAnalysis(
+                status="playable",
+                validity="valid",
+                explorer_usability="cellwise_explorable",
+                rigid_playability="rigid_playable",
+                summary="strict cached analysis",
+            )
+            write_cached_playability_analysis(
+                profile,
+                dims=(6, 6),
+                analysis=analysis,
+                root_dir=root,
+            )
+            cache_file = next(
+                explorer_topology_preview_cache_dir_path(root_dir=root).glob("*.json")
+            )
+            original = json.loads(cache_file.read_text(encoding="utf-8"))
+
+            for near_miss in (True, 1.0, "1"):
+                malformed = json.loads(json.dumps(original))
+                malformed["playability_analysis"]["movement_summary"]["cell_count"] = (
+                    near_miss
+                )
+                cache_file.write_text(json.dumps(malformed), encoding="utf-8")
+                self.assertIsNone(
+                    read_cached_playability_analysis(
+                        profile,
+                        dims=(6, 6),
+                        root_dir=root,
+                    )
+                )
         finally:
             shutil.rmtree(root, ignore_errors=True)
 

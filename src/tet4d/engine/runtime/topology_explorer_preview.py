@@ -16,7 +16,6 @@ from tet4d.engine.runtime.topology_cache import (
     TOPOLOGY_CACHE_VERSION,
     merge_topology_cache_entry,
     read_cached_graph_rows,
-    read_topology_cache_entry,
 )
 from tet4d.engine.runtime.topology_explorer_audit import record_active_interaction_phase
 from tet4d.engine.topology_explorer import (
@@ -27,6 +26,9 @@ from tet4d.engine.topology_explorer import (
     movement_steps_for_dimension,
     tangent_axes_for_boundary,
     validate_explorer_topology_profile,
+)
+from tet4d.engine.topology_explorer.domain_validation import (
+    require_integral_sequence,
 )
 from tet4d.engine.topology_explorer.movement_graph import (
     movement_graph_from_rows,
@@ -356,43 +358,11 @@ def _sample_traversals(
     return samples
 
 
-def _preview_payload_for_source(
-    payload: dict[str, object],
-    *,
-    source: str,
-) -> dict[str, object]:
-    preview = dict(payload)
-    preview["source"] = str(source)
-    return preview
-
-
-def _read_cached_preview_payload(
+def _write_cached_preview_graph_rows(
     profile: ExplorerTopologyProfile,
     *,
     dims: tuple[int, ...],
-    source: str,
-    root_dir: Path | None = None,
-) -> dict[str, object] | None:
-    entry = read_topology_cache_entry(
-        profile,
-        dims=dims,
-        cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
-        root_dir=root_dir,
-    )
-    if entry is None:
-        return None
-    payload = entry.get("preview")
-    if not isinstance(payload, dict) or not payload:
-        return None
-    return _preview_payload_for_source(payload, source=source)
-
-
-def _write_cached_preview_payload(
-    profile: ExplorerTopologyProfile,
-    *,
-    dims: tuple[int, ...],
-    payload: dict[str, object],
-    graph_rows=None,
+    graph_rows,
     root_dir: Path | None = None,
 ) -> None:
     merge_topology_cache_entry(
@@ -400,12 +370,7 @@ def _write_cached_preview_payload(
         dims=dims,
         cache_version=_PREVIEW_LOCAL_CACHE_VERSION,
         root_dir=root_dir,
-        preview=payload,
-        graph_rows=serialize_movement_graph_rows(
-            movement_graph_rows(profile, dims=dims)
-            if graph_rows is None
-            else graph_rows
-        ),
+        graph_rows=serialize_movement_graph_rows(graph_rows, dims=dims),
     )
 
 
@@ -417,23 +382,14 @@ def compile_explorer_topology_preview(
     root_dir: Path | None = None,
     use_local_cache: bool = True,
 ) -> dict[str, object]:
+    normalized_dims = require_integral_sequence(dims, "preview dimensions")
     with record_active_interaction_phase(
         "preview_compile",
         dimension=profile.dimension,
-        dims=tuple(int(value) for value in dims),
+        dims=normalized_dims,
         glue_count=len(profile.gluings),
         source=source,
     ):
-        normalized_dims = tuple(int(value) for value in dims)
-        if use_local_cache:
-            cached = _read_cached_preview_payload(
-                profile,
-                dims=normalized_dims,
-                source=source,
-                root_dir=root_dir,
-            )
-            if cached is not None:
-                return cached
         graph_rows = read_cached_graph_rows(
             profile,
             dims=normalized_dims,
@@ -455,7 +411,7 @@ def compile_explorer_topology_preview(
             "version": 1,
             "source": str(source),
             "dimension": profile.dimension,
-            "dims": [int(value) for value in dims],
+            "dims": list(normalized_dims),
             "glue_count": len(profile.gluings),
             "gluings": _glue_payload(profile),
             "basis_arrows": basis_arrow_payload(profile),
@@ -467,7 +423,7 @@ def compile_explorer_topology_preview(
                 "degree_histogram": {
                     str(key): count for key, count in sorted(degree_histogram.items())
                 },
-                "origin": [0 for _ in dims],
+                "origin": [0 for _ in normalized_dims],
             },
             "sample_boundary_traversals": _sample_traversals(graph),
             "warnings": _preview_warnings(profile, component_count=component_count),
@@ -475,10 +431,9 @@ def compile_explorer_topology_preview(
         }
         if use_local_cache:
             try:
-                _write_cached_preview_payload(
+                _write_cached_preview_graph_rows(
                     profile,
                     dims=normalized_dims,
-                    payload=payload,
                     graph_rows=graph_rows,
                     root_dir=root_dir,
                 )
