@@ -27,8 +27,9 @@ Stable references: `docs/architecture/authority_map.md`,
       behaviour or boundaries changed.
 - [ ] The named subsystem authority matches
       `docs/architecture/authority_map.md`.
-- [ ] Inherited Python/reference behaviour remains authoritative unless a
-      completed transfer record changes the named subsystem.
+- [ ] For inherited, untransferred behaviour, the Python oracle/reference
+      remains authoritative unless a completed transfer record changes the
+      named subsystem.
 - [ ] New behaviour without a predecessor has a normative contract, named
       implementation/data owners, conformance evidence, and an establishment
       record where semantic authority is claimed.
