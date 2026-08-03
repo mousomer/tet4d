@@ -29,9 +29,9 @@ Use the actual repository structure and preserve these boundaries:
 
 Implementation alone does not transfer inherited authority or establish new
 authority. Both operations route through
-`docs/architecture/authority_transfer_protocol.md` and the current authority
-map in `docs/architecture/authority_map.md`. Inherited parity work follows
-`docs/architecture/parity_protocol.md`.
+`docs/architecture/authority_transfer_protocol.md`. The authority map records
+current ownership in `docs/architecture/authority_map.md`. Inherited parity
+work follows `docs/architecture/parity_protocol.md`.
 
 ## Inherited versus new behaviour
 
