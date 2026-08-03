@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -103,8 +104,7 @@ def _energy_payload(state) -> dict[str, Any]:
 
 
 def _event_payload(event) -> dict[str, Any]:
-    payload = to_jsonable(event)
-    return payload if isinstance(payload, dict) else {"event": payload}
+    return to_jsonable(asdict(event))
 
 
 def _apply_particle_overrides(state, case: EndgameTraceCase) -> None:
