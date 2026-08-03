@@ -17,12 +17,21 @@ from ..core.rules.piece_placement import (
 )
 from ..core.step.reducer import step_nd as core_step_nd
 from ..runtime.runtime_config import (
+    kick_level_names,
     normalize_kick_level_name,
     rotation_kick_candidate_offsets,
 )
 from ..runtime.score_analyzer import new_analysis_session_id
 from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
 from ..topology_explorer import ExplorerTopologyProfile, MoveStep
+from ..topology_explorer.domain_validation import (
+    require_bounded_integral,
+    require_exact_bool,
+    require_instance,
+    require_integral_sequence,
+    require_non_negative_integral,
+    require_string,
+)
 from ..topology_explorer.transport_resolver import (
     ExplorerTransportFrameTransform,
     ExplorerTransportResolver,
@@ -55,16 +64,18 @@ from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
     map_piece_cells,
+    normalize_edge_rules,
     normalize_topology_mode,
 )
 
 
 def _coerce_rng_seed(value: object) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError("rng_seed must be an integer")  # noqa: TRY004 - preserve the established validation contract.
-    if not (0 <= value <= 999_999_999):
-        raise ValueError("rng_seed must be within [0, 999999999]")
-    return int(value)
+    return require_bounded_integral(
+        value,
+        "rng_seed",
+        minimum=0,
+        maximum=999_999_999,
+    )
 
 
 def _resolve_piece_set_id(
@@ -105,7 +116,7 @@ def _normalize_explorer_transport_nd(
 def _resolve_explorer_rigid_play_enabled_nd(config) -> bool | None:
     enabled = config.explorer_rigid_play_enabled
     if enabled is not None:
-        return bool(enabled)
+        return enabled
     profile = config.explorer_topology_profile
     if profile is None:
         return None
@@ -182,6 +193,86 @@ def _compose_piece_frame(
     return tuple(composed_permutation), tuple(composed_signs)
 
 
+def _normalize_game_config_nd_scalars(config) -> None:
+    config.dims = require_integral_sequence(config.dims, "dims")
+    if len(config.dims) < 2:
+        raise ValueError("dims must have at least 2 axes")
+    if any(dimension <= 0 for dimension in config.dims):
+        raise ValueError("all dimensions must be > 0")
+    config.gravity_axis = require_bounded_integral(
+        config.gravity_axis,
+        "gravity_axis",
+        minimum=0,
+        maximum=len(config.dims) - 1,
+    )
+    config.speed_level = require_bounded_integral(
+        config.speed_level,
+        "speed_level",
+        minimum=1,
+        maximum=10,
+    )
+    config.random_cell_count = require_bounded_integral(
+        config.random_cell_count,
+        "random_cell_count",
+        minimum=3,
+        maximum=8,
+    )
+    config.challenge_layers = require_non_negative_integral(
+        config.challenge_layers, "challenge_layers"
+    )
+    config.lock_piece_points = require_non_negative_integral(
+        config.lock_piece_points, "lock_piece_points"
+    )
+    config.rng_seed = _coerce_rng_seed(config.rng_seed)
+
+
+def _normalize_game_config_nd_flags_and_explorer(config) -> None:
+    config.exploration_mode = require_exact_bool(
+        config.exploration_mode, "exploration_mode"
+    )
+    config.wrap_gravity_axis = require_exact_bool(
+        config.wrap_gravity_axis, "wrap_gravity_axis"
+    )
+    if config.explorer_rigid_play_enabled is not None:
+        config.explorer_rigid_play_enabled = require_exact_bool(
+            config.explorer_rigid_play_enabled,
+            "explorer_rigid_play_enabled",
+        )
+    if config.explorer_topology_profile is not None:
+        config.explorer_topology_profile = require_instance(
+            config.explorer_topology_profile,
+            "explorer_topology_profile",
+            ExplorerTopologyProfile,
+        )
+    if config.explorer_transport is not None:
+        config.explorer_transport = require_instance(
+            config.explorer_transport,
+            "explorer_transport",
+            ExplorerTransportResolver,
+        )
+
+
+def _normalize_game_config_nd_named_fields(config) -> None:
+    config.rng_mode = normalize_rng_mode(require_string(config.rng_mode, "rng_mode"))
+    config.topology_mode = normalize_topology_mode(
+        require_string(config.topology_mode, "topology_mode")
+    )
+    if config.topology_edge_rules is not None:
+        config.topology_edge_rules = normalize_edge_rules(
+            config.topology_edge_rules,
+            axis_count=len(config.dims),
+            gravity_axis=config.gravity_axis,
+            wrap_gravity_axis=config.wrap_gravity_axis,
+        )
+    kick_level = require_string(config.kick_level, "kick_level").strip().lower()
+    if kick_level not in kick_level_names():
+        raise ValueError(f"unsupported kick level: {config.kick_level!r}")
+    config.kick_level = normalize_kick_level_name(kick_level)
+    if config.piece_set_id is not None:
+        config.piece_set_id = require_string(config.piece_set_id, "piece_set_id")
+    config.piece_set_4d = require_string(config.piece_set_4d, "piece_set_4d")
+
+
 @dataclass
 class GameConfigND:
     dims: Coord = (10, 20, 6)
@@ -204,27 +295,9 @@ class GameConfigND:
     rng_seed: int = 1337
 
     def __post_init__(self) -> None:
-        if len(self.dims) < 2:
-            raise ValueError("dims must have at least 2 axes")
-        if any(d <= 0 for d in self.dims):
-            raise ValueError("all dimensions must be > 0")
-        if not (0 <= self.gravity_axis < len(self.dims)):
-            raise ValueError("invalid gravity_axis")
-        if not (1 <= self.speed_level <= 10):
-            raise ValueError("speed_level must be in [1, 10]")
-        if not (3 <= self.random_cell_count <= 8):
-            raise ValueError("random_cell_count must be in [3, 8]")
-        if self.challenge_layers < 0:
-            raise ValueError("challenge_layers must be >= 0")
-        if self.lock_piece_points < 0:
-            raise ValueError("lock_piece_points must be >= 0")
-        self.exploration_mode = bool(self.exploration_mode)
-        self.rng_mode = normalize_rng_mode(self.rng_mode)
-        self.rng_seed = _coerce_rng_seed(self.rng_seed)
-        self.topology_mode = normalize_topology_mode(self.topology_mode)
-        self.wrap_gravity_axis = bool(self.wrap_gravity_axis)
-        self.kick_level = normalize_kick_level_name(self.kick_level)
-
+        _normalize_game_config_nd_scalars(self)
+        _normalize_game_config_nd_flags_and_explorer(self)
+        _normalize_game_config_nd_named_fields(self)
         ndim = len(self.dims)
         self.explorer_transport = _normalize_explorer_transport_nd(self, ndim=ndim)
         self.explorer_rigid_play_enabled = _resolve_explorer_rigid_play_enabled_nd(self)

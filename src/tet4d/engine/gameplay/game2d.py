@@ -16,12 +16,20 @@ from ..core.rules.piece_placement import (
 )
 from ..core.step.reducer import step_2d as core_step_2d
 from ..runtime.runtime_config import (
+    kick_level_names,
     normalize_kick_level_name,
     rotation_kick_candidate_offsets,
 )
 from ..runtime.score_analyzer import new_analysis_session_id
 from ..runtime.topology_playability_signal import resolve_rigid_play_enabled
 from ..topology_explorer import ExplorerTopologyProfile, MoveStep
+from ..topology_explorer.domain_validation import (
+    require_bounded_integral,
+    require_exact_bool,
+    require_instance,
+    require_non_negative_integral,
+    require_string,
+)
 from ..topology_explorer.transport_resolver import (
     ExplorerTransportResolver,
     build_explorer_transport_resolver,
@@ -51,6 +59,7 @@ from .topology import (
     TOPOLOGY_BOUNDED,
     TopologyPolicy,
     map_piece_cells,
+    normalize_edge_rules,
     normalize_topology_mode,
 )
 
@@ -75,7 +84,7 @@ def _normalize_explorer_transport_2d(config) -> ExplorerTransportResolver | None
 def _resolve_explorer_rigid_play_enabled_2d(config) -> bool | None:
     enabled = config.explorer_rigid_play_enabled
     if enabled is not None:
-        return bool(enabled)
+        return enabled
     profile = config.explorer_topology_profile
     if profile is None:
         return None
@@ -139,31 +148,90 @@ class GameConfig:
     rng_seed: int = 1337
 
     def __post_init__(self):
+        self.width = require_non_negative_integral(self.width, "width")
+        self.height = require_non_negative_integral(self.height, "height")
         if self.width <= 0 or self.height <= 0:
             raise ValueError("width and height must be > 0")
+        self.gravity_axis = require_bounded_integral(
+            self.gravity_axis,
+            "gravity_axis",
+            minimum=0,
+            maximum=1,
+        )
         # 2D mode is defined as gravity along y (axis 1), clearing full x-rows.
         if self.gravity_axis != 1:
             raise ValueError("2D mode requires gravity_axis=1 (y-axis)")
+        self.speed_level = require_bounded_integral(
+            self.speed_level,
+            "speed_level",
+            minimum=1,
+            maximum=10,
+        )
         if not (1 <= self.speed_level <= 10):
             raise ValueError("speed_level must be in [1, 10]")
-        self.piece_set = normalize_piece_set_2d(self.piece_set)
-        self.kick_level = normalize_kick_level_name(self.kick_level)
+        self.piece_set = normalize_piece_set_2d(
+            require_string(self.piece_set, "piece_set")
+        )
+        kick_level = require_string(self.kick_level, "kick_level").strip().lower()
+        if kick_level not in kick_level_names():
+            raise ValueError(f"unsupported kick level: {self.kick_level!r}")
+        self.kick_level = normalize_kick_level_name(kick_level)
+        self.random_cell_count = require_bounded_integral(
+            self.random_cell_count,
+            "random_cell_count",
+            minimum=3,
+            maximum=8,
+        )
         if not (3 <= self.random_cell_count <= 8):
             raise ValueError("random_cell_count must be in [3, 8]")
-        if self.challenge_layers < 0:
-            raise ValueError("challenge_layers must be >= 0")
-        if self.lock_piece_points < 0:
-            raise ValueError("lock_piece_points must be >= 0")
-        self.exploration_mode = bool(self.exploration_mode)
+        self.challenge_layers = require_non_negative_integral(
+            self.challenge_layers, "challenge_layers"
+        )
+        self.lock_piece_points = require_non_negative_integral(
+            self.lock_piece_points, "lock_piece_points"
+        )
+        self.exploration_mode = require_exact_bool(
+            self.exploration_mode, "exploration_mode"
+        )
+        self.wrap_gravity_axis = require_exact_bool(
+            self.wrap_gravity_axis, "wrap_gravity_axis"
+        )
+        if self.explorer_rigid_play_enabled is not None:
+            self.explorer_rigid_play_enabled = require_exact_bool(
+                self.explorer_rigid_play_enabled,
+                "explorer_rigid_play_enabled",
+            )
+        if self.explorer_topology_profile is not None:
+            self.explorer_topology_profile = require_instance(
+                self.explorer_topology_profile,
+                "explorer_topology_profile",
+                ExplorerTopologyProfile,
+            )
+        if self.explorer_transport is not None:
+            self.explorer_transport = require_instance(
+                self.explorer_transport,
+                "explorer_transport",
+                ExplorerTransportResolver,
+            )
+        self.topology_mode = normalize_topology_mode(
+            require_string(self.topology_mode, "topology_mode")
+        )
+        if self.topology_edge_rules is not None:
+            self.topology_edge_rules = normalize_edge_rules(
+                self.topology_edge_rules,
+                axis_count=2,
+                gravity_axis=self.gravity_axis,
+                wrap_gravity_axis=self.wrap_gravity_axis,
+            )
         self.explorer_transport = _normalize_explorer_transport_2d(self)
         self.explorer_rigid_play_enabled = _resolve_explorer_rigid_play_enabled_2d(self)
-        self.rng_mode = normalize_rng_mode(self.rng_mode)
-        if isinstance(self.rng_seed, bool) or not isinstance(self.rng_seed, int):
-            raise ValueError("rng_seed must be an integer")  # noqa: TRY004 - preserve the established validation contract.
-        if not (0 <= self.rng_seed <= 999_999_999):
-            raise ValueError("rng_seed must be within [0, 999999999]")
-        self.topology_mode = normalize_topology_mode(self.topology_mode)
-        self.wrap_gravity_axis = bool(self.wrap_gravity_axis)
+        self.rng_mode = normalize_rng_mode(require_string(self.rng_mode, "rng_mode"))
+        self.rng_seed = require_bounded_integral(
+            self.rng_seed,
+            "rng_seed",
+            minimum=0,
+            maximum=999_999_999,
+        )
 
     def topology_policy(self) -> TopologyPolicy:
         return TopologyPolicy(

@@ -43,6 +43,83 @@ class TestGameND(unittest.TestCase):
         self.assertEqual(score_for_clear(4), 1200)
         self.assertEqual(score_for_clear(5), 1600)
 
+    def test_config_rejects_scalar_near_misses(self):
+        cases = (
+            ("gravity_axis", True),
+            ("speed_level", 1.0),
+            ("speed_level", 1.5),
+            ("random_cell_count", "5"),
+            ("challenge_layers", False),
+            ("lock_piece_points", 5.0),
+            ("rng_seed", "1337"),
+            ("wrap_gravity_axis", 1),
+            ("exploration_mode", "false"),
+            ("explorer_rigid_play_enabled", 0),
+            ("topology_mode", None),
+            ("piece_set_id", 3),
+            ("piece_set_4d", False),
+            ("kick_level", b"off"),
+            ("rng_mode", 1),
+        )
+        for field, near_miss in cases:
+            with (
+                self.subTest(field=field, near_miss=near_miss),
+                self.assertRaises((TypeError, ValueError)),
+            ):
+                GameConfigND(**{field: near_miss})
+
+    def test_config_rejects_dimension_near_misses(self):
+        cases = (
+            (6, True, 4),
+            (6, 12.0, 4),
+            (6, "12", 4),
+            "6,12,4",
+            b"6,12,4",
+        )
+        for dims in cases:
+            with self.subTest(dims=dims), self.assertRaises((TypeError, ValueError)):
+                GameConfigND(dims=dims)
+
+    def test_config_rejects_malformed_edge_rules(self):
+        with self.assertRaises((TypeError, ValueError)):
+            GameConfigND(
+                dims=(6, 12, 4),
+                topology_edge_rules=(
+                    ("bounded", "bounded"),
+                    ("bounded", "bounded"),
+                    ("bounded", 1),
+                ),
+            )
+
+    def test_config_rejects_out_of_range_and_unknown_values(self):
+        cases = (
+            {"dims": (6, 0, 4)},
+            {"gravity_axis": 3},
+            {"kick_level": "unknown"},
+            {"topology_mode": "unknown"},
+        )
+        for kwargs in cases:
+            with (
+                self.subTest(kwargs=kwargs),
+                self.assertRaises((TypeError, ValueError)),
+            ):
+                GameConfigND(**kwargs)
+
+    def test_config_accepts_documented_boundary_values(self):
+        config = GameConfigND(
+            dims=(1, 1),
+            gravity_axis=1,
+            speed_level=10,
+            random_cell_count=3,
+            challenge_layers=0,
+            lock_piece_points=0,
+            explorer_rigid_play_enabled=None,
+            rng_seed=999_999_999,
+        )
+
+        self.assertEqual(config.dims, (1, 1))
+        self.assertEqual(config.speed_level, 10)
+
     def test_spawn_piece_matches_config_dimension(self):
         cfg = GameConfigND(dims=(6, 12, 4), gravity_axis=1)
         state = GameStateND(config=cfg, board=BoardND(cfg.dims))
