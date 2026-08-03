@@ -18,7 +18,15 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 - Workflow and change classes: `docs/WORKFLOW_CODEX.md`
 - Machine governance: `config/project/policy_pack.json`
 
-## Active Work
+## Tracking Boundaries
+
+This backlog tracks strategic programmes, migrations, and deferrals whose
+resolution depends on an authority decision or product evidence. GitHub issues
+are for independently actionable, user-visible or reproducible bugs and their
+collaboration lifecycle. The movement-cache item below remains here because it
+depends on a future C++ graph-authority and representation decision.
+
+## Completed Foundations
 
 ### Shared topology contract foundation
 
@@ -71,12 +79,22 @@ values into valid topology data.
 Stage 53B transports and validates topology data but does not transfer semantic
 authority from Python to C++.
 
+## Active Work
+
 ### Professional playable 2D/3D/4D game programme
 
-The Stage 53A–53F short-term topology and Python-boundary governance sequence
-is closed. The next primary objective is the medium-term professional playable
-2D/3D/4D game programme. Plan product slices through the relevant RDS and
-authority-map owners; do not reopen generic boundary-governance stages.
+Stage 53E is complete and merged at `22938485`. Stage 53F, including its
+corrective follow-up, is complete locally on
+`codex/targeted-python-boundary-hardening` pending publication. Its strict
+replay, trace/hash, configuration, movement-cache, topology-store, and
+validation-ownership work is complete; the cache-performance deferral below is
+not incomplete correctness.
+
+The primary objective is a professional playable 2D/3D/4D game: stable
+gameplay, Godot integration, clear controls, UI/UX, tutorials and onboarding,
+topology gameplay, endgame/explosion presentation, and user-visible
+performance. Plan product slices through the relevant RDS and authority-map
+owners; do not reopen generic boundary-governance stages.
 
 ## Explicit Deferrals
 
@@ -96,6 +114,26 @@ authority-map owners; do not reopen generic boundary-governance stages.
   and unified gameplay/endgame/explosion integration remain separate later
   migration slices.
 
+### Python movement-graph persistent-cache performance
+
+Status: deferred pending a C++ movement-graph authority and representation
+decision, or user-facing latency evidence.
+
+Stage 53F correctness is complete: strict cache validation treats malformed or
+incompatible data as a derived-data miss, rebuilds from authoritative topology,
+and keeps normal cache acceptance bounded without constructing the full graph.
+The diagnostic 20³ benchmark measured direct construction at approximately
+`.054` seconds and a cold strict JSON cache read at approximately `.318`
+seconds. The cache therefore makes no cold-start performance claim.
+
+This affects setup and topology transitions only; it has no steady-state
+movement, rendering, collision, determinism, or frame-rate impact. A redesign
+is deferred because C++ graph authority and representation would change the
+cost model, ownership, layout, serialization, cache strategy, and possible
+asynchronous work. Revisit when that authority/representation is designed, or
+when realistic normal game-start or topology-switching latency exceeds the
+accepted product budget on representative hardware.
+
 ## Governance Watchlist
 
 - Keep one semantic objective per PR.
@@ -104,8 +142,6 @@ authority-map owners; do not reopen generic boundary-governance stages.
 - Require a scope matrix for deliberately cross-layer integration PRs.
 - Never weaken tests to fit an implementation.
 - Keep Python authority and transfer records aligned with actual ownership.
-- Keep persistent topology-cache acceptance bounded; valid cold reads must not
-  reconstruct the full authoritative graph.
 - Keep invalid topology-profile storage non-saveable through ordinary update
   paths; read-only fallback is not mutation authority.
 - Keep generated outputs tied to their source authority and generator.

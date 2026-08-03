@@ -138,6 +138,14 @@ source snapshots, save refusal, and atomic file replacement remain local to
 `runtime/topology_profile_store.py`; Stage 53D gluing persistence is not
 duplicated or routed through this distinct edge-rule workspace format.
 
+Cache performance disposition: Stage 53F's cache correctness closure is
+complete, but the diagnostic 20³ measurement found direct graph construction at
+approximately `.054` seconds and a cold strict JSON cache read at approximately
+`.318` seconds. This is a setup/topology-transition concern, not a
+steady-state gameplay or frame-rate result. The C++-dependent redesign decision
+is intentionally deferred in `docs/BACKLOG.md`; it is not remaining Stage 53F
+correctness scope.
+
 ## Corrective validation-ownership matrix
 
 | Rule/helper | Replay | Config | Cache | Topology store | Trace/hash | Canonical owner |

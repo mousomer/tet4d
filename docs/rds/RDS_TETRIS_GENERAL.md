@@ -53,6 +53,13 @@ Cross-cutting requirements are defined in:
 28. 3D/4D mouse tutorial stages must display explicit mouse prompts and require sustained mouse orbit/zoom interaction for at least 2 seconds before completion.
 29. Tutorial board dimensions must use explicit per-mode tutorial profiles and must not inherit or clamp against the user's normal gameplay board settings.
 
+### 2.1 Responsiveness review signal
+
+Normal game start and ordinary topology selection should preferably complete
+within approximately one second on supported hardware. This is a product review
+signal rather than a hard automated threshold until representative hardware and
+C++ ownership are established.
+
 ## 3. Shared Rules and Axis Conventions
 
 1. Axis `0`=`x`(horizontal), axis`1`=`y` (gravity/downward).

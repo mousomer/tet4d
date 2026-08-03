@@ -146,7 +146,11 @@ authoritative graph. Any mismatch is a silent derived-data miss, after which
 the caller builds once from authoritative inputs and may replace each cache
 artifact atomically; an interrupted document/digest pair is therefore only a
 future miss. Full graph comparison is reserved for tests or explicit
-diagnostics, not production cache acceptance.
+diagnostics, not production cache acceptance. This correctness boundary makes
+no cold-start throughput claim: cache-performance redesign remains deferred
+until C++ movement-graph authority and representation are designed, or
+realistic product setup/topology-transition latency crosses the RDS review
+signal.
 
 The active topology-profile store distinguishes missing, valid, and invalid
 documents. Read-only consumers may use a default recovery view for missing or

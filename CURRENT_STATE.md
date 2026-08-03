@@ -47,7 +47,8 @@ history ledger. Detailed history is preserved in
 - Stage 53C strict Python topology constructors are merged on `master` at
   `36972384`. Stage 53D explicit topology persistence and legacy recovery is
   merged on `master` at `c7243828`. Stage 53E merged at `22938485`; Stage 53F
-  is complete and verified on `codex/targeted-python-boundary-hardening`.
+  is complete and verified on `codex/targeted-python-boundary-hardening`,
+  pending publication.
   Replay, trace/hash, gameplay-config, movement-cache, and active topology-
   profile boundaries are strict, while named adapters retain evidenced source
   leniency. Its corrective follow-up keeps valid cold cache reads free of full
@@ -80,7 +81,9 @@ history ledger. Detailed history is preserved in
   adapters rather than topology domain constructors.
 - Invalid topology movement caches are derived-data misses: discard and
   rebuild them from the authoritative profile and dimensions; never repair
-  them into semantic state.
+  them into semantic state. This correctness policy makes no cold-start
+  performance claim; its separate C++-dependent setup-latency deferral is in
+  `docs/BACKLOG.md`.
 - `state/topology/profiles.json` is a distinct version-1 edge-rule workspace
   format. Its strict named adapter and explicit Stage 53C explorer bridge must
   not be replaced by permissive default overlay. Invalid existing storage may
@@ -164,7 +167,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 ## Next Steps
 
 1. Begin the medium-term professional playable 2D/3D/4D game programme,
-   including later topology-aware Godot gameplay and tooling slices.
+   prioritizing stable gameplay, Godot integration, controls, UI/UX, tutorials,
+   topology gameplay, endgame/explosion, and user-visible performance.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals; address them only with owning-format
    evidence rather than another generic governance stage.
