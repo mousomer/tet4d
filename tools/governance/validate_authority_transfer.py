@@ -230,8 +230,7 @@ def _parse_records(
     header = _split_table_row(table[0])
     if header != list(columns):
         return [], [
-            f"{label} records table has invalid columns; expected "
-            + ", ".join(columns)
+            f"{label} records table has invalid columns; expected " + ", ".join(columns)
         ]
 
     rows = [_split_table_row(line) for line in table[1:]]
@@ -325,9 +324,13 @@ def _validate_transfer_records(records: list[TransferRecord]) -> list[str]:
         if record.operation != "transfer":
             failures.append(f"{record.id} operation must be `transfer`")
         if record.status not in TRANSFER_STATUSES:
-            failures.append(f"{record.id} has invalid transfer status `{record.status}`")
+            failures.append(
+                f"{record.id} has invalid transfer status `{record.status}`"
+            )
         if record.current_authority == record.candidate_authority:
-            failures.append(f"{record.id} current and candidate authority are identical")
+            failures.append(
+                f"{record.id} current and candidate authority are identical"
+            )
         if record.status == "transferred":
             for field in (
                 "reference_implementation",
@@ -438,20 +441,12 @@ def check_protocol_contents(root: Path = ROOT) -> CheckResult:
         "Godot presentation": ("presentation", "godot"),
         "native deterministic authority": ("native", "deterministic"),
         "parity not sufficient": ("not sufficient", "parity"),
-        "only transferred changes authority": (
-            "only `transferred` changes authority",
-        ),
-        "only established creates authority": (
-            "only `established` creates authority",
-        ),
+        "only transferred changes authority": ("only `transferred` changes authority",),
+        "only established creates authority": ("only `established` creates authority",),
         "active transfer records": ("### active transfer records",),
-        "active establishment records": (
-            "### active establishment records",
-        ),
+        "active establishment records": ("### active establishment records",),
         "transfer required fields": ("required transfer record fields",),
-        "establishment required fields": (
-            "required establishment record fields",
-        ),
+        "establishment required fields": ("required establishment record fields",),
         "fallback": ("fallback",),
         "authority map update": ("authority_map_update", "authority map"),
         "comparison command": ("comparison_command", "comparison command"),
@@ -529,9 +524,7 @@ def check_authority_map_consistency(
     lower = authority_map.lower()
 
     if not (
-        "python" in lower
-        and "reference authority" in lower
-        and "inherited" in lower
+        "python" in lower and "reference authority" in lower and "inherited" in lower
     ):
         failures.append(
             "authority_map.md must describe Python as reference authority for "
@@ -602,8 +595,7 @@ def check_policy_consistency(root: Path = ROOT) -> CheckResult:
         )
     if "establish" not in godot_lower:
         failures.append(
-            "docs/governance/godot_cpp_policy.md must route new authority "
-            "establishment"
+            "docs/governance/godot_cpp_policy.md must route new authority establishment"
         )
 
     cpp = _read_rel(root, "docs/governance/cpp_safety_policy.md", failures)
