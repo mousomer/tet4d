@@ -17,89 +17,81 @@ history ledger. Detailed history is preserved in
   includes configurable bounded setup, display/accessibility infrastructure,
   settings hardening, Godot 4.7.1, pinned native dependencies, blocking
   Godot/native/parity CI, and Ruff 0.16 migration.
-- Python remains the semantic oracle. No topology, replay, endgame/explosion,
-  or broader gameplay authority transferred to Godot or native C++.
 - Governance trajectory simplification is merged on `master` at `f7e519b0`.
   Active routing now uses the stable constitution, task contract, change
   classes, and completion report; completed stage detail remains historical.
 - Godot visual consolidation was human accepted and merged at `6e06e00a`.
   Its viewport-control and persistence recovery was manually accepted and
-  merged at `6bedb75a`. Camera-relative grid rectangles occupy the three rear
-  faces of every volumetric section while the three front faces remain clear;
-  the recovered shell keeps Ctrl-only soft drop, direct mouse orbit/pan/zoom,
-  persistent windowed state, readable W-slice labels, and restrained slice
-  framing.
+  merged at `6bedb75a`.
 - Canonical topology contract version 1 is merged on `master` at `86906eb8`.
-  It makes the existing paired-seam Python semantics strict, normalized,
-  versioned, and identity-bearing, and extends the provisional native query
-  parity surface with frame transport and board-extent validation. The merge
-  does not transfer Python topology authority to native C++ or Godot; Godot
-  carries only the documented DTO, adapter, parity, and query-facing surfaces.
-- Shared topology contract foundation work is merged on `master` at
-  `af01bbd6`. It adds one language-neutral scalar source, deterministic
-  Python/C++ bindings, strict canonical scalar acceptance, and
-  generated-binding drift checks.
-- Stage 53B native topology transport is merged on `master` at `fe867627`. It
-  implements a strict native profile and resolver-query DTO, exact Godot
-  `Variant` decoding, checked dimension products, structured errors, and 59
-  shared Python/Godot-native acceptance fixtures. It reuses the existing
-  provisional native resolver and does not transfer Python authority.
-- Stage 53C strict Python topology constructors are merged on `master` at
-  `36972384`. Stage 53D explicit topology persistence and legacy recovery is
-  merged on `master` at `c7243828`. Stage 53E merged at `22938485`; Stage 53F
-  is merged and verified on `master` at `91b901f3`.
-  Replay, trace/hash, gameplay-config, movement-cache, and active topology-
-  profile boundaries are strict, while named adapters retain evidenced source
-  leniency. Its corrective follow-up keeps valid cold cache reads free of full
-  graph construction and prevents ordinary saves from overwriting invalid
-  topology-profile storage. The short-term Python boundary-governance
-  programme is closed.
-- Godot topology gameplay, the Godot Topology Lab, and unified Godot
-  gameplay/endgame/topology/explosion integration have not begun.
-- Stage 54A Godot cockpit control coherence and visual-affordance correction is
-  human accepted and ready for integration. Live 3D/4D uses
-  Ctrl-only soft drop, left-drag camera rotation, right-drag camera
-  translation, and wheel zoom; Shift has no soft-drop or special wheel action.
-  `LiveInputContract` is the shared action/helper authority. Quick Settings and
-  grid visibility are grouped in the cockpit button panel; W labels use rear
-  faces without active wording, and the active-slice frame is restrained.
+  Shared topology-contract foundations are merged at `af01bbd6`, and Stage 53B
+  native topology transport is merged at `fe867627` with strict profile/query
+  transport and 59 shared Python/Godot-native acceptance fixtures.
+- Stage 53C strict Python topology constructors are merged at `36972384`.
+  Stage 53D topology persistence and legacy recovery is merged at `c7243828`.
+  Stage 53E is merged at `22938485`. Stage 53F is merged and verified on
+  `master` at `91b901f3`. The short-term Python boundary-governance programme
+  is closed.
+- Stage 54A is human accepted and merged on `master` at `bcf41519`.
+- The active product authority is
+  `docs/plans/professional_godot_game_programme.md`. Its first gate is a fully
+  playable, professionally presented 4D Godot game that is ready for later
+  topology, Explorer, challenge, and simulation extensions.
+- The next planned product capability is Stage 54B: complete direct per-axis
+  board configuration within one validated product envelope.
+- Stage 54C then adds game-safe 4D slice-basis quarter-turns and focused
+  instruction. Stage 54D adds modern Hold-piece gameplay.
+- Weak live 3D/4D grid visibility is known non-blocking visual debt. It is
+  deferred to the Stage 54E visible-GUI playability review and does not block
+  Stage 54B, Stage 54C, or Stage 54D.
+- Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
+  challenge campaign, and unified gameplay/endgame/topology/explosion
+  integration remain later programme phases.
 
 ## Current Authority
 
+- Professional product programme and phase gates:
+  `docs/plans/professional_godot_game_programme.md`
 - Contributor workflow and change-class routing: `docs/WORKFLOW_CODEX.md`
 - Governance router and reusable contracts: `docs/governance/README.md`
 - Machine-readable policy: `config/project/policy_pack.json`
-- Product behavior: relevant `docs/rds/*`
+- Product behaviour: relevant `docs/rds/*`
 - Architecture boundaries: `docs/ARCHITECTURE_CONTRACT.md`
-- Migration ownership: `docs/architecture/authority_map.md`
+- Subsystem authority and migration ownership:
+  `docs/architecture/authority_map.md`
+- Authority transfer and new-authority establishment:
+  `docs/architecture/authority_transfer_protocol.md`
 - Documentation routing: `docs/DOCUMENTATION_MAP.md`
 - Open work and deferrals: `docs/BACKLOG.md`
 - Generated structure inventory: `docs/PROJECT_STRUCTURE.md`
 
 ## Known Watchouts
 
+- Python is reference authority only for inherited, untransferred behaviour.
+  It is not the mandatory origin or universal oracle for new Godot/native
+  product capabilities.
+- Existing inherited behaviour moves through the authority-transfer protocol.
+  New behaviour without a predecessor uses authority establishment with an
+  owning contract, named owner, conformance evidence, and authority-map entry.
 - Native topology transport accepts only values that satisfy the shared
-  topology contract and the runtime query contract. It does not coerce
-  malformed scalar values into valid topology data.
+  topology contract and runtime query contract. It does not coerce malformed
+  scalar values into valid topology data.
 - Stage 53B transports and validates topology data but does not transfer
-  semantic authority from Python to C++.
+  inherited topology semantics from Python/reference contracts to C++.
 - Lenient persistence or human-input recovery must stay in named source
   adapters rather than topology domain constructors.
 - Invalid topology movement caches are derived-data misses: discard and
   rebuild them from the authoritative profile and dimensions; never repair
-  them into semantic state. This correctness policy makes no cold-start
-  performance claim; its separate C++-dependent setup-latency deferral is in
-  `docs/BACKLOG.md`.
+  them into semantic state. Its separate C++-dependent setup-latency deferral
+  remains in `docs/BACKLOG.md`.
 - `state/topology/profiles.json` is a distinct version-1 edge-rule workspace
-  format. Its strict named adapter and explicit Stage 53C explorer bridge must
-  not be replaced by permissive default overlay. Invalid existing storage may
-  provide read-only defaults but must block ordinary save; destructive
-  replacement requires an explicit future recovery operation.
-- Do not move Python semantic authority through implementation convenience or
-  visual plausibility; use the authority-transfer protocol.
+  format. Invalid existing storage may provide read-only defaults but must
+  block ordinary save; destructive replacement requires an explicit recovery
+  operation.
+- Do not create a Python mirror solely to satisfy an obsolete universal-oracle
+  claim.
 - Do not let completed stage narratives return to universal agent prompts,
-  review checklists, or active drift rules. Route historical evidence through
-  the parity protocol, documentation map, and `docs/history/`.
+  review checklists, or active drift rules.
 - Keep `CURRENT_STATE.md` restart-only and `docs/BACKLOG.md` open-work-only.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
@@ -172,10 +164,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Integrate human-accepted Stage 54A, then continue the medium-term
-   professional playable 2D/3D/4D game programme with later controls, UI/UX,
-   tutorials, topology gameplay, endgame/explosion, and user-visible
-   performance slices.
+1. Implement Stage 54B — Complete Custom Board Configuration.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
-   bounded, format-specific deferrals; address them only with owning-format
-   evidence rather than another generic governance stage.
+   bounded, format-specific deferrals rather than reopening generic governance
+   work.
