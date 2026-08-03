@@ -56,6 +56,13 @@ history ledger. Detailed history is preserved in
   programme is closed.
 - Godot topology gameplay, the Godot Topology Lab, and unified Godot
   gameplay/endgame/topology/explosion integration have not begun.
+- Stage 54A Godot cockpit control coherence and visual-affordance correction is
+  implemented locally and pending human visual acceptance. Live 3D/4D uses
+  Ctrl-only soft drop, left-drag camera rotation, right-drag camera
+  translation, and wheel zoom; Shift has no soft-drop or special wheel action.
+  `LiveInputContract` is the shared action/helper authority. Quick Settings and
+  grid visibility are grouped in the cockpit button panel; W labels use rear
+  faces without active wording, and the active-slice frame is restrained.
 
 ## Current Authority
 
@@ -165,9 +172,10 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Begin the medium-term professional playable 2D/3D/4D game programme,
-   prioritizing stable gameplay, Godot integration, controls, UI/UX, tutorials,
-   topology gameplay, endgame/explosion, and user-visible performance.
+1. Obtain human visual acceptance for Stage 54A, then continue the medium-term
+   professional playable 2D/3D/4D game programme with later controls, UI/UX,
+   tutorials, topology gameplay, endgame/explosion, and user-visible
+   performance slices.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals; address them only with owning-format
    evidence rather than another generic governance stage.

@@ -35,7 +35,6 @@ var _current_document: TraceDocument
 var _current_snapshot: Dictionary = {}
 var _playback_accumulator := 0.0
 var _mouse_orbiting := false
-var _mouse_rolling := false
 var _mouse_panning := false
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
@@ -221,23 +220,21 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_camera_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == LiveInputContractScript.CAMERA_ORBIT_BUTTON:
+		var camera_control := LiveInputContractScript.camera_control_for_button(event.button_index)
+		if camera_control == "camera_orbit":
 			if event.pressed and event.double_click:
 				_mouse_orbiting = false
-				_mouse_rolling = false
 				_mouse_panning = false
 				_fit_view()
 				return
-			var shift_roll: bool = event.shift_pressed or Input.is_key_pressed(LiveInputContractScript.CAMERA_ROLL_MODIFIER)
-			_mouse_orbiting = event.pressed and not shift_roll
-			_mouse_rolling = event.pressed and shift_roll
-		elif event.button_index in LiveInputContractScript.CAMERA_PAN_BUTTONS:
+			_mouse_orbiting = event.pressed
+		elif camera_control == "camera_pan":
 			_mouse_panning = event.pressed
-		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+		elif camera_control == "camera_zoom" and event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			if _camera_rig != null:
 				_camera_rig.zoom(-1.0)
 				_refresh_camera_status()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+		elif camera_control == "camera_zoom" and event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			if _camera_rig != null:
 				_camera_rig.zoom(1.0)
 				_refresh_camera_status()
@@ -247,9 +244,6 @@ func _handle_camera_input(event: InputEvent) -> void:
 		if _mouse_orbiting:
 			_camera_rig.orbit(event.relative)
 			_refresh_camera_status()
-		elif _mouse_rolling:
-			_camera_rig.roll(event.relative)
-			_refresh_camera_status()
 		elif _mouse_panning:
 			_camera_rig.pan_screen(event.relative)
 			_refresh_camera_status()
@@ -257,15 +251,9 @@ func _handle_camera_input(event: InputEvent) -> void:
 
 func _event_is_camera_mouse_input(event: InputEvent) -> bool:
 	if event is InputEventMouseMotion:
-		return _mouse_orbiting or _mouse_rolling or _mouse_panning
+		return _mouse_orbiting or _mouse_panning
 	if event is InputEventMouseButton:
-		return event.button_index in [
-			LiveInputContractScript.CAMERA_ORBIT_BUTTON,
-			LiveInputContractScript.CAMERA_PAN_BUTTONS[0],
-			LiveInputContractScript.CAMERA_PAN_BUTTONS[1],
-			MOUSE_BUTTON_WHEEL_UP,
-			MOUSE_BUTTON_WHEEL_DOWN,
-		]
+		return LiveInputContractScript.is_camera_button(event.button_index)
 	return false
 
 
@@ -1716,8 +1704,7 @@ func _ensure_input_map() -> void:
 		for keycode in spec.get("keys", []):
 			_ensure_key_action(str(action_name), int(keycode) as Key)
 	_ensure_mouse_action("camera_orbit", LiveInputContractScript.CAMERA_ORBIT_BUTTON)
-	for pan_button in LiveInputContractScript.CAMERA_PAN_BUTTONS:
-		_ensure_mouse_action("camera_pan", int(pan_button) as MouseButton)
+	_ensure_mouse_action("camera_pan", LiveInputContractScript.CAMERA_PAN_BUTTON)
 	_ensure_mouse_action("camera_zoom", MOUSE_BUTTON_WHEEL_UP)
 
 

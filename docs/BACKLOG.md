@@ -96,6 +96,15 @@ topology gameplay, endgame/explosion presentation, and user-visible
 performance. Plan product slices through the relevant RDS and authority-map
 owners; do not reopen generic boundary-governance stages.
 
+Stage 54A, Godot cockpit control coherence and visual-affordance correction,
+is implemented locally and pending human visual acceptance. It establishes one
+Godot control/helper authority; Ctrl-only soft drop; left-drag rotation,
+right-drag translation, and wheel zoom; cockpit-panel ownership for Quick
+Settings and grid visibility; clearer passive helper tags; rear-face W labels;
+and restrained active-slice framing. Control remapping, controller support,
+tutorials, topology gameplay, audio, and broader menu work remain later
+product slices.
+
 ## Explicit Deferrals
 
 - topology-aware Godot gameplay and diagnostics;

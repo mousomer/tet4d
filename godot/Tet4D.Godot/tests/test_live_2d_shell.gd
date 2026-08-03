@@ -19,7 +19,7 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Shift + Left Drag Roll") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Left Drag Rotate camera") or not live_4d_hint.contains("Right Drag Translate camera") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose W controls, camera controls, six rotation planes, and Esc-only quit")
 	for action_name in LiveInputContractScript.ACTION_SPECS:
 		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
@@ -332,12 +332,12 @@ func run() -> Array:
 		var roll_motion_event := InputEventMouseMotion.new()
 		roll_motion_event.relative = Vector2(12.0, 0.0)
 		app._handle_camera_input(roll_motion_event)
-		if app._camera_rig._target_roll <= roll_before_drag:
-			failures.append("Shift-drag should roll camera view")
+		if app._camera_rig._target_roll != roll_before_drag:
+			failures.append("Shift-drag must not introduce an undocumented camera action")
 		shift_drag_event.pressed = false
 		app._handle_camera_input(shift_drag_event)
 		var pan_button := InputEventMouseButton.new()
-		pan_button.button_index = MOUSE_BUTTON_MIDDLE
+		pan_button.button_index = MOUSE_BUTTON_RIGHT
 		pan_button.pressed = true
 		app._handle_camera_input(pan_button)
 		var focus_before_pan: Vector3 = app._camera_rig._target_focus
@@ -345,7 +345,7 @@ func run() -> Array:
 		pan_motion.relative = Vector2(18.0, -9.0)
 		app._handle_camera_input(pan_motion)
 		if app._camera_rig._target_focus == focus_before_pan or app._camera_rig._current_fit_state != "manual pan":
-			failures.append("Middle-drag should pan the gameboard view")
+			failures.append("Right-drag should pan the gameboard view")
 		pan_button.pressed = false
 		app._handle_camera_input(pan_button)
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:

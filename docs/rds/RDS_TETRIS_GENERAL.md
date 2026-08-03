@@ -60,6 +60,22 @@ within approximately one second on supported hardware. This is a product review
 signal rather than a hard automated threshold until representative hardware and
 C++ ownership are established.
 
+### 2.2 Godot live cockpit controls
+
+1. Godot Live 3D and Live 4D soft drop uses Ctrl only; Shift does not trigger
+   soft drop.
+2. Left mouse-button drag rotates the camera, right mouse-button drag
+   translates it, and ordinary mouse wheel input zooms. Shift-wheel has no
+   special translation behavior.
+3. Public live-control helpers resolve their bindings through the same Godot
+   action/control authority used by input dispatch.
+4. Live play-plane visualization owns board content only. Interactive Quick
+   Settings and grid-visibility commands belong to a cockpit button panel;
+   passive keyboard and mouse references belong to helper panels.
+5. In 4D, W-slice labels identify the slice without active wording, sit on the
+   camera-relative rear face, and use visual emphasis rather than semantic text
+   to distinguish the selected slice.
+
 ## 3. Shared Rules and Axis Conventions
 
 1. Axis `0`=`x`(horizontal), axis`1`=`y` (gravity/downward).

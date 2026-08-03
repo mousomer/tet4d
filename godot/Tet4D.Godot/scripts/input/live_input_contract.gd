@@ -3,9 +3,16 @@ extends RefCounted
 class_name LiveInputContract
 
 const CAMERA_ORBIT_BUTTON := MOUSE_BUTTON_LEFT
-const CAMERA_PAN_BUTTONS := [MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT]
+const CAMERA_PAN_BUTTON := MOUSE_BUTTON_RIGHT
 const CAMERA_ZOOM_BUTTONS := [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]
-const CAMERA_ROLL_MODIFIER := KEY_SHIFT
+
+# This is the public shell-control authority. Runtime input routing and every
+# user-facing helper resolve bindings from these stable semantic IDs.
+const CAMERA_CONTROL_SPECS := {
+	"camera_orbit": {"button": CAMERA_ORBIT_BUTTON, "display": "Left Drag", "helper": "Rotate camera", "context": "live_camera", "public": true},
+	"camera_pan": {"button": CAMERA_PAN_BUTTON, "display": "Right Drag", "helper": "Translate camera", "context": "live_camera", "public": true},
+	"camera_zoom": {"buttons": CAMERA_ZOOM_BUTTONS, "display": "Wheel", "helper": "Zoom", "context": "live_camera", "public": true},
+}
 
 const ACTION_SPECS := {
 	"live_move_left": {"keys": [KEY_LEFT, KEY_A], "display_key": KEY_A},
@@ -74,6 +81,30 @@ static func action_specs() -> Dictionary:
 	return ACTION_SPECS.duplicate(true)
 
 
+static func camera_control_specs() -> Dictionary:
+	return CAMERA_CONTROL_SPECS.duplicate(true)
+
+
+static func camera_control_for_button(button: MouseButton) -> String:
+	for control_id in CAMERA_CONTROL_SPECS:
+		var spec: Dictionary = CAMERA_CONTROL_SPECS[control_id]
+		if int(spec.get("button", -1)) == button or button in spec.get("buttons", []):
+			return control_id
+	return ""
+
+
+static func is_camera_button(button: MouseButton) -> bool:
+	return not camera_control_for_button(button).is_empty()
+
+
+static func camera_helper_items() -> Array:
+	var items: Array = []
+	for control_id in ["camera_orbit", "camera_pan", "camera_zoom"]:
+		var spec: Dictionary = CAMERA_CONTROL_SPECS[control_id]
+		items.append([str(spec["display"]), str(spec["helper"])])
+	return items
+
+
 static func control_hint_groups(mode: String) -> Array:
 	match mode:
 		"live_2d":
@@ -102,7 +133,7 @@ static func _live_3d_groups() -> Array:
 		{"group": "Piece movement", "items": [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "Move X- / X+"], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Move Z+ / Z-"]]},
 		{"group": "Piece rotation", "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY- / XY+"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ- / XZ+"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ- / YZ+"]]},
 		{"group": "Drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop"], [_display_key("live_3d_hard_drop"), "Hard Drop"]]},
-		{"group": "Camera", "items": _pointer_items(false) + [["F", "Fit View"]]},
+		{"group": "Camera", "items": camera_helper_items() + [["F", "Fit View"]]},
 		{"group": "Session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
 	]
@@ -113,20 +144,11 @@ static func _live_4d_groups() -> Array:
 		{"group": "Piece movement", "items": [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "X- / X+"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Z+ / Z-"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W- / W+"]]},
 		{"group": "Plane Rotation", "note": "Left: CCW · Right: CW", "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
 		{"group": "Camera", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"], [_pair("live_4d_camera_roll_left", "live_4d_camera_roll_right", " / "), "Roll left / right"], ["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": _pointer_items(true)},
+		{"group": "Mouse Camera", "items": camera_helper_items()},
 		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
 		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
 	]
-
-
-static func _pointer_items(include_roll: bool) -> Array:
-	var items := [["Left Drag", "Orbit"], ["Middle / Right Drag", "Pan"]]
-	if include_roll:
-		items.append(["Shift + Left Drag", "Roll"])
-	items.append(["Wheel", "Zoom"])
-	items.append(["Double-click", "Fit View"])
-	return items
 
 
 static func _pair(first_action: String, second_action: String, separator: String = "/") -> String:
