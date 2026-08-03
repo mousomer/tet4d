@@ -3,11 +3,11 @@
 tet4d is a Python-origin game and engine with Godot as the product-shell
 direction. Semantic authority is subsystem-specific.
 
-Python remains reference authority for inherited gameplay, topology, trace,
-replay, configuration, and related behaviour only until the named subsystem is
-transferred or retired. New capabilities without a Python predecessor may
-establish authority directly in native C++, Godot, or versioned declarative
-data through the documented authority-establishment process.
+Python remains the semantic oracle for inherited, untransferred gameplay,
+topology, trace, replay, configuration, and related behaviour only until the
+named subsystem is transferred or retired. New capabilities without a Python
+predecessor may establish authority directly in native C++, Godot, or versioned
+declarative data through the documented authority-establishment process.
 
 ## Canonical authorities
 
