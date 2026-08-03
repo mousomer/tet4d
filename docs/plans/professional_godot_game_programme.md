@@ -2,8 +2,8 @@
 
 Role: authority  
 Status: active  
-Source of truth: this file for product-programme priorities, phase sequencing,
-and completion gates  
+Source of truth: this file for product priorities, phase sequencing, and
+completion gates  
 Supersedes: none  
 Last updated: 2026-08-03
 
@@ -14,85 +14,94 @@ This document defines the active long-term product programme for Tet4D.
 Its first and overriding goal is:
 
 > Deliver a fully playable, professionally presented four-dimensional game in
-> Godot, with a stable product architecture that supports later extension into
-> topology, free spatial exploration, challenge campaigns, and physics
-> simulation.
+> Godot, with an architecture ready for professional gaming features and later
+> extension into topology, spatial exploration, challenge campaigns, and
+> physics simulation.
 
 This document owns:
 
-- the order of major product capabilities;
-- the boundary between the professional core game and later extensions;
+- programme priority and stage order;
+- the boundary between the core game and later extensions;
 - phase-completion gates;
-- dependencies between board configuration, four-dimensional view controls,
-  Hold, topology, exploration, challenges, and simulation;
-- the authority model used when new capabilities no longer have a Python
-  predecessor.
+- dependencies among board configuration, 4D view controls, Hold, topology,
+  Explorer, challenges, and simulation;
+- the programme-level authority model for inherited and genuinely new
+  capabilities.
 
-This document does not own:
+It does not own:
 
-- detailed durable behaviour, which belongs in `docs/rds/*`;
+- durable feature behaviour, which belongs in `docs/rds/*`;
 - architecture law, which belongs in `docs/ARCHITECTURE_CONTRACT.md`;
-- subsystem authority records, which belong in
+- current subsystem ownership, which belongs in
   `docs/architecture/authority_map.md`;
+- authority transfer and establishment procedure, which belongs in
+  `docs/architecture/authority_transfer_protocol.md`;
 - topology-playground invariants, which belong in
   `docs/plans/topology_playground_current_authority.md`;
-- current restart context, which belongs in `CURRENT_STATE.md`;
-- open execution work and deferrals, which belong in `docs/BACKLOG.md`;
+- current execution state, which belongs in `CURRENT_STATE.md` and
+  `docs/BACKLOG.md`;
 - completed implementation evidence, which belongs in architecture records and
   history.
 
 When a programme stage changes durable product behaviour, the owning RDS must
 be updated in the same implementation slice.
 
-## 2. Primary Product Goal
+## 2. First Product Gate
 
-Tet4D must become a professional game before its surrounding research and
-exploration capabilities are allowed to displace the core product.
-
-The first major programme gate is:
+The first major gate is:
 
 ```text
 PROFESSIONAL_CORE_GAME_READY
 ```
 
-Passing this gate means that the 4D game is not merely technically functional.
-It is understandable, configurable, reliable, visually coherent, responsive,
-and ready to support additional professional gaming features.
+Tet4D must pass this gate before topology, the full Explorer, challenge
+campaigns, or simulation become the dominant implementation focus.
 
-The core game must:
+Passing the gate means that the 4D game is not merely technically functional.
+It is:
 
-1. be enjoyable and coherent as a game;
-2. present 2D, 3D, and especially 4D state clearly;
-3. allow meaningful board configuration rather than only curated demos;
-4. distinguish piece rotation, camera movement, slice movement, and
-   four-dimensional view-basis changes;
-5. provide a modern gameplay baseline, including a Hold mechanic;
-6. have reliable controls, menus, persistence, rendering, performance, and
-   packaging;
-7. be architecturally ready for topology, exploration, challenges, and
-   simulation without requiring those later modes for core completeness.
+- understandable;
+- configurable;
+- reliable;
+- visually coherent;
+- responsive;
+- enjoyable as a game;
+- distributable;
+- ready for further professional gameplay features.
+
+The core product must:
+
+1. provide polished 2D, 3D, and 4D play;
+2. make 4D state legible rather than merely correct;
+3. support direct per-axis board configuration;
+4. distinguish piece rotation, camera movement, slice navigation, and 4D
+   presentation-basis rotation;
+5. provide a modern gameplay baseline, including Hold;
+6. have coherent setup, controls, menus, persistence, accessibility, display,
+   performance, and packaging;
+7. expose stable integration boundaries for later modes.
 
 ## 3. Product Structure
 
-Tet4D is not one linear tutorial ladder.
+Tet4D does not have one mandatory linear progression.
 
-The product varies along four substantially independent axes:
+It varies along four independent product axes:
 
-| Product axis | Meaning |
+| Axis | Options |
 | --- | --- |
-| Dimension | 2D, 3D, or 4D spatial structure |
-| Board geometry | Size of each active coordinate axis |
-| Topology | How boundaries and locations are connected |
-| Activity | Play, Explore, Challenge, or Simulate |
+| Dimension | 2D, 3D, 4D |
+| Board geometry | Validated size on every active axis |
+| Topology | Bounded, strip, Möbius, and later richer spaces |
+| Activity | Play, Explore, Challenge, Simulate |
 
-The final product therefore supports several valid paths.
+This supports several player paths.
 
 ### Dimensional path
 
 ```text
-2D bounded play
--> 3D bounded play
--> 4D bounded play
+2D bounded
+-> 3D bounded
+-> 4D bounded
 ```
 
 ### Topological path
@@ -107,140 +116,116 @@ The final product therefore supports several valid paths.
 ### Spatial-learning path
 
 ```text
-contextual guidance
+contextual help
 -> free manipulation
--> target-pose challenges
+-> spatial challenges
 -> placement and clearing puzzles
--> four-dimensional challenge campaign
+-> 4D challenge campaign
 ```
 
 ### Simulation path
 
 ```text
 game or constructed state
--> final board
+-> final state
 -> explosion or physics simulation
 -> inspect, replay, or continue experimenting
 ```
 
 Engineering phases may be sequential. The final product must not force every
-player through one mandatory conceptual progression.
+player through one conceptual ladder.
 
 ## 4. Programme Principles
 
-### 4.1 Product work before speculative migration
+### 4.1 Product value before migration volume
 
-Implementation priority is driven by player value, product completeness, and
-measured performance.
+Implementation priority is determined by player value, product completeness,
+and measured performance.
 
 C++ migration is not itself a product milestone.
 
-### 4.2 New capability before repeated proof
+### 4.2 New capability before repeated verification
 
-Do not create a new stage merely to repeat already established lifecycle,
-governance, or parity checks.
+Do not create a stage merely to re-prove lifecycle, governance, or parity
+behaviour already covered by existing regression suites.
 
-Every stage must provide at least one of:
+A stage must provide at least one of:
 
 - a new user-facing capability;
 - correction of an observed user-facing defect;
 - removal of a demonstrated product blocker;
-- an explicit subsystem authority change with measurable benefit.
+- an explicit bounded authority change with measurable benefit.
 
-Existing regression suites remain mandatory, but running them is not itself a
-product stage.
+Regression verification remains mandatory, but is not itself a product stage.
 
-### 4.3 Four-dimensional comprehension is core gameplay
+### 4.3 Four-dimensional comprehension is gameplay
 
-A mathematically correct state is insufficient when the player cannot
-understand it.
+A mathematically correct state is insufficient when the player cannot read it.
 
-The game must explain and keep distinct:
+The product must keep distinct:
 
-- the current visible coordinate basis;
-- the current slice axis;
-- the active slice;
-- movement through the slice axis;
-- piece rotation;
-- ordinary 3D camera movement;
-- discrete 4D view-basis rotation.
+- object position;
+- object orientation;
+- camera orientation;
+- visible 3D basis;
+- current slice axis;
+- active slice;
+- slice navigation;
+- 4D presentation-basis rotation.
 
 ### 4.4 Presets are shortcuts, not restrictions
 
-Presets populate supported setup values. They must not remain the only
-available board shapes when the engine already supports a validated range.
+Presets should populate supported configuration values. They must not remain
+the only permitted board shapes where the runtime supports a validated range.
 
 ### 4.5 Topology is independent of dimension
 
-Topology is not merely an advanced feature after 4D.
+Topology is not simply an advanced feature after 4D. Two-dimensional bounded,
+strip, and Möbius games are independently meaningful.
 
-Two-dimensional bounded, strip, and Möbius games are legitimate first-class
-games. They form an independent conceptual progression.
+This does not change the immediate priority: complete the professional bounded
+4D game before topology becomes the principal implementation programme.
 
-This does not change the first product priority: complete the professional
-bounded 4D game before topology becomes the dominant implementation focus.
+### 4.6 Exploration is a learning mode
 
-### 4.6 Exploration is part of learning
+The Explorer is not only an editor or diagnostic surface. It is a free-practice
+environment for movement, object rotation, camera rotation, re-slicing,
+inspection, resetting, and repetition without game pressure.
 
-The Explorer is not only a diagnostic or editing tool. It is a free-practice
-environment where a player can move, rotate, re-slice, inspect, reset, and
-repeat without gravity or score pressure.
+### 4.7 Challenges are the main curriculum
 
-### 4.7 Challenges replace the conventional tutorial as the main curriculum
+Contextual prompts remain useful, but the principal tutorial system should ask
+the player to solve spatial and gameplay problems.
 
-Contextual prompts remain useful, but mastery should be demonstrated through
-spatial and gameplay problems:
+Examples:
 
-- reach a target coordinate;
+- reach a coordinate;
 - match a target orientation;
-- choose a useful slicing direction;
-- place a piece into a cavity;
+- select a useful slicing direction;
+- fit a piece into a cavity;
 - clear a line, plane, or hyperplane with a constrained sequence;
 - use a topology seam deliberately.
 
 ## 5. Current Foundation
 
-The programme begins from an already substantial foundation.
+The project already has:
 
-### 5.1 Existing live game
+- bounded 2D, 3D, and 4D live play;
+- deterministic state transitions;
+- multiple piece sets;
+- fixed-seed and random sessions;
+- initial speed setup;
+- restart and new-random-game behaviour;
+- curated board presets;
+- adaptive 4D slice layout;
+- Godot settings, display, and accessibility infrastructure;
+- strict topology contracts and native transport;
+- a Python topology Editor/Sandbox/Play model;
+- an existing explosion simulator and deterministic traces.
 
-The project has bounded 2D, 3D, and 4D live game paths with deterministic
-state transitions, multiple piece sets, fixed and random seeds, speed setup,
-restart behaviour, settings, display infrastructure, accessibility, and an
-adaptive 4D slice layout.
+### Stage 54A status
 
-### 5.2 Current board setup
-
-Godot currently exposes curated board presets. The underlying setup and native
-session boundaries already carry explicit board shapes.
-
-The missing product capability is direct, validated editing of every active
-axis.
-
-### 5.3 Current 4D presentation
-
-The 4D view presents a visible 3D volume as a stack or matrix of slices along a
-selected axis.
-
-The missing fundamental operation is an exact quarter-turn of the 4D
-presentation basis that changes which coordinate axis defines the slice stack.
-
-### 5.4 Current guidance
-
-The existing Godot onboarding layer provides useful contextual control
-information. It remains a help system, not the final learning model.
-
-### 5.5 Current topology and exploration
-
-The Python topology path already has an accepted Editor, Sandbox, and Play
-architecture. Sandbox already represents free piece experimentation and
-movement diagnostics.
-
-Godot does not yet provide the complete player-facing equivalent.
-
-### 5.6 Stage 54A
-
-Stage 54A has been implemented and locally committed at `bfeb23dc`.
+Stage 54A is implemented and locally committed at `bfeb23dc`.
 
 It establishes:
 
@@ -249,10 +234,11 @@ It establishes:
 - right-drag camera translation;
 - ordinary wheel zoom;
 - no Shift-wheel translation;
-- shared runtime/helper input authority;
-- cockpit ownership for interactive buttons;
+- one runtime/helper input authority;
+- correct cockpit ownership for interactive controls;
 - clearer button/helper distinction;
-- improved W labels and restrained active-slice framing.
+- improved W labels;
+- restrained active-slice framing.
 
 Automated verification passed. Human visual acceptance remains pending because
 the implementation environment could not capture a valid viewport.
@@ -262,146 +248,110 @@ the implementation environment could not capture a valid viewport.
 Status: active  
 Priority: highest
 
-Phase I exists to pass:
-
-```text
-PROFESSIONAL_CORE_GAME_READY
-```
-
-Later topology, Explorer, challenge, and simulation work must not replace this
-gate.
-
 ### Stage 54A — Control and cockpit coherence
 
-Status: implemented locally; automated verification passed; human visual
-acceptance pending.
+Status: implemented locally; publication and later human visual acceptance
+pending.
 
-Remaining work:
-
-- publish and integrate the implementation;
-- complete visible-GUI acceptance during a later representative play session.
+Do not reopen the settled functional scope unless visible-GUI review identifies
+a defect.
 
 ### Stage 54B — Complete custom board configuration
 
 Objective:
 
-Allow the player to configure every active board axis directly within one
-validated product envelope.
+Allow direct editing of every active board axis inside one validated product
+envelope.
 
-#### Required fields
+#### Fields
 
-2D:
-
-```text
-X size
-Y size
-```
-
-3D:
-
-```text
-X size
-Y size
-Z size
-```
-
-4D:
-
-```text
-X size
-Y size
-Z size
-W size
-```
+| Mode | Editable axes |
+| --- | --- |
+| 2D | X, Y |
+| 3D | X, Y, Z |
+| 4D | X, Y, Z, W |
 
 Each active axis must provide:
 
 - direct integer entry;
-- increment and decrement controls;
-- explicit minimum and maximum;
+- increment/decrement controls;
+- visible minimum and maximum;
 - validation feedback;
-- canonical default value;
+- canonical default;
 - persistence of the last valid setup;
-- compatibility checks with the selected piece set;
+- compatibility validation with the selected piece set;
 - safe rejection of unsupported combinations.
 
-Presets remain available and populate the editable fields:
+Presets remain available:
 
 ```text
 select preset
--> receive preset dimensions
+-> preset fills axis fields
 -> edit any axis
--> start a validated custom game
+-> launch validated custom game
 ```
 
-#### Reset semantics
+#### Reset and lifecycle semantics
 
-Provide two distinct actions:
+Provide separate actions:
 
-- `Reset Sizes`: restore canonical dimensions for the current mode;
-- `Reset Setup`: restore all setup fields for the current mode.
+- `Reset Sizes`: restore canonical dimensions for the selected mode;
+- `Reset Setup`: restore all setup fields for the selected mode.
 
-Do not resize an active session.
+An active game is never resized.
 
-`Restart Game` reconstructs the frozen current setup. `Change Setup` returns to
-setup before constructing another session.
+- `Restart Game` reconstructs the frozen current setup.
+- `Change Setup` leaves the session before another setup is constructed.
 
 #### Authority boundary
 
-One board-extent contract must define product minima, product maxima, setup
-validation, persistence validation, native construction limits, and tests.
+One board-extent contract owns product minima, maxima, setup validation,
+persistence validation, native construction limits, and tests.
 
-Godot must not invent a second set of board limits.
+Godot must not invent independent limits.
 
 Stage 49 and Stage 50 remain accurate records of their completed curated-preset
-scope. Stage 54B extends the active product boundary rather than rewriting
-those completed records.
+scope. Stage 54B extends the current product boundary rather than rewriting
+those records.
 
-### Stage 54C — Game-safe four-dimensional slice-basis rotations
+### Stage 54C — Game-safe 4D slice-basis rotations
 
 Objective:
 
 Allow the player to change the 3D slicing through which the 4D game board is
-displayed while preserving the visible meaning of the gravity axis.
+displayed while preserving the visible meaning of gravity.
 
 #### Distinct operations
 
 The live 4D game distinguishes:
 
-1. **Piece rotation** — changes the active piece orientation.
-2. **Three-dimensional camera movement** — changes the viewpoint inside the
-   current visible 3D volume.
-3. **Slice navigation** — changes the active index along the current slice
-   axis.
-4. **Slice-basis rotation** — exchanges the current slice axis with a visible
+1. **Piece rotation** — changes active-piece orientation.
+2. **3D camera movement** — changes the viewpoint within the visible volume.
+3. **Slice navigation** — moves along the current slice axis.
+4. **Slice-basis rotation** — exchanges the slice axis with a visible
    non-gravity axis and reconstructs the slice stack.
 
-These operations require separate actions, labels, helper descriptions, and
-feedback.
+These require separate actions, labels, helpers, and feedback.
 
-#### Gravity-axis invariant
-
-In live gameplay:
+#### Gravity invariant
 
 ```text
 Y = gravity axis
 ```
 
-Y remains visible and retains a stable downward presentation.
+Y remains visible and retains a stable downward presentation during live play.
+The game does not exchange Y with the current slice axis.
 
-The game must not exchange Y with the current slice axis because that would
-conflate presentation transformation with gameplay gravity.
+#### Canonical basis and actions
 
-#### Canonical initial basis
+Initial basis:
 
 ```text
-Visible axes: X Y Z
-Slice axis: W
+Visible: X Y Z
+Slices: W
 ```
 
-#### Required game-safe quarter-turns
-
-From the canonical basis:
+Initial exact quarter-turns:
 
 ```text
 XW +90°
@@ -410,90 +360,75 @@ ZW +90°
 ZW -90°
 ```
 
-After a basis change, the general rule is:
+After a basis change, the current slice axis may exchange with either visible
+non-gravity axis. Both directions are supported.
 
-> The current slice axis may be exchanged with either visible non-gravity axis.
+#### Required update
 
-Both directions must be supported.
-
-#### Coherent update
-
-A basis rotation updates:
+A basis turn updates:
 
 - visible-axis basis;
-- current slice axis;
-- slice membership and order;
+- slice axis;
+- slice membership and ordering;
 - labels and active-slice identity;
-- axis/basis indicator;
-- grid, cell, piece, and locked-state presentation;
-- camera framing;
-- helper presentation.
+- basis indicator;
+- grid and cell presentation;
+- active and locked-piece presentation;
+- framing and helper presentation.
 
 It does not alter:
 
-- board cells;
-- active-piece semantic coordinates;
+- semantic board coordinates;
+- active-piece coordinates;
 - gravity;
 - movement or piece-rotation legality;
 - scoring;
 - topology;
 - deterministic gameplay state.
 
-The transition may be animated between two exact basis states. Animation must
-not become semantic interpolation.
+The transition may animate between two exact states. Animation is presentation,
+not semantic interpolation.
 
 #### Focused instruction
 
-Stage 54C includes a small dedicated instructional sequence, without building
-the complete future challenge framework.
+Stage 54C includes a small instructional sequence without prematurely building
+the complete challenge framework:
 
-Minimum exercises:
+1. rotate the basis and observe that the object does not change;
+2. choose a slicing direction that makes a piece easier to understand;
+3. find a marked coordinate by re-slicing and navigating;
+4. match a target visible/slice basis;
+5. re-slice to inspect a difficult placement.
 
-1. **The object does not change** — rotate the basis and observe that semantic
-   coordinates remain fixed.
-2. **Choose the useful slicing** — select the slice direction that makes a
-   supplied piece easiest to understand.
-3. **Find the marked coordinate** — re-slice and navigate until a marked 4D
-   cell is visible.
-4. **Match the target decomposition** — match a target visible/slice basis.
-5. **Inspect before placement** — use re-slicing to verify a difficult
-   gameplay placement.
-
-The lesson data should be structured for later migration into the general
-challenge runner.
+The lesson data should be reusable by the later challenge runner.
 
 ### Stage 54D — Hold-piece gameplay
 
 Objective:
 
-Add the modern Hold mechanic as first-class deterministic gameplay across 2D,
-3D, and 4D.
+Add the modern one-slot Hold mechanic across 2D, 3D, and 4D.
 
-#### Product rule
-
-Each live session has one optional held-piece slot.
+#### Rule
 
 A successful Hold action:
 
 - stores the active piece when the slot is empty and activates the next queued
   piece;
-- swaps the active and held pieces when the slot is occupied;
+- swaps active and held pieces when the slot is occupied;
 - becomes unavailable until the resulting active piece locks;
-- respawns the incoming piece at its canonical spawn position and orientation;
-- does not preserve the previous active-piece pose;
+- respawns the incoming piece at canonical spawn position and orientation;
+- does not preserve the outgoing piece pose;
 - does not rewind or reshuffle the queue;
-- does not consume the next queue entry during an occupied-slot swap.
+- does not consume a queue entry during an occupied-slot swap.
 
-Failure to spawn the incoming piece follows the normal game-over policy.
-
-The same rule applies in 2D, 3D, and 4D.
+Failure to spawn the incoming piece uses normal game-over policy.
 
 Hold stores piece identity, not:
 
-- board position;
+- position;
 - active slice;
-- piece orientation;
-- camera orientation;
+- orientation;
+- camera state;
 - view basis;
 - presentation layout.
 
@@ -505,48 +440,43 @@ Ordinary setup may expose:
 Hold: On / Off
 ```
 
-The modern standard game defaults to `On`. The initial implementation supports
-one slot only.
+The modern standard game defaults to `On`. Initial support is exactly one slot.
 
 Godot provides:
 
-- a semantic `hold_piece` action through the shared input authority;
-- a clear `HOLD` preview area;
+- semantic `hold_piece` input through the shared input contract;
+- a clear `HOLD` preview;
 - empty, available, and unavailable states;
-- readable previews for 2D, 3D, and 4D pieces.
+- readable previews in 2D, 3D, and 4D.
 
-#### Deterministic identity
+Snapshots, hashes, replay/session identity, and restart behaviour represent:
 
-Snapshots, hashes, replay/session identity, and restart behaviour must include:
-
-- held-piece identity or empty state;
+- held piece or empty state;
 - Hold availability;
 - Hold enablement where it affects gameplay.
 
-### Stage 54E — Professional visible-GUI playability review
+### Stage 54E — Visible-GUI professional playability review
 
 Objective:
 
-Perform a real playability review of integrated 2D, 3D, and 4D gameplay, with
-primary emphasis on 4D.
+Conduct a real human playability review of integrated 2D, 3D, and 4D play,
+with primary emphasis on 4D.
 
-This stage is evidence-driven. It must not begin with a speculative rewrite
-list.
+This is evidence-driven. It does not begin with a speculative rewrite list.
 
-Review areas:
+Review:
 
 - Stage 54A visual acceptance;
-- custom board setup usability;
-- slice-basis rotation discoverability and comprehension;
+- custom setup usability;
+- basis-rotation comprehension;
 - Hold usability and preview clarity;
 - active and locked-piece readability;
 - axis and depth distinction;
 - current-slice-axis comprehension;
 - camera recovery;
-- menus and button hierarchy;
-- pause, restart, change-setup, and game-over usability;
-- startup and transition responsiveness;
-- representative board-size performance;
+- menu and button hierarchy;
+- pause, restart, setup, and game-over usability;
+- responsiveness and representative board-size performance;
 - minimum viewport and accessibility composition.
 
 Implement only defects observed during review.
@@ -555,73 +485,69 @@ Implement only defects observed during review.
 
 Objective:
 
-Close the gap between a verified prototype and a professional game build.
+Close the gap between a verified prototype and a professional game release.
 
-Candidate focused slices include:
+Use focused slices for demonstrated needs such as:
 
-- complete keybinding/remapping workflow;
+- full keybinding/remapping workflow;
 - gamepad support if adopted;
-- audio, volume, and mute controls;
+- audio, mute, and volume controls;
 - polished pause and game-over presentation;
 - scoring and progression presentation;
-- settings recovery;
-- user-visible performance correction;
+- persistence and recovery;
+- performance correction;
 - installer, export, and launch reliability;
-- release help and documentation;
-- final manual acceptance matrix.
-
-These may be separate implementation slices. All remain part of Phase I.
+- user help and release documentation;
+- final manual acceptance.
 
 ## 7. Professional Core Game Gate
 
-Phase I completes only when all of the following hold.
+Phase I is complete only when the following hold.
 
 ### Gameplay
 
 - 2D, 3D, and 4D are fully playable.
 - 4D is understandable rather than merely operational.
-- Movement, piece rotation, soft/hard drop, lock, clearing, scoring, pause,
-  restart, Hold, and game over are reliable.
+- Movement, piece rotation, soft/hard drop, Hold, lock, clear, scoring, pause,
+  restart, and game over are reliable.
 - Custom dimensions work within supported limits.
-- Presets remain convenient shortcuts.
-- Fixed-seed restart and random-session behaviour remain coherent.
+- Presets remain convenient.
+- deterministic restart and random-session behaviour remain coherent.
 
-### Four-dimensional presentation
+### 4D presentation
 
 - visible axes and slice axis are explicit;
 - slice navigation works;
 - exact game-safe basis quarter-turns work;
 - basis changes do not mutate gameplay state;
 - camera and basis controls are distinct;
-- cells, grid, labels, active frames, and Hold previews are readable.
+- cells, grid, labels, frames, and Hold previews are readable.
 
 ### Product shell
 
-- setup, menus, settings, live play, pause, restart, and return paths are
-  coherent;
+- setup, menus, settings, play, pause, restart, and return paths are coherent;
 - controls and helper text share authority;
-- interactive and passive UI elements remain visually distinct;
-- supported viewports do not clip essential controls;
+- interactive controls and passive help are visually distinct;
+- essential controls do not clip at supported viewports;
 - accessibility and display settings compose correctly.
 
-### Reliability and performance
+### Reliability, performance, and release
 
 - automated verification is green;
 - representative manual play has passed;
-- invalid settings and failed construction recover safely;
-- supported packaging/startup paths work;
+- invalid setup and failed construction recover safely;
+- supported package/startup paths work;
 - no known high-severity gameplay or data-loss defect remains;
-- normal setup, start, and basis transitions are responsive on representative
-  hardware;
+- start, setup, and basis transitions are responsive;
 - supported board maxima remain usable.
 
 ### Extension readiness
 
 - subsystem authority is explicit;
-- no semantic rule is duplicated in GDScript presentation code;
-- board dimensions, view basis, topology profile, challenge state, and
-  simulator input have stable integration boundaries;
-- later modes can reuse shared semantics rather than fork them.
+- GDScript does not duplicate inherited deterministic rules;
+- board setup, view basis, topology profile, challenge state, and simulation
+  input have stable boundaries;
+- later modes can reuse shared semantics instead of forking them.
 
 Passing this gate does not require complete topology, Explorer, challenge, or
 physics features.
@@ -629,10 +555,7 @@ physics features.
 ## 8. Phase II — First-Class Topological Games
 
 Status: planned  
-Dependency: professional core game gate, except for isolated architecture work
-
-Topology begins in 2D, where it can be understood without simultaneous
-higher-dimensional visual complexity.
+Dependency: professional core-game gate, except for isolated architecture work
 
 ### Stage 55A — 2D topology games
 
@@ -642,31 +565,26 @@ Expose three first-class 2D games:
 2. `Strip`
 3. `Möbius Strip`
 
-#### Bounded
+#### Product meanings
 
-All board boundaries are walls.
+- **Bounded:** all boundaries are walls.
+- **Strip:** one non-gravity axis wraps with orientation preserved.
+- **Möbius Strip:** seam crossing applies the accepted
+  reflection/orientation transformation.
 
-#### Strip
+Requirements:
 
-One non-gravity axis wraps with orientation preserved.
-
-#### Möbius strip
-
-Crossing the seam applies the accepted reflection/orientation transform.
-
-#### Requirements
-
-- available from ordinary setup;
+- normal setup access;
 - concise visual explanation;
 - visible seam behaviour;
 - exact canonical topology transport;
 - deterministic identity;
 - no silent fallback to bounded play;
-- product labels separated from stable internal IDs;
+- product labels separate from stable internal IDs;
 - inherited topology semantics reused rather than rewritten.
 
-The mapping between current generic presets and these product concepts must be
-verified and documented.
+The mapping from current generic topology presets to these product concepts
+must be verified rather than assumed.
 
 ### Stage 55B — Higher-dimensional topology play
 
@@ -674,30 +592,25 @@ After 2D topology acceptance:
 
 - expose selected canonical 3D and 4D topology presets;
 - preserve exact topology transport;
-- provide visible seam and transformation feedback;
-- distinguish topology effects from projection, slice movement, and basis
+- show seam and transformation feedback;
+- distinguish topology effects from projection, slice navigation, and basis
   rotation;
-- retain bounded gameplay as the default reference case.
+- retain bounded play as the default reference case.
 
-Do not expose every advanced topology-editor possibility as an ordinary game
-preset.
+Do not expose every editor possibility as an ordinary game preset.
 
 ## 9. Phase III — Explorer as Spatial Practice
 
 Status: planned  
-Dependency: stable view-basis rotations; topology support may be incremental
+Dependency: stable view-basis controls; topology support may be incremental
 
-The Godot Explorer is a player-facing practice environment, not only a
-developer diagnostic tool.
+The Godot Explorer is a player-facing practice environment. It should preserve
+the accepted conceptual distinction among Editor, Sandbox, and Play. The
+Sandbox/practice path may arrive before the complete editor migration.
 
-It should preserve the accepted conceptual separation of Editor, Sandbox, and
-Play. The player-facing Sandbox/practice experience may arrive before the full
-editor migration.
+### 9.1 Movement
 
-### 9.1 Explorer movement
-
-The Explorer permits deliberate movement in both directions along every active
-axis:
+The Explorer permits deliberate movement in both directions along every axis:
 
 ```text
 X ±
@@ -706,27 +619,28 @@ Z ±
 W ±
 ```
 
-Y is not privileged by gravity unless an explicit experiment enables gravity.
+Y is not privileged by gravity unless an experiment explicitly enables
+gravity.
 
-### 9.2 Explorer camera controls
+### 9.2 Camera orientation
 
-The Explorer exposes both continuous and exact camera controls for the current
-visible 3D volume:
+The Explorer exposes:
 
 - continuous mouse orbit;
-- explicit yaw around the visible Y axis;
-- explicit pitch around the visible X axis;
-- explicit roll around the visible Z axis;
+- explicit yaw around visible Y;
+- explicit pitch around visible X;
+- explicit roll around visible Z;
 - exact positive and negative 90-degree camera turns;
 - reset to canonical camera orientation.
 
-These change camera orientation only. They do not reconstruct the slice stack.
+Camera changes do not rebuild the slice stack.
 
-### 9.3 Explorer basis controls
+### 9.3 Complete 4D basis control
 
-The Explorer may exchange the current slice axis with any visible axis.
+Unlike live play, the Explorer may exchange the slice axis with any visible
+axis.
 
-From `XYZ | W` this includes:
+From `XYZ | W`:
 
 ```text
 XW ±90°
@@ -734,71 +648,56 @@ YW ±90°
 ZW ±90°
 ```
 
-After a basis change, the same rule applies relative to the current visible and
-slice axes.
+After a basis change, the same rule applies relative to the current basis.
+Y/slice exchange is therefore available in Explorer even though it is excluded
+from ordinary gravity-driven play.
 
-Unlike the live game, the Explorer permits Y/slice exchange.
+### 9.4 Independent state
 
-### 9.4 Independent state concepts
+The Explorer keeps independently observable:
 
-The Explorer must keep independently observable:
+- camera orientation;
+- 4D view basis;
+- slice axis;
+- active slice;
+- object position;
+- object orientation.
 
-```text
-camera orientation
-view basis
-slice axis
-active slice
-object position
-object orientation
-```
+Changing one must not silently modify another.
 
-Changing one must not silently mutate the others.
-
-### 9.5 Core practice capabilities
+### 9.5 Practice capabilities
 
 - choose a piece or object;
 - move freely;
 - rotate the object freely;
-- rotate the camera freely or by exact quarter-turns;
-- rotate the 4D view basis;
-- navigate the current slice axis;
-- reset position, orientation, camera, and basis independently;
-- inspect coordinates and orientation;
-- show occupied slices;
-- choose a bounded or supported topology;
+- rotate the camera continuously or discretely;
+- rotate the 4D basis;
+- navigate slices;
+- reset position, object orientation, camera, and basis independently;
+- inspect coordinates, orientation, and occupied slices;
+- choose a supported topology;
 - cross seams deliberately;
 - inspect neighbours and movement effects;
-- transition from exploration into play.
+- transition into Play.
 
-### 9.6 Product transitions
-
-```text
-Explore This Space
--> Play in This Space
-```
+Intended transitions:
 
 ```text
-Game State
--> Explore Current Board
+Explore This Space -> Play in This Space
+Game State -> Explore Current Board
+Challenge -> Practise in Explorer -> Retry
 ```
 
-```text
-Challenge
--> Practise in Explorer
--> Retry Challenge
-```
-
-The Explorer must not become a second implementation of movement, rotation, or
-topology semantics.
+Explorer must not create a second movement, rotation, or topology rule system.
 
 ## 10. Phase IV — Challenge and Learning System
 
 Status: planned  
 Dependency: stable gameplay, basis controls, and a reusable Explorer path
 
-The main tutorial becomes a challenge system.
+The primary tutorial becomes a data-driven challenge system.
 
-### 10.1 Challenge families
+### Challenge families
 
 - target-pose challenges;
 - piece-rotation challenges;
@@ -808,18 +707,17 @@ The main tutorial becomes a challenge system.
 - placement challenges;
 - line/plane/hyperplane-clearing puzzles;
 - topology challenges;
-- later scored or constrained puzzle campaigns.
+- scored and constrained puzzle campaigns.
 
-### 10.2 Data-driven challenge definitions
+### Challenge definition
 
 A challenge may define:
 
-- stable ID and title;
-- concise instructions;
+- stable ID, title, and instructions;
 - dimension and board shape;
 - topology profile;
 - starting board;
-- piece or fixed piece sequence;
+- piece or fixed sequence;
 - initial piece pose;
 - initial camera orientation;
 - initial 4D view basis;
@@ -828,12 +726,12 @@ A challenge may define:
 - move/time limits;
 - required or forbidden seam crossings;
 - Hold policy;
-- success/failure conditions;
+- success and failure conditions;
 - hints;
 - scoring thresholds;
 - unlock relationships.
 
-### 10.3 Initial vertical slice
+### Initial vertical slice
 
 Begin with a small representative set:
 
@@ -841,272 +739,231 @@ Begin with a small representative set:
 - one 2D strip or Möbius navigation challenge;
 - one 3D orientation challenge;
 - one 4D W-navigation challenge;
-- one 4D view-basis challenge.
+- one 4D basis challenge.
 
-The objective is to validate the runner and shared semantics, not to create the
-full campaign immediately.
+The objective is to validate the runner and shared semantics, not immediately
+produce the full campaign.
 
-### 10.4 Four-dimensional campaign
+### 4D campaign direction
 
-A later campaign can progress through:
+The later campaign may progress through:
 
-1. locating cells across slices;
-2. W-axis movement;
+1. finding cells across slices;
+2. W movement;
 3. occupied-slice sets;
-4. XW basis quarter-turns;
-5. ZW basis quarter-turns;
-6. Explorer YW basis quarter-turns;
-7. inverse and repeated basis turns;
-8. camera-versus-basis distinction;
-9. 4D piece rotations;
-10. target-pose matching;
-11. placement across several slices;
-12. constrained hyperlayer clearing;
-13. topology-aware 4D navigation;
-14. advanced packing and transformation puzzles.
+4. XW and ZW game-safe basis turns;
+5. Explorer YW basis turns;
+6. inverse and repeated basis turns;
+7. camera-versus-basis distinction;
+8. 4D piece rotations;
+9. target-pose matching;
+10. placement across several slices;
+11. constrained hyperlayer clearing;
+12. topology-aware 4D navigation;
+13. advanced packing and transformation puzzles.
 
-This is both a tutorial and an independent puzzle mode.
+This campaign is both tutorial and independent puzzle mode.
 
-## 11. Phase V — Unified Game, Explorer, Topology, and Simulation
+## 11. Phase V — Unified Product
 
 Status: long-term
 
-The mature product connects its activities without collapsing their ownership.
+The mature product connects activities without collapsing their ownership.
 
 ```text
-Play
--> Game Over
--> Replay / Explore Final Board / Simulate
+Play -> Game Over -> Replay / Explore Final Board / Simulate
+Topology Editor -> Sandbox -> Play This Topology
+Challenge -> Practise in Explorer -> Retry
+Constructed State -> Run Physics Simulation
 ```
 
-```text
-Topology Editor
--> Sandbox
--> Play This Topology
-```
-
-```text
-Challenge
--> Practise in Explorer
--> Retry
-```
-
-```text
-Constructed State
--> Run Physics Simulation
-```
-
-The simulator may consume a game board, Explorer state, challenge state,
-topology profile, or constructed scenario through an explicit versioned
-conversion boundary.
+Simulation may consume a game board, Explorer state, challenge state, topology
+profile, or constructed scenario through an explicit versioned conversion
+boundary.
 
 Gameplay state must not be silently reinterpreted as physics state.
 
-## 12. Cross-Cutting Authority Model
+## 12. Authority Model
 
-### 12.1 Authority is subsystem-specific
+Authority is subsystem-specific.
 
-Tet4D no longer treats one language as the universal semantic authority.
+The governing documents are:
 
-Authority is assigned per subsystem according to:
+- `docs/architecture/authority_map.md` for current ownership;
+- `docs/architecture/authority_transfer_protocol.md` for inherited authority
+  transfer and new authority establishment;
+- `docs/architecture/parity_protocol.md` for inherited parity evidence.
 
-- where the behaviour originated;
-- whether the behaviour already exists;
-- whether it is deterministic core behaviour or product presentation;
-- the implementation intended to own it long term;
-- the available contract and verification evidence.
+### 12.1 Inherited Python behaviour
 
-The project distinguishes:
-
-1. inherited Python semantics;
-2. transferred inherited semantics;
-3. new deterministic core semantics;
-4. new Godot product/presentation semantics;
-5. declarative content authority.
-
-### 12.2 Python as a bounded reference authority
-
-Python remains reference authority only for existing behaviour that:
+Python remains reference authority only for inherited behaviour that:
 
 - originated in Python;
 - remains intended product behaviour;
-- has not received a completed authority transfer;
+- has not received a completed transfer;
 - has not been retired.
 
-This currently includes relevant portions of existing gameplay, piece
-transformations, gravity/drop/lock, scoring, topology, replay compatibility,
-configuration, and locked-cell explosion behaviour.
+Relevant inherited areas currently include portions of gameplay, piece
+transformations, gravity/drop/lock, scoring, topology, replay, configuration,
+and locked-cell explosion behaviour.
 
 This does not mean:
 
-- every new feature must first be implemented in Python;
+- every new feature must first exist in Python;
 - every Godot feature requires Python parity;
-- Python owns new presentation semantics;
-- the future Explorer or challenge campaign must exist in Python;
+- future Explorer or challenge features must be mirrored in Python;
 - new native systems require an artificial Python predecessor.
 
-### 12.3 Existing-behaviour transfer
+### 12.2 Inherited transfer
 
-When another implementation replaces inherited Python behaviour, the existing
-authority-transfer protocol applies.
+When another implementation replaces inherited behaviour, it uses the
+transfer procedure:
 
-Parity alone does not move authority.
+- exact subsystem scope;
+- identified reference behaviour;
+- parity or equivalent conformance evidence;
+- documented exclusions and fallback;
+- terminal transfer record;
+- authority-map update.
 
-### 12.4 New-behaviour authority establishment
+Parity alone does not transfer authority.
 
-A capability with no Python predecessor receives authority directly when it is
-designed.
+### 12.3 New authority establishment
 
-Authority establishment requires:
+A capability without a predecessor receives authority directly through the
+establishment procedure:
 
-- an owning RDS, specification, or versioned contract;
-- a named implementation owner;
-- explicit semantic and presentation boundaries;
+- normative RDS, specification, or schema;
+- named implementation and data owners;
+- explicit semantic/presentation boundaries;
 - deterministic conformance tests where applicable;
-- persistence and compatibility rules where applicable;
-- an authority-map entry;
-- no competing duplicate implementation.
+- persistence and compatibility rules;
+- establishment record;
+- authority-map update;
+- no competing truth implementation.
 
-New behaviour must not be implemented in Python solely to manufacture an
-oracle.
+Do not implement new behaviour in Python solely to manufacture an oracle.
 
-### 12.5 Godot-authoritative behaviour
+### 12.4 Godot authority
 
 Godot owns new product and presentation semantics, including:
 
-- menus and setup interaction;
-- live HUD and guidance;
+- setup interaction and menus;
+- HUD and guidance;
 - camera orientation;
 - 4D presentation basis;
-- slice layout and labels;
-- animation;
+- slice layout, labels, and transition animation;
 - Explorer interaction;
-- challenge screens and hints;
-- campaign navigation and progress presentation;
+- challenge instructions, hints, progress, and campaign navigation;
 - accessibility and visual feedback.
 
-### 12.6 New native deterministic behaviour
+Godot may consume deterministic core state but must not duplicate inherited
+gameplay or topology rules.
 
-New deterministic semantics should normally be established in native C++ when
-they:
+### 12.5 New native deterministic authority
 
-- operate on gameplay or geometric state;
-- must be shared by Play, Explore, and Challenge;
-- affect legality, success, or reproducible results;
-- are intended to remain in the professional product core.
+New deterministic behaviour should normally be established in native C++ when
+it:
 
-Likely examples include:
+- operates on gameplay or geometric state;
+- must be shared by Play, Explorer, and Challenge;
+- affects legality, success, or reproducible results;
+- belongs in the long-term professional core.
 
-- Hold state transitions;
+Likely examples:
+
+- Hold transitions;
 - target-pose comparison;
-- target-cell occupancy predicates;
+- target-cell predicates;
 - constrained-move accounting;
 - deterministic challenge evaluation;
-- shared geometric transform utilities;
+- shared exact geometric transforms;
 - later simulation stepping beyond inherited Python behaviour.
 
-No Python parity is required where no Python predecessor exists.
+No Python parity is required when no Python predecessor exists.
 
-### 12.7 Declarative content authority
+### 12.6 Declarative authority
 
-Versioned data owns challenge content, campaign structure, and topology/profile
-selection data. Runtime implementations validate and execute that content but
-do not silently redefine it.
+Versioned data owns challenge content, campaign structure, and other named
+product content. Runtime code validates and executes that content without
+silently redefining it.
 
-### 12.8 Long-term Python role
+### 12.7 Long-term Python role
 
-Python remains valuable as:
+Python remains useful as:
 
-- the historical reference implementation;
-- a source of inherited semantic evidence;
-- a fixture/trace generator for untransferred behaviour;
-- a research and rapid-experiment environment;
-- an offline analysis tool;
-- an independent verifier for selected high-value deterministic subsystems.
+- historical reference implementation;
+- source of inherited semantic evidence;
+- trace and fixture generator for untransferred behaviour;
+- research and rapid-experiment environment;
+- offline analysis tool;
+- independent verifier for selected high-value subsystems.
 
 It is not required to remain the production runtime, universal semantic owner,
 or complete mirror of future Godot interaction.
 
 ## 13. Documentation Integration
 
-This document is the planning authority for the professional Godot game
+This document is the active planning authority for the professional Godot game
 programme.
 
-### Routing maps
+Routing requirements:
 
-`docs/plans/plan_authority_map.md` and `docs/DOCUMENTATION_MAP.md` must route
-programme sequencing and phase gates here.
+- `docs/plans/plan_authority_map.md` and `docs/DOCUMENTATION_MAP.md` route
+  programme sequence and phase gates here;
+- `CURRENT_STATE.md` points to the current programme and immediate stage only;
+- `docs/BACKLOG.md` tracks active work, immediate follow-ups, and deferrals
+  rather than duplicating this roadmap;
+- relevant RDS documents gain durable requirements when a stage begins;
+- completed architecture records remain accurate evidence of their original
+  scope;
+- topology work continues to route through
+  `docs/plans/topology_playground_current_authority.md`.
 
-### Current state and backlog
-
-`CURRENT_STATE.md` should point to the active programme and current stage only.
-
-`docs/BACKLOG.md` should track the active slice, immediate accepted follow-ups,
-and explicit deferrals rather than duplicate this roadmap.
-
-### RDS
-
-Durable requirements are added to the relevant RDS when their stage begins.
-Near-term reconciliation includes:
+Near-term RDS reconciliation includes:
 
 - direct per-axis board dimensions;
-- complete game-safe slice-basis rotation requirements;
-- distinction between camera, piece, slice, and basis actions;
+- game-safe slice-basis rotations;
+- distinction among piece, camera, slice, and basis actions;
 - Hold behaviour;
 - challenge-based tutorial direction;
 - product-facing 2D topology names.
 
-### Completed architecture records
-
-Completed stage records remain accurate historical evidence of the boundary
-accepted at that time. Do not rewrite Stage 49 or Stage 50 to imply that they
-delivered unrestricted custom dimensions.
-
-### Topology authority
-
-Do not duplicate topology-playground invariants here. Topology and Explorer
-work must route through
-`docs/plans/topology_playground_current_authority.md` and its associated spec
-and debt register.
-
 ## 14. Immediate Execution Order
-
-The intended order is:
 
 1. Publish and integrate Stage 54A.
 2. Stage 54B: complete custom per-axis board configuration.
-3. Stage 54C: game-safe 4D slice-basis rotations and focused instruction.
-4. Stage 54D: Hold-piece gameplay.
-5. Stage 54E: visible-GUI professional playability review and
-   evidence-driven correction.
-6. Stage 54F: remaining professional gaming-experience and release hardening.
+3. Stage 54C: game-safe 4D basis quarter-turns and focused instruction.
+4. Stage 54D: one-slot Hold gameplay.
+5. Stage 54E: visible-GUI professional playability review and correction.
+6. Stage 54F: professional gaming-experience and release hardening.
 7. Pass `PROFESSIONAL_CORE_GAME_READY`.
-8. Stage 55A: first-class 2D bounded, strip, and Möbius games.
-9. Extend selected topology play to higher dimensions.
-10. Build the Godot Explorer as a complete spatial practice environment.
-11. Build the general challenge runner and 4D challenge campaign.
-12. Connect game, Explorer, challenges, topology, endgame, and simulation.
-13. Transfer inherited semantics or establish new native authority only at
-    explicit subsystem boundaries.
+8. Stage 55A: first-class 2D Bounded, Strip, and Möbius games.
+9. Extend selected topology play to 3D and 4D.
+10. Build the Godot Explorer as a complete spatial-practice mode.
+11. Build the challenge runner and 4D challenge campaign.
+12. Connect Play, Explorer, Challenge, topology, endgame, and simulation.
+13. Transfer inherited semantics or establish new authority only at explicit
+    subsystem boundaries.
 
 A later stage must not be pulled forward merely because its infrastructure is
 technically mature.
 
 ## 15. Current Decision
 
-The next product capability after Stage 54A is:
+Next product capability:
 
 ```text
 Stage 54B — Complete Custom Board Configuration
 ```
 
-The next specifically four-dimensional capability is:
+Next specifically 4D capability:
 
 ```text
 Stage 54C — Game-Safe Four-Dimensional Slice-Basis Rotations
 ```
 
-The next modern gameplay capability is:
+Next modern gameplay capability:
 
 ```text
 Stage 54D — Hold-Piece Gameplay
