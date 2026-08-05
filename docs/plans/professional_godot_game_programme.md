@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-08-03
+Last updated: 2026-08-05
 
 ## 1. Purpose
 
@@ -21,11 +21,10 @@ Its first and overriding goal is:
 This document owns:
 
 - programme priority and stage order;
-- the boundary between the core game and later extensions;
+- the boundary between the professional core game and later extensions;
 - phase-completion gates;
-- dependencies among board configuration, 4D view controls, Hold, topology,
-  Explorer, challenges, and simulation;
-- the programme-level authority model for inherited and genuinely new
+- implementation-stage dependencies;
+- the programme-level authority direction for inherited and genuinely new
   capabilities.
 
 It does not own:
@@ -43,8 +42,8 @@ It does not own:
 - completed implementation evidence, which belongs in architecture records and
   history.
 
-When a programme stage changes durable product behaviour, the owning RDS must
-be updated in the same implementation slice.
+When a programme stage changes durable product behaviour, the owning RDS and
+relevant authority records must be updated in the same implementation slice.
 
 ## 2. First Product Gate
 
@@ -76,7 +75,8 @@ The core product must:
 3. support direct per-axis board configuration;
 4. distinguish piece rotation, camera movement, slice navigation, and 4D
    presentation-basis rotation;
-5. provide a modern gameplay baseline, including Hold;
+5. provide a modern gameplay baseline including next-piece preview, ghost
+   piece, and Hold;
 6. have coherent setup, controls, menus, persistence, accessibility, display,
    performance, and packaging;
 7. expose stable integration boundaries for later modes.
@@ -173,6 +173,9 @@ The product must keep distinct:
 - slice navigation;
 - 4D presentation-basis rotation.
 
+Landing preview, queue visibility, slice-aware previews, and readable basis
+feedback are therefore gameplay requirements rather than optional decoration.
+
 ### 4.4 Presets are shortcuts, not restrictions
 
 Presets should populate supported configuration values. They must not remain
@@ -197,14 +200,14 @@ inspection, resetting, and repetition without game pressure.
 Contextual prompts remain useful, but the principal tutorial system should ask
 the player to solve spatial and gameplay problems.
 
-Examples:
+Examples include:
 
-- reach a coordinate;
-- match a target orientation;
-- select a useful slicing direction;
-- fit a piece into a cavity;
-- clear a line, plane, or hyperplane with a constrained sequence;
-- use a topology seam deliberately.
+- reaching a coordinate;
+- matching a target orientation;
+- selecting a useful slicing direction;
+- fitting a piece into a cavity;
+- clearing a line, plane, or hyperplane with a constrained sequence;
+- using a topology seam deliberately.
 
 ## 5. Current Foundation
 
@@ -223,11 +226,7 @@ The project already has:
 - a Python topology Editor/Sandbox/Play model;
 - an existing explosion simulator and deterministic traces.
 
-### Stage 54A status
-
-Stage 54A is complete, human accepted, and merged.
-
-It established:
+Stage 54A is complete, human accepted, and merged. It established:
 
 - Ctrl-only soft drop;
 - left-drag camera rotation;
@@ -289,6 +288,31 @@ select preset
 -> launch validated custom game
 ```
 
+#### Shared board-extent interface
+
+One board-extent contract owns:
+
+- product minima and maxima;
+- topology input;
+- piece-set compatibility;
+- canonical spawn viability;
+- setup and persistence validation;
+- native construction limits;
+- structured validation results;
+- focused tests.
+
+The selected topology is an explicit validation input. The contract must forbid
+independent topology-blind hard-coded minima in Godot, native session builders,
+or persistence adapters.
+
+Phase I implements the complete bounded-board rule through this interface.
+Strip and Möbius minimum-extent and seam-safety rules activate in Stage 55A
+through the same interface. Later topology stages may add rules without
+replacing the setup-validation architecture.
+
+Unsupported configurations must be rejected before session construction. Do
+not silently clamp an invalid request into a semantically different board.
+
 #### Reset and lifecycle semantics
 
 Provide separate actions:
@@ -301,16 +325,37 @@ An active game is never resized.
 - `Restart Game` reconstructs the frozen current setup.
 - `Change Setup` leaves the session before another setup is constructed.
 
-#### Authority boundary
+#### Implementation slices
 
-One board-extent contract owns product minima, maxima, setup validation,
-persistence validation, native construction limits, and tests.
+##### Stage 54B-1 — Shared board-extent contract
 
-Godot must not invent independent limits.
+Implement the topology-aware validation interface and the complete bounded
+rule, including:
 
-Stage 49 and Stage 50 remain accurate records of their completed curated-preset
-scope. Stage 54B extends the current product boundary rather than rewriting
-those records.
+- minima and maxima;
+- piece-set compatibility;
+- spawn viability;
+- native construction limits;
+- structured errors;
+- persistence validation;
+- focused native and contract tests.
+
+##### Stage 54B-2 — Godot setup and persistence
+
+Implement:
+
+- editable X/Y/Z/W fields;
+- increment/decrement controls;
+- presets that populate editable fields;
+- validation feedback;
+- `Reset Sizes` and `Reset Setup`;
+- last-valid-setup persistence;
+- frozen-session restart semantics;
+- visible-GUI acceptance.
+
+Stage 49 and Stage 50 remain accurate records of their curated-preset scope.
+Stage 54B extends the current product boundary rather than rewriting those
+records.
 
 ### Stage 54C — Game-safe 4D slice-basis rotations
 
@@ -400,13 +445,90 @@ the complete challenge framework:
 
 The lesson data should be reusable by the later challenge runner.
 
-### Stage 54D — Hold-piece gameplay
+#### Implementation slices
+
+1. exact basis-state and transform contract;
+2. Godot controls and basis indicators;
+3. slice reconstruction and presentation;
+4. focused instructional sequence;
+5. manual 4D comprehension review.
+
+### Stage 54D — Modern gameplay baseline
 
 Objective:
 
-Add the modern one-slot Hold mechanic across 2D, 3D, and 4D.
+Complete the minimum modern gameplay baseline across 2D, 3D, and 4D through
+three ordered sub-slices:
 
-#### Rule
+```text
+54D-1 Next-piece preview
+-> 54D-2 Ghost piece
+-> 54D-3 Hold
+```
+
+This order is load-bearing. Queue visibility and a shared piece-preview
+component make Hold an informed strategic choice rather than a blind swap.
+
+#### Stage 54D-1 — Next-piece preview
+
+Display exactly one authoritative next piece in live 2D, 3D, and 4D play.
+
+The slice must:
+
+- consume the existing next-piece value without changing queue semantics;
+- provide a shared piece-thumbnail presentation used later by `HOLD`;
+- support readable 2D and 3D previews;
+- provide a compact slice-decomposed 4D preview;
+- compose with supported viewport and accessibility settings.
+
+Initial scope excludes:
+
+- multiple visible queue entries;
+- configurable preview depth;
+- randomizer-history presentation.
+
+Authority boundary:
+
+- queue state remains owned by the current deterministic gameplay authority;
+- Godot owns the live preview presentation;
+- no snapshot, hash, replay, trace, or randomizer semantics change.
+
+#### Stage 54D-2 — Ghost piece
+
+Display the exact destination produced by the authoritative hard-drop
+semantics.
+
+The ghost must:
+
+- use the same legality and landing result as hard drop;
+- appear at every destination cell;
+- appear in every affected 4D slice;
+- remain distinct from active and locked cells;
+- remain readable against the grid and accessibility composition;
+- support `Ghost: On / Off`, default `On`.
+
+Godot must not calculate collision, drop distance, topology traversal, or
+landing legality independently. If no suitable query exists, add a bounded
+read-only landing query over inherited hard-drop semantics.
+
+The landing query does not transfer authority and must not create a second drop
+algorithm.
+
+Ghost state is presentation-only and must not enter:
+
+- gameplay snapshots;
+- state hashes;
+- replay identity;
+- scoring;
+- collision;
+- lock state.
+
+Use the existing `ghost.enabled` capability vocabulary unless the owning RDS
+explicitly replaces it.
+
+#### Stage 54D-3 — Hold
+
+Add one-slot Hold after next-piece and ghost presentation are accepted.
 
 A successful Hold action:
 
@@ -430,8 +552,6 @@ Hold stores piece identity, not:
 - view basis;
 - presentation layout.
 
-#### Setup and presentation
-
 Ordinary setup may expose:
 
 ```text
@@ -439,40 +559,27 @@ Hold: On / Off
 ```
 
 The modern standard game defaults to `On`. Initial support is exactly one slot.
+The `HOLD` preview reuses the Stage 54D-1 thumbnail presentation.
 
-Godot provides:
-
-- semantic `hold_piece` input through the shared input contract;
-- a clear `HOLD` preview;
-- empty, available, and unavailable states;
-- readable previews in 2D, 3D, and 4D.
-
-#### Deterministic identity and compatibility
-
-Hold authority establishment must define snapshot, state-hash, replay, trace,
-and compatibility behaviour before implementation is accepted.
-
-Snapshots, hashes, replay/session identity, and restart behaviour represent:
-
-- held piece or empty state;
-- Hold availability;
-- Hold enablement where it affects gameplay.
-
-Existing replay formats created before Hold must remain readable through an
-explicit compatibility rule, such as treating Hold as disabled with an empty
-slot, or through a deliberate schema-version boundary. The implementation must
-not silently reinterpret old replay identity.
-
-The eventual Stage 54D authority-establishment record must identify:
+Hold changes deterministic state. Its implementation slice must define:
 
 - Hold state owner;
 - queue-transition owner;
-- snapshot fields;
-- replay schema/version behaviour;
-- old-replay compatibility;
+- held-piece and availability snapshot fields;
 - state-hash inclusion;
+- replay and trace schema behaviour;
+- old-replay compatibility;
 - restart semantics;
-- fallback or safe-failure behaviour.
+- failed-spawn policy;
+- safe failure or fallback;
+- conformance evidence;
+- authority-map update.
+
+Keep Hold as refined deferred-candidate prose in
+`docs/architecture/authority_transfer_protocol.md` until implementation
+provides concrete contracts, code, compatibility decisions, and evidence.
+Stage 54D-3 then creates and completes an `AE-####` authority-establishment
+record. Do not create an incomplete placeholder row in advance.
 
 ### Stage 54E — Visible-GUI professional playability review
 
@@ -488,7 +595,12 @@ Review:
 - visual regressions in the settled Stage 54A scope;
 - custom setup usability;
 - basis-rotation comprehension;
-- Hold usability and preview clarity;
+- next-piece preview clarity;
+- 4D next-piece and Hold thumbnail readability;
+- ghost usefulness and contrast;
+- cross-slice ghost comprehension;
+- distinction among ghost, active, and locked cells;
+- Hold decision quality with visible queue information;
 - active and locked-piece readability;
 - axis and depth distinction;
 - current-slice-axis comprehension;
@@ -500,7 +612,17 @@ Review:
   settings, and accessibility combinations;
 - minimum viewport and accessibility composition.
 
-Implement only defects observed during review.
+Stage 54E completes only when:
+
+1. representative human-visible review evidence is recorded;
+2. findings are classified by severity and gate impact;
+3. every defect classified as blocking `PROFESSIONAL_CORE_GAME_READY` is
+   corrected and re-reviewed, or remains an explicit blocker preventing the
+   gate from passing;
+4. non-blocking defects have an owner or deliberate deferral.
+
+Grid strengthening is required only if review evidence classifies current grid
+visibility as blocking comprehension or accessibility.
 
 ### Stage 54F — Professional gaming-experience and release hardening
 
@@ -529,8 +651,11 @@ Phase I is complete only when the following hold.
 
 - 2D, 3D, and 4D are fully playable.
 - 4D is understandable rather than merely operational.
-- Movement, piece rotation, soft/hard drop, Hold, lock, clear, scoring, pause,
+- Movement, piece rotation, soft/hard drop, lock, clear, scoring, pause,
   restart, and game over are reliable.
+- Next-piece preview reflects the authoritative queue.
+- Ghost projection matches authoritative hard drop.
+- Hold follows its established deterministic contract.
 - Custom dimensions work within supported limits.
 - Presets remain convenient.
 - deterministic restart and random-session behaviour remain coherent.
@@ -542,7 +667,10 @@ Phase I is complete only when the following hold.
 - exact game-safe basis quarter-turns work;
 - basis changes do not mutate gameplay state;
 - camera and basis controls are distinct;
-- cells, grid, labels, frames, and Hold previews are readable.
+- next-piece and Hold previews are readable;
+- ghost cells appear in every affected slice;
+- ghost, active, and locked cells are distinguishable;
+- cells, grid, labels, and frames remain readable.
 
 ### Product shell
 
@@ -551,6 +679,14 @@ Phase I is complete only when the following hold.
 - interactive controls and passive help are visually distinct;
 - essential controls do not clip at supported viewports;
 - accessibility and display settings compose correctly.
+
+### Semantic boundaries
+
+- Godot does not independently calculate queue order or landing legality;
+- ghost remains presentation-only;
+- Hold state participates in deterministic identity;
+- old replay formats follow an explicit compatibility rule;
+- subsystem authority is explicit.
 
 ### Reliability, performance, and release
 
@@ -564,7 +700,6 @@ Phase I is complete only when the following hold.
 
 ### Extension readiness
 
-- subsystem authority is explicit;
 - GDScript does not duplicate inherited deterministic rules;
 - board setup, view basis, topology profile, challenge state, and simulation
   input have stable boundaries;
@@ -586,13 +721,6 @@ Expose three first-class 2D games:
 2. `Strip`
 3. `Möbius Strip`
 
-#### Product meanings
-
-- **Bounded:** all boundaries are walls.
-- **Strip:** one non-gravity axis wraps with orientation preserved.
-- **Möbius Strip:** seam crossing applies the accepted
-  reflection/orientation transformation.
-
 Requirements:
 
 - normal setup access;
@@ -602,7 +730,9 @@ Requirements:
 - deterministic identity;
 - no silent fallback to bounded play;
 - product labels separate from stable internal IDs;
-- inherited topology semantics reused rather than rewritten.
+- inherited topology semantics reused rather than rewritten;
+- Strip and Möbius extent/seam-safety rules activated through the Stage 54B
+  board-extent interface.
 
 The mapping from current generic topology presets to these product concepts
 must be verified rather than assumed.
@@ -629,8 +759,6 @@ The Godot Explorer is a player-facing practice environment. It should preserve
 the accepted conceptual distinction among Editor, Sandbox, and Play. The
 Sandbox/practice path may arrive before the complete editor migration.
 
-### 9.1 Movement
-
 The Explorer permits deliberate movement in both directions along every axis:
 
 ```text
@@ -643,71 +771,10 @@ W ±
 Y is not privileged by gravity unless an experiment explicitly enables
 gravity.
 
-### 9.2 Camera orientation
-
-The Explorer exposes:
-
-- continuous mouse orbit;
-- explicit yaw around visible Y;
-- explicit pitch around visible X;
-- explicit roll around visible Z;
-- exact positive and negative 90-degree camera turns;
-- reset to canonical camera orientation.
-
-Camera changes do not rebuild the slice stack.
-
-### 9.3 Complete 4D basis control
-
-Unlike live play, the Explorer may exchange the slice axis with any visible
-axis.
-
-From `XYZ | W`:
-
-```text
-XW ±90°
-YW ±90°
-ZW ±90°
-```
-
-After a basis change, the same rule applies relative to the current basis.
-Y/slice exchange is therefore available in Explorer even though it is excluded
-from ordinary gravity-driven play.
-
-### 9.4 Independent state
-
-The Explorer keeps independently observable:
-
-- camera orientation;
-- 4D view basis;
-- slice axis;
-- active slice;
-- object position;
-- object orientation.
-
-Changing one must not silently modify another.
-
-### 9.5 Practice capabilities
-
-- choose a piece or object;
-- move freely;
-- rotate the object freely;
-- rotate the camera continuously or discretely;
-- rotate the 4D basis;
-- navigate slices;
-- reset position, object orientation, camera, and basis independently;
-- inspect coordinates, orientation, and occupied slices;
-- choose a supported topology;
-- cross seams deliberately;
-- inspect neighbours and movement effects;
-- transition into Play.
-
-Intended transitions:
-
-```text
-Explore This Space -> Play in This Space
-Game State -> Explore Current Board
-Challenge -> Practise in Explorer -> Retry
-```
+The Explorer exposes continuous and exact camera controls, complete 4D basis
+control including Y/slice exchange, independent camera/basis/slice/object
+state, reset operations, coordinate inspection, topology selection, deliberate
+seam traversal, and transition into Play.
 
 Explorer must not create a second movement, rotation, or topology rule system.
 
@@ -718,7 +785,7 @@ Dependency: stable gameplay, basis controls, and a reusable Explorer path
 
 The primary tutorial becomes a data-driven challenge system.
 
-### Challenge families
+Challenge families include:
 
 - target-pose challenges;
 - piece-rotation challenges;
@@ -730,60 +797,8 @@ The primary tutorial becomes a data-driven challenge system.
 - topology challenges;
 - scored and constrained puzzle campaigns.
 
-### Challenge definition
-
-A challenge may define:
-
-- stable ID, title, and instructions;
-- dimension and board shape;
-- topology profile;
-- starting board;
-- piece or fixed sequence;
-- initial piece pose;
-- initial camera orientation;
-- initial 4D view basis;
-- target pose, cells, board pattern, camera, basis, or clear condition;
-- allowed actions;
-- move/time limits;
-- required or forbidden seam crossings;
-- Hold policy;
-- success and failure conditions;
-- hints;
-- scoring thresholds;
-- unlock relationships.
-
-### Initial vertical slice
-
-Begin with a small representative set:
-
-- one 2D placement challenge;
-- one 2D strip or Möbius navigation challenge;
-- one 3D orientation challenge;
-- one 4D W-navigation challenge;
-- one 4D basis challenge.
-
-The objective is to validate the runner and shared semantics, not immediately
-produce the full campaign.
-
-### 4D campaign direction
-
-The later campaign may progress through:
-
-1. finding cells across slices;
-2. W movement;
-3. occupied-slice sets;
-4. XW and ZW game-safe basis turns;
-5. Explorer YW basis turns;
-6. inverse and repeated basis turns;
-7. camera-versus-basis distinction;
-8. 4D piece rotations;
-9. target-pose matching;
-10. placement across several slices;
-11. constrained hyperlayer clearing;
-12. topology-aware 4D navigation;
-13. advanced packing and transformation puzzles.
-
-This campaign is both tutorial and independent puzzle mode.
+Begin with a small representative vertical slice rather than the complete
+campaign.
 
 ## 11. Phase V — Unified Product
 
@@ -815,180 +830,70 @@ The governing documents are:
   transfer and new authority establishment;
 - `docs/architecture/parity_protocol.md` for inherited parity evidence.
 
-### 12.1 Inherited Python behaviour
+Python remains reference authority only for inherited behaviour that has not
+been transferred or retired.
 
-Python remains reference authority only for inherited behaviour that:
+Godot owns product and presentation semantics, including menus, setup
+interaction, input routing, HUD, camera, layout, animation, guidance,
+accessibility, and diagnostics. It must not duplicate inherited deterministic
+rules.
 
-- originated in Python;
-- remains intended product behaviour;
-- has not received a completed transfer;
-- has not been retired.
+New deterministic behaviour without a predecessor may establish native
+authority directly through a normative contract, implementation, conformance
+evidence, compatibility rules, an establishment record, and authority-map
+update. Do not create a Python mirror solely to manufacture an oracle.
 
-Relevant inherited areas currently include portions of gameplay, piece
-transformations, gravity/drop/lock, scoring, topology, replay, configuration,
-and locked-cell explosion behaviour.
+A product stage may combine several authority lanes. Stage 54D is the immediate
+example:
 
-This does not mean:
+- next preview: Godot presentation of inherited queue state;
+- ghost: Godot presentation over an inherited read-only landing query;
+- Hold: genuinely new deterministic state requiring authority establishment.
 
-- every new feature must first exist in Python;
-- every Godot feature requires Python parity;
-- future Explorer or challenge features must be mirrored in Python;
-- new native systems require an artificial Python predecessor.
+## 13. Implementation and PR Discipline
 
-### 12.2 Inherited transfer
+Each implementation PR must have one bounded semantic objective.
 
-When another implementation replaces inherited behaviour, it uses the
-transfer procedure:
+Use separate PRs for:
 
-- exact subsystem scope;
-- identified reference behaviour;
-- parity or equivalent conformance evidence;
-- documented exclusions and fallback;
-- terminal transfer record;
-- authority-map update.
+- Stage 54B-1 board-extent contract;
+- Stage 54B-2 Godot setup and persistence;
+- Stage 54C bounded implementation slices;
+- Stage 54D-1 next-piece preview;
+- Stage 54D-2 ghost piece;
+- Stage 54D-3 Hold;
+- Stage 54E review evidence and any focused correction batches.
 
-Parity alone does not transfer authority.
+Do not combine all of Phase I into one branch.
 
-### 12.3 New authority establishment
+Every implementation PR must identify:
 
-A capability without a predecessor receives authority directly through the
-establishment procedure:
-
-- normative RDS, specification, or schema;
-- named implementation and data owners;
-- explicit semantic/presentation boundaries;
-- deterministic conformance tests where applicable;
-- persistence and compatibility rules;
-- establishment record;
-- authority-map update;
-- no competing truth implementation.
-
-Do not implement new behaviour in Python solely to manufacture an oracle.
-
-### 12.4 Godot authority
-
-Godot owns new product and presentation semantics, including:
-
-- setup interaction and menus;
-- HUD and guidance;
-- camera orientation;
-- 4D presentation basis;
-- slice layout, labels, and transition animation;
-- Explorer interaction;
-- challenge instructions, hints, progress, and campaign navigation;
-- accessibility and visual feedback.
-
-Godot may consume deterministic core state but must not duplicate inherited
-gameplay or topology rules.
-
-### 12.5 New native deterministic authority
-
-New deterministic behaviour should normally be established in native C++ when
-it:
-
-- operates on gameplay or geometric state;
-- must be shared by Play, Explorer, and Challenge;
-- affects legality, success, or reproducible results;
-- belongs in the long-term professional core.
-
-Likely examples:
-
-- Hold transitions;
-- target-pose comparison;
-- target-cell predicates;
-- constrained-move accounting;
-- deterministic challenge evaluation;
-- shared exact geometric transforms;
-- later simulation stepping beyond inherited Python behaviour.
-
-No Python parity is required when no Python predecessor exists.
-
-### 12.6 Declarative authority
-
-Versioned data owns challenge content, campaign structure, and other named
-product content. Runtime code validates and executes that content without
-silently redefining it.
-
-### 12.7 Long-term Python role
-
-Python remains useful as:
-
-- historical reference implementation;
-- source of inherited semantic evidence;
-- trace and fixture generator for untransferred behaviour;
-- research and rapid-experiment environment;
-- offline analysis tool;
-- independent verifier for selected high-value subsystems.
-
-It is not required to remain the production runtime, universal semantic owner,
-or complete mirror of future Godot interaction.
-
-## 13. Documentation Integration
-
-This document is the active planning authority for the professional Godot game
-programme.
-
-Routing requirements:
-
-- `docs/plans/plan_authority_map.md` and `docs/DOCUMENTATION_MAP.md` route
-  programme sequence and phase gates here;
-- `CURRENT_STATE.md` points to the current programme and immediate stage only;
-- `docs/BACKLOG.md` tracks active work, immediate follow-ups, and deferrals
-  rather than duplicating this roadmap;
-- relevant RDS documents gain durable requirements when a stage begins;
-- completed architecture records remain accurate evidence of their original
-  scope;
-- topology work continues to route through
-  `docs/plans/topology_playground_current_authority.md`.
-
-Near-term RDS reconciliation includes:
-
-- direct per-axis board dimensions;
-- game-safe slice-basis rotations;
-- distinction among piece, camera, slice, and basis actions;
-- Hold behaviour;
-- challenge-based tutorial direction;
-- product-facing 2D topology names.
+- owning product/RDS contract;
+- current or newly established semantic authority;
+- presentation owner;
+- persistence, replay, and compatibility impact;
+- focused tests;
+- visible-GUI acceptance where relevant;
+- remaining risks and deferrals.
 
 ## 14. Immediate Execution Order
 
-1. Stage 54B — custom per-axis board configuration.
-2. Stage 54C — game-safe 4D slice-basis rotations.
-3. Stage 54D — Hold-piece gameplay.
-4. Stage 54E — visible-GUI review and evidence-driven correction.
-5. Stage 54F — release and professional gaming-experience hardening.
-6. Pass `PROFESSIONAL_CORE_GAME_READY`.
-7. Stage 55A — first-class 2D Bounded, Strip, and Möbius games.
-8. Extend selected topology play to 3D and 4D.
-9. Build the Godot Explorer as a complete spatial-practice mode.
-10. Build the challenge runner and 4D challenge campaign.
-11. Connect Play, Explorer, Challenge, topology, endgame, and simulation.
-12. Transfer inherited semantics or establish new authority only at explicit
-    subsystem boundaries.
+The active order is:
 
-A later stage must not be pulled forward merely because its infrastructure is
-technically mature.
+1. Stage 54B-1 — shared topology-aware board-extent contract, bounded rule.
+2. Stage 54B-2 — Godot custom-size setup, validation, and persistence.
+3. Stage 54C — game-safe 4D slice-basis rotations and focused instruction.
+4. Stage 54D-1 — one-piece next preview and shared thumbnail presentation.
+5. Stage 54D-2 — authoritative ghost-piece landing preview.
+6. Stage 54D-3 — one-slot Hold with completed authority establishment.
+7. Stage 54E — visible-GUI review and blocking-defect correction.
+8. Stage 54F — remaining professional release hardening.
+9. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
+10. Later Explorer, challenge, topology, and simulation phases.
 
-## 15. Current Decision
+Weak live-grid visibility remains non-blocking visual debt for Stage 54E unless
+review evidence classifies it as a professional-core-game blocker.
 
-Next product capability:
-
-```text
-Stage 54B — Complete Custom Board Configuration
-```
-
-Next specifically 4D capability:
-
-```text
-Stage 54C — Game-Safe Four-Dimensional Slice-Basis Rotations
-```
-
-Next modern gameplay capability:
-
-```text
-Stage 54D — Hold-Piece Gameplay
-```
-
-Progress is measured by whether Tet4D is becoming a clearer, deeper, more
-enjoyable, more professional, and more extensible game—not by the number of
-migration stages completed.
+Compaction or splitting of `docs/history/DONE_SUMMARIES.md` belongs to a
+separate documentation-hygiene batch. Historical archive size is not active
+product work and must not be mixed into Phase I implementation PRs.
