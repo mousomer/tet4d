@@ -290,6 +290,12 @@ The following are accepted later phases, not current implementation scope.
   stored-schema review and named migration-adapter evidence;
 - Stage 53E retirement candidates that retain active callers, product/policy
   roles, benchmark roles, or released compatibility obligations;
+- machine-readable pointers from `config/project/policy_pack.json` to the
+  professional programme, subsystem authority map, authority protocol, and
+  active backlog, together with structural validation in
+  `tools/governance/validate_project_contracts.py`; existing document and
+  authority routing remains valid, and this pointer-only enhancement belongs
+  to a separate focused governance follow-up;
 - compaction or splitting of `docs/history/DONE_SUMMARIES.md`, which belongs to
   a separate documentation-hygiene batch and is not active product work.
 
