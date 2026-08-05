@@ -161,6 +161,11 @@ Only `established` creates authority.
 | `status` | yes | Establishment status |
 | `notes` | no | Additional context |
 
+Every active record row must contain substantive values for all required
+fields, regardless of status. Use the deferred-candidate prose section while
+implementation, compatibility decisions, or evidence are not yet concrete.
+Do not create placeholder `proposed` or `ready` rows merely to reserve an ID.
+
 ## 3. Mixed subsystems
 
 A product feature may combine several authorities.
@@ -171,6 +176,14 @@ For example, a challenge feature may use:
 - native C++ for deterministic success predicates;
 - Godot for instructions, hints, progress, and campaign navigation;
 - inherited gameplay semantics that remain Python-reference until transferred.
+
+The Stage 54D modern gameplay baseline is another mixed feature:
+
+- next-piece preview is Godot presentation of inherited queue state;
+- ghost rendering is Godot presentation over an inherited authoritative
+  landing query;
+- Hold introduces new deterministic state and requires authority establishment
+  when its implementation contract and evidence are concrete.
 
 Do not force such a feature into one monolithic owner.
 
@@ -187,6 +200,8 @@ Examples include:
 - 4D view/presentation basis;
 - slice layout and labels;
 - transition animation;
+- next-piece and Hold thumbnails;
+- ghost rendering over an authoritative landing result;
 - challenge UI and hints;
 - Explorer controls and diagnostics.
 
@@ -224,12 +239,19 @@ Potential inherited transfer candidates include:
 
 Potential new establishment candidates include:
 
-- Hold gameplay state;
+- Hold state covering held-piece identity, once-per-active-piece availability,
+  queue interaction, canonical respawn, snapshot/hash identity, replay and
+  trace compatibility, old-session handling, restart semantics, and failed-
+  spawn policy;
 - Godot 4D view-basis state;
 - Explorer complete camera/basis controls;
 - challenge content schema;
 - deterministic challenge predicates;
 - future physics beyond the inherited explosion model.
+
+The Stage 54D-3 implementation slice adds a Hold `AE-####` row only after its
+normative contract, code owner, compatibility rules, conformance evidence,
+safe-failure policy, and authority-map update can be recorded honestly.
 
 Do not transfer or establish the full gameplay loop, full topology system,
 Explorer, or challenge campaign as one undifferentiated subsystem.
