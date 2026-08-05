@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-03
+Updated: 2026-08-05
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -24,9 +24,9 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 
 ## Tracking Boundaries
 
-This backlog tracks the active product slice, immediate accepted follow-ups,
-and deferrals whose resolution depends on product evidence or an authority
-decision.
+This backlog tracks the active implementation slice, immediate accepted
+follow-ups, and deferrals whose resolution depends on product evidence or an
+authority decision.
 
 It does not duplicate the complete programme roadmap.
 
@@ -40,19 +40,13 @@ The short-term Python boundary-governance programme is complete.
 Stage 53E is merged at `22938485`. Stage 53F and its corrective follow-up are
 merged and verified on `master` at `91b901f3`.
 
-Replay, trace/hash, gameplay configuration, movement-cache, topology-store,
-and validation-ownership boundaries are strict. The separate movement-cache
-performance item below is a product/representation deferral, not incomplete
-correctness.
+Stage 54A is complete, human accepted, and merged on `master` at `bcf41519`.
+Its settled control and cockpit scope is not active backlog work.
 
 Do not create Stage 53G or reopen generic boundary-governance work without a
 new evidenced problem and owning-format scope.
 
-## Active Work
-
-### Professional Godot core-game programme
-
-Status: active.
+## Active Programme
 
 Primary gate:
 
@@ -67,44 +61,143 @@ extensions.
 The programme is owned by
 `docs/plans/professional_godot_game_programme.md`.
 
-Stage 54A is complete, human accepted, and merged on `master` at `bcf41519`.
-Its settled control and cockpit scope is not active backlog work.
+## Next Implementation Stage
 
-### Stage 54B — Complete custom board configuration
+### Stage 54B-1 — Shared topology-aware board-extent contract
 
 Status: next implementation slice.
 
 Objective:
 
+- make selected topology an explicit board-validation input;
+- provide one shared minimum/maximum and validation authority;
+- implement the complete bounded-board rule required by Phase I;
+- validate piece-set compatibility and canonical spawn viability;
+- enforce native construction limits;
+- return structured validation errors;
+- reject invalid configurations before session construction;
+- forbid topology-independent duplicated minima in Godot or adapters;
+- preserve deterministic setup and restart semantics.
+
+Phase I ships the bounded rule. Strip and Möbius minimum-extent and seam-safety
+rules activate in Stage 55A through the same interface.
+
+Do not implement the setup UI in this slice except for any minimal test harness
+required to exercise the contract.
+
+### Stage 54B-2 — Godot custom board setup and persistence
+
+Status: blocked on Stage 54B-1.
+
+Objective:
+
 - expose direct X/Y/Z/W axis-size editing for every active dimension;
 - retain presets as shortcuts that populate editable fields;
-- enforce one shared minimum/maximum authority;
-- validate piece-set compatibility;
+- show shared validation feedback;
 - persist the last valid setup;
 - distinguish `Reset Sizes` from `Reset Setup`;
-- preserve frozen active-session and restart semantics.
+- preserve frozen active-session and restart semantics;
+- complete visible-GUI acceptance.
 
 Stage 49 and Stage 50 remain accurate records of their curated-preset scope.
 Stage 54B extends the active product boundary rather than rewriting those
 records.
 
-### Accepted immediate follow-ups
+## Accepted Immediate Follow-Ups
 
-After Stage 54B:
+### Stage 54C — Game-safe 4D slice-basis quarter-turns
 
-1. Stage 54C — game-safe 4D slice-basis quarter-turns and focused instruction;
-2. Stage 54D — modern one-slot Hold-piece gameplay across 2D/3D/4D;
-3. Stage 54E — visible-GUI professional playability review and
-   evidence-driven correction;
-4. Stage 54F — remaining professional gaming-experience and release hardening.
+Status: after Stage 54B.
 
-Do not replace these new capabilities with another broad lifecycle-verification
-framework.
+Required implementation sequence:
+
+1. exact basis-state and transform contract;
+2. Godot controls and basis indicators;
+3. slice reconstruction and presentation;
+4. focused instructional sequence;
+5. manual 4D comprehension review.
+
+Y remains the visible gravity axis during ordinary play. This stage does not
+mutate semantic board coordinates or deterministic gameplay state.
+
+### Stage 54D — Modern gameplay baseline
+
+Status: after Stage 54C.
+
+Implement as three separate PRs in dependency order.
+
+#### Stage 54D-1 — Next-piece preview
+
+- display exactly one authoritative next piece in live 2D/3D/4D play;
+- create one shared 2D/3D/4D piece-thumbnail presentation;
+- reuse that presentation later for `HOLD`;
+- do not change queue, snapshot, hash, replay, trace, or RNG semantics.
+
+#### Stage 54D-2 — Ghost piece
+
+- render the exact authoritative hard-drop destination;
+- show every occupied destination cell across all affected 4D slices;
+- expose `Ghost: On / Off`, default `On`;
+- do not calculate drop legality independently in GDScript;
+- add only a bounded read-only core query if no existing landing query is
+  available;
+- keep ghost state out of snapshots, hashes, replay identity, scoring,
+  collision, and lock state.
+
+#### Stage 54D-3 — Hold
+
+- implement the modern one-slot Hold rule;
+- reuse the Stage 54D-1 thumbnail presentation;
+- define snapshot, hash, replay, trace, compatibility, restart, and spawn-failure
+  behaviour;
+- create and complete an `AE-####` authority-establishment record only when the
+  implementation contract and evidence are concrete;
+- update the authority map when the record reaches `established`.
+
+Do not add an incomplete Hold row to the active establishment table in advance.
+
+### Stage 54E — Visible-GUI professional playability review
+
+Status: after integrated Stage 54B–54D behaviour.
+
+Review representative 2D/3D/4D play with primary emphasis on 4D, including:
+
+- custom setup usability;
+- basis-rotation comprehension;
+- next-piece and Hold preview readability;
+- ghost usefulness and cross-slice comprehension;
+- distinction among ghost, active, and locked cells;
+- grid contrast and visibility;
+- camera recovery;
+- menu hierarchy;
+- accessibility and minimum viewport composition;
+- representative board-size responsiveness.
+
+Stage 54E completes when review evidence is recorded, findings are classified,
+and every `PROFESSIONAL_CORE_GAME_READY` blocker is corrected and re-reviewed
+or remains an explicit blocker preventing the gate from passing.
 
 Grid visibility: the live 3D/4D grid is currently too weak in some views.
-Reassess grid contrast, opacity, and accessibility composition during the
-Stage 54E visible-GUI playability review. This does not block Stage 54B,
-Stage 54C, or Stage 54D.
+Reassess it during Stage 54E. This does not block Stage 54B, Stage 54C, or Stage
+54D. Strengthening becomes mandatory only if review evidence classifies the
+current grid as blocking comprehension or accessibility.
+
+### Stage 54F — Professional release hardening
+
+Status: after Stage 54E gate findings.
+
+Use focused slices for demonstrated needs such as:
+
+- keybinding/remapping completion;
+- gamepad support if adopted;
+- audio and volume controls;
+- pause/game-over polish;
+- scoring and progression presentation;
+- performance correction;
+- installer/export/startup reliability;
+- release help and final manual acceptance.
+
+Do not turn Stage 54F into an unbounded cleanup programme.
 
 ## Authority Transition Work
 
@@ -118,13 +211,21 @@ New behaviour without a predecessor may establish authority directly in:
 - native C++ for deterministic shared semantics;
 - versioned declarative data for challenge/campaign content.
 
-Immediate documentation/governance requirement:
+Stage 54D exercises three distinct lanes:
+
+- next preview: Godot presentation of inherited queue state;
+- ghost: Godot presentation over an inherited read-only landing query;
+- Hold: new deterministic state requiring authority establishment.
+
+Immediate governance requirements:
 
 - keep `docs/architecture/authority_map.md` aligned with actual subsystem
   owners;
 - use transfer records for inherited behaviour;
 - use establishment records for genuinely new behaviour;
-- do not create Python mirrors solely to manufacture parity.
+- do not create Python mirrors solely to manufacture parity;
+- do not add placeholder authority-record rows without the required concrete
+  evidence.
 
 Potential future bounded reviews include explicit native transfer of existing
 bounded gameplay and topology subsystems. Do not transfer the full gameplay
@@ -137,6 +238,7 @@ The following are accepted later phases, not current implementation scope.
 ### First-class topology games
 
 - ordinary 2D setup choices for Bounded, Strip, and Möbius Strip;
+- Strip/Möbius board-extent rules through the Stage 54B validation interface;
 - later selected 3D/4D topology presets;
 - exact canonical topology transport;
 - visible seam/transformation feedback;
@@ -177,6 +279,9 @@ The following are accepted later phases, not current implementation scope.
 - complete Explorer implementation;
 - general challenge runner and campaign;
 - unified gameplay/endgame/explosion launch integration;
+- multi-piece next-queue display and configurable preview depth;
+- ghost style/opacity menus;
+- multiple Hold slots, Hold buffering, or competitive Hold variants;
 - gamepad support, audio, and broad control-remapping work until their focused
   Phase I hardening slices;
 - piece-record and migration/config-bundle import readers identified by the
@@ -184,7 +289,9 @@ The following are accepted later phases, not current implementation scope.
 - unrelated settings recovery identified by Stage 53E, pending individual
   stored-schema review and named migration-adapter evidence;
 - Stage 53E retirement candidates that retain active callers, product/policy
-  roles, benchmark roles, or released compatibility obligations.
+  roles, benchmark roles, or released compatibility obligations;
+- compaction or splitting of `docs/history/DONE_SUMMARIES.md`, which belongs to
+  a separate documentation-hygiene batch and is not active product work.
 
 ## Python Movement-Graph Persistent-Cache Performance
 
@@ -211,6 +318,7 @@ Revisit when:
 ## Governance Watchlist
 
 - Keep one semantic objective per PR.
+- Use the implementation-stage boundaries in the professional programme.
 - Require a scope matrix for deliberately cross-layer integration PRs.
 - Never weaken tests to fit an implementation.
 - Keep subsystem authority and transfer/establishment records aligned with
