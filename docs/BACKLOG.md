@@ -46,7 +46,7 @@ Its settled control and cockpit scope is not active backlog work.
 Do not create Stage 53G or reopen generic boundary-governance work without a
 new evidenced problem and owning-format scope.
 
-## Active Programme
+## Active Work
 
 Primary gate:
 
