@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-03
+Last updated: 2026-08-05
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -37,10 +37,12 @@ history ledger. Detailed history is preserved in
   `docs/plans/professional_godot_game_programme.md`. Its first gate is a fully
   playable, professionally presented 4D Godot game that is ready for later
   topology, Explorer, challenge, and simulation extensions.
-- The next planned product capability is Stage 54B: complete direct per-axis
-  board configuration within one validated product envelope.
-- Stage 54C then adds game-safe 4D slice-basis quarter-turns and focused
-  instruction. Stage 54D adds modern Hold-piece gameplay.
+- The next implementation slice is Stage 54B-1: a shared topology-aware
+  board-extent contract implementing the complete bounded-board rule. Stage
+  54B-2 then adds direct Godot X/Y/Z/W setup, validation, and persistence.
+- Stage 54C adds game-safe 4D slice-basis quarter-turns and focused instruction.
+- Stage 54D provides the modern gameplay baseline in three ordered slices:
+  next-piece preview, ghost piece, and Hold.
 - Weak live 3D/4D grid visibility is known non-blocking visual debt. It is
   deferred to the Stage 54E visible-GUI playability review and does not block
   Stage 54B, Stage 54C, or Stage 54D.
@@ -73,6 +75,14 @@ history ledger. Detailed history is preserved in
 - Existing inherited behaviour moves through the authority-transfer protocol.
   New behaviour without a predecessor uses authority establishment with an
   owning contract, named owner, conformance evidence, and authority-map entry.
+- Stage 54B must accept topology as an explicit board-validation input while
+  implementing the bounded rule now; Strip and Möbius constraints activate
+  later through the same interface. Do not introduce topology-blind duplicate
+  minima in Godot or adapters.
+- Stage 54D-1 presents inherited next-piece state. Stage 54D-2 presents an
+  authoritative landing query. Stage 54D-3 introduces new Hold state and must
+  complete an `AE-####` establishment record during implementation, not before
+  concrete contract and evidence exist.
 - Native topology transport accepts only values that satisfy the shared
   topology contract and runtime query contract. It does not coerce malformed
   scalar values into valid topology data.
@@ -164,7 +174,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54B — Complete Custom Board Configuration.
+1. Implement Stage 54B-1 — Shared Topology-Aware Board-Extent Contract.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
