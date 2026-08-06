@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # Temporary diagnostic: expose the exact generated restart handoff.
+# This commit exists only to trigger the ready diagnostic PR.
 python - <<'PY'
 from pathlib import Path
 
