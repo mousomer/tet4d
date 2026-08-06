@@ -1,10 +1,9 @@
 name: Regenerate CURRENT_STATE once
 
-# One registration follow-up triggers this temporary PR workflow.
 on:
   pull_request:
-    paths:
-      - .github/workflows/regenerate_current_state_once.yml
+    types:
+      - edited
 
 permissions:
   contents: write
