@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 
 import pytest
 
 from tools.governance.select_codex_ci_lanes import (
     LaneSelectionError,
+    github_outputs,
     load_lane_config,
     select_lanes,
+    write_github_outputs,
 )
 
 
@@ -199,3 +202,36 @@ def test_full_gate_configuration_must_cover_every_lane() -> None:
 
     with pytest.raises(LaneSelectionError, match="every configured lane"):
         load_lane_config(payload)
+
+
+def test_github_outputs_include_boolean_for_every_lane() -> None:
+    config = load_lane_config(_config_payload())
+    selection = select_lanes(
+        _resolution(verification_requirements=["godot", "human_visual"]),
+        config=config,
+    )
+
+    outputs = github_outputs(selection, config=config)
+
+    assert outputs["lane_baseline"] == "true"
+    assert outputs["lane_godot"] == "true"
+    assert outputs["lane_python"] == "false"
+    assert outputs["selected_lanes"] == '["baseline","godot"]'
+    assert outputs["manual_requirements"] == '["human_visual"]'
+    assert outputs["requires_full_repository_gate"] == "false"
+
+
+def test_github_outputs_are_appended_in_stable_order(tmp_path: Path) -> None:
+    config = load_lane_config(_config_payload())
+    selection = select_lanes(_resolution(), config=config)
+    output_path = tmp_path / "github_output.txt"
+    output_path.write_text("existing=value\n", encoding="utf-8")
+
+    write_github_outputs(output_path, selection, config=config)
+
+    lines = output_path.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "existing=value"
+    assert lines[1] == "lane_baseline=true"
+    assert "lane_native=true" in lines
+    assert "lane_deterministic_parity=true" in lines
+    assert lines[-1] == "requires_full_repository_gate=false"
