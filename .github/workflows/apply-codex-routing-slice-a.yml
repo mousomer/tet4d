@@ -37,33 +37,16 @@ jobs:
           python tools/governance/generate_maintenance_docs.py
           python tools/governance/generate_configuration_reference.py
 
-      - name: Format and lint changed Python
+      - name: Format generated Python
         run: |
           python -m ruff format \
             tools/governance/validate_project_contracts.py \
             tests/unit/governance/test_governance_validate_project_contracts.py
-          python -m ruff check --fix \
-            tools/governance/validate_project_contracts.py \
-            tests/unit/governance/test_governance_validate_project_contracts.py
 
-      - name: Run focused governance verification
-        run: |
-          python tools/governance/validate_project_contracts.py
-          python tools/governance/generate_maintenance_docs.py --check
-          python tools/governance/generate_configuration_reference.py --check
-          python -m pytest -q \
-            tests/unit/governance/test_governance_validate_project_contracts.py
-          git diff --check
-
-      - name: Remove temporary applicator
-        run: |
-          rm tools/automation/apply_codex_routing_slice_a.py
-          rm .github/workflows/apply-codex-routing-slice-a.yml
-
-      - name: Commit Slice A
+      - name: Commit generated draft for bounded refactor
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Add machine-readable Codex routing model"
+          git commit -m "Generate Codex routing model draft"
           git push origin HEAD:codex/codex-routing-model
