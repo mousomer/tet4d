@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - tools/automation/apply_codex_verification_resolver.py
+      - tools/automation/refactor_codex_verification_resolver.py
       - .github/workflows/apply-codex-verification-resolver.yml
 
 permissions:
@@ -32,9 +33,13 @@ jobs:
       - name: Apply resolver implementation
         run: python tools/automation/apply_codex_verification_resolver.py
 
+      - name: Refactor resolver into bounded helpers
+        run: python tools/automation/refactor_codex_verification_resolver.py
+
       - name: Remove temporary machinery before measuring final tree
         run: |
           rm tools/automation/apply_codex_verification_resolver.py
+          rm tools/automation/refactor_codex_verification_resolver.py
           rm .github/workflows/apply-codex-verification-resolver.yml
 
       - name: Format and lint resolver
