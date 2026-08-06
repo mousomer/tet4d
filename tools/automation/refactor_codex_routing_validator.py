@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
-PATH = Path("tools/governance/validate_project_contracts.py")
+VALIDATOR_PATH = Path("tools/governance/validate_project_contracts.py")
+POLICY_PATH = Path("config/project/policy_pack.json")
 START = "def _validate_codex_routing_model() -> list[ValidationIssue]:\n"
 END = "\ndef validate_manifest() -> list[ValidationIssue]:\n"
 
@@ -238,12 +240,51 @@ def _validate_codex_routing_model() -> list[ValidationIssue]:
     return issues
 '''
 
+WORKFLOW_TOKEN_REPLACEMENTS = {
+    "## Task profiles": "## Machine-readable task routing and composable verification",
+    "Narrow review": "`review_only`",
+    "Python engine": "`python_reference_engine`",
+    "Godot product shell": "`godot_product_shell`",
+    "Native C++/GDExtension": "`native_deterministic_core`",
+    "Topology explorer": "`topology_and_explorer`",
+    "Staged migration/handoff": "`staged_handoff`",
+}
+AGENTS_TOKEN_REPLACEMENTS = {
+    "docs/DOCUMENTATION_MAP.md": "`codex_routing`",
+    "docs/plans/topology_playground_current_authority.md": "docs/architecture/authority_map.md",
+}
 
-def main() -> None:
-    text = PATH.read_text(encoding="utf-8")
+
+def _replace_validator() -> None:
+    text = VALIDATOR_PATH.read_text(encoding="utf-8")
     start = text.index(START)
     end = text.index(END, start)
-    PATH.write_text(text[:start] + REPLACEMENT + text[end:], encoding="utf-8")
+    VALIDATOR_PATH.write_text(text[:start] + REPLACEMENT + text[end:], encoding="utf-8")
+
+
+def _replace_rule_tokens(rule: dict[str, object], replacements: dict[str, str]) -> None:
+    tokens = rule.get("must_contain")
+    if not isinstance(tokens, list):
+        return
+    rule["must_contain"] = [replacements.get(token, token) for token in tokens]
+
+
+def _update_policy_content_rules() -> None:
+    payload = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+    rules = payload["maintenance_contract"]["content_rules"]
+    for rule in rules:
+        if not isinstance(rule, dict):
+            continue
+        if rule.get("file") == "docs/WORKFLOW_CODEX.md":
+            _replace_rule_tokens(rule, WORKFLOW_TOKEN_REPLACEMENTS)
+        elif rule.get("file") == "AGENTS.md":
+            _replace_rule_tokens(rule, AGENTS_TOKEN_REPLACEMENTS)
+    POLICY_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def main() -> None:
+    _replace_validator()
+    _update_policy_content_rules()
 
 
 if __name__ == "__main__":
