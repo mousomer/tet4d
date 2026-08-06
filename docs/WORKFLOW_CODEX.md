@@ -75,29 +75,62 @@ copy unrelated account identifiers, local credential or identity paths, token
 details, private email addresses, or machine-specific paths into tracked files,
 PR descriptions, issues, comments, or other public GitHub metadata.
 
-## Task profiles
+## Machine-readable task routing and composable verification
 
-Use the smallest matching profile. Every profile inherits the common
-preconditions above.
+`config/project/policy_pack.json.codex_routing` defines seven stable primary
+task types, four workflow modifiers, and twelve verification requirements.
+Codex selects exactly one primary task type; modifiers describe execution
+context and never replace subsystem ownership.
 
-| Task | Required context | Focused verification | Usually skip |
-| --- | --- | --- | --- |
-| Narrow review | changed diff, touched tests, routed authority | touched tests or matching docs/governance check | backlog, handoff, unrelated RDS |
-| Python engine | architecture contract, relevant RDS, touched modules/tests | touched Ruff paths and engine tests | policy pack, handoff, unrelated UI docs |
-| Menu/UI | menu RDS/editing guide, menu config, affected UI/tests | menu graph and touched UI tests | migration history, packaging |
-| Godot product shell | `godot/AGENTS.md`, relevant product/presentation authority, affected scenes/scripts/tests | focused Godot tests and applicable shell validator | Python internals unrelated to the boundary |
-| Native C++/GDExtension | `native/AGENTS.md`, authority map, applicable parity/transfer protocol, native code/tests | native build/tests, selected parity lane, tooling validation | unrelated completed parity slices |
-| Topology explorer | current topology authority, relevant runtime/tests; backlog only when active scope matters | touched explorer/runtime tests | archived topology plans and unrelated RDS |
-| Render/frontend | current package owner, relevant RDS when behaviour changes, touched render tests | touched render tests | handoff, packaging, unrelated topology docs |
-| Governance | policy pack, governance router, affected validators/generators/tests | contract validator and relevant generator checks | unrelated RDS and runtime history |
-| Packaging | packaging RDS, release checklist, affected scripts/workflows/tests | targeted packaging tests | topology and unrelated migration docs |
-| Staged migration/handoff | `CURRENT_STATE.md`, backlog, relevant architecture authorities, branch/worktree state | focused gates followed by applicable full gate | unrelated domain authorities |
+| Task type | Primary scope | Typical requirements |
+| --- | --- | --- |
+| `product_planning` | programme, phase gates, backlog, product scope | `documentation` |
+| `python_reference_engine` | inherited Python gameplay, replay, trace, configuration | `python`, `deterministic` |
+| `godot_product_shell` | Godot UI, controls, rendering, accessibility | `godot` |
+| `native_deterministic_core` | C++, GDExtension, deterministic native contracts | `native`, `deterministic` |
+| `topology_and_explorer` | topology rules, transport, Explorer interaction | owner-dependent plus `deterministic` where semantic |
+| `governance_and_tooling` | policy, validators, generators, CI-routing contracts | `governance_structure` |
+| `packaging_and_release` | installers, exports, platform release work | `packaging`, `platform` for executable changes |
 
-Parity implementation, parity evidence review, authority transfer, native
-migration, Godot product-shell work, and topology explorer work are durable
-routing categories. Use `docs/DOCUMENTATION_MAP.md` and
-`docs/governance/README.md` to locate applicable current or historical
-documents; do not infer active scope from an old stage number.
+Workflow modifiers are `review_only`, `staged_handoff`, `cross_layer`, and
+`verification_failure`. `cross_layer` requires an affected-layer list, scope
+matrix, provider and consumer checks, and `integration` evidence.
+
+Verification requirements are composable evidence sets, not a hierarchy:
+`documentation`, `governance_structure`, `python`, `godot`, `native`,
+`deterministic`, `parity_or_conformance`, `integration`, `human_visual`,
+`packaging`, `platform`, and `release_acceptance`.
+
+Apply this selection algorithm:
+
+1. Select one primary task type and applicable workflow modifiers.
+2. Identify affected layers and the claims made by the change.
+3. Load the task type's typical requirements as heuristics.
+4. Remove only requirements demonstrably inapplicable to the actual diff, and
+   record the reason for every omission.
+5. Add requirements implied by changed behaviour, authority boundaries,
+   compatibility obligations, modifiers, and policy.
+6. Compose the final requirement set by union; no category supersedes another.
+7. Use `requires_full_repository_gate=true` when an authority, broad shared
+   infrastructure, material uncertainty, reviewer, or release claim requires it.
+
+`review_only` is a modifier, not a verification requirement. It is valid only
+when tracked repository state is unchanged and resolves to an empty requirement
+set. Once implementation starts, remove `review_only`, reclassify the task, and
+produce a non-empty requirement set. Repository-changing work can never resolve
+to no verification.
+
+A prose-only packaging edit may therefore select `documentation` without
+`packaging` or `platform`, provided the completion report explains why those
+typical requirements were inapplicable. A native query consumed by Godot uses
+one primary owner plus `cross_layer`, and composes `native`, `deterministic`,
+`parity_or_conformance`, `integration`, and `godot` as applicable.
+
+The completion report must state: task type, modifiers, repository-change
+status, affected layers, claims, verification requirements, authorities,
+checks run, typical checks omitted with rationale, full-gate decision, scope
+matrix, authority effects, remaining risks, and unverified areas.
+
 
 ## Stable change classes
 
@@ -233,10 +266,10 @@ CI preflight:
 ```
 
 Run focused checks first. Never run `./scripts/verify.sh` and
-`./scripts/ci_check.sh` in parallel. Run the full local gate before completion
-unless the task explicitly limits verification or an external blocker is
-reported precisely. Use quiet test/verify output by default and increase
-verbosity only for diagnosis.
+`./scripts/ci_check.sh` in parallel. Run the full local gate when the resolved
+requirements or `requires_full_repository_gate` demand it; otherwise report the
+selected focused checks and why unrelated lanes were inapplicable. Use quiet
+output by default and increase verbosity only for diagnosis.
 
 Godot shell-settings changes must also run:
 

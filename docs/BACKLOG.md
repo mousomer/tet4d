@@ -290,12 +290,6 @@ The following are accepted later phases, not current implementation scope.
   stored-schema review and named migration-adapter evidence;
 - Stage 53E retirement candidates that retain active callers, product/policy
   roles, benchmark roles, or released compatibility obligations;
-- machine-readable pointers from `config/project/policy_pack.json` to the
-  professional programme, subsystem authority map, authority protocol, and
-  active backlog, together with structural validation in
-  `tools/governance/validate_project_contracts.py`; existing document and
-  authority routing remains valid, and this pointer-only enhancement belongs
-  to a separate focused governance follow-up;
 - compaction or splitting of `docs/history/DONE_SUMMARIES.md`, which belongs to
   a separate documentation-hygiene batch and is not active product work.
 
@@ -320,6 +314,23 @@ Revisit when:
 - a native movement-graph representation is designed; or
 - representative normal start/topology-switch latency exceeds the accepted
   product budget.
+
+## Codex Routing Follow-Ups
+
+The machine-readable authority pointers, task taxonomy, workflow modifiers,
+and composable verification-requirement schema are implemented by Slice A.
+
+Accepted follow-ups:
+
+- **Slice B — verification resolver and completion reporting:** consume the
+  routing model, enforce read-only exclusivity and non-empty verification for
+  repository changes, compose requirements by union, and produce stable reports.
+- **Slice C — path-sensitive CI lanes:** map resolved requirements to explicit
+  baseline, governance, Python, Godot, native, deterministic/parity, packaging,
+  platform, and release lanes with conservative full-gate fallback.
+
+Measure Slice C only against the CI baseline after duplicate push/PR execution
+has been removed. Do not combine either follow-up with Stage 54B-1 runtime work.
 
 ## Governance Watchlist
 

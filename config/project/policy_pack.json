@@ -9,7 +9,113 @@
     "handoff_doc": "CURRENT_STATE.md",
     "product_requirements_root": "docs/rds/",
     "architecture_contract": "docs/ARCHITECTURE_CONTRACT.md",
-    "topology_current_authority": "docs/plans/topology_playground_current_authority.md"
+    "topology_current_authority": "docs/plans/topology_playground_current_authority.md",
+    "professional_product_programme": "docs/plans/professional_godot_game_programme.md",
+    "subsystem_authority_map": "docs/architecture/authority_map.md",
+    "authority_transfer_and_establishment_protocol": "docs/architecture/authority_transfer_protocol.md",
+    "open_work_backlog": "docs/BACKLOG.md"
+  },
+  "codex_routing": {
+    "schema_version": 1,
+    "task_types": {
+      "product_planning": {
+        "authority_keys": [
+          "professional_product_programme",
+          "product_requirements_root",
+          "open_work_backlog"
+        ],
+        "typical_verification_requirements": [
+          "documentation"
+        ]
+      },
+      "python_reference_engine": {
+        "authority_keys": [
+          "architecture_contract",
+          "product_requirements_root",
+          "subsystem_authority_map"
+        ],
+        "typical_verification_requirements": [
+          "python",
+          "deterministic"
+        ]
+      },
+      "godot_product_shell": {
+        "dispatch_paths": [
+          "godot/AGENTS.md"
+        ],
+        "authority_keys": [
+          "product_requirements_root",
+          "subsystem_authority_map"
+        ],
+        "typical_verification_requirements": [
+          "godot"
+        ]
+      },
+      "native_deterministic_core": {
+        "dispatch_paths": [
+          "native/AGENTS.md"
+        ],
+        "authority_keys": [
+          "subsystem_authority_map",
+          "authority_transfer_and_establishment_protocol"
+        ],
+        "typical_verification_requirements": [
+          "native",
+          "deterministic"
+        ]
+      },
+      "topology_and_explorer": {
+        "authority_keys": [
+          "topology_current_authority",
+          "product_requirements_root",
+          "subsystem_authority_map"
+        ],
+        "typical_verification_requirements": [
+          "deterministic"
+        ]
+      },
+      "governance_and_tooling": {
+        "dispatch_paths": [
+          "docs/governance/README.md"
+        ],
+        "authority_keys": [
+          "machine_authority"
+        ],
+        "typical_verification_requirements": [
+          "governance_structure"
+        ]
+      },
+      "packaging_and_release": {
+        "dispatch_paths": [
+          "docs/rds/RDS_PACKAGING.md",
+          "docs/RELEASE_CHECKLIST.md"
+        ],
+        "typical_verification_requirements": [
+          "packaging",
+          "platform"
+        ]
+      }
+    },
+    "workflow_modifiers": [
+      "review_only",
+      "staged_handoff",
+      "cross_layer",
+      "verification_failure"
+    ],
+    "verification_requirements": [
+      "documentation",
+      "governance_structure",
+      "python",
+      "godot",
+      "native",
+      "deterministic",
+      "parity_or_conformance",
+      "integration",
+      "human_visual",
+      "packaging",
+      "platform",
+      "release_acceptance"
+    ]
   },
   "governance": {
     "schema_version": 1,
@@ -360,8 +466,7 @@
             "Board / Setup Defaults",
             "Controls",
             "Display",
-            "Audio"
-            ,
+            "Audio",
             "Endgame / Explosion"
           ]
         },

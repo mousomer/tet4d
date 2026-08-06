@@ -21,6 +21,26 @@ Stable references: `docs/architecture/authority_map.md`,
 - [ ] Unrelated formatting and toolchain changes are separated where practical.
 - [ ] Work did not silently continue into the next task or stage.
 
+## Codex routing and proportional verification
+
+- [ ] Exactly one primary task type is selected; workflow modifiers are listed
+      separately.
+- [ ] All affected layers and behavioural claims are identified.
+- [ ] Verification requirements are composed as a set rather than treated as a
+      ladder.
+- [ ] Deterministic and integration obligations both appear when applicable;
+      platform and release evidence remain distinct.
+- [ ] Omitted typical requirements have an explicit inapplicability rationale.
+- [ ] `review_only` is used only with no repository mutation and no verification
+      requirements.
+- [ ] Repository-changing work resolves to a non-empty verification set.
+- [ ] `cross_layer` work includes a scope matrix and provider-consumer evidence.
+- [ ] The full-repository override is applied for broad shared infrastructure,
+      material uncertainty, owning-policy requirements, reviewer requests, or
+      release acceptance.
+- [ ] `AGENTS.md` remains a compact bootstrap and does not duplicate the machine
+      model or detailed workflow.
+
 ## Authority and semantics
 
 - [ ] Owning RDS/architecture authorities were consulted and updated when

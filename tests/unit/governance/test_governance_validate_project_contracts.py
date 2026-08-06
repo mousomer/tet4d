@@ -2631,3 +2631,296 @@ def test_deprecated_authority_checks_detect_reintroduced_path(
 
     assert issues
     assert any("deprecated authority path present" in issue.message for issue in issues)
+
+
+# Codex routing model contract
+
+
+def _codex_authority_model() -> dict[str, str]:
+    return {
+        "machine_authority": "config/project/policy_pack.json",
+        "dispatch_file": "AGENTS.md",
+        "workflow_doc": "docs/WORKFLOW_CODEX.md",
+        "handoff_doc": "CURRENT_STATE.md",
+        "product_requirements_root": "docs/rds/",
+        "architecture_contract": "docs/ARCHITECTURE_CONTRACT.md",
+        "topology_current_authority": "docs/plans/topology_playground_current_authority.md",
+        **contracts.CODEX_AUTHORITY_POINTERS,
+    }
+
+
+def _codex_task_types() -> dict[str, object]:
+    return {
+        "product_planning": {
+            "authority_keys": ["professional_product_programme"],
+            "typical_verification_requirements": ["documentation"],
+        },
+        "python_reference_engine": {
+            "authority_keys": ["architecture_contract"],
+            "typical_verification_requirements": ["python", "deterministic"],
+        },
+        "godot_product_shell": {
+            "dispatch_paths": ["godot/AGENTS.md"],
+            "authority_keys": ["subsystem_authority_map"],
+            "typical_verification_requirements": ["godot"],
+        },
+        "native_deterministic_core": {
+            "dispatch_paths": ["native/AGENTS.md"],
+            "authority_keys": ["authority_transfer_and_establishment_protocol"],
+            "typical_verification_requirements": ["native", "deterministic"],
+        },
+        "topology_and_explorer": {
+            "authority_keys": ["topology_current_authority"],
+            "typical_verification_requirements": ["deterministic"],
+        },
+        "governance_and_tooling": {
+            "dispatch_paths": ["docs/governance/README.md"],
+            "authority_keys": ["machine_authority"],
+            "typical_verification_requirements": ["governance_structure"],
+        },
+        "packaging_and_release": {
+            "dispatch_paths": ["docs/RELEASE_CHECKLIST.md"],
+            "typical_verification_requirements": ["packaging", "platform"],
+        },
+    }
+
+
+def _codex_policy_payload() -> dict[str, object]:
+    return {
+        "authority_model": _codex_authority_model(),
+        "codex_routing": {
+            "schema_version": 1,
+            "task_types": _codex_task_types(),
+            "workflow_modifiers": sorted(contracts.SUPPORTED_CODEX_WORKFLOW_MODIFIERS),
+            "verification_requirements": sorted(
+                contracts.SUPPORTED_CODEX_VERIFICATION_REQUIREMENTS
+            ),
+        },
+    }
+
+
+def _install_codex_policy_fixture(
+    tmp_path: Path, monkeypatch, payload: dict[str, object]
+) -> set[str]:
+    policy_path = tmp_path / "config/project/policy_pack.json"
+    _write_json(policy_path, payload)
+    paths = {
+        *contracts.CODEX_AUTHORITY_POINTERS.values(),
+        "godot/AGENTS.md",
+        "native/AGENTS.md",
+        "docs/governance/README.md",
+        "docs/RELEASE_CHECKLIST.md",
+    }
+    for rel in paths:
+        _write_text(tmp_path / rel, rel + "\n")
+    tracked = {"config/project/policy_pack.json", *paths}
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_path)
+    monkeypatch.setattr(contracts, "_git_tracked_paths", lambda issues: tracked)
+    return tracked
+
+
+def test_codex_routing_accepts_complete_contract(tmp_path: Path, monkeypatch) -> None:
+    _install_codex_policy_fixture(tmp_path, monkeypatch, _codex_policy_payload())
+    assert contracts._validate_codex_routing_model() == []
+
+
+def test_codex_routing_rejects_missing_pointer(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["authority_model"].pop("professional_product_programme")
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("professional_product_programme" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_empty_pointer(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["authority_model"]["professional_product_programme"] = ""
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("professional_product_programme" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_absolute_pointer(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["authority_model"]["professional_product_programme"] = "/tmp/programme.md"
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("repository-relative" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_traversal_pointer(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["authority_model"]["professional_product_programme"] = "../programme.md"
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("repository-relative" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_missing_pointer_target(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    target = (
+        tmp_path / contracts.CODEX_AUTHORITY_POINTERS["professional_product_programme"]
+    )
+    target.unlink()
+    issues = contracts._validate_codex_routing_model()
+    assert any("target does not exist" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_untracked_pointer_target(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    tracked = _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    target = contracts.CODEX_AUTHORITY_POINTERS["professional_product_programme"]
+    monkeypatch.setattr(
+        contracts, "_git_tracked_paths", lambda issues: tracked - {target}
+    )
+    issues = contracts._validate_codex_routing_model()
+    assert any(
+        "not tracked" in issue.message and target in issue.message for issue in issues
+    )
+
+
+def test_codex_routing_rejects_unknown_task_type(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["unknown_task"] = payload["codex_routing"][
+        "task_types"
+    ].pop("product_planning")
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("unknown_task" in issue.message for issue in issues)
+    assert any("product_planning" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_unknown_modifier(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["workflow_modifiers"][-1] = "unknown_modifier"
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("unknown_modifier" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_unknown_requirement(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["verification_requirements"][-1] = "unknown_requirement"
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("unknown_requirement" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_unknown_authority_key(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["product_planning"]["authority_keys"] = [
+        "missing_authority"
+    ]
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("missing_authority" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_invalid_dispatch_path(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["packaging_and_release"][
+        "dispatch_paths"
+    ] = ["../release.md"]
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("repository-relative" in issue.message for issue in issues)
+
+
+def test_codex_routing_rejects_unknown_typical_requirement(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["product_planning"][
+        "typical_verification_requirements"
+    ] = ["unknown_requirement"]
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any("unknown_requirement" in issue.message for issue in issues)
+
+
+def test_codex_routing_accepts_authority_only_task(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["product_planning"].pop(
+        "dispatch_paths", None
+    )
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    assert contracts._validate_codex_routing_model() == []
+
+
+def test_codex_routing_accepts_dispatch_only_task(tmp_path: Path, monkeypatch) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["packaging_and_release"].pop(
+        "authority_keys", None
+    )
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    assert contracts._validate_codex_routing_model() == []
+
+
+def test_codex_routing_accepts_task_with_both_routes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    task = payload["codex_routing"]["task_types"]["godot_product_shell"]
+    assert "authority_keys" in task and "dispatch_paths" in task
+    assert contracts._validate_codex_routing_model() == []
+
+
+def test_codex_routing_rejects_task_with_neither_route(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    task = payload["codex_routing"]["task_types"]["product_planning"]
+    task.pop("authority_keys", None)
+    task.pop("dispatch_paths", None)
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any(
+        "must define authority_keys or dispatch_paths" in issue.message
+        for issue in issues
+    )
+
+
+def test_codex_routing_rejects_empty_authority_keys(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["product_planning"]["authority_keys"] = []
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any(
+        "authority_keys must be a non-empty" in issue.message for issue in issues
+    )
+
+
+def test_codex_routing_rejects_empty_dispatch_paths(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    payload["codex_routing"]["task_types"]["packaging_and_release"][
+        "dispatch_paths"
+    ] = []
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    issues = contracts._validate_codex_routing_model()
+    assert any(
+        "dispatch_paths must be a non-empty" in issue.message for issue in issues
+    )
+
+
+def test_codex_routing_is_structural_not_roadmap_prose(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _codex_policy_payload()
+    _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
+    assert "Stage 54" not in json.dumps(payload)
+    assert contracts._validate_codex_routing_model() == []

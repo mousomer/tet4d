@@ -1898,13 +1898,17 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/project/policy_pack.json`
-Top-level keys: `authority_model`, `code_rules`, `deprecated_authorities`, `description`, `governance`, `maintenance_contract`, `maintenance_docs`, `project_name`, `schema_version`
+Top-level keys: `authority_model`, `code_rules`, `codex_routing`, `deprecated_authorities`, `description`, `governance`, `maintenance_contract`, `maintenance_docs`, `project_name`, `schema_version`
 Parameters:
 - `authority_model.architecture_contract`: `"docs/ARCHITECTURE_CONTRACT.md"` (`string`)
+- `authority_model.authority_transfer_and_establishment_protocol`: `"docs/architecture/authority_transfer_protocol.md"` (`string`)
 - `authority_model.dispatch_file`: `"AGENTS.md"` (`string`)
 - `authority_model.handoff_doc`: `"CURRENT_STATE.md"` (`string`)
 - `authority_model.machine_authority`: `"config/project/policy_pack.json"` (`string`)
+- `authority_model.open_work_backlog`: `"docs/BACKLOG.md"` (`string`)
 - `authority_model.product_requirements_root`: `"docs/rds/"` (`string`)
+- `authority_model.professional_product_programme`: `"docs/plans/professional_godot_game_programme.md"` (`string`)
+- `authority_model.subsystem_authority_map`: `"docs/architecture/authority_map.md"` (`string`)
 - `authority_model.topology_current_authority`: `"docs/plans/topology_playground_current_authority.md"` (`string`)
 - `authority_model.workflow_doc`: `"docs/WORKFLOW_CODEX.md"` (`string`)
 - `code_rules.config_backed_runtime_constants.allowed_loader_modules[]`: array[`string`]; examples: `"tet4d.engine.runtime.project_config"`, `"tet4d.engine.runtime.runtime_config"`, `"tet4d.engine.runtime.menu_config"`
@@ -1983,6 +1987,26 @@ Parameters:
 - `code_rules.wheel_reuse.rules[].id`: varies (`string`); examples: `"parsing_validation_reuse"`, `"normalization_reuse"`, `"path_and_config_reuse"`
 - `code_rules.wheel_reuse.rules[].prefer_symbols[]`: array[`string`]; examples: `"tet4d.engine.runtime.settings_schema"`, `"sanitize_text_runtime"`, `"append_numeric_text"`
 - `code_rules.wheel_reuse.rules[].scope_globs[]`: array[`string`]; examples: `"src/tet4d/ui/pygame/launch/*.py"`, `"src/tet4d/ui/pygame/menu/*.py"`, `"src/tet4d/engine/tutorial/*.py"`
+- `codex_routing.schema_version`: `1` (`int`)
+- `codex_routing.task_types.godot_product_shell.authority_keys[]`: array[`string`]; examples: `"product_requirements_root"`, `"subsystem_authority_map"`
+- `codex_routing.task_types.godot_product_shell.dispatch_paths[]`: array[`string`]; examples: `"godot/AGENTS.md"`
+- `codex_routing.task_types.godot_product_shell.typical_verification_requirements[]`: array[`string`]; examples: `"godot"`
+- `codex_routing.task_types.governance_and_tooling.authority_keys[]`: array[`string`]; examples: `"machine_authority"`
+- `codex_routing.task_types.governance_and_tooling.dispatch_paths[]`: array[`string`]; examples: `"docs/governance/README.md"`
+- `codex_routing.task_types.governance_and_tooling.typical_verification_requirements[]`: array[`string`]; examples: `"governance_structure"`
+- `codex_routing.task_types.native_deterministic_core.authority_keys[]`: array[`string`]; examples: `"subsystem_authority_map"`, `"authority_transfer_and_establishment_protocol"`
+- `codex_routing.task_types.native_deterministic_core.dispatch_paths[]`: array[`string`]; examples: `"native/AGENTS.md"`
+- `codex_routing.task_types.native_deterministic_core.typical_verification_requirements[]`: array[`string`]; examples: `"native"`, `"deterministic"`
+- `codex_routing.task_types.packaging_and_release.dispatch_paths[]`: array[`string`]; examples: `"docs/rds/RDS_PACKAGING.md"`, `"docs/RELEASE_CHECKLIST.md"`
+- `codex_routing.task_types.packaging_and_release.typical_verification_requirements[]`: array[`string`]; examples: `"packaging"`, `"platform"`
+- `codex_routing.task_types.product_planning.authority_keys[]`: array[`string`]; examples: `"professional_product_programme"`, `"product_requirements_root"`, `"open_work_backlog"`
+- `codex_routing.task_types.product_planning.typical_verification_requirements[]`: array[`string`]; examples: `"documentation"`
+- `codex_routing.task_types.python_reference_engine.authority_keys[]`: array[`string`]; examples: `"architecture_contract"`, `"product_requirements_root"`, `"subsystem_authority_map"`
+- `codex_routing.task_types.python_reference_engine.typical_verification_requirements[]`: array[`string`]; examples: `"python"`, `"deterministic"`
+- `codex_routing.task_types.topology_and_explorer.authority_keys[]`: array[`string`]; examples: `"topology_current_authority"`, `"product_requirements_root"`, `"subsystem_authority_map"`
+- `codex_routing.task_types.topology_and_explorer.typical_verification_requirements[]`: array[`string`]; examples: `"deterministic"`
+- `codex_routing.verification_requirements[]`: array[`string`]; examples: `"documentation"`, `"governance_structure"`, `"python"`
+- `codex_routing.workflow_modifiers[]`: array[`string`]; examples: `"review_only"`, `"staged_handoff"`, `"cross_layer"`
 - `deprecated_authorities.blocked_paths[]`: array[`string`]; examples: `"config/project/policy/governance.json"`, `"config/project/policy/code_rules.json"`, `"config/project/policy/manifests/canonical_maintenance.json"`
 - `deprecated_authorities.description`: `"Retired governance and routing surfaces that must stay absent from l...` (`string`)
 - `deprecated_authorities.reference_checks[]`: array[`object`]
