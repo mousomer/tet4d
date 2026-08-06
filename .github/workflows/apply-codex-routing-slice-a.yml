@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - tools/automation/refactor_codex_routing_validator.py
+      - tools/automation/update_codex_routing_test.py
       - .github/workflows/apply-codex-routing-slice-a.yml
 
 permissions:
@@ -31,6 +32,9 @@ jobs:
 
       - name: Refactor routing validator and policy tokens
         run: python tools/automation/refactor_codex_routing_validator.py
+
+      - name: Align routing drift-protection test
+        run: python tools/automation/update_codex_routing_test.py
 
       - name: Format and lint changed Python
         run: |
@@ -59,6 +63,7 @@ jobs:
         run: |
           rm tools/automation/apply_codex_routing_slice_a.py
           rm tools/automation/refactor_codex_routing_validator.py
+          rm tools/automation/update_codex_routing_test.py
           rm .github/workflows/apply-codex-routing-slice-a.yml
 
       - name: Commit validated Slice A
