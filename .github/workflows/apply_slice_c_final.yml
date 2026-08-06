@@ -1,0 +1,206 @@
+name: Apply final Slice C governance state
+
+on:
+  push:
+    branches:
+      - codex/path-sensitive-ci-lanes
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-slice-c-final-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: codex/path-sensitive-ci-lanes
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Align permanent governance sources
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          from pathlib import Path
+
+          policy_path = Path("config/project/policy_pack.json")
+          policy = json.loads(policy_path.read_text(encoding="utf-8"))
+          routing = policy["codex_routing"]
+          routing["ci_lane_mapping_path"] = "config/project/codex_ci_lanes.json"
+          routing["ci_path_classifier_path"] = (
+              "tools/governance/classify_codex_ci_paths.py"
+          )
+          routing["ci_lane_selector_path"] = (
+              "tools/governance/select_codex_ci_lanes.py"
+          )
+          policy_path.write_text(
+              json.dumps(policy, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          workflow_path = Path("docs/WORKFLOW_CODEX.md")
+          workflow = workflow_path.read_text(encoding="utf-8")
+          marker = (
+              "Resolver output selects evidence obligations; it does not claim that checks\n"
+              "have passed. Completion reports must populate checks, authority effects,\n"
+              "remaining risks, and unverified areas with actual final evidence.\n"
+          )
+          addition = marker + """
+
+### Path-sensitive CI execution
+
+`config/project/codex_ci_lanes.json` maps resolved verification requirements to
+stable automated lanes. `tools/governance/classify_codex_ci_paths.py` classifies
+the complete PR diff, unions every matching rule, adds `integration` when
+multiple implementation layers are present, and forces the full repository
+gate for shared CI infrastructure or any unmatched path. Unknown paths are
+never ignored.
+
+`tools/governance/select_codex_ci_lanes.py` consumes either task-resolver output
+or path-classifier output, preserves manual-only requirements separately, and
+emits deterministic JSON or GitHub Actions outputs. `human_visual` remains a
+manual obligation and never becomes a synthetic automated lane.
+
+The CI planning/baseline job always runs repository sanitation, policy and
+project contracts, classification validation, and diff checks. It then selects
+only the applicable documentation/governance, Python, Godot, native,
+deterministic/parity, integration, packaging, platform, and release-acceptance
+lanes. The final required-gate job fails when any selected lane did not pass.
+Workflow, selector, classifier, or lane-map changes self-apply the full gate.
+
+Slice 0 established the de-duplicated baseline of five jobs for an ordinary
+full PR commit: four Python versions and one Godot/native job. Path-sensitive
+savings must be measured against that baseline; trigger de-duplication is not
+credited to lane selection.
+"""
+          if "### Path-sensitive CI execution" not in workflow:
+              if marker not in workflow:
+                  raise SystemExit("workflow insertion marker missing")
+              workflow = workflow.replace(marker, addition, 1)
+          workflow_path.write_text(workflow, encoding="utf-8")
+
+          backlog_path = Path("docs/BACKLOG.md")
+          backlog = backlog_path.read_text(encoding="utf-8")
+          start = backlog.index("## Codex Routing Follow-Ups\n")
+          end = backlog.index("## Governance Watchlist\n", start)
+          replacement = """## Codex Routing And Verification
+
+The Codex routing and proportional-verification programme is complete.
+
+- Slice 0 removed duplicate push and pull-request CI execution and established
+  a five-job de-duplicated full-PR baseline.
+- Slice A added direct authority pointers, seven primary task types, separate
+  workflow modifiers, and composable verification requirements.
+- Slice B added the policy-backed task resolver, read-only and repository-change
+  invariants, scope matrices, stable reports, and union semantics.
+- Slice C adds an offline requirement-to-lane map, conservative changed-path
+  classification, deterministic GitHub outputs, explicit CI lanes, an always-run
+  baseline, cross-layer integration evidence, manual-only requirement handling,
+  and full-gate fallback for shared or unmatched paths.
+
+The CI workflow compares the complete pull-request diff with its base, so a
+later documentation commit cannot hide implementation changes already present
+in the PR. Full-gate self-application remains mandatory for CI-selection
+infrastructure. Future routing or lane additions require a demonstrated missing
+case, schema review, focused tests, and documentation alignment.
+
+Do not combine maintenance of this governance machinery with Stage 54B-1
+runtime implementation.
+
+"""
+          backlog = backlog[:start] + replacement + backlog[end:]
+          backlog_path.write_text(backlog, encoding="utf-8")
+
+          test_path = Path("tests/unit/governance/test_select_codex_ci_lanes.py")
+          test_text = test_path.read_text(encoding="utf-8")
+          if "import json\n" not in test_text:
+              test_text = test_text.replace(
+                  "import copy\n", "import copy\nimport json\n", 1
+              )
+          test_block = """
+
+def test_policy_pack_routes_to_lane_mapping() -> None:
+    policy = json.loads(
+        Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+    )
+    routing = policy["codex_routing"]
+
+    assert routing["ci_lane_mapping_path"] == (
+        "config/project/codex_ci_lanes.json"
+    )
+    assert routing["ci_path_classifier_path"] == (
+        "tools/governance/classify_codex_ci_paths.py"
+    )
+    assert routing["ci_lane_selector_path"] == (
+        "tools/governance/select_codex_ci_lanes.py"
+    )
+    for key in (
+        "ci_lane_mapping_path",
+        "ci_path_classifier_path",
+        "ci_lane_selector_path",
+    ):
+        target = Path(routing[key])
+        assert target.is_file()
+"""
+          if "def test_policy_pack_routes_to_lane_mapping" not in test_text:
+              test_text += test_block
+          test_path.write_text(test_text, encoding="utf-8")
+          PY
+
+      - name: Remove temporary machinery and regenerate final tree
+        run: |
+          rm .github/workflows/apply_slice_c_final.yml
+          python -m ruff format \
+            tools/governance/classify_codex_ci_paths.py \
+            tools/governance/select_codex_ci_lanes.py \
+            tests/unit/governance/test_classify_codex_ci_paths.py \
+            tests/unit/governance/test_select_codex_ci_lanes.py
+          python tools/governance/generate_configuration_reference.py
+          python tools/governance/generate_maintenance_docs.py
+
+      - name: Verify permanent final tree
+        run: |
+          python -m ruff check \
+            tools/governance/classify_codex_ci_paths.py \
+            tools/governance/select_codex_ci_lanes.py \
+            tests/unit/governance/test_classify_codex_ci_paths.py \
+            tests/unit/governance/test_select_codex_ci_lanes.py
+          python -m ruff format --check \
+            tools/governance/classify_codex_ci_paths.py \
+            tools/governance/select_codex_ci_lanes.py \
+            tests/unit/governance/test_classify_codex_ci_paths.py \
+            tests/unit/governance/test_select_codex_ci_lanes.py
+          python tools/governance/validate_project_contracts.py
+          python tools/governance/validate_governance.py
+          python tools/governance/generate_configuration_reference.py --check
+          python tools/governance/generate_maintenance_docs.py --check
+          python -m pytest -q \
+            tests/unit/governance/test_classify_codex_ci_paths.py \
+            tests/unit/governance/test_select_codex_ci_lanes.py \
+            tests/unit/governance/test_resolve_codex_verification.py \
+            tests/unit/governance/test_governance_validate_project_contracts.py
+          git diff --check
+
+      - name: Commit final permanent state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Complete path-sensitive CI governance"
+          git push origin HEAD:codex/path-sensitive-ci-lanes
