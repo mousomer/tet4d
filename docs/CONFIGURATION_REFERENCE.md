@@ -1610,6 +1610,8 @@ Parameters:
 - `full_repository_gate_lanes[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
 - `lane_order[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
 - `manual_requirements[]`: array[`string`]; examples: `"human_visual"`
+- `path_classification.cross_layer_requirements[]`: array[`string`]; examples: `"python"`, `"godot"`, `"native"`
+- `path_classification.cross_layer_verification_requirement`: `"integration"` (`string`)
 - `path_classification.rules[]`: array[`object`]
 - `path_classification.rules[].id`: varies (`string`); examples: `"ci_and_shared_infrastructure"`, `"codex_ci_selection_infrastructure"`, `"governance_documents"`
 - `path_classification.rules[].patterns[]`: array[`string`]; examples: `".github/workflows/**"`, `"scripts/**"`, `"pyproject.toml"`
