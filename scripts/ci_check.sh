@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # Temporary diagnostic: expose the exact generated restart handoff.
-# This commit exists only to trigger the ready diagnostic PR.
+# This owner-authenticated commit triggers the standard PR workflow.
 python - <<'PY'
 from pathlib import Path
 
