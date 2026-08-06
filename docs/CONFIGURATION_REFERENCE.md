@@ -24,6 +24,7 @@ Coverage:
 - `config/menu/structure.json`
 - `config/playbot/policy.json`
 - `config/project/backlog_debt.json`
+- `config/project/codex_ci_lanes.json`
 - `config/project/constants.json`
 - `config/project/folder_balance_budgets.json`
 - `config/project/format_allowlist.txt`
@@ -1600,6 +1601,37 @@ Parameters:
 - `operational_watch_items[].id`: varies (`string`); examples: `"BKL-P3-002"`, `"BKL-P3-003"`, `"BKL-P3-006"`
 - `operational_watch_items[].priority`: varies (`string`); examples: `"P3"`
 - `operational_watch_items[].title`: varies (`string`); examples: `"Scheduled stability + policy workflow watch"`, `"Runtime-config validation module split watch"`, `"Desktop release hardening watch"`
+- `schema_version`: `1` (`int`)
+
+### `config/project/codex_ci_lanes.json`
+Top-level keys: `always_run_lanes`, `full_repository_gate_lanes`, `lane_order`, `manual_requirements`, `path_classification`, `requirement_to_lanes`, `resolution_schema_version`, `schema_version`
+Parameters:
+- `always_run_lanes[]`: array[`string`]; examples: `"baseline"`
+- `full_repository_gate_lanes[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
+- `lane_order[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
+- `manual_requirements[]`: array[`string`]; examples: `"human_visual"`
+- `path_classification.cross_layer_requirements[]`: array[`string`]; examples: `"python"`, `"godot"`, `"native"`
+- `path_classification.cross_layer_verification_requirement`: `"integration"` (`string`)
+- `path_classification.rules[]`: array[`object`]
+- `path_classification.rules[].id`: varies (`string`); examples: `"ci_and_shared_infrastructure"`, `"codex_ci_selection_infrastructure"`, `"governance_documents"`
+- `path_classification.rules[].patterns[]`: array[`string`]; examples: `".github/workflows/**"`, `"scripts/**"`, `"pyproject.toml"`
+- `path_classification.rules[].requirements[]`: array[`string`]; examples: `"governance_structure"`, `"python"`, `"documentation"`
+- `path_classification.rules[].requires_full_repository_gate`: varies (`bool`); examples: `true`
+- `path_classification.schema_version`: `1` (`int`)
+- `path_classification.unknown_path_policy`: `"full_repository_gate"` (`string`)
+- `requirement_to_lanes.deterministic[]`: array[`string`]; examples: `"deterministic_parity"`
+- `requirement_to_lanes.documentation[]`: array[`string`]; examples: `"documentation_governance"`
+- `requirement_to_lanes.godot[]`: array[`string`]; examples: `"godot"`
+- `requirement_to_lanes.governance_structure[]`: array[`string`]; examples: `"documentation_governance"`
+- `requirement_to_lanes.human_visual[]`: array[`empty`]
+- `requirement_to_lanes.integration[]`: array[`string`]; examples: `"integration"`
+- `requirement_to_lanes.native[]`: array[`string`]; examples: `"native"`
+- `requirement_to_lanes.packaging[]`: array[`string`]; examples: `"packaging"`
+- `requirement_to_lanes.parity_or_conformance[]`: array[`string`]; examples: `"deterministic_parity"`
+- `requirement_to_lanes.platform[]`: array[`string`]; examples: `"platform"`
+- `requirement_to_lanes.python[]`: array[`string`]; examples: `"python"`
+- `requirement_to_lanes.release_acceptance[]`: array[`string`]; examples: `"release_acceptance"`
+- `resolution_schema_version`: `1` (`int`)
 - `schema_version`: `1` (`int`)
 
 ### `config/project/constants.json`

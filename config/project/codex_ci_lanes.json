@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "resolution_schema_version": 1,
+  "lane_order": [
+    "baseline",
+    "documentation_governance",
+    "python",
+    "godot",
+    "native",
+    "deterministic_parity",
+    "integration",
+    "packaging",
+    "platform",
+    "release_acceptance"
+  ],
+  "always_run_lanes": [
+    "baseline"
+  ],
+  "requirement_to_lanes": {
+    "documentation": [
+      "documentation_governance"
+    ],
+    "governance_structure": [
+      "documentation_governance"
+    ],
+    "python": [
+      "python"
+    ],
+    "godot": [
+      "godot"
+    ],
+    "native": [
+      "native"
+    ],
+    "deterministic": [
+      "deterministic_parity"
+    ],
+    "parity_or_conformance": [
+      "deterministic_parity"
+    ],
+    "integration": [
+      "integration"
+    ],
+    "human_visual": [],
+    "packaging": [
+      "packaging"
+    ],
+    "platform": [
+      "platform"
+    ],
+    "release_acceptance": [
+      "release_acceptance"
+    ]
+  },
+  "manual_requirements": [
+    "human_visual"
+  ],
+  "full_repository_gate_lanes": [
+    "baseline",
+    "documentation_governance",
+    "python",
+    "godot",
+    "native",
+    "deterministic_parity",
+    "integration",
+    "packaging",
+    "platform",
+    "release_acceptance"
+  ],
+  "path_classification": {
+    "schema_version": 1,
+    "unknown_path_policy": "full_repository_gate",
+    "cross_layer_requirements": [
+      "python",
+      "godot",
+      "native",
+      "packaging"
+    ],
+    "cross_layer_verification_requirement": "integration",
+    "rules": [
+      {
+        "id": "ci_and_shared_infrastructure",
+        "patterns": [
+          ".github/workflows/**",
+          "scripts/**",
+          "pyproject.toml",
+          "setup.cfg",
+          "requirements*.txt",
+          ".gitignore",
+          ".gitattributes"
+        ],
+        "requirements": [
+          "governance_structure",
+          "python"
+        ],
+        "requires_full_repository_gate": true
+      },
+      {
+        "id": "codex_ci_selection_infrastructure",
+        "patterns": [
+          "config/project/codex_ci_lanes.json",
+          "tools/governance/classify_codex_ci_paths.py",
+          "tools/governance/select_codex_ci_lanes.py",
+          "tests/unit/governance/test_classify_codex_ci_paths.py",
+          "tests/unit/governance/test_select_codex_ci_lanes.py"
+        ],
+        "requirements": [
+          "governance_structure",
+          "python"
+        ],
+        "requires_full_repository_gate": true
+      },
+      {
+        "id": "governance_documents",
+        "patterns": [
+          "AGENTS.md",
+          "**/AGENTS.md",
+          "docs/governance/**",
+          "docs/architecture/authority_map.md",
+          "docs/architecture/authority_transfer_protocol.md"
+        ],
+        "requirements": [
+          "documentation",
+          "governance_structure"
+        ]
+      },
+      {
+        "id": "governance_configuration",
+        "patterns": [
+          "config/project/**"
+        ],
+        "requirements": [
+          "governance_structure"
+        ]
+      },
+      {
+        "id": "governance_python",
+        "patterns": [
+          "tools/governance/**",
+          "tests/unit/governance/**"
+        ],
+        "requirements": [
+          "governance_structure",
+          "python"
+        ]
+      },
+      {
+        "id": "documentation",
+        "patterns": [
+          "*.md",
+          "**/*.md",
+          "LICENSE*"
+        ],
+        "requirements": [
+          "documentation"
+        ]
+      },
+      {
+        "id": "python",
+        "patterns": [
+          "front.py",
+          "cli/**",
+          "src/**/*.py",
+          "tests/**/*.py",
+          "tools/**/*.py"
+        ],
+        "requirements": [
+          "python"
+        ]
+      },
+      {
+        "id": "deterministic_semantics",
+        "patterns": [
+          "config/gameplay/**",
+          "config/topology/**",
+          "src/tet4d/engine/gameplay/**",
+          "src/tet4d/engine/**/*replay*",
+          "src/tet4d/engine/**/*topology*",
+          "src/tet4d/engine/**/*trace*",
+          "tests/**/*replay*",
+          "tests/**/*topology*",
+          "tests/**/*trace*"
+        ],
+        "requirements": [
+          "python",
+          "deterministic"
+        ]
+      },
+      {
+        "id": "runtime_configuration",
+        "patterns": [
+          "config/**"
+        ],
+        "requirements": [
+          "python"
+        ]
+      },
+      {
+        "id": "parity_and_migration",
+        "patterns": [
+          "tools/migration/**",
+          "tools/parity/**",
+          "tests/unit/migration/**",
+          "tests/fixtures/parity/**"
+        ],
+        "requirements": [
+          "python",
+          "parity_or_conformance"
+        ]
+      },
+      {
+        "id": "godot",
+        "patterns": [
+          "godot/**"
+        ],
+        "requirements": [
+          "godot"
+        ]
+      },
+      {
+        "id": "native",
+        "patterns": [
+          "native/**"
+        ],
+        "requirements": [
+          "native"
+        ]
+      },
+      {
+        "id": "integration_tests",
+        "patterns": [
+          "tests/integration/**",
+          "tests/e2e/**"
+        ],
+        "requirements": [
+          "integration"
+        ]
+      },
+      {
+        "id": "packaging",
+        "patterns": [
+          "packaging/**"
+        ],
+        "requirements": [
+          "packaging",
+          "platform"
+        ]
+      }
+    ]
+  }
+}
