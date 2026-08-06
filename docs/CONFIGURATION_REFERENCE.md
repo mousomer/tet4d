@@ -24,6 +24,7 @@ Coverage:
 - `config/menu/structure.json`
 - `config/playbot/policy.json`
 - `config/project/backlog_debt.json`
+- `config/project/codex_ci_lanes.json`
 - `config/project/constants.json`
 - `config/project/folder_balance_budgets.json`
 - `config/project/format_allowlist.txt`
@@ -1600,6 +1601,28 @@ Parameters:
 - `operational_watch_items[].id`: varies (`string`); examples: `"BKL-P3-002"`, `"BKL-P3-003"`, `"BKL-P3-006"`
 - `operational_watch_items[].priority`: varies (`string`); examples: `"P3"`
 - `operational_watch_items[].title`: varies (`string`); examples: `"Scheduled stability + policy workflow watch"`, `"Runtime-config validation module split watch"`, `"Desktop release hardening watch"`
+- `schema_version`: `1` (`int`)
+
+### `config/project/codex_ci_lanes.json`
+Top-level keys: `always_run_lanes`, `full_repository_gate_lanes`, `lane_order`, `manual_requirements`, `requirement_to_lanes`, `resolution_schema_version`, `schema_version`
+Parameters:
+- `always_run_lanes[]`: array[`string`]; examples: `"baseline"`
+- `full_repository_gate_lanes[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
+- `lane_order[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
+- `manual_requirements[]`: array[`string`]; examples: `"human_visual"`
+- `requirement_to_lanes.deterministic[]`: array[`string`]; examples: `"deterministic_parity"`
+- `requirement_to_lanes.documentation[]`: array[`string`]; examples: `"documentation_governance"`
+- `requirement_to_lanes.godot[]`: array[`string`]; examples: `"godot"`
+- `requirement_to_lanes.governance_structure[]`: array[`string`]; examples: `"documentation_governance"`
+- `requirement_to_lanes.human_visual[]`: array[`empty`]
+- `requirement_to_lanes.integration[]`: array[`string`]; examples: `"integration"`
+- `requirement_to_lanes.native[]`: array[`string`]; examples: `"native"`
+- `requirement_to_lanes.packaging[]`: array[`string`]; examples: `"packaging"`
+- `requirement_to_lanes.parity_or_conformance[]`: array[`string`]; examples: `"deterministic_parity"`
+- `requirement_to_lanes.platform[]`: array[`string`]; examples: `"platform"`
+- `requirement_to_lanes.python[]`: array[`string`]; examples: `"python"`
+- `requirement_to_lanes.release_acceptance[]`: array[`string`]; examples: `"release_acceptance"`
+- `resolution_schema_version`: `1` (`int`)
 - `schema_version`: `1` (`int`)
 
 ### `config/project/constants.json`
