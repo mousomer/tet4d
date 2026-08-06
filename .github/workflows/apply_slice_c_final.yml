@@ -33,6 +33,7 @@ jobs:
 
       - name: Align permanent governance sources
         run: |
+          echo "Applying final Slice C authority and documentation alignment"
           python - <<'PY'
           from __future__ import annotations
 
