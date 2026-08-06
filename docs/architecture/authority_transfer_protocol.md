@@ -1,61 +1,64 @@
-# tet4d Authority Transfer Protocol
+# tet4d Authority Transfer and Establishment Protocol
 
-This document defines how semantic authority may move from the current Python
-oracle to another implementation.
+This document defines two distinct operations:
 
-Current state:
+1. **authority transfer** for inherited behaviour that already has an owner;
+2. **authority establishment** for genuinely new behaviour with no predecessor.
 
-- Python remains the semantic oracle.
-- Godot remains product shell, presentation, input routing, UI, diagnostics,
-  and visualization.
-- C++/GDExtension remains provisional until parity evidence and an explicit
-  completed transfer record exist.
-- The first subsystem parity pilot is evidence only and must not be recorded
-  as a transferred subsystem.
-
-This document does not transfer authority by itself.
+This document does not move or establish authority by itself.
 
 ## Relationship to other documents
 
-- `docs/architecture/authority_map.md` defines current subsystem authority.
-- `docs/architecture/parity_protocol.md` defines evidence required for parity.
+- `docs/architecture/authority_map.md` records current subsystem authority.
+- `docs/architecture/parity_protocol.md` defines reusable parity evidence.
+- The first subsystem parity pilot is evidence only and must not be recorded as
+  an authority transfer. Its detailed record remains in
+  `docs/architecture/first_subsystem_parity_pilot.md`.
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md` defines the
-  reusable gate for any second parity slice.
-- `docs/architecture/second_parity_slice_candidate_selection.md` records
-  Stage 17 candidate selection only; selection documents are not transfer
-  records.
-- This document defines the additional transfer record required before
-  authority changes.
-- `tools/governance/validate_authority_transfer.py` validates transfer claims.
+  reusable promotion gate for inherited parity work. The pilot and its audit
+  are evidence-only material; they are not transfer records.
+- `docs/architecture/parity_evidence_package_review.md` reviews parity evidence
+  packaging. Evidence-package reviews are not transfer records.
+- `docs/architecture/trace_schema_version_normalization_parity.md` records a
+  specific inherited parity result. It is not a transfer record.
+- other promotion-gate and evidence-review documents provide supporting
+  evidence only.
+- `docs/plans/professional_godot_game_programme.md` defines the product sequence
+  that creates new authority needs.
+- `tools/governance/validate_authority_transfer.py` validates recorded claims
+  where supported by the current schema.
 
-Parity-pilot evidence and promotion-gate audits are not transfer records.
-Future second-slice parity evidence is also insufficient for transfer without
-an explicit transfer record and authority-map update.
-Evidence package reviews, including
-`docs/architecture/parity_evidence_package_review.md`, are not transfer
-records.
-Stage 22 trace schema/version normalization parity in
-`docs/architecture/trace_schema_version_normalization_parity.md` is metadata
-evidence only and is not a transfer record.
+Evidence packages, parity reviews, implementation success, and product use do
+not change authority without the required record and authority-map update.
 
-## Rule
+## 1. Authority transfer
 
-Parity evidence is necessary but not sufficient.
+Authority transfer applies when another implementation replaces behaviour that
+already has an accepted owner.
 
-A subsystem may become non-Python-authoritative only when:
+The common current case is movement from an inherited Python-reference
+subsystem to native C++.
 
-1. the relevant parity evidence exists,
-2. the comparison command is documented,
-3. known exclusions are documented,
-4. fallback/reversion path is documented,
-5. current and new authority are named,
-6. the authority map is updated,
-7. the transfer record status is `transferred`,
-8. governance validation passes.
+### Transfer rule
 
-## Transfer statuses
+A subsystem may receive transferred authority only when:
 
-Allowed statuses:
+1. the current authority is named;
+2. the exact observable behaviour is scoped;
+3. relevant parity or conformance evidence exists;
+4. comparison commands are documented;
+5. known exclusions are documented;
+6. the fallback/reversion path is documented;
+7. the candidate does not depend on duplicate semantic glue elsewhere;
+8. `docs/architecture/authority_map.md` is updated;
+9. the transfer record status is `transferred`;
+10. required governance validation passes.
+
+Parity is necessary for inherited behaviour but is not sufficient by itself.
+
+### Transfer statuses
+
+Allowed transfer statuses:
 
 - `candidate`
 - `blocked`
@@ -63,61 +66,206 @@ Allowed statuses:
 - `transferred`
 - `retired`
 
-Definitions:
-
-- `candidate`: proposed transfer area; no authority change.
-- `blocked`: transfer cannot proceed because evidence or design is missing.
-- `ready`: evidence appears sufficient, but authority has not moved.
-- `transferred`: authority has moved according to the record.
-- `retired`: old or superseded transfer record.
-
 Only `transferred` changes authority.
 
-## Required transfer record fields
+### Required transfer record fields
 
 | Field | Required | Meaning |
-|---|---:|---|
+| --- | ---: | --- |
 | `id` | yes | Stable transfer ID |
-| `subsystem` | yes | Semantic subsystem being transferred |
-| `current_authority` | yes | Current authority before transfer |
-| `candidate_authority` | yes | Proposed new authority |
-| `scope` | yes | Exact behavior covered |
-| `python_oracle` | yes | Python files/modules used as oracle |
-| `golden_fixtures` | yes | Fixtures/traces used as evidence |
-| `comparison_command` | yes | Command that compares candidate against oracle |
-| `known_exclusions` | yes | Behavior not covered by transfer |
-| `fallback_path` | yes | How to revert or route back to Python |
-| `authority_map_update` | yes | Required authority-map update |
+| `operation` | yes | `transfer` |
+| `subsystem` | yes | Exact semantic subsystem |
+| `current_authority` | yes | Accepted owner before transfer |
+| `candidate_authority` | yes | Proposed new owner |
+| `scope` | yes | Exact behaviour covered |
+| `reference_implementation` | yes | Existing implementation or contract used as reference |
+| `golden_fixtures` | yes | Traces, fixtures, or equivalent conformance evidence |
+| `comparison_command` | yes | Command that compares candidate with reference |
+| `known_exclusions` | yes | Behaviour not covered |
+| `fallback_path` | yes | Reversion or compatibility path |
+| `authority_map_update` | yes | Required map change |
 | `validation` | yes | Required validation command(s) |
-| `status` | yes | candidate, blocked, ready, transferred, retired |
-| `notes` | no | Extra context |
+| `status` | yes | Transfer status |
+| `notes` | no | Additional context |
 
-## Transfer records
+The field is named `reference_implementation`, not `python_oracle`, because an
+inherited subsystem may eventually transfer from an owner other than Python.
 
-No semantic authority transfers are active unless a row below has status
-`transferred`.
+## 2. Authority establishment
 
-| id | subsystem | current_authority | candidate_authority | scope | python_oracle | golden_fixtures | comparison_command | known_exclusions | fallback_path | authority_map_update | validation | status | notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+Authority establishment applies when a new capability has no accepted
+predecessor.
 
-## Deferred transfer candidates
+Examples include:
 
-This section may list future candidates in prose only. Prose candidates do not
-change authority.
+- new Godot 4D presentation-basis state;
+- Explorer Y/slice basis exchange;
+- new Hold gameplay if no existing authoritative implementation is found;
+- challenge predicates and campaign rules;
+- future native physics beyond the inherited explosion model.
 
-Potential future candidates:
+A new capability must not be implemented in Python solely to create an oracle.
 
-- coordinate/bounds helper
-- trace metadata identity/digest
-- trace schema/version normalization
-- trace parser
-- topology lookup helper
-- deterministic scoring helper
-- first subsystem parity pilot for `stable_hash_text(text)` evidence only
+### Establishment rule
 
-Any future parity slice still needs the promotion gates in
-`docs/architecture/parity_pilot_audit_and_promotion_gates.md` plus an explicit
-transfer record before authority moves.
+A new subsystem may receive established authority only when:
 
-Do not list full gameplay loop, full topology engine, or rotation system as a
-first transfer unless evidence already exists.
+1. the capability is demonstrably new rather than an undocumented rewrite of
+   inherited behaviour;
+2. a normative RDS, specification, schema, or versioned contract exists;
+3. the implementation owner is named;
+4. any declarative-data owner is named separately;
+5. deterministic and presentation boundaries are explicit;
+6. conformance tests exist where the behaviour is deterministic;
+7. persistence, replay, compatibility, and versioning rules are documented
+   where applicable;
+8. fallback or safe-failure behaviour is documented where relevant;
+9. no competing truth implementation remains;
+10. `docs/architecture/authority_map.md` is updated;
+11. the establishment record status is `established`;
+12. required governance validation passes.
+
+Authority establishment does not require Python parity when no Python behaviour
+exists.
+
+### Establishment statuses
+
+Allowed establishment statuses:
+
+- `proposed`
+- `blocked`
+- `ready`
+- `established`
+- `retired`
+
+Only `established` creates authority.
+
+### Required establishment record fields
+
+| Field | Required | Meaning |
+| --- | ---: | --- |
+| `id` | yes | Stable establishment ID |
+| `operation` | yes | `establishment` |
+| `subsystem` | yes | Exact new subsystem |
+| `normative_contract` | yes | Owning RDS, specification, or schema |
+| `implementation_authority` | yes | Code/runtime owner |
+| `data_authority` | conditional | Versioned data owner where separate |
+| `scope` | yes | Exact behaviour covered |
+| `semantic_boundaries` | yes | Deterministic versus presentation ownership |
+| `conformance_evidence` | yes | Tests, fixtures, validators, or review evidence |
+| `compatibility_rules` | yes | Persistence/replay/versioning impact or `none` |
+| `known_exclusions` | yes | Behaviour not covered |
+| `safe_failure_or_fallback` | yes | Failure/recovery policy or `not applicable` |
+| `authority_map_update` | yes | Required map change |
+| `validation` | yes | Required validation command(s) |
+| `status` | yes | Establishment status |
+| `notes` | no | Additional context |
+
+Every active record row must contain substantive values for all required
+fields, regardless of status. Use the deferred-candidate prose section while
+implementation, compatibility decisions, or evidence are not yet concrete.
+Do not create placeholder `proposed` or `ready` rows merely to reserve an ID.
+
+## 3. Mixed subsystems
+
+A product feature may combine several authorities.
+
+For example, a challenge feature may use:
+
+- versioned declarative data for challenge content;
+- native C++ for deterministic success predicates;
+- Godot for instructions, hints, progress, and campaign navigation;
+- inherited gameplay semantics that remain Python-reference until transferred.
+
+The Stage 54D modern gameplay baseline is another mixed feature:
+
+- next-piece preview is Godot presentation of inherited queue state;
+- ghost rendering is Godot presentation over an inherited authoritative
+  landing query;
+- Hold introduces new deterministic state and requires authority establishment
+  when its implementation contract and evidence are concrete.
+
+Do not force such a feature into one monolithic owner.
+
+Record the boundaries explicitly.
+
+## 4. Presentation authority
+
+New presentation behaviour may be Godot-authoritative from inception when it
+does not redefine inherited deterministic semantics.
+
+Examples include:
+
+- camera orientation;
+- 4D view/presentation basis;
+- slice layout and labels;
+- transition animation;
+- next-piece and Hold thumbnails;
+- ghost rendering over an authoritative landing result;
+- challenge UI and hints;
+- Explorer controls and diagnostics.
+
+Where presentation uses shared exact mathematics, a native deterministic
+utility may own the transform while Godot owns user-facing state and animation.
+
+## 5. Transfer and establishment records
+
+No authority changes are active unless a record below has the terminal status
+for its operation and the authority map agrees.
+
+### Active transfer records
+
+| id | operation | subsystem | current_authority | candidate_authority | scope | reference_implementation | golden_fixtures | comparison_command | known_exclusions | fallback_path | authority_map_update | validation | status | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+### Active establishment records
+
+| id | operation | subsystem | normative_contract | implementation_authority | data_authority | scope | semantic_boundaries | conformance_evidence | compatibility_rules | known_exclusions | safe_failure_or_fallback | authority_map_update | validation | status | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+## 6. Deferred candidates
+
+Prose candidates do not change authority.
+
+Potential inherited transfer candidates include:
+
+- bounded board/piece state transition;
+- bounded movement and rotation legality;
+- gravity and drop/lock progression;
+- scoring and clear transitions;
+- topology resolution;
+- trace/replay normalization helpers;
+- existing explosion stepping.
+
+Potential new establishment candidates include:
+
+- Hold state covering held-piece identity, once-per-active-piece availability,
+  queue interaction, canonical respawn, snapshot/hash identity, replay and
+  trace compatibility, old-session handling, restart semantics, and failed-
+  spawn policy;
+- Godot 4D view-basis state;
+- Explorer complete camera/basis controls;
+- challenge content schema;
+- deterministic challenge predicates;
+- future physics beyond the inherited explosion model.
+
+The Stage 54D-3 implementation slice adds a Hold `AE-####` row only after its
+normative contract, code owner, compatibility rules, conformance evidence,
+safe-failure policy, and authority-map update can be recorded honestly.
+
+Do not transfer or establish the full gameplay loop, full topology system,
+Explorer, or challenge campaign as one undifferentiated subsystem.
+
+## 7. Forbidden claims
+
+Do not:
+
+- claim authority from parity evidence alone;
+- claim universal Python authority over a new capability;
+- create a Python mirror solely to satisfy an obsolete oracle rule;
+- label runtime implementation ownership as semantic authority without the
+  appropriate record;
+- establish new native authority without a normative contract and tests;
+- let Godot presentation silently redefine inherited gameplay or topology
+  semantics;
+- leave the authority map inconsistent with a terminal record.

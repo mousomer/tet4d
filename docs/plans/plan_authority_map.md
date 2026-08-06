@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file for planning-document ownership and precedence
 Supersedes: ad hoc ownership notes spread across active planning docs
-Last updated: 2026-05-31
+Last updated: 2026-08-03
 
 ## Purpose
 
@@ -19,6 +19,7 @@ planning redirection notes.
 | --- | --- |
 | Planning-layer taxonomy, file roles, retirement rules | `README.md` |
 | Planning-document ownership and precedence | `plan_authority_map.md` |
+| Professional Godot product priorities, programme sequencing, and phase gates | `professional_godot_game_programme.md` |
 | Repo-wide structural cleanup sequencing | `cleanup_master_plan.md` |
 | Live 3D and future Live 4D gameboard visual language | `gameboard_visual_language_design.md` |
 | Stage 22f manual Live 3D acceptance run record | `godot_live_3d_manual_acceptance.md` |
@@ -50,6 +51,8 @@ lower-precedence file in the same batch.
 A filename should match the authority scope of the document.
 
 - General planning infrastructure gets general names.
+- The professional Godot programme owns product order and gates, not durable
+  per-feature behaviour or implementation history.
 - Topology-playground-specific authority/spec/debt files keep topology-
   playground-specific names.
 - A topology-playground file must not become the general routing document for
@@ -58,6 +61,7 @@ A filename should match the authority scope of the document.
 ## Non-goals
 
 This file does not define:
+- professional programme stage details,
 - gameboard visual-language details,
 - topology-playground architecture,
 - topology-playground shell behavior,

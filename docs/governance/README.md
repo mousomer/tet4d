@@ -1,15 +1,17 @@
 # Governance Router
 
-tet4d is Python-centered. Godot/C++ migration governance is an overlay, not a
-replacement for Python/repository governance. The machine-readable authority is
-`config/project/policy_pack.json`; this file routes readers to human policy and
-evidence.
+tet4d is a Python-origin project with Godot as the product-shell direction and
+native C++ as the long-term deterministic core direction. Authority is
+subsystem-specific.
+
+The machine-readable authority is `config/project/policy_pack.json`; this file
+routes readers to human policy and evidence.
 
 ## Three-layer active model
 
 1. **Stable project constitution:** `AGENTS.md` states durable authorities,
    semantic boundaries, safety, verification, sanitation, and
-   authority-transfer rules.
+   transfer/establishment rules.
 2. **Task contract:** `docs/governance/task_contract.md` constrains one
    objective, authority, allowed/forbidden scope, acceptance, verification,
    documentation, and deferrals. `docs/WORKFLOW_CODEX.md` routes stable change
@@ -27,6 +29,7 @@ unrelated work.
 
 | Concern | Read |
 | --- | --- |
+| Professional product programme | `docs/plans/professional_godot_game_programme.md` |
 | Contributor workflow | `docs/WORKFLOW_CODEX.md`, `docs/governance/codex_policy.md` |
 | Reusable programming rules | `docs/governance/workspace_bundle/programming_policy.md` |
 | Reusable drift protection | `docs/governance/workspace_bundle/drift_protection_policy.md` |
@@ -34,7 +37,7 @@ unrelated work.
 | Godot/C++ boundary | `docs/governance/godot_cpp_policy.md`, `docs/architecture/authority_map.md` |
 | Native safety/tooling | `docs/governance/cpp_safety_policy.md`, `docs/governance/native_tooling_ci_policy.md` |
 | Testing/parity | `docs/governance/testing_policy.md`, `docs/architecture/parity_protocol.md` |
-| Authority transfer | `docs/architecture/authority_transfer_protocol.md`, `tools/governance/validate_authority_transfer.py` |
+| Authority transfer/establishment | `docs/architecture/authority_transfer_protocol.md`, `tools/governance/validate_authority_transfer.py` |
 | Config/constants | `docs/governance/config_policy.md`, `tools/governance/validate_config_authority.py` |
 | Secrets/security | `docs/governance/secrets_policy.md`, `config/project/policy/manifests/secret_scan.json` |
 | GitHub publication identity | `config/project/policy_pack.json`, `AGENTS.md`, `docs/WORKFLOW_CODEX.md` |
@@ -51,20 +54,26 @@ does not define tet4d-specific authority.
 
 | Work type | Additional context |
 | --- | --- |
-| Python gameplay/topology/trace | architecture contract, relevant RDS, current Python implementation/tests |
-| Godot UI/product shell | `godot/AGENTS.md`, Godot/C++ policy, relevant product/presentation authority |
-| Native C++/GDExtension | `native/AGENTS.md`, authority map, applicable parity/transfer protocol, native safety/tooling policy |
-| Parity implementation | parity protocol, selected subsystem doc, harness, fixtures, tests |
+| Product planning/phase sequencing | professional Godot programme, relevant RDS, authority map |
+| Inherited Python gameplay/topology/trace | architecture contract, relevant RDS, current Python implementation/tests, authority map |
+| Godot UI/product shell/new presentation | `godot/AGENTS.md`, Godot/C++ policy, relevant product/presentation authority |
+| Native inherited port | `native/AGENTS.md`, authority map, parity and transfer protocol, native safety/tooling policy |
+| Native new deterministic subsystem | `native/AGENTS.md`, normative contract, establishment protocol, native safety/tooling policy |
+| Parity implementation | parity protocol, selected inherited subsystem doc, harness, fixtures, tests |
 | Parity evidence review | promotion gates, applicable evidence package, comparison outputs |
-| Authority transfer | transfer protocol, fallback/evidence, authority-map update |
-| Topology migration | current topology authority, topology plan, Python oracle/runtime, tests |
+| Authority transfer | transfer protocol, reference evidence, fallback, authority-map update |
+| Authority establishment | normative contract, named owners, conformance evidence, compatibility rules, authority-map update |
+| Topology migration | current topology authority, canonical contracts, inherited Python-reference runtime, native transport/query surfaces, tests |
 | Governance/validation | policy pack, affected validators/generators/tests |
-| Mixed migration | union of the smallest relevant routes above |
+| Mixed integration | union of the smallest relevant routes above |
 
-Python remains the semantic oracle. Godot owns product-shell presentation.
-Native implementations remain provisional unless a completed transfer record
-and authority-map update say otherwise. Parity and promotion-gate evidence do
-not transfer authority.
+Python remains reference authority for inherited, untransferred behaviour.
+Godot owns product-shell and presentation semantics. New deterministic behaviour
+without a predecessor may establish native authority directly. Versioned data
+may own challenge/campaign content.
+
+Parity and implementation success do not transfer inherited authority.
+New behaviour must not be mirrored in Python solely to manufacture an oracle.
 
 ## Historical parity and migration evidence index
 
@@ -108,8 +117,12 @@ Governance entrypoints include `tools/governance/validate_governance.py`,
 When documents conflict:
 
 1. safety/security wins over convenience;
-2. current Python semantics win over migration convenience;
-3. the authority map decides migration ownership;
-4. folder-local `AGENTS.md` may tighten but not weaken root constraints;
-5. migration governance may clarify but not silently supersede Python
-   governance.
+2. the owning RDS or normative contract decides intended product behaviour;
+3. inherited reference behaviour wins over migration convenience until a
+   completed transfer;
+4. the authority map decides current subsystem ownership;
+5. a completed establishment record decides ownership for genuinely new
+   behaviour;
+6. folder-local `AGENTS.md` may tighten but not weaken root constraints;
+7. migration governance may clarify but not silently supersede product or
+   architecture authority.

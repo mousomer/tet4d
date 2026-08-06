@@ -47,6 +47,7 @@ or debt ledgers.
 
 - `docs/plans/README.md`
 - `docs/plans/plan_authority_map.md`
+- `docs/plans/professional_godot_game_programme.md`
 - `docs/plans/cleanup_master_plan.md`
 - domain-specific active plan files under `docs/plans/`
 - recent planning-adjacent audits under `docs/plans/audits/`
@@ -127,6 +128,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | --- | --- |
 | Documentation-layer routing and file-role boundaries | `docs/DOCUMENTATION_MAP.md` |
 | Planning-layer routing and planning-doc ownership | `docs/plans/README.md`, `docs/plans/plan_authority_map.md` |
+| Professional Godot product priorities, phase sequencing, and completion gates | `docs/plans/professional_godot_game_programme.md` |
 | Codebase dependency rules and package ownership law | `docs/ARCHITECTURE_CONTRACT.md` |
 | Canonical package layout, entrypoints, and generated ownership inventory | `docs/PROJECT_STRUCTURE.md` |
 | Current topology-playground architecture and invariants | `docs/plans/topology_playground_current_authority.md` |
@@ -137,6 +139,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Strict native/Godot topology profile and resolver-query transport | `docs/architecture/native_topology_transport.md` |
 | Strict internal Python topology constructor and source-adapter boundary | `docs/architecture/python_topology_domain_model.md` |
 | Explorer topology persistence versions, strict loading, and legacy recovery | `docs/architecture/topology_persistence_recovery.md` |
+| Subsystem authority, inherited reference ownership, and new authority establishment | `docs/architecture/authority_map.md`, `docs/architecture/authority_transfer_protocol.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
 | Current Python semantic-boundary, coercion, retirement, and complexity audit | `docs/plans/audits/python_boundary_audit_2026-08-02.md` |
@@ -144,7 +147,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Current Godot product-shell visual system | `docs/design/godot_visual_system.md` |
 | Live 3D and future Live 4D gameboard visual language | `docs/plans/gameboard_visual_language_design.md` |
 | Parity implementation and evidence process | `docs/architecture/parity_protocol.md`, `docs/governance/README.md` |
-| Authority transfer | `docs/architecture/authority_transfer_protocol.md`, `docs/architecture/authority_map.md` |
+| Authority transfer and new-authority establishment | `docs/architecture/authority_transfer_protocol.md`, `docs/architecture/authority_map.md` |
 | Completed parity/migration evidence | historical evidence index above and `docs/history/*` |
 | Stage 45A Python 2D/ND duplication audit and first safe slice | `docs/architecture/python_2d_nd_dedup_audit.md` |
 | Stage 28 Godot shell layout stabilization | `docs/architecture/godot_shell_layout_stabilization.md` |
@@ -194,6 +197,11 @@ Own current active planning authority/spec/debt.
 They do not replace durable RDS behavior contracts outside active in-flight
 migration exceptions.
 
+### `docs/plans/professional_godot_game_programme.md`
+Owns programme order, phase gates, and cross-phase product priorities.
+It does not own detailed feature behaviour, implementation history, or current
+batch status.
+
 ### `docs/rds/*`
 Own durable product requirements and behavior contracts.
 They must not accumulate active batch logs, migration diaries, or completed-pass
@@ -205,15 +213,19 @@ It is not the historical ledger.
 
 ### `docs/BACKLOG.md`
 Owns open work and current change footprint.
-It is not the product contract.
+It is not the product contract or complete roadmap.
 
 ## Reader shortcuts
 
 - If you need the docs entrypoint only: use `docs/README.md`.
 - If you need routing or precedence: use `docs/DOCUMENTATION_MAP.md`.
-
+- If you need the active professional Godot product programme and phase order:
+  use `docs/plans/professional_godot_game_programme.md`.
 - If you need the current repo architecture: start with
   `docs/ARCHITECTURE_CONTRACT.md`.
+- If you need current subsystem authority, inherited Python-reference limits,
+  or new-authority establishment: use `docs/architecture/authority_map.md` and
+  `docs/architecture/authority_transfer_protocol.md`.
 - If you need the current topology-playground direction: start with
   `docs/plans/topology_playground_current_authority.md`.
 - If you need the current topology-playground shell behavior: use

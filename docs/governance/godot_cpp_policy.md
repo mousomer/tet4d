@@ -1,27 +1,118 @@
-# Godot/C++ Migration Policy
+# Godot/C++ Product and Migration Policy
 
 This policy extends the reusable workspace governance in
 `docs/governance/workspace_bundle/`.
 
 ## Scope
 
-This policy applies only to Godot, GDExtension, native C++, and migration work.
-It does not replace existing Python-centered governance.
+This policy applies to Godot, GDExtension, native C++, migration work, and new
+Godot/native product capabilities.
+
+It does not replace the owning RDS, architecture contract, subsystem authority
+map, or professional product programme.
 
 ## Architecture
 
-Use the actual repository structure, but preserve these boundaries:
+Use the actual repository structure and preserve these boundaries:
 
-- Python implementation: current semantic oracle.
-- Godot: product shell, UI, rendering, input, animation, diagnostics.
-- C++/GDExtension/native code: provisional port of selected deterministic logic
-  until parity is documented.
-- Adapter layer: thin conversion boundary between Godot and deterministic
+- inherited Python behaviour: reference authority until transferred or retired;
+- Godot: product shell, UI, rendering, input routing, animation, diagnostics,
+  accessibility, camera, view-basis presentation, Explorer interaction, and
+  challenge/campaign presentation;
+- C++/GDExtension/native code: provisional, parity-backed implementation of
+  inherited deterministic logic and direct authority candidate for genuinely
+  new deterministic subsystems;
+- versioned declarative data: authority for challenge/campaign content and
+  other named product data;
+- adapter layer: thin conversion boundary between Godot and deterministic
   logic.
 
-Godot, GDScript, C++, and GDExtension cannot gain semantic authority by
-implementation alone. Parity evidence and promotion claims route through
-`docs/architecture/authority_transfer_protocol.md`.
+Implementation alone does not transfer inherited authority or establish new
+authority. Both operations route through
+`docs/architecture/authority_transfer_protocol.md`. The authority map records
+current ownership in `docs/architecture/authority_map.md`. Inherited parity
+work follows `docs/architecture/parity_protocol.md`.
+
+## Inherited versus new behaviour
+
+Before implementation, classify the feature.
+
+### Inherited behaviour
+
+Inherited behaviour already has an accepted reference implementation or
+contract.
+
+Requirements:
+
+- identify the current reference owner;
+- identify exact behaviour and exclusions;
+- reuse or port without silent semantic change;
+- provide parity or equivalent conformance evidence;
+- complete authority transfer before claiming a new owner.
+
+### New behaviour
+
+New behaviour has no accepted predecessor.
+
+Requirements:
+
+- define it through an owning RDS, specification, or schema;
+- name deterministic, presentation, and data owners separately;
+- provide conformance tests and compatibility rules;
+- establish authority explicitly;
+- do not implement it in Python solely to manufacture an oracle.
+
+## Godot product and presentation authority
+
+Godot may own new product and presentation semantics, including:
+
+- menus, setup interaction, and scenes;
+- camera orientation and exact camera turns;
+- 4D view/presentation basis and slice layout;
+- basis-transition animation;
+- HUD, guidance, hints, and accessibility presentation;
+- Explorer interaction;
+- challenge selection, progress, and campaign navigation;
+- visual diagnostics.
+
+Godot must not duplicate inherited deterministic semantics such as:
+
+- topology rules;
+- legal movement;
+- collision;
+- gravity/drop behaviour;
+- piece rotation legality;
+- scoring;
+- trace semantics;
+- replay correctness.
+
+## Godot semantic boundary
+
+Godot may display, animate, route, request, and compose authoritative state.
+It must not independently compute inherited topology, movement, collision,
+gravity, piece-rotation legality, scoring, trace correctness, or replay
+correctness.
+
+Deterministic rules that must be shared across Play, Explore, and Challenge
+belong in the named core authority rather than GDScript UI glue.
+
+The semantic-boundary validator scans Godot scripts for suspicious local rule
+computation. Legitimate presentation/routing cases may use a narrow suppression
+with a reason.
+
+## Native deterministic authority
+
+Native C++ may implement:
+
+- inherited deterministic behaviour under parity and transfer rules;
+- genuinely new deterministic behaviour under establishment rules.
+
+Potential new native subsystems include Hold transitions, challenge predicates,
+shared geometric comparison, and future simulation behaviour beyond the
+inherited Python model.
+
+Keep deterministic core logic independent from Godot where practical and keep
+the Godot-facing adapter thin.
 
 ## Memory safety
 
@@ -31,53 +122,22 @@ Native C++ and GDExtension memory-safety rules live in
 Native tooling CI-readiness rules live in
 `docs/governance/native_tooling_ci_policy.md`.
 
-Migration work must keep deterministic rule logic independent from Godot where
-practical and keep Godot-facing adapter code thin.
+## No rewriting inherited functions by convenience
 
-## No semantic duplication
+Migration must reuse, map, or wrap inherited semantics. Do not rewrite Python
+functions as a side effect of porting.
 
-GDScript must not implement or duplicate:
+Before porting inherited behaviour, identify:
 
-- topology rules
-- legal movement
-- collision
-- gravity/drop behavior
-- rotation
-- scoring
-- trace semantics
-- replay correctness
+- current authority;
+- file/function/class or normative contract;
+- observable behaviour;
+- tests/traces;
+- reuse/mapping plan;
+- transfer boundary.
 
-GDScript may:
-
-- present state
-- animate state
-- route input
-- call adapter/core APIs
-- display diagnostics
-- manage menus and scenes
-
-## Godot semantic boundary
-
-Godot may display, animate, route, and request semantic state. Godot must not
-independently compute topology, movement, collision, gravity, rotation, scoring,
-trace correctness, or replay correctness.
-
-The semantic-boundary validator scans Godot scripts for suspicious local rule
-computation. Legitimate display/routing cases may use a narrow suppression with
-a reason.
-
-## No rewriting existing functions
-
-Migration must reuse, map, or wrap existing Python semantics. Do not rewrite
-Python functions as a side effect of porting.
-
-Before adding C++/Godot logic, identify the existing Python authority:
-
-- file
-- function/class
-- behavior
-- tests/traces
-- reuse/mapping plan
+For new behaviour, identify the normative contract and intended owner rather
+than searching for a nonexistent Python implementation.
 
 ## No reinventing utilities
 
@@ -88,12 +148,12 @@ If adding a reusable helper, update the utility index.
 
 Prefer existing libraries over new custom implementations for:
 
-- test frameworks
-- serialization/parsing
-- schema validation
-- secret scanning
-- formatting/static analysis
-- platform abstraction
+- test frameworks;
+- serialization/parsing;
+- schema validation;
+- secret scanning;
+- formatting/static analysis;
+- platform abstraction.
 
 Do not add a large dependency for trivial code.
 
@@ -102,32 +162,33 @@ Do not add a large dependency for trivial code.
 For C++ public APIs and stored Godot pointers, follow
 `docs/governance/cpp_safety_policy.md`.
 
-Comments in migration code must explain:
+Comments in migration or new core code must explain:
 
-- intent
-- invariants
-- ownership
-- coordinate conventions
-- topology conventions
-- boundary conversions
-- non-obvious algorithm choices
+- intent;
+- invariants;
+- authority boundary;
+- ownership;
+- coordinate conventions;
+- topology conventions;
+- boundary conversions;
+- non-obvious algorithm choices.
 
 Do not add comments that merely restate obvious code.
 
 ## Size limits
 
-Use these budgets for native/Godot migration code and new governance examples:
+Use these budgets for native/Godot work and new governance examples:
 
-- function target: 40 logical LOC
-- function hard limit: 80 logical LOC
-- `.cpp` target: 300 LOC
-- `.cpp` hard limit: 500 LOC
-- header target: 180 LOC
-- header hard limit: 350 LOC
-- folder target: 12 owned files
-- folder hard limit: 20 owned files
-- nesting target: 3 levels
-- parameter target: 5 parameters
+- function target: 40 logical LOC;
+- function hard limit: 80 logical LOC;
+- `.cpp` target: 300 LOC;
+- `.cpp` hard limit: 500 LOC;
+- header target: 180 LOC;
+- header hard limit: 350 LOC;
+- folder target: 12 owned files;
+- folder hard limit: 20 owned files;
+- nesting target: 3 levels;
+- parameter target: 5 parameters.
 
 If a limit is exceeded, document why and add a follow-up note.
 
@@ -138,22 +199,26 @@ No nontrivial magic numbers in source. Follow
 `docs/policies/POLICY_NO_MAGIC_NUMBERS.md`.
 
 Godot presentation-only constants may live in Godot theme/config resources.
-Gameplay and topology constants must not be redefined independently in Godot.
+Inherited gameplay/topology constants must not be redefined independently in
+Godot. New deterministic constants belong to their normative contract and
+core/data owner.
 
-## Tests
+## Tests and authority evidence
 
-Every ported behavior needs parity evidence against Python.
+Every inherited port needs parity or equivalent conformance evidence against
+its accepted reference under `docs/architecture/parity_protocol.md`.
 
-Semantic parity requirements for native subsystems are defined in
-`docs/architecture/parity_protocol.md`. C++/GDExtension code remains
-provisional until parity evidence exists and the authority map records the
-transfer through `docs/architecture/authority_transfer_protocol.md`.
+Every new deterministic subsystem needs conformance evidence against its
+normative contract.
 
-Use the repo testing policy. Expected categories:
+Expected categories include:
 
-- Python tests for current oracle behavior
-- golden traces or equivalent parity fixtures
-- C++ unit tests for native deterministic logic
-- Godot integration tests for adapter/UI behavior
+- Python tests/traces for inherited reference behaviour;
+- golden traces or equivalent parity fixtures for inherited ports;
+- C++ unit tests for native deterministic logic;
+- schema/validator tests for declarative data;
+- Godot integration tests for adapter and product behaviour;
+- manual visual acceptance where presentation quality is part of the contract.
 
-A visual Godot demo is not a substitute for semantic parity.
+A visual Godot demo is not a substitute for inherited semantic parity or new
+deterministic conformance evidence.

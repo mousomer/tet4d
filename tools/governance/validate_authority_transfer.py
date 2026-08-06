@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeVar
 
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL_REL = "docs/architecture/authority_transfer_protocol.md"
@@ -12,6 +13,7 @@ REQUIRED_FILES = (
     PROTOCOL_REL,
     "docs/architecture/authority_map.md",
     "docs/architecture/parity_protocol.md",
+    "docs/plans/professional_godot_game_programme.md",
     "docs/governance/godot_cpp_policy.md",
     "docs/governance/cpp_safety_policy.md",
     "docs/governance/testing_policy.md",
@@ -24,13 +26,14 @@ REQUIRED_FILES = (
     "tools/governance/validate_drift_protection.py",
 )
 
-REQUIRED_COLUMNS = (
+TRANSFER_COLUMNS = (
     "id",
+    "operation",
     "subsystem",
     "current_authority",
     "candidate_authority",
     "scope",
-    "python_oracle",
+    "reference_implementation",
     "golden_fixtures",
     "comparison_command",
     "known_exclusions",
@@ -41,8 +44,38 @@ REQUIRED_COLUMNS = (
     "notes",
 )
 
-ALLOWED_STATUSES = {"candidate", "blocked", "ready", "transferred", "retired"}
+ESTABLISHMENT_COLUMNS = (
+    "id",
+    "operation",
+    "subsystem",
+    "normative_contract",
+    "implementation_authority",
+    "data_authority",
+    "scope",
+    "semantic_boundaries",
+    "conformance_evidence",
+    "compatibility_rules",
+    "known_exclusions",
+    "safe_failure_or_fallback",
+    "authority_map_update",
+    "validation",
+    "status",
+    "notes",
+)
+
+# Compatibility alias for older callers and tests that imported REQUIRED_COLUMNS.
+REQUIRED_COLUMNS = TRANSFER_COLUMNS
+
+TRANSFER_STATUSES = {"candidate", "blocked", "ready", "transferred", "retired"}
+ESTABLISHMENT_STATUSES = {
+    "proposed",
+    "blocked",
+    "ready",
+    "established",
+    "retired",
+}
 TRANSFER_ID_RE = re.compile(r"^AT-\d{4}$")
+ESTABLISHMENT_ID_RE = re.compile(r"^AE-\d{4}$")
 PLACEHOLDERS = {"tbd", "todo", "none", "n/a", "unknown", "not yet", "deferred"}
 
 DANGEROUS_AUTHORITY_PHRASES = (
@@ -71,6 +104,10 @@ AUTHORITY_EXEMPTION_PHRASES = (
     "may not claim",
     "must not claim",
     "no policy claims",
+    "authority establishment",
+    "established record",
+    "when established",
+    "without a predecessor",
 )
 
 SCAN_RELS = (
@@ -83,11 +120,12 @@ SCAN_RELS = (
 @dataclass(frozen=True)
 class TransferRecord:
     id: str
+    operation: str
     subsystem: str
     current_authority: str
     candidate_authority: str
     scope: str
-    python_oracle: str
+    reference_implementation: str
     golden_fixtures: str
     comparison_command: str
     known_exclusions: str
@@ -99,9 +137,32 @@ class TransferRecord:
 
 
 @dataclass(frozen=True)
+class EstablishmentRecord:
+    id: str
+    operation: str
+    subsystem: str
+    normative_contract: str
+    implementation_authority: str
+    data_authority: str
+    scope: str
+    semantic_boundaries: str
+    conformance_evidence: str
+    compatibility_rules: str
+    known_exclusions: str
+    safe_failure_or_fallback: str
+    authority_map_update: str
+    validation: str
+    status: str
+    notes: str
+
+
+@dataclass(frozen=True)
 class CheckResult:
     name: str
     failures: list[str]
+
+
+RecordT = TypeVar("RecordT", TransferRecord, EstablishmentRecord)
 
 
 def read_text(path: Path) -> str:
@@ -154,31 +215,59 @@ def _table_lines_after_heading(text: str, heading: str) -> list[str]:
     return table
 
 
-def parse_transfer_records(text: str) -> tuple[list[TransferRecord], list[str]]:
-    table = _table_lines_after_heading(text, "## Transfer records")
+def _parse_records(
+    text: str,
+    *,
+    heading: str,
+    columns: tuple[str, ...],
+    record_type: type[RecordT],
+    label: str,
+) -> tuple[list[RecordT], list[str]]:
+    table = _table_lines_after_heading(text, heading)
     if len(table) < 2:
-        return [], ["authority transfer protocol must contain a transfer records table"]
+        return [], [f"authority protocol must contain an active {label} records table"]
 
     header = _split_table_row(table[0])
-    if header != list(REQUIRED_COLUMNS):
+    if header != list(columns):
         return [], [
-            "transfer records table has invalid columns; expected "
-            + ", ".join(REQUIRED_COLUMNS)
+            f"{label} records table has invalid columns; expected " + ", ".join(columns)
         ]
 
     rows = [_split_table_row(line) for line in table[1:]]
     if rows and _is_separator_row(rows[0]):
         rows = rows[1:]
 
-    records: list[TransferRecord] = []
+    records: list[RecordT] = []
     issues: list[str] = []
     for index, cells in enumerate(rows, start=1):
-        if len(cells) != len(REQUIRED_COLUMNS):
-            issues.append(f"transfer row {index} has {len(cells)} cells")
+        if len(cells) != len(columns):
+            issues.append(f"{label} row {index} has {len(cells)} cells")
             continue
-        raw = dict(zip(REQUIRED_COLUMNS, cells, strict=True))
-        records.append(TransferRecord(**raw))
+        raw = dict(zip(columns, cells, strict=True))
+        records.append(record_type(**raw))
     return records, issues
+
+
+def parse_transfer_records(text: str) -> tuple[list[TransferRecord], list[str]]:
+    return _parse_records(
+        text,
+        heading="### Active transfer records",
+        columns=TRANSFER_COLUMNS,
+        record_type=TransferRecord,
+        label="transfer",
+    )
+
+
+def parse_establishment_records(
+    text: str,
+) -> tuple[list[EstablishmentRecord], list[str]]:
+    return _parse_records(
+        text,
+        heading="### Active establishment records",
+        columns=ESTABLISHMENT_COLUMNS,
+        record_type=EstablishmentRecord,
+        label="establishment",
+    )
 
 
 def _is_placeholder(value: str) -> bool:
@@ -186,10 +275,15 @@ def _is_placeholder(value: str) -> bool:
     return not normalized or normalized in PLACEHOLDERS
 
 
-def _validate_required_record_fields(record: TransferRecord) -> list[str]:
+def _validate_required_fields(
+    record: TransferRecord | EstablishmentRecord,
+    columns: tuple[str, ...],
+    *,
+    optional: frozenset[str] = frozenset({"notes"}),
+) -> list[str]:
     failures: list[str] = []
-    for field in REQUIRED_COLUMNS:
-        if field == "notes":
+    for field in columns:
+        if field in optional:
             continue
         if _is_placeholder(getattr(record, field)):
             failures.append(
@@ -198,52 +292,104 @@ def _validate_required_record_fields(record: TransferRecord) -> list[str]:
     return failures
 
 
-def _validate_record_identity(
-    record: TransferRecord, seen: set[str]
-) -> tuple[list[str], set[str]]:
+def _validate_identity(
+    record_id: str,
+    *,
+    pattern: re.Pattern[str],
+    kind: str,
+    seen: set[str],
+) -> list[str]:
     failures: list[str] = []
-    if not TRANSFER_ID_RE.match(record.id):
-        failures.append(f"{record.id or '<missing>'} has invalid transfer id")
-    if record.id in seen:
-        failures.append(f"{record.id} is duplicated")
-    seen.add(record.id)
-    return failures, seen
-
-
-def _validate_record_status(record: TransferRecord) -> list[str]:
-    failures: list[str] = []
-    if record.status not in ALLOWED_STATUSES:
-        failures.append(f"{record.id} has invalid status `{record.status}`")
-    if record.status != "retired" and "python" not in record.current_authority.lower():
-        failures.append(f"{record.id} current_authority must include Python")
+    if not pattern.match(record_id):
+        failures.append(f"{record_id or '<missing>'} has invalid {kind} id")
+    if record_id in seen:
+        failures.append(f"{record_id} is duplicated")
+    seen.add(record_id)
     return failures
 
 
-def _validate_transferred_record_evidence(record: TransferRecord) -> list[str]:
-    if record.status != "transferred":
-        return []
-
-    failures: list[str] = []
-    for field in (
-        "golden_fixtures",
-        "comparison_command",
-        "authority_map_update",
-        "validation",
-    ):
-        if _is_placeholder(getattr(record, field)):
-            failures.append(f"{record.id} transferred row has placeholder `{field}`")
-    return failures
-
-
-def _validate_record_fields(records: list[TransferRecord]) -> list[str]:
+def _validate_transfer_records(records: list[TransferRecord]) -> list[str]:
     failures: list[str] = []
     seen: set[str] = set()
     for record in records:
-        failures.extend(_validate_required_record_fields(record))
-        record_failures, seen = _validate_record_identity(record, seen)
-        failures.extend(record_failures)
-        failures.extend(_validate_record_status(record))
-        failures.extend(_validate_transferred_record_evidence(record))
+        failures.extend(_validate_required_fields(record, TRANSFER_COLUMNS))
+        failures.extend(
+            _validate_identity(
+                record.id,
+                pattern=TRANSFER_ID_RE,
+                kind="transfer",
+                seen=seen,
+            )
+        )
+        if record.operation != "transfer":
+            failures.append(f"{record.id} operation must be `transfer`")
+        if record.status not in TRANSFER_STATUSES:
+            failures.append(
+                f"{record.id} has invalid transfer status `{record.status}`"
+            )
+        if record.current_authority == record.candidate_authority:
+            failures.append(
+                f"{record.id} current and candidate authority are identical"
+            )
+        if record.status == "transferred":
+            for field in (
+                "reference_implementation",
+                "golden_fixtures",
+                "comparison_command",
+                "fallback_path",
+                "authority_map_update",
+                "validation",
+            ):
+                if _is_placeholder(getattr(record, field)):
+                    failures.append(
+                        f"{record.id} transferred row has placeholder `{field}`"
+                    )
+    return failures
+
+
+def _validate_establishment_records(
+    records: list[EstablishmentRecord],
+) -> list[str]:
+    failures: list[str] = []
+    seen: set[str] = set()
+    optional = frozenset({"notes"})
+    for record in records:
+        failures.extend(
+            _validate_required_fields(
+                record,
+                ESTABLISHMENT_COLUMNS,
+                optional=optional,
+            )
+        )
+        failures.extend(
+            _validate_identity(
+                record.id,
+                pattern=ESTABLISHMENT_ID_RE,
+                kind="establishment",
+                seen=seen,
+            )
+        )
+        if record.operation != "establishment":
+            failures.append(f"{record.id} operation must be `establishment`")
+        if record.status not in ESTABLISHMENT_STATUSES:
+            failures.append(
+                f"{record.id} has invalid establishment status `{record.status}`"
+            )
+        if record.status == "established":
+            for field in (
+                "normative_contract",
+                "implementation_authority",
+                "semantic_boundaries",
+                "conformance_evidence",
+                "compatibility_rules",
+                "safe_failure_or_fallback",
+                "authority_map_update",
+                "validation",
+            ):
+                if _is_placeholder(getattr(record, field)):
+                    failures.append(
+                        f"{record.id} established row has placeholder `{field}`"
+                    )
     return failures
 
 
@@ -265,6 +411,10 @@ def check_router_links(root: Path = ROOT) -> CheckResult:
         ),
         "docs/architecture/authority_map.md": (PROTOCOL_REL,),
         "docs/architecture/parity_protocol.md": (PROTOCOL_REL,),
+        "docs/plans/professional_godot_game_programme.md": (
+            "docs/architecture/authority_map.md",
+            PROTOCOL_REL,
+        ),
     }
     for rel, links in required_links.items():
         text = _read_rel(root, rel, failures)
@@ -285,31 +435,45 @@ def check_protocol_contents(root: Path = ROOT) -> CheckResult:
     failures: list[str] = []
     text = _read_rel(root, PROTOCOL_REL, failures)
     concepts = {
-        "Python current semantic oracle": ("semantic oracle", "python"),
-        "Godot shell/presentation": ("product shell", "presentation", "ui"),
-        "C++/GDExtension provisional": ("c++", "gdextension", "provisional"),
-        "parity necessary but not sufficient": ("necessary but not sufficient",),
+        "subsystem-specific authority": ("subsystem", "authority"),
+        "inherited transfer": ("authority transfer", "inherited behaviour"),
+        "new authority establishment": ("authority establishment", "new behaviour"),
+        "Godot presentation": ("presentation", "godot"),
+        "native deterministic authority": ("native", "deterministic"),
+        "parity not sufficient": ("not sufficient", "parity"),
         "only transferred changes authority": ("only `transferred` changes authority",),
-        "transfer records table": ("## transfer records",),
-        "required fields": ("required transfer record fields",),
-        "allowed statuses": ("allowed statuses",),
-        "fallback path": ("fallback",),
+        "only established creates authority": ("only `established` creates authority",),
+        "active transfer records": ("### active transfer records",),
+        "active establishment records": ("### active establishment records",),
+        "transfer required fields": ("required transfer record fields",),
+        "establishment required fields": ("required establishment record fields",),
+        "fallback": ("fallback",),
         "authority map update": ("authority_map_update", "authority map"),
         "comparison command": ("comparison_command", "comparison command"),
         "known exclusions": ("known_exclusions", "known exclusions"),
+        "normative contract": ("normative_contract", "normative contract"),
+        "conformance evidence": (
+            "conformance_evidence",
+            "conformance evidence",
+        ),
     }
     for concept in contains_concepts(text, concepts):
         failures.append(f"{PROTOCOL_REL} is missing concept `{concept}`")
     return CheckResult("protocol contents", failures)
 
 
-def check_transfer_table(root: Path = ROOT) -> tuple[CheckResult, list[TransferRecord]]:
+def check_record_tables(
+    root: Path = ROOT,
+) -> tuple[CheckResult, list[TransferRecord], list[EstablishmentRecord]]:
     failures: list[str] = []
     text = _read_rel(root, PROTOCOL_REL, failures)
-    records, parse_failures = parse_transfer_records(text)
-    failures.extend(parse_failures)
-    failures.extend(_validate_record_fields(records))
-    return CheckResult("transfer table", failures), records
+    transfers, transfer_parse_failures = parse_transfer_records(text)
+    establishments, establishment_parse_failures = parse_establishment_records(text)
+    failures.extend(transfer_parse_failures)
+    failures.extend(establishment_parse_failures)
+    failures.extend(_validate_transfer_records(transfers))
+    failures.extend(_validate_establishment_records(establishments))
+    return CheckResult("authority record tables", failures), transfers, establishments
 
 
 def _scan_markdown_rels(root: Path) -> list[str]:
@@ -351,20 +515,25 @@ def check_dangerous_authority_claims(root: Path = ROOT) -> CheckResult:
 
 
 def check_authority_map_consistency(
-    records: list[TransferRecord], root: Path = ROOT
+    transfers: list[TransferRecord],
+    establishments: list[EstablishmentRecord],
+    root: Path = ROOT,
 ) -> CheckResult:
     failures: list[str] = []
     authority_map = _read_rel(root, "docs/architecture/authority_map.md", failures)
     lower = authority_map.lower()
-    transferred = [record for record in records if record.status == "transferred"]
-    if not transferred:
-        if "python" not in lower or "semantic oracle" not in lower:
-            failures.append(
-                "authority_map.md must continue saying Python is current semantic oracle"
-            )
-        return CheckResult("authority-map consistency", failures)
 
-    for record in transferred:
+    if not (
+        "python" in lower and "reference authority" in lower and "inherited" in lower
+    ):
+        failures.append(
+            "authority_map.md must describe Python as reference authority for "
+            "inherited behaviour"
+        )
+
+    for record in transfers:
+        if record.status != "transferred":
+            continue
         mentions_id = record.id.lower() in lower
         mentions_transfer = (
             record.subsystem.lower() in lower
@@ -374,6 +543,20 @@ def check_authority_map_consistency(
             failures.append(
                 f"authority_map.md does not mention transferred record {record.id}"
             )
+
+    for record in establishments:
+        if record.status != "established":
+            continue
+        mentions_id = record.id.lower() in lower
+        mentions_establishment = (
+            record.subsystem.lower() in lower
+            and record.implementation_authority.lower() in lower
+        )
+        if not (mentions_id or mentions_establishment):
+            failures.append(
+                f"authority_map.md does not mention established record {record.id}"
+            )
+
     return CheckResult("authority-map consistency", failures)
 
 
@@ -387,7 +570,8 @@ def check_parity_protocol_consistency(root: Path = ROOT) -> CheckResult:
         )
     if "necessary but not sufficient" not in lower or "transfer record" not in lower:
         failures.append(
-            "docs/architecture/parity_protocol.md must say parity does not itself transfer authority"
+            "docs/architecture/parity_protocol.md must say parity does not itself "
+            "transfer authority"
         )
     return CheckResult("parity-protocol consistency", failures)
 
@@ -398,26 +582,37 @@ def check_policy_consistency(root: Path = ROOT) -> CheckResult:
     godot_lower = godot.lower()
     if not (
         "gdscript" in godot_lower
-        and "semantic" in godot_lower
+        and "inherited" in godot_lower
         and ("must not" in godot_lower or "does not" in godot_lower)
     ):
         failures.append(
-            "docs/governance/godot_cpp_policy.md must say GDScript/Godot does not own semantic truth"
+            "docs/governance/godot_cpp_policy.md must prevent GDScript from "
+            "duplicating inherited semantic truth"
         )
     if "authority_transfer_protocol.md" not in godot:
         failures.append(
-            "docs/governance/godot_cpp_policy.md must refer to authority transfer protocol"
+            "docs/governance/godot_cpp_policy.md must refer to authority protocol"
+        )
+    if "establish" not in godot_lower:
+        failures.append(
+            "docs/governance/godot_cpp_policy.md must route new authority establishment"
         )
 
     cpp = _read_rel(root, "docs/governance/cpp_safety_policy.md", failures)
     cpp_lower = cpp.lower()
     if not ("provisional" in cpp_lower or "parity" in cpp_lower):
         failures.append(
-            "docs/governance/cpp_safety_policy.md must say C++ authority is provisional or parity-gated"
+            "docs/governance/cpp_safety_policy.md must keep inherited C++ "
+            "authority provisional or parity-gated"
         )
     if "authority_transfer_protocol.md" not in cpp:
         failures.append(
-            "docs/governance/cpp_safety_policy.md must refer to authority transfer protocol"
+            "docs/governance/cpp_safety_policy.md must refer to authority protocol"
+        )
+    if "establish" not in cpp_lower:
+        failures.append(
+            "docs/governance/cpp_safety_policy.md must define new authority "
+            "establishment"
         )
     return CheckResult("Godot/C++ policy consistency", failures)
 
@@ -427,10 +622,13 @@ def check_review_checklist(root: Path = ROOT) -> CheckResult:
     text = _read_rel(root, "docs/governance/review_checklist.md", failures)
     concepts = {
         "authority transfer": ("authority transfer",),
+        "authority establishment": ("authority establishment",),
         "parity evidence": ("parity evidence", "golden traces"),
         "authority map": ("authority map",),
-        "fallback path": ("fallback path",),
+        "fallback path": ("fallback path", "safe-failure"),
         "known exclusions": ("known exclusions",),
+        "normative contract": ("normative contract",),
+        "conformance evidence": ("conformance",),
     }
     for concept in contains_concepts(text, concepts):
         failures.append(
@@ -439,35 +637,42 @@ def check_review_checklist(root: Path = ROOT) -> CheckResult:
     return CheckResult("review checklist", failures)
 
 
-def validate(root: Path = ROOT) -> tuple[list[CheckResult], list[TransferRecord]]:
-    transfer_table_result, records = check_transfer_table(root)
+def validate(
+    root: Path = ROOT,
+) -> tuple[list[CheckResult], list[TransferRecord], list[EstablishmentRecord]]:
+    table_result, transfers, establishments = check_record_tables(root)
     results = [
         check_required_files(root),
         check_router_links(root),
         check_protocol_contents(root),
-        transfer_table_result,
+        table_result,
         check_dangerous_authority_claims(root),
-        check_authority_map_consistency(records, root),
+        check_authority_map_consistency(transfers, establishments, root),
         check_parity_protocol_consistency(root),
         check_policy_consistency(root),
         check_review_checklist(root),
     ]
-    return results, records
+    return results, transfers, establishments
 
 
 def main() -> int:
-    results, records = validate(ROOT)
+    results, transfers, establishments = validate(ROOT)
     failures = [failure for result in results for failure in result.failures]
     if failures:
-        print("Authority transfer validation failed:")
+        print("Authority validation failed:")
         for failure in failures:
             print(f"- {failure}")
         return 1
 
-    transferred = [record for record in records if record.status == "transferred"]
-    print("Authority transfer validation passed.")
-    print(f"Transfer records: {len(records)}")
+    transferred = [record for record in transfers if record.status == "transferred"]
+    established = [
+        record for record in establishments if record.status == "established"
+    ]
+    print("Authority transfer and establishment validation passed.")
+    print(f"Transfer records: {len(transfers)}")
     print(f"Transferred subsystems: {len(transferred)}")
+    print(f"Establishment records: {len(establishments)}")
+    print(f"Established subsystems: {len(established)}")
     print("Checks:")
     for result in results:
         print(f"- {result.name}: pass")
