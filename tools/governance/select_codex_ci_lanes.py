@@ -288,6 +288,48 @@ def select_lanes(
     )
 
 
+def github_outputs(
+    selection: LaneSelection,
+    *,
+    config: LaneConfig,
+) -> dict[str, str]:
+    selected = set(selection.selected_lanes)
+    outputs = {
+        f"lane_{lane}": "true" if lane in selected else "false"
+        for lane in config.lane_order
+    }
+    outputs.update(
+        {
+            "repository_changed": (
+                "true" if selection.repository_changed else "false"
+            ),
+            "selected_lanes": json.dumps(
+                list(selection.selected_lanes), separators=(",", ":")
+            ),
+            "manual_requirements": json.dumps(
+                list(selection.manual_requirements), separators=(",", ":")
+            ),
+            "requires_full_repository_gate": (
+                "true"
+                if selection.requires_full_repository_gate
+                else "false"
+            ),
+        }
+    )
+    return outputs
+
+
+def write_github_outputs(
+    path: Path,
+    selection: LaneSelection,
+    *,
+    config: LaneConfig,
+) -> None:
+    with path.open("a", encoding="utf-8") as output_file:
+        for key, value in github_outputs(selection, config=config).items():
+            output_file.write(f"{key}={value}\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Map Codex verification requirements to stable CI lanes."
@@ -299,11 +341,18 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_LANE_CONFIG_PATH,
         help="CI lane mapping configuration",
     )
+    parser.add_argument(
+        "--github-output",
+        type=Path,
+        help="append deterministic lane outputs to a GitHub Actions output file",
+    )
     args = parser.parse_args(argv)
     try:
         config = load_lane_config(_load_json_object(args.config, label="lane config"))
         resolution = _load_json_object(args.resolution, label="resolver output")
         selection = select_lanes(resolution, config=config)
+        if args.github_output is not None:
+            write_github_outputs(args.github_output, selection, config=config)
     except (OSError, LaneSelectionError) as exc:
         print(f"CI lane selection failed: {exc}", file=sys.stderr)
         return 2
