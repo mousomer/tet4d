@@ -320,7 +320,7 @@ Revisit when:
 The machine-readable authority pointers, task taxonomy, workflow modifiers,
 and composable verification-requirement schema are implemented in Slice A.
 
-Slice B is implemented: the policy-backed resolver consumes the routing model,
+Slice B is now implemented: the policy-backed resolver consumes the routing model,
 enforces read-only and repository-change invariants, composes requirements by
 union, emits scope matrices, and renders stable JSON or Markdown reports.
 
