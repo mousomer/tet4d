@@ -32,11 +32,6 @@ jobs:
       - name: Refactor routing validator and policy tokens
         run: python tools/automation/refactor_codex_routing_validator.py
 
-      - name: Regenerate policy-backed documentation
-        run: |
-          python tools/governance/generate_maintenance_docs.py
-          python tools/governance/generate_configuration_reference.py
-
       - name: Format and lint changed Python
         run: |
           python -m ruff format \
@@ -46,11 +41,16 @@ jobs:
             tools/governance/validate_project_contracts.py \
             tests/unit/governance/test_governance_validate_project_contracts.py
 
+      - name: Regenerate policy-backed documentation
+        run: |
+          python tools/governance/generate_configuration_reference.py
+          python tools/governance/generate_maintenance_docs.py
+
       - name: Run focused governance verification
         run: |
           python tools/governance/validate_project_contracts.py
-          python tools/governance/generate_maintenance_docs.py --check
           python tools/governance/generate_configuration_reference.py --check
+          python tools/governance/generate_maintenance_docs.py --check
           python -m pytest -q \
             tests/unit/governance/test_governance_validate_project_contracts.py
           git diff --check
