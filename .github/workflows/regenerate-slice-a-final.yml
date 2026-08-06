@@ -1,0 +1,57 @@
+name: Regenerate Slice A final maintenance snapshot
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows/regenerate-slice-a-final.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: codex/codex-routing-model
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Remove temporary workflow before measuring final tree
+        run: rm .github/workflows/regenerate-slice-a-final.yml
+
+      - name: Regenerate final policy-backed documentation
+        run: |
+          python tools/governance/generate_configuration_reference.py
+          python tools/governance/generate_maintenance_docs.py
+
+      - name: Verify final generated tree
+        run: |
+          python tools/governance/validate_project_contracts.py
+          python tools/governance/generate_configuration_reference.py --check
+          python tools/governance/generate_maintenance_docs.py --check
+          python -m ruff check \
+            tools/governance/validate_project_contracts.py \
+            tests/unit/governance/test_governance_validate_project_contracts.py
+          python -m pytest -q \
+            tests/unit/governance/test_governance_validate_project_contracts.py
+          git diff --check
+
+      - name: Commit final generated snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Regenerate Codex routing maintenance snapshot"
+          git push origin HEAD:codex/codex-routing-model
