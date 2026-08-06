@@ -318,7 +318,7 @@ Revisit when:
 ## Codex Routing Follow-Ups
 
 The machine-readable authority pointers, task taxonomy, workflow modifiers,
-and composable verification-requirement schema are implemented in Slice A.
+and composable verification-requirement schema are implemented by Slice A.
 
 Accepted follow-ups:
 
