@@ -29,6 +29,8 @@ class PathClassificationConfig:
     requirement_order: tuple[str, ...]
     automated_requirements: tuple[str, ...]
     unknown_path_policy: str
+    cross_layer_requirements: tuple[str, ...]
+    cross_layer_verification_requirement: str
     rules: tuple[PathRule, ...]
 
 
@@ -46,6 +48,7 @@ class PathClassification:
     classified_paths: tuple[ClassifiedPath, ...]
     unmatched_paths: tuple[str, ...]
     verification_requirements: tuple[str, ...]
+    cross_layer_detected: bool
     requires_full_repository_gate: bool
     full_gate_reasons: tuple[str, ...]
 
@@ -67,6 +70,7 @@ class PathClassification:
             ],
             "unmatched_paths": list(self.unmatched_paths),
             "verification_requirements": list(self.verification_requirements),
+            "cross_layer_detected": self.cross_layer_detected,
             "requires_full_repository_gate": self.requires_full_repository_gate,
             "full_gate_reasons": list(self.full_gate_reasons),
         }
@@ -184,6 +188,37 @@ def _parse_rule(
     )
 
 
+def _cross_layer_contract(
+    block: dict[str, object],
+    *,
+    requirement_order: tuple[str, ...],
+    automated_requirements: tuple[str, ...],
+) -> tuple[tuple[str, ...], str]:
+    layer_requirements = _string_list(
+        block.get("cross_layer_requirements"),
+        field="path_classification.cross_layer_requirements",
+    )
+    if len(layer_requirements) < 2:
+        raise PathClassificationError(
+            "path_classification.cross_layer_requirements must contain at least two ids"
+        )
+    unknown = sorted(set(layer_requirements) - set(automated_requirements))
+    if unknown:
+        raise PathClassificationError(
+            "path_classification.cross_layer_requirements contains unknown or manual "
+            "requirements: " + ", ".join(unknown)
+        )
+    integration_requirement = _non_empty_string(
+        block.get("cross_layer_verification_requirement"),
+        field="path_classification.cross_layer_verification_requirement",
+    )
+    if integration_requirement not in requirement_order:
+        raise PathClassificationError(
+            "path_classification.cross_layer_verification_requirement is unknown"
+        )
+    return layer_requirements, integration_requirement
+
+
 def load_path_classification_config(
     payload: dict[str, object],
 ) -> PathClassificationConfig:
@@ -204,6 +239,11 @@ def load_path_classification_config(
         raise PathClassificationError(
             "path_classification.unknown_path_policy must be 'full_repository_gate'"
         )
+    cross_layer_requirements, integration_requirement = _cross_layer_contract(
+        block,
+        requirement_order=requirement_order,
+        automated_requirements=automated_requirements,
+    )
     raw_rules = block.get("rules")
     if not isinstance(raw_rules, list) or not raw_rules:
         raise PathClassificationError(
@@ -226,6 +266,8 @@ def load_path_classification_config(
         requirement_order=requirement_order,
         automated_requirements=automated_requirements,
         unknown_path_policy=unknown_path_policy,
+        cross_layer_requirements=cross_layer_requirements,
+        cross_layer_verification_requirement=integration_requirement,
         rules=rules,
     )
 
@@ -254,6 +296,16 @@ def _matching_rules(path: str, rules: tuple[PathRule, ...]) -> tuple[PathRule, .
         for rule in rules
         if any(fnmatch.fnmatchcase(path, pattern) for pattern in rule.patterns)
     )
+
+
+def _apply_cross_layer_requirement(
+    requirements: set[str], config: PathClassificationConfig
+) -> bool:
+    selected_layers = requirements.intersection(config.cross_layer_requirements)
+    cross_layer_detected = len(selected_layers) >= 2
+    if cross_layer_detected:
+        requirements.add(config.cross_layer_verification_requirement)
+    return cross_layer_detected
 
 
 def classify_paths(
@@ -301,6 +353,7 @@ def classify_paths(
     requires_full_gate = bool(unmatched or full_gate_reasons)
     if unmatched:
         requirements.update(config.automated_requirements)
+    cross_layer_detected = _apply_cross_layer_requirement(requirements, config)
     if normalised and not requirements:
         raise PathClassificationError(
             "repository-changing paths cannot resolve to an empty requirement set"
@@ -312,6 +365,7 @@ def classify_paths(
         verification_requirements=_ordered_subset(
             requirements, config.requirement_order
         ),
+        cross_layer_detected=cross_layer_detected,
         requires_full_repository_gate=requires_full_gate,
         full_gate_reasons=tuple(dict.fromkeys(full_gate_reasons)),
     )
