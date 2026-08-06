@@ -3,7 +3,7 @@ name: Regenerate CURRENT_STATE once
 on:
   pull_request:
     types:
-      - edited
+      - ready_for_review
 
 permissions:
   contents: write
