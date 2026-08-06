@@ -320,11 +320,12 @@ Revisit when:
 The machine-readable authority pointers, task taxonomy, workflow modifiers,
 and composable verification-requirement schema are implemented in Slice A.
 
-Accepted follow-ups:
+Slice B is implemented: the policy-backed resolver consumes the routing model,
+enforces read-only and repository-change invariants, composes requirements by
+union, emits scope matrices, and renders stable JSON or Markdown reports.
 
-- **Slice B — verification resolver and completion reporting:** consume the
-  routing model, enforce read-only exclusivity and non-empty verification for
-  repository changes, compose requirements by union, and produce stable reports.
+Accepted follow-up:
+
 - **Slice C — path-sensitive CI lanes:** map resolved requirements to explicit
   baseline, governance, Python, Godot, native, deterministic/parity, packaging,
   platform, and release lanes with conservative full-gate fallback.
