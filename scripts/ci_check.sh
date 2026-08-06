@@ -3,6 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Temporary diagnostic: expose the exact generated restart handoff.
 python - <<'PY'
 from pathlib import Path
 
