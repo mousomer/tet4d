@@ -2229,7 +2229,9 @@ def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
     assert "config/project/policy_pack.json" in must_contain
     assert "Authority files must be tracked in Git" in must_contain
     assert "## Common preconditions" in must_contain
-    assert "## Task profiles" in must_contain
+    assert (
+        "## Machine-readable task routing and composable verification" in must_contain
+    )
     assert "Ordinary isolated fixes" in must_contain
     assert "Read the full policy pack only for governance" in must_contain
     assert "## Boundary model" in must_contain

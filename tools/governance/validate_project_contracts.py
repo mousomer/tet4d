@@ -4148,12 +4148,9 @@ def _validate_optional_codex_path_list(
     return values
 
 
-def _validate_codex_routing_model() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    payload = _load_policy_pack_payload(issues)
-    if payload is None:
-        return issues
-
+def _validate_codex_authority_model(
+    payload: dict[str, object], issues: list[ValidationIssue]
+) -> tuple[dict[str, object] | None, set[str] | None]:
     authority_model = payload.get("authority_model")
     if not isinstance(authority_model, dict):
         issues.append(
@@ -4161,7 +4158,7 @@ def _validate_codex_routing_model() -> list[ValidationIssue]:
                 "schema", f"{POLICY_PACK_REL}.authority_model must be an object"
             )
         )
-        return issues
+        return None, None
 
     tracked_paths = _git_tracked_paths(issues)
     for key, expected_path in CODEX_AUTHORITY_POINTERS.items():
@@ -4177,22 +4174,18 @@ def _validate_codex_routing_model() -> list[ValidationIssue]:
             tracked_paths=tracked_paths,
             issues=issues,
         )
+    return authority_model, tracked_paths
 
-    routing = payload.get("codex_routing")
-    if not isinstance(routing, dict):
-        issues.append(
-            ValidationIssue(
-                "schema", f"{POLICY_PACK_REL}.codex_routing must be an object"
-            )
-        )
-        return issues
+
+def _validate_codex_routing_header(
+    routing: dict[str, object], issues: list[ValidationIssue]
+) -> None:
     if routing.get("schema_version") != 1:
         issues.append(
             ValidationIssue(
                 "schema", f"{POLICY_PACK_REL}.codex_routing.schema_version must equal 1"
             )
         )
-
     _append_exact_identifier_set_issues(
         field=f"{POLICY_PACK_REL}.codex_routing.workflow_modifiers",
         raw=routing.get("workflow_modifiers"),
@@ -4206,6 +4199,123 @@ def _validate_codex_routing_model() -> list[ValidationIssue]:
         issues=issues,
     )
 
+
+def _validate_codex_task_authority_keys(
+    *,
+    task: dict[str, object],
+    field: str,
+    known_authority_keys: set[str],
+    issues: list[ValidationIssue],
+) -> None:
+    if "authority_keys" not in task:
+        return
+    authority_field = f"{field}.authority_keys"
+    values = _codex_string_list(task.get("authority_keys"))
+    if values is None or not values:
+        issues.append(
+            ValidationIssue(
+                "schema", f"{authority_field} must be a non-empty list[str]"
+            )
+        )
+        return
+    if len(values) != len(set(values)):
+        issues.append(
+            ValidationIssue("schema", f"{authority_field} must not contain duplicates")
+        )
+    for authority_key in values:
+        if authority_key not in known_authority_keys:
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{authority_field} references unknown authority key: {authority_key}",
+                )
+            )
+
+
+def _validate_codex_task_dispatch_paths(
+    *,
+    task: dict[str, object],
+    field: str,
+    tracked_paths: set[str] | None,
+    issues: list[ValidationIssue],
+) -> None:
+    if "dispatch_paths" not in task:
+        return
+    _validate_optional_codex_path_list(
+        field=f"{field}.dispatch_paths",
+        raw=task.get("dispatch_paths"),
+        tracked_paths=tracked_paths,
+        issues=issues,
+    )
+
+
+def _validate_codex_task_typical_requirements(
+    *,
+    task: dict[str, object],
+    field: str,
+    issues: list[ValidationIssue],
+) -> None:
+    typical_field = f"{field}.typical_verification_requirements"
+    values = _codex_string_list(task.get("typical_verification_requirements"))
+    if values is None or not values:
+        issues.append(
+            ValidationIssue("schema", f"{typical_field} must be a non-empty list[str]")
+        )
+        return
+    if len(values) != len(set(values)):
+        issues.append(
+            ValidationIssue("schema", f"{typical_field} must not contain duplicates")
+        )
+    for requirement in values:
+        if requirement not in SUPPORTED_CODEX_VERIFICATION_REQUIREMENTS:
+            issues.append(
+                ValidationIssue(
+                    "schema",
+                    f"{typical_field} references unknown verification requirement: {requirement}",
+                )
+            )
+
+
+def _validate_codex_task_entry(
+    *,
+    task_id: str,
+    task: object,
+    known_authority_keys: set[str],
+    tracked_paths: set[str] | None,
+    issues: list[ValidationIssue],
+) -> None:
+    field = f"{POLICY_PACK_REL}.codex_routing.task_types.{task_id}"
+    if not isinstance(task, dict):
+        issues.append(ValidationIssue("schema", f"{field} must be an object"))
+        return
+    if "authority_keys" not in task and "dispatch_paths" not in task:
+        issues.append(
+            ValidationIssue(
+                "schema", f"{field} must define authority_keys or dispatch_paths"
+            )
+        )
+    _validate_codex_task_authority_keys(
+        task=task,
+        field=field,
+        known_authority_keys=known_authority_keys,
+        issues=issues,
+    )
+    _validate_codex_task_dispatch_paths(
+        task=task,
+        field=field,
+        tracked_paths=tracked_paths,
+        issues=issues,
+    )
+    _validate_codex_task_typical_requirements(task=task, field=field, issues=issues)
+
+
+def _validate_codex_task_types(
+    *,
+    routing: dict[str, object],
+    authority_model: dict[str, object],
+    tracked_paths: set[str] | None,
+    issues: list[ValidationIssue],
+) -> None:
     task_types = routing.get("task_types")
     if not isinstance(task_types, dict):
         issues.append(
@@ -4214,96 +4324,57 @@ def _validate_codex_routing_model() -> list[ValidationIssue]:
                 f"{POLICY_PACK_REL}.codex_routing.task_types must be an object",
             )
         )
-        return issues
+        return
     actual_task_types = set(task_types)
-    missing_task_types = sorted(SUPPORTED_CODEX_TASK_TYPES - actual_task_types)
-    unknown_task_types = sorted(actual_task_types - SUPPORTED_CODEX_TASK_TYPES)
-    if missing_task_types:
+    missing = sorted(SUPPORTED_CODEX_TASK_TYPES - actual_task_types)
+    unknown = sorted(actual_task_types - SUPPORTED_CODEX_TASK_TYPES)
+    if missing:
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.codex_routing.task_types is missing identifiers: {', '.join(missing_task_types)}",
+                f"{POLICY_PACK_REL}.codex_routing.task_types is missing identifiers: {', '.join(missing)}",
             )
         )
-    if unknown_task_types:
+    if unknown:
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.codex_routing.task_types contains unknown identifiers: {', '.join(unknown_task_types)}",
+                f"{POLICY_PACK_REL}.codex_routing.task_types contains unknown identifiers: {', '.join(unknown)}",
             )
         )
-
-    authority_keys = set(authority_model)
     for task_id in sorted(actual_task_types & SUPPORTED_CODEX_TASK_TYPES):
-        field = f"{POLICY_PACK_REL}.codex_routing.task_types.{task_id}"
-        task = task_types[task_id]
-        if not isinstance(task, dict):
-            issues.append(ValidationIssue("schema", f"{field} must be an object"))
-            continue
-        has_authority_keys = "authority_keys" in task
-        has_dispatch_paths = "dispatch_paths" in task
-        if not has_authority_keys and not has_dispatch_paths:
-            issues.append(
-                ValidationIssue(
-                    "schema",
-                    f"{field} must define authority_keys or dispatch_paths",
-                )
-            )
-        if has_authority_keys:
-            raw_authority_keys = _codex_string_list(task.get("authority_keys"))
-            authority_field = f"{field}.authority_keys"
-            if raw_authority_keys is None or not raw_authority_keys:
-                issues.append(
-                    ValidationIssue(
-                        "schema", f"{authority_field} must be a non-empty list[str]"
-                    )
-                )
-            else:
-                if len(raw_authority_keys) != len(set(raw_authority_keys)):
-                    issues.append(
-                        ValidationIssue(
-                            "schema", f"{authority_field} must not contain duplicates"
-                        )
-                    )
-                for authority_key in raw_authority_keys:
-                    if authority_key not in authority_keys:
-                        issues.append(
-                            ValidationIssue(
-                                "schema",
-                                f"{authority_field} references unknown authority key: {authority_key}",
-                            )
-                        )
-        if has_dispatch_paths:
-            _validate_optional_codex_path_list(
-                field=f"{field}.dispatch_paths",
-                raw=task.get("dispatch_paths"),
-                tracked_paths=tracked_paths,
-                issues=issues,
-            )
+        _validate_codex_task_entry(
+            task_id=task_id,
+            task=task_types[task_id],
+            known_authority_keys=set(authority_model),
+            tracked_paths=tracked_paths,
+            issues=issues,
+        )
 
-        typical_field = f"{field}.typical_verification_requirements"
-        typical = _codex_string_list(task.get("typical_verification_requirements"))
-        if typical is None or not typical:
-            issues.append(
-                ValidationIssue(
-                    "schema", f"{typical_field} must be a non-empty list[str]"
-                )
+
+def _validate_codex_routing_model() -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    payload = _load_policy_pack_payload(issues)
+    if payload is None:
+        return issues
+    authority_model, tracked_paths = _validate_codex_authority_model(payload, issues)
+    if authority_model is None:
+        return issues
+    routing = payload.get("codex_routing")
+    if not isinstance(routing, dict):
+        issues.append(
+            ValidationIssue(
+                "schema", f"{POLICY_PACK_REL}.codex_routing must be an object"
             )
-            continue
-        if len(typical) != len(set(typical)):
-            issues.append(
-                ValidationIssue(
-                    "schema", f"{typical_field} must not contain duplicates"
-                )
-            )
-        for requirement in typical:
-            if requirement not in SUPPORTED_CODEX_VERIFICATION_REQUIREMENTS:
-                issues.append(
-                    ValidationIssue(
-                        "schema",
-                        f"{typical_field} references unknown verification requirement: {requirement}",
-                    )
-                )
+        )
+        return issues
+    _validate_codex_routing_header(routing, issues)
+    _validate_codex_task_types(
+        routing=routing,
+        authority_model=authority_model,
+        tracked_paths=tracked_paths,
+        issues=issues,
+    )
     return issues
 
 
