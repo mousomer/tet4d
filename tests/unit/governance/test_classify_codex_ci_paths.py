@@ -32,6 +32,13 @@ def _payload() -> dict[str, object]:
         "path_classification": {
             "schema_version": 1,
             "unknown_path_policy": "full_repository_gate",
+            "cross_layer_requirements": [
+                "python",
+                "godot",
+                "native",
+                "packaging",
+            ],
+            "cross_layer_verification_requirement": "integration",
             "rules": [
                 {
                     "id": "documentation",
@@ -81,6 +88,7 @@ def test_documentation_only_change_stays_focused() -> None:
     )
 
     assert result.verification_requirements == ("documentation",)
+    assert result.cross_layer_detected is False
     assert result.requires_full_repository_gate is False
     assert result.unmatched_paths == ()
 
@@ -93,16 +101,28 @@ def test_multiple_matching_rules_compose_by_union() -> None:
 
     assert result.verification_requirements == ("python", "deterministic")
     assert result.classified_paths[0].matched_rules == ("python", "deterministic")
+    assert result.cross_layer_detected is False
 
 
-def test_cross_subsystem_paths_compose_requirements() -> None:
+def test_cross_subsystem_paths_add_integration() -> None:
     result = classify_paths(
         ["godot/Tet4D.Godot/main.gd", "native/tet4d_core/src/query.cpp"],
         config=load_path_classification_config(_payload()),
     )
 
-    assert result.verification_requirements == ("godot", "native")
+    assert result.verification_requirements == ("godot", "native", "integration")
+    assert result.cross_layer_detected is True
     assert result.requires_full_repository_gate is False
+
+
+def test_python_and_native_paths_add_integration() -> None:
+    result = classify_paths(
+        ["src/tet4d/engine/core/query.py", "native/tet4d_core/src/query.cpp"],
+        config=load_path_classification_config(_payload()),
+    )
+
+    assert result.verification_requirements == ("python", "native", "integration")
+    assert result.cross_layer_detected is True
 
 
 def test_full_gate_rule_preserves_local_requirements() -> None:
@@ -126,6 +146,7 @@ def test_unmatched_path_forces_full_gate_and_all_automated_requirements() -> Non
     assert result.unmatched_paths == ("assets/new_binary.dat",)
     assert "human_visual" not in result.verification_requirements
     assert set(result.verification_requirements) == set(config.automated_requirements)
+    assert result.cross_layer_detected is True
 
 
 def test_no_changed_paths_produces_review_only_shape() -> None:
@@ -133,6 +154,7 @@ def test_no_changed_paths_produces_review_only_shape() -> None:
 
     assert result.changed_paths == ()
     assert result.verification_requirements == ()
+    assert result.cross_layer_detected is False
     assert result.requires_full_repository_gate is False
 
 
@@ -208,4 +230,34 @@ def test_absolute_rule_pattern_is_rejected() -> None:
     rule["patterns"] = ["/tmp/**"]
 
     with pytest.raises(PathClassificationError, match="repository-relative"):
+        load_path_classification_config(payload)
+
+
+def test_cross_layer_contract_requires_two_requirements() -> None:
+    payload = copy.deepcopy(_payload())
+    block = payload["path_classification"]
+    assert isinstance(block, dict)
+    block["cross_layer_requirements"] = ["python"]
+
+    with pytest.raises(PathClassificationError, match="at least two"):
+        load_path_classification_config(payload)
+
+
+def test_cross_layer_contract_rejects_manual_requirement() -> None:
+    payload = copy.deepcopy(_payload())
+    block = payload["path_classification"]
+    assert isinstance(block, dict)
+    block["cross_layer_requirements"] = ["python", "human_visual"]
+
+    with pytest.raises(PathClassificationError, match="unknown or manual"):
+        load_path_classification_config(payload)
+
+
+def test_cross_layer_verification_requirement_must_be_known() -> None:
+    payload = copy.deepcopy(_payload())
+    block = payload["path_classification"]
+    assert isinstance(block, dict)
+    block["cross_layer_verification_requirement"] = "unknown"
+
+    with pytest.raises(PathClassificationError, match="is unknown"):
         load_path_classification_config(payload)
