@@ -1,105 +1,59 @@
 # tet4d Dispatch
 
-tet4d is a Python-origin game and engine with Godot as the product-shell
-direction. Semantic authority is subsystem-specific.
+tet4d is a Python-origin game and engine with Godot as the product shell and
+subsystem-specific semantic authority.
 
-Python remains the semantic oracle for inherited, untransferred gameplay,
-topology, trace, replay, configuration, and related behaviour only until the
-named subsystem is transferred or retired. New capabilities without a Python
-predecessor may establish authority directly in native C++, Godot, or versioned
-declarative data through the documented authority-establishment process.
+## Routing bootstrap
 
-## Canonical authorities
+- Machine-readable task types, workflow modifiers, verification requirements,
+  and authority pointers: `config/project/policy_pack.json` under
+  `authority_model` and `codex_routing`.
+- Detailed routing and verification algorithm: `docs/WORKFLOW_CODEX.md`.
+- Product programme: `docs/plans/professional_godot_game_programme.md`.
+- Product behaviour: relevant `docs/rds/*`.
+- Architecture and subsystem ownership: `docs/ARCHITECTURE_CONTRACT.md` and
+  `docs/architecture/authority_map.md`.
+- Authority transfer or establishment:
+  `docs/architecture/authority_transfer_protocol.md`.
+- Active work and explicit deferrals: `docs/BACKLOG.md`.
+- Restart or staged handoff only: `CURRENT_STATE.md`.
 
-- Professional product programme and phase gates:
-  `docs/plans/professional_godot_game_programme.md`
-- Governance and generated-maintenance policy:
-  `config/project/policy_pack.json`
-- Contributor workflow and verification: `docs/WORKFLOW_CODEX.md`
-- Product behaviour: relevant documents under `docs/rds/`
-- Architecture boundaries: `docs/ARCHITECTURE_CONTRACT.md`
-- Subsystem ownership: `docs/architecture/authority_map.md`
-- Authority transfer and establishment:
-  `docs/architecture/authority_transfer_protocol.md`
-- Documentation and historical routing: `docs/DOCUMENTATION_MAP.md`
-- Governance policy routing: `docs/governance/README.md`
-- Repository-changing task boundary: `docs/governance/task_contract.md`
-- Completion evidence format: `docs/governance/completion_report.md`
-- Restart and staged-work handoff only: `CURRENT_STATE.md`
-- Open work and deferred scope: `docs/BACKLOG.md`
+Select exactly one primary task type. Treat `review_only`, `staged_handoff`,
+`cross_layer`, and `verification_failure` as workflow modifiers, never as task
+types. Derive verification from the actual diff, claims, and authority
+boundaries; compose required evidence by union. A repository-changing task may
+not resolve to no verification. Ambiguity broadens verification.
 
-## Task routing
-
-- Narrow review: inspect the changed diff, touched tests, and the authority
-  routed by `docs/DOCUMENTATION_MAP.md`.
-- Product planning or phase sequencing: read
-  `docs/plans/professional_godot_game_programme.md` and the relevant RDS.
-- Python engine or inherited gameplay: read the architecture contract,
-  relevant RDS, authority map, touched modules, and tests.
-- Godot UI/product shell: also follow `godot/AGENTS.md` and the relevant
-  product or presentation authority.
-- Native C++/GDExtension: also follow `native/AGENTS.md`, the authority map,
-  and the applicable parity, transfer, or establishment protocol.
-- Topology explorer: read
-  `docs/plans/topology_playground_current_authority.md`, then the relevant
-  runtime, authority boundary, and tests.
-- Governance, validation, generated maintenance docs, policy-backed tooling,
-  manifest contracts, or policy interpretation: read the policy pack,
-  governance router, and affected validators or generators.
-- Packaging: read `docs/rds/RDS_PACKAGING.md`,
-  `docs/RELEASE_CHECKLIST.md`, and affected scripts/tests.
-- Staged migration, restart, architecture restructuring, or multi-batch
-  handoff: read `CURRENT_STATE.md`, `docs/BACKLOG.md`, and the routed
-  architecture authorities.
-
-Use `docs/WORKFLOW_CODEX.md` for detailed workflow and focused checks. Do not
-load `CURRENT_STATE.md` or the full policy pack for an ordinary isolated task
-unless one of the routes above requires it.
+Follow `godot/AGENTS.md` or `native/AGENTS.md` when those trees are in scope.
+Nested dispatch files may narrow this contract and may not weaken it.
 
 ## Universal invariants
 
-- Inspect current code, tests, and owning authority documents before editing;
-  search for existing implementations and policies before adding new ones.
-- Relevant RDS documents own product behaviour. The architecture contract and
-  authority map own boundaries; do not invent a competing authority.
-- For inherited behaviour, preserve the current reference authority until a
-  completed transfer record changes the named subsystem. Godot shell work and
-  parity evidence alone do not transfer authority.
-- For genuinely new behaviour, establish authority through an owning contract,
-  named implementation/data owners, conformance evidence, and authority-map
-  update. Do not create a Python mirror solely to manufacture an oracle.
-- Godot may own product and presentation semantics directly, but must not
-  silently redefine inherited gameplay, topology, scoring, replay, or trace
-  behaviour.
-- Behavioural changes require tests. Preserve security, config, testing,
-  parity, and semantic-boundary guarantees routed by the workflow and policy
-  documents.
-- Keep one semantic objective per PR. Separate unrelated formatting and
-  toolchain migrations from product behavior where practical; use a scope
-  matrix when cross-layer integration is deliberate.
-- Preserve deterministic identity, parity/conformance evidence, repository
-  sanitation, and explicit deferrals. Never weaken tests or silently continue
-  into the next task.
-- All GitHub writes for this repository, including pushes, pull requests,
-  releases, and metadata edits, must target the canonical `origin` repository
-  and authenticate as that repository's owner. Never use an unrelated personal
-  or organization account. Verify the active GitHub and transport identity
-  locally before writing; stop if it cannot be confirmed. Do not publish the
-  checked account name, local identity-file path, token details, private email,
-  or machine-specific paths in tracked files or GitHub metadata.
-- Nested `AGENTS.md` files may add narrower constraints and cannot weaken this
-  dispatch.
-- Partial satisfaction of acceptance criteria must not be reported as
-  completion.
+- Inspect current code, tests, and routed authorities before editing; reuse
+  existing implementations and policy before adding new ones.
+- Python remains the semantic oracle only for inherited, untransferred
+  behaviour. Godot or C++/GDExtension work, visual plausibility, and parity
+  evidence alone do not transfer authority.
+- New behaviour may establish authority directly only through a normative
+  contract, named owners, conformance evidence, and authority-map update.
+- Keep one semantic objective per PR. Deliberate cross-layer work requires a
+  scope matrix and provider-consumer integration evidence.
+- Behavioural changes require tests. Never weaken tests, deterministic identity,
+  replay/trace compatibility, sanitation, or explicit-deferral discipline.
+- All GitHub writes must target canonical `origin` under the repository owner;
+  do not publish credentials, private identity data, or machine-local paths.
+- Partial acceptance is not completion, and work must not silently continue
+  into another task or stage.
 
 ## Verification and completion
 
-Run focused checks while iterating, then the applicable final gate:
+Use focused checks selected by `docs/WORKFLOW_CODEX.md`; apply the full gate
+when an authority, broad shared-infrastructure change, uncertainty, reviewer, or
+release claim requires it:
 
 ```bash
 CODEX_MODE=1 ./scripts/verify.sh
 ```
 
-Report files changed, authorities reused/transferred/established, any routing
-or authority decision, checks and results, and remaining risks or unverified
-areas.
+Report task type, modifiers, affected layers, claims, authorities, required and
+omitted checks with rationale, authority effects, risks, and unverified areas.
