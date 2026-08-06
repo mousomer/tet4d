@@ -67,3 +67,5 @@ jobs:
           git add -A
           git commit -m "Add machine-readable Codex routing model"
           git push origin HEAD:codex/codex-routing-model
+
+# Trigger after workflow registration.
