@@ -1,5 +1,6 @@
 name: Regenerate CURRENT_STATE once
 
+# One registration follow-up triggers this temporary PR workflow.
 on:
   pull_request:
     paths:
