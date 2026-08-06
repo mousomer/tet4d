@@ -132,6 +132,39 @@ checks run, typical checks omitted with rationale, full-gate decision, scope
 matrix, authority effects, remaining risks, and unverified areas.
 
 
+### Machine resolver
+
+Use the policy-backed resolver to turn a task declaration into a stable
+verification decision and completion-report skeleton:
+
+```bash
+python tools/governance/resolve_codex_verification.py request.json --format json
+python tools/governance/resolve_codex_verification.py request.json --format markdown
+```
+
+The request records one primary task type, modifiers, repository-change status,
+affected layers, claims with any explicit evidence obligations, additional
+requirements, justified omissions of typical requirements, and the full-gate
+override. The resolver loads `policy_pack.json`; callers must not copy the task
+or requirement inventories into a second configuration.
+
+The resolver enforces these invariants:
+
+- `review_only` requires `repository_changed=false`, no executable evidence
+  requirements, and no full gate;
+- repository-changing work requires affected layers, at least one claim, and a
+  non-empty verification set;
+- `cross_layer` requires at least two affected layers, adds `integration`, and
+  emits a scope matrix;
+- omitted typical requirements need a non-empty rationale and may not be
+  reintroduced by the actual layers or claims;
+- deterministic, integration, platform, and release obligations remain
+  independent members of the union.
+
+Resolver output selects evidence obligations; it does not claim that checks
+have passed. Completion reports must populate checks, authority effects,
+remaining risks, and unverified areas with actual final evidence.
+
 ## Stable change classes
 
 Use capability classes for current routing. Stage numbers may identify

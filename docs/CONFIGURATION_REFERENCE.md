@@ -1987,6 +1987,7 @@ Parameters:
 - `code_rules.wheel_reuse.rules[].id`: varies (`string`); examples: `"parsing_validation_reuse"`, `"normalization_reuse"`, `"path_and_config_reuse"`
 - `code_rules.wheel_reuse.rules[].prefer_symbols[]`: array[`string`]; examples: `"tet4d.engine.runtime.settings_schema"`, `"sanitize_text_runtime"`, `"append_numeric_text"`
 - `code_rules.wheel_reuse.rules[].scope_globs[]`: array[`string`]; examples: `"src/tet4d/ui/pygame/launch/*.py"`, `"src/tet4d/ui/pygame/menu/*.py"`, `"src/tet4d/engine/tutorial/*.py"`
+- `codex_routing.resolver_path`: `"tools/governance/resolve_codex_verification.py"` (`string`)
 - `codex_routing.schema_version`: `1` (`int`)
 - `codex_routing.task_types.godot_product_shell.authority_keys[]`: array[`string`]; examples: `"product_requirements_root"`, `"subsystem_authority_map"`
 - `codex_routing.task_types.godot_product_shell.dispatch_paths[]`: array[`string`]; examples: `"godot/AGENTS.md"`
