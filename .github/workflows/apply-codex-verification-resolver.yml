@@ -56,6 +56,9 @@ jobs:
           python tools/governance/generate_configuration_reference.py
           python tools/governance/generate_maintenance_docs.py
 
+      - name: Stage final tree for tracked-path validation
+        run: git add -A
+
       - name: Run focused Slice B verification
         run: |
           python tools/governance/validate_project_contracts.py
@@ -64,12 +67,11 @@ jobs:
           python -m pytest -q \
             tests/unit/governance/test_resolve_codex_verification.py \
             tests/unit/governance/test_governance_validate_project_contracts.py
-          git diff --check
+          git diff --check --cached
 
       - name: Commit validated Slice B
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
           git commit -m "Add Codex verification resolver"
           git push origin HEAD:codex/codex-verification-resolver
