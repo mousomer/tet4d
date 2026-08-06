@@ -1,9 +1,9 @@
 name: Apply Codex routing Slice A
 
 on:
-  push:
+  pull_request:
     branches:
-      - codex/codex-routing-model
+      - master
     paths:
       - tools/automation/apply_codex_routing_slice_a.py
       - .github/workflows/apply-codex-routing-slice-a.yml
@@ -67,5 +67,3 @@ jobs:
           git add -A
           git commit -m "Add machine-readable Codex routing model"
           git push origin HEAD:codex/codex-routing-model
-
-# Trigger after workflow registration.
