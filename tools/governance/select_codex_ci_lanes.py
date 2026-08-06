@@ -300,9 +300,7 @@ def github_outputs(
     }
     outputs.update(
         {
-            "repository_changed": (
-                "true" if selection.repository_changed else "false"
-            ),
+            "repository_changed": ("true" if selection.repository_changed else "false"),
             "selected_lanes": json.dumps(
                 list(selection.selected_lanes), separators=(",", ":")
             ),
@@ -310,9 +308,7 @@ def github_outputs(
                 list(selection.manual_requirements), separators=(",", ":")
             ),
             "requires_full_repository_gate": (
-                "true"
-                if selection.requires_full_repository_gate
-                else "false"
+                "true" if selection.requires_full_repository_gate else "false"
             ),
         }
     )

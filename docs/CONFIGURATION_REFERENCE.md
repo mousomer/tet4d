@@ -1604,12 +1604,19 @@ Parameters:
 - `schema_version`: `1` (`int`)
 
 ### `config/project/codex_ci_lanes.json`
-Top-level keys: `always_run_lanes`, `full_repository_gate_lanes`, `lane_order`, `manual_requirements`, `requirement_to_lanes`, `resolution_schema_version`, `schema_version`
+Top-level keys: `always_run_lanes`, `full_repository_gate_lanes`, `lane_order`, `manual_requirements`, `path_classification`, `requirement_to_lanes`, `resolution_schema_version`, `schema_version`
 Parameters:
 - `always_run_lanes[]`: array[`string`]; examples: `"baseline"`
 - `full_repository_gate_lanes[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
 - `lane_order[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
 - `manual_requirements[]`: array[`string`]; examples: `"human_visual"`
+- `path_classification.rules[]`: array[`object`]
+- `path_classification.rules[].id`: varies (`string`); examples: `"ci_and_shared_infrastructure"`, `"codex_ci_selection_infrastructure"`, `"governance_documents"`
+- `path_classification.rules[].patterns[]`: array[`string`]; examples: `".github/workflows/**"`, `"scripts/**"`, `"pyproject.toml"`
+- `path_classification.rules[].requirements[]`: array[`string`]; examples: `"governance_structure"`, `"python"`, `"documentation"`
+- `path_classification.rules[].requires_full_repository_gate`: varies (`bool`); examples: `true`
+- `path_classification.schema_version`: `1` (`int`)
+- `path_classification.unknown_path_policy`: `"full_repository_gate"` (`string`)
 - `requirement_to_lanes.deterministic[]`: array[`string`]; examples: `"deterministic_parity"`
 - `requirement_to_lanes.documentation[]`: array[`string`]; examples: `"documentation_governance"`
 - `requirement_to_lanes.godot[]`: array[`string`]; examples: `"godot"`

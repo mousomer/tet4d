@@ -142,8 +142,7 @@ def _automated_requirements(
     unknown = sorted(manual - set(requirement_order))
     if unknown:
         raise PathClassificationError(
-            "manual_requirements references unknown requirements: "
-            + ", ".join(unknown)
+            "manual_requirements references unknown requirements: " + ", ".join(unknown)
         )
     return tuple(item for item in requirement_order if item not in manual)
 
@@ -168,14 +167,11 @@ def _parse_rule(
             raise PathClassificationError(
                 f"{field}.patterns must not contain parent traversal"
             )
-    requirements = _string_list(
-        raw.get("requirements"), field=f"{field}.requirements"
-    )
+    requirements = _string_list(raw.get("requirements"), field=f"{field}.requirements")
     unknown = sorted(set(requirements) - set(known_requirements))
     if unknown:
         raise PathClassificationError(
-            f"{field}.requirements contains unknown identifiers: "
-            + ", ".join(unknown)
+            f"{field}.requirements contains unknown identifiers: " + ", ".join(unknown)
         )
     return PathRule(
         rule_id=rule_id,
@@ -206,8 +202,7 @@ def load_path_classification_config(
     )
     if unknown_path_policy != "full_repository_gate":
         raise PathClassificationError(
-            "path_classification.unknown_path_policy must be "
-            "'full_repository_gate'"
+            "path_classification.unknown_path_policy must be 'full_repository_gate'"
         )
     raw_rules = block.get("rules")
     if not isinstance(raw_rules, list) or not raw_rules:
@@ -281,9 +276,7 @@ def classify_paths(
         path_requirements = {
             requirement for rule in matches for requirement in rule.requirements
         }
-        path_full_gate = any(
-            rule.requires_full_repository_gate for rule in matches
-        )
+        path_full_gate = any(rule.requires_full_repository_gate for rule in matches)
         requirements.update(path_requirements)
         if path_full_gate:
             full_gate_reasons.append(
