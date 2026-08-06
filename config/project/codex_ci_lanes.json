@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "resolution_schema_version": 1,
+  "lane_order": [
+    "baseline",
+    "documentation_governance",
+    "python",
+    "godot",
+    "native",
+    "deterministic_parity",
+    "integration",
+    "packaging",
+    "platform",
+    "release_acceptance"
+  ],
+  "always_run_lanes": [
+    "baseline"
+  ],
+  "requirement_to_lanes": {
+    "documentation": [
+      "documentation_governance"
+    ],
+    "governance_structure": [
+      "documentation_governance"
+    ],
+    "python": [
+      "python"
+    ],
+    "godot": [
+      "godot"
+    ],
+    "native": [
+      "native"
+    ],
+    "deterministic": [
+      "deterministic_parity"
+    ],
+    "parity_or_conformance": [
+      "deterministic_parity"
+    ],
+    "integration": [
+      "integration"
+    ],
+    "human_visual": [],
+    "packaging": [
+      "packaging"
+    ],
+    "platform": [
+      "platform"
+    ],
+    "release_acceptance": [
+      "release_acceptance"
+    ]
+  },
+  "manual_requirements": [
+    "human_visual"
+  ],
+  "full_repository_gate_lanes": [
+    "baseline",
+    "documentation_governance",
+    "python",
+    "godot",
+    "native",
+    "deterministic_parity",
+    "integration",
+    "packaging",
+    "platform",
+    "release_acceptance"
+  ]
+}
