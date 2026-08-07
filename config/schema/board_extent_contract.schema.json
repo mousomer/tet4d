@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/schema/board_extent_contract.schema.json",
+  "title": "Tet4D professional live board extent contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "contract_version",
+    "modes"
+  ],
+  "properties": {
+    "contract": {
+      "const": "tet4d.board_extent_contract"
+    },
+    "contract_version": {
+      "const": 1
+    },
+    "modes": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/mode"
+      }
+    }
+  },
+  "$defs": {
+    "mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "axis_maxima",
+        "axis_minima",
+        "axis_order",
+        "canonical_default_shape",
+        "id",
+        "native_maximum_cells",
+        "rank",
+        "supported_topology_kind"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "live_2d",
+            "live_3d",
+            "live_4d"
+          ]
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 4
+        },
+        "axis_order": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "X",
+              "Y",
+              "Z",
+              "W"
+            ]
+          }
+        },
+        "axis_minima": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "axis_maxima": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "canonical_default_shape": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "native_maximum_cells": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "supported_topology_kind": {
+          "const": "bounded"
+        }
+      }
+    }
+  }
+}

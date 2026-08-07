@@ -875,18 +875,22 @@ func _bundle_case_count() -> int:
 func _start_configured_live_game(setup: Dictionary) -> void:
 	var mode_name := str(setup.get("mode", ""))
 	var configured := false
+	var validation: Dictionary = {}
 	match mode_name:
 		MODE_LIVE_2D:
-			configured = _live_bridge.live_2d_configure(setup)
+			validation = _live_bridge.live_2d_configure_checked(setup)
+			configured = bool(validation.get("ok", false))
 			_live_2d_session_started = configured
 		MODE_LIVE_3D:
-			configured = _live_bridge.live_3d_configure(setup)
+			validation = _live_bridge.live_3d_configure_checked(setup)
+			configured = bool(validation.get("ok", false))
 			_live_3d_session_started = configured
 		MODE_LIVE_4D:
-			configured = _live_bridge.live_4d_configure(setup)
+			validation = _live_bridge.live_4d_configure_checked(setup)
+			configured = bool(validation.get("ok", false))
 			_live_4d_session_started = configured
 	if not configured:
-		push_error("Native live session rejected setup %s." % str(setup))
+		push_error("Native live session rejected setup: %s" % str(validation.get("errors", [])))
 		return
 	_active_live_setup = setup.duplicate(true)
 	_live_gravity_interval_seconds = _gravity_interval_for_setup(_active_live_setup)

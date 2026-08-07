@@ -1,0 +1,36 @@
+{
+  "contract": "tet4d.board_extent_contract",
+  "contract_version": 1,
+  "modes": [
+    {
+      "axis_maxima": [16, 30],
+      "axis_minima": [4, 6],
+      "axis_order": ["X", "Y"],
+      "canonical_default_shape": [6, 6],
+      "id": "live_2d",
+      "native_maximum_cells": 480,
+      "rank": 2,
+      "supported_topology_kind": "bounded"
+    },
+    {
+      "axis_maxima": [10, 24, 10],
+      "axis_minima": [4, 6, 2],
+      "axis_order": ["X", "Y", "Z"],
+      "canonical_default_shape": [6, 10, 6],
+      "id": "live_3d",
+      "native_maximum_cells": 2400,
+      "rank": 3,
+      "supported_topology_kind": "bounded"
+    },
+    {
+      "axis_maxima": [12, 24, 8, 12],
+      "axis_minima": [4, 6, 2, 1],
+      "axis_order": ["X", "Y", "Z", "W"],
+      "canonical_default_shape": [5, 10, 4, 4],
+      "id": "live_4d",
+      "native_maximum_cells": 27648,
+      "rank": 4,
+      "supported_topology_kind": "bounded"
+    }
+  ]
+}

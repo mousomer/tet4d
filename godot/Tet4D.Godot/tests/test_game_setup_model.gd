@@ -42,9 +42,13 @@ func run() -> Array:
 	if not model.select_speed_level(10) or model.select_speed_level(11):
 		failures.append("speed validation should enforce 1..10")
 	var canonical: Dictionary = model.canonical_session_setup()
-	for expected_key in ["schema_version", "mode", "board_preset_id", "board_shape", "piece_set_id", "random_mode", "seed", "initial_speed_level"]:
+	for expected_key in ["schema_version", "contract_version", "mode", "board_preset_id", "board_shape", "piece_set_id", "random_mode", "seed", "initial_speed_level", "topology_profile"]:
 		if not canonical.has(expected_key):
 			failures.append("canonical setup missing %s" % expected_key)
+	if canonical.get("board_shape", []) != GameSetupSpecScript.canonical_default_shape(GameSetupSpecScript.MODE_4D):
+		failures.append("canonical standard setup must use generated board-extent default")
+	if canonical.get("topology_profile", {}).get("seams", ["unexpected"]) != []:
+		failures.append("canonical setup must emit explicit bounded topology")
 	for forbidden_key in ["piece_set_index", "random_mode_index", "preset_id"]:
 		if canonical.has(forbidden_key):
 			failures.append("canonical setup leaked legacy key %s" % forbidden_key)

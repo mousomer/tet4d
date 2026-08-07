@@ -128,15 +128,18 @@ func canonical_snapshot() -> Dictionary:
 
 
 func canonical_session_setup() -> Dictionary:
+	var shape := selected_shape()
 	return {
 		"schema_version": GameSetupSpecScript.SCHEMA_VERSION,
+		"contract_version": GameSetupSpecScript.BoardExtentContractScript.CONTRACT_VERSION,
 		"mode": current_mode,
 		"board_preset_id": selected_preset_id(),
-		"board_shape": selected_shape(),
+		"board_shape": shape,
 		"piece_set_id": selected_piece_set_id(),
 		"random_mode": selected_random_mode(),
 		"seed": selected_seed(),
 		"initial_speed_level": selected_speed_level(),
+		"topology_profile": GameSetupSpecScript.bounded_topology_profile(shape),
 	}
 
 

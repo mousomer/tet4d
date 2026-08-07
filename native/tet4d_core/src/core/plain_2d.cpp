@@ -280,18 +280,7 @@ void GameState2D::spawn_piece(const PieceShape2D &shape) {
 		game_over_reason = "spawn_blocked";
 		return;
 	}
-	int min_x = shape.blocks.front().x;
-	int max_x = min_x;
-	int min_y = shape.blocks.front().y;
-	for (const Coord2D &block : shape.blocks) {
-		min_x = std::min(min_x, block.x);
-		max_x = std::max(max_x, block.x);
-		min_y = std::min(min_y, block.y);
-	}
-	const int span_x = max_x - min_x + 1;
-	const int spawn_x = (board.width() - span_x) / 2 - min_x;
-	const int spawn_y = -2 - min_y;
-	active_piece = ActivePiece2D{shape, {spawn_x, spawn_y}, 0};
+	active_piece = ActivePiece2D{shape, canonical_spawn_pose_2d(board.width(), shape), 0};
 	if (!can_exist(*active_piece)) {
 		game_over = true;
 		game_over_reason = "spawn_blocked";
@@ -322,6 +311,52 @@ void GameState2D::spawn_piece(const PieceShape2D &shape) {
 	game_over = true;
 	game_over_reason = "spawn_blocked";
 	active_piece.reset();
+}
+
+Coord2D canonical_spawn_pose_2d(int width, const PieceShape2D &shape) {
+	if (shape.blocks.empty()) {
+		return {};
+	}
+	int min_x = shape.blocks.front().x;
+	int max_x = min_x;
+	int min_y = shape.blocks.front().y;
+	for (const Coord2D &block : shape.blocks) {
+		min_x = std::min(min_x, block.x);
+		max_x = std::max(max_x, block.x);
+		min_y = std::min(min_y, block.y);
+	}
+	const int span_x = max_x - min_x + 1;
+	return {(width - span_x) / 2 - min_x, -2 - min_y};
+}
+
+bool canonical_spawn_viable_2d(int width, int height, const PieceShape2D &shape) {
+	if (width <= 0 || height <= 0 || shape.blocks.empty()) {
+		return false;
+	}
+	ActivePiece2D probe{shape, canonical_spawn_pose_2d(width, shape), 0};
+	const auto can_exist_on_empty_board = [width, height](const ActivePiece2D &piece) {
+		for (const Coord2D &cell : piece.cells()) {
+			if (cell.x < 0 || cell.x >= width || cell.y >= height) {
+				return false;
+			}
+		}
+		return true;
+	};
+	if (!can_exist_on_empty_board(probe)) {
+		return false;
+	}
+	for (int step = 0; step <= height; ++step) {
+		for (const Coord2D &cell : probe.cells()) {
+			if (cell.y >= 0) {
+				return true;
+			}
+		}
+		probe = probe.moved(0, 1);
+		if (!can_exist_on_empty_board(probe)) {
+			return false;
+		}
+	}
+	return false;
 }
 
 CommandResult2D GameStepper2D::apply(GameState2D &state, const GameCommand2D &command) {

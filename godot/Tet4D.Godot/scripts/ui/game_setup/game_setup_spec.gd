@@ -2,6 +2,9 @@ extends RefCounted
 
 class_name GameSetupSpec
 
+const BoardExtentContractScript = preload("res://scripts/generated/board_extent_contract_v1.gd")
+const TopologyContractDocumentScript = preload("res://scripts/native/topology_contract_document.gd")
+
 const MODE_2D := "live_2d"
 const MODE_3D := "live_3d"
 const MODE_4D := "live_4d"
@@ -59,14 +62,37 @@ static func modes() -> Array:
 
 
 static func presets_for_mode(mode: String) -> Array:
-	return (SPECS.get(mode, []) as Array).duplicate(true)
+	var result: Array = []
+	for candidate in SPECS.get(mode, []):
+		result.append(preset(mode, str((candidate as Dictionary).get("id", ""))))
+	return result
 
 
 static func preset(mode: String, preset_id: String) -> Dictionary:
 	for candidate in SPECS.get(mode, []):
 		if str(candidate.get("id", "")) == preset_id:
-			return (candidate as Dictionary).duplicate(true)
+			var result := (candidate as Dictionary).duplicate(true)
+			if preset_id == STANDARD_PRESET_ID:
+				result["shape"] = canonical_default_shape(mode)
+			return result
 	return {}
+
+
+static func canonical_default_shape(mode: String) -> Array:
+	return BoardExtentContractScript.canonical_default_shape(mode)
+
+
+static func board_axis_ranges(mode: String) -> Array:
+	return BoardExtentContractScript.axis_ranges(mode)
+
+
+static func bounded_topology_profile(shape: Array) -> Dictionary:
+	return {
+		"contract_version": TopologyContractDocumentScript.SCHEMA_VERSION,
+		"rank": shape.size(),
+		"dimensions": shape.duplicate(),
+		"seams": [],
+	}
 
 
 static func is_supported(mode: String, preset_id: String) -> bool:

@@ -65,6 +65,15 @@ func native_topology_transport_query(profile, query) -> Dictionary:
 	return _api().topology_transport_resolve_cell_step(profile, query)
 
 
+func get_board_extent_contract() -> Dictionary:
+	return _api().get_board_extent_contract()
+
+
+# tet4d-semantic-boundary: allow adapter-routing
+func validate_live_board_setup(setup: Dictionary) -> Dictionary:
+	return _api().validate_live_board_setup(setup)
+
+
 func run_builtin_plain_2d_smoke_case() -> bool:
 	return bool(_api().run_builtin_plain_2d_smoke_case())
 
@@ -106,7 +115,11 @@ func get_plain_nd_required_field_parity(case_id: String = "gameplay_plain_3d_sho
 
 
 func live_2d_configure(setup: Dictionary) -> bool:
-	return bool(_api().live_2d_configure(setup))
+	return bool(live_2d_configure_checked(setup).get("ok", false))
+
+
+func live_2d_configure_checked(setup: Dictionary) -> Dictionary:
+	return _api().live_2d_configure_checked(setup)
 
 
 func live_2d_reset() -> void:
@@ -134,7 +147,11 @@ func live_2d_state_hash() -> String:
 
 
 func live_3d_configure(setup: Dictionary) -> bool:
-	return bool(_api().live_3d_configure(setup))
+	return bool(live_3d_configure_checked(setup).get("ok", false))
+
+
+func live_3d_configure_checked(setup: Dictionary) -> Dictionary:
+	return _api().live_3d_configure_checked(setup)
 
 
 func live_3d_reset() -> void:
@@ -162,7 +179,11 @@ func live_3d_state_hash() -> String:
 
 
 func live_4d_configure(setup: Dictionary) -> bool:
-	return bool(_api().live_4d_configure(setup))
+	return bool(live_4d_configure_checked(setup).get("ok", false))
+
+
+func live_4d_configure_checked(setup: Dictionary) -> Dictionary:
+	return _api().live_4d_configure_checked(setup)
 
 
 func live_4d_reset() -> void:

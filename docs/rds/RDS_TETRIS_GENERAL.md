@@ -76,6 +76,23 @@ C++ ownership are established.
    camera-relative rear face, and use visual emphasis rather than semantic text
    to distinguish the selected slice.
 
+### 2.3 Professional live-board setup admissibility
+
+1. Professional Godot live play must validate setup through the versioned
+   topology-aware board-extent contract before native session construction.
+2. The bounded Phase-I request includes contract version, mode, exact integer
+   board shape, production piece-set ID, and an explicit no-seam topology
+   profile matching the board dimensions.
+3. Invalid setup returns ordered structured errors and must not mutate a live
+   session or silently substitute standard dimensions.
+4. Product extent limits, piece compatibility, canonical spawn viability, and
+   native cell budgets belong to
+   `docs/architecture/topology_aware_board_extent_contract.md`, not to general
+   Python engine constructors or Godot UI code.
+5. Existing persisted setup schema versions remain source data; their recovery
+   adapter must materialize a candidate and route it through the shared
+   validator. Arbitrary-shape persistence is deferred to Stage 54B-2.
+
 ## 3. Shared Rules and Axis Conventions
 
 1. Axis `0`=`x`(horizontal), axis`1`=`y` (gravity/downward).

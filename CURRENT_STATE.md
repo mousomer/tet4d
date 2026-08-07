@@ -37,9 +37,11 @@ history ledger. Detailed history is preserved in
   `docs/plans/professional_godot_game_programme.md`. Its first gate is a fully
   playable, professionally presented 4D Godot game that is ready for later
   topology, Explorer, challenge, and simulation extensions.
-- The next implementation slice is Stage 54B-1: a shared topology-aware
-  board-extent contract implementing the complete bounded-board rule. Stage
-  54B-2 then adds direct Godot X/Y/Z/W setup, validation, and persistence.
+- Stage 54B-1 is complete on the active branch: the shared topology-aware
+  board-extent contract establishes bounded live setup admission under
+  `AE-0054` without transferring topology or gameplay semantics. Stage 54B-2
+  is now the next implementation slice for direct Godot X/Y/Z/W setup,
+  validation presentation, and persistence.
 - Stage 54C adds game-safe 4D slice-basis quarter-turns and focused instruction.
 - Stage 54D provides the modern gameplay baseline in three ordered slices:
   next-piece preview, ghost piece, and Hold.
@@ -75,10 +77,9 @@ history ledger. Detailed history is preserved in
 - Existing inherited behaviour moves through the authority-transfer protocol.
   New behaviour without a predecessor uses authority establishment with an
   owning contract, named owner, conformance evidence, and authority-map entry.
-- Stage 54B must accept topology as an explicit board-validation input while
-  implementing the bounded rule now; Strip and Möbius constraints activate
-  later through the same interface. Do not introduce topology-blind duplicate
-  minima in Godot or adapters.
+- Stage 54B-2 must consume the established board-extent contract; Strip and
+  Möbius constraints activate later through the same interface. Do not
+  introduce topology-blind duplicate minima in Godot or adapters.
 - Stage 54D-1 presents inherited next-piece state. Stage 54D-2 presents an
   authoritative landing query. Stage 54D-3 introduces new Hold state and must
   complete an `AE-####` establishment record during implementation, not before
@@ -118,12 +119,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.06` (`low`)
+- `tech_debt.score = 5.95` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.91`
-2. `code_balance = 2.15`
+1. `delivery_size_pressure = 2.92`
+2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -174,7 +175,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54B-1 — Shared Topology-Aware Board-Extent Contract.
+1. Implement Stage 54B-2 — Godot custom board setup and persistence.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

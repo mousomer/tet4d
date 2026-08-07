@@ -1,6 +1,7 @@
 extends RefCounted
 
 const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
+const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 
 
 func run() -> Array:
@@ -64,6 +65,7 @@ func run() -> Array:
 func _setup(mode: String, preset_id: String, shape: Array, piece_set_id: String, seed: int, speed: int, random_mode: String = "fixed_seed") -> Dictionary:
 	return {
 		"schema_version": 2,
+		"contract_version": GameSetupSpecScript.BoardExtentContractScript.CONTRACT_VERSION,
 		"mode": mode,
 		"board_preset_id": preset_id,
 		"board_shape": shape,
@@ -71,6 +73,7 @@ func _setup(mode: String, preset_id: String, shape: Array, piece_set_id: String,
 		"random_mode": random_mode,
 		"seed": seed,
 		"initial_speed_level": speed,
+		"topology_profile": GameSetupSpecScript.bounded_topology_profile(shape),
 	}
 
 

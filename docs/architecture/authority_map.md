@@ -30,6 +30,7 @@ Do not implement a new capability in Python solely to manufacture an oracle.
 | Existing locked-cell explosion semantics | Python headless model and golden traces | New physics beyond this model may establish separate native authority. |
 | Accepted native bounded live-session execution | Native C++ implementation | Runtime implementation ownership is not automatically semantic authority; review and transfer bounded subsystems explicitly. |
 | Native topology profile and resolver-query transport | Native C++ | Strict transport implementation ownership only. |
+| Professional live-board setup admissibility and extent validation (`AE-0054`) | Versioned board-extent contract and native C++ | Established only for the live product envelope, bounded-profile admission, production-piece compatibility, canonical spawn viability, volume safety, and structured safe failure. It does not transfer topology seams or gameplay transitions. |
 | Godot product shell, menus, setup interaction, input routing, rendering, camera, animation, HUD, guidance, accessibility, and diagnostics | Godot/GDScript | Godot must not duplicate inherited gameplay or topology rules. |
 | New Godot 3D camera and 4D view-basis presentation state | Godot/GDScript | Includes camera orientation, visible/slice basis, slice layout, labels, and transition animation. |
 | New deterministic core behaviour without a Python predecessor | Owning native C++ subsystem named by its contract | Examples may include Hold transitions, challenge predicates, and later shared geometric evaluation. |

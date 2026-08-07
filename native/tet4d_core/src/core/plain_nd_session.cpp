@@ -1,5 +1,8 @@
 #include "tet4d_core/plain_nd_session.hpp"
 
+#include "tet4d_core/board_extent_contract.hpp"
+#include "tet4d_core/generated/board_extent_contract_v1.hpp"
+#include "tet4d_core/plain_piece_catalog.hpp"
 #include "tet4d_core/sha256.hpp"
 
 #include <sstream>
@@ -172,131 +175,6 @@ int active_w_index(const std::optional<ActivePieceND> &piece) {
 	return piece->pos.values[3];
 }
 
-PieceShapeND live_o_shape_3d() {
-	return {"O3", {{{0, 0, 0}}, {{1, 0, 0}}, {{0, 1, 0}}, {{1, 1, 0}}}, 2};
-}
-
-PieceShapeND live_l_shape_3d() {
-	return {"L3", {{{-1, 0, 0}}, {{0, 0, 0}}, {{1, 0, 0}}, {{1, 1, 0}}}, 3};
-}
-
-PieceShapeND live_t_shape_3d() {
-	return {"T3", {{{-1, 0, 0}}, {{0, 0, 0}}, {{1, 0, 0}}, {{0, 1, 0}}}, 4};
-}
-
-PieceShapeND live_s_shape_3d() {
-	return {"S3", {{{0, 0, 0}}, {{1, 0, 0}}, {{-1, 1, 0}}, {{0, 1, 0}}}, 5};
-}
-
-PieceShapeND live_j_shape_3d() {
-	return {"J3D", {{{0, 0, 0}}, {{1, 0, 0}}, {{0, 1, 0}}, {{0, 0, 1}}}, 6};
-}
-
-PieceShapeND live_screw_shape_3d() {
-	return {"SCREW3", {{{0, 0, 0}}, {{1, 0, 0}}, {{1, 1, 0}}, {{1, 1, 1}}}, 7};
-}
-
-std::vector<PieceShapeND> live_piece_sequence_for_dimension(int dimension) {
-	if (dimension == 4) {
-		return {
-			trace_shape_4d(),
-			standard_stair_shape_4d(),
-			trace_rotation_shape_4d(),
-			trace_single_shape_4d(),
-			trace_spawn_blocked_shape_4d(),
-		};
-	}
-	if (dimension == 3) {
-		return {
-			native_i_shape_3d(),
-			live_o_shape_3d(),
-			live_l_shape_3d(),
-			live_t_shape_3d(),
-			live_s_shape_3d(),
-			live_j_shape_3d(),
-			live_screw_shape_3d(),
-		};
-	}
-	return {};
-}
-
-std::vector<PieceShapeND> embedded_2d_piece_sequence(int dimension) {
-	const auto coord = [dimension](std::initializer_list<int> values) {
-		std::vector<int> result(values);
-		result.resize(static_cast<std::size_t>(dimension), 0);
-		return CoordND{result};
-	};
-	return {
-		{"I_E2", {coord({-1, 0}), coord({0, 0}), coord({1, 0}), coord({2, 0})}, 1},
-		{"O_E2", {coord({0, 0}), coord({1, 0}), coord({0, 1}), coord({1, 1})}, 2},
-		{"T_E2", {coord({-1, 0}), coord({0, 0}), coord({1, 0}), coord({0, 1})}, 3},
-		{"S_E2", {coord({0, 0}), coord({1, 0}), coord({-1, 1}), coord({0, 1})}, 4},
-		{"Z_E2", {coord({-1, 0}), coord({0, 0}), coord({0, 1}), coord({1, 1})}, 5},
-		{"J_E2", {coord({-1, 0}), coord({-1, 1}), coord({0, 0}), coord({1, 0})}, 6},
-		{"L_E2", {coord({-1, 0}), coord({0, 0}), coord({1, 0}), coord({1, 1})}, 7},
-	};
-}
-
-std::vector<PieceShapeND> native_3d_piece_sequence(int dimension = 3) {
-	const auto coord = [dimension](std::initializer_list<int> values) {
-		std::vector<int> result(values);
-		result.resize(static_cast<std::size_t>(dimension), 0);
-		return CoordND{result};
-	};
-	return {
-		{"I3", {coord({-1, 0, 0}), coord({0, 0, 0}), coord({1, 0, 0}), coord({2, 0, 0})}, 1},
-		{"O3", {coord({0, 0, 0}), coord({1, 0, 0}), coord({0, 1, 0}), coord({1, 1, 0})}, 2},
-		{"L3", {coord({-1, 0, 0}), coord({0, 0, 0}), coord({1, 0, 0}), coord({1, 1, 0})}, 3},
-		{"T3", {coord({-1, 0, 0}), coord({0, 0, 0}), coord({1, 0, 0}), coord({0, 1, 0})}, 4},
-		{"S3", {coord({0, 0, 0}), coord({1, 0, 0}), coord({-1, 1, 0}), coord({0, 1, 0})}, 5},
-		{"J3D", {coord({0, 0, 0}), coord({1, 0, 0}), coord({0, 1, 0}), coord({0, 0, 1})}, 6},
-		{"SCREW3", {coord({0, 0, 0}), coord({1, 0, 0}), coord({1, 1, 0}), coord({1, 1, 1})}, 7},
-	};
-}
-
-std::vector<PieceShapeND> standard_4d_5_piece_sequence() {
-	const auto coord = [](std::initializer_list<int> values) {
-		return CoordND{std::vector<int>(values)};
-	};
-	return {
-		{"CROSS4", {coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 0, 0}), coord({0, 0, 1, 0}), coord({0, 0, 0, 1})}, 1},
-		{"SKEW4_A", {coord({0, 0, 0, 0}), coord({-1, 0, 0, 0}), coord({0, 1, 0, 0}), coord({0, 1, 1, 0}), coord({0, 1, 1, 1})}, 2},
-		{"SKEW4_B", {coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({1, -1, 0, 0}), coord({1, -1, 1, 0}), coord({1, -1, 1, 1})}, 3},
-		{"TEE4", {coord({-1, 0, 0, 0}), coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 1, 0}), coord({0, 1, 1, 1})}, 4},
-		{"CORK4", {coord({0, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 0, 0}), coord({1, 1, 1, 0}), coord({1, 1, 1, 1})}, 5},
-		{"STAIR4", {coord({0, 0, 0, 0}), coord({0, 1, 0, 0}), coord({1, 1, 0, 0}), coord({1, 1, 1, 0}), coord({1, 1, 1, 1})}, 6},
-		{"FORK4", {coord({0, 0, 0, 0}), coord({-1, 0, 0, 0}), coord({1, 0, 0, 0}), coord({0, 1, 0, 1}), coord({0, 0, 1, 1})}, 7},
-	};
-}
-
-std::vector<PieceShapeND> configured_piece_sequence(
-		int dimension,
-		const std::string &piece_set_id) {
-	if (piece_set_id == "embedded_2d") {
-		return embedded_2d_piece_sequence(dimension);
-	}
-	if (dimension == 3 && piece_set_id == "native_3d") {
-		return native_3d_piece_sequence();
-	}
-	if (dimension == 4 && piece_set_id == "embedded_3d") {
-		return native_3d_piece_sequence(4);
-	}
-	if (dimension == 4 && piece_set_id == "standard_4d_5") {
-		return standard_4d_5_piece_sequence();
-	}
-	return {};
-}
-
-BoardShapeND live_board_shape_for_dimension(int dimension) {
-	if (dimension == 4) {
-		return {{5, 10, 4, 4}};
-	}
-	if (dimension == 3) {
-		return {{6, 10, 6}};
-	}
-	return {{6, 10, 6}};
-}
-
 std::string hash_payload_json(
 		const GameStateND &state,
 		const BoardShapeND &shape,
@@ -350,12 +228,14 @@ std::string legacy_hash_payload_json(
 } // namespace
 
 PlainNDSession::PlainNDSession(int dimension) :
-		PlainNDSession(dimension, live_board_shape_for_dimension(dimension)) {
+		PlainNDSession(
+				dimension,
+				BoardShapeND{canonical_live_board_shape(dimension == 4 ? "live_4d" : "live_3d")}) {
 }
 
 PlainNDSession::PlainNDSession(int dimension, BoardShapeND board_shape) :
 		dimension_(dimension),
-		board_shape_(is_supported_live_nd_board_shape(dimension, board_shape) ? std::move(board_shape) : live_board_shape_for_dimension(dimension)),
+		board_shape_(std::move(board_shape)),
 		setup_({
 			PLAIN_SETUP_SCHEMA_VERSION,
 			dimension == 4 ? "live_4d" : "live_3d",
@@ -370,8 +250,17 @@ PlainNDSession::PlainNDSession(int dimension, BoardShapeND board_shape) :
 		}),
 		rng_(static_cast<std::uint32_t>(setup_.effective_seed)),
 		state_(board_shape_, 1),
-		piece_sequence_(live_piece_sequence_for_dimension(dimension)) {
+		piece_sequence_(legacy_live_piece_sequence_for_dimension(dimension)) {
 	reset();
+}
+
+std::optional<PlainNDSession> PlainNDSession::create_validated(
+		int dimension,
+		BoardShapeND board_shape) {
+	if (!is_supported_live_nd_board_shape(dimension, board_shape)) {
+		return std::nullopt;
+	}
+	return PlainNDSession(dimension, std::move(board_shape));
 }
 
 bool PlainNDSession::configure(const BoardShapeND &board_shape) {
@@ -389,10 +278,20 @@ bool PlainNDSession::configure(const PlainGameSetup &requested_setup) {
 	const BoardShapeND shape{requested_setup.board_shape};
 	if (requested_setup.schema_version != PLAIN_SETUP_SCHEMA_VERSION ||
 			requested_setup.mode != expected_mode ||
-			!is_supported_live_nd_board_shape(dimension_, shape) ||
-			!is_supported_live_nd_piece_set(dimension_, requested_setup.piece_set_id) ||
 			!is_valid_plain_random_mode(requested_setup.random_mode) ||
 			!is_valid_plain_speed(requested_setup.initial_speed_level)) {
+		return false;
+	}
+	BoardExtentValidationRequest extent_request;
+	extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+	extent_request.mode = expected_mode;
+	extent_request.board_shape.reserve(shape.dims.size());
+	for (const int extent : shape.dims) {
+		extent_request.board_shape.push_back(extent);
+	}
+	extent_request.piece_set_id = requested_setup.piece_set_id;
+	extent_request.topology_profile = bounded_topology_profile_for_shape(shape.dims);
+	if (!validate_live_board_setup(extent_request).ok) {
 		return false;
 	}
 	if (requested_setup.random_mode == RANDOM_MODE_FIXED_SEED &&
@@ -417,8 +316,8 @@ bool PlainNDSession::configure(const PlainGameSetup &requested_setup) {
 void PlainNDSession::reset() {
 	state_ = GameStateND(board_shape_, 1);
 	piece_sequence_ = setup_.shuffle_bag ?
-			configured_piece_sequence(dimension_, setup_.piece_set_id) :
-			live_piece_sequence_for_dimension(dimension_);
+			plain_piece_catalog_nd(dimension_, setup_.piece_set_id) :
+			legacy_live_piece_sequence_for_dimension(dimension_);
 	piece_bag_.clear();
 	next_piece_index_ = 0;
 	rng_.seed(static_cast<std::uint32_t>(setup_.effective_seed));
@@ -692,33 +591,20 @@ std::string PlainNDSession::command_status(const std::string &command) const {
 }
 
 bool is_supported_live_nd_board_shape(int dimension, const BoardShapeND &board_shape) {
-	if (!board_shape.is_valid() || board_shape.dimension() != dimension) {
-		return false;
+	BoardExtentValidationRequest request;
+	request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+	request.mode = dimension == 3 ? "live_3d" : (dimension == 4 ? "live_4d" : "");
+	request.board_shape.reserve(board_shape.dims.size());
+	for (const int extent : board_shape.dims) {
+		request.board_shape.push_back(extent);
 	}
-	if (dimension == 3) {
-		return board_shape.dims[0] >= 4 && board_shape.dims[0] <= 10 &&
-				board_shape.dims[1] >= 6 && board_shape.dims[1] <= 24 &&
-				board_shape.dims[2] >= 2 && board_shape.dims[2] <= 10;
-	}
-	if (dimension == 4) {
-		return board_shape.dims[0] >= 4 && board_shape.dims[0] <= 12 &&
-				board_shape.dims[1] >= 6 && board_shape.dims[1] <= 24 &&
-				board_shape.dims[2] >= 2 && board_shape.dims[2] <= 8 &&
-				board_shape.dims[3] >= 1 && board_shape.dims[3] <= 12;
-	}
-	return false;
+	request.piece_set_id = dimension == 4 ? "standard_4d_5" : "native_3d";
+	request.topology_profile = bounded_topology_profile_for_shape(board_shape.dims);
+	return validate_live_board_setup(request).ok;
 }
 
 bool is_supported_live_nd_piece_set(int dimension, const std::string &piece_set_id) {
-	if (dimension == 3) {
-		return piece_set_id == "native_3d" || piece_set_id == "embedded_2d";
-	}
-	if (dimension == 4) {
-		return piece_set_id == "standard_4d_5" ||
-				piece_set_id == "embedded_3d" ||
-				piece_set_id == "embedded_2d";
-	}
-	return false;
+	return is_supported_live_piece_set(dimension, piece_set_id);
 }
 
 } // namespace tet4d::core

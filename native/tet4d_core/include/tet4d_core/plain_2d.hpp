@@ -99,6 +99,8 @@ PieceShape2D trace_dot_shape_2d();
 PieceShape2D trace_t_shape_2d();
 PieceShape2D classic_i_shape_2d();
 PieceShape2D classic_s_shape_2d();
+Coord2D canonical_spawn_pose_2d(int width, const PieceShape2D &shape);
+bool canonical_spawn_viable_2d(int width, int height, const PieceShape2D &shape);
 GameState2D make_builtin_plain_2d_initial_state();
 std::vector<GameCommand2D> builtin_plain_2d_commands();
 

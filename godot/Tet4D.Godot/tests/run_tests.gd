@@ -20,6 +20,7 @@ func _run_all() -> void:
 		"res://tests/test_display_presentation_runtime.gd",
 		"res://tests/test_accessibility_runtime.gd",
 		"res://tests/test_game_setup_model.gd",
+		"res://tests/test_board_extent_contract.gd",
 		"res://tests/test_plain_setup_navigation.gd",
 		"res://tests/test_adaptive_4d_layer_layout.gd",
 		"res://tests/test_configurable_live_sessions.gd",

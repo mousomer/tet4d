@@ -1,5 +1,8 @@
 #include "tet4d_core/plain_2d_session.hpp"
 
+#include "tet4d_core/board_extent_contract.hpp"
+#include "tet4d_core/generated/board_extent_contract_v1.hpp"
+#include "tet4d_core/plain_piece_catalog.hpp"
 #include "tet4d_core/sha256.hpp"
 
 #include <sstream>
@@ -13,37 +16,8 @@ std::string bool_json(bool value) {
 	return value ? "true" : "false";
 }
 
-PieceShape2D classic_o_shape_2d() {
-	return {"O", {{0, 0}, {1, 0}, {0, 1}, {1, 1}}, 2};
-}
-
-PieceShape2D classic_t_shape_2d() {
-	return {"T", {{-1, 0}, {0, 0}, {1, 0}, {0, 1}}, 3};
-}
-
-PieceShape2D classic_z_shape_2d() {
-	return {"Z", {{-1, 0}, {0, 0}, {0, 1}, {1, 1}}, 5};
-}
-
-PieceShape2D classic_j_shape_2d() {
-	return {"J", {{-1, 0}, {-1, 1}, {0, 0}, {1, 0}}, 6};
-}
-
-PieceShape2D classic_l_shape_2d() {
-	return {"L", {{-1, 0}, {0, 0}, {1, 0}, {1, 1}}, 7};
-}
-
 const std::vector<PieceShape2D> &live_piece_sequence() {
-	static const std::vector<PieceShape2D> sequence = {
-		classic_i_shape_2d(),
-		classic_o_shape_2d(),
-		classic_t_shape_2d(),
-		classic_s_shape_2d(),
-		classic_z_shape_2d(),
-		classic_j_shape_2d(),
-		classic_l_shape_2d(),
-	};
-	return sequence;
+	return plain_piece_catalog_2d("classic");
 }
 
 std::string coord_json(const Coord2D &coord) {
@@ -182,12 +156,13 @@ std::string legacy_hash_payload_json(
 
 } // namespace
 
-Plain2DSession::Plain2DSession() : Plain2DSession(6, 6) {
+Plain2DSession::Plain2DSession() :
+		Plain2DSession(canonical_live_board_shape("live_2d")[0], canonical_live_board_shape("live_2d")[1]) {
 }
 
 Plain2DSession::Plain2DSession(int width, int height) :
-		width_(is_supported_live_2d_board_shape(width, height) ? width : 6),
-		height_(is_supported_live_2d_board_shape(width, height) ? height : 6),
+		width_(width),
+		height_(height),
 		setup_({
 			PLAIN_SETUP_SCHEMA_VERSION,
 			"live_2d",
@@ -205,8 +180,21 @@ Plain2DSession::Plain2DSession(int width, int height) :
 	reset();
 }
 
-bool Plain2DSession::configure(int width, int height) {
+std::optional<Plain2DSession> Plain2DSession::create_validated(int width, int height) {
 	if (!is_supported_live_2d_board_shape(width, height)) {
+		return std::nullopt;
+	}
+	return Plain2DSession(width, height);
+}
+
+bool Plain2DSession::configure(int width, int height) {
+	BoardExtentValidationRequest extent_request;
+	extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+	extent_request.mode = "live_2d";
+	extent_request.board_shape = {width, height};
+	extent_request.piece_set_id = "classic";
+	extent_request.topology_profile = bounded_topology_profile_for_shape({width, height});
+	if (!validate_live_board_setup(extent_request).ok) {
 		return false;
 	}
 	width_ = width;
@@ -227,7 +215,13 @@ bool Plain2DSession::configure(const PlainGameSetup &requested_setup) {
 	}
 	const int width = requested_setup.board_shape[0];
 	const int height = requested_setup.board_shape[1];
-	if (!is_supported_live_2d_board_shape(width, height)) {
+	BoardExtentValidationRequest extent_request;
+	extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+	extent_request.mode = "live_2d";
+	extent_request.board_shape = {width, height};
+	extent_request.piece_set_id = requested_setup.piece_set_id;
+	extent_request.topology_profile = bounded_topology_profile_for_shape({width, height});
+	if (!validate_live_board_setup(extent_request).ok) {
 		return false;
 	}
 	if (requested_setup.random_mode == RANDOM_MODE_FIXED_SEED &&
@@ -471,11 +465,13 @@ std::string Plain2DSession::command_status(const std::string &command) const {
 }
 
 bool is_supported_live_2d_board_shape(int width, int height) {
-	constexpr int MIN_WIDTH = 4;
-	constexpr int MIN_HEIGHT = 6;
-	constexpr int MAX_WIDTH = 16;
-	constexpr int MAX_HEIGHT = 30;
-	return width >= MIN_WIDTH && width <= MAX_WIDTH && height >= MIN_HEIGHT && height <= MAX_HEIGHT;
+	BoardExtentValidationRequest request;
+	request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+	request.mode = "live_2d";
+	request.board_shape = {width, height};
+	request.piece_set_id = "classic";
+	request.topology_profile = bounded_topology_profile_for_shape({width, height});
+	return validate_live_board_setup(request).ok;
 }
 
 } // namespace tet4d::core

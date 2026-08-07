@@ -329,8 +329,10 @@ An active game is never resized.
 
 ##### Stage 54B-1 — Shared board-extent contract
 
-Implement the topology-aware validation interface and the complete bounded
-rule, including:
+Status: complete — established by `AE-0054`.
+
+The topology-aware validation interface and complete bounded rule are now
+implemented through `contracts/board_extent_contract_v1.json`, including:
 
 - minima and maxima;
 - piece-set compatibility;
@@ -339,6 +341,9 @@ rule, including:
 - structured errors;
 - persistence validation;
 - focused native and contract tests.
+
+It preserves the existing persistence versions and deterministic gameplay
+identity. It does not implement direct size-entry UI or topology seam rules.
 
 ##### Stage 54B-2 — Godot setup and persistence
 

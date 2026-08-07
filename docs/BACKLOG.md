@@ -63,31 +63,9 @@ The programme is owned by
 
 ## Next Implementation Stage
 
-### Stage 54B-1 — Shared topology-aware board-extent contract
-
-Status: next implementation slice.
-
-Objective:
-
-- make selected topology an explicit board-validation input;
-- provide one shared minimum/maximum and validation authority;
-- implement the complete bounded-board rule required by Phase I;
-- validate piece-set compatibility and canonical spawn viability;
-- enforce native construction limits;
-- return structured validation errors;
-- reject invalid configurations before session construction;
-- forbid topology-independent duplicated minima in Godot or adapters;
-- preserve deterministic setup and restart semantics.
-
-Phase I ships the bounded rule. Strip and Möbius minimum-extent and seam-safety
-rules activate in Stage 55A through the same interface.
-
-Do not implement the setup UI in this slice except for any minimal test harness
-required to exercise the contract.
-
 ### Stage 54B-2 — Godot custom board setup and persistence
 
-Status: blocked on Stage 54B-1.
+Status: next implementation slice; unblocked by completed Stage 54B-1.
 
 Objective:
 

@@ -26,6 +26,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/parity_protocol.md`
 - `docs/architecture/authority_transfer_protocol.md`
 - `docs/architecture/topology_contract_foundation.md`
+- `docs/architecture/topology_aware_board_extent_contract.md`
 - `docs/architecture/godot_shell_layout_stabilization.md`
 - `docs/architecture/godot_shell_settings_source_of_truth.md`
 - `docs/architecture/godot_shell_settings_persistence.md`
@@ -136,6 +137,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
 | Canonical topology interchange, identity, and migration contract | `docs/architecture/canonical_topology_contract.md` |
 | Shared topology scalar limits, generated bindings, and fingerprint | `contracts/topology_contract_v1.json`, `docs/architecture/topology_contract_foundation.md` |
+| Professional live-board extent, bounded setup admissibility, and checked setup errors | `contracts/board_extent_contract_v1.json`, `docs/architecture/topology_aware_board_extent_contract.md` |
 | Strict native/Godot topology profile and resolver-query transport | `docs/architecture/native_topology_transport.md` |
 | Strict internal Python topology constructor and source-adapter boundary | `docs/architecture/python_topology_domain_model.md` |
 | Explorer topology persistence versions, strict loading, and legacy recovery | `docs/architecture/topology_persistence_recovery.md` |

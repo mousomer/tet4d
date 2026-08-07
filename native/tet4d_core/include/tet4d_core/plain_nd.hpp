@@ -125,5 +125,7 @@ PieceShapeND trace_rotation_shape_4d();
 PieceShapeND native_i_shape_3d();
 PieceShapeND standard_stair_shape_4d();
 CoordND spawn_pos_for_shape(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape);
+CoordND canonical_spawn_pose_nd(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape);
+bool canonical_spawn_viable_nd(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape);
 
 } // namespace tet4d::core

@@ -4,6 +4,7 @@
 #include "tet4d_core/plain_game_setup.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,10 @@ namespace tet4d::core {
 class Plain2DSession {
 public:
 	Plain2DSession();
-	Plain2DSession(int width, int height);
+	// The only public parameterized construction path. Returns nullopt when the
+	// board fails the shared board-extent contract; it never substitutes a
+	// canonical board for an invalid request.
+	static std::optional<Plain2DSession> create_validated(int width, int height);
 
 	bool configure(int width, int height);
 	bool configure(const PlainGameSetup &setup);
@@ -24,6 +28,10 @@ public:
 	std::string state_hash() const;
 
 private:
+	// Internal precondition: dimensions have already passed create_validated or
+	// are the generated canonical default used by the no-argument constructor.
+	Plain2DSession(int width, int height);
+
 	int width_ = 6;
 	int height_ = 6;
 	PlainGameSetup setup_;
