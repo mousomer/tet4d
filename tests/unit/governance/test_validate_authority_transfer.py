@@ -206,7 +206,9 @@ def test_missing_transfer_table_fails(tmp_path: Path) -> None:
         _protocol(include_transfer_table=False),
     )
 
-    assert any("active transfer records table" in failure for failure in _failures(tmp_path))
+    assert any(
+        "active transfer records table" in failure for failure in _failures(tmp_path)
+    )
 
 
 def test_missing_establishment_table_fails(tmp_path: Path) -> None:
@@ -230,7 +232,10 @@ def test_missing_transfer_columns_fails(tmp_path: Path) -> None:
     )
     _write(tmp_path / validator.PROTOCOL_REL, text)
 
-    assert any("transfer records table has invalid columns" in failure for failure in _failures(tmp_path))
+    assert any(
+        "transfer records table has invalid columns" in failure
+        for failure in _failures(tmp_path)
+    )
 
 
 def test_empty_record_tables_pass_with_required_concepts(tmp_path: Path) -> None:
@@ -246,7 +251,9 @@ def test_invalid_transfer_id_fails(tmp_path: Path) -> None:
 
 
 def test_invalid_establishment_id_fails(tmp_path: Path) -> None:
-    _valid_fixture(tmp_path, establishment_rows=[_establishment_row(establishment_id="BAD")])
+    _valid_fixture(
+        tmp_path, establishment_rows=[_establishment_row(establishment_id="BAD")]
+    )
 
     assert any("invalid establishment id" in failure for failure in _failures(tmp_path))
 
@@ -362,7 +369,10 @@ def test_godot_policy_missing_establishment_route_fails(tmp_path: Path) -> None:
         "See docs/architecture/authority_transfer_protocol.md.\n",
     )
 
-    assert any("route new authority establishment" in failure for failure in _failures(tmp_path))
+    assert any(
+        "route new authority establishment" in failure
+        for failure in _failures(tmp_path)
+    )
 
 
 def test_cpp_policy_missing_establishment_route_fails(tmp_path: Path) -> None:
@@ -373,7 +383,10 @@ def test_cpp_policy_missing_establishment_route_fails(tmp_path: Path) -> None:
         "See docs/architecture/authority_transfer_protocol.md.\n",
     )
 
-    assert any("define new authority establishment" in failure for failure in _failures(tmp_path))
+    assert any(
+        "define new authority establishment" in failure
+        for failure in _failures(tmp_path)
+    )
 
 
 def test_review_checklist_missing_establishment_concepts_fails(
