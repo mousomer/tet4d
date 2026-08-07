@@ -87,17 +87,18 @@ remain canonical-only. Godot uses the checked configure methods.
 Godot consumes generated defaults and emits an explicit bounded profile, then
 calls `validate_live_board_setup` and `live_*_configure_checked`. GDScript owns
 the setup interaction and presets but not professional extent, piece, spawn,
-or topology admissibility. Existing persistence schemas 1 and 2 remain source
-adapters: recovery produces a canonical candidate which is validated before
-native construction. This stage adds no arbitrary-shape persistence format and
-the validator never performs semantic repair.
+or topology admissibility. Stage 54B-2 persistence schema 3 retains concrete
+shapes; schemas 1 and 2 remain source adapters that migrate preset IDs to a
+candidate and revalidate it through this boundary. Neither validator nor source
+adapter performs semantic repair of an invalid tuple.
 
 ## Scope and extension point
 
 Excluded behaviour includes topology seam semantics, movement, rotation,
 collision, gravity, locking, clearing, scoring, randomization, replay, trace,
-hashing, custom-axis UI, and renderer changes. Existing valid gameplay hashes
-and trace schemas remain unchanged.
+hashing, and renderer changes. Stage 54B-2 consumes this contract for
+custom-axis UI without changing existing valid gameplay hashes or trace
+schemas.
 
 Stage 55A may add topology-specific board rules by extending the selected
 topology rule branch after rank and dimension agreement; it must not replace

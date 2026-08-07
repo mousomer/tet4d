@@ -1976,11 +1976,11 @@ func _build_game_setup_screen(screen: Control) -> void:
 	screen.add_child(_game_setup_panel)
 	_game_setup_panel.configure(_game_setup_model)
 	_screen_focus_targets[SCREEN_GAME_SETUP] = _game_setup_panel.first_focus_control()
-	_game_setup_panel.setup_changed.connect(func() -> void:
-		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
+	_game_setup_panel.last_valid_changed.connect(func() -> void:
+		_game_setup_store.save_last_validated(_game_setup_model)
 	)
 	_game_setup_panel.start_requested.connect(func(setup: Dictionary) -> void:
-		_game_setup_store.save_last_selected(_game_setup_model.canonical_snapshot().get("last_selected", {}))
+		_game_setup_store.save_last_validated(_game_setup_model)
 		live_game_start_requested.emit(setup)
 	)
 	_game_setup_panel.back_requested.connect(func() -> void:

@@ -43,6 +43,10 @@ merged and verified on `master` at `91b901f3`.
 Stage 54A is complete, human accepted, and merged on `master` at `bcf41519`.
 Its settled control and cockpit scope is not active backlog work.
 
+Stage 54B-2 is complete and verified on the active branch. It adds editable
+Godot board dimensions, native-validation presentation, and schema-3
+last-valid setup persistence without changing gameplay or topology semantics.
+
 Do not create Stage 53G or reopen generic boundary-governance work without a
 new evidenced problem and owning-format scope.
 
@@ -63,23 +67,14 @@ The programme is owned by
 
 ## Next Implementation Stage
 
-### Stage 54B-2 — Godot custom board setup and persistence
+### Stage 54C — Game-safe 4D slice-basis quarter-turns
 
-Status: next implementation slice; unblocked by completed Stage 54B-1.
+Status: next implementation slice after Stage 54B-2.
 
-Objective:
-
-- expose direct X/Y/Z/W axis-size editing for every active dimension;
-- retain presets as shortcuts that populate editable fields;
-- show shared validation feedback;
-- persist the last valid setup;
-- distinguish `Reset Sizes` from `Reset Setup`;
-- preserve frozen active-session and restart semantics;
-- complete visible-GUI acceptance.
-
-Stage 49 and Stage 50 remain accurate records of their curated-preset scope.
-Stage 54B extends the active product boundary rather than rewriting those
-records.
+Use the bounded setup surface delivered by Stage 54B-2 without changing board
+coordinates or deterministic gameplay state. Follow the implementation
+sequence in the professional programme and retain Stage 54B's tuple-level
+admission boundary.
 
 ## Accepted Immediate Follow-Ups
 

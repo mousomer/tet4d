@@ -9,6 +9,11 @@ replay semantic oracle. Native C++ remains the owner of the accepted bounded
 live-session transitions. Godot remains the product shell and owns setup
 presentation, validation feedback, persistence, input routing, and timing.
 
+Stage 54B-2 preserves this Stage 50 bounded-session, piece, RNG, and restart
+contract while superseding its preset-only interaction and schema-2
+persistence details. The current editable-axis/persistence contract is
+`editable_board_setup_and_persistence.md`.
+
 ## Product boundary
 
 Stage 50 completes only ordinary bounded 2D, 3D, and 4D game setup. The
@@ -17,7 +22,7 @@ canonical setup fields are:
 | Field | Canonical representation | Semantic role |
 | --- | --- | --- |
 | mode | `live_2d`, `live_3d`, or `live_4d` | Selects dimension/session family |
-| board preset | stable preset ID | Shell selection identity |
+| board preset | exact preset ID or empty no-preset identity | Shortcut identity derived from concrete shape |
 | board shape | integer axis-size array | Native board geometry |
 | piece set | stable piece-set ID | Native bag/catalog identity |
 | random mode | `fixed_seed` or `true_random` | Session seed policy |
@@ -159,9 +164,10 @@ panel, and gravity scheduler are adapter-routing declarations only. They route
 through the canonical setup spec or the bundled Python-authoritative tuning
 curve; they do not grant Godot gameplay-rule authority.
 
-The persistence document advances to schema version 2 and stores a validated
-entry per mode. Schema version 1 preset strings migrate independently to
-version 2 defaults. Malformed/future documents fail safely without touching
+At Stage 50 the persistence document advanced to schema version 2. Stage 54B-2
+now writes schema 3 concrete last-valid shapes, migrates schemas 1/2 preset
+entries to candidate shapes, and revalidates every candidate through AE-0054.
+Malformed/future documents still fail safely without touching
 `user://shell_settings.json`.
 
 ## Completion evidence

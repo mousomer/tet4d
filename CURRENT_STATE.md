@@ -40,8 +40,9 @@ history ledger. Detailed history is preserved in
 - Stage 54B-1 is complete on the active branch: the shared topology-aware
   board-extent contract establishes bounded live setup admission under
   `AE-0054` without transferring topology or gameplay semantics. Stage 54B-2
-  is now the next implementation slice for direct Godot X/Y/Z/W setup,
-  validation presentation, and persistence.
+  implementation now provides direct Godot X/Y/Z/W setup, validation
+  presentation, and schema-3 last-valid persistence. It is complete and
+  verified; Stage 54C is next.
 - Stage 54C adds game-safe 4D slice-basis quarter-turns and focused instruction.
 - Stage 54D provides the modern gameplay baseline in three ordered slices:
   next-piece preview, ghost piece, and Hold.
@@ -175,7 +176,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54B-2 — Godot custom board setup and persistence.
+1. Implement Stage 54C — game-safe 4D slice-basis rotations and focused
+   instruction.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

@@ -7,15 +7,18 @@ const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec
 func run() -> Array:
 	var failures := []
 	var bridge = Tet4DCoreBridgeScript.new()
-	if not bridge.live_2d_configure(_setup("live_2d", "large", [10, 20], "classic", 1337, 1)):
+	var frozen_setup := _setup("live_2d", "large", [10, 20], "classic", 1337, 1)
+	if not bridge.live_2d_configure(frozen_setup):
 		failures.append("native 2D alternate shape should configure")
 	else:
 		var snapshot_2d := _snapshot(bridge.live_2d_snapshot_json())
 		if _shape(snapshot_2d) != [10, 20] or snapshot_2d.get("piece_set_id") != "classic":
 			failures.append("native 2D snapshot should expose canonical setup")
+		frozen_setup["board_shape"] = [4, 6]
+		frozen_setup["topology_profile"] = GameSetupSpecScript.bounded_topology_profile([4, 6])
 	bridge.live_2d_reset()
 	if _shape(_snapshot(bridge.live_2d_snapshot_json())) != [10, 20]:
-		failures.append("native 2D restart should preserve alternate shape")
+		failures.append("restart should preserve the frozen configured shape despite later draft changes")
 	var malformed := _setup("live_2d", "standard", [6, 6], "classic", 1337, 1)
 	malformed.erase("seed")
 	if bridge.live_2d_configure(malformed):

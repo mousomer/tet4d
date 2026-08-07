@@ -347,6 +347,8 @@ identity. It does not implement direct size-entry UI or topology seam rules.
 
 ##### Stage 54B-2 — Godot setup and persistence
 
+Status: complete and verified.
+
 Implement:
 
 - editable X/Y/Z/W fields;
