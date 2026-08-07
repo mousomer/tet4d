@@ -94,6 +94,33 @@ C++ ownership are established.
    adapter must materialize a candidate and route it through the shared
    validator. Arbitrary-shape persistence is deferred to Stage 54B-2.
 
+### 2.4 One-piece next preview
+
+1. Live Godot 2D, 3D, and 4D must display exactly one next piece selected by
+   the authoritative deterministic session.
+2. The preview consumes a read-only native query containing the piece-set ID,
+   piece name, existing production colour identifier, dimension, and canonical
+   piece-local cells. Godot must not reconstruct queue order or production
+   piece geometry from the piece name.
+3. Querying or rendering the preview must not change queue order, bag refill,
+   RNG consumption, current gameplay state, snapshots, state hashes, replay,
+   or traces. Gameplay refill and empty-bag prediction must call one shared
+   randomizer operation; prediction supplies copied RNG state and discards the
+   temporary bag rather than mutate the session.
+4. One shared Godot thumbnail presentation covers 2D, 3D, and compact W-sliced
+   4D geometry and remains reusable by the later Hold feature.
+5. The live-only `NEXT` panel belongs near the top of the right inspector,
+   after onboarding and before the 4D basis and controls. Replay must not show
+   it.
+6. Multiple queue entries, configurable preview depth, randomizer history,
+   ghost pieces, and Hold semantics remain outside Stage 54D-1.
+7. Ordinary game over retains the last successfully rendered preview. A
+   structured provider failure clears stale geometry and reports bounded
+   unavailability without blocking gameplay. Current live sessions do not
+   represent a successful no-next state.
+8. Native transports the existing production `color_id`; Godot owns palette,
+   theme, High Contrast, outlines, and accessibility styling.
+
 ## 3. Shared Rules and Axis Conventions
 
 1. Axis `0`=`x`(horizontal), axis`1`=`y` (gravity/downward).

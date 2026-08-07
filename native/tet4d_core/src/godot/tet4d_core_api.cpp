@@ -128,6 +128,44 @@ Array blocks_to_array(const std::vector<tet4d::core::CoordND> &blocks) {
 	return result;
 }
 
+Dictionary piece_preview_dictionary(
+		const tet4d::core::PieceShape2D &shape,
+		const std::string &piece_set_id) {
+	Dictionary result;
+	const bool ok = !shape.name.empty() && !shape.blocks.empty();
+	result["ok"] = ok;
+	result["status"] = ok ? "piece" : "failure";
+	result["dimension"] = 2;
+	result["piece_set_id"] = to_godot_string(piece_set_id);
+	result["piece_name"] = to_godot_string(shape.name);
+	result["color_id"] = shape.color_id;
+	Array cells;
+	for (const tet4d::core::Coord2D &coord : shape.blocks) {
+		Array cell;
+		cell.push_back(coord.x);
+		cell.push_back(coord.y);
+		cells.push_back(cell);
+	}
+	result["cells"] = cells;
+	return result;
+}
+
+Dictionary piece_preview_dictionary(
+		const tet4d::core::PieceShapeND &shape,
+		const std::string &piece_set_id) {
+	Dictionary result;
+	const int dimension = shape.blocks.empty() ? 0 : shape.blocks.front().dimension();
+	const bool ok = !shape.name.empty() && !shape.blocks.empty() && (dimension == 3 || dimension == 4);
+	result["ok"] = ok;
+	result["status"] = ok ? "piece" : "failure";
+	result["dimension"] = dimension;
+	result["piece_set_id"] = to_godot_string(piece_set_id);
+	result["piece_name"] = to_godot_string(shape.name);
+	result["color_id"] = shape.color_id;
+	result["cells"] = blocks_to_array(shape.blocks);
+	return result;
+}
+
 String boundary_label(const tet4d::core::BoundaryQueryRef &boundary) {
 	const char *names[] = {"x", "y", "z", "w"};
 	return String(names[boundary.axis]) + (boundary.side < 0 ? "-" : "+");
@@ -382,6 +420,7 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("live_2d_apply_command", "command"), &Tet4DCoreApi::live_2d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_2d_tick"), &Tet4DCoreApi::live_2d_tick);
 	ClassDB::bind_method(D_METHOD("live_2d_snapshot_json"), &Tet4DCoreApi::live_2d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_2d_next_piece_preview"), &Tet4DCoreApi::live_2d_next_piece_preview);
 	ClassDB::bind_method(D_METHOD("live_2d_status"), &Tet4DCoreApi::live_2d_status);
 	ClassDB::bind_method(D_METHOD("live_2d_state_hash"), &Tet4DCoreApi::live_2d_state_hash);
 	ClassDB::bind_method(D_METHOD("live_3d_configure", "setup"), &Tet4DCoreApi::live_3d_configure);
@@ -390,6 +429,7 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("live_3d_apply_command", "command"), &Tet4DCoreApi::live_3d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_3d_tick"), &Tet4DCoreApi::live_3d_tick);
 	ClassDB::bind_method(D_METHOD("live_3d_snapshot_json"), &Tet4DCoreApi::live_3d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_3d_next_piece_preview"), &Tet4DCoreApi::live_3d_next_piece_preview);
 	ClassDB::bind_method(D_METHOD("live_3d_status"), &Tet4DCoreApi::live_3d_status);
 	ClassDB::bind_method(D_METHOD("live_3d_state_hash"), &Tet4DCoreApi::live_3d_state_hash);
 	ClassDB::bind_method(D_METHOD("live_4d_configure", "setup"), &Tet4DCoreApi::live_4d_configure);
@@ -398,6 +438,7 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("live_4d_apply_command", "command"), &Tet4DCoreApi::live_4d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_4d_tick"), &Tet4DCoreApi::live_4d_tick);
 	ClassDB::bind_method(D_METHOD("live_4d_snapshot_json"), &Tet4DCoreApi::live_4d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_4d_next_piece_preview"), &Tet4DCoreApi::live_4d_next_piece_preview);
 	ClassDB::bind_method(D_METHOD("live_4d_status"), &Tet4DCoreApi::live_4d_status);
 	ClassDB::bind_method(D_METHOD("live_4d_state_hash"), &Tet4DCoreApi::live_4d_state_hash);
 }
@@ -665,6 +706,12 @@ String Tet4DCoreApi::live_2d_snapshot_json() const {
 	return to_godot_string(live_2d_session_.snapshot_json());
 }
 
+Dictionary Tet4DCoreApi::live_2d_next_piece_preview() const {
+	return piece_preview_dictionary(
+			live_2d_session_.peek_next_piece_shape(),
+			live_2d_session_.piece_set_id());
+}
+
 String Tet4DCoreApi::live_2d_status() const {
 	return to_godot_string(live_2d_session_.status());
 }
@@ -697,6 +744,12 @@ String Tet4DCoreApi::live_3d_snapshot_json() const {
 	return to_godot_string(live_3d_session_.snapshot_json());
 }
 
+Dictionary Tet4DCoreApi::live_3d_next_piece_preview() const {
+	return piece_preview_dictionary(
+			live_3d_session_.peek_next_piece_shape(),
+			live_3d_session_.piece_set_id());
+}
+
 String Tet4DCoreApi::live_3d_status() const {
 	return to_godot_string(live_3d_session_.status());
 }
@@ -727,6 +780,12 @@ String Tet4DCoreApi::live_4d_tick() {
 
 String Tet4DCoreApi::live_4d_snapshot_json() const {
 	return to_godot_string(live_4d_session_.snapshot_json());
+}
+
+Dictionary Tet4DCoreApi::live_4d_next_piece_preview() const {
+	return piece_preview_dictionary(
+			live_4d_session_.peek_next_piece_shape(),
+			live_4d_session_.piece_set_id());
 }
 
 String Tet4DCoreApi::live_4d_status() const {

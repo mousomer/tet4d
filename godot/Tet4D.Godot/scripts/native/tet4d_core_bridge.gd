@@ -138,6 +138,10 @@ func live_2d_snapshot_json() -> String:
 	return _api().live_2d_snapshot_json()
 
 
+func live_2d_next_piece_preview() -> Dictionary:
+	return _api().live_2d_next_piece_preview()
+
+
 func live_2d_status() -> String:
 	return _api().live_2d_status()
 
@@ -170,6 +174,10 @@ func live_3d_snapshot_json() -> String:
 	return _api().live_3d_snapshot_json()
 
 
+func live_3d_next_piece_preview() -> Dictionary:
+	return _api().live_3d_next_piece_preview()
+
+
 func live_3d_status() -> String:
 	return _api().live_3d_status()
 
@@ -200,6 +208,10 @@ func live_4d_tick() -> String:
 
 func live_4d_snapshot_json() -> String:
 	return _api().live_4d_snapshot_json()
+
+
+func live_4d_next_piece_preview() -> Dictionary:
+	return _api().live_4d_next_piece_preview()
 
 
 func live_4d_status() -> String:

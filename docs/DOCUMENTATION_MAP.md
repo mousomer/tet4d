@@ -167,6 +167,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 49 configurable plain-board setup and adaptive 4D presentation | `docs/architecture/configurable_plain_boards_and_4d_layout.md` |
 | Stage 54B-2 editable Godot board dimensions and persistence | `docs/architecture/editable_board_setup_and_persistence.md` |
 | Stage 54C exact game-safe 4D presentation basis, coordinate mapping, and input routing | `docs/architecture/game_safe_4d_slice_basis.md` |
+| Stage 54D-1 authoritative one-piece queue query and shared live thumbnail presentation | `docs/architecture/next_piece_preview.md` |
 | Completed Stage 50 canonical bounded plain-game setup, RNG, piece-set, speed, restart, and acceptance contract | `docs/architecture/plain_game_setup_completion.md` |
 | Stage 51 canonical Godot display settings, persistence, and runtime presentation policy | `docs/architecture/display_infrastructure.md` |
 | Stage 52 Godot accessibility invariants, preferences, persistence, and runtime presentation policy | `docs/architecture/accessibility_infrastructure.md` |

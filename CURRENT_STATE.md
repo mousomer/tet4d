@@ -183,8 +183,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54D-1 — the authoritative one-piece next preview and shared
-   compact 2D/3D/4D thumbnail presentation.
+1. Review and commit Stage 54D-1 separately after its semantic audit; human
+   preview-readability acceptance remains routed to integrated Stage 54E.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

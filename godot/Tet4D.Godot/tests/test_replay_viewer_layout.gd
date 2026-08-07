@@ -41,8 +41,30 @@ func run() -> Array:
 		failures.append_array(await _check_keyboard_hint_visibility_setting(hud))
 		var replay_snapshot: Dictionary = hud.layout_contract_snapshot()
 		var replay_game_rect: Rect2 = replay_snapshot.get("game_area", Rect2())
+		if bool(replay_snapshot.get("next_piece_panel", {}).get("visible", true)):
+			failures.append("replay mode must not expose the live NEXT panel")
+		hud.set_next_piece_preview({
+			"ok": true,
+			"status": "piece",
+			"dimension": 4,
+			"piece_set_id": "standard_4d_5",
+			"piece_name": "CROSS4",
+			"color_id": 1,
+			"cells": [[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+		})
 		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
 		await tree.process_frame
+		var terminal_preview: Dictionary = hud.layout_contract_snapshot().get("next_piece_panel", {})
+		if terminal_preview.get("piece_name_text") != "CROSS4":
+			failures.append("ordinary game over should retain the last authoritative NEXT preview")
+		var geometry_revision := int(terminal_preview.get("thumbnail", {}).get("geometry_revision", -1))
+		hud.set_live_4d_basis_snapshot({
+			"text": "View: +W · +Y · +Z\nSlice: -X · Gravity: Y down",
+			"slice_axis": "x",
+		})
+		var basis_preview: Dictionary = hud.layout_contract_snapshot().get("next_piece_panel", {})
+		if int(basis_preview.get("thumbnail", {}).get("geometry_revision", -2)) != geometry_revision or basis_preview.get("piece_name_text") != "CROSS4":
+			failures.append("Stage 54C basis changes must not rebuild or reorient canonical NEXT geometry")
 		if str(hud.layout_contract_snapshot().get("top_summary_title", "")) != "Live Session":
 			failures.append("live 4D must not retain the Replay summary heading")
 		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size, replay_game_rect.size.x))
@@ -54,6 +76,8 @@ func run() -> Array:
 			failures.append("replay mode should restore the Replay summary heading")
 		if str(restored_snapshot.get("bundle_status_text", "")).find("Bundle: OK") == -1:
 			failures.append("replay mode should restore bundle status after live mode")
+		if bool(restored_snapshot.get("next_piece_panel", {}).get("visible", true)):
+			failures.append("returning to replay must hide the NEXT panel")
 		root.queue_free()
 		await tree.process_frame
 	failures.append_array(_check_live_control_maps())
@@ -257,8 +281,13 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: game area should remain larger than the inspector column, game=%s inspector=%s" % [label, game_rect, inspector_rect])
 	if replay_game_width > 0.0 and game_rect.size.x <= replay_game_width + 0.5:
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
-	if right_inspector_order.size() < 4 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "Live4DBasisPanel" or str(right_inspector_order[2]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[3]) != "InspectorControlHints":
-		failures.append("%s: live right inspector should present onboarding and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
+	if right_inspector_order.size() < 5 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "NextPiecePanel" or str(right_inspector_order[2]) != "Live4DBasisPanel" or str(right_inspector_order[3]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[4]) != "InspectorControlHints":
+		failures.append("%s: live right inspector should present onboarding, NEXT, basis, and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
+	var next_piece_panel: Dictionary = snapshot.get("next_piece_panel", {})
+	if not bool(next_piece_panel.get("visible", false)) or next_piece_panel.get("piece_name_text") != "CROSS4":
+		failures.append("%s: live right inspector should expose the authoritative NEXT piece" % label)
+	if float(next_piece_panel.get("minimum_height", 0.0)) > inspector_rect.size.y:
+		failures.append("%s: NEXT panel should remain bounded within the scrollable inspector viewport" % label)
 	var view_actions := hud.find_child("CockpitButtonPanel", true, false) as Control
 	var quick_settings := hud.find_child("QuickSettingsToggle", true, false) as Button
 	var grid_toggle := hud.find_child("GridVisibilityToggle", true, false) as Button

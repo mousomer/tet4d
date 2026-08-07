@@ -26,6 +26,11 @@ public:
 	std::string snapshot_json() const;
 	std::string status() const;
 	std::string state_hash() const;
+	// Observational queue query. The returned production shape is the next real
+	// draw and querying never mutates the bag or RNG, including at refill.
+	PieceShapeND peek_next_piece_shape() const;
+	// Borrowed setup identifier; valid until the session is destroyed.
+	const std::string &piece_set_id() const;
 
 private:
 	// Internal precondition: dimensions have already passed create_validated or

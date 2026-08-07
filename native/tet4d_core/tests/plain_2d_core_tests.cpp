@@ -1,8 +1,10 @@
 #include "tet4d_core/core_api.hpp"
 #include "tet4d_core/plain_2d.hpp"
 #include "tet4d_core/plain_2d_session.hpp"
+#include "tet4d_core/plain_piece_catalog.hpp"
 #include "tet4d_core/sha256.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -17,6 +19,33 @@ void require(bool condition, const std::string &message) {
 		std::cerr << message << "\n";
 		std::exit(1);
 	}
+}
+
+bool same_shape(
+		const tet4d::core::PieceShape2D &left,
+		const tet4d::core::PieceShape2D &right) {
+	return left.name == right.name && left.color_id == right.color_id &&
+			left.blocks == right.blocks;
+}
+
+void require_nonterminal(
+		const tet4d::core::Plain2DSession &session,
+		const std::string &context) {
+	require(
+			session.snapshot_json().find("\"game_over\":false") != std::string::npos,
+			context + " must remain nonterminal");
+}
+
+void require_production_shape(const tet4d::core::PieceShape2D &shape) {
+	const std::vector<tet4d::core::PieceShape2D> &catalogue =
+			tet4d::core::plain_piece_catalog_2d("classic");
+	const auto match = std::find_if(
+			catalogue.begin(),
+			catalogue.end(),
+			[&shape](const tet4d::core::PieceShape2D &candidate) {
+				return same_shape(candidate, shape);
+			});
+	require(match != catalogue.end(), "2D preview must be an exact production-catalogue shape");
 }
 
 void test_stable_hash_pilot() {
@@ -228,6 +257,66 @@ void test_stage50_true_random_seed_and_restart() {
 	require(second.state_hash() != initial_hash, "new true-random construction should receive a different effective seed");
 }
 
+void verify_2d_refill_boundary(const std::string &random_mode) {
+	tet4d::core::Plain2DSession shuffled;
+	tet4d::core::PlainGameSetup setup = setup_2d(1337, 1, random_mode);
+	setup.board_shape = {10, 30};
+	require(shuffled.configure(setup), "large valid 2D board should configure for nonterminal preview boundary test");
+	require_nonterminal(shuffled, "initial 2D boundary fixture");
+	const std::string initial_hash = shuffled.state_hash();
+	const std::string initial_snapshot = shuffled.snapshot_json();
+	const std::string initial_status = shuffled.status();
+	const tet4d::core::PieceShape2D initial_preview = shuffled.peek_next_piece_shape();
+	const tet4d::core::PieceShape2D repeated_preview_2 = shuffled.peek_next_piece_shape();
+	const tet4d::core::PieceShape2D repeated_preview_3 = shuffled.peek_next_piece_shape();
+	require(same_shape(initial_preview, repeated_preview_2) && same_shape(initial_preview, repeated_preview_3), "three repeated 2D preview queries should be stable");
+	if (random_mode == tet4d::core::RANDOM_MODE_FIXED_SEED) {
+		require(initial_preview.name == "L", "fixed seed 1337 must retain the established 2D queue sequence");
+	}
+	require_production_shape(initial_preview);
+	require(shuffled.state_hash() == initial_hash, "2D preview query must not change state hash");
+	require(shuffled.snapshot_json() == initial_snapshot, "2D preview query must not change snapshot");
+	require(shuffled.status() == initial_status, "2D preview query must not change command status");
+	shuffled.apply_command("hard_drop");
+	require_nonterminal(shuffled, "2D preview-to-spawn advancement");
+	require(shuffled.snapshot_json().find("\"current_piece\":\"" + initial_preview.name + "\"") != std::string::npos, "2D preview must become the next normally spawned current piece");
+	const tet4d::core::PieceShape2D following_preview = shuffled.peek_next_piece_shape();
+	require(shuffled.snapshot_json().find("\"next_piece\":\"" + following_preview.name + "\"") != std::string::npos, "2D post-spawn preview must report the following authoritative entry");
+
+	for (int draw = 0; draw < 5; ++draw) {
+		shuffled.apply_command("hard_drop");
+		require_nonterminal(shuffled, "2D refill-boundary hard-drop fixture");
+	}
+	require(shuffled.snapshot_json().find("\"next_piece\":\"pending_bag\"") != std::string::npos, "boundary fixture should preserve existing pending_bag snapshot semantics");
+	const std::string boundary_hash = shuffled.state_hash();
+	const std::string boundary_snapshot = shuffled.snapshot_json();
+	const std::string boundary_status = shuffled.status();
+	const tet4d::core::PieceShape2D refill_preview_1 = shuffled.peek_next_piece_shape();
+	const tet4d::core::PieceShape2D refill_preview_2 = shuffled.peek_next_piece_shape();
+	const tet4d::core::PieceShape2D refill_preview_3 = shuffled.peek_next_piece_shape();
+	require(same_shape(refill_preview_1, refill_preview_2) && same_shape(refill_preview_1, refill_preview_3), "three empty-bag 2D preview queries should be stable");
+	require_production_shape(refill_preview_1);
+	require(shuffled.state_hash() == boundary_hash, "empty-bag 2D preview must not advance RNG or hash");
+	require(shuffled.snapshot_json() == boundary_snapshot, "empty-bag 2D preview must not refill the real bag");
+	require(shuffled.status() == boundary_status, "empty-bag 2D preview must not change bag/index/current observable status");
+	shuffled.apply_command("hard_drop");
+	require_nonterminal(shuffled, "2D refill prediction spawn");
+	require(shuffled.snapshot_json().find("\"current_piece\":\"" + refill_preview_1.name + "\"") != std::string::npos, "2D refill preview must equal the next real draw");
+	const tet4d::core::PieceShape2D post_refill_preview = shuffled.peek_next_piece_shape();
+	require(shuffled.snapshot_json().find("\"next_piece\":\"" + post_refill_preview.name + "\"") != std::string::npos, "2D refill spawn must expose the following authoritative preview");
+}
+
+void test_next_piece_preview_is_exact_and_observational() {
+	tet4d::core::Plain2DSession legacy;
+	const tet4d::core::PieceShape2D legacy_preview = legacy.peek_next_piece_shape();
+	require(legacy_preview.name == "O", "legacy 2D preview should report the exact next piece");
+	require(legacy_preview.color_id == 2 && legacy_preview.blocks.size() == 4, "legacy 2D preview should expose production color and cells");
+	require_production_shape(legacy_preview);
+
+	verify_2d_refill_boundary(tet4d::core::RANDOM_MODE_FIXED_SEED);
+	verify_2d_refill_boundary(tet4d::core::RANDOM_MODE_TRUE_RANDOM);
+}
+
 std::string export_stage50_setup_case_2d(const std::string &case_id) {
 	tet4d::core::PlainGameSetup setup = setup_2d(1337);
 	std::vector<std::string> actions = {"move_right", "rotate_cw", "soft_drop", "hard_drop"};
@@ -320,6 +409,7 @@ int main(int argc, char **argv) {
 	test_configurable_live_plain_2d_session();
 	test_stage50_live_plain_2d_setup_identity();
 	test_stage50_true_random_seed_and_restart();
+	test_next_piece_preview_is_exact_and_observational();
 	test_game_over_spawn_blocked_and_rejected_commands();
 	std::cout << "tet4d_core native plain 2D tests passed\n";
 	return 0;

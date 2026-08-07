@@ -165,6 +165,10 @@ static func color_for_role(role: String, mode: String = DISPLAY_MODE_PLAIN) -> C
 	return palette.get(role, palette.get(ROLE_TEXT, Color.WHITE))
 
 
+static func preview_piece_color(color_id: int) -> Color:
+	return _trace_color(color_id, false).lerp(Color.WHITE, 0.08)
+
+
 static func build_theme(mode: String = DISPLAY_MODE_PLAIN) -> Theme:
 	var display_mode := normalize_display_mode(mode)
 	var theme_path := DIAGNOSTIC_THEME_PATH

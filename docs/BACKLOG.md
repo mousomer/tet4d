@@ -52,6 +52,13 @@ exact Godot-owned signed 4D presentation basis, shared slice reconstruction,
 basis-aware controls/HUD/instruction, and deterministic invariance evidence
 without changing native gameplay or topology semantics.
 
+Stage 54D-1 implementation and mechanical verification are complete on its
+implementation branch, with commit still pending. Developer-rendered
+inspection is complete; human preview-readability acceptance remains pending
+under Stage 54E. The slice adds one authoritative next-piece query plus a
+shared compact Godot 2D/3D/4D thumbnail without changing queue, RNG, snapshot,
+hash, replay, or trace semantics.
+
 Do not create Stage 53G or reopen generic boundary-governance work without a
 new evidenced problem and owning-format scope.
 
@@ -72,19 +79,20 @@ The programme is owned by
 
 ## Next Implementation Stage
 
-### Stage 54D-1 — One-piece next preview
+### Stage 54D-2 — Ghost piece
 
-Status: next implementation slice after Stage 54C.
+Status: next implementation slice after Stage 54D-1 is committed separately.
 
-Present exactly one authoritative next piece through a shared compact
-2D/3D/4D thumbnail without changing queue, RNG, snapshot, hash, replay, or
+Render the exact authoritative hard-drop destination across every affected
+slice without changing scoring, collision, lock, snapshot, hash, replay, or
 trace semantics.
 
 ## Accepted Immediate Follow-Ups
 
 ### Stage 54D — Modern gameplay baseline
 
-Status: after verified Stage 54C; begin with Stage 54D-1.
+Status: Stage 54D-1 implementation complete with commit pending; Stage 54D-2
+is next only after that separate commit decision.
 
 Implement as three separate PRs in dependency order.
 

@@ -13,6 +13,7 @@ const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tok
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onboarding_model.gd")
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
+const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
@@ -180,6 +181,7 @@ var _live_4d_paused := false
 var _live_4d_game_over := false
 var _onboarding_model = LiveOnboardingModelScript.new()
 var _onboarding_panel: PanelContainer
+var _next_piece_panel: PanelContainer
 var _basis_panel: PanelContainer
 var _basis_indicator_label: Label
 var _live_4d_basis_snapshot: Dictionary = {
@@ -554,6 +556,8 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 	if _summary_title != null:
 		_summary_title.text = "Replay"
 	_set_live_declutter_mode(false)
+	if _next_piece_panel != null:
+		_next_piece_panel.visible = false
 	if _live_view_actions != null:
 		_live_view_actions.visible = false
 	set_playback_state(is_playing, speed, diagnostics_visible)
@@ -730,6 +734,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"inspector_hint_text": _collect_label_text(_inspector_hint_panel),
 		"onboarding": _onboarding_model.snapshot(),
 		"onboarding_panel": _onboarding_panel.deterministic_snapshot() if _onboarding_panel != null else {},
+		"next_piece_panel": _next_piece_panel.deterministic_snapshot() if _next_piece_panel != null else {},
 		"basis": _live_4d_basis_snapshot.duplicate(true),
 		"basis_indicator_text": _basis_indicator_label.text if _basis_indicator_label != null else "",
 		"basis_panel_visible": _basis_panel.visible if _basis_panel != null else false,
@@ -1040,6 +1045,14 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_onboarding_panel.visible = false
 	if not live_mode and _basis_panel != null:
 		_basis_panel.visible = false
+	if _next_piece_panel != null:
+		_next_piece_panel.visible = live_mode
+
+
+func set_next_piece_preview(preview: Dictionary) -> bool:
+	if _next_piece_panel == null:
+		return false
+	return _next_piece_panel.set_preview(preview)
 
 
 func set_live_4d_basis_snapshot(snapshot: Dictionary) -> void:
@@ -1082,19 +1095,20 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 		_quick_settings_header.visible = detailed
 		_settings_panel.visible = detailed
 		_move_right_column_child(_onboarding_panel, 0)
-		_move_right_column_child(_basis_panel, 1)
-		_move_right_column_child(_controls_header, 2)
-		_move_right_column_child(_inspector_hint_panel, 3)
-		_move_right_column_child(_inspector_header, 4)
-		_move_right_column_child(_integrity_panel, 5)
-		_move_right_column_child(_bundle_detail_panel, 6)
-		_move_right_column_child(_view_header, 6)
-		_move_right_column_child(_camera_panel, 7)
-		_move_right_column_child(_diagnostics_header, 8)
-		_move_right_column_child(_diagnostics_panel, 9)
-		_move_right_column_child(_event_panel, 10)
-		_move_right_column_child(_quick_settings_header, 11)
-		_move_right_column_child(_settings_panel, 12)
+		_move_right_column_child(_next_piece_panel, 1)
+		_move_right_column_child(_basis_panel, 2)
+		_move_right_column_child(_controls_header, 3)
+		_move_right_column_child(_inspector_hint_panel, 4)
+		_move_right_column_child(_inspector_header, 5)
+		_move_right_column_child(_integrity_panel, 6)
+		_move_right_column_child(_bundle_detail_panel, 7)
+		_move_right_column_child(_view_header, 8)
+		_move_right_column_child(_camera_panel, 9)
+		_move_right_column_child(_diagnostics_header, 10)
+		_move_right_column_child(_diagnostics_panel, 11)
+		_move_right_column_child(_event_panel, 12)
+		_move_right_column_child(_quick_settings_header, 13)
+		_move_right_column_child(_settings_panel, 14)
 		return
 	_bundle_detail_panel.visible = true
 	_camera_panel.visible = true
@@ -1116,6 +1130,8 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 	_move_right_column_child(_event_panel, 10)
 	_move_right_column_child(_quick_settings_header, 11)
 	_move_right_column_child(_settings_panel, 12)
+	_move_right_column_child(_next_piece_panel, 13)
+	_move_right_column_child(_basis_panel, 14)
 
 
 func _move_right_column_child(node: Node, index: int) -> void:
@@ -1691,6 +1707,10 @@ func _build_layout() -> void:
 		_set_persistent_setting("interface.show_onboarding", false)
 	)
 	_right_column.add_child(_onboarding_panel)
+	_next_piece_panel = NextPiecePanelScript.new()
+	_next_piece_panel.visible = false
+	_next_piece_panel.set_style_manager(_style_manager)
+	_right_column.add_child(_next_piece_panel)
 	_basis_panel = _build_basis_panel()
 	_basis_panel.visible = false
 	_right_column.add_child(_basis_panel)
@@ -2465,6 +2485,8 @@ func _apply_shell_style() -> void:
 		_game_viewport.transparent_bg = false
 		_game_viewport.get_world_3d()
 	_style_applier.apply_to_tree(self, _style_manager)
+	if _next_piece_panel != null:
+		_next_piece_panel.set_style_manager(_style_manager)
 	if _settings_panel != null:
 		_settings_panel.apply_shell_style()
 	if _settings_screen_panel != null:

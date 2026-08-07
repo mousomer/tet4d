@@ -419,9 +419,26 @@ std::string Plain2DSession::state_hash() const {
 	));
 }
 
+PieceShape2D Plain2DSession::peek_next_piece_shape() const {
+	if (!setup_.shuffle_bag) {
+		const std::vector<PieceShape2D> &sequence = live_piece_sequence();
+		return sequence[next_piece_index_ % sequence.size()];
+	}
+	if (!piece_bag_.empty()) {
+		return piece_bag_.back();
+	}
+	PythonRandom preview_rng = rng_;
+	const std::vector<PieceShape2D> preview_bag =
+			build_shuffled_piece_bag(live_piece_sequence(), preview_rng);
+	return preview_bag.back();
+}
+
+const std::string &Plain2DSession::piece_set_id() const {
+	return setup_.piece_set_id;
+}
+
 void Plain2DSession::refill_piece_bag() {
-	piece_bag_ = live_piece_sequence();
-	rng_.shuffle(piece_bag_);
+	piece_bag_ = build_shuffled_piece_bag(live_piece_sequence(), rng_);
 }
 
 PieceShape2D Plain2DSession::draw_next_piece_shape() {

@@ -856,6 +856,8 @@ func _apply_world_palette(display_mode: String) -> void:
 func _refresh_hud() -> void:
 	if _mode == MODE_LIVE_2D:
 		var game_over := _live_snapshot_game_over()
+		if not game_over:
+			_hud.set_next_piece_preview(_live_bridge.live_2d_next_piece_preview())
 		_hud.set_live_2d_mode(
 			_live_2d_paused,
 			game_over,
@@ -865,6 +867,8 @@ func _refresh_hud() -> void:
 		)
 	elif _mode == MODE_LIVE_3D:
 		var game_over := _live_snapshot_game_over()
+		if not game_over:
+			_hud.set_next_piece_preview(_live_bridge.live_3d_next_piece_preview())
 		_hud.set_live_3d_mode(
 			_live_3d_paused,
 			game_over,
@@ -874,6 +878,8 @@ func _refresh_hud() -> void:
 		)
 	elif _mode == MODE_LIVE_4D:
 		var game_over := _live_snapshot_game_over()
+		if not game_over:
+			_hud.set_next_piece_preview(_live_bridge.live_4d_next_piece_preview())
 		_hud.set_live_4d_basis_snapshot(_live_4d_basis_hud_snapshot())
 		_hud.set_live_4d_mode(
 			_live_4d_paused,

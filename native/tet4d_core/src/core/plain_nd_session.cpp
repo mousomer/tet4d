@@ -541,9 +541,28 @@ std::string PlainNDSession::state_hash() const {
 	));
 }
 
+PieceShapeND PlainNDSession::peek_next_piece_shape() const {
+	if (piece_sequence_.empty()) {
+		return {};
+	}
+	if (!setup_.shuffle_bag) {
+		return piece_sequence_[next_piece_index_ % piece_sequence_.size()];
+	}
+	if (!piece_bag_.empty()) {
+		return piece_bag_.back();
+	}
+	PythonRandom preview_rng = rng_;
+	const std::vector<PieceShapeND> preview_bag =
+			build_shuffled_piece_bag(piece_sequence_, preview_rng);
+	return preview_bag.back();
+}
+
+const std::string &PlainNDSession::piece_set_id() const {
+	return setup_.piece_set_id;
+}
+
 void PlainNDSession::refill_piece_bag() {
-	piece_bag_ = piece_sequence_;
-	rng_.shuffle(piece_bag_);
+	piece_bag_ = build_shuffled_piece_bag(piece_sequence_, rng_);
 }
 
 PieceShapeND PlainNDSession::draw_next_piece_shape() {
