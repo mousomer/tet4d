@@ -1,9 +1,9 @@
 ﻿# 4D Tetris RDS
 
-Status: Active v0.7 (Verified 2026-02-19)  
+Status: Active v0.8 (Godot Stage 54C verified 2026-08-07)
 Author: Omer + Codex  
 Date: 2026-02-18  
-Target Runtime: Python 3.11-3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`; Godot 4.7.1 product shell
 
 ## 1. Scope
 
@@ -118,6 +118,10 @@ System:
 Layer-view policy:
 1. 4D mode renders all basis-derived layer boards; there is no manual slice selection control.
 2. Gameplay rotations and movement are independent from view-layer panel ordering.
+3. In Godot live play, the exact signed presentation basis and coordinate map
+   are governed by `docs/architecture/game_safe_4d_slice_basis.md`.
+4. Godot `view_xw_*` and `view_zw_*` actions reconstruct the slice stack while
+   leaving canonical gameplay state and camera orientation unchanged.
 
 Viewer-consistent translation requirement:
 1. Movement intents are interpreted in viewer space for `x/z` translation.
@@ -139,7 +143,8 @@ Rotation reliability requirements (4D `z-w`):
 
 ## 6. Rendering and UX
 
-1. 4D state is shown as a grid of projected 3D boards (one per `w` layer).
+1. 4D state is shown as a grid of projected 3D boards, one per layer of the
+   current signed slice axis (canonical `W` at identity).
 2. HUD shows active basis metadata (axis/count), not manual slice indices.
 3. Grid can be toggled on/off for all layer boards.
 4. When grid is off, each layer board still renders a board shadow.
@@ -179,6 +184,23 @@ Implementation structure for view `xw` / `zw`:
 8. map board coord `(x,y,z,w)` -> `(layer_index, cell3)` via basis,
 9. map `cell3` to centered 3D world coords for that layer board dims,
 10. apply existing 3D yaw/pitch projection path.
+
+### 6.1 Godot Stage 54C acceptance boundary
+
+1. The presentation basis is an exact signed permutation with `+Y` fixed in
+   the visible vertical slot; floating-point orientation is not semantic state.
+2. The shared mapper is bijective for every admitted board shape, including
+   asymmetric boards and `W=1`.
+3. Locked cells, active cells, lesson markers, grids, frames, labels, and
+   active-layer emphasis use the same canonical-to-presentation map.
+4. Slice labels expose signed semantic axis and coordinate; reversed stacks
+   do not masquerade as ordinary positive ordering.
+5. Basis state is excluded from native snapshots, hashes, replay identity,
+   gameplay configuration, topology, scoring, and persistence.
+6. Replay presentation remains identity-based. Stage 54C applies only to live
+   4D play.
+7. New games, gameplay restart, and Reset View restore identity. Reduced
+   Motion snaps directly to the exact destination basis.
 
 ## 7. Scoring
 

@@ -50,6 +50,8 @@ signal live_game_start_requested(setup: Dictionary)
 signal change_setup_requested(mode: String)
 signal new_random_game_requested()
 signal main_menu_requested()
+signal basis_turn_requested(plane: String, direction: int)
+signal basis_reset_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -63,7 +65,7 @@ const SCREEN_GAME_SETUP := "game_setup"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
 const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
-const LIVE_4D_HELP_TEXT := "The board uses W slices; Q/E moves the piece between them. Start with one or two of the six rotation planes. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
+const LIVE_4D_HELP_TEXT := "The same 4D board can be re-sliced through X, Z, or W. Basis controls rebuild the slices without rotating the piece; camera controls move only the 3D viewpoint. Y remains down. Q/E moves along the current slice axis. Esc returns to the Main Menu."
 const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end lets you inspect replay demos and play the plain-board 2D, 3D, and 4D modes.
 
 Choose a mode:
@@ -178,6 +180,15 @@ var _live_4d_paused := false
 var _live_4d_game_over := false
 var _onboarding_model = LiveOnboardingModelScript.new()
 var _onboarding_panel: PanelContainer
+var _basis_panel: PanelContainer
+var _basis_indicator_label: Label
+var _live_4d_basis_snapshot: Dictionary = {
+	"key": "1,2,3,4",
+	"visible_axes": ["+X", "+Y", "+Z"],
+	"slice_axis": "+W",
+	"gravity_axis": "+Y",
+	"text": "View: +X · +Y · +Z\nSlice: +W · Gravity: Y down",
+}
 var _last_onboarding_result_signature := ""
 var _screen_focus_targets := {}
 var _screen_last_focus := {}
@@ -352,9 +363,10 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 				]
 			var layout_text := "Board view"
 			if trace_type == "live_4d":
-				layout_text = "W slices side-by-side · W %d/%d" % [
-					int(snapshot.get("active_w", 0)),
-					int(snapshot.get("w_slice_count", 1)),
+				layout_text = "%s · %d slices · visible %s" % [
+					str(_live_4d_basis_snapshot.get("text", "4D basis")).replace("\n", " · "),
+					int(_live_4d_basis_snapshot.get("layer_count", 1)),
+					str(_live_4d_basis_snapshot.get("visible_dimensions", [])),
 				]
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
 			_update_live_gameplay_summary(snapshot, mode_label)
@@ -399,6 +411,8 @@ func set_live_2d_mode(
 	_active_live_mode = GameSetupSpecScript.MODE_2D
 	_live_2d_game_over = game_over
 	_onboarding_model.select_mode("live_2d")
+	if _basis_panel != null:
+		_basis_panel.visible = false
 	_render_onboarding()
 	_set_live_declutter_mode(true)
 	if _live_view_actions != null:
@@ -447,6 +461,8 @@ func set_live_3d_mode(
 	_active_live_mode = GameSetupSpecScript.MODE_3D
 	_live_3d_game_over = game_over
 	_onboarding_model.select_mode("live_3d")
+	if _basis_panel != null:
+		_basis_panel.visible = false
 	_render_onboarding()
 	_set_live_declutter_mode(true)
 	if _live_view_actions != null:
@@ -495,6 +511,8 @@ func set_live_4d_mode(
 	_active_live_mode = GameSetupSpecScript.MODE_4D
 	_live_4d_game_over = game_over
 	_onboarding_model.select_mode("live_4d")
+	if _basis_panel != null:
+		_basis_panel.visible = true
 	_render_onboarding()
 	_set_live_declutter_mode(true)
 	if _live_view_actions != null:
@@ -510,11 +528,11 @@ func set_live_4d_mode(
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 4D"
 	if _viewport_hint != null:
-		_viewport_hint.text = "C++ PlainNDSession · Godot command/render shell · W slice cards · gravity %.2fs" % gravity_interval_seconds
+		_viewport_hint.text = "C++ PlainNDSession · exact Godot slice basis · gravity %.2fs" % gravity_interval_seconds
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Play 4D uses W slices. Q/E move the piece across W; camera controls change only the view; double-click or Fit View restores it."
+		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Re-slice the same object through X, Z, or W. Y remains down; camera and piece rotations stay independent."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -527,7 +545,7 @@ func set_live_4d_mode(
 			state_text,
 			game_over_reason,
 			last_command,
-			"W slices side-by-side",
+			str(_live_4d_basis_snapshot.get("text", "4D basis")),
 			"Last rotation pending snapshot"
 		)
 
@@ -712,6 +730,9 @@ func layout_contract_snapshot() -> Dictionary:
 		"inspector_hint_text": _collect_label_text(_inspector_hint_panel),
 		"onboarding": _onboarding_model.snapshot(),
 		"onboarding_panel": _onboarding_panel.deterministic_snapshot() if _onboarding_panel != null else {},
+		"basis": _live_4d_basis_snapshot.duplicate(true),
+		"basis_indicator_text": _basis_indicator_label.text if _basis_indicator_label != null else "",
+		"basis_panel_visible": _basis_panel.visible if _basis_panel != null else false,
 		"focused_control": get_viewport().gui_get_focus_owner().name if get_viewport() != null and get_viewport().gui_get_focus_owner() != null else "",
 		"main_menu_scroll": _scroll_contract(_main_menu_scroll),
 		"controls_scroll": _scroll_contract(_controls_scroll),
@@ -894,10 +915,10 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 
 func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String) -> void:
 	if _summary_label != null:
-		_summary_label.text = live_gameplay_summary_text(snapshot, mode_label)
+		_summary_label.text = live_gameplay_summary_text(snapshot, mode_label, _live_4d_basis_snapshot)
 
 
-static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String) -> String:
+static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String, basis_snapshot: Dictionary = {}) -> String:
 	var current_piece := str(snapshot.get("current_piece", "-")).strip_edges()
 	var next_piece := str(snapshot.get("next_piece", "-")).strip_edges()
 	var shape: Array = snapshot.get("board_shape", [])
@@ -909,16 +930,21 @@ static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String)
 	var seed_text := "Seed %d" % int(snapshot.get("effective_seed", 0))
 	var layer_text := ""
 	if int(snapshot.get("dimension", 0)) == 4:
-		var active_layers := []
-		for cell in snapshot.get("active_cells", []):
-			var position: Array = cell.get("position", [])
-			if position.size() > 3 and not active_layers.has(int(position[3])):
-				active_layers.append(int(position[3]))
-		active_layers.sort()
+		var active_layers: Array = basis_snapshot.get("active_layers", [])
+		if active_layers.is_empty():
+			for cell in snapshot.get("active_cells", []):
+				var position: Array = cell.get("position", [])
+				if position.size() > 3 and not active_layers.has(int(position[3])):
+					active_layers.append(int(position[3]))
+			active_layers.sort()
 		var active_labels := []
 		for layer in active_layers:
 			active_labels.append(str(int(layer) + 1))
-		layer_text = " | Layers W · %d | Active %s" % [int(snapshot.get("w_slice_count", shape[3] if shape.size() > 3 else 1)), ",".join(active_labels)]
+		layer_text = " | Slices %s · %d | Active %s" % [
+			str(basis_snapshot.get("slice_axis", "+W")),
+			int(basis_snapshot.get("layer_count", snapshot.get("w_slice_count", shape[3] if shape.size() > 3 else 1))),
+			",".join(active_labels),
+		]
 	return "%s | Board %s%s | %s | %s | %s | SCORE %d | CLEARS %d | %s > %s | %s" % [
 		mode_label,
 		board_text,
@@ -1012,11 +1038,29 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 	_set_live_inspector_density(live_mode)
 	if not live_mode and _onboarding_panel != null:
 		_onboarding_panel.visible = false
+	if not live_mode and _basis_panel != null:
+		_basis_panel.visible = false
+
+
+func set_live_4d_basis_snapshot(snapshot: Dictionary) -> void:
+	_live_4d_basis_snapshot = snapshot.duplicate(true)
+	_onboarding_model.select_mode("live_4d")
+	_onboarding_model.consume_basis_state(_live_4d_basis_snapshot)
+	if _basis_indicator_label != null:
+		_basis_indicator_label.text = str(snapshot.get("text", "View: +X · +Y · +Z\nSlice: +W · Gravity: Y down"))
+	if _inspector_hint_panel != null and _active_live_mode == GameSetupSpecScript.MODE_4D:
+		_inspector_hint_panel.set_meta("hint_cache_key", "")
+		_update_control_hint_panel(_inspector_hint_panel, "live_4d", _live_4d_game_over, "")
+	_render_onboarding()
 
 
 func _render_onboarding() -> void:
 	if _onboarding_panel != null:
 		_onboarding_panel.render(_onboarding_model.snapshot())
+
+
+func onboarding_snapshot() -> Dictionary:
+	return _onboarding_model.snapshot()
 
 
 func _set_onboarding_visible(visible: bool) -> void:
@@ -1038,11 +1082,12 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 		_quick_settings_header.visible = detailed
 		_settings_panel.visible = detailed
 		_move_right_column_child(_onboarding_panel, 0)
-		_move_right_column_child(_controls_header, 1)
-		_move_right_column_child(_inspector_hint_panel, 2)
-		_move_right_column_child(_inspector_header, 3)
-		_move_right_column_child(_integrity_panel, 4)
-		_move_right_column_child(_bundle_detail_panel, 5)
+		_move_right_column_child(_basis_panel, 1)
+		_move_right_column_child(_controls_header, 2)
+		_move_right_column_child(_inspector_hint_panel, 3)
+		_move_right_column_child(_inspector_header, 4)
+		_move_right_column_child(_integrity_panel, 5)
+		_move_right_column_child(_bundle_detail_panel, 6)
 		_move_right_column_child(_view_header, 6)
 		_move_right_column_child(_camera_panel, 7)
 		_move_right_column_child(_diagnostics_header, 8)
@@ -1646,6 +1691,9 @@ func _build_layout() -> void:
 		_set_persistent_setting("interface.show_onboarding", false)
 	)
 	_right_column.add_child(_onboarding_panel)
+	_basis_panel = _build_basis_panel()
+	_basis_panel.visible = false
+	_right_column.add_child(_basis_panel)
 	_diagnostics_header = _inspector_section_header("DIAGNOSTICS")
 	_right_column.add_child(_diagnostics_header)
 	_diagnostics_panel = DiagnosticsPanelScript.new()
@@ -2210,6 +2258,54 @@ func _inspector_section_header(label_text: String) -> Label:
 	return label
 
 
+func _build_basis_panel() -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.name = "Live4DBasisPanel"
+	panel.theme_type_variation = "ViewportFrame"
+	panel.set_meta("semantic_role", "interactive_button_panel")
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 8)
+	panel.add_child(content)
+	var title := Label.new()
+	title.text = "4D BASIS"
+	title.theme_type_variation = "AccentLabel"
+	content.add_child(title)
+	_basis_indicator_label = Label.new()
+	_basis_indicator_label.name = "Live4DBasisIndicator"
+	_basis_indicator_label.text = str(_live_4d_basis_snapshot.get("text", ""))
+	_basis_indicator_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_basis_indicator_label.theme_type_variation = "SecondaryLabel"
+	content.add_child(_basis_indicator_label)
+	var controls := HFlowContainer.new()
+	controls.name = "Live4DBasisControls"
+	controls.add_theme_constant_override("h_separation", 6)
+	controls.add_theme_constant_override("v_separation", 6)
+	content.add_child(controls)
+	for action in [
+		["view_xw_neg", "XW -", "xw", -1],
+		["view_xw_pos", "XW +", "xw", 1],
+		["view_zw_neg", "ZW -", "zw", -1],
+		["view_zw_pos", "ZW +", "zw", 1],
+	]:
+		var button := Button.new()
+		button.name = "BasisButton__%s" % str(action[0])
+		button.text = "%s  %s" % [LiveInputContractScript.display_key(str(action[0])), str(action[1])]
+		button.tooltip_text = "Re-slice the same 4D state; does not rotate the piece"
+		button.set_meta("semantic_role", "action_button")
+		var plane := str(action[2])
+		var direction := int(action[3])
+		button.pressed.connect(func() -> void: basis_turn_requested.emit(plane, direction))
+		controls.add_child(button)
+	var reset_button := Button.new()
+	reset_button.name = "BasisResetButton"
+	reset_button.text = "%s  Reset View" % LiveInputContractScript.display_key("reset")
+	reset_button.tooltip_text = "Reset the camera and the exact 4D slice basis"
+	reset_button.set_meta("semantic_role", "action_button")
+	reset_button.pressed.connect(func() -> void: basis_reset_requested.emit())
+	controls.add_child(reset_button)
+	return panel
+
+
 func _control_mode_card(title_text: String, subtitle: String, mode: String) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.name = "ControlModeCard__%s" % mode
@@ -2252,7 +2348,8 @@ func _update_control_hint_panel(
 	if panel == null:
 		return
 	compact = bool(panel.get_meta("hint_compact", compact))
-	var cache_key := "%s|%s|%s|%s" % [mode, str(warning), warning_text, str(compact)]
+	var basis_key := str(_live_4d_basis_snapshot.get("key", "")) if mode == "live_4d" else ""
+	var cache_key := "%s|%s|%s|%s|%s" % [mode, str(warning), warning_text, str(compact), basis_key]
 	if str(panel.get_meta("hint_cache_key", "")) == cache_key:
 		return
 	panel.set_meta("hint_cache_key", cache_key)
@@ -2282,7 +2379,7 @@ func _control_hint_groups_for_mode(mode: String) -> Array:
 		"live_3d":
 			return live_3d_control_hint_groups()
 		"live_4d":
-			return live_4d_control_hint_groups()
+			return LiveInputContractScript.control_hint_groups("live_4d", _live_4d_basis_snapshot)
 		_:
 			return replay_control_hint_groups()
 

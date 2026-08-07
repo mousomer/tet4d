@@ -47,6 +47,11 @@ Stage 54B-2 is complete and verified on the active branch. It adds editable
 Godot board dimensions, native-validation presentation, and schema-3
 last-valid setup persistence without changing gameplay or topology semantics.
 
+Stage 54C is complete and verified on its implementation branch. It adds an
+exact Godot-owned signed 4D presentation basis, shared slice reconstruction,
+basis-aware controls/HUD/instruction, and deterministic invariance evidence
+without changing native gameplay or topology semantics.
+
 Do not create Stage 53G or reopen generic boundary-governance work without a
 new evidenced problem and owning-format scope.
 
@@ -67,35 +72,19 @@ The programme is owned by
 
 ## Next Implementation Stage
 
-### Stage 54C — Game-safe 4D slice-basis quarter-turns
+### Stage 54D-1 — One-piece next preview
 
-Status: next implementation slice after Stage 54B-2.
+Status: next implementation slice after Stage 54C.
 
-Use the bounded setup surface delivered by Stage 54B-2 without changing board
-coordinates or deterministic gameplay state. Follow the implementation
-sequence in the professional programme and retain Stage 54B's tuple-level
-admission boundary.
+Present exactly one authoritative next piece through a shared compact
+2D/3D/4D thumbnail without changing queue, RNG, snapshot, hash, replay, or
+trace semantics.
 
 ## Accepted Immediate Follow-Ups
 
-### Stage 54C — Game-safe 4D slice-basis quarter-turns
-
-Status: after Stage 54B.
-
-Required implementation sequence:
-
-1. exact basis-state and transform contract;
-2. Godot controls and basis indicators;
-3. slice reconstruction and presentation;
-4. focused instructional sequence;
-5. manual 4D comprehension review.
-
-Y remains the visible gravity axis during ordinary play. This stage does not
-mutate semantic board coordinates or deterministic gameplay state.
-
 ### Stage 54D — Modern gameplay baseline
 
-Status: after Stage 54C.
+Status: after verified Stage 54C; begin with Stage 54D-1.
 
 Implement as three separate PRs in dependency order.
 

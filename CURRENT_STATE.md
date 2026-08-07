@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-05
+Last updated: 2026-08-07
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -42,8 +42,12 @@ history ledger. Detailed history is preserved in
   `AE-0054` without transferring topology or gameplay semantics. Stage 54B-2
   implementation now provides direct Godot X/Y/Z/W setup, validation
   presentation, and schema-3 last-valid persistence. It is complete and
-  verified; Stage 54C is next.
-- Stage 54C adds game-safe 4D slice-basis quarter-turns and focused instruction.
+  verified.
+- Stage 54C is complete and verified on the active branch. Godot now owns an exact signed
+  live-4D slice-presentation basis with XW/ZW quarter turns, a shared bijective
+  coordinate mapper, basis-aware layout/input/HUD, a five-step lesson, and
+  deterministic native-state/replay isolation. Native gameplay and topology
+  authority did not change.
 - Stage 54D provides the modern gameplay baseline in three ordered slices:
   next-piece preview, ghost piece, and Hold.
 - Weak live 3D/4D grid visibility is known non-blocking visual debt. It is
@@ -96,6 +100,9 @@ history ledger. Detailed history is preserved in
   rebuild them from the authoritative profile and dimensions; never repair
   them into semantic state. Its separate C++-dependent setup-latency deferral
   remains in `docs/BACKLOG.md`.
+- Live 4D basis state is Godot presentation state only. Do not persist it,
+  include it in snapshots/hashes, apply it to replay rendering, exchange Y,
+  or duplicate native movement legality in GDScript.
 - `state/topology/profiles.json` is a distinct version-1 edge-rule workspace
   format. Invalid existing storage may provide read-only defaults but must
   block ordinary save; destructive replacement requires an explicit recovery
@@ -176,8 +183,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54C — game-safe 4D slice-basis rotations and focused
-   instruction.
+1. Implement Stage 54D-1 — the authoritative one-piece next preview and shared
+   compact 2D/3D/4D thumbnail presentation.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

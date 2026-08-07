@@ -72,9 +72,10 @@ C++ ownership are established.
 4. Live play-plane visualization owns board content only. Interactive Quick
    Settings and grid-visibility commands belong to a cockpit button panel;
    passive keyboard and mouse references belong to helper panels.
-5. In 4D, W-slice labels identify the slice without active wording, sit on the
-   camera-relative rear face, and use visual emphasis rather than semantic text
-   to distinguish the selected slice.
+5. In 4D, signed slice-axis labels identify the semantic layer without active
+   wording, sit on the camera-relative rear face, and use visual emphasis
+   rather than semantic text to distinguish selected layers. Identity uses W;
+   Stage 54C may present X or Z layers through the exact Godot view basis.
 
 ### 2.3 Professional live-board setup admissibility
 

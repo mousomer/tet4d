@@ -14,7 +14,7 @@ var is_live_4d := false
 var uses_live_exterior_cells := false
 
 
-func configure(source_snapshot: Dictionary) -> void:
+func configure(source_snapshot: Dictionary, basis = null) -> void:
 	snapshot = source_snapshot
 	trace_type = str(snapshot.get("trace_type", ""))
 	dimension = int(snapshot.get("dimension", 0))
@@ -22,7 +22,7 @@ func configure(source_snapshot: Dictionary) -> void:
 	is_live_3d = trace_type == "live_3d" and dimension == 3
 	is_live_4d = trace_type == "live_4d" and dimension == 4
 	uses_live_exterior_cells = is_live and dimension >= 3
-	projection.configure(snapshot)
+	projection.configure(snapshot, basis)
 
 
 func current_bounds() -> Dictionary:
@@ -52,7 +52,10 @@ func active_layer_indices() -> Array:
 	for cell in active_cells():
 		var position: Array = cell.get("position", [])
 		if position.size() > 3:
-			var layer := int(position[3])
+			var mapped: Dictionary = projection.mapper.presentation_coordinate(position)
+			if not bool(mapped.get("ok", false)):
+				continue
+			var layer := int(mapped.get("layer_index", -1))
 			if not result.has(layer):
 				result.append(layer)
 	result.sort()

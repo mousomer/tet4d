@@ -257,7 +257,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: game area should remain larger than the inspector column, game=%s inspector=%s" % [label, game_rect, inspector_rect])
 	if replay_game_width > 0.0 and game_rect.size.x <= replay_game_width + 0.5:
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
-	if right_inspector_order.size() < 3 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[2]) != "InspectorControlHints":
+	if right_inspector_order.size() < 4 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "Live4DBasisPanel" or str(right_inspector_order[2]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[3]) != "InspectorControlHints":
 		failures.append("%s: live right inspector should present onboarding and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
 	var view_actions := hud.find_child("CockpitButtonPanel", true, false) as Control
 	var quick_settings := hud.find_child("QuickSettingsToggle", true, false) as Button
@@ -317,7 +317,7 @@ func _check_live_control_maps() -> Array:
 		group_names.append(str(group.get("group", "")))
 		for item in group.get("items", []):
 			flattened += "%s %s\n" % [str(item[0]), str(item[1])]
-	for required_group in ["Piece movement", "Plane Rotation", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
+	for required_group in ["Piece movement", "Plane Rotation", "4D Basis", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
 	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Right Drag", "Wheel"]:
@@ -332,7 +332,13 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Piece movement",
-		[["A / D", "X- / X+"], ["W / S", "Z+ / Z-"], ["Q / E", "W- / W+"]]
+		[["A / D", "Visible X - / +"], ["W / S", "Visible Z - / +"], ["Q / E", "Slice W - / +"]]
+	)
+	_assert_group_items(
+		failures,
+		group_items,
+		"4D Basis",
+		[["1 / 2", "Re-slice XW - / +"], ["; / '", "Re-slice ZW - / +"], ["0", "Reset camera + basis"]]
 	)
 	_assert_group_items(
 		failures,

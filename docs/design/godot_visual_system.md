@@ -79,25 +79,25 @@ bright frame.
 - Warning and error roles are reserved for actionable state.
 - Pause and game-over use text plus a bordered status badge; game over uses
   the error role without turning the full shell red.
-- Active W layers use a stronger outline and label weight. Inactive layers
+- Active basis-derived layers use a stronger outline and label weight. Inactive layers
   remain visible with a quieter structural outline.
 
 ## Board and shell relationship
 
 Board bounds and grids support orientation. They must remain quieter than
-active pieces, locked cells, the selected W layer, and terminal state. Active
+active pieces, locked cells, the selected basis-derived layer, and terminal state. Active
 pieces use crisp, warm-white edge outlines with restrained or zero emission in
 the Instrument theme. Piece fill owns gameplay colour; the outline separates
 every constituent cell clearly even at 3D/4D overview scale. Locked cells are
 darker and use quieter edges, but adjacent cells must remain individually
 parseable. The Pygame diagrammatic exterior view, clean cube-edge separation,
-and stable W-slice rhythm remain the comparison standard.
+and stable signed-slice rhythm remain the comparison standard.
 
 In 3D and 4D, active and locked cells retain the same body scale and structural
 wireframe envelope. Locking changes emphasis, not geometry: the wireframe stays
 visibly present in a quieter warm-gray role, and the settled stack must not
 acquire artificial gaps. The default 4D
-fit keeps the complete W-slice matrix visible without making it feel remote.
+fit keeps the complete current-slice matrix visible without making it feel remote.
 Active cell wireframes remain crisp but subordinate to piece fill rather than
 forming a bright cage. Live boards keep persistent View Options above the board
 for restoring Quick Settings and toggling internal grid detail; the outer
@@ -108,7 +108,7 @@ updates so the three front faces remain free of grid detail. Grids must never
 bisect the play volume or obstruct cells on a front face.
 
 The canonical gravity floor uses a quiet filled plane distinct from the other
-five open boundaries. Four-dimensional slice labels remain readable at the
+five open boundaries. Four-dimensional signed slice-axis labels remain readable at the
 fitted overview scale, while the active-slice frame uses emphasis rather than
 excessive thickness. Live 3D/4D views include a compact, screen-anchored XYZ
 orientation marker whose arrows track the world axes as the camera moves.
@@ -123,8 +123,12 @@ actions use a stronger clickable-button treatment than passive key-reference
 tags. Windowed/fullscreen state, including OS-driven mode changes, is persisted
 and restored with the other shell presentation preferences.
 
-In 4D, each slice ID is attached to its camera-relative rear vertical face.
+In 4D, each signed semantic slice ID is attached to its camera-relative rear vertical face.
 Selection is conveyed through visual emphasis, without adding "active" text.
+The compact basis indicator states the three visible signed axes, signed slice
+axis, and unchanged Y-down gravity. Basis controls, piece rotation, slice
+navigation, and camera controls remain visually distinct. Reduced Motion snaps
+the short basis settle while preserving the exact destination state.
 
 Main menu, setup, settings, onboarding, replay, live HUD, diagnostics, pause,
 and game-over surfaces all use the same tokens. Diagnostic density may be

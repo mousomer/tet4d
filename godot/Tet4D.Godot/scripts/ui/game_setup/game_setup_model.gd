@@ -196,10 +196,12 @@ func canonical_session_setup(mode: String = "") -> Dictionary:
 	}
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func is_current_valid() -> bool:
 	return is_valid(current_mode)
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func is_valid(mode: String) -> bool:
 	return bool((_validation.get(mode, {}) as Dictionary).get("ok", false))
 
@@ -213,6 +215,7 @@ func validation_errors(mode: String = "") -> Array:
 	return (validation_result(mode).get("errors", []) as Array).duplicate(true)
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func validate_current_draft() -> bool:
 	_validate_mode(current_mode)
 	return is_current_valid()

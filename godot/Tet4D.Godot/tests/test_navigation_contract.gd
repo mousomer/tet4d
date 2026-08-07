@@ -9,7 +9,9 @@ func run() -> Array:
 		if text.find("Esc Main Menu") == -1: failures.append("live controls should map Esc to Main Menu")
 		if text.find("Back / Quit") != -1: failures.append("live controls should distinguish Main Menu from Quit")
 	var four_d := Hud._control_groups_text(Hud.live_4d_control_hint_groups())
-	if four_d.find("Q / E W- / W+") == -1: failures.append("4D Q/E should remain W movement")
+	if four_d.find("Q / E Slice W - / +") == -1: failures.append("identity-basis Q/E should navigate the W slice axis")
+	if four_d.find("1 / 2 Re-slice XW") == -1 or four_d.find("; / ' Re-slice ZW") == -1:
+		failures.append("4D basis controls should remain distinct from piece rotation and camera controls")
 	var hud := Hud.new()
 	var quit_count := [0]
 	hud.quit_requested.connect(func() -> void: quit_count[0] += 1)

@@ -19,8 +19,8 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E W- / W+") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Left Drag Rotate camera") or not live_4d_hint.contains("Right Drag Translate camera") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
-		failures.append("live 4D hint text should expose W controls, camera controls, six rotation planes, and Esc-only quit")
+	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 Re-slice XW") or not live_4d_hint.contains("; / ' Re-slice ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Left Drag Rotate camera") or not live_4d_hint.contains("Right Drag Translate camera") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+		failures.append("live 4D hint text should expose slice-axis movement, basis controls, camera controls, six piece-rotation planes, and Esc-only quit")
 	for action_name in LiveInputContractScript.ACTION_SPECS:
 		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
 		if not spec.get("keys", []).has(spec.get("display_key")):
@@ -412,6 +412,49 @@ func run() -> Array:
 			failures.append("Mouse wheel over the live viewport should zoom camera after game over")
 		if str(app._live_bridge.live_4d_state_hash()) != endgame_hash:
 			failures.append("Endgame mouse camera controls should not mutate Live 4D gameplay state")
+		app._reset_live_4d()
+		var basis_native_snapshot_before: String = str(app._live_bridge.live_4d_snapshot_json())
+		var basis_hash_before := str(app._live_bridge.live_4d_state_hash())
+		var basis_camera_before: Dictionary = app._camera_rig.presentation_snapshot()
+		app._apply_live_4d_basis_turn("xw", 1)
+		if app._live_4d_basis.slots() != [4, 2, 3, -1]:
+			failures.append("XW+ should commit the exact presentation basis immediately")
+		if app._live_bridge.live_4d_snapshot_json() != basis_native_snapshot_before or str(app._live_bridge.live_4d_state_hash()) != basis_hash_before:
+			failures.append("basis-only actions must not change native snapshot or state hash")
+		if app._camera_rig.presentation_snapshot() != basis_camera_before:
+			failures.append("basis turns must not change camera orientation, zoom intent, or translation")
+		app._dispatch_live_4d_presentation_intent("move_x_pos")
+		if str(app._current_snapshot.get("last_command", "")) != "move_w_pos":
+			failures.append("visible +W horizontal intent should route to canonical W+")
+		app._reset_live_4d()
+		for _turn_index in range(4):
+			app._apply_live_4d_basis_turn("xw", 1)
+		if app._live_4d_basis.slots() != [1, 2, 3, 4]:
+			failures.append("rapid four-turn basis input must compose exactly to identity")
+		app._renderer._process(0.2)
+		if float(app._renderer.live_4d_basis_snapshot().get("transition_progress", 0.0)) < 1.0:
+			failures.append("basis transition should settle without a stuck intermediate state")
+		app._reset_live_4d()
+		app._dispatch_live_4d_gameplay_command("hard_drop")
+		var identity_drop_hash := str(app._live_bridge.live_4d_state_hash())
+		app._reset_live_4d()
+		app._apply_live_4d_basis_turn("zw", -1)
+		app._dispatch_live_4d_gameplay_command("hard_drop")
+		if str(app._live_bridge.live_4d_state_hash()) != identity_drop_hash:
+			failures.append("hard drop after a basis turn must preserve canonical Y-gravity outcome")
+		app._reset_live_4d()
+		for canonical_command in ["move_x_pos", "move_z_neg", "move_w_pos"]:
+			app._dispatch_live_4d_gameplay_command(canonical_command)
+		var canonical_sequence_hash := str(app._live_bridge.live_4d_state_hash())
+		app._reset_live_4d()
+		app._apply_live_4d_basis_turn("xw", 1)
+		app._dispatch_live_4d_gameplay_command("move_x_pos")
+		app._apply_live_4d_basis_turn("zw", -1)
+		app._dispatch_live_4d_gameplay_command("move_z_neg")
+		app._apply_live_4d_basis_turn("xw", -1)
+		app._dispatch_live_4d_gameplay_command("move_w_pos")
+		if str(app._live_bridge.live_4d_state_hash()) != canonical_sequence_hash:
+			failures.append("basis events interleaved with canonical commands must preserve replay identity")
 		app._reset_live_4d()
 		var live_4d_initial_hash := str(app._live_bridge.live_4d_state_hash())
 		app._dispatch_live_4d_gameplay_command("move_w_pos")

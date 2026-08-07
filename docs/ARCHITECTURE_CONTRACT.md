@@ -1,7 +1,7 @@
 # Architecture Contract
 
 Status: active architecture baseline  
-Last updated: 2026-03-07  
+Last updated: 2026-08-07
 Arch stage: 900
 
 This contract defines the dependency direction, ownership rules, and enforcement
@@ -84,6 +84,20 @@ Owns:
 
 UI may import engine modules directly. It should prefer the narrowest engine
 owner that already exists instead of adding new `engine.api` wrappers.
+
+### Godot product shell (`godot/Tet4D.Godot`)
+
+Godot owns product-shell presentation and input adaptation around native
+gameplay authority. For live 4D, it owns the exact signed slice-presentation
+basis, canonical-to-presentation coordinate mapping, basis indicator,
+presentation-only transition, and focused basis instruction defined in
+`docs/architecture/game_safe_4d_slice_basis.md`.
+
+This ownership may remap presentation movement intents into existing canonical
+native commands. It must not independently decide movement legality or mutate
+canonical board coordinates, gravity, topology, collision, scoring, snapshot,
+hash, replay, or persistence semantics. Camera orientation and replay
+presentation remain separate from the live 4D basis.
 
 ### AI (`src/tet4d/ai/playbot`)
 

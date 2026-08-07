@@ -32,4 +32,19 @@ func run() -> Array:
 	for obsolete in ["Shift +", "Middle / Right", "Shift-wheel"]:
 		if helper.to_lower().contains(obsolete.to_lower()):
 			failures.append("helper must not advertise obsolete control: %s" % obsolete)
+	var expected_basis_keys := {
+		"view_xw_neg": KEY_1,
+		"view_xw_pos": KEY_2,
+		"view_zw_neg": KEY_SEMICOLON,
+		"view_zw_pos": KEY_APOSTROPHE,
+	}
+	var reserved_keys := []
+	for action_id in ["live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", "live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", "live_4d_soft_drop", "live_4d_hard_drop", "live_4d_camera_yaw_left", "live_4d_camera_yaw_right", "live_4d_camera_pitch_up", "live_4d_camera_pitch_down"]:
+		reserved_keys.append_array(specs.get(action_id, {}).get("keys", []))
+	for action_id in expected_basis_keys:
+		var keycode := int(expected_basis_keys[action_id])
+		if specs.get(action_id, {}).get("keys", []) != [keycode]:
+			failures.append("%s must reuse the canonical repository basis binding" % action_id)
+		if keycode in reserved_keys:
+			failures.append("%s must not collide with piece rotation, drop, or camera actions" % action_id)
 	return failures

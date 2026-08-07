@@ -31,6 +31,7 @@ func load_last_selected(path: String = DEFAULT_PATH) -> Dictionary:
 	return result
 
 
+# tet4d-semantic-boundary: allow adapter-routing
 func save_last_validated(model, path: String = DEFAULT_PATH) -> bool:
 	if model == null or not model.has_method("last_valid_entries"):
 		return false

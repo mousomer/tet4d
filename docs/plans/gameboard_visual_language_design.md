@@ -310,22 +310,22 @@ planning.
 Constraints for Stage 23 and later Live 4D polish:
 
 1. Reuse the same cell grammar.
-2. Show `W` as side-by-side slices unless a later design proves a clearer
-   alternative.
-3. Keep `W` labels stable.
-4. Make `W-` / `W+` movement visible.
+2. Show the current signed slice axis as side-by-side layers. Identity uses W;
+   Stage 54C may exchange W with visible X or Z while keeping Y visible.
+3. Keep signed semantic slice labels stable and ordering explicit.
+4. Make previous/next movement along the current slice axis visible.
 5. Extend the rotation-plane HUD to `XY`, `XZ`, `XW`, `YZ`, `YW`, and `ZW`.
-6. Keep selected/current `W` context visible.
+6. Keep selected/current signed slice-axis context visible.
 7. Do not invent a separate visual language for Live 4D.
-8. Keep W labels large enough to read at default/Fit View with high-contrast
+8. Keep signed slice labels large enough to read at default/Fit View with high-contrast
    backing.
 9. Consume Space as live hard-drop before shell UI controls can treat it as
    accept/back.
 10. Keep active Live 4D cells moderately brighter than locked cells with a
     stronger outline and origin marker, but avoid high-emission glare.
-11. Use a canonical fitted Live 4D default that frames all W slices and slice
+11. Use a canonical fitted Live 4D default that frames all current-axis layers and slice
     headers.
-12. Keep Fit View as the canonical recovery action for the full W-slice layout.
+12. Keep Fit View as the canonical recovery action for the identity W-slice layout.
 13. Allow limited Live 4D camera adjustment controls that do not overlap
     movement, rotation, drop, pause, reset, mode switch, or quit controls.
 14. Live 4D orthographic zoom must adjust effective orthographic size; camera
@@ -378,17 +378,18 @@ Live 3D acceptance:
 - [ ] Live 2D is unaffected.
 - [ ] Replay is unaffected.
 
-Future Live 4D acceptance:
+Live 4D basis-aware acceptance:
 
-- [ ] `W` slices are identifiable.
-- [ ] `W` labels are immediately noticeable and remain readable after Fit View
+- [ ] The current signed slice axis is identifiable in identity, XW, ZW, and
+      mixed exact bases.
+- [ ] Signed slice labels are immediately noticeable and remain readable after Fit View
       and resize.
 - [ ] Live 4D opens already fitted to the full W-slice layout.
 - [ ] `Fit View` restores the full W-slice layout after camera adjustment.
 - [ ] Camera controls allow inspection and do not interfere with gameplay
       controls.
-- [ ] Current/focused slice is visible.
-- [ ] `W` movement is readable.
+- [ ] Current/focused signed slice layer is visible.
+- [ ] Movement along the current slice axis is readable.
 - [ ] Space hard-drops and does not activate menu/back/reset/UI controls.
 - [ ] Six rotation planes are represented clearly.
 - [ ] Active piece is decipherable across slices.
@@ -398,6 +399,8 @@ Future Live 4D acceptance:
 - [ ] Switching away to Replay and back resumes the selected Live 4D session
       without resetting the native C++ state.
 - [ ] Zoom and Space hard-drop still work after HUD focus changes.
+- [ ] Standard, asymmetric, W=1, and large-W boards remain comprehensible and
+      free of stale layer panels under repeated basis turns.
 
 ## 18. Risks And Mitigations
 

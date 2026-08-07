@@ -2,6 +2,7 @@ extends RefCounted
 
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
 
 
 func run() -> Array:
@@ -51,7 +52,7 @@ func run() -> Array:
 			elif absf(box.size.x - ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE) > 0.001:
 				failures.append("gameplay active cell scale should keep adjacent cells separated")
 
-	renderer.render_snapshot({
+	var live_2d_snapshot := {
 		"case_id": "live_plain_2d",
 		"trace_type": "live_2d",
 		"frame_index": 0,
@@ -62,7 +63,8 @@ func run() -> Array:
 		"probe_markers": [],
 		"event_markers": [],
 		"particles": [],
-	})
+	}
+	renderer.render_snapshot(live_2d_snapshot)
 	await tree.process_frame
 	cell_root = renderer.get_node_or_null("CellRoot")
 	if cell_root == null or cell_root.get_child_count() != 2:
@@ -103,7 +105,7 @@ func run() -> Array:
 			failures.append("grid toggle should hide internal detail while retaining the 12-edge orientation cage")
 		renderer.set_grid_visible(true)
 
-	renderer.render_snapshot({
+	var live_3d_snapshot := {
 		"case_id": "live_plain_3d",
 		"trace_type": "live_3d",
 		"frame_index": 0,
@@ -116,7 +118,8 @@ func run() -> Array:
 		"probe_markers": [],
 		"event_markers": [],
 		"particles": [],
-	})
+	}
+	renderer.render_snapshot(live_3d_snapshot)
 	await tree.process_frame
 	cell_root = renderer.get_node_or_null("CellRoot")
 	if cell_root == null or cell_root.get_child_count() != 2:
@@ -152,12 +155,12 @@ func run() -> Array:
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live 3D renderer should keep one shared grid renderer")
 
-	renderer.render_snapshot({
+	var live_4d_snapshot := {
 		"case_id": "live_plain_4d",
 		"trace_type": "live_4d",
 		"frame_index": 0,
 		"dimension": 4,
-		"board_shape": [5, 10, 4, 4],
+		"board_shape": [5, 10, 3, 4],
 		"locked_cells": [{"position": [1, 4, 1, 0], "color_id": 4}],
 		"active_cells": [{"position": [1, 1, 2, 1], "color_id": 6}],
 		"last_command": "rotate_xw_pos",
@@ -167,7 +170,8 @@ func run() -> Array:
 		"probe_markers": [],
 		"event_markers": [],
 		"particles": [],
-	})
+	}
+	renderer.render_snapshot(live_4d_snapshot)
 	await tree.process_frame
 	cell_root = renderer.get_node_or_null("CellRoot")
 	if cell_root == null or cell_root.get_child_count() != 2:
@@ -210,13 +214,13 @@ func run() -> Array:
 		live_4d_grid._update_rear_grid_faces(Vector3(-100.0, -100.0, -100.0))
 		live_4d_grid._update_slice_labels(Vector3(-100.0, -100.0, -100.0))
 		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, 1.0, "negative camera octant")
-		var w_label_count := 0
+		var slice_label_count := 0
 		for child in live_4d_grid.get_children():
-			if child is Label3D and str((child as Label3D).text).begins_with("w"):
-				w_label_count += 1
+			if child is Label3D and child.has_meta("slice_axis"):
+				slice_label_count += 1
 				var label := child as Label3D
 				if label.text.find("ACTIVE") != -1:
-					failures.append("W labels should contain only the slice ID")
+					failures.append("slice labels should contain only signed semantic identity")
 				var selected := bool(label.get_meta("selected_slice", false))
 				var expected_font_size := ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 				if label.font_size != expected_font_size or absf(label.pixel_size - ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE) > 0.0001:
@@ -231,8 +235,43 @@ func run() -> Array:
 					var expected_face := label_min[rear_axis] if rear_sign < 0.0 else label_max[rear_axis]
 					if absf(label.position[rear_axis] - expected_face) > 0.05:
 						failures.append("W labels should attach to a camera-relative rear vertical face")
-		if w_label_count < 4:
-			failures.append("live 4D renderer should label each W slice")
+		if slice_label_count < 4:
+			failures.append("live 4D renderer should label each basis-derived slice")
+
+	var xw_basis = SliceBasis4DScript.identity().turned("xw", 1)
+	renderer.set_live_4d_basis(xw_basis, false)
+	renderer.render_snapshot(live_4d_snapshot)
+	await tree.process_frame
+	grid_root = renderer.get_node_or_null("GridRoot")
+	if grid_root == null or grid_root.get_child_count() != 1:
+		failures.append("basis rebuild should remove the prior slice stack")
+	else:
+		var xw_grid := grid_root.get_child(0)
+		var xw_labels := 0
+		for child in xw_grid.get_children():
+			if child is Label3D and child.has_meta("slice_axis"):
+				xw_labels += 1
+				if str(child.get_meta("slice_axis")) != "-X":
+					failures.append("XW+ labels must expose the signed -X slice axis")
+		if xw_labels != 5:
+			failures.append("XW+ should rebuild five X slices for dimensions 5x10x4x4")
+	if renderer._presentation.projection.mapper.visible_board_shape() != [4, 10, 3]:
+		failures.append("XW+ should render W,Y,Z as visible board dimensions")
+	var zw_basis = SliceBasis4DScript.identity().turned("zw", 1)
+	var stable_grid_during_transition = grid_root.get_child(0) if grid_root != null and grid_root.get_child_count() == 1 else null
+	renderer.set_live_4d_basis(zw_basis, true)
+	renderer._process(0.08)
+	if stable_grid_during_transition != null and grid_root.get_child(0) != stable_grid_during_transition:
+		failures.append("basis settle frames must not rebuild stable layer geometry")
+	renderer.render_snapshot(live_4d_snapshot)
+	await tree.process_frame
+	grid_root = renderer.get_node_or_null("GridRoot")
+	if grid_root == null or grid_root.get_child_count() != 1:
+		failures.append("smaller Z slice rebuild must remove stale X panels")
+	elif renderer._presentation.projection.mapper.current_layer_count() != 3:
+		failures.append("ZW+ should derive layer count from Z extent")
+	if renderer._presentation.projection.mapper.visible_board_shape() != [5, 10, 4]:
+		failures.append("ZW+ should render X,Y,W as visible board dimensions")
 
 	renderer.queue_free()
 	await tree.process_frame

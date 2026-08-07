@@ -51,7 +51,11 @@ func _init() -> void:
 func render(snapshot: Dictionary) -> void:
 	visible = bool(snapshot.get("visible", false))
 	_title.text = "Getting Started — %d of %d" % [int(snapshot.get("step_index", 0)) + 1, int(snapshot.get("step_count", 0))]
-	_body.text = str(snapshot.get("body", ""))
+	var body := str(snapshot.get("body", ""))
+	var target_coordinate: Array = snapshot.get("target_coordinate", [])
+	if not target_coordinate.is_empty():
+		body += "\nMarked target: (%s)" % ", ".join(target_coordinate)
+	_body.text = body
 	_progress.text = str(snapshot.get("title", ""))
 
 func deterministic_snapshot() -> Dictionary:

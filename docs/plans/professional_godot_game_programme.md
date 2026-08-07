@@ -366,6 +366,8 @@ records.
 
 ### Stage 54C — Game-safe 4D slice-basis rotations
 
+Status: complete and verified on the Stage 54C implementation branch.
+
 Objective:
 
 Allow the player to change the 3D slicing through which the 4D game board is
@@ -459,6 +461,14 @@ The lesson data should be reusable by the later challenge runner.
 3. slice reconstruction and presentation;
 4. focused instructional sequence;
 5. manual 4D comprehension review.
+
+The exact contract is
+`docs/architecture/game_safe_4d_slice_basis.md`. Godot owns this presentation
+capability under the existing authority-map grant; native gameplay, topology,
+snapshot/hash/replay identity, configuration, and persistence authority are
+unchanged. Completion evidence covers exact group laws, exhaustive coordinate
+bijection, asymmetric and W=1 layouts, basis-aware input and HUD behavior,
+replay isolation, deterministic invariance, and visible GUI review.
 
 ### Stage 54D — Modern gameplay baseline
 

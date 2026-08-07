@@ -15,9 +15,11 @@ const MODE_STEPS := {
 		{"id": "camera", "title": "Move the view", "body": "Camera movement changes only the view, not the piece. Fit View restores orientation.", "accepted_commands": []},
 	],
 	"live_4d": [
-		{"id": "slices", "title": "Read the W slices", "body": "The board is displayed as multiple W slices. Q/E move the piece between them.", "accepted_commands": ["move_w_neg", "move_w_pos"]},
-		{"id": "rotate", "title": "Rotate in planes", "body": "Six rotation planes exist. Start with XY and XZ before exploring the others.", "accepted_commands": ["rotate_xy_neg", "rotate_xy_pos", "rotate_xz_neg", "rotate_xz_pos", "rotate_yz_neg", "rotate_yz_pos", "rotate_xw_neg", "rotate_xw_pos", "rotate_yw_neg", "rotate_yw_pos", "rotate_zw_neg", "rotate_zw_pos"]},
-		{"id": "camera", "title": "Recover the view", "body": "Camera controls do not move the piece. Double-click or Fit View restores the canonical view.", "accepted_commands": []},
+		{"id": "same_object", "title": "Same object, different slicing", "body": "Use one 4D Basis control. Watch the slice stack change while the falling object stays the same.", "predicate": "basis_changed", "completion": "Same object. Different slicing."},
+		{"id": "useful_slice", "title": "Choose a clearer slice", "body": "Re-slice once more. Choose X or Z as the slice direction so W becomes visible inside each board.", "predicate": "non_w_slice_used", "completion": "A different slicing direction can expose structure."},
+		{"id": "find_coordinate", "title": "Find a stable coordinate", "body": "The marked coordinate is fixed in 4D. Use Q/E to navigate the current signed slice axis and follow its layer frame.", "predicate": "slice_navigation_used", "target_coordinate": [2, 7, 2, 0], "accepted_commands": ["move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos", "move_w_neg", "move_w_pos"], "completion": "The coordinate stayed fixed; only its displayed layer changed."},
+		{"id": "match_basis", "title": "Match the target basis", "body": "Reach View: +W · +Y · +Z / Slice: -X using exact quarter turns.", "predicate": "basis_equals_target", "target_basis": [4, 2, 3, -1], "completion": "Exact basis matched."},
+		{"id": "inspect_placement", "title": "Inspect a difficult placement", "body": "Re-slice once more to inspect the placement without rotating the piece. Y remains down.", "predicate": "basis_changed", "completion": "Inspection complete. The gameplay state did not rotate."},
 	],
 }
 
@@ -25,6 +27,9 @@ var _mode := ""
 var _indices := {}
 var _dismissed := false
 var _enabled := true
+var _last_basis_key := ""
+var _step_entry_basis_key := ""
+var _current_slice_axis := "w"
 
 func select_mode(mode: String) -> void:
 	_mode = mode if MODE_STEPS.has(mode) else ""
@@ -35,7 +40,42 @@ func consume_command_result(command: String, status: String) -> bool:
 	var step := current_step()
 	if step.is_empty() or not step.get("accepted_commands", []).has(command):
 		return false
+	if str(step.get("predicate", "")) == "slice_navigation_used":
+		if not command.begins_with("move_%s_" % _current_slice_axis):
+			return false
 	_indices[_mode] = current_index() + 1
+	_step_entry_basis_key = _last_basis_key
+	return true
+
+
+func consume_basis_state(basis_snapshot: Dictionary) -> bool:
+	if _dismissed or _mode != "live_4d":
+		return false
+	var basis_key := str(basis_snapshot.get("key", ""))
+	if basis_key.is_empty():
+		return false
+	_current_slice_axis = str(basis_snapshot.get("slice_axis", "+W")).replace("+", "").replace("-", "").to_lower()
+	if _last_basis_key.is_empty():
+		_last_basis_key = basis_key
+		_step_entry_basis_key = basis_key
+		return false
+	if basis_key == _last_basis_key:
+		return false
+	_last_basis_key = basis_key
+	var step := current_step()
+	var predicate := str(step.get("predicate", ""))
+	var complete := false
+	match predicate:
+		"basis_changed":
+			complete = basis_key != _step_entry_basis_key
+		"non_w_slice_used":
+			complete = str(basis_snapshot.get("slice_axis", "+W")).replace("+", "").replace("-", "") != "W"
+		"basis_equals_target":
+			complete = basis_snapshot.get("slots", []) == step.get("target_basis", [])
+	if not complete:
+		return false
+	_indices[_mode] = current_index() + 1
+	_step_entry_basis_key = basis_key
 	return true
 
 func dismiss() -> void:
@@ -60,4 +100,4 @@ func current_step() -> Dictionary:
 func snapshot() -> Dictionary:
 	var step := current_step()
 	var steps: Array = MODE_STEPS.get(_mode, [])
-	return {"mode": _mode, "visible": is_visible(), "enabled": _enabled, "dismissed": _dismissed, "step_index": current_index(), "step_count": steps.size(), "step_id": str(step.get("id", "")), "title": str(step.get("title", "")), "body": str(step.get("body", ""))}
+	return {"mode": _mode, "visible": is_visible(), "enabled": _enabled, "dismissed": _dismissed, "step_index": current_index(), "step_count": steps.size(), "step_id": str(step.get("id", "")), "title": str(step.get("title", "")), "body": str(step.get("body", "")), "predicate": str(step.get("predicate", "")), "target_basis": step.get("target_basis", []).duplicate(), "target_coordinate": step.get("target_coordinate", []).duplicate(), "completion": str(step.get("completion", ""))}

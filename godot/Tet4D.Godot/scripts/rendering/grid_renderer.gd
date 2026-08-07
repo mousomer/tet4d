@@ -37,7 +37,8 @@ func rebuild(
 
 	if board_shape.is_empty():
 		return
-	var w_size := int(board_shape[3]) if dimension >= 4 and board_shape.size() > 3 else 1
+	var visible_board_shape: Array = mapper.visible_board_shape()
+	var w_size: int = int(mapper.current_layer_count()) if dimension >= 4 else 1
 
 	for w_index in range(w_size):
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
@@ -45,9 +46,9 @@ func rebuild(
 			continue
 		if show_grid and live_2d and dimension >= 2 and board_detail != "minimal":
 			if dimension == 2:
-				_add_flat_grid(slice_bounds, board_shape, display_mode)
+				_add_flat_grid(slice_bounds, visible_board_shape, display_mode)
 			else:
-				_add_volumetric_boundary_grids(slice_bounds, board_shape, display_mode)
+				_add_volumetric_boundary_grids(slice_bounds, visible_board_shape, display_mode)
 		if live_2d and dimension >= 3:
 			_add_floor_face(slice_bounds, display_mode)
 		_add_outline_box(
@@ -78,7 +79,14 @@ func rebuild(
 				ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER)
 			)
 		if dimension >= 4 and show_w_labels:
-			_add_w_label(w_index, w_size, slice_bounds, display_mode, active_layers.has(w_index))
+			_add_slice_label(
+				w_index,
+				slice_bounds,
+				display_mode,
+				active_layers.has(w_index),
+				mapper.slice_axis_label(),
+				mapper.semantic_slice_coordinate(w_index)
+			)
 	var camera := get_viewport().get_camera_3d()
 	if camera != null:
 		var camera_position := to_local(camera.global_position)
@@ -230,9 +238,20 @@ func _update_rear_grid_faces(camera_position: Vector3) -> void:
 		face.visible = sign_value * camera_delta <= 0.0
 
 
-func _add_w_label(w_index: int, _w_size: int, slice_bounds: Dictionary, display_mode: String, selected: bool) -> void:
+func _add_slice_label(
+	layer_index: int,
+	slice_bounds: Dictionary,
+	display_mode: String,
+	selected: bool,
+	axis_label: String,
+	semantic_coordinate: int
+) -> void:
 	var label := Label3D.new()
-	label.text = "w%d" % [w_index + 1]
+	label.name = "SliceLabel_%d" % layer_index
+	label.text = "%s %d" % [axis_label, semantic_coordinate + 1]
+	label.set_meta("slice_axis", axis_label)
+	label.set_meta("semantic_coordinate", semantic_coordinate)
+	label.set_meta("presentation_layer", layer_index)
 	label.font_size = ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.pixel_size = ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE
 	label.modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_TEXT, display_mode) if selected else ReplayVisuals.slice_label_color(display_mode)

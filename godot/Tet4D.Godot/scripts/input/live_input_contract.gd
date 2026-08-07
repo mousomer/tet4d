@@ -74,6 +74,13 @@ const ACTION_SPECS := {
 	"live_4d_camera_roll_right": {"keys": [KEY_PERIOD], "display_key": KEY_PERIOD},
 	"live_4d_camera_zoom_in": {"keys": [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD], "display_key": KEY_EQUAL},
 	"live_4d_camera_zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "display_key": KEY_MINUS},
+	# Existing repository-wide view action IDs are reused for exact Stage 54C
+	# basis turns. Piece rotations retain their separate live_4d_rotate_* IDs.
+	"view_xw_neg": {"keys": [KEY_1], "display_key": KEY_1},
+	"view_xw_pos": {"keys": [KEY_2], "display_key": KEY_2},
+	"view_zw_neg": {"keys": [KEY_SEMICOLON], "display_key": KEY_SEMICOLON},
+	"view_zw_pos": {"keys": [KEY_APOSTROPHE], "display_key": KEY_APOSTROPHE},
+	"reset": {"keys": [KEY_0], "display_key": KEY_0},
 }
 
 
@@ -105,14 +112,18 @@ static func camera_helper_items() -> Array:
 	return items
 
 
-static func control_hint_groups(mode: String) -> Array:
+static func display_key(action_name: String) -> String:
+	return _display_key(action_name)
+
+
+static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}) -> Array:
 	match mode:
 		"live_2d":
 			return _live_2d_groups()
 		"live_3d":
 			return _live_3d_groups()
 		"live_4d":
-			return _live_4d_groups()
+			return _live_4d_groups(basis_snapshot)
 		_:
 			return []
 
@@ -139,10 +150,15 @@ static func _live_3d_groups() -> Array:
 	]
 
 
-static func _live_4d_groups() -> Array:
+static func _live_4d_groups(basis_snapshot: Dictionary = {}) -> Array:
+	var visible_axes: Array = basis_snapshot.get("visible_axes", ["X", "+Y", "Z"])
+	var horizontal_axis := str(visible_axes[0]) if visible_axes.size() > 0 else "X"
+	var depth_axis := str(visible_axes[2]) if visible_axes.size() > 2 else "Z"
+	var slice_axis := str(basis_snapshot.get("slice_axis", "W"))
 	return [
-		{"group": "Piece movement", "items": [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "X- / X+"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Z+ / Z-"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W- / W+"]]},
+		{"group": "Piece movement", "items": [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Visible %s - / +" % horizontal_axis], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Visible %s - / +" % depth_axis], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice %s - / +" % slice_axis]]},
 		{"group": "Plane Rotation", "note": "Left: CCW · Right: CW", "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
+		{"group": "4D Basis", "note": "Re-slice the same object; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "Re-slice XW - / +"], [_pair("view_zw_neg", "view_zw_pos", " / "), "Re-slice ZW - / +"], [_display_key("reset"), "Reset camera + basis"]]},
 		{"group": "Camera", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"], [_pair("live_4d_camera_roll_left", "live_4d_camera_roll_right", " / "), "Roll left / right"], ["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"]]},
 		{"group": "Mouse Camera", "items": camera_helper_items()},
 		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
@@ -194,5 +210,9 @@ static func _key_label(keycode: int) -> String:
 			return "="
 		KEY_MINUS:
 			return "-"
+		KEY_SEMICOLON:
+			return ";"
+		KEY_APOSTROPHE:
+			return "'"
 		_:
 			return OS.get_keycode_string(keycode)
