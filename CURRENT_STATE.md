@@ -42,14 +42,18 @@ history ledger. Detailed history is preserved in
   integrated: the topology-aware board-extent contract; editable validated
   setup; exact signed 4D basis; authoritative NEXT; and Ghost plus accepted
   presentation/control corrections.
-- The Stage 54D-2 combined-camera-yaw resolver is an accepted architectural
-  limitation, not a merge blocker. Programme restructuring establishes Stage
-  54E as 4D presentation/interaction architecture; 54E-1 is next and is
-  design/audit only. No runtime implementation is permitted before its design
-  contract is accepted.
-- Stage 54D-3 Hold remains pending deterministic-core work. It may proceed
-  once 54E-1 is accepted, does not require 54E-2, and reuses the thumbnail
-  delivered by 54D-1.
+- Stage 54E-1 is HUMAN ACCEPTED. Its accepted architecture contract is
+  `docs/architecture/4d_presentation_interaction_architecture.md`: the
+  combined-camera-yaw resolver is `DEFECTIVE`; Option A assigns shared
+  slice-local orientation, anchor-only layout, and non-orienting normal
+  Live-4D `V/P`; the F/R/Q and displayed-Forward/depth contracts are accepted.
+  Normal-gameplay roll is removed in 54E-2 while reusable Explorer/free-
+  inspection roll remains intended. Constrained pitch is accepted only where
+  Pitch-depth preservation keeps Forward away from the viewer.
+- After this acceptance record is merged, Stage 54D-3 Hold is unblocked and
+  Stage 54E-2a is the only unblocked 54E-2 entry slice. Stage 54E-2b requires
+  green 54E-2a completion; 54E-2c requires green 54E-2b; and 54E-2d requires
+  green 54E-2c. No later 54E-2 slice is simultaneously active.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -182,10 +186,10 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Stage 54E-1 — Presentation-space architecture/design: produce and accept
-   the required design/audit contract before any runtime work. Stage 54D-3
-   Hold remains pending until that acceptance, after which it may proceed
-   independently of Stage 54E-2.
+1. Stage 54E-1 — COMPLETE / HUMAN ACCEPTED. After this acceptance record is
+   merged, Stage 54D-3 Hold may proceed independently and Stage 54E-2a is the
+   only eligible 54E-2 entry slice. 54E-2b/c/d remain sequentially gated on
+   prior green completion.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

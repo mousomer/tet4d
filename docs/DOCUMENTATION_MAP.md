@@ -29,6 +29,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/topology_aware_board_extent_contract.md`
 - `docs/architecture/editable_board_setup_and_persistence.md`
 - `docs/architecture/game_safe_4d_slice_basis.md`
+- `docs/architecture/4d_presentation_interaction_architecture.md`
 - `docs/architecture/ghost_piece.md`
 - `docs/architecture/godot_shell_layout_stabilization.md`
 - `docs/architecture/godot_shell_settings_source_of_truth.md`
@@ -168,6 +169,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 49 configurable plain-board setup and adaptive 4D presentation | `docs/architecture/configurable_plain_boards_and_4d_layout.md` |
 | Stage 54B-2 editable Godot board dimensions and persistence | `docs/architecture/editable_board_setup_and_persistence.md` |
 | Stage 54C exact game-safe 4D presentation basis, coordinate mapping, and input routing | `docs/architecture/game_safe_4d_slice_basis.md` |
+| Stage 54E-1 accepted 4D presentation-space separation, relative-control audit, and bounded 54E-2 plan | `docs/architecture/4d_presentation_interaction_architecture.md` |
 | Stage 54D-1 authoritative one-piece queue query and shared live thumbnail presentation | `docs/architecture/next_piece_preview.md` |
 | Stage 54D-2 authoritative hard-drop destination query and live ghost presentation | `docs/architecture/ghost_piece.md` |
 | Completed Stage 50 canonical bounded plain-game setup, RNG, piece-set, speed, restart, and acceptance contract | `docs/architecture/plain_game_setup_completion.md` |
@@ -267,6 +269,9 @@ It is not the product contract or complete roadmap.
 - If you need exact 4D presentation-basis composition, basis-aware coordinate
   mapping, or view-relative input routing: use
   `docs/architecture/game_safe_4d_slice_basis.md`.
+- If you need the accepted separation of exact basis, slice-local orientation,
+  slice layout, final view, or the Stage 54E-1 resolver verdict: use
+  `docs/architecture/4d_presentation_interaction_architecture.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
 - If you need to constrain a repository-changing task: use

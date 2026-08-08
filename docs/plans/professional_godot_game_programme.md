@@ -579,8 +579,8 @@ explicitly replaces it.
 
 #### Stage 54D-3 — Hold
 
-Status: pending deterministic-core work. Hold may proceed after the Stage
-54E-1 design contract is accepted; it does not require Stage 54E-2.
+Status: unblocked deterministic-core work after the accepted Stage 54E-1
+record is merged. Hold does not require Stage 54E-2.
 
 Add one-slot Hold after next-piece and ghost presentation are accepted. Its
 only presentation dependency is the shared piece thumbnail already delivered
@@ -657,12 +657,14 @@ axis of each 3D slice.
 
 #### Stage 54E-1 — Presentation-space architecture/design
 
-Status: next; design/audit only.
+Status: complete — human accepted.
 
-No runtime implementation is permitted as part of 54E-1 until its design
-contract is accepted. This slice inspects the current implementation and
-produces an architecture contract/design; it must not opportunistically
-refactor code.
+The accepted contract is
+`docs/architecture/4d_presentation_interaction_architecture.md`. It adopts
+Option A, records the `DEFECTIVE` combined-camera-yaw verdict, accepts normal
+gameplay roll removal while preserving Explorer/free-inspection roll, and
+accepts the constrained pitch-depth-preservation policy. No runtime
+implementation is part of the acceptance record.
 
 54E-1 completes only when its accepted design provides all of the following:
 
@@ -703,8 +705,8 @@ refactor code.
    implications, focused regression coverage, human-visible verification, and
    forbidden scope.
 
-The restructuring does not decide the transform order or representation,
-ownership, persistence, or scene-graph solution on behalf of 54E-1.
+The accepted architecture decides the transform order and ownership for 54E-2;
+runtime authority records remain contingent on concrete implementation evidence.
 
 #### Stage 54E-2 — Camera-space separation implementation
 
@@ -714,7 +716,12 @@ collision, scoring, RNG, topology semantics, deterministic snapshots/hashes,
 or replay identity, unless the accepted design identifies a presentation-only
 replay concern.
 
-54E-2 may begin only after 54E-1 is accepted.
+Only 54E-2a may begin after the accepted 54E-1 record is merged. The mandatory
+green sequence is 54E-2a (presentation state and coordinate decomposition),
+then 54E-2b (renderer composition), then 54E-2c (interaction and camera-rig
+separation), then 54E-2d (lifecycle, authority, and contract reconciliation).
+Each slice must be separately reviewable and green; no later slice may repair a
+prior slice, and a monolithic 54E-2 implementation is forbidden.
 
 #### Stage 54E-3 — Setup/menu information architecture
 
@@ -1034,18 +1041,21 @@ The active order is:
 
 1. Stages 54B-1, 54B-2, 54C, 54D-1, and 54D-2 are integrated on `master`
    through PR #63 at `c93dcc8cfa93857d514a14b925002efc4404b007`.
-2. Stage 54E-1 — presentation-space architecture/design (next; design/audit
-   only).
-3. Stage 54D-3 — Hold may proceed after the 54E-1 design contract is accepted;
-   it does not wait for 54E-2.
-4. Stage 54E-2 — camera-space separation implementation.
-5. Stage 54E-3 — setup/menu information architecture.
-6. Stage 54E-4 — camera/GUI presets.
-7. Stage 54E-5 — cockpit consolidation.
-8. Stage 54F — integrated professional playability/visual acceptance.
-9. Stage 54G — remaining professional release hardening.
-10. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
-11. Later Explorer, challenge, topology, and simulation phases.
+2. Stage 54E-1 — presentation-space architecture/design is complete and human
+   accepted; its acceptance record is pending PR merge.
+3. Stage 54D-3 — Hold is eligible after that acceptance record merges; it does
+   not wait for 54E-2.
+4. Stage 54E-2a — presentation state and coordinate decomposition is the only
+   eligible 54E-2 entry slice after that merge.
+5. Stage 54E-2b, then 54E-2c, then 54E-2d — each starts only after the prior
+   slice is separately reviewed and green.
+6. Stage 54E-3 — setup/menu information architecture.
+7. Stage 54E-4 — camera/GUI presets.
+8. Stage 54E-5 — cockpit consolidation.
+9. Stage 54F — integrated professional playability/visual acceptance.
+10. Stage 54G — remaining professional release hardening.
+11. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
+12. Later Explorer, challenge, topology, and simulation phases.
 
 Stage numbers do not imply that 54D-3 must run before 54E-1. Stage 54D-2
 corrected the reviewed live-grid readability weakness and has developer/user
