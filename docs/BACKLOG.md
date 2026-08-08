@@ -89,9 +89,9 @@ folding it into the presentation-only Ghost capability.
 
 ### Stage 54D — Modern gameplay baseline
 
-Status: Stage 54D-1 committed; Stage 54D-2 implementation, deterministic and
-mechanical verification, and developer/user Ghost/board visual review are
-complete. Stage 54D-3 is next after the Stage 54D-2 commit.
+Status: Stage 54D-1 is committed at `e7708d8c`; Stage 54D-2 is committed at
+`4f9e920b`. Its implementation, deterministic and mechanical verification, and
+developer/user Ghost/board visual review are complete. Stage 54D-3 is next.
 
 Stage 54D-2 correction scope also includes the persistent, presentation-only
 relative/absolute Translation and Rotation frame selectors, a shared

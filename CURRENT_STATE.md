@@ -50,7 +50,8 @@ history ledger. Detailed history is preserved in
   authority did not change.
 - Stage 54D provides the modern gameplay baseline in three ordered slices:
   next-piece preview, ghost piece, and Hold.
-- Stage 54D-1 is committed at `e7708d8c`. Stage 54D-2 implements a shared
+- Stage 54D-1 is committed at `e7708d8c`; Stage 54D-2 is committed at
+  `4f9e920b`. Stage 54D-2 implements a shared
   observational native hard-drop destination, live 2D/3D/4D basis-aware ghost
   presentation, and the persistent `ghost.enabled` preference without changing
   deterministic identity or authority. Stage 54D-3 Hold is next.
@@ -70,7 +71,8 @@ history ledger. Detailed history is preserved in
   regression permits only visible-U, +Y, and visible-V arrows. Full repository
   verification completed with `verify: OK`. Stage 54D-2 developer/user visual
   review accepted the Ghost/board presentation; broader integrated professional
-  playability acceptance remains routed to Stage 54E. No commit is recorded.
+  playability acceptance remains routed to Stage 54E. The implementation branch
+  is published; Stage 54D-3 Hold remains the next implementation slice.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -201,9 +203,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Commit Stage 54D-2 separately, then begin Stage 54D-3 Hold with its required
-   authority establishment. Integrated professional playability acceptance
-   remains routed to Stage 54E.
+1. Integrate the published Stage 54B through 54D-2 chain, then begin Stage
+   54D-3 Hold with its required authority establishment. Integrated professional
+   playability acceptance remains routed to Stage 54E.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
