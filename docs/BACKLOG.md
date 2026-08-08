@@ -50,21 +50,24 @@ The programme is owned by
 
 ### Stage 54E-1 — Presentation-space architecture/design
 
-Status: next; design/audit only.
+Status: COMPLETE — HUMAN ACCEPTED.
 
-Produce the completion gate defined in the professional programme: the three
-presentation-space definitions, transform composition, ownership,
-persistence/lifecycle, scene-graph implications, a definite current
-relative-control yaw verdict, the two invariants, executable-verification
-strategy, and bounded 54E-2 plan. No runtime implementation is permitted
-until that design contract is accepted.
+The accepted architecture contract is
+`docs/architecture/4d_presentation_interaction_architecture.md`. It defines
+the three spaces, composition, ownership, lifecycle, scene implications,
+`DEFECTIVE` current resolver verdict, anchor-only layout, shared slice-local
+orientation, active/passive yaw and displayed-depth contract, verification
+strategy, and mandatory green 54E-2 slices. Decisions A/B/C are accepted:
+Option A; normal-gameplay roll removal while preserving Explorer/free-inspection
+roll; and constrained pitch-depth preservation. No runtime implementation is
+part of this acceptance record.
 
 ## Hold
 
 ### Stage 54D-3 — Hold
 
-Status: pending deterministic-core work; blocked only until 54E-1 design
-acceptance.
+Status: unblocked deterministic-core work after the 54E-1 acceptance record
+is merged.
 
 Hold does not require 54E-2. Its shared thumbnail dependency is already
 satisfied by 54D-1. Its eventual implementation must establish the one-slot
@@ -73,7 +76,13 @@ a placeholder authority record in advance.
 
 ## Forward Work
 
-- Stage 54E-2 — camera-space separation implementation.
+- Stage 54E-2a — presentation state and coordinate decomposition (unblocked
+  after the 54E-1 acceptance record is merged).
+- Stage 54E-2b — renderer composition (blocked until 54E-2a completes green).
+- Stage 54E-2c — interaction and camera-rig separation (blocked until 54E-2b
+  completes green).
+- Stage 54E-2d — lifecycle, authority, and contract reconciliation (blocked
+  until 54E-2c completes green).
 - Stage 54E-3 — setup/menu information architecture.
 - Stage 54E-4 — camera/GUI presets.
 - Stage 54E-5 — cockpit consolidation.
