@@ -65,6 +65,18 @@ private:
 	std::uint32_t next_word();
 };
 
+// One authoritative shuffled-bag construction operation. Gameplay commits the
+// returned bag and mutated RNG; observational callers pass a copied RNG and
+// discard both copied mutations.
+template <typename T>
+std::vector<T> build_shuffled_piece_bag(
+		const std::vector<T> &catalogue,
+		PythonRandom &rng) {
+	std::vector<T> bag = catalogue;
+	rng.shuffle(bag);
+	return bag;
+}
+
 int generate_effective_seed();
 bool is_valid_plain_random_mode(const std::string &random_mode);
 bool is_valid_plain_seed(int seed);

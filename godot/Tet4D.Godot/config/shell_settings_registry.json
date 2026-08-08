@@ -95,6 +95,33 @@
       "persist": true
     },
     {
+      "id": "ghost.enabled",
+      "label": "Ghost Piece",
+      "description": "Shows the exact hard-drop destination during live play.",
+      "category": "display",
+      "value_type": "bool",
+      "control_type": "checkbox",
+      "default": true,
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "settled_cells.opacity",
+      "label": "Locked-cell opacity",
+      "description": "Controls locked-cell fill opacity while keeping occupied-cell outlines visible.",
+      "category": "display",
+      "value_type": "float",
+      "control_type": "slider",
+      "default": 0.75,
+      "min": 0.35,
+      "max": 1.0,
+      "step": 0.05,
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
       "id": "replay.playback_speed",
       "label": "Replay speed",
       "description": "Controls visual replay playback speed only. Does not change gameplay timing.",

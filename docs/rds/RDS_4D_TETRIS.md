@@ -1,9 +1,9 @@
 ﻿# 4D Tetris RDS
 
-Status: Active v0.7 (Verified 2026-02-19)  
+Status: Active v0.8 (Godot Stage 54C verified 2026-08-07)
 Author: Omer + Codex  
 Date: 2026-02-18  
-Target Runtime: Python 3.11-3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`; Godot 4.7.1 product shell
 
 ## 1. Scope
 
@@ -107,7 +107,9 @@ View-hyperplane extension (`xw` / `zw`) requirements:
 6. `view_xw_neg`,
 7. `view_xw_pos`,
 8. `view_zw_neg`,
-9. `view_zw_pos`.
+9. `view_zw_pos`,
+10. `view_zx_neg`,
+11. `view_zx_pos`.
 
 System:
 1. Restart: `Y`
@@ -118,6 +120,12 @@ System:
 Layer-view policy:
 1. 4D mode renders all basis-derived layer boards; there is no manual slice selection control.
 2. Gameplay rotations and movement are independent from view-layer panel ordering.
+3. In Godot live play, the exact signed presentation basis and coordinate map
+   are governed by `docs/architecture/game_safe_4d_slice_basis.md`.
+4. Godot `view_xw_*`, `view_zw_*`, and `view_zx_*` actions rotate the exact
+   presentation basis while leaving canonical gameplay state and free-camera
+   orientation unchanged. XW/ZW may reconstruct slice membership; ZX rotates
+   the visible X/Z frame through the same signed-basis composition.
 
 Viewer-consistent translation requirement:
 1. Movement intents are interpreted in viewer space for `x/z` translation.
@@ -139,7 +147,8 @@ Rotation reliability requirements (4D `z-w`):
 
 ## 6. Rendering and UX
 
-1. 4D state is shown as a grid of projected 3D boards (one per `w` layer).
+1. 4D state is shown as a grid of projected 3D boards, one per layer of the
+   current signed slice axis (canonical `W` at identity).
 2. HUD shows active basis metadata (axis/count), not manual slice indices.
 3. Grid can be toggled on/off for all layer boards.
 4. When grid is off, each layer board still renders a board shadow.
@@ -179,6 +188,54 @@ Implementation structure for view `xw` / `zw`:
 8. map board coord `(x,y,z,w)` -> `(layer_index, cell3)` via basis,
 9. map `cell3` to centered 3D world coords for that layer board dims,
 10. apply existing 3D yaw/pitch projection path.
+
+### 6.1 Godot Stage 54C acceptance boundary
+
+1. The presentation basis is an exact signed permutation with `+Y` fixed in
+   the visible vertical slot; floating-point orientation is not semantic state.
+2. The shared mapper is bijective for every admitted board shape, including
+   asymmetric boards and `W=1`.
+3. Locked cells, active cells, lesson markers, grids, frames, labels, and
+   active-layer emphasis use the same canonical-to-presentation map.
+4. Slice labels expose signed semantic axis and coordinate; reversed stacks
+   do not masquerade as ordinary positive ordering.
+5. Basis state is excluded from native snapshots, hashes, replay identity,
+   gameplay configuration, topology, scoring, and persistence.
+6. Replay presentation remains identity-based. Stage 54C applies only to live
+   4D play.
+7. New games, gameplay restart, and Reset View restore identity. Reduced
+   Motion snaps directly to the exact destination basis.
+8. Live ghost destination cells use this same mapper for every reachable
+   signed basis. A basis turn redistributes cached canonical cells across the
+   new slice axis without changing native state or re-querying hard drop.
+9. Every authoritative destination cell appears exactly once; asymmetric,
+   `W=1`, and large-W admitted boards use the same mapping path.
+10. Tet4D provides exact presentation-only 90-degree view rotations in the
+    `XW`, `ZW`, and `ZX` planes. `XW`/`ZW` may exchange the slice axis with a
+    visible non-gravity axis; `ZX` rotates the visible X/Z frame without
+    independently changing slice membership. The signed basis, board, grid,
+    cells, movement helper, and axis indicator use one mapping; `+Y` remains
+    the fixed gravity axis.
+11. Live 3D and 4D setup exposes independent Translation and Rotation frame
+    preferences: `relative` (default) and `absolute`. These are local UI
+    preferences, persisted with the Godot setup selection, and excluded from
+    native setup, snapshots, hashes, replay, and deterministic identity.
+12. Relative controls resolve against the signed presentation basis composed
+    with the camera yaw rounded to the nearest 90 degrees (Python-compatible
+    ties-to-even). Local X is left/right, local positive depth is Forward/Away,
+    local W is the signed current slice axis, and local Y remains canonical
+    gravity. Relative rotations resolve local planes and canonicalize both
+    axis order and direction before calling native commands. Absolute controls
+    continue to emit the canonical command names unchanged.
+13. Camera presets (`Iso`, `Front`, `Side`, `Back`, `Top`, and `Opposite Iso`)
+    are Godot presentation shortcuts only. They change ordinary camera state,
+    never the exact BasisState, native snapshot/hash/replay identity, or cached
+    Ghost destination. The Back preset must preserve viewer-relative controls
+    through the same control-frame resolver; absolute controls remain canonical.
+14. Internal grid remains visibly dark/desaturated blue, while the board
+    wireframe remains continuously visible but weaker. Active > Ghost/Locked >
+    grid > wireframe > background is a product requirement; exact style values
+    are owned by `docs/design/godot_visual_system.md`.
 
 ## 7. Scoring
 
@@ -263,7 +320,7 @@ Implemented in code:
 7. Scoring matrix and random-piece stability checks are covered in `tests/unit/engine/test_game_nd.py`.
 8. Camera/view hyperplane turns for `xw` and `zw` are implemented in 4D renderer/view layer (`src/tet4d/ui/pygame/front4d_render.py`).
 9. Dedicated keybinding camera actions for these turns are implemented and conflict-safe by default:
-10. `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos`.
+10. `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos/view_zx_neg/view_zx_pos`.
 11. 4D projection cache keys include total `W` size, avoiding stale lattice/helper cache reuse across config changes.
 12. 4D per-layer zoom fitting is basis-aware and computed from current per-layer board dims.
 13. Black-box render-cache regression coverage exists for cross-config `W`-size changes (`tests/unit/engine/test_front4d_render.py`).

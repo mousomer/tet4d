@@ -72,9 +72,81 @@ C++ ownership are established.
 4. Live play-plane visualization owns board content only. Interactive Quick
    Settings and grid-visibility commands belong to a cockpit button panel;
    passive keyboard and mouse references belong to helper panels.
-5. In 4D, W-slice labels identify the slice without active wording, sit on the
-   camera-relative rear face, and use visual emphasis rather than semantic text
-   to distinguish the selected slice.
+5. In 4D, signed slice-axis labels identify the semantic layer without active
+   wording, sit on the camera-relative rear face, and use visual emphasis
+   rather than semantic text to distinguish selected layers. Identity uses W;
+   Stage 54C may present X or Z layers through the exact Godot view basis.
+
+### 2.3 Professional live-board setup admissibility
+
+1. Professional Godot live play must validate setup through the versioned
+   topology-aware board-extent contract before native session construction.
+2. The bounded Phase-I request includes contract version, mode, exact integer
+   board shape, production piece-set ID, and an explicit no-seam topology
+   profile matching the board dimensions.
+3. Invalid setup returns ordered structured errors and must not mutate a live
+   session or silently substitute standard dimensions.
+4. Product extent limits, piece compatibility, canonical spawn viability, and
+   native cell budgets belong to
+   `docs/architecture/topology_aware_board_extent_contract.md`, not to general
+   Python engine constructors or Godot UI code.
+5. Existing persisted setup schema versions remain source data; their recovery
+   adapter must materialize a candidate and route it through the shared
+   validator. Arbitrary-shape persistence is deferred to Stage 54B-2.
+
+### 2.4 One-piece next preview
+
+1. Live Godot 2D, 3D, and 4D must display exactly one next piece selected by
+   the authoritative deterministic session.
+2. The preview consumes a read-only native query containing the piece-set ID,
+   piece name, existing production colour identifier, dimension, and canonical
+   piece-local cells. Godot must not reconstruct queue order or production
+   piece geometry from the piece name.
+3. Querying or rendering the preview must not change queue order, bag refill,
+   RNG consumption, current gameplay state, snapshots, state hashes, replay,
+   or traces. Gameplay refill and empty-bag prediction must call one shared
+   randomizer operation; prediction supplies copied RNG state and discards the
+   temporary bag rather than mutate the session.
+4. One shared Godot thumbnail presentation covers 2D, 3D, and compact W-sliced
+   4D geometry and remains reusable by the later Hold feature.
+5. The live-only `NEXT` panel belongs near the top of the right inspector,
+   after onboarding and before the 4D basis and controls. Replay must not show
+   it.
+6. Multiple queue entries, configurable preview depth, randomizer history,
+   ghost pieces, and Hold semantics remain outside Stage 54D-1.
+7. Ordinary game over retains the last successfully rendered preview. A
+   structured provider failure clears stale geometry and reports bounded
+   unavailability without blocking gameplay. Current live sessions do not
+   represent a successful no-next state.
+8. Native transports the existing production `color_id`; Godot owns palette,
+   theme, High Contrast, outlines, and accessibility styling.
+
+### 2.5 Authoritative live ghost
+
+1. Live Godot 2D, 3D, and 4D display the exact canonical cells returned by
+   the authoritative native hard-drop destination query.
+2. Gameplay hard drop and the observational query use one shared destination
+   computation. Godot must not calculate distance, collision, or landing
+   legality.
+3. `ghost.enabled` is a persistent presentation preference, defaults on, and
+   is excluded from gameplay setup, snapshots, hashes, replay, and traces.
+4. Terminal/no-active/provider-failure states hide and invalidate the ghost.
+   An exact overlap with the active cells is hidden without changing the
+   native result; pause retains the current ghost.
+5. Landing queries are revision-driven. Camera, theme, HUD, and 4D basis
+   changes reuse canonical cached cells and do not re-query gameplay.
+6. The dedicated Ghost role uses a readable fill plus persistent high-contrast
+   outline. It remains weaker than the active piece and distinct from locked
+   cells and the structural grid, including High Contrast.
+
+### 2.6 Locked-cell presentation
+
+1. `settled_cells.opacity` is a persistent Godot presentation preference with
+   default `0.75` and range `0.35..1.00`; it only restyles locked-cell fills.
+2. Locked cells retain a persistent opaque outline, while active cells and
+   ghost styling remain unaffected.
+3. The setting is excluded from gameplay setup, native queries, snapshots,
+   hashes, replay, trace, queue, RNG, collision, and locking semantics.
 
 ## 3. Shared Rules and Axis Conventions
 
@@ -468,7 +540,7 @@ it does not transfer semantic authority or redefine Play drop/lock policy.
 10. Audio controls (master volume, SFX volume, mute) must be available in settings.
 11. Fullscreen/windowed toggle must be supported without layout corruption.
 12. Piece rotations must use a soft visual animation instead of a single-frame snap.
-13. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
+13. 2D/3D/4D locked-cell fill opacity must be user-adjustable from settings with default `0.75` and allowed range `0.35..1.00`; the persistent outline remains fully legible.
 14. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 15. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
 16. Terminal game-over presentation must use a dedicated post-terminal phase model `playing -> endgame_shatter -> endgame_relic_field`; the animation must render from a frozen endgame snapshot instead of mutating live gameplay entities.

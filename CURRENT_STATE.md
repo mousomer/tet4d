@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-05
+Last updated: 2026-08-07
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -37,15 +37,42 @@ history ledger. Detailed history is preserved in
   `docs/plans/professional_godot_game_programme.md`. Its first gate is a fully
   playable, professionally presented 4D Godot game that is ready for later
   topology, Explorer, challenge, and simulation extensions.
-- The next implementation slice is Stage 54B-1: a shared topology-aware
-  board-extent contract implementing the complete bounded-board rule. Stage
-  54B-2 then adds direct Godot X/Y/Z/W setup, validation, and persistence.
-- Stage 54C adds game-safe 4D slice-basis quarter-turns and focused instruction.
+- Stage 54B-1 is complete on the active branch: the shared topology-aware
+  board-extent contract establishes bounded live setup admission under
+  `AE-0054` without transferring topology or gameplay semantics. Stage 54B-2
+  implementation now provides direct Godot X/Y/Z/W setup, validation
+  presentation, and schema-3 last-valid persistence. It is complete and
+  verified.
+- Stage 54C is complete and verified on the active branch. Godot now owns an exact signed
+  live-4D slice-presentation basis with XW/ZW/ZX quarter turns, a shared bijective
+  coordinate mapper, basis-aware layout/input/HUD, a five-step lesson, and
+  deterministic native-state/replay isolation. Native gameplay and topology
+  authority did not change.
 - Stage 54D provides the modern gameplay baseline in three ordered slices:
   next-piece preview, ghost piece, and Hold.
-- Weak live 3D/4D grid visibility is known non-blocking visual debt. It is
-  deferred to the Stage 54E visible-GUI playability review and does not block
-  Stage 54B, Stage 54C, or Stage 54D.
+- Stage 54D-1 is committed at `e7708d8c`; Stage 54D-2 is committed at
+  `4f9e920b`. Stage 54D-2 implements a shared
+  observational native hard-drop destination, live 2D/3D/4D basis-aware ghost
+  presentation, and the persistent `ghost.enabled` preference without changing
+  deterministic identity or authority. Stage 54D-3 Hold is next.
+- Stage 54D-2 corrects grid and ghost readability, adds render-only locked-cell
+  opacity, and completes the basis-driven 90-degree view-rotation/axis-indicator
+  family. It also adds persistent presentation-only relative/absolute
+  Translation and Rotation controls resolved by a shared Python-compatible
+  yaw/basis mapper, plus a dedicated amber W-axis role. Integrated human
+  acceptance remains routed to Stage 54E.
+- The final Stage 54D-2 correction keeps the shell palette as the shared
+  live-board grammar authority, distinguishes the explicit stronger wireframe
+  from the subordinate interior-only dark-blue grid, adds scoped visual-role
+  drift validation, and adds
+  presentation-only Iso/Front/Side/Back/Top/Opposite-Iso camera presets.
+  The final orientation-grid/floor calibration is mechanically verified by the
+  Godot 4.7.1 suite and scoped visual-role validator; the 24-state gizmo
+  regression permits only visible-U, +Y, and visible-V arrows. Full repository
+  verification completed with `verify: OK`. Stage 54D-2 developer/user visual
+  review accepted the Ghost/board presentation; broader integrated professional
+  playability acceptance remains routed to Stage 54E. The implementation branch
+  is published; Stage 54D-3 Hold remains the next implementation slice.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -75,10 +102,9 @@ history ledger. Detailed history is preserved in
 - Existing inherited behaviour moves through the authority-transfer protocol.
   New behaviour without a predecessor uses authority establishment with an
   owning contract, named owner, conformance evidence, and authority-map entry.
-- Stage 54B must accept topology as an explicit board-validation input while
-  implementing the bounded rule now; Strip and Möbius constraints activate
-  later through the same interface. Do not introduce topology-blind duplicate
-  minima in Godot or adapters.
+- Stage 54B-2 must consume the established board-extent contract; Strip and
+  Möbius constraints activate later through the same interface. Do not
+  introduce topology-blind duplicate minima in Godot or adapters.
 - Stage 54D-1 presents inherited next-piece state. Stage 54D-2 presents an
   authoritative landing query. Stage 54D-3 introduces new Hold state and must
   complete an `AE-####` establishment record during implementation, not before
@@ -94,6 +120,9 @@ history ledger. Detailed history is preserved in
   rebuild them from the authoritative profile and dimensions; never repair
   them into semantic state. Its separate C++-dependent setup-latency deferral
   remains in `docs/BACKLOG.md`.
+- Live 4D basis state is Godot presentation state only. Do not persist it,
+  include it in snapshots/hashes, apply it to replay rendering, exchange Y,
+  or duplicate native movement legality in GDScript.
 - `state/topology/profiles.json` is a distinct version-1 edge-rule workspace
   format. Invalid existing storage may provide read-only defaults but must
   block ordinary save; destructive replacement requires an explicit recovery
@@ -118,12 +147,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.06` (`low`)
+- `tech_debt.score = 5.95` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.91`
-2. `code_balance = 2.15`
+1. `delivery_size_pressure = 2.92`
+2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->
@@ -174,7 +203,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54B-1 — Shared Topology-Aware Board-Extent Contract.
+1. Integrate the published Stage 54B through 54D-2 chain, then begin Stage
+   54D-3 Hold with its required authority establishment. Integrated professional
+   playability acceptance remains routed to Stage 54E.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

@@ -88,6 +88,7 @@ func _setup(mode: String, shape: Array) -> Dictionary:
 	var piece_set := "classic" if mode == "live_2d" else ("native_3d" if mode == "live_3d" else "standard_4d_5")
 	return {
 		"schema_version": 2,
+		"contract_version": 1,
 		"mode": mode,
 		"board_preset_id": "standard",
 		"board_shape": shape,
@@ -95,6 +96,7 @@ func _setup(mode: String, shape: Array) -> Dictionary:
 		"random_mode": "fixed_seed",
 		"seed": 1337,
 		"initial_speed_level": 1,
+		"topology_profile": {"contract_version": 1, "rank": shape.size(), "dimensions": shape.duplicate(), "seams": []},
 	}
 
 

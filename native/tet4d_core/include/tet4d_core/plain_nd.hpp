@@ -79,6 +79,8 @@ struct GameStateND {
 	bool try_move_axis(int axis, int delta);
 	bool try_rotate(int axis_a, int axis_b, int delta_steps);
 	bool try_soft_drop();
+	// Pure observational landing query shared with hard_drop().
+	std::optional<ActivePieceND> hard_drop_destination() const;
 	void hard_drop();
 	int lock_current_piece();
 	void spawn_piece(const PieceShapeND &shape);
@@ -125,5 +127,7 @@ PieceShapeND trace_rotation_shape_4d();
 PieceShapeND native_i_shape_3d();
 PieceShapeND standard_stair_shape_4d();
 CoordND spawn_pos_for_shape(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape);
+CoordND canonical_spawn_pose_nd(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape);
+bool canonical_spawn_viable_nd(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape);
 
 } // namespace tet4d::core

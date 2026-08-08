@@ -10,11 +10,11 @@ var dimension := 0
 var bounds: Dictionary = {"ok": false}
 
 
-func configure(snapshot: Dictionary) -> void:
+func configure(snapshot: Dictionary, basis = null) -> void:
 	board_shape = snapshot.get("board_shape", []).duplicate()
 	dimension = int(snapshot.get("dimension", 0))
-	mapper.configure(board_shape)
-	bounds = mapper.board_bounds(board_shape, dimension)
+	mapper.configure(board_shape, basis)
+	bounds = mapper.board_bounds(board_shape, dimension, basis)
 
 
 func world_position(coordinates: Array) -> Vector3:

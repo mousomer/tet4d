@@ -364,6 +364,8 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 - `display.ui_scale`: default `"standard"`; enum; options: small, standard, large, extra_large
 - `display.hud_density`: default `"standard"`; enum; options: compact, standard, detailed
 - `display.board_detail`: default `"standard"`; enum; options: minimal, standard, full
+- `ghost.enabled`: default `true`; bool
+- `settled_cells.opacity`: default `0.75`; float
 - `display.show_w_labels`: default `true`; bool
 - `display.projection_strength`: default `1.0`; float
 

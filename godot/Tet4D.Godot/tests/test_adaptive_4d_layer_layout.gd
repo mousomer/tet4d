@@ -3,6 +3,7 @@ extends RefCounted
 const AdaptiveLayerLayoutScript = preload("res://scripts/presentation/adaptive_layer_layout.gd")
 const TraceCoordinateMapperScript = preload("res://scripts/rendering/trace_coordinate_mapper.gd")
 const BoardPresentationModelScript = preload("res://scripts/presentation/board_presentation_model.gd")
+const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
 
 
 func run() -> Array:
@@ -31,4 +32,12 @@ func run() -> Array:
 	presentation.configure({"trace_type": "live_4d", "dimension": 4, "board_shape": [8, 16, 5, 8], "active_cells": [{"position": [1, 1, 1, 2]}, {"position": [1, 1, 1, 3]}]})
 	if presentation.active_layer_indices() != [2, 3]:
 		failures.append("all active-piece layers should be highlighted")
+	var asymmetric := TraceCoordinateMapperScript.new()
+	asymmetric.configure([5, 4, 3, 2], SliceBasis4DScript.identity().turned("xw", 1))
+	if asymmetric.current_layer_count() != 5 or asymmetric.visible_board_shape() != [2, 4, 3]:
+		failures.append("XW basis layout must derive count and visible dimensions from asymmetric extents")
+	var thin_w := TraceCoordinateMapperScript.new()
+	thin_w.configure([4, 6, 2, 1], SliceBasis4DScript.identity().turned("zw", -1))
+	if thin_w.current_layer_count() != 2 or thin_w.visible_board_shape() != [4, 6, 1]:
+		failures.append("W=1 must remain a valid visible dimension after ZW re-slicing")
 	return failures

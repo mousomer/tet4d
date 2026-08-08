@@ -45,6 +45,7 @@ config/generated drift into capability-based checks.
 - `tools/governance/validate_config_authority.py`
 - `tools/governance/validate_utility_reuse.py`
 - `tools/governance/validate_godot_semantic_boundary.py`
+- `tools/governance/validate_live_board_visual_roles.py`
 - `tools/governance/validate_native_cpp_tooling.py`
 - `tools/governance/validate_drift_protection.py`
 - `tools/governance/validate_authority_transfer.py`

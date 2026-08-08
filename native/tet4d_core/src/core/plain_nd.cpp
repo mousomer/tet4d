@@ -361,11 +361,27 @@ bool GameStateND::try_soft_drop() {
 	return try_move_axis(gravity_axis, 1);
 }
 
+std::optional<ActivePieceND> GameStateND::hard_drop_destination() const {
+	if (game_over || !active_piece.has_value()) {
+		return std::nullopt;
+	}
+	ActivePieceND destination = *active_piece;
+	while (true) {
+		const ActivePieceND candidate = destination.moved_axis(gravity_axis, 1);
+		if (!can_exist(candidate)) {
+			return destination;
+		}
+		destination = candidate;
+	}
+}
+
 void GameStateND::hard_drop() {
 	if (game_over) {
 		return;
 	}
-	while (try_soft_drop()) {
+	const std::optional<ActivePieceND> destination = hard_drop_destination();
+	if (destination.has_value()) {
+		active_piece = *destination;
 	}
 	lock_current_piece();
 	if (!game_over && post_lock_spawn_shape.has_value()) {
@@ -399,7 +415,7 @@ void GameStateND::spawn_piece(const PieceShapeND &shape) {
 	if (game_over) {
 		return;
 	}
-	active_piece = ActivePieceND::from_shape(shape, spawn_pos_for_shape(board.shape(), gravity_axis, shape));
+	active_piece = ActivePieceND::from_shape(shape, canonical_spawn_pose_nd(board.shape(), gravity_axis, shape));
 	if (!can_exist(*active_piece)) {
 		game_over = true;
 		game_over_reason = "spawn_blocked";
@@ -494,6 +510,10 @@ PieceShapeND standard_stair_shape_4d() {
 }
 
 CoordND spawn_pos_for_shape(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape) {
+	return canonical_spawn_pose_nd(shape, gravity_axis, piece_shape);
+}
+
+CoordND canonical_spawn_pose_nd(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape) {
 	CoordND result;
 	result.values.resize(shape.dims.size(), 0);
 	for (int axis = 0; axis < shape.dimension(); ++axis) {
@@ -513,6 +533,33 @@ CoordND spawn_pos_for_shape(const BoardShapeND &shape, int gravity_axis, const P
 		}
 	}
 	return result;
+}
+
+bool canonical_spawn_viable_nd(const BoardShapeND &shape, int gravity_axis, const PieceShapeND &piece_shape) {
+	if (!shape.is_valid() || gravity_axis < 0 || gravity_axis >= shape.dimension() || piece_shape.blocks.empty()) {
+		return false;
+	}
+	for (const CoordND &block : piece_shape.blocks) {
+		if (block.dimension() != shape.dimension()) {
+			return false;
+		}
+	}
+	const ActivePieceND piece = ActivePieceND::from_shape(
+			piece_shape, canonical_spawn_pose_nd(shape, gravity_axis, piece_shape));
+	for (const CoordND &cell : piece.cells()) {
+		for (int axis = 0; axis < shape.dimension(); ++axis) {
+			const int value = cell.values[static_cast<std::size_t>(axis)];
+			const int extent = shape.dims[static_cast<std::size_t>(axis)];
+			if (axis == gravity_axis) {
+				if (value >= extent) {
+					return false;
+				}
+			} else if (value < 0 || value >= extent) {
+				return false;
+			}
+		}
+	}
+	return true;
 }
 
 } // namespace tet4d::core

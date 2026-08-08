@@ -2,6 +2,9 @@ extends RefCounted
 
 class_name GameSetupSpec
 
+const BoardExtentContractScript = preload("res://scripts/generated/board_extent_contract_v1.gd")
+const TopologyContractDocumentScript = preload("res://scripts/native/topology_contract_document.gd")
+
 const MODE_2D := "live_2d"
 const MODE_3D := "live_3d"
 const MODE_4D := "live_4d"
@@ -59,22 +62,50 @@ static func modes() -> Array:
 
 
 static func presets_for_mode(mode: String) -> Array:
-	return (SPECS.get(mode, []) as Array).duplicate(true)
+	var result: Array = []
+	for candidate in SPECS.get(mode, []):
+		result.append(preset(mode, str((candidate as Dictionary).get("id", ""))))
+	return result
 
 
 static func preset(mode: String, preset_id: String) -> Dictionary:
 	for candidate in SPECS.get(mode, []):
 		if str(candidate.get("id", "")) == preset_id:
-			return (candidate as Dictionary).duplicate(true)
+			var result := (candidate as Dictionary).duplicate(true)
+			if preset_id == STANDARD_PRESET_ID:
+				result["shape"] = canonical_default_shape(mode)
+			return result
 	return {}
+
+
+static func canonical_default_shape(mode: String) -> Array:
+	return BoardExtentContractScript.canonical_default_shape(mode)
+
+
+static func board_axis_ranges(mode: String) -> Array:
+	return BoardExtentContractScript.axis_ranges(mode)
+
+
+static func bounded_topology_profile(shape: Array) -> Dictionary:
+	return {
+		"contract_version": TopologyContractDocumentScript.SCHEMA_VERSION,
+		"rank": shape.size(),
+		"dimensions": shape.duplicate(),
+		"seams": [],
+	}
 
 
 static func is_supported(mode: String, preset_id: String) -> bool:
 	return not preset(mode, preset_id).is_empty()
 
-static func piece_sets_for_mode(mode: String, preset_id: String = STANDARD_PRESET_ID) -> Array:
-	if not is_supported(mode, preset_id):
-		return []
+static func preset_id_for_shape(mode: String, shape: Array) -> String:
+	for candidate in presets_for_mode(mode):
+		if (candidate.get("shape", []) as Array) == shape:
+			return str(candidate.get("id", ""))
+	return ""
+
+
+static func piece_sets_for_mode(mode: String, _preset_id: String = STANDARD_PRESET_ID) -> Array:
 	return (PIECE_SETS.get(mode, []) as Array).duplicate(true)
 
 
@@ -91,8 +122,6 @@ static func default_piece_set_id(mode: String) -> String:
 
 
 static func is_piece_set_supported(mode: String, preset_id: String, piece_set_id: String) -> bool:
-	if not is_supported(mode, preset_id):
-		return false
 	for candidate in piece_sets_for_mode(mode, preset_id):
 		if str(candidate.get("id", "")) == piece_set_id:
 			return true

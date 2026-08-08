@@ -4,6 +4,7 @@
 #include "tet4d_core/plain_game_setup.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,10 @@ namespace tet4d::core {
 class Plain2DSession {
 public:
 	Plain2DSession();
-	Plain2DSession(int width, int height);
+	// The only public parameterized construction path. Returns nullopt when the
+	// board fails the shared board-extent contract; it never substitutes a
+	// canonical board for an invalid request.
+	static std::optional<Plain2DSession> create_validated(int width, int height);
 
 	bool configure(int width, int height);
 	bool configure(const PlainGameSetup &setup);
@@ -22,8 +26,20 @@ public:
 	std::string snapshot_json() const;
 	std::string status() const;
 	std::string state_hash() const;
+	// Observational queue query. The returned production shape is the next real
+	// draw and querying never mutates the bag or RNG, including at refill.
+	PieceShape2D peek_next_piece_shape() const;
+	// Exact read-only destination used by the next hard drop, or nullopt when
+	// the session is terminal or has no active piece.
+	std::optional<ActivePiece2D> hard_drop_destination() const;
+	// Borrowed setup identifier; valid until the session is destroyed.
+	const std::string &piece_set_id() const;
 
 private:
+	// Internal precondition: dimensions have already passed create_validated or
+	// are the generated canonical default used by the no-argument constructor.
+	Plain2DSession(int width, int height);
+
 	int width_ = 6;
 	int height_ = 6;
 	PlainGameSetup setup_;

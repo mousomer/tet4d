@@ -124,6 +124,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         validate_config_authority,
         validate_drift_protection,
         validate_godot_semantic_boundary,
+        validate_live_board_visual_roles,
         validate_native_cpp_tooling,
         validate_project_contracts,
         validate_technical_debt,
@@ -140,6 +141,9 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         GovernanceCheck("config_authority", validate_config_authority.main),
         GovernanceCheck(
             "godot_semantic_boundary", validate_godot_semantic_boundary.main
+        ),
+        GovernanceCheck(
+            "live_board_visual_roles", validate_live_board_visual_roles.main
         ),
         GovernanceCheck("native_cpp_tooling", validate_native_cpp_tooling.main),
         GovernanceCheck("menu_graph", lint_menu_graph.main),

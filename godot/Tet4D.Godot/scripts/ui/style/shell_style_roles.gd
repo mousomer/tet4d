@@ -17,6 +17,10 @@ const ACCENT_FOCUS := "accent.focus"
 const GRID_MAJOR := "grid.major"
 const GRID_MINOR := "grid.minor"
 const GRID_AXIS := "grid.axis"
+const AXIS_X := "axis.x"
+const AXIS_Y := "axis.y"
+const AXIS_Z := "axis.z"
+const AXIS_W := "axis.w"
 const CELL_ACTIVE := "cell.active"
 const CELL_LOCKED := "cell.locked"
 const CELL_SECONDARY := "cell.secondary"
@@ -62,6 +66,10 @@ const REQUIRED_COLOR_ROLES := [
 	GRID_MAJOR,
 	GRID_MINOR,
 	GRID_AXIS,
+	AXIS_X,
+	AXIS_Y,
+	AXIS_Z,
+	AXIS_W,
 	CELL_ACTIVE,
 	CELL_LOCKED,
 	CELL_SECONDARY,

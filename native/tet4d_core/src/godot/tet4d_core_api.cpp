@@ -2,7 +2,9 @@
 
 #include "topology_transport_variant.h"
 
+#include "tet4d_core/board_extent_contract.hpp"
 #include "tet4d_core/core_api.hpp"
+#include "tet4d_core/generated/board_extent_contract_v1.hpp"
 #include "tet4d_core/geometry.hpp"
 #include "tet4d_core/plain_game_setup.hpp"
 #include "tet4d_core/query.hpp"
@@ -126,6 +128,79 @@ Array blocks_to_array(const std::vector<tet4d::core::CoordND> &blocks) {
 	return result;
 }
 
+Dictionary piece_preview_dictionary(
+		const tet4d::core::PieceShape2D &shape,
+		const std::string &piece_set_id) {
+	Dictionary result;
+	const bool ok = !shape.name.empty() && !shape.blocks.empty();
+	result["ok"] = ok;
+	result["status"] = ok ? "piece" : "failure";
+	result["dimension"] = 2;
+	result["piece_set_id"] = to_godot_string(piece_set_id);
+	result["piece_name"] = to_godot_string(shape.name);
+	result["color_id"] = shape.color_id;
+	Array cells;
+	for (const tet4d::core::Coord2D &coord : shape.blocks) {
+		Array cell;
+		cell.push_back(coord.x);
+		cell.push_back(coord.y);
+		cells.push_back(cell);
+	}
+	result["cells"] = cells;
+	return result;
+}
+
+Dictionary hard_drop_destination_dictionary(const std::optional<tet4d::core::ActivePiece2D> &piece) {
+	Dictionary result;
+	const bool ok = piece.has_value();
+	result["ok"] = ok;
+	result["status"] = ok ? "destination" : "unavailable";
+	result["dimension"] = 2;
+	result["piece_name"] = ok ? to_godot_string(piece->shape.name) : String();
+	result["color_id"] = ok ? piece->shape.color_id : 0;
+	Array cells;
+	if (ok) {
+		for (const tet4d::core::Coord2D &coord : piece->cells()) {
+			Array cell;
+			cell.push_back(coord.x);
+			cell.push_back(coord.y);
+			cells.push_back(cell);
+		}
+	}
+	result["cells"] = cells;
+	return result;
+}
+
+Dictionary hard_drop_destination_dictionary(
+		const std::optional<tet4d::core::ActivePieceND> &piece,
+		int dimension) {
+	Dictionary result;
+	const bool ok = piece.has_value();
+	result["ok"] = ok;
+	result["status"] = ok ? "destination" : "unavailable";
+	result["dimension"] = dimension;
+	result["piece_name"] = ok ? to_godot_string(piece->shape.name) : String();
+	result["color_id"] = ok ? piece->shape.color_id : 0;
+	result["cells"] = ok ? blocks_to_array(piece->cells()) : Array();
+	return result;
+}
+
+Dictionary piece_preview_dictionary(
+		const tet4d::core::PieceShapeND &shape,
+		const std::string &piece_set_id) {
+	Dictionary result;
+	const int dimension = shape.blocks.empty() ? 0 : shape.blocks.front().dimension();
+	const bool ok = !shape.name.empty() && !shape.blocks.empty() && (dimension == 3 || dimension == 4);
+	result["ok"] = ok;
+	result["status"] = ok ? "piece" : "failure";
+	result["dimension"] = dimension;
+	result["piece_set_id"] = to_godot_string(piece_set_id);
+	result["piece_name"] = to_godot_string(shape.name);
+	result["color_id"] = shape.color_id;
+	result["cells"] = blocks_to_array(shape.blocks);
+	return result;
+}
+
 String boundary_label(const tet4d::core::BoundaryQueryRef &boundary) {
 	const char *names[] = {"x", "y", "z", "w"};
 	return String(names[boundary.axis]) + (boundary.side < 0 ? "-" : "+");
@@ -173,11 +248,58 @@ Dictionary topology_query_result_to_dictionary(const tet4d::core::TopologyCellSt
 	return dictionary;
 }
 
+Array board_shape_to_array(const std::vector<int> &shape) {
+	Array result;
+	for (const int extent : shape) {
+		result.push_back(extent);
+	}
+	return result;
+}
+
+Dictionary board_extent_error_dictionary(const tet4d::core::BoardExtentValidationError &detail) {
+	Dictionary result;
+	result["code"] = to_godot_string(detail.code);
+	result["path"] = to_godot_string(detail.path);
+	result["expected"] = to_godot_string(detail.expected);
+	result["actual"] = to_godot_string(detail.actual);
+	result["message"] = to_godot_string(detail.message);
+	return result;
+}
+
+Dictionary board_extent_result_dictionary(const tet4d::core::BoardExtentValidationResult &result) {
+	Dictionary response;
+	response["ok"] = result.ok;
+	Array errors;
+	for (const tet4d::core::BoardExtentValidationError &detail : result.errors) {
+		errors.push_back(board_extent_error_dictionary(detail));
+	}
+	response["errors"] = errors;
+	Dictionary validated;
+	if (result.validated_setup.has_value()) {
+		const tet4d::core::ValidatedLiveBoardSetup &setup = *result.validated_setup;
+		validated["contract_version"] = setup.contract_version;
+		validated["mode"] = to_godot_string(setup.mode);
+		validated["board_shape"] = board_shape_to_array(setup.board_shape);
+		validated["piece_set_id"] = to_godot_string(setup.piece_set_id);
+		validated["native_cell_count"] = setup.native_cell_count;
+		validated["topology_profile"] = topology_transport_profile_dictionary(setup.topology_profile).get("profile", Dictionary());
+	}
+	response["validated_setup"] = validated;
+	return response;
+}
+
+Dictionary configuration_error_dictionary(const std::string &path, const std::string &message) {
+	tet4d::core::BoardExtentValidationResult result;
+	result.errors.push_back({"invalid_field_type", path, "valid live setup", "invalid", message});
+	return board_extent_result_dictionary(result);
+}
+
 std::optional<tet4d::core::PlainGameSetup> plain_setup_from_dictionary(
 		const Dictionary &payload,
 		const std::string &expected_mode) {
 	static const std::set<std::string> allowed_fields = {
 		"schema_version",
+		"contract_version",
 		"mode",
 		"board_preset_id",
 		"board_shape",
@@ -185,6 +307,7 @@ std::optional<tet4d::core::PlainGameSetup> plain_setup_from_dictionary(
 		"random_mode",
 		"seed",
 		"initial_speed_level",
+		"topology_profile",
 	};
 	const Array keys = payload.keys();
 	for (int64_t index = 0; index < keys.size(); ++index) {
@@ -202,12 +325,14 @@ std::optional<tet4d::core::PlainGameSetup> plain_setup_from_dictionary(
 	}
 	for (const char *required : {
 			"schema_version",
+			"contract_version",
 			"mode",
 			"board_preset_id",
 			"board_shape",
 			"piece_set_id",
 			"random_mode",
 			"initial_speed_level",
+			"topology_profile",
 		}) {
 		if (!payload.has(required)) {
 			ERR_PRINT((std::string("Tet4D live setup missing required field: ") + required).c_str());
@@ -272,6 +397,30 @@ std::optional<tet4d::core::PlainGameSetup> plain_setup_from_dictionary(
 	return result;
 }
 
+template <typename Session>
+Dictionary configure_checked(
+		const Dictionary &setup,
+		const std::string &mode,
+		Session &session) {
+	auto transported = topology_transport_value_from_variant(setup, "$");
+	if (!transported.ok()) {
+		return configuration_error_dictionary("$", "The live setup contains an unsupported Variant value.");
+	}
+	const tet4d::core::BoardExtentValidationResult validation =
+			tet4d::core::validate_live_board_setup_transport(*transported.value);
+	if (!validation.ok) {
+		return board_extent_result_dictionary(validation);
+	}
+	const auto parsed = plain_setup_from_dictionary(setup, mode);
+	if (!parsed.has_value()) {
+		return configuration_error_dictionary("$", "The non-extent live setup fields are invalid.");
+	}
+	if (!session.configure(*parsed)) {
+		return configuration_error_dictionary("$", "The validated setup could not be committed atomically.");
+	}
+	return board_extent_result_dictionary(validation);
+}
+
 } // namespace
 
 void Tet4DCoreApi::_bind_methods() {
@@ -288,6 +437,8 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("query_topology_axis_wrap_cell_step", "dims", "wrapped_axes", "coord", "axis", "delta"), &Tet4DCoreApi::query_topology_axis_wrap_cell_step);
 	ClassDB::bind_method(D_METHOD("topology_transport_profile", "profile"), &Tet4DCoreApi::topology_transport_profile);
 	ClassDB::bind_method(D_METHOD("topology_transport_resolve_cell_step", "profile", "query"), &Tet4DCoreApi::topology_transport_resolve_cell_step);
+	ClassDB::bind_method(D_METHOD("get_board_extent_contract"), &Tet4DCoreApi::get_board_extent_contract);
+	ClassDB::bind_method(D_METHOD("validate_live_board_setup", "setup"), &Tet4DCoreApi::validate_live_board_setup);
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
 	ClassDB::bind_method(D_METHOD("list_plain_2d_parity_cases"), &Tet4DCoreApi::list_plain_2d_parity_cases);
 	ClassDB::bind_method(D_METHOD("get_plain_2d_parity_status"), &Tet4DCoreApi::get_plain_2d_parity_status);
@@ -299,24 +450,33 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("export_plain_nd_trace_json", "case_id"), &Tet4DCoreApi::export_plain_nd_trace_json);
 	ClassDB::bind_method(D_METHOD("get_plain_nd_required_field_parity", "case_id"), &Tet4DCoreApi::get_plain_nd_required_field_parity);
 	ClassDB::bind_method(D_METHOD("live_2d_configure", "setup"), &Tet4DCoreApi::live_2d_configure);
+	ClassDB::bind_method(D_METHOD("live_2d_configure_checked", "setup"), &Tet4DCoreApi::live_2d_configure_checked);
 	ClassDB::bind_method(D_METHOD("live_2d_reset"), &Tet4DCoreApi::live_2d_reset);
 	ClassDB::bind_method(D_METHOD("live_2d_apply_command", "command"), &Tet4DCoreApi::live_2d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_2d_tick"), &Tet4DCoreApi::live_2d_tick);
 	ClassDB::bind_method(D_METHOD("live_2d_snapshot_json"), &Tet4DCoreApi::live_2d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_2d_next_piece_preview"), &Tet4DCoreApi::live_2d_next_piece_preview);
+	ClassDB::bind_method(D_METHOD("live_2d_hard_drop_destination"), &Tet4DCoreApi::live_2d_hard_drop_destination);
 	ClassDB::bind_method(D_METHOD("live_2d_status"), &Tet4DCoreApi::live_2d_status);
 	ClassDB::bind_method(D_METHOD("live_2d_state_hash"), &Tet4DCoreApi::live_2d_state_hash);
 	ClassDB::bind_method(D_METHOD("live_3d_configure", "setup"), &Tet4DCoreApi::live_3d_configure);
+	ClassDB::bind_method(D_METHOD("live_3d_configure_checked", "setup"), &Tet4DCoreApi::live_3d_configure_checked);
 	ClassDB::bind_method(D_METHOD("live_3d_reset"), &Tet4DCoreApi::live_3d_reset);
 	ClassDB::bind_method(D_METHOD("live_3d_apply_command", "command"), &Tet4DCoreApi::live_3d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_3d_tick"), &Tet4DCoreApi::live_3d_tick);
 	ClassDB::bind_method(D_METHOD("live_3d_snapshot_json"), &Tet4DCoreApi::live_3d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_3d_next_piece_preview"), &Tet4DCoreApi::live_3d_next_piece_preview);
+	ClassDB::bind_method(D_METHOD("live_3d_hard_drop_destination"), &Tet4DCoreApi::live_3d_hard_drop_destination);
 	ClassDB::bind_method(D_METHOD("live_3d_status"), &Tet4DCoreApi::live_3d_status);
 	ClassDB::bind_method(D_METHOD("live_3d_state_hash"), &Tet4DCoreApi::live_3d_state_hash);
 	ClassDB::bind_method(D_METHOD("live_4d_configure", "setup"), &Tet4DCoreApi::live_4d_configure);
+	ClassDB::bind_method(D_METHOD("live_4d_configure_checked", "setup"), &Tet4DCoreApi::live_4d_configure_checked);
 	ClassDB::bind_method(D_METHOD("live_4d_reset"), &Tet4DCoreApi::live_4d_reset);
 	ClassDB::bind_method(D_METHOD("live_4d_apply_command", "command"), &Tet4DCoreApi::live_4d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_4d_tick"), &Tet4DCoreApi::live_4d_tick);
 	ClassDB::bind_method(D_METHOD("live_4d_snapshot_json"), &Tet4DCoreApi::live_4d_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_4d_next_piece_preview"), &Tet4DCoreApi::live_4d_next_piece_preview);
+	ClassDB::bind_method(D_METHOD("live_4d_hard_drop_destination"), &Tet4DCoreApi::live_4d_hard_drop_destination);
 	ClassDB::bind_method(D_METHOD("live_4d_status"), &Tet4DCoreApi::live_4d_status);
 	ClassDB::bind_method(D_METHOD("live_4d_state_hash"), &Tet4DCoreApi::live_4d_state_hash);
 }
@@ -472,6 +632,46 @@ Dictionary Tet4DCoreApi::topology_transport_resolve_cell_step(const Variant &pro
 	return response;
 }
 
+Dictionary Tet4DCoreApi::get_board_extent_contract() const {
+	Dictionary result;
+	result["contract"] = to_godot_string(std::string(tet4d::core::generated::BOARD_EXTENT_CONTRACT_NAME));
+	result["contract_version"] = tet4d::core::generated::BOARD_EXTENT_CONTRACT_VERSION;
+	result["fingerprint"] = to_godot_string(std::string(tet4d::core::generated::BOARD_EXTENT_CONTRACT_FINGERPRINT));
+	Array modes;
+	for (const tet4d::core::generated::BoardExtentModeSpec &spec : tet4d::core::generated::BOARD_EXTENT_MODE_SPECS) {
+		Dictionary mode;
+		mode["id"] = to_godot_string(std::string(spec.id));
+		mode["rank"] = spec.rank;
+		Array axes;
+		Array minima;
+		Array maxima;
+		Array defaults;
+		for (std::int64_t axis = 0; axis < spec.rank; ++axis) {
+			axes.push_back(to_godot_string(std::string(spec.axis_order[static_cast<std::size_t>(axis)])));
+			minima.push_back(spec.axis_minima[static_cast<std::size_t>(axis)]);
+			maxima.push_back(spec.axis_maxima[static_cast<std::size_t>(axis)]);
+			defaults.push_back(spec.canonical_default_shape[static_cast<std::size_t>(axis)]);
+		}
+		mode["axis_order"] = axes;
+		mode["axis_minima"] = minima;
+		mode["axis_maxima"] = maxima;
+		mode["canonical_default_shape"] = defaults;
+		mode["native_maximum_cells"] = spec.native_maximum_cells;
+		mode["supported_topology_kind"] = to_godot_string(std::string(spec.supported_topology_kind));
+		modes.push_back(mode);
+	}
+	result["modes"] = modes;
+	return result;
+}
+
+Dictionary Tet4DCoreApi::validate_live_board_setup(const Variant &setup) const {
+	auto transported = topology_transport_value_from_variant(setup, "$");
+	if (!transported.ok()) {
+		return configuration_error_dictionary("$", "The live setup contains an unsupported Variant value.");
+	}
+	return board_extent_result_dictionary(tet4d::core::validate_live_board_setup_transport(*transported.value));
+}
+
 bool Tet4DCoreApi::run_builtin_plain_2d_smoke_case() const {
 	return tet4d::core::run_builtin_plain_2d_smoke_case();
 }
@@ -521,8 +721,11 @@ bool Tet4DCoreApi::get_plain_nd_required_field_parity(const String &case_id) con
 }
 
 bool Tet4DCoreApi::live_2d_configure(const Dictionary &setup) {
-	const auto parsed = plain_setup_from_dictionary(setup, "live_2d");
-	return parsed.has_value() && live_2d_session_.configure(*parsed);
+	return bool(live_2d_configure_checked(setup).get("ok", false));
+}
+
+Dictionary Tet4DCoreApi::live_2d_configure_checked(const Dictionary &setup) {
+	return configure_checked(setup, "live_2d", live_2d_session_);
 }
 
 void Tet4DCoreApi::live_2d_reset() {
@@ -541,6 +744,16 @@ String Tet4DCoreApi::live_2d_snapshot_json() const {
 	return to_godot_string(live_2d_session_.snapshot_json());
 }
 
+Dictionary Tet4DCoreApi::live_2d_next_piece_preview() const {
+	return piece_preview_dictionary(
+			live_2d_session_.peek_next_piece_shape(),
+			live_2d_session_.piece_set_id());
+}
+
+Dictionary Tet4DCoreApi::live_2d_hard_drop_destination() const {
+	return hard_drop_destination_dictionary(live_2d_session_.hard_drop_destination());
+}
+
 String Tet4DCoreApi::live_2d_status() const {
 	return to_godot_string(live_2d_session_.status());
 }
@@ -550,8 +763,11 @@ String Tet4DCoreApi::live_2d_state_hash() const {
 }
 
 bool Tet4DCoreApi::live_3d_configure(const Dictionary &setup) {
-	const auto parsed = plain_setup_from_dictionary(setup, "live_3d");
-	return parsed.has_value() && live_3d_session_.configure(*parsed);
+	return bool(live_3d_configure_checked(setup).get("ok", false));
+}
+
+Dictionary Tet4DCoreApi::live_3d_configure_checked(const Dictionary &setup) {
+	return configure_checked(setup, "live_3d", live_3d_session_);
 }
 
 void Tet4DCoreApi::live_3d_reset() {
@@ -570,6 +786,16 @@ String Tet4DCoreApi::live_3d_snapshot_json() const {
 	return to_godot_string(live_3d_session_.snapshot_json());
 }
 
+Dictionary Tet4DCoreApi::live_3d_next_piece_preview() const {
+	return piece_preview_dictionary(
+			live_3d_session_.peek_next_piece_shape(),
+			live_3d_session_.piece_set_id());
+}
+
+Dictionary Tet4DCoreApi::live_3d_hard_drop_destination() const {
+	return hard_drop_destination_dictionary(live_3d_session_.hard_drop_destination(), 3);
+}
+
 String Tet4DCoreApi::live_3d_status() const {
 	return to_godot_string(live_3d_session_.status());
 }
@@ -579,8 +805,11 @@ String Tet4DCoreApi::live_3d_state_hash() const {
 }
 
 bool Tet4DCoreApi::live_4d_configure(const Dictionary &setup) {
-	const auto parsed = plain_setup_from_dictionary(setup, "live_4d");
-	return parsed.has_value() && live_4d_session_.configure(*parsed);
+	return bool(live_4d_configure_checked(setup).get("ok", false));
+}
+
+Dictionary Tet4DCoreApi::live_4d_configure_checked(const Dictionary &setup) {
+	return configure_checked(setup, "live_4d", live_4d_session_);
 }
 
 void Tet4DCoreApi::live_4d_reset() {
@@ -597,6 +826,16 @@ String Tet4DCoreApi::live_4d_tick() {
 
 String Tet4DCoreApi::live_4d_snapshot_json() const {
 	return to_godot_string(live_4d_session_.snapshot_json());
+}
+
+Dictionary Tet4DCoreApi::live_4d_next_piece_preview() const {
+	return piece_preview_dictionary(
+			live_4d_session_.peek_next_piece_shape(),
+			live_4d_session_.piece_set_id());
+}
+
+Dictionary Tet4DCoreApi::live_4d_hard_drop_destination() const {
+	return hard_drop_destination_dictionary(live_4d_session_.hard_drop_destination(), 4);
 }
 
 String Tet4DCoreApi::live_4d_status() const {

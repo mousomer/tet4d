@@ -4,6 +4,11 @@ Status: complete; menu-routing regression repaired, automated verification
 passed, and manual reacceptance recorded on integrated head `bb9d5b6a`
 Date: 2026-07-15
 
+Stage 54B-2 later extends this curated-preset record with editable dimensions,
+native tuple-level admission, and schema-3 persistence. Its current contract is
+`editable_board_setup_and_persistence.md`; this document remains the Stage 49
+historical boundary and adaptive-4D-layout record.
+
 ## Authority and scope
 
 Python remains the semantic authority for gameplay rules, topology, replay,
@@ -118,12 +123,11 @@ exception, not a change to Python defaults or the Python product envelope.
 
 ## Setup and persistence ownership
 
-Godot owns a separate `game_setup` model containing supported specs, the
-selected preset per mode, validation, and canonical snapshots. Optional
-last-selection persistence uses versioned `user://game_setup.json`. It stores
-only preset IDs by mode, validates them against checked-in specs, falls back to
-Standard for missing/malformed/unsupported data, and never reads or writes
-`user://shell_settings.json`.
+Stage 49's `game_setup` model initially contained a selected preset per mode.
+Stage 54B-2 replaces that current setup/persistence behavior with per-mode
+editable drafts and native-validated last-valid entries in schema 3; see
+`editable_board_setup_and_persistence.md`. The store remains separate from
+`user://shell_settings.json` and never persists live session state.
 
 No active board, score, pieces, cells, RNG, pause state, or game-over state is
 persisted.
@@ -168,7 +172,7 @@ mode, board shape, command index, cells/state, and hash/shape differences.
 ## Explicit deferrals
 
 - topology transport, presets, seams, and topology-aware Godot gameplay;
-- arbitrary custom dimensions beyond curated presets;
+- arbitrary custom dimensions beyond the Stage 54B board-extent envelope;
 - explorer dimensions and exploration mode;
 - piece-set, RNG/seed, kick, progression, bot, endgame, and explosion migration;
 - replay-schema redesign or authority transfer;
