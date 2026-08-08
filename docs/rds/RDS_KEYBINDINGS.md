@@ -376,7 +376,9 @@ pytest -q
 6. Trigger a key conflict and verify conflict-resolution flow.
 7. Save profile locally, restart app, load profile, and verify key behavior persists.
 8. In 4D, verify `V/B` (`rotate_zw`) repeatedly work and are not consumed by camera/system keys.
-9. Verify `view_xw/*` and `view_zw/*` rotate camera only and do not affect gameplay state.
+9. In Godot Live 4D, verify `view_xw/*`, `view_zw/*`, and `view_zx/*` change only the exact
+   slice-presentation basis: canonical gameplay state and camera state remain
+   unchanged. Legacy Pygame view adapters retain their owner-specific behavior.
 
 ## 9. Acceptance Criteria
 
@@ -388,7 +390,8 @@ pytest -q
 6. Tests pass and menu feedback is visible for load/save/rebind/reset actions.
 7. Keybinding editor supports local save/load and conflict-safe rebinding.
 8. The shipped negative-left / positive-right rotation ladder (`RT`,`FG`,`VB`,`YU`,`HJ`,`NM`) is conflict-free and reliable under key repeat.
-9. 4D camera hyperplane actions (`view_xw/*`,`view_zw/*`) are bindable and conflict-safe.
+9. 4D presentation-basis actions (`view_xw/*`,`view_zw/*`,`view_zx/*`) are bindable and
+   conflict-safe with camera, movement, and piece-rotation actions.
 
 ## 11. Implementation Status (2026-02-18)
 

@@ -60,7 +60,47 @@ func run() -> Array:
 	_assert_live_2d_session(failures, bridge)
 	_assert_live_3d_session(failures, bridge)
 	_assert_live_4d_session(failures, bridge)
+	_assert_landing_query_bridge(failures, bridge)
 	return failures
+
+
+func _assert_landing_query_bridge(failures: Array, bridge: RefCounted) -> void:
+	for mode in [2, 3, 4]:
+		if mode == 2:
+			bridge.live_2d_reset()
+		elif mode == 3:
+			bridge.live_3d_reset()
+		else:
+			bridge.live_4d_reset()
+		var before_hash: String = bridge.live_2d_state_hash() if mode == 2 else (bridge.live_3d_state_hash() if mode == 3 else bridge.live_4d_state_hash())
+		var before_snapshot: String = bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json())
+		var landing: Dictionary = bridge.live_2d_hard_drop_destination() if mode == 2 else (bridge.live_3d_hard_drop_destination() if mode == 3 else bridge.live_4d_hard_drop_destination())
+		_assert_equal(failures, landing.get("ok"), true, "live %dD landing query ok" % mode)
+		_assert_equal(failures, landing.get("status"), "destination", "live %dD landing query status" % mode)
+		_assert_equal(failures, landing.get("dimension"), mode, "live %dD landing query dimension" % mode)
+		var queried_cells: Array = landing.get("cells", [])
+		for cell in queried_cells:
+			_assert_equal(failures, cell.size(), mode, "live %dD landing coordinate rank" % mode)
+		_assert_equal(failures, bridge.live_2d_state_hash() if mode == 2 else (bridge.live_3d_state_hash() if mode == 3 else bridge.live_4d_state_hash()), before_hash, "live %dD landing hash invariance" % mode)
+		_assert_equal(failures, bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json()), before_snapshot, "live %dD landing snapshot invariance" % mode)
+		if mode == 2:
+			bridge.live_2d_apply_command("hard_drop")
+		elif mode == 3:
+			bridge.live_3d_apply_command("hard_drop")
+		else:
+			bridge.live_4d_apply_command("hard_drop")
+		var after_json: String = bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json())
+		var after = JSON.parse_string(after_json)
+		var locked_positions: Array = []
+		if typeof(after) == TYPE_DICTIONARY:
+			for cell in after.get("locked_cells", []):
+				var normalized_position: Array = []
+				for component in cell.get("position", []):
+					normalized_position.append(int(component))
+				locked_positions.append(normalized_position)
+		for destination in queried_cells:
+			if not locked_positions.has(destination):
+				failures.append("live %dD hard drop should lock queried cell %s" % [mode, str(destination)])
 
 
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:
@@ -256,6 +296,19 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, snapshot.get("paused", true), false, "live 2D initial paused")
 	if snapshot.get("active_cells", []).is_empty():
 		failures.append("live 2D snapshot should include active cells")
+	var snapshot_before_preview: String = bridge.live_2d_snapshot_json()
+	var status_before_preview: String = bridge.live_2d_status()
+	var preview: Dictionary = bridge.live_2d_next_piece_preview()
+	_assert_equal(failures, preview.get("ok"), true, "live 2D preview query status")
+	_assert_equal(failures, preview.get("status"), "piece", "live 2D preview structured status")
+	_assert_equal(failures, preview.get("dimension"), 2, "live 2D preview dimension")
+	_assert_equal(failures, preview.get("piece_set_id"), "classic", "live 2D preview piece set")
+	_assert_equal(failures, preview.get("piece_name"), "O", "live 2D preview piece")
+	_assert_equal(failures, preview.get("color_id"), 2, "live 2D preview color")
+	_assert_equal(failures, preview.get("cells", []).size(), 4, "live 2D preview cell count")
+	_assert_equal(failures, bridge.live_2d_state_hash(), initial_hash, "live 2D preview hash invariance")
+	_assert_equal(failures, bridge.live_2d_snapshot_json(), snapshot_before_preview, "live 2D preview snapshot invariance")
+	_assert_equal(failures, bridge.live_2d_status(), status_before_preview, "live 2D preview status invariance")
 	bridge.live_2d_apply_command("soft_drop")
 	if bridge.live_2d_state_hash() == initial_hash:
 		failures.append("live 2D state hash should change after soft_drop")
@@ -327,6 +380,17 @@ func _assert_live_3d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, snapshot.get("game_over", true), false, "live 3D initial game_over")
 	if snapshot.get("active_cells", []).is_empty():
 		failures.append("live 3D snapshot should include active cells")
+	var preview_hash: String = bridge.live_3d_state_hash()
+	var preview_snapshot: String = bridge.live_3d_snapshot_json()
+	var preview: Dictionary = bridge.live_3d_next_piece_preview()
+	_assert_equal(failures, preview.get("status"), "piece", "live 3D preview structured status")
+	_assert_equal(failures, preview.get("dimension"), 3, "live 3D preview dimension")
+	_assert_equal(failures, preview.get("piece_set_id"), "native_3d", "live 3D preview piece set")
+	_assert_equal(failures, preview.get("piece_name"), "O3", "live 3D preview piece")
+	_assert_equal(failures, preview.get("color_id"), 2, "live 3D preview color")
+	_assert_equal(failures, preview.get("cells", []).size(), 4, "live 3D preview cell count")
+	_assert_equal(failures, bridge.live_3d_state_hash(), preview_hash, "live 3D preview hash invariance")
+	_assert_equal(failures, bridge.live_3d_snapshot_json(), preview_snapshot, "live 3D preview snapshot invariance")
 	bridge.live_3d_apply_command("move_x_pos")
 	if bridge.live_3d_state_hash() == initial_hash:
 		failures.append("live 3D state hash should change after X movement")
@@ -393,6 +457,18 @@ func _assert_live_4d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, snapshot.get("next_piece", ""), "STAIR4", "live 4D deterministic next piece")
 	if snapshot.get("active_cells", []).is_empty():
 		failures.append("live 4D snapshot should include active cells")
+	var preview_hash: String = bridge.live_4d_state_hash()
+	var preview_snapshot: String = bridge.live_4d_snapshot_json()
+	var preview: Dictionary = bridge.live_4d_next_piece_preview()
+	_assert_equal(failures, preview.get("status"), "piece", "live 4D preview structured status")
+	_assert_equal(failures, preview.get("dimension"), 4, "live 4D preview dimension")
+	_assert_equal(failures, preview.get("piece_set_id"), "standard_4d_5", "live 4D preview piece set")
+	_assert_equal(failures, preview.get("piece_name"), "STAIR4", "live 4D preview piece")
+	_assert_equal(failures, preview.get("cells", []).size(), 5, "live 4D preview cell count")
+	for cell in preview.get("cells", []):
+		_assert_equal(failures, cell.size(), 4, "live 4D preview canonical coordinate rank")
+	_assert_equal(failures, bridge.live_4d_state_hash(), preview_hash, "live 4D preview hash invariance")
+	_assert_equal(failures, bridge.live_4d_snapshot_json(), preview_snapshot, "live 4D preview snapshot invariance")
 	bridge.live_4d_apply_command("move_w_pos")
 	if bridge.live_4d_state_hash() == initial_hash:
 		failures.append("live 4D state hash should change after W movement")

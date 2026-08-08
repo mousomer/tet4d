@@ -229,8 +229,12 @@ func _check_replay_visual_roles() -> Array: # tet4d-semantic-boundary: allow tes
 	manager.set_theme("tron")
 	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_BOARD_FILL, "tron") != manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD):
 		failures.append("board fill should use background.board")
-	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_BOARD_GRID, "tron") != manager.get_color(ShellStyleRolesScript.GRID_MINOR):
-		failures.append("board grid should use grid.minor")
+	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_LIVE_BOARD_GRID, "tron") != manager.get_color(ShellStyleRolesScript.GRID_MAJOR):
+		failures.append("board grid should use the visible grid.major role")
+	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BOARD_WIREFRAME, "tron") != manager.get_color(ShellStyleRolesScript.GRID_MINOR):
+		failures.append("board wireframe should use the quieter grid.minor role")
+	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BOARD_GRID, "tron") == ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BOARD_WIREFRAME, "tron"):
+		failures.append("grid and wireframe must remain distinct governed roles")
 	if ReplayVisuals.slice_label_color("tron") != manager.get_color(ShellStyleRolesScript.LABEL_W_LAYER):
 		failures.append("W/layer labels should use config-owned label.w_layer")
 	if ReplayVisuals.event_marker_material("tron").albedo_color != manager.get_color(ShellStyleRolesScript.DIAGNOSTIC_BOUNDS):

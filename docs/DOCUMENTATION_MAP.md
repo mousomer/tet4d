@@ -26,6 +26,10 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/parity_protocol.md`
 - `docs/architecture/authority_transfer_protocol.md`
 - `docs/architecture/topology_contract_foundation.md`
+- `docs/architecture/topology_aware_board_extent_contract.md`
+- `docs/architecture/editable_board_setup_and_persistence.md`
+- `docs/architecture/game_safe_4d_slice_basis.md`
+- `docs/architecture/ghost_piece.md`
 - `docs/architecture/godot_shell_layout_stabilization.md`
 - `docs/architecture/godot_shell_settings_source_of_truth.md`
 - `docs/architecture/godot_shell_settings_persistence.md`
@@ -136,6 +140,8 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Topology-playground deferred cleanup and transitional debt | `docs/plans/topology_playground_debt_register.md` |
 | Canonical topology interchange, identity, and migration contract | `docs/architecture/canonical_topology_contract.md` |
 | Shared topology scalar limits, generated bindings, and fingerprint | `contracts/topology_contract_v1.json`, `docs/architecture/topology_contract_foundation.md` |
+| Professional live-board extent, bounded setup admissibility, and checked setup errors | `contracts/board_extent_contract_v1.json`, `docs/architecture/topology_aware_board_extent_contract.md` |
+| Godot editable board drafts, last-valid setup persistence, and launch gating | `docs/architecture/editable_board_setup_and_persistence.md` |
 | Strict native/Godot topology profile and resolver-query transport | `docs/architecture/native_topology_transport.md` |
 | Strict internal Python topology constructor and source-adapter boundary | `docs/architecture/python_topology_domain_model.md` |
 | Explorer topology persistence versions, strict loading, and legacy recovery | `docs/architecture/topology_persistence_recovery.md` |
@@ -160,6 +166,10 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 47 Godot guided onboarding and navigation contract | `docs/architecture/godot_guided_onboarding_navigation.md` |
 | Stage 48 Godot shell settings persistence contract | `docs/architecture/godot_shell_settings_persistence.md` |
 | Stage 49 configurable plain-board setup and adaptive 4D presentation | `docs/architecture/configurable_plain_boards_and_4d_layout.md` |
+| Stage 54B-2 editable Godot board dimensions and persistence | `docs/architecture/editable_board_setup_and_persistence.md` |
+| Stage 54C exact game-safe 4D presentation basis, coordinate mapping, and input routing | `docs/architecture/game_safe_4d_slice_basis.md` |
+| Stage 54D-1 authoritative one-piece queue query and shared live thumbnail presentation | `docs/architecture/next_piece_preview.md` |
+| Stage 54D-2 authoritative hard-drop destination query and live ghost presentation | `docs/architecture/ghost_piece.md` |
 | Completed Stage 50 canonical bounded plain-game setup, RNG, piece-set, speed, restart, and acceptance contract | `docs/architecture/plain_game_setup_completion.md` |
 | Stage 51 canonical Godot display settings, persistence, and runtime presentation policy | `docs/architecture/display_infrastructure.md` |
 | Stage 52 Godot accessibility invariants, preferences, persistence, and runtime presentation policy | `docs/architecture/accessibility_infrastructure.md` |
@@ -251,6 +261,12 @@ It is not the product contract or complete roadmap.
 - If you need configurable Godot plain-board presets, parameterized native live
   sessions, or adaptive 4D layer layout: use
   `docs/architecture/configurable_plain_boards_and_4d_layout.md`.
+- If you need editable Godot board dimensions, draft/last-valid behavior, or
+  `game_setup.json` schema 3 migration: use
+  `docs/architecture/editable_board_setup_and_persistence.md`.
+- If you need exact 4D presentation-basis composition, basis-aware coordinate
+  mapping, or view-relative input routing: use
+  `docs/architecture/game_safe_4d_slice_basis.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
 - If you need to constrain a repository-changing task: use

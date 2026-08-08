@@ -110,6 +110,7 @@ also be recovered through `docs/history/` and Git history.
 Governance entrypoints include `tools/governance/validate_governance.py`,
 `tools/governance/validate_project_contracts.py`,
 `tools/governance/validate_godot_semantic_boundary.py`,
+`tools/governance/validate_live_board_visual_roles.py`,
 `tools/governance/validate_native_cpp_tooling.py`,
 `tools/governance/check_wheel_reuse_rules.py`, and
 `tools/governance/check_dedup_dead_code_rules.py`.

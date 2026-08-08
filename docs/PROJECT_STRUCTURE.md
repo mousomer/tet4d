@@ -546,6 +546,7 @@ Match labels are shown inline as `(exact)`, `(prefix)`, or `(fallback)`.
 - `src/tet4d/engine/topology_explorer/transport_resolver.py`: `tests/unit/engine/test_explorer_transport_resolver.py` (fallback)
 - `src/tet4d/engine/tutorial/setup_apply.py`: `tests/unit/engine/test_tutorial_setup_apply.py` (fallback)
 - `src/tet4d/engine/ui_logic/menu_layout.py`: `tests/unit/engine/test_menu_layout.py` (exact)
+- `src/tet4d/generated/board_extent_contract_v1.py`: `tests/unit/governance/test_generate_board_extent_contract.py` (fallback)
 - `src/tet4d/ui/pygame/endgame_animation.py`: `tests/unit/engine/test_endgame_animation.py` (exact)
 - `src/tet4d/ui/pygame/front2d_setup.py`: `tests/unit/engine/test_front2d_setup.py` (exact)
 - `src/tet4d/ui/pygame/front4d_render.py`: `tests/unit/engine/test_front4d_render.py` (exact)

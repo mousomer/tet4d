@@ -43,6 +43,21 @@ merged and verified on `master` at `91b901f3`.
 Stage 54A is complete, human accepted, and merged on `master` at `bcf41519`.
 Its settled control and cockpit scope is not active backlog work.
 
+Stage 54B-2 is complete and verified on the active branch. It adds editable
+Godot board dimensions, native-validation presentation, and schema-3
+last-valid setup persistence without changing gameplay or topology semantics.
+
+Stage 54C is complete and verified on its implementation branch. It adds an
+exact Godot-owned signed 4D presentation basis, shared slice reconstruction,
+basis-aware controls/HUD/instruction, and deterministic invariance evidence
+without changing native gameplay or topology semantics.
+
+Stage 54D-1 is committed at `e7708d8c`. Developer-rendered
+inspection is complete; human preview-readability acceptance remains pending
+under Stage 54E. The slice adds one authoritative next-piece query plus a
+shared compact Godot 2D/3D/4D thumbnail without changing queue, RNG, snapshot,
+hash, replay, or trace semantics.
+
 Do not create Stage 53G or reopen generic boundary-governance work without a
 new evidenced problem and owning-format scope.
 
@@ -63,66 +78,33 @@ The programme is owned by
 
 ## Next Implementation Stage
 
-### Stage 54B-1 — Shared topology-aware board-extent contract
+### Stage 54D-3 — Hold
 
-Status: next implementation slice.
+Status: next implementation slice after the completed Stage 54D-2 commit.
 
-Objective:
-
-- make selected topology an explicit board-validation input;
-- provide one shared minimum/maximum and validation authority;
-- implement the complete bounded-board rule required by Phase I;
-- validate piece-set compatibility and canonical spawn viability;
-- enforce native construction limits;
-- return structured validation errors;
-- reject invalid configurations before session construction;
-- forbid topology-independent duplicated minima in Godot or adapters;
-- preserve deterministic setup and restart semantics.
-
-Phase I ships the bounded rule. Strip and Möbius minimum-extent and seam-safety
-rules activate in Stage 55A through the same interface.
-
-Do not implement the setup UI in this slice except for any minimal test harness
-required to exercise the contract.
-
-### Stage 54B-2 — Godot custom board setup and persistence
-
-Status: blocked on Stage 54B-1.
-
-Objective:
-
-- expose direct X/Y/Z/W axis-size editing for every active dimension;
-- retain presets as shortcuts that populate editable fields;
-- show shared validation feedback;
-- persist the last valid setup;
-- distinguish `Reset Sizes` from `Reset Setup`;
-- preserve frozen active-session and restart semantics;
-- complete visible-GUI acceptance.
-
-Stage 49 and Stage 50 remain accurate records of their curated-preset scope.
-Stage 54B extends the active product boundary rather than rewriting those
-records.
+Establish and implement the deterministic one-slot Hold contract without
+folding it into the presentation-only Ghost capability.
 
 ## Accepted Immediate Follow-Ups
 
-### Stage 54C — Game-safe 4D slice-basis quarter-turns
-
-Status: after Stage 54B.
-
-Required implementation sequence:
-
-1. exact basis-state and transform contract;
-2. Godot controls and basis indicators;
-3. slice reconstruction and presentation;
-4. focused instructional sequence;
-5. manual 4D comprehension review.
-
-Y remains the visible gravity axis during ordinary play. This stage does not
-mutate semantic board coordinates or deterministic gameplay state.
-
 ### Stage 54D — Modern gameplay baseline
 
-Status: after Stage 54C.
+Status: Stage 54D-1 is committed at `e7708d8c`; Stage 54D-2 is committed at
+`4f9e920b`. Its implementation, deterministic and mechanical verification, and
+developer/user Ghost/board visual review are complete. Stage 54D-3 is next.
+
+Stage 54D-2 correction scope also includes the persistent, presentation-only
+relative/absolute Translation and Rotation frame selectors, a shared
+Python-convention yaw/basis resolver, and dedicated `axis.w` styling. These
+remain out of deterministic native setup, snapshots, hashes, and replay.
+The final correction also establishes the shell palette as the live-board
+visual grammar owner: subordinate dark/desaturated internal grid, stronger
+ordinary wireframe,
+governed active/locked/Ghost roles, scoped anti-drift validation, and compact
+presentation-only camera presets. The accepted calibration keeps the active
+slice frame strongest, makes every ordinary board volume identifiable, and
+keeps the internal grid visible without dominance. Broader integrated
+professional playability acceptance remains Stage 54E.
 
 Implement as three separate PRs in dependency order.
 

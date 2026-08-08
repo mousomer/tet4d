@@ -32,6 +32,8 @@ func run() -> Array:
 		hints_checkbox.button_pressed = false
 		await tree.process_frame
 	panel._on_control_value_changed("display.projection_strength", 0.75)
+	panel._on_control_value_changed("ghost.enabled", false)
+	panel._on_control_value_changed("settled_cells.opacity", 0.60)
 	if applied.get("theme.name") != "tron" or applied.get("accessibility.show_help_hints") != false:
 		failures.append("validated changes should apply immediately through SettingsPanel signals")
 	var fresh = StoreScript.new(registry, TEST_PATH)
@@ -39,6 +41,13 @@ func run() -> Array:
 		failures.append("fresh shell stores should restore persisted interface and appearance values")
 	if absf(float(fresh.value("display.projection_strength")) - 0.75) > 0.001:
 		failures.append("fresh shell stores should restore persisted numeric values")
+	if bool(fresh.value("ghost.enabled")):
+		failures.append("fresh shell stores should restore the disabled ghost presentation preference")
+	if absf(float(fresh.value("settled_cells.opacity")) - 0.60) > 0.001:
+		failures.append("fresh shell stores should restore the locked-cell opacity presentation preference")
+	panel._on_control_value_changed("ghost.enabled", true)
+	if not bool(store.value("ghost.enabled")):
+		failures.append("ghost presentation preference should toggle on without gameplay setup state")
 	if store.status_text().find("saved automatically") == -1:
 		failures.append("successful generated-control changes should visibly report automatic saving")
 	var onboarding = OnboardingModelScript.new()

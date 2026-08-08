@@ -79,36 +79,72 @@ bright frame.
 - Warning and error roles are reserved for actionable state.
 - Pause and game-over use text plus a bordered status badge; game over uses
   the error role without turning the full shell red.
-- Active W layers use a stronger outline and label weight. Inactive layers
+- Active basis-derived layers use a stronger outline and label weight. Inactive layers
   remain visible with a quieter structural outline.
 
 ## Board and shell relationship
 
-Board bounds and grids support orientation. They must remain quieter than
-active pieces, locked cells, the selected W layer, and terminal state. Active
-pieces use crisp, warm-white edge outlines with restrained or zero emission in
-the Instrument theme. Piece fill owns gameplay colour; the outline separates
-every constituent cell clearly even at 3D/4D overview scale. Locked cells are
-darker and use quieter edges, but adjacent cells must remain individually
-parseable. The Pygame diagrammatic exterior view, clean cube-edge separation,
-and stable W-slice rhythm remain the comparison standard.
+Board bounds and grids support orientation. The governed live-board hierarchy is
+**Active / Locked / Ghost > active frame > board wireframe > internal grid > floor fill > background**.
+Ghost and locked cells have distinct jobs and need not be ordered by one alpha
+value. The ordinary board wireframe defines each volume and takes clear visual
+precedence over the continuously visible but subordinate, cell-scale internal
+grid. Active/current frames are a distinct, stronger semantic role. Internal
+grids generate interior subdivisions only; the explicit wireframe owns
+coincident outer boundaries rather than relying on alpha stacking. Active/current slice frames may
+use stronger emphasis without promoting every board edge. Grid detail remains behind cells according
+to projected depth rather than being drawn indiscriminately on top. Active
+pieces are the strongest gameplay object, using crisp warm-white edge outlines
+with restrained or zero emission in the Instrument theme. Piece fill owns
+gameplay colour; the outline separates every constituent cell clearly even at
+3D/4D overview scale. Locked cells use semi-transparent fill controlled by the
+persistent `settled_cells.opacity` preference, plus a strong persistent outline
+so occupied structure remains unambiguous. The Pygame diagrammatic exterior
+view, clean cube-edge separation, and stable signed-slice rhythm remain the
+comparison standard.
+
+The live ghost uses the dedicated `cell.ghost` role with a clearly visible
+predictive fill, smaller body, and stronger persistent outline. It remains
+weaker than the active piece and distinct from transparent locked cells and
+the grid without relying only on hue or animation. High Contrast strengthens
+the ghost and grid roles; Reduced Motion does not change ghost geometry. Exact
+active/ghost coincidence is not double-painted.
 
 In 3D and 4D, active and locked cells retain the same body scale and structural
 wireframe envelope. Locking changes emphasis, not geometry: the wireframe stays
 visibly present in a quieter warm-gray role, and the settled stack must not
 acquire artificial gaps. The default 4D
-fit keeps the complete W-slice matrix visible without making it feel remote.
+fit keeps the complete current-slice matrix visible without making it feel remote.
 Active cell wireframes remain crisp but subordinate to piece fill rather than
 forming a bright cage. Live boards keep persistent View Options above the board
-for restoring Quick Settings and toggling internal grid detail; the outer
-orientation cage remains visible when grid detail is off.
+for restoring Quick Settings and toggling grid visibility. A selected Grid: On
+state always renders the lattice; board-detail preferences may not silently
+remove it. The outer orientation cage remains visible when Grid: Off.
 On volumetric boards, grid rectangles belong to the three camera-relative rear
 faces of each box: one face per axis. As the camera orbits, rear-face selection
 updates so the three front faces remain free of grid detail. Grids must never
 bisect the play volume or obstruct cells on a front face.
 
+The shared shell palette is the sole owner of the live-board identities:
+`background.board`, `grid.major` (`board.grid`), `grid.minor`
+(`board.wireframe`), `layer.active` (`board.frame_active`), `cell.active`,
+`cell.locked`, `cell.ghost`, and
+`axis.x/y/z/w`. Consumers may derive alpha, depth attenuation, and transient
+emphasis from those roles but may not replace their base colour locally. Normal
+internal grid lines use an unshaded dark/desaturated steel-blue `grid.major`
+derivative (0.055 world units at 0.31 alpha, 63% of the rejected calibration);
+the `grid.minor` wireframe is 0.099 world units and remains independently
+stronger. High
+Contrast increases thickness and contrast while keeping active, ghost, locked,
+grid, and wireframe distinct rather than only increasing alpha. The gravity
+floor uses the same grid-role lattice derivative plus a quiet 0.18-alpha filled depth
+cue; rear faces may attenuate modestly but never disappear. The orientation
+gizmo renders exactly the three visible basis axes (`visible_u`, `+Y`, and
+`visible_v`), never the slice axis. Axis colour identifies the canonical axis,
+while sign identifies only direction and text.
+
 The canonical gravity floor uses a quiet filled plane distinct from the other
-five open boundaries. Four-dimensional slice labels remain readable at the
+five open boundaries. Four-dimensional signed slice-axis labels remain readable at the
 fitted overview scale, while the active-slice frame uses emphasis rather than
 excessive thickness. Live 3D/4D views include a compact, screen-anchored XYZ
 orientation marker whose arrows track the world axes as the camera moves.
@@ -123,8 +159,31 @@ actions use a stronger clickable-button treatment than passive key-reference
 tags. Windowed/fullscreen state, including OS-driven mode changes, is persisted
 and restored with the other shell presentation preferences.
 
-In 4D, each slice ID is attached to its camera-relative rear vertical face.
+In 4D, each signed semantic slice ID is attached to its camera-relative rear vertical face.
 Selection is conveyed through visual emphasis, without adding "active" text.
+The compact basis indicator derives its horizontal/depth arrow labels and
+directions from the exact signed basis, states the signed slice axis, and keeps
+Y-down gravity stable. Basis controls, piece rotation, slice
+navigation, and camera controls remain visually distinct. Reduced Motion snaps
+the short basis settle while preserving the exact destination state.
+
+The setup Controls section separately selects relative or absolute Translation
+and Rotation. Relative help says Left/Right, Forward/Back, Slice, and local
+planes with the resolved signed axes; absolute help says canonical axes and
+planes. The same control-frame resolver drives both wording and commands.
+
+Camera presets (`Iso`, `Front`, `Side`, `Back`, `Top`, and `Opposite Iso`) are
+presentation-only yaw/pitch/zoom shortcuts selected from the compact CAMERA
+control. They do not carry or mutate `BasisState`; a manual orbit reports the
+derived `Custom` state. **4D VIEW ROTATION** means the exact signed XW, ZW, or
+ZX quarter-turn transformation. Re-slicing is used only where that exact turn
+changes slice membership. Relative controls compose the exact basis with the
+camera's yaw quadrant; pitch never remaps gravity, and absolute controls remain
+canonical. Reset View restores canonical basis and the Iso camera presentation.
+
+`tools/governance/validate_live_board_visual_roles.py` protects the known grid,
+wireframe, ghost, locked, and orientation-gizmo consumption paths. It is
+intentionally scoped: unrelated decorative colours remain permitted.
 
 Main menu, setup, settings, onboarding, replay, live HUD, diagnostics, pause,
 and game-over surfaces all use the same tokens. Diagnostic density may be

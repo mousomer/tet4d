@@ -1,6 +1,7 @@
 #include "tet4d_core/plain_nd.hpp"
 #include "tet4d_core/plain_nd_session.hpp"
 #include "tet4d_core/plain_nd_trace.hpp"
+#include "tet4d_core/plain_piece_catalog.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -17,6 +18,44 @@ void require(bool condition, const std::string &message) {
 		std::exit(1);
 	}
 }
+
+bool same_shape(
+		const tet4d::core::PieceShapeND &left,
+		const tet4d::core::PieceShapeND &right) {
+	return left.name == right.name && left.color_id == right.color_id &&
+			left.blocks == right.blocks;
+}
+
+void require_nonterminal(
+		const tet4d::core::PlainNDSession &session,
+		const std::string &context) {
+	require(
+			session.snapshot_json().find("\"game_over\":false") != std::string::npos,
+			context + " must remain nonterminal");
+}
+
+void require_production_shape(
+		const tet4d::core::PieceShapeND &shape,
+		int dimension,
+		const std::string &piece_set_id) {
+	const std::vector<tet4d::core::PieceShapeND> catalogue =
+			tet4d::core::plain_piece_catalog_nd(dimension, piece_set_id);
+	const auto match = std::find_if(
+			catalogue.begin(),
+			catalogue.end(),
+			[&shape](const tet4d::core::PieceShapeND &candidate) {
+				return same_shape(candidate, shape);
+			});
+	require(match != catalogue.end(), "ND preview must be an exact production-catalogue shape");
+}
+
+tet4d::core::PlainGameSetup setup_nd(
+		int dimension,
+		const std::vector<int> &shape,
+		const std::string &piece_set_id,
+		int seed = 1337,
+		int speed_level = 1,
+		const std::string &random_mode = tet4d::core::RANDOM_MODE_FIXED_SEED);
 
 void test_coord_and_board_model() {
 	const tet4d::core::CoordND left{{1, 2, 0}};
@@ -80,6 +119,55 @@ void test_4d_state_stepper() {
 	require(state.active_piece->pos == tet4d::core::CoordND{{1, -2, 1, 1}}, "4D spawn position mismatch");
 }
 
+void test_authoritative_hard_drop_destination_nd() {
+	for (const int dimension : {3, 4}) {
+		const tet4d::core::BoardShapeND board_shape = dimension == 3 ?
+			tet4d::core::BoardShapeND{{5, 8, 5}} : tet4d::core::BoardShapeND{{5, 8, 4, 3}};
+		tet4d::core::GameStateND state(board_shape, 1);
+		const tet4d::core::PieceShapeND shape = dimension == 3 ?
+			tet4d::core::trace_shape_3d() : tet4d::core::trace_shape_4d();
+		const tet4d::core::CoordND pose = dimension == 3 ?
+			tet4d::core::CoordND{{2, 0, 2}} : tet4d::core::CoordND{{2, 0, 1, 1}};
+		state.active_piece = tet4d::core::ActivePieceND::from_shape(shape, pose);
+		const std::vector<tet4d::core::CoordND> before = state.active_cells();
+		const auto destination = state.hard_drop_destination();
+		require(destination.has_value(), "ND landing query should return an active destination");
+		require(state.active_cells() == before, "ND landing query must not mutate the active pose");
+		require(!state.can_exist(destination->moved_axis(1, 1)), "ND queried destination must be maximally dropped");
+		require(state.try_move_axis(0, 1), "ND landing fixture lateral move should succeed");
+		const auto moved_destination = state.hard_drop_destination();
+		require(moved_destination.has_value() && moved_destination->cells() != destination->cells(),
+			"ND landing query should follow lateral movement");
+		state.try_rotate(0, 2, 1);
+		require(state.hard_drop_destination().has_value(), "ND landing query should follow rotation");
+		require(state.try_soft_drop(), "ND landing fixture soft drop should succeed");
+		require(state.hard_drop_destination().has_value(), "ND landing query should remain valid after soft drop");
+		state.active_piece = *destination;
+		const std::vector<tet4d::core::CoordND> expected_locked = destination->cells();
+		state.hard_drop();
+		for (const auto &cell : expected_locked) {
+			require(state.board.has_cell(cell), "ND hard drop must lock every queried destination cell");
+		}
+		state.game_over = true;
+		require(!state.hard_drop_destination().has_value(), "terminal ND query should be unavailable");
+	}
+
+	for (const auto &setup : {
+		setup_nd(3, {8, 16, 8}, "embedded_2d"),
+		setup_nd(3, {10, 24, 10}, "native_3d"),
+		setup_nd(4, {5, 10, 4, 1}, "embedded_2d"),
+		setup_nd(4, {8, 16, 5, 12}, "embedded_3d")}) {
+		tet4d::core::PlainNDSession session(setup.mode == "live_4d" ? 4 : 3);
+		require(session.configure(setup), "production landing-query setup should configure");
+		const std::string hash = session.state_hash();
+		const auto next = session.peek_next_piece_shape();
+		const auto destination = session.hard_drop_destination();
+		require(destination.has_value(), "production piece set should expose landing geometry");
+		require(session.state_hash() == hash && same_shape(session.peek_next_piece_shape(), next),
+			"ND landing query must preserve state, bag, and RNG");
+	}
+}
+
 void test_configurable_live_plain_nd_sessions() {
 	tet4d::core::PlainNDSession session_3d(3);
 	const std::string standard_3d_hash = session_3d.state_hash();
@@ -109,9 +197,9 @@ tet4d::core::PlainGameSetup setup_nd(
 		int dimension,
 		const std::vector<int> &shape,
 		const std::string &piece_set_id,
-		int seed = 1337,
-		int speed_level = 1,
-		const std::string &random_mode = tet4d::core::RANDOM_MODE_FIXED_SEED) {
+		int seed,
+		int speed_level,
+		const std::string &random_mode) {
 	tet4d::core::PlainGameSetup setup;
 	setup.mode = dimension == 4 ? "live_4d" : "live_3d";
 	setup.board_preset_id = "standard";
@@ -184,6 +272,70 @@ void test_stage50_nd_true_random_effective_seed() {
 	first.apply_command("hard_drop");
 	first.reset();
 	require(first.state_hash() == initial_hash, "ND true-random restart should preserve effective seed");
+}
+
+void test_next_piece_preview_is_exact_and_observational() {
+	tet4d::core::PlainNDSession session_3d(3);
+	require(session_3d.configure(setup_nd(3, {10, 24, 10}, "native_3d")), "large valid 3D board should configure for preview test");
+	const std::string hash_3d = session_3d.state_hash();
+	const std::string snapshot_3d = session_3d.snapshot_json();
+	const std::string status_3d = session_3d.status();
+	const tet4d::core::PieceShapeND preview_3d_1 = session_3d.peek_next_piece_shape();
+	const tet4d::core::PieceShapeND preview_3d_2 = session_3d.peek_next_piece_shape();
+	const tet4d::core::PieceShapeND preview_3d_3 = session_3d.peek_next_piece_shape();
+	require(preview_3d_1.name == "SCREW3", "3D preview should match authoritative shuffled queue");
+	require(same_shape(preview_3d_1, preview_3d_2) && same_shape(preview_3d_1, preview_3d_3), "three repeated 3D preview queries should be stable");
+	require(preview_3d_1.color_id == 7 && preview_3d_1.blocks.size() == 4, "3D preview should expose production color and cells");
+	require_production_shape(preview_3d_1, 3, "native_3d");
+	require(session_3d.state_hash() == hash_3d && session_3d.snapshot_json() == snapshot_3d && session_3d.status() == status_3d, "3D preview query must be observational");
+	session_3d.apply_command("hard_drop");
+	require_nonterminal(session_3d, "3D preview-to-spawn advancement");
+	require(session_3d.snapshot_json().find("\"current_piece\":\"" + preview_3d_1.name + "\"") != std::string::npos, "3D preview must become the next normally spawned current piece");
+	const tet4d::core::PieceShapeND following_3d = session_3d.peek_next_piece_shape();
+	require(session_3d.snapshot_json().find("\"next_piece\":\"" + following_3d.name + "\"") != std::string::npos, "3D post-spawn preview must report the following authoritative entry");
+
+	tet4d::core::PlainNDSession embedded_3d(3);
+	require(embedded_3d.configure(setup_nd(3, {10, 24, 10}, "embedded_2d")), "embedded 2D-in-3D preview fixture should configure");
+	require_production_shape(embedded_3d.peek_next_piece_shape(), 3, "embedded_2d");
+	tet4d::core::PlainNDSession embedded_4d(4);
+	require(embedded_4d.configure(setup_nd(4, {8, 24, 8, 8}, "embedded_3d")), "embedded 3D-in-4D preview fixture should configure");
+	require_production_shape(embedded_4d.peek_next_piece_shape(), 4, "embedded_3d");
+
+	tet4d::core::PlainNDSession session_4d(4);
+	require(session_4d.configure(setup_nd(4, {8, 24, 8, 8}, "standard_4d_5")), "large valid 4D board should configure for preview boundary test");
+	const tet4d::core::PieceShapeND preview_4d = session_4d.peek_next_piece_shape();
+	require(preview_4d.name == "FORK4", "4D preview should match authoritative shuffled queue");
+	require(preview_4d.color_id == 7 && preview_4d.blocks.size() == 5, "4D preview should expose production color and five-cell geometry");
+	for (const tet4d::core::CoordND &cell : preview_4d.blocks) {
+		require(cell.dimension() == 4, "4D preview cells must retain all four canonical coordinates");
+	}
+	require_production_shape(preview_4d, 4, "standard_4d_5");
+	session_4d.apply_command("hard_drop");
+	require_nonterminal(session_4d, "4D preview-to-spawn advancement");
+	require(session_4d.snapshot_json().find("\"current_piece\":\"" + preview_4d.name + "\"") != std::string::npos, "4D preview must become the next normally spawned current piece");
+	const tet4d::core::PieceShapeND following_4d = session_4d.peek_next_piece_shape();
+	require(session_4d.snapshot_json().find("\"next_piece\":\"" + following_4d.name + "\"") != std::string::npos, "4D post-spawn preview must report the following authoritative entry");
+	for (int draw = 0; draw < 5; ++draw) {
+		session_4d.apply_command("hard_drop");
+		require_nonterminal(session_4d, "4D refill-boundary hard-drop fixture");
+	}
+	require(session_4d.snapshot_json().find("\"next_piece\":\"pending_bag\"") != std::string::npos, "4D boundary fixture should preserve pending_bag snapshot semantics");
+	const std::string boundary_hash = session_4d.state_hash();
+	const std::string boundary_snapshot = session_4d.snapshot_json();
+	const std::string boundary_status = session_4d.status();
+	const tet4d::core::PieceShapeND refill_preview_1 = session_4d.peek_next_piece_shape();
+	const tet4d::core::PieceShapeND refill_preview_2 = session_4d.peek_next_piece_shape();
+	const tet4d::core::PieceShapeND refill_preview_3 = session_4d.peek_next_piece_shape();
+	require(same_shape(refill_preview_1, refill_preview_2) && same_shape(refill_preview_1, refill_preview_3), "three empty-bag 4D preview queries should be stable");
+	require_production_shape(refill_preview_1, 4, "standard_4d_5");
+	require(session_4d.state_hash() == boundary_hash, "empty-bag 4D preview must not advance RNG or hash");
+	require(session_4d.snapshot_json() == boundary_snapshot, "empty-bag 4D preview must not refill the real bag");
+	require(session_4d.status() == boundary_status, "4D preview query must not change command status");
+	session_4d.apply_command("hard_drop");
+	require_nonterminal(session_4d, "4D refill prediction spawn");
+	require(session_4d.snapshot_json().find("\"current_piece\":\"" + refill_preview_1.name + "\"") != std::string::npos, "4D refill preview must equal the next real draw");
+	const tet4d::core::PieceShapeND post_refill_preview = session_4d.peek_next_piece_shape();
+	require(session_4d.snapshot_json().find("\"next_piece\":\"" + post_refill_preview.name + "\"") != std::string::npos, "4D refill spawn must expose the following authoritative preview");
 }
 
 std::string export_stage50_setup_case_nd(const std::string &case_id) {
@@ -624,9 +776,11 @@ int main(int argc, char **argv) {
 	test_coord_and_board_model();
 	test_3d_state_stepper();
 	test_4d_state_stepper();
+	test_authoritative_hard_drop_destination_nd();
 	test_configurable_live_plain_nd_sessions();
 	test_stage50_configured_piece_sets_rng_and_restart();
 	test_stage50_nd_true_random_effective_seed();
+	test_next_piece_preview_is_exact_and_observational();
 	test_3d_rotation_stepper();
 	test_4d_rotation_stepper();
 	test_rotation_rejects_invalid_axes_clearly();

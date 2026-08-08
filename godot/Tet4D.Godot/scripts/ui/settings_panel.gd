@@ -26,6 +26,8 @@ signal windowed_size_changed(size_value: Array)
 signal ui_scale_changed(scale_id: String)
 signal hud_density_changed(density: String)
 signal board_detail_changed(detail: String)
+signal ghost_visibility_changed(visible: bool)
+signal locked_cell_opacity_changed(opacity: float)
 signal camera_sensitivity_changed(sensitivity: String)
 signal camera_invert_y_changed(inverted: bool)
 signal settings_reset()
@@ -269,6 +271,10 @@ func _emit_setting(setting_id: String, value) -> void:
 			hud_density_changed.emit(str(value))
 		"display.board_detail":
 			board_detail_changed.emit(str(value))
+		"ghost.enabled":
+			ghost_visibility_changed.emit(bool(value))
+		"settled_cells.opacity":
+			locked_cell_opacity_changed.emit(float(value))
 		"replay.playback_speed":
 			playback_speed_changed.emit(float(value))
 		"replay.loop_enabled":

@@ -3,6 +3,10 @@ extends Node3D
 class_name GridRenderer
 
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const PRESENTATION_ROLE_GRID := "board.grid"
+const PRESENTATION_ROLE_FLOOR_GRID := "board.grid.floor"
+const PRESENTATION_ROLE_WIREFRAME := "board.wireframe"
+const PRESENTATION_ROLE_ACTIVE_FRAME := "board.frame_active"
 
 var _rear_grid_faces: Array[Node3D] = []
 var _slice_labels: Array[Label3D] = []
@@ -37,48 +41,49 @@ func rebuild(
 
 	if board_shape.is_empty():
 		return
-	var w_size := int(board_shape[3]) if dimension >= 4 and board_shape.size() > 3 else 1
+	var visible_board_shape: Array = mapper.visible_board_shape()
+	var w_size: int = int(mapper.current_layer_count()) if dimension >= 4 else 1
 
 	for w_index in range(w_size):
 		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
 		if not slice_bounds.get("ok", false):
 			continue
-		if show_grid and live_2d and dimension >= 2 and board_detail != "minimal":
+		# The Grid: On control is authoritative: detail may tune the presentation,
+		# but it must never silently suppress the lattice.
+		if show_grid and live_2d and dimension >= 2:
 			if dimension == 2:
-				_add_flat_grid(slice_bounds, board_shape, display_mode)
+				_add_flat_grid(slice_bounds, visible_board_shape, display_mode, high_contrast)
 			else:
-				_add_volumetric_boundary_grids(slice_bounds, board_shape, display_mode)
+				_add_volumetric_boundary_grids(slice_bounds, visible_board_shape, display_mode, high_contrast)
 		if live_2d and dimension >= 3:
 			_add_floor_face(slice_bounds, display_mode)
+			_add_floor_lattice(slice_bounds, visible_board_shape, display_mode, high_contrast)
 		_add_outline_box(
 			slice_bounds,
 			display_mode,
 			null,
-			ReplayVisuals.slice_outline_thickness(display_mode) * (1.35 if high_contrast else 1.0)
+			ReplayVisuals.slice_outline_thickness(display_mode) * (1.20 if high_contrast else 1.0),
+			PRESENTATION_ROLE_WIREFRAME,
+			high_contrast
 		)
-		if show_grid and board_detail == "full":
-			_add_outline_box(
-				slice_bounds,
-				display_mode,
-				ReplayVisuals.live_board_grid_material(display_mode),
-				ReplayVisuals.slice_outline_thickness(display_mode) * 0.72
-			)
-		if live_2d and dimension >= 4:
-			_add_outline_box(
-				slice_bounds,
-				display_mode,
-				ReplayVisuals.board_outline_material(display_mode),
-				ReplayVisuals.slice_outline_thickness(display_mode) * 1.55
-			)
 		if active_layers.has(w_index):
 			_add_outline_box(
 				slice_bounds,
 				display_mode,
-				ReplayVisuals.live_active_cell_border_material(display_mode),
-				ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER)
+				ReplayVisuals.board_active_frame_material(display_mode, high_contrast),
+				ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER),
+				PRESENTATION_ROLE_ACTIVE_FRAME,
+				high_contrast
 			)
 		if dimension >= 4 and show_w_labels:
-			_add_w_label(w_index, w_size, slice_bounds, display_mode, active_layers.has(w_index))
+			_add_slice_label(
+				w_index,
+				slice_bounds,
+				display_mode,
+				active_layers.has(w_index),
+				mapper.slice_axis_label(),
+				mapper.semantic_slice_coordinate(w_index)
+			)
 	var camera := get_viewport().get_camera_3d()
 	if camera != null:
 		var camera_position := to_local(camera.global_position)
@@ -86,8 +91,15 @@ func rebuild(
 		_update_slice_labels(camera_position)
 
 
-func _add_outline_box(slice_bounds: Dictionary, display_mode: String, material_override: Material = null, thickness_override: float = -1.0) -> void:
-	var board_material := ReplayVisuals.board_outline_material(display_mode) if material_override == null else material_override
+func _add_outline_box(
+	slice_bounds: Dictionary,
+	display_mode: String,
+	material_override: Material = null,
+	thickness_override: float = -1.0,
+	presentation_role: String = PRESENTATION_ROLE_WIREFRAME,
+	high_contrast: bool = false
+) -> void:
+	var board_material := ReplayVisuals.board_outline_material(display_mode, high_contrast) if material_override == null else material_override
 	var thickness := ReplayVisuals.slice_outline_thickness(display_mode) if thickness_override < 0.0 else thickness_override
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
@@ -99,27 +111,35 @@ func _add_outline_box(slice_bounds: Dictionary, display_mode: String, material_o
 	var z1 := max_pos.z
 	var size := max_pos - min_pos
 
-	_add_line(Vector3((x0 + x1) * 0.5, y0, z0), Vector3(size.x, thickness, thickness), board_material)
-	_add_line(Vector3((x0 + x1) * 0.5, y1, z0), Vector3(size.x, thickness, thickness), board_material)
-	_add_line(Vector3((x0 + x1) * 0.5, y0, z1), Vector3(size.x, thickness, thickness), board_material)
-	_add_line(Vector3((x0 + x1) * 0.5, y1, z1), Vector3(size.x, thickness, thickness), board_material)
-	_add_line(Vector3(x0, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material)
-	_add_line(Vector3(x1, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material)
-	_add_line(Vector3(x0, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material)
-	_add_line(Vector3(x1, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material)
-	_add_line(Vector3(x0, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material)
-	_add_line(Vector3(x1, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material)
-	_add_line(Vector3(x0, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material)
-	_add_line(Vector3(x1, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material)
+	_add_line(Vector3((x0 + x1) * 0.5, y0, z0), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
+	_add_line(Vector3((x0 + x1) * 0.5, y1, z0), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
+	_add_line(Vector3((x0 + x1) * 0.5, y0, z1), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
+	_add_line(Vector3((x0 + x1) * 0.5, y1, z1), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
+	_add_line(Vector3(x0, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
+	_add_line(Vector3(x1, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
+	_add_line(Vector3(x0, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
+	_add_line(Vector3(x1, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
+	_add_line(Vector3(x0, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
+	_add_line(Vector3(x1, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
+	_add_line(Vector3(x0, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
+	_add_line(Vector3(x1, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
 
 
-func _add_line(position: Vector3, scale_value: Vector3, material: Material, parent: Node3D = null) -> void:
+func _add_line(
+	position: Vector3,
+	scale_value: Vector3,
+	material: Material,
+	parent: Node3D = null,
+	presentation_role: String = ""
+) -> void:
 	var mesh_instance := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	mesh.size = scale_value
 	mesh_instance.mesh = mesh
 	mesh_instance.material_override = material
 	mesh_instance.position = position
+	if not presentation_role.is_empty():
+		mesh_instance.set_meta("presentation_role", presentation_role)
 	var target_parent: Node3D = self if parent == null else parent
 	target_parent.add_child(mesh_instance)
 
@@ -138,40 +158,64 @@ func _add_floor_face(slice_bounds: Dictionary, display_mode: String) -> void:
 	add_child(floor)
 
 
-func _add_flat_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: String) -> void:
+func _add_floor_lattice(slice_bounds: Dictionary, board_shape: Array, display_mode: String, high_contrast: bool) -> void:
+	if board_shape.size() < 3:
+		return
+	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
+	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
+	var thickness := ReplayVisuals.grid_internal_thickness(high_contrast) * 0.86
+	var material := ReplayVisuals.live_board_floor_grid_material(display_mode, high_contrast)
+	var floor_y := min_pos.y + thickness * 0.70
+	var lattice := Node3D.new()
+	lattice.name = "GravityFloorLattice"
+	lattice.set_meta("boundary_role", "gravity_floor_lattice")
+	add_child(lattice)
+	for x_index in range(1, int(board_shape[0])):
+		var x_pos := min_pos.x + float(x_index)
+		_add_line(Vector3(x_pos, floor_y, (min_pos.z + max_pos.z) * 0.5), Vector3(thickness, thickness, max_pos.z - min_pos.z), material, lattice, PRESENTATION_ROLE_FLOOR_GRID)
+	for z_index in range(1, int(board_shape[2])):
+		var z_pos := min_pos.z + float(z_index)
+		_add_line(Vector3((min_pos.x + max_pos.x) * 0.5, floor_y, z_pos), Vector3(max_pos.x - min_pos.x, thickness, thickness), material, lattice, PRESENTATION_ROLE_FLOOR_GRID)
+
+
+func _add_flat_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: String, high_contrast: bool) -> void:
 	if board_shape.size() < 2:
 		return
 	var width := int(board_shape[0])
 	var height := int(board_shape[1])
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
-	var thickness := ReplayVisuals.GRID_LINE_THICKNESS * 0.55
-	var material := ReplayVisuals.live_board_grid_material(display_mode)
+	var thickness := ReplayVisuals.grid_internal_thickness(high_contrast)
+	var material := ReplayVisuals.live_board_grid_material(display_mode, high_contrast)
 	var grid_z := min_pos.z - 0.02
-	for x in range(width + 1):
+	for x in range(1, width):
 		var x_pos := min_pos.x + float(x)
 		_add_line(
 			Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, grid_z),
 			Vector3(thickness, max_pos.y - min_pos.y, thickness),
-			material
+			material,
+			null,
+			PRESENTATION_ROLE_GRID
 		)
-	for y in range(height + 1):
+	for y in range(1, height):
 		var y_pos := min_pos.y + float(y)
 		_add_line(
 			Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, grid_z + 0.002),
 			Vector3(max_pos.x - min_pos.x, thickness, thickness),
-			material
+			material,
+			null,
+			PRESENTATION_ROLE_GRID
 		)
 
 
-func _add_volumetric_boundary_grids(slice_bounds: Dictionary, board_shape: Array, display_mode: String) -> void:
+func _add_volumetric_boundary_grids(slice_bounds: Dictionary, board_shape: Array, display_mode: String, high_contrast: bool) -> void:
 	if board_shape.size() < 3:
 		return
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var center := (min_pos + max_pos) * 0.5
-	var thickness := ReplayVisuals.GRID_LINE_THICKNESS * 0.55
-	var material := ReplayVisuals.live_board_grid_material(display_mode)
+	var thickness := ReplayVisuals.grid_internal_thickness(high_contrast)
+	var material := ReplayVisuals.live_board_grid_material(display_mode, high_contrast)
 	for axis in range(3):
 		for sign_value in [-1.0, 1.0]:
 			var face := Node3D.new()
@@ -179,6 +223,7 @@ func _add_volumetric_boundary_grids(slice_bounds: Dictionary, board_shape: Array
 			face.set_meta("grid_axis", axis)
 			face.set_meta("grid_sign", sign_value)
 			face.set_meta("grid_center", center)
+			face.set_meta("presentation_role", PRESENTATION_ROLE_GRID)
 			add_child(face)
 			_rear_grid_faces.append(face)
 			_add_boundary_face_grid(face, axis, sign_value, min_pos, max_pos, board_shape, thickness, material)
@@ -197,28 +242,28 @@ func _add_boundary_face_grid(
 	var inward_offset := thickness * 0.55
 	if axis == Vector3.AXIS_X:
 		var x_pos := (min_pos.x if sign_value < 0.0 else max_pos.x) - sign_value * inward_offset
-		for z_index in range(int(board_shape[2]) + 1):
+		for z_index in range(1, int(board_shape[2])):
 			var z_pos := min_pos.z + float(z_index)
-			_add_line(Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, z_pos), Vector3(thickness, max_pos.y - min_pos.y, thickness), material, face)
-		for y_index in range(int(board_shape[1]) + 1):
+			_add_line(Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, z_pos), Vector3(thickness, max_pos.y - min_pos.y, thickness), material, face, PRESENTATION_ROLE_GRID)
+		for y_index in range(1, int(board_shape[1])):
 			var y_pos := min_pos.y + float(y_index)
-			_add_line(Vector3(x_pos, y_pos, (min_pos.z + max_pos.z) * 0.5), Vector3(thickness, thickness, max_pos.z - min_pos.z), material, face)
+			_add_line(Vector3(x_pos, y_pos, (min_pos.z + max_pos.z) * 0.5), Vector3(thickness, thickness, max_pos.z - min_pos.z), material, face, PRESENTATION_ROLE_GRID)
 	elif axis == Vector3.AXIS_Y:
 		var y_pos := (min_pos.y if sign_value < 0.0 else max_pos.y) - sign_value * inward_offset
-		for x_index in range(int(board_shape[0]) + 1):
+		for x_index in range(1, int(board_shape[0])):
 			var x_pos := min_pos.x + float(x_index)
-			_add_line(Vector3(x_pos, y_pos, (min_pos.z + max_pos.z) * 0.5), Vector3(thickness, thickness, max_pos.z - min_pos.z), material, face)
-		for z_index in range(int(board_shape[2]) + 1):
+			_add_line(Vector3(x_pos, y_pos, (min_pos.z + max_pos.z) * 0.5), Vector3(thickness, thickness, max_pos.z - min_pos.z), material, face, PRESENTATION_ROLE_GRID)
+		for z_index in range(1, int(board_shape[2])):
 			var z_pos := min_pos.z + float(z_index)
-			_add_line(Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, z_pos), Vector3(max_pos.x - min_pos.x, thickness, thickness), material, face)
+			_add_line(Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, z_pos), Vector3(max_pos.x - min_pos.x, thickness, thickness), material, face, PRESENTATION_ROLE_GRID)
 	else:
 		var z_pos := (min_pos.z if sign_value < 0.0 else max_pos.z) - sign_value * inward_offset
-		for x_index in range(int(board_shape[0]) + 1):
+		for x_index in range(1, int(board_shape[0])):
 			var x_pos := min_pos.x + float(x_index)
-			_add_line(Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, z_pos), Vector3(thickness, max_pos.y - min_pos.y, thickness), material, face)
-		for y_index in range(int(board_shape[1]) + 1):
+			_add_line(Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, z_pos), Vector3(thickness, max_pos.y - min_pos.y, thickness), material, face, PRESENTATION_ROLE_GRID)
+		for y_index in range(1, int(board_shape[1])):
 			var y_pos := min_pos.y + float(y_index)
-			_add_line(Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, z_pos), Vector3(max_pos.x - min_pos.x, thickness, thickness), material, face)
+			_add_line(Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, z_pos), Vector3(max_pos.x - min_pos.x, thickness, thickness), material, face, PRESENTATION_ROLE_GRID)
 
 
 func _update_rear_grid_faces(camera_position: Vector3) -> void:
@@ -230,9 +275,20 @@ func _update_rear_grid_faces(camera_position: Vector3) -> void:
 		face.visible = sign_value * camera_delta <= 0.0
 
 
-func _add_w_label(w_index: int, _w_size: int, slice_bounds: Dictionary, display_mode: String, selected: bool) -> void:
+func _add_slice_label(
+	layer_index: int,
+	slice_bounds: Dictionary,
+	display_mode: String,
+	selected: bool,
+	axis_label: String,
+	semantic_coordinate: int
+) -> void:
 	var label := Label3D.new()
-	label.text = "w%d" % [w_index + 1]
+	label.name = "SliceLabel_%d" % layer_index
+	label.text = "%s %d" % [axis_label, semantic_coordinate + 1]
+	label.set_meta("slice_axis", axis_label)
+	label.set_meta("semantic_coordinate", semantic_coordinate)
+	label.set_meta("presentation_layer", layer_index)
 	label.font_size = ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 	label.pixel_size = ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE
 	label.modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_TEXT, display_mode) if selected else ReplayVisuals.slice_label_color(display_mode)
