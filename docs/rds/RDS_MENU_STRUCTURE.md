@@ -171,6 +171,35 @@ Pause Menu
     only; controls reference/help content must stay under
     `Tutorials` or another explicit learning/reference surface.
 
+### 4.4 Setup and presentation ownership taxonomy
+
+The 4D setup surface must use progressive disclosure rather than permanently
+presenting every possible field in one flat form. This taxonomy defines durable
+semantic ownership; it does not itself prescribe a field-by-field migration.
+
+1. **Game definition** is state that determines what game/session is being
+   constructed and belongs in the ordinary pre-game definition surface.
+2. **Contextual game definition** is game-definition state meaningful only
+   when another selected mode or capability makes it applicable. Reveal it
+   contextually instead of keeping every possible field permanently visible.
+3. **Advanced gameplay/input configuration** is player-adjustable rule, input,
+   or control configuration. It remains reachable but must not dominate the
+   ordinary game-definition path.
+4. **Presentation preference** is state affecting how the game is viewed or
+   rendered without redefining deterministic game identity.
+
+The progressive-disclosure rule is:
+
+- ordinary setup exposes the minimum coherent game definition;
+- context-dependent choices appear only when relevant;
+- advanced gameplay/input options are reachable but visually secondary; and
+- presentation preferences must not be presented as if they define
+  deterministic game identity.
+
+Where enforcement is required, menu work must extend or reuse the existing
+`menu_structure_single_source`, `menu_control_typing_contract`, and menu-graph
+machinery. Do not introduce another menu validator merely for this taxonomy.
+
 ## 5. Layout and Readability Requirements
 
 ### 5.1 Layout

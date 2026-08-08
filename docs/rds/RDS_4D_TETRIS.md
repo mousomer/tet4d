@@ -220,18 +220,35 @@ Implementation structure for view `xw` / `zw`:
     preferences: `relative` (default) and `absolute`. These are local UI
     preferences, persisted with the Godot setup selection, and excluded from
     native setup, snapshots, hashes, replay, and deterministic identity.
-12. Relative controls resolve against the signed presentation basis composed
-    with the camera yaw rounded to the nearest 90 degrees (Python-compatible
-    ties-to-even). Local X is left/right, local positive depth is Forward/Away,
-    local W is the signed current slice axis, and local Y remains canonical
-    gravity. Relative rotations resolve local planes and canonicalize both
-    axis order and direction before calling native commands. Absolute controls
-    continue to emit the canonical command names unchanged.
+12. Relative controls must correspond to the player's local visible 3D frame
+    after the exact signed presentation basis has been applied. Local X is
+    left/right, local positive depth is Forward/Away, local W is the signed
+    current slice axis, and local Y remains canonical gravity. Relative
+    rotations resolve local planes and canonicalize both axis order and
+    direction before calling native commands; absolute controls continue to
+    emit canonical command names unchanged.
+
+    The current Stage 54D-2 implementation consumes yaw from the existing
+    combined camera rig, rounded to the nearest 90 degrees with
+    Python-compatible ties-to-even behaviour. That coupling is a known
+    provisional architectural limitation pending Stage 54E-1; it is not a
+    permanent requirement for the yaw source. Exact transform composition,
+    ownership, persistence, and implementation structure are intentionally
+    unresolved until 54E-1.
+
+    The following are durable presentation invariants:
+
+    - a slice-local 3D Y rotation changes internal X/Z orientation consistently
+      across every slice without moving or reordering slice anchors;
+    - a slice-layout transformation changes slice anchors/layout without
+      changing each slice's local 3D frame.
+
 13. Camera presets (`Iso`, `Front`, `Side`, `Back`, `Top`, and `Opposite Iso`)
-    are Godot presentation shortcuts only. They change ordinary camera state,
-    never the exact BasisState, native snapshot/hash/replay identity, or cached
-    Ghost destination. The Back preset must preserve viewer-relative controls
-    through the same control-frame resolver; absolute controls remain canonical.
+    are provisional Godot presentation shortcuts pending the corrected
+    camera-space model. They do not change the exact BasisState, native
+    snapshot/hash/replay identity, or cached Ghost destination. Stage 54E-4,
+    after Stage 54E-2, must decide their transform scope, reset behaviour, and
+    persistence ownership; absolute controls remain canonical.
 14. Internal grid remains visibly dark/desaturated blue, while the board
     wireframe remains continuously visible but weaker. Active > Ghost/Locked >
     grid > wireframe > background is a product requirement; exact style values

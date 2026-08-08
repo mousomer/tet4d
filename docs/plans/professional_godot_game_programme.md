@@ -246,6 +246,19 @@ review rather than reopening Stage 54A.
 Status: active  
 Priority: highest
 
+#### Programme-planning lenses
+
+Use the following lenses to decompose programme work and identify the concern
+that a stage addresses: deterministic gameplay, 4D representation, input
+semantics, product information architecture, visual system, and product
+acceptance. They are descriptive programme-planning vocabulary only; they do
+not define Codex routing or task classification.
+
+The current descriptive mapping is: 54D-3, deterministic gameplay; 54E-1/2,
+4D representation and input semantics; 54E-3, product information
+architecture; 54E-4/5, visual system and product information architecture;
+and 54F, product acceptance.
+
 ### Stage 54A — Control and cockpit coherence
 
 Status: complete and merged
@@ -329,7 +342,8 @@ An active game is never resized.
 
 ##### Stage 54B-1 — Shared board-extent contract
 
-Status: complete — established by `AE-0054`.
+Status: complete — established by `AE-0054` and integrated on `master` through
+PR #63 at `c93dcc8cfa93857d514a14b925002efc4404b007`.
 
 The topology-aware validation interface and complete bounded rule are now
 implemented through `contracts/board_extent_contract_v1.json`, including:
@@ -347,7 +361,8 @@ identity. It does not implement direct size-entry UI or topology seam rules.
 
 ##### Stage 54B-2 — Godot setup and persistence
 
-Status: complete and verified.
+Status: complete and integrated on `master` through PR #63 at
+`c93dcc8cfa93857d514a14b925002efc4404b007`.
 
 Implement:
 
@@ -366,7 +381,8 @@ records.
 
 ### Stage 54C — Game-safe 4D slice-basis rotations
 
-Status: complete and verified on the Stage 54C implementation branch.
+Status: complete and integrated on `master` through PR #63 at
+`c93dcc8cfa93857d514a14b925002efc4404b007`.
 
 Objective:
 
@@ -488,6 +504,9 @@ component make Hold an informed strategic choice rather than a blind swap.
 
 #### Stage 54D-1 — Next-piece preview
 
+Status: complete and integrated on `master` through PR #63 at
+`c93dcc8cfa93857d514a14b925002efc4404b007`.
+
 Display exactly one authoritative next piece in live 2D, 3D, and 4D play.
 
 The slice must:
@@ -512,18 +531,19 @@ Authority boundary:
 
 #### Stage 54D-2 — Ghost piece
 
-Implementation status: complete and mechanically verified on the Stage 54D-2
-branch with native/Godot conformance and a corrective presentation pass for
-grid/ghost readability, locked-cell opacity, and exact XW/ZW/ZX view rotations.
+Implementation status: complete and integrated on `master` through PR #63 at
+`c93dcc8cfa93857d514a14b925002efc4404b007`, with native/Godot conformance
+and a corrective presentation pass for grid/ghost readability, locked-cell
+opacity, and exact XW/ZW/ZX view rotations.
 Developer/user visual review accepted the Stage 54D-2 Ghost/board presentation;
-integrated professional playability acceptance remains part of Stage 54E.
+integrated professional playability acceptance remains part of Stage 54F.
 
 The accepted fixed dense-4D calibration artifact,
 `tet4d-wireframe-grid-canonical-after.png` (SHA-256
 `76c0d8ae3eaf25b047516768044b66e3599c140969739838c222a8c55fae49e1`),
 confirms that the bright frame identifies only the active slice, ordinary
 wireframes preserve every board volume, and the continuously visible internal
-grid remains subordinate. This is Stage 54D-2 visual evidence, not Stage 54E
+grid remains subordinate. This is Stage 54D-2 visual evidence, not Stage 54F
 integrated playability acceptance.
 
 Display the exact destination produced by the authoritative hard-drop
@@ -559,7 +579,13 @@ explicitly replaces it.
 
 #### Stage 54D-3 — Hold
 
-Add one-slot Hold after next-piece and ghost presentation are accepted.
+Status: pending deterministic-core work. Hold may proceed after the Stage
+54E-1 design contract is accepted; it does not require Stage 54E-2.
+
+Add one-slot Hold after next-piece and ghost presentation are accepted. Its
+only presentation dependency is the shared piece thumbnail already delivered
+by Stage 54D-1. Hold changes deterministic gameplay state and must not be
+absorbed into the presentation-architecture refactor.
 
 A successful Hold action:
 
@@ -612,50 +638,139 @@ provides concrete contracts, code, compatibility decisions, and evidence.
 Stage 54D-3 then creates and completes an `AE-####` authority-establishment
 record. Do not create an incomplete placeholder row in advance.
 
-### Stage 54E — Visible-GUI professional playability review
+### Stage 54E — 4D Presentation & Interaction Architecture
 
 Objective:
 
-Conduct a real human playability review of integrated 2D, 3D, and 4D play,
-with primary emphasis on 4D.
+Establish a deliberate presentation and interaction architecture for live 4D
+play before changing the existing runtime. The current presentation conflates
+three concepts that must become explicit and separately owned:
 
-This is evidence-driven. It does not begin with a speculative rewrite list.
+1. exact 4D `BasisState` rotation;
+2. slice-local 3D camera orientation: how the volume inside every individual
+   slice is viewed;
+3. slice-set/layout transformation: how the collection of slice volumes is
+   arranged and viewed as a collection.
 
-Review:
+The slice sequence is a presentation-layout coordinate. It is not the local X
+axis of each 3D slice.
 
-- visual regressions in the settled Stage 54A scope;
-- custom setup usability;
-- basis-rotation comprehension;
-- next-piece preview clarity;
-- 4D next-piece and Hold thumbnail readability;
-- ghost usefulness and contrast;
-- cross-slice ghost comprehension;
-- distinction among ghost, active, and locked cells;
-- Hold decision quality with visible queue information;
-- active and locked-piece readability;
-- axis and depth distinction;
-- current-slice-axis comprehension;
-- camera recovery;
-- menu and button hierarchy;
-- pause, restart, setup, and game-over usability;
-- responsiveness and representative board-size performance;
-- grid contrast and visibility across representative 3D/4D views, display
-  settings, and accessibility combinations;
-- minimum viewport and accessibility composition.
+#### Stage 54E-1 — Presentation-space architecture/design
 
-Stage 54E completes only when:
+Status: next; design/audit only.
 
-1. representative human-visible review evidence is recorded;
-2. findings are classified by severity and gate impact;
-3. every defect classified as blocking `PROFESSIONAL_CORE_GAME_READY` is
-   corrected and re-reviewed, or remains an explicit blocker preventing the
-   gate from passing;
-4. non-blocking defects have an owner or deliberate deferral.
+No runtime implementation is permitted as part of 54E-1 until its design
+contract is accepted. This slice inspects the current implementation and
+produces an architecture contract/design; it must not opportunistically
+refactor code.
 
-Grid strengthening is required only if review evidence classifies current grid
+54E-1 completes only when its accepted design provides all of the following:
+
+1. precise definitions of exact 4D `BasisState` space, slice-local 3D
+   camera/view space, and slice-set/layout space, including the coordinate
+   frame each acts in and what it may change;
+2. one explicit transform-composition model/order that distinguishes canonical
+   gameplay coordinates, exact 4D basis mapping, per-slice local 3D
+   presentation, slice anchor/layout placement, and final camera/view
+   transformation;
+3. an owner for every resulting presentation state, explicitly distinct from
+   deterministic gameplay state, topology state, snapshots, hashes, and replay
+   identity, with any new authority boundary following the established protocol;
+4. persistence and lifecycle decisions for every presentation-space state:
+   ephemeral interaction, reset-view, game/session-local, persisted
+   presentation preference, setup state, or deliberately non-persistent, with
+   behaviour defined for new game, restart game, change setup, reset view, and
+   application restart;
+5. scene-graph consequences that state where per-slice local orientation,
+   slice layout/anchors, and outer viewing-camera transforms belong and must
+   not belong;
+6. an audit of `ControlFrameMapping`, `CameraRig.control_frame_yaw()`, exact
+   `SliceBasis4D` state, slice anchor/layout generation, and the live input
+   resolver construction. The audit must issue a definite `CONFORMING` or
+   `DEFECTIVE` verdict, with architectural reasoning that decides whether the
+   yaw used by the resolver is the required slice-local 3D orientation or
+   incorrectly includes slice-set/layout viewing transformation;
+7. these architecture invariants:
+   - a slice-local 3D Y rotation changes the internal X/Z view identically in
+     every slice while leaving slice anchors and slice ordering unchanged;
+   - a slice-layout transformation changes slice anchors/layout without
+     changing the local 3D coordinate frame inside each slice;
+8. a verification design explaining how those invariants become executable
+   regression coverage in 54E-2, without deliberately committing failing
+   current tests; and
+9. a bounded 54E-2 implementation plan: affected Godot components, proposed
+   state owners, scene-graph changes, migration sequence, compatibility/reset
+   implications, focused regression coverage, human-visible verification, and
+   forbidden scope.
+
+The restructuring does not decide the transform order or representation,
+ownership, persistence, or scene-graph solution on behalf of 54E-1.
+
+#### Stage 54E-2 — Camera-space separation implementation
+
+Implement the architecture accepted in 54E-1. Separate the relevant
+presentation transforms without changing canonical gameplay coordinates,
+collision, scoring, RNG, topology semantics, deterministic snapshots/hashes,
+or replay identity, unless the accepted design identifies a presentation-only
+replay concern.
+
+54E-2 may begin only after 54E-1 is accepted.
+
+#### Stage 54E-3 — Setup/menu information architecture
+
+The 4D setup surface has exceeded an acceptable flat complexity level and must
+use progressive disclosure. The durable taxonomy and its rules are owned by
+`docs/rds/RDS_MENU_STRUCTURE.md`. This stage implements that approved
+information architecture and reuses the existing
+`menu_structure_single_source`, `menu_control_typing_contract`, and menu-graph
+machinery wherever enforcement is required; it does not introduce another menu
+validator solely for the taxonomy.
+
+#### Stage 54E-4 — Camera/GUI presets
+
+Current camera/GUI presets are provisional pending the corrected camera-space
+model. After 54E-2, decide what camera and GUI/layout presets transform,
+whether combined presets are permitted, the affected presentation spaces,
+reset behaviour, and persistence ownership. This programme does not make those
+decisions or redesign existing presets now.
+
+54E-4 may begin only after 54E-2 is complete.
+
+#### Stage 54E-5 — Cockpit consolidation
+
+After the preceding semantics are stable, rationalize the cockpit, helper
+surfaces, indicators, buttons, camera/layout controls, and presentation
+affordances. This is a bounded consolidation pass, not authorization for an
+unbounded visual rewrite.
+
+Stage 54E-5 completes when the cockpit surfaces identified by the accepted
+54E architecture are consolidated onto their intended state owners,
+contradictory or redundant presentation/control displays are removed, and the
+resulting cockpit passes focused consistency and visible-GUI review. It does
+not authorize unrelated visual redesign.
+
+### Stage 54F — Integrated professional playability/visual acceptance
+
+Objective:
+
+Conduct a real, evidence-driven human playability review of integrated 2D, 3D,
+and 4D play, with primary emphasis on 4D and the corrected Stage 54E
+architecture. It does not begin with a speculative rewrite list.
+
+Review basis-rotation comprehension; slice-local camera and slice-layout
+manipulation; viewer-relative controls; setup progressive disclosure;
+camera/GUI presets; cockpit consolidation; NEXT; Ghost; Hold; board/grid/cell
+hierarchy; accessibility; viewport composition; responsiveness; pause,
+restart, setup, and game-over usability.
+
+Stage 54F completes only when representative human-visible review evidence is
+recorded, findings are classified by severity and gate impact, each
+`PROFESSIONAL_CORE_GAME_READY` blocker is corrected and re-reviewed or remains
+an explicit blocker, and non-blocking defects have an owner or deliberate
+deferral. Grid strengthening is required only if evidence classifies grid
 visibility as blocking comprehension or accessibility.
 
-### Stage 54F — Professional gaming-experience and release hardening
+### Stage 54G — Professional gaming-experience and release hardening
 
 Objective:
 
@@ -893,7 +1008,13 @@ Use separate PRs for:
 - Stage 54D-1 next-piece preview;
 - Stage 54D-2 ghost piece;
 - Stage 54D-3 Hold;
-- Stage 54E review evidence and any focused correction batches.
+- Stage 54E-1 presentation-space architecture/design;
+- Stage 54E-2 camera-space separation implementation;
+- Stage 54E-3 setup/menu information architecture;
+- Stage 54E-4 camera/GUI presets;
+- Stage 54E-5 cockpit consolidation;
+- Stage 54F integrated playability/visual acceptance;
+- Stage 54G release hardening.
 
 Do not combine all of Phase I into one branch.
 
@@ -911,20 +1032,24 @@ Every implementation PR must identify:
 
 The active order is:
 
-1. Stage 54B-1 — shared topology-aware board-extent contract, bounded rule.
-2. Stage 54B-2 — Godot custom-size setup, validation, and persistence.
-3. Stage 54C — game-safe 4D slice-basis rotations and focused instruction.
-4. Stage 54D-1 — one-piece next preview and shared thumbnail presentation.
-5. Stage 54D-2 — authoritative ghost-piece landing preview.
-6. Stage 54D-3 — one-slot Hold with completed authority establishment.
-7. Stage 54E — visible-GUI review and blocking-defect correction.
-8. Stage 54F — remaining professional release hardening.
-9. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
-10. Later Explorer, challenge, topology, and simulation phases.
+1. Stages 54B-1, 54B-2, 54C, 54D-1, and 54D-2 are integrated on `master`
+   through PR #63 at `c93dcc8cfa93857d514a14b925002efc4404b007`.
+2. Stage 54E-1 — presentation-space architecture/design (next; design/audit
+   only).
+3. Stage 54D-3 — Hold may proceed after the 54E-1 design contract is accepted;
+   it does not wait for 54E-2.
+4. Stage 54E-2 — camera-space separation implementation.
+5. Stage 54E-3 — setup/menu information architecture.
+6. Stage 54E-4 — camera/GUI presets.
+7. Stage 54E-5 — cockpit consolidation.
+8. Stage 54F — integrated professional playability/visual acceptance.
+9. Stage 54G — remaining professional release hardening.
+10. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
+11. Later Explorer, challenge, topology, and simulation phases.
 
-Stage 54D-2 corrects the reviewed live-grid readability weakness and has
-developer/user Ghost/board visual acceptance. Stage 54E retains integrated
-professional playability acceptance for the complete play surface.
+Stage numbers do not imply that 54D-3 must run before 54E-1. Stage 54D-2
+corrected the reviewed live-grid readability weakness and has developer/user
+Ghost/board visual acceptance; this is not Stage 54F integrated acceptance.
 
 Compaction or splitting of `docs/history/DONE_SUMMARIES.md` belongs to a
 separate documentation-hygiene batch. Historical archive size is not active
