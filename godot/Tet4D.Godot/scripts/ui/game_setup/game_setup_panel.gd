@@ -24,6 +24,9 @@ var _seed_row: Control
 var _seed_input: LineEdit
 var _seed_error: Label
 var _speed_selector: OptionButton
+var _controls_section: VBoxContainer
+var _translation_frame_selector: OptionButton
+var _rotation_frame_selector: OptionButton
 var _start_button: Button
 var _focus_controls: Array[Control] = []
 var _refreshing := false
@@ -138,6 +141,26 @@ func _rebuild() -> void:
 	var speed_note := _add_description(layout)
 	speed_note.text = "1 is relaxed; 10 is the fastest starting gravity cadence."
 
+	_controls_section = VBoxContainer.new()
+	_controls_section.name = "ControlFrameSection"
+	_controls_section.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
+	layout.add_child(_controls_section)
+	var controls_title := Label.new()
+	controls_title.text = "CONTROLS"
+	controls_title.theme_type_variation = "SecondaryLabel"
+	_controls_section.add_child(controls_title)
+	_translation_frame_selector = _add_selector(_controls_section, "Translation")
+	_rotation_frame_selector = _add_selector(_controls_section, "Rotation")
+	for selector in [_translation_frame_selector, _rotation_frame_selector]:
+		selector.add_item("Relative")
+		selector.set_item_metadata(0, "relative")
+		selector.add_item("Absolute")
+		selector.set_item_metadata(1, "absolute")
+	_translation_frame_selector.item_selected.connect(func(index: int) -> void: _on_control_frame_selected("translation_frame", _translation_frame_selector, index))
+	_rotation_frame_selector.item_selected.connect(func(index: int) -> void: _on_control_frame_selected("rotation_frame", _rotation_frame_selector, index))
+	var controls_note := _add_description(_controls_section)
+	controls_note.text = "Relative controls follow the current view; Absolute controls use canonical axes and planes."
+
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
 	layout.add_child(actions)
@@ -164,7 +187,7 @@ func _rebuild() -> void:
 
 	_focus_controls = [_board_selector]
 	_focus_controls.append_array(_axis_buttons)
-	_focus_controls.append_array([_piece_selector, _random_selector, _seed_input, _speed_selector, _start_button, reset_sizes, reset_setup, back])
+	_focus_controls.append_array([_piece_selector, _random_selector, _seed_input, _speed_selector, _translation_frame_selector, _rotation_frame_selector, _start_button, reset_sizes, reset_setup, back])
 	_refresh_from_model()
 	_configure_focus()
 	_board_selector.call_deferred("grab_focus")
@@ -237,6 +260,10 @@ func _refresh_from_model() -> void:
 		_axis_inputs[axis_index].text = _model.selected_axis_text(axis_index)
 	_seed_input.text = str(_model.selected_seed())
 	_select_metadata(_speed_selector, _model.selected_speed_level())
+	var frames: Dictionary = _model.selected_control_frames()
+	_select_metadata(_translation_frame_selector, frames.get("translation_frame", "relative"))
+	_select_metadata(_rotation_frame_selector, frames.get("rotation_frame", "relative"))
+	_controls_section.visible = _model.current_mode != GameSetupSpecScript.MODE_2D
 	var random_spec := _spec_by_id(GameSetupSpecScript.random_modes(), _model.selected_random_mode())
 	_random_description.text = str(random_spec.get("description", ""))
 	_seed_row.visible = _model.selected_random_mode() == GameSetupSpecScript.RANDOM_MODE_FIXED_SEED
@@ -303,6 +330,13 @@ func _on_seed_changed(_text: String) -> void:
 func _on_speed_selected(index: int) -> void:
 	if _model.select_speed_level(_speed_selector.get_item_metadata(index)):
 		_refresh_validation_state()
+		_emit_changed()
+
+
+func _on_control_frame_selected(kind: String, selector: OptionButton, index: int) -> void:
+	if _refreshing:
+		return
+	if _model.select_control_frame(kind, str(selector.get_item_metadata(index))):
 		_emit_changed()
 
 

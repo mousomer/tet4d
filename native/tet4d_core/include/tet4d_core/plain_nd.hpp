@@ -79,6 +79,8 @@ struct GameStateND {
 	bool try_move_axis(int axis, int delta);
 	bool try_rotate(int axis_a, int axis_b, int delta_steps);
 	bool try_soft_drop();
+	// Pure observational landing query shared with hard_drop().
+	std::optional<ActivePieceND> hard_drop_destination() const;
 	void hard_drop();
 	int lock_current_piece();
 	void spawn_piece(const PieceShapeND &shape);

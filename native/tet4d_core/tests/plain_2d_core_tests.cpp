@@ -100,6 +100,48 @@ void test_command_replay() {
 	require(state.active_piece->pos == tet4d::core::Coord2D{2, -2}, "respawn position mismatch");
 }
 
+void test_authoritative_hard_drop_destination_2d() {
+	tet4d::core::GameState2D state(6, 8);
+	state.active_piece = tet4d::core::ActivePiece2D{
+		tet4d::core::trace_t_shape_2d(), {2, 0}, 0};
+	state.board.set_cell({2, 6}, 8);
+	const std::vector<tet4d::core::Coord2D> before = state.active_cells();
+	const auto destination = state.hard_drop_destination();
+	require(destination.has_value(), "2D landing query should return an active destination");
+	require(state.active_cells() == before, "2D landing query must not mutate the active pose");
+	require(!state.can_exist(destination->moved(0, 1)), "2D queried destination must be maximally dropped");
+	require(state.try_move(1, 0), "2D landing fixture lateral move should succeed");
+	const auto moved_destination = state.hard_drop_destination();
+	require(moved_destination.has_value() && moved_destination->cells() != destination->cells(),
+		"2D landing query should follow lateral movement");
+	state.try_rotate(1);
+	require(state.hard_drop_destination().has_value(), "2D landing query should follow accepted rotation");
+	require(state.try_soft_drop(), "2D landing fixture soft drop should succeed");
+	require(state.hard_drop_destination().has_value(), "2D landing query should remain valid after soft drop");
+	state.active_piece = *destination;
+	const std::vector<tet4d::core::Coord2D> expected_locked = destination->cells();
+	state.hard_drop();
+	for (const auto &cell : expected_locked) {
+		require(state.board.has_cell(cell), "2D hard drop must lock every queried destination cell");
+	}
+
+	tet4d::core::GameState2D landed(4, 4);
+	landed.active_piece = tet4d::core::ActivePiece2D{
+		tet4d::core::trace_dot_shape_2d(), {1, 3}, 0};
+	const auto coincident = landed.hard_drop_destination();
+	require(coincident.has_value() && coincident->cells() == landed.active_cells(),
+		"already-landed 2D query should return the unchanged pose");
+	landed.game_over = true;
+	require(!landed.hard_drop_destination().has_value(), "terminal 2D query should be unavailable");
+
+	tet4d::core::Plain2DSession session;
+	const std::string hash = session.state_hash();
+	const auto preview = session.peek_next_piece_shape();
+	require(session.hard_drop_destination().has_value(), "live 2D session should expose landing geometry");
+	require(session.state_hash() == hash && same_shape(session.peek_next_piece_shape(), preview),
+		"live 2D landing queries must preserve state, bag, and RNG");
+}
+
 void test_trace_export_smoke() {
 	const std::string trace = tet4d::core::export_plain_2d_trace_json();
 	require(trace.find("\"case_id\":\"gameplay_plain_2d_short\"") != std::string::npos, "trace case id missing");
@@ -402,6 +444,7 @@ int main(int argc, char **argv) {
 	}
 	test_board_and_piece_cells();
 	test_command_replay();
+	test_authoritative_hard_drop_destination_2d();
 	test_trace_export_smoke();
 	test_stage11_trace_exports();
 	test_live_plain_2d_session();

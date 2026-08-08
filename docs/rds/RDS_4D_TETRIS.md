@@ -107,7 +107,9 @@ View-hyperplane extension (`xw` / `zw`) requirements:
 6. `view_xw_neg`,
 7. `view_xw_pos`,
 8. `view_zw_neg`,
-9. `view_zw_pos`.
+9. `view_zw_pos`,
+10. `view_zx_neg`,
+11. `view_zx_pos`.
 
 System:
 1. Restart: `Y`
@@ -120,8 +122,10 @@ Layer-view policy:
 2. Gameplay rotations and movement are independent from view-layer panel ordering.
 3. In Godot live play, the exact signed presentation basis and coordinate map
    are governed by `docs/architecture/game_safe_4d_slice_basis.md`.
-4. Godot `view_xw_*` and `view_zw_*` actions reconstruct the slice stack while
-   leaving canonical gameplay state and camera orientation unchanged.
+4. Godot `view_xw_*`, `view_zw_*`, and `view_zx_*` actions rotate the exact
+   presentation basis while leaving canonical gameplay state and free-camera
+   orientation unchanged. XW/ZW may reconstruct slice membership; ZX rotates
+   the visible X/Z frame through the same signed-basis composition.
 
 Viewer-consistent translation requirement:
 1. Movement intents are interpreted in viewer space for `x/z` translation.
@@ -201,6 +205,37 @@ Implementation structure for view `xw` / `zw`:
    4D play.
 7. New games, gameplay restart, and Reset View restore identity. Reduced
    Motion snaps directly to the exact destination basis.
+8. Live ghost destination cells use this same mapper for every reachable
+   signed basis. A basis turn redistributes cached canonical cells across the
+   new slice axis without changing native state or re-querying hard drop.
+9. Every authoritative destination cell appears exactly once; asymmetric,
+   `W=1`, and large-W admitted boards use the same mapping path.
+10. Tet4D provides exact presentation-only 90-degree view rotations in the
+    `XW`, `ZW`, and `ZX` planes. `XW`/`ZW` may exchange the slice axis with a
+    visible non-gravity axis; `ZX` rotates the visible X/Z frame without
+    independently changing slice membership. The signed basis, board, grid,
+    cells, movement helper, and axis indicator use one mapping; `+Y` remains
+    the fixed gravity axis.
+11. Live 3D and 4D setup exposes independent Translation and Rotation frame
+    preferences: `relative` (default) and `absolute`. These are local UI
+    preferences, persisted with the Godot setup selection, and excluded from
+    native setup, snapshots, hashes, replay, and deterministic identity.
+12. Relative controls resolve against the signed presentation basis composed
+    with the camera yaw rounded to the nearest 90 degrees (Python-compatible
+    ties-to-even). Local X is left/right, local positive depth is Forward/Away,
+    local W is the signed current slice axis, and local Y remains canonical
+    gravity. Relative rotations resolve local planes and canonicalize both
+    axis order and direction before calling native commands. Absolute controls
+    continue to emit the canonical command names unchanged.
+13. Camera presets (`Iso`, `Front`, `Side`, `Back`, `Top`, and `Opposite Iso`)
+    are Godot presentation shortcuts only. They change ordinary camera state,
+    never the exact BasisState, native snapshot/hash/replay identity, or cached
+    Ghost destination. The Back preset must preserve viewer-relative controls
+    through the same control-frame resolver; absolute controls remain canonical.
+14. Internal grid remains visibly dark/desaturated blue, while the board
+    wireframe remains continuously visible but weaker. Active > Ghost/Locked >
+    grid > wireframe > background is a product requirement; exact style values
+    are owned by `docs/design/godot_visual_system.md`.
 
 ## 7. Scoring
 
@@ -285,7 +320,7 @@ Implemented in code:
 7. Scoring matrix and random-piece stability checks are covered in `tests/unit/engine/test_game_nd.py`.
 8. Camera/view hyperplane turns for `xw` and `zw` are implemented in 4D renderer/view layer (`src/tet4d/ui/pygame/front4d_render.py`).
 9. Dedicated keybinding camera actions for these turns are implemented and conflict-safe by default:
-10. `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos`.
+10. `view_xw_neg/view_xw_pos/view_zw_neg/view_zw_pos/view_zx_neg/view_zx_pos`.
 11. 4D projection cache keys include total `W` size, avoiding stale lattice/helper cache reuse across config changes.
 12. 4D per-layer zoom fitting is basis-aware and computed from current per-layer board dims.
 13. Black-box render-cache regression coverage exists for cross-config `W`-size changes (`tests/unit/engine/test_front4d_render.py`).

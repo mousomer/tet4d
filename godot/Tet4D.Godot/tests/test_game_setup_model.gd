@@ -68,6 +68,12 @@ func run() -> Array:
 	for expected_key in ["schema_version", "contract_version", "mode", "board_preset_id", "board_shape", "piece_set_id", "random_mode", "seed", "initial_speed_level", "topology_profile"]:
 		if not canonical.has(expected_key):
 			failures.append("canonical setup missing %s" % expected_key)
+	if not model.select_control_frame("translation_frame", "absolute") or not model.select_control_frame("rotation_frame", "absolute"):
+		failures.append("3D/4D control-frame selectors should accept absolute mode")
+	if model.selected_control_frames() != {"translation_frame": "absolute", "rotation_frame": "absolute"}:
+		failures.append("control-frame selectors should remain independent")
+	if canonical.has("translation_frame") or canonical.has("rotation_frame"):
+		failures.append("control-frame preferences must not enter deterministic native setup")
 	if canonical.get("topology_profile", {}).get("dimensions", []) != [5, 10, 4, 1]:
 		failures.append("custom setup topology must derive from the exact editable shape")
 	var bridge = Tet4DCoreBridgeScript.new()
@@ -86,8 +92,8 @@ func run() -> Array:
 	if not store.save_last_validated(model, path):
 		failures.append("only the model's native-validated last-valid snapshot should persist")
 	var loaded: Dictionary = store.load_last_selected(path)
-	if loaded.get(GameSetupSpecScript.MODE_4D, {}).get("board_shape", []) != [5, 10, 4, 1]:
-		failures.append("schema 3 should persist the full custom shape")
+	if loaded.get(GameSetupSpecScript.MODE_4D, {}).get("board_shape", []) != [5, 10, 4, 1] or loaded.get(GameSetupSpecScript.MODE_4D, {}).get("translation_frame", "") != "absolute":
+		failures.append("schema 4 should persist the full custom shape and control-frame preference")
 	model.set_axis_text(3, "1e0")
 	store.save_last_validated(model, path)
 	loaded = store.load_last_selected(path)
@@ -112,6 +118,9 @@ func run() -> Array:
 		file = FileAccess.open(path, FileAccess.WRITE)
 		file.store_string(JSON.stringify({"schema_version": 3, "last_selected": {"live_4d": {"board_shape": [5, 10, 4, 1], "piece_set_id": "standard_4d_5", "random_mode": "fixed_seed", "seed": 1337, "initial_speed_level": 1}}}))
 		file.close()
+	loaded = store.load_last_selected(path)
+	if loaded.get(GameSetupSpecScript.MODE_4D, {}).get("translation_frame", "") != "relative" or loaded.get(GameSetupSpecScript.MODE_4D, {}).get("rotation_frame", "") != "relative":
+		failures.append("schema 3 setup persistence must migrate control frames to relative defaults")
 	model.apply_last_selected(store.load_last_selected(path))
 	if model.selected_shape(GameSetupSpecScript.MODE_4D) != [5, 10, 4, 4] or not model.is_valid(GameSetupSpecScript.MODE_4D):
 		failures.append("stale invalid persisted tuples must recover through native validation to canonical defaults")

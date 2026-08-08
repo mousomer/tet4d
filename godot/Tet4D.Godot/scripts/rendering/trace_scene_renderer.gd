@@ -19,6 +19,7 @@ var _show_w_labels := true
 var _projection_strength := 1.0
 var _board_detail := "standard"
 var _show_grid := true
+var _locked_cell_opacity := ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY
 var _high_contrast := false
 var _reduced_motion := false
 var _last_case_id := ""
@@ -76,6 +77,10 @@ func set_board_detail(detail: String) -> void:
 
 func set_grid_visible(visible: bool) -> void:
 	_show_grid = visible
+
+
+func set_locked_cell_opacity(opacity: float) -> void:
+	_locked_cell_opacity = ReplayVisuals.normalize_locked_cell_opacity(opacity)
 
 
 func set_accessibility_policy(high_contrast: bool, reduced_motion: bool) -> void:
@@ -142,7 +147,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_show_grid
 	)
 
-	var locked_material := ReplayVisuals.locked_cell_material(_display_mode)
+	var locked_material := ReplayVisuals.locked_cell_material(_display_mode, _locked_cell_opacity)
 	var probe_before_material := ReplayVisuals.probe_before_material(_display_mode)
 	var probe_after_material := ReplayVisuals.probe_after_material(_display_mode)
 	var event_material := ReplayVisuals.event_marker_material(_display_mode)
@@ -156,7 +161,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		if _presentation.uses_live_exterior_cells:
 			node.setup_exterior_block(
 				locked_position,
-				ReplayVisuals.live_3d_locked_face_materials(_display_mode, locked_color_id),
+				ReplayVisuals.live_3d_locked_face_materials(_display_mode, locked_color_id, _locked_cell_opacity),
 				ReplayVisuals.live_3d_locked_cell_border_material(_display_mode),
 				locked_size,
 				locked_size + ReplayVisuals.LIVE_3D_LOCKED_CELL_BORDER_DELTA * _edge_weight()
@@ -170,6 +175,21 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				_live_locked_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(locked_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0
 			)
+
+	for cell in _presentation.ghost_cells():
+		var ghost_node := CellRendererScript.new()
+		ghost_node.name = "GhostCell"
+		ghost_node.set_meta("presentation_role", "ghost")
+		_cell_root.add_child(ghost_node)
+		var ghost_size := ReplayVisuals.LIVE_3D_GHOST_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_GHOST_CELL_SCALE
+		ghost_node.setup(
+			_presentation.world_position(cell.get("position", [])),
+			ReplayVisuals.ghost_cell_material(_display_mode, int(cell.get("color_id", 0)), _high_contrast),
+			ghost_size,
+			ghost_size if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_CELL_DEPTH,
+			ReplayVisuals.ghost_cell_border_material(_display_mode, _high_contrast),
+			ghost_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()
+		)
 
 	var active_cells := _presentation.active_cells()
 	for active_index in range(active_cells.size()):
@@ -291,9 +311,9 @@ func _apply_basis_presentation_transform(settle_scale: float) -> void:
 
 func _live_locked_material(color_id: int, is_live_3d_snapshot: bool, is_live_snapshot: bool, replay_material: Material) -> Material:
 	if is_live_3d_snapshot:
-		return ReplayVisuals.live_3d_locked_cell_material(_display_mode, color_id)
+		return ReplayVisuals.live_3d_locked_cell_material(_display_mode, color_id, _locked_cell_opacity)
 	if is_live_snapshot:
-		return ReplayVisuals.live_locked_cell_material(_display_mode, color_id)
+		return ReplayVisuals.live_locked_cell_material(_display_mode, color_id, _locked_cell_opacity)
 	return replay_material
 
 

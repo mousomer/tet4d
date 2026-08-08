@@ -59,6 +59,7 @@ func run() -> Array:
 		"dimension": 2,
 		"board_shape": [4, 4],
 		"locked_cells": [{"position": [1, 3], "color_id": 4}],
+		"ghost_cells": [{"position": [1, 2], "color_id": 2}],
 		"active_cells": [{"position": [1, 1], "color_id": 2}],
 		"probe_markers": [],
 		"event_markers": [],
@@ -67,11 +68,12 @@ func run() -> Array:
 	renderer.render_snapshot(live_2d_snapshot)
 	await tree.process_frame
 	cell_root = renderer.get_node_or_null("CellRoot")
-	if cell_root == null or cell_root.get_child_count() != 2:
-		failures.append("live renderer should create active and locked cells")
+	if cell_root == null or cell_root.get_child_count() != 3:
+		failures.append("live renderer should create locked, ghost, and active cells")
 	else:
 		var locked_cell := cell_root.get_child(0) as Node3D
-		var active_cell := cell_root.get_child(1) as Node3D
+		var ghost_cell := cell_root.get_child(1) as Node3D
+		var active_cell := cell_root.get_child(2) as Node3D
 		_assert_cell_material(
 			failures,
 			locked_cell,
@@ -86,22 +88,37 @@ func run() -> Array:
 		)
 		_assert_box_size(failures, active_cell, ReplayVisuals.LIVE_ACTIVE_CELL_SCALE, "live active cell scale")
 		_assert_box_size(failures, locked_cell, ReplayVisuals.LIVE_LOCKED_CELL_SCALE, "live locked cell scale")
+		_assert_box_size(failures, ghost_cell, ReplayVisuals.LIVE_GHOST_CELL_SCALE, "live ghost cell scale")
 		if active_cell.get_child_count() < 2:
 			failures.append("live active cell should include a crisp border mesh")
 		if locked_cell.get_child_count() < 2:
 			failures.append("live locked cell should include a crisp border mesh")
+		if ghost_cell.get_child_count() < 2 or not bool(ghost_cell.get_meta("presentation_role", "") == "ghost"):
+			failures.append("live ghost cell should retain a dedicated outlined presentation role")
+		elif _cell_alpha(ghost_cell) < 0.45 or _cell_alpha(ghost_cell) >= _cell_alpha(active_cell):
+			failures.append("ghost fill should be clearly visible while remaining weaker than active cells")
+		renderer.set_locked_cell_opacity(0.60)
+		renderer.render_snapshot(live_2d_snapshot)
+		await tree.process_frame
+		var translucent_locked := (renderer.get_node_or_null("CellRoot") as Node).get_child(0) as Node3D
+		var unchanged_active := (renderer.get_node_or_null("CellRoot") as Node).get_child(2) as Node3D
+		if absf(_cell_alpha(translucent_locked) - 0.60) > 0.001 or absf(_cell_alpha(unchanged_active) - 1.0) > 0.001:
+			failures.append("locked-cell opacity must restyle only locked fill without weakening active cells")
+		renderer.set_locked_cell_opacity(ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY)
 	var grid_root := renderer.get_node_or_null("GridRoot")
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live renderer should keep one shared grid renderer")
 	else:
 		var live_grid := grid_root.get_child(0)
-		if live_grid.get_child_count() <= 12:
-			failures.append("live renderer should include board fill/grid lines beyond the outline")
+		if _count_presentation_role(live_grid, "board.wireframe") != 12:
+			failures.append("live 2D renderer should build an explicit 12-edge ordinary wireframe")
+		if _count_presentation_role(live_grid, "board.grid") != 6:
+			failures.append("live 2D internal grid should exclude its six coincident outer-boundary lines")
 		renderer.set_grid_visible(false)
 		renderer.render_snapshot(renderer._presentation.snapshot)
 		await tree.process_frame
 		var hidden_grid := (renderer.get_node_or_null("GridRoot") as Node).get_child(0)
-		if hidden_grid.get_child_count() != 12:
+		if hidden_grid.get_child_count() != 12 or _count_presentation_role(hidden_grid, "board.wireframe") != 12 or _count_presentation_role(hidden_grid, "board.grid") != 0:
 			failures.append("grid toggle should hide internal detail while retaining the 12-edge orientation cage")
 		renderer.set_grid_visible(true)
 
@@ -154,6 +171,11 @@ func run() -> Array:
 	grid_root = renderer.get_node_or_null("GridRoot")
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live 3D renderer should keep one shared grid renderer")
+	else:
+		var live_3d_grid := grid_root.get_child(0)
+		if _count_presentation_role(live_3d_grid, "board.wireframe") != 12:
+			failures.append("live 3D renderer should retain an explicit ordinary wireframe")
+		_assert_internal_face_grid_counts(failures, live_3d_grid, [4, 5, 4])
 
 	var live_4d_snapshot := {
 		"case_id": "live_plain_4d",
@@ -203,6 +225,15 @@ func run() -> Array:
 		failures.append("live 4D renderer should keep one shared grid renderer")
 	else:
 		var live_4d_grid := grid_root.get_child(0)
+		if _count_presentation_role(live_4d_grid, "board.wireframe") != 48:
+			failures.append("live 4D renderer should build one explicit ordinary wireframe per board")
+		if _count_presentation_role(live_4d_grid, "board.frame_active") != 12:
+			failures.append("live 4D renderer should keep one separately governed active frame")
+		var stable_structural_count := _count_presentation_role(live_4d_grid, "board.wireframe") + _count_presentation_role(live_4d_grid, "board.grid") + _count_presentation_role(live_4d_grid, "board.grid.floor") + _count_presentation_role(live_4d_grid, "board.frame_active")
+		live_4d_grid._process(0.016)
+		var processed_structural_count := _count_presentation_role(live_4d_grid, "board.wireframe") + _count_presentation_role(live_4d_grid, "board.grid") + _count_presentation_role(live_4d_grid, "board.grid.floor") + _count_presentation_role(live_4d_grid, "board.frame_active")
+		if processed_structural_count != stable_structural_count:
+			failures.append("stable board processing must not rebuild or accumulate structural geometry")
 		var floor_count := 0
 		for child in live_4d_grid.get_children():
 			if child.has_meta("boundary_role") and str(child.get_meta("boundary_role")) == "gravity_floor":
@@ -272,6 +303,12 @@ func run() -> Array:
 		failures.append("ZW+ should derive layer count from Z extent")
 	if renderer._presentation.projection.mapper.visible_board_shape() != [5, 10, 4]:
 		failures.append("ZW+ should render X,Y,W as visible board dimensions")
+	var zx_basis = SliceBasis4DScript.identity().turned("zx", 1)
+	renderer.set_live_4d_basis(zx_basis, false)
+	renderer.render_snapshot(live_4d_snapshot)
+	await tree.process_frame
+	if renderer._presentation.projection.mapper.current_layer_count() != 4 or renderer._presentation.projection.mapper.visible_board_shape() != [3, 10, 5]:
+		failures.append("ZX+ should rotate visible X/Z dimensions while preserving the W slice count")
 
 	renderer.queue_free()
 	await tree.process_frame
@@ -292,6 +329,12 @@ func _assert_color(failures: Array, actual: Color, expected: Color, label: Strin
 		or absf(actual.a - expected.a) > tolerance
 	):
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _cell_alpha(cell: Node3D) -> float:
+	var mesh_instance := cell.get_child(0) as MeshInstance3D
+	var material := mesh_instance.material_override as StandardMaterial3D if mesh_instance != null else null
+	return material.albedo_color.a if material != null else 0.0
 
 
 func _assert_cell_material(failures: Array, cell: Node3D, expected: Color, label: String) -> void:
@@ -354,8 +397,16 @@ func _assert_live_3d_exterior_block(failures: Array, cell: Node3D, label: String
 		var material := mesh_instance.material_override as StandardMaterial3D
 		if material == null:
 			failures.append("%s face %d should have material" % [label, index])
+		elif label.contains("locked"):
+			if material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or absf(material.albedo_color.a - ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY) > 0.001:
+				failures.append("%s face %d should use the configured translucent locked fill" % [label, index])
 		elif material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or material.albedo_color.a < 0.99:
-			failures.append("%s face %d should be opaque, not glass-like" % [label, index])
+			failures.append("%s face %d should be opaque" % [label, index])
+	if label.contains("locked"):
+		var outline := cell.get_child(6) as MeshInstance3D
+		var outline_material := outline.material_override as StandardMaterial3D if outline != null else null
+		if outline_material == null or outline_material.albedo_color.a < 0.99:
+			failures.append("%s should retain an opaque outline over translucent faces" % label)
 
 
 func _assert_rotation_pulse_outline(failures: Array, cell: Node3D, label: String) -> void:
@@ -371,6 +422,32 @@ func _assert_rotation_pulse_outline(failures: Array, cell: Node3D, label: String
 		failures.append("%s first outline edge should use box mesh" % label)
 	elif minf(box.size.y, box.size.z) <= 0.016:
 		failures.append("%s should thicken active outline briefly after rotation" % label)
+
+
+func _count_presentation_role(node: Node, role: String) -> int:
+	var count := 1 if str(node.get_meta("presentation_role", "")) == role else 0
+	for child in node.get_children():
+		count += _count_presentation_role(child, role)
+	return count
+
+
+func _assert_internal_face_grid_counts(failures: Array, grid: Node3D, board_shape: Array) -> void:
+	var face_count := 0
+	for child in grid.get_children():
+		if not child.has_meta("grid_axis"):
+			continue
+		face_count += 1
+		var axis := int(child.get_meta("grid_axis", -1))
+		var expected := 0
+		for dimension_index in range(3):
+			if dimension_index != axis:
+				expected += maxi(0, int(board_shape[dimension_index]) - 1)
+		if child.get_child_count() != expected:
+			failures.append("rear grid faces must contain interior subdivisions only; axis %d expected %d, got %d" % [axis, expected, child.get_child_count()])
+		if str(child.get_meta("presentation_role", "")) != "board.grid":
+			failures.append("rear grid faces must consume the board.grid presentation role")
+	if face_count != 6:
+		failures.append("live 3D renderer should retain six cached rear-grid face candidates")
 
 
 func _assert_three_rear_grid_faces_per_slice(

@@ -45,6 +45,10 @@ func active_cells() -> Array:
 	return snapshot.get("active_cells", [])
 
 
+func ghost_cells() -> Array:
+	return snapshot.get("ghost_cells", [])
+
+
 func active_layer_indices() -> Array:
 	if dimension < 4:
 		return []

@@ -21,6 +21,8 @@ const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
 const LIVE_4D_MATRIX_SCROLL_STEP := 4.0
 const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
+const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const ORIENTATION_GIZMO_SCREEN_SCALE := 0.060
 const ORIENTATION_GIZMO_EDGE_OFFSET := 0.41
 const ORIENTATION_GIZMO_CAMERA_DEPTH := 2.0
@@ -44,13 +46,17 @@ var _base_distance := 22.0
 var _base_orthographic_size := DEFAULT_ORTHOGRAPHIC_SIZE
 var _zoom_multiplier := 1.0
 var _last_frame_signature := ""
-var _current_view_preset := REPLAY_DISPLAY_VIEW_PRESET_NAME
+var _current_view_preset := CameraPresetScript.ISO
 var _current_view_octant := "python replay"
 var _current_fit_state := "initial"
 var _sensitivity_factor := 1.0
 var _invert_y := false
 var _interpolation_scale := 1.0
 var _orientation_gizmo: Node3D
+var _orientation_basis_snapshot := {
+	"visible_axes": ["+X", "+Y", "+Z"],
+	"gravity_axis": "+Y",
+}
 
 @onready var _camera: Camera3D = $Camera3D
 
@@ -131,13 +137,13 @@ func orbit(delta: Vector2) -> void:
 	_target_yaw -= delta.x * orbit_sensitivity * _sensitivity_factor
 	var vertical_direction := 1.0 if _invert_y else -1.0
 	_target_pitch = clampf(_target_pitch + delta.y * orbit_sensitivity * _sensitivity_factor * vertical_direction, -1.2, 1.2)
-	_current_fit_state = "manual"
+	_mark_custom_view("manual")
 
 
 func nudge_yaw(delta_radians: float) -> void:
 	_target_yaw += delta_radians * _sensitivity_factor
 	_current_yaw = _target_yaw
-	_current_fit_state = "manual"
+	_mark_custom_view("manual")
 	_update_camera()
 
 
@@ -145,25 +151,25 @@ func nudge_pitch(delta_radians: float) -> void:
 	var vertical_direction := -1.0 if _invert_y else 1.0
 	_target_pitch = clampf(_target_pitch + delta_radians * _sensitivity_factor * vertical_direction, -1.2, 1.2)
 	_current_pitch = _target_pitch
-	_current_fit_state = "manual"
+	_mark_custom_view("manual")
 	_update_camera()
 
 
 func nudge_roll(delta_radians: float) -> void:
 	_target_roll += delta_radians * _sensitivity_factor
 	_current_roll = _target_roll
-	_current_fit_state = "manual"
+	_mark_custom_view("manual")
 	_update_camera()
 
 
 func roll(delta: Vector2) -> void:
 	_target_roll += delta.x * orbit_sensitivity * _sensitivity_factor
-	_current_fit_state = "manual"
+	_mark_custom_view("manual")
 
 
 func pan_focus(offset: Vector3) -> void:
 	_target_focus += offset
-	_current_fit_state = "matrix scroll"
+	_mark_custom_view("matrix scroll")
 	if _camera != null:
 		_update_camera()
 
@@ -182,13 +188,52 @@ func pan_screen(delta: Vector2) -> void:
 	) * world_units_per_pixel
 	_target_focus += offset
 	_current_focus = _target_focus
-	_current_fit_state = "manual pan"
+	_mark_custom_view("manual pan")
 	_update_camera()
 
 
 func set_orientation_gizmo_visible(visible: bool) -> void:
 	if _orientation_gizmo != null:
 		_orientation_gizmo.visible = visible
+
+
+func set_orientation_basis(basis) -> void:
+	if basis == null or not basis.has_method("indicator_snapshot"):
+		return
+	_orientation_basis_snapshot = basis.indicator_snapshot()
+	_update_gizmo_axes()
+
+
+func set_control_frame_mapping(mapping: Dictionary) -> void:
+	if mapping.is_empty():
+		return
+	_orientation_basis_snapshot["visible_axes"] = [str(mapping.get("horizontal_axis", "+X")), "+Y", str(mapping.get("depth_axis", "+Z"))]
+	_orientation_basis_snapshot["slice_axis"] = str(mapping.get("slice_axis", "+W"))
+	_update_gizmo_axes()
+
+
+func control_frame_yaw() -> float:
+	return _target_yaw
+
+
+func apply_preset(id: String) -> bool:
+	if not CameraPresetScript.is_known(id):
+		return false
+	var preset := CameraPresetScript.definition(id)
+	_target_yaw = float(preset.get("yaw", _target_yaw))
+	_target_pitch = float(preset.get("pitch", _target_pitch))
+	_target_roll = 0.0
+	_zoom_multiplier = float(preset.get("zoom", 1.0))
+	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
+	_current_view_preset = id
+	_current_view_octant = CameraPresetScript.label(id)
+	_current_fit_state = "preset"
+	_snap_to_targets()
+	return true
+
+
+func current_preset_id() -> String:
+	return _current_view_preset
 
 
 func zoom(step: float) -> void:
@@ -204,7 +249,7 @@ func zoom(step: float) -> void:
 	else:
 		_zoom_multiplier = clampf(_zoom_multiplier * multiplier, min_distance / maxf(_base_distance, 0.001), max_distance / maxf(_base_distance, 0.001))
 		_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
-	_current_fit_state = "manual"
+	_mark_custom_view("manual")
 
 
 func view_status_text() -> String:
@@ -216,7 +261,7 @@ func view_status_text() -> String:
 	var roll_degrees := rad_to_deg(_current_roll)
 	var pitch_label := "above %.0f deg" % pitch_degrees if pitch_degrees >= 0.0 else "below %.0f deg" % absf(pitch_degrees)
 	return "Camera: %s · %s · size %.2f · zoom %.2fx · %s · yaw %.0f deg · pitch %s · roll %.0f deg · %s" % [
-		_current_view_preset,
+		CameraPresetScript.label(_current_view_preset),
 		projection_label,
 		_camera.size,
 		_zoom_multiplier,
@@ -256,6 +301,12 @@ func _snap_to_targets() -> void:
 	_update_camera()
 
 
+func _mark_custom_view(fit_state: String) -> void:
+	_current_view_preset = CameraPresetScript.CUSTOM
+	_current_view_octant = "free camera"
+	_current_fit_state = fit_state
+
+
 func _update_camera() -> void:
 	var horizontal_radius: float = _current_distance * cos(_current_pitch)
 	var offset: Vector3 = Vector3(
@@ -286,15 +337,16 @@ func _build_orientation_gizmo() -> void:
 	center.material_override = _gizmo_material(Color("d8dde3"))
 	_orientation_gizmo.add_child(center)
 
-	_add_gizmo_axis("X", Vector3.RIGHT, Color("ef6b66"))
-	_add_gizmo_axis("Y", Vector3.UP, Color("79c98d"))
-	_add_gizmo_axis("Z", Vector3.BACK, Color("6f9ee8"))
+	_add_gizmo_axis("Horizontal", "+X", Vector3.RIGHT, ReplayVisuals.axis_color("+X"))
+	_add_gizmo_axis("Gravity", "+Y", Vector3.DOWN, ReplayVisuals.axis_color("+Y"))
+	_add_gizmo_axis("Depth", "+Z", Vector3.BACK, ReplayVisuals.axis_color("+Z"))
+	_update_gizmo_axes()
 
 
-func _add_gizmo_axis(label_text: String, direction: Vector3, color: Color) -> void:
+func _add_gizmo_axis(slot: String, label_text: String, direction: Vector3, color: Color) -> void:
 	var material := _gizmo_material(color)
 	var shaft := MeshInstance3D.new()
-	shaft.name = "%sAxis" % label_text
+	shaft.name = "%sAxis" % slot
 	var shaft_mesh := CylinderMesh.new()
 	shaft_mesh.top_radius = 0.035
 	shaft_mesh.bottom_radius = 0.035
@@ -302,11 +354,11 @@ func _add_gizmo_axis(label_text: String, direction: Vector3, color: Color) -> vo
 	shaft.mesh = shaft_mesh
 	shaft.material_override = material
 	shaft.position = direction * 0.35
-	shaft.quaternion = Quaternion(Vector3.UP, direction)
+	shaft.quaternion = _axis_quaternion(direction)
 	_orientation_gizmo.add_child(shaft)
 
 	var arrow := MeshInstance3D.new()
-	arrow.name = "%sArrow" % label_text
+	arrow.name = "%sArrow" % slot
 	var arrow_mesh := CylinderMesh.new()
 	arrow_mesh.top_radius = 0.0
 	arrow_mesh.bottom_radius = 0.10
@@ -314,11 +366,11 @@ func _add_gizmo_axis(label_text: String, direction: Vector3, color: Color) -> vo
 	arrow.mesh = arrow_mesh
 	arrow.material_override = material
 	arrow.position = direction * 0.75
-	arrow.quaternion = Quaternion(Vector3.UP, direction)
+	arrow.quaternion = _axis_quaternion(direction)
 	_orientation_gizmo.add_child(arrow)
 
 	var label := Label3D.new()
-	label.name = "%sLabel" % label_text
+	label.name = "%sLabel" % slot
 	label.text = label_text
 	label.font_size = 36
 	label.pixel_size = 0.006
@@ -328,6 +380,48 @@ func _add_gizmo_axis(label_text: String, direction: Vector3, color: Color) -> vo
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.position = direction * 1.02
 	_orientation_gizmo.add_child(label)
+
+
+func _update_gizmo_axes() -> void:
+	if _orientation_gizmo == null:
+		return
+	var visible_axes: Array = _orientation_basis_snapshot.get("visible_axes", ["+X", "+Y", "+Z"])
+	var horizontal := str(visible_axes[0]) if visible_axes.size() > 0 else "+X"
+	var depth := str(visible_axes[2]) if visible_axes.size() > 2 else "+Z"
+	_update_gizmo_axis("Horizontal", horizontal, _signed_direction(Vector3.RIGHT, horizontal))
+	# +Y is fixed as the gravity/down direction in every valid presentation basis.
+	_update_gizmo_axis("Gravity", str(_orientation_basis_snapshot.get("gravity_axis", "+Y")), Vector3.DOWN)
+	_update_gizmo_axis("Depth", depth, _signed_direction(Vector3.BACK, depth))
+
+
+func _update_gizmo_axis(slot: String, label_text: String, direction: Vector3) -> void:
+	var shaft := _orientation_gizmo.get_node_or_null("%sAxis" % slot) as MeshInstance3D
+	var arrow := _orientation_gizmo.get_node_or_null("%sArrow" % slot) as MeshInstance3D
+	var label := _orientation_gizmo.get_node_or_null("%sLabel" % slot) as Label3D
+	var color := ReplayVisuals.axis_color(label_text)
+	if shaft != null:
+		shaft.position = direction * 0.35
+		shaft.quaternion = _axis_quaternion(direction)
+		shaft.material_override = _gizmo_material(color)
+		shaft.set_meta("signed_axis", label_text)
+	if arrow != null:
+		arrow.position = direction * 0.75
+		arrow.quaternion = _axis_quaternion(direction)
+		arrow.material_override = _gizmo_material(color)
+		arrow.set_meta("signed_axis", label_text)
+	if label != null:
+		label.text = label_text
+		label.modulate = color
+		label.position = direction * 1.02
+		label.set_meta("signed_axis", label_text)
+
+
+func _signed_direction(base: Vector3, signed_axis: String) -> Vector3:
+	return -base if signed_axis.begins_with("-") else base
+
+
+func _axis_quaternion(direction: Vector3) -> Quaternion:
+	return Quaternion(Vector3.RIGHT, PI) if direction.dot(Vector3.UP) < -0.999 else Quaternion(Vector3.UP, direction)
 
 
 func _gizmo_material(color: Color) -> StandardMaterial3D:

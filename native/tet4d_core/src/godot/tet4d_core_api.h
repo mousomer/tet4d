@@ -51,6 +51,7 @@ public:
 	String live_2d_tick();
 	String live_2d_snapshot_json() const;
 	Dictionary live_2d_next_piece_preview() const;
+	Dictionary live_2d_hard_drop_destination() const;
 	String live_2d_status() const;
 	String live_2d_state_hash() const;
 	bool live_3d_configure(const Dictionary &setup);
@@ -60,6 +61,7 @@ public:
 	String live_3d_tick();
 	String live_3d_snapshot_json() const;
 	Dictionary live_3d_next_piece_preview() const;
+	Dictionary live_3d_hard_drop_destination() const;
 	String live_3d_status() const;
 	String live_3d_state_hash() const;
 	bool live_4d_configure(const Dictionary &setup);
@@ -69,6 +71,7 @@ public:
 	String live_4d_tick();
 	String live_4d_snapshot_json() const;
 	Dictionary live_4d_next_piece_preview() const;
+	Dictionary live_4d_hard_drop_destination() const;
 	String live_4d_status() const;
 	String live_4d_state_hash() const;
 

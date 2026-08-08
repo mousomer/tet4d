@@ -512,6 +512,20 @@ Authority boundary:
 
 #### Stage 54D-2 — Ghost piece
 
+Implementation status: complete and mechanically verified on the Stage 54D-2
+branch with native/Godot conformance and a corrective presentation pass for
+grid/ghost readability, locked-cell opacity, and exact XW/ZW/ZX view rotations.
+Developer/user visual review accepted the Stage 54D-2 Ghost/board presentation;
+integrated professional playability acceptance remains part of Stage 54E.
+
+The accepted fixed dense-4D calibration artifact,
+`tet4d-wireframe-grid-canonical-after.png` (SHA-256
+`76c0d8ae3eaf25b047516768044b66e3599c140969739838c222a8c55fae49e1`),
+confirms that the bright frame identifies only the active slice, ordinary
+wireframes preserve every board volume, and the continuously visible internal
+grid remains subordinate. This is Stage 54D-2 visual evidence, not Stage 54E
+integrated playability acceptance.
+
 Display the exact destination produced by the authoritative hard-drop
 semantics.
 
@@ -908,8 +922,9 @@ The active order is:
 9. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
 10. Later Explorer, challenge, topology, and simulation phases.
 
-Weak live-grid visibility remains non-blocking visual debt for Stage 54E unless
-review evidence classifies it as a professional-core-game blocker.
+Stage 54D-2 corrects the reviewed live-grid readability weakness and has
+developer/user Ghost/board visual acceptance. Stage 54E retains integrated
+professional playability acceptance for the complete play surface.
 
 Compaction or splitting of `docs/history/DONE_SUMMARIES.md` belongs to a
 separate documentation-hygiene batch. Historical archive size is not active

@@ -29,6 +29,9 @@ public:
 	// Observational queue query. The returned production shape is the next real
 	// draw and querying never mutates the bag or RNG, including at refill.
 	PieceShape2D peek_next_piece_shape() const;
+	// Exact read-only destination used by the next hard drop, or nullopt when
+	// the session is terminal or has no active piece.
+	std::optional<ActivePiece2D> hard_drop_destination() const;
 	// Borrowed setup identifier; valid until the session is destroyed.
 	const std::string &piece_set_id() const;
 

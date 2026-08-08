@@ -361,11 +361,27 @@ bool GameStateND::try_soft_drop() {
 	return try_move_axis(gravity_axis, 1);
 }
 
+std::optional<ActivePieceND> GameStateND::hard_drop_destination() const {
+	if (game_over || !active_piece.has_value()) {
+		return std::nullopt;
+	}
+	ActivePieceND destination = *active_piece;
+	while (true) {
+		const ActivePieceND candidate = destination.moved_axis(gravity_axis, 1);
+		if (!can_exist(candidate)) {
+			return destination;
+		}
+		destination = candidate;
+	}
+}
+
 void GameStateND::hard_drop() {
 	if (game_over) {
 		return;
 	}
-	while (try_soft_drop()) {
+	const std::optional<ActivePieceND> destination = hard_drop_destination();
+	if (destination.has_value()) {
+		active_piece = *destination;
 	}
 	lock_current_piece();
 	if (!game_over && post_lock_spawn_shape.has_value()) {

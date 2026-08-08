@@ -60,7 +60,47 @@ func run() -> Array:
 	_assert_live_2d_session(failures, bridge)
 	_assert_live_3d_session(failures, bridge)
 	_assert_live_4d_session(failures, bridge)
+	_assert_landing_query_bridge(failures, bridge)
 	return failures
+
+
+func _assert_landing_query_bridge(failures: Array, bridge: RefCounted) -> void:
+	for mode in [2, 3, 4]:
+		if mode == 2:
+			bridge.live_2d_reset()
+		elif mode == 3:
+			bridge.live_3d_reset()
+		else:
+			bridge.live_4d_reset()
+		var before_hash: String = bridge.live_2d_state_hash() if mode == 2 else (bridge.live_3d_state_hash() if mode == 3 else bridge.live_4d_state_hash())
+		var before_snapshot: String = bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json())
+		var landing: Dictionary = bridge.live_2d_hard_drop_destination() if mode == 2 else (bridge.live_3d_hard_drop_destination() if mode == 3 else bridge.live_4d_hard_drop_destination())
+		_assert_equal(failures, landing.get("ok"), true, "live %dD landing query ok" % mode)
+		_assert_equal(failures, landing.get("status"), "destination", "live %dD landing query status" % mode)
+		_assert_equal(failures, landing.get("dimension"), mode, "live %dD landing query dimension" % mode)
+		var queried_cells: Array = landing.get("cells", [])
+		for cell in queried_cells:
+			_assert_equal(failures, cell.size(), mode, "live %dD landing coordinate rank" % mode)
+		_assert_equal(failures, bridge.live_2d_state_hash() if mode == 2 else (bridge.live_3d_state_hash() if mode == 3 else bridge.live_4d_state_hash()), before_hash, "live %dD landing hash invariance" % mode)
+		_assert_equal(failures, bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json()), before_snapshot, "live %dD landing snapshot invariance" % mode)
+		if mode == 2:
+			bridge.live_2d_apply_command("hard_drop")
+		elif mode == 3:
+			bridge.live_3d_apply_command("hard_drop")
+		else:
+			bridge.live_4d_apply_command("hard_drop")
+		var after_json: String = bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json())
+		var after = JSON.parse_string(after_json)
+		var locked_positions: Array = []
+		if typeof(after) == TYPE_DICTIONARY:
+			for cell in after.get("locked_cells", []):
+				var normalized_position: Array = []
+				for component in cell.get("position", []):
+					normalized_position.append(int(component))
+				locked_positions.append(normalized_position)
+		for destination in queried_cells:
+			if not locked_positions.has(destination):
+				failures.append("live %dD hard drop should lock queried cell %s" % [mode, str(destination)])
 
 
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:

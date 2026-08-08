@@ -133,6 +133,25 @@ func selected_speed_level(mode: String = "") -> int:
 	return int(candidate) if GameSetupSpecScript.is_valid_speed(candidate) else GameSetupSpecScript.MIN_SPEED_LEVEL
 
 
+func selected_control_frames(mode: String = "") -> Dictionary:
+	var target_mode := current_mode if mode.is_empty() else mode
+	var entry := _draft_entry(target_mode)
+	return {
+		"translation_frame": "absolute" if str(entry.get("translation_frame", "relative")) == "absolute" else "relative",
+		"rotation_frame": "absolute" if str(entry.get("rotation_frame", "relative")) == "absolute" else "relative",
+	}
+
+
+func select_control_frame(kind: String, frame: String) -> bool:
+	if kind not in ["translation_frame", "rotation_frame"] or frame not in ["relative", "absolute"]:
+		return false
+	var entry := _draft_entry(current_mode)
+	entry[kind] = frame
+	_drafts[current_mode] = entry
+	_validate_mode(current_mode)
+	return true
+
+
 func select_speed_level(speed_level) -> bool:
 	if not GameSetupSpecScript.is_valid_speed(speed_level):
 		return false
@@ -248,6 +267,8 @@ func _default_entry(mode: String) -> Dictionary:
 		"random_mode": GameSetupSpecScript.RANDOM_MODE_FIXED_SEED,
 		"seed": GameSetupSpecScript.DEFAULT_SEED,
 		"initial_speed_level": GameSetupSpecScript.MIN_SPEED_LEVEL,
+		"translation_frame": "relative",
+		"rotation_frame": "relative",
 	}
 
 
@@ -257,7 +278,7 @@ func _entry_from_persisted(mode: String, raw: Dictionary) -> Dictionary:
 		result["board_shape"] = raw.get("board_shape")
 	elif GameSetupSpecScript.is_supported(mode, str(raw.get("board_preset_id", ""))):
 		result["board_shape"] = (GameSetupSpecScript.preset(mode, str(raw.get("board_preset_id", ""))).get("shape", []) as Array).duplicate()
-	for key in ["piece_set_id", "random_mode", "seed", "initial_speed_level"]:
+	for key in ["piece_set_id", "random_mode", "seed", "initial_speed_level", "translation_frame", "rotation_frame"]:
 		if raw.has(key):
 			result[key] = raw.get(key)
 	return result
@@ -272,6 +293,8 @@ func _persisted_entry(mode: String, entry: Dictionary) -> Dictionary:
 		"random_mode": entry.get("random_mode", ""),
 		"seed": entry.get("seed", null),
 		"initial_speed_level": entry.get("initial_speed_level", null),
+		"translation_frame": entry.get("translation_frame", "relative"),
+		"rotation_frame": entry.get("rotation_frame", "relative"),
 	}
 
 

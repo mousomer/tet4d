@@ -52,8 +52,7 @@ exact Godot-owned signed 4D presentation basis, shared slice reconstruction,
 basis-aware controls/HUD/instruction, and deterministic invariance evidence
 without changing native gameplay or topology semantics.
 
-Stage 54D-1 implementation and mechanical verification are complete on its
-implementation branch, with commit still pending. Developer-rendered
+Stage 54D-1 is committed at `e7708d8c`. Developer-rendered
 inspection is complete; human preview-readability acceptance remains pending
 under Stage 54E. The slice adds one authoritative next-piece query plus a
 shared compact Godot 2D/3D/4D thumbnail without changing queue, RNG, snapshot,
@@ -79,20 +78,33 @@ The programme is owned by
 
 ## Next Implementation Stage
 
-### Stage 54D-2 — Ghost piece
+### Stage 54D-3 — Hold
 
-Status: next implementation slice after Stage 54D-1 is committed separately.
+Status: next implementation slice after the completed Stage 54D-2 commit.
 
-Render the exact authoritative hard-drop destination across every affected
-slice without changing scoring, collision, lock, snapshot, hash, replay, or
-trace semantics.
+Establish and implement the deterministic one-slot Hold contract without
+folding it into the presentation-only Ghost capability.
 
 ## Accepted Immediate Follow-Ups
 
 ### Stage 54D — Modern gameplay baseline
 
-Status: Stage 54D-1 implementation complete with commit pending; Stage 54D-2
-is next only after that separate commit decision.
+Status: Stage 54D-1 committed; Stage 54D-2 implementation, deterministic and
+mechanical verification, and developer/user Ghost/board visual review are
+complete. Stage 54D-3 is next after the Stage 54D-2 commit.
+
+Stage 54D-2 correction scope also includes the persistent, presentation-only
+relative/absolute Translation and Rotation frame selectors, a shared
+Python-convention yaw/basis resolver, and dedicated `axis.w` styling. These
+remain out of deterministic native setup, snapshots, hashes, and replay.
+The final correction also establishes the shell palette as the live-board
+visual grammar owner: subordinate dark/desaturated internal grid, stronger
+ordinary wireframe,
+governed active/locked/Ghost roles, scoped anti-drift validation, and compact
+presentation-only camera presets. The accepted calibration keeps the active
+slice frame strongest, makes every ordinary board volume identifiable, and
+keeps the internal grid visible without dominance. Broader integrated
+professional playability acceptance remains Stage 54E.
 
 Implement as three separate PRs in dependency order.
 

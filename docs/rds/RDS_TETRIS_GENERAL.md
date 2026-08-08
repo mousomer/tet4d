@@ -121,6 +121,33 @@ C++ ownership are established.
 8. Native transports the existing production `color_id`; Godot owns palette,
    theme, High Contrast, outlines, and accessibility styling.
 
+### 2.5 Authoritative live ghost
+
+1. Live Godot 2D, 3D, and 4D display the exact canonical cells returned by
+   the authoritative native hard-drop destination query.
+2. Gameplay hard drop and the observational query use one shared destination
+   computation. Godot must not calculate distance, collision, or landing
+   legality.
+3. `ghost.enabled` is a persistent presentation preference, defaults on, and
+   is excluded from gameplay setup, snapshots, hashes, replay, and traces.
+4. Terminal/no-active/provider-failure states hide and invalidate the ghost.
+   An exact overlap with the active cells is hidden without changing the
+   native result; pause retains the current ghost.
+5. Landing queries are revision-driven. Camera, theme, HUD, and 4D basis
+   changes reuse canonical cached cells and do not re-query gameplay.
+6. The dedicated Ghost role uses a readable fill plus persistent high-contrast
+   outline. It remains weaker than the active piece and distinct from locked
+   cells and the structural grid, including High Contrast.
+
+### 2.6 Locked-cell presentation
+
+1. `settled_cells.opacity` is a persistent Godot presentation preference with
+   default `0.75` and range `0.35..1.00`; it only restyles locked-cell fills.
+2. Locked cells retain a persistent opaque outline, while active cells and
+   ghost styling remain unaffected.
+3. The setting is excluded from gameplay setup, native queries, snapshots,
+   hashes, replay, trace, queue, RNG, collision, and locking semantics.
+
 ## 3. Shared Rules and Axis Conventions
 
 1. Axis `0`=`x`(horizontal), axis`1`=`y` (gravity/downward).
@@ -513,7 +540,7 @@ it does not transfer semantic authority or redefine Play drop/lock policy.
 10. Audio controls (master volume, SFX volume, mute) must be available in settings.
 11. Fullscreen/windowed toggle must be supported without layout corruption.
 12. Piece rotations must use a soft visual animation instead of a single-frame snap.
-13. 3D/4D locked-cell transparency must be user-adjustable from settings with default `25%` and allowed range `0%..90%`.
+13. 2D/3D/4D locked-cell fill opacity must be user-adjustable from settings with default `0.75` and allowed range `0.35..1.00`; the persistent outline remains fully legible.
 14. Locked-cell transparency must affect locked board cells only (challenge layers + landed pieces); active-piece cells remain opaque.
 15. Piece generation must support both fixed-seed deterministic runs and true-random runs with user-configurable setup controls.
 16. Terminal game-over presentation must use a dedicated post-terminal phase model `playing -> endgame_shatter -> endgame_relic_field`; the animation must render from a frozen endgame snapshot instead of mutating live gameplay entities.

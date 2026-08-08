@@ -19,8 +19,8 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 Re-slice XW") or not live_4d_hint.contains("; / ' Re-slice ZW") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Left Drag Rotate camera") or not live_4d_hint.contains("Right Drag Translate camera") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
-		failures.append("live 4D hint text should expose slice-axis movement, basis controls, camera controls, six piece-rotation planes, and Esc-only quit")
+	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XW - / + (re-slice)") or not live_4d_hint.contains("; / ' ZW - / + (re-slice)") or not live_4d_hint.contains("[ / ] ZX - / +") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Left Drag Rotate camera") or not live_4d_hint.contains("Right Drag Translate camera") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+		failures.append("live 4D hint text should expose slice-axis movement, 90-degree view rotations, camera controls, six piece-rotation planes, and Esc-only quit")
 	for action_name in LiveInputContractScript.ACTION_SPECS:
 		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
 		if not spec.get("keys", []).has(spec.get("display_key")):
@@ -196,15 +196,15 @@ func run() -> Array:
 			failures.append("live 4D should start with native TRACE_4D piece, got %s" % str(live_4d_snapshot.get("current_piece", "")))
 		if int(live_4d_snapshot.get("w_slice_count", 0)) != 4:
 			failures.append("live 4D should expose W slice count")
-		if app._camera_rig._current_view_preset != "LIVE_4D_FITTED_W_SLICE_VIEW":
+		if app._camera_rig._current_view_preset != "iso":
 			failures.append("live 4D should open in the fitted W-slice camera preset")
 		if app._camera_rig._current_fit_state != "fit OK":
 			failures.append("live 4D should open already fitted")
 		var orientation_gizmo := app._camera_rig.get_node_or_null("OrientationGizmo") as Node3D
 		if orientation_gizmo == null or not orientation_gizmo.visible or orientation_gizmo.get_child_count() < 10:
-			failures.append("Live 4D should show a compact XYZ ball-and-arrow orientation marker")
-		elif orientation_gizmo.get_node_or_null("XArrow") == null or orientation_gizmo.get_node_or_null("YArrow") == null or orientation_gizmo.get_node_or_null("ZArrow") == null:
-			failures.append("orientation marker should expose explicit X, Y, and Z arrowheads")
+			failures.append("Live 4D should show a compact basis-driven ball-and-arrow orientation marker")
+		elif orientation_gizmo.get_node_or_null("HorizontalArrow") == null or orientation_gizmo.get_node_or_null("GravityArrow") == null or orientation_gizmo.get_node_or_null("DepthArrow") == null:
+			failures.append("orientation marker should expose horizontal, gravity, and depth arrowheads")
 		else:
 			var gizmo_position_before: Vector3 = orientation_gizmo.global_position
 			app._camera_rig.orbit(Vector2(8.0, -4.0))
@@ -278,7 +278,7 @@ func run() -> Array:
 		if app._camera_rig._current_fit_state != "manual":
 			failures.append("Live 4D camera roll should mark the view manual")
 		app._fit_view()
-		if app._camera_rig._current_view_preset != "LIVE_4D_FITTED_W_SLICE_VIEW" or app._camera_rig._current_fit_state != "fit OK":
+		if app._camera_rig._current_view_preset != "iso" or app._camera_rig._current_fit_state != "fit OK":
 			failures.append("Fit View should restore the full Live 4D W-slice layout")
 		if absf(app._camera_rig._current_roll) > 0.001:
 			failures.append("Fit View should reset Live 4D camera roll")
@@ -423,9 +423,25 @@ func run() -> Array:
 			failures.append("basis-only actions must not change native snapshot or state hash")
 		if app._camera_rig.presentation_snapshot() != basis_camera_before:
 			failures.append("basis turns must not change camera orientation, zoom intent, or translation")
-		app._dispatch_live_4d_presentation_intent("move_x_pos")
+		var horizontal_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/HorizontalArrow") as MeshInstance3D
+		var depth_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/DepthArrow") as MeshInstance3D
+		var gravity_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/GravityArrow") as MeshInstance3D
+		if horizontal_arrow == null or str(horizontal_arrow.get_meta("signed_axis", "")) != "+W" or depth_arrow == null or str(depth_arrow.get_meta("signed_axis", "")) != "+Z" or gravity_arrow == null or str(gravity_arrow.get_meta("signed_axis", "")) != "+Y":
+			failures.append("basis-driven orientation arrows should expose XW visible axes with stable gravity")
+		app._dispatch_live_4d_control_intent("move_x_pos")
 		if str(app._current_snapshot.get("last_command", "")) != "move_w_pos":
 			failures.append("visible +W horizontal intent should route to canonical W+")
+		app._reset_live_4d()
+		app._apply_live_4d_basis_turn("zx", 1)
+		if app._live_4d_basis.slots() != [-3, 2, 1, 4]:
+			failures.append("ZX+ should commit the exact visible X/Z basis rotation")
+		var zx_horizontal_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/HorizontalArrow") as MeshInstance3D
+		var zx_depth_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/DepthArrow") as MeshInstance3D
+		if zx_horizontal_arrow == null or str(zx_horizontal_arrow.get_meta("signed_axis", "")) != "-Z" or zx_depth_arrow == null or str(zx_depth_arrow.get_meta("signed_axis", "")) != "+X":
+			failures.append("ZX+ arrows should derive swapped signed visible axes from BasisState")
+		app._dispatch_live_4d_control_intent("move_x_pos")
+		if str(app._current_snapshot.get("last_command", "")) != "move_z_neg":
+			failures.append("ZX viewer-relative movement should agree with the basis-driven horizontal arrow")
 		app._reset_live_4d()
 		for _turn_index in range(4):
 			app._apply_live_4d_basis_turn("xw", 1)

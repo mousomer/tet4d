@@ -29,6 +29,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/topology_aware_board_extent_contract.md`
 - `docs/architecture/editable_board_setup_and_persistence.md`
 - `docs/architecture/game_safe_4d_slice_basis.md`
+- `docs/architecture/ghost_piece.md`
 - `docs/architecture/godot_shell_layout_stabilization.md`
 - `docs/architecture/godot_shell_settings_source_of_truth.md`
 - `docs/architecture/godot_shell_settings_persistence.md`
@@ -168,6 +169,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 54B-2 editable Godot board dimensions and persistence | `docs/architecture/editable_board_setup_and_persistence.md` |
 | Stage 54C exact game-safe 4D presentation basis, coordinate mapping, and input routing | `docs/architecture/game_safe_4d_slice_basis.md` |
 | Stage 54D-1 authoritative one-piece queue query and shared live thumbnail presentation | `docs/architecture/next_piece_preview.md` |
+| Stage 54D-2 authoritative hard-drop destination query and live ghost presentation | `docs/architecture/ghost_piece.md` |
 | Completed Stage 50 canonical bounded plain-game setup, RNG, piece-set, speed, restart, and acceptance contract | `docs/architecture/plain_game_setup_completion.md` |
 | Stage 51 canonical Godot display settings, persistence, and runtime presentation policy | `docs/architecture/display_infrastructure.md` |
 | Stage 52 Godot accessibility invariants, preferences, persistence, and runtime presentation policy | `docs/architecture/accessibility_infrastructure.md` |

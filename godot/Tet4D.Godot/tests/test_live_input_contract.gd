@@ -37,6 +37,8 @@ func run() -> Array:
 		"view_xw_pos": KEY_2,
 		"view_zw_neg": KEY_SEMICOLON,
 		"view_zw_pos": KEY_APOSTROPHE,
+		"view_zx_neg": KEY_BRACKETLEFT,
+		"view_zx_pos": KEY_BRACKETRIGHT,
 	}
 	var reserved_keys := []
 	for action_id in ["live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", "live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", "live_4d_soft_drop", "live_4d_hard_drop", "live_4d_camera_yaw_left", "live_4d_camera_yaw_right", "live_4d_camera_pitch_up", "live_4d_camera_pitch_down"]:

@@ -557,6 +557,10 @@ PieceShapeND PlainNDSession::peek_next_piece_shape() const {
 	return preview_bag.back();
 }
 
+std::optional<ActivePieceND> PlainNDSession::hard_drop_destination() const {
+	return state_.hard_drop_destination();
+}
+
 const std::string &PlainNDSession::piece_set_id() const {
 	return setup_.piece_set_id;
 }

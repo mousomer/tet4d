@@ -433,6 +433,10 @@ PieceShape2D Plain2DSession::peek_next_piece_shape() const {
 	return preview_bag.back();
 }
 
+std::optional<ActivePiece2D> Plain2DSession::hard_drop_destination() const {
+	return state_.hard_drop_destination();
+}
+
 const std::string &Plain2DSession::piece_set_id() const {
 	return setup_.piece_set_id;
 }

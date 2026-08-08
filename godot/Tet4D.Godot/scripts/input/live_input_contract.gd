@@ -80,6 +80,8 @@ const ACTION_SPECS := {
 	"view_xw_pos": {"keys": [KEY_2], "display_key": KEY_2},
 	"view_zw_neg": {"keys": [KEY_SEMICOLON], "display_key": KEY_SEMICOLON},
 	"view_zw_pos": {"keys": [KEY_APOSTROPHE], "display_key": KEY_APOSTROPHE},
+	"view_zx_neg": {"keys": [KEY_BRACKETLEFT], "display_key": KEY_BRACKETLEFT},
+	"view_zx_pos": {"keys": [KEY_BRACKETRIGHT], "display_key": KEY_BRACKETRIGHT},
 	"reset": {"keys": [KEY_0], "display_key": KEY_0},
 }
 
@@ -116,14 +118,14 @@ static func display_key(action_name: String) -> String:
 	return _display_key(action_name)
 
 
-static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}) -> Array:
+static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
 	match mode:
 		"live_2d":
 			return _live_2d_groups()
 		"live_3d":
-			return _live_3d_groups()
+			return _live_3d_groups(control_frame)
 		"live_4d":
-			return _live_4d_groups(basis_snapshot)
+			return _live_4d_groups(basis_snapshot, control_frame)
 		_:
 			return []
 
@@ -139,10 +141,17 @@ static func _live_2d_groups() -> Array:
 	]
 
 
-static func _live_3d_groups() -> Array:
+static func _live_3d_groups(control_frame: Dictionary = {}) -> Array:
+	var legacy := control_frame.is_empty()
+	var relative := str(control_frame.get("translation_frame", "relative")) == "relative"
+	var rotation_relative := str(control_frame.get("rotation_frame", "relative")) == "relative"
+	var horizontal := str(control_frame.get("horizontal_axis", "+X"))
+	var depth := str(control_frame.get("depth_axis", "+Z"))
+	var move_rows := [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "X− / X+"], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Z− / Z+"]] if legacy or not relative else [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "Left / Right [%s]" % horizontal], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Forward / Back [%s]" % depth]]
+	var rotation_note := "Planes follow the current view." if rotation_relative else "Canonical XYZ planes."
 	return [
-		{"group": "Piece movement", "items": [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "Move X- / X+"], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Move Z+ / Z-"]]},
-		{"group": "Piece rotation", "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY- / XY+"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ- / XZ+"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ- / YZ+"]]},
+		{"group": "Piece movement", "note": "Controls follow the current view." if relative else "Canonical X/Z axes.", "items": move_rows},
+		{"group": "Piece rotation", "note": rotation_note, "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ"]]},
 		{"group": "Drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop"], [_display_key("live_3d_hard_drop"), "Hard Drop"]]},
 		{"group": "Camera", "items": camera_helper_items() + [["F", "Fit View"]]},
 		{"group": "Session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
@@ -150,15 +159,19 @@ static func _live_3d_groups() -> Array:
 	]
 
 
-static func _live_4d_groups(basis_snapshot: Dictionary = {}) -> Array:
+static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
+	var legacy := control_frame.is_empty()
+	var relative := str(control_frame.get("translation_frame", "relative")) == "relative"
+	var rotation_relative := str(control_frame.get("rotation_frame", "relative")) == "relative"
 	var visible_axes: Array = basis_snapshot.get("visible_axes", ["X", "+Y", "Z"])
-	var horizontal_axis := str(visible_axes[0]) if visible_axes.size() > 0 else "X"
-	var depth_axis := str(visible_axes[2]) if visible_axes.size() > 2 else "Z"
-	var slice_axis := str(basis_snapshot.get("slice_axis", "W"))
+	var horizontal_axis := str(control_frame.get("horizontal_axis", visible_axes[0] if visible_axes.size() > 0 else "+X"))
+	var depth_axis := str(control_frame.get("depth_axis", visible_axes[2] if visible_axes.size() > 2 else "+Z"))
+	var slice_axis := str(control_frame.get("slice_axis", basis_snapshot.get("slice_axis", "+W")))
+	var move_rows := [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Visible X - / +"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Visible Z - / +"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice W - / +"]] if legacy else ([[ _pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Left / Right [%s]" % horizontal_axis], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Forward / Back [%s]" % depth_axis], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice - / + [%s]" % slice_axis]] if relative else [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "X− / X+"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Z− / Z+"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W− / W+"]])
 	return [
-		{"group": "Piece movement", "items": [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Visible %s - / +" % horizontal_axis], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Visible %s - / +" % depth_axis], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice %s - / +" % slice_axis]]},
-		{"group": "Plane Rotation", "note": "Left: CCW · Right: CW", "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
-		{"group": "4D Basis", "note": "Re-slice the same object; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "Re-slice XW - / +"], [_pair("view_zw_neg", "view_zw_pos", " / "), "Re-slice ZW - / +"], [_display_key("reset"), "Reset camera + basis"]]},
+		{"group": "Piece movement", "note": "Controls follow the current view." if relative else "Canonical X/Z/W axes.", "items": move_rows},
+		{"group": "Plane Rotation", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
+		{"group": "90° View Rotation", "note": "Exact presentation basis; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "XW - / + (re-slice)"], [_pair("view_zw_neg", "view_zw_pos", " / "), "ZW - / + (re-slice)"], [_pair("view_zx_neg", "view_zx_pos", " / "), "ZX - / +"], [_display_key("reset"), "Reset camera + basis"]]},
 		{"group": "Camera", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"], [_pair("live_4d_camera_roll_left", "live_4d_camera_roll_right", " / "), "Roll left / right"], ["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"]]},
 		{"group": "Mouse Camera", "items": camera_helper_items()},
 		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
@@ -214,5 +227,9 @@ static func _key_label(keycode: int) -> String:
 			return ";"
 		KEY_APOSTROPHE:
 			return "'"
+		KEY_BRACKETLEFT:
+			return "["
+		KEY_BRACKETRIGHT:
+			return "]"
 		_:
 			return OS.get_keycode_string(keycode)

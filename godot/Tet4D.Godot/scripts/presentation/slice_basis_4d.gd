@@ -9,6 +9,7 @@ const AXIS_W := 3
 
 const PLANE_XW := "xw"
 const PLANE_ZW := "zw"
+const PLANE_ZX := "zx"
 
 # Signed axes use +/- (axis + 1), avoiding a negative-zero representation.
 const IDENTITY_SLOTS := [AXIS_X + 1, AXIS_Y + 1, AXIS_Z + 1, AXIS_W + 1]
@@ -205,6 +206,8 @@ static func _plane_axes(plane: String) -> Array:
 			return [AXIS_X, AXIS_W]
 		PLANE_ZW:
 			return [AXIS_Z, AXIS_W]
+		PLANE_ZX:
+			return [AXIS_Z, AXIS_X]
 		_:
 			return []
 

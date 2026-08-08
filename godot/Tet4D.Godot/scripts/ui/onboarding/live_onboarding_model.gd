@@ -15,11 +15,11 @@ const MODE_STEPS := {
 		{"id": "camera", "title": "Move the view", "body": "Camera movement changes only the view, not the piece. Fit View restores orientation.", "accepted_commands": []},
 	],
 	"live_4d": [
-		{"id": "same_object", "title": "Same object, different slicing", "body": "Use one 4D Basis control. Watch the slice stack change while the falling object stays the same.", "predicate": "basis_changed", "completion": "Same object. Different slicing."},
+		{"id": "same_object", "title": "Same object, rotated view", "body": "Use one 90° View Rotation control. Watch the presentation change while the falling object stays the same.", "predicate": "basis_changed", "completion": "Same object. Exact view rotation."},
 		{"id": "useful_slice", "title": "Choose a clearer slice", "body": "Re-slice once more. Choose X or Z as the slice direction so W becomes visible inside each board.", "predicate": "non_w_slice_used", "completion": "A different slicing direction can expose structure."},
 		{"id": "find_coordinate", "title": "Find a stable coordinate", "body": "The marked coordinate is fixed in 4D. Use Q/E to navigate the current signed slice axis and follow its layer frame.", "predicate": "slice_navigation_used", "target_coordinate": [2, 7, 2, 0], "accepted_commands": ["move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos", "move_w_neg", "move_w_pos"], "completion": "The coordinate stayed fixed; only its displayed layer changed."},
 		{"id": "match_basis", "title": "Match the target basis", "body": "Reach View: +W · +Y · +Z / Slice: -X using exact quarter turns.", "predicate": "basis_equals_target", "target_basis": [4, 2, 3, -1], "completion": "Exact basis matched."},
-		{"id": "inspect_placement", "title": "Inspect a difficult placement", "body": "Re-slice once more to inspect the placement without rotating the piece. Y remains down.", "predicate": "basis_changed", "completion": "Inspection complete. The gameplay state did not rotate."},
+		{"id": "inspect_placement", "title": "Inspect a difficult placement", "body": "Rotate the view once more to inspect the placement without rotating the piece. Y remains down.", "predicate": "basis_changed", "completion": "Inspection complete. The gameplay state did not rotate."},
 	],
 }
 

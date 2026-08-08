@@ -38,10 +38,13 @@ For a positive quarter turn in canonical plane `A-B`:
 +B -> -A
 ```
 
-The negative turn is its exact inverse. Stage 54C exposes `XW +/-90` and
-`ZW +/-90`; operations transform the current signed basis and therefore
-compose rather than toggle hard-coded layouts. Four equal quarter turns are
-identity and opposite turns cancel exactly.
+The negative turn is its exact inverse. Tet4D exposes `XW +/-90`, `ZW +/-90`,
+and `ZX +/-90` as one exact 90-degree view-rotation family. `XW` and `ZW` may
+exchange the slice axis with a visible non-gravity axis; `ZX` rotates the
+visible X/Z frame while preserving the current slice-axis membership. The
+operations transform the current signed basis and therefore compose rather
+than toggle hard-coded layouts. Four equal quarter turns are identity and
+opposite turns cancel exactly.
 
 ## Coordinate mapping
 
@@ -75,19 +78,39 @@ presentation model.
 ## Input routing
 
 Piece rotation, camera movement, layer-axis movement, and basis rotation remain
-separate action groups. Existing `view_xw_neg`, `view_xw_pos`, `view_zw_neg`,
-and `view_zw_pos` semantic actions own the basis turns.
+separate action groups. `view_xw_neg`, `view_xw_pos`, `view_zw_neg`,
+`view_zw_pos`, `view_zx_neg`, and `view_zx_pos` semantic actions own the exact
+view turns.
 
 Presentation movement intents map through the committed exact basis:
 
 - left/right use `visible_u`;
 - away/closer use `visible_v`;
 - previous/next layer use `slice_axis`;
+
+The compact horizontal/depth/gravity indicator is a direct consumer of this
+same basis: its horizontal and depth arrows use the signed visible slots, and
+its stable gravity arrow remains `+Y` / down. It has no independent label or
+orientation state.
 - soft and hard drop remain canonical `+Y` gameplay commands.
 
 The mapper emits an existing canonical movement command. Native gameplay still
 accepts or rejects it; Godot does not calculate destinations, collision, seam
 transport, or legality.
+
+## Control-frame resolver
+
+`ControlFrameMapping` is the single Godot presentation resolver for runtime
+input, help copy, and the compact orientation marker. It composes the exact
+signed basis with the camera yaw quantized to a nearest quarter turn using the
+inherited Python convention. The resolver fixes local Y at canonical `+Y`,
+maps Forward/Away to local positive depth, and maps slice movement through the
+signed current slice slot. Relative rotations multiply the local plane signs,
+then canonicalize axis order and invert direction when the order is swapped.
+
+The translation and rotation frame selections are setup-UI persistence only.
+They do not enter native setup, snapshot/hash/replay identity, or authority.
+`absolute` deliberately preserves the previous canonical command protocol.
 
 ## Gravity, camera, and lifecycle
 

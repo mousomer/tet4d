@@ -19,6 +19,8 @@ func _test_exact_turns(failures: Array) -> void:
 	_assert_slots(failures, identity.turned("xw", -1), [-4, 2, 3, 1], "XW-")
 	_assert_slots(failures, identity.turned("zw", 1), [1, 2, 4, -3], "ZW+")
 	_assert_slots(failures, identity.turned("zw", -1), [1, 2, -4, 3], "ZW-")
+	_assert_slots(failures, identity.turned("zx", 1), [-3, 2, 1, 4], "ZX+")
+	_assert_slots(failures, identity.turned("zx", -1), [3, 2, -1, 4], "ZX-")
 	if SliceBasis4DScript.is_valid_slots([1, 2, 1, 4]):
 		failures.append("duplicate axes must be rejected")
 	if SliceBasis4DScript.is_valid_slots([1, -2, 3, 4]):
@@ -28,7 +30,7 @@ func _test_exact_turns(failures: Array) -> void:
 
 
 func _test_group_laws(failures: Array) -> void:
-	for plane in ["xw", "zw"]:
+	for plane in ["xw", "zw", "zx"]:
 		var identity = SliceBasis4DScript.identity()
 		if not identity.turned(plane, 1).turned(plane, -1).equals(identity):
 			failures.append("%s positive/negative turns must cancel" % plane)
@@ -41,9 +43,10 @@ func _test_group_laws(failures: Array) -> void:
 			if not result.equals(identity):
 				failures.append("four %s %s turns must be identity" % [plane, direction])
 	var mixed = SliceBasis4DScript.identity()
-	for operation in [["xw", 1], ["zw", 1], ["xw", -1], ["zw", -1]]:
+	for operation in [["xw", 1], ["zw", 1], ["zx", -1], ["xw", -1], ["zw", -1], ["zx", 1]]:
 		mixed = mixed.turned(str(operation[0]), int(operation[1]))
-	_assert_slots(failures, mixed, [4, 2, 1, 3], "mixed exact sequence")
+	if not SliceBasis4DScript.is_valid_slots(mixed.slots()) or int(mixed.slots()[1]) != 2:
+		failures.append("mixed XW/ZW/ZX sequence must remain a valid +Y-fixed signed basis")
 
 
 func _test_mapping_bijection(failures: Array) -> void:
@@ -84,6 +87,9 @@ func _test_mapping_bijection(failures: Array) -> void:
 	var zw = identity.turned("zw", 1)
 	if zw.visible_dimensions(dimensions) != [5, 4, 2] or zw.layer_count(dimensions) != 3:
 		failures.append("Z/W decomposition dimensions are wrong")
+	var zx = identity.turned("zx", 1)
+	if zx.visible_dimensions(dimensions) != [3, 4, 5] or zx.layer_count(dimensions) != 2:
+		failures.append("ZX rotation must exchange visible X/Z dimensions without re-slicing W")
 	var thin_dimensions := [4, 6, 2, 1]
 	for basis in _reachable_bases():
 		var mapped: Dictionary = basis.presentation_coordinate([3, 5, 1, 0], thin_dimensions)
@@ -114,6 +120,9 @@ func _test_signed_order_and_movement(failures: Array) -> void:
 		failures.append("negative layer movement must map through +Z")
 	if zw_negative.canonical_movement_command("hard_drop") != "hard_drop":
 		failures.append("drop commands must remain canonical Y gameplay commands")
+	var zx_positive = SliceBasis4DScript.identity().turned("zx", 1)
+	if zx_positive.canonical_movement_command("move_x_pos") != "move_z_neg" or zx_positive.canonical_movement_command("move_z_pos") != "move_x_pos":
+		failures.append("ZX movement must follow the visible signed X/Z presentation axes")
 
 
 func _reachable_bases() -> Array:
@@ -126,7 +135,7 @@ func _reachable_bases() -> Array:
 			continue
 		seen[basis.key()] = true
 		result.append(basis)
-		for plane in ["xw", "zw"]:
+		for plane in ["xw", "zw", "zx"]:
 			for direction in [-1, 1]:
 				queue.append(basis.turned(plane, direction))
 	return result

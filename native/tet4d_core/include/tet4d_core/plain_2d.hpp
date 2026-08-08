@@ -64,6 +64,8 @@ struct GameState2D {
 	bool try_move(int dx, int dy);
 	bool try_soft_drop();
 	void try_rotate(int delta_steps);
+	// Pure observational landing query shared with hard_drop().
+	std::optional<ActivePiece2D> hard_drop_destination() const;
 	void hard_drop();
 	int lock_current_piece();
 	void spawn_piece(const PieceShape2D &shape);

@@ -221,11 +221,27 @@ void GameState2D::try_rotate(int delta_steps) {
 	}
 }
 
+std::optional<ActivePiece2D> GameState2D::hard_drop_destination() const {
+	if (game_over || !active_piece.has_value()) {
+		return std::nullopt;
+	}
+	ActivePiece2D destination = *active_piece;
+	while (true) {
+		const ActivePiece2D candidate = destination.moved(0, 1);
+		if (!can_exist(candidate)) {
+			return destination;
+		}
+		destination = candidate;
+	}
+}
+
 void GameState2D::hard_drop() {
 	if (game_over) {
 		return;
 	}
-	while (try_move(0, 1)) {
+	const std::optional<ActivePiece2D> destination = hard_drop_destination();
+	if (destination.has_value()) {
+		active_piece = *destination;
 	}
 	lock_current_piece();
 	if (!game_over) {

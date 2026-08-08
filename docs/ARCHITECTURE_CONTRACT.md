@@ -99,6 +99,12 @@ canonical board coordinates, gravity, topology, collision, scoring, snapshot,
 hash, replay, or persistence semantics. Camera orientation and replay
 presentation remain separate from the live 4D basis.
 
+The Stage 54D-2 ghost consumes only the observational native landing result
+defined by `docs/architecture/ghost_piece.md`. Godot may cache, project, hide,
+and style those canonical cells, but it must not calculate drop distance,
+collision, or landing legality. Basis and camera changes remap cached
+presentation data and do not invoke native gameplay semantics.
+
 ### AI (`src/tet4d/ai/playbot`)
 
 Owns:

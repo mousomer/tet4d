@@ -346,7 +346,7 @@ func _check_live_control_maps() -> Array:
 		group_names.append(str(group.get("group", "")))
 		for item in group.get("items", []):
 			flattened += "%s %s\n" % [str(item[0]), str(item[1])]
-	for required_group in ["Piece movement", "Plane Rotation", "4D Basis", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
+	for required_group in ["Piece movement", "Plane Rotation", "90° View Rotation", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
 	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Right Drag", "Wheel"]:
@@ -366,8 +366,8 @@ func _check_live_control_maps() -> Array:
 	_assert_group_items(
 		failures,
 		group_items,
-		"4D Basis",
-		[["1 / 2", "Re-slice XW - / +"], ["; / '", "Re-slice ZW - / +"], ["0", "Reset camera + basis"]]
+		"90° View Rotation",
+		[["1 / 2", "XW - / + (re-slice)"], ["; / '", "ZW - / + (re-slice)"], ["[ / ]", "ZX - / +"], ["0", "Reset camera + basis"]]
 	)
 	_assert_group_items(
 		failures,

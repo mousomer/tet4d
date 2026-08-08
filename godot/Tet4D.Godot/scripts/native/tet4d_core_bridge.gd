@@ -142,6 +142,10 @@ func live_2d_next_piece_preview() -> Dictionary:
 	return _api().live_2d_next_piece_preview()
 
 
+func live_2d_hard_drop_destination() -> Dictionary:
+	return _api().live_2d_hard_drop_destination()
+
+
 func live_2d_status() -> String:
 	return _api().live_2d_status()
 
@@ -178,6 +182,10 @@ func live_3d_next_piece_preview() -> Dictionary:
 	return _api().live_3d_next_piece_preview()
 
 
+func live_3d_hard_drop_destination() -> Dictionary:
+	return _api().live_3d_hard_drop_destination()
+
+
 func live_3d_status() -> String:
 	return _api().live_3d_status()
 
@@ -212,6 +220,10 @@ func live_4d_snapshot_json() -> String:
 
 func live_4d_next_piece_preview() -> Dictionary:
 	return _api().live_4d_next_piece_preview()
+
+
+func live_4d_hard_drop_destination() -> Dictionary:
+	return _api().live_4d_hard_drop_destination()
 
 
 func live_4d_status() -> String:

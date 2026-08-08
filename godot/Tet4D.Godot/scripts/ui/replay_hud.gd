@@ -23,6 +23,7 @@ const GameSetupModelScript = preload("res://scripts/ui/game_setup/game_setup_mod
 const GameSetupStoreScript = preload("res://scripts/ui/game_setup/game_setup_store.gd")
 const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_panel.gd")
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
+const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -38,9 +39,12 @@ signal replay_loop_changed(enabled: bool)
 signal display_w_labels_changed(visible: bool)
 signal projection_strength_changed(value: float)
 signal board_detail_changed(detail: String)
+signal ghost_visibility_changed(visible: bool)
+signal locked_cell_opacity_changed(opacity: float)
 signal grid_visibility_changed(visible: bool)
 signal accessibility_policy_changed(policy: Dictionary)
 signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
+signal camera_preset_requested(id: String)
 signal fit_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
@@ -144,6 +148,7 @@ var _help_panel: PanelContainer
 var _trace_integrity_label: Label
 var _bundle_detail_label: Label
 var _camera_status_label: Label
+var _camera_preset_selector: OptionButton
 var _help_label: Label
 var _top_state_badge_label: Label
 var _inspector_hint_panel: VBoxContainer
@@ -191,6 +196,7 @@ var _live_4d_basis_snapshot: Dictionary = {
 	"gravity_axis": "+Y",
 	"text": "View: +X · +Y · +Z\nSlice: +W · Gravity: Y down",
 }
+var _control_frame_snapshot: Dictionary = {}
 var _last_onboarding_result_signature := ""
 var _screen_focus_targets := {}
 var _screen_last_focus := {}
@@ -238,6 +244,16 @@ static func live_3d_control_hint_groups() -> Array:
 
 static func live_4d_control_hint_groups() -> Array:
 	return LiveInputContractScript.control_hint_groups("live_4d")
+
+
+func live_control_frames() -> Dictionary:
+	if _game_setup_model == null or not _game_setup_model.has_method("selected_control_frames"):
+		return {"translation_frame": "relative", "rotation_frame": "relative"}
+	return _game_setup_model.selected_control_frames()
+
+
+func set_control_frame_snapshot(snapshot: Dictionary) -> void:
+	_control_frame_snapshot = snapshot.duplicate(true)
 
 
 static func quick_control_hint_groups(mode: String) -> Array:
@@ -301,6 +317,15 @@ func set_bundle_status(text: String, detail: String = "") -> void:
 func set_camera_status(text: String) -> void:
 	if _camera_status_label != null:
 		_camera_status_label.text = text
+
+
+func set_camera_preset(id: String) -> void:
+	if _camera_preset_selector == null:
+		return
+	for index in range(_camera_preset_selector.item_count):
+		if str(_camera_preset_selector.get_item_metadata(index)) == id:
+			_camera_preset_selector.select(index)
+			return
 
 
 func set_trace_families(families: Array, selected: String) -> void:
@@ -534,7 +559,7 @@ func set_live_4d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Re-slice the same object through X, Z, or W. Y remains down; camera and piece rotations stay independent."
+		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Use exact 90° XW, ZW, or ZX view rotations. Y remains down; camera and piece rotations stay independent."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -844,6 +869,12 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.hud_density_changed.connect(_apply_hud_density)
 	panel.board_detail_changed.connect(func(detail: String) -> void:
 		board_detail_changed.emit(detail)
+	)
+	panel.ghost_visibility_changed.connect(func(visible: bool) -> void:
+		ghost_visibility_changed.emit(visible)
+	)
+	panel.locked_cell_opacity_changed.connect(func(opacity: float) -> void:
+		locked_cell_opacity_changed.emit(opacity)
 	)
 	panel.high_contrast_changed.connect(func(_enabled: bool) -> void:
 		_apply_accessibility_settings()
@@ -1689,6 +1720,16 @@ func _build_layout() -> void:
 	camera_title.text = "Camera"
 	camera_title.theme_type_variation = "SecondaryLabel"
 	camera_box.add_child(camera_title)
+	_camera_preset_selector = OptionButton.new()
+	_camera_preset_selector.name = "CameraPresetSelector"
+	_camera_preset_selector.tooltip_text = "Presentation-only camera shortcut; 4D view rotation remains independent"
+	for id in CameraPresetScript.ids():
+		_camera_preset_selector.add_item(CameraPresetScript.label(str(id)))
+		_camera_preset_selector.set_item_metadata(_camera_preset_selector.item_count - 1, id)
+	_camera_preset_selector.item_selected.connect(func(index: int) -> void:
+		camera_preset_requested.emit(str(_camera_preset_selector.get_item_metadata(index)))
+	)
+	camera_box.add_child(_camera_preset_selector)
 	_camera_status_label = Label.new()
 	_camera_status_label.name = "InspectorCameraValueLabel"
 	_camera_status_label.text = "Camera: pending"
@@ -2287,7 +2328,7 @@ func _build_basis_panel() -> PanelContainer:
 	content.add_theme_constant_override("separation", 8)
 	panel.add_child(content)
 	var title := Label.new()
-	title.text = "4D BASIS"
+	title.text = "4D VIEW ROTATION"
 	title.theme_type_variation = "AccentLabel"
 	content.add_child(title)
 	_basis_indicator_label = Label.new()
@@ -2306,11 +2347,13 @@ func _build_basis_panel() -> PanelContainer:
 		["view_xw_pos", "XW +", "xw", 1],
 		["view_zw_neg", "ZW -", "zw", -1],
 		["view_zw_pos", "ZW +", "zw", 1],
+		["view_zx_neg", "ZX -", "zx", -1],
+		["view_zx_pos", "ZX +", "zx", 1],
 	]:
 		var button := Button.new()
 		button.name = "BasisButton__%s" % str(action[0])
 		button.text = "%s  %s" % [LiveInputContractScript.display_key(str(action[0])), str(action[1])]
-		button.tooltip_text = "Re-slice the same 4D state; does not rotate the piece"
+		button.tooltip_text = "Rotate the 4D presentation frame by an exact 90°; does not rotate the piece"
 		button.set_meta("semantic_role", "action_button")
 		var plane := str(action[2])
 		var direction := int(action[3])
@@ -2369,7 +2412,8 @@ func _update_control_hint_panel(
 		return
 	compact = bool(panel.get_meta("hint_compact", compact))
 	var basis_key := str(_live_4d_basis_snapshot.get("key", "")) if mode == "live_4d" else ""
-	var cache_key := "%s|%s|%s|%s|%s" % [mode, str(warning), warning_text, str(compact), basis_key]
+	var control_frame_key := str(_control_frame_snapshot) if mode in ["live_3d", "live_4d"] else ""
+	var cache_key := "%s|%s|%s|%s|%s|%s" % [mode, str(warning), warning_text, str(compact), basis_key, control_frame_key]
 	if str(panel.get_meta("hint_cache_key", "")) == cache_key:
 		return
 	panel.set_meta("hint_cache_key", cache_key)
@@ -2397,9 +2441,9 @@ func _control_hint_groups_for_mode(mode: String) -> Array:
 		"live_2d":
 			return live_2d_control_hint_groups()
 		"live_3d":
-			return live_3d_control_hint_groups()
+			return LiveInputContractScript.control_hint_groups("live_3d", {}, _control_frame_snapshot)
 		"live_4d":
-			return LiveInputContractScript.control_hint_groups("live_4d", _live_4d_basis_snapshot)
+			return LiveInputContractScript.control_hint_groups("live_4d", _live_4d_basis_snapshot, _control_frame_snapshot)
 		_:
 			return replay_control_hint_groups()
 

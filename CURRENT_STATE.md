@@ -44,15 +44,33 @@ history ledger. Detailed history is preserved in
   presentation, and schema-3 last-valid persistence. It is complete and
   verified.
 - Stage 54C is complete and verified on the active branch. Godot now owns an exact signed
-  live-4D slice-presentation basis with XW/ZW quarter turns, a shared bijective
+  live-4D slice-presentation basis with XW/ZW/ZX quarter turns, a shared bijective
   coordinate mapper, basis-aware layout/input/HUD, a five-step lesson, and
   deterministic native-state/replay isolation. Native gameplay and topology
   authority did not change.
 - Stage 54D provides the modern gameplay baseline in three ordered slices:
   next-piece preview, ghost piece, and Hold.
-- Weak live 3D/4D grid visibility is known non-blocking visual debt. It is
-  deferred to the Stage 54E visible-GUI playability review and does not block
-  Stage 54B, Stage 54C, or Stage 54D.
+- Stage 54D-1 is committed at `e7708d8c`. Stage 54D-2 implements a shared
+  observational native hard-drop destination, live 2D/3D/4D basis-aware ghost
+  presentation, and the persistent `ghost.enabled` preference without changing
+  deterministic identity or authority. Stage 54D-3 Hold is next.
+- Stage 54D-2 corrects grid and ghost readability, adds render-only locked-cell
+  opacity, and completes the basis-driven 90-degree view-rotation/axis-indicator
+  family. It also adds persistent presentation-only relative/absolute
+  Translation and Rotation controls resolved by a shared Python-compatible
+  yaw/basis mapper, plus a dedicated amber W-axis role. Integrated human
+  acceptance remains routed to Stage 54E.
+- The final Stage 54D-2 correction keeps the shell palette as the shared
+  live-board grammar authority, distinguishes the explicit stronger wireframe
+  from the subordinate interior-only dark-blue grid, adds scoped visual-role
+  drift validation, and adds
+  presentation-only Iso/Front/Side/Back/Top/Opposite-Iso camera presets.
+  The final orientation-grid/floor calibration is mechanically verified by the
+  Godot 4.7.1 suite and scoped visual-role validator; the 24-state gizmo
+  regression permits only visible-U, +Y, and visible-V arrows. Full repository
+  verification completed with `verify: OK`. Stage 54D-2 developer/user visual
+  review accepted the Ghost/board presentation; broader integrated professional
+  playability acceptance remains routed to Stage 54E. No commit is recorded.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -183,8 +201,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Review and commit Stage 54D-1 separately after its semantic audit; human
-   preview-readability acceptance remains routed to integrated Stage 54E.
+1. Commit Stage 54D-2 separately, then begin Stage 54D-3 Hold with its required
+   authority establishment. Integrated professional playability acceptance
+   remains routed to Stage 54E.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

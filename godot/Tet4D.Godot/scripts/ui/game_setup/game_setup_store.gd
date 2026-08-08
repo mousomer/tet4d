@@ -2,8 +2,8 @@ extends RefCounted
 
 class_name GameSetupStore
 
-const SCHEMA_VERSION := 3
-const LEGACY_SCHEMA_VERSIONS := [1, 2]
+const SCHEMA_VERSION := 4
+const LEGACY_SCHEMA_VERSIONS := [1, 2, 3]
 const DEFAULT_PATH := "user://game_setup.json"
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 
@@ -68,6 +68,8 @@ func _default_entry(mode: String) -> Dictionary:
 		"random_mode": GameSetupSpecScript.RANDOM_MODE_FIXED_SEED,
 		"seed": GameSetupSpecScript.DEFAULT_SEED,
 		"initial_speed_level": GameSetupSpecScript.MIN_SPEED_LEVEL,
+		"translation_frame": "relative",
+		"rotation_frame": "relative",
 	}
 
 
@@ -78,11 +80,11 @@ func _migrate_entry(mode: String, raw, schema_version: int) -> Dictionary:
 	if not (raw is Dictionary):
 		return result
 	var entry := raw as Dictionary
-	if schema_version == 3 and entry.has("board_shape"):
+	if schema_version >= 3 and entry.has("board_shape"):
 		result["board_shape"] = _decode_shape(entry.get("board_shape"))
 	elif GameSetupSpecScript.is_supported(mode, str(entry.get("board_preset_id", ""))):
 		result["board_shape"] = (GameSetupSpecScript.preset(mode, str(entry.get("board_preset_id", ""))).get("shape", []) as Array).duplicate()
-	for key in ["piece_set_id", "random_mode", "seed", "initial_speed_level"]:
+	for key in ["piece_set_id", "random_mode", "seed", "initial_speed_level", "translation_frame", "rotation_frame"]:
 		if entry.has(key):
 			result[key] = _decoded_integer(entry.get(key)) if key in ["seed", "initial_speed_level"] else entry.get(key)
 	var shape = result.get("board_shape", [])
@@ -105,6 +107,8 @@ func _is_current_entry(value) -> bool:
 		and typeof(entry.get("random_mode")) == TYPE_STRING
 		and typeof(entry.get("seed")) == TYPE_INT
 		and typeof(entry.get("initial_speed_level")) == TYPE_INT
+		and str(entry.get("translation_frame", "relative")) in ["relative", "absolute"]
+		and str(entry.get("rotation_frame", "relative")) in ["relative", "absolute"]
 	)
 
 
