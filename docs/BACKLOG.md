@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-05
+Updated: 2026-08-08
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -33,34 +33,6 @@ It does not duplicate the complete programme roadmap.
 GitHub issues are for independently actionable, user-visible or reproducible
 bugs and their collaboration lifecycle.
 
-## Closed Programme
-
-The short-term Python boundary-governance programme is complete.
-
-Stage 53E is merged at `22938485`. Stage 53F and its corrective follow-up are
-merged and verified on `master` at `91b901f3`.
-
-Stage 54A is complete, human accepted, and merged on `master` at `bcf41519`.
-Its settled control and cockpit scope is not active backlog work.
-
-Stage 54B-2 is complete and verified on the active branch. It adds editable
-Godot board dimensions, native-validation presentation, and schema-3
-last-valid setup persistence without changing gameplay or topology semantics.
-
-Stage 54C is complete and verified on its implementation branch. It adds an
-exact Godot-owned signed 4D presentation basis, shared slice reconstruction,
-basis-aware controls/HUD/instruction, and deterministic invariance evidence
-without changing native gameplay or topology semantics.
-
-Stage 54D-1 is committed at `e7708d8c`. Developer-rendered
-inspection is complete; human preview-readability acceptance remains pending
-under Stage 54E. The slice adds one authoritative next-piece query plus a
-shared compact Godot 2D/3D/4D thumbnail without changing queue, RNG, snapshot,
-hash, replay, or trace semantics.
-
-Do not create Stage 53G or reopen generic boundary-governance work without a
-new evidenced problem and owning-format scope.
-
 ## Active Work
 
 Primary gate:
@@ -70,116 +42,43 @@ PROFESSIONAL_CORE_GAME_READY
 ```
 
 The first priority is a fully playable and professionally presented 4D Godot
-game that is ready for later topology, Explorer, challenge, and simulation
-extensions.
-
+game ready for later topology, Explorer, challenge, and simulation extensions.
 The programme is owned by
 `docs/plans/professional_godot_game_programme.md`.
 
-## Next Implementation Stage
+## Next Work
+
+### Stage 54E-1 — Presentation-space architecture/design
+
+Status: next; design/audit only.
+
+Produce the completion gate defined in the professional programme: the three
+presentation-space definitions, transform composition, ownership,
+persistence/lifecycle, scene-graph implications, a definite current
+relative-control yaw verdict, the two invariants, executable-verification
+strategy, and bounded 54E-2 plan. No runtime implementation is permitted
+until that design contract is accepted.
+
+## Hold
 
 ### Stage 54D-3 — Hold
 
-Status: next implementation slice after the completed Stage 54D-2 commit.
+Status: pending deterministic-core work; blocked only until 54E-1 design
+acceptance.
 
-Establish and implement the deterministic one-slot Hold contract without
-folding it into the presentation-only Ghost capability.
+Hold does not require 54E-2. Its shared thumbnail dependency is already
+satisfied by 54D-1. Its eventual implementation must establish the one-slot
+deterministic contract and complete its concrete `AE-####` record; do not add
+a placeholder authority record in advance.
 
-## Accepted Immediate Follow-Ups
+## Forward Work
 
-### Stage 54D — Modern gameplay baseline
-
-Status: Stage 54D-1 is committed at `e7708d8c`; Stage 54D-2 is committed at
-`4f9e920b`. Its implementation, deterministic and mechanical verification, and
-developer/user Ghost/board visual review are complete. Stage 54D-3 is next.
-
-Stage 54D-2 correction scope also includes the persistent, presentation-only
-relative/absolute Translation and Rotation frame selectors, a shared
-Python-convention yaw/basis resolver, and dedicated `axis.w` styling. These
-remain out of deterministic native setup, snapshots, hashes, and replay.
-The final correction also establishes the shell palette as the live-board
-visual grammar owner: subordinate dark/desaturated internal grid, stronger
-ordinary wireframe,
-governed active/locked/Ghost roles, scoped anti-drift validation, and compact
-presentation-only camera presets. The accepted calibration keeps the active
-slice frame strongest, makes every ordinary board volume identifiable, and
-keeps the internal grid visible without dominance. Broader integrated
-professional playability acceptance remains Stage 54E.
-
-Implement as three separate PRs in dependency order.
-
-#### Stage 54D-1 — Next-piece preview
-
-- display exactly one authoritative next piece in live 2D/3D/4D play;
-- create one shared 2D/3D/4D piece-thumbnail presentation;
-- reuse that presentation later for `HOLD`;
-- do not change queue, snapshot, hash, replay, trace, or RNG semantics.
-
-#### Stage 54D-2 — Ghost piece
-
-- render the exact authoritative hard-drop destination;
-- show every occupied destination cell across all affected 4D slices;
-- expose `Ghost: On / Off`, default `On`;
-- do not calculate drop legality independently in GDScript;
-- add only a bounded read-only core query if no existing landing query is
-  available;
-- keep ghost state out of snapshots, hashes, replay identity, scoring,
-  collision, and lock state.
-
-#### Stage 54D-3 — Hold
-
-- implement the modern one-slot Hold rule;
-- reuse the Stage 54D-1 thumbnail presentation;
-- define snapshot, hash, replay, trace, compatibility, restart, and spawn-failure
-  behaviour;
-- create and complete an `AE-####` authority-establishment record only when the
-  implementation contract and evidence are concrete;
-- update the authority map when the record reaches `established`.
-
-Do not add an incomplete Hold row to the active establishment table in advance.
-
-### Stage 54E — Visible-GUI professional playability review
-
-Status: after integrated Stage 54B–54D behaviour.
-
-Review representative 2D/3D/4D play with primary emphasis on 4D, including:
-
-- custom setup usability;
-- basis-rotation comprehension;
-- next-piece and Hold preview readability;
-- ghost usefulness and cross-slice comprehension;
-- distinction among ghost, active, and locked cells;
-- grid contrast and visibility;
-- camera recovery;
-- menu hierarchy;
-- accessibility and minimum viewport composition;
-- representative board-size responsiveness.
-
-Stage 54E completes when review evidence is recorded, findings are classified,
-and every `PROFESSIONAL_CORE_GAME_READY` blocker is corrected and re-reviewed
-or remains an explicit blocker preventing the gate from passing.
-
-Grid visibility: the live 3D/4D grid is currently too weak in some views.
-Reassess it during Stage 54E. This does not block Stage 54B, Stage 54C, or Stage
-54D. Strengthening becomes mandatory only if review evidence classifies the
-current grid as blocking comprehension or accessibility.
-
-### Stage 54F — Professional release hardening
-
-Status: after Stage 54E gate findings.
-
-Use focused slices for demonstrated needs such as:
-
-- keybinding/remapping completion;
-- gamepad support if adopted;
-- audio and volume controls;
-- pause/game-over polish;
-- scoring and progression presentation;
-- performance correction;
-- installer/export/startup reliability;
-- release help and final manual acceptance.
-
-Do not turn Stage 54F into an unbounded cleanup programme.
+- Stage 54E-2 — camera-space separation implementation.
+- Stage 54E-3 — setup/menu information architecture.
+- Stage 54E-4 — camera/GUI presets.
+- Stage 54E-5 — cockpit consolidation.
+- Stage 54F — integrated professional playability/visual acceptance.
+- Stage 54G — professional gaming-experience and release hardening.
 
 ## Authority Transition Work
 

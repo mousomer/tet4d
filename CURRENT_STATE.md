@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-07
+Last updated: 2026-08-08
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -37,42 +37,21 @@ history ledger. Detailed history is preserved in
   `docs/plans/professional_godot_game_programme.md`. Its first gate is a fully
   playable, professionally presented 4D Godot game that is ready for later
   topology, Explorer, challenge, and simulation extensions.
-- Stage 54B-1 is complete on the active branch: the shared topology-aware
-  board-extent contract establishes bounded live setup admission under
-  `AE-0054` without transferring topology or gameplay semantics. Stage 54B-2
-  implementation now provides direct Godot X/Y/Z/W setup, validation
-  presentation, and schema-3 last-valid persistence. It is complete and
-  verified.
-- Stage 54C is complete and verified on the active branch. Godot now owns an exact signed
-  live-4D slice-presentation basis with XW/ZW/ZX quarter turns, a shared bijective
-  coordinate mapper, basis-aware layout/input/HUD, a five-step lesson, and
-  deterministic native-state/replay isolation. Native gameplay and topology
-  authority did not change.
-- Stage 54D provides the modern gameplay baseline in three ordered slices:
-  next-piece preview, ghost piece, and Hold.
-- Stage 54D-1 is committed at `e7708d8c`; Stage 54D-2 is committed at
-  `4f9e920b`. Stage 54D-2 implements a shared
-  observational native hard-drop destination, live 2D/3D/4D basis-aware ghost
-  presentation, and the persistent `ghost.enabled` preference without changing
-  deterministic identity or authority. Stage 54D-3 Hold is next.
-- Stage 54D-2 corrects grid and ghost readability, adds render-only locked-cell
-  opacity, and completes the basis-driven 90-degree view-rotation/axis-indicator
-  family. It also adds persistent presentation-only relative/absolute
-  Translation and Rotation controls resolved by a shared Python-compatible
-  yaw/basis mapper, plus a dedicated amber W-axis role. Integrated human
-  acceptance remains routed to Stage 54E.
-- The final Stage 54D-2 correction keeps the shell palette as the shared
-  live-board grammar authority, distinguishes the explicit stronger wireframe
-  from the subordinate interior-only dark-blue grid, adds scoped visual-role
-  drift validation, and adds
-  presentation-only Iso/Front/Side/Back/Top/Opposite-Iso camera presets.
-  The final orientation-grid/floor calibration is mechanically verified by the
-  Godot 4.7.1 suite and scoped visual-role validator; the 24-state gizmo
-  regression permits only visible-U, +Y, and visible-V arrows. Full repository
-  verification completed with `verify: OK`. Stage 54D-2 developer/user visual
-  review accepted the Ghost/board presentation; broader integrated professional
-  playability acceptance remains routed to Stage 54E. The implementation branch
-  is published; Stage 54D-3 Hold remains the next implementation slice.
+- PR #63 is merged on `master` at
+  `c93dcc8cfa93857d514a14b925002efc4404b007`. Stages 54B-1 through 54D-2 are
+  integrated: the topology-aware board-extent contract; editable validated
+  setup; exact signed 4D basis; authoritative NEXT; and Ghost plus accepted
+  presentation/control corrections.
+- The Stage 54D-2 combined-camera-yaw resolver is an accepted architectural
+  limitation, not a merge blocker. Programme restructuring establishes Stage
+  54E as 4D presentation/interaction architecture; 54E-1 is next and is
+  design/audit only. No runtime implementation is permitted before its design
+  contract is accepted.
+- Stage 54D-3 Hold remains pending deterministic-core work. It may proceed
+  once 54E-1 is accepted, does not require 54E-2, and reuses the thumbnail
+  delivered by 54D-1.
+- Integrated professional playability/visual acceptance is now Stage 54F;
+  professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -203,9 +182,10 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Integrate the published Stage 54B through 54D-2 chain, then begin Stage
-   54D-3 Hold with its required authority establishment. Integrated professional
-   playability acceptance remains routed to Stage 54E.
+1. Stage 54E-1 — Presentation-space architecture/design: produce and accept
+   the required design/audit contract before any runtime work. Stage 54D-3
+   Hold remains pending until that acceptance, after which it may proceed
+   independently of Stage 54E-2.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
