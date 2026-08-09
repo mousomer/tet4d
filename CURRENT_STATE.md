@@ -178,9 +178,9 @@ Top 8 live Python hotspots by real LOC:
 3. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
 5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2427` real LOC
-6. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `3194` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
 7. `scripts/arch_metrics.py`: `1899` real LOC
-8. `cli/front.py`: `804` real LOC
+8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
 
 Thin-wrapper budgets:
 
