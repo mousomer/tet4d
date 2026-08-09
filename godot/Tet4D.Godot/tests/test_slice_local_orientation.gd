@@ -20,6 +20,7 @@ func run() -> Array:
 	_test_identity_yaw_matrix(failures)
 	_test_negative_signed_basis_yaw_matrix(failures)
 	_test_w_one_and_reslicing(failures)
+	_test_renderer_composition_and_oriented_bounds(failures)
 	return failures
 
 
@@ -177,6 +178,79 @@ func _test_w_one_and_reslicing(failures: Array) -> void:
 	projection.mapper.configure(dimensions, identity.turned("zw", 1))
 	if projection.mapper.current_layer_count() != 3 or projection.mapper.visible_board_shape() != [5, 7, 1]:
 		failures.append("W=1 ZW turn must make Z the extent-aware slice axis")
+
+
+# Requirement/invariant coverage for Stage 54E-2b composition, transformed
+# corner AABBs, signed B, continuous yaw, pitch, and uniform multi-slice L.
+func _test_renderer_composition_and_oriented_bounds(failures: Array) -> void:
+	var signed_basis = SliceBasis4DScript.from_slots([-3, 2, 1, 4])
+	var orientation = SliceLocalOrientationScript.new(PI / 6.0, PI / 8.0)
+	var projection = ProjectionLayoutScript.new()
+	projection.configure({"dimension": 4, "board_shape": DIMENSIONS}, signed_basis, orientation)
+	if projection.oriented_world_position([]) != Vector3.ZERO:
+		failures.append("invalid renderer mapping must fail safely to the neutral position")
+	var canonical_point := [1, 2, 2, 1]
+	var decomposition: Dictionary = projection.decompose_position(canonical_point)
+	if not bool(decomposition.get("ok", false)):
+		failures.append("signed-B renderer point must decompose before L")
+		return
+	var local_point: Vector3 = decomposition.get("centered_local_point", Vector3.ZERO)
+	var anchor: Vector3 = decomposition.get("anchor", Vector3.ZERO)
+	var rendered := projection.oriented_world_position(canonical_point)
+	_assert_vector(
+		failures,
+		rendered,
+		orientation.orient_local_point(local_point) + anchor,
+		"renderer composition is L(G_D(p)) plus anchor"
+	)
+	if rendered.distance_to(orientation.orient_local_point(local_point + anchor)) <= 0.001:
+		failures.append("renderer composition must not rotate the slice anchor")
+
+	var local_delta := Vector3(1.0, 0.0, 0.0)
+	var expected_delta := orientation.orient_local_point(local_delta)
+	for layer_index in [0, 1]:
+		var origin := [1, 2, 2, layer_index]
+		var destination := [1, 2, 1, layer_index]
+		var actual_delta := projection.oriented_world_position(destination) - projection.oriented_world_position(origin)
+		_assert_vector(failures, actual_delta, expected_delta, "shared L rendered delta in slice %d" % layer_index)
+
+	var local_bounds: Dictionary = projection.local_slice_bounds()
+	var min_local: Vector3 = local_bounds.get("min", Vector3.ZERO)
+	var max_local: Vector3 = local_bounds.get("max", Vector3.ZERO)
+	var collection_bounds: Dictionary = projection.bounds
+	for layer_index in [0, 1]:
+		var slice_anchor: Vector3 = projection.slice_anchor(layer_index)
+		for x in [min_local.x, max_local.x]:
+			for y in [min_local.y, max_local.y]:
+				for z in [min_local.z, max_local.z]:
+					var corner := orientation.orient_local_point(Vector3(x, y, z)) + slice_anchor
+					_assert_point_in_bounds(failures, corner, collection_bounds, "oriented corner layer %d" % layer_index)
+
+	var identity_projection = ProjectionLayoutScript.new()
+	identity_projection.configure(
+		{"dimension": 4, "board_shape": DIMENSIONS},
+		signed_basis,
+		SliceLocalOrientationScript.new()
+	)
+	var identity_size: Vector3 = identity_projection.bounds.get("max", Vector3.ZERO) - identity_projection.bounds.get("min", Vector3.ZERO)
+	var oriented_size: Vector3 = collection_bounds.get("max", Vector3.ZERO) - collection_bounds.get("min", Vector3.ZERO)
+	if identity_size.distance_to(oriented_size) <= 0.001:
+		failures.append("asymmetric non-quarter yaw/pitch must change the oriented collection AABB")
+
+
+func _assert_point_in_bounds(failures: Array, point: Vector3, bounds: Dictionary, label: String) -> void:
+	var min_point: Vector3 = bounds.get("min", Vector3.ZERO)
+	var max_point: Vector3 = bounds.get("max", Vector3.ZERO)
+	var tolerance := 0.001
+	if (
+		point.x < min_point.x - tolerance
+		or point.y < min_point.y - tolerance
+		or point.z < min_point.z - tolerance
+		or point.x > max_point.x + tolerance
+		or point.y > max_point.y + tolerance
+		or point.z > max_point.z + tolerance
+	):
+		failures.append("%s must lie inside oriented bounds: %s not in %s..%s" % [label, point, min_point, max_point])
 
 
 func _canonical_delta(command: String) -> Array:

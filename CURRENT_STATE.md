@@ -54,11 +54,17 @@ history ledger. Detailed history is preserved in
   REVIEWED GREEN: it established the first-class shared
   `SliceLocalOrientation`, explicit `B`, affine centred `G_D`, anchor-only
   layout decomposition, continuous `F(theta)`/`R(theta)`, and discrete `Q(q)`
-  control projection distinction. The renderer retains its compatibility path,
-  and input/CameraRig ownership is unchanged. Stage 54E-2b — renderer
-  composition — is the next eligible 54E implementation slice; 54E-2c remains
-  blocked until reviewed-green 54E-2b, and 54E-2d remains blocked until
-  reviewed-green 54E-2c.
+  control projection distinction. Stage 54E-2b is COMPLETE / REVIEWED GREEN:
+  it establishes `B -> G_D -> L -> anchor` renderer composition; one shared
+  continuous `L`; aligned cells, active piece, Ghost, grids, and frames;
+  anchor-only layout; oriented corner-derived fit bounds; and slice identity
+  labels outside local physical rotation. Input and `CameraRig` ownership are
+  unchanged. Stage 54E-2c — interaction and camera-rig separation — is next
+  and eligible; 54E-2d remains blocked until reviewed-green 54E-2c. When
+  54E-2c makes `SliceLocalOrientation` interactive, every yaw/pitch mutation
+  must refresh presentation composition and recompute oriented collection
+  bounds/camera-fit inputs so geometry and cached bounds never observe
+  different `L` states.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -191,9 +197,11 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Stage 54E-2b — Renderer composition. It is the sole next eligible 54E
-   implementation slice; 54E-2c/d remain sequentially gated, and Stage 54D-3
-   Hold remains independently eligible.
+1. Stage 54E-2c — Interaction and camera-rig separation — is the sole next
+   eligible 54E implementation slice. It must preserve coherent refresh of
+   mutable `L`, oriented collection bounds, and camera-fit inputs; 54E-2d
+   remains sequentially gated, and Stage 54D-3 Hold remains independently
+   eligible.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

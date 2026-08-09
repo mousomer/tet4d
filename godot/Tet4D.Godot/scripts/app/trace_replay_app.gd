@@ -18,6 +18,7 @@ const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd"
 const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 const ControlFrameMappingScript = preload("res://scripts/presentation/control_frame_mapping.gd")
 const GhostPieceModelScript = preload("res://scripts/presentation/ghost_piece_model.gd")
 
@@ -53,6 +54,7 @@ var _live_4d_session_started := false
 var _live_4d_last_rotation_label := "none"
 var _live_4d_last_rotation_status := "none"
 var _live_4d_basis = SliceBasis4DScript.identity()
+var _live_4d_local_orientation = SliceLocalOrientationScript.new()
 var _translation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _rotation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _live_tick_accumulator := 0.0
@@ -876,6 +878,7 @@ func _build_world_in_game_viewport() -> void:
 	_renderer = TraceSceneRendererScript.new() as TraceSceneRenderer
 	_renderer.name = "TraceSceneRenderer"
 	_renderer.set_live_4d_basis(_live_4d_basis, false)
+	_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
 	_world_root.add_child(_renderer)
 
 	_camera_rig = CameraRigScript.new() as CameraRig

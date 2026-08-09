@@ -95,6 +95,13 @@ indicator, presentation-only transition, and focused basis instruction defined
 in `docs/architecture/game_safe_4d_slice_basis.md` and
 `docs/architecture/4d_presentation_interaction_architecture.md`.
 
+Live-4D renderer composition is owned by `ProjectionLayout`: canonical cells
+are mapped through exact `B`, affine centred `G_D`, one shared continuous `L`,
+and only then an anchor translation. Grid/frame scene nodes encode the same
+order as separate anchor translation and local orientation transforms. Oriented
+corner-derived collection bounds are the renderer's camera-fit input; slice
+identity labels remain presentation attachments rather than local basis axes.
+
 This ownership may remap presentation movement intents into existing canonical
 native commands. It must not independently decide movement legality or mutate
 canonical board coordinates, gravity, topology, collision, scoring, snapshot,

@@ -5,7 +5,8 @@ Status: Stage 54E-1 complete — human accepted
 Scope: Live 4D Godot presentation and input adaptation only
 Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
-Implementation evidence: Stage 54E-2a complete — reviewed green
+Implementation evidence: Stage 54E-2a complete — reviewed green; Stage 54E-2b
+complete — reviewed green
 
 ## 1. Purpose and current audit result
 
@@ -730,11 +731,11 @@ point mapping, separately queryable anchors, and a compatibility composition
 of `G_D(p) + anchor_i`. Focused Godot tests execute all four yaw quarter-turns
 for identity and `[-Z,+Y,+X,+W]`, use mapped-point differences, and cover
 anchor isolation, asymmetric `(5,7,3,2)` dimensions, signed mapping, and
-`W=1` re-slicing. The compatibility `world_position()` path deliberately does
-not apply `L`; renderer migration remains Stage 54E-2b. App input and
-`CameraRig` ownership remain unchanged for Stage 54E-2c. This evidence is
-reviewed and accepted green; it makes 54E-2b the next eligible slice without
-beginning renderer migration.
+`W=1` re-slicing. At the 54E-2a boundary, its compatibility position path
+deliberately did not apply `L`; renderer migration was reserved for Stage
+54E-2b. App input and `CameraRig` ownership remain unchanged for Stage 54E-2c.
+This 54E-2a evidence is reviewed and accepted green; the following section
+records the separately reviewable 54E-2b implementation.
 
 ### 54E-2b — Renderer composition
 
@@ -745,7 +746,37 @@ uniform local orientation, anchors unchanged under L, local bases unchanged
 under layout, Ghost destination isolation, and renderer-relevant deterministic
 isolation. Repository green is required before 54E-2c.
 
+Stage 54E-2b implementation evidence now exists in `projection_layout.gd`,
+`board_presentation_model.gd`, `trace_scene_renderer.gd`, and
+`grid_renderer.gd`. `ProjectionLayout.oriented_world_position()` is the
+authoritative renderer composition seam: it decomposes canonical input through
+exact `B` and affine centred `G_D`, applies the one shared continuous
+`SliceLocalOrientation`, and only then adds the layout anchor. Cells and
+geometry-attached markers use that numerical seam. Grid, floor/lattice, and
+frame geometry use equivalent per-slice scene nodes whose translation is the
+anchor and whose child-local basis is the same shared `L`; neither path applies
+`L` twice.
+
+Per-slice world AABBs are derived by transforming all eight local board-volume
+corners and are unioned for renderer/camera-fit input. Slice identity labels
+remain root-level billboards attached through those oriented envelopes rather
+than becoming physical local-basis geometry. Focused tests cover identity,
+quarter and non-quarter yaw, pitch, signed `[-Z,+Y,+X,+W]`, asymmetric
+dimensions, `W=1` re-slicing, multiple slices, anchor/layout invariance, shared
+locked/active/Ghost deltas and bases, grid/frame orientation, label identity,
+and corner containment. App input routing, `CameraRig`, and relative-control
+ownership remain unchanged for Stage 54E-2c. Technical review accepted this
+implementation; it is complete and reviewed green, and 54E-2c is now eligible.
+
 ### 54E-2c — Interaction and camera-rig separation
+
+**Interactive-orientation refresh invariant.** `L` is shared mutable
+presentation state, while oriented collection bounds are produced during
+presentation configuration. A change to shared `L` must invalidate or recompute
+every presentation result derived from it—including oriented collection bounds
+and camera-fit inputs—before the next rendered or fit state is considered
+coherent. This is a semantic integration requirement: it does not prescribe
+signals, dirty flags, observers, or a rebuild cadence.
 
 Route mouse-left yaw/pitch and keyboard yaw/pitch to `L`; retain right-drag
 pan, wheel zoom, and Fit View in `V/P`; and give the resolver exact `B`

@@ -24,7 +24,7 @@ func run() -> Array:
 		failures.append("presentation model should expose projected board bounds")
 	if model.locked_cells().size() != 1 or model.active_cells().size() != 1:
 		failures.append("presentation model should expose renderable cell collections")
-	var position := model.world_position([0, 0, 0])
+	var position := model.render_world_position([0, 0, 0])
 	if position.distance_to(Vector3(-1.5, 2.0, -2.5)) > 0.001:
 		failures.append("presentation model should use the canonical mapper, got %s" % str(position))
 	var live_4d_model := BoardPresentationModelScript.new()
@@ -48,8 +48,8 @@ func run() -> Array:
 		failures.append("presentation model should give live 4D exterior cell grammar")
 	if not live_4d_model.current_bounds().get("ok", false):
 		failures.append("presentation model should expose projected live 4D board bounds")
-	var w0_position := live_4d_model.world_position([0, 0, 0, 0])
-	var w1_position := live_4d_model.world_position([0, 0, 0, 1])
+	var w0_position := live_4d_model.render_world_position([0, 0, 0, 0])
+	var w1_position := live_4d_model.render_world_position([0, 0, 0, 1])
 	if w1_position.x <= w0_position.x:
 		failures.append("presentation model should separate W slices side-by-side")
 	return failures

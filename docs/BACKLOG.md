@@ -70,9 +70,34 @@ The implementation introduces the first-class shared Godot
 `SliceLocalOrientation`, separates exact `B` mapping, centred `G_D` point
 mapping, anchor lookup, and compatibility world composition, and executes the
 accepted active/passive yaw, point-difference, signed-basis, asymmetric-board,
-anchor-only, and `W=1` contracts. The renderer remains on the compatibility
-`G_D(p) + anchor_i` path. This implementation is reviewed and accepted green;
-Stage 54E-2b is next and eligible.
+anchor-only, and `W=1` contracts. At the reviewed-green 54E-2a boundary the
+renderer remained on the compatibility `G_D(p) + anchor_i` path; the separate
+54E-2b implementation below now migrates that path.
+
+### Stage 54E-2b — Renderer composition
+
+Status: COMPLETE — REVIEWED GREEN.
+
+The implementation migrates Live-4D cells, Ghost, geometry-attached markers,
+grid/floor/lattice, ordinary and active frames, slice-label placement, and
+camera-fit bounds to `B -> G_D -> L -> anchor`. It uses one shared continuous
+orientation across all slice-local content, leaves anchors/layout/exact basis
+unchanged, derives world AABBs from transformed local corners, and retains
+2D/3D identity behavior. Focused Godot evidence covers asymmetric dimensions,
+quarter/non-quarter yaw, pitch, signed basis, W=1 re-slicing, multiple slices,
+Ghost alignment, grid/frame orientation, label identity, and bounds
+containment. Technical review accepted this evidence; Stage 54E-2c is now next
+and eligible.
+
+### Stage 54E-2c — Interaction and camera-rig separation
+
+Status: NEXT — ELIGIBLE.
+
+`SliceLocalOrientation` becomes interactive in this stage. Every yaw/pitch
+mutation must refresh presentation composition, recompute oriented per-slice
+and collection bounds, and refresh camera-fit inputs before geometry and cached
+fit bounds are considered coherent. Stage 54E-2d remains blocked until this
+stage is reviewed green.
 
 ## Hold
 
@@ -88,9 +113,9 @@ a placeholder authority record in advance.
 
 ## Forward Work
 
-- Stage 54E-2b — renderer composition (NEXT / ELIGIBLE).
-- Stage 54E-2c — interaction and camera-rig separation (blocked until
-  reviewed-green 54E-2b).
+- Stage 54E-2b — renderer composition (COMPLETE / REVIEWED GREEN).
+- Stage 54E-2c — interaction and camera-rig separation (NEXT / ELIGIBLE;
+  mutable-`L` presentation/bounds/fit refresh is mandatory).
 - Stage 54E-2d — lifecycle, authority, and contract reconciliation (blocked
   until reviewed-green 54E-2c).
 - Stage 54E-3 — setup/menu information architecture.

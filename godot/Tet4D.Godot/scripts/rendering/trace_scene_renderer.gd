@@ -9,6 +9,7 @@ const ParticleRendererScript = preload("res://scripts/rendering/particle_rendere
 const EventMarkerRendererScript = preload("res://scripts/rendering/event_marker_renderer.gd")
 const BoardPresentationModelScript = preload("res://scripts/presentation/board_presentation_model.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 
 var current_slice_stride := 6.0
 var _cell_scale := ReplayVisuals.CELL_SCALE
@@ -28,6 +29,7 @@ var _particle_trails: Dictionary = {}
 var _presentation := BoardPresentationModelScript.new()
 var _last_bounds: Dictionary = {"ok": false}
 var _live_4d_basis = SliceBasis4DScript.identity()
+var _live_4d_local_orientation = SliceLocalOrientationScript.new()
 var _basis_transition_progress := 1.0
 var _basis_transition_duration := 0.16
 var _live_4d_fit_reference: Dictionary = {}
@@ -94,6 +96,15 @@ func set_live_4d_basis(basis, animate: bool = true) -> void:
 	_apply_basis_presentation_transform(1.0 if _basis_transition_progress >= 1.0 else 0.965)
 
 
+func set_live_4d_local_orientation(orientation) -> void:
+	if orientation != null:
+		_live_4d_local_orientation = orientation
+
+
+func live_4d_local_orientation_snapshot() -> Dictionary:
+	return _live_4d_local_orientation.snapshot()
+
+
 func reset_live_4d_fit_envelope() -> void:
 	_live_4d_fit_reference = {}
 	_live_4d_fit_reference_layer_count = 1
@@ -123,7 +134,11 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	_last_frame_index = frame_index
 
 	var presentation_basis = _live_4d_basis if str(snapshot.get("trace_type", "")) == "live_4d" else null
-	_presentation.configure(snapshot, presentation_basis)
+	_presentation.configure(
+		snapshot,
+		presentation_basis,
+		_live_4d_local_orientation if str(snapshot.get("trace_type", "")) == "live_4d" else null
+	)
 	current_slice_stride = _presentation.projection.mapper.slice_stride
 	_last_bounds = _presentation.current_bounds()
 	_update_live_4d_fit_envelope(str(snapshot.get("trace_type", "")))
@@ -137,7 +152,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	grid.rebuild(
 		_presentation.board_shape(),
 		_presentation.dimension,
-		_presentation.projection.mapper,
+		_presentation.projection,
 		_display_mode,
 		_presentation.is_live,
 		_show_w_labels,
@@ -157,7 +172,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_cell_root.add_child(node)
 		var locked_color_id := int(cell.get("color_id", 0))
 		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
-		var locked_position := _presentation.world_position(cell.get("position", []))
+		var locked_position := _presentation.render_world_position(cell.get("position", []))
 		if _presentation.uses_live_exterior_cells:
 			node.setup_exterior_block(
 				locked_position,
@@ -175,6 +190,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				_live_locked_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(locked_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0
 			)
+		node.basis = _presentation.local_render_basis()
 
 	for cell in _presentation.ghost_cells():
 		var ghost_node := CellRendererScript.new()
@@ -183,13 +199,14 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_cell_root.add_child(ghost_node)
 		var ghost_size := ReplayVisuals.LIVE_3D_GHOST_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_GHOST_CELL_SCALE
 		ghost_node.setup(
-			_presentation.world_position(cell.get("position", [])),
+			_presentation.render_world_position(cell.get("position", [])),
 			ReplayVisuals.ghost_cell_material(_display_mode, int(cell.get("color_id", 0)), _high_contrast),
 			ghost_size,
 			ghost_size if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_CELL_DEPTH,
 			ReplayVisuals.ghost_cell_border_material(_display_mode, _high_contrast),
 			ghost_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()
 		)
+		ghost_node.basis = _presentation.local_render_basis()
 
 	var active_cells := _presentation.active_cells()
 	for active_index in range(active_cells.size()):
@@ -198,7 +215,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_cell_root.add_child(node)
 		# Gameplay cells do not carry stable per-cell IDs in the exported traces.
 		# Keep them on the current discrete frame instead of inventing a path.
-		var position := _presentation.world_position(cell.get("position", []))
+		var position := _presentation.render_world_position(cell.get("position", []))
 		var active_color_id := int(cell.get("color_id", 1))
 		var active_size := ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_ACTIVE_CELL_SCALE
 		if _presentation.uses_live_exterior_cells:
@@ -221,13 +238,17 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				_live_active_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(active_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0
 			)
+		node.basis = _presentation.local_render_basis()
 
 	for marker in _presentation.probe_markers():
 		var marker_node := EventMarkerRendererScript.new()
 		_marker_root.add_child(marker_node)
 		var probe_material := probe_after_material if str(marker.get("kind", "")) == "probe_after" else probe_before_material
 		marker_node.setup(
-			_presentation.world_position(marker.get("position", [])) + Vector3.UP * ReplayVisuals.PROBE_MARKER_HEIGHT,
+			_presentation.render_world_position_with_local_offset(
+				marker.get("position", []),
+				Vector3.UP * ReplayVisuals.PROBE_MARKER_HEIGHT
+			),
 			probe_material,
 			1.35 if str(marker.get("presentation_role", "")) == "lesson_target" else _event_scale * 1.05,
 			1.0,
@@ -238,7 +259,10 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var marker_node := EventMarkerRendererScript.new()
 		_marker_root.add_child(marker_node)
 		marker_node.setup(
-			_presentation.world_position(marker.get("position", [])) + Vector3.UP * ReplayVisuals.EVENT_MARKER_HEIGHT,
+			_presentation.render_world_position_with_local_offset(
+				marker.get("position", []),
+				Vector3.UP * ReplayVisuals.EVENT_MARKER_HEIGHT
+			),
 			event_material,
 			_event_scale,
 			1.0 - ((0.0 if _reduced_motion else alpha) * 0.65),
@@ -252,13 +276,13 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var escaped := bool(particle.get("escaped", false))
 		var color_id := int(particle.get("color_id", 0))
 		var particle_id := int(particle.get("particle_id", -1))
-		var particle_position := _presentation.world_position(particle.get("position", []))
+		var particle_position := _presentation.render_world_position(particle.get("position", []))
 		var next_particle := _matching_particle(particle_id, next_snapshot.get("particles", []))
 		if not next_particle.is_empty():
 			# Endgame particles have stable trace IDs, so this is visual-only
 			# interpolation between exported frames, not simulation.
 			particle_position = particle_position.lerp(
-				_presentation.world_position(next_particle.get("position", [])),
+				_presentation.render_world_position(next_particle.get("position", [])),
 				0.0 if _reduced_motion else alpha
 			)
 		var trail_positions := _trail_positions_for_particle(particle_id, particle_position)

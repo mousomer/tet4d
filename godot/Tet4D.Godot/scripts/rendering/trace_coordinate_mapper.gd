@@ -23,11 +23,11 @@ func configure(board_shape: Array, basis = null) -> void:
 	layer_layout.configure(current_layer_count(), width, height)
 
 
-func world_position(coordinates: Array, dimension: int) -> Vector3:
-	# Renderer compatibility path for Stage 54E-2a. The separated point and
-	# anchor responsibilities below are the migration seam for Stage 54E-2b.
+func unoriented_world_position(coordinates: Array, dimension: int) -> Vector3:
+	# Explicit Stage 54E-2a compatibility composition: G_D(p) + anchor_i.
+	# Live-4D renderer consumers use ProjectionLayout.oriented_world_position().
 	var decomposition := decompose_position(coordinates, dimension)
-	return decomposition.get("composed_world_point", Vector3.ZERO) if bool(decomposition.get("ok", false)) else Vector3.ZERO
+	return decomposition.get("unoriented_world_point", Vector3.ZERO) if bool(decomposition.get("ok", false)) else Vector3.ZERO
 
 
 func decompose_position(coordinates: Array, dimension: int) -> Dictionary:
@@ -49,7 +49,7 @@ func decompose_position(coordinates: Array, dimension: int) -> Dictionary:
 		"visible_cell_3d": visible_coordinates.duplicate(),
 		"centered_local_point": local_point,
 		"anchor": anchor,
-		"composed_world_point": compose_anchored_point(local_point, anchor),
+		"unoriented_world_point": compose_anchored_point(local_point, anchor),
 	}
 
 
@@ -86,20 +86,31 @@ func slice_offset(w_index: int) -> Vector3:
 	return slice_anchor(w_index)
 
 
-func slice_bounds(w_index: int = 0) -> Dictionary:
+func local_slice_bounds() -> Dictionary:
 	if _board_shape.is_empty():
 		return {"ok": false}
 	var x_size := _axis_size(0)
 	var y_size := _axis_size(1)
 	var z_size := _axis_size(2)
+	return {
+		"ok": true,
+		"min": Vector3(-x_size * 0.5, -y_size * 0.5, -z_size * 0.5),
+		"max": Vector3(x_size * 0.5, y_size * 0.5, z_size * 0.5),
+	}
+
+
+func unoriented_slice_bounds(w_index: int = 0) -> Dictionary:
+	var local_bounds := local_slice_bounds()
+	if not local_bounds.get("ok", false):
+		return {"ok": false}
 	var anchor := slice_anchor(w_index)
-	var min_pos := Vector3(-x_size * 0.5, -y_size * 0.5, -z_size * 0.5) + anchor
-	var max_pos := Vector3(x_size * 0.5, y_size * 0.5, z_size * 0.5) + anchor
+	var min_pos: Vector3 = local_bounds.get("min", Vector3.ZERO) + anchor
+	var max_pos: Vector3 = local_bounds.get("max", Vector3.ZERO) + anchor
 	return {"ok": true, "min": min_pos, "max": max_pos}
 
 
 func slice_label_position(w_index: int = 0) -> Vector3:
-	var bounds := slice_bounds(w_index)
+	var bounds := unoriented_slice_bounds(w_index)
 	if not bounds.get("ok", false):
 		return Vector3.ZERO
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
@@ -116,11 +127,11 @@ func board_bounds(board_shape: Array, dimension: int, basis = null) -> Dictionar
 	if _board_shape.is_empty():
 		return {"ok": false}
 	var w_size := current_layer_count() if dimension >= 4 else 1
-	var first_bounds := slice_bounds(0)
+	var first_bounds := unoriented_slice_bounds(0)
 	var min_pos: Vector3 = first_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = first_bounds.get("max", Vector3.ZERO)
 	for layer_index in range(1, w_size):
-		var layer_bounds := slice_bounds(layer_index)
+		var layer_bounds := unoriented_slice_bounds(layer_index)
 		var layer_min: Vector3 = layer_bounds.get("min", min_pos)
 		var layer_max: Vector3 = layer_bounds.get("max", max_pos)
 		min_pos = Vector3(minf(min_pos.x, layer_min.x), minf(min_pos.y, layer_min.y), minf(min_pos.z, layer_min.z))
