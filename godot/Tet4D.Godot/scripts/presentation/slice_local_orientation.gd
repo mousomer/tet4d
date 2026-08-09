@@ -2,6 +2,15 @@ extends RefCounted
 
 class_name SliceLocalOrientation
 
+# The fitted Live-4D mount first loses Forward/away depth at about -68.1
+# degrees (and +111.9 degrees in the other direction). A symmetric +/-60
+# degree gameplay domain preserves the existing Top preset while retaining a
+# positive away-depth margin. Explorer/free-inspection code may continue to
+# use the unconstrained set_angles() primitive.
+const NORMAL_GAMEPLAY_PITCH_LIMIT_RAD := PI / 3.0
+const NORMAL_GAMEPLAY_MIN_PITCH_RAD := -NORMAL_GAMEPLAY_PITCH_LIMIT_RAD
+const NORMAL_GAMEPLAY_MAX_PITCH_RAD := NORMAL_GAMEPLAY_PITCH_LIMIT_RAD
+
 # Shared, presentation-only orientation for the centred contents of every 4D
 # slice. This state is deliberately independent of exact SliceBasis4D state,
 # layout anchors, CameraRig framing, and deterministic gameplay identity.
@@ -17,6 +26,15 @@ func _init(yaw_radians: float = 0.0, pitch_radians: float = 0.0) -> void:
 func set_angles(yaw_radians: float, pitch_radians: float) -> void:
 	local_yaw = yaw_radians
 	local_pitch = pitch_radians
+
+
+func set_normal_gameplay_angles(yaw_radians: float, pitch_radians: float) -> void:
+	local_yaw = wrapf(yaw_radians, -PI, PI)
+	local_pitch = clampf(
+		pitch_radians,
+		NORMAL_GAMEPLAY_MIN_PITCH_RAD,
+		NORMAL_GAMEPLAY_MAX_PITCH_RAD
+	)
 
 
 func active_yaw_basis() -> Basis:

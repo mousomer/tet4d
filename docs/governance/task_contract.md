@@ -1,107 +1,129 @@
-# Task Contract — Stage 54E-2b Renderer Composition
+# Task Contract — Stage 54E-2c Interaction and Camera-Rig Separation
 
 ## Objective
 
-Migrate applicable Live-4D renderer consumers from `G_D(p) + anchor_i` to the
-accepted `B -> G_D -> L -> anchor_i` composition without changing gameplay or
-input semantics.
+Separate normal Live-4D slice-local interaction from outer framing and route
+relative controls through exact `B` plus quantized shared `L.local_yaw`.
 
 ## Current Authority
 
 - `docs/architecture/4d_presentation_interaction_architecture.md`: accepted
-  Stage 54E-1 transform, ownership, and staged-delivery contract.
-- Stage 54E-2a implementation at `cb7d5e600f58d01f9c25fb705471ab543ab045d9`:
-  reviewed-green state/decomposition evidence.
+  Stage 54E transform, ownership, pitch-depth, and staged-delivery contract.
+- Reviewed-green Stage 54E-2a/2b evidence on `master` at
+  `51a17ae6291295ca1d00780a5dc98bf7336139d4`.
 - `docs/architecture/game_safe_4d_slice_basis.md`: exact signed `B` contract.
-- `docs/architecture/ghost_piece.md`: authoritative Ghost destination and
-  presentation-only identity.
 - `docs/ARCHITECTURE_CONTRACT.md` and
-  `docs/architecture/authority_map.md`: subsystem ownership boundaries.
+  `docs/architecture/authority_map.md`: Godot presentation ownership and
+  deterministic exclusion.
+- `docs/rds/RDS_4D_TETRIS.md`, `docs/rds/RDS_KEYBINDINGS.md`, and the live
+  input contract: current product/input surfaces, subordinate to the accepted
+  54E architecture where transitional wording remains.
 - `docs/plans/professional_godot_game_programme.md`, `CURRENT_STATE.md`, and
   `docs/BACKLOG.md`: Stage 54E sequencing and explicit deferrals.
 - `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`, and
   `godot/AGENTS.md`: routing and verification governance.
 
-Python semantic authority does not apply to the new presentation transform.
-Native gameplay remains authoritative for canonical cells and Ghost landing.
+Godot owns this presentation behavior. Native gameplay remains authoritative
+for canonical state and commands; no Python, native, or authority-transfer
+work is permitted.
 
 ## Allowed Systems and Paths
 
-- Godot rendering and presentation under
-  `godot/Tet4D.Godot/scripts/{rendering,presentation}/`.
-- Minimum app-to-renderer presentation-state wiring in
-  `godot/Tet4D.Godot/scripts/app/trace_replay_app.gd`.
-- Focused Godot renderer/presentation tests.
-- Stage 54E architecture, programme, backlog, handoff, and authority evidence.
+- Godot Live-4D input and presentation orchestration.
+- Godot camera/framing and temporary preset compatibility integration.
+- Shared slice-local orientation and control-frame mapping consumers.
+- Focused Godot camera, renderer, input, and live-integration tests.
+- Necessary status, architecture, programme, backlog, task, and evidence docs.
 
 ## Required Changes
 
-- Apply one shared `SliceLocalOrientation` to locked, active, and Ghost cells.
-- Apply the same orientation to grid, floor/lattice, slice frame/wireframe,
-  active frame, and applicable geometry-attached markers.
-- Keep slice identity labels readable and attached without rotating anchors.
-- Derive per-slice and collection world AABBs from oriented local corners and
-  use those bounds as camera-fit inputs.
-- Preserve exact `B`, affine centred `G_D`, anchor-only layout, continuous yaw,
-  representative pitch, signed-basis, asymmetric-dimension, and W=1 behavior.
+- Route Live-4D left drag and keyboard yaw/pitch to the one shared `L`.
+- Keep right drag on outer pan and wheel/zoom actions on outer framing.
+- Resolve relative Live-4D controls from exact `B + Q(L.local_yaw)` without
+  consulting `CameraRig.control_frame_yaw()`.
+- Remove ordinary Live-4D interactive outer yaw/pitch/roll while preserving
+  reusable low-level free-inspection roll.
+- Establish and enforce a fitted-view-derived normal-gameplay pitch domain.
+- Prove fitted-view post-`R` `+X` is screen-right and `+Z` is receding.
+- Decompose current preset yaw/pitch into `L` and framing/zoom/pan into `V/P`.
+- Make every interactive or preset-driven `L` mutation explicitly rerender,
+  recompute oriented bounds, and refresh fit inputs without native gameplay.
+- Replace provisional combined-camera characterization tests with requirement
+  and regression evidence while preserving non-Live camera behavior.
 
 ## Forbidden Changes
 
-- Input rerouting, including mouse/keyboard yaw or pitch ownership.
-- `CameraRig` orientation ownership, control-frame resolver semantics, roll
-  binding removal, pitch-domain policy, or fitted-camera Forward proof.
-- Camera/GUI preset redesign or lifecycle/reset reconciliation.
-- Canonical gameplay, Ghost landing, native C++, Python, snapshot/hash/replay,
-  RNG, score, queue, topology, or persistence semantics.
-- Stage 54E-2c, 54E-2d, 54E-3, 54E-4, or 54E-5 implementation.
+- Deterministic gameplay, canonical commands, snapshots/hashes, RNG, scoring,
+  queue/NEXT, Ghost landing, collision, hard drop, or topology semantics.
+- Native C++ or Python implementation changes.
+- Camera-preset taxonomy, names, UI categories, persistence, or Stage 54E-4
+  redesign.
+- Broad lifecycle, Reset View, new-game/restart, setup-change, mode-switch,
+  persistence, keybinding/RDS, or final authority closure from Stage 54E-2d.
+- Explorer UI, Hold, or Stages 54E-3/4/5 implementation.
 
 ## Acceptance Criteria
 
-1. Live-4D render composition is exactly `world = L(G_D(p)) + anchor_i`.
-2. One continuous yaw/pitch `L` is applied once and identically to every slice.
-3. Locked, active, Ghost, grid, frame, and geometry-attached markers align.
-4. Yaw/pitch do not change anchors, row/column assignment, order, membership,
-   exact `B`, canonical source cells, or deterministic identity.
-5. Layout changes may move anchors but cannot change oriented local deltas.
-6. Oriented corner-derived bounds contain every rendered local board corner
-   for identity, non-quarter yaw, pitch, asymmetric dimensions, and multiple
-   slices; camera fit consumes those bounds.
-7. Slice labels remain associated with the correct signed semantic slice and
-   are not rotated as local physical geometry.
-8. Identity `L` preserves current 2D, 3D, and Live-4D presentation.
-9. Focused, resolver-required, sanitation, full repository, and manual visual
-   verification are green.
-10. Status is `IMPLEMENTED / REVIEW PENDING`; Stage 54E-2c remains blocked.
+1. One shared `L` owns normal Live-4D yaw/pitch for renderer, input, resolver,
+   and preset compatibility.
+2. Live-4D relative commands use exact `B + Q(L.local_yaw)`; pitch and outer
+   framing never enter discrete mapping.
+3. Left drag and keyboard yaw/pitch mutate `L`; right drag pans; wheel and
+   zoom actions change framing; gameplay roll has no effect.
+4. Normal Live-4D outer interactive rotation is absent, while generic rig
+   orbit/yaw/pitch/roll remains valid for non-Live/free-inspection consumers.
+5. Every `L` mutation rerenders continuous orientation, recomputes oriented
+   bounds, and refreshes the renderer/camera-fit input seam without native
+   transitions or automatic recentering on every drag.
+6. `B`, `L`, pan, zoom, Fit, and presets satisfy their independence and
+   deterministic-isolation contracts.
+7. The declared normal-game pitch range is mathematically inside the actual
+   fitted-view Forward inversion boundary and passes default, extrema,
+   intermediate, and clamp coverage.
+8. Actual fitted-view evidence proves board-frame `+X` projects screen-right
+   and board-frame `+Z` recedes for identity and signed `B`, all four yaw
+   quarters, and representative admitted pitch.
+9. Preset yaw/pitch reaches `L`, framing reaches `V/P`, final bounds remain
+   coherent, and no preset leaves normal Live-4D outer rotation.
+10. Focused, resolver-required, sanitation, full-repository, and real-window
+    verification are green; Stage 54E-2d remains the next gated slice.
 
 ## Automated Verification
 
-- Policy-backed resolver requirements: `documentation`, `godot`,
-  `deterministic`, and `human_visual`; full repository gate required.
-- Focused renderer/presentation Godot tests.
+- Policy resolver classification: `godot_product_shell` with
+  `staged_handoff`.
+- Requirements: `documentation`, `governance_structure`, `godot`,
+  `deterministic`, `integration`, and `human_visual`; full repository gate
+  required.
+- Focused camera, orientation, mapping, renderer, input, and live-shell tests.
 - `GODOT_BIN=... ./scripts/verify_godot_4_7.sh`.
-- Governance/documentation validators and generated-document checks.
+- Governance validators and generated-document checks.
 - Git sanitation and `git diff --check`.
 - `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ## Manual Verification
 
-Inspect a real rendered Live-4D scene at identity and at representative
-nonzero continuous yaw/pitch. Confirm uniform per-slice orientation, fixed
-anchors/order, cell/Ghost/grid/frame alignment, correct labels, no clipping,
-and complete collection framing. Do not assess final control correspondence.
+Use a real window with an asymmetric multi-slice Live-4D board. Verify shared
+slice-local left-drag/keyboard yaw and pitch, fixed anchors, right-drag pan,
+wheel zoom, clamp behavior, Right/Forward correspondence, framing
+independence, preset decomposition, roll detachment, visual alignment,
+refreshed Fit bounds/no clipping, and a representative 3D/non-Live camera
+path.
 
 ## Documentation Updates
 
-Update only concrete implementation/status evidence in `CURRENT_STATE.md`,
-`docs/BACKLOG.md`, `docs/architecture/4d_presentation_interaction_architecture.md`,
-`docs/plans/professional_godot_game_programme.md`, `docs/ARCHITECTURE_CONTRACT.md`,
-and `docs/architecture/authority_map.md` where the resulting diff establishes
-new renderer ownership evidence.
+Update concrete 54E-2c implementation/status evidence in `CURRENT_STATE.md`,
+`docs/BACKLOG.md`,
+`docs/architecture/4d_presentation_interaction_architecture.md`,
+`docs/architecture/game_safe_4d_slice_basis.md`,
+`docs/plans/professional_godot_game_programme.md`,
+`docs/ARCHITECTURE_CONTRACT.md`, and
+`docs/architecture/authority_map.md` as warranted by the final diff.
 
 ## Explicit Deferrals
 
-- Stage 54E-2c: interaction, resolver, `CameraRig`, roll, pitch policy, presets,
-  and fitted-camera semantic Forward verification.
-- Stage 54E-2d: lifecycle, reset/new-game/mode-switch, and final contract
-  reconciliation.
-- Stages 54E-3/4/5 and later integrated visual acceptance.
+- Stage 54E-2d: complete reset/new-game/restart/setup/mode-switch lifecycle,
+  persistence semantics, final keybinding/RDS/help reconciliation, and final
+  authority closure.
+- Stage 54E-4: preset semantics, categories, naming, UI, and persistence.
+- Explorer/free-inspection UI and later Stage 54E/54F work.

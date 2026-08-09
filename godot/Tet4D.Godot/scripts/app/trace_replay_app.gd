@@ -252,14 +252,16 @@ func _handle_camera_input(event: InputEvent) -> void:
 				_camera_rig.zoom(1.0)
 				_refresh_camera_status()
 	elif event is InputEventMouseMotion:
-		if _camera_rig == null:
-			return
 		if _mouse_orbiting:
-			_camera_rig.orbit(event.relative)
-			_refresh_camera_status()
+			if _mode == MODE_LIVE_4D:
+				_apply_live_4d_orientation_drag(event.relative)
+			elif _camera_rig != null:
+				_camera_rig.orbit(event.relative)
+				_refresh_camera_status()
 		elif _mouse_panning:
-			_camera_rig.pan_screen(event.relative)
-			_refresh_camera_status()
+			if _camera_rig != null:
+				_camera_rig.pan_screen(event.relative)
+				_refresh_camera_status()
 
 
 func _event_is_camera_mouse_input(event: InputEvent) -> bool:
@@ -463,41 +465,100 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 
 
 func _handle_live_4d_camera_input(event: InputEvent) -> bool:
-	if _camera_rig == null:
-		return false
 	if _event_action_pressed_once(event, ["live_4d_camera_yaw_left"]):
-		_camera_rig.nudge_yaw(-CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
-		_refresh_camera_status()
+		_nudge_live_4d_local_yaw(-CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_yaw_right"]):
-		_camera_rig.nudge_yaw(CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
-		_refresh_camera_status()
+		_nudge_live_4d_local_yaw(CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_pitch_up"]):
-		_camera_rig.nudge_pitch(CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
-		_refresh_camera_status()
+		_nudge_live_4d_local_pitch(CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_pitch_down"]):
-		_camera_rig.nudge_pitch(-CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
-		_refresh_camera_status()
+		_nudge_live_4d_local_pitch(-CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_roll_left"]):
-		_camera_rig.nudge_roll(-CameraRigScript.LIVE_4D_CAMERA_ROLL_STEP_RAD)
-		_refresh_camera_status()
+		# Normal Live-4D gameplay deliberately consumes but does not expose roll.
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_roll_right"]):
-		_camera_rig.nudge_roll(CameraRigScript.LIVE_4D_CAMERA_ROLL_STEP_RAD)
-		_refresh_camera_status()
+		# Generic CameraRig roll remains available to free-inspection consumers.
 		return true
 	if _event_is_live_4d_zoom_in(event):
-		_camera_rig.zoom(-1.0)
-		_refresh_camera_status()
+		if _camera_rig != null:
+			_camera_rig.zoom(-1.0)
+			_refresh_camera_status()
 		return true
 	if _event_is_live_4d_zoom_out(event):
-		_camera_rig.zoom(1.0)
-		_refresh_camera_status()
+		if _camera_rig != null:
+			_camera_rig.zoom(1.0)
+			_refresh_camera_status()
 		return true
 	return false
+
+
+func _apply_live_4d_orientation_drag(delta: Vector2) -> void:
+	var sensitivity_factor := 1.0
+	var invert_y := false
+	var orbit_sensitivity := 0.01
+	if _camera_rig != null:
+		var preferences: Dictionary = _camera_rig.presentation_snapshot()
+		sensitivity_factor = float(preferences.get("sensitivity_factor", 1.0))
+		invert_y = bool(preferences.get("invert_y", false))
+		orbit_sensitivity = _camera_rig.orbit_sensitivity
+	var yaw_delta := -delta.x * orbit_sensitivity * sensitivity_factor
+	var vertical_direction := 1.0 if invert_y else -1.0
+	var pitch_delta := delta.y * orbit_sensitivity * sensitivity_factor * vertical_direction
+	_set_live_4d_local_orientation(
+		_live_4d_local_orientation.local_yaw + yaw_delta,
+		_live_4d_local_orientation.local_pitch + pitch_delta
+	)
+
+
+func _nudge_live_4d_local_yaw(delta_radians: float) -> void:
+	var sensitivity_factor := 1.0
+	if _camera_rig != null:
+		sensitivity_factor = float(_camera_rig.presentation_snapshot().get("sensitivity_factor", 1.0))
+	_set_live_4d_local_orientation(
+		_live_4d_local_orientation.local_yaw + delta_radians * sensitivity_factor,
+		_live_4d_local_orientation.local_pitch
+	)
+
+
+func _nudge_live_4d_local_pitch(delta_radians: float) -> void:
+	var sensitivity_factor := 1.0
+	var vertical_direction := 1.0
+	if _camera_rig != null:
+		var preferences: Dictionary = _camera_rig.presentation_snapshot()
+		sensitivity_factor = float(preferences.get("sensitivity_factor", 1.0))
+		vertical_direction = -1.0 if bool(preferences.get("invert_y", false)) else 1.0
+	_set_live_4d_local_orientation(
+		_live_4d_local_orientation.local_yaw,
+		_live_4d_local_orientation.local_pitch + delta_radians * sensitivity_factor * vertical_direction
+	)
+
+
+# Sole normal-game semantic boundary for mutable shared L. It keeps renderer
+# geometry, oriented bounds, the renderer fit reference, and resolver/HUD
+# consumers on the same orientation without invoking a native transition.
+func _set_live_4d_local_orientation(yaw_radians: float, pitch_radians: float) -> bool:
+	var before := _live_4d_local_orientation.snapshot()
+	_live_4d_local_orientation.set_normal_gameplay_angles(yaw_radians, pitch_radians)
+	var after := _live_4d_local_orientation.snapshot()
+	if before == after:
+		return false
+	_refresh_live_4d_presentation(true)
+	_refresh_camera_status()
+	return true
+
+
+func _refresh_live_4d_presentation(reset_fit_reference: bool = false) -> void:
+	if _mode != MODE_LIVE_4D or _renderer == null:
+		return
+	if reset_fit_reference:
+		_renderer.reset_live_4d_fit_envelope()
+	_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
+	_refresh_render()
+	_refresh_control_frame_presentation()
 
 
 func _handle_live_4d_basis_input(event: InputEvent) -> bool:
@@ -590,7 +651,8 @@ func _wire_hud() -> void:
 			_refresh_camera_status()
 	)
 	_hud.camera_preset_requested.connect(func(id: String) -> void:
-		if _camera_rig != null and _camera_rig.apply_preset(id):
+		var applied := _apply_live_4d_preset(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_preset(id))
+		if applied and _camera_rig != null:
 			_hud.set_camera_preset(_camera_rig.current_preset_id())
 			_refresh_camera_status()
 	)
@@ -826,6 +888,17 @@ func ghost_cache_snapshot() -> Dictionary:
 	return result
 
 
+func _apply_live_4d_preset(id: String) -> bool:
+	if _mode != MODE_LIVE_4D or _camera_rig == null or not CameraPresetScript.is_known(id):
+		return false
+	var preset := CameraPresetScript.definition(id)
+	_set_live_4d_local_orientation(
+		float(preset.get("yaw", _live_4d_local_orientation.local_yaw)),
+		float(preset.get("pitch", _live_4d_local_orientation.local_pitch))
+	)
+	return _camera_rig.apply_framing_preset(id)
+
+
 func _fit_view() -> void:
 	_resolve_scene_nodes()
 	if _camera_rig == null or _renderer == null or not _camera_rig.has_method("fit_bounds"):
@@ -842,7 +915,8 @@ func _fit_view() -> void:
 			CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
 			CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
 			CameraPresetScript.ISO,
-			"fitted W slices"
+			"fitted W slices",
+			true
 		)
 	elif _mode == MODE_LIVE_3D:
 		_camera_rig.fit_bounds(
@@ -1229,8 +1303,13 @@ func _dispatch_live_4d_gameplay_command(command: String) -> bool:
 
 
 func _control_frame_mapping(dimension: int):
+	if dimension >= 4:
+		return ControlFrameMappingScript.for_4d(
+			_live_4d_basis,
+			_live_4d_local_orientation.local_yaw
+		)
 	var yaw := _camera_rig.control_frame_yaw() if _camera_rig != null and _camera_rig.has_method("control_frame_yaw") else 0.0
-	return ControlFrameMappingScript.for_4d(_live_4d_basis, yaw) if dimension >= 4 else ControlFrameMappingScript.for_3d(yaw)
+	return ControlFrameMappingScript.for_3d(yaw)
 
 
 func _dispatch_live_3d_control_intent(intent: String) -> bool:
@@ -1256,8 +1335,8 @@ func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 	_renderer.set_live_4d_basis(_live_4d_basis, true)
 	if _camera_rig != null:
 		_camera_rig.set_orientation_basis(_live_4d_basis)
+	_refresh_live_4d_presentation()
 	_refresh_hud()
-	_refresh_render()
 
 
 func _reset_live_4d_view() -> void:
@@ -1265,11 +1344,12 @@ func _reset_live_4d_view() -> void:
 		return
 	_live_4d_basis = SliceBasis4DScript.identity()
 	if _renderer != null:
-		_renderer.reset_live_4d_fit_envelope()
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
 	if _camera_rig != null:
 		_camera_rig.set_orientation_basis(_live_4d_basis)
-	_refresh_render()
+	var orientation_changed := _set_live_4d_local_orientation(0.0, 0.0)
+	if not orientation_changed:
+		_refresh_live_4d_presentation(true)
 	_fit_view()
 	_refresh_hud()
 

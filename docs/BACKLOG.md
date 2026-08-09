@@ -91,13 +91,18 @@ and eligible.
 
 ### Stage 54E-2c — Interaction and camera-rig separation
 
-Status: NEXT — ELIGIBLE.
+Status: IMPLEMENTED — REVIEW PENDING.
 
-`SliceLocalOrientation` becomes interactive in this stage. Every yaw/pitch
-mutation must refresh presentation composition, recompute oriented per-slice
-and collection bounds, and refresh camera-fit inputs before geometry and cached
-fit bounds are considered coherent. Stage 54E-2d remains blocked until this
-stage is reviewed green.
+Normal Live-4D left-drag and keyboard yaw/pitch now mutate the one shared
+`SliceLocalOrientation`; the app-owned mutation seam rerenders presentation,
+recomputes oriented bounds, and refreshes the renderer fit reference. Relative
+commands use exact `B + Q(L.local_yaw)` and ignore outer framing. Right-drag,
+wheel/zoom, and Fit remain framing operations; gameplay roll is detached while
+generic roll remains reusable. Legacy presets are temporarily decomposed into
+`L` orientation and `V/P` framing. The fixed fitted mount now proves board
+`+X` screen-right and board `+Z` receding, with a mathematically safe
+`[-60 degrees, +60 degrees]` gameplay pitch range. Stage 54E-2d remains blocked
+until this stage is reviewed green.
 
 ## Hold
 
@@ -114,8 +119,8 @@ a placeholder authority record in advance.
 ## Forward Work
 
 - Stage 54E-2b — renderer composition (COMPLETE / REVIEWED GREEN).
-- Stage 54E-2c — interaction and camera-rig separation (NEXT / ELIGIBLE;
-  mutable-`L` presentation/bounds/fit refresh is mandatory).
+- Stage 54E-2c — interaction and camera-rig separation (IMPLEMENTED / REVIEW
+  PENDING).
 - Stage 54E-2d — lifecycle, authority, and contract reconciliation (blocked
   until reviewed-green 54E-2c).
 - Stage 54E-3 — setup/menu information architecture.

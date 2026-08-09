@@ -9,7 +9,10 @@ const LIVE_3D_VIEW_PRESET_NAME := "LIVE_3D_EXTERNAL_DIAGRAM_VIEW"
 const LIVE_4D_VIEW_PRESET_NAME := "LIVE_4D_FITTED_W_SLICE_VIEW"
 const LIVE_3D_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const LIVE_3D_DISPLAY_PITCH_RAD := 0.4537856055185257  # +26 degrees above the board.
-const LIVE_4D_DISPLAY_YAW_RAD := 0.4363323129985824  # 25 degrees for side-by-side W slices.
+# The fitted gameplay mount sits 25 degrees past the board's far side. Its
+# fixed horizontal reflection preserves board-frame +X as screen-right while
+# board-frame +Z recedes into the scene.
+const LIVE_4D_DISPLAY_YAW_RAD := 3.5779249665883754  # 205 degrees.
 const LIVE_4D_DISPLAY_PITCH_RAD := 0.3490658503988659  # +20 degrees above the board.
 const LIVE_2D_FIT_MARGIN := 1.32
 const LIVE_3D_FIT_MARGIN := 1.38
@@ -21,6 +24,7 @@ const LIVE_4D_CAMERA_YAW_STEP_RAD := 0.08726646259971647  # 5 degrees.
 const LIVE_4D_MATRIX_SCROLL_STEP := 4.0
 const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
+const LIVE_4D_HORIZONTAL_MIRROR_SCALE := Vector3(-1.0, 1.0, 1.0)
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const ORIENTATION_GIZMO_SCREEN_SCALE := 0.060
@@ -34,6 +38,7 @@ const ORIENTATION_GIZMO_CAMERA_DEPTH := 2.0
 
 var _target_focus := Vector3.ZERO
 var _current_focus := Vector3.ZERO
+var _fit_focus := Vector3.ZERO
 var _target_distance := 22.0
 var _current_distance := 22.0
 var _target_yaw := PYTHON_DISPLAY_YAW_RAD
@@ -52,6 +57,7 @@ var _current_fit_state := "initial"
 var _sensitivity_factor := 1.0
 var _invert_y := false
 var _interpolation_scale := 1.0
+var _horizontal_mirrored := false
 var _orientation_gizmo: Node3D
 var _orientation_basis_snapshot := {
 	"visible_axes": ["+X", "+Y", "+Z"],
@@ -91,6 +97,7 @@ func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> voi
 		x_extent += max(w_extent - 1.0, 0.0) * slice_stride
 	var x_center: float = maxf(w_extent - 1.0, 0.0) * slice_stride * 0.5 if dimension >= 4 else 0.0
 	_target_focus = Vector3(x_center, 0.0, 0.0)
+	_fit_focus = _target_focus
 	var framed_distance := clampf(max(x_extent, y_extent, z_extent * 2.0) * 1.6 + 4.0, min_distance, max_distance)
 	if signature != _last_frame_signature:
 		_base_distance = framed_distance
@@ -102,6 +109,7 @@ func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> voi
 	_current_view_preset = REPLAY_DISPLAY_VIEW_PRESET_NAME
 	_current_view_octant = "python replay"
 	_current_fit_state = "framed"
+	_horizontal_mirrored = false
 
 
 func fit_bounds(
@@ -110,7 +118,8 @@ func fit_bounds(
 	yaw: float = PYTHON_DISPLAY_YAW_RAD,
 	pitch: float = PYTHON_DISPLAY_PITCH_RAD,
 	view_preset: String = REPLAY_DISPLAY_VIEW_PRESET_NAME,
-	view_octant: String = "python replay"
+	view_octant: String = "python replay",
+	horizontal_mirrored: bool = false
 ) -> void:
 	if not bounds.get("ok", false):
 		return
@@ -118,12 +127,14 @@ func fit_bounds(
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	var size := max_pos - min_pos
 	_target_focus = (min_pos + max_pos) * 0.5
+	_fit_focus = _target_focus
 	_target_yaw = yaw
 	_target_pitch = pitch
 	_target_roll = 0.0
 	_current_view_preset = view_preset
 	_current_view_octant = view_octant
 	_current_fit_state = "fit OK"
+	_horizontal_mirrored = horizontal_mirrored
 	var max_extent := maxf(size.x, maxf(size.y, maxf(size.z, 1.0)))
 	_base_distance = clampf(max_extent * 1.45 + 6.0, min_distance, max_distance)
 	_zoom_multiplier = 1.0
@@ -223,11 +234,37 @@ func apply_preset(id: String) -> bool:
 	_target_yaw = float(preset.get("yaw", _target_yaw))
 	_target_pitch = float(preset.get("pitch", _target_pitch))
 	_target_roll = 0.0
+	_horizontal_mirrored = false
 	_zoom_multiplier = float(preset.get("zoom", 1.0))
 	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
 	_current_view_preset = id
 	_current_view_octant = CameraPresetScript.label(id)
 	_current_fit_state = "preset"
+	_snap_to_targets()
+	return true
+
+
+# Stage 54E-2c compatibility adapter: legacy preset orientation is applied to
+# shared SliceLocalOrientation by the app. CameraRig receives framing only.
+# Stage 54E-4 owns the eventual preset taxonomy and persistence redesign.
+func apply_framing_preset(id: String) -> bool:
+	if not CameraPresetScript.is_known(id):
+		return false
+	var preset := CameraPresetScript.definition(id)
+	var pan: Vector3 = preset.get("pan", Vector3.ZERO)
+	_target_focus = _fit_focus + pan
+	_current_focus = _target_focus
+	_zoom_multiplier = float(preset.get("zoom", 1.0))
+	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
+	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+		_camera.size = clampf(
+			_base_orthographic_size * _zoom_multiplier,
+			MIN_ORTHOGRAPHIC_SIZE,
+			MAX_ORTHOGRAPHIC_SIZE
+		)
+	_current_view_preset = id
+	_current_view_octant = "%s framing" % CameraPresetScript.label(id)
+	_current_fit_state = "preset framing"
 	_snap_to_targets()
 	return true
 
@@ -288,8 +325,34 @@ func presentation_snapshot() -> Dictionary:
 		"target_pitch": _target_pitch,
 		"target_roll": _target_roll,
 		"target_focus": _target_focus,
+		"zoom_multiplier": _zoom_multiplier,
+		"orthographic_size": _camera.size if _camera != null else 0.0,
+		"horizontal_mirrored": _horizontal_mirrored,
 		"orientation_gizmo_visible": _orientation_gizmo != null and _orientation_gizmo.visible,
 	}
+
+
+func view_space_direction(world_direction: Vector3) -> Vector3:
+	if _camera == null:
+		return Vector3.ZERO
+	return _camera.global_basis.inverse() * world_direction
+
+
+static func live_4d_forward_away_depth(local_pitch: float) -> float:
+	var camera_outward := Vector3(
+		sin(LIVE_4D_DISPLAY_YAW_RAD) * cos(LIVE_4D_DISPLAY_PITCH_RAD),
+		sin(LIVE_4D_DISPLAY_PITCH_RAD),
+		cos(LIVE_4D_DISPLAY_YAW_RAD) * cos(LIVE_4D_DISPLAY_PITCH_RAD)
+	)
+	var displayed_forward := Basis(Vector3.RIGHT, local_pitch) * Vector3.BACK
+	return -camera_outward.dot(displayed_forward)
+
+
+static func live_4d_pitch_safe_domain() -> Vector2:
+	var depth_coefficient := -cos(LIVE_4D_DISPLAY_YAW_RAD) * cos(LIVE_4D_DISPLAY_PITCH_RAD)
+	var vertical_coefficient := sin(LIVE_4D_DISPLAY_PITCH_RAD)
+	var safe_domain_center := atan2(vertical_coefficient, depth_coefficient)
+	return Vector2(safe_domain_center - PI * 0.5, safe_domain_center + PI * 0.5)
 
 
 func _snap_to_targets() -> void:
@@ -318,6 +381,7 @@ func _update_camera() -> void:
 	var forward := (_current_focus - _camera.global_position).normalized()
 	var rolled_up := Basis(forward, _current_roll) * Vector3.UP
 	_camera.look_at(_current_focus, rolled_up)
+	_camera.scale = LIVE_4D_HORIZONTAL_MIRROR_SCALE if _horizontal_mirrored else Vector3.ONE
 	_update_orientation_gizmo()
 
 

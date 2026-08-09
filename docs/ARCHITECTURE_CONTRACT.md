@@ -102,6 +102,13 @@ order as separate anchor translation and local orientation transforms. Oriented
 corner-derived collection bounds are the renderer's camera-fit input; slice
 identity labels remain presentation attachments rather than local basis axes.
 
+Normal Live-4D interaction mutates that same shared `L` through one app-owned
+refresh boundary. Continuous `L` reaches rendering and oriented fit bounds;
+only quantized `L.local_yaw` combines with exact `B` for relative commands.
+Outer `CameraRig` state owns pan, fit, zoom, focus, the fixed fitted mount, and
+projection, and cannot affect Live-4D command resolution. Normal gameplay does
+not expose roll, while generic camera roll remains reusable outside that mode.
+
 This ownership may remap presentation movement intents into existing canonical
 native commands. It must not independently decide movement legality or mutate
 canonical board coordinates, gravity, topology, collision, scoring, snapshot,

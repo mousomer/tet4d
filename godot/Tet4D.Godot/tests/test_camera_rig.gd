@@ -2,7 +2,13 @@ extends RefCounted
 
 const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
+const ControlFrameMappingScript = preload("res://scripts/presentation/control_frame_mapping.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
+const TraceCoordinateMapperScript = preload("res://scripts/rendering/trace_coordinate_mapper.gd")
+
+const LIVE_4D_DIMENSIONS := [5, 7, 3, 2]
+const LIVE_4D_INTERIOR_POINT := [2, 3, 1, 0]
 
 
 func run() -> Array:
@@ -56,12 +62,17 @@ func run() -> Array:
 		CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
 		CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
 		CameraPresetScript.ISO,
-		"fitted W slices"
+		"fitted W slices",
+		true
 	)
 	_assert_float(failures, rig._current_yaw, CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD, "live 4D fit uses W-slice yaw")
 	_assert_float(failures, rig._current_pitch, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD, "live 4D fit uses W-slice pitch")
 	if camera.size <= 20.0:
 		failures.append("live 4D camera fit should frame the full W-slice layout, got size %.3f" % camera.size)
+	if not bool(rig.presentation_snapshot().get("horizontal_mirrored", false)):
+		failures.append("live 4D fixed far-side mount should mirror screen X for board-frame Right")
+	_assert_live_4d_fitted_view_contract(failures, rig)
+	_assert_live_4d_signed_correspondence(failures, rig)
 	status = rig.view_status_text()
 	if status.find("Iso") == -1 or status.find("fitted W slices") == -1 or status.find("size") == -1 or status.find("zoom") == -1:
 		failures.append("live 4D camera status should name the fitted W-slice preset and zoom diagnostics: %s" % status)
@@ -78,13 +89,13 @@ func run() -> Array:
 	var yaw_before := rig._current_yaw
 	rig.nudge_yaw(CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
 	if rig._current_yaw <= yaw_before:
-		failures.append("live 4D camera yaw nudge should adjust the view")
+		failures.append("generic camera yaw nudge should remain available for non-Live/free inspection")
 	if rig.view_status_text().find("manual") == -1:
 		failures.append("live 4D camera nudge should mark the view as manual")
 	var roll_before := rig._current_roll
 	rig.nudge_roll(CameraRigScript.LIVE_4D_CAMERA_ROLL_STEP_RAD)
 	if rig._current_roll <= roll_before:
-		failures.append("live 4D camera roll nudge should adjust the view")
+		failures.append("generic camera roll nudge should remain available for free inspection")
 	if rig.view_status_text().find("roll") == -1:
 		failures.append("live 4D camera status should expose roll diagnostics")
 	rig.fit_bounds(
@@ -93,7 +104,8 @@ func run() -> Array:
 		CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
 		CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
 		CameraPresetScript.ISO,
-		"fitted W slices"
+		"fitted W slices",
+		true
 	)
 	if absf(camera.size - fitted_size) > 0.001:
 		failures.append("live 4D Fit View should restore fitted orthographic size, got %.3f expected %.3f" % [camera.size, fitted_size])
@@ -107,9 +119,9 @@ func run() -> Array:
 		failures.append("4D matrix scrolling should pan presentation focus and report its view state")
 	var yaw_before_preset := rig._current_yaw
 	if not rig.apply_preset(CameraPresetScript.BACK):
-		failures.append("Back camera preset should be accepted")
+		failures.append("generic Back camera preset should be accepted")
 	elif rig.current_preset_id() != CameraPresetScript.BACK or absf(rig._current_yaw - PI) > 0.001:
-		failures.append("Back camera preset should set only its deterministic presentation yaw")
+		failures.append("generic Back preset should retain reusable non-Live outer yaw")
 	if rig.apply_preset("unknown"):
 		failures.append("unknown camera preset should be rejected")
 	if absf(yaw_before_preset - rig._current_yaw) < 0.001:
@@ -119,6 +131,91 @@ func run() -> Array:
 	rig.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_live_4d_fitted_view_contract(failures: Array, rig) -> void:
+	var focus_view: Vector3 = rig._camera.to_local(rig._current_focus)
+	if focus_view.z >= 0.0:
+		failures.append("actual fitted Live 4D collection must remain in front of the camera")
+	var right_view: Vector3 = rig.view_space_direction(Vector3.RIGHT)
+	if right_view.x <= 0.0:
+		failures.append("actual fitted Live 4D view must project board-frame +X screen-right")
+	var safe_domain := CameraRigScript.live_4d_pitch_safe_domain()
+	var product_min := SliceLocalOrientationScript.NORMAL_GAMEPLAY_MIN_PITCH_RAD
+	var product_max := SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD
+	if product_min <= safe_domain.x or product_max >= safe_domain.y:
+		failures.append("normal gameplay pitch range must remain strictly inside theoretical fitted-view boundaries %s" % safe_domain)
+	for pitch_case in [
+		0.0,
+		product_min,
+		product_max,
+		PI / 6.0,
+		-PI / 6.0,
+	]:
+		var displayed_forward := Basis(Vector3.RIGHT, pitch_case) * Vector3.BACK
+		var forward_view: Vector3 = rig.view_space_direction(displayed_forward)
+		if -forward_view.z <= 0.0:
+			failures.append("actual fitted view Forward must recede at pitch %.3f" % pitch_case)
+		if CameraRigScript.live_4d_forward_away_depth(pitch_case) <= 0.0:
+			failures.append("analytical fitted-view away depth must stay positive at pitch %.3f" % pitch_case)
+	var epsilon := deg_to_rad(0.1)
+	if CameraRigScript.live_4d_forward_away_depth(safe_domain.x + epsilon) <= 0.0:
+		failures.append("pitch immediately inside the theoretical lower boundary should retain away depth")
+	if CameraRigScript.live_4d_forward_away_depth(safe_domain.x - epsilon) >= 0.0:
+		failures.append("pitch immediately outside the theoretical lower boundary should invert away depth")
+	if CameraRigScript.live_4d_forward_away_depth(safe_domain.y - epsilon) <= 0.0:
+		failures.append("pitch immediately inside the theoretical upper boundary should retain away depth")
+	if CameraRigScript.live_4d_forward_away_depth(safe_domain.y + epsilon) >= 0.0:
+		failures.append("pitch immediately outside the theoretical upper boundary should invert away depth")
+
+
+func _assert_live_4d_signed_correspondence(failures: Array, rig) -> void:
+	for basis in [
+		SliceBasis4DScript.identity(),
+		SliceBasis4DScript.from_slots([-3, 2, 1, 4]),
+	]:
+		var mapper = TraceCoordinateMapperScript.new()
+		mapper.configure(LIVE_4D_DIMENSIONS, basis)
+		for yaw in [0.0, PI * 0.5, PI, -PI * 0.5]:
+			var mapping = ControlFrameMappingScript.for_4d(basis, yaw)
+			var orientation = SliceLocalOrientationScript.new(yaw, PI / 6.0)
+			var right := _mapped_displayed_difference(
+				mapper,
+				orientation,
+				mapping.translation_command("move_x_pos", "relative")
+			)
+			var forward := _mapped_displayed_difference(
+				mapper,
+				orientation,
+				mapping.translation_command("move_z_neg", "relative")
+			)
+			var right_view: Vector3 = rig.view_space_direction(right)
+			var forward_view: Vector3 = rig.view_space_direction(forward)
+			if right_view.x <= 0.0:
+				failures.append("signed B %s yaw %.3f Right must remain screen-right in actual fitted view" % [basis.key(), yaw])
+			if -forward_view.z <= 0.0:
+				failures.append("signed B %s yaw %.3f Forward must remain receding in actual fitted view" % [basis.key(), yaw])
+
+
+func _mapped_displayed_difference(mapper, orientation, command: String) -> Vector3:
+	var delta := _canonical_delta(command)
+	var destination := LIVE_4D_INTERIOR_POINT.duplicate()
+	for axis in range(4):
+		destination[axis] = int(destination[axis]) + int(delta[axis])
+	var origin_mapping: Dictionary = mapper.presentation_coordinate(LIVE_4D_INTERIOR_POINT)
+	var destination_mapping: Dictionary = mapper.presentation_coordinate(destination)
+	var origin_local: Vector3 = mapper.centered_local_point(origin_mapping.get("visible_cell_3d", []))
+	var destination_local: Vector3 = mapper.centered_local_point(destination_mapping.get("visible_cell_3d", []))
+	return orientation.passive_render_basis() * (destination_local - origin_local)
+
+
+func _canonical_delta(command: String) -> Array:
+	match command:
+		"move_x_neg": return [-1, 0, 0, 0]
+		"move_x_pos": return [1, 0, 0, 0]
+		"move_z_neg": return [0, 0, -1, 0]
+		"move_z_pos": return [0, 0, 1, 0]
+		_: return [0, 0, 0, 0]
 
 
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:

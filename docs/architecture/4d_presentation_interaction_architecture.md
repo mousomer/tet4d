@@ -6,7 +6,7 @@ Scope: Live 4D Godot presentation and input adaptation only
 Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
 Implementation evidence: Stage 54E-2a complete — reviewed green; Stage 54E-2b
-complete — reviewed green
+complete — reviewed green; Stage 54E-2c implemented — review pending
 
 ## 1. Purpose and current audit result
 
@@ -802,6 +802,56 @@ The relevant test/manual visual verification must establish that actual camera
 placement/orientation satisfies this semantic contract. If it does not, 54E-2
 must reconcile presentation/camera composition rather than relabelling the
 direction.
+
+**Stage 54E-2c implementation evidence.** Normal Live-4D now has one app-owned
+orientation mutation seam over the shared `SliceLocalOrientation`. Mouse-left
+drag and keyboard yaw/pitch enter that seam; it applies the normal-game pitch
+policy, resets the renderer fit reference, rerenders the current presentation,
+recomputes oriented bounds, and refreshes resolver/HUD consumers without a
+native gameplay transition. Right-drag remains outer pan, wheel/zoom remain
+framing, and ordinary roll actions are consumed without mutating either `L` or
+the outer rig. Generic `CameraRig` yaw/pitch/roll primitives remain available
+to 3D, replay, and future free-inspection consumers.
+
+The Live-4D resolver now consumes exact `B` plus
+`Q(L.local_yaw)`; `CameraRig.control_frame_yaw()` remains only for the 3D
+resolver. Rendering continues to consume continuous yaw and admitted pitch.
+The temporary preset adapter sends legacy yaw/pitch to shared `L` and sends
+zoom/pan/focus framing to `CameraRig`; final preset semantics remain Stage
+54E-4.
+
+The actual fitted mount required reconciliation. A proper near-side camera at
+the old 25-degree yaw made board-frame `+Z` approach the viewer. The corrected
+fixed Live-4D mount is on the far side at yaw `205 degrees`, pitch `20 degrees`,
+with a fixed horizontal camera reflection. This keeps the collection in front
+of the camera, maps board-frame `+X` to positive view/screen X, preserves the
+vertical presentation, and maps board-frame `+Z` to negative Godot view Z
+(farther into the rendered scene).
+
+Let the post-yaw semantic Forward after local pitch `p` be
+`d(p)=(0,-sin(p),cos(p))`. For the fixed mount, positive away depth is:
+
+```text
+away(p) = sin(20 degrees) sin(p)
+        + cos(25 degrees) cos(20 degrees) cos(p)
+```
+
+The strict mathematical interval around the gameplay default is therefore
+approximately `(-68.121 degrees, +111.879 degrees)`. Normal gameplay uses the
+symmetric product range `[-60 degrees, +60 degrees]`. It preserves the current
+Top preset, leaves an `8.121-degree` margin at the nearest inversion boundary,
+and retains approximately `0.130` normalized away depth at the worst admitted
+endpoint. The unconstrained low-level orientation primitive remains available
+outside the normal-gameplay policy.
+
+Focused evidence covers default/minimum/maximum/intermediate pitch, just-inside
+and just-outside mathematical boundaries, `44/46/134/136`-degree yaw samples
+and ties-to-even, identity and `[-Z,+Y,+X,+W]`, all four yaw quarters, actual
+view-space Right/Forward signs, outer-yaw/pan/zoom/Fit independence, preset
+decomposition, refreshed renderer bounds/fit reference, deterministic
+isolation, Live-4D roll detachment, and retained non-Live/free-camera
+primitives. Stage 54E-2c is implemented and review pending; 54E-2d remains
+blocked until it is reviewed green.
 
 ### 54E-2d — Lifecycle, authority, and contract reconciliation
 
