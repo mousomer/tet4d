@@ -149,9 +149,19 @@ fitted overview scale, while the active-slice frame uses emphasis rather than
 excessive thickness. Live 3D/4D views include a compact, screen-anchored XYZ
 orientation marker whose arrows track the world axes as the camera moves.
 
-Pointer controls use left drag to rotate, right drag to translate, and wheel
-to zoom. Shift has no live camera or soft-drop binding; 3D/4D soft drop uses
-Ctrl only.
+Pointer controls in normal Live 4D use left drag for shared slice-local
+orientation `L`, right drag for outer-framing translation/pan, and the wheel
+for outer-framing zoom. Other modes may retain their camera interaction. Shift
+has no live camera or soft-drop binding; 3D/4D soft drop uses Ctrl only.
+
+The fixed fitted Live-4D horizontal presentation is applied once to the
+renderer-only `Live4DPresentationRoot`, across the active camera's
+vertical/depth plane about the fitted focus. The HUD and `Camera3D` are outside
+that subtree, so text remains left-to-right and the camera keeps identity
+scale. The orientation gizmo applies the same presented-axis mapping without
+mirroring its screen-anchored UI. Screen-right conformance is measured through
+actual `Camera3D.unproject_position()` coordinates; camera basis inspection is
+not a substitute for rendered projection evidence.
 
 Live control helpers and runtime `InputMap` registration consume the same
 binding contract. Helper copy must not duplicate key assignments. Application
@@ -177,9 +187,11 @@ presentation-only yaw/pitch/zoom shortcuts selected from the compact CAMERA
 control. They do not carry or mutate `BasisState`; a manual orbit reports the
 derived `Custom` state. **4D VIEW ROTATION** means the exact signed XW, ZW, or
 ZX quarter-turn transformation. Re-slicing is used only where that exact turn
-changes slice membership. Relative controls compose the exact basis with the
-camera's yaw quadrant; pitch never remaps gravity, and absolute controls remain
-canonical. Reset View restores canonical basis and the Iso camera presentation.
+changes slice membership. Live-4D relative controls compose exact `B` with
+quantized `SliceLocalOrientation.local_yaw`; outer `CameraRig` framing does not
+participate in Live-4D command mapping. Pitch never remaps gravity, and
+absolute controls remain canonical. Reset View restores canonical basis and
+coherent shared-L/Iso framing defaults.
 
 `tools/governance/validate_live_board_visual_roles.py` protects the known grid,
 wireframe, ghost, locked, and orientation-gizmo consumption paths. It is

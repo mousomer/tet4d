@@ -101,9 +101,11 @@ transport, or legality.
 ## Control-frame resolver
 
 `ControlFrameMapping` is the single Godot presentation resolver for runtime
-input, help copy, and the compact orientation marker. It composes the exact
-signed basis with the camera yaw quantized to a nearest quarter turn using the
-inherited Python convention. The resolver fixes local Y at canonical `+Y`,
+input, help copy, and the compact orientation marker. In Live 4D it composes
+the exact signed basis with shared slice-local `L.local_yaw`, quantized to a
+nearest quarter turn using the inherited Python convention. Outer camera
+framing cannot enter the Live-4D resolver; 3D retains its existing camera-yaw
+projection. The resolver fixes local Y at canonical `+Y`,
 maps Forward/Away to local positive depth, and maps slice movement through the
 signed current slice slot. Relative rotations multiply the local plane signs,
 then canonicalize axis order and invert direction when the order is swapped.
@@ -118,9 +120,9 @@ They do not enter native setup, snapshot/hash/replay identity, or authority.
 world-coordinate convention. Stage 54C cannot place Y in the slice slot or
 invert it.
 
-A basis turn does not change camera yaw, pitch, roll, zoom intent, or pan
-offset. Basis-derived bounds and layout are recomputed independently. Camera
-controls do not modify basis state.
+A basis turn does not change shared `L`, outer fitted framing, zoom intent, or
+pan offset. Basis-derived bounds and layout are recomputed independently.
+Slice-local orientation and outer framing controls do not modify basis state.
 
 The exact destination basis commits when an action begins. A short reduced-
 motion-aware presentation settle animates toward that exact destination; the

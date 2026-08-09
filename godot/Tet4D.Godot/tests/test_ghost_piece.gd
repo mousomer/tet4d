@@ -25,6 +25,8 @@ func run() -> Array:
 	_test_model_and_coincident_visibility(failures)
 	_test_semantic_revision_cache(failures)
 	_test_live_lifecycle_and_presentation_only_cache(failures)
+	await _test_immediate_renderer_replacement(failures)
+	await _test_live_4d_lock_spawn_renderer_lifecycle(failures)
 	await _test_renderer_and_4d_basis(failures)
 	return failures
 
@@ -177,6 +179,196 @@ func _test_renderer_and_4d_basis(failures: Array) -> void:
 	app.free()
 	renderer.queue_free()
 	await tree.process_frame
+
+
+func _test_immediate_renderer_replacement(failures: Array) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		failures.append("immediate Ghost replacement test requires SceneTree")
+		return
+	var renderer = TraceSceneRendererScript.new()
+	tree.root.add_child(renderer)
+	await tree.process_frame
+	var before_lock := _renderer_snapshot(
+		"before-lock",
+		[],
+		[[1, 7, 1, 0], [2, 7, 1, 0]],
+		[[1, 2, 1, 0], [2, 2, 1, 0]],
+		2
+	)
+	renderer.render_snapshot(before_lock)
+	await tree.process_frame
+	var obsolete_natural_ghosts := _nodes_for_role(renderer, "ghost")
+	var after_natural_lock := _renderer_snapshot(
+		"after-natural-lock",
+		[[1, 8, 1, 0], [2, 8, 1, 0]],
+		[[2, 6, 1, 0], [3, 6, 1, 0]],
+		[[2, 1, 1, 0], [3, 1, 1, 0]],
+		3
+	)
+	renderer.render_snapshot(after_natural_lock)
+	_assert_obsolete_nodes_detached(failures, obsolete_natural_ghosts, "natural lock")
+	_assert_renderer_roles_match(failures, renderer, after_natural_lock, "natural lock")
+	await tree.process_frame
+
+	var obsolete_hard_drop_ghosts := _nodes_for_role(renderer, "ghost")
+	var after_hard_drop := _renderer_snapshot(
+		"after-hard-drop",
+		[[1, 8, 1, 0], [2, 8, 1, 0], [2, 7, 1, 0], [3, 7, 1, 0]],
+		[[0, 5, 2, 1], [1, 5, 2, 1]],
+		[[0, 1, 2, 1], [1, 1, 2, 1]],
+		5
+	)
+	renderer.render_snapshot(after_hard_drop)
+	_assert_obsolete_nodes_detached(failures, obsolete_hard_drop_ghosts, "hard drop")
+	_assert_renderer_roles_match(failures, renderer, after_hard_drop, "hard drop")
+	renderer.queue_free()
+	await tree.process_frame
+
+
+func _test_live_4d_lock_spawn_renderer_lifecycle(failures: Array) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		failures.append("Live-4D Ghost lifecycle test requires SceneTree")
+		return
+	var scene := load("res://scenes/trace_replay.tscn") as PackedScene
+	if scene == null:
+		failures.append("Live-4D Ghost lifecycle test requires the product scene")
+		return
+	var root := scene.instantiate() as Control
+	tree.root.add_child(root)
+	await tree.process_frame
+	await tree.process_frame
+	var app = root.get_node_or_null("App")
+	if app == null:
+		failures.append("Live-4D Ghost lifecycle test requires the app node")
+		root.queue_free()
+		await tree.process_frame
+		return
+	app._enter_live_4d_mode()
+	app._live_4d_paused = true
+	_assert_above_board_active_projection(failures, app, "native initial spawn")
+
+	var natural_lock_seen := false
+	for _tick_index in range(32):
+		var locked_before := int(app._current_snapshot.get("locked_cells", []).size())
+		var obsolete_ghosts := _nodes_for_role(app._renderer, "ghost")
+		app._live_4d_command("tick")
+		if app._current_snapshot.get("locked_cells", []).size() > locked_before:
+			natural_lock_seen = true
+			_assert_obsolete_nodes_detached(failures, obsolete_ghosts, "native natural lock")
+			var natural_snapshot: Dictionary = app._presentation_snapshot_for_render()
+			_assert_renderer_roles_match(failures, app._renderer, natural_snapshot, "native natural lock")
+			_assert_above_board_active_projection(failures, app, "native natural spawn")
+			if natural_snapshot.get("ghost_cells", []).is_empty():
+				failures.append("native natural lock must publish the new piece's authoritative Ghost")
+			break
+	if not natural_lock_seen:
+		failures.append("Live-4D natural gravity ticks must reach a lock/spawn transition")
+
+	var hard_drop_obsolete_ghosts := _nodes_for_role(app._renderer, "ghost")
+	var hard_drop_locked_before := int(app._current_snapshot.get("locked_cells", []).size())
+	app._live_4d_command("hard_drop")
+	if app._current_snapshot.get("locked_cells", []).size() <= hard_drop_locked_before:
+		failures.append("Live-4D hard drop must publish its locked piece before renderer assertions")
+	_assert_obsolete_nodes_detached(failures, hard_drop_obsolete_ghosts, "native hard drop")
+	var hard_drop_snapshot: Dictionary = app._presentation_snapshot_for_render()
+	_assert_renderer_roles_match(failures, app._renderer, hard_drop_snapshot, "native hard drop")
+	_assert_above_board_active_projection(failures, app, "native hard-drop spawn")
+	if hard_drop_snapshot.get("ghost_cells", []).is_empty():
+		failures.append("native hard drop must publish the new piece's authoritative Ghost")
+
+	var native_snapshot_before_rerender: String = app._live_bridge.live_4d_snapshot_json()
+	var native_hash_before_rerender: String = str(app._live_bridge.live_4d_state_hash())
+	app._renderer.render_snapshot(hard_drop_snapshot)
+	if app._live_bridge.live_4d_snapshot_json() != native_snapshot_before_rerender or str(app._live_bridge.live_4d_state_hash()) != native_hash_before_rerender:
+		failures.append("renderer Ghost replacement must not mutate native snapshot or state hash")
+	root.queue_free()
+	await tree.process_frame
+
+
+func _renderer_snapshot(
+	case_id: String,
+	locked_positions: Array,
+	ghost_positions: Array,
+	active_positions: Array,
+	color_id: int
+) -> Dictionary:
+	return {
+		"case_id": case_id,
+		"trace_type": "live_4d",
+		"frame_index": 0,
+		"dimension": 4,
+		"board_shape": [5, 10, 4, 4],
+		"locked_cells": _cells(locked_positions, color_id),
+		"ghost_cells": _cells(ghost_positions, color_id),
+		"active_cells": _cells(active_positions, color_id),
+		"probe_markers": [],
+		"event_markers": [],
+		"particles": [],
+	}
+
+
+func _cells(positions: Array, color_id: int) -> Array:
+	var cells: Array = []
+	for position in positions:
+		cells.append({"position": position.duplicate(), "color_id": color_id})
+	return cells
+
+
+func _nodes_for_role(renderer, role: String) -> Array:
+	var nodes: Array = []
+	var root = renderer.get_node_or_null("CellRoot")
+	if root == null:
+		return nodes
+	for child in root.get_children():
+		if str(child.get_meta("presentation_role", "")) == role:
+			nodes.append(child)
+	return nodes
+
+
+func _assert_obsolete_nodes_detached(failures: Array, obsolete_nodes: Array, label: String) -> void:
+	for node in obsolete_nodes:
+		if is_instance_valid(node) and node.get_parent() != null:
+			failures.append("%s must synchronously detach obsolete Ghost geometry" % label)
+			return
+
+
+func _assert_renderer_roles_match(failures: Array, renderer, snapshot: Dictionary, label: String) -> void:
+	for role in ["locked", "ghost", "active"]:
+		var expected_key := "%s_cells" % role
+		var expected := _canonical_position_keys(snapshot.get(expected_key, []))
+		var actual: Array = []
+		for node in _nodes_for_role(renderer, role):
+			actual.append(str(node.get_meta("canonical_position", [])))
+		actual.sort()
+		if actual != expected:
+			failures.append("%s rendered %s set must immediately match authoritative presentation: expected %s got %s" % [label, role, expected, actual])
+
+
+func _canonical_position_keys(cells: Array) -> Array:
+	var keys: Array = []
+	for cell in cells:
+		keys.append(str(cell.get("position", [])))
+	keys.sort()
+	return keys
+
+
+func _assert_above_board_active_projection(failures: Array, app, label: String) -> void:
+	var above_board_nodes: Array = []
+	var rendered_positions := {}
+	for node in _nodes_for_role(app._renderer, "active"):
+		var canonical: Array = node.get_meta("canonical_position", [])
+		if canonical.size() < 4 or float(canonical[1]) >= 0.0:
+			continue
+		above_board_nodes.append(node)
+		if node.position.is_equal_approx(Vector3.ZERO):
+			failures.append("%s must not collapse an above-board active cell to the renderer origin" % label)
+		rendered_positions[str(node.position)] = true
+	if above_board_nodes.is_empty():
+		failures.append("%s must exercise native above-board active coordinates" % label)
+	elif rendered_positions.size() != above_board_nodes.size():
+		failures.append("%s must map distinct above-board active cells to distinct rendered points" % label)
 
 
 func _find_ghost(renderer) -> Node3D:

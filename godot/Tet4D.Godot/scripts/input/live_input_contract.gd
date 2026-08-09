@@ -114,6 +114,14 @@ static func camera_helper_items() -> Array:
 	return items
 
 
+static func live_4d_pointer_helper_items() -> Array:
+	return [
+		[str(CAMERA_CONTROL_SPECS["camera_orbit"]["display"]), "Orient slices"],
+		[str(CAMERA_CONTROL_SPECS["camera_pan"]["display"]), "Translate framing"],
+		[str(CAMERA_CONTROL_SPECS["camera_zoom"]["display"]), "Zoom"],
+	]
+
+
 static func display_key(action_name: String) -> String:
 	return _display_key(action_name)
 
@@ -171,9 +179,10 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 	return [
 		{"group": "Piece movement", "note": "Controls follow the current view." if relative else "Canonical X/Z/W axes.", "items": move_rows},
 		{"group": "Plane Rotation", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
-		{"group": "90° View Rotation", "note": "Exact presentation basis; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "XW - / + (re-slice)"], [_pair("view_zw_neg", "view_zw_pos", " / "), "ZW - / + (re-slice)"], [_pair("view_zx_neg", "view_zx_pos", " / "), "ZX - / +"], [_display_key("reset"), "Reset camera + basis"]]},
-		{"group": "Camera", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"], [_pair("live_4d_camera_roll_left", "live_4d_camera_roll_right", " / "), "Roll left / right"], ["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"]]},
-		{"group": "Mouse Camera", "items": camera_helper_items()},
+		{"group": "90° View Rotation", "note": "Exact presentation basis; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "XW - / + (re-slice)"], [_pair("view_zw_neg", "view_zw_pos", " / "), "ZW - / + (re-slice)"], [_pair("view_zx_neg", "view_zx_pos", " / "), "ZX - / +"], [_display_key("reset"), "Reset view + basis"]]},
+		{"group": "Slice orientation", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"]]},
+		{"group": "Framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"]]},
+		{"group": "Pointer", "items": live_4d_pointer_helper_items()},
 		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
 		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},

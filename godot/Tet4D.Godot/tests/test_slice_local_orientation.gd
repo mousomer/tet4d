@@ -17,6 +17,8 @@ func run() -> Array:
 	_test_active_passive_yaw(failures)
 	_test_continuous_non_quarter_yaw(failures)
 	_test_yaw_pitch_and_anchor_isolation(failures)
+	_test_gameplay_pitch_domain(failures)
+	_test_continuous_yaw_quantization_boundaries(failures)
 	_test_identity_yaw_matrix(failures)
 	_test_negative_signed_basis_yaw_matrix(failures)
 	_test_w_one_and_reslicing(failures)
@@ -85,6 +87,95 @@ func _test_yaw_pitch_and_anchor_isolation(failures: Array) -> void:
 	for layer_index in [0, 1]:
 		var anchor: Vector3 = projection.slice_anchor(layer_index)
 		_assert_vector(failures, oriented + anchor - anchor, oriented, "L is uniform for slice %d" % layer_index)
+
+
+func _test_gameplay_pitch_domain(failures: Array) -> void:
+	var orientation = SliceLocalOrientationScript.new()
+	orientation.set_normal_gameplay_angles(PI * 3.0, PI)
+	_assert_float(
+		failures,
+		orientation.local_pitch,
+		SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD,
+		"normal gameplay pitch clamps at declared maximum"
+	)
+	orientation.set_normal_gameplay_angles(-PI * 3.0, -PI)
+	_assert_float(
+		failures,
+		orientation.local_pitch,
+		SliceLocalOrientationScript.NORMAL_GAMEPLAY_MIN_PITCH_RAD,
+		"normal gameplay pitch clamps at declared minimum"
+	)
+	# The unconstrained primitive remains reusable for Explorer/free inspection.
+	orientation.set_angles(0.0, PI * 0.75)
+	_assert_float(failures, orientation.local_pitch, PI * 0.75, "generic L primitive remains unconstrained")
+
+	for basis in [
+		SliceBasis4DScript.identity(),
+		SliceBasis4DScript.from_slots([-3, 2, 1, 4]),
+	]:
+		var basis_before: Array = basis.slots()
+		for yaw in [
+			deg_to_rad(44.0),
+			deg_to_rad(46.0),
+			deg_to_rad(134.0),
+			deg_to_rad(136.0),
+			deg_to_rad(-46.0),
+		]:
+			var baseline = ControlFrameMappingScript.for_4d(basis, yaw)
+			var baseline_snapshot: Dictionary = baseline.snapshot()
+			var expected_right: String = baseline.translation_command("move_x_pos", "relative")
+			var expected_forward: String = baseline.translation_command("move_z_neg", "relative")
+			var expected_slice: String = baseline.translation_command("move_w_pos", "relative")
+			var expected_rotation: String = baseline.rotation_command("rotate_x_z_pos", "relative")
+			var reference_anchors: Array = []
+			for pitch_case in [
+				0.0,
+				SliceLocalOrientationScript.NORMAL_GAMEPLAY_MIN_PITCH_RAD,
+				SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD,
+				PI / 6.0,
+				-PI / 6.0,
+			]:
+				orientation.set_normal_gameplay_angles(yaw, pitch_case)
+				var mapping = ControlFrameMappingScript.for_4d(basis, orientation.local_yaw)
+				var label := "B %s yaw %.0f pitch %.0f" % [basis.key(), rad_to_deg(yaw), rad_to_deg(pitch_case)]
+				_assert_equal(failures, mapping.snapshot(), baseline_snapshot, "%s leaves q and complete mapping unchanged" % label)
+				_assert_equal(failures, mapping.translation_command("move_x_pos", "relative"), expected_right, "%s leaves Right mapping unchanged" % label)
+				_assert_equal(failures, mapping.translation_command("move_z_neg", "relative"), expected_forward, "%s leaves Forward mapping unchanged" % label)
+				_assert_equal(failures, mapping.translation_command("move_w_pos", "relative"), expected_slice, "%s leaves slice mapping unchanged" % label)
+				_assert_equal(failures, mapping.rotation_command("rotate_x_z_pos", "relative"), expected_rotation, "%s leaves rotation plane unchanged" % label)
+				var projection = ProjectionLayoutScript.new()
+				projection.configure({"dimension": 4, "board_shape": DIMENSIONS}, basis, orientation)
+				var anchors := [projection.slice_anchor(0), projection.slice_anchor(1)]
+				if reference_anchors.is_empty():
+					reference_anchors = anchors
+				elif anchors != reference_anchors:
+					failures.append("%s must not move slice anchors" % label)
+				if not projection.bounds.get("ok", false):
+					failures.append("%s must produce valid oriented bounds" % label)
+		if basis.slots() != basis_before:
+			failures.append("pitch/yaw isolation matrix must not mutate exact B %s" % basis.key())
+
+
+func _test_continuous_yaw_quantization_boundaries(failures: Array) -> void:
+	var identity = SliceBasis4DScript.identity()
+	var cases := [
+		{"degrees": 44.0, "turn": 0},
+		{"degrees": 46.0, "turn": 1},
+		{"degrees": 134.0, "turn": 1},
+		{"degrees": 136.0, "turn": 2},
+	]
+	var previous_rendered := Vector3.ZERO
+	for index in range(cases.size()):
+		var yaw := deg_to_rad(float(cases[index]["degrees"]))
+		var orientation = SliceLocalOrientationScript.new(yaw, 0.0)
+		var rendered_forward: Vector3 = orientation.orient_local_point(DISPLAYED_FORWARD)
+		if index > 0 and rendered_forward == previous_rendered:
+			failures.append("continuous renderer yaw must change across sampled resolver boundaries")
+		previous_rendered = rendered_forward
+		var mapping = ControlFrameMappingScript.for_4d(identity, yaw)
+		_assert_equal(failures, mapping.yaw_quarter_turn, int(cases[index]["turn"]), "resolver threshold at %s degrees" % cases[index]["degrees"])
+	_assert_equal(failures, ControlFrameMappingScript.nearest_yaw_quarter_turn(PI * 0.25), 0, "45-degree tie remains ties-to-even")
+	_assert_equal(failures, ControlFrameMappingScript.nearest_yaw_quarter_turn(PI * 0.75), 2, "135-degree tie remains ties-to-even")
 
 
 func _test_identity_yaw_matrix(failures: Array) -> void:
@@ -271,6 +362,11 @@ func _assert_basis(failures: Array, actual: Basis, expected: Basis, label: Strin
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:
 	if actual.distance_to(expected) > 0.001:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _assert_float(failures: Array, actual: float, expected: float, label: String) -> void:
+	if absf(actual - expected) > 0.001:
+		failures.append("%s: expected %.4f, got %.4f" % [label, expected, actual])
 
 
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:

@@ -8,6 +8,9 @@ const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.
 const LABEL_HEIGHT := 18.0
 const GROUP_GAP := 8.0
 const OUTER_PAD := 6.0
+const ISOMETRIC_HALF_WIDTH := 0.46
+const ISOMETRIC_HALF_HEIGHT := 0.25
+const ISOMETRIC_DEPTH := 0.48
 
 var _model
 var _style_manager
@@ -119,10 +122,7 @@ func _draw_isometric_cells(cells: Array, rect: Rect2) -> void:
 		return
 	var projected: Array = []
 	for cell in cells:
-		var x := float(int(cell[0]))
-		var y := float(int(cell[1]))
-		var z := float(int(cell[2])) if cell.size() > 2 else 0.0
-		projected.append(Vector2((x - z) * 0.86, y * 0.92 + (x + z) * 0.42))
+		projected.append(isometric_cell_center(cell))
 	var min_point: Vector2 = projected[0]
 	var max_point: Vector2 = projected[0]
 	for point: Vector2 in projected:
@@ -145,9 +145,9 @@ func _draw_isometric_cells(cells: Array, rect: Rect2) -> void:
 
 
 func _draw_cube(center: Vector2, unit: float, base: Color) -> void:
-	var half_w := unit * 0.46
-	var half_h := unit * 0.25
-	var depth := unit * 0.48
+	var half_w := unit * ISOMETRIC_HALF_WIDTH
+	var half_h := unit * ISOMETRIC_HALF_HEIGHT
+	var depth := unit * ISOMETRIC_DEPTH
 	var top := PackedVector2Array([
 		center + Vector2(0.0, -depth),
 		center + Vector2(half_w, -depth + half_h),
@@ -168,6 +168,19 @@ func _draw_cube(center: Vector2, unit: float, base: Color) -> void:
 		var closed := PackedVector2Array(polygon)
 		closed.append(polygon[0])
 		draw_polyline(closed, outline, _outline_width(), true)
+
+
+func isometric_cell_center(cell: Array) -> Vector2:
+	var x := float(int(cell[0]))
+	var y := float(int(cell[1]))
+	var z := float(int(cell[2])) if cell.size() > 2 else 0.0
+	# Each canonical unit advances by the matching cube-face edge. This makes
+	# adjacent cells read as one face-connected polycube rather than separate
+	# miniature cubes with background gaps.
+	return Vector2(
+		(x - z) * ISOMETRIC_HALF_WIDTH,
+		y * ISOMETRIC_DEPTH + (x + z) * ISOMETRIC_HALF_HEIGHT
+	)
 
 
 func _coordinate_bounds(cells: Array, count: int) -> Array:

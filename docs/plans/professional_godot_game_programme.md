@@ -711,7 +711,8 @@ runtime authority records remain contingent on concrete implementation evidence.
 #### Stage 54E-2 — Camera-space separation implementation
 
 Status: Stages 54E-2a and 54E-2b complete — reviewed green. Stage 54E-2c is
-next and eligible; 54E-2d remains sequentially gated on reviewed-green 54E-2c.
+implemented — review pending; 54E-2d remains sequentially gated on
+reviewed-green 54E-2c.
 
 Implement the architecture accepted in 54E-1. Separate the relevant
 presentation transforms without changing canonical gameplay coordinates,
@@ -723,8 +724,8 @@ The mandatory reviewed-green sequence is 54E-2a (presentation state and
 coordinate decomposition), then 54E-2b (renderer composition), then 54E-2c
 (interaction and camera-rig separation), then 54E-2d (lifecycle, authority,
 and contract reconciliation). Stage 54E-2b is complete and reviewed green;
-54E-2c is next and eligible, while each later slice remains blocked until its
-predecessor is separately reviewed and green.
+54E-2c is implemented and review pending, while each later slice remains
+blocked until its predecessor is separately reviewed and green.
 No later slice may repair a prior slice, and a monolithic 54E-2 implementation
 is forbidden.
 
@@ -1056,8 +1057,8 @@ The active order is:
 4. Stage 54E-2a — presentation state and coordinate decomposition is complete
    and reviewed green.
 5. Stage 54E-2b — renderer composition — is complete and reviewed green.
-   Stage 54E-2c — interaction and camera-rig separation — is next and
-   eligible; 54E-2d remains gated on reviewed-green 54E-2c.
+   Stage 54E-2c — interaction and camera-rig separation — is implemented and
+   review pending; 54E-2d remains gated on reviewed-green 54E-2c.
 6. Stage 54E-3 — setup/menu information architecture.
 7. Stage 54E-4 — camera/GUI presets.
 8. Stage 54E-5 — cockpit consolidation.

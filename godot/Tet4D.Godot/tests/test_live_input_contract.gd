@@ -18,7 +18,7 @@ func run() -> Array:
 		if not camera_specs.has(control_id) or not bool(camera_specs[control_id].get("public", false)):
 			failures.append("public camera control %s must have one descriptor" % control_id)
 	if LiveInputContractScript.camera_control_for_button(MOUSE_BUTTON_LEFT) != "camera_orbit":
-		failures.append("left drag must resolve to camera rotation")
+		failures.append("left drag must retain the shared primary-orientation binding id")
 	if LiveInputContractScript.camera_control_for_button(MOUSE_BUTTON_RIGHT) != "camera_pan":
 		failures.append("right drag must resolve to camera translation")
 	if LiveInputContractScript.camera_control_for_button(MOUSE_BUTTON_WHEEL_UP) != "camera_zoom":
@@ -26,9 +26,12 @@ func run() -> Array:
 	if not LiveInputContractScript.camera_control_for_button(MOUSE_BUTTON_MIDDLE).is_empty():
 		failures.append("middle drag must not retain an undocumented pan binding")
 	var helper := ReplayHudScript.live_4d_hint_text()
-	for required in ["Ctrl Soft Drop", "Left Drag Rotate camera", "Right Drag Translate camera", "Wheel Zoom"]:
+	for required in ["Ctrl Soft Drop", "Left Drag Orient slices", "Right Drag Translate framing", "Wheel Zoom"]:
 		if not helper.contains(required):
 			failures.append("helper must render the authoritative control: %s" % required)
+	for forbidden in ["Roll left / right", "Rotate camera"]:
+		if helper.contains(forbidden):
+			failures.append("normal Live 4D helper must not advertise %s" % forbidden)
 	for obsolete in ["Shift +", "Middle / Right", "Shift-wheel"]:
 		if helper.to_lower().contains(obsolete.to_lower()):
 			failures.append("helper must not advertise obsolete control: %s" % obsolete)

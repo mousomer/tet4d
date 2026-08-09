@@ -9,7 +9,10 @@ const LIVE_3D_VIEW_PRESET_NAME := "LIVE_3D_EXTERNAL_DIAGRAM_VIEW"
 const LIVE_4D_VIEW_PRESET_NAME := "LIVE_4D_FITTED_W_SLICE_VIEW"
 const LIVE_3D_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const LIVE_3D_DISPLAY_PITCH_RAD := 0.4537856055185257  # +26 degrees above the board.
-const LIVE_4D_DISPLAY_YAW_RAD := 0.4363323129985824  # 25 degrees for side-by-side W slices.
+# The fitted gameplay mount sits 25 degrees past the board's far side. A fixed
+# outer rendered-world reflection preserves board-frame +X as screen-right
+# while board-frame +Z recedes into the scene.
+const LIVE_4D_DISPLAY_YAW_RAD := 3.5779249665883754  # 205 degrees.
 const LIVE_4D_DISPLAY_PITCH_RAD := 0.3490658503988659  # +20 degrees above the board.
 const LIVE_2D_FIT_MARGIN := 1.32
 const LIVE_3D_FIT_MARGIN := 1.38
@@ -23,6 +26,7 @@ const LIVE_4D_CAMERA_PITCH_STEP_RAD := 0.06981317007977318  # 4 degrees.
 const LIVE_4D_CAMERA_ROLL_STEP_RAD := 0.08726646259971647  # 5 degrees.
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
+const ControlFrameMappingScript = preload("res://scripts/presentation/control_frame_mapping.gd")
 const ORIENTATION_GIZMO_SCREEN_SCALE := 0.060
 const ORIENTATION_GIZMO_EDGE_OFFSET := 0.41
 const ORIENTATION_GIZMO_CAMERA_DEPTH := 2.0
@@ -34,6 +38,7 @@ const ORIENTATION_GIZMO_CAMERA_DEPTH := 2.0
 
 var _target_focus := Vector3.ZERO
 var _current_focus := Vector3.ZERO
+var _fit_focus := Vector3.ZERO
 var _target_distance := 22.0
 var _current_distance := 22.0
 var _target_yaw := PYTHON_DISPLAY_YAW_RAD
@@ -52,6 +57,9 @@ var _current_fit_state := "initial"
 var _sensitivity_factor := 1.0
 var _invert_y := false
 var _interpolation_scale := 1.0
+var _horizontal_reflection_active := false
+var _horizontal_reflection_focus := Vector3.ZERO
+var _world_presentation_root: Node3D
 var _orientation_gizmo: Node3D
 var _orientation_basis_snapshot := {
 	"visible_axes": ["+X", "+Y", "+Z"],
@@ -91,6 +99,7 @@ func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> voi
 		x_extent += max(w_extent - 1.0, 0.0) * slice_stride
 	var x_center: float = maxf(w_extent - 1.0, 0.0) * slice_stride * 0.5 if dimension >= 4 else 0.0
 	_target_focus = Vector3(x_center, 0.0, 0.0)
+	_fit_focus = _target_focus
 	var framed_distance := clampf(max(x_extent, y_extent, z_extent * 2.0) * 1.6 + 4.0, min_distance, max_distance)
 	if signature != _last_frame_signature:
 		_base_distance = framed_distance
@@ -102,6 +111,7 @@ func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> voi
 	_current_view_preset = REPLAY_DISPLAY_VIEW_PRESET_NAME
 	_current_view_octant = "python replay"
 	_current_fit_state = "framed"
+	_set_horizontal_reflection(false, Vector3.ZERO)
 
 
 func fit_bounds(
@@ -110,7 +120,8 @@ func fit_bounds(
 	yaw: float = PYTHON_DISPLAY_YAW_RAD,
 	pitch: float = PYTHON_DISPLAY_PITCH_RAD,
 	view_preset: String = REPLAY_DISPLAY_VIEW_PRESET_NAME,
-	view_octant: String = "python replay"
+	view_octant: String = "python replay",
+	horizontal_reflection_active: bool = false
 ) -> void:
 	if not bounds.get("ok", false):
 		return
@@ -118,12 +129,14 @@ func fit_bounds(
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	var size := max_pos - min_pos
 	_target_focus = (min_pos + max_pos) * 0.5
+	_fit_focus = _target_focus
 	_target_yaw = yaw
 	_target_pitch = pitch
 	_target_roll = 0.0
 	_current_view_preset = view_preset
 	_current_view_octant = view_octant
 	_current_fit_state = "fit OK"
+	_set_horizontal_reflection(horizontal_reflection_active, _target_focus)
 	var max_extent := maxf(size.x, maxf(size.y, maxf(size.z, 1.0)))
 	_base_distance = clampf(max_extent * 1.45 + 6.0, min_distance, max_distance)
 	_zoom_multiplier = 1.0
@@ -182,9 +195,10 @@ func pan_screen(delta: Vector2) -> void:
 	if viewport != null:
 		viewport_height = maxf(viewport.get_visible_rect().size.y, 1.0)
 	var world_units_per_pixel := _camera.size / viewport_height
+	var effective_camera_basis := _camera.get_camera_transform().basis
 	var offset := (
-		-_camera.global_basis.x * delta.x
-		+ _camera.global_basis.y * delta.y
+		-effective_camera_basis.x * delta.x
+		+ effective_camera_basis.y * delta.y
 	) * world_units_per_pixel
 	_target_focus += offset
 	_current_focus = _target_focus
@@ -195,6 +209,13 @@ func pan_screen(delta: Vector2) -> void:
 func set_orientation_gizmo_visible(visible: bool) -> void:
 	if _orientation_gizmo != null:
 		_orientation_gizmo.visible = visible
+		if visible:
+			_update_orientation_gizmo()
+
+
+func set_world_presentation_root(world_presentation_root: Node3D) -> void:
+	_world_presentation_root = world_presentation_root
+	_apply_world_presentation_transform()
 
 
 func set_orientation_basis(basis) -> void:
@@ -223,11 +244,37 @@ func apply_preset(id: String) -> bool:
 	_target_yaw = float(preset.get("yaw", _target_yaw))
 	_target_pitch = float(preset.get("pitch", _target_pitch))
 	_target_roll = 0.0
+	_set_horizontal_reflection(false, Vector3.ZERO)
 	_zoom_multiplier = float(preset.get("zoom", 1.0))
 	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
 	_current_view_preset = id
 	_current_view_octant = CameraPresetScript.label(id)
 	_current_fit_state = "preset"
+	_snap_to_targets()
+	return true
+
+
+# Stage 54E-2c compatibility adapter: legacy preset orientation is applied to
+# shared SliceLocalOrientation by the app. CameraRig receives framing only.
+# Stage 54E-4 owns the eventual preset taxonomy and persistence redesign.
+func apply_framing_preset(id: String) -> bool:
+	if not CameraPresetScript.is_known(id):
+		return false
+	var preset := CameraPresetScript.definition(id)
+	var pan: Vector3 = preset.get("pan", Vector3.ZERO)
+	_target_focus = _fit_focus + pan
+	_current_focus = _target_focus
+	_zoom_multiplier = float(preset.get("zoom", 1.0))
+	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
+	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+		_camera.size = clampf(
+			_base_orthographic_size * _zoom_multiplier,
+			MIN_ORTHOGRAPHIC_SIZE,
+			MAX_ORTHOGRAPHIC_SIZE
+		)
+	_current_view_preset = id
+	_current_view_octant = "%s framing" % CameraPresetScript.label(id)
+	_current_fit_state = "preset framing"
 	_snap_to_targets()
 	return true
 
@@ -288,8 +335,83 @@ func presentation_snapshot() -> Dictionary:
 		"target_pitch": _target_pitch,
 		"target_roll": _target_roll,
 		"target_focus": _target_focus,
+		"zoom_multiplier": _zoom_multiplier,
+		"orthographic_size": _camera.size if _camera != null else 0.0,
+		"horizontal_reflection_active": _horizontal_reflection_active,
 		"orientation_gizmo_visible": _orientation_gizmo != null and _orientation_gizmo.visible,
 	}
+
+
+func project_world_point(world_point: Vector3) -> Vector2:
+	return Vector2.ZERO if _camera == null else _camera.unproject_position(world_point)
+
+
+func camera_space_point(world_point: Vector3) -> Vector3:
+	if _camera == null:
+		return Vector3.ZERO
+	return _camera.get_camera_transform().affine_inverse() * world_point
+
+
+func is_world_point_behind(world_point: Vector3) -> bool:
+	return true if _camera == null else _camera.is_position_behind(world_point)
+
+
+static func live_4d_semantic_forward_residual_yaw(local_yaw: float) -> float:
+	var quarter_turn := ControlFrameMappingScript.nearest_yaw_quarter_turn(local_yaw)
+	var resolved_yaw := float(quarter_turn) * PI * 0.5
+	return wrapf(local_yaw - resolved_yaw, -PI, PI)
+
+
+static func live_4d_semantic_forward_direction(local_yaw: float, local_pitch: float) -> Vector3:
+	# The resolver selects pre-L Forward at theta_q = Q(theta) * pi/2. The
+	# passive continuous render yaw then leaves only delta = theta - theta_q;
+	# pitch acts last about displayed-local Right.
+	var residual_yaw := live_4d_semantic_forward_residual_yaw(local_yaw)
+	return Basis(Vector3.RIGHT, local_pitch) * Basis(Vector3.UP, residual_yaw) * Vector3.BACK
+
+
+static func live_4d_semantic_forward_away_depth(local_yaw: float, local_pitch: float) -> float:
+	return -_live_4d_fitted_camera_outward().dot(
+		live_4d_semantic_forward_direction(local_yaw, local_pitch)
+	)
+
+
+static func live_4d_all_yaw_safe_pitch_domain() -> Vector2:
+	# Across nearest-quarter resolution, delta spans [-pi/4, +pi/4]. With the
+	# accepted fitted mount, the lower away-depth endpoint is delta=-pi/4, so
+	# safety reduces to b*sin(p) + c*cos(p) > a, where a/b/c are derived from
+	# the actual camera outward vector below.
+	var camera_outward := _live_4d_fitted_camera_outward()
+	var residual_horizontal_coefficient := -camera_outward.x
+	var vertical_coefficient := camera_outward.y
+	var depth_coefficient := -camera_outward.z
+	var pitch_magnitude := sqrt(
+		vertical_coefficient * vertical_coefficient
+		+ depth_coefficient * depth_coefficient
+	)
+	var safe_domain_center := atan2(vertical_coefficient, depth_coefficient)
+	var safe_domain_half_width := acos(
+		clampf(residual_horizontal_coefficient / pitch_magnitude, -1.0, 1.0)
+	)
+	return Vector2(
+		safe_domain_center - safe_domain_half_width,
+		safe_domain_center + safe_domain_half_width
+	)
+
+
+static func live_4d_worst_case_semantic_forward_away_depth(local_pitch: float) -> float:
+	return minf(
+		live_4d_semantic_forward_away_depth(-PI * 0.25, local_pitch),
+		live_4d_semantic_forward_away_depth(PI * 0.25, local_pitch)
+	)
+
+
+static func _live_4d_fitted_camera_outward() -> Vector3:
+	return Vector3(
+		sin(LIVE_4D_DISPLAY_YAW_RAD) * cos(LIVE_4D_DISPLAY_PITCH_RAD),
+		sin(LIVE_4D_DISPLAY_PITCH_RAD),
+		cos(LIVE_4D_DISPLAY_YAW_RAD) * cos(LIVE_4D_DISPLAY_PITCH_RAD)
+	)
 
 
 func _snap_to_targets() -> void:
@@ -318,7 +440,42 @@ func _update_camera() -> void:
 	var forward := (_current_focus - _camera.global_position).normalized()
 	var rolled_up := Basis(forward, _current_roll) * Vector3.UP
 	_camera.look_at(_current_focus, rolled_up)
+	_apply_world_presentation_transform()
 	_update_orientation_gizmo()
+
+
+func _set_horizontal_reflection(active: bool, reflection_focus: Vector3) -> void:
+	_horizontal_reflection_active = active
+	_horizontal_reflection_focus = reflection_focus
+	_apply_world_presentation_transform()
+	_update_gizmo_axes()
+
+
+func _apply_world_presentation_transform() -> void:
+	if _world_presentation_root == null:
+		return
+	if not _horizontal_reflection_active:
+		_world_presentation_root.transform = Transform3D.IDENTITY
+		return
+	if _camera == null:
+		return
+	# Reflect across the fitted camera's vertical/depth plane. Its normal is
+	# effective camera-right, so this reverses rendered screen X without
+	# changing camera-space Y or Z.
+	var screen_right := _camera.get_camera_transform().basis.x.normalized()
+	var reflection_basis := Basis(
+		_reflect_direction(Vector3.RIGHT, screen_right),
+		_reflect_direction(Vector3.UP, screen_right),
+		_reflect_direction(Vector3.BACK, screen_right)
+	)
+	_world_presentation_root.transform = Transform3D(
+		reflection_basis,
+		_horizontal_reflection_focus - reflection_basis * _horizontal_reflection_focus
+	)
+
+
+func _reflect_direction(direction: Vector3, plane_normal: Vector3) -> Vector3:
+	return direction - plane_normal * (2.0 * plane_normal.dot(direction))
 
 
 func _build_orientation_gizmo() -> void:
@@ -388,10 +545,16 @@ func _update_gizmo_axes() -> void:
 	var visible_axes: Array = _orientation_basis_snapshot.get("visible_axes", ["+X", "+Y", "+Z"])
 	var horizontal := str(visible_axes[0]) if visible_axes.size() > 0 else "+X"
 	var depth := str(visible_axes[2]) if visible_axes.size() > 2 else "+Z"
-	_update_gizmo_axis("Horizontal", horizontal, _signed_direction(Vector3.RIGHT, horizontal))
+	_update_gizmo_axis("Horizontal", horizontal, _presented_direction(_signed_direction(Vector3.RIGHT, horizontal)))
 	# +Y is fixed as the gravity/down direction in every valid presentation basis.
 	_update_gizmo_axis("Gravity", str(_orientation_basis_snapshot.get("gravity_axis", "+Y")), Vector3.DOWN)
-	_update_gizmo_axis("Depth", depth, _signed_direction(Vector3.BACK, depth))
+	_update_gizmo_axis("Depth", depth, _presented_direction(_signed_direction(Vector3.BACK, depth)))
+
+
+func _presented_direction(direction: Vector3) -> Vector3:
+	if not _horizontal_reflection_active or _world_presentation_root == null:
+		return direction
+	return _world_presentation_root.transform.basis * direction
 
 
 func _update_gizmo_axis(slot: String, label_text: String, direction: Vector3) -> void:
@@ -436,11 +599,12 @@ func _update_orientation_gizmo() -> void:
 	if _orientation_gizmo == null or _camera == null or not _orientation_gizmo.visible:
 		return
 	var aspect := _viewport_aspect()
-	var right := _camera.global_basis.x
-	var up := _camera.global_basis.y
-	var forward := -_camera.global_basis.z
+	var camera_transform := _camera.get_camera_transform()
+	var right := camera_transform.basis.x
+	var up := camera_transform.basis.y
+	var forward := -camera_transform.basis.z
 	_orientation_gizmo.global_position = (
-		_camera.global_position
+		camera_transform.origin
 		+ forward * ORIENTATION_GIZMO_CAMERA_DEPTH
 		- right * _camera.size * aspect * ORIENTATION_GIZMO_EDGE_OFFSET
 		- up * _camera.size * ORIENTATION_GIZMO_EDGE_OFFSET

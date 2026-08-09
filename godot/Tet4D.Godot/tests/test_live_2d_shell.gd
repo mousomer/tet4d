@@ -3,6 +3,10 @@ extends RefCounted
 const ReplayHudScript = preload("res://scripts/ui/replay_hud.gd")
 const TraceReplayAppScript = preload("res://scripts/app/trace_replay_app.gd")
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
+const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
+const SCREEN_RIGHT_TOLERANCE_PX := 0.5
+const AWAY_DEPTH_TOLERANCE := 0.0001
 
 
 func run() -> Array:
@@ -19,8 +23,8 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XW - / + (re-slice)") or not live_4d_hint.contains("; / ' ZW - / + (re-slice)") or not live_4d_hint.contains("[ / ] ZX - / +") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains(", / . Roll") or not live_4d_hint.contains("Left Drag Rotate camera") or not live_4d_hint.contains("Right Drag Translate camera") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
-		failures.append("live 4D hint text should expose slice-axis movement, 90-degree view rotations, camera controls, six piece-rotation planes, and Esc-only quit")
+	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XW - / + (re-slice)") or not live_4d_hint.contains("; / ' ZW - / + (re-slice)") or not live_4d_hint.contains("[ / ] ZX - / +") or not live_4d_hint.contains("I / K") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+		failures.append("live 4D hint text should expose separated slice orientation, framing, exact basis, piece rotation, and Esc-only quit")
 	for action_name in LiveInputContractScript.ACTION_SPECS:
 		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
 		if not spec.get("keys", []).has(spec.get("display_key")):
@@ -118,6 +122,8 @@ func run() -> Array:
 		app._enter_live_3d_mode()
 		if app._mode != TraceReplayAppScript.MODE_LIVE_3D:
 			failures.append("app should enter Live 3D mode on direct call, got %s" % str(app._mode))
+		if bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)) or app._live_4d_presentation_root.transform != Transform3D.IDENTITY:
+			failures.append("Live 3D must not inherit the fitted Live-4D presentation reflection")
 		var direct_live_3d_snapshot = JSON.parse_string(app._live_bridge.live_3d_snapshot_json())
 		if typeof(direct_live_3d_snapshot) == TYPE_DICTIONARY and str(direct_live_3d_snapshot.get("trace_type", "")) != "live_3d":
 			failures.append("direct native live 3D snapshot had trace type %s" % str(direct_live_3d_snapshot.get("trace_type", "")))
@@ -200,12 +206,29 @@ func run() -> Array:
 			failures.append("live 4D should open in the fitted W-slice camera preset")
 		if app._camera_rig._current_fit_state != "fit OK":
 			failures.append("live 4D should open already fitted")
+		if not bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)):
+			failures.append("live 4D fitted view should use the accepted board-depth mount")
+		if app._live_4d_presentation_root == null or app._renderer.get_parent() != app._live_4d_presentation_root:
+			failures.append("Live 4D renderer should be isolated under one fixed presentation root")
+		elif app._live_4d_presentation_root.transform.basis.determinant() >= 0.0:
+			failures.append("Live 4D presentation root should carry the render-effective horizontal reflection")
+		if app._live_4d_presentation_root != null and app._live_4d_presentation_root.is_ancestor_of(app._camera_rig):
+			failures.append("Live 4D presentation reflection must not contain CameraRig")
+		if app._live_4d_presentation_root != null and app._live_4d_presentation_root.is_ancestor_of(app._hud):
+			failures.append("Live 4D presentation reflection must not inherit from HUD")
 		var orientation_gizmo := app._camera_rig.get_node_or_null("OrientationGizmo") as Node3D
 		if orientation_gizmo == null or not orientation_gizmo.visible or orientation_gizmo.get_child_count() < 10:
 			failures.append("Live 4D should show a compact basis-driven ball-and-arrow orientation marker")
 		elif orientation_gizmo.get_node_or_null("HorizontalArrow") == null or orientation_gizmo.get_node_or_null("GravityArrow") == null or orientation_gizmo.get_node_or_null("DepthArrow") == null:
 			failures.append("orientation marker should expose horizontal, gravity, and depth arrowheads")
 		else:
+			var gizmo_origin := orientation_gizmo.get_node_or_null("AxisOrigin") as MeshInstance3D
+			var gizmo_horizontal := orientation_gizmo.get_node_or_null("HorizontalArrow") as MeshInstance3D
+			if gizmo_origin != null and gizmo_horizontal != null:
+				var gizmo_origin_screen: Vector2 = app._camera_rig.project_world_point(gizmo_origin.global_position)
+				var gizmo_horizontal_screen: Vector2 = app._camera_rig.project_world_point(gizmo_horizontal.global_position)
+				if gizmo_horizontal_screen.x - gizmo_origin_screen.x <= SCREEN_RIGHT_TOLERANCE_PX:
+					failures.append("orientation gizmo horizontal arrow should agree with reflected board screen-right")
 			var gizmo_position_before: Vector3 = orientation_gizmo.global_position
 			app._camera_rig.orbit(Vector2(8.0, -4.0))
 			app._camera_rig._process(1.0)
@@ -251,38 +274,57 @@ func run() -> Array:
 		app._input(plus_event)
 		if live_4d_camera != null and live_4d_camera.size >= focused_zoom_size:
 			failures.append("Live 4D zoom should still work through pre-UI input capture")
-		var yaw_before: float = app._camera_rig._current_yaw
+		var outer_yaw_before: float = app._camera_rig._current_yaw
+		var local_yaw_before: float = app._live_4d_local_orientation.local_yaw
 		var camera_event := InputEventKey.new()
 		camera_event.keycode = KEY_O
 		camera_event.pressed = true
 		app._unhandled_input(camera_event)
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
-			failures.append("Live 4D camera keys should not mutate gameplay state")
-		if app._camera_rig._current_yaw >= yaw_before:
-			failures.append("Live 4D O camera key should adjust yaw left")
-		if app._camera_rig._current_fit_state != "manual":
-			failures.append("Live 4D camera adjustment should mark the view manual")
+			failures.append("Live 4D orientation keys should not mutate gameplay state")
+		if app._live_4d_local_orientation.local_yaw >= local_yaw_before:
+			failures.append("Live 4D O key should adjust shared L yaw left")
+		if not is_equal_approx(app._camera_rig._current_yaw, outer_yaw_before):
+			failures.append("Live 4D keyboard yaw must not rotate the outer rig")
+		if app._renderer.live_4d_local_orientation_snapshot() != app._live_4d_local_orientation.snapshot():
+			failures.append("Live 4D renderer and resolver must observe the same shared L")
+		if app._renderer._live_4d_fit_reference != app._renderer.current_bounds():
+			failures.append("Live 4D L mutation must refresh oriented bounds and fit reference")
+		var outer_pitch_before: float = app._camera_rig._current_pitch
+		var local_pitch_before: float = app._live_4d_local_orientation.local_pitch
+		var pitch_event := InputEventKey.new()
+		pitch_event.keycode = KEY_I
+		pitch_event.pressed = true
+		app._unhandled_input(pitch_event)
+		if is_equal_approx(app._live_4d_local_orientation.local_pitch, local_pitch_before):
+			failures.append("Live 4D I key should adjust shared L pitch using the active invert-Y preference")
+		if not is_equal_approx(app._camera_rig._current_pitch, outer_pitch_before):
+			failures.append("Live 4D keyboard pitch must not rotate the outer rig")
 		var roll_before: float = app._camera_rig._current_roll
+		var local_before_roll: Dictionary = app._live_4d_local_orientation.snapshot()
 		var roll_event := InputEventKey.new()
 		roll_event.keycode = KEY_PERIOD
 		roll_event.pressed = true
 		app._unhandled_input(roll_event)
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Live 4D roll keys should not mutate gameplay state")
-		if app._camera_rig._current_roll <= roll_before:
-			failures.append("Live 4D period camera key should roll right")
+		if not is_equal_approx(app._camera_rig._current_roll, roll_before) or app._live_4d_local_orientation.snapshot() != local_before_roll:
+			failures.append("normal Live 4D roll input must not rotate outer framing or shared L")
 		var roll_left_event := InputEventKey.new()
 		roll_left_event.keycode = KEY_COMMA
 		roll_left_event.pressed = true
 		app._unhandled_input(roll_left_event)
-		if app._camera_rig._current_fit_state != "manual":
-			failures.append("Live 4D camera roll should mark the view manual")
+		if not is_equal_approx(app._camera_rig._current_roll, roll_before):
+			failures.append("normal Live 4D roll-left input must remain detached")
 		app._fit_view()
 		if app._camera_rig._current_view_preset != "iso" or app._camera_rig._current_fit_state != "fit OK":
 			failures.append("Fit View should restore the full Live 4D W-slice layout")
 		if absf(app._camera_rig._current_roll) > 0.001:
 			failures.append("Fit View should reset Live 4D camera roll")
 		var wheel_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
+		var wheel_orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
+		var wheel_basis_before: Array = app._live_4d_basis.slots()
+		var wheel_right_before: String = app._control_frame_mapping(4).translation_command("move_x_pos", "relative")
 		var wheel_up_event := InputEventMouseButton.new()
 		wheel_up_event.button_index = MOUSE_BUTTON_WHEEL_UP
 		wheel_up_event.pressed = true
@@ -311,16 +353,27 @@ func run() -> Array:
 			failures.append("Wheel should remain zoom even when Shift is held")
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Shift+wheel zoom should not dispatch a gameplay command")
+		if app._live_4d_local_orientation.snapshot() != wheel_orientation_before or app._live_4d_basis.slots() != wheel_basis_before or app._control_frame_mapping(4).translation_command("move_x_pos", "relative") != wheel_right_before:
+			failures.append("wheel zoom must not change B, L, or relative command mapping")
 		var drag_event := InputEventMouseButton.new()
 		drag_event.button_index = MOUSE_BUTTON_LEFT
 		drag_event.pressed = true
 		app._handle_camera_input(drag_event)
-		var yaw_before_drag: float = app._camera_rig._target_yaw
+		var outer_yaw_before_drag: float = app._camera_rig._target_yaw
+		var orientation_before_drag: Dictionary = app._live_4d_local_orientation.snapshot()
+		var anchor_before_drag: Vector3 = app._renderer._presentation.projection.slice_anchor(0)
+		var bounds_before_drag: Dictionary = app._renderer.current_bounds().duplicate(true)
 		var motion_event := InputEventMouseMotion.new()
-		motion_event.relative = Vector2(12.0, 0.0)
+		motion_event.relative = Vector2(12.0, -6.0)
 		app._handle_camera_input(motion_event)
-		if app._camera_rig._target_yaw >= yaw_before_drag:
-			failures.append("Mouse drag should orbit camera view")
+		if app._live_4d_local_orientation.snapshot() == orientation_before_drag:
+			failures.append("Live 4D left drag should mutate shared L yaw/pitch")
+		if not is_equal_approx(app._camera_rig._target_yaw, outer_yaw_before_drag):
+			failures.append("Live 4D left drag must not rotate the outer rig")
+		if app._renderer._presentation.projection.slice_anchor(0) != anchor_before_drag:
+			failures.append("Live 4D left drag must not move slice anchors")
+		if app._renderer.current_bounds() == bounds_before_drag or app._renderer._live_4d_fit_reference != app._renderer.current_bounds():
+			failures.append("Live 4D left drag must refresh oriented bounds and fit reference")
 		drag_event.pressed = false
 		app._handle_camera_input(drag_event)
 		var shift_drag_event := InputEventMouseButton.new()
@@ -341,16 +394,86 @@ func run() -> Array:
 		pan_button.pressed = true
 		app._handle_camera_input(pan_button)
 		var focus_before_pan: Vector3 = app._camera_rig._target_focus
+		var orientation_before_pan: Dictionary = app._live_4d_local_orientation.snapshot()
+		var basis_before_pan: Array = app._live_4d_basis.slots()
+		var command_before_pan: String = app._control_frame_mapping(4).translation_command("move_z_neg", "relative")
+		var anchor_before_pan: Vector3 = app._renderer._presentation.projection.slice_anchor(0)
 		var pan_motion := InputEventMouseMotion.new()
 		pan_motion.relative = Vector2(18.0, -9.0)
 		app._handle_camera_input(pan_motion)
 		if app._camera_rig._target_focus == focus_before_pan or app._camera_rig._current_fit_state != "manual pan":
 			failures.append("Right-drag should pan the gameboard view")
+		if app._live_4d_local_orientation.snapshot() != orientation_before_pan or app._live_4d_basis.slots() != basis_before_pan or app._control_frame_mapping(4).translation_command("move_z_neg", "relative") != command_before_pan or app._renderer._presentation.projection.slice_anchor(0) != anchor_before_pan:
+			failures.append("Right-drag pan must not change B, L, resolver mapping, or anchors")
 		pan_button.pressed = false
 		app._handle_camera_input(pan_button)
 		if str(app._live_bridge.live_4d_state_hash()) != camera_hash_before:
 			failures.append("Mouse camera controls should not mutate Live 4D gameplay state")
+		app._set_live_4d_local_orientation(deg_to_rad(44.0), 0.0)
+		if app._control_frame_mapping(4).yaw_quarter_turn != 0:
+			failures.append("Live 4D resolver should remain at q=0 below the 45-degree boundary")
+		var rendered_yaw_44: float = float(app._renderer.live_4d_local_orientation_snapshot().get("local_yaw", 0.0))
+		app._set_live_4d_local_orientation(deg_to_rad(46.0), 0.0)
+		if app._control_frame_mapping(4).yaw_quarter_turn != 1:
+			failures.append("Live 4D resolver should switch to q=1 above the 45-degree boundary")
+		if is_equal_approx(float(app._renderer.live_4d_local_orientation_snapshot().get("local_yaw", 0.0)), rendered_yaw_44):
+			failures.append("Live 4D renderer yaw should remain continuous across resolver thresholds")
+		var lower_clamp_native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
+		var lower_clamp_hash: String = str(app._live_bridge.live_4d_state_hash())
+		var lower_clamp_mapping: Dictionary = app._control_frame_mapping(4).snapshot()
+		for _request_index in range(3):
+			app._set_live_4d_local_orientation(
+				deg_to_rad(46.0),
+				SliceLocalOrientationScript.NORMAL_GAMEPLAY_MIN_PITCH_RAD - PI
+			)
+		if not is_equal_approx(app._live_4d_local_orientation.local_pitch, SliceLocalOrientationScript.NORMAL_GAMEPLAY_MIN_PITCH_RAD):
+			failures.append("repeated unsafe negative pitch requests must clamp at the corrected product minimum")
+		if app._renderer.live_4d_local_orientation_snapshot() != app._live_4d_local_orientation.snapshot():
+			failures.append("lower pitch clamp must propagate through actual renderer-owned L")
+		if app._control_frame_mapping(4).snapshot() != lower_clamp_mapping:
+			failures.append("lower pitch clamp must leave the app-owned resolver mapping unchanged")
+		if app._live_bridge.live_4d_snapshot_json() != lower_clamp_native_snapshot or str(app._live_bridge.live_4d_state_hash()) != lower_clamp_hash:
+			failures.append("lower pitch clamp must not change native snapshot or state hash")
+		_assert_app_live_4d_semantic_directions(failures, app, "yaw 46 corrected minimum clamp")
+		var mapping_before_outer_yaw: Dictionary = app._control_frame_mapping(4).snapshot()
+		app._camera_rig.nudge_yaw(PI * 0.5)
+		if app._control_frame_mapping(4).snapshot() != mapping_before_outer_yaw:
+			failures.append("outer camera yaw must not influence Live 4D relative controls")
+		var mapping_before_pitch: Dictionary = app._control_frame_mapping(4).snapshot()
+		app._set_live_4d_local_orientation(
+			app._live_4d_local_orientation.local_yaw,
+			SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD + PI
+		)
+		if not is_equal_approx(app._live_4d_local_orientation.local_pitch, SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD):
+			failures.append("Live 4D orientation seam must clamp pitch to the declared gameplay maximum")
+		if app._control_frame_mapping(4).snapshot() != mapping_before_pitch:
+			failures.append("Live 4D pitch must not affect discrete relative controls")
 		app._fit_view()
+		var preset_outer_yaw: float = app._camera_rig._current_yaw
+		var preset_outer_pitch: float = app._camera_rig._current_pitch
+		var preset_native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
+		var preset_hash: String = str(app._live_bridge.live_4d_state_hash())
+		if not app._apply_live_4d_preset(CameraPresetScript.SIDE):
+			failures.append("Live 4D Side preset should apply through the compatibility adapter")
+		elif not is_equal_approx(app._live_4d_local_orientation.local_yaw, PI * 0.5) or app._control_frame_mapping(4).yaw_quarter_turn != 1:
+			failures.append("Live 4D Side preset yaw should reach shared L and its quantized resolver")
+		if not is_equal_approx(app._camera_rig._current_yaw, preset_outer_yaw) or not is_equal_approx(app._camera_rig._current_pitch, preset_outer_pitch):
+			failures.append("Live 4D presets must not rotate the outer rig")
+		if app._renderer._live_4d_fit_reference != app._renderer.current_bounds():
+			failures.append("Live 4D preset orientation must leave bounds and fit reference coherent")
+		if app._live_bridge.live_4d_snapshot_json() != preset_native_snapshot or str(app._live_bridge.live_4d_state_hash()) != preset_hash:
+			failures.append("Live 4D presentation presets must not mutate canonical gameplay state")
+		if not app._apply_live_4d_preset(CameraPresetScript.TOP) or not is_equal_approx(app._live_4d_local_orientation.local_pitch, SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD):
+			failures.append("Live 4D Top preset pitch should reach the admitted shared-L boundary")
+		if not is_equal_approx(float(app._camera_rig.presentation_snapshot().get("zoom_multiplier", 0.0)), float(CameraPresetScript.definition(CameraPresetScript.TOP).get("zoom", 0.0))):
+			failures.append("Live 4D preset zoom should reach outer framing")
+		app._set_live_4d_local_orientation(0.0, 0.0)
+		var fit_orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
+		var fit_basis_before: Array = app._live_4d_basis.slots()
+		var fit_mapping_before: Dictionary = app._control_frame_mapping(4).snapshot()
+		app._fit_view()
+		if app._live_4d_local_orientation.snapshot() != fit_orientation_before or app._live_4d_basis.slots() != fit_basis_before or app._control_frame_mapping(4).snapshot() != fit_mapping_before:
+			failures.append("Fit must not change B, L, or relative command mapping")
 		app._camera_rig.zoom(-1.0)
 		var double_click_event := InputEventMouseButton.new()
 		double_click_event.button_index = MOUSE_BUTTON_LEFT
@@ -390,13 +513,16 @@ func run() -> Array:
 		endgame_drag_start.pressed = true
 		endgame_drag_start.position = viewport_center
 		app._input(endgame_drag_start)
-		var endgame_yaw_before: float = app._camera_rig._target_yaw
+		var endgame_outer_yaw_before: float = app._camera_rig._target_yaw
+		var endgame_local_yaw_before: float = app._live_4d_local_orientation.local_yaw
 		var endgame_motion := InputEventMouseMotion.new()
 		endgame_motion.position = viewport_center + Vector2(10.0, 0.0)
 		endgame_motion.relative = Vector2(10.0, 0.0)
 		app._input(endgame_motion)
-		if app._camera_rig._target_yaw >= endgame_yaw_before:
-			failures.append("Mouse drag over the live viewport should orbit camera after game over")
+		if app._live_4d_local_orientation.local_yaw >= endgame_local_yaw_before:
+			failures.append("Live 4D left drag should continue to orient shared L after game over")
+		if not is_equal_approx(app._camera_rig._target_yaw, endgame_outer_yaw_before):
+			failures.append("Live 4D post-game left drag must not rotate outer framing")
 		var endgame_drag_end := InputEventMouseButton.new()
 		endgame_drag_end.button_index = MOUSE_BUTTON_LEFT
 		endgame_drag_end.pressed = false
@@ -413,9 +539,21 @@ func run() -> Array:
 		if str(app._live_bridge.live_4d_state_hash()) != endgame_hash:
 			failures.append("Endgame mouse camera controls should not mutate Live 4D gameplay state")
 		app._reset_live_4d()
+		app._set_live_4d_local_orientation(0.7, 0.2)
+		app._apply_live_4d_basis_turn("xw", 1)
+		var reset_view_native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
+		var reset_view_hash: String = str(app._live_bridge.live_4d_state_hash())
+		app._reset_live_4d_view()
+		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0}:
+			failures.append("Reset View should coherently restore identity B and default shared L")
+		if app._renderer._live_4d_fit_reference != app._renderer.current_bounds() or app._camera_rig._current_fit_state != "fit OK":
+			failures.append("Reset View should refresh oriented bounds and fitted framing")
+		if app._live_bridge.live_4d_snapshot_json() != reset_view_native_snapshot or str(app._live_bridge.live_4d_state_hash()) != reset_view_hash:
+			failures.append("Reset View must remain presentation-only")
 		var basis_native_snapshot_before: String = str(app._live_bridge.live_4d_snapshot_json())
 		var basis_hash_before := str(app._live_bridge.live_4d_state_hash())
 		var basis_camera_before: Dictionary = app._camera_rig.presentation_snapshot()
+		var local_orientation_before_basis: Dictionary = app._live_4d_local_orientation.snapshot()
 		app._apply_live_4d_basis_turn("xw", 1)
 		if app._live_4d_basis.slots() != [4, 2, 3, -1]:
 			failures.append("XW+ should commit the exact presentation basis immediately")
@@ -423,6 +561,8 @@ func run() -> Array:
 			failures.append("basis-only actions must not change native snapshot or state hash")
 		if app._camera_rig.presentation_snapshot() != basis_camera_before:
 			failures.append("basis turns must not change camera orientation, zoom intent, or translation")
+		if app._live_4d_local_orientation.snapshot() != local_orientation_before_basis:
+			failures.append("exact B turns must not mutate shared L")
 		var horizontal_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/HorizontalArrow") as MeshInstance3D
 		var depth_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/DepthArrow") as MeshInstance3D
 		var gravity_arrow := app._camera_rig.get_node_or_null("OrientationGizmo/GravityArrow") as MeshInstance3D
@@ -596,6 +736,42 @@ func run() -> Array:
 	root.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_app_live_4d_semantic_directions(failures: Array, app, label: String) -> void:
+	var mapping = app._control_frame_mapping(4)
+	var projection = app._renderer._presentation.projection
+	var origin := [2, 3, 1, 0]
+	for intent in ["move_x_pos", "move_z_neg"]:
+		var command: String = mapping.translation_command(intent, "relative")
+		var delta := _canonical_4d_delta(command)
+		var destination := origin.duplicate()
+		for axis in range(4):
+			destination[axis] = int(destination[axis]) + int(delta[axis])
+		var origin_world: Vector3 = app._renderer.to_global(projection.oriented_world_position(origin))
+		var destination_world: Vector3 = app._renderer.to_global(projection.oriented_world_position(destination))
+		if app._camera_rig.is_world_point_behind(origin_world) or app._camera_rig.is_world_point_behind(destination_world):
+			failures.append("%s: production projection points must be in front of Camera3D" % label)
+			continue
+		if intent == "move_x_pos":
+			var origin_screen: Vector2 = app._camera_rig.project_world_point(origin_world)
+			var destination_screen: Vector2 = app._camera_rig.project_world_point(destination_world)
+			if destination_screen.x - origin_screen.x <= SCREEN_RIGHT_TOLERANCE_PX:
+				failures.append("%s: actual app-owned Right must increase Camera3D screen X" % label)
+		if intent == "move_z_neg":
+			var origin_view: Vector3 = app._camera_rig.camera_space_point(origin_world)
+			var destination_view: Vector3 = app._camera_rig.camera_space_point(destination_world)
+			if origin_view.z - destination_view.z <= AWAY_DEPTH_TOLERANCE:
+				failures.append("%s: actual app-owned Forward must remain strictly receding" % label)
+
+
+func _canonical_4d_delta(command: String) -> Array:
+	match command:
+		"move_x_neg": return [-1, 0, 0, 0]
+		"move_x_pos": return [1, 0, 0, 0]
+		"move_z_neg": return [0, 0, -1, 0]
+		"move_z_pos": return [0, 0, 1, 0]
+		_: return [0, 0, 0, 0]
 
 
 func _assert_live_gameplay_hud_copy(failures: Array) -> void:

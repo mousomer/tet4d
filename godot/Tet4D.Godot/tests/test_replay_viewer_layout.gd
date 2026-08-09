@@ -264,11 +264,13 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should not show Quit Replay wording" % label)
 	if left_panel_visible:
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
-	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Camera") == -1 or inspector_hint_text.find("Mouse Camera") == -1 or inspector_hint_text.find("Session") == -1 or inspector_hint_text.find("Navigation") == -1:
+	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Plane Rotation") == -1 or inspector_hint_text.find("Slice orientation") == -1 or inspector_hint_text.find("Framing") == -1 or inspector_hint_text.find("Pointer") == -1 or inspector_hint_text.find("Session") == -1 or inspector_hint_text.find("Navigation") == -1:
 		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Right Drag", "Wheel", "Backspace", "Tab", "Esc"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Left Drag", "Right Drag", "Wheel", "Backspace", "Tab", "Esc"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D full controls should include %s" % [label, required])
+	if inspector_hint_text.find("Roll left / right") != -1:
+		failures.append("%s: normal Live 4D controls must not advertise gameplay roll" % label)
 	if inspector_hint_text.find("Left: CCW") == -1 or inspector_hint_text.find("Right: CW") == -1:
 		failures.append("%s: Live 4D rotation controls should include a section-level CCW/CW hint" % label)
 	if inspector_hint_text.find("Move:") != -1 or inspector_hint_text.find("Rotate:") != -1:
@@ -346,10 +348,10 @@ func _check_live_control_maps() -> Array:
 		group_names.append(str(group.get("group", "")))
 		for item in group.get("items", []):
 			flattened += "%s %s\n" % [str(item[0]), str(item[1])]
-	for required_group in ["Piece movement", "Plane Rotation", "90° View Rotation", "Drop", "Camera", "Mouse Camera", "Session", "Navigation"]:
+	for required_group in ["Piece movement", "Plane Rotation", "90° View Rotation", "Drop", "Slice orientation", "Framing", "Pointer", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", ", / .", "- / = / +", "Left Drag", "Right Drag", "Wheel"]:
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Left Drag", "Right Drag", "Wheel"]:
 		if flattened.find(required) == -1:
 			failures.append("Live 4D control map should include %s" % required)
 	var group_items := {}
@@ -367,7 +369,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"90° View Rotation",
-		[["1 / 2", "XW - / + (re-slice)"], ["; / '", "ZW - / + (re-slice)"], ["[ / ]", "ZX - / +"], ["0", "Reset camera + basis"]]
+		[["1 / 2", "XW - / + (re-slice)"], ["; / '", "ZW - / + (re-slice)"], ["[ / ]", "ZX - / +"], ["0", "Reset view + basis"]]
 	)
 	_assert_group_items(
 		failures,
@@ -383,14 +385,20 @@ func _check_live_control_maps() -> Array:
 	_assert_group_items(
 		failures,
 		group_items,
-		"Camera",
-		[["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"], [", / .", "Roll left / right"], ["- / = / +", "Zoom out / in"]]
+		"Slice orientation",
+		[["I / K", "Pitch up / down"], ["O / L", "Yaw left / right"]]
 	)
 	_assert_group_items(
 		failures,
 		group_items,
-		"Mouse Camera",
-		[["Left Drag", "Rotate camera"], ["Right Drag", "Translate camera"], ["Wheel", "Zoom"]]
+		"Framing",
+		[["- / = / +", "Zoom out / in"]]
+	)
+	_assert_group_items(
+		failures,
+		group_items,
+		"Pointer",
+		[["Left Drag", "Orient slices"], ["Right Drag", "Translate framing"], ["Wheel", "Zoom"]]
 	)
 	_assert_group_items(failures, group_items, "Drop", [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]])
 	_assert_group_items(

@@ -76,6 +76,12 @@ piece-local cells. It exposes deterministic drawing groups:
 - 4D: ordered W groups, each rendered as a compact isometric XYZ slice with an
   explicit signed `W` coordinate label.
 
+Within each isometric XYZ group, canonical face-neighbours use the matching
+projected cube-face edge as their centre-to-centre step, so a connected piece
+reads as one face-connected polycube without background gaps. Distinct 4D `W`
+groups remain intentionally separated and explicitly labeled; presentation
+must not merge cells across different `W` coordinates into a false 3D shape.
+
 `PieceThumbnail` is the shared renderer. `NextPiecePanel` supplies the `NEXT`
 title and piece name and owns no queue decisions. Stage 54D-3 Hold must reuse
 this model and renderer rather than create a second piece-preview system.
