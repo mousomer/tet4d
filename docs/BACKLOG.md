@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-08
+Updated: 2026-08-09
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -86,33 +86,32 @@ unchanged, derives world AABBs from transformed local corners, and retains
 2D/3D identity behavior. Focused Godot evidence covers asymmetric dimensions,
 quarter/non-quarter yaw, pitch, signed basis, W=1 re-slicing, multiple slices,
 Ghost alignment, grid/frame orientation, label identity, and bounds
-containment. Technical review accepted this evidence; Stage 54E-2c is now next
-and eligible.
+containment. Technical review accepted this evidence; Stage 54E-2c has since
+completed and been reviewed green.
 
 ### Stage 54E-2c — Interaction and camera-rig separation
 
-Status: IMPLEMENTED — REVIEW PENDING.
+Status: COMPLETE — REVIEWED GREEN.
 
-Normal Live-4D left-drag and keyboard yaw/pitch now mutate the one shared
+Normal Live-4D left-drag and keyboard yaw/pitch mutate the one shared
 `SliceLocalOrientation`; the app-owned mutation seam rerenders presentation,
 recomputes oriented bounds, and refreshes the renderer fit reference. Relative
 commands use exact `B + Q(L.local_yaw)` and ignore outer framing. Right-drag,
 wheel/zoom, and Fit remain framing operations; gameplay roll is detached while
 generic roll remains reusable. Legacy presets are temporarily decomposed into
-`L` orientation and `V/P` framing. The fixed fitted mount now applies one
+`L` orientation and `V/P` framing. The fixed fitted mount applies one
 renderer-only outer `V` reflection across the active camera's vertical/depth
 plane, with Camera3D and HUD outside it. Actual Camera3D projection proves
 resolver-selected Right screen-right, and effective camera-space depth proves
-resolver-selected Forward receding across continuous yaw. Review correction
-evidence gives the strict all-yaw pitch
-interval as approximately `(-42.480 degrees, +86.240 degrees)` and selects the
-asymmetric product range `[-40 degrees, +60 degrees]`, retaining a
-`2.480-degree` lower margin. Final visual review also corrects Live-4D active
-spawn cells with negative canonical `Y`: they now retain their basis-derived
-slice and above-board position instead of collapsing to a shared renderer
-origin. Stage 54E-2d remains blocked until this stage is reviewed green.
-The same final visual pass corrects shared NEXT-thumbnail cell adjacency so
-connected cells share projected cube faces within each intentional `W` group.
+resolver-selected Forward receding across continuous yaw. Review-correction
+evidence gives the strict all-yaw pitch interval as approximately
+`(-42.480 degrees, +86.240 degrees)` and selects the asymmetric product range
+`[-40 degrees, +60 degrees]`, retaining a `2.480-degree` lower margin. Final
+visual review corrects Live-4D active spawn cells with negative canonical `Y`:
+they retain their basis-derived slice and above-board position instead of
+collapsing to a shared renderer origin. The same final visual pass corrects
+shared NEXT-thumbnail cell adjacency so connected cells share projected cube
+faces within each intentional `W` group. Stage 54E-2d is now next and eligible.
 
 ## Hold
 
@@ -129,10 +128,10 @@ a placeholder authority record in advance.
 ## Forward Work
 
 - Stage 54E-2b — renderer composition (COMPLETE / REVIEWED GREEN).
-- Stage 54E-2c — interaction and camera-rig separation (IMPLEMENTED / REVIEW
-  PENDING).
-- Stage 54E-2d — lifecycle, authority, and contract reconciliation (blocked
-  until reviewed-green 54E-2c).
+- Stage 54E-2c — interaction and camera-rig separation (COMPLETE / REVIEWED
+  GREEN).
+- Stage 54E-2d — lifecycle, authority, and contract reconciliation (NEXT /
+  ELIGIBLE).
 - Stage 54E-3 — setup/menu information architecture.
 - Stage 54E-4 — camera/GUI presets.
 - Stage 54E-5 — cockpit consolidation.
