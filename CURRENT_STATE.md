@@ -73,12 +73,15 @@ history ledger. Detailed history is preserved in
   `L.local_yaw` and `Q(L.local_yaw)`: the strict all-yaw pitch interval is
   approximately `(-42.480 degrees, +86.240 degrees)`, and normal gameplay uses
   `[-40 degrees, +60 degrees]` with a `2.480-degree` lower margin. Stage
-  54E-2c final visual review also found and fixed a transient stale-Ghost
-  presentation artefact and a separate above-board active-spawn projection
-  collapse. It also restores face-connected cell adjacency inside each shared
-  NEXT-thumbnail `W` group. Board spacing and grid/wireframe styling remain
-  deferred visual-quality work tracked in `docs/BACKLOG.md` and GitHub Issues.
-  Stage 54E-2d remains blocked until reviewed-green 54E-2c.
+  54E-2c final visual review identified and fixed an above-board active-spawn
+  projection collapse that had initially looked like a stale Ghost cell; the
+  investigation also hardened presentation-node teardown by synchronously
+  detaching obsolete children before deferred destruction, but that hardening
+  was not the root cause of the reported cube. It also restores face-connected
+  cell adjacency inside each shared NEXT-thumbnail `W` group. Board spacing
+  and grid/wireframe styling remain deferred visual-quality work tracked in
+  `docs/BACKLOG.md` and GitHub Issues. Stage 54E-2d remains blocked until
+  reviewed-green 54E-2c.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -175,9 +178,9 @@ Top 8 live Python hotspots by real LOC:
 3. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
 5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2427` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
+6. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `3194` real LOC
 7. `scripts/arch_metrics.py`: `1899` real LOC
-8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
+8. `cli/front.py`: `804` real LOC
 
 Thin-wrapper budgets:
 
