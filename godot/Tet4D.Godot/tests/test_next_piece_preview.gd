@@ -1,12 +1,14 @@
 extends RefCounted
 
 const PieceThumbnailModelScript = preload("res://scripts/ui/pieces/piece_thumbnail_model.gd")
+const PieceThumbnailScript = preload("res://scripts/ui/pieces/piece_thumbnail.gd")
 const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.gd")
 
 
 func run() -> Array:
 	var failures: Array = []
 	_test_model_validation_and_dimensions(failures)
+	_test_isometric_face_adjacency(failures)
 	_test_shared_panel_renderer(failures)
 	return failures
 
@@ -107,3 +109,21 @@ func _test_shared_panel_renderer(failures: Array) -> void:
 	if bool(snapshot.get("model", {}).get("available", true)) or snapshot.get("piece_name_text") != "—" or snapshot.get("status_text") != "Preview unavailable":
 		failures.append("provider failure should clear stale geometry and show bounded unavailable state")
 	panel.free()
+
+
+func _test_isometric_face_adjacency(failures: Array) -> void:
+	var renderer = PieceThumbnailScript.new()
+	var origin: Vector2 = renderer.isometric_cell_center([0, 0, 0])
+	var x_step: Vector2 = renderer.isometric_cell_center([1, 0, 0]) - origin
+	var y_step: Vector2 = renderer.isometric_cell_center([0, 1, 0]) - origin
+	var z_step: Vector2 = renderer.isometric_cell_center([0, 0, 1]) - origin
+	var expected_x := Vector2(PieceThumbnailScript.ISOMETRIC_HALF_WIDTH, PieceThumbnailScript.ISOMETRIC_HALF_HEIGHT)
+	var expected_y := Vector2(0.0, PieceThumbnailScript.ISOMETRIC_DEPTH)
+	var expected_z := Vector2(-PieceThumbnailScript.ISOMETRIC_HALF_WIDTH, PieceThumbnailScript.ISOMETRIC_HALF_HEIGHT)
+	if not x_step.is_equal_approx(expected_x):
+		failures.append("isometric NEXT X-neighbours must share one cube-face edge")
+	if not y_step.is_equal_approx(expected_y):
+		failures.append("isometric NEXT Y-neighbours must stack without a background gap")
+	if not z_step.is_equal_approx(expected_z):
+		failures.append("isometric NEXT Z-neighbours must share one cube-face edge")
+	renderer.free()

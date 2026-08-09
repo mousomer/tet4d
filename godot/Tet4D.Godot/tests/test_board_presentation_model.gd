@@ -33,7 +33,10 @@ func run() -> Array:
 		"dimension": 4,
 		"board_shape": [5, 10, 4, 4],
 		"locked_cells": [{"position": [1, 4, 2, 0]}],
-		"active_cells": [{"position": [2, 1, 3, 1]}],
+		"active_cells": [
+			{"position": [2, -2, 3, 1]},
+			{"position": [2, -1, 2, 2]},
+		],
 		"probe_markers": [],
 		"event_markers": [],
 		"particles": [],
@@ -52,4 +55,13 @@ func run() -> Array:
 	var w1_position := live_4d_model.render_world_position([0, 0, 0, 1])
 	if w1_position.x <= w0_position.x:
 		failures.append("presentation model should separate W slices side-by-side")
+	var spawn_w1 := live_4d_model.render_active_world_position([2, -2, 3, 1])
+	var spawn_w2 := live_4d_model.render_active_world_position([2, -1, 2, 2])
+	var board_top_w1 := live_4d_model.render_world_position([2, 0, 3, 1])
+	if spawn_w1 == Vector3.ZERO or spawn_w2 == Vector3.ZERO or spawn_w1.is_equal_approx(spawn_w2):
+		failures.append("above-board Live-4D active cells must map to distinct slice-local positions")
+	if spawn_w1.y <= board_top_w1.y:
+		failures.append("negative-Y Live-4D active cells must render above the board top")
+	if live_4d_model.active_layer_indices() != [1, 2]:
+		failures.append("above-board active cells must retain their basis-derived active slices")
 	return failures

@@ -2,14 +2,15 @@ extends RefCounted
 
 class_name SliceLocalOrientation
 
-# The fitted Live-4D mount first loses Forward/away depth at about -68.1
-# degrees (and +111.9 degrees in the other direction). A symmetric +/-60
-# degree gameplay domain preserves the existing Top preset while retaining a
-# positive away-depth margin. Explorer/free-inspection code may continue to
-# use the unconstrained set_angles() primitive.
-const NORMAL_GAMEPLAY_PITCH_LIMIT_RAD := PI / 3.0
-const NORMAL_GAMEPLAY_MIN_PITCH_RAD := -NORMAL_GAMEPLAY_PITCH_LIMIT_RAD
-const NORMAL_GAMEPLAY_MAX_PITCH_RAD := NORMAL_GAMEPLAY_PITCH_LIMIT_RAD
+# The actual fitted-view semantic-Forward proof includes the residual yaw
+# between continuous L.local_yaw and its nearest-quarter resolver frame. Its
+# strict all-yaw pitch interval is approximately (-42.480, +86.240) degrees.
+# The asymmetric product range retains Top at +60 degrees and selects a round
+# -40-degree lower limit, leaving 2.480 degrees (and positive normalized away
+# depth) before the worst-case inversion boundary. Explorer/free-inspection
+# code may continue to use the unconstrained set_angles() primitive.
+const NORMAL_GAMEPLAY_MIN_PITCH_RAD := -PI * 2.0 / 9.0  # -40 degrees.
+const NORMAL_GAMEPLAY_MAX_PITCH_RAD := PI / 3.0  # +60 degrees.
 
 # Shared, presentation-only orientation for the centred contents of every 4D
 # slice. This state is deliberately independent of exact SliceBasis4D state,

@@ -8,6 +8,7 @@ func run() -> Array:
 	_test_exact_turns(failures)
 	_test_group_laws(failures)
 	_test_mapping_bijection(failures)
+	_test_above_board_active_mapping(failures)
 	_test_signed_order_and_movement(failures)
 	return failures
 
@@ -123,6 +124,21 @@ func _test_signed_order_and_movement(failures: Array) -> void:
 	var zx_positive = SliceBasis4DScript.identity().turned("zx", 1)
 	if zx_positive.canonical_movement_command("move_x_pos") != "move_z_neg" or zx_positive.canonical_movement_command("move_z_pos") != "move_x_pos":
 		failures.append("ZX movement must follow the visible signed X/Z presentation axes")
+
+
+func _test_above_board_active_mapping(failures: Array) -> void:
+	var dimensions := [5, 10, 4, 4]
+	for basis in [SliceBasis4DScript.identity(), SliceBasis4DScript.from_slots([-3, 2, 1, 4])]:
+		var coordinate := [2, -2, 1, 3]
+		if bool(basis.presentation_coordinate(coordinate, dimensions).get("ok", false)):
+			failures.append("ordinary exact basis mapping must reject above-board coordinates")
+		var mapped: Dictionary = basis.presentation_coordinate(coordinate, dimensions, true)
+		if not bool(mapped.get("ok", false)) or int((mapped.get("visible_cell_3d", []) as Array)[1]) != -2:
+			failures.append("active presentation mapping must preserve above-board Y for %s" % basis.key())
+		if bool(basis.presentation_coordinate([2, 10, 1, 3], dimensions, true).get("ok", false)):
+			failures.append("active presentation mapping must still reject coordinates below the board")
+		if bool(basis.presentation_coordinate([5, -2, 1, 3], dimensions, true).get("ok", false)):
+			failures.append("active presentation mapping must not relax non-Y board bounds")
 
 
 func _reachable_bases() -> Array:

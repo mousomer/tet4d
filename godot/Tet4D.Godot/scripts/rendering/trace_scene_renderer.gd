@@ -169,6 +169,9 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 
 	for cell in _presentation.locked_cells():
 		var node := CellRendererScript.new()
+		node.name = "LockedCell"
+		node.set_meta("presentation_role", "locked")
+		node.set_meta("canonical_position", cell.get("position", []).duplicate())
 		_cell_root.add_child(node)
 		var locked_color_id := int(cell.get("color_id", 0))
 		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
@@ -196,6 +199,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var ghost_node := CellRendererScript.new()
 		ghost_node.name = "GhostCell"
 		ghost_node.set_meta("presentation_role", "ghost")
+		ghost_node.set_meta("canonical_position", cell.get("position", []).duplicate())
 		_cell_root.add_child(ghost_node)
 		var ghost_size := ReplayVisuals.LIVE_3D_GHOST_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_GHOST_CELL_SCALE
 		ghost_node.setup(
@@ -212,10 +216,13 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	for active_index in range(active_cells.size()):
 		var cell = active_cells[active_index]
 		var node := CellRendererScript.new()
+		node.name = "ActiveCell"
+		node.set_meta("presentation_role", "active")
+		node.set_meta("canonical_position", cell.get("position", []).duplicate())
 		_cell_root.add_child(node)
 		# Gameplay cells do not carry stable per-cell IDs in the exported traces.
 		# Keep them on the current discrete frame instead of inventing a path.
-		var position := _presentation.render_world_position(cell.get("position", []))
+		var position := _presentation.render_active_world_position(cell.get("position", []))
 		var active_color_id := int(cell.get("color_id", 1))
 		var active_size := ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_ACTIVE_CELL_SCALE
 		if _presentation.uses_live_exterior_cells:
@@ -427,4 +434,8 @@ func _ensure_child(node_name: String) -> Node3D:
 
 func _clear_root(root: Node) -> void:
 	for child in root.get_children():
+		# queue_free() alone keeps obsolete presentation geometry attached until
+		# the frame ends. Detach synchronously so a lock/spawn refresh exposes
+		# only the authoritative locked/Ghost/active node sets immediately.
+		root.remove_child(child)
 		child.queue_free()

@@ -78,8 +78,12 @@ func turned(plane: String, quarter_turn: int):
 	return get_script().new(result)
 
 
-func presentation_coordinate(canonical_coordinate: Array, canonical_dimensions: Array) -> Dictionary:
-	if not _valid_coordinate(canonical_coordinate, canonical_dimensions):
+func presentation_coordinate(
+	canonical_coordinate: Array,
+	canonical_dimensions: Array,
+	allow_above_board_y: bool = false
+) -> Dictionary:
+	if not _valid_coordinate(canonical_coordinate, canonical_dimensions, allow_above_board_y):
 		return {"ok": false}
 	var visible := []
 	for slot_index in range(3):
@@ -228,13 +232,17 @@ static func _coordinate_for_signed_axis(coordinate: Array, dimensions: Array, si
 	return semantic if signed_axis > 0 else int(dimensions[axis]) - 1 - semantic
 
 
-static func _valid_coordinate(coordinate: Array, dimensions: Array) -> bool:
+static func _valid_coordinate(coordinate: Array, dimensions: Array, allow_above_board_y: bool = false) -> bool:
 	if coordinate.size() != 4 or dimensions.size() != 4:
 		return false
 	for axis in range(4):
 		if not _is_integral_number(coordinate[axis]) or not _is_integral_number(dimensions[axis]):
 			return false
-		if int(dimensions[axis]) < 1 or int(coordinate[axis]) < 0 or int(coordinate[axis]) >= int(dimensions[axis]):
+		var extent := int(dimensions[axis])
+		var value := int(coordinate[axis])
+		if extent < 1 or value >= extent:
+			return false
+		if value < 0 and not (allow_above_board_y and axis == AXIS_Y):
 			return false
 	return true
 

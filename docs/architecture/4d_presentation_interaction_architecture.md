@@ -195,6 +195,15 @@ canonical C=(x,y,z,w)
   -> Camera3D projection -> screen
 ```
 
+Native active-piece cells may legitimately have negative canonical `Y` while
+the piece is spawning above the board. The active-cell presentation path must
+preserve that `Y` through the same exact `B -> G_D -> L -> anchor` composition;
+it must not clamp or collapse rejected points to a shared fallback origin.
+Because exact `B` keeps `+Y` fixed, this is a bounded admission exception for
+above-board active presentation only. Locked cells and Ghost cells retain the
+ordinary strict in-board coordinate contract, and no gameplay legality or
+spawn semantics move into Godot.
+
 `TraceSceneRenderer.set_live_4d_basis()` stores `_live_4d_basis`; the app owns
 the matching `_live_4d_basis`, passes it to the renderer, and uses it for HUD
 and input mapping. `ProjectionLayout` owns a `TraceCoordinateMapper`, whose
@@ -411,22 +420,28 @@ viewer into the displayed 3D slice volume**. Back means movement toward the
 viewer out of that volume. `Forward` is the semantic command name; this
 document deliberately does not use the ambiguous compound “Forward/Away”.
 
-The explicitly defined rendered depth sign for semantic Forward is **post-`R`
-displayed `+Z`**. The normal Live-4D fixed camera mount/projection must display
-that board-frame `+Z` as receding/away and board-frame `+X` as screen-right.
-This is a requirement on the accepted presentation frame, not an inference
-from Godot's camera-forward convention.
+The explicitly defined ideal rendered depth sign for semantic Forward is
+**displayed `+Z`**. At exact resolver quarter centres, post-`R` gameplay
+Forward equals that vector. Between centres, the actual discrete command uses
+`F(theta_q)` while rendering uses continuous `R(theta)`, so gameplay Forward
+contains the residual yaw derived in the 54E-2c review correction below. The
+normal Live-4D fixed camera mount/projection must display actual
+resolver-selected Forward as receding/away and resolver-selected Right as
+screen-right throughout the admitted yaw/pitch domain. This is a requirement
+on the accepted presentation frame, not an inference from Godot's
+camera-forward convention.
 
 **Displayed-depth implementation clarification.** Here “away” means receding
 from the player under the normal fitted Live-4D gameplay view after slice-local
-orientation and final framing/projection. Post-`R` board-frame `+Z` is required
-to appear as that receding direction. This semantic presentation contract does
-not define either Godot world `+Z` or `Camera3D` local `+Z` as away:
+orientation and final framing/projection. Displayed `+Z` is the exact-quarter
+baseline; actual command safety additionally includes residual yaw. This
+semantic presentation contract does not define either Godot world `+Z` or
+`Camera3D` local `+Z` as away:
 
 ```text
 board-frame +Z != Godot world +Z by definition
 board-frame +Z != Camera3D local forward by definition
-board-frame +Z = semantic Forward/away under the normal fitted gameplay view
+displayed +Z = ideal semantic Forward/away direction
 ```
 
 The following are distinct and must never be silently substituted for one
@@ -465,7 +480,8 @@ R(theta) = passive coordinate/render transform from pre-L coordinates into the
 ```
 
 `F(theta)` maps fixed semantic displayed axes `(Right=+X, Forward=+Z)` into
-pre-`L` coordinates. The resolver implements those columns: at `q=1`,
+pre-`L` coordinates. The discrete resolver implements the columns of
+`F(theta_q)`, not arbitrary continuous `F(theta)`: at `q=1`,
 Right is pre-`L` `+Z` and Forward is pre-`L` `-X`. Therefore:
 
 ```text
@@ -492,7 +508,7 @@ q=2: Right=-horizontal,      Forward=-depth
 q=3: Right=-depth,           Forward=horizontal
 ```
 
-Thus `Q` produces the canonical displacement represented by `F`. For a valid
+Thus `Q` produces the canonical displacement represented by `F(theta_q)`. For a valid
 origin/destination pair, `B` maps each point to a visible coordinate and the
 induced pre-`L` vector is their `G_D` point difference; `R` maps that difference
 to invariant screen/depth meaning. It does not receive an affine `G_D(ΔC)`.
@@ -718,9 +734,9 @@ Introduce `SliceLocalOrientation` (or equivalent) and separately queryable
 `adaptive_layer_layout.gd`), without rerouting all input. Add focused model
 tests for decomposition, anchor-only layout, asymmetric dimensions, `W=1`,
 signed basis mapping, active/passive mathematics, depth sign, and yaw vectors.
-Establish the post-`R` board-frame `+Z` depth contract as semantic Forward/away;
-actual fitted-camera integration is verified in 54E-2c. Repository green is
-required before 54E-2b.
+Establish displayed `+Z` as the exact-quarter semantic Forward/away baseline;
+actual resolver-residual and fitted-camera integration are verified in
+54E-2c. Repository green is required before 54E-2b.
 
 Stage 54E-2a implementation evidence now exists in
 `slice_local_orientation.gd`, `trace_coordinate_mapper.gd`,
@@ -823,35 +839,92 @@ zoom/pan/focus framing to `CameraRig`; final preset semantics remain Stage
 The actual fitted mount required reconciliation. A proper near-side camera at
 the old 25-degree yaw made board-frame `+Z` approach the viewer. The corrected
 fixed Live-4D mount is on the far side at yaw `205 degrees`, pitch `20 degrees`,
-with a fixed horizontal camera reflection. This keeps the collection in front
-of the camera, maps board-frame `+X` to positive view/screen X, preserves the
-vertical presentation, and maps board-frame `+Z` to negative Godot view Z
-(farther into the rendered scene).
+with a fixed horizontal presentation reflection in outer `V`. The reflection
+is applied once to the rendered-world subtree by a dedicated
+`Live4DPresentationRoot` about the fitted focus and across the active camera's
+vertical/depth plane; its normal is effective camera-right. Camera3D and the
+HUD remain outside that node. This reverses camera-space X while preserving
+camera-space Y and Z, keeps the collection in front of the camera, maps
+board-frame `+X` to positive screen X, preserves the vertical presentation,
+and maps board-frame `+Z` to negative Godot view Z (farther into the rendered
+scene). It is not part of `B`, `G_D`, `L`, any slice anchor, or `Q(q)`, and
+non-Live fits restore the presentation root to identity.
 
-Let the post-yaw semantic Forward after local pitch `p` be
-`d(p)=(0,-sin(p),cos(p))`. For the fixed mount, positive away depth is:
+Screen-right acceptance is established from actual resolver-selected
+canonical point pairs through `B`, two-point `G_D`, continuous `L`, anchor and
+renderer/world placement, followed by `Camera3D.unproject_position()`. It is
+not established by `Camera3D` Node3D scale, `global_basis.inverse()`, or a
+reflection-state boolean. Forward is tested separately from the same world
+points through `Camera3D.get_camera_transform().affine_inverse()`: Godot's
+visible camera space uses negative Z, so increasing away depth means the
+destination has a more-negative camera-space Z than the origin.
+
+**Stage 54E-2c review correction.** The initial proof treated semantic
+Forward as displayed `+Z`. That is only the special case where continuous yaw
+is exactly at the resolver-selected quarter turn. It omitted residual
+continuous yaw between `L.local_yaw` and the nearest-quarter command frame and
+therefore did not prove the admitted pitch range across normal gameplay yaw.
+The production counterexample is identity `B`, `theta=46 degrees`, `q=1`, and
+`p=-60 degrees`: resolver-selected Forward mapped from an interior canonical
+point through exact `B`, affine point-difference `G_D`, continuous `L`, and the
+actual fitted view has normalized away depth `-0.182625` and approaches the
+viewer.
+
+The corrected derivation uses active `F(theta)` for the semantic local frame
+and passive `R(theta)=F(theta)^-1` for coordinates rendered by `L`. Let
+`q=Q(theta)`, `theta_q=q*pi/2`, and `delta=theta-theta_q`. The resolver obtains
+canonical Forward from exact `B` at `q`; after exact `B` and the difference of
+two affine `G_D` point mappings, its pre-`L` board-coordinate vector is
+`R(-theta_q)(0,0,1)`. Continuous passive render yaw produces
+`R(theta)R(-theta_q)(0,0,1)=R(delta)(0,0,1)`. Pitch acts last about displayed
+Right, so actual rendered semantic Forward is:
 
 ```text
-away(p) = sin(20 degrees) sin(p)
-        + cos(25 degrees) cos(20 degrees) cos(p)
+d(delta,p) = (sin(delta),
+              -sin(p) cos(delta),
+               cos(p) cos(delta))
 ```
 
-The strict mathematical interval around the gameplay default is therefore
-approximately `(-68.121 degrees, +111.879 degrees)`. Normal gameplay uses the
-symmetric product range `[-60 degrees, +60 degrees]`. It preserves the current
-Top preset, leaves an `8.121-degree` margin at the nearest inversion boundary,
-and retains approximately `0.130` normalized away depth at the worst admitted
-endpoint. The unconstrained low-level orientation primitive remains available
-outside the normal-gameplay policy.
+The accepted fixed camera's outward direction is
+`o=(-sin(25)cos(20), sin(20), -cos(25)cos(20))`. Thus positive away depth is:
 
-Focused evidence covers default/minimum/maximum/intermediate pitch, just-inside
-and just-outside mathematical boundaries, `44/46/134/136`-degree yaw samples
-and ties-to-even, identity and `[-Z,+Y,+X,+W]`, all four yaw quarters, actual
-view-space Right/Forward signs, outer-yaw/pan/zoom/Fit independence, preset
-decomposition, refreshed renderer bounds/fit reference, deterministic
-isolation, Live-4D roll detachment, and retained non-Live/free-camera
-primitives. Stage 54E-2c is implemented and review pending; 54E-2d remains
-blocked until it is reviewed green.
+```text
+away(delta,p) = sin(25) cos(20) sin(delta)
+              + cos(delta) [sin(20) sin(p)
+              + cos(25) cos(20) cos(p)]
+```
+
+For exact quarter-turn yaw (`delta=0`), the earlier pitch-only special-case
+interval is approximately `(-68.120 degrees, +111.880 degrees)` and remains a
+truthful description of displayed `+Z` only. Nearest-quarter resolution admits
+`delta` throughout `[-45 degrees,+45 degrees]`, with the existing ties-to-even
+policy selecting the exact boundary frame. Over the central gameplay interval,
+the worst endpoint is `delta=-45 degrees`; strict all-yaw safety reduces to:
+
+```text
+sin(20) sin(p) + cos(25) cos(20) cos(p) > sin(25) cos(20)
+```
+
+Solving that inequality gives the actual strict normal-gameplay-safe interval
+`(-42.479647 degrees, +86.240113 degrees)`. The least disruptive product policy
+is asymmetric `[-40 degrees, +60 degrees]`: it preserves the current Top
+preset, keeps the former upper product limit, and moves only the unsafe lower
+limit. The lower limit retains `2.479647 degrees` of angular margin and
+`0.025049` normalized away depth at the worst residual yaw. The unconstrained
+low-level orientation primitive remains available outside normal gameplay.
+
+Focused evidence uses a normalized sign tolerance of `1e-6` and cross-products
+quarter centres and both sides of every
+nearest-quarter boundary (including positive/negative wrapped cases and
+ties-to-even) with corrected minimum, maximum, zero, and intermediate pitch;
+identity and `[-Z,+Y,+X,+W]`; actual resolver-selected Right/Forward; two-point
+`B/G_D` mapping; continuous `L`; and actual fitted view-space signs. It also
+proves the rejected `46/-60` state, lower clamp and deterministic isolation,
+pitch command isolation, outer-yaw/pan/zoom/Fit independence, preset
+decomposition, refreshed renderer bounds/fit reference, Live-4D roll
+detachment, and retained non-Live/free-camera primitives. Stage 54E-2c remains
+implemented and review pending; 54E-2d remains blocked until it is reviewed
+green.
 
 ### 54E-2d — Lifecycle, authority, and contract reconciliation
 

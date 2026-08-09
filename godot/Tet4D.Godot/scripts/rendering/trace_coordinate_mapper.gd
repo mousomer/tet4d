@@ -30,13 +30,13 @@ func unoriented_world_position(coordinates: Array, dimension: int) -> Vector3:
 	return decomposition.get("unoriented_world_point", Vector3.ZERO) if bool(decomposition.get("ok", false)) else Vector3.ZERO
 
 
-func decompose_position(coordinates: Array, dimension: int) -> Dictionary:
+func decompose_position(coordinates: Array, dimension: int, allow_above_board_y: bool = false) -> Dictionary:
 	if coordinates.is_empty():
 		return {"ok": false}
 	var visible_coordinates := coordinates.duplicate()
 	var layer_index := 0
 	if dimension >= 4 and coordinates.size() > 3:
-		var mapped: Dictionary = presentation_coordinate(coordinates)
+		var mapped: Dictionary = presentation_coordinate(coordinates, allow_above_board_y)
 		if not bool(mapped.get("ok", false)):
 			return {"ok": false}
 		visible_coordinates = mapped.get("visible_cell_3d", [])
@@ -167,5 +167,5 @@ func basis_key() -> String:
 	return _basis.key()
 
 
-func presentation_coordinate(canonical_coordinate: Array) -> Dictionary:
-	return _basis.presentation_coordinate(canonical_coordinate, _board_shape)
+func presentation_coordinate(canonical_coordinate: Array, allow_above_board_y: bool = false) -> Dictionary:
+	return _basis.presentation_coordinate(canonical_coordinate, _board_shape, allow_above_board_y)

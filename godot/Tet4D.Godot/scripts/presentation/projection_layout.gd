@@ -28,8 +28,17 @@ func oriented_world_position(coordinates: Array) -> Vector3:
 	return oriented_world_position_with_local_offset(coordinates, Vector3.ZERO)
 
 
+func oriented_active_world_position(coordinates: Array) -> Vector3:
+	var decomposition := mapper.decompose_position(coordinates, dimension, true)
+	return _oriented_world_position_from_decomposition(decomposition, Vector3.ZERO)
+
+
 func oriented_world_position_with_local_offset(coordinates: Array, local_offset: Vector3) -> Vector3:
 	var decomposition := decompose_position(coordinates)
+	return _oriented_world_position_from_decomposition(decomposition, local_offset)
+
+
+func _oriented_world_position_from_decomposition(decomposition: Dictionary, local_offset: Vector3) -> Vector3:
 	if not bool(decomposition.get("ok", false)):
 		return Vector3.ZERO
 	var local_point: Vector3 = decomposition.get("centered_local_point", Vector3.ZERO) + local_offset

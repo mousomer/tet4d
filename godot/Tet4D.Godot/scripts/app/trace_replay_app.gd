@@ -100,6 +100,7 @@ var _ghost_semantic_revision := ""
 var _ghost_query_count := 0
 
 var _world_root: Node3D
+var _live_4d_presentation_root: Node3D
 var _renderer: TraceSceneRenderer
 var _camera_rig: CameraRig
 var _world_environment: WorldEnvironment
@@ -938,9 +939,13 @@ func _resolve_scene_nodes() -> void:
 	if _world_root == null:
 		_build_world_in_game_viewport()
 	if _renderer == null:
-		_renderer = _world_root.get_node_or_null("TraceSceneRenderer") as TraceSceneRenderer
+		_renderer = _world_root.get_node_or_null("Live4DPresentationRoot/TraceSceneRenderer") as TraceSceneRenderer
 	if _camera_rig == null:
 		_camera_rig = _world_root.get_node_or_null("CameraRig") as CameraRig
+	if _live_4d_presentation_root == null:
+		_live_4d_presentation_root = _world_root.get_node_or_null("Live4DPresentationRoot") as Node3D
+	if _camera_rig != null:
+		_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
 
 
 func _build_world_in_game_viewport() -> void:
@@ -948,12 +953,15 @@ func _build_world_in_game_viewport() -> void:
 		return
 	_world_root = Node3D.new()
 	_world_root.name = "WorldRoot"
+	_live_4d_presentation_root = Node3D.new()
+	_live_4d_presentation_root.name = "Live4DPresentationRoot"
+	_world_root.add_child(_live_4d_presentation_root)
 
 	_renderer = TraceSceneRendererScript.new() as TraceSceneRenderer
 	_renderer.name = "TraceSceneRenderer"
 	_renderer.set_live_4d_basis(_live_4d_basis, false)
 	_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
-	_world_root.add_child(_renderer)
+	_live_4d_presentation_root.add_child(_renderer)
 
 	_camera_rig = CameraRigScript.new() as CameraRig
 	_camera_rig.name = "CameraRig"
@@ -964,6 +972,7 @@ func _build_world_in_game_viewport() -> void:
 	camera.current = true
 	camera.fov = 50.0
 	_camera_rig.add_child(camera)
+	_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
 
 	var light := DirectionalLight3D.new()
 	light.name = "DirectionalLight3D"

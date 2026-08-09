@@ -99,10 +99,20 @@ recomputes oriented bounds, and refreshes the renderer fit reference. Relative
 commands use exact `B + Q(L.local_yaw)` and ignore outer framing. Right-drag,
 wheel/zoom, and Fit remain framing operations; gameplay roll is detached while
 generic roll remains reusable. Legacy presets are temporarily decomposed into
-`L` orientation and `V/P` framing. The fixed fitted mount now proves board
-`+X` screen-right and board `+Z` receding, with a mathematically safe
-`[-60 degrees, +60 degrees]` gameplay pitch range. Stage 54E-2d remains blocked
-until this stage is reviewed green.
+`L` orientation and `V/P` framing. The fixed fitted mount now applies one
+renderer-only outer `V` reflection across the active camera's vertical/depth
+plane, with Camera3D and HUD outside it. Actual Camera3D projection proves
+resolver-selected Right screen-right, and effective camera-space depth proves
+resolver-selected Forward receding across continuous yaw. Review correction
+evidence gives the strict all-yaw pitch
+interval as approximately `(-42.480 degrees, +86.240 degrees)` and selects the
+asymmetric product range `[-40 degrees, +60 degrees]`, retaining a
+`2.480-degree` lower margin. Final visual review also corrects Live-4D active
+spawn cells with negative canonical `Y`: they now retain their basis-derived
+slice and above-board position instead of collapsing to a shared renderer
+origin. Stage 54E-2d remains blocked until this stage is reviewed green.
+The same final visual pass corrects shared NEXT-thumbnail cell adjacency so
+connected cells share projected cube faces within each intentional `W` group.
 
 ## Hold
 
@@ -128,6 +138,19 @@ a placeholder authority record in advance.
 - Stage 54E-5 — cockpit consolidation.
 - Stage 54F — integrated professional playability/visual acceptance.
 - Stage 54G — professional gaming-experience and release hardening.
+
+### Stage 54F deferred Live-4D visual findings
+
+- [Increase Live-4D inter-slice board spacing (#69)](https://github.com/mousomer/tet4d/issues/69):
+  increase the visual gutter between simultaneously displayed slice boards
+  while preserving anchor-only layout semantics, stable slice ordering, and
+  whole-collection Fit. Validate `W=1` and representative `2x2` and larger
+  slice layouts.
+- [Refine Live-4D grid and board-wireframe visual hierarchy (#70)](https://github.com/mousomer/tet4d/issues/70):
+  reduce internal-grid contrast and line weight; use a weak dark-blue grid and
+  thinner muted-yellow outer wireframe; keep active-slice emphasis visible
+  without an excessively thick frame; and ensure pieces and Ghost dominate the
+  visual hierarchy.
 
 ## Authority Transition Work
 

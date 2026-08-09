@@ -64,11 +64,21 @@ history ledger. Detailed history is preserved in
   exact `B + Q(L.local_yaw)`; outer pan/zoom/Fit remain framing-only; gameplay
   roll is detached while generic roll remains; preset yaw/pitch and framing
   are decomposed; and every `L` mutation rerenders oriented geometry, bounds,
-  and the fit reference. The fixed far-side/horizontally reflected mount proves
-  board `+X` screen-right and `+Z` receding. The normal pitch range is
-  `[-60 degrees, +60 degrees]`, strictly inside the approximately
-  `(-68.121 degrees, +111.879 degrees)` safe interval. Stage 54E-2d remains
-  blocked until reviewed-green 54E-2c.
+  and the fit reference. The fixed far-side mount uses one renderer-only outer
+  `V` reflection across the active camera's vertical/depth plane; the camera
+  and HUD remain outside it. Actual `Camera3D.unproject_position()` evidence
+  proves resolver-selected Right is screen-right, while effective camera-space
+  depth proves resolver-selected Forward recedes. A review correction accounts
+  for residual continuous yaw between
+  `L.local_yaw` and `Q(L.local_yaw)`: the strict all-yaw pitch interval is
+  approximately `(-42.480 degrees, +86.240 degrees)`, and normal gameplay uses
+  `[-40 degrees, +60 degrees]` with a `2.480-degree` lower margin. Stage
+  54E-2c final visual review also found and fixed a transient stale-Ghost
+  presentation artefact and a separate above-board active-spawn projection
+  collapse. It also restores face-connected cell adjacency inside each shared
+  NEXT-thumbnail `W` group. Board spacing and grid/wireframe styling remain
+  deferred visual-quality work tracked in `docs/BACKLOG.md` and GitHub Issues.
+  Stage 54E-2d remains blocked until reviewed-green 54E-2c.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the

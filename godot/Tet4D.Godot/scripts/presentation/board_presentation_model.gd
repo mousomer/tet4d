@@ -33,6 +33,13 @@ func render_world_position(coordinates: Array) -> Vector3:
 	return projection.oriented_world_position(coordinates)
 
 
+func render_active_world_position(coordinates: Array) -> Vector3:
+	# Native spawn cells may legitimately sit above the board at negative Y.
+	# Keep ordinary locked/Ghost mapping strict while preserving those active
+	# coordinates through the same B -> G_D -> L -> anchor composition.
+	return projection.oriented_active_world_position(coordinates)
+
+
 func render_world_position_with_local_offset(coordinates: Array, local_offset: Vector3) -> Vector3:
 	return projection.oriented_world_position_with_local_offset(coordinates, local_offset)
 
@@ -64,7 +71,7 @@ func active_layer_indices() -> Array:
 	for cell in active_cells():
 		var position: Array = cell.get("position", [])
 		if position.size() > 3:
-			var mapped: Dictionary = projection.mapper.presentation_coordinate(position)
+			var mapped: Dictionary = projection.mapper.presentation_coordinate(position, true)
 			if not bool(mapped.get("ok", false)):
 				continue
 			var layer := int(mapped.get("layer_index", -1))

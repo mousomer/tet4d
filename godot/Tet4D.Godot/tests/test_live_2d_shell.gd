@@ -5,6 +5,8 @@ const TraceReplayAppScript = preload("res://scripts/app/trace_replay_app.gd")
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
+const SCREEN_RIGHT_TOLERANCE_PX := 0.5
+const AWAY_DEPTH_TOLERANCE := 0.0001
 
 
 func run() -> Array:
@@ -120,6 +122,8 @@ func run() -> Array:
 		app._enter_live_3d_mode()
 		if app._mode != TraceReplayAppScript.MODE_LIVE_3D:
 			failures.append("app should enter Live 3D mode on direct call, got %s" % str(app._mode))
+		if bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)) or app._live_4d_presentation_root.transform != Transform3D.IDENTITY:
+			failures.append("Live 3D must not inherit the fitted Live-4D presentation reflection")
 		var direct_live_3d_snapshot = JSON.parse_string(app._live_bridge.live_3d_snapshot_json())
 		if typeof(direct_live_3d_snapshot) == TYPE_DICTIONARY and str(direct_live_3d_snapshot.get("trace_type", "")) != "live_3d":
 			failures.append("direct native live 3D snapshot had trace type %s" % str(direct_live_3d_snapshot.get("trace_type", "")))
@@ -202,14 +206,29 @@ func run() -> Array:
 			failures.append("live 4D should open in the fitted W-slice camera preset")
 		if app._camera_rig._current_fit_state != "fit OK":
 			failures.append("live 4D should open already fitted")
-		if not bool(app._camera_rig.presentation_snapshot().get("horizontal_mirrored", false)):
+		if not bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)):
 			failures.append("live 4D fitted view should use the accepted board-depth mount")
+		if app._live_4d_presentation_root == null or app._renderer.get_parent() != app._live_4d_presentation_root:
+			failures.append("Live 4D renderer should be isolated under one fixed presentation root")
+		elif app._live_4d_presentation_root.transform.basis.determinant() >= 0.0:
+			failures.append("Live 4D presentation root should carry the render-effective horizontal reflection")
+		if app._live_4d_presentation_root != null and app._live_4d_presentation_root.is_ancestor_of(app._camera_rig):
+			failures.append("Live 4D presentation reflection must not contain CameraRig")
+		if app._live_4d_presentation_root != null and app._live_4d_presentation_root.is_ancestor_of(app._hud):
+			failures.append("Live 4D presentation reflection must not inherit from HUD")
 		var orientation_gizmo := app._camera_rig.get_node_or_null("OrientationGizmo") as Node3D
 		if orientation_gizmo == null or not orientation_gizmo.visible or orientation_gizmo.get_child_count() < 10:
 			failures.append("Live 4D should show a compact basis-driven ball-and-arrow orientation marker")
 		elif orientation_gizmo.get_node_or_null("HorizontalArrow") == null or orientation_gizmo.get_node_or_null("GravityArrow") == null or orientation_gizmo.get_node_or_null("DepthArrow") == null:
 			failures.append("orientation marker should expose horizontal, gravity, and depth arrowheads")
 		else:
+			var gizmo_origin := orientation_gizmo.get_node_or_null("AxisOrigin") as MeshInstance3D
+			var gizmo_horizontal := orientation_gizmo.get_node_or_null("HorizontalArrow") as MeshInstance3D
+			if gizmo_origin != null and gizmo_horizontal != null:
+				var gizmo_origin_screen: Vector2 = app._camera_rig.project_world_point(gizmo_origin.global_position)
+				var gizmo_horizontal_screen: Vector2 = app._camera_rig.project_world_point(gizmo_horizontal.global_position)
+				if gizmo_horizontal_screen.x - gizmo_origin_screen.x <= SCREEN_RIGHT_TOLERANCE_PX:
+					failures.append("orientation gizmo horizontal arrow should agree with reflected board screen-right")
 			var gizmo_position_before: Vector3 = orientation_gizmo.global_position
 			app._camera_rig.orbit(Vector2(8.0, -4.0))
 			app._camera_rig._process(1.0)
@@ -399,6 +418,23 @@ func run() -> Array:
 			failures.append("Live 4D resolver should switch to q=1 above the 45-degree boundary")
 		if is_equal_approx(float(app._renderer.live_4d_local_orientation_snapshot().get("local_yaw", 0.0)), rendered_yaw_44):
 			failures.append("Live 4D renderer yaw should remain continuous across resolver thresholds")
+		var lower_clamp_native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
+		var lower_clamp_hash: String = str(app._live_bridge.live_4d_state_hash())
+		var lower_clamp_mapping: Dictionary = app._control_frame_mapping(4).snapshot()
+		for _request_index in range(3):
+			app._set_live_4d_local_orientation(
+				deg_to_rad(46.0),
+				SliceLocalOrientationScript.NORMAL_GAMEPLAY_MIN_PITCH_RAD - PI
+			)
+		if not is_equal_approx(app._live_4d_local_orientation.local_pitch, SliceLocalOrientationScript.NORMAL_GAMEPLAY_MIN_PITCH_RAD):
+			failures.append("repeated unsafe negative pitch requests must clamp at the corrected product minimum")
+		if app._renderer.live_4d_local_orientation_snapshot() != app._live_4d_local_orientation.snapshot():
+			failures.append("lower pitch clamp must propagate through actual renderer-owned L")
+		if app._control_frame_mapping(4).snapshot() != lower_clamp_mapping:
+			failures.append("lower pitch clamp must leave the app-owned resolver mapping unchanged")
+		if app._live_bridge.live_4d_snapshot_json() != lower_clamp_native_snapshot or str(app._live_bridge.live_4d_state_hash()) != lower_clamp_hash:
+			failures.append("lower pitch clamp must not change native snapshot or state hash")
+		_assert_app_live_4d_semantic_directions(failures, app, "yaw 46 corrected minimum clamp")
 		var mapping_before_outer_yaw: Dictionary = app._control_frame_mapping(4).snapshot()
 		app._camera_rig.nudge_yaw(PI * 0.5)
 		if app._control_frame_mapping(4).snapshot() != mapping_before_outer_yaw:
@@ -700,6 +736,42 @@ func run() -> Array:
 	root.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_app_live_4d_semantic_directions(failures: Array, app, label: String) -> void:
+	var mapping = app._control_frame_mapping(4)
+	var projection = app._renderer._presentation.projection
+	var origin := [2, 3, 1, 0]
+	for intent in ["move_x_pos", "move_z_neg"]:
+		var command: String = mapping.translation_command(intent, "relative")
+		var delta := _canonical_4d_delta(command)
+		var destination := origin.duplicate()
+		for axis in range(4):
+			destination[axis] = int(destination[axis]) + int(delta[axis])
+		var origin_world: Vector3 = app._renderer.to_global(projection.oriented_world_position(origin))
+		var destination_world: Vector3 = app._renderer.to_global(projection.oriented_world_position(destination))
+		if app._camera_rig.is_world_point_behind(origin_world) or app._camera_rig.is_world_point_behind(destination_world):
+			failures.append("%s: production projection points must be in front of Camera3D" % label)
+			continue
+		if intent == "move_x_pos":
+			var origin_screen: Vector2 = app._camera_rig.project_world_point(origin_world)
+			var destination_screen: Vector2 = app._camera_rig.project_world_point(destination_world)
+			if destination_screen.x - origin_screen.x <= SCREEN_RIGHT_TOLERANCE_PX:
+				failures.append("%s: actual app-owned Right must increase Camera3D screen X" % label)
+		if intent == "move_z_neg":
+			var origin_view: Vector3 = app._camera_rig.camera_space_point(origin_world)
+			var destination_view: Vector3 = app._camera_rig.camera_space_point(destination_world)
+			if origin_view.z - destination_view.z <= AWAY_DEPTH_TOLERANCE:
+				failures.append("%s: actual app-owned Forward must remain strictly receding" % label)
+
+
+func _canonical_4d_delta(command: String) -> Array:
+	match command:
+		"move_x_neg": return [-1, 0, 0, 0]
+		"move_x_pos": return [1, 0, 0, 0]
+		"move_z_neg": return [0, 0, -1, 0]
+		"move_z_pos": return [0, 0, 1, 0]
+		_: return [0, 0, 0, 0]
 
 
 func _assert_live_gameplay_hud_copy(failures: Array) -> void:

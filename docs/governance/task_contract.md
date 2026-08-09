@@ -44,12 +44,62 @@ work is permitted.
 - Remove ordinary Live-4D interactive outer yaw/pitch/roll while preserving
   reusable low-level free-inspection roll.
 - Establish and enforce a fitted-view-derived normal-gameplay pitch domain.
-- Prove fitted-view post-`R` `+X` is screen-right and `+Z` is receding.
+- Correct the review defect in the initial pitch-only proof by including the
+  residual yaw between continuous `L.local_yaw` and `Q(L.local_yaw)`.
+- Prove actual resolver-selected Right is screen-right and Forward is receding
+  through exact `B`, two-point `G_D`, continuous `L`, and fitted `V/P`.
 - Decompose current preset yaw/pitch into `L` and framing/zoom/pan into `V/P`.
 - Make every interactive or preset-driven `L` mutation explicitly rerender,
   recompute oriented bounds, and refresh fit inputs without native gameplay.
 - Replace provisional combined-camera characterization tests with requirement
   and regression evidence while preserving non-Live camera behavior.
+- Replace the review-rejected `Camera3D.scale` reflection with one
+  render-effective outer Live-4D presentation transform. Keep the HUD outside
+  that transform and keep `B`, `G_D`, `L`, anchors, `Q`, and deterministic
+  gameplay unchanged.
+- Prove Right with actual `Camera3D.unproject_position()` screen coordinates
+  from resolver-selected canonical point pairs after their real renderer/world
+  placement. Prove Forward separately with the effective camera transform and
+  explicit Godot negative-view-Z depth convention.
+
+## Render-Projection Review-Amendment Audit
+
+The pre-amendment scene path is:
+
+```text
+ReplayHud/GameViewport
+  -> WorldRoot
+       -> TraceSceneRenderer
+       -> CameraRig
+            -> Camera3D
+```
+
+`ReplayHud` and its controls are outside `GameViewport`; slice geometry and
+slice labels are rendered inside it. The pre-amendment
+`_horizontal_mirrored` flag reaches only `Camera3D.scale=(-1,1,1)`, while the
+screen-direction tests inspect `Camera3D.global_basis.inverse()`. That is not
+accepted as evidence of the projection Camera3D actually supplies to the
+viewport.
+
+The selected correction inserts one `Live4DPresentationRoot` under
+`WorldRoot`, parents only `TraceSceneRenderer` beneath it, and applies the
+fixed horizontal reflection there about the fitted focus and across the
+active camera's vertical/depth plane. Its normal is effective camera-right,
+so it reverses camera-space X while preserving camera-space Y and Z. This is
+one outer `V` transform over the rendered world: it is not slice-local, does
+not change renderer-local anchors or `L`, and does not contain Camera3D or the
+HUD. Non-Live fits restore this root to identity. CameraRig remains the owner
+that configures this fitted-presentation state and exposes only semantic
+diagnostics.
+
+Normative Right evidence must map an interior canonical point pair through
+the actual resolver, exact `B`, two-point `G_D`, continuous `L`, anchor/world
+placement, renderer/presentation-root transforms, and then
+`Camera3D.unproject_position()`. Normative Forward evidence uses the same
+world points and `Camera3D.get_camera_transform().affine_inverse()`; a farther
+visible point has a more-negative camera-space Z, so origin Z minus destination
+Z is positive away depth. Boolean reflection metadata and camera basis-only
+direction helpers are secondary diagnostics, not acceptance proof.
 
 ## Forbidden Changes
 
@@ -78,11 +128,14 @@ work is permitted.
 6. `B`, `L`, pan, zoom, Fit, and presets satisfy their independence and
    deterministic-isolation contracts.
 7. The declared normal-game pitch range is mathematically inside the actual
-   fitted-view Forward inversion boundary and passes default, extrema,
-   intermediate, and clamp coverage.
-8. Actual fitted-view evidence proves board-frame `+X` projects screen-right
-   and board-frame `+Z` recedes for identity and signed `B`, all four yaw
-   quarters, and representative admitted pitch.
+   all-continuous-yaw fitted-view Forward inversion boundary, has an explicit
+   margin, and passes default, extrema, intermediate, rejected-old-boundary,
+   and clamp coverage.
+8. Actual fitted-view evidence proves resolver-selected Right has a positive
+   pixel displacement through `Camera3D.unproject_position()` and Forward has
+   positive away depth through the effective camera transform for identity and
+   signed `B`, yaw-quarter centres, both sides of quantizer boundaries,
+   ties-to-even, and pitch extrema/intermediate values.
 9. Preset yaw/pitch reaches `L`, framing reaches `V/P`, final bounds remain
    coherent, and no preset leaves normal Live-4D outer rotation.
 10. Focused, resolver-required, sanitation, full-repository, and real-window
