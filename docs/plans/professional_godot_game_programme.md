@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-08-05
+Last updated: 2026-08-09
 
 ## 1. Purpose
 
@@ -710,9 +710,8 @@ runtime authority records remain contingent on concrete implementation evidence.
 
 #### Stage 54E-2 — Camera-space separation implementation
 
-Status: Stages 54E-2a and 54E-2b complete — reviewed green. Stage 54E-2c is
-implemented — review pending; 54E-2d remains sequentially gated on
-reviewed-green 54E-2c.
+Status: Stages 54E-2a, 54E-2b, and 54E-2c complete — reviewed green. Stage
+54E-2d is NEXT / ELIGIBLE.
 
 Implement the architecture accepted in 54E-1. Separate the relevant
 presentation transforms without changing canonical gameplay coordinates,
@@ -723,13 +722,12 @@ replay concern.
 The mandatory reviewed-green sequence is 54E-2a (presentation state and
 coordinate decomposition), then 54E-2b (renderer composition), then 54E-2c
 (interaction and camera-rig separation), then 54E-2d (lifecycle, authority,
-and contract reconciliation). Stage 54E-2b is complete and reviewed green;
-54E-2c is implemented and review pending, while each later slice remains
-blocked until its predecessor is separately reviewed and green.
+and contract reconciliation). Stages 54E-2a, 54E-2b, and 54E-2c are complete
+and reviewed green; 54E-2d is now the next eligible implementation slice.
 No later slice may repair a prior slice, and a monolithic 54E-2 implementation
 is forbidden.
 
-Stage 54E-2c must ensure that interactive yaw/pitch changes to shared `L`
+Stage 54E-2c established that interactive yaw/pitch changes to shared `L`
 refresh renderer-derived orientation state and recompute oriented fit bounds,
 so geometry and the fitting envelope cannot diverge.
 
@@ -1057,8 +1055,9 @@ The active order is:
 4. Stage 54E-2a — presentation state and coordinate decomposition is complete
    and reviewed green.
 5. Stage 54E-2b — renderer composition — is complete and reviewed green.
-   Stage 54E-2c — interaction and camera-rig separation — is implemented and
-   review pending; 54E-2d remains gated on reviewed-green 54E-2c.
+   Stage 54E-2c — interaction and camera-rig separation — is complete and
+   reviewed green; Stage 54E-2d — lifecycle, authority, and contract
+   reconciliation — is next and eligible.
 6. Stage 54E-3 — setup/menu information architecture.
 7. Stage 54E-4 — camera/GUI presets.
 8. Stage 54E-5 — cockpit consolidation.
