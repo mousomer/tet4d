@@ -5,6 +5,7 @@ Status: Stage 54E-1 complete — human accepted
 Scope: Live 4D Godot presentation and input adaptation only
 Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
+Implementation evidence: Stage 54E-2a complete — reviewed green
 
 ## 1. Purpose and current audit result
 
@@ -89,12 +90,13 @@ frame: it changes the orientation of the volume inside every slice, never the
 placement or order of slice origins.
 
 The accepted contract represents `L` with separately named `local_yaw` and
-`local_pitch` values. The rendering transform may interpolate, but the input
-projection is the exact nearest-quarter-turn value of `local_yaw`. `L` owns
-the ordinary Live-4D orientation interactions that change the visible X/Z
-frame: mouse left-drag orbit, keyboard yaw, and keyboard pitch. Only its
-quantized yaw combines with `B` for relative X/Z translation and local
-rotation commands.
+`local_pitch` values. Let `theta = local_yaw`: rendering consumes this
+continuous visual angle directly. Input projection instead derives
+`q = nearest_yaw_quarter_turn(theta)` and uses only that exact quarter turn for
+relative X/Z translation and local rotation commands. `L` owns the ordinary
+Live-4D orientation interactions that change the visible X/Z frame: mouse
+left-drag orbit, keyboard yaw, and keyboard pitch. Only `Q(q)` combines with
+`B` for discrete controls.
 
 `local_pitch` is allowed but visual-only for command resolution. It is a tilt
 around the already selected local horizontal axis; it does not reassign local
@@ -264,7 +266,7 @@ screen_cell = P(V(world_cell))      # outer final view and projection
 | --- | --- | --- | --- | --- | --- |
 | `B` | canonical 4D -> `(i,p)` | canonical extents | app/Stage 54C Godot presentation state | exact signed discrete | changes visible/slice axes; relative controls consume it |
 | `G_D` | visible integer 3D point -> centred local 3D point | slice board centre | coordinate mapper | deterministic affine point conversion | no orientation; controls do not consume it |
-| `L` | local 3D -> oriented local 3D | each slice local origin | new Godot `SliceLocalOrientation` | local yaw plus admitted pitch visual transform and quantized yaw | shared visible local frame; yaw reaches relative controls, pitch is visual-only within the depth-preserving gameplay domain, roll is unavailable in normal gameplay |
+| `L` | local 3D -> oriented local 3D | each slice local origin | new Godot `SliceLocalOrientation` | continuous `theta = local_yaw`, admitted pitch visual transform, and discrete `Q(q)` | shared visible local frame; `theta` reaches rendering continuously, `Q(q)` reaches relative controls, pitch is visual-only within the depth-preserving gameplay domain, roll is unavailable in normal gameplay |
 | `anchor_i` | oriented local 3D -> world collection | slice origin `i` | layout owner | float translation; future point-only anchor arrangement | placement only; cannot alter local basis or controls |
 | `V` | world collection -> final framing | outer focus | `CameraRig` | floating pan/fit/zoom state | no normal Live-4D rotation; forbidden from controls |
 | `P` | final view -> screen | camera projection | `Camera3D` | projection parameters | projection only; forbidden from controls |
@@ -305,8 +307,11 @@ Forward, select cases where `i'=i` and both cells are valid. Then compute:
 
 ```text
 ΔpreL = G_D(p') - G_D(p)
-Δdisplayed = R(q) * ΔpreL
+Δdisplayed = R(theta_q) * ΔpreL
 ```
+
+Here `theta_q = q*pi/2` because Invariant C samples exact quarter turns; this
+does not change the continuous `R(theta)` used for general rendering.
 
 `G_D` is affine for cell positions because it centres the board; it must never
 be applied directly to `ΔC` as a point. The difference cancels centring and
@@ -447,36 +452,37 @@ This is explicitly a difference of two point mappings; it does not apply
 
 ### Active frame, passive coordinates, and resolver turns
 
-Let `q` be `ControlFrameMapping.nearest_yaw_quarter_turn(local_yaw)` and use
-the matching exact quarter-turn angle. Define three distinct objects:
+Let `theta = local_yaw` be the continuous visual yaw, and let
+`q = ControlFrameMapping.nearest_yaw_quarter_turn(theta)` be its discrete
+control quarter turn. Define the continuous visual transforms:
 
 ```text
-F(q) = active orientation of semantic displayed slice-local axes,
+F(theta) = active orientation of semantic displayed slice-local axes,
        expressed in pre-L coordinates
-R(q) = passive coordinate/render transform from pre-L coordinates into the
+R(theta) = passive coordinate/render transform from pre-L coordinates into the
        fixed displayed local board frame
-Q(q) = discrete signed-axis mapping consumed by ControlFrameMapping
 ```
 
-`F(q)` maps fixed semantic displayed axes `(Right=+X, Forward=+Z)` into
+`F(theta)` maps fixed semantic displayed axes `(Right=+X, Forward=+Z)` into
 pre-`L` coordinates. The resolver implements those columns: at `q=1`,
 Right is pre-`L` `+Z` and Forward is pre-`L` `-X`. Therefore:
 
 ```text
-F(q) = Basis(Vector3.UP, -local_yaw)
-R(q) = F(q)^-1 = Basis(Vector3.UP, +local_yaw)
+F(theta) = Basis(Vector3.UP, -theta)
+R(theta) = F(theta)^-1 = Basis(Vector3.UP, +theta)
 ```
 
 This is active/passive duality, not two competing orientations. Direct Godot
 evaluation establishes that `Basis(Vector3.UP,+PI/2)` maps `+X -> -Z` and
 `+Z -> +X`. Consequently `R(+90°)` maps the resolver's pre-`L` Right
 `+Z` to displayed `+X`, and Forward `-X` to displayed `+Z`. The final
-derived renderer sign is therefore `Basis(Vector3.UP, +local_yaw)`. The prior
+derived continuous renderer sign is therefore `Basis(Vector3.UP, +theta)`. The prior
 negative renderer sign incorrectly used the active-frame transform as a
 passive coordinate transform.
 
-`Q(q)` consumes un-negated `local_yaw` using the existing nearest-turn,
-ties-to-even rule. It selects from `B`'s signed horizontal/depth slots:
+`Q(q)` consumes the un-negated discrete `q`, selected from `theta` by the
+existing nearest-turn, ties-to-even rule. It selects from `B`'s signed
+horizontal/depth slots:
 
 ```text
 q=0: Right=horizontal,       Forward=depth
@@ -489,6 +495,11 @@ Thus `Q` produces the canonical displacement represented by `F`. For a valid
 origin/destination pair, `B` maps each point to a visible coordinate and the
 induced pre-`L` vector is their `G_D` point difference; `R` maps that difference
 to invariant screen/depth meaning. It does not receive an affine `G_D(ΔC)`.
+
+For exact-quarter-turn correspondence tests only, define
+`theta_q = q*pi/2` and use `F(q)` and `R(q)` as shorthand for `F(theta_q)` and
+`R(theta_q)`. This shorthand never quantizes the visual transform: non-quarter
+angles continue to render through `F(theta)` and `R(theta)`.
 
 | Local yaw | Resolver turn | Relative Right canonical displacement | Relative Forward canonical displacement | Displayed Right direction after R | Displayed Forward direction after R |
 | --- | ---: | --- | --- | --- | --- |
@@ -529,18 +540,19 @@ cancel.
 
 | Control family | May affect canonical command resolution |
 | --- | --- |
-| relative horizontal/depth translation and local 3D rotations | exact `B` plus `Q(local_yaw)` |
+| relative horizontal/depth translation and local 3D rotations | exact `B` plus `Q(q)` |
 | current-slice-axis translation | signed slice slot from `B` only |
 | absolute controls | canonical action names only |
 
-Yaw changes the discrete horizontal/depth command basis; pitch does not. Pitch
+The continuous visual `theta` selects `q` only for this discrete command basis;
+pitch does not affect it. Pitch
 may visually tilt the shared slice-local volume, but it does not redefine the
 discrete command frame, canonical `+Y` gravity, or create viewer-relative
 vertical translation. This is a constrained gameplay presentation policy, not
 a general fact about cameras. It is permitted only in an admitted normal
 Live-4D gameplay pitch domain in which Pitch-depth preservation holds: rendered
 semantic Forward must retain positive away depth and never become Back. Thus
-the command frame is `B + Q(local_yaw)`, while rendering may include local yaw
+the command frame is `B + Q(q)`, while rendering includes continuous `theta`
 plus admitted local pitch. 54E-2 must prove permitted pitch changes leave the
 resolved canonical Right/Forward frame unchanged and preserve positive Forward
 depth; if the renderer cannot express that separation, pitch requires another
@@ -670,7 +682,8 @@ canonical `ΔC_right` and `ΔC_forward`, and ensure each destination is valid an
 in the same displayed slice. For each intent, map both points through the exact
 `B` presentation mapping to visible points `p_origin` and `p_destination`, then
 compute `ΔpreL = G_D(p_destination) - G_D(p_origin)` and
-`Δdisplayed = R(q) * ΔpreL`. Assert Right with
+`Δdisplayed = R(theta_q) * ΔpreL`, where `theta_q = q*pi/2` for this exact
+quarter-turn correspondence test. Assert Right with
 `Δdisplayed.x > 0` and `abs(Δdisplayed.z) <= tolerance`; assert Forward with
 `abs(Δdisplayed.x) <= tolerance` and `Δdisplayed.z > 0`. This intentionally
 uses rendered-point differences: the affine centring translation cancels, no
@@ -707,6 +720,21 @@ signed basis mapping, active/passive mathematics, depth sign, and yaw vectors.
 Establish the post-`R` board-frame `+Z` depth contract as semantic Forward/away;
 actual fitted-camera integration is verified in 54E-2c. Repository green is
 required before 54E-2b.
+
+Stage 54E-2a implementation evidence now exists in
+`slice_local_orientation.gd`, `trace_coordinate_mapper.gd`,
+`adaptive_layer_layout.gd`, and `projection_layout.gd`. It introduces explicit
+`local_yaw`/`local_pitch`, continuous active `F(theta)` and passive `R(theta)`
+queries, affine centred
+point mapping, separately queryable anchors, and a compatibility composition
+of `G_D(p) + anchor_i`. Focused Godot tests execute all four yaw quarter-turns
+for identity and `[-Z,+Y,+X,+W]`, use mapped-point differences, and cover
+anchor isolation, asymmetric `(5,7,3,2)` dimensions, signed mapping, and
+`W=1` re-slicing. The compatibility `world_position()` path deliberately does
+not apply `L`; renderer migration remains Stage 54E-2b. App input and
+`CameraRig` ownership remain unchanged for Stage 54E-2c. This evidence is
+reviewed and accepted green; it makes 54E-2b the next eligible slice without
+beginning renderer migration.
 
 ### 54E-2b — Renderer composition
 
@@ -783,7 +811,8 @@ supports Explorer, topology/geometry inspection, or other free-inspection modes.
 Pitch may visually tilt the shared slice-local volume without altering the
 discrete gameplay command frame only within an admitted normal Live-4D pitch
 domain that preserves semantic Forward as away from the viewer. The command
-frame remains determined by `B + local_yaw`; the precise numeric limit belongs
+frame remains determined by `B + Q(q)`, where `q` is derived from continuous
+`local_yaw = theta`; the precise numeric limit belongs
 to 54E-2 implementation evidence, not this acceptance record. The admitted
 domain must satisfy Pitch-depth preservation, including
 `displayed_forward_depth > 0` throughout its range.

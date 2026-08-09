@@ -89,15 +89,19 @@ owner that already exists instead of adding new `engine.api` wrappers.
 
 Godot owns product-shell presentation and input adaptation around native
 gameplay authority. For live 4D, it owns the exact signed slice-presentation
-basis, canonical-to-presentation coordinate mapping, basis indicator,
-presentation-only transition, and focused basis instruction defined in
-`docs/architecture/game_safe_4d_slice_basis.md`.
+basis, canonical-to-presentation coordinate mapping, centred local point
+mapping, shared slice-local orientation, anchor-only slice layout, basis
+indicator, presentation-only transition, and focused basis instruction defined
+in `docs/architecture/game_safe_4d_slice_basis.md` and
+`docs/architecture/4d_presentation_interaction_architecture.md`.
 
 This ownership may remap presentation movement intents into existing canonical
 native commands. It must not independently decide movement legality or mutate
 canonical board coordinates, gravity, topology, collision, scoring, snapshot,
 hash, replay, or persistence semantics. Camera orientation and replay
-presentation remain separate from the live 4D basis.
+presentation remain separate from the live 4D basis. Slice-local orientation,
+layout anchors, and outer camera framing are independent presentation
+responsibilities; an anchor is never a local basis vector or gameplay axis.
 
 The Stage 54D-2 ghost consumes only the observational native landing result
 defined by `docs/architecture/ghost_piece.md`. Godot may cache, project, hide,

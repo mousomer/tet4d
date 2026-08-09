@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -50,10 +50,15 @@ history ledger. Detailed history is preserved in
   Normal-gameplay roll is removed in 54E-2 while reusable Explorer/free-
   inspection roll remains intended. Constrained pitch is accepted only where
   Pitch-depth preservation keeps Forward away from the viewer.
-- After this acceptance record is merged, Stage 54D-3 Hold is unblocked and
-  Stage 54E-2a is the only unblocked 54E-2 entry slice. Stage 54E-2b requires
-  green 54E-2a completion; 54E-2c requires green 54E-2b; and 54E-2d requires
-  green 54E-2c. No later 54E-2 slice is simultaneously active.
+- Stage 54D-3 Hold is independently eligible. Stage 54E-2a is COMPLETE /
+  REVIEWED GREEN: it established the first-class shared
+  `SliceLocalOrientation`, explicit `B`, affine centred `G_D`, anchor-only
+  layout decomposition, continuous `F(theta)`/`R(theta)`, and discrete `Q(q)`
+  control projection distinction. The renderer retains its compatibility path,
+  and input/CameraRig ownership is unchanged. Stage 54E-2b — renderer
+  composition — is the next eligible 54E implementation slice; 54E-2c remains
+  blocked until reviewed-green 54E-2b, and 54E-2d remains blocked until
+  reviewed-green 54E-2c.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -186,10 +191,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Stage 54E-1 — COMPLETE / HUMAN ACCEPTED. After this acceptance record is
-   merged, Stage 54D-3 Hold may proceed independently and Stage 54E-2a is the
-   only eligible 54E-2 entry slice. 54E-2b/c/d remain sequentially gated on
-   prior green completion.
+1. Stage 54E-2b — Renderer composition. It is the sole next eligible 54E
+   implementation slice; 54E-2c/d remain sequentially gated, and Stage 54D-3
+   Hold remains independently eligible.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

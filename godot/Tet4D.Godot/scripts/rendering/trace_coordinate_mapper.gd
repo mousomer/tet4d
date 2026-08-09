@@ -24,35 +24,66 @@ func configure(board_shape: Array, basis = null) -> void:
 
 
 func world_position(coordinates: Array, dimension: int) -> Vector3:
+	# Renderer compatibility path for Stage 54E-2a. The separated point and
+	# anchor responsibilities below are the migration seam for Stage 54E-2b.
+	var decomposition := decompose_position(coordinates, dimension)
+	return decomposition.get("composed_world_point", Vector3.ZERO) if bool(decomposition.get("ok", false)) else Vector3.ZERO
+
+
+func decompose_position(coordinates: Array, dimension: int) -> Dictionary:
 	if coordinates.is_empty():
-		return Vector3.ZERO
-	var visible_coordinates := coordinates
+		return {"ok": false}
+	var visible_coordinates := coordinates.duplicate()
 	var layer_index := 0
 	if dimension >= 4 and coordinates.size() > 3:
-		var mapped: Dictionary = _basis.presentation_coordinate(coordinates, _board_shape)
+		var mapped: Dictionary = presentation_coordinate(coordinates)
 		if not bool(mapped.get("ok", false)):
-			return Vector3.ZERO
+			return {"ok": false}
 		visible_coordinates = mapped.get("visible_cell_3d", [])
 		layer_index = int(mapped.get("layer_index", 0))
+	var local_point := centered_local_point(visible_coordinates)
+	var anchor := slice_anchor(layer_index) if dimension >= 4 and coordinates.size() > 3 else Vector3.ZERO
+	return {
+		"ok": true,
+		"layer_index": layer_index,
+		"visible_cell_3d": visible_coordinates.duplicate(),
+		"centered_local_point": local_point,
+		"anchor": anchor,
+		"composed_world_point": compose_anchored_point(local_point, anchor),
+	}
+
+
+func centered_local_point(visible_coordinates: Array) -> Vector3:
 	# Mirrors the Python/Pygame raw_to_world display convention: center each
-	# board axis around zero and invert Y for screen/world-up rendering.
+	# board axis around zero and invert Y for screen/world-up rendering. This is
+	# the affine point mapping G_D; displacement vectors must use differences of
+	# two mapped points rather than entering this function directly.
+	if visible_coordinates.is_empty():
+		return Vector3.ZERO
 	var x_size := _axis_size(0)
 	var y_size := _axis_size(1)
 	var z_size := _axis_size(2)
 	var x := float(visible_coordinates[0]) - (x_size - 1.0) * 0.5
 	var y := -(float(visible_coordinates[1]) - (y_size - 1.0) * 0.5) if visible_coordinates.size() > 1 else 0.0
 	var z := float(visible_coordinates[2]) - (z_size - 1.0) * 0.5 if visible_coordinates.size() > 2 else 0.0
-	if dimension >= 4 and coordinates.size() > 3:
-		return Vector3(x, y, z) + slice_offset(layer_index)
 	return Vector3(x, y, z)
 
 
+func compose_anchored_point(centered_local_point_value: Vector3, anchor: Vector3) -> Vector3:
+	return centered_local_point_value + anchor
+
+
 func w_offset(w_index: float) -> float:
-	return slice_offset(int(round(w_index))).x
+	return slice_anchor(int(round(w_index))).x
+
+
+func slice_anchor(layer_index: int) -> Vector3:
+	return layer_layout.anchor_for_layer(layer_index)
 
 
 func slice_offset(w_index: int) -> Vector3:
-	return layer_layout.offset_for_layer(w_index)
+	# Compatibility alias retained for renderer/layout consumers until 54E-2b.
+	return slice_anchor(w_index)
 
 
 func slice_bounds(w_index: int = 0) -> Dictionary:
@@ -61,9 +92,9 @@ func slice_bounds(w_index: int = 0) -> Dictionary:
 	var x_size := _axis_size(0)
 	var y_size := _axis_size(1)
 	var z_size := _axis_size(2)
-	var offset := slice_offset(w_index)
-	var min_pos := Vector3(-x_size * 0.5, -y_size * 0.5, -z_size * 0.5) + offset
-	var max_pos := Vector3(x_size * 0.5, y_size * 0.5, z_size * 0.5) + offset
+	var anchor := slice_anchor(w_index)
+	var min_pos := Vector3(-x_size * 0.5, -y_size * 0.5, -z_size * 0.5) + anchor
+	var max_pos := Vector3(x_size * 0.5, y_size * 0.5, z_size * 0.5) + anchor
 	return {"ok": true, "min": min_pos, "max": max_pos}
 
 
