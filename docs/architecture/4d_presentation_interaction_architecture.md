@@ -507,6 +507,7 @@ q=1: Right=depth,            Forward=-horizontal
 q=2: Right=-horizontal,      Forward=-depth
 q=3: Right=-depth,           Forward=horizontal
 ```
+
 Thus `Q` produces the canonical displacement represented by `F(theta_q)`. For a valid
 origin/destination pair, `B` maps each point to a visible coordinate and the
 induced pre-`L` vector is their `G_D` point difference; `R` maps that difference
