@@ -25,7 +25,7 @@ func _process(_delta: float) -> void:
 func rebuild(
 	board_shape: Array,
 	dimension: int,
-	mapper,
+	projection,
 	display_mode: String,
 	live_2d: bool = false,
 	show_w_labels: bool = true,
@@ -41,44 +41,64 @@ func rebuild(
 
 	if board_shape.is_empty():
 		return
+	var mapper = projection.mapper
 	var visible_board_shape: Array = mapper.visible_board_shape()
 	var w_size: int = int(mapper.current_layer_count()) if dimension >= 4 else 1
 
 	for w_index in range(w_size):
-		var slice_bounds: Dictionary = mapper.slice_bounds(w_index)
-		if not slice_bounds.get("ok", false):
+		var local_bounds: Dictionary = projection.local_slice_bounds()
+		var oriented_bounds: Dictionary = projection.oriented_slice_bounds(w_index)
+		if not local_bounds.get("ok", false) or not oriented_bounds.get("ok", false):
 			continue
+		var slice_root := Node3D.new()
+		slice_root.name = "SliceGeometry_%d" % w_index
+		slice_root.position = projection.slice_anchor(w_index)
+		slice_root.basis = projection.local_render_basis()
+		slice_root.set_meta("presentation_layer", w_index)
+		slice_root.set_meta("slice_anchor", slice_root.position)
+		slice_root.set_meta("presentation_role", "board.slice_geometry")
+		add_child(slice_root)
 		# The Grid: On control is authoritative: detail may tune the presentation,
 		# but it must never silently suppress the lattice.
 		if show_grid and live_2d and dimension >= 2:
 			if dimension == 2:
-				_add_flat_grid(slice_bounds, visible_board_shape, display_mode, high_contrast)
+				_add_flat_grid(local_bounds, visible_board_shape, display_mode, high_contrast, slice_root)
 			else:
-				_add_volumetric_boundary_grids(slice_bounds, visible_board_shape, display_mode, high_contrast)
+				_add_volumetric_boundary_grids(
+					local_bounds,
+					visible_board_shape,
+					display_mode,
+					high_contrast,
+					slice_root,
+					projection.slice_anchor(w_index),
+					projection.local_render_basis()
+				)
 		if live_2d and dimension >= 3:
-			_add_floor_face(slice_bounds, display_mode)
-			_add_floor_lattice(slice_bounds, visible_board_shape, display_mode, high_contrast)
+			_add_floor_face(local_bounds, display_mode, slice_root)
+			_add_floor_lattice(local_bounds, visible_board_shape, display_mode, high_contrast, slice_root)
 		_add_outline_box(
-			slice_bounds,
+			local_bounds,
 			display_mode,
 			null,
 			ReplayVisuals.slice_outline_thickness(display_mode) * (1.20 if high_contrast else 1.0),
 			PRESENTATION_ROLE_WIREFRAME,
-			high_contrast
+			high_contrast,
+			slice_root
 		)
 		if active_layers.has(w_index):
 			_add_outline_box(
-				slice_bounds,
+				local_bounds,
 				display_mode,
 				ReplayVisuals.board_active_frame_material(display_mode, high_contrast),
 				ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER),
 				PRESENTATION_ROLE_ACTIVE_FRAME,
-				high_contrast
+				high_contrast,
+				slice_root
 			)
 		if dimension >= 4 and show_w_labels:
 			_add_slice_label(
 				w_index,
-				slice_bounds,
+				oriented_bounds,
 				display_mode,
 				active_layers.has(w_index),
 				mapper.slice_axis_label(),
@@ -97,7 +117,8 @@ func _add_outline_box(
 	material_override: Material = null,
 	thickness_override: float = -1.0,
 	presentation_role: String = PRESENTATION_ROLE_WIREFRAME,
-	high_contrast: bool = false
+	high_contrast: bool = false,
+	parent: Node3D = null
 ) -> void:
 	var board_material := ReplayVisuals.board_outline_material(display_mode, high_contrast) if material_override == null else material_override
 	var thickness := ReplayVisuals.slice_outline_thickness(display_mode) if thickness_override < 0.0 else thickness_override
@@ -111,18 +132,18 @@ func _add_outline_box(
 	var z1 := max_pos.z
 	var size := max_pos - min_pos
 
-	_add_line(Vector3((x0 + x1) * 0.5, y0, z0), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
-	_add_line(Vector3((x0 + x1) * 0.5, y1, z0), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
-	_add_line(Vector3((x0 + x1) * 0.5, y0, z1), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
-	_add_line(Vector3((x0 + x1) * 0.5, y1, z1), Vector3(size.x, thickness, thickness), board_material, null, presentation_role)
-	_add_line(Vector3(x0, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
-	_add_line(Vector3(x1, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
-	_add_line(Vector3(x0, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
-	_add_line(Vector3(x1, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material, null, presentation_role)
-	_add_line(Vector3(x0, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
-	_add_line(Vector3(x1, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
-	_add_line(Vector3(x0, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
-	_add_line(Vector3(x1, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, null, presentation_role)
+	_add_line(Vector3((x0 + x1) * 0.5, y0, z0), Vector3(size.x, thickness, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3((x0 + x1) * 0.5, y1, z0), Vector3(size.x, thickness, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3((x0 + x1) * 0.5, y0, z1), Vector3(size.x, thickness, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3((x0 + x1) * 0.5, y1, z1), Vector3(size.x, thickness, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3(x0, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3(x1, (y0 + y1) * 0.5, z0), Vector3(thickness, size.y, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3(x0, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3(x1, (y0 + y1) * 0.5, z1), Vector3(thickness, size.y, thickness), board_material, parent, presentation_role)
+	_add_line(Vector3(x0, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, parent, presentation_role)
+	_add_line(Vector3(x1, y0, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, parent, presentation_role)
+	_add_line(Vector3(x0, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, parent, presentation_role)
+	_add_line(Vector3(x1, y1, (z0 + z1) * 0.5), Vector3(thickness, thickness, size.z), board_material, parent, presentation_role)
 
 
 func _add_line(
@@ -144,7 +165,7 @@ func _add_line(
 	target_parent.add_child(mesh_instance)
 
 
-func _add_floor_face(slice_bounds: Dictionary, display_mode: String) -> void:
+func _add_floor_face(slice_bounds: Dictionary, display_mode: String, parent: Node3D) -> void:
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var floor := MeshInstance3D.new()
@@ -155,10 +176,16 @@ func _add_floor_face(slice_bounds: Dictionary, display_mode: String) -> void:
 	floor.mesh = mesh
 	floor.material_override = ReplayVisuals.live_board_floor_material(display_mode)
 	floor.position = Vector3((min_pos.x + max_pos.x) * 0.5, min_pos.y + 0.0125, (min_pos.z + max_pos.z) * 0.5)
-	add_child(floor)
+	parent.add_child(floor)
 
 
-func _add_floor_lattice(slice_bounds: Dictionary, board_shape: Array, display_mode: String, high_contrast: bool) -> void:
+func _add_floor_lattice(
+	slice_bounds: Dictionary,
+	board_shape: Array,
+	display_mode: String,
+	high_contrast: bool,
+	parent: Node3D
+) -> void:
 	if board_shape.size() < 3:
 		return
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
@@ -169,7 +196,7 @@ func _add_floor_lattice(slice_bounds: Dictionary, board_shape: Array, display_mo
 	var lattice := Node3D.new()
 	lattice.name = "GravityFloorLattice"
 	lattice.set_meta("boundary_role", "gravity_floor_lattice")
-	add_child(lattice)
+	parent.add_child(lattice)
 	for x_index in range(1, int(board_shape[0])):
 		var x_pos := min_pos.x + float(x_index)
 		_add_line(Vector3(x_pos, floor_y, (min_pos.z + max_pos.z) * 0.5), Vector3(thickness, thickness, max_pos.z - min_pos.z), material, lattice, PRESENTATION_ROLE_FLOOR_GRID)
@@ -178,7 +205,13 @@ func _add_floor_lattice(slice_bounds: Dictionary, board_shape: Array, display_mo
 		_add_line(Vector3((min_pos.x + max_pos.x) * 0.5, floor_y, z_pos), Vector3(max_pos.x - min_pos.x, thickness, thickness), material, lattice, PRESENTATION_ROLE_FLOOR_GRID)
 
 
-func _add_flat_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: String, high_contrast: bool) -> void:
+func _add_flat_grid(
+	slice_bounds: Dictionary,
+	board_shape: Array,
+	display_mode: String,
+	high_contrast: bool,
+	parent: Node3D
+) -> void:
 	if board_shape.size() < 2:
 		return
 	var width := int(board_shape[0])
@@ -194,7 +227,7 @@ func _add_flat_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 			Vector3(x_pos, (min_pos.y + max_pos.y) * 0.5, grid_z),
 			Vector3(thickness, max_pos.y - min_pos.y, thickness),
 			material,
-			null,
+			parent,
 			PRESENTATION_ROLE_GRID
 		)
 	for y in range(1, height):
@@ -203,12 +236,20 @@ func _add_flat_grid(slice_bounds: Dictionary, board_shape: Array, display_mode: 
 			Vector3((min_pos.x + max_pos.x) * 0.5, y_pos, grid_z + 0.002),
 			Vector3(max_pos.x - min_pos.x, thickness, thickness),
 			material,
-			null,
+			parent,
 			PRESENTATION_ROLE_GRID
 		)
 
 
-func _add_volumetric_boundary_grids(slice_bounds: Dictionary, board_shape: Array, display_mode: String, high_contrast: bool) -> void:
+func _add_volumetric_boundary_grids(
+	slice_bounds: Dictionary,
+	board_shape: Array,
+	display_mode: String,
+	high_contrast: bool,
+	parent: Node3D,
+	anchor: Vector3,
+	render_basis: Basis
+) -> void:
 	if board_shape.size() < 3:
 		return
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
@@ -222,9 +263,10 @@ func _add_volumetric_boundary_grids(slice_bounds: Dictionary, board_shape: Array
 			face.name = "RearGridFace_%d_%s" % [axis, "Negative" if sign_value < 0.0 else "Positive"]
 			face.set_meta("grid_axis", axis)
 			face.set_meta("grid_sign", sign_value)
-			face.set_meta("grid_center", center)
+			face.set_meta("grid_center", render_basis * center + anchor)
+			face.set_meta("grid_normal", render_basis * _axis_vector(axis) * sign_value)
 			face.set_meta("presentation_role", PRESENTATION_ROLE_GRID)
-			add_child(face)
+			parent.add_child(face)
 			_rear_grid_faces.append(face)
 			_add_boundary_face_grid(face, axis, sign_value, min_pos, max_pos, board_shape, thickness, material)
 
@@ -268,11 +310,17 @@ func _add_boundary_face_grid(
 
 func _update_rear_grid_faces(camera_position: Vector3) -> void:
 	for face in _rear_grid_faces:
-		var axis := int(face.get_meta("grid_axis", 0))
-		var sign_value := float(face.get_meta("grid_sign", -1.0))
 		var center: Vector3 = face.get_meta("grid_center", Vector3.ZERO)
-		var camera_delta := camera_position[axis] - center[axis]
-		face.visible = sign_value * camera_delta <= 0.0
+		var normal: Vector3 = face.get_meta("grid_normal", Vector3.BACK)
+		face.visible = normal.dot(camera_position - center) <= 0.0
+
+
+func _axis_vector(axis: int) -> Vector3:
+	if axis == Vector3.AXIS_X:
+		return Vector3.RIGHT
+	if axis == Vector3.AXIS_Y:
+		return Vector3.UP
+	return Vector3.BACK
 
 
 func _add_slice_label(

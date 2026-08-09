@@ -3,6 +3,7 @@ extends RefCounted
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 
 
 func run() -> Array:
@@ -118,7 +119,7 @@ func run() -> Array:
 		renderer.render_snapshot(renderer._presentation.snapshot)
 		await tree.process_frame
 		var hidden_grid := (renderer.get_node_or_null("GridRoot") as Node).get_child(0)
-		if hidden_grid.get_child_count() != 12 or _count_presentation_role(hidden_grid, "board.wireframe") != 12 or _count_presentation_role(hidden_grid, "board.grid") != 0:
+		if _count_presentation_role(hidden_grid, "board.wireframe") != 12 or _count_presentation_role(hidden_grid, "board.grid") != 0:
 			failures.append("grid toggle should hide internal detail while retaining the 12-edge orientation cage")
 		renderer.set_grid_visible(true)
 
@@ -184,6 +185,7 @@ func run() -> Array:
 		"dimension": 4,
 		"board_shape": [5, 10, 3, 4],
 		"locked_cells": [{"position": [1, 4, 1, 0], "color_id": 4}],
+		"ghost_cells": [{"position": [2, 1, 2, 1], "color_id": 6}],
 		"active_cells": [{"position": [1, 1, 2, 1], "color_id": 6}],
 		"last_command": "rotate_xw_pos",
 		"last_command_status": "accepted",
@@ -196,11 +198,12 @@ func run() -> Array:
 	renderer.render_snapshot(live_4d_snapshot)
 	await tree.process_frame
 	cell_root = renderer.get_node_or_null("CellRoot")
-	if cell_root == null or cell_root.get_child_count() != 2:
-		failures.append("live 4D renderer should create active and locked cells through the shared renderer")
+	if cell_root == null or cell_root.get_child_count() != 3:
+		failures.append("live 4D renderer should create active, Ghost, and locked cells through the shared renderer")
 	else:
 		var live_4d_locked_cell := cell_root.get_child(0) as Node3D
-		var live_4d_active_cell := cell_root.get_child(1) as Node3D
+		var live_4d_ghost_cell := cell_root.get_child(1) as Node3D
+		var live_4d_active_cell := cell_root.get_child(2) as Node3D
 		_assert_cell_material(
 			failures,
 			live_4d_locked_cell,
@@ -215,6 +218,7 @@ func run() -> Array:
 		)
 		_assert_live_3d_exterior_block(failures, live_4d_active_cell, "live 4D active cell")
 		_assert_live_3d_exterior_block(failures, live_4d_locked_cell, "live 4D locked cell")
+		_assert_box_size(failures, live_4d_ghost_cell, ReplayVisuals.LIVE_3D_GHOST_CELL_SCALE, "live 4D Ghost cell scale")
 		_assert_rotation_pulse_outline(failures, live_4d_active_cell, "live 4D active rotation pulse")
 		_assert_live_3d_origin_marker(failures, live_4d_active_cell)
 		_assert_live_4d_active_restrained(failures, live_4d_active_cell, live_4d_locked_cell)
@@ -234,10 +238,7 @@ func run() -> Array:
 		var processed_structural_count := _count_presentation_role(live_4d_grid, "board.wireframe") + _count_presentation_role(live_4d_grid, "board.grid") + _count_presentation_role(live_4d_grid, "board.grid.floor") + _count_presentation_role(live_4d_grid, "board.frame_active")
 		if processed_structural_count != stable_structural_count:
 			failures.append("stable board processing must not rebuild or accumulate structural geometry")
-		var floor_count := 0
-		for child in live_4d_grid.get_children():
-			if child.has_meta("boundary_role") and str(child.get_meta("boundary_role")) == "gravity_floor":
-				floor_count += 1
+		var floor_count := _count_meta_value(live_4d_grid, "boundary_role", "gravity_floor")
 		if floor_count != 4:
 			failures.append("live 4D should distinguish the bottom boundary on every W section")
 		live_4d_grid._update_rear_grid_faces(Vector3(100.0, 100.0, 100.0))
@@ -268,6 +269,81 @@ func run() -> Array:
 						failures.append("W labels should attach to a camera-relative rear vertical face")
 		if slice_label_count < 4:
 			failures.append("live 4D renderer should label each basis-derived slice")
+
+	# Requirement/invariant/regression coverage: cells, Ghost, grids, frames,
+	# labels, anchors, and bounds consume one shared L exactly once.
+	var anchors_before_orientation := []
+	for layer_index in range(4):
+		anchors_before_orientation.append(renderer._presentation.projection.slice_anchor(layer_index))
+	var canonical_snapshot_before_orientation: Dictionary = live_4d_snapshot.duplicate(true)
+	var oriented_identity_bounds: Dictionary = renderer.current_bounds().duplicate(true)
+	var quarter_orientation = SliceLocalOrientationScript.new(PI * 0.5, 0.0)
+	renderer.set_live_4d_local_orientation(quarter_orientation)
+	renderer.render_snapshot(live_4d_snapshot)
+	await tree.process_frame
+	cell_root = renderer.get_node_or_null("CellRoot")
+	if cell_root != null and cell_root.get_child_count() == 3:
+		var quarter_ghost := cell_root.get_child(1) as Node3D
+		var quarter_active := cell_root.get_child(2) as Node3D
+		_assert_vector(failures, quarter_ghost.position - quarter_active.position, Vector3(0.0, 0.0, -1.0), "renderer consumes continuous L at pi/2")
+
+	var shared_orientation = SliceLocalOrientationScript.new(PI / 6.0, PI / 8.0)
+	renderer.set_live_4d_local_orientation(shared_orientation)
+	renderer.render_snapshot(live_4d_snapshot)
+	await tree.process_frame
+	if renderer._presentation.projection.local_orientation != shared_orientation:
+		failures.append("app/renderer/projection must share one SliceLocalOrientation object")
+	if live_4d_snapshot != canonical_snapshot_before_orientation:
+		failures.append("renderer orientation must not mutate canonical snapshot identity")
+	cell_root = renderer.get_node_or_null("CellRoot")
+	if cell_root == null or cell_root.get_child_count() != 3:
+		failures.append("oriented Live-4D renderer must retain locked, Ghost, and active cells")
+	else:
+		var oriented_locked := cell_root.get_child(0) as Node3D
+		var oriented_ghost := cell_root.get_child(1) as Node3D
+		var oriented_active := cell_root.get_child(2) as Node3D
+		var expected_render_basis: Basis = shared_orientation.passive_render_basis()
+		_assert_basis(failures, oriented_locked.basis, expected_render_basis, "locked cell uses shared L")
+		_assert_basis(failures, oriented_ghost.basis, expected_render_basis, "Ghost cell uses shared L")
+		_assert_basis(failures, oriented_active.basis, expected_render_basis, "active cell uses shared L")
+		_assert_vector(
+			failures,
+			oriented_ghost.position - oriented_active.position,
+			expected_render_basis * Vector3.RIGHT,
+			"Ghost and active cell canonical delta shares B plus L plus anchor"
+		)
+		if renderer._presentation.ghost_cells()[0].get("position", []) != live_4d_snapshot["ghost_cells"][0]["position"]:
+			failures.append("presentation orientation must not change authoritative Ghost destination")
+	var oriented_grid := (renderer.get_node_or_null("GridRoot") as Node).get_child(0) as Node3D
+	var slice_roots := _nodes_with_meta(oriented_grid, "slice_anchor")
+	if slice_roots.size() != 4:
+		failures.append("oriented grid must keep one geometry root per slice")
+	else:
+		for layer_index in range(4):
+			var slice_root := slice_roots[layer_index] as Node3D
+			_assert_vector(failures, slice_root.position, anchors_before_orientation[layer_index], "L leaves anchor_%d unchanged" % layer_index)
+			_assert_basis(failures, slice_root.basis, shared_orientation.passive_render_basis(), "grid/frame slice %d uses shared L once" % layer_index)
+			_assert_vector(failures, slice_root.basis * Vector3.RIGHT, shared_orientation.passive_render_basis() * Vector3.RIGHT, "grid/frame local X follows L in slice %d" % layer_index)
+	var oriented_bounds: Dictionary = renderer.current_bounds()
+	var identity_size: Vector3 = oriented_identity_bounds.get("max", Vector3.ZERO) - oriented_identity_bounds.get("min", Vector3.ZERO)
+	var oriented_size: Vector3 = oriented_bounds.get("max", Vector3.ZERO) - oriented_bounds.get("min", Vector3.ZERO)
+	if identity_size.distance_to(oriented_size) <= 0.001:
+		failures.append("non-quarter yaw/pitch must change renderer camera-fit bounds")
+	for layer_index in range(4):
+		if renderer._presentation.projection.slice_anchor(layer_index) != anchors_before_orientation[layer_index]:
+			failures.append("shared L must not move renderer anchor_%d" % layer_index)
+	var oriented_labels := 0
+	for child in oriented_grid.get_children():
+		if child is Label3D and child.has_meta("presentation_layer"):
+			oriented_labels += 1
+			if (child as Label3D).billboard != BaseMaterial3D.BILLBOARD_ENABLED:
+				failures.append("slice identity labels must remain billboarded outside local physical rotation")
+	if oriented_labels != 4:
+		failures.append("orientation must preserve one semantic identity label per slice")
+
+	renderer.set_live_4d_local_orientation(SliceLocalOrientationScript.new())
+	renderer.render_snapshot(live_4d_snapshot)
+	await tree.process_frame
 
 	var xw_basis = SliceBasis4DScript.identity().turned("xw", 1)
 	renderer.set_live_4d_basis(xw_basis, false)
@@ -318,6 +394,12 @@ func run() -> Array:
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:
 	if actual.distance_to(expected) > 0.001:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _assert_basis(failures: Array, actual: Basis, expected: Basis, label: String) -> void:
+	_assert_vector(failures, actual.x, expected.x, "%s X" % label)
+	_assert_vector(failures, actual.y, expected.y, "%s Y" % label)
+	_assert_vector(failures, actual.z, expected.z, "%s Z" % label)
 
 
 func _assert_color(failures: Array, actual: Color, expected: Color, label: String) -> void:
@@ -433,9 +515,7 @@ func _count_presentation_role(node: Node, role: String) -> int:
 
 func _assert_internal_face_grid_counts(failures: Array, grid: Node3D, board_shape: Array) -> void:
 	var face_count := 0
-	for child in grid.get_children():
-		if not child.has_meta("grid_axis"):
-			continue
+	for child in _nodes_with_meta(grid, "grid_axis"):
 		face_count += 1
 		var axis := int(child.get_meta("grid_axis", -1))
 		var expected := 0
@@ -458,8 +538,8 @@ func _assert_three_rear_grid_faces_per_slice(
 	label: String
 ) -> void:
 	var visible_faces := 0
-	for child in grid.get_children():
-		if not child.has_meta("grid_axis") or not (child as Node3D).visible:
+	for child in _nodes_with_meta(grid, "grid_axis"):
+		if not (child as Node3D).visible:
 			continue
 		visible_faces += 1
 		if float(child.get_meta("grid_sign", 0.0)) != expected_sign:
@@ -468,6 +548,22 @@ func _assert_three_rear_grid_faces_per_slice(
 			failures.append("%s rear grid face should contain boundary rectangles" % label)
 	if visible_faces != slice_count * 3:
 		failures.append("%s should show exactly three rear grid faces per section, got %d" % [label, visible_faces])
+
+
+func _nodes_with_meta(root: Node, meta_name: String) -> Array:
+	var result := []
+	for child in root.get_children():
+		if child.has_meta(meta_name):
+			result.append(child)
+		result.append_array(_nodes_with_meta(child, meta_name))
+	return result
+
+
+func _count_meta_value(root: Node, meta_name: String, expected_value: String) -> int:
+	var count := 1 if root.has_meta(meta_name) and str(root.get_meta(meta_name)) == expected_value else 0
+	for child in root.get_children():
+		count += _count_meta_value(child, meta_name, expected_value)
+	return count
 
 
 func _assert_live_3d_active_priority(failures: Array, active_cell: Node3D, locked_cell: Node3D) -> void:

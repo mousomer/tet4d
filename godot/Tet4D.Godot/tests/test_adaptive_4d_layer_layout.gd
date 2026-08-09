@@ -83,6 +83,6 @@ func _test_anchor_only_layout(failures: Array) -> void:
 	for layer_index in [0, 1]:
 		var origin := [2, 3, 1, layer_index]
 		var destination := [3, 3, 1, layer_index]
-		layer_differences.append(mapper.world_position(destination, 4) - mapper.world_position(origin, 4))
+		layer_differences.append(mapper.unoriented_world_position(destination, 4) - mapper.unoriented_world_position(origin, 4))
 	if layer_differences != [Vector3(1.0, 0.0, 0.0), Vector3(1.0, 0.0, 0.0)]:
 		failures.append("anchor vectors must cancel from local gameplay point differences")

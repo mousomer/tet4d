@@ -14,7 +14,7 @@ var is_live_4d := false
 var uses_live_exterior_cells := false
 
 
-func configure(source_snapshot: Dictionary, basis = null) -> void:
+func configure(source_snapshot: Dictionary, basis = null, orientation = null) -> void:
 	snapshot = source_snapshot
 	trace_type = str(snapshot.get("trace_type", ""))
 	dimension = int(snapshot.get("dimension", 0))
@@ -22,15 +22,23 @@ func configure(source_snapshot: Dictionary, basis = null) -> void:
 	is_live_3d = trace_type == "live_3d" and dimension == 3
 	is_live_4d = trace_type == "live_4d" and dimension == 4
 	uses_live_exterior_cells = is_live and dimension >= 3
-	projection.configure(snapshot, basis)
+	projection.configure(snapshot, basis, orientation if is_live_4d else null)
 
 
 func current_bounds() -> Dictionary:
 	return projection.bounds
 
 
-func world_position(coordinates: Array) -> Vector3:
-	return projection.world_position(coordinates)
+func render_world_position(coordinates: Array) -> Vector3:
+	return projection.oriented_world_position(coordinates)
+
+
+func render_world_position_with_local_offset(coordinates: Array, local_offset: Vector3) -> Vector3:
+	return projection.oriented_world_position_with_local_offset(coordinates, local_offset)
+
+
+func local_render_basis() -> Basis:
+	return projection.local_render_basis()
 
 
 func board_shape() -> Array:
