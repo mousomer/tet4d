@@ -6,7 +6,7 @@ Scope: Live 4D Godot presentation and input adaptation only
 Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
 Implementation evidence: Stage 54E-2a complete — reviewed green; Stage 54E-2b
-complete — reviewed green; Stage 54E-2c implemented — review pending
+complete — reviewed green; Stage 54E-2c complete — reviewed green
 
 ## 1. Purpose and current audit result
 
@@ -922,9 +922,9 @@ identity and `[-Z,+Y,+X,+W]`; actual resolver-selected Right/Forward; two-point
 proves the rejected `46/-60` state, lower clamp and deterministic isolation,
 pitch command isolation, outer-yaw/pan/zoom/Fit independence, preset
 decomposition, refreshed renderer bounds/fit reference, Live-4D roll
-detachment, and retained non-Live/free-camera primitives. Stage 54E-2c remains
-implemented and review pending; 54E-2d remains blocked until it is reviewed
-green.
+detachment, and retained non-Live/free-camera primitives. Stage 54E-2c is
+complete and reviewed green; Stage 54E-2d is now the next eligible
+implementation slice.
 
 ### 54E-2d — Lifecycle, authority, and contract reconciliation
 
