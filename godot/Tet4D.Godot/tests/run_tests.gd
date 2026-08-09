@@ -24,6 +24,7 @@ func _run_all() -> void:
 		"res://tests/test_plain_setup_navigation.gd",
 		"res://tests/test_adaptive_4d_layer_layout.gd",
 		"res://tests/test_slice_basis_4d.gd",
+		"res://tests/test_slice_local_orientation.gd",
 		"res://tests/test_control_frame_mapping.gd",
 		"res://tests/test_next_piece_preview.gd",
 		"res://tests/test_ghost_piece.gd",

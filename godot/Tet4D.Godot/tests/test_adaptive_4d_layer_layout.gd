@@ -4,6 +4,7 @@ const AdaptiveLayerLayoutScript = preload("res://scripts/presentation/adaptive_l
 const TraceCoordinateMapperScript = preload("res://scripts/rendering/trace_coordinate_mapper.gd")
 const BoardPresentationModelScript = preload("res://scripts/presentation/board_presentation_model.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 
 
 func run() -> Array:
@@ -40,4 +41,48 @@ func run() -> Array:
 	thin_w.configure([4, 6, 2, 1], SliceBasis4DScript.identity().turned("zw", -1))
 	if thin_w.current_layer_count() != 2 or thin_w.visible_board_shape() != [4, 6, 1]:
 		failures.append("W=1 must remain a valid visible dimension after ZW re-slicing")
+	_test_anchor_only_layout(failures)
 	return failures
+
+
+func _test_anchor_only_layout(failures: Array) -> void:
+	var basis = SliceBasis4DScript.from_slots([-3, 2, 1, 4])
+	var basis_before: Array = basis.slots()
+	var orientation = SliceLocalOrientationScript.new(PI * 0.5, 0.0)
+	var local_axes_before: Array = [
+		orientation.passive_yaw_basis() * Vector3(1.0, 0.0, 0.0),
+		orientation.passive_yaw_basis() * Vector3(0.0, 1.0, 0.0),
+		orientation.passive_yaw_basis() * Vector3(0.0, 0.0, 1.0),
+	]
+	var layout = AdaptiveLayerLayoutScript.new()
+	layout.configure(2, 5.0, 7.0)
+	var first_anchor_before: Vector3 = layout.anchor_for_layer(1)
+	if layout.offset_for_layer(1) != first_anchor_before:
+		failures.append("legacy layout offset must be an alias of anchor lookup")
+	layout.configure(2, 9.0, 7.0)
+	var first_anchor_after: Vector3 = layout.anchor_for_layer(1)
+	if first_anchor_after == first_anchor_before:
+		failures.append("layout configuration must be able to change anchors")
+	var local_axes_after: Array = [
+		orientation.passive_yaw_basis() * Vector3(1.0, 0.0, 0.0),
+		orientation.passive_yaw_basis() * Vector3(0.0, 1.0, 0.0),
+		orientation.passive_yaw_basis() * Vector3(0.0, 0.0, 1.0),
+	]
+	if local_axes_after != local_axes_before:
+		failures.append("layout changes must not rotate or scale local basis vectors")
+	if basis.slots() != basis_before:
+		failures.append("layout changes must not alter exact B")
+	var anchors_before_orientation_change: Array = [layout.anchor_for_layer(0), layout.anchor_for_layer(1)]
+	orientation.set_angles(-PI * 0.5, PI / 8.0)
+	if [layout.anchor_for_layer(0), layout.anchor_for_layer(1)] != anchors_before_orientation_change:
+		failures.append("local orientation state must not move anchors")
+
+	var mapper = TraceCoordinateMapperScript.new()
+	mapper.configure([5, 7, 3, 2])
+	var layer_differences := []
+	for layer_index in [0, 1]:
+		var origin := [2, 3, 1, layer_index]
+		var destination := [3, 3, 1, layer_index]
+		layer_differences.append(mapper.world_position(destination, 4) - mapper.world_position(origin, 4))
+	if layer_differences != [Vector3(1.0, 0.0, 0.0), Vector3(1.0, 0.0, 0.0)]:
+		failures.append("anchor vectors must cancel from local gameplay point differences")

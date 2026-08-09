@@ -32,7 +32,7 @@ Do not implement a new capability in Python solely to manufacture an oracle.
 | Native topology profile and resolver-query transport | Native C++ | Strict transport implementation ownership only. |
 | Professional live-board setup admissibility and extent validation (`AE-0054`) | Versioned board-extent contract and native C++ | Established only for the live product envelope, bounded-profile admission, production-piece compatibility, canonical spawn viability, volume safety, and structured safe failure. It does not transfer topology seams or gameplay transitions. |
 | Godot product shell, menus, setup interaction, input routing, rendering, camera, animation, HUD, guidance, accessibility, and diagnostics | Godot/GDScript | Godot must not duplicate inherited gameplay or topology rules. |
-| New Godot 3D camera and exact 4D view-basis presentation state | Godot/GDScript | Includes camera orientation plus the Stage 54C signed-axis basis, shared presentation mapper, basis-aware input routing, slice layout, labels, guidance, and transition animation defined by `game_safe_4d_slice_basis.md`. It excludes gameplay coordinates and legality. |
+| New Godot 3D camera and 4D presentation state | Godot/GDScript | Includes camera orientation; the Stage 54C exact signed-axis basis; the Stage 54E-2a shared `SliceLocalOrientation`, centred point mapper, and anchor-only layout decomposition; basis-aware input routing; labels; guidance; and transition animation defined by `game_safe_4d_slice_basis.md` and `4d_presentation_interaction_architecture.md`. It excludes gameplay coordinates, legality, and deterministic identity. Renderer composition through the new local orientation remains gated to Stage 54E-2b. |
 | Live one-piece next preview | Inherited deterministic queue owner for piece selection; Godot/GDScript for presentation | Native sessions expose the observational shape query defined by `next_piece_preview.md`. Godot owns the shared 2D/3D/4D thumbnail and HUD placement and must not infer queue order or mutate RNG. No authority transfer occurs. |
 | Live authoritative ghost piece | Existing deterministic drop/collision owner for landing; Godot/GDScript for presentation | Native hard drop and the read-only query share `hard_drop_destination` as defined by `ghost_piece.md`. Godot owns visibility, settings, basis-aware projection, and styling only. No authority transfer or establishment occurs. |
 | New deterministic core behaviour without a Python predecessor | Owning native C++ subsystem named by its contract | Examples may include Hold transitions, challenge predicates, and later shared geometric evaluation. |
@@ -65,7 +65,9 @@ Godot is the product-shell direction and owns:
 - animation and rendering;
 - 3D camera orientation;
 - 4D presentation/view basis;
-- slice layout, labels, and basis-transition presentation;
+- shared 4D slice-local orientation;
+- centred slice-local point mapping plus anchor-only slice layout;
+- slice labels and basis-transition presentation;
 - HUD, guidance, hints, and campaign navigation;
 - accessibility and product usability;
 - Explorer shell and interaction;

@@ -25,7 +25,7 @@ func configure(count: int, local_width: float, local_height: float, viewport_asp
 	rows = int(ceil(float(layer_count) / float(columns)))
 
 
-func offset_for_layer(index: int) -> Vector3:
+func anchor_for_layer(index: int) -> Vector3:
 	var safe_index := clampi(index, 0, layer_count - 1)
 	var column := safe_index % columns
 	var row := safe_index / columns
@@ -36,9 +36,21 @@ func offset_for_layer(index: int) -> Vector3:
 	)
 
 
+func offset_for_layer(index: int) -> Vector3:
+	# Compatibility alias for pre-54E-2a callers. Layout owns anchor points;
+	# the value is not a local basis vector or gameplay direction.
+	return anchor_for_layer(index)
+
+
 func snapshot() -> Dictionary:
 	var assignments := []
 	for index in range(layer_count):
-		var offset := offset_for_layer(index)
-		assignments.append({"layer": index, "column": index % columns, "row": index / columns, "offset": offset})
+		var anchor := anchor_for_layer(index)
+		assignments.append({
+			"layer": index,
+			"column": index % columns,
+			"row": index / columns,
+			"anchor": anchor,
+			"offset": anchor,
+		})
 	return {"layer_count": layer_count, "columns": columns, "rows": rows, "assignments": assignments}

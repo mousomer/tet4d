@@ -62,6 +62,18 @@ Option A; normal-gameplay roll removal while preserving Explorer/free-inspection
 roll; and constrained pitch-depth preservation. No runtime implementation is
 part of this acceptance record.
 
+### Stage 54E-2a — Presentation state and coordinate decomposition
+
+Status: COMPLETE — REVIEWED GREEN.
+
+The implementation introduces the first-class shared Godot
+`SliceLocalOrientation`, separates exact `B` mapping, centred `G_D` point
+mapping, anchor lookup, and compatibility world composition, and executes the
+accepted active/passive yaw, point-difference, signed-basis, asymmetric-board,
+anchor-only, and `W=1` contracts. The renderer remains on the compatibility
+`G_D(p) + anchor_i` path. This implementation is reviewed and accepted green;
+Stage 54E-2b is next and eligible.
+
 ## Hold
 
 ### Stage 54D-3 — Hold
@@ -76,13 +88,11 @@ a placeholder authority record in advance.
 
 ## Forward Work
 
-- Stage 54E-2a — presentation state and coordinate decomposition (unblocked
-  after the 54E-1 acceptance record is merged).
-- Stage 54E-2b — renderer composition (blocked until 54E-2a completes green).
-- Stage 54E-2c — interaction and camera-rig separation (blocked until 54E-2b
-  completes green).
+- Stage 54E-2b — renderer composition (NEXT / ELIGIBLE).
+- Stage 54E-2c — interaction and camera-rig separation (blocked until
+  reviewed-green 54E-2b).
 - Stage 54E-2d — lifecycle, authority, and contract reconciliation (blocked
-  until 54E-2c completes green).
+  until reviewed-green 54E-2c).
 - Stage 54E-3 — setup/menu information architecture.
 - Stage 54E-4 — camera/GUI presets.
 - Stage 54E-5 — cockpit consolidation.

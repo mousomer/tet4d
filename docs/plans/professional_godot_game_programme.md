@@ -710,18 +710,23 @@ runtime authority records remain contingent on concrete implementation evidence.
 
 #### Stage 54E-2 — Camera-space separation implementation
 
+Status: Stage 54E-2a complete — reviewed green. Stage 54E-2b is next and
+eligible; 54E-2c and 54E-2d remain sequentially gated on reviewed-green prior
+slices.
+
 Implement the architecture accepted in 54E-1. Separate the relevant
 presentation transforms without changing canonical gameplay coordinates,
 collision, scoring, RNG, topology semantics, deterministic snapshots/hashes,
 or replay identity, unless the accepted design identifies a presentation-only
 replay concern.
 
-Only 54E-2a may begin after the accepted 54E-1 record is merged. The mandatory
-green sequence is 54E-2a (presentation state and coordinate decomposition),
-then 54E-2b (renderer composition), then 54E-2c (interaction and camera-rig
-separation), then 54E-2d (lifecycle, authority, and contract reconciliation).
-Each slice must be separately reviewable and green; no later slice may repair a
-prior slice, and a monolithic 54E-2 implementation is forbidden.
+The mandatory reviewed-green sequence is 54E-2a (presentation state and
+coordinate decomposition), then 54E-2b (renderer composition), then 54E-2c
+(interaction and camera-rig separation), then 54E-2d (lifecycle, authority,
+and contract reconciliation). Stage 54E-2b is next and eligible; each later
+slice remains blocked until its predecessor is separately reviewed and green.
+No later slice may repair a prior slice, and a monolithic 54E-2 implementation
+is forbidden.
 
 #### Stage 54E-3 — Setup/menu information architecture
 
@@ -1041,14 +1046,14 @@ The active order is:
 
 1. Stages 54B-1, 54B-2, 54C, 54D-1, and 54D-2 are integrated on `master`
    through PR #63 at `c93dcc8cfa93857d514a14b925002efc4404b007`.
-2. Stage 54E-1 — presentation-space architecture/design is complete and human
-   accepted; its acceptance record is pending PR merge.
-3. Stage 54D-3 — Hold is eligible after that acceptance record merges; it does
-   not wait for 54E-2.
-4. Stage 54E-2a — presentation state and coordinate decomposition is the only
-   eligible 54E-2 entry slice after that merge.
-5. Stage 54E-2b, then 54E-2c, then 54E-2d — each starts only after the prior
-   slice is separately reviewed and green.
+2. Stage 54E-1 — presentation-space architecture/design is complete, human
+   accepted, and merged at `7e3558f823dd496b8896eabe6da9c18951bdb005`.
+3. Stage 54D-3 — Hold is eligible and does not wait for 54E-2.
+4. Stage 54E-2a — presentation state and coordinate decomposition is complete
+   and reviewed green.
+5. Stage 54E-2b — renderer composition — is next and eligible; 54E-2c starts
+   only after reviewed-green 54E-2b, and 54E-2d only after reviewed-green
+   54E-2c.
 6. Stage 54E-3 — setup/menu information architecture.
 7. Stage 54E-4 — camera/GUI presets.
 8. Stage 54E-5 — cockpit consolidation.
