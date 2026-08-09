@@ -59,29 +59,29 @@ history ledger. Detailed history is preserved in
   continuous `L`; aligned cells, active piece, Ghost, grids, and frames;
   anchor-only layout; oriented corner-derived fit bounds; and slice identity
   labels outside local physical rotation. Stage 54E-2c — interaction and
-  camera-rig separation — is IMPLEMENTED / REVIEW PENDING: left-drag and
-  keyboard yaw/pitch mutate the one shared `L`; relative controls consume
-  exact `B + Q(L.local_yaw)`; outer pan/zoom/Fit remain framing-only; gameplay
-  roll is detached while generic roll remains; preset yaw/pitch and framing
-  are decomposed; and every `L` mutation rerenders oriented geometry, bounds,
-  and the fit reference. The fixed far-side mount uses one renderer-only outer
-  `V` reflection across the active camera's vertical/depth plane; the camera
-  and HUD remain outside it. Actual `Camera3D.unproject_position()` evidence
-  proves resolver-selected Right is screen-right, while effective camera-space
-  depth proves resolver-selected Forward recedes. A review correction accounts
-  for residual continuous yaw between
-  `L.local_yaw` and `Q(L.local_yaw)`: the strict all-yaw pitch interval is
-  approximately `(-42.480 degrees, +86.240 degrees)`, and normal gameplay uses
-  `[-40 degrees, +60 degrees]` with a `2.480-degree` lower margin. Stage
-  54E-2c final visual review identified and fixed an above-board active-spawn
-  projection collapse that had initially looked like a stale Ghost cell; the
-  investigation also hardened presentation-node teardown by synchronously
-  detaching obsolete children before deferred destruction, but that hardening
-  was not the root cause of the reported cube. It also restores face-connected
-  cell adjacency inside each shared NEXT-thumbnail `W` group. Board spacing
-  and grid/wireframe styling remain deferred visual-quality work tracked in
-  `docs/BACKLOG.md` and GitHub Issues. Stage 54E-2d remains blocked until
-  reviewed-green 54E-2c.
+  camera-rig separation — is COMPLETE / REVIEWED GREEN: left-drag and keyboard
+  yaw/pitch mutate the one shared `L`; relative controls consume exact
+  `B + Q(L.local_yaw)`; outer pan/zoom/Fit remain framing-only; gameplay roll
+  is detached while generic roll remains; preset yaw/pitch and framing are
+  decomposed; and every `L` mutation rerenders oriented geometry, bounds, and
+  the fit reference. The fixed far-side mount uses one renderer-only outer `V`
+  reflection across the active camera's vertical/depth plane; the camera and
+  HUD remain outside it. Actual `Camera3D.unproject_position()` evidence proves
+  resolver-selected Right is screen-right, while effective camera-space depth
+  proves resolver-selected Forward recedes. Review correction accounts for
+  residual continuous yaw between `L.local_yaw` and `Q(L.local_yaw)`: the
+  strict all-yaw pitch interval is approximately
+  `(-42.480 degrees, +86.240 degrees)`, and normal gameplay uses
+  `[-40 degrees, +60 degrees]` with a `2.480-degree` lower margin. Final visual
+  review identified and fixed an above-board active-spawn projection collapse
+  that had initially looked like a stale Ghost cell; the investigation also
+  hardened presentation-node teardown by synchronously detaching obsolete
+  children before deferred destruction, but that hardening was not the root
+  cause of the reported cube. It also restores face-connected cell adjacency
+  inside each shared NEXT-thumbnail `W` group. Board spacing and grid/wireframe
+  styling remain deferred visual-quality work tracked in `docs/BACKLOG.md` and
+  GitHub Issues. Stage 54E-2d — lifecycle, authority, and contract
+  reconciliation — is now NEXT / ELIGIBLE.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -214,9 +214,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Review Stage 54E-2c — Interaction and camera-rig separation. Stage 54E-2d
-   remains sequentially gated on reviewed-green 54E-2c, and Stage 54D-3 Hold
-   remains independently eligible.
+1. Stage 54E-2d — Lifecycle, authority, and contract reconciliation — is the
+   sole next eligible 54E implementation slice. Stage 54D-3 Hold remains
+   independently eligible.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
