@@ -67,7 +67,8 @@ no authority transfer or establishment.
   behavior or shared keybinding configuration to match Godot.
 - Prove ephemeral presentation fields are absent from settings/setup/native
   identity while established frame and camera preferences continue to persist.
-- Close Stage 54E-2 authority records only to implemented/review-pending state.
+- Close Stage 54E-2 authority records to reviewed-green state only after
+  external review has accepted the implementation evidence.
 
 ## Forbidden Changes
 
@@ -116,8 +117,9 @@ no authority transfer or establishment.
 13. Existing screen-right/Forward-depth, active-spawn, NEXT, Ghost,
     asymmetric-board, `W=1`, and signed-basis guarantees remain green.
 14. Resolver-required focused, governance, sanitation, full-repository, and
-    real-window verification pass; the worktree is clean and the draft PR is
-    unmerged with review pending.
+    real-window verification pass; the worktree is clean; external technical
+    review is green; the PR remains unmerged until reviewed-green status
+    reconciliation and protected merge are complete.
 
 ## Automated Verification
 
@@ -171,6 +173,10 @@ Update only concrete stale statements or required evidence in:
 - Stage 54G release hardening and full keybinding/remapping/gamepad work.
 - Explorer, topology, challenge, campaign, and simulation later phases.
 
-Implementation handoff status may become `STAGE 54E-2d IMPLEMENTED — REVIEW
-PENDING`; neither Stage 54E-2d nor Stage 54E-2 may be called reviewed green or
-programme-complete before external review.
+## Review Outcome
+
+External technical review accepted the implementation and evidence on PR #72.
+Stage 54E-2d is COMPLETE / REVIEWED GREEN, and the aggregate Stage 54E-2
+implementation series is COMPLETE / REVIEWED GREEN. Stage 54E-3 is the next
+eligible Stage 54E implementation slice. Stage 54D-3 Hold remains independently
+eligible.
