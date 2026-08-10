@@ -1,7 +1,7 @@
 # Architecture Contract
 
 Status: active architecture baseline  
-Last updated: 2026-08-07
+Last updated: 2026-08-10
 Arch stage: 900
 
 This contract defines the dependency direction, ownership rules, and enforcement
@@ -113,6 +113,16 @@ outside its ownership. Screen-right acceptance uses actual
 `Camera3D.unproject_position()` output rather than Node3D scale or basis-only
 inspection. Normal gameplay does not expose roll, while generic camera roll
 remains reusable outside that mode.
+
+The Live-4D app owns presentation lifecycle orchestration. Entry, new/random
+launch, Restart Game, and Reset View restore ephemeral `B/L/V/P` defaults and
+recompute anchors, bounds, and fit reference. Reset View is presentation-only;
+Restart Game alone crosses the existing native reset boundary for the frozen
+setup. Basis-only reset preserves `L` and framing. Setup/menu exit and mode
+transition synchronously detach renderer-owned nodes and clear derived fit,
+reflection, focus, zoom, projection override, and interpolation state before
+another mode can render. None of these ephemeral fields enters settings,
+setup, native snapshots/hashes, or replay identity.
 
 This ownership may remap presentation movement intents into existing canonical
 native commands. It must not independently decide movement legality or mutate

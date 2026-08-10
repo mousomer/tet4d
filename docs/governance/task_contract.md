@@ -1,182 +1,182 @@
-# Task Contract — Stage 54E-2c Interaction and Camera-Rig Separation
+# Task Contract — Stage 54E-2d Lifecycle, Authority, and Contract Reconciliation
 
 ## Objective
 
-Separate normal Live-4D slice-local interaction from outer framing and route
-relative controls through exact `B` plus quantized shared `L.local_yaw`.
+Complete Stage 54E-2 implementation by enforcing the accepted Live-4D
+presentation lifecycle and reconciling the public control, persistence, RDS,
+architecture, authority, programme, backlog, and restart-handoff contracts with
+the reviewed-green `B -> G_D -> L -> anchor -> V/P` implementation.
 
 ## Current Authority
 
 - `docs/architecture/4d_presentation_interaction_architecture.md`: accepted
-  Stage 54E transform, ownership, pitch-depth, and staged-delivery contract.
-- Reviewed-green Stage 54E-2a/2b evidence on `master` at
-  `51a17ae6291295ca1d00780a5dc98bf7336139d4`.
-- `docs/architecture/game_safe_4d_slice_basis.md`: exact signed `B` contract.
+  transform, ownership, lifecycle, pitch-depth, preset, and staged-delivery
+  contract.
+- `docs/architecture/game_safe_4d_slice_basis.md`: exact signed `B`, reset,
+  input-routing, and deterministic-exclusion contract.
+- `docs/rds/RDS_4D_TETRIS.md` and `docs/rds/RDS_KEYBINDINGS.md`: durable
+  product and binding requirements, interpreted with explicit runtime scope
+  where inherited Python behavior differs from the Godot product shell.
 - `docs/ARCHITECTURE_CONTRACT.md` and
   `docs/architecture/authority_map.md`: Godot presentation ownership and
-  deterministic exclusion.
-- `docs/rds/RDS_4D_TETRIS.md`, `docs/rds/RDS_KEYBINDINGS.md`, and the live
-  input contract: current product/input surfaces, subordinate to the accepted
-  54E architecture where transitional wording remains.
+  native deterministic-gameplay boundary.
+- `docs/architecture/editable_board_setup_and_persistence.md` and
+  `docs/architecture/godot_shell_settings_persistence.md`: frozen game setup,
+  last-valid setup, shell preference, recovery, and persistence ownership.
 - `docs/plans/professional_godot_game_programme.md`, `CURRENT_STATE.md`, and
-  `docs/BACKLOG.md`: Stage 54E sequencing and explicit deferrals.
-- `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`, and
-  `godot/AGENTS.md`: routing and verification governance.
+  `docs/BACKLOG.md`: Stage 54E sequencing, current handoff, and explicit
+  deferrals.
+- `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`, `AGENTS.md`,
+  and `godot/AGENTS.md`: routing and verification governance.
 
-Godot owns this presentation behavior. Native gameplay remains authoritative
-for canonical state and commands; no Python, native, or authority-transfer
-work is permitted.
+Godot owns `B`, shared continuous `L`, layout, renderer composition, `V/P`,
+input adaptation, help, and presentation lifecycle. Native gameplay remains
+authoritative for canonical state and session transitions. This slice performs
+no authority transfer or establishment.
 
 ## Allowed Systems and Paths
 
-- Godot Live-4D input and presentation orchestration.
-- Godot camera/framing and temporary preset compatibility integration.
-- Shared slice-local orientation and control-frame mapping consumers.
-- Focused Godot camera, renderer, input, and live-integration tests.
-- Necessary status, architecture, programme, backlog, task, and evidence docs.
+- Godot Live-4D app/session lifecycle orchestration.
+- Godot renderer presentation teardown and semantic state snapshots.
+- Godot `CameraRig` default framing/projection/reflection reset seam.
+- Godot normal Live-4D action registration, routing, helper, and help copy.
+- Focused Godot lifecycle, input, camera, renderer, settings, setup,
+  persistence, deterministic-isolation, and integration tests.
+- Necessary task, RDS, architecture, authority, programme, backlog, design,
+  README/control, and restart-handoff documentation.
 
 ## Required Changes
 
-- Route Live-4D left drag and keyboard yaw/pitch to the one shared `L`.
-- Keep right drag on outer pan and wheel/zoom actions on outer framing.
-- Resolve relative Live-4D controls from exact `B + Q(L.local_yaw)` without
-  consulting `CameraRig.control_frame_yaw()`.
-- Remove ordinary Live-4D interactive outer yaw/pitch/roll while preserving
-  reusable low-level free-inspection roll.
-- Establish and enforce a fitted-view-derived normal-gameplay pitch domain.
-- Correct the review defect in the initial pitch-only proof by including the
-  residual yaw between continuous `L.local_yaw` and `Q(L.local_yaw)`.
-- Prove actual resolver-selected Right is screen-right and Forward is receding
-  through exact `B`, two-point `G_D`, continuous `L`, and fitted `V/P`.
-- Decompose current preset yaw/pitch into `L` and framing/zoom/pan into `V/P`.
-- Make every interactive or preset-driven `L` mutation explicitly rerender,
-  recompute oriented bounds, and refresh fit inputs without native gameplay.
-- Replace provisional combined-camera characterization tests with requirement
-  and regression evidence while preserving non-Live camera behavior.
-- Replace the review-rejected `Camera3D.scale` reflection with one
-  render-effective outer Live-4D presentation transform. Keep the HUD outside
-  that transform and keep `B`, `G_D`, `L`, anchors, `Q`, and deterministic
-  gameplay unchanged.
-- Prove Right with actual `Camera3D.unproject_position()` screen coordinates
-  from resolver-selected canonical point pairs after their real renderer/world
-  placement. Prove Forward separately with the effective camera transform and
-  explicit Godot negative-view-Z depth convention.
-
-## Render-Projection Review-Amendment Audit
-
-The pre-amendment scene path is:
-
-```text
-ReplayHud/GameViewport
-  -> WorldRoot
-       -> TraceSceneRenderer
-       -> CameraRig
-            -> Camera3D
-```
-
-`ReplayHud` and its controls are outside `GameViewport`; slice geometry and
-slice labels are rendered inside it. The pre-amendment
-`_horizontal_mirrored` flag reaches only `Camera3D.scale=(-1,1,1)`, while the
-screen-direction tests inspect `Camera3D.global_basis.inverse()`. That is not
-accepted as evidence of the projection Camera3D actually supplies to the
-viewport.
-
-The selected correction inserts one `Live4DPresentationRoot` under
-`WorldRoot`, parents only `TraceSceneRenderer` beneath it, and applies the
-fixed horizontal reflection there about the fitted focus and across the
-active camera's vertical/depth plane. Its normal is effective camera-right,
-so it reverses camera-space X while preserving camera-space Y and Z. This is
-one outer `V` transform over the rendered world: it is not slice-local, does
-not change renderer-local anchors or `L`, and does not contain Camera3D or the
-HUD. Non-Live fits restore this root to identity. CameraRig remains the owner
-that configures this fitted-presentation state and exposes only semantic
-diagnostics.
-
-Normative Right evidence must map an interior canonical point pair through
-the actual resolver, exact `B`, two-point `G_D`, continuous `L`, anchor/world
-placement, renderer/presentation-root transforms, and then
-`Camera3D.unproject_position()`. Normative Forward evidence uses the same
-world points and `Camera3D.get_camera_transform().affine_inverse()`; a farther
-visible point has a more-negative camera-space Z, so origin Z minus destination
-Z is positive away depth. Boolean reflection metadata and camera basis-only
-direction helpers are secondary diagnostics, not acceptance proof.
+- Establish app-owned seams for fresh Live-4D defaults, session teardown, and
+  basis-only reset without redesigning transform ownership.
+- Reset ephemeral `B/L/V/P`, anchors/bounds/fit reference, reflection, helper,
+  and resolver state on the lifecycle events that own a full reset.
+- Keep Restart Game bound to native reconstruction of the frozen current setup
+  and preserve existing deterministic seed/RNG/session behavior.
+- Make Reset View presentation-only and basis reset `B`-only, with explicit
+  deterministic-isolation evidence.
+- Clear stale Live-4D state and renderer children on setup/menu exit and mode
+  transition; re-entry must start from coherent defaults on its first frame.
+- Keep presets decomposed into `L` plus `V/P`, non-persistent, and independent
+  of `B` and canonical gameplay.
+- Remove normal-gameplay roll action registration/routing/help exposure while
+  retaining generic low-level `CameraRig` roll primitives.
+- Reconcile Live-4D terminology and the Reset View / Restart Game / Fit View
+  distinction across runtime helpers and durable documentation.
+- Make inherited Python keybinding scope explicit rather than changing Python
+  behavior or shared keybinding configuration to match Godot.
+- Prove ephemeral presentation fields are absent from settings/setup/native
+  identity while established frame and camera preferences continue to persist.
+- Close Stage 54E-2 authority records to reviewed-green state only after
+  external review has accepted the implementation evidence.
 
 ## Forbidden Changes
 
-- Deterministic gameplay, canonical commands, snapshots/hashes, RNG, scoring,
-  queue/NEXT, Ghost landing, collision, hard drop, or topology semantics.
-- Native C++ or Python implementation changes.
-- Camera-preset taxonomy, names, UI categories, persistence, or Stage 54E-4
-  redesign.
-- Broad lifecycle, Reset View, new-game/restart, setup-change, mode-switch,
-  persistence, keybinding/RDS, or final authority closure from Stage 54E-2d.
-- Explorer UI, Hold, or Stages 54E-3/4/5 implementation.
+- Native C++, Python gameplay, deterministic rules, topology, collision,
+  gravity, scoring, hard drop, RNG, queue/NEXT, Ghost landing, replay/trace
+  schema, or board-extent semantics.
+- Quantized-yaw mathematics, ties-to-even, the `[-40°, +60°]` pitch policy,
+  transform ordering, fitted mount, reflection mechanism, or projection proof.
+- Stage 54D-3 Hold; Stages 54E-3/4/5; Stage 54F visual work; Stage 54G release
+  hardening; Issues #69/#70.
+- Preset taxonomy/names/categories/UI/persistence redesign; Explorer UI;
+  topology UI; gamepad support; a keybinding editor/profile/schema redesign.
+- A new persistent `B/L/V/P` schema or authority-establishment record.
 
 ## Acceptance Criteria
 
-1. One shared `L` owns normal Live-4D yaw/pitch for renderer, input, resolver,
-   and preset compatibility.
-2. Live-4D relative commands use exact `B + Q(L.local_yaw)`; pitch and outer
-   framing never enter discrete mapping.
-3. Left drag and keyboard yaw/pitch mutate `L`; right drag pans; wheel and
-   zoom actions change framing; gameplay roll has no effect.
-4. Normal Live-4D outer interactive rotation is absent, while generic rig
-   orbit/yaw/pitch/roll remains valid for non-Live/free-inspection consumers.
-5. Every `L` mutation rerenders continuous orientation, recomputes oriented
-   bounds, and refreshes the renderer/camera-fit input seam without native
-   transitions or automatic recentering on every drag.
-6. `B`, `L`, pan, zoom, Fit, and presets satisfy their independence and
-   deterministic-isolation contracts.
-7. The declared normal-game pitch range is mathematically inside the actual
-   all-continuous-yaw fitted-view Forward inversion boundary, has an explicit
-   margin, and passes default, extrema, intermediate, rejected-old-boundary,
-   and clamp coverage.
-8. Actual fitted-view evidence proves resolver-selected Right has a positive
-   pixel displacement through `Camera3D.unproject_position()` and Forward has
-   positive away depth through the effective camera transform for identity and
-   signed `B`, yaw-quarter centres, both sides of quantizer boundaries,
-   ties-to-even, and pitch extrema/intermediate values.
-9. Preset yaw/pitch reaches `L`, framing reaches `V/P`, final bounds remain
-   coherent, and no preset leaves normal Live-4D outer rotation.
-10. Focused, resolver-required, sanitation, full-repository, and real-window
-    verification are green; Stage 54E-2d remains the next gated slice.
+1. Fresh/configured/random Live-4D sessions start with identity `B`, default
+   yaw/pitch `L`, recomputed layout/bounds, and fitted reflected default `V/P`.
+2. Restart Game reconstructs the frozen current setup and resets presentation
+   defaults without changing its established deterministic semantics.
+3. Change Setup, menu return, and mode transitions clear Live-4D ephemeral
+   state, presentation children, fit state, and reflection authority.
+4. Re-entering Live 4D after another mode uses fresh presentation defaults;
+   Live 3D retains its existing camera behavior and inherits no 4D state.
+5. Reset View resets `B + L + V/P` and renderer/resolver/HUD state without
+   changing native snapshot, hash, RNG, score, queue, cells, Ghost, or setup.
+6. The internal basis-only reset restores identity `B` and dependent
+   layout/bounds while preserving `L`, pan/focus, zoom, projection, and frame
+   preferences.
+7. Presets preserve `B`, anchors, canonical gameplay, and preferences while
+   updating shared `L`, oriented bounds/fit inputs, and framing coherently.
+8. No stale cells, Ghost, active nodes, grids, frames, labels, markers, gizmo
+   authority, fit envelope, reflection pivot, focus, or interpolation state
+   survives presentation teardown/re-entry.
+9. Ephemeral presentation state is not serialized in shell settings, game
+   setup, native snapshot/hash, or replay identity; accepted presentation and
+   frame preferences retain their established persistence.
+10. Normal Live-4D gameplay registers and advertises no roll action; reusable
+    low-level camera roll remains available outside normal gameplay.
+11. Public Live-4D help distinguishes piece movement/rotation, exact 90° view
+    rotation/re-slicing, slice orientation, framing, Drop, Session, and
+    Navigation, and accurately distinguishes Restart, Reset View, and Fit.
+12. RDS/architecture/authority documents describe exact `B`, continuous
+    yaw/pitch `L`, yaw-only `Q`, framing-only `V/P`, lifecycle reset semantics,
+    deterministic exclusion, and runtime-specific binding scope.
+13. Existing screen-right/Forward-depth, active-spawn, NEXT, Ghost,
+    asymmetric-board, `W=1`, and signed-basis guarantees remain green.
+14. Resolver-required focused, governance, sanitation, full-repository, and
+    real-window verification pass; the worktree is clean; external technical
+    review is green; the PR remains unmerged until reviewed-green status
+    reconciliation and protected merge are complete.
 
 ## Automated Verification
 
-- Policy resolver classification: `godot_product_shell` with
-  `staged_handoff`.
+- Policy resolver: `godot_product_shell` with `staged_handoff` and
+  `cross_layer`.
 - Requirements: `documentation`, `governance_structure`, `godot`,
   `deterministic`, `integration`, and `human_visual`; full repository gate
-  required.
-- Focused camera, orientation, mapping, renderer, input, and live-shell tests.
+  required; no typical requirement omitted.
+- Focused LiveInputContract, Live-4D lifecycle/reset/session/mode tests,
+  SliceLocalOrientation, ProjectionLayout, CameraRig, renderer cleanup,
+  control-frame mapping, preset, setup/settings persistence, and deterministic
+  isolation.
+- `./scripts/check_keybinding_contract.sh` if shared keybinding/configuration
+  sources change.
 - `GODOT_BIN=... ./scripts/verify_godot_4_7.sh`.
 - Governance validators and generated-document checks.
-- Git sanitation and `git diff --check`.
-- `CODEX_MODE=1 ./scripts/verify.sh`.
+- Git sanitation, `git diff --check`, and `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ## Manual Verification
 
-Use a real window with an asymmetric multi-slice Live-4D board. Verify shared
-slice-local left-drag/keyboard yaw and pitch, fixed anchors, right-drag pan,
-wheel zoom, clamp behavior, Right/Forward correspondence, framing
-independence, preset decomposition, roll detachment, visual alignment,
-refreshed Fit bounds/no clipping, and a representative 3D/non-Live camera
-path.
+Run Godot 4.7.1 in a real non-headless window. Cover asymmetric
+`5 x 10 x 4 x 4`, `W=1`, and representative Live 3D sessions. Verify Restart,
+Reset View after visible gameplay change, basis-only reset via the semantic
+seam, representative preset with non-identity `B`, `4D -> 3D -> 4D`, Change
+Setup/relaunch, coherent first frames/Fit/reflection/helpers, and absence of
+normal-gameplay roll advertising or response.
 
 ## Documentation Updates
 
-Update concrete 54E-2c implementation/status evidence in `CURRENT_STATE.md`,
-`docs/BACKLOG.md`,
-`docs/architecture/4d_presentation_interaction_architecture.md`,
-`docs/architecture/game_safe_4d_slice_basis.md`,
-`docs/plans/professional_godot_game_programme.md`,
-`docs/ARCHITECTURE_CONTRACT.md`, and
-`docs/architecture/authority_map.md` as warranted by the final diff.
+Update only concrete stale statements or required evidence in:
+
+- `docs/architecture/4d_presentation_interaction_architecture.md`
+- `docs/architecture/game_safe_4d_slice_basis.md`
+- `docs/ARCHITECTURE_CONTRACT.md`
+- `docs/architecture/authority_map.md`
+- `docs/rds/RDS_4D_TETRIS.md`
+- `docs/rds/RDS_KEYBINDINGS.md`
+- `docs/design/godot_visual_system.md` or the current Godot README/control
+  reference where runtime help terminology is stale
+- `docs/plans/professional_godot_game_programme.md`
+- `docs/BACKLOG.md`
+- `CURRENT_STATE.md`
 
 ## Explicit Deferrals
 
-- Stage 54E-2d: complete reset/new-game/restart/setup/mode-switch lifecycle,
-  persistence semantics, final keybinding/RDS/help reconciliation, and final
-  authority closure.
-- Stage 54E-4: preset semantics, categories, naming, UI, and persistence.
-- Explorer/free-inspection UI and later Stage 54E/54F work.
+- Stage 54D-3 Hold.
+- Stage 54E-3 setup/menu information architecture.
+- Stage 54E-4 preset taxonomy, naming, categories, UI, and persistence.
+- Stage 54E-5 cockpit consolidation.
+- Stage 54F integrated visual acceptance, including Issues #69 and #70.
+- Stage 54G release hardening and full keybinding/remapping/gamepad work.
+- Explorer, topology, challenge, campaign, and simulation later phases.
+
+## Review Outcome
+
+External technical review accepted the implementation and evidence on PR #72.
+Stage 54E-2d is COMPLETE / REVIEWED GREEN, and the aggregate Stage 54E-2
+implementation series is COMPLETE / REVIEWED GREEN. Stage 54E-3 is the next
+eligible Stage 54E implementation slice. Stage 54D-3 Hold remains independently
+eligible.

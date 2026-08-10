@@ -478,12 +478,6 @@ func _handle_live_4d_camera_input(event: InputEvent) -> bool:
 	if _event_action_pressed_once(event, ["live_4d_camera_pitch_down"]):
 		_nudge_live_4d_local_pitch(-CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
 		return true
-	if _event_action_pressed_once(event, ["live_4d_camera_roll_left"]):
-		# Normal Live-4D gameplay deliberately consumes but does not expose roll.
-		return true
-	if _event_action_pressed_once(event, ["live_4d_camera_roll_right"]):
-		# Generic CameraRig roll remains available to free-inspection consumers.
-		return true
 	if _event_is_live_4d_zoom_in(event):
 		if _camera_rig != null:
 			_camera_rig.zoom(-1.0)
@@ -1129,7 +1123,6 @@ func _start_configured_live_game(setup: Dictionary) -> void:
 			configured = bool(validation.get("ok", false))
 			_live_3d_session_started = configured
 		MODE_LIVE_4D:
-			_live_4d_basis = SliceBasis4DScript.identity()
 			validation = _live_bridge.live_4d_configure_checked(setup)
 			configured = bool(validation.get("ok", false))
 			_live_4d_session_started = configured
@@ -1137,9 +1130,6 @@ func _start_configured_live_game(setup: Dictionary) -> void:
 		push_error("Native live session rejected setup: %s" % str(validation.get("errors", [])))
 		return
 	_active_live_setup = setup.duplicate(true)
-	if mode_name == MODE_LIVE_4D and _renderer != null:
-		_renderer.reset_live_4d_fit_envelope()
-		_renderer.set_live_4d_basis(_live_4d_basis, false)
 	_live_gravity_interval_seconds = _gravity_interval_for_setup(_active_live_setup)
 	match mode_name:
 		MODE_LIVE_2D:
@@ -1198,6 +1188,7 @@ func _enter_live_4d_mode() -> void:
 	if not _live_4d_session_started:
 		_live_bridge.live_4d_reset()
 		_live_4d_session_started = true
+	_restore_live_4d_presentation_defaults()
 	_refresh_live_4d_snapshot()
 	_fit_view()
 	_hud.show_replay_viewer()
@@ -1205,6 +1196,8 @@ func _enter_live_4d_mode() -> void:
 
 
 func _prepare_live_mode_entry(mode_name: String) -> void:
+	if _mode == MODE_LIVE_4D and mode_name != MODE_LIVE_4D:
+		_clear_live_4d_presentation_state(false)
 	_mode = mode_name
 	_state.is_playing = false
 	if mode_name == MODE_LIVE_4D:
@@ -1227,7 +1220,10 @@ func _return_to_main_menu() -> void:
 	_reset_live_repeat_state()
 	_hud.set_live_keyboard_capture(false)
 	_clear_ghost_cache()
-	_refresh_render()
+	if _mode == MODE_LIVE_4D:
+		_clear_live_4d_presentation_state(true)
+	else:
+		_refresh_render()
 	_hud.show_screen(ReplayHud.SCREEN_MAIN_MENU)
 
 
@@ -1239,11 +1235,16 @@ func _change_live_setup(mode_name: String) -> void:
 	_reset_live_repeat_state()
 	_hud.set_live_keyboard_capture(false)
 	_clear_ghost_cache()
-	_refresh_render()
+	if _mode == MODE_LIVE_4D:
+		_clear_live_4d_presentation_state(true)
+	else:
+		_refresh_render()
 	_hud.open_game_setup(mode_name)
 
 
 func _enter_replay_mode() -> void:
+	if _mode == MODE_LIVE_4D:
+		_clear_live_4d_presentation_state(false)
 	_mode = MODE_REPLAY
 	_clear_ghost_cache()
 	_hud.set_live_keyboard_capture(false)
@@ -1348,7 +1349,9 @@ func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 	_refresh_hud()
 
 
-func _reset_live_4d_view() -> void:
+# Internal semantic seam used by lifecycle tests and future non-public tooling.
+# It changes only exact presentation basis B and dependent layout/bounds.
+func _reset_live_4d_basis_only() -> void:
 	if _mode != MODE_LIVE_4D:
 		return
 	_live_4d_basis = SliceBasis4DScript.identity()
@@ -1356,9 +1359,42 @@ func _reset_live_4d_view() -> void:
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
 	if _camera_rig != null:
 		_camera_rig.set_orientation_basis(_live_4d_basis)
-	var orientation_changed := _set_live_4d_local_orientation(0.0, 0.0)
-	if not orientation_changed:
-		_refresh_live_4d_presentation(true)
+	_refresh_live_4d_presentation()
+	_refresh_hud()
+
+
+# Restores the complete ephemeral Live-4D presentation state. Native gameplay,
+# the frozen setup, and persisted shell preferences are deliberately excluded.
+func _restore_live_4d_presentation_defaults() -> void:
+	_live_4d_basis = SliceBasis4DScript.identity()
+	_live_4d_local_orientation.set_normal_gameplay_angles(0.0, 0.0)
+	if _renderer != null:
+		_renderer.clear_presentation()
+		_renderer.set_live_4d_basis(_live_4d_basis, false)
+		_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
+	if _camera_rig != null:
+		_camera_rig.clear_presentation_state()
+		_camera_rig.set_orientation_basis(_live_4d_basis)
+	_pending_fit_view = false
+
+
+# Tears down presentation authority at session/mode boundaries. Setting
+# end_session marks the native session for reconstruction on its next entry;
+# native deterministic state is otherwise untouched at teardown time.
+func _clear_live_4d_presentation_state(end_session: bool) -> void:
+	_restore_live_4d_presentation_defaults()
+	_clear_ghost_cache()
+	_live_4d_last_rotation_label = "none"
+	_live_4d_last_rotation_status = "none"
+	if end_session:
+		_live_4d_session_started = false
+
+
+func _reset_live_4d_view() -> void:
+	if _mode != MODE_LIVE_4D:
+		return
+	_restore_live_4d_presentation_defaults()
+	_refresh_live_4d_presentation()
 	_fit_view()
 	_refresh_hud()
 
@@ -1388,12 +1424,7 @@ func _reset_live_3d() -> void:
 func _reset_live_4d() -> void:
 	_live_4d_last_rotation_label = "none"
 	_live_4d_last_rotation_status = "none"
-	_live_4d_basis = SliceBasis4DScript.identity()
-	if _renderer != null:
-		_renderer.reset_live_4d_fit_envelope()
-		_renderer.set_live_4d_basis(_live_4d_basis, false)
-	if _camera_rig != null:
-		_camera_rig.set_orientation_basis(_live_4d_basis)
+	_restore_live_4d_presentation_defaults()
 	_live_bridge.live_4d_reset()
 	_live_4d_session_started = true
 	_live_tick_accumulator = 0.0
@@ -2010,6 +2041,12 @@ func _choose_startup_case_id(trace_type: String) -> String:
 
 func _ensure_input_map() -> void:
 	_remove_key_action("quit", KEY_Q)
+	# These IDs were briefly registered during Stage 54E-2c. Normal gameplay
+	# has no roll control; erase stale process-local registrations as well as
+	# omitting them from the durable action contract.
+	for obsolete_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
+		if InputMap.has_action(obsolete_action):
+			InputMap.erase_action(obsolete_action)
 	_ensure_key_action("replay_prev_frame", KEY_LEFT)
 	_ensure_key_action("replay_next_frame", KEY_RIGHT)
 	_ensure_key_action("replay_play_pause", KEY_SPACE)

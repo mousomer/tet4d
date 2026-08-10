@@ -6,7 +6,8 @@ Scope: Live 4D Godot presentation and input adaptation only
 Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
 Implementation evidence: Stage 54E-2a complete — reviewed green; Stage 54E-2b
-complete — reviewed green; Stage 54E-2c complete — reviewed green
+complete — reviewed green; Stage 54E-2c complete — reviewed green; Stage
+54E-2d complete — reviewed green; aggregate Stage 54E-2 complete — reviewed green
 
 ## 1. Purpose and current audit result
 
@@ -166,7 +167,7 @@ are insufficient in this architecture.
 ### Interaction ownership (normative)
 
 | Interaction | B | L | anchors | V/P | Relative mapping | Gameplay/Explorer scope |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- | --- |
 | XW basis turn | exact mutation | no | recompute | fit only | changes through B | gameplay + later Explorer as applicable |
 | ZW basis turn | exact mutation | no | recompute | fit only | changes through B | gameplay + later Explorer |
 | ZX basis turn | exact mutation | no | recompute | fit only | changes through B | gameplay + later Explorer |
@@ -825,8 +826,9 @@ drag and keyboard yaw/pitch enter that seam; it applies the normal-game pitch
 policy, resets the renderer fit reference, rerenders the current presentation,
 recomputes oriented bounds, and refreshes resolver/HUD consumers without a
 native gameplay transition. Right-drag remains outer pan, wheel/zoom remain
-framing, and ordinary roll actions are consumed without mutating either `L` or
-the outer rig. Generic `CameraRig` yaw/pitch/roll primitives remain available
+framing, and at the 54E-2c boundary ordinary roll actions were consumed without
+mutating either `L` or the outer rig. Stage 54E-2d removes those normal-gameplay
+action registrations. Generic `CameraRig` yaw/pitch/roll primitives remain available
 to 3D, replay, and future free-inspection consumers.
 
 The Live-4D resolver now consumes exact `B` plus
@@ -923,8 +925,8 @@ proves the rejected `46/-60` state, lower clamp and deterministic isolation,
 pitch command isolation, outer-yaw/pan/zoom/Fit independence, preset
 decomposition, refreshed renderer bounds/fit reference, Live-4D roll
 detachment, and retained non-Live/free-camera primitives. Stage 54E-2c is
-complete and reviewed green; Stage 54E-2d is now the next eligible
-implementation slice.
+complete and reviewed green; Stage 54E-2d is complete and reviewed green, and
+aggregate Stage 54E-2 is complete and reviewed green.
 
 ### 54E-2d — Lifecycle, authority, and contract reconciliation
 
@@ -940,6 +942,34 @@ required.
 Stage 54E-4, not 54E-2, decides final preset categories, labels, and
 persistence. Stage 54D-3 Hold remains separate deterministic-core work after
 human acceptance.
+
+**Stage 54E-2d reviewed-green implementation evidence.** The app now owns
+three explicit lifecycle seams: complete ephemeral default restoration,
+synchronous presentation teardown, and an internal basis-only reset. Live-4D
+entry, configured/random launch, Restart Game, and Reset View restore identity
+`B`, default shared `L`, recomputed anchors/bounds/fit reference, canonical
+orthographic fitted `V/P`, and the accepted reflection. Reset View performs no
+native transition. Restart Game retains the frozen current setup and invokes
+the existing native reset boundary.
+
+Change Setup, main-menu return, replay entry, and 4D-to-other-live-mode
+transitions synchronously detach renderer children, discard derived
+presentation/bounds/fit/interpolation state, and clear focus, zoom, roll,
+projection override, orientation gizmo, and reflection authority. Re-entry
+rebuilds one coherent first frame from fresh defaults. The internal basis-only
+seam restores identity `B` and dependent layout/bounds while preserving `L`,
+focus/pan, zoom, projection, and preferences. Presets remain the bounded 54E-2c
+compatibility decomposition.
+
+Normal Live-4D roll IDs are absent from the public action contract, runtime
+`InputMap`, routing, and help; generic low-level `CameraRig` roll remains.
+Settings/setup persistence tests prove `B/L/V/P`, reflection, and fit state are
+absent while established frame, display, sensitivity, invert-Y, and
+Reduced-Motion preferences remain. This is concrete Godot presentation
+implementation evidence only: it transfers or establishes no gameplay,
+native-session, topology, replay, or persistence authority. External technical
+review accepted the implementation and evidence. Stage 54E-2d and the aggregate
+Stage 54E-2 are complete and reviewed green.
 
 ## 19. Human acceptance decisions
 
@@ -973,9 +1003,9 @@ domain must satisfy Pitch-depth preservation, including
 
 ## 20. Stage boundary
 
-This accepted contract authorizes the next implementation entry points only
-after this acceptance record is merged: Stage 54E-2a and the independent
-Stage 54D-3 Hold. It does not authorize runtime implementation in this PR;
-54E-2b/c/d remain sequentially gated on prior green slices.
+The accepted sequential Stage 54E-2 implementation through 54E-2d is complete
+and reviewed green. Stage 54E-3 — setup/menu information architecture — is now
+the next eligible Stage 54E implementation slice. Stage 54E-4/5 remain later
+programme work, and Stage 54D-3 Hold remains independently eligible.
 
 **STAGE 54E-1 COMPLETE — HUMAN ACCEPTED**

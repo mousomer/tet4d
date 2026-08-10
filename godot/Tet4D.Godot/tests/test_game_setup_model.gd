@@ -94,6 +94,10 @@ func run() -> Array:
 	var loaded: Dictionary = store.load_last_selected(path)
 	if loaded.get(GameSetupSpecScript.MODE_4D, {}).get("board_shape", []) != [5, 10, 4, 1] or loaded.get(GameSetupSpecScript.MODE_4D, {}).get("translation_frame", "") != "absolute":
 		failures.append("schema 4 should persist the full custom shape and control-frame preference")
+	var persisted_4d: Dictionary = loaded.get(GameSetupSpecScript.MODE_4D, {})
+	for ephemeral_field in ["basis", "basis_state", "local_yaw", "local_pitch", "target_focus", "zoom_multiplier", "projection", "horizontal_reflection_active", "fit_reference"]:
+		if persisted_4d.has(ephemeral_field):
+			failures.append("game setup persistence must exclude Live-4D presentation field %s" % ephemeral_field)
 	model.set_axis_text(3, "1e0")
 	store.save_last_validated(model, path)
 	loaded = store.load_last_selected(path)

@@ -64,17 +64,22 @@ decimal seed, and starting speed 1–10. Start Game constructs one strict native
 bounded session from that canonical setup.
 
 Restart Game keeps the same board, piece set, random mode, effective seed, and
-starting speed, reproducing the initial piece sequence. True Random still
+starting speed, reproducing the initial piece sequence and restoring the
+default Live-4D presentation. Reset View restores only basis, shared slice
+orientation, and fitted framing/projection; Fit View changes framing only.
+True Random still
 captures and displays an effective seed; New Random Game is shown only for that
 mode and requests a new effective seed without changing the other setup
 choices. Change Setup exits live play before another session is constructed.
 
 The last validated setup per mode is stored separately in
-`user://game_setup.json` using schema version 2. Existing Stage 49 preset-only
-schema-version-1 files migrate safely. Missing, malformed, future, or invalid
+`user://game_setup.json` using schema version 4. Existing schema versions 1–3
+migrate safely. Missing, malformed, future, or invalid
 mode entries fall back independently. The file stores the user's fixed seed,
 not active/effective runtime seed or board state, score, pieces, cells, pause,
-or game-over state, and it never writes `user://shell_settings.json`.
+or game-over state. It also excludes basis, slice-local yaw/pitch, framing,
+projection, fit, and reflection state, and it never writes
+`user://shell_settings.json`.
 
 Production piece sets currently exposed are Classic Tetrominoes in 2D; True 3D
 and Embedded 2D in 3D; and True 4D (5-cell), Embedded 3D, and Embedded 2D in
@@ -82,11 +87,11 @@ and Embedded 2D in 3D; and True 4D (5-cell), Embedded 3D, and Embedded 2D in
 remain deferred until they have native production and parity coverage.
 
 The Wide W 4D preset uses an adaptive matrix of projected layer boards. Every
-W layer is represented, all active-piece layers receive stronger outlines,
-and Fit View frames the complete matrix. Godot does not currently expose XW or
-ZW view-basis rotation, so identity/W layering remains the accepted live view.
-Shift+mouse-wheel scrolls layer rows without sending gameplay commands; normal
-mouse-wheel zoom remains unchanged, and Fit View restores the matrix overview.
+current basis-derived layer is represented, all active-piece layers receive
+stronger outlines, and Fit View frames the complete matrix. Exact `XW`, `ZW`,
+and `ZX` 90-degree view rotations change presentation basis without changing
+gameplay. Left drag changes shared slice orientation, right drag pans framing,
+and the wheel zooms. Normal Live-4D gameplay exposes no roll control.
 
 ## Shell Settings
 

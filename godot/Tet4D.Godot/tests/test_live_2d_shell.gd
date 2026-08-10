@@ -25,6 +25,9 @@ func run() -> Array:
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
 	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XW - / + (re-slice)") or not live_4d_hint.contains("; / ' ZW - / + (re-slice)") or not live_4d_hint.contains("[ / ] ZX - / +") or not live_4d_hint.contains("I / K") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose separated slice orientation, framing, exact basis, piece rotation, and Esc-only quit")
+	for roll_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
+		if LiveInputContractScript.ACTION_SPECS.has(roll_action):
+			failures.append("normal Live 4D action contract must omit %s" % roll_action)
 	for action_name in LiveInputContractScript.ACTION_SPECS:
 		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
 		if not spec.get("keys", []).has(spec.get("display_key")):
@@ -539,6 +542,8 @@ func run() -> Array:
 		if str(app._live_bridge.live_4d_state_hash()) != endgame_hash:
 			failures.append("Endgame mouse camera controls should not mutate Live 4D gameplay state")
 		app._reset_live_4d()
+		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._current_fit_state != "fit OK":
+			failures.append("Restart Game must restore B, L, and fitted V/P defaults")
 		app._set_live_4d_local_orientation(0.7, 0.2)
 		app._apply_live_4d_basis_turn("xw", 1)
 		var reset_view_native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
@@ -571,6 +576,20 @@ func run() -> Array:
 		app._dispatch_live_4d_control_intent("move_x_pos")
 		if str(app._current_snapshot.get("last_command", "")) != "move_w_pos":
 			failures.append("visible +W horizontal intent should route to canonical W+")
+		var basis_only_native_before: String = app._live_bridge.live_4d_snapshot_json()
+		var basis_only_hash_before: String = str(app._live_bridge.live_4d_state_hash())
+		app._set_live_4d_local_orientation(0.31, -0.17)
+		app._camera_rig.pan_focus(Vector3(1.5, -0.5, 0.0))
+		app._camera_rig.zoom(-1.0)
+		var basis_only_l_before: Dictionary = app._live_4d_local_orientation.snapshot()
+		var basis_only_camera_before: Dictionary = app._camera_rig.presentation_snapshot()
+		app._reset_live_4d_basis_only()
+		if not app._live_4d_basis.is_identity():
+			failures.append("basis-only reset must restore identity B")
+		if app._live_4d_local_orientation.snapshot() != basis_only_l_before or app._camera_rig.presentation_snapshot() != basis_only_camera_before:
+			failures.append("basis-only reset must preserve L, pan/focus, zoom, projection, and preferences")
+		if app._live_bridge.live_4d_snapshot_json() != basis_only_native_before or str(app._live_bridge.live_4d_state_hash()) != basis_only_hash_before:
+			failures.append("basis-only reset must remain outside deterministic identity")
 		app._reset_live_4d()
 		app._apply_live_4d_basis_turn("zx", 1)
 		if app._live_4d_basis.slots() != [-3, 2, 1, 4]:
@@ -649,16 +668,40 @@ func run() -> Array:
 		app._unhandled_input(h_event)
 		if str(app._current_snapshot.get("last_rotation_label", "")) != "YW-":
 			failures.append("H should dispatch Live 4D YW- rotation instead of Help")
+		app._set_live_4d_local_orientation(0.42, 0.18)
+		app._apply_live_4d_basis_turn("zw", 1)
+		app._camera_rig.zoom(-1.0)
 		app._enter_replay_mode()
 		await tree.process_frame
 		app._enter_live_4d_mode()
 		await tree.process_frame
 		if app._live_4d_paused:
 			failures.append("switching back to Live 4D should resume the selected live mode")
+		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._current_fit_state != "fit OK" or not bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)):
+			failures.append("re-entering Live 4D must use fresh B, L, V/P, and reflection defaults")
 		var switched_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
 		app._input(zoom_out_event)
 		if live_4d_camera != null and live_4d_camera.size <= switched_fit_size:
 			failures.append("Live 4D zoom should work after switching away and back")
+		app._set_live_4d_local_orientation(0.28, -0.12)
+		app._apply_live_4d_basis_turn("xw", 1)
+		app._enter_live_3d_mode()
+		if str(app._current_snapshot.get("trace_type", "")) != "live_3d" or not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0}:
+			failures.append("4D to 3D transition must clear Live-4D presentation state before the 3D frame")
+		if bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)) or app._live_4d_presentation_root.transform != Transform3D.IDENTITY:
+			failures.append("Live 3D must not inherit Live-4D reflection authority")
+		app._enter_live_4d_mode()
+		app._set_live_4d_local_orientation(0.2, 0.1)
+		app._apply_live_4d_basis_turn("zw", -1)
+		app._change_live_setup(TraceReplayAppScript.MODE_LIVE_4D)
+		_assert_live_4d_teardown(failures, app, "Change Setup")
+		if app._live_4d_session_started:
+			failures.append("Change Setup must end the current Live-4D session ownership")
+		app._enter_live_4d_mode()
+		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._current_fit_state != "fit OK":
+			failures.append("Live-4D relaunch after Change Setup must start from coherent defaults")
+		app._return_to_main_menu()
+		_assert_live_4d_teardown(failures, app, "Main Menu")
 	for action_name in [
 		"live_move_left",
 		"live_move_right",
@@ -708,8 +751,6 @@ func run() -> Array:
 		"live_4d_camera_pitch_down",
 		"live_4d_camera_yaw_left",
 		"live_4d_camera_yaw_right",
-		"live_4d_camera_roll_left",
-		"live_4d_camera_roll_right",
 		"live_4d_camera_zoom_in",
 		"live_4d_camera_zoom_out",
 		"mode_toggle_replay_live",
@@ -717,6 +758,9 @@ func run() -> Array:
 	]:
 		if not InputMap.has_action(action_name):
 			failures.append("InputMap missing %s" % action_name)
+	for obsolete_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
+		if InputMap.has_action(obsolete_action):
+			failures.append("normal Live 4D InputMap must not register %s" % obsolete_action)
 	for soft_drop_action in ["live_3d_soft_drop", "live_4d_soft_drop"]:
 		var has_ctrl := false
 		var has_shift := false
@@ -736,6 +780,19 @@ func run() -> Array:
 	root.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_live_4d_teardown(failures: Array, app, label: String) -> void:
+	for root_name in ["GridRoot", "CellRoot", "ParticleRoot", "MarkerRoot"]:
+		var presentation_root: Node = app._renderer.get_node_or_null(root_name)
+		if presentation_root == null or presentation_root.get_child_count() != 0:
+			failures.append("%s must synchronously clear %s" % [label, root_name])
+	if bool(app._renderer.current_bounds().get("ok", true)) or not app._renderer._live_4d_fit_reference.is_empty():
+		failures.append("%s must clear bounds and fit-reference authority" % label)
+	if bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", true)) or app._live_4d_presentation_root.transform != Transform3D.IDENTITY:
+		failures.append("%s must clear reflection authority" % label)
+	if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0}:
+		failures.append("%s must clear B and L" % label)
 
 
 func _assert_app_live_4d_semantic_directions(failures: Array, app, label: String) -> void:

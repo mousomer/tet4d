@@ -125,6 +125,9 @@ func fit_bounds(
 ) -> void:
 	if not bounds.get("ok", false):
 		return
+	# Every fitted product view starts from the canonical orthographic
+	# projection; perspective/free-inspection state cannot leak across modes.
+	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	var size := max_pos - min_pos
@@ -144,6 +147,35 @@ func fit_bounds(
 	_base_orthographic_size = maxf(_projected_orthographic_size(min_pos, max_pos, _target_yaw, _target_pitch, margin), 4.0)
 	_camera.size = _base_orthographic_size
 	_snap_to_targets()
+
+
+# Clears mode-owned framing/reflection/interpolation state without touching
+# persisted sensitivity, invert-Y, or reduced-motion preferences.
+func clear_presentation_state() -> void:
+	_target_focus = Vector3.ZERO
+	_current_focus = Vector3.ZERO
+	_fit_focus = Vector3.ZERO
+	_target_distance = 22.0
+	_current_distance = 22.0
+	_base_distance = 22.0
+	_target_yaw = PYTHON_DISPLAY_YAW_RAD
+	_current_yaw = PYTHON_DISPLAY_YAW_RAD
+	_target_pitch = PYTHON_DISPLAY_PITCH_RAD
+	_current_pitch = PYTHON_DISPLAY_PITCH_RAD
+	_target_roll = 0.0
+	_current_roll = 0.0
+	_zoom_multiplier = 1.0
+	_base_orthographic_size = DEFAULT_ORTHOGRAPHIC_SIZE
+	_last_frame_signature = ""
+	_current_view_preset = CameraPresetScript.ISO
+	_current_view_octant = "cleared"
+	_current_fit_state = "cleared"
+	_set_horizontal_reflection(false, Vector3.ZERO)
+	set_orientation_gizmo_visible(false)
+	if _camera != null:
+		_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+		_camera.size = DEFAULT_ORTHOGRAPHIC_SIZE
+		_snap_to_targets()
 
 
 func orbit(delta: Vector2) -> void:

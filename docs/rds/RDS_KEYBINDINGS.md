@@ -1,9 +1,9 @@
 # Keybindings RDS
 
-Status: Active v0.8 (Verified 2026-02-20)  
+Status: Active v0.9 (Godot Stage 54E-2d reconciled 2026-08-10; reviewed green)
 Author: Omer + Codex  
 Date: 2026-02-20  
-Target Runtime: Python 3.11-3.14 + `pygame-ce`
+Target Runtime: Python 3.11-3.14 + `pygame-ce`; Godot 4.7.1 product shell
 
 ## 1. Scope
 
@@ -23,6 +23,16 @@ Implementation references:
 6. `keybindings/2d.json`
 7. `keybindings/3d.json`
 8. `keybindings/4d.json`
+
+### 1.1 Runtime scope
+
+Sections 2–5 describe the inherited Python/Pygame profile, editor, and
+configuration system unless a paragraph explicitly names Godot. They do not
+define Godot `InputMap` defaults. The Godot product shell currently owns a
+separate fixed semantic action contract in
+`godot/Tet4D.Godot/scripts/input/live_input_contract.gd`; a unified remapping
+schema remains Stage 54G scope. Help and runtime registration within each
+runtime must still consume that runtime's one action authority.
 
 ## 2. Keyboard Type Profiles
 
@@ -85,7 +95,7 @@ Implementation references:
 4. `C`-> toggle grid
 5. `F1`(or `Tab` on macbook/tiny profiles)-> help
 
-## 4. Key Sets By Dimension And Keyboard Type
+## 4. Inherited Python/Pygame Key Sets By Dimension And Keyboard Type
 
 ### 4.1 2D gameplay
 
@@ -208,6 +218,28 @@ Implementation references:
 5. Secondary `view_zw_neg`: `;`
 6. Secondary `view_zw_pos`: `'`
 7. Conflict rule remains unchanged: gameplay keys keep priority over camera bindings.
+
+### 4.4 Godot Live-4D product-shell controls
+
+These fixed bindings apply only to normal Godot Live-4D gameplay:
+
+1. Piece movement: `A/D` (or Left/Right) for visible Left/Right, `W/S` (or
+   Up/Down) for Forward/Back, `Q/E` for the signed current slice axis.
+2. Drop/session: `Ctrl` Soft Drop, `Space` Hard Drop, `P` Pause, `Backspace`
+   Restart Game, `Esc` Main Menu. Shift is not Soft Drop.
+3. Piece rotation: `R/T` XY, `F/G` XZ, `V/B` YZ, `Y/U` XW, `H/J` YW, and
+   `N/M` ZW.
+4. Exact 90-degree presentation basis: `1/2` XW, `;/'` ZW, `[/]` ZX, and
+   `0` Reset View. Reset View restores `B + L + V/P`; it is not Restart Game.
+5. Shared slice orientation `L`: `O/L` yaw and `I/K` pitch, plus left drag.
+6. Framing `V/P`: `-/=/+` and wheel zoom, right-drag pan, and double-click or
+   the visible Fit View button. Fit View is framing-only; `F/G` remain the
+   Live-4D XZ piece-rotation pair.
+7. Normal Live-4D gameplay registers no roll action. Generic low-level roll is
+   reserved for non-gameplay free-inspection/Explorer consumers.
+8. Exact `B`, continuous yaw/pitch `L`, anchors/layout, focus/pan, zoom,
+   projection, fit, and reflection are ephemeral presentation state and are
+   not keybinding-profile, setup, native-state, snapshot/hash, or replay data.
 
 ## 5. Load, Change, Save Workflow
 

@@ -148,11 +148,10 @@ frames, camera bounds, and active-layer emphasis:
 
 Counts up to four prefer one row or `2x2`; five through twelve use an
 approximately square matrix. All Stage 49 presets remain fully represented and
-Fit View restores the whole matrix. In Live 4D, Shift+mouse-wheel pans the
-matrix focus by deterministic row steps while the normal wheel retains camera
-zoom; Fit View restores the complete overview. Matrix scrolling/panning is
-presentation only, does not dispatch gameplay commands, and does not take live
-keyboard focus.
+Fit View restores the whole matrix. In Live 4D, right drag pans the matrix
+focus while the wheel retains camera zoom; double-click or the visible Fit View
+action restores the complete overview. Matrix panning is presentation only,
+does not dispatch gameplay commands, and does not take live keyboard focus.
 
 Full tile-node virtualization is deferred. The supported maximum is twelve
 layers, for which complete instantiation is bounded. A future virtualization
