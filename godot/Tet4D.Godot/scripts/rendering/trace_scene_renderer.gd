@@ -113,6 +113,23 @@ func reset_live_4d_fit_envelope() -> void:
 	_apply_basis_presentation_transform(1.0)
 
 
+# Synchronously drops presentation-owned geometry and derived fit/layout state.
+# Shell preferences intentionally survive; B/L are restored by the app-owned
+# lifecycle seam immediately after this teardown.
+func clear_presentation() -> void:
+	_clear_root(_grid_root)
+	_clear_root(_cell_root)
+	_clear_root(_particle_root)
+	_clear_root(_marker_root)
+	_particle_trails.clear()
+	_presentation = BoardPresentationModelScript.new()
+	_last_bounds = {"ok": false}
+	_last_case_id = ""
+	_last_frame_index = -1
+	_basis_transition_progress = 1.0
+	reset_live_4d_fit_envelope()
+
+
 func live_4d_basis_snapshot() -> Dictionary:
 	var snapshot: Dictionary = _live_4d_basis.indicator_snapshot()
 	snapshot["transition_progress"] = _basis_transition_progress
@@ -433,6 +450,8 @@ func _ensure_child(node_name: String) -> Node3D:
 
 
 func _clear_root(root: Node) -> void:
+	if root == null:
+		return
 	for child in root.get_children():
 		# queue_free() alone keeps obsolete presentation geometry attached until
 		# the frame ends. Detach synchronously so a lock/spawn refresh exposes

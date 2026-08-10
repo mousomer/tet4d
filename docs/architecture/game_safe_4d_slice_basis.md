@@ -129,10 +129,14 @@ motion-aware presentation settle animates toward that exact destination; the
 intermediate parameter is never basis truth. Rapid commands compose from the
 latest exact state and retarget the visual settle without dropping input.
 
-New configured games and gameplay restarts reset to the canonical basis,
-matching the existing live-view reset lifecycle. The view-reset action resets
-both camera framing and basis. Basis is session-local and is excluded from the
-Stage 54B setup schema and persistence.
+Live-4D entry, new configured/random games, gameplay restart, and Reset View
+reset to the canonical basis. Reset View restores `B + L + V/P` without a
+native transition; Restart Game also reconstructs the native session from the
+frozen current setup. The internal basis-only reset restores identity `B` and
+dependent layout/bounds while preserving `L`, framing, projection, and
+preferences. Setup/menu exit and mode transition discard basis with the rest
+of the ephemeral presentation. Basis is excluded from setup/settings
+persistence, native snapshots/hashes, and replay identity.
 
 ## Instruction
 

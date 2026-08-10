@@ -193,6 +193,13 @@ participate in Live-4D command mapping. Pitch never remaps gravity, and
 absolute controls remain canonical. Reset View restores canonical basis and
 coherent shared-L/Iso framing defaults.
 
+Fit View changes framing only. Reset View restores exact basis, shared slice
+orientation, and fitted projection/framing without restarting gameplay.
+Restart Game additionally reconstructs the frozen native setup. Change Setup,
+main-menu return, and mode changes must remove the old Live-4D renderer tree
+and reflection before the next visible frame. Normal Live-4D controls expose
+no roll action; reusable free-inspection roll remains outside this surface.
+
 `tools/governance/validate_live_board_visual_roles.py` protects the known grid,
 wireframe, ghost, locked, and orientation-gizmo consumption paths. It is
 intentionally scoped: unrelated decorative colours remain permitted.

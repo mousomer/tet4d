@@ -154,6 +154,29 @@ func run() -> Array:
 		failures.append("unknown camera preset should be rejected")
 	if absf(yaw_before_preset - rig._current_yaw) < 0.001:
 		failures.append("Back camera preset should be meaningfully distinct from the fitted view")
+	rig.set_presentation_preferences(1.5, true, 0.0)
+	rig.fit_bounds(
+		{"ok": true, "min": Vector3(-2.5, -5.0, -2.0), "max": Vector3(23.5, 6.72, 2.0)},
+		1.34,
+		CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
+		CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
+		CameraPresetScript.ISO,
+		"fitted W slices",
+		true
+	)
+	rig.pan_focus(Vector3(2.0, -1.0, 0.0))
+	rig.zoom(-1.0)
+	rig.nudge_roll(0.25)
+	rig.clear_presentation_state()
+	var cleared := rig.presentation_snapshot()
+	if bool(cleared.get("horizontal_reflection_active", true)) or presentation_root.transform != Transform3D.IDENTITY:
+		failures.append("presentation teardown must remove reflection authority immediately")
+	if cleared.get("target_focus") != Vector3.ZERO or not is_equal_approx(float(cleared.get("zoom_multiplier", 0.0)), 1.0) or not is_equal_approx(float(cleared.get("target_roll", 1.0)), 0.0):
+		failures.append("presentation teardown must clear focus, zoom, and roll state")
+	if camera.projection != Camera3D.PROJECTION_ORTHOGONAL or not is_equal_approx(camera.size, CameraRigScript.DEFAULT_ORTHOGRAPHIC_SIZE):
+		failures.append("presentation teardown must restore the canonical orthographic projection")
+	if not is_equal_approx(float(cleared.get("sensitivity_factor", 0.0)), 1.5) or not bool(cleared.get("invert_y", false)) or not is_equal_approx(float(cleared.get("interpolation_scale", 1.0)), 0.0):
+		failures.append("presentation teardown must preserve camera and reduced-motion preferences")
 	_assert_orientation_gizmo_visible_axes_only(failures, rig)
 
 	viewport.queue_free()

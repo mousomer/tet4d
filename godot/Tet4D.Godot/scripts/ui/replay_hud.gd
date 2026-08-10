@@ -70,7 +70,7 @@ const SCREEN_GAME_SETUP := "game_setup"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
 const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
-const LIVE_4D_HELP_TEXT := "The same 4D board can be re-sliced through X, Z, or W. Basis controls rebuild the slices without rotating the piece; camera controls move only the 3D viewpoint. Y remains down. Q/E moves along the current slice axis. Esc returns to the Main Menu."
+const LIVE_4D_HELP_TEXT := "The same 4D board can be re-sliced through X, Z, or W. Exact 90° view controls change the presentation basis; slice orientation changes shared yaw/pitch; framing controls pan, zoom, and Fit without changing either. Y remains down. Reset View restores basis, slice orientation, and framing; Restart Game also reconstructs the current frozen setup. Q/E moves along the current slice axis. Esc returns to the Main Menu."
 const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end lets you inspect replay demos and play the plain-board 2D, 3D, and 4D modes.
 
 Choose a mode:

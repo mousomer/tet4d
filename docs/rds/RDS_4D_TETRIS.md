@@ -1,6 +1,6 @@
 ﻿# 4D Tetris RDS
 
-Status: Active v0.8 (Godot Stage 54C verified 2026-08-07)
+Status: Active v0.9 (Godot Stage 54E-2d reconciled 2026-08-10; review pending)
 Author: Omer + Codex  
 Date: 2026-02-18  
 Target Runtime: Python 3.11-3.14 + `pygame-ce`; Godot 4.7.1 product shell
@@ -75,7 +75,11 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 2. Set is intended for fast hyperlayer-clear and scoring validation.
 3. Debug set must remain deterministic under fixed seed.
 
-## 5. Controls
+## 5. Inherited Python/Pygame controls
+
+This section retains the Python/Pygame runtime contract. It does not define
+Godot `InputMap` bindings; see §5.1 and `RDS_KEYBINDINGS.md` for explicit
+runtime scope.
 
 Gameplay (default small profile):
 1. Move `x`: Left/Right
@@ -116,6 +120,35 @@ System:
 2. Menu: `M`
 3. Quit: `Esc`
 4. Toggle grid: `C`
+
+### 5.1 Godot Live-4D controls and lifecycle
+
+1. Godot normal gameplay separates Piece movement, Piece rotation, exact
+   `90° View Rotation`, Slice orientation, Framing, Drop, Session, and
+   Navigation in the public help surface.
+2. Piece movement uses `A/D`, `W/S`, and `Q/E`; piece rotations use `R/T`,
+   `F/G`, `V/B`, `Y/U`, `H/J`, and `N/M`; `Ctrl` is Soft Drop and `Space` is
+   Hard Drop.
+3. Exact `B` actions are `1/2` XW, `;/'` ZW, and `[/]` ZX. `0` Reset View
+   restores `B + L + V/P` without changing native gameplay.
+4. Shared continuous `L` yaw/pitch uses `O/L`, `I/K`, and left drag. Only
+   `Q(L.local_yaw)` joins exact `B` for relative command resolution; pitch is
+   visual-only in the admitted `[-40°, +60°]` gameplay domain.
+5. Outer `V/P` owns right-drag pan, wheel or `-/=/+` zoom, double-click/the
+   visible Fit View action, canonical orthographic projection, and the fitted
+   reflection. Fit View changes framing only.
+6. `Backspace` Restart Game reconstructs the frozen current native setup and
+   also resets `B/L/V/P`. Reset View is presentation-only. The internal
+   basis-only reset changes only `B` and dependent layout/bounds.
+7. Live-4D entry, new/random launch, Restart Game, and Reset View use fresh
+   presentation defaults. Change Setup, main-menu return, and mode transition
+   synchronously discard ephemeral presentation nodes/state before re-entry.
+8. Normal Live-4D gameplay registers and advertises no roll. Generic
+   low-level roll remains available for future Explorer/free inspection.
+9. `B`, `L`, anchors/bounds/fit reference, focus/pan, zoom, projection, and
+   reflection are excluded from settings/setup, native snapshots/hashes,
+   deterministic identity, and replay identity. Frame preferences and accepted
+   shell display/camera preferences retain their established persistence.
 
 Layer-view policy:
 1. 4D mode renders all basis-derived layer boards; there is no manual slice selection control.
@@ -228,13 +261,11 @@ Implementation structure for view `xw` / `zw`:
     direction before calling native commands; absolute controls continue to
     emit canonical command names unchanged.
 
-    The current Stage 54D-2 implementation consumes yaw from the existing
-    combined camera rig, rounded to the nearest 90 degrees with
-    Python-compatible ties-to-even behaviour. That coupling is a known
-    provisional architectural limitation pending Stage 54E-1; it is not a
-    permanent requirement for the yaw source. Exact transform composition,
-    ownership, persistence, and implementation structure are intentionally
-    unresolved until 54E-1.
+    Historical Stage 54D-2 consumed yaw from the combined camera rig. Stage
+    54E-2 replaces that coupling: rendering consumes continuous shared `L`,
+    relative controls consume exact `B + Q(L.local_yaw)` with Python-compatible
+    ties-to-even, anchors remain layout-only, and outer `V/P` cannot enter
+    command resolution.
 
     The following are durable presentation invariants:
 
@@ -321,9 +352,10 @@ Relevant tests:
 12. Quarter-turn `xw` / `zw` view turns change board decomposition by axis basis with deterministic layer count/dims mapping.
 13. Starting a live 4D session must render the configured live snapshot directly;
     a retained replay document or replay camera state must not become its first view.
-14. Pointer camera controls provide orbit, right/middle-drag pan, zoom, and a
-    live XYZ orientation marker without dispatching gameplay commands. Ctrl
-    owns soft drop; Shift remains exclusively a camera modifier.
+14. Godot pointer controls provide left-drag shared-L orientation, right-drag
+    framing pan, wheel zoom, double-click Fit, and a live basis-driven
+    orientation marker without dispatching gameplay commands. Ctrl owns soft
+    drop; Shift has no normal Live-4D camera or soft-drop binding.
 
 ## 11. Implementation Status (2026-02-19)
 

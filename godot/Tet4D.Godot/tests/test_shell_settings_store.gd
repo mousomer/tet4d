@@ -68,8 +68,11 @@ func run() -> Array:
 		var saved: Dictionary = payload.get("settings", {})
 		if saved.size() != registry.persistent_specs().size():
 			failures.append("canonical file should contain every and only persistent registry key")
-		for forbidden in ["score", "lines", "board_state", "active_cells", "locked_cells", "paused", "game_over", "topology", "native_trace_state"]:
+		for forbidden in ["score", "lines", "board_state", "active_cells", "locked_cells", "paused", "game_over", "topology", "native_trace_state", "basis", "basis_state", "local_yaw", "local_pitch", "target_focus", "zoom_multiplier", "projection", "horizontal_reflection_active", "fit_reference"]:
 			if saved.has(forbidden): failures.append("settings file must exclude semantic state %s" % forbidden)
+		for persistent_preference in ["display.show_w_labels", "display.projection_strength", "display.board_detail", "accessibility.reduced_motion", "camera.sensitivity", "camera.invert_y"]:
+			if not saved.has(persistent_preference):
+				failures.append("settings file must retain established preference %s" % persistent_preference)
 	_test_invalid_inputs(failures, registry)
 	_test_schema_representations(failures, registry)
 	_test_failure_safe_replacement(failures, registry)

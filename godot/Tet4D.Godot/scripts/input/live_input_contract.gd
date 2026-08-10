@@ -70,8 +70,6 @@ const ACTION_SPECS := {
 	"live_4d_camera_pitch_down": {"keys": [KEY_K], "display_key": KEY_K},
 	"live_4d_camera_yaw_left": {"keys": [KEY_O], "display_key": KEY_O},
 	"live_4d_camera_yaw_right": {"keys": [KEY_L], "display_key": KEY_L},
-	"live_4d_camera_roll_left": {"keys": [KEY_COMMA], "display_key": KEY_COMMA},
-	"live_4d_camera_roll_right": {"keys": [KEY_PERIOD], "display_key": KEY_PERIOD},
 	"live_4d_camera_zoom_in": {"keys": [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD], "display_key": KEY_EQUAL},
 	"live_4d_camera_zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "display_key": KEY_MINUS},
 	# Existing repository-wide view action IDs are reused for exact Stage 54C
@@ -178,10 +176,10 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 	var move_rows := [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Visible X - / +"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Visible Z - / +"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice W - / +"]] if legacy else ([[ _pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Left / Right [%s]" % horizontal_axis], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Forward / Back [%s]" % depth_axis], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice - / + [%s]" % slice_axis]] if relative else [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "X− / X+"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Z− / Z+"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W− / W+"]])
 	return [
 		{"group": "Piece movement", "note": "Controls follow the current view." if relative else "Canonical X/Z/W axes.", "items": move_rows},
-		{"group": "Plane Rotation", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
-		{"group": "90° View Rotation", "note": "Exact presentation basis; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "XW - / + (re-slice)"], [_pair("view_zw_neg", "view_zw_pos", " / "), "ZW - / + (re-slice)"], [_pair("view_zx_neg", "view_zx_pos", " / "), "ZX - / +"], [_display_key("reset"), "Reset view + basis"]]},
+		{"group": "Piece rotation", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
+		{"group": "90° View Rotation", "note": "Exact presentation basis; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "XW - / + (re-slice)"], [_pair("view_zw_neg", "view_zw_pos", " / "), "ZW - / + (re-slice)"], [_pair("view_zx_neg", "view_zx_pos", " / "), "ZX - / +"], [_display_key("reset"), "Reset View (basis, slice orientation, framing)"]]},
 		{"group": "Slice orientation", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"]]},
-		{"group": "Framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"]]},
+		{"group": "Framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"], ["Double-click", "Fit View (framing only)"]]},
 		{"group": "Pointer", "items": live_4d_pointer_helper_items()},
 		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
 		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},

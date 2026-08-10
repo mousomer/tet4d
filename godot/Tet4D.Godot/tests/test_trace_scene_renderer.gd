@@ -386,6 +386,16 @@ func run() -> Array:
 	if renderer._presentation.projection.mapper.current_layer_count() != 4 or renderer._presentation.projection.mapper.visible_board_shape() != [3, 10, 5]:
 		failures.append("ZX+ should rotate visible X/Z dimensions while preserving the W slice count")
 
+	renderer.clear_presentation()
+	for root_name in ["GridRoot", "CellRoot", "ParticleRoot", "MarkerRoot"]:
+		var presentation_root := renderer.get_node_or_null(root_name)
+		if presentation_root == null or presentation_root.get_child_count() != 0:
+			failures.append("presentation teardown must synchronously empty %s" % root_name)
+	if bool(renderer.current_bounds().get("ok", true)) or not renderer._live_4d_fit_reference.is_empty():
+		failures.append("presentation teardown must clear bounds and fitted-envelope authority")
+	if renderer._last_frame_index != -1 or not renderer._particle_trails.is_empty():
+		failures.append("presentation teardown must clear frame and particle interpolation state")
+
 	renderer.queue_free()
 	await tree.process_frame
 	return failures
