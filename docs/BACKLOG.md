@@ -115,7 +115,7 @@ faces within each intentional `W` group.
 
 ### Stage 54E-2d — Lifecycle, authority, and contract reconciliation
 
-Status: IMPLEMENTED — REVIEW PENDING.
+Status: COMPLETE — REVIEWED GREEN.
 
 The implementation restores fresh `B/L/V/P` defaults on Live-4D entry,
 configured/random launch, Restart Game, and Reset View; keeps Reset View
@@ -125,8 +125,9 @@ setup/menu/mode exit; and rebuilds coherent defaults on re-entry. Normal
 gameplay no longer registers/routes/advertises roll, while generic `CameraRig`
 roll remains reusable. Persistence and deterministic-isolation tests exclude
 ephemeral presentation state while retaining established preferences. No
-authority transfer or establishment occurs. External review is still required;
-aggregate Stage 54E-2 and later Stage 54E work have not advanced.
+authority transfer or establishment occurs. External technical review accepted
+the implementation and its evidence. Aggregate Stage 54E-2 is COMPLETE /
+REVIEWED GREEN; Stage 54E-3 is now NEXT / ELIGIBLE.
 
 ## Hold
 
@@ -145,9 +146,9 @@ a placeholder authority record in advance.
 - Stage 54E-2b — renderer composition (COMPLETE / REVIEWED GREEN).
 - Stage 54E-2c — interaction and camera-rig separation (COMPLETE / REVIEWED
   GREEN).
-- Stage 54E-2d — lifecycle, authority, and contract reconciliation
-  (IMPLEMENTED / REVIEW PENDING).
-- Stage 54E-3 — setup/menu information architecture.
+- Stage 54E-2d — lifecycle, authority, and contract reconciliation (COMPLETE /
+  REVIEWED GREEN).
+- Stage 54E-3 — setup/menu information architecture (NEXT / ELIGIBLE).
 - Stage 54E-4 — camera/GUI presets.
 - Stage 54E-5 — cockpit consolidation.
 - Stage 54F — integrated professional playability/visual acceptance.
