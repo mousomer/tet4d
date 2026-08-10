@@ -81,13 +81,13 @@ history ledger. Detailed history is preserved in
   inside each shared NEXT-thumbnail `W` group. Board spacing and grid/wireframe
   styling remain deferred visual-quality work tracked in `docs/BACKLOG.md` and
   GitHub Issues. Stage 54E-2d — lifecycle, authority, and contract
-  reconciliation — is IMPLEMENTED / REVIEW PENDING on branch
-  `codex/54e-2d-lifecycle-authority-reconciliation` in draft PR #72. It adds
-  fresh entry/restart/reset defaults, presentation-only
-  Reset View, an internal basis-only reset, synchronous setup/menu/mode
-  teardown, coherent re-entry, public roll removal with generic roll retained,
-  and persistence/deterministic exclusion evidence. It performs no authority
-  transfer or establishment. Aggregate Stage 54E-2 remains open pending review.
+  reconciliation — is COMPLETE / REVIEWED GREEN on PR #72: it establishes
+  fresh entry/restart/reset defaults, presentation-only Reset View, an internal
+  basis-only reset, synchronous setup/menu/mode teardown, coherent re-entry,
+  public roll removal with generic roll retained, and persistence/deterministic
+  exclusion evidence. It performs no authority transfer or establishment.
+  Aggregate Stage 54E-2 is COMPLETE / REVIEWED GREEN. Stage 54E-3 — setup/menu
+  information architecture — is now NEXT / ELIGIBLE.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -220,9 +220,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Review Stage 54E-2d on draft PR #72. Do not mark it or aggregate Stage
-   54E-2 reviewed green, and do not begin Stage 54E-3/4/5 from this handoff.
-   Stage 54D-3 Hold remains independently eligible.
+1. Stage 54E-3 — Setup/menu information architecture — is the next eligible
+   Stage 54E implementation slice. Stage 54D-3 Hold remains independently
+   eligible. Stage 54E-4/5 remain later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
