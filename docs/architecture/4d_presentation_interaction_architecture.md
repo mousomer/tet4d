@@ -7,7 +7,7 @@ Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
 Implementation evidence: Stage 54E-2a complete — reviewed green; Stage 54E-2b
 complete — reviewed green; Stage 54E-2c complete — reviewed green; Stage
-54E-2d implemented — review pending
+54E-2d complete — reviewed green; aggregate Stage 54E-2 complete — reviewed green
 
 ## 1. Purpose and current audit result
 
@@ -167,7 +167,7 @@ are insufficient in this architecture.
 ### Interaction ownership (normative)
 
 | Interaction | B | L | anchors | V/P | Relative mapping | Gameplay/Explorer scope |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- | --- |
 | XW basis turn | exact mutation | no | recompute | fit only | changes through B | gameplay + later Explorer as applicable |
 | ZW basis turn | exact mutation | no | recompute | fit only | changes through B | gameplay + later Explorer |
 | ZX basis turn | exact mutation | no | recompute | fit only | changes through B | gameplay + later Explorer |
@@ -925,8 +925,8 @@ proves the rejected `46/-60` state, lower clamp and deterministic isolation,
 pitch command isolation, outer-yaw/pan/zoom/Fit independence, preset
 decomposition, refreshed renderer bounds/fit reference, Live-4D roll
 detachment, and retained non-Live/free-camera primitives. Stage 54E-2c is
-complete and reviewed green; Stage 54E-2d is now implemented with review
-pending.
+complete and reviewed green; Stage 54E-2d is complete and reviewed green, and
+aggregate Stage 54E-2 is complete and reviewed green.
 
 ### 54E-2d — Lifecycle, authority, and contract reconciliation
 
@@ -943,7 +943,7 @@ Stage 54E-4, not 54E-2, decides final preset categories, labels, and
 persistence. Stage 54D-3 Hold remains separate deterministic-core work after
 human acceptance.
 
-**Stage 54E-2d implementation evidence — review pending.** The app now owns
+**Stage 54E-2d reviewed-green implementation evidence.** The app now owns
 three explicit lifecycle seams: complete ephemeral default restoration,
 synchronous presentation teardown, and an internal basis-only reset. Live-4D
 entry, configured/random launch, Restart Game, and Reset View restore identity
@@ -967,8 +967,9 @@ Settings/setup persistence tests prove `B/L/V/P`, reflection, and fit state are
 absent while established frame, display, sensitivity, invert-Y, and
 Reduced-Motion preferences remain. This is concrete Godot presentation
 implementation evidence only: it transfers or establishes no gameplay,
-native-session, topology, replay, or persistence authority. Stage 54E-2d and
-the aggregate Stage 54E-2 remain review pending.
+native-session, topology, replay, or persistence authority. External technical
+review accepted the implementation and evidence. Stage 54E-2d and the aggregate
+Stage 54E-2 are complete and reviewed green.
 
 ## 19. Human acceptance decisions
 
@@ -1002,9 +1003,9 @@ domain must satisfy Pitch-depth preservation, including
 
 ## 20. Stage boundary
 
-The accepted sequential implementation is now present through Stage 54E-2d,
-but 54E-2d and aggregate Stage 54E-2 remain review pending. No Stage 54E-3/4/5
-work is authorized by this implementation record. Stage 54D-3 Hold remains an
-independent eligible deterministic-core slice.
+The accepted sequential Stage 54E-2 implementation through 54E-2d is complete
+and reviewed green. Stage 54E-3 — setup/menu information architecture — is now
+the next eligible Stage 54E implementation slice. Stage 54E-4/5 remain later
+programme work, and Stage 54D-3 Hold remains independently eligible.
 
 **STAGE 54E-1 COMPLETE — HUMAN ACCEPTED**
