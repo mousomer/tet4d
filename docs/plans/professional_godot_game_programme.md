@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 
 ## 1. Purpose
 
@@ -710,8 +710,8 @@ runtime authority records remain contingent on concrete implementation evidence.
 
 #### Stage 54E-2 — Camera-space separation implementation
 
-Status: Stages 54E-2a, 54E-2b, and 54E-2c complete — reviewed green. Stage
-54E-2d is implemented — review pending; aggregate Stage 54E-2 remains open.
+Status: COMPLETE — REVIEWED GREEN. Stages 54E-2a, 54E-2b, 54E-2c, and
+54E-2d are all complete and reviewed green.
 
 Implement the architecture accepted in 54E-1. Separate the relevant
 presentation transforms without changing canonical gameplay coordinates,
@@ -722,8 +722,7 @@ replay concern.
 The mandatory reviewed-green sequence is 54E-2a (presentation state and
 coordinate decomposition), then 54E-2b (renderer composition), then 54E-2c
 (interaction and camera-rig separation), then 54E-2d (lifecycle, authority,
-and contract reconciliation). Stages 54E-2a, 54E-2b, and 54E-2c are complete
-and reviewed green; 54E-2d implementation is now review pending.
+and contract reconciliation). All four slices are complete and reviewed green.
 No later slice may repair a prior slice, and a monolithic 54E-2 implementation
 is forbidden.
 
@@ -731,14 +730,16 @@ Stage 54E-2c established that interactive yaw/pitch changes to shared `L`
 refresh renderer-derived orientation state and recompute oriented fit bounds,
 so geometry and the fitting envelope cannot diverge.
 
-Stage 54E-2d implements the accepted lifecycle: fresh entry/new/random/restart
-defaults; presentation-only Reset View; internal basis-only reset; synchronous
-setup/menu/mode teardown and coherent re-entry; public roll removal with
-generic low-level capability retained; and settings/setup/native/replay
-exclusion evidence. No authority transfer or establishment occurs. This stage
-must not be called reviewed green until external review is complete.
+Stage 54E-2d implements and closes the accepted lifecycle: fresh
+entry/new/random/restart defaults; presentation-only Reset View; internal
+basis-only reset; synchronous setup/menu/mode teardown and coherent re-entry;
+public roll removal with generic low-level capability retained; and
+settings/setup/native/replay exclusion evidence. External technical review
+accepted the implementation. No authority transfer or establishment occurs.
 
 #### Stage 54E-3 — Setup/menu information architecture
+
+Status: NEXT / ELIGIBLE.
 
 The 4D setup surface has exceeded an acceptable flat complexity level and must
 use progressive disclosure. The durable taxonomy and its rules are owned by
@@ -1061,12 +1062,12 @@ The active order is:
 3. Stage 54D-3 — Hold is eligible and does not wait for 54E-2.
 4. Stage 54E-2a — presentation state and coordinate decomposition is complete
    and reviewed green.
-5. Stage 54E-2b — renderer composition — is complete and reviewed green.
+5. Stage 54E-2b — renderer composition — is complete and reviewed green;
    Stage 54E-2c — interaction and camera-rig separation — is complete and
    reviewed green; Stage 54E-2d — lifecycle, authority, and contract
-   reconciliation — is implemented with review pending. Do not advance
-   aggregate Stage 54E-2 or Stage 54E-3/4/5 before that review closes.
-6. Stage 54E-3 — setup/menu information architecture.
+   reconciliation — is complete and reviewed green. Aggregate Stage 54E-2 is
+   complete and reviewed green.
+6. Stage 54E-3 — setup/menu information architecture — is NEXT / ELIGIBLE.
 7. Stage 54E-4 — camera/GUI presets.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.
