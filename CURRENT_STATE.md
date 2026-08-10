@@ -82,8 +82,8 @@ history ledger. Detailed history is preserved in
   styling remain deferred visual-quality work tracked in `docs/BACKLOG.md` and
   GitHub Issues. Stage 54E-2d — lifecycle, authority, and contract
   reconciliation — is IMPLEMENTED / REVIEW PENDING on branch
-  `codex/54e-2d-lifecycle-authority-reconciliation`; its draft PR is pending
-  publication. It adds fresh entry/restart/reset defaults, presentation-only
+  `codex/54e-2d-lifecycle-authority-reconciliation` in draft PR #72. It adds
+  fresh entry/restart/reset defaults, presentation-only
   Reset View, an internal basis-only reset, synchronous setup/menu/mode
   teardown, coherent re-entry, public roll removal with generic roll retained,
   and persistence/deterministic exclusion evidence. It performs no authority
@@ -220,7 +220,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Review Stage 54E-2d on its draft PR. Do not mark it or aggregate Stage
+1. Review Stage 54E-2d on draft PR #72. Do not mark it or aggregate Stage
    54E-2 reviewed green, and do not begin Stage 54E-3/4/5 from this handoff.
    Stage 54D-3 Hold remains independently eligible.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as

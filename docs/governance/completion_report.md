@@ -117,19 +117,22 @@ path settings/native-input messages; the gate completed successfully.
 
 ## Diffstat
 
-Pre-publication diffstat: 26 files changed, 664 insertions, 256 deletions.
+Published diffstat: 26 files changed, 672 insertions, 256 deletions.
 
 ## Commit SHA
 
-Pending intentional commit after the full repository gate.
+Implementation commit tested and published:
+`a7c811b9f910d92ced5d5aa73c41544126f10d37`. A documentation-only handoff
+commit records the resulting draft PR URL and final clean state.
 
 ## PR URL
 
-Pending draft PR publication against `master`.
+[Draft PR #72](https://github.com/mousomer/tet4d/pull/72), targeting `master`.
+State: implemented, review pending.
 
 ## Worktree State
 
 Branch: `codex/54e-2d-lifecycle-authority-reconciliation`.
 Base agreement: started from required `master` commit
-`021db14664e118e649a2171296ded7bf6abeb0d4`. The worktree is intentionally
-dirty until the implementation is committed and published.
+`021db14664e118e649a2171296ded7bf6abeb0d4`. The tracked worktree is clean after
+the documentation-only handoff commit.
