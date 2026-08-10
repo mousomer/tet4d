@@ -82,10 +82,17 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 Result: `verify: OK`.
 
+[GitHub CI run 31343615624](https://github.com/mousomer/tet4d/actions/runs/31343615624)
+passed the baseline contracts, documentation/governance, pinned Godot
+4.7.1/native-parity lane, and required gate after implementation publication.
+Packaging, general Python checks, deterministic/parity, standalone native,
+platform-package, cross-layer, and release lanes were skipped by the resolver.
+
 ## Manual Checks
 
 Real, non-headless Godot 4.7.1 window on macOS, using the pinned executable at
-`/Applications/Godot.app/Contents/MacOS/Godot`:
+`/Applications/Godot.app/Contents/MacOS/Godot`, Metal 4.0 Forward+ on an Apple
+M1 Pro:
 
 - Standard 5×10×4×4 Live-4D launch rendered four coherent slices, active
   piece, Ghost, NEXT, exact-basis controls, and framing controls.
@@ -98,6 +105,8 @@ Real, non-headless Godot 4.7.1 window on macOS, using the pinned executable at
 - W=1 with Embedded 3D launched as one coherent slice with active piece,
   Ghost, NEXT, and stable fit.
 - Wide 8×16×5×8 launched with eight coherent fitted slices.
+- With a non-identity exact basis active, the Top presentation camera preset
+  changed `L`/framing coherently, retained `B`, and kept all slices fitted.
 - Visible help exposed piece rotation, exact 4D basis, framing, Reset View, and
   Restart semantics without public gameplay-roll controls.
 
@@ -117,7 +126,7 @@ path settings/native-input messages; the gate completed successfully.
 
 ## Diffstat
 
-Published diffstat: 26 files changed, 672 insertions, 256 deletions.
+Published diffstat: 26 files changed, 681 insertions, 256 deletions.
 
 ## Commit SHA
 
