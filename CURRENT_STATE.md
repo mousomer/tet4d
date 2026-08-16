@@ -87,10 +87,11 @@ history ledger. Detailed history is preserved in
   public roll removal with generic roll retained, and persistence/deterministic
   exclusion evidence. It performs no authority transfer or establishment.
   Aggregate Stage 54E-2 is COMPLETE / REVIEWED GREEN. Stage 54E-3 — setup/menu
-  information architecture — is IN PROGRESS: Stage 54E-3a taxonomy and
-  classification is implemented / review pending, including the semantic
-  `numeric_entry` typing decision for direct seed input; Stage 54E-3b remains
-  next.
+  information architecture — is COMPLETE / REVIEW PENDING. Stage 54E-3a
+  declared the taxonomy as data; Stage 54E-3b renders it as progressive
+  disclosure, removes the panel's duplicate visibility rules, and keeps
+  disclosure out of canonical session setup, setup persistence, and native
+  session state. Stage 54E-4 is now NEXT / ELIGIBLE.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -223,9 +224,10 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Review Stage 54E-3a taxonomy and classification, then implement Stage
-   54E-3b progressive disclosure. Stage 54D-3 Hold remains independently
-   eligible. Stage 54E-4/5 remain later programme work.
+1. Review Stage 54E-3 setup progressive disclosure, then implement Stage
+   54E-4 camera/GUI presets, which owns the presentation-preference setup
+   fields this stage deliberately did not add. Stage 54D-3 Hold remains
+   independently eligible. Stage 54E-5 remains later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

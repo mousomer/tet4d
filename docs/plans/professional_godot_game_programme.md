@@ -739,20 +739,35 @@ accepted the implementation. No authority transfer or establishment occurs.
 
 #### Stage 54E-3 — Setup/menu information architecture
 
-Status: IN PROGRESS. Stage 54E-3a taxonomy and classification is implemented /
-review pending; Stage 54E-3b progressive-disclosure rendering remains next.
+Status: COMPLETE / REVIEW PENDING. Stage 54E-3a taxonomy and classification and
+Stage 54E-3b progressive-disclosure rendering are both implemented with
+automated and real-window evidence recorded.
 
-The 4D setup surface has exceeded an acceptable flat complexity level and must
-use progressive disclosure. The durable taxonomy and its rules are owned by
+The 4D setup surface had exceeded an acceptable flat complexity level and now
+uses progressive disclosure. The durable taxonomy and its rules are owned by
 `docs/rds/RDS_MENU_STRUCTURE.md`. This stage implements that approved
 information architecture and reuses the existing
 `menu_structure_single_source`, `menu_control_typing_contract`, and menu-graph
-machinery wherever enforcement is required; it does not introduce another menu
-validator solely for the taxonomy.
+machinery wherever enforcement is required; it introduces no menu validator for
+the taxonomy and no general-purpose disclosure framework.
 
 Stage 54E-3a records direct seed input as the semantic setup control type
 `numeric_entry`; Godot maps that type to its existing `LineEdit`. This is a
-typing-contract clarification, not a setup behavior or identity change.
+typing-contract clarification, not a setup behavior or identity change. Stage
+54E-3b keeps board-axis controls as `stepper`, because their ranges are small
+enough for stepping to be the primary interaction.
+
+Stage 54E-3b makes ordinary setup the board preset shortcut, the piece-set
+choice where a mode publishes more than one set, and the starting speed, with
+board customization, reproducibility, and control frames behind secondary
+disclosure. The panel no longer keeps a second copy of the declared visibility
+rules; mode applicability and the conditional seed rule resolve through
+`SetupFieldRegistry`. Disclosure is ephemeral presentation state that never
+reaches canonical session setup, the persisted setup document, or native
+session state, so no schema version changes. Undisclosed controls leave the
+focus ring, a collapsing section that holds focus hands focus to its own
+disclosure control, and a validation failure inside a collapsed section stays
+explained and reachable.
 
 #### Stage 54E-4 — Camera/GUI presets
 
@@ -1072,10 +1087,11 @@ The active order is:
    reviewed green; Stage 54E-2d — lifecycle, authority, and contract
    reconciliation — is complete and reviewed green. Aggregate Stage 54E-2 is
    complete and reviewed green.
-6. Stage 54E-3 — setup/menu information architecture — is IN PROGRESS: Stage
-   54E-3a taxonomy and classification is implemented / review pending, and
-   Stage 54E-3b progressive-disclosure rendering remains next.
-7. Stage 54E-4 — camera/GUI presets.
+6. Stage 54E-3 — setup/menu information architecture — is COMPLETE / REVIEW
+   PENDING: Stage 54E-3a taxonomy and classification and Stage 54E-3b
+   progressive-disclosure rendering are both implemented, with automated and
+   real-window evidence recorded.
+7. Stage 54E-4 — camera/GUI presets — is NEXT / ELIGIBLE.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.
 10. Stage 54G — remaining professional release hardening.

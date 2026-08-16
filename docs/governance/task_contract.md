@@ -1,19 +1,19 @@
-# Task Contract — Stage 54E-3a Setup Taxonomy and Classification
+# Task Contract — Stage 54E-3b Setup Progressive Disclosure
 
 ## Objective
 
-Make the accepted `RDS_MENU_STRUCTURE.md` section 4.4 setup taxonomy
-first-class declarative data for the Godot game-setup surface, classify every
-field the setup panel renders, and enforce the taxonomy rules as testable
-invariants. This slice changes no rendering, no field semantics, and no
-persisted or canonical setup payload. Progressive-disclosure presentation is
-Stage 54E-3b.
+Render the accepted `RDS_MENU_STRUCTURE.md` section 4.4 setup taxonomy as
+progressive disclosure across 2D, 3D, and 4D, so ordinary setup is concise while
+complete board configuration, reproducibility controls, and advanced input
+configuration remain fully reachable. This slice changes information
+architecture only: no setup value, validation rule, canonical session payload,
+persisted document, or deterministic behaviour changes.
 
 ## Current Authority
 
-- `docs/rds/RDS_MENU_STRUCTURE.md`: section 4.4 setup and presentation
-  ownership taxonomy, its four categories, and the progressive-disclosure rule;
-  section 5.1 shared shell layout and overflow behaviour.
+- `docs/rds/RDS_MENU_STRUCTURE.md`: section 4.4 setup and presentation ownership
+  taxonomy and the progressive-disclosure rule; section 4.5 setup disclosure
+  behaviour; section 5.1 shared shell layout and overflow behaviour.
 - `docs/plans/professional_godot_game_programme.md`: Stage 54E-3 scope, the
   requirement to reuse existing menu machinery, and the prohibition on adding
   another menu validator for the taxonomy.
@@ -24,179 +24,157 @@ Stage 54E-3b.
 - `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`, `AGENTS.md`, and
   `godot/AGENTS.md`: routing and verification governance.
 
-Godot owns the setup presentation surface and its field taxonomy. Native
-gameplay remains authoritative for canonical session construction. This slice
-performs no authority transfer and no authority establishment.
+Godot owns the setup presentation surface. Native gameplay remains
+authoritative for canonical session construction. This slice performs no
+authority transfer and no authority establishment.
 
 ## Allowed Systems and Paths
 
-- `godot/Tet4D.Godot/scripts/ui/game_setup/` field specification and
-  classification registry.
-- Focused Godot setup taxonomy, classification, and conformance tests.
-- Task, RDS status, backlog, and restart-handoff documentation.
+- `godot/Tet4D.Godot/scripts/ui/game_setup/game_setup_panel.gd` rendering,
+  disclosure, focus, and validation presentation.
+- `godot/Tet4D.Godot/scripts/ui/game_setup/setup_field_registry.gd` declared
+  mode applicability.
+- Focused Godot setup disclosure, navigation, and taxonomy conformance tests.
+- Task, RDS, programme, backlog, and restart-handoff documentation.
 
 ## Required Changes
 
-- Add `setup_field_spec.gd` as a sibling of `setting_spec.gd`. It must reuse
-  the established spec/validation mechanism without modifying the settings
-  surface or relaxing its `FORBIDDEN_CATEGORY_TOKENS` guard, which exists
-  because the settings panel is shell-only while setup is game definition.
-- Declare the four `RDS_MENU_STRUCTURE.md` section 4.4 categories, their
-  required disclosure level, and their required identity classification as
-  data rather than as prose or panel control flow.
-- Add a setup field registry declaring every field the setup panel renders,
-  per mode: board preset shortcut, each board dimension axis, piece set,
-  randomness mode, seed, starting speed, translation frame, and rotation
-  frame.
-- Express the two conditions currently hardcoded in
-  `game_setup_panel.gd::_refresh_from_model()` as declared data: seed is
-  visible only under fixed-seed randomness, and the control-frame fields do
-  not apply to 2D. Mode applicability must be carried by each field's declared
-  mode list, not by branching in the registry builder, so that changing where a
-  field appears is a data edit the tests can contradict. Board dimension axes
-  remain generated per mode because their count and ranges derive from the
-  board-extent contract.
-- Enforce, as validation failures rather than convention:
-  - every declared field resolves to exactly one category;
-  - contextual game definition declares a `visible_when` condition and no
-    other category may declare one;
-  - advanced gameplay/input and presentation preference must not be classified
-    as session identity;
-  - declared disclosure and identity match the category.
-- Add a conformance test binding the taxonomy to actual data flow: the set of
-  fields classified as session identity must correspond exactly to the fields
-  `game_setup_model.gd::canonical_session_setup()` sends to native, and the
-  control-frame fields must remain outside it.
-- Validate declared numeric ranges and bind them to the sources that own them:
-  axis ranges must equal `board_axis_ranges()` from the board-extent contract,
-  and seed and starting-speed ranges must equal their `GameSetupSpec`
-  constants. Enum fields must not declare ranges at all.
-- Add a panel-introspection test binding the taxonomy to the rendered surface:
-  enumerate the setup panel's visible value controls from the live scene tree
-  and require exact correspondence with the registry's visible fields, so an
-  undeclared control added to `_rebuild()` fails rather than passing silently.
-  Assert declared visibility in both directions across representative mode and
-  randomness combinations.
-- Leave `game_setup_panel.gd` rendering, focus order, `game_setup_model.gd`
-  semantics, and `game_setup_store.gd` persistence unchanged. The panel
-  therefore keeps its own conditional visibility logic during this slice, and
-  the declared conditions duplicate it. That duplication is intentional and
-  bounded: Stage 54E-3b removes it by making the panel consume the registry.
-  The introspection test is what keeps the two sides agreeing until then.
+- Group the ordinary surface as board preset shortcut, piece set where a choice
+  exists, and starting speed, with `Customize Board`, `Advanced Game`, and
+  `Controls` as secondary disclosures and `Start Game` as the primary action.
+- Keep every Stage 54B board capability: preset shortcuts, per-axis
+  decrement/direct entry/increment, structured validation, and `Reset Sizes`,
+  now placed with board customization rather than in the primary action row.
+- Auto-expose a board shape that matches no named preset, including after the
+  surface is rebuilt, and make the derived `Custom` identity expose the
+  dimension editors without mutating the shape.
+- Stop presenting a one-option piece-set selector. Declare `piece_set` only for
+  the modes that publish more than one production set, and bind that declaration
+  to the piece-set catalogue in test rather than restating it.
+- Remove the bounded duplication Stage 54E-3a recorded: piece-set and
+  control-frame mode applicability and the conditional seed rule must resolve
+  through `SetupFieldRegistry` and `SetupFieldSpec.is_visible_for()` instead of
+  a second copy of those rules in the panel.
+- Exclude undisclosed controls from focus navigation, move focus to the owning
+  disclosure control when a section holding focus collapses, and keep the
+  focused control visible in the scrolling viewport.
+- Keep validation actionable under disclosure: fold seed text that never
+  reached the model into the always-visible summary, and expose and focus the
+  section owning the first failure when a launch is blocked.
 
 ## Forbidden Changes
 
-- Progressive-disclosure rendering, section restructuring, focus-order
-  redesign, or any visible setup layout change; those are Stage 54E-3b.
-- Modifying `setting_spec.gd`, `settings_registry.gd`, `settings_store.gd`, or
-  the Godot settings panel, including its forbidden-token guard.
-- Adding a new menu validator, a new governance subsystem, a versioned
-  cross-language contract, or a generated GDScript contract for the taxonomy.
-- Editing `config/menu/structure.json` or the Python menu surfaces it owns.
-- Adding fields to, removing fields from, or reordering
-  `canonical_session_setup()`; changing the persisted setup schema or
-  `SCHEMA_VERSION`.
-- Native C++, Python gameplay, deterministic rules, topology, RNG, queue,
-  Ghost, replay/trace schema, or board-extent semantics.
-- Stage 54D-3 Hold; Stage 54E-4 presets; Stage 54E-5 cockpit; Stage 54F visual
-  work including Issues #69 and #70; Stage 54G release hardening.
+- Adding disclosure, section, or presentation state to `GameSetupModel`
+  canonical session setup, `game_setup_store.gd` persistence, settings
+  persistence, snapshots, hashes, traces, replays, or native session state.
+- Any setup or persistence schema version change.
+- Changing queue or RNG semantics, effective-seed behaviour, seed bounds,
+  deterministic identity, control-frame semantics, relative-command resolution,
+  `SliceLocalOrientation`, `SliceBasis4D`, `CameraRig`, or native movement.
+- Adding a new menu validator, governance subsystem, or general-purpose
+  disclosure framework; editing `config/menu/structure.json`.
+- Adding piece sets, redesigning the speed curve, or moving speed authority
+  into Godot.
+- Stage 54D-3 Hold; Stage 54E-4 camera/GUI presets; Stage 54E-5 cockpit; Stage
+  54F visual work including Issues #69 and #70; Stage 54G release hardening.
 
 ## Acceptance Criteria
 
-1. Every field the setup panel renders is declared with exactly one category,
-   and no rendered field is unclassified. This is verified by enumerating the
-   panel's visible value controls from the live scene tree, not by comparing
-   the registry against a restatement of itself.
-2. Declaring a field with a category/disclosure or category/identity mismatch
-   fails validation with a named failure.
-3. Declaring `visible_when` on a non-contextual category fails validation, and
-   omitting it on contextual game definition fails validation.
-4. Classifying an advanced gameplay/input or presentation-preference field as
-   session identity fails validation.
-5. The session-identity field set corresponds exactly to the payload
-   `canonical_session_setup()` sends to native; `translation_frame` and
-   `rotation_frame` remain outside it. Declared numeric ranges likewise
-   correspond to their owning sources rather than to repeated literals, and an
-   inverted, non-numeric, or missing range fails validation.
-6. Seed is declared contextual on fixed-seed randomness, and the control-frame
-   fields are declared as not applying to 2D. Declared visibility is checked
-   against the panel in both directions: a field declared visible that the
-   panel hides, and a field declared hidden that the panel shows, both fail.
-7. The setup screens for 2D, 3D, and 4D render identically to `master`: same
-   controls, same order, same visibility, same focus order.
-8. `test_game_setup_model.gd` and `test_plain_setup_navigation.gd` pass
-   unmodified.
-9. The settings surface, its spec type, and its forbidden-token guard are
-   unchanged.
-10. No new validator, generated contract, or governance subsystem is
-    introduced, and `config/menu/structure.json` is unchanged.
-11. Resolver-required focused, governance, sanitation, and full-repository
-    verification pass, and the tracked worktree is clean.
+1. Ordinary 2D, 3D, and 4D setup exposes the primary controls with every
+   secondary section collapsed, and `Start Game` is immediately available for
+   valid defaults.
+2. A preset-backed board does not permanently expose axis editors;
+   `Customize Board` exposes exactly the active axes for the mode.
+3. A non-preset board reads as `Custom` and exposes its dimensions on a rebuilt
+   surface without another step.
+4. Malformed dimension text stays visible, structured, and non-launchable, and
+   increment recovers from it using the last-valid dimension.
+5. `Reset Sizes` restores canonical dimensions without resetting piece set,
+   speed, or control frames.
+6. 2D presents no piece-set selector while still carrying `classic` in its
+   session payload; 3D and 4D keep every audited piece set with its identity,
+   label, and compatibility validation.
+7. Fixed Seed exposes Seed and True Random hides it; a hidden Seed is not a
+   focus target; seed validation is unchanged.
+8. The control-frame disclosure is absent in 2D, present and collapsed by
+   default in 3D and 4D, and toggling it does not change the frame values.
+9. Toggling every disclosure leaves `canonical_session_setup()` and
+   `last_valid_entries()` unchanged, and the persisted document records no
+   disclosure state.
+10. Undisclosed controls are not focus targets, focus order traverses only
+    revealed controls and returns to its origin, collapsing a section holding
+    focus lands focus on its disclosure control, and collapsing an unfocused
+    section does not steal focus.
+11. Expanding every section reveals every applicable field, so collapse is the
+    only remaining reason an applicable field is off screen.
+12. Resolver-required focused, documentation, human-visual, sanitation, and
+    full-repository verification pass, and the tracked worktree is clean.
 
 ## Automated Verification
 
 - Policy resolver: `godot_product_shell` with `staged_handoff`.
-- Requirements: `documentation`, `governance_structure`, and `godot`. The
-  `human_visual` requirement is not claimed for this slice because rendering is
-  unchanged by construction; it is required for Stage 54E-3b.
-- Focused Godot setup taxonomy validation tests, the classification totality
-  test, the `canonical_session_setup()` conformance test, and the panel
-  introspection test. The introspection test drives the real panel and awaits
-  frames, so it registers in the `SceneTree` lane of `tests/run_tests.gd`
-  alongside `test_plain_setup_navigation.gd`.
-- Existing `test_game_setup_model.gd` and `test_plain_setup_navigation.gd`
-  unmodified.
+- Requirements: `documentation`, `godot`, and `human_visual`. Unlike Stage
+  54E-3a, `human_visual` is claimed because this slice changes what the player
+  sees.
+- `tests/test_setup_progressive_disclosure.gd` for the disclosure, board,
+  piece-set, advanced, controls, deterministic-isolation, and navigation
+  evidence.
+- `tests/test_setup_field_taxonomy.gd` for taxonomy conformance, now asserting
+  semantic and presentational hiding independently.
+- `tests/test_plain_setup_navigation.gd` and `tests/test_game_setup_model.gd`
+  for the Stage 54B and session regressions.
 - `GODOT_BIN=... ./scripts/verify_godot_4_7.sh`.
-- Governance validators and generated-document checks.
 - Git sanitation, `git diff --check`, and `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ## Manual Verification
 
-Open the setup screen for 2D, 3D, and 4D and confirm no visible difference
-from `master`: identical control set and order, seed row still appearing only
-under fixed-seed randomness, control-frame section still absent in 2D, and
-unchanged keyboard focus traversal. This slice's manual check is a
-no-visual-change confirmation, not a progressive-disclosure review.
+Drive the real windowed Godot 4.7.1 shell and confirm: 2D setup is concise with
+no one-choice selector and discoverable X/Y; 3D piece-set choice, exact
+dimensions, and a secondary `Controls`; 4D Standard reading as an
+understandable game rather than an engineering form; a 4D custom shape staying
+obvious after leaving and re-entering setup; W=1 with True 4D pieces remaining
+understandable and actionable; conditional Seed presentation under Fixed Seed
+and True Random; a complete keyboard-only traversal; and every disclosure and
+principal action driven by pointer.
 
 ## Documentation Updates
 
-Update only concrete stale statements or required evidence in:
-
-- `docs/rds/RDS_MENU_STRUCTURE.md` implementation-status section
-- `docs/BACKLOG.md`
-- `CURRENT_STATE.md`
+- `docs/rds/RDS_MENU_STRUCTURE.md`: section 4.4 stepper/`numeric_entry`
+  boundary and new section 4.5 recording durable setup disclosure behaviour —
+  the two hiding reasons, the ordinary path, custom-board legibility,
+  disclosure-state exclusion, the keyboard contract, and visible validation.
+- `docs/plans/professional_godot_game_programme.md`: Stage 54E-3 status and
+  scope outcome; Stage 54E-4 becomes next.
+- `docs/BACKLOG.md` and `CURRENT_STATE.md`: Stage 54E-3 status and next steps.
 
 ## Resolved Decisions
 
-- The seed field is a semantic `numeric_entry`. The setup-control typing
-  contract permits `numeric_entry`, and Godot continues to render that control
-  with a `LineEdit`. The durable taxonomy names the input behavior rather than
-  the toolkit widget, because direct entry is appropriate for the seed's large
-  numeric range and a stepper-only interaction would be impractical. This
-  decision changes no setup value, range, persistence, or session identity.
-
-## Open Questions For Stage 54E-3b
-
-- Board-axis controls remain classified as `stepper` in Stage 54E-3a. The
-  current panel renders a `LineEdit` with decrement/increment buttons and
-  supports direct typed entry, so Stage 54E-3b must decide whether its control
-  factory models that composite as `stepper`, `numeric_entry`, or an explicit
-  stepper-with-entry variant before the registry begins constructing controls.
+- Board-axis controls remain `stepper`. Their ranges are small enough for
+  stepping to be the primary interaction, so direct typed entry is a
+  convenience affordance rather than the required input mode; `numeric_entry`
+  stays reserved for ranges that make stepping impractical, such as the seed.
+  No control factory was introduced, so no factory-level typing decision was
+  forced.
+- Disclosure state is owned by the panel, cleared and recomputed on every
+  `configure()`. It is therefore structurally unable to reach the model, the
+  persisted document, or the native session payload.
+- The all-clear validation confirmation is feedback for dimension editing and
+  is presented with board customization rather than in the ordinary path. A
+  failure is always visible.
 
 ## Explicit Deferrals
 
-- Stage 54E-3b progressive-disclosure rendering, section layout, secondary
-  advanced disclosure, focus behaviour, and the board-axis composite-control
-  typing decision recorded above.
 - Stage 54E-3c final aggregate RDS, programme, backlog, and handoff
-  reconciliation after the progressive-disclosure implementation is accepted.
+  reconciliation after external technical review accepts this implementation.
 - Stage 54D-3 Hold and any Hold setup or keybinding field.
-- Stage 54E-4 preset taxonomy, naming, categories, UI, and persistence.
+- Stage 54E-4 preset taxonomy, naming, categories, UI, and persistence,
+  including all camera/GUI presentation-preference setup fields.
 - Stage 54E-5 cockpit consolidation.
 - Stage 54F integrated visual acceptance, including Issues #69 and #70.
 - Stage 54G release hardening.
 
 ## Review Outcome
 
-Pending. Stage 54E-3a is not complete until external technical review accepts
-the implementation and evidence.
+Pending. Stage 54E-3 is implemented with automated and real-window evidence
+recorded; it is not reviewed green until external technical review accepts the
+implementation and its evidence.
