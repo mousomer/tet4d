@@ -26,9 +26,12 @@ func run() -> Array:
 		failures.append("fixed-seed setup should show the seed field")
 	if panel.first_focus_control() != panel._board_selector:
 		failures.append("setup should restore focus at the preset shortcut")
-	for control in panel._focus_controls:
+	for control in panel.visible_focus_controls():
 		if control.focus_mode == Control.FOCUS_NONE:
-			failures.append("setup control should remain keyboard reachable: %s" % control.name)
+			failures.append("revealed setup control should remain keyboard reachable: %s" % control.name)
+	for control in panel.hidden_focus_controls():
+		if control.focus_mode != Control.FOCUS_NONE:
+			failures.append("undisclosed setup control must not be a keyboard focus target: %s" % control.name)
 	panel._axis_inputs[3].text = "1"
 	panel._on_axis_text_changed(3, "1")
 	await tree.process_frame

@@ -8,7 +8,7 @@ const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_pan
 
 const EXPECTED_FIELD_IDS := {
 	"live_2d": [
-		"board_preset", "board_axis_0", "board_axis_1", "piece_set",
+		"board_preset", "board_axis_0", "board_axis_1",
 		"random_mode", "seed", "initial_speed_level",
 	],
 	"live_3d": [
@@ -30,6 +30,7 @@ func run() -> Array:
 	_check_total_classification(failures)
 	_check_disclosure_assignment(failures)
 	_check_contextual_visibility(failures)
+	_check_piece_set_choice_modes(failures)
 	_check_session_identity_conformance(failures)
 	_check_range_conformance(failures)
 	_check_rule_enforcement(failures)
@@ -94,6 +95,22 @@ func _check_contextual_visibility(failures: Array) -> void:
 	for spec in SetupFieldRegistryScript.specs_for_mode(GameSetupSpecScript.MODE_2D):
 		if spec.id() == "translation_frame" or spec.id() == "rotation_frame":
 			failures.append("2D must not declare control-frame fields")
+		if spec.id() == "piece_set":
+			failures.append("2D must not declare a piece-set field while only one set exists")
+
+
+# Binds the declared piece-set modes to the independently maintained piece-set
+# catalogue, so a mode that gains or loses a real choice fails here.
+func _check_piece_set_choice_modes(failures: Array) -> void:
+	var declared: Array = SetupFieldRegistryScript.PIECE_SET_CHOICE_MODES
+	for mode in GameSetupSpecScript.modes():
+		var has_choice: bool = GameSetupSpecScript.piece_sets_for_mode(mode).size() > 1
+		if has_choice != declared.has(mode):
+			failures.append("%s declares a piece-set choice field as %s but publishes %d piece sets" % [
+				mode, str(declared.has(mode)), GameSetupSpecScript.piece_sets_for_mode(mode).size(),
+			])
+		if not has_choice and GameSetupSpecScript.piece_sets_for_mode(mode).is_empty():
+			failures.append("%s must still publish a piece set for the session payload" % mode)
 
 
 func _check_session_identity_conformance(failures: Array) -> void:
@@ -258,29 +275,55 @@ func _check_panel_classification(failures: Array) -> void:
 	await tree.process_frame
 
 
+# A setup field can be absent from the screen for two unrelated reasons:
+# semantically, because the declared `visible_when` condition does not hold; and
+# presentationally, because the disclosure section holding it is collapsed. Only
+# the first belongs to the taxonomy, so this check pins both independently.
 func _compare_panel_to_registry(failures: Array, panel, model, mode: String, random_mode: String) -> void:
 	var context := "%s/%s" % [mode, random_mode]
 	var entry := {"random_mode": model.selected_random_mode()}
-	var rendered: Array = _visible_value_controls(panel)
-	var declared: Array = []
+	var applicable: Array = []
 	for spec in SetupFieldRegistryScript.visible_specs_for(mode, entry):
 		var control = _control_for_field(panel, spec.id())
 		if control == null:
 			failures.append("%s: declared field %s has no rendered control" % [context, spec.id()])
 			continue
-		declared.append(control)
-		if not control.is_visible_in_tree():
-			failures.append("%s: %s is declared visible but the panel hides it" % [context, spec.id()])
+		applicable.append(control)
 	for spec in SetupFieldRegistryScript.specs_for_mode(mode):
 		if spec.is_visible_for(mode, entry):
 			continue
 		var hidden_control = _control_for_field(panel, spec.id())
-		if hidden_control != null and hidden_control.is_visible_in_tree():
+		if hidden_control == null:
+			continue
+		if hidden_control.is_visible_in_tree():
 			failures.append("%s: %s is declared hidden but the panel shows it" % [context, spec.id()])
-	if _instance_ids(rendered) != _instance_ids(declared):
-		failures.append("%s: every rendered setup control must be classified: rendered %d, declared %d (%s)" % [
-			context, rendered.size(), declared.size(), _control_names(rendered),
+		if hidden_control.focus_mode != Control.FOCUS_NONE:
+			failures.append("%s: semantically hidden %s must not be a focus target" % [context, spec.id()])
+
+	# Nothing rendered may be unclassified, in any disclosure state.
+	var revealed: Array = []
+	for control in applicable:
+		if (control as Control).is_visible_in_tree():
+			revealed.append(control)
+	var rendered: Array = _visible_value_controls(panel)
+	if _instance_ids(rendered) != _instance_ids(revealed):
+		failures.append("%s: every rendered setup control must be classified: rendered %d, classified %d (%s)" % [
+			context, rendered.size(), revealed.size(), _control_names(rendered),
 		])
+
+	# Collapse must be the only remaining reason an applicable field is hidden.
+	for section_id in panel.disclosure_section_ids():
+		panel.set_section_expanded(section_id, true)
+	for spec in SetupFieldRegistryScript.visible_specs_for(mode, entry):
+		var expanded_control = _control_for_field(panel, spec.id())
+		if expanded_control == null:
+			continue
+		if not (expanded_control as Control).is_visible_in_tree():
+			failures.append("%s: %s stays hidden with every section expanded" % [context, spec.id()])
+		if (expanded_control as Control).focus_mode != Control.FOCUS_ALL:
+			failures.append("%s: revealed %s must be a focus target" % [context, spec.id()])
+	for section_id in panel.disclosure_section_ids():
+		panel.set_section_expanded(section_id, false)
 
 
 func _visible_value_controls(node: Node) -> Array:

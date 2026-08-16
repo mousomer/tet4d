@@ -3,6 +3,7 @@ extends Control
 class_name GameSetupPanel
 
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
+const SetupFieldRegistryScript = preload("res://scripts/ui/game_setup/setup_field_registry.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 signal start_requested(setup: Dictionary)
@@ -10,11 +11,24 @@ signal back_requested()
 signal setup_changed()
 signal last_valid_changed()
 
+# Disclosure sections are presentation state only. They are rebuilt from the
+# model on every `configure()` and never enter the canonical session setup, the
+# persisted setup document, or any deterministic payload.
+const SECTION_BOARD := "board"
+const SECTION_ADVANCED := "advanced_game"
+const SECTION_CONTROLS := "controls"
+
+const SECTION_TITLES := {
+	SECTION_BOARD: "Customize Board",
+	SECTION_ADVANCED: "Advanced Game",
+	SECTION_CONTROLS: "Controls",
+}
+
 var _model
 var _title: Label
+var _scroll: ScrollContainer
 var _board_selector: OptionButton
 var _axis_inputs: Array[LineEdit] = []
-var _axis_buttons: Array[Control] = []
 var _validation_label: Label
 var _piece_selector: OptionButton
 var _piece_description: Label
@@ -30,6 +44,12 @@ var _rotation_frame_selector: OptionButton
 var _start_button: Button
 var _focus_controls: Array[Control] = []
 var _refreshing := false
+var _expanded := {}
+var _section_buttons := {}
+var _section_bodies := {}
+# Mode applicability and conditional visibility come from the declared taxonomy
+# rather than a second copy of the same rules in this panel.
+var _seed_spec
 
 
 func configure(model) -> void:
@@ -46,17 +66,16 @@ func _rebuild() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	_focus_controls.clear()
-	_axis_inputs.clear()
-	_axis_buttons.clear()
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
+	_clear_build_state()
+	_scroll = ScrollContainer.new()
+	_scroll.name = "SetupScroll"
+	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(_scroll)
 	var center := CenterContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(center)
+	_scroll.add_child(center)
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(720, 0)
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -66,6 +85,7 @@ func _rebuild() -> void:
 		margin.add_theme_constant_override("margin_%s" % side, ShellDesignTokensScript.SPACE_5)
 	panel.add_child(margin)
 	var layout := VBoxContainer.new()
+	layout.name = "SetupLayout"
 	layout.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_3)
 	margin.add_child(layout)
 	_title = Label.new()
@@ -78,6 +98,55 @@ func _rebuild() -> void:
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(prompt)
 
+	_build_board_group(layout)
+	_build_piece_group(layout)
+	_build_speed_group(layout)
+	_build_advanced_section(layout)
+	_build_controls_section(layout)
+	_build_actions(layout)
+
+	_refresh_from_model()
+	_board_selector.call_deferred("grab_focus")
+
+
+func _clear_build_state() -> void:
+	_focus_controls.clear()
+	_axis_inputs.clear()
+	_expanded.clear()
+	_section_buttons.clear()
+	_section_bodies.clear()
+	_title = null
+	_scroll = null
+	_board_selector = null
+	_validation_label = null
+	_piece_selector = null
+	_piece_description = null
+	_random_selector = null
+	_random_description = null
+	_seed_row = null
+	_seed_input = null
+	_seed_error = null
+	_speed_selector = null
+	_controls_section = null
+	_translation_frame_selector = null
+	_rotation_frame_selector = null
+	_start_button = null
+	_seed_spec = null
+
+
+func first_focus_control() -> Control:
+	return _board_selector
+
+
+# --- Ordinary game definition -------------------------------------------------
+
+
+func _build_board_group(layout: VBoxContainer) -> void:
+	var header := Label.new()
+	header.name = "BoardGroupHeader"
+	header.text = "Board"
+	header.theme_type_variation = "AccentLabel"
+	layout.add_child(header)
 	_board_selector = _add_selector(layout, "Preset Shortcut")
 	for spec in GameSetupSpecScript.presets_for_mode(_model.current_mode):
 		_board_selector.add_item("%s · %s" % [
@@ -90,33 +159,68 @@ func _rebuild() -> void:
 	_board_selector.item_selected.connect(_on_board_selected)
 	_board_selector.gui_input.connect(func(event: InputEvent) -> void: _on_selector_gui_input(_board_selector, event))
 
-	var dimensions_label := Label.new()
-	dimensions_label.text = "Board Dimensions"
-	dimensions_label.theme_type_variation = "SecondaryLabel"
-	layout.add_child(dimensions_label)
+	var body := _add_disclosure_section(layout, SECTION_BOARD)
 	for axis_index in range(GameSetupSpecScript.board_axis_ranges(_model.current_mode).size()):
-		_add_axis_editor(layout, axis_index)
+		_add_axis_editor(body, axis_index)
+	var reset_sizes := Button.new()
+	reset_sizes.name = "ResetSizesButton"
+	reset_sizes.text = "Reset Sizes"
+	reset_sizes.tooltip_text = "Restore the canonical dimensions without changing any other setup choice"
+	reset_sizes.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	reset_sizes.pressed.connect(_on_reset_sizes_pressed)
+	body.add_child(reset_sizes)
+	_register_focus_control(reset_sizes)
+
+	# The validation summary stays in the ordinary surface so a failure inside a
+	# collapsed section is never silent.
 	_validation_label = Label.new()
 	_validation_label.name = "BoardValidationLabel"
 	_validation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(_validation_label)
 
-	_piece_selector = _add_selector(layout, "Piece Set")
+
+func _build_piece_group(layout: VBoxContainer) -> void:
+	if not _field_applies("piece_set"):
+		return
+	var group := VBoxContainer.new()
+	group.name = "PieceSetGroup"
+	group.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
+	layout.add_child(group)
+	_piece_selector = _add_selector(group, "Piece Set")
 	_piece_selector.item_selected.connect(_on_piece_selected)
 	_piece_selector.gui_input.connect(func(event: InputEvent) -> void: _on_selector_gui_input(_piece_selector, event))
-	_piece_description = _add_description(layout)
+	_piece_description = _add_description(group)
 
-	_random_selector = _add_selector(layout, "Randomness")
+
+func _build_speed_group(layout: VBoxContainer) -> void:
+	_speed_selector = _add_selector(layout, "Starting Speed")
+	for speed in GameSetupSpecScript.speed_levels():
+		_speed_selector.add_item(str(int(speed)))
+		_speed_selector.set_item_metadata(_speed_selector.item_count - 1, int(speed))
+	_speed_selector.item_selected.connect(_on_speed_selected)
+	_speed_selector.gui_input.connect(func(event: InputEvent) -> void: _on_selector_gui_input(_speed_selector, event))
+	var speed_note := _add_description(layout)
+	speed_note.text = "1 is relaxed; 10 is the fastest starting gravity cadence."
+
+
+# --- Secondary disclosure -----------------------------------------------------
+
+
+func _build_advanced_section(layout: VBoxContainer) -> void:
+	_seed_spec = _spec_for_field("seed")
+	var body := _add_disclosure_section(layout, SECTION_ADVANCED)
+	_random_selector = _add_selector(body, "Randomness")
 	for spec in GameSetupSpecScript.random_modes():
 		_random_selector.add_item(str(spec.get("label", "")))
 		_random_selector.set_item_metadata(_random_selector.item_count - 1, str(spec.get("id", "")))
 	_random_selector.item_selected.connect(_on_random_selected)
 	_random_selector.gui_input.connect(func(event: InputEvent) -> void: _on_selector_gui_input(_random_selector, event))
-	_random_description = _add_description(layout)
+	_random_description = _add_description(body)
 
 	_seed_row = VBoxContainer.new()
+	_seed_row.name = "SeedRow"
 	(_seed_row as VBoxContainer).add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
-	layout.add_child(_seed_row)
+	body.add_child(_seed_row)
 	var seed_label := Label.new()
 	seed_label.text = "Seed"
 	seed_label.theme_type_variation = "SecondaryLabel"
@@ -127,28 +231,18 @@ func _rebuild() -> void:
 	_seed_input.max_length = 9
 	_seed_input.text_changed.connect(_on_seed_changed)
 	_seed_row.add_child(_seed_input)
+	_register_focus_control(_seed_input)
 	_seed_error = Label.new()
+	_seed_error.name = "SeedError"
 	_seed_error.theme_type_variation = "StatusErrorLabel"
 	_seed_error.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_seed_row.add_child(_seed_error)
 
-	_speed_selector = _add_selector(layout, "Starting Speed")
-	for speed in GameSetupSpecScript.speed_levels():
-		_speed_selector.add_item(str(int(speed)))
-		_speed_selector.set_item_metadata(_speed_selector.item_count - 1, int(speed))
-	_speed_selector.item_selected.connect(_on_speed_selected)
-	_speed_selector.gui_input.connect(func(event: InputEvent) -> void: _on_selector_gui_input(_speed_selector, event))
-	var speed_note := _add_description(layout)
-	speed_note.text = "1 is relaxed; 10 is the fastest starting gravity cadence."
 
-	_controls_section = VBoxContainer.new()
-	_controls_section.name = "ControlFrameSection"
-	_controls_section.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
-	layout.add_child(_controls_section)
-	var controls_title := Label.new()
-	controls_title.text = "CONTROLS"
-	controls_title.theme_type_variation = "SecondaryLabel"
-	_controls_section.add_child(controls_title)
+func _build_controls_section(layout: VBoxContainer) -> void:
+	if not _field_applies("translation_frame"):
+		return
+	_controls_section = _add_disclosure_section(layout, SECTION_CONTROLS)
 	_translation_frame_selector = _add_selector(_controls_section, "Translation")
 	_rotation_frame_selector = _add_selector(_controls_section, "Rotation")
 	for selector in [_translation_frame_selector, _rotation_frame_selector]:
@@ -161,40 +255,130 @@ func _rebuild() -> void:
 	var controls_note := _add_description(_controls_section)
 	controls_note.text = "Relative controls follow the current view; Absolute controls use canonical axes and planes."
 
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
-	layout.add_child(actions)
+
+func _build_actions(layout: VBoxContainer) -> void:
 	_start_button = Button.new()
 	_start_button.name = "StartGameButton"
 	_start_button.text = "Start Game"
+	_start_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_start_button.custom_minimum_size = Vector2(0, 44)
+	_start_button.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
+	# Reuse the shell's established primary-action treatment rather than
+	# inventing setup-local emphasis.
+	_start_button.set_meta("semantic_role", "action_button")
 	_start_button.pressed.connect(_on_start_pressed)
-	actions.add_child(_start_button)
-	var reset_sizes := Button.new()
-	reset_sizes.name = "ResetSizesButton"
-	reset_sizes.text = "Reset Sizes"
-	reset_sizes.pressed.connect(_on_reset_sizes_pressed)
-	actions.add_child(reset_sizes)
+	layout.add_child(_start_button)
+	_register_focus_control(_start_button)
+
+	var secondary := HBoxContainer.new()
+	secondary.name = "SecondaryActions"
+	secondary.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
+	layout.add_child(secondary)
 	var reset_setup := Button.new()
 	reset_setup.name = "ResetSetupButton"
 	reset_setup.text = "Reset Setup"
+	reset_setup.tooltip_text = "Restore every default for this mode"
 	reset_setup.pressed.connect(_on_reset_setup_pressed)
-	actions.add_child(reset_setup)
+	secondary.add_child(reset_setup)
+	_register_focus_control(reset_setup)
 	var back := Button.new()
 	back.name = "BackButton"
 	back.text = "Back"
 	back.pressed.connect(func() -> void: back_requested.emit())
-	actions.add_child(back)
+	secondary.add_child(back)
+	_register_focus_control(back)
 
-	_focus_controls = [_board_selector]
-	_focus_controls.append_array(_axis_buttons)
-	_focus_controls.append_array([_piece_selector, _random_selector, _seed_input, _speed_selector, _translation_frame_selector, _rotation_frame_selector, _start_button, reset_sizes, reset_setup, back])
-	_refresh_from_model()
+
+# --- Disclosure ---------------------------------------------------------------
+
+
+func _add_disclosure_section(layout: VBoxContainer, section_id: String) -> VBoxContainer:
+	var button := Button.new()
+	button.name = "Disclosure__%s" % section_id
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.pressed.connect(func() -> void: toggle_section(section_id))
+	layout.add_child(button)
+	_register_focus_control(button)
+	var body := VBoxContainer.new()
+	body.name = "Section__%s" % section_id
+	body.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
+	layout.add_child(body)
+	_section_buttons[section_id] = button
+	_section_bodies[section_id] = body
+	_expanded[section_id] = false
+	_apply_section_state(section_id)
+	return body
+
+
+func disclosure_section_ids() -> Array:
+	var ids: Array = []
+	for section_id in [SECTION_BOARD, SECTION_ADVANCED, SECTION_CONTROLS]:
+		if _section_bodies.has(section_id):
+			ids.append(section_id)
+	return ids
+
+
+func is_section_expanded(section_id: String) -> bool:
+	return bool(_expanded.get(section_id, false))
+
+
+func toggle_section(section_id: String) -> void:
+	set_section_expanded(section_id, not is_section_expanded(section_id))
+
+
+func set_section_expanded(section_id: String, expanded: bool) -> void:
+	if not _section_bodies.has(section_id):
+		return
+	var collapsing := is_section_expanded(section_id) and not expanded
+	var focus_was_inside := collapsing and _focus_is_inside_section(section_id)
+	_expanded[section_id] = expanded
+	_apply_section_state(section_id)
+	if _validation_label != null:
+		_refresh_validation_state()
 	_configure_focus()
-	_board_selector.call_deferred("grab_focus")
+	var button := _section_buttons[section_id] as Button
+	if focus_was_inside:
+		button.grab_focus()
+	elif expanded:
+		_ensure_visible(button)
 
 
-func first_focus_control() -> Control:
-	return _board_selector
+func _apply_section_state(section_id: String) -> void:
+	var expanded := is_section_expanded(section_id)
+	var body := _section_bodies.get(section_id) as Control
+	if body != null:
+		body.visible = expanded
+	var button := _section_buttons.get(section_id) as Button
+	if button != null:
+		var title := str(SECTION_TITLES.get(section_id, section_id))
+		button.text = "%s  %s" % ["▾" if expanded else "▸", title]
+		button.tooltip_text = "%s %s" % ["Hide" if expanded else "Show", title]
+
+
+func _focus_is_inside_section(section_id: String) -> bool:
+	var body := _section_bodies.get(section_id) as Control
+	if body == null or not is_inside_tree():
+		return false
+	var viewport := get_viewport()
+	if viewport == null:
+		return false
+	var focused := viewport.gui_get_focus_owner()
+	return focused != null and body.is_ancestor_of(focused)
+
+
+# --- Control construction -----------------------------------------------------
+
+
+func _spec_for_field(field_id: String):
+	for spec in SetupFieldRegistryScript.specs_for_mode(_model.current_mode):
+		if spec.id() == field_id:
+			return spec
+	return null
+
+
+func _field_applies(field_id: String) -> bool:
+	return _spec_for_field(field_id) != null
 
 
 func _add_selector(layout: VBoxContainer, label_text: String) -> OptionButton:
@@ -205,6 +389,7 @@ func _add_selector(layout: VBoxContainer, label_text: String) -> OptionButton:
 	var selector := OptionButton.new()
 	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.add_child(selector)
+	_register_focus_control(selector)
 	return selector
 
 
@@ -240,7 +425,8 @@ func _add_axis_editor(layout: VBoxContainer, axis_index: int) -> void:
 	increment.pressed.connect(func() -> void: _on_axis_adjusted(axis_index, 1))
 	row.add_child(increment)
 	_axis_inputs.append(input)
-	_axis_buttons.append_array([decrement, input, increment])
+	for control in [decrement, input, increment]:
+		_register_focus_control(control)
 
 
 func _add_description(layout: VBoxContainer) -> Label:
@@ -249,6 +435,9 @@ func _add_description(layout: VBoxContainer) -> Label:
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(description)
 	return description
+
+
+# --- Model synchronisation ----------------------------------------------------
 
 
 func _refresh_from_model() -> void:
@@ -260,13 +449,19 @@ func _refresh_from_model() -> void:
 		_axis_inputs[axis_index].text = _model.selected_axis_text(axis_index)
 	_seed_input.text = str(_model.selected_seed())
 	_select_metadata(_speed_selector, _model.selected_speed_level())
-	var frames: Dictionary = _model.selected_control_frames()
-	_select_metadata(_translation_frame_selector, frames.get("translation_frame", "relative"))
-	_select_metadata(_rotation_frame_selector, frames.get("rotation_frame", "relative"))
-	_controls_section.visible = _model.current_mode != GameSetupSpecScript.MODE_2D
+	if _controls_section != null:
+		var frames: Dictionary = _model.selected_control_frames()
+		_select_metadata(_translation_frame_selector, frames.get("translation_frame", "relative"))
+		_select_metadata(_rotation_frame_selector, frames.get("rotation_frame", "relative"))
 	var random_spec := _spec_by_id(GameSetupSpecScript.random_modes(), _model.selected_random_mode())
 	_random_description.text = str(random_spec.get("description", ""))
-	_seed_row.visible = _model.selected_random_mode() == GameSetupSpecScript.RANDOM_MODE_FIXED_SEED
+	_seed_row.visible = _seed_spec != null and _seed_spec.is_visible_for(
+		_model.current_mode, {"random_mode": _model.selected_random_mode()}
+	)
+	# A board that matches no named preset must be immediately legible rather
+	# than hidden behind another discovery step.
+	_expanded[SECTION_BOARD] = is_section_expanded(SECTION_BOARD) or _model.selected_preset_id().is_empty()
+	_apply_section_state(SECTION_BOARD)
 	_refreshing = false
 	_validate_seed_text()
 	_refresh_validation_state()
@@ -274,6 +469,8 @@ func _refresh_from_model() -> void:
 
 
 func _rebuild_piece_options() -> void:
+	if _piece_selector == null:
+		return
 	_piece_selector.clear()
 	for spec in GameSetupSpecScript.piece_sets_for_mode(_model.current_mode):
 		_piece_selector.add_item(str(spec.get("label", "")))
@@ -285,7 +482,14 @@ func _rebuild_piece_options() -> void:
 
 func _on_board_selected(index: int) -> void:
 	var preset_id := str(_board_selector.get_item_metadata(index))
-	if not preset_id.is_empty() and _model.select_preset(preset_id):
+	if preset_id.is_empty():
+		# `Custom` is an information-architecture affordance: it exposes the
+		# dimension editors and leaves the current shape untouched.
+		set_section_expanded(SECTION_BOARD, true)
+		if not _axis_inputs.is_empty():
+			_axis_inputs[0].grab_focus()
+		return
+	if _model.select_preset(preset_id):
 		_refresh_from_model()
 		_emit_changed()
 
@@ -324,6 +528,7 @@ func _on_seed_changed(_text: String) -> void:
 		return
 	if _validate_seed_text():
 		_model.select_seed(int(_seed_input.text))
+	_refresh_validation_state()
 	_emit_changed()
 
 
@@ -345,6 +550,7 @@ func _on_start_pressed() -> void:
 		start_requested.emit(_model.canonical_session_setup().duplicate(true))
 	else:
 		_refresh_validation_state()
+		_reveal_first_blocking_field()
 
 
 func _on_reset_sizes_pressed() -> void:
@@ -366,14 +572,20 @@ func _emit_changed() -> void:
 		last_valid_changed.emit()
 
 
+# --- Validation ---------------------------------------------------------------
+
+
 func _refresh_validation_state() -> void:
-	var errors: Array = _model.validation_errors()
+	var errors: Array = _blocking_errors()
 	if errors.is_empty():
 		_validation_label.theme_type_variation = "StatusAccentLabel"
 		_validation_label.text = "Dimensions accepted by the native board-extent contract."
 	else:
 		_validation_label.theme_type_variation = "StatusErrorLabel"
 		_validation_label.text = "Not launchable: %s" % _format_validation_errors(errors)
+	# A failure is always visible. The all-clear confirmation is feedback for
+	# dimension editing, so it stays out of the ordinary path.
+	_validation_label.visible = not errors.is_empty() or is_section_expanded(SECTION_BOARD)
 	for axis_index in range(_axis_inputs.size()):
 		var path := "$.board_shape[%d]" % axis_index
 		var has_axis_error := false
@@ -385,12 +597,64 @@ func _refresh_validation_state() -> void:
 	_start_button.disabled = not _model.is_current_valid() or not _seed_error.text.is_empty()
 
 
+# Seed text that never reached the model would otherwise disable Start with no
+# entry in the summary, so it is folded in here.
+func _blocking_errors() -> Array:
+	var errors: Array = _model.validation_errors()
+	if _seed_error == null or _seed_error.text.is_empty():
+		return errors
+	for detail in errors:
+		if str((detail as Dictionary).get("path", "")) == "$.seed":
+			return errors
+	errors.append({"code": "invalid_seed", "path": "$.seed"})
+	return errors
+
+
 func _format_validation_errors(errors: Array) -> String:
 	var rows: Array = []
 	for detail in errors:
 		var value := detail as Dictionary
 		rows.append("%s @ %s" % [str(value.get("code", "validation_error")), str(value.get("path", "$"))])
 	return " · ".join(rows)
+
+
+# A blocked Start must never leave the responsible field hidden.
+func _reveal_first_blocking_field() -> void:
+	for detail in _blocking_errors():
+		var path := str((detail as Dictionary).get("path", ""))
+		var section := _section_for_error_path(path)
+		if not section.is_empty():
+			set_section_expanded(section, true)
+		var control := _control_for_error_path(path)
+		if control != null and _is_revealed(control):
+			control.grab_focus()
+			return
+
+
+func _section_for_error_path(path: String) -> String:
+	if path.begins_with("$.board_shape"):
+		return SECTION_BOARD
+	if path == "$.seed" or path == "$.random_mode":
+		return SECTION_ADVANCED
+	return ""
+
+
+func _control_for_error_path(path: String) -> Control:
+	if path.begins_with("$.board_shape["):
+		var axis_index := int(path.trim_prefix("$.board_shape[").trim_suffix("]"))
+		if axis_index >= 0 and axis_index < _axis_inputs.size():
+			return _axis_inputs[axis_index]
+		return _axis_inputs[0] if not _axis_inputs.is_empty() else null
+	match path:
+		"$.seed":
+			return _seed_input
+		"$.random_mode":
+			return _random_selector
+		"$.piece_set_id":
+			return _piece_selector
+		"$.initial_speed_level":
+			return _speed_selector
+	return null
 
 
 # tet4d-semantic-boundary: allow adapter-routing
@@ -411,6 +675,8 @@ func _validate_seed_text() -> bool:
 
 
 func _select_metadata(selector: OptionButton, value) -> void:
+	if selector == null:
+		return
 	for index in range(selector.item_count):
 		if selector.get_item_metadata(index) == value:
 			selector.select(index)
@@ -424,16 +690,63 @@ func _spec_by_id(specs: Array, value: String) -> Dictionary:
 	return {}
 
 
+# --- Focus and scrolling ------------------------------------------------------
+
+
+func _register_focus_control(control: Control) -> void:
+	_focus_controls.append(control)
+	control.focus_entered.connect(func() -> void: _ensure_visible(control))
+
+
+# Visibility is resolved against the panel's own subtree so focus stays correct
+# while the setup screen is built off-screen in the shell's screen stack.
+func _is_revealed(control: Control) -> bool:
+	if not is_instance_valid(control):
+		return false
+	var node: Node = control
+	while node != null and node != self:
+		if node is CanvasItem and not (node as CanvasItem).visible:
+			return false
+		node = node.get_parent()
+	return node == self
+
+
+func visible_focus_controls() -> Array:
+	var controls: Array = []
+	for control in _focus_controls:
+		if _is_revealed(control):
+			controls.append(control)
+	return controls
+
+
+func hidden_focus_controls() -> Array:
+	var controls: Array = []
+	for control in _focus_controls:
+		if is_instance_valid(control) and not _is_revealed(control):
+			controls.append(control)
+	return controls
+
+
 func _configure_focus() -> void:
 	var visible_controls: Array[Control] = []
 	for control in _focus_controls:
-		if control == _seed_input and not _seed_row.visible:
+		if not is_instance_valid(control):
 			continue
-		visible_controls.append(control)
+		if _is_revealed(control):
+			control.focus_mode = Control.FOCUS_ALL
+			visible_controls.append(control)
+		else:
+			control.focus_mode = Control.FOCUS_NONE
 	for index in range(visible_controls.size()):
 		var control := visible_controls[index]
 		control.focus_neighbor_top = control.get_path_to(visible_controls[(index - 1 + visible_controls.size()) % visible_controls.size()])
 		control.focus_neighbor_bottom = control.get_path_to(visible_controls[(index + 1) % visible_controls.size()])
+
+
+func _ensure_visible(control: Control) -> void:
+	if _scroll == null or not is_instance_valid(control) or not control.is_inside_tree():
+		return
+	_scroll.ensure_control_visible(control)
 
 
 func _on_selector_gui_input(selector: OptionButton, event: InputEvent) -> void:

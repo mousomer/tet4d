@@ -7,6 +7,12 @@ const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec
 
 const ALL_MODES := ["live_2d", "live_3d", "live_4d"]
 const CONTROL_FRAME_MODES := ["live_3d", "live_4d"]
+
+# A piece-set field is only a choice where the mode publishes more than one
+# production piece set. `test_setup_field_taxonomy.gd` binds this list to
+# `GameSetupSpec.piece_sets_for_mode()` so adding a second 2D piece set fails
+# here instead of silently leaving a one-option selector unrendered.
+const PIECE_SET_CHOICE_MODES := ["live_3d", "live_4d"]
 const CONTROL_FRAME_OPTIONS := [
 	{"value": "relative", "label": "Relative"},
 	{"value": "absolute", "label": "Absolute"},
@@ -39,7 +45,7 @@ const INVARIANT_FIELDS := [
 		"session_key": "piece_set_id",
 		"value_type": "enum",
 		"control_type": "selector",
-		"modes": ALL_MODES,
+		"modes": PIECE_SET_CHOICE_MODES,
 	},
 	{
 		"id": "random_mode",

@@ -23,6 +23,7 @@ func _run_all() -> void:
 		"res://tests/test_board_extent_contract.gd",
 		"res://tests/test_plain_setup_navigation.gd",
 		"res://tests/test_setup_field_taxonomy.gd",
+		"res://tests/test_setup_progressive_disclosure.gd",
 		"res://tests/test_adaptive_4d_layer_layout.gd",
 		"res://tests/test_slice_basis_4d.gd",
 		"res://tests/test_slice_local_orientation.gd",
@@ -74,6 +75,7 @@ func _run_all() -> void:
 			"res://tests/test_live_menu_input_routing.gd",
 			"res://tests/test_plain_setup_navigation.gd",
 			"res://tests/test_setup_field_taxonomy.gd",
+		"res://tests/test_setup_progressive_disclosure.gd",
 		]:
 			failures.append_array(await test_case.run())
 		else:
