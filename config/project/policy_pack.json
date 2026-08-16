@@ -559,7 +559,8 @@
         "toggle",
         "selector",
         "slider",
-        "stepper"
+        "stepper",
+        "numeric_entry"
       ],
       "selector_options_key_required": true,
       "enum_setup_option_source_tokens": [

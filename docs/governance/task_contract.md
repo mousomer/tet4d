@@ -166,20 +166,30 @@ Update only concrete stale statements or required evidence in:
 - `docs/BACKLOG.md`
 - `CURRENT_STATE.md`
 
-## Open Questions For Review
+## Resolved Decisions
 
-- `config/project/policy_pack.json` declares
-  `menu_control_typing_contract.setup_control_types` as `toggle`, `selector`,
-  `slider`, and `stepper`. The seed field renders as a `LineEdit`, which has no
-  entry in that list. This slice declares the field's actual control type and
-  does not silently resolve the divergence. Review must decide whether to
-  extend the policy list or migrate seed to a stepper in Stage 54E-3b.
+- The seed field is a semantic `numeric_entry`. The setup-control typing
+  contract permits `numeric_entry`, and Godot continues to render that control
+  with a `LineEdit`. The durable taxonomy names the input behavior rather than
+  the toolkit widget, because direct entry is appropriate for the seed's large
+  numeric range and a stepper-only interaction would be impractical. This
+  decision changes no setup value, range, persistence, or session identity.
+
+## Open Questions For Stage 54E-3b
+
+- Board-axis controls remain classified as `stepper` in Stage 54E-3a. The
+  current panel renders a `LineEdit` with decrement/increment buttons and
+  supports direct typed entry, so Stage 54E-3b must decide whether its control
+  factory models that composite as `stepper`, `numeric_entry`, or an explicit
+  stepper-with-entry variant before the registry begins constructing controls.
 
 ## Explicit Deferrals
 
 - Stage 54E-3b progressive-disclosure rendering, section layout, secondary
-  advanced disclosure, and focus behaviour.
-- Stage 54E-3c RDS, programme, backlog, and handoff reconciliation.
+  advanced disclosure, focus behaviour, and the board-axis composite-control
+  typing decision recorded above.
+- Stage 54E-3c final aggregate RDS, programme, backlog, and handoff
+  reconciliation after the progressive-disclosure implementation is accepted.
 - Stage 54D-3 Hold and any Hold setup or keybinding field.
 - Stage 54E-4 preset taxonomy, naming, categories, UI, and persistence.
 - Stage 54E-5 cockpit consolidation.

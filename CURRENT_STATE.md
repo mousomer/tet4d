@@ -87,7 +87,10 @@ history ledger. Detailed history is preserved in
   public roll removal with generic roll retained, and persistence/deterministic
   exclusion evidence. It performs no authority transfer or establishment.
   Aggregate Stage 54E-2 is COMPLETE / REVIEWED GREEN. Stage 54E-3 — setup/menu
-  information architecture — is now NEXT / ELIGIBLE.
+  information architecture — is IN PROGRESS: Stage 54E-3a taxonomy and
+  classification is implemented / review pending, including the semantic
+  `numeric_entry` typing decision for direct seed input; Stage 54E-3b remains
+  next.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -179,11 +182,11 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tools/governance/validate_project_contracts.py`: `4042` real LOC
+1. `tools/governance/validate_project_contracts.py`: `4083` real LOC
 2. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
 3. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
-5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2427` real LOC
+5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2445` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
 7. `scripts/arch_metrics.py`: `1899` real LOC
 8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
@@ -220,8 +223,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Stage 54E-3 — Setup/menu information architecture — is the next eligible
-   Stage 54E implementation slice. Stage 54D-3 Hold remains independently
+1. Review Stage 54E-3a taxonomy and classification, then implement Stage
+   54E-3b progressive disclosure. Stage 54D-3 Hold remains independently
    eligible. Stage 54E-4/5 remain later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance

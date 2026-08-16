@@ -43,9 +43,9 @@ const IDENTITY_BY_CATEGORY := {
 }
 
 const ALLOWED_VALUE_TYPES := ["int", "enum", "shape_axis"]
-const ALLOWED_CONTROL_TYPES := ["selector", "stepper", "text_field"]
+const ALLOWED_CONTROL_TYPES := ["selector", "stepper", "numeric_entry"]
 const CONTROL_TYPES_BY_VALUE_TYPE := {
-	"int": ["selector", "stepper", "text_field"],
+	"int": ["selector", "stepper", "numeric_entry"],
 	"enum": ["selector"],
 	"shape_axis": ["stepper"],
 }

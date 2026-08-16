@@ -14,6 +14,9 @@ POLICY_PACK_PATH = PROJECT_ROOT / POLICY_PACK_REL
 POLICY_INDEX_PATH = PROJECT_ROOT / "docs/policies/INDEX.md"
 POLICY_MANIFEST_DIR = PROJECT_ROOT / "config/project/policy/manifests"
 MENU_STRUCTURE_PATH = PROJECT_ROOT / "config/menu/structure.json"
+GODOT_SETUP_FIELD_SPEC_PATH = (
+    PROJECT_ROOT / "godot/Tet4D.Godot/scripts/ui/game_setup/setup_field_spec.gd"
+)
 GOVERNANCE_ROUTING_REQUIRED_PATHS: tuple[str, ...] = (
     "AGENTS.md",
     "docs/governance/README.md",
@@ -1313,6 +1316,7 @@ def _validate_menu_control_typing() -> list[ValidationIssue]:
     setup_control_types = set(
         _as_string_list(contract.get("setup_control_types", [])) or []
     )
+    _validate_godot_setup_control_vocabulary(setup_control_types, issues)
     selector_options_key_required = bool(
         contract.get("selector_options_key_required", False)
     )
@@ -1343,6 +1347,45 @@ def _validate_menu_control_typing() -> list[ValidationIssue]:
         issues=issues,
     )
     return issues
+
+
+def _validate_godot_setup_control_vocabulary(
+    policy_control_types: set[str], issues: list[ValidationIssue]
+) -> None:
+    spec_rel = "godot/Tet4D.Godot/scripts/ui/game_setup/setup_field_spec.gd"
+    try:
+        spec_text = GODOT_SETUP_FIELD_SPEC_PATH.read_text(encoding="utf-8")
+    except OSError as exc:
+        issues.append(ValidationIssue("missing", f"failed reading {spec_rel}: {exc}"))
+        return
+    match = re.search(
+        r"const\s+ALLOWED_CONTROL_TYPES\s*:=\s*\[(?P<body>.*?)\]",
+        spec_text,
+        flags=re.DOTALL,
+    )
+    if match is None:
+        issues.append(
+            ValidationIssue(
+                "content",
+                f"{spec_rel} must declare ALLOWED_CONTROL_TYPES as an array",
+            )
+        )
+        return
+    godot_control_types = set(
+        re.findall(r"[\"\']([^\"\']+)[\"\']", match.group("body"))
+    )
+    unregistered = sorted(godot_control_types - policy_control_types)
+    if unregistered:
+        issues.append(
+            ValidationIssue(
+                "content",
+                (
+                    f"{spec_rel} ALLOWED_CONTROL_TYPES contains setup control types "
+                    f"absent from {POLICY_PACK_REL} "
+                    f"menu_control_typing_contract.setup_control_types: {unregistered}"
+                ),
+            )
+        )
 
 
 def _validate_menu_item_control_typing(

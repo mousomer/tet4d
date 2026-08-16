@@ -127,7 +127,8 @@ roll remains reusable. Persistence and deterministic-isolation tests exclude
 ephemeral presentation state while retaining established preferences. No
 authority transfer or establishment occurs. External technical review accepted
 the implementation and its evidence. Aggregate Stage 54E-2 is COMPLETE /
-REVIEWED GREEN; Stage 54E-3 is now NEXT / ELIGIBLE.
+REVIEWED GREEN. Stage 54E-3 is IN PROGRESS: Stage 54E-3a taxonomy and
+classification is implemented / review pending, and Stage 54E-3b remains next.
 
 ## Hold
 
@@ -148,7 +149,12 @@ a placeholder authority record in advance.
   GREEN).
 - Stage 54E-2d — lifecycle, authority, and contract reconciliation (COMPLETE /
   REVIEWED GREEN).
-- Stage 54E-3 — setup/menu information architecture (NEXT / ELIGIBLE).
+- Stage 54E-3 — setup/menu information architecture (IN PROGRESS): Stage
+  54E-3a taxonomy and classification is implemented / review pending, with
+  direct seed input classified as semantic `numeric_entry`; Stage 54E-3b
+  progressive-disclosure rendering remains next and must decide whether the
+  board-axis `LineEdit` plus decrement/increment buttons is a `stepper`, a
+  `numeric_entry`, or an explicit composite type before building its factory.
 - Stage 54E-4 — camera/GUI presets.
 - Stage 54E-5 — cockpit consolidation.
 - Stage 54F — integrated professional playability/visual acceptance.

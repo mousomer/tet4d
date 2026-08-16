@@ -739,7 +739,8 @@ accepted the implementation. No authority transfer or establishment occurs.
 
 #### Stage 54E-3 — Setup/menu information architecture
 
-Status: NEXT / ELIGIBLE.
+Status: IN PROGRESS. Stage 54E-3a taxonomy and classification is implemented /
+review pending; Stage 54E-3b progressive-disclosure rendering remains next.
 
 The 4D setup surface has exceeded an acceptable flat complexity level and must
 use progressive disclosure. The durable taxonomy and its rules are owned by
@@ -748,6 +749,10 @@ information architecture and reuses the existing
 `menu_structure_single_source`, `menu_control_typing_contract`, and menu-graph
 machinery wherever enforcement is required; it does not introduce another menu
 validator solely for the taxonomy.
+
+Stage 54E-3a records direct seed input as the semantic setup control type
+`numeric_entry`; Godot maps that type to its existing `LineEdit`. This is a
+typing-contract clarification, not a setup behavior or identity change.
 
 #### Stage 54E-4 — Camera/GUI presets
 
@@ -1067,7 +1072,9 @@ The active order is:
    reviewed green; Stage 54E-2d — lifecycle, authority, and contract
    reconciliation — is complete and reviewed green. Aggregate Stage 54E-2 is
    complete and reviewed green.
-6. Stage 54E-3 — setup/menu information architecture — is NEXT / ELIGIBLE.
+6. Stage 54E-3 — setup/menu information architecture — is IN PROGRESS: Stage
+   54E-3a taxonomy and classification is implemented / review pending, and
+   Stage 54E-3b progressive-disclosure rendering remains next.
 7. Stage 54E-4 — camera/GUI presets.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.

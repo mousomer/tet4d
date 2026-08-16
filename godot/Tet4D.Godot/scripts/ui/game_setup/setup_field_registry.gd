@@ -62,7 +62,7 @@ const INVARIANT_FIELDS := [
 		"identity": "session_identity",
 		"session_key": "seed",
 		"value_type": "int",
-		"control_type": "text_field",
+		"control_type": "numeric_entry",
 		"modes": ALL_MODES,
 		"min": GameSetupSpecScript.MIN_SEED,
 		"max": GameSetupSpecScript.MAX_SEED,

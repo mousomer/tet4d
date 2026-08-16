@@ -199,6 +199,9 @@ The progressive-disclosure rule is:
 Where enforcement is required, menu work must extend or reuse the existing
 `menu_structure_single_source`, `menu_control_typing_contract`, and menu-graph
 machinery. Do not introduce another menu validator merely for this taxonomy.
+Setup controls whose large numeric range requires direct value entry use the
+semantic control type `numeric_entry`; a product shell may map that type to its
+native numeric text-entry widget.
 
 ## 5. Layout and Readability Requirements
 
