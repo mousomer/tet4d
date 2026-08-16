@@ -740,8 +740,10 @@ accepted the implementation. No authority transfer or establishment occurs.
 #### Stage 54E-3 — Setup/menu information architecture
 
 Status: COMPLETE / REVIEW PENDING. Stage 54E-3a taxonomy and classification and
-Stage 54E-3b progressive-disclosure rendering are both implemented with
-automated and real-window evidence recorded.
+Stage 54E-3b progressive-disclosure rendering are both implemented. Real-window
+evidence is recorded in
+`docs/plans/stage_54e3_setup_disclosure_manual_acceptance.md`, which records the
+verification as agent-driven rather than a human sign-off.
 
 The 4D setup surface had exceeded an acceptable flat complexity level and now
 uses progressive disclosure. The durable taxonomy and its rules are owned by
@@ -767,7 +769,10 @@ reaches canonical session setup, the persisted setup document, or native
 session state, so no schema version changes. Undisclosed controls leave the
 focus ring, a collapsing section that holds focus hands focus to its own
 disclosure control, and a validation failure inside a collapsed section stays
-explained and reachable.
+explained and reachable through an enabled control, because the disabled
+`Start Game` cannot itself emit an activation. Presentation placement is
+declared separately from semantic category, so reproducibility remains game
+definition while being presented secondarily.
 
 #### Stage 54E-4 — Camera/GUI presets
 
@@ -1089,8 +1094,8 @@ The active order is:
    complete and reviewed green.
 6. Stage 54E-3 — setup/menu information architecture — is COMPLETE / REVIEW
    PENDING: Stage 54E-3a taxonomy and classification and Stage 54E-3b
-   progressive-disclosure rendering are both implemented, with automated and
-   real-window evidence recorded.
+   progressive-disclosure rendering are both implemented, with automated
+   evidence and a recorded real-window acceptance checklist.
 7. Stage 54E-4 — camera/GUI presets — is NEXT / ELIGIBLE.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.

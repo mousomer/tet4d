@@ -59,8 +59,14 @@ authority transfer and no authority establishment.
   disclosure control when a section holding focus collapses, and keep the
   focused control visible in the scrolling viewport.
 - Keep validation actionable under disclosure: fold seed text that never
-  reached the model into the always-visible summary, and expose and focus the
-  section owning the first failure when a launch is blocked.
+  reached the model into the always-visible summary, and offer an enabled,
+  focusable control that exposes and focuses the section owning the first
+  failure. `Start Game` is disabled while the setup is invalid and a disabled
+  Godot button emits no `pressed`, so it cannot be that control.
+- Declare presentation placement separately from semantic category, and have
+  the panel place controls from that declaration, so a field can be game
+  definition while being presented secondarily without the taxonomy
+  contradicting the rendered surface.
 
 ## Forbidden Changes
 
@@ -98,16 +104,22 @@ authority transfer and no authority establishment.
    focus target; seed validation is unchanged.
 8. The control-frame disclosure is absent in 2D, present and collapsed by
    default in 3D and 4D, and toggling it does not change the frame values.
-9. Toggling every disclosure leaves `canonical_session_setup()` and
-   `last_valid_entries()` unchanged, and the persisted document records no
-   disclosure state.
-10. Undisclosed controls are not focus targets, focus order traverses only
+9. A blocked setup presents an enabled, focusable reveal action; activating it
+   by real pointer click and by real key press both expand the owning section
+   and focus the failing field; a real click on the disabled Start launches
+   nothing; repairing the value withdraws the action.
+10. Every field's declared presentation section equals the section that
+    actually contains its control in the live scene tree.
+11. Toggling every disclosure leaves `canonical_session_setup()` and
+    `last_valid_entries()` unchanged, and the persisted document records no
+    disclosure state.
+12. Undisclosed controls are not focus targets, focus order traverses only
     revealed controls and returns to its origin, collapsing a section holding
     focus lands focus on its disclosure control, and collapsing an unfocused
     section does not steal focus.
-11. Expanding every section reveals every applicable field, so collapse is the
+13. Expanding every section reveals every applicable field, so collapse is the
     only remaining reason an applicable field is off screen.
-12. Resolver-required focused, documentation, human-visual, sanitation, and
+14. Resolver-required focused, documentation, human-visual, sanitation, and
     full-repository verification pass, and the tracked worktree is clean.
 
 ## Automated Verification
@@ -127,6 +139,12 @@ authority transfer and no authority establishment.
 - Git sanitation, `git diff --check`, and `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ## Manual Verification
+
+Recorded in `docs/plans/stage_54e3_setup_disclosure_manual_acceptance.md` with
+environment, per-scenario outcomes, screenshots under
+`docs/design/screenshots/stage_54e3_setup_disclosure/`, corrections made during
+verification, and advisories. That record notes the verification was
+agent-driven rather than a human sign-off.
 
 Drive the real windowed Godot 4.7.1 shell and confirm: 2D setup is concise with
 no one-choice selector and discoverable X/Y; 3D piece-set choice, exact
