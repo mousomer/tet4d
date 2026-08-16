@@ -4,6 +4,7 @@ class_name GameSetupPanel
 
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 const SetupFieldRegistryScript = preload("res://scripts/ui/game_setup/setup_field_registry.gd")
+const SetupFieldSpecScript = preload("res://scripts/ui/game_setup/setup_field_spec.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 signal start_requested(setup: Dictionary)
@@ -14,9 +15,9 @@ signal last_valid_changed()
 # Disclosure sections are presentation state only. They are rebuilt from the
 # model on every `configure()` and never enter the canonical session setup, the
 # persisted setup document, or any deterministic payload.
-const SECTION_BOARD := "board"
-const SECTION_ADVANCED := "advanced_game"
-const SECTION_CONTROLS := "controls"
+const SECTION_BOARD := SetupFieldSpecScript.SECTION_BOARD
+const SECTION_ADVANCED := SetupFieldSpecScript.SECTION_ADVANCED
+const SECTION_CONTROLS := SetupFieldSpecScript.SECTION_CONTROLS
 
 const SECTION_TITLES := {
 	SECTION_BOARD: "Customize Board",
@@ -42,6 +43,7 @@ var _controls_section: VBoxContainer
 var _translation_frame_selector: OptionButton
 var _rotation_frame_selector: OptionButton
 var _start_button: Button
+var _reveal_button: Button
 var _focus_controls: Array[Control] = []
 var _refreshing := false
 var _expanded := {}
@@ -131,6 +133,7 @@ func _clear_build_state() -> void:
 	_translation_frame_selector = null
 	_rotation_frame_selector = null
 	_start_button = null
+	_reveal_button = null
 	_seed_spec = null
 
 
@@ -161,7 +164,7 @@ func _build_board_group(layout: VBoxContainer) -> void:
 
 	var body := _add_disclosure_section(layout, SECTION_BOARD)
 	for axis_index in range(GameSetupSpecScript.board_axis_ranges(_model.current_mode).size()):
-		_add_axis_editor(body, axis_index)
+		_add_axis_editor(_container_for("board_axis_%d" % axis_index, layout), axis_index)
 	var reset_sizes := Button.new()
 	reset_sizes.name = "ResetSizesButton"
 	reset_sizes.text = "Reset Sizes"
@@ -177,6 +180,17 @@ func _build_board_group(layout: VBoxContainer) -> void:
 	_validation_label.name = "BoardValidationLabel"
 	_validation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(_validation_label)
+	# `Start Game` is disabled while the setup is invalid and a disabled Godot
+	# button emits no `pressed`, so the reveal path needs its own enabled,
+	# focusable control. It appears only alongside a failure.
+	_reveal_button = Button.new()
+	_reveal_button.name = "RevealProblemButton"
+	_reveal_button.text = "Show Problem"
+	_reveal_button.tooltip_text = "Open the section holding the first setup problem and focus that field"
+	_reveal_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_reveal_button.pressed.connect(_reveal_first_blocking_field)
+	layout.add_child(_reveal_button)
+	_register_focus_control(_reveal_button)
 
 
 func _build_piece_group(layout: VBoxContainer) -> void:
@@ -208,7 +222,8 @@ func _build_speed_group(layout: VBoxContainer) -> void:
 
 func _build_advanced_section(layout: VBoxContainer) -> void:
 	_seed_spec = _spec_for_field("seed")
-	var body := _add_disclosure_section(layout, SECTION_ADVANCED)
+	_add_disclosure_section(layout, SECTION_ADVANCED)
+	var body := _container_for("random_mode", layout)
 	_random_selector = _add_selector(body, "Randomness")
 	for spec in GameSetupSpecScript.random_modes():
 		_random_selector.add_item(str(spec.get("label", "")))
@@ -220,7 +235,7 @@ func _build_advanced_section(layout: VBoxContainer) -> void:
 	_seed_row = VBoxContainer.new()
 	_seed_row.name = "SeedRow"
 	(_seed_row as VBoxContainer).add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
-	body.add_child(_seed_row)
+	_container_for("seed", layout).add_child(_seed_row)
 	var seed_label := Label.new()
 	seed_label.text = "Seed"
 	seed_label.theme_type_variation = "SecondaryLabel"
@@ -242,9 +257,10 @@ func _build_advanced_section(layout: VBoxContainer) -> void:
 func _build_controls_section(layout: VBoxContainer) -> void:
 	if not _field_applies("translation_frame"):
 		return
-	_controls_section = _add_disclosure_section(layout, SECTION_CONTROLS)
+	_add_disclosure_section(layout, SECTION_CONTROLS)
+	_controls_section = _container_for("translation_frame", layout)
 	_translation_frame_selector = _add_selector(_controls_section, "Translation")
-	_rotation_frame_selector = _add_selector(_controls_section, "Rotation")
+	_rotation_frame_selector = _add_selector(_container_for("rotation_frame", layout), "Rotation")
 	for selector in [_translation_frame_selector, _rotation_frame_selector]:
 		selector.add_item("Relative")
 		selector.set_item_metadata(0, "relative")
@@ -368,6 +384,15 @@ func _focus_is_inside_section(section_id: String) -> bool:
 
 
 # --- Control construction -----------------------------------------------------
+
+
+# Placement comes from the declared section, so moving a field between the
+# ordinary path and a disclosure is a registry edit rather than a panel edit.
+func _container_for(field_id: String, layout: VBoxContainer) -> VBoxContainer:
+	var section := SetupFieldRegistryScript.section_for_field(_model.current_mode, field_id)
+	if section == SetupFieldSpecScript.SECTION_ORDINARY or not _section_bodies.has(section):
+		return layout
+	return _section_bodies[section] as VBoxContainer
 
 
 func _spec_for_field(field_id: String):
@@ -553,6 +578,10 @@ func _on_start_pressed() -> void:
 		_reveal_first_blocking_field()
 
 
+func reveal_problem_control() -> Button:
+	return _reveal_button
+
+
 func _on_reset_sizes_pressed() -> void:
 	_model.reset_sizes()
 	_refresh_from_model()
@@ -586,6 +615,8 @@ func _refresh_validation_state() -> void:
 	# A failure is always visible. The all-clear confirmation is feedback for
 	# dimension editing, so it stays out of the ordinary path.
 	_validation_label.visible = not errors.is_empty() or is_section_expanded(SECTION_BOARD)
+	if _reveal_button != null:
+		_reveal_button.visible = not errors.is_empty()
 	for axis_index in range(_axis_inputs.size()):
 		var path := "$.board_shape[%d]" % axis_index
 		var has_axis_error := false
@@ -595,6 +626,8 @@ func _refresh_validation_state() -> void:
 				break
 		_axis_inputs[axis_index].modulate = Color(1.0, 0.68, 0.68) if has_axis_error else Color.WHITE
 	_start_button.disabled = not _model.is_current_valid() or not _seed_error.text.is_empty()
+	# Showing or hiding the reveal action changes the focus ring.
+	_configure_focus()
 
 
 # Seed text that never reached the model would otherwise disable Start with no
@@ -618,7 +651,7 @@ func _format_validation_errors(errors: Array) -> String:
 	return " · ".join(rows)
 
 
-# A blocked Start must never leave the responsible field hidden.
+# A blocked setup must never leave the responsible field hidden.
 func _reveal_first_blocking_field() -> void:
 	for detail in _blocking_errors():
 		var path := str((detail as Dictionary).get("path", ""))

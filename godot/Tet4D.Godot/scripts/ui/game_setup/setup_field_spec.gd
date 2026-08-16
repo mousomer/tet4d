@@ -14,17 +14,35 @@ const ALLOWED_CATEGORIES := [
 	CATEGORY_PRESENTATION_PREFERENCE,
 ]
 
+# Presentation placement. This is where the product shell renders a field, and
+# it is deliberately independent of the semantic category above: reproducibility
+# is game definition that the RDS requires to be presented secondarily, and
+# board dimensions are game definition presented behind board customization.
+# Deriving placement from category would make the declaration disagree with the
+# rendered surface.
+const SECTION_ORDINARY := "ordinary"
+const SECTION_BOARD := "board"
+const SECTION_ADVANCED := "advanced_game"
+const SECTION_CONTROLS := "controls"
+const ALLOWED_SECTIONS := [
+	SECTION_ORDINARY,
+	SECTION_BOARD,
+	SECTION_ADVANCED,
+	SECTION_CONTROLS,
+]
+
+# Disclosure level is derived from placement and conditionality rather than
+# declared, so it can never contradict where the field is actually rendered.
 const DISCLOSURE_ORDINARY := "ordinary"
 const DISCLOSURE_CONTEXTUAL := "contextual"
 const DISCLOSURE_SECONDARY := "secondary"
 const ALLOWED_DISCLOSURES := [DISCLOSURE_ORDINARY, DISCLOSURE_CONTEXTUAL, DISCLOSURE_SECONDARY]
 
-const DISCLOSURE_BY_CATEGORY := {
-	CATEGORY_GAME_DEFINITION: DISCLOSURE_ORDINARY,
-	CATEGORY_CONTEXTUAL_GAME_DEFINITION: DISCLOSURE_CONTEXTUAL,
-	CATEGORY_ADVANCED_GAMEPLAY_INPUT: DISCLOSURE_SECONDARY,
-	CATEGORY_PRESENTATION_PREFERENCE: DISCLOSURE_SECONDARY,
-}
+# Categories that the RDS forbids from dominating the ordinary path.
+const CATEGORIES_FORBIDDEN_IN_ORDINARY := [
+	CATEGORY_ADVANCED_GAMEPLAY_INPUT,
+	CATEGORY_PRESENTATION_PREFERENCE,
+]
 
 const IDENTITY_SESSION := "session_identity"
 const IDENTITY_INPUT_PREFERENCE := "input_preference"
@@ -51,7 +69,7 @@ const CONTROL_TYPES_BY_VALUE_TYPE := {
 }
 
 const ALLOWED_SPEC_FIELDS := [
-	"id", "label", "description", "category", "disclosure", "identity",
+	"id", "label", "description", "category", "section", "identity",
 	"value_type", "control_type", "modes", "visible_when", "options",
 	"min", "max", "axis_index", "session_key",
 ]
@@ -79,8 +97,14 @@ func category() -> String:
 	return str(data.get("category", ""))
 
 
+func section() -> String:
+	return str(data.get("section", ""))
+
+
 func disclosure() -> String:
-	return str(data.get("disclosure", DISCLOSURE_BY_CATEGORY.get(category(), "")))
+	if not visible_when().is_empty():
+		return DISCLOSURE_CONTEXTUAL
+	return DISCLOSURE_ORDINARY if section() == SECTION_ORDINARY else DISCLOSURE_SECONDARY
 
 
 func identity() -> String:
@@ -152,14 +176,13 @@ static func validate(spec_data: Dictionary, known_modes: Array) -> Array:
 
 
 static func _validate_taxonomy(failures: Array, spec_data: Dictionary, field_id: String, category_id: String) -> void:
-	var declared_disclosure := str(spec_data.get("disclosure", ""))
-	var required_disclosure := str(DISCLOSURE_BY_CATEGORY.get(category_id, ""))
-	if declared_disclosure.is_empty():
-		failures.append("%s: disclosure is required" % field_id)
-	elif not ALLOWED_DISCLOSURES.has(declared_disclosure):
-		failures.append("%s: unknown disclosure %s" % [field_id, declared_disclosure])
-	elif declared_disclosure != required_disclosure:
-		failures.append("%s: category %s requires disclosure %s" % [field_id, category_id, required_disclosure])
+	var declared_section := str(spec_data.get("section", ""))
+	if declared_section.is_empty():
+		failures.append("%s: section is required" % field_id)
+	elif not ALLOWED_SECTIONS.has(declared_section):
+		failures.append("%s: unknown section %s" % [field_id, declared_section])
+	elif declared_section == SECTION_ORDINARY and CATEGORIES_FORBIDDEN_IN_ORDINARY.has(category_id):
+		failures.append("%s: category %s must not be presented in the ordinary path" % [field_id, category_id])
 	var declared_identity := str(spec_data.get("identity", ""))
 	var required_identity := str(IDENTITY_BY_CATEGORY.get(category_id, ""))
 	if declared_identity.is_empty():

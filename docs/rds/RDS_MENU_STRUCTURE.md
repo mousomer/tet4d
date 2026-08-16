@@ -219,6 +219,13 @@ Only the first may be expressed in the setup field taxonomy. Expanding every
 section must reveal every applicable field, so collapse is the only remaining
 reason an applicable field is off screen.
 
+Semantic category and presentation placement are separate declarations. A field
+may be game definition and still be presented secondarily: reproducibility is
+game definition that this document requires to sit behind advanced disclosure,
+and board dimensions are game definition presented behind board customization.
+Disclosure level must therefore derive from declared placement, never from
+category, or the declaration will contradict the rendered surface.
+
 The ordinary setup path carries the board preset shortcut, the piece-set choice
 where a mode publishes more than one set, and the starting speed. Exact board
 dimensions, reproducibility controls, and control-frame preferences are reached
@@ -245,8 +252,11 @@ Progressive disclosure must not weaken the keyboard-first contract:
 - focusing a control keeps it visible within the scrolling viewport.
 
 A validation failure must never be silent. A failure belonging to a collapsed
-section stays explained in the always-visible setup summary, and a blocked
-launch exposes and focuses the section owning the first failure.
+section stays explained in the always-visible setup summary, and the surface
+must offer a control the player can actually activate that exposes and focuses
+the section owning the first failure. Where the launch action is disabled while
+the setup is invalid, that action cannot itself be the recovery path, because a
+disabled control emits no activation.
 
 ## 5. Layout and Readability Requirements
 

@@ -28,7 +28,7 @@ const INVARIANT_FIELDS := [
 		"label": "Preset Shortcut",
 		"description": "Named board shortcut; editing dimensions derives Custom.",
 		"category": "game_definition",
-		"disclosure": "ordinary",
+		"section": "ordinary",
 		"identity": "session_identity",
 		"session_key": "board_preset_id",
 		"value_type": "enum",
@@ -40,7 +40,7 @@ const INVARIANT_FIELDS := [
 		"label": "Piece Set",
 		"description": "Piece family the session generates.",
 		"category": "game_definition",
-		"disclosure": "ordinary",
+		"section": "ordinary",
 		"identity": "session_identity",
 		"session_key": "piece_set_id",
 		"value_type": "enum",
@@ -52,7 +52,7 @@ const INVARIANT_FIELDS := [
 		"label": "Randomness",
 		"description": "Whether the piece sequence is reproducible.",
 		"category": "game_definition",
-		"disclosure": "ordinary",
+		"section": "advanced_game",
 		"identity": "session_identity",
 		"session_key": "random_mode",
 		"value_type": "enum",
@@ -64,7 +64,7 @@ const INVARIANT_FIELDS := [
 		"label": "Seed",
 		"description": "Reproducible sequence seed; meaningful only under fixed-seed randomness.",
 		"category": "contextual_game_definition",
-		"disclosure": "contextual",
+		"section": "advanced_game",
 		"identity": "session_identity",
 		"session_key": "seed",
 		"value_type": "int",
@@ -79,7 +79,7 @@ const INVARIANT_FIELDS := [
 		"label": "Starting Speed",
 		"description": "Starting gravity cadence.",
 		"category": "game_definition",
-		"disclosure": "ordinary",
+		"section": "ordinary",
 		"identity": "session_identity",
 		"session_key": "initial_speed_level",
 		"value_type": "int",
@@ -93,7 +93,7 @@ const INVARIANT_FIELDS := [
 		"label": "Translation",
 		"description": "Relative controls follow the current view; Absolute controls use canonical axes and planes.",
 		"category": "advanced_gameplay_input",
-		"disclosure": "secondary",
+		"section": "controls",
 		"identity": "input_preference",
 		"value_type": "enum",
 		"control_type": "selector",
@@ -105,7 +105,7 @@ const INVARIANT_FIELDS := [
 		"label": "Rotation",
 		"description": "Relative controls follow the current view; Absolute controls use canonical axes and planes.",
 		"category": "advanced_gameplay_input",
-		"disclosure": "secondary",
+		"section": "controls",
 		"identity": "input_preference",
 		"value_type": "enum",
 		"control_type": "selector",
@@ -145,6 +145,21 @@ static func visible_specs_for(mode: String, entry: Dictionary) -> Array:
 	var specs: Array = []
 	for spec in specs_for_mode(mode):
 		if spec.is_visible_for(mode, entry):
+			specs.append(spec)
+	return specs
+
+
+static func section_for_field(mode: String, field_id: String) -> String:
+	for spec in specs_for_mode(mode):
+		if spec.id() == field_id:
+			return spec.section()
+	return ""
+
+
+static func specs_for_section(mode: String, section: String) -> Array:
+	var specs: Array = []
+	for spec in specs_for_mode(mode):
+		if spec.section() == section:
 			specs.append(spec)
 	return specs
 
@@ -219,7 +234,7 @@ static func _axis_field_data(mode: String) -> Array:
 			"label": axis_name,
 			"description": "Board extent along %s." % axis_name,
 			"category": SetupFieldSpecScript.CATEGORY_GAME_DEFINITION,
-			"disclosure": SetupFieldSpecScript.DISCLOSURE_ORDINARY,
+			"section": SetupFieldSpecScript.SECTION_BOARD,
 			"identity": SetupFieldSpecScript.IDENTITY_SESSION,
 			"session_key": "board_shape",
 			"value_type": "shape_axis",

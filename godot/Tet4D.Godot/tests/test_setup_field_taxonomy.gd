@@ -31,6 +31,7 @@ func run() -> Array:
 	_check_disclosure_assignment(failures)
 	_check_contextual_visibility(failures)
 	_check_piece_set_choice_modes(failures)
+	_check_section_placement_declarations(failures)
 	_check_session_identity_conformance(failures)
 	_check_range_conformance(failures)
 	_check_rule_enforcement(failures)
@@ -59,15 +60,29 @@ func _check_total_classification(failures: Array) -> void:
 
 func _check_disclosure_assignment(failures: Array) -> void:
 	for spec in SetupFieldRegistryScript.specs_for_mode(GameSetupSpecScript.MODE_4D):
+		if not SetupFieldSpecScript.ALLOWED_SECTIONS.has(spec.section()):
+			failures.append("%s: unknown presentation section %s" % [spec.id(), spec.section()])
 		match spec.category():
-			SetupFieldSpecScript.CATEGORY_GAME_DEFINITION:
-				if not spec.is_always_visible():
-					failures.append("%s: game definition must stay in the ordinary path" % spec.id())
 			SetupFieldSpecScript.CATEGORY_ADVANCED_GAMEPLAY_INPUT:
+				if spec.section() == SetupFieldSpecScript.SECTION_ORDINARY:
+					failures.append("%s: advanced gameplay input must not sit in the ordinary path" % spec.id())
 				if spec.disclosure() != SetupFieldSpecScript.DISCLOSURE_SECONDARY:
 					failures.append("%s: advanced gameplay input must be visually secondary" % spec.id())
 				if spec.defines_session_identity():
 					failures.append("%s: advanced gameplay input must not define session identity" % spec.id())
+	# Reproducibility is game definition that the RDS requires to be presented
+	# secondarily. Deriving disclosure from category rather than from placement
+	# is exactly the contradiction this asserts against.
+	var random_spec = _spec(GameSetupSpecScript.MODE_4D, "random_mode")
+	if random_spec == null:
+		failures.append("randomness must remain a declared setup field")
+	else:
+		if random_spec.category() != SetupFieldSpecScript.CATEGORY_GAME_DEFINITION:
+			failures.append("randomness must remain game definition")
+		if random_spec.section() != SetupFieldSpecScript.SECTION_ADVANCED:
+			failures.append("randomness must be placed in the advanced section")
+		if random_spec.disclosure() == SetupFieldSpecScript.DISCLOSURE_ORDINARY:
+			failures.append("randomness must not resolve to ordinary disclosure")
 	var advanced_ids: Array = _spec_ids(SetupFieldRegistryScript.specs_for_category(
 		GameSetupSpecScript.MODE_4D, SetupFieldSpecScript.CATEGORY_ADVANCED_GAMEPLAY_INPUT
 	))
@@ -174,6 +189,28 @@ func _expected_int_range(field_id: String) -> Array:
 	return []
 
 
+func _spec(mode: String, field_id: String):
+	for spec in SetupFieldRegistryScript.specs_for_mode(mode):
+		if spec.id() == field_id:
+			return spec
+	return null
+
+
+# Every field must name a presentation section, and every section the panel can
+# build must be declared by at least one field in some mode.
+func _check_section_placement_declarations(failures: Array) -> void:
+	var seen: Array = []
+	for mode in GameSetupSpecScript.modes():
+		for spec in SetupFieldRegistryScript.specs_for_mode(mode):
+			if spec.section().is_empty():
+				failures.append("%s/%s must declare a presentation section" % [mode, spec.id()])
+			elif not seen.has(spec.section()):
+				seen.append(spec.section())
+	for section in SetupFieldSpecScript.ALLOWED_SECTIONS:
+		if not seen.has(section):
+			failures.append("no setup field declares the %s section" % section)
+
+
 func _spec_ids(specs: Array) -> Array:
 	var ids: Array = []
 	for spec in specs:
@@ -189,17 +226,28 @@ func _check_rule_enforcement(failures: Array) -> void:
 
 	var advanced_claiming_identity := base.duplicate(true)
 	advanced_claiming_identity["category"] = SetupFieldSpecScript.CATEGORY_ADVANCED_GAMEPLAY_INPUT
-	advanced_claiming_identity["disclosure"] = SetupFieldSpecScript.DISCLOSURE_SECONDARY
+	advanced_claiming_identity["section"] = SetupFieldSpecScript.SECTION_CONTROLS
 	_expect_failure(failures, advanced_claiming_identity, modes, "advanced field declared as session identity")
 
 	var presentation_claiming_identity := base.duplicate(true)
 	presentation_claiming_identity["category"] = SetupFieldSpecScript.CATEGORY_PRESENTATION_PREFERENCE
-	presentation_claiming_identity["disclosure"] = SetupFieldSpecScript.DISCLOSURE_SECONDARY
+	presentation_claiming_identity["section"] = SetupFieldSpecScript.SECTION_CONTROLS
 	_expect_failure(failures, presentation_claiming_identity, modes, "presentation preference declared as session identity")
 
-	var mismatched_disclosure := base.duplicate(true)
-	mismatched_disclosure["disclosure"] = SetupFieldSpecScript.DISCLOSURE_SECONDARY
-	_expect_failure(failures, mismatched_disclosure, modes, "category/disclosure mismatch")
+	var advanced_in_ordinary := base.duplicate(true)
+	advanced_in_ordinary["category"] = SetupFieldSpecScript.CATEGORY_ADVANCED_GAMEPLAY_INPUT
+	advanced_in_ordinary["identity"] = SetupFieldSpecScript.IDENTITY_INPUT_PREFERENCE
+	advanced_in_ordinary.erase("session_key")
+	advanced_in_ordinary["section"] = SetupFieldSpecScript.SECTION_ORDINARY
+	_expect_failure(failures, advanced_in_ordinary, modes, "advanced input placed in the ordinary path")
+
+	var unknown_section := base.duplicate(true)
+	unknown_section["section"] = "cockpit"
+	_expect_failure(failures, unknown_section, modes, "unknown presentation section")
+
+	var missing_section := base.duplicate(true)
+	missing_section.erase("section")
+	_expect_failure(failures, missing_section, modes, "field without a presentation section")
 
 	var stray_condition := base.duplicate(true)
 	stray_condition["visible_when"] = {"field": "random_mode", "equals": "fixed_seed"}
@@ -300,6 +348,18 @@ func _compare_panel_to_registry(failures: Array, panel, model, mode: String, ran
 		if hidden_control.focus_mode != Control.FOCUS_NONE:
 			failures.append("%s: semantically hidden %s must not be a focus target" % [context, spec.id()])
 
+	# Declared placement must match where the control actually lives, so the
+	# taxonomy cannot claim a disclosure level the panel does not render.
+	for spec in SetupFieldRegistryScript.specs_for_mode(mode):
+		var placed = _control_for_field(panel, spec.id())
+		if placed == null:
+			continue
+		var rendered_section := _rendered_section_for(panel, placed as Control)
+		if rendered_section != spec.section():
+			failures.append("%s: %s is declared in section %s but rendered in %s" % [
+				context, spec.id(), spec.section(), rendered_section,
+			])
+
 	# Nothing rendered may be unclassified, in any disclosure state.
 	var revealed: Array = []
 	for control in applicable:
@@ -324,6 +384,18 @@ func _compare_panel_to_registry(failures: Array, panel, model, mode: String, ran
 			failures.append("%s: revealed %s must be a focus target" % [context, spec.id()])
 	for section_id in panel.disclosure_section_ids():
 		panel.set_section_expanded(section_id, false)
+
+
+# Walks the real scene tree to find the disclosure section a control lives in,
+# independent of how the panel decided to place it.
+func _rendered_section_for(panel, control: Control) -> String:
+	var node: Node = control
+	while node != null and node != panel:
+		var node_name := str(node.name)
+		if node_name.begins_with("Section__"):
+			return node_name.trim_prefix("Section__")
+		node = node.get_parent()
+	return SetupFieldSpecScript.SECTION_ORDINARY
 
 
 func _visible_value_controls(node: Node) -> Array:

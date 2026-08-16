@@ -23,6 +23,7 @@ func run() -> Array:
 	await _check_piece_set_disclosure(failures)
 	await _check_advanced_game_disclosure(failures)
 	await _check_controls_disclosure(failures)
+	await _check_blocked_launch_recovery(failures)
 	await _check_deterministic_isolation(failures)
 	await _check_navigation(failures)
 	return failures
@@ -274,10 +275,6 @@ func _check_advanced_game_disclosure(failures: Array) -> void:
 		failures.append("a hidden seed failure must still be explained in the summary")
 	if not panel._validation_label.is_visible_in_tree():
 		failures.append("a hidden seed failure must leave the summary visible")
-	panel._on_start_pressed()
-	await tree.process_frame
-	if not panel.is_section_expanded(panel.SECTION_ADVANCED):
-		failures.append("blocked Start must expose the section owning the failure")
 	await _free_panel(harness)
 
 
@@ -460,6 +457,107 @@ func _check_navigation(failures: Array) -> void:
 	await _free_panel(harness)
 
 
+# --- Blocked launch recovery --------------------------------------------------
+
+
+# `Start Game` is disabled while the setup is invalid, and a disabled Godot
+# button emits no `pressed`, so the reveal path must belong to a control the
+# player can actually activate. These checks drive real pointer and key events
+# through the live tree rather than calling the panel's handlers.
+func _check_blocked_launch_recovery(failures: Array) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var original_size: Vector2i = tree.root.size
+	tree.root.size = Vector2i(1600, 960)
+	var harness := await _make_panel(GameSetupSpecScript.MODE_4D)
+	var panel = harness["panel"]
+
+	var reveal := panel.find_child("RevealProblemButton", true, false) as Button
+	if reveal == null:
+		failures.append("the setup surface must provide a reveal action for blocked launches")
+		await _free_panel(harness)
+		tree.root.size = original_size
+		return
+	if reveal.is_visible_in_tree():
+		failures.append("the reveal action must not appear while the setup is valid")
+
+	# Break the seed, then collapse the section that owns it.
+	panel.set_section_expanded(panel.SECTION_ADVANCED, true)
+	await _settle(tree)
+	panel._seed_input.text = "1e3"
+	panel._on_seed_changed(panel._seed_input.text)
+	panel.set_section_expanded(panel.SECTION_ADVANCED, false)
+	await _settle(tree)
+
+	if not panel._start_button.disabled:
+		failures.append("an invalid seed must leave Start non-launchable")
+	if not reveal.is_visible_in_tree():
+		failures.append("a blocked setup must present the reveal action")
+	if reveal.disabled:
+		failures.append("the reveal action must stay activatable while Start is blocked")
+	if reveal.focus_mode != Control.FOCUS_ALL:
+		failures.append("the reveal action must be keyboard focusable")
+
+	# A real click on the disabled Start must not launch anything.
+	var launched: Array = []
+	panel.start_requested.connect(func(setup: Dictionary) -> void: launched.append(setup))
+	await _click(tree, panel._start_button)
+	await _settle(tree)
+	if not launched.is_empty():
+		failures.append("a disabled Start must not launch an invalid setup")
+
+	# Pointer activation of the reveal action must expose and focus the field.
+	await _click(tree, reveal)
+	await _settle(tree)
+	if not panel.is_section_expanded(panel.SECTION_ADVANCED):
+		failures.append("clicking the reveal action must expose the section owning the failure")
+	if tree.root.gui_get_focus_owner() != panel._seed_input:
+		failures.append("clicking the reveal action must focus the failing field")
+
+	# Keyboard activation must reach the same path.
+	panel.set_section_expanded(panel.SECTION_ADVANCED, false)
+	await _settle(tree)
+	reveal.grab_focus()
+	await _settle(tree)
+	if tree.root.gui_get_focus_owner() != reveal:
+		failures.append("the reveal action must accept keyboard focus")
+	_send_key(KEY_ENTER)
+	await _settle(tree)
+	if not panel.is_section_expanded(panel.SECTION_ADVANCED):
+		failures.append("Enter on the reveal action must expose the section owning the failure")
+	if tree.root.gui_get_focus_owner() != panel._seed_input:
+		failures.append("Enter on the reveal action must focus the failing field")
+
+	# Recovering clears both the block and the reveal action.
+	panel._seed_input.text = "1337"
+	panel._on_seed_changed(panel._seed_input.text)
+	await _settle(tree)
+	if panel._start_button.disabled:
+		failures.append("a repaired seed must restore Start")
+	if reveal.is_visible_in_tree():
+		failures.append("a repaired setup must withdraw the reveal action")
+	if reveal.focus_mode != Control.FOCUS_NONE:
+		failures.append("a withdrawn reveal action must leave the focus ring")
+
+	# The same path recovers a dimension failure inside the board section.
+	panel.set_section_expanded(panel.SECTION_BOARD, true)
+	await _settle(tree)
+	panel._axis_inputs[3].text = "not-a-number"
+	panel._on_axis_text_changed(3, "not-a-number")
+	panel.set_section_expanded(panel.SECTION_BOARD, false)
+	await _settle(tree)
+	if not reveal.is_visible_in_tree():
+		failures.append("a hidden dimension failure must present the reveal action")
+	await _click(tree, reveal)
+	await _settle(tree)
+	if not panel.is_section_expanded(panel.SECTION_BOARD):
+		failures.append("the reveal action must expose the board section for a dimension failure")
+	if tree.root.gui_get_focus_owner() != panel._axis_inputs[3]:
+		failures.append("the reveal action must focus the failing dimension editor")
+
+	await _free_panel(harness)
+	tree.root.size = original_size
+
+
 # --- Helpers ------------------------------------------------------------------
 
 
@@ -487,6 +585,36 @@ func _index_for_metadata(selector: OptionButton, value: String) -> int:
 			selector.select(index)
 			return index
 	return -1
+
+
+func _settle(tree: SceneTree) -> void:
+	await tree.process_frame
+	await tree.process_frame
+
+
+# Measured after settling, because layout shifts as sections open and close.
+func _click(tree: SceneTree, control: Control) -> void:
+	await _settle(tree)
+	var point := control.get_global_rect().get_center()
+	for pressed in [true, false]:
+		var event := InputEventMouseButton.new()
+		event.position = point
+		event.global_position = point
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.pressed = pressed
+		tree.root.push_input(event)
+		await tree.process_frame
+
+
+func _send_key(keycode: Key) -> void:
+	var pressed := InputEventKey.new()
+	pressed.keycode = keycode
+	pressed.pressed = true
+	Input.parse_input_event(pressed)
+	var released := InputEventKey.new()
+	released.keycode = keycode
+	released.pressed = false
+	Input.parse_input_event(released)
 
 
 func _is_within_scroll(scroll: ScrollContainer, control: Control) -> bool:
