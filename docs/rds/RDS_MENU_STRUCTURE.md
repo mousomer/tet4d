@@ -199,6 +199,64 @@ The progressive-disclosure rule is:
 Where enforcement is required, menu work must extend or reuse the existing
 `menu_structure_single_source`, `menu_control_typing_contract`, and menu-graph
 machinery. Do not introduce another menu validator merely for this taxonomy.
+Setup controls whose large numeric range requires direct value entry use the
+semantic control type `numeric_entry`; a product shell may map that type to its
+native numeric text-entry widget. A control whose range is small enough for
+stepping to be the primary interaction remains a `stepper` even where the shell
+also accepts a typed value.
+
+### 4.5 Setup disclosure behaviour
+
+A field is absent from the setup surface for exactly one of two unrelated
+reasons, and the two must not be conflated:
+
+1. **Semantic inapplicability** — the field does not apply to the selected mode,
+   or its contextual condition does not hold. This is taxonomy state.
+2. **Undisclosed presentation** — the field applies, but the secondary section
+   holding it is collapsed. This is presentation state.
+
+Only the first may be expressed in the setup field taxonomy. Expanding every
+section must reveal every applicable field, so collapse is the only remaining
+reason an applicable field is off screen.
+
+Semantic category and presentation placement are separate declarations. A field
+may be game definition and still be presented secondarily: reproducibility is
+game definition that this document requires to sit behind advanced disclosure,
+and board dimensions are game definition presented behind board customization.
+Disclosure level must therefore derive from declared placement, never from
+category, or the declaration will contradict the rendered surface.
+
+The ordinary setup path carries the board preset shortcut, the piece-set choice
+where a mode publishes more than one set, and the starting speed. Exact board
+dimensions, reproducibility controls, and control-frame preferences are reached
+through secondary disclosure. A one-option selector is not presented merely to
+keep modes structurally identical; the mode still carries that value in its
+session definition.
+
+A board shape matching no named preset reads as `Custom` and exposes its
+dimensions without a further discovery step, including after the setup surface
+is left and re-entered. Selecting the derived `Custom` identity exposes the
+dimension editors and does not mutate the current shape.
+
+Disclosure state is ephemeral presentation state. It must not enter canonical
+session setup, setup persistence, settings persistence, snapshots, hashes,
+traces, replays, or native session state, and it requires no schema version.
+
+Progressive disclosure must not weaken the keyboard-first contract:
+
+- disclosure controls are keyboard focusable and toggle through the same
+  semantic path for pointer and keyboard;
+- undisclosed controls are excluded from focus navigation and cannot take focus;
+- collapsing a section that holds focus moves focus to that section's own
+  disclosure control rather than dropping it;
+- focusing a control keeps it visible within the scrolling viewport.
+
+A validation failure must never be silent. A failure belonging to a collapsed
+section stays explained in the always-visible setup summary, and the surface
+must offer a control the player can actually activate that exposes and focuses
+the section owning the first failure. Where the launch action is disabled while
+the setup is invalid, that action cannot itself be the recovery path, because a
+disabled control emits no activation.
 
 ## 5. Layout and Readability Requirements
 

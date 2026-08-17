@@ -2482,7 +2482,13 @@ def test_menu_control_typing_detects_mismatched_semantic_controls(
                 "menu_control_typing_contract": {
                     "setting_semantic_types": ["bool", "enum", "int", "float"],
                     "menu_control_types": ["toggle", "selector", "slider", "stepper"],
-                    "setup_control_types": ["toggle", "selector", "slider", "stepper"],
+                    "setup_control_types": [
+                        "toggle",
+                        "selector",
+                        "slider",
+                        "stepper",
+                        "numeric_entry",
+                    ],
                     "selector_options_key_required": True,
                     "enum_setup_option_source_tokens": ["piece_set_labels"],
                 }
@@ -2543,7 +2549,13 @@ def test_menu_control_typing_accepts_semantic_type_aligned_controls(
                 "menu_control_typing_contract": {
                     "setting_semantic_types": ["bool", "enum", "int", "float"],
                     "menu_control_types": ["toggle", "selector", "slider", "stepper"],
-                    "setup_control_types": ["toggle", "selector", "slider", "stepper"],
+                    "setup_control_types": [
+                        "toggle",
+                        "selector",
+                        "slider",
+                        "stepper",
+                        "numeric_entry",
+                    ],
                     "selector_options_key_required": True,
                     "enum_setup_option_source_tokens": ["piece_set_labels"],
                 }
@@ -2607,6 +2619,28 @@ def test_menu_control_typing_accepts_semantic_type_aligned_controls(
     monkeypatch.setattr(contracts, "MENU_STRUCTURE_PATH", menu_path)
 
     assert contracts._validate_menu_control_typing() == []
+
+
+def test_menu_control_typing_rejects_godot_control_type_absent_from_policy(
+    tmp_path: Path, monkeypatch
+) -> None:
+    spec_path = tmp_path / "setup_field_spec.gd"
+    spec_path.write_text(
+        'const ALLOWED_CONTROL_TYPES := ["selector", "future_control"]\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(contracts, "GODOT_SETUP_FIELD_SPEC_PATH", spec_path)
+
+    issues: list[contracts.ValidationIssue] = []
+    contracts._validate_godot_setup_control_vocabulary(
+        {"selector", "numeric_entry"}, issues
+    )
+
+    assert any(
+        "future_control" in issue.message
+        and "menu_control_typing_contract.setup_control_types" in issue.message
+        for issue in issues
+    )
 
 
 def test_deprecated_authority_checks_detect_reintroduced_path(

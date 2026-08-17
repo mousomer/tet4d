@@ -1,182 +1,199 @@
-# Task Contract — Stage 54E-2d Lifecycle, Authority, and Contract Reconciliation
+# Task Contract — Stage 54E-3b Setup Progressive Disclosure
 
 ## Objective
 
-Complete Stage 54E-2 implementation by enforcing the accepted Live-4D
-presentation lifecycle and reconciling the public control, persistence, RDS,
-architecture, authority, programme, backlog, and restart-handoff contracts with
-the reviewed-green `B -> G_D -> L -> anchor -> V/P` implementation.
+Render the accepted `RDS_MENU_STRUCTURE.md` section 4.4 setup taxonomy as
+progressive disclosure across 2D, 3D, and 4D, so ordinary setup is concise while
+complete board configuration, reproducibility controls, and advanced input
+configuration remain fully reachable. This slice changes information
+architecture only: no setup value, validation rule, canonical session payload,
+persisted document, or deterministic behaviour changes.
 
 ## Current Authority
 
-- `docs/architecture/4d_presentation_interaction_architecture.md`: accepted
-  transform, ownership, lifecycle, pitch-depth, preset, and staged-delivery
-  contract.
-- `docs/architecture/game_safe_4d_slice_basis.md`: exact signed `B`, reset,
-  input-routing, and deterministic-exclusion contract.
-- `docs/rds/RDS_4D_TETRIS.md` and `docs/rds/RDS_KEYBINDINGS.md`: durable
-  product and binding requirements, interpreted with explicit runtime scope
-  where inherited Python behavior differs from the Godot product shell.
-- `docs/ARCHITECTURE_CONTRACT.md` and
-  `docs/architecture/authority_map.md`: Godot presentation ownership and
-  native deterministic-gameplay boundary.
-- `docs/architecture/editable_board_setup_and_persistence.md` and
-  `docs/architecture/godot_shell_settings_persistence.md`: frozen game setup,
-  last-valid setup, shell preference, recovery, and persistence ownership.
-- `docs/plans/professional_godot_game_programme.md`, `CURRENT_STATE.md`, and
-  `docs/BACKLOG.md`: Stage 54E sequencing, current handoff, and explicit
-  deferrals.
-- `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`, `AGENTS.md`,
-  and `godot/AGENTS.md`: routing and verification governance.
+- `docs/rds/RDS_MENU_STRUCTURE.md`: section 4.4 setup and presentation ownership
+  taxonomy and the progressive-disclosure rule; section 4.5 setup disclosure
+  behaviour; section 5.1 shared shell layout and overflow behaviour.
+- `docs/plans/professional_godot_game_programme.md`: Stage 54E-3 scope, the
+  requirement to reuse existing menu machinery, and the prohibition on adding
+  another menu validator for the taxonomy.
+- `docs/architecture/editable_board_setup_and_persistence.md`: frozen game
+  setup, last-valid setup, draft, and persistence ownership.
+- `docs/ARCHITECTURE_CONTRACT.md` and `docs/architecture/authority_map.md`:
+  Godot presentation ownership and the native deterministic-gameplay boundary.
+- `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`, `AGENTS.md`, and
+  `godot/AGENTS.md`: routing and verification governance.
 
-Godot owns `B`, shared continuous `L`, layout, renderer composition, `V/P`,
-input adaptation, help, and presentation lifecycle. Native gameplay remains
-authoritative for canonical state and session transitions. This slice performs
-no authority transfer or establishment.
+Godot owns the setup presentation surface. Native gameplay remains
+authoritative for canonical session construction. This slice performs no
+authority transfer and no authority establishment.
 
 ## Allowed Systems and Paths
 
-- Godot Live-4D app/session lifecycle orchestration.
-- Godot renderer presentation teardown and semantic state snapshots.
-- Godot `CameraRig` default framing/projection/reflection reset seam.
-- Godot normal Live-4D action registration, routing, helper, and help copy.
-- Focused Godot lifecycle, input, camera, renderer, settings, setup,
-  persistence, deterministic-isolation, and integration tests.
-- Necessary task, RDS, architecture, authority, programme, backlog, design,
-  README/control, and restart-handoff documentation.
+- `godot/Tet4D.Godot/scripts/ui/game_setup/game_setup_panel.gd` rendering,
+  disclosure, focus, and validation presentation.
+- `godot/Tet4D.Godot/scripts/ui/game_setup/setup_field_registry.gd` declared
+  mode applicability.
+- Focused Godot setup disclosure, navigation, and taxonomy conformance tests.
+- Task, RDS, programme, backlog, and restart-handoff documentation.
 
 ## Required Changes
 
-- Establish app-owned seams for fresh Live-4D defaults, session teardown, and
-  basis-only reset without redesigning transform ownership.
-- Reset ephemeral `B/L/V/P`, anchors/bounds/fit reference, reflection, helper,
-  and resolver state on the lifecycle events that own a full reset.
-- Keep Restart Game bound to native reconstruction of the frozen current setup
-  and preserve existing deterministic seed/RNG/session behavior.
-- Make Reset View presentation-only and basis reset `B`-only, with explicit
-  deterministic-isolation evidence.
-- Clear stale Live-4D state and renderer children on setup/menu exit and mode
-  transition; re-entry must start from coherent defaults on its first frame.
-- Keep presets decomposed into `L` plus `V/P`, non-persistent, and independent
-  of `B` and canonical gameplay.
-- Remove normal-gameplay roll action registration/routing/help exposure while
-  retaining generic low-level `CameraRig` roll primitives.
-- Reconcile Live-4D terminology and the Reset View / Restart Game / Fit View
-  distinction across runtime helpers and durable documentation.
-- Make inherited Python keybinding scope explicit rather than changing Python
-  behavior or shared keybinding configuration to match Godot.
-- Prove ephemeral presentation fields are absent from settings/setup/native
-  identity while established frame and camera preferences continue to persist.
-- Close Stage 54E-2 authority records to reviewed-green state only after
-  external review has accepted the implementation evidence.
+- Group the ordinary surface as board preset shortcut, piece set where a choice
+  exists, and starting speed, with `Customize Board`, `Advanced Game`, and
+  `Controls` as secondary disclosures and `Start Game` as the primary action.
+- Keep every Stage 54B board capability: preset shortcuts, per-axis
+  decrement/direct entry/increment, structured validation, and `Reset Sizes`,
+  now placed with board customization rather than in the primary action row.
+- Auto-expose a board shape that matches no named preset, including after the
+  surface is rebuilt, and make the derived `Custom` identity expose the
+  dimension editors without mutating the shape.
+- Stop presenting a one-option piece-set selector. Declare `piece_set` only for
+  the modes that publish more than one production set, and bind that declaration
+  to the piece-set catalogue in test rather than restating it.
+- Remove the bounded duplication Stage 54E-3a recorded: piece-set and
+  control-frame mode applicability and the conditional seed rule must resolve
+  through `SetupFieldRegistry` and `SetupFieldSpec.is_visible_for()` instead of
+  a second copy of those rules in the panel.
+- Exclude undisclosed controls from focus navigation, move focus to the owning
+  disclosure control when a section holding focus collapses, and keep the
+  focused control visible in the scrolling viewport.
+- Keep validation actionable under disclosure: fold seed text that never
+  reached the model into the always-visible summary, and offer an enabled,
+  focusable control that exposes and focuses the section owning the first
+  failure. `Start Game` is disabled while the setup is invalid and a disabled
+  Godot button emits no `pressed`, so it cannot be that control.
+- Declare presentation placement separately from semantic category, and have
+  the panel place controls from that declaration, so a field can be game
+  definition while being presented secondarily without the taxonomy
+  contradicting the rendered surface.
 
 ## Forbidden Changes
 
-- Native C++, Python gameplay, deterministic rules, topology, collision,
-  gravity, scoring, hard drop, RNG, queue/NEXT, Ghost landing, replay/trace
-  schema, or board-extent semantics.
-- Quantized-yaw mathematics, ties-to-even, the `[-40°, +60°]` pitch policy,
-  transform ordering, fitted mount, reflection mechanism, or projection proof.
-- Stage 54D-3 Hold; Stages 54E-3/4/5; Stage 54F visual work; Stage 54G release
-  hardening; Issues #69/#70.
-- Preset taxonomy/names/categories/UI/persistence redesign; Explorer UI;
-  topology UI; gamepad support; a keybinding editor/profile/schema redesign.
-- A new persistent `B/L/V/P` schema or authority-establishment record.
+- Adding disclosure, section, or presentation state to `GameSetupModel`
+  canonical session setup, `game_setup_store.gd` persistence, settings
+  persistence, snapshots, hashes, traces, replays, or native session state.
+- Any setup or persistence schema version change.
+- Changing queue or RNG semantics, effective-seed behaviour, seed bounds,
+  deterministic identity, control-frame semantics, relative-command resolution,
+  `SliceLocalOrientation`, `SliceBasis4D`, `CameraRig`, or native movement.
+- Adding a new menu validator, governance subsystem, or general-purpose
+  disclosure framework; editing `config/menu/structure.json`.
+- Adding piece sets, redesigning the speed curve, or moving speed authority
+  into Godot.
+- Stage 54D-3 Hold; Stage 54E-4 camera/GUI presets; Stage 54E-5 cockpit; Stage
+  54F visual work including Issues #69 and #70; Stage 54G release hardening.
 
 ## Acceptance Criteria
 
-1. Fresh/configured/random Live-4D sessions start with identity `B`, default
-   yaw/pitch `L`, recomputed layout/bounds, and fitted reflected default `V/P`.
-2. Restart Game reconstructs the frozen current setup and resets presentation
-   defaults without changing its established deterministic semantics.
-3. Change Setup, menu return, and mode transitions clear Live-4D ephemeral
-   state, presentation children, fit state, and reflection authority.
-4. Re-entering Live 4D after another mode uses fresh presentation defaults;
-   Live 3D retains its existing camera behavior and inherits no 4D state.
-5. Reset View resets `B + L + V/P` and renderer/resolver/HUD state without
-   changing native snapshot, hash, RNG, score, queue, cells, Ghost, or setup.
-6. The internal basis-only reset restores identity `B` and dependent
-   layout/bounds while preserving `L`, pan/focus, zoom, projection, and frame
-   preferences.
-7. Presets preserve `B`, anchors, canonical gameplay, and preferences while
-   updating shared `L`, oriented bounds/fit inputs, and framing coherently.
-8. No stale cells, Ghost, active nodes, grids, frames, labels, markers, gizmo
-   authority, fit envelope, reflection pivot, focus, or interpolation state
-   survives presentation teardown/re-entry.
-9. Ephemeral presentation state is not serialized in shell settings, game
-   setup, native snapshot/hash, or replay identity; accepted presentation and
-   frame preferences retain their established persistence.
-10. Normal Live-4D gameplay registers and advertises no roll action; reusable
-    low-level camera roll remains available outside normal gameplay.
-11. Public Live-4D help distinguishes piece movement/rotation, exact 90° view
-    rotation/re-slicing, slice orientation, framing, Drop, Session, and
-    Navigation, and accurately distinguishes Restart, Reset View, and Fit.
-12. RDS/architecture/authority documents describe exact `B`, continuous
-    yaw/pitch `L`, yaw-only `Q`, framing-only `V/P`, lifecycle reset semantics,
-    deterministic exclusion, and runtime-specific binding scope.
-13. Existing screen-right/Forward-depth, active-spawn, NEXT, Ghost,
-    asymmetric-board, `W=1`, and signed-basis guarantees remain green.
-14. Resolver-required focused, governance, sanitation, full-repository, and
-    real-window verification pass; the worktree is clean; external technical
-    review is green; the PR remains unmerged until reviewed-green status
-    reconciliation and protected merge are complete.
+1. Ordinary 2D, 3D, and 4D setup exposes the primary controls with every
+   secondary section collapsed, and `Start Game` is immediately available for
+   valid defaults.
+2. A preset-backed board does not permanently expose axis editors;
+   `Customize Board` exposes exactly the active axes for the mode.
+3. A non-preset board reads as `Custom` and exposes its dimensions on a rebuilt
+   surface without another step.
+4. Malformed dimension text stays visible, structured, and non-launchable, and
+   increment recovers from it using the last-valid dimension.
+5. `Reset Sizes` restores canonical dimensions without resetting piece set,
+   speed, or control frames.
+6. 2D presents no piece-set selector while still carrying `classic` in its
+   session payload; 3D and 4D keep every audited piece set with its identity,
+   label, and compatibility validation.
+7. Fixed Seed exposes Seed and True Random hides it; a hidden Seed is not a
+   focus target; seed validation is unchanged.
+8. The control-frame disclosure is absent in 2D, present and collapsed by
+   default in 3D and 4D, and toggling it does not change the frame values.
+9. A blocked setup presents an enabled, focusable reveal action; activating it
+   by real pointer click and by real key press both expand the owning section
+   and focus the failing field; a real click on the disabled Start launches
+   nothing; repairing the value withdraws the action.
+10. Every field's declared presentation section equals the section that
+    actually contains its control in the live scene tree.
+11. Toggling every disclosure leaves `canonical_session_setup()` and
+    `last_valid_entries()` unchanged, and the persisted document records no
+    disclosure state.
+12. Undisclosed controls are not focus targets, focus order traverses only
+    revealed controls and returns to its origin, collapsing a section holding
+    focus lands focus on its disclosure control, and collapsing an unfocused
+    section does not steal focus.
+13. Expanding every section reveals every applicable field, so collapse is the
+    only remaining reason an applicable field is off screen.
+14. Resolver-required focused, documentation, human-visual, sanitation, and
+    full-repository verification pass, and the tracked worktree is clean.
 
 ## Automated Verification
 
-- Policy resolver: `godot_product_shell` with `staged_handoff` and
-  `cross_layer`.
-- Requirements: `documentation`, `governance_structure`, `godot`,
-  `deterministic`, `integration`, and `human_visual`; full repository gate
-  required; no typical requirement omitted.
-- Focused LiveInputContract, Live-4D lifecycle/reset/session/mode tests,
-  SliceLocalOrientation, ProjectionLayout, CameraRig, renderer cleanup,
-  control-frame mapping, preset, setup/settings persistence, and deterministic
-  isolation.
-- `./scripts/check_keybinding_contract.sh` if shared keybinding/configuration
-  sources change.
+- Policy resolver: `godot_product_shell` with `staged_handoff`.
+- Requirements: `documentation`, `godot`, and `human_visual`. Unlike Stage
+  54E-3a, `human_visual` is claimed because this slice changes what the player
+  sees.
+- `tests/test_setup_progressive_disclosure.gd` for the disclosure, board,
+  piece-set, advanced, controls, deterministic-isolation, and navigation
+  evidence.
+- `tests/test_setup_field_taxonomy.gd` for taxonomy conformance, now asserting
+  semantic and presentational hiding independently.
+- `tests/test_plain_setup_navigation.gd` and `tests/test_game_setup_model.gd`
+  for the Stage 54B and session regressions.
 - `GODOT_BIN=... ./scripts/verify_godot_4_7.sh`.
-- Governance validators and generated-document checks.
 - Git sanitation, `git diff --check`, and `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ## Manual Verification
 
-Run Godot 4.7.1 in a real non-headless window. Cover asymmetric
-`5 x 10 x 4 x 4`, `W=1`, and representative Live 3D sessions. Verify Restart,
-Reset View after visible gameplay change, basis-only reset via the semantic
-seam, representative preset with non-identity `B`, `4D -> 3D -> 4D`, Change
-Setup/relaunch, coherent first frames/Fit/reflection/helpers, and absence of
-normal-gameplay roll advertising or response.
+Recorded in `docs/plans/stage_54e3_setup_disclosure_manual_acceptance.md` with
+environment, per-scenario outcomes, screenshots under
+`docs/design/screenshots/stage_54e3_setup_disclosure/`, corrections made during
+verification, and advisories. That record notes the verification was
+agent-driven rather than a human sign-off.
+
+Drive the real windowed Godot 4.7.1 shell and confirm: 2D setup is concise with
+no one-choice selector and discoverable X/Y; 3D piece-set choice, exact
+dimensions, and a secondary `Controls`; 4D Standard reading as an
+understandable game rather than an engineering form; a 4D custom shape staying
+obvious after leaving and re-entering setup; W=1 with True 4D pieces remaining
+understandable and actionable; conditional Seed presentation under Fixed Seed
+and True Random; a complete keyboard-only traversal; and every disclosure and
+principal action driven by pointer.
 
 ## Documentation Updates
 
-Update only concrete stale statements or required evidence in:
+- `docs/rds/RDS_MENU_STRUCTURE.md`: section 4.4 stepper/`numeric_entry`
+  boundary and new section 4.5 recording durable setup disclosure behaviour —
+  the two hiding reasons, the ordinary path, custom-board legibility,
+  disclosure-state exclusion, the keyboard contract, and visible validation.
+- `docs/plans/professional_godot_game_programme.md`: Stage 54E-3 status and
+  scope outcome; Stage 54E-4 becomes next.
+- `docs/BACKLOG.md` and `CURRENT_STATE.md`: Stage 54E-3 status and next steps.
 
-- `docs/architecture/4d_presentation_interaction_architecture.md`
-- `docs/architecture/game_safe_4d_slice_basis.md`
-- `docs/ARCHITECTURE_CONTRACT.md`
-- `docs/architecture/authority_map.md`
-- `docs/rds/RDS_4D_TETRIS.md`
-- `docs/rds/RDS_KEYBINDINGS.md`
-- `docs/design/godot_visual_system.md` or the current Godot README/control
-  reference where runtime help terminology is stale
-- `docs/plans/professional_godot_game_programme.md`
-- `docs/BACKLOG.md`
-- `CURRENT_STATE.md`
+## Resolved Decisions
+
+- Board-axis controls remain `stepper`. Their ranges are small enough for
+  stepping to be the primary interaction, so direct typed entry is a
+  convenience affordance rather than the required input mode; `numeric_entry`
+  stays reserved for ranges that make stepping impractical, such as the seed.
+  No control factory was introduced, so no factory-level typing decision was
+  forced.
+- Disclosure state is owned by the panel, cleared and recomputed on every
+  `configure()`. It is therefore structurally unable to reach the model, the
+  persisted document, or the native session payload.
+- The all-clear validation confirmation is feedback for dimension editing and
+  is presented with board customization rather than in the ordinary path. A
+  failure is always visible.
 
 ## Explicit Deferrals
 
-- Stage 54D-3 Hold.
-- Stage 54E-3 setup/menu information architecture.
-- Stage 54E-4 preset taxonomy, naming, categories, UI, and persistence.
+- Stage 54E-3c final aggregate RDS, programme, backlog, and handoff
+  reconciliation is complete following external technical review acceptance.
+- Stage 54D-3 Hold and any Hold setup or keybinding field.
+- Stage 54E-4 preset taxonomy, naming, categories, UI, and persistence,
+  including all camera/GUI presentation-preference setup fields.
 - Stage 54E-5 cockpit consolidation.
 - Stage 54F integrated visual acceptance, including Issues #69 and #70.
-- Stage 54G release hardening and full keybinding/remapping/gamepad work.
-- Explorer, topology, challenge, campaign, and simulation later phases.
+- Stage 54G release hardening.
 
 ## Review Outcome
 
-External technical review accepted the implementation and evidence on PR #72.
-Stage 54E-2d is COMPLETE / REVIEWED GREEN, and the aggregate Stage 54E-2
-implementation series is COMPLETE / REVIEWED GREEN. Stage 54E-3 is the next
-eligible Stage 54E implementation slice. Stage 54D-3 Hold remains independently
-eligible.
+Accepted. External technical review found no remaining actionable findings
+after the blocked-launch recovery, declarative presentation-placement, and
+human-visible evidence corrections. Stage 54E-3 is COMPLETE / REVIEWED GREEN.
+No authority transfer or establishment occurs.

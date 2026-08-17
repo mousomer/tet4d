@@ -127,7 +127,15 @@ roll remains reusable. Persistence and deterministic-isolation tests exclude
 ephemeral presentation state while retaining established preferences. No
 authority transfer or establishment occurs. External technical review accepted
 the implementation and its evidence. Aggregate Stage 54E-2 is COMPLETE /
-REVIEWED GREEN; Stage 54E-3 is now NEXT / ELIGIBLE.
+REVIEWED GREEN. Stage 54E-3 is COMPLETE / REVIEWED GREEN: Stage 54E-3a
+taxonomy and classification and Stage 54E-3b progressive-disclosure rendering
+are implemented and accepted by external technical review. Ordinary setup is
+the board preset shortcut, the piece-set choice where a mode publishes more
+than one set, and the starting speed; board customization, reproducibility, and
+control frames sit behind secondary disclosure. Disclosure is ephemeral
+presentation state excluded from canonical session setup, setup persistence,
+and native session state, so no schema version changes. Stage 54E-4 is now NEXT
+/ ELIGIBLE.
 
 ## Hold
 
@@ -148,8 +156,11 @@ a placeholder authority record in advance.
   GREEN).
 - Stage 54E-2d — lifecycle, authority, and contract reconciliation (COMPLETE /
   REVIEWED GREEN).
-- Stage 54E-3 — setup/menu information architecture (NEXT / ELIGIBLE).
-- Stage 54E-4 — camera/GUI presets.
+- Stage 54E-3 — setup/menu information architecture (COMPLETE / REVIEWED
+  GREEN): direct seed input is the semantic control type `numeric_entry`,
+  and board-axis controls remain `stepper` because their ranges make stepping
+  the primary interaction. No control factory was introduced.
+- Stage 54E-4 — camera/GUI presets (NEXT / ELIGIBLE).
 - Stage 54E-5 — cockpit consolidation.
 - Stage 54F — integrated professional playability/visual acceptance.
 - Stage 54G — professional gaming-experience and release hardening.

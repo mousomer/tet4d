@@ -87,7 +87,11 @@ history ledger. Detailed history is preserved in
   public roll removal with generic roll retained, and persistence/deterministic
   exclusion evidence. It performs no authority transfer or establishment.
   Aggregate Stage 54E-2 is COMPLETE / REVIEWED GREEN. Stage 54E-3 — setup/menu
-  information architecture — is now NEXT / ELIGIBLE.
+  information architecture — is COMPLETE / REVIEWED GREEN. Stage 54E-3a
+  declared the taxonomy as data; Stage 54E-3b renders it as progressive
+  disclosure, removes the panel's duplicate visibility rules, and keeps
+  disclosure out of canonical session setup, setup persistence, and native
+  session state. Stage 54E-4 is now NEXT / ELIGIBLE.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -179,11 +183,11 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tools/governance/validate_project_contracts.py`: `4042` real LOC
+1. `tools/governance/validate_project_contracts.py`: `4083` real LOC
 2. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
 3. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
-5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2427` real LOC
+5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2457` real LOC
 6. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
 7. `scripts/arch_metrics.py`: `1899` real LOC
 8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
@@ -220,9 +224,10 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Stage 54E-3 — Setup/menu information architecture — is the next eligible
-   Stage 54E implementation slice. Stage 54D-3 Hold remains independently
-   eligible. Stage 54E-4/5 remain later programme work.
+1. Implement Stage 54E-4 camera/GUI presets, which owns the
+   presentation-preference setup
+   fields this stage deliberately did not add. Stage 54D-3 Hold remains
+   independently eligible. Stage 54E-5 remains later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
