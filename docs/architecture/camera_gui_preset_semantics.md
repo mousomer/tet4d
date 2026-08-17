@@ -1,7 +1,7 @@
 # Camera and GUI Preset Semantics
 
 Role: architecture
-Status: design complete; pending human acceptance of Decisions A and B
+Status: design accepted; Stage 54E-4b implements this contract
 Scope: Godot product-shell view/layout/GUI preset semantics across Live 2D/3D/4D
 Canonical owner: this file
 Consumes: docs/architecture/4d_presentation_interaction_architecture.md
@@ -25,9 +25,10 @@ It does not own the presentation-space separation itself, which belongs to
 
 Stage 54E-4a performed no runtime change.
 
-Two product decisions await human acceptance; they are stated in section 20.
-Everything else in this document is decided by repository evidence or by
-already-accepted authority.
+The two product decisions this design raised were accepted on 2026-08-17 and
+are recorded in section 20. Every statement in this document is therefore
+decided, either by repository evidence, by already-accepted authority, or by
+that acceptance. Stage 54E-4b implements it without reopening the design.
 
 ## 2. Consumed architecture
 
@@ -400,7 +401,7 @@ displayed labels survive unchanged.
 
 Live 2D is a flat board on a fixed orthographic front view with no `L` and no
 meaningful orientation choice, so the View selector is hidden there. This is
-Decision A below.
+accepted Decision A in section 20.
 
 ## 13. Stage 54E-3 integration boundary
 
@@ -553,16 +554,16 @@ responsive-layout overhaul; Explorer; camera projection controls; any change to
 gameplay, native code, topology, RNG, queue, Ghost, snapshots, hashes, or
 replay and trace schemas.
 
-## 20. Decisions requiring human acceptance
+## 20. Accepted product decisions
 
-Everything not listed here is decided. These two change a visible surface or a
-felt behaviour, so they are product calls rather than architecture consequences.
+Both decisions below were accepted by the product owner on 2026-08-17. No
+unresolved design question remains.
 
-### Decision A — View selector in Live 2D
+### Decision A — View selector in Live 2D — ACCEPTED
 
 ```text
-RECOMMEND: hide the View selector in Live 2D; keep it in Live 3D and Live 4D
-Alternative: keep it visible in all three modes, as today
+ACCEPTED: hide the View selector in Live 2D; keep it in Live 3D and Live 4D
+Rejected alternative: keep it visible in all three modes, as today
 ```
 
 Reason. Live 2D is a flat board on a fixed orthographic front view with no
@@ -573,12 +574,13 @@ across modes, which has some consistency value, at the cost of advertising
 controls that do nothing useful. The recommendation follows the same principle
 Stage 54E-3 applied when it stopped presenting a one-option piece-set selector.
 
-### Decision B — framing on preset application
+### Decision B — framing on preset application — ACCEPTED
 
 ```text
-RECOMMEND: applying a View preset restores the fitted framing baseline,
-           discarding manual pan and zoom
-Alternative: preserve the player's current pan and zoom across preset changes
+ACCEPTED: applying a View preset restores the fitted framing baseline,
+          discarding manual pan and zoom
+Rejected alternative: preserve the player's current pan and zoom across
+          preset changes
 ```
 
 Reason. This is today's behaviour, but only as an accident: all six presets

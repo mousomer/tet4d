@@ -161,10 +161,10 @@ a placeholder authority record in advance.
   and board-axis controls remain `stepper` because their ranges make stepping
   the primary interaction. No control factory was introduced.
 - Stage 54E-4 — camera/GUI presets: Stage 54E-4a semantic audit and design is
-  DESIGN COMPLETE / PENDING HUMAN ACCEPTANCE, recorded in
-  `docs/architecture/camera_gui_preset_semantics.md`; Stage 54E-4b implements
-  that contract as one bounded PR once the two recorded decisions are
-  accepted.
+  DESIGN ACCEPTED, recorded in
+  `docs/architecture/camera_gui_preset_semantics.md`; both product decisions
+  were accepted on 2026-08-17. Stage 54E-4b — implement the accepted preset
+  contract — is NEXT / ELIGIBLE as one bounded PR.
 - Stage 54E-5 — cockpit consolidation.
 - Stage 54F — integrated professional playability/visual acceptance.
 - Stage 54G — professional gaming-experience and release hardening.

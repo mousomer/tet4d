@@ -146,15 +146,13 @@ design it records is an obligation of Stage 54E-4b, not of this slice.
   derived and `L` and framing remain session-local.
 - Presentation presets do not belong in game setup. Stage 54E-4b adds no setup
   field and requires no Stage 54E-3 change.
+- Decision A, accepted 2026-08-17: the View selector is hidden in Live 2D and
+  retained in Live 3D and Live 4D.
+- Decision B, accepted 2026-08-17: applying a View preset restores the fitted
+  framing baseline, discarding manual pan and zoom. This matches current
+  behaviour, so it becomes a declared rule rather than a change.
 
-## Open Questions For Human Acceptance
-
-- Decision A: hide the View selector in Live 2D.
-- Decision B: confirm that applying a View preset restores the fitted framing
-  baseline, discarding manual pan and zoom.
-
-Both are recorded with recommendation, alternative, and tradeoff in
-`docs/architecture/camera_gui_preset_semantics.md`.
+No unresolved design question remains.
 
 ## Explicit Deferrals
 
@@ -169,6 +167,7 @@ Both are recorded with recommendation, alternative, and tradeoff in
 
 ## Review Outcome
 
-Pending. Stage 54E-4a is design complete and awaits human acceptance of
-Decisions A and B. Stage 54E-4 itself remains incomplete until Stage 54E-4b
-implements and verifies the contract.
+Stage 54E-4a is design complete and its two product decisions were accepted on
+2026-08-17. Stage 54E-4 itself remains incomplete: Stage 54E-4b must still
+implement and verify the accepted contract, and no runtime work has been
+performed.

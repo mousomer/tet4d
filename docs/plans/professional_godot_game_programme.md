@@ -776,8 +776,7 @@ definition while being presented secondarily.
 
 #### Stage 54E-4 — Camera/GUI presets
 
-Status: Stage 54E-4a DESIGN COMPLETE / PENDING HUMAN ACCEPTANCE; Stage 54E-4b
-NOT STARTED.
+Status: Stage 54E-4a DESIGN ACCEPTED; Stage 54E-4b NEXT / ELIGIBLE.
 
 Stage 54E-4a audited every preset-like operation and recorded the durable
 contract in `docs/architecture/camera_gui_preset_semantics.md`, which is now
@@ -794,8 +793,10 @@ fitted framing baseline, and never changes the exact basis `B`. View identity
 derives from state equality rather than a tracked flag, so a manual change can
 no longer leave a false label. Nothing new is persisted and no schema changes.
 
-Stage 54E-4b implements that contract as one bounded PR and is blocked only on
-human acceptance of the two decisions recorded in the design document.
+Both product decisions the design raised were accepted on 2026-08-17: the View
+selector is hidden in Live 2D, and applying a View preset restores the fitted
+framing baseline. Stage 54E-4b implements the accepted contract as one bounded
+PR and is no longer blocked.
 
 #### Stage 54E-5 — Cockpit consolidation
 
