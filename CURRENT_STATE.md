@@ -91,7 +91,14 @@ history ledger. Detailed history is preserved in
   declared the taxonomy as data; Stage 54E-3b renders it as progressive
   disclosure, removes the panel's duplicate visibility rules, and keeps
   disclosure out of canonical session setup, setup persistence, and native
-  session state. Stage 54E-4 is now NEXT / ELIGIBLE.
+  session state. Stage 54E-4a — camera/GUI preset semantic audit and design —
+  is DESIGN COMPLETE / PENDING HUMAN ACCEPTANCE. It changed no runtime and
+  recorded the durable contract in
+  `docs/architecture/camera_gui_preset_semantics.md`: one View preset family,
+  no layout or GUI preset families, no combined presets, no preset may change
+  the exact basis `B`, view identity derived from state equality, and no new
+  persistence or schema. Stage 54E-4b implementation is blocked only on
+  acceptance of two recorded product decisions.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -224,10 +231,12 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54E-4 camera/GUI presets, which owns the
-   presentation-preference setup
-   fields this stage deliberately did not add. Stage 54D-3 Hold remains
-   independently eligible. Stage 54E-5 remains later programme work.
+1. Accept or revise the two Stage 54E-4a product decisions recorded in
+   `docs/architecture/camera_gui_preset_semantics.md`, then implement Stage
+   54E-4b against that contract. The design concludes that presentation
+   presets do not belong in game setup, so Stage 54E-3 needs no follow-up
+   field. Stage 54D-3 Hold remains independently eligible. Stage 54E-5 remains
+   later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

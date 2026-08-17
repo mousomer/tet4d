@@ -776,13 +776,26 @@ definition while being presented secondarily.
 
 #### Stage 54E-4 — Camera/GUI presets
 
-Current camera/GUI presets are provisional pending the corrected camera-space
-model. After 54E-2, decide what camera and GUI/layout presets transform,
-whether combined presets are permitted, the affected presentation spaces,
-reset behaviour, and persistence ownership. This programme does not make those
-decisions or redesign existing presets now.
+Status: Stage 54E-4a DESIGN COMPLETE / PENDING HUMAN ACCEPTANCE; Stage 54E-4b
+NOT STARTED.
 
-54E-4 may begin only after 54E-2 is complete.
+Stage 54E-4a audited every preset-like operation and recorded the durable
+contract in `docs/architecture/camera_gui_preset_semantics.md`, which is now
+the canonical owner of preset taxonomy, per-family mutation permissions, view
+identity, preset-owned reset and lifecycle behaviour, persistence ownership,
+and compatibility mapping. It changed no runtime.
+
+The accepted taxonomy has exactly one preset family, View. Layout has one
+adaptive algorithm and no player-facing alternatives, and GUI state is already
+a set of independent persistent settings, so neither justifies a preset family.
+No combined View/Layout/GUI presets exist. A View preset sets a named
+slice-local orientation in 4D or the outer orientation in 3D, restores the
+fitted framing baseline, and never changes the exact basis `B`. View identity
+derives from state equality rather than a tracked flag, so a manual change can
+no longer leave a false label. Nothing new is persisted and no schema changes.
+
+Stage 54E-4b implements that contract as one bounded PR and is blocked only on
+human acceptance of the two decisions recorded in the design document.
 
 #### Stage 54E-5 — Cockpit consolidation
 

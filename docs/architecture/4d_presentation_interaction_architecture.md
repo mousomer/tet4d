@@ -599,6 +599,13 @@ decision whether named combined presets are allowed. It decides persistence,
 reset, labels, and any future layout preset scope; 54E-2 only provides the
 coherent compatibility decomposition and does not modify current definitions.
 
+Stage 54E-4a completed that redesign. `docs/architecture/camera_gui_preset_semantics.md`
+is the canonical owner of preset taxonomy, per-family mutation permissions,
+view identity, preset-owned reset and lifecycle behaviour, persistence
+ownership, and the compatibility mapping for the existing IDs. It consumes the
+separation and the section 14 lifecycle contract defined here without
+reopening either.
+
 ## 14. Ownership contract
 
 | State | Owner | Semantic or presentation | Deterministic identity | Consumers |
