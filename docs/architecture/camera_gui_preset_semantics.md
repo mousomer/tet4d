@@ -67,8 +67,9 @@ Two consumed constraints do most of the work below:
 | `display.hud_density` (`compact`/`standard`/`detailed`) | Settings | same | inspector panel visibility incl. camera panel | persistent | persistent | all | `test_replay_viewer_layout` | no | `GUI_VISIBILITY` | RETAIN as setting |
 | `display.board_detail` (`minimal`/`standard`/`full`) | Settings | same | renderer detail | persistent | persistent | all | `test_shell_settings_registry` | no | `GUI_VISIBILITY` | RETAIN as setting |
 | `display.ui_scale` | Settings | same | UI scale factor | persistent | persistent | all | `test_shell_display_settings` | no | `ACCESSIBILITY_PRESENTATION` | RETAIN as setting |
-| `display.projection_strength` | Settings | `renderer.set_projection_strength()` | 4D slice projection strength, not camera projection | persistent | persistent | 4D | `test_shell_settings_registry` | no | `PROJECTION` | RETAIN as setting |
-| `display.show_w_labels`, `ghost.enabled`, `settled_cells.opacity`, `interface.show_onboarding`, `diagnostics.show_layout_bounds` | Settings | same | HUD/renderer visibility | persistent except diagnostics | mixed | all | settings tests | no | `GUI_VISIBILITY` | RETAIN as setting |
+| `display.projection_strength` | Settings | `renderer.set_projection_strength()` | scales cell, particle, and event size in every mode; not a camera projection mode | persistent | persistent | all | `test_shell_settings_registry` | no | `PROJECTION` | RETAIN as setting; name is misleading, see section 12.1 |
+| `display.show_w_labels` | Settings | `grid_renderer.gd` | W-slice labels; the renderer gates it on `dimension >= 4` | persistent | persistent | effective in 4D only, presented in all | settings tests | no | `GUI_VISIBILITY` | RETAIN as setting; see section 12.1 |
+| `ghost.enabled`, `settled_cells.opacity`, `interface.show_onboarding`, `diagnostics.show_layout_bounds` | Settings | same | HUD/renderer visibility | persistent except diagnostics | mixed | all | settings tests | no | `GUI_VISIBILITY` | RETAIN as setting |
 | `camera.sensitivity`, `camera.invert_y` | Settings | `set_presentation_preferences()` | input gain and inversion | persistent | persistent | all | `test_shell_settings_store` | no | `OTHER` (input preference) | RETAIN as setting |
 | `accessibility.high_contrast`, `.reduced_motion`, `.show_help_hints` | Settings | renderer/HUD | contrast, motion, hint visibility | persistent | persistent | all | `test_accessibility_runtime` | no | `ACCESSIBILITY_PRESENTATION` | RETAIN as setting |
 
@@ -402,6 +403,41 @@ displayed labels survive unchanged.
 Live 2D is a flat board on a fixed orthographic front view with no `L` and no
 meaningful orientation choice, so the View selector is hidden there. This is
 accepted Decision A in section 20.
+
+### 12.1 Mode-inapplicable controls are not presented
+
+Accepted Decision A is an instance of a general rule, stated here because it
+outlives the one control it was raised for:
+
+> A presentation control is not offered in a mode where it cannot change what
+> the player sees. Presenting it costs attention and teaches a false model of
+> what the mode can do.
+
+This is the same principle Stage 54E-3 applied when it stopped rendering a
+one-option piece-set selector in 2D, and it is why the Live-4D basis panel and
+the orientation gizmo are already restricted to the modes that have a basis.
+
+Audit against this rule found exactly two live violations. The first is the
+View selector in Live 2D, fixed by Decision A in Stage 54E-4b. The second is
+`display.show_w_labels`: the renderer gates W labels on `dimension >= 4`, so
+the setting does nothing in 2D and 3D, yet the settings surface presents it in
+every mode.
+
+The second one cannot be fixed in Stage 54E-4b. `SettingSpec` has no mode or
+applicability concept at all — its permitted fields are `id`, `label`,
+`description`, `category`, `value_type`, `control_type`, `default`, `min`,
+`max`, `step`, `unit`, `options`, `authority`, `persistence`, `persist`,
+`action_id`, and `ui_visible`, and `ui_visible` is unconditional. Hiding a
+setting per mode therefore requires a new declared applicability mechanism in
+the settings registry, which is a settings-surface capability rather than
+preset semantics. It is recorded here and assigned to Stage 54E-5, which owns
+cockpit and surface consolidation.
+
+Two things are explicitly *not* violations. `display.projection_strength` reads
+as 4D-only but is not: it scales cell, particle, and event size in every mode.
+Its name is misleading and Stage 54E-5 should rename it as part of terminology
+consolidation, but its presence in every mode is correct. The Live-4D basis
+panel and the orientation gizmo are already correctly mode-gated.
 
 ## 13. Stage 54E-3 integration boundary
 

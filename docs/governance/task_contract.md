@@ -147,7 +147,11 @@ design it records is an obligation of Stage 54E-4b, not of this slice.
 - Presentation presets do not belong in game setup. Stage 54E-4b adds no setup
   field and requires no Stage 54E-3 change.
 - Decision A, accepted 2026-08-17: the View selector is hidden in Live 2D and
-  retained in Live 3D and Live 4D.
+  retained in Live 3D and Live 4D. Section 12.1 of the design generalises this
+  into a durable rule — a presentation control is not offered in a mode where
+  it cannot change what the player sees — and records the only other live
+  violation, `display.show_w_labels`, which needs a settings-registry
+  applicability mechanism and is therefore assigned to Stage 54E-5.
 - Decision B, accepted 2026-08-17: applying a View preset restores the fitted
   framing baseline, discarding manual pan and zoom. This matches current
   behaviour, so it becomes a declared rule rather than a change.

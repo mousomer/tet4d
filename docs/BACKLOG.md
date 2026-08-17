@@ -165,7 +165,12 @@ a placeholder authority record in advance.
   `docs/architecture/camera_gui_preset_semantics.md`; both product decisions
   were accepted on 2026-08-17. Stage 54E-4b — implement the accepted preset
   contract — is NEXT / ELIGIBLE as one bounded PR.
-- Stage 54E-5 — cockpit consolidation.
+- Stage 54E-5 — cockpit consolidation. Carries two findings from Stage 54E-4a
+  section 12.1: `display.show_w_labels` is presented in 2D and 3D where the
+  renderer gates it on `dimension >= 4`, which needs a declared applicability
+  mechanism in the settings registry; and `display.projection_strength` is
+  misleadingly named, since it scales cell, particle, and event size in every
+  mode rather than expressing a 4D projection.
 - Stage 54F — integrated professional playability/visual acceptance.
 - Stage 54G — professional gaming-experience and release hardening.
 
