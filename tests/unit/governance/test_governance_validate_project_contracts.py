@@ -2482,7 +2482,13 @@ def test_menu_control_typing_detects_mismatched_semantic_controls(
                 "menu_control_typing_contract": {
                     "setting_semantic_types": ["bool", "enum", "int", "float"],
                     "menu_control_types": ["toggle", "selector", "slider", "stepper"],
-                    "setup_control_types": ["toggle", "selector", "slider", "stepper", "numeric_entry"],
+                    "setup_control_types": [
+                        "toggle",
+                        "selector",
+                        "slider",
+                        "stepper",
+                        "numeric_entry",
+                    ],
                     "selector_options_key_required": True,
                     "enum_setup_option_source_tokens": ["piece_set_labels"],
                 }
@@ -2543,7 +2549,13 @@ def test_menu_control_typing_accepts_semantic_type_aligned_controls(
                 "menu_control_typing_contract": {
                     "setting_semantic_types": ["bool", "enum", "int", "float"],
                     "menu_control_types": ["toggle", "selector", "slider", "stepper"],
-                    "setup_control_types": ["toggle", "selector", "slider", "stepper", "numeric_entry"],
+                    "setup_control_types": [
+                        "toggle",
+                        "selector",
+                        "slider",
+                        "stepper",
+                        "numeric_entry",
+                    ],
                     "selector_options_key_required": True,
                     "enum_setup_option_source_tokens": ["piece_set_labels"],
                 }
