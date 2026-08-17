@@ -1,7 +1,7 @@
 # Stage 54E-3 Setup Disclosure Manual Acceptance
 
 Role: checklist
-Status: passed with advisories; external technical review pending
+Status: passed with advisories; external technical review accepted
 Source of truth: docs/rds/RDS_MENU_STRUCTURE.md sections 4.4 and 4.5
 Supersedes: none
 Stage: 54E-3 human-visible verification gate
@@ -38,8 +38,8 @@ was discarded for that reason.
 
 Agent-driven session: the setup surface was exercised in a real window and the
 rendered frames were inspected. This is **not** a human sign-off. External
-technical review and any human acceptance remain outstanding, which is why the
-stage is recorded as COMPLETE / REVIEW PENDING rather than reviewed green.
+technical review subsequently accepted the implementation and this evidence;
+any distinct human product acceptance remains outstanding.
 
 ## Screenshots
 

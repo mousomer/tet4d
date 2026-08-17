@@ -87,7 +87,7 @@ history ledger. Detailed history is preserved in
   public roll removal with generic roll retained, and persistence/deterministic
   exclusion evidence. It performs no authority transfer or establishment.
   Aggregate Stage 54E-2 is COMPLETE / REVIEWED GREEN. Stage 54E-3 — setup/menu
-  information architecture — is COMPLETE / REVIEW PENDING. Stage 54E-3a
+  information architecture — is COMPLETE / REVIEWED GREEN. Stage 54E-3a
   declared the taxonomy as data; Stage 54E-3b renders it as progressive
   disclosure, removes the panel's duplicate visibility rules, and keeps
   disclosure out of canonical session setup, setup persistence, and native
@@ -224,8 +224,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Review Stage 54E-3 setup progressive disclosure, then implement Stage
-   54E-4 camera/GUI presets, which owns the presentation-preference setup
+1. Implement Stage 54E-4 camera/GUI presets, which owns the
+   presentation-preference setup
    fields this stage deliberately did not add. Stage 54D-3 Hold remains
    independently eligible. Stage 54E-5 remains later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as

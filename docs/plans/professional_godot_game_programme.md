@@ -739,9 +739,9 @@ accepted the implementation. No authority transfer or establishment occurs.
 
 #### Stage 54E-3 — Setup/menu information architecture
 
-Status: COMPLETE / REVIEW PENDING. Stage 54E-3a taxonomy and classification and
-Stage 54E-3b progressive-disclosure rendering are both implemented. Real-window
-evidence is recorded in
+Status: COMPLETE / REVIEWED GREEN. Stage 54E-3a taxonomy and classification and
+Stage 54E-3b progressive-disclosure rendering are both implemented and accepted
+by external technical review. Real-window evidence is recorded in
 `docs/plans/stage_54e3_setup_disclosure_manual_acceptance.md`, which records the
 verification as agent-driven rather than a human sign-off.
 
@@ -1092,10 +1092,11 @@ The active order is:
    reviewed green; Stage 54E-2d — lifecycle, authority, and contract
    reconciliation — is complete and reviewed green. Aggregate Stage 54E-2 is
    complete and reviewed green.
-6. Stage 54E-3 — setup/menu information architecture — is COMPLETE / REVIEW
-   PENDING: Stage 54E-3a taxonomy and classification and Stage 54E-3b
-   progressive-disclosure rendering are both implemented, with automated
-   evidence and a recorded real-window acceptance checklist.
+6. Stage 54E-3 — setup/menu information architecture — is COMPLETE / REVIEWED
+   GREEN: Stage 54E-3a taxonomy and classification and Stage 54E-3b
+   progressive-disclosure rendering are implemented and accepted by external
+   technical review, with automated evidence and a recorded real-window
+   acceptance checklist.
 7. Stage 54E-4 — camera/GUI presets — is NEXT / ELIGIBLE.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.
