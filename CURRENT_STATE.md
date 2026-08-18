@@ -91,17 +91,27 @@ history ledger. Detailed history is preserved in
   declared the taxonomy as data; Stage 54E-3b renders it as progressive
   disclosure, removes the panel's duplicate visibility rules, and keeps
   disclosure out of canonical session setup, setup persistence, and native
-  session state. Stage 54E-4a — camera/GUI preset semantic audit and design —
-  has its contract review findings FIXED and is ready for independent
-  re-review. It changed no runtime and recorded the durable contract
-  in `docs/architecture/camera_gui_preset_semantics.md`: one View preset
-  family, no layout or GUI preset families, no combined presets, no preset may
-  change the exact basis `B`, view identity derived from state equality, and no
-  new persistence or schema. Both product decisions were accepted on
-  2026-08-17. Review corrections assign `display.ui_scale` only to
-  accessibility presentation, keep Fit View framing-only, and define wrapped
-  yaw plus bounded-pitch identity with one contract tolerance. Stage 54E-4b
-  has not started and is not eligible until independent re-review is green.
+  session state. Its distinct human product review is outstanding and belongs
+  to integrated Stage 54F unless performed sooner; E3 remains COMPLETE /
+  REVIEWED GREEN. Stage 54E-4a human view semantics are ACCEPTED, its contract
+  is CORRECTED, and it is READY FOR INDEPENDENT TECHNICAL RE-REVIEW. It changed
+  no runtime. The active contract in
+  `docs/architecture/camera_gui_preset_semantics.md` treats current view as
+  transient presentation-context state; exposes one composite Reset View and a
+  framing-only Fit View; preserves view across same-context Restart/new game;
+  establishes fresh canonical view after setup/menu/mode exit and re-entry;
+  defines flat 2D plus mode-owned 3D/4D/replay semantics; assigns UI scale to
+  accessibility reset ownership; resolves camera projection as transient; and
+  treats named presets as actions with no continuous `Custom`/state-equality
+  identity. This deliberately refines the then-accepted Stage 54E-2d restart
+  lifecycle without rewriting its historical reviewed-green evidence. Stage
+  54E-4b is NOT STARTED / INELIGIBLE until independent re-review is green.
+- Two pre-54F correctness findings are OPEN: 3D control arrows must truthfully
+  match Relative/Absolute movement resolution, and every production 3D/4D NEXT
+  thumbnail must be geometrically faithful to its authoritative queued piece.
+  Stage 54F also retains #69 spacing, #70 grid/wireframe/active-frame hierarchy,
+  the criterion that every 4D slice reads as a 3D board, and the setup
+  validation-error colour advisory.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -236,8 +246,11 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 1. Independently re-review the corrected Stage 54E-4a contract in
    `docs/architecture/camera_gui_preset_semantics.md`. Do not begin Stage
-   54E-4b until that review is green. The design concludes that presentation
-   presets do not belong in game setup. Stage 54D-3 Hold remains independently
+   54E-4b until that review is green. Verify the transient/persistent split,
+   Reset/Fit separation, restart preservation, context re-entry, mode-specific
+   canonical views, flat 2D target, UI-scale ownership, projection conclusion,
+   action-based presets, implementation evidence plan, programme consistency,
+   and human-finding ownership. Stage 54D-3 Hold remains independently
    eligible. Stage 54E-5 remains later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance

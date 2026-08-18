@@ -1,659 +1,419 @@
 # Camera and GUI Preset Semantics
 
 Role: architecture
-Status: contract review findings fixed; ready for independent re-review
-Scope: Godot product-shell view/layout/GUI preset semantics across Live 2D/3D/4D
+Status: human view semantics accepted; contract corrected; ready for independent technical re-review
+Scope: Godot product-shell view lifecycle, preset actions, fit/reset, and preference boundaries across Live 2D/3D/4D and replay
 Canonical owner: this file
 Consumes: docs/architecture/4d_presentation_interaction_architecture.md
 Stage: 54E-4a design and audit
 Last updated: 2026-08-18
 
-## 1. Purpose and boundary
-
-Stage 54E-2 separated the Live-4D presentation pipeline into distinct spaces.
-The preset concept predates that separation. This document audits what every
-preset-like operation actually does today, assigns each mutable presentation
-property exactly one semantic owner, and defines the durable preset contract
-that Stage 54E-4b implements.
-
-This document owns preset taxonomy, what each family may mutate, preset
-identity, reset and lifecycle behaviour for preset-owned state, persistence
-ownership, and the compatibility mapping for existing IDs.
-
-It does not own the presentation-space separation itself, which belongs to
-`4d_presentation_interaction_architecture.md` and is consumed here unchanged.
-
-Stage 54E-4a performed no runtime change.
-
-The two product decisions this design raised were accepted on 2026-08-17 and
-are recorded in section 20. Independent contract-review findings were
-corrected before implementation. Stage 54E-4b must not begin until independent
-re-review accepts the corrected contract.
-
-## 2. Consumed architecture
-
-The accepted pipeline is `C -> B -> G_D -> L -> anchor/layout -> V/P`, with
-HUD/GUI composition separate from all of it. Section 14 of
-`4d_presentation_interaction_architecture.md` already fixes the lifecycle
-matrix, and its section 13 explicitly defers preset taxonomy, persistence,
-reset, labels, and layout-preset scope to Stage 54E-4. The Stage 54E-2
-decisions listed in that document are settled and are not reopened here.
-
-Two consumed constraints do most of the work below:
-
-- `SliceLocalOrientation.set_normal_gameplay_angles()` wraps yaw and clamps
-  pitch to `[-40deg, +60deg]`. Anything a preset writes to `L` is admitted by
-  construction.
-- The Live-4D outer mount is fixed at yaw `205deg`, pitch `20deg` with a fixed
-  horizontal presentation reflection. In Live 4D the outer rig does not rotate.
-
-## 3. Preset inventory
-
-### 3.1 In scope — Godot product shell
-
-| ID / label | Entry surface | Implementation | Current mutations | Lifecycle | Persistence | Modes | Tests | Legacy coupling | Intended owner | Verdict |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `iso` "Iso" | `CameraPresetSelector` in live inspector VIEW | `camera_preset.gd` | yaw `+0.5585`, pitch `+0.4538`, zoom `1.0`, pan `ZERO` | reset on Reset View / mode change | none | 2D, 3D, 4D | `test_live_board_visual_grammar`, `test_camera_rig`, `test_live_2d_shell` | yes — see F1, F2 | `SLICE_LOCAL_ORIENTATION` (4D) / `OUTER_FRAMING` (3D) | REDEFINE_COMPATIBLY |
-| `front` "Front" | same | same | yaw `0`, pitch `0`, zoom `1.0`, pan `ZERO` | same | none | 2D, 3D, 4D | same | yes | same | REDEFINE_COMPATIBLY |
-| `side` "Side" | same | same | yaw `PI/2`, pitch `0`, zoom `1.0`, pan `ZERO` | same | none | 2D, 3D, 4D | same | yes | same | REDEFINE_COMPATIBLY |
-| `back` "Back" | same | same | yaw `PI`, pitch `0`, zoom `1.0`, pan `ZERO` | same | none | 2D, 3D, 4D | same | yes | same | REDEFINE_COMPATIBLY |
-| `top` "Top" | same | same | yaw `0`, pitch `+1.0472`, zoom `1.0`, pan `ZERO` | same | none | 2D, 3D, 4D | same | yes | same | REDEFINE_COMPATIBLY |
-| `opposite_iso` "Opposite Iso" | same | same | yaw `-2.5831`, pitch `+0.4538`, zoom `1.0`, pan `ZERO` | same | none | 2D, 3D, 4D | same | yes | same | REDEFINE_COMPATIBLY |
-| `custom` "Custom" | derived, not selectable | `_mark_custom_view()` | label only | set by any manual orbit/nudge/roll/pan/zoom | none | all | `test_camera_rig` | yes — see F3 | derived identity | REDEFINE_COMPATIBLY |
-| Fit View | `fit_view_requested`, key | `_fit_view()` | focus, base distance, orthographic size, projection to orthographic, reflection, gizmo; sets label to `iso` | on demand and after every reset | none | all | `test_live_2d_shell` | yes — see F3 | `OUTER_FRAMING` | RETAIN |
-| Reset View | key `0`, `Reset View` button | `_reset_live_4d_view()` | `B` to identity, `L` to `(0,0)`, `clear_presentation_state()`, then Fit | on demand | none | 4D (2D/3D reset via mode reset) | `test_live_2d_shell` | no | multi-owner by accepted contract | RETAIN |
-| Adaptive layer layout | none — automatic | `adaptive_layer_layout.gd` | anchors, columns, rows from layer count and viewport aspect | recomputed on shape change | none | 4D | `test_adaptive_4d_layer_layout` | no | `SLICE_LAYOUT` | RETAIN (not a preset) |
-| `theme.name` (`plain`/`tron`) | Settings | `shell_settings_registry.json` | palette/style roles | persistent | persistent | all | `test_shell_theme_palettes` | no | `GUI_LAYOUT` | RETAIN as setting |
-| `display.hud_density` (`compact`/`standard`/`detailed`) | Settings | same | inspector panel visibility incl. camera panel | persistent | persistent | all | `test_replay_viewer_layout` | no | `GUI_VISIBILITY` | RETAIN as setting |
-| `display.board_detail` (`minimal`/`standard`/`full`) | Settings | same | renderer detail | persistent | persistent | all | `test_shell_settings_registry` | no | `GUI_VISIBILITY` | RETAIN as setting |
-| `display.ui_scale` | Settings | same | UI scale factor | persistent | persistent | all | `test_shell_display_settings` | no | `ACCESSIBILITY_PRESENTATION` | RETAIN as setting |
-| `display.projection_strength` | Settings | `renderer.set_projection_strength()` | scales cell, particle, and event size in every mode; not a camera projection mode | persistent | persistent | all | `test_shell_settings_registry` | no | `PROJECTION` | RETAIN as setting; name is misleading, see section 12.1 |
-| `display.show_w_labels` | Settings | `grid_renderer.gd` | W-slice labels; the renderer gates it on `dimension >= 4` | persistent | persistent | effective in 4D only, presented in all | settings tests | no | `GUI_VISIBILITY` | RETAIN as setting; see section 12.1 |
-| `ghost.enabled`, `settled_cells.opacity`, `interface.show_onboarding`, `diagnostics.show_layout_bounds` | Settings | same | HUD/renderer visibility | persistent except diagnostics | mixed | all | settings tests | no | `GUI_VISIBILITY` | RETAIN as setting |
-| `camera.sensitivity`, `camera.invert_y` | Settings | `set_presentation_preferences()` | input gain and inversion | persistent | persistent | all | `test_shell_settings_store` | no | `OTHER` (input preference) | RETAIN as setting |
-| `accessibility.high_contrast`, `.reduced_motion`, `.show_help_hints` | Settings | renderer/HUD | contrast, motion, hint visibility | persistent | persistent | all | `test_accessibility_runtime` | no | `ACCESSIBILITY_PRESENTATION` | RETAIN as setting |
-
-### 3.2 Out of scope — different domain, recorded to prevent conflation
-
-| Concept | Owner | Why out of scope |
-| --- | --- | --- |
-| Board presets (`compact`/`standard`/`large`/`wide_w`) in `game_setup_spec.gd` | Stage 54B / 54E-3 | Game definition, not presentation. Shares the word "preset" only. |
-| `camera_preset: tutorial_3d_default` / `tutorial_4d_default` | Python pygame tutorial | Inherited Python UI. Sets `yaw_deg`, `pitch_deg`, `zoom_scale`, and `xw_deg`/`zw_deg` to zero, so in the Python model it does reset basis-like state. Godot is the product shell authority; this precedent does not bind the Godot contract. |
-| `endgame_preset_id: default_orbit` | Python endgame animation | Post-game animation orbit, not a live view preset. |
-| `topology_preset_id`, `speed_preset` | Python menu settings | Topology and gameplay speed, not presentation. |
-
-## 4. Mutation-path audit
-
-Player action to final state, as implemented today.
-
-### 4.1 Live 4D
-
-```text
-CameraPresetSelector.item_selected
-  -> ReplayHud.camera_preset_requested(id)
-  -> TraceReplayApp._apply_live_4d_preset(id)
-       -> _set_live_4d_local_orientation(preset.yaw, preset.pitch)
-            -> SliceLocalOrientation.set_normal_gameplay_angles()   [L]
-            -> _refresh_live_4d_presentation(reset_fit_reference=true)
-            -> _refresh_control_frame_presentation()                [resolver refresh]
-       -> CameraRig.apply_framing_preset(id)
-            -> _target_focus = _fit_focus + pan                     [V/P]
-            -> _zoom_multiplier = zoom; _camera.size = base * zoom  [V/P]
-            -> _current_view_preset = id                            [label flag]
-  -> ReplayHud.set_camera_preset(CameraRig.current_preset_id())
-```
-
-`B` is not written. Layout anchors are not written. Native gameplay is not
-written. The Live-4D outer rig does not rotate.
-
-### 4.2 Live 3D, Live 2D, replay
-
-```text
-CameraPresetSelector.item_selected
-  -> ReplayHud.camera_preset_requested(id)
-  -> CameraRig.apply_preset(id)
-       -> _target_yaw, _target_pitch, _target_roll = 0              [outer V]
-       -> _set_horizontal_reflection(false)                         [V]
-       -> _zoom_multiplier, _target_distance                        [V]
-       -> _current_view_preset = id                                 [label flag]
-```
-
-In 3D the outer yaw is also the control frame, through
-`CameraRig.control_frame_yaw()`, which the accepted architecture retains for
-the 3D resolver only.
-
-### 4.3 Manual mutation and reset
-
-`orbit`, `nudge_yaw`, `nudge_pitch`, `nudge_roll`, `roll`, `pan_focus`,
-`pan_screen`, and `zoom` each call `_mark_custom_view()`, which sets the label
-flag to `custom`. `_fit_view()` calls `fit_bounds(..., CameraPresetScript.ISO,
-...)`, which sets the label flag to `iso`. `_reset_live_4d_view()` restores
-`B` to identity, `L` to `(0,0)`, clears rig presentation state, then fits.
-
-## 5. Legacy-coupling findings
-
-**F1 — one preset ID, two semantic owners.** The same six IDs write `L` in
-Live 4D and the outer rig in Live 3D and replay. This is not an accident to be
-removed: in 4D the outer mount is fixed and orientation lives in `L`, while in
-3D the outer rig legitimately is both the orientation and the control frame.
-It is an under-documented mode-dependent binding. Stage 54E-4b must state the
-binding, not erase it.
-
-**F2 — the framing component carries no information.** All six presets declare
-`zoom: 1.0` and `pan: Vector3.ZERO`. `apply_framing_preset()` therefore never
-expresses a per-preset framing; it restores focus to `_fit_focus` and zoom to
-the fitted baseline, discarding any manual pan or zoom. The behaviour is
-useful, but it is currently an accident of uniform data rather than a declared
-rule, and it makes each preset look like a combined `L + V/P` preset when it is
-an orientation preset plus a fixed framing-reset step.
-
-**F3 — the preset label can lie.** `_current_view_preset` is a mutable flag,
-not a function of state. `_fit_view()` sets it to `iso` while `L` is `(0,0)`
-and the outer mount is at its fixed angles, so after Fit View or Reset View the
-selector reads "Iso" when nothing matches Iso. `(0,0)` is exactly the `front`
-preset, so the truthful label is "Front".
-
-**F4 — presets are exposed where they are meaningless.** The camera panel is
-visible in every live mode whenever `display.hud_density` is not `compact`.
-Live 2D is a flat board with a fixed orthographic front view and no `L`;
-offering Top, Side, Back, and Opposite Iso there is noise.
-
-**F5 — no preset state is persisted.** No view preset, `L` value, framing, or
-projection state appears in `shell_settings_registry.json` or any store. The
-selector resets every session. This is correct under the accepted contract and
-should be preserved.
-
-**F6 — no accessibility coupling exists.** `apply_preset()`,
-`apply_framing_preset()`, and `clear_presentation_state()` touch only camera
-state; `clear_presentation_state()` explicitly preserves sensitivity, invert-Y,
-and interpolation preferences. No preset writes any `accessibility.*` value.
-This is a clean result, recorded so a future change cannot silently regress it.
-
-## 6. Semantic owner classification
-
-| Property | Owner | Notes |
-| --- | --- | --- |
-| signed 4D basis `B` | `EXACT_BASIS` | gameplay-facing re-slicing; dedicated controls and indicator |
-| `L.local_yaw`, `L.local_pitch` | `SLICE_LOCAL_ORIENTATION` | shared across slices; feeds resolver through `Q(local_yaw)` |
-| slice anchors, columns, rows | `SLICE_LAYOUT` | algorithmic only |
-| outer focus / pan | `OUTER_FRAMING` | |
-| zoom multiplier, orthographic size | `OUTER_FRAMING` | |
-| fit state, base distance | `OUTER_FRAMING` | |
-| horizontal presentation reflection | `OUTER_FRAMING` | renderer-only, fixed for Live 4D |
-| outer yaw / pitch | `OUTER_FRAMING` in 3D and replay; fixed mount in 4D | in 3D also the control frame |
-| outer roll | `OUTER_FRAMING` | absent from normal gameplay; Explorer capability retained |
-| camera projection type | `PROJECTION` | forced orthographic in every fitted product view |
-| `display.projection_strength` | `PROJECTION` | 4D slice projection strength; independent persistent setting |
-| `theme.name` | `GUI_LAYOUT` | palette and style-role selection |
-| `display.ui_scale` | `ACCESSIBILITY_PRESENTATION` | user presentation/accessibility preference; layout adapts to it but does not own it |
-| `display.hud_density`, `display.board_detail`, `display.show_w_labels`, `interface.show_onboarding`, `diagnostics.show_layout_bounds`, `ghost.enabled`, `settled_cells.opacity` | `GUI_VISIBILITY` | |
-| `accessibility.*` | `ACCESSIBILITY_PRESENTATION` | |
-| `camera.sensitivity`, `camera.invert_y` | `OTHER` | input preference, not view state |
-| orientation gizmo visibility | `GUI_VISIBILITY` | driven by mode, not by preset |
-
-No property required more than one primary owner.
-
-## 7. Accepted taxonomy
-
-There is exactly one preset family: **View presets**.
-
-```text
-View        named orientation of the board, plus a defined framing reset
-Slice Layout   no preset family — one adaptive algorithm
-Interface      no preset family — independent persistent settings
-```
-
-Rationale. A preset family is justified only when several player-useful named
-states exist that cannot be expressed more clearly as independent settings.
-Layout has exactly one algorithm and no player-facing alternatives, so a layout
-preset family would be invented rather than discovered. GUI state is already a
-set of independent persistent settings, and `display.hud_density` already
-provides the one genuinely useful three-step composite; wrapping those in a
-"GUI preset" would add a layer without adding a choice.
-
-Player-facing terminology: **View**. The existing label "Camera" on the
-inspector panel is retained for 3D and replay, where the camera really does
-move, but the selector itself is a View selector in all modes. The word
-"camera" must not be used in Live-4D help text for an operation that rotates
-slice contents rather than the camera.
-
-## 8. Policies
-
-### 8.1 Exact basis `B`
-
-**An ordinary View preset must never change `B`.** Re-slicing changes which
-canonical axes are visible and which axis is the slice axis; it is a
-gameplay-facing 4D comprehension operation with its own controls, its own
-indicator, and its own help group. Burying it inside a view shortcut would
-rebuild the coupling Stage 54E-2 removed.
-
-Current behaviour already complies: `_apply_live_4d_preset()` does not touch
-`_live_4d_basis`. This is retained and must become an explicit test.
-
-If a future feature genuinely needs a named state that includes `B`, it is a
-different semantic class — a re-slicing shortcut — and must be named and
-surfaced as such, never as a View preset.
-
-### 8.2 Slice-local orientation `L`
-
-View presets set **named absolute** `L` targets, never relative
-transformations, and always through `set_normal_gameplay_angles()` so the
-admitted domain is enforced by construction. `Top` is defined at exactly
-`NORMAL_GAMEPLAY_MAX_PITCH_RAD`; if that limit ever moves, `Top` moves with it
-and a test binds the two.
-
-Applying a preset must refresh the relative-command resolver, because the
-resolver consumes `Q(L.local_yaw)`. Current code does this through
-`_refresh_control_frame_presentation()`.
-
-### 8.3 Slice layout
-
-No layout presets. `AdaptiveLayerLayout` remains algorithmic. Layout may move
-anchors and change rows, columns, and spacing; it must not rotate slice-local
-coordinates, alter `B`, alter gameplay state, or reorder semantic slice
-identity. Spacing and grid quality remain Stage 54F, issues #69 and #70.
-
-### 8.4 Outer framing
-
-A View preset restores the **fitted framing baseline**: focus returns to the
-fit focus and zoom returns to `1.0`. This is stated as a rule of the View
-contract rather than encoded as `pan`/`zoom` fields on each preset, because all
-six presets carry identical values and the fields therefore express nothing.
-Stage 54E-4b removes the per-preset `zoom` and `pan` fields and replaces the
-call with a named `restore_fitted_framing()` step.
-
-Manual pan and zoom after applying a preset are ordinary user adjustments; they
-do not change `L`, and they make the view identity `Custom` under section 8.7.
-
-### 8.5 Projection
-
-Projection is not a preset dimension. Every fitted product view is
-orthographic, `fit_bounds()` forces it, and `clear_presentation_state()`
-restores it. There is no user-facing camera projection choice and Stage 54E-4b
-must not add one.
-
-`display.projection_strength` is a 4D slice projection setting, not a camera
-projection mode. It remains an independent persistent display setting and no
-preset may override it.
-
-### 8.6 GUI
-
-No GUI preset family. The existing independent settings are clearer than a
-preset would be, and `display.hud_density` already covers the composite case.
-Stage 54E-4b changes no GUI setting, adds no GUI preset, and renames nothing;
-cockpit composition is Stage 54E-5.
-
-A View preset must never change any GUI setting, and no GUI setting may move
-the board or change any geometry transform. `display.hud_density` currently
-shows and hides the camera panel, which changes only whether the control is
-visible.
-
-### 8.7 View identity under manual mutation
-
-View identity is **derived from state equality**, not tracked by a flag.
-
-```text
-current_view_id() =
-    the named preset whose orientation target equals the current orientation
-    within epsilon, otherwise "custom"
-```
-
-In Live 4D the compared orientation is `(L.local_yaw, L.local_pitch)`; in Live
-3D and replay it is the outer `(yaw, pitch)`. This removes the F3 class of
-defect structurally: Fit View and Reset View leave `L = (0,0)`, which equals
-`front`, so the selector truthfully reads "Front" instead of the current false
-"Iso". A label can no longer disagree with the state that produced it.
-
-Identity compares semantic angular state, not raw floating-point
-representation. Yaw is periodic, so its comparison uses the wrapped signed
-difference in the canonical `[-PI, PI)` interval:
-
-```text
-angular_delta(a, b) = wrap_to_pi(a - b)
-yaw_equal(a, b) = abs(angular_delta(a, b)) <= view_identity_epsilon
-```
-
-Consequently `0`, `2*PI`, and `-2*PI` are equivalent yaw representations.
-This rule applies both to the already-wrapped Live-4D local yaw and to outer
-3D/replay yaw, which may accumulate outside the canonical interval.
-
-Pitch is not periodic presentation state. Both normal Live-4D pitch and outer
-3D/replay pitch are admitted through bounded domains, so pitch uses direct
-bounded comparison: `abs(current_pitch - target_pitch) <=
-view_identity_epsilon`. It must not wrap across `PI`.
-
-The preset-definition owner declares one View-identity tolerance of `0.001`
-radians. `resolve_id()` and its tests consume that contract-owned value;
-callers must not scatter independent epsilon literals or choose per-call
-tolerances. The implementation may choose the constant/helper names.
-
-### 8.8 Combined presets
-
-**No combined presets.** Option A, strictly separate, is adopted. With no
-layout preset family and no GUI preset family there is nothing to combine, so a
-composite family would exist only to reintroduce the coupling Stage 54E-2
-removed. Named composite profiles remain possible for a future Explorer or
-campaign surface, but they are not ordinary Live-game presets and are out of
-scope for Stage 54E-4b.
-
-## 9. Reset and lifecycle matrix
-
-Target behaviour. `B`, `L`, layout, and `V/P` rows match the accepted section
-14 contract of `4d_presentation_interaction_architecture.md`; the View identity
-column is new and follows from section 8.7.
-
-| Operation | `B` | `L` | Layout | `V/P` | GUI | View identity |
-| --- | --- | --- | --- | --- | --- | --- |
-| Apply View preset | unchanged | set to named target | unchanged | restore fitted framing | unchanged | that preset |
-| Manual yaw / pitch | unchanged | changed | unchanged | unchanged | unchanged | derived; `Custom` unless it lands on a named target |
-| Manual pan / zoom | unchanged | unchanged | unchanged | changed | unchanged | derived from orientation only, so unchanged |
-| Fit View | unchanged | unchanged | unchanged | recomputed from current bounds | unchanged | derived, unchanged |
-| Reset View | identity | `(0,0)` | recompute | fitted default | unchanged | `Front` by derivation |
-| Restart Game | identity | `(0,0)` | recompute | fitted default | unchanged | `Front` |
-| New Game | identity | `(0,0)` | recompute | fitted default | unchanged | `Front` |
-| Change Setup | cleared with session | cleared | cleared | cleared | unchanged | recomputed on re-entry |
-| Return to menu | cleared with session | cleared | cleared | cleared | unchanged | recomputed on re-entry |
-| Re-enter Live 4D | identity | `(0,0)` | rebuild | fitted default | unchanged | `Front` |
-| Application restart | identity | `(0,0)` | rebuild | fitted default | loaded from settings | `Front` |
-
-**Reset View restores the canonical product default** — option A of the three
-candidates. It does not restore a persisted preferred preset and does not
-restore session-entry state. Two reasons decide it. The accepted section 14
-contract already defines Reset View as identity `B` plus local default `L` plus
-fitted outer default, and a user-specific baseline would make one key mean a
-different thing per profile, which is exactly the ambiguity this stage exists to
-remove. Reset View continues to change `B`, which is explicitly defined by the
-accepted architecture, the input contract help group, and the Live-4D help
-text; that is not a new coupling introduced here.
-
-**Restart Game keeps canonical defaults.** A user-configured presentation
-default is deliberately not introduced; see section 10.
-
-## 10. Persistence
-
-| Property | Classification |
-| --- | --- |
-| View preset selection | never persisted — derived from `L` or outer orientation |
-| `L.local_yaw`, `L.local_pitch` | session-local |
-| outer focus, zoom, fit state, reflection | session-local |
-| `B` | session-local |
-| layout anchors | never persisted — derived |
-| `camera.sensitivity`, `camera.invert_y` | application presentation preference |
-| `theme.name`, `display.*`, `interface.show_onboarding` | application presentation preference |
-| `accessibility.*` | accessibility preference |
-| `diagnostics.show_layout_bounds` | session-local |
-| board shape, piece set, randomness, seed, speed | setup state, owned by Stage 54E-3 |
-
-**No new persistence and no schema change.** Stage 54E-4b reuses
-`shell_settings_registry.json` at `schema_version 3` and adds no key, because
-the accepted taxonomy persists nothing new: view identity is derived, and `L`
-and framing stay session-local. The section 14 rule that persisting `L`,
-anchors, or `V` would require a versioned presentation schema is therefore not
-triggered.
-
-The invariant is unchanged: no presentation state enters native deterministic
-snapshots, state hashes, replay identity, trace semantics, RNG identity, or
-game setup.
-
-## 11. Compatibility and migration
-
-| Legacy ID | Disposition | Mapping |
-| --- | --- | --- |
-| `iso` | REDEFINE_COMPATIBLY | same yaw/pitch target; framing fields dropped |
-| `front` | REDEFINE_COMPATIBLY | same |
-| `side` | REDEFINE_COMPATIBLY | same |
-| `back` | REDEFINE_COMPATIBLY | same |
-| `top` | REDEFINE_COMPATIBLY | same; pitch bound to `NORMAL_GAMEPLAY_MAX_PITCH_RAD` |
-| `opposite_iso` | REDEFINE_COMPATIBLY | same |
-| `custom` | REDEFINE_COMPATIBLY | becomes a derived result rather than a flag value |
-| `CameraRig.apply_framing_preset()` | DEPRECATE | replaced by `restore_fitted_framing()`; the 54E-2c adapter has done its job |
-| `CameraRig.apply_preset()` | REDEFINE_COMPATIBLY | retained as the 3D and replay orientation path, documented as such |
-| per-preset `zoom` / `pan` fields | REMOVE | uniform across all six presets; carry no information |
-
-No stored preference references a view preset, so there is no stored-value
-migration and no risk of silent reinterpretation. All six public IDs and their
-displayed labels survive unchanged.
-
-## 12. Mode applicability
-
-| Family | 2D | 3D | 4D |
+## 1. Purpose, authority, and stage boundary
+
+This document owns the forward-looking product contract for transient view
+state, named view actions, Fit View, Reset View, view-context lifetime, and the
+boundary between current view state and persistent shell preferences. It
+consumes the accepted Live-4D pipeline `C -> B -> G_D -> L -> anchor/layout ->
+V/P` without merging its state owners.
+
+The human product semantics in this revision are accepted. Stage 54E-4a
+changes documentation only and does not implement them. Stage 54E-4b is not
+eligible until a fresh independent technical review accepts this corrected
+contract. No further human E4a decision gate is required unless implementation
+evidence reveals a genuinely new product contradiction.
+
+This revision clarifies and supersedes the forward-looking presentation
+lifecycle chosen at Stage 54E-2d. Stage 54E-2d correctly implemented and
+reviewed the then-accepted rule that Restart Game established fresh
+presentation defaults. Stage 54E-4 now deliberately refines that rule:
+Restart Game preserves the current view, while Reset View explicitly restores
+the complete canonical view. Historical Stage 54E-2d evidence remains true.
+
+Authority effect: clarification within existing Godot presentation authority.
+There is no deterministic gameplay authority transfer, no native authority
+establishment, and no change to replay, trace, snapshot, hash, RNG, or setup
+identity.
+
+## 2. Runtime audit and mismatches to be implemented later
+
+The Stage 54E-4a audit records current implementation truth rather than
+assuming the documentation is already implemented:
+
+- `CameraRig.fit_bounds()` currently writes projection, focus, yaw, pitch,
+  roll, reflection, base distance, zoom, and orthographic size. It therefore
+  establishes a canonical orientation as well as fitting; it is not yet the
+  framing-only Fit View required by this contract.
+- `TraceReplayApp._fit_view()` supplies canonical yaw/pitch for Live 3D and
+  Live 4D and uses replay-style defaults for Live 2D and replay. Fit View must
+  be split from canonical-view establishment in E4b.
+- `_reset_live_2d()`, `_reset_live_3d()`, and `_reset_live_4d()` reset gameplay
+  and then call `_fit_view()`. Live 4D additionally restores `B`, `L`, layout,
+  and rig defaults. This violates the new restart-preserves-view rule.
+- Live-mode entry and context exit currently have explicit 4D teardown/default
+  seams, but equivalent canonical ownership for 2D, 3D, and replay is implicit
+  in the shared camera rig. E4b must make every mode explicit.
+- Live 2D currently falls through to the replay-style oblique fit defaults.
+  It does not yet implement the accepted flat/front-on canonical view.
+- `_current_view_preset`, `_mark_custom_view()`, and selector synchronization
+  maintain a selected preset identity that can disagree with rendered state.
+  That product model is retired below.
+- `display.ui_scale` is declared under the registry's `display` category;
+  `reset_display_settings_to_defaults()` therefore resets it, while
+  `reset_accessibility_settings_to_defaults()` does not. The target ownership
+  is the reverse.
+- No player-facing orthographic/perspective setting exists. Every fitted view
+  forces orthographic projection. `display.projection_strength` changes
+  rendered cell/particle/event emphasis and is not a camera-projection choice.
+
+These are E4b or explicitly bounded settings corrections. No runtime
+correction belongs to E4a.
+
+## 3. The transient current-view model
+
+The current navigated view belongs to the current live presentation context.
+It is not gameplay-run state and is not an application preference.
+
+Transient current-view state includes, where the mode owns it:
+
+- exact Live-4D presentation basis `B`;
+- shared Live-4D slice-local orientation `L`;
+- current slice anchors/layout and other layout-derived state;
+- camera/view yaw, pitch, and roll;
+- focus, pan, zoom, fit reference, distance, orthographic size, and reflection;
+- camera projection type when the mode has no explicit projection preference;
+- interpolation and fit-derived transient state; and
+- any mode-local framing or orientation state needed to reproduce the current
+  presented geometry.
+
+Each state retains the semantic owner established by Stage 54E-2. Reset View
+does not become the owner of `B`, `L`, layout, or framing; it owns the composite
+operation that asks those owners to restore the complete canonical view for
+the current mode/context.
+
+Transient view state must not be written to shell settings merely because the
+player leaves the viewport in that state. It remains excluded from native
+deterministic state, game setup, snapshots, hashes, RNG identity, replay
+identity, and trace identity. A future persisted arbitrary-view feature would
+be an explicit saved-view/bookmark contract, not accidental current-pose
+persistence. Bookmarks are out of scope.
+
+## 4. Mutable-presentation inventory and ownership
+
+| Property | Semantic owner | Lifetime / persistence | Reset owner |
 | --- | --- | --- | --- |
-| View presets | not exposed | exposed; targets outer orientation | exposed; targets `L` |
-| Slice layout | n/a | n/a | algorithmic |
-| Interface settings | shared | shared | shared |
-| Fit View | yes | yes | yes |
-| Reset View | mode reset | mode reset | full presentation reset |
+| Live-4D signed basis `B` | `EXACT_BASIS` | current 4D presentation context; never persisted | Reset View through basis owner |
+| Live-4D `L.local_yaw`, `L.local_pitch` | `SLICE_LOCAL_ORIENTATION` | current 4D presentation context; never persisted | Reset View through local-orientation owner |
+| slice anchors, rows, columns, spacing, fit reference | `SLICE_LAYOUT` | derived current-context state; never persisted | Reset View rebuilds canonical layout |
+| focus, pan, zoom, size, distance, reflection, camera orientation | mode's `OUTER_FRAMING` / camera owner | current presentation context; never persisted | Reset View through mode owner; Fit changes framing only |
+| camera projection type | `PROJECTION` presentation owner | transient canonical-view state; never persisted because no player choice exists | Reset View; Fit preserves it |
+| `display.projection_strength` | persistent display presentation preference | local shell | Display Settings reset |
+| `display.window_mode`, `display.windowed_size` | persistent shell/display preference | local shell | Display Settings reset |
+| `display.hud_density`, `display.board_detail`, `display.show_w_labels`, `ghost.enabled`, `settled_cells.opacity` | persistent display/visibility preference | local shell | Display Settings reset |
+| `theme.name` | persistent theme preference | local shell | Display Settings reset |
+| `display.ui_scale` | `ACCESSIBILITY_PRESENTATION` | local shell accessibility preference | Accessibility Settings reset only |
+| `accessibility.high_contrast`, `.reduced_motion`, `.show_help_hints` | `ACCESSIBILITY_PRESENTATION` | local shell | Accessibility Settings reset |
+| `camera.sensitivity`, `camera.invert_y` | persistent input/presentation preference | local shell | Display/camera settings reset; never Reset View |
+| `replay.playback_speed`, `replay.loop_enabled` | persistent replay-player preferences | local shell; not view pose and not deterministic replay content | replay/settings owner, not Reset View |
+| `interface.show_onboarding` | persistent interface preference | local shell | interface/settings owner |
+| `diagnostics.show_layout_bounds` | diagnostics visibility | session only | diagnostics/settings owner |
+| setup disclosure expansion | setup-surface presentation owner | ephemeral setup-surface state | setup surface, not Reset View |
 
-Live 2D is a flat board on a fixed orthographic front view with no `L` and no
-meaningful orientation choice, so the View selector is hidden there. This is
-accepted Decision A in section 20.
+Window mode/size and replay speed/loop are explicitly included so the
+persistence inventory is not inferred from a subset of camera-like state.
 
-### 12.1 Mode-inapplicable controls are not presented
+## 5. One composite Reset View
 
-Accepted Decision A is an instance of a general rule, stated here because it
-outlives the one control it was raised for:
+There is exactly one ordinary player-facing command named **Reset View**.
+There are no parallel ordinary reset families named Reset Camera, Reset
+Orientation, Reset Slice View, Reset Layout, Reset Basis, or Reset Framing.
+Internal owner-specific helpers are required, but they are implementation
+seams behind the one command.
 
-> A presentation control is not offered in a mode where it cannot change what
-> the player sees. Presenting it costs attention and teaches a false model of
-> what the mode can do.
+Reset View preserves gameplay, frozen setup, deterministic identity, replay
+content, and every persistent preference. It restores the complete canonical
+view for the current mode/context. Projection is restored only as part of that
+canonical transient view, never by changing a persistent display preference.
 
-This is the same principle Stage 54E-3 applied when it stopped rendering a
-one-option piece-set selector in 2D, and it is why the Live-4D basis panel and
-the orientation gizmo are already restricted to the modes that have a basis.
+In Live 4D, the composite operation restores identity `B`, default `L`, the
+canonical adaptive layout and anchors, canonical outer orientation/reflection,
+and canonical fitted focus/pan/zoom/framing. It also restores any other
+transient view state the implementation audit proves is needed for the same
+canonical result. The operation changes no native gameplay state.
 
-Audit against this rule found exactly two live violations. The first is the
-View selector in Live 2D, fixed by Decision A in Stage 54E-4b. The second is
-`display.show_w_labels`: the renderer gates W labels on `dimension >= 4`, so
-the setting does nothing in 2D and 3D, yet the settings surface presents it in
-every mode.
+## 6. Fit View is framing-only
 
-The second one cannot be fixed in Stage 54E-4b. `SettingSpec` has no mode or
-applicability concept at all — its permitted fields are `id`, `label`,
-`description`, `category`, `value_type`, `control_type`, `default`, `min`,
-`max`, `step`, `unit`, `options`, `authority`, `persistence`, `persist`,
-`action_id`, and `ui_visible`, and `ui_visible` is unconditional. Hiding a
-setting per mode therefore requires a new declared applicability mechanism in
-the settings registry, which is a settings-surface capability rather than
-preset semantics. It is recorded here and assigned to Stage 54E-5, which owns
-cockpit and surface consolidation.
+There is one separate ordinary command named **Fit View**. It frames the
+currently presented board/content in the viewport.
 
-Two things are explicitly *not* violations. `display.projection_strength` reads
-as 4D-only but is not: it scales cell, particle, and event size in every mode.
-Its name is misleading and Stage 54E-5 should rename it as part of terminology
-consolidation, but its presence in every mode is correct. The Live-4D basis
-panel and the orientation gizmo are already correctly mode-gated.
+Fit View preserves gameplay, `B`, `L`, slice layout and anchors, semantic
+arrangement, current orientation, projection type, accessibility preferences,
+display preferences, and replay content. It may change only the focus, pan,
+zoom, distance/orthographic size, and fit reference required to frame the
+already-current geometry.
 
-## 13. Stage 54E-3 integration boundary
-
-Presentation presets do not belong in game setup. The repository already
-supports this strongly: `setup_field_spec.gd` defines a
-`presentation_preference` category with `IDENTITY_PRESENTATION_PREFERENCE`,
-forbids it from being session identity, and forbids it from the ordinary setup
-path — and Stage 54E-3 deliberately declared no field in that category. The
-category exists and is empty by design.
-
-Destination for View controls after Stage 54E-3:
+E4b must provide two separate internal operations:
 
 ```text
-live cockpit VIEW section    View selector, Fit View, Reset View   (current, retained)
-settings                      camera sensitivity, invert Y, GUI, accessibility (current, retained)
-pre-game setup                nothing
+fit_current_view()                 # framing only; public Fit View path
+establish_canonical_view_and_fit() # owner resets followed by framing; entry/Reset View path
 ```
 
-Stage 54E-4b adds no field to the setup surface and requires no Stage 54E-3
-change. Stage 54E-3 is merged at `ad365627`; there is no branch integration
-point to schedule.
+The names are illustrative, but the separation is normative. The existing
+`fit_bounds()` path cannot serve both contracts while it also writes
+yaw/pitch/roll, reflection, and projection.
 
-## 14. Explorer boundary
+## 7. View lifetime and lifecycle matrix
 
-Explorer will later permit free inspection beyond normal gameplay, including
-roll and broader basis manipulation. The boundary Stage 54E-4b must respect:
+The preservation boundary is the presentation context, not the individual
+Tetris run.
 
-- `SliceLocalOrientation.set_angles()` stays available as the unconstrained
-  primitive; View presets use `set_normal_gameplay_angles()` only.
-- `CameraRig.roll()` and `nudge_roll()` stay as generic primitives, absent from
-  normal-gameplay action registration.
-- No View preset sets or persists roll; every preset application zeroes it.
-- The View preset API must remain callable by a future Explorer surface, so it
-  must not assume the Live-4D fixed mount inside the preset definition.
+| Operation | 2D | 3D | Live 4D | Replay | Gameplay / deterministic content | Persistent preferences |
+| --- | --- | --- | --- | --- | --- | --- |
+| Fit View | reframe flat current view | preserve orientation; reframe | preserve `B`, `L`, layout, orientation; reframe | preserve replay view orientation; reframe | unchanged | unchanged |
+| Reset View | canonical flat view + fit | canonical 3D view + fit | identity `B`, default `L`, canonical layout/view + fit | canonical replay view + fit | unchanged | unchanged |
+| Restart Game | preserve current view | preserve current view | preserve complete current `B/L/layout/V/P` | n/a | reset live gameplay | unchanged |
+| new game, same mode/context | preserve current view | preserve current view | preserve complete current view | n/a | establish new live gameplay | unchanged |
+| game over/loss | preserve until transition or Reset View | same | same | n/a | follows gameplay owner | unchanged |
+| Change Setup / setup exit | destroy live presentation context | destroy | destroy | n/a | current live session ends per setup flow | unchanged |
+| return to menu | destroy current presentation context | destroy | destroy | destroy replay presentation context | mode/session owner applies | unchanged |
+| mode change | destroy old mode context | destroy | destroy | destroy | mode owner applies | unchanged |
+| re-enter after exit/change | fresh canonical mode view | fresh canonical mode view | fresh canonical mode view | fresh canonical replay view | unchanged by view establishment | load/retain |
+| application restart | fresh canonical mode view | fresh canonical mode view | fresh canonical mode view | fresh canonical replay view | loaded/created separately | load |
 
-## 15. Stage 54E-4b implementation plan
+`Change Setup` is a teardown/re-entry in the current scene flow and therefore
+belongs to the context-exit category. E4b must not invent hidden persistence to
+recreate the old pose after that transition. A configured or random new game
+started without leaving the live presentation context preserves the view.
 
-One bounded implementation PR. The audit shows no load-bearing sequential
-dependency that would justify splitting it.
+## 8. Named view presets are actions
 
-**Files and components**
+Named view presets are commands that move the relevant mode-owned orientation
+to a named target and then establish the declared framing baseline. They do not
+enter a persistent named mode.
 
-| Component | Old behaviour | Target behaviour |
+After manual rotate, pan, or zoom, no preset needs to remain selected. The
+product does not require `Top (modified)`, `Oblique (modified)`, `Custom`, or a
+continuously derived current-preset identity. Consequently:
+
+- `_current_view_preset` must not remain product state;
+- `_mark_custom_view()` and selector synchronization based on a tracked flag
+  are retired;
+- no `resolve_id()` architecture is required merely to derive a selection;
+- pan/zoom never decide named-preset membership;
+- target-versus-rendered equality and the former `0.001`-radian identity
+  tolerance are not load-bearing product requirements; and
+- generic angular comparison helpers may remain if another real operation
+  needs them, but E4b must not add or retain them solely for preset identity.
+
+No audited product operation currently needs angular target comparison after
+continuous preset identity is removed. Preset application may assert that a
+target was reached using ordinary test tolerances; that is conformance
+evidence, not persistent product identity.
+
+The six current public IDs and labels remain compatibility actions with their
+existing targets. In Live 4D, yaw/pitch target `L`; in Live 3D and replay they
+target the legitimate outer orientation owner. They are not exposed in Live
+2D. Every action preserves `B` and layout, sets zero roll where the mode owns
+roll, and restores the fitted framing baseline as accepted on 2026-08-17.
+
+| Action ID / label | Absolute yaw target | Absolute pitch target |
 | --- | --- | --- |
-| `scripts/presentation/camera_preset.gd` | six records of yaw/pitch/zoom/pan plus `custom` constant | six records of yaw/pitch only; own the single `0.001`-radian identity tolerance and add `resolve_id(yaw, pitch)` using wrapped yaw and bounded pitch comparison to return the matching ID or `custom` |
-| `scripts/rendering/camera_rig.gd` | `apply_framing_preset()` adapter; `_current_view_preset` flag set by `_mark_custom_view()` and `fit_bounds()` | `restore_fitted_framing()`; `current_preset_id()` derives from outer `(yaw, pitch)` via `resolve_id()`; delete the flag and `_mark_custom_view()` |
-| `scripts/app/trace_replay_app.gd` | `_apply_live_4d_preset()` calls `apply_framing_preset()`; label read from rig in all modes | `_apply_live_4d_preset()` sets `L` then calls `restore_fitted_framing()`; in Live 4D the label derives from `L` via `resolve_id()`, not from the rig |
-| `scripts/ui/replay_hud.gd` | camera panel visible in every live mode when density is not compact | hidden in Live 2D; tooltip and section wording corrected per section 7 |
-| `scripts/input/live_input_contract.gd`, Live-4D help text | "camera preset" wording | View wording; no behaviour change |
+| `iso` / Iso | `0.5585053606381855` | `0.4537856055185257` |
+| `front` / Front | `0.0` | `0.0` |
+| `side` / Side | `PI / 2` | `0.0` |
+| `back` / Back | `PI` | `0.0` |
+| `top` / Top | `0.0` | `NORMAL_GAMEPLAY_MAX_PITCH_RAD` (`PI / 3` today) |
+| `opposite_iso` / Opposite Iso | `-2.5830872929516078` | `0.4537856055185257` |
 
-**Migration**: none required; no stored preference references a preset.
+The UI behaves as an action surface, not proof that one option remains
+selected. Subsequent manual changes do not create a new identity.
 
-**Authority impact**: none. No transfer, no establishment, no schema change.
+## 9. Mode-specific canonical view contracts
 
-**Forbidden adjacent work**: Stage 54E-5 cockpit consolidation, Stage 54F
-spacing and grid work including issues #69 and #70, any GUI preset family, any
-layout preset family, any camera projection control, any change to `B`
-semantics, `SliceBasis4D`, `SliceLocalOrientation` clamps, layout algorithms,
-native code, or gameplay.
+The common user concept is View. Internal ownership remains mode-specific.
 
-## 16. Automated evidence design
+### 9.1 Live 2D
 
-New or extended Godot tests, written before the implementation.
+The canonical 2D presentation is genuinely flat and simple: an orthographic,
+front-on board with no gratuitous yaw, pitch, roll, perspective, or oblique
+depth presentation. For the current XY board plane this means yaw `0`, pitch
+`0`, roll `0`, no horizontal reflection, and orthographic projection. Reset
+View restores that view and fits it. Fit View only reframes it. Orientation
+presets remain absent because they cannot add a meaningful 2D choice.
 
-**View ownership** — applying every preset in Live 4D proves `B` slots
-unchanged, layout snapshot unchanged, native snapshot JSON and state hash
-unchanged, `L` equal to the named target, and framing restored to the fitted
-baseline. Applying every preset in Live 3D proves the outer orientation reaches
-the target and `L` is untouched.
+E4b must replace Live 2D's current fall-through to replay-style oblique
+`fit_bounds()` defaults with an explicit 2D canonical-view owner/path. This is
+not authorization for a broader 2D visual redesign.
 
-**Framing reset is declared, not incidental** — after a manual pan and zoom,
-applying any View preset restores focus to the fit focus and zoom to `1.0`.
+### 9.2 Live 3D
 
-**Layout isolation** — recomputing the adaptive layout leaves `L`, `B`, and
-canonical state unchanged, and no API exists to select a layout preset.
+`CameraRig` is the legitimate 3D orientation and framing owner. The canonical
+view is the existing accepted external diagram view (`LIVE_3D_DISPLAY_YAW_RAD`,
+`LIVE_3D_DISPLAY_PITCH_RAD`, zero roll, orthographic projection, no 4D
+reflection): yaw `0.5585053606381855`, pitch `0.4537856055185257` today. Reset View restores
+that orientation and fits. Fit View preserves the current orientation and
+projection while reframing. Live-4D `B` and `L` do not exist in this mode.
 
-**GUI isolation** — changing `theme.name`, `display.hud_density`,
-`display.board_detail`, and `display.ui_scale` leaves every geometry transform,
-`B`, `L`, anchors, framing, and deterministic identity unchanged.
+### 9.3 Live 4D
 
-**Accessibility isolation** — applying every preset leaves every
-`accessibility.*` value and `camera.sensitivity` / `camera.invert_y` unchanged.
-This locks finding F6.
+The canonical view composes identity `B`, default `L`, adaptive canonical
+layout, the accepted fixed outer mount/reflection, orthographic projection,
+and fitted framing. The current accepted mount is yaw
+`3.5779249665883754`, pitch `0.3490658503988659`, zero roll, with horizontal
+reflection active. Reset View restores all of it through the separate owners.
+Fit View preserves `B`, `L`, layout, mount/orientation, reflection, and
+projection while reframing only.
 
-**View identity** — `resolve_id()` returns the named ID at each target,
-`custom` after a manual yaw or pitch nudge, and is unaffected by manual pan or
-zoom. After Fit View and after Reset View the identity is `front`, not `iso`,
-which is the direct regression test for F3. Equivalent yaw representations at
-the target plus and minus whole turns resolve to the same ID; yaw or pitch
-outside the one contract-owned tolerance resolves to `custom`, and no caller
-supplies an independent epsilon.
+### 9.4 Replay
 
-**Reset and lifecycle** — for each of Reset View, Restart Game, New Game,
-Change Setup, return to menu, mode change, re-entry, and settings reload, assert
-the row of the section 9 matrix. Fit View separately proves `B`, `L`, slice
-layout, and anchors unchanged while outer framing is recomputed from the
-current bounds.
+Replay uses the replay camera/presentation owner and current replay content; it
+does not receive Live-4D `B` or `L`. Reset View restores the canonical replay
+diagram orientation (yaw `0.5585053606381855`, pitch
+`-0.4537856055185257`, zero roll), orthographic projection, no horizontal
+reflection, and fits it. Fit View preserves current replay
+orientation/projection and reframes. Both operations preserve the loaded
+replay document, frame index, state hashes, events, and deterministic replay
+identity. Replay speed and looping are persistent replay-player preferences,
+not view state.
 
-**Persistence** — the persisted settings document contains no view preset, `L`,
-framing, `B`, or layout key; presentation preferences reload correctly; the
-deterministic session setup, snapshot, hash, and replay identity contain no
-presentation state.
+## 10. Projection and preference reset ownership
 
-**Mode applicability** — the View selector is absent in Live 2D and present in
-Live 3D and Live 4D at non-compact density.
+The projection audit is resolved: Tet4D has no meaningful player-selectable
+orthographic/perspective preference. Camera projection type is therefore part
+of the canonical transient view for each relevant mode. Reset View restores
+the canonical projection; Fit View preserves the current projection while
+framing. Application restart and context re-entry establish the canonical
+projection. E4b adds no projection setting.
 
-## 17. Human-visible verification design
+`display.projection_strength` remains a persistent renderer-emphasis setting
+and is preserved by Fit View, Reset View, Restart Game, and context changes.
 
-A focused real-window Godot 4.7.1 review, recorded in the format established by
-`docs/plans/stage_54e3_setup_disclosure_manual_acceptance.md`, with environment,
-per-scenario outcome, screenshots, and advisories. It is not Stage 54F.
+UI scale is an accessibility presentation preference even though its current
+registry ID begins with `display.`. Target reset behaviour is:
 
-Scenarios: every retained View preset has an obvious, predictable, and distinct
-visual effect in 3D and 4D; applying a View preset visibly does not re-slice,
-confirmed against the basis indicator; the slice layout does not rotate slice
-contents when the layer count changes; changing `theme.name`,
-`display.hud_density`, and `display.board_detail` does not move the board;
-Reset View matches the section 9 row; the selector label is truthful after
-manual rotation, after Fit View, and after Reset View; restart and re-entry are
-understandable; Live 2D shows no View selector; Live 3D remains coherent.
+| Operation | UI scale |
+| --- | --- |
+| Reset Display Settings | preserve |
+| Reset Accessibility Settings | restore accessibility default |
+| Reset View | preserve |
+| Fit View | preserve |
+| Restart Game | preserve |
 
-Visual plausibility is not accepted as proof of deterministic isolation; that is
-covered by section 16.
+E4b, or one separately routed bounded settings correction completed before its
+acceptance, must reconcile the registry/reset mechanism and tests. Display
+Reset is not an authorized cross-owner composite.
 
-## 18. Adversarial review
+## 11. Exact Stage 54E-4b implementation plan
 
-1. No ordinary View preset changes more than one presentation space: it sets
-   orientation and restores a defined framing baseline, and the framing step is
-   a declared rule rather than hidden per-preset data.
-2. Re-slicing cannot be confused with view orientation, because no View preset
-   touches `B` and re-slicing keeps its own controls and indicator.
-3. No GUI setting alters board geometry; section 16 locks it.
-4. Reset View has exactly one meaning, inherited from the accepted section 14
-   contract.
-5. Restart behaviour is explicit and deliberately not user-configurable.
-6. Every preset-owned property has a persistence classification in section 10.
-7. Manual mutation cannot produce a false label, because identity is derived.
-8. Accessibility preferences are untouched and locked by test.
-9. No deterministic state is included anywhere in the contract.
-10. Stage 54E-3 is not redesigned; Stage 54E-4b adds no setup field.
-11. No Stage 54E-5 cockpit consolidation appears here.
-12. The 54E-2c adapter is retired rather than preserved for its own sake, and
-    the vacuous `zoom`/`pan` fields are removed.
-13. No preset family is invented: layout and GUI families are explicitly
-    rejected for lack of demonstrated player-facing choice.
-14. Section 15 names the files, the old and target behaviour, the migration,
-    and the forbidden scope, so another engineer can implement it without
-    guessing.
+E4b is one semantic implementation objective. It may use an explicitly bounded
+settings sub-commit if UI-scale ownership is clearer that way, but it must not
+absorb unrelated human-review defects.
 
-## 19. Forbidden scope for Stage 54E-4
+| Component | Required change |
+| --- | --- |
+| `scripts/app/trace_replay_app.gd` | add mode-aware Reset View orchestration; route public Fit View to framing-only fit; preserve view across live reset and same-context new-game paths; establish canonical view only on entry, Reset View, context re-entry, and application initialization; keep setup/menu/mode transitions as teardown |
+| `scripts/rendering/camera_rig.gd` | split framing calculation/application from canonical yaw/pitch/roll/projection/reflection establishment; expose owner-specific canonical reset and framing-only fit seams; preserve sensitivity, invert-Y, and reduced-motion policy |
+| `scripts/presentation/camera_preset.gd` | retain useful named targets as action definitions; remove product-state `custom`, per-preset identity machinery, and vacuous identity tolerance/`resolve_id()` work; keep generic numeric helpers only if a demonstrated consumer remains |
+| `scripts/ui/replay_hud.gd` and preset selector | present named views as actions without a misleading persistent selection; keep the control absent in 2D; expose one Reset View and one Fit View |
+| Live input/help contracts | use View terminology and preserve one Reset View / one Fit View surface; do not add reset families |
+| Live 2D camera path | establish explicit flat/front-on orthographic canonical view; Fit preserves it and changes framing only |
+| Live 3D camera path | canonical reset uses the legitimate 3D rig orientation; Fit preserves current orientation |
+| Live 4D presentation owners | Reset composes basis, local orientation, layout, outer-view, projection, and framing owners; Fit preserves all but framing |
+| replay path | canonical replay reset and framing-only fit preserve deterministic replay document/content |
+| `config/shell_settings_registry.json`, `scripts/ui/settings_panel.gd`, settings tests | make UI scale accessibility-owned operationally: Display Reset preserves it and Accessibility Reset restores it |
 
-Stage 54D-3 Hold; Stage 54E-5 cockpit consolidation; Stage 54F visual work
-including issues #69 and #70; board styling, cell materials, and HUD polish;
-responsive-layout overhaul; Explorer; camera projection controls; any change to
-gameplay, native code, topology, RNG, queue, Ghost, snapshots, hashes, or
-replay and trace schemas.
+Implementation ordering:
 
-## 20. Accepted product decisions
+1. Add separate canonical-establishment and framing-only camera seams with
+   snapshots that expose every affected property.
+2. Route mode entry and Reset View through canonical establishment plus fit.
+3. Route Fit View through framing only.
+4. Decouple live gameplay reset/new-game from presentation reset.
+5. Make teardown/re-entry explicit for every mode.
+6. Convert named presets to actions and remove obsolete selected identity.
+7. Reconcile UI-scale reset ownership.
+8. Update tests, help, RDS/architecture evidence, and real-window acceptance.
 
-Both decisions below were accepted by the product owner on 2026-08-17. No
-unresolved design question remains.
+Forbidden adjacent work: the 3D arrow/control resolver defect, NEXT geometry,
+slice spacing, grid/wireframe styling, 4D board-volume redesign, cockpit
+consolidation, Hold, Explorer, topology, native gameplay, and replay/trace
+schema changes.
 
-### Decision A — View selector in Live 2D — ACCEPTED
+## 12. Automated evidence required for E4b
 
-```text
-ACCEPTED: hide the View selector in Live 2D; keep it in Live 3D and Live 4D
-Rejected alternative: keep it visible in all three modes, as today
-```
+Tests must capture complete presentation snapshots before and after each
+operation, alongside deterministic state/hash evidence where applicable.
 
-Reason. Live 2D is a flat board on a fixed orthographic front view with no
-slice-local orientation. Top, Side, Back, and Opposite Iso have no meaningful
-effect there, so the control offers six choices that do not answer a question
-the 2D player has. The alternative keeps the inspector structurally identical
-across modes, which has some consistency value, at the cost of advertising
-controls that do nothing useful. The recommendation follows the same principle
-Stage 54E-3 applied when it stopped presenting a one-option piece-set selector.
+- **Live-4D Reset View:** mutate `B`, `L`, layout-affecting transient state,
+  pan, zoom, focus, and framing; invoke Reset View; assert the complete
+  canonical presentation and unchanged gameplay snapshot/hash.
+- **Fit View in every mode:** begin from noncanonical orientation and, in 4D,
+  nonidentity `B`, nondefault `L`, and current layout; invoke Fit; assert all
+  orientation/basis/layout/projection state unchanged, gameplay/replay content
+  unchanged, and only required framing changed.
+- **Restart/new game:** mutate the current view, restart gameplay and start a
+  new game within the same presentation context; assert gameplay reset/new-game
+  semantics and exact view preservation.
+- **Context re-entry:** mutate view, exit through setup/menu/mode change, and
+  re-enter; assert fresh canonical view rather than the prior pose.
+- **2D:** assert entry/reset yaw, pitch, roll, projection, reflection, and
+  camera-space presentation are flat/front-on and simple.
+- **3D:** assert Reset restores canonical 3D orientation and Fit preserves a
+  manually changed orientation.
+- **Replay:** assert Reset/Fit affect presentation only and preserve document,
+  frame, events, and deterministic content.
+- **Preset actions:** every action reaches its target; subsequent manual
+  rotate/pan/zoom creates no required `Custom` or selected-preset identity.
+- **Persistence:** application restart does not restore transient
+  pan/zoom/yaw/pitch/roll/`B`/`L`/layout/fit state; persistent shell,
+  accessibility, input, display, and replay-player preferences reload.
+- **UI scale:** Display Reset preserves it; Accessibility Reset restores its
+  default; Reset View, Fit View, and Restart Game preserve it.
+- **Isolation:** no view operation changes setup identity, native snapshot,
+  state hash, RNG identity, trace identity, or replay identity.
 
-### Decision B — framing on preset application — ACCEPTED
+## 13. Focused E4b human-visible review
 
-```text
-ACCEPTED: applying a View preset restores the fitted framing baseline,
-          discarding manual pan and zoom
-Rejected alternative: preserve the player's current pan and zoom across
-          preset changes
-```
+After automated evidence passes, record a real-window Godot 4.7.1 review with
+environment and per-scenario evidence. Verify:
 
-Reason. This is today's behaviour, but only as an accident: all six presets
-declare `zoom: 1.0` and `pan: ZERO`, so the framing step happens to reset
-rather than to express anything per preset. The decision is whether to keep
-that effect once it becomes an explicit rule. Restoring the baseline makes each
-named view a clean, reproducible state, which is what a named view is for. The
-alternative suits sustained close inspection, where re-zooming after every
-orientation change is friction; that use case belongs to the future Explorer,
-which is free to adopt the other rule. Confirming the recommendation preserves
-current behaviour, so choosing it requires no migration.
+- 2D entry and Reset View are flat, front-on, and simple;
+- Fit preserves current orientation/layout/basis while making content fit;
+- Reset View restores the complete canonical view in 2D, 3D, 4D, and replay;
+- Restart Game and same-context new game preserve the current view;
+- setup/menu/mode exit followed by re-entry establishes a fresh canonical view;
+- named presets behave as actions and no selector falsely claims a persistent
+  identity after manual manipulation;
+- UI-scale, Display Reset, and Accessibility Reset behave coherently; and
+- 3D, 4D, and replay use their actual owners rather than simulated Live-4D
+  state.
+
+This is focused E4b acceptance, not the integrated Stage 54F human audit.
+Visual plausibility does not replace deterministic-isolation tests.
+
+## 14. Independent E4a review closure and handoff
+
+The corrected design closes the independent review findings at contract level:
+
+- UI scale has one accessibility owner and an exact operational reset target.
+- Fit has a framing-only public path separate from canonical establishment.
+- the contradictory continuous preset-identity model is removed rather than
+  repaired;
+- the lifecycle matrix covers 2D, 3D, 4D, replay, restart, same-context new
+  game, setup/menu/mode exit, re-entry, and application restart;
+- E4b is explicitly ineligible pending a green independent re-review; and
+- window mode/size plus replay speed/loop complete the mutable-presentation
+  inventory.
+
+Fresh independent review must verify the transient/persistent split, composite
+Reset View, Fit isolation, restart preservation, context re-entry, mode-specific
+canonical views, flat 2D target, UI-scale ownership, projection conclusion,
+removal of obsolete preset identity, E4b implementability, programme status,
+and human-finding ownership. E4a must not self-certify REVIEWED GREEN.
+
+## 15. Scope exclusions
+
+Stage 54E-4a implements no camera, settings, movement, NEXT, renderer, spacing,
+grid, cockpit, Hold, topology, Explorer, campaign, physics, simulation, or
+general GUI changes. Separate defects remain open when documented; recording
+them is not a fix.

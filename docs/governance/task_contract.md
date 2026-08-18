@@ -1,187 +1,148 @@
-# Task Contract — Stage 54E-4a Camera and GUI Preset Semantic Audit and Design
+# Task Contract — Reconcile Stage 54E-4a View Semantics and Human Findings
 
 ## Objective
 
-Audit every camera, view, layout, and GUI preset-like operation in the Godot
-product shell against the accepted Stage 54E-2 presentation-space separation,
-assign each mutable presentation property exactly one semantic owner, and
-record the durable preset contract plus a concrete Stage 54E-4b implementation
-plan. This is a design and audit slice. It changes no runtime behaviour.
+Correct the Stage 54E-4a architecture contract to the accepted human
+view/persistence/reset model, reconcile active programme status, and assign all
+current human-visible findings to bounded owners. This is documentation-only
+architecture and staged handoff work. It implements no runtime or visual fix.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `staged_handoff`.
+- Affected layers: documentation and governance records.
+- Verification requirements: `documentation`, `governance_structure`.
+- Typical `godot` evidence is omitted because no Godot runtime, scene,
+  resource, configuration, or test changes; executable evidence cannot prove a
+  prose-only architecture correction.
+- Full repository gate: required because this changes an architecture
+  authority and prepares an independent-review handoff.
 
 ## Current Authority
 
-- `docs/architecture/4d_presentation_interaction_architecture.md`: the
-  `C -> B -> G_D -> L -> anchor/layout -> V/P` separation, the section 14
-  ownership and lifecycle contract, and the section 13 camera-preset audit that
-  explicitly defers taxonomy, persistence, reset, labels, and layout-preset
-  scope to Stage 54E-4.
-- `docs/plans/professional_godot_game_programme.md`: Stage 54E-4 scope and its
-  ordering after Stage 54E-2.
-- `docs/rds/RDS_MENU_STRUCTURE.md`: menu and setup information architecture,
-  including the section 4.4 setup taxonomy whose `presentation_preference`
-  category is declared and deliberately empty.
-- `docs/ARCHITECTURE_CONTRACT.md` and `docs/architecture/authority_map.md`:
-  Godot presentation ownership and the native deterministic boundary.
-- `config/project/policy_pack.json`, `docs/WORKFLOW_CODEX.md`, `AGENTS.md`, and
-  `godot/AGENTS.md`: routing and verification governance.
+- `docs/architecture/camera_gui_preset_semantics.md` for the forward view
+  lifecycle and operation contract;
+- `docs/architecture/4d_presentation_interaction_architecture.md` for the
+  accepted `B/L/layout/V/P` separation and historical Stage 54E-2 evidence;
+- `docs/plans/professional_godot_game_programme.md` for programme gates and
+  human-review responsibilities;
+- `docs/rds/RDS_MENU_STRUCTURE.md` for setup/presentation separation;
+- `docs/ARCHITECTURE_CONTRACT.md` and `docs/architecture/authority_map.md` for
+  subsystem boundaries; and
+- `docs/BACKLOG.md` and `CURRENT_STATE.md` for open work and restart handoff.
 
-Godot owns the presentation surface. This slice performs no authority transfer
-and no authority establishment; it clarifies existing Godot presentation
-ownership.
+Authority effect: clarify/supersede presentation lifecycle semantics within
+existing Godot presentation authority. No gameplay authority transfer and no
+native authority establishment.
 
 ## Allowed Systems and Paths
 
-- `docs/architecture/camera_gui_preset_semantics.md` as the new canonical owner
-  of preset semantics.
-- A pointer from `docs/architecture/4d_presentation_interaction_architecture.md`
-  section 13 to that document.
-- Programme, backlog, restart-handoff, and task-contract status records.
+- the E4a view architecture owner and its consumed 4D architecture pointer;
+- authority-map wording;
+- programme, backlog, restart-handoff, and this task contract; and
+- no runtime, config, test, scene, asset, or generated-maintenance file.
 
 ## Required Changes
 
-- Inventory every preset-like operation with its entry surface, implementation
-  owner, actual mutations, lifecycle, persistence, mode applicability, tests,
-  legacy coupling, intended owner, and disposition, including hidden
-  compatibility adapters and concepts not named "preset".
-- Trace each preset from player action through dispatch, resolver, state
-  mutation, renderer update, persistence, and lifecycle reset, recording actual
-  rather than named behaviour.
-- Audit the Stage 54E-2c compatibility adapter and decide whether it survives.
-- Classify every mutable presentation property into exactly one owner from
-  `EXACT_BASIS`, `SLICE_LOCAL_ORIENTATION`, `SLICE_LAYOUT`, `OUTER_FRAMING`,
-  `PROJECTION`, `GUI_LAYOUT`, `GUI_VISIBILITY`, `ACCESSIBILITY_PRESENTATION`,
-  or `OTHER`.
-- Decide the durable taxonomy, the `B` policy, the `L` policy, layout policy,
-  outer-framing policy, projection policy, GUI policy, and combined-preset
-  policy.
-- Define the reset and lifecycle matrix, persistence classification, view
-  identity under manual mutation, compatibility mapping, mode applicability,
-  the Stage 54E-3 integration boundary, and the Explorer boundary.
-- Record the Stage 54E-4b implementation plan, automated evidence design, and
-  human-visible verification design.
+1. Define current view as transient presentation-context state, not a
+   preference or gameplay-run state.
+2. Define one composite Reset View that restores every mode-owned canonical
+   view component without taking ownership of those components.
+3. Define Fit View as framing-only and require a separate internal canonical
+   establishment path.
+4. Refine lifecycle so same-context Restart/new game preserves view, while
+   setup/menu/mode exit destroys it and re-entry/application restart establishes
+   a fresh canonical view.
+5. Replace persistent/derived current-preset identity with named view actions;
+   retire `Custom`, `resolve_id()`, and the `0.001`-radian identity requirement
+   where they have no other product purpose.
+6. Define canonical/reset/fit ownership for 2D, 3D, Live 4D, and replay, with a
+   flat/front-on canonical 2D view.
+7. Classify projection from runtime evidence and reconcile UI-scale reset
+   ownership as accessibility presentation.
+8. Make the E4b component and automated/visible evidence plans implementable
+   without another product decision.
+9. Record bounded pre-54F correctness briefs for 3D control-arrow truthfulness
+   and 3D/4D NEXT geometry fidelity.
+10. Preserve #69, #70, the 4D-slice-as-3D comprehension criterion, and the E3
+    validation-error colour advisory under Stage 54F.
+11. Reconcile programme status and the E4a/E4b/E5/54F/54G human-review register.
 
 ## Forbidden Changes
 
-- Any Godot runtime, scene, resource, input, keybinding, camera, layout,
-  renderer, or settings-persistence change.
-- `SliceLocalOrientation`, `SliceBasis4D`, `CameraRig`, layout algorithms,
-  native code, Python gameplay or reference code, gameplay semantics, board
-  configuration, snapshots, hashes, replay and trace schemas, topology, NEXT,
-  Ghost, or Hold.
-- Reopening any reviewed-green Stage 54E-2 decision.
-- Stage 54E-4b implementation; Stage 54E-5 cockpit consolidation; Stage 54F
-  visual work including issues #69 and #70; Stage 54D-3 Hold; Explorer.
-- Modifying Stage 54E-3 completion status on behalf of that stage.
+- E4b runtime camera/settings implementation;
+- the 3D movement/control fix or NEXT renderer/geometry fix;
+- #69 spacing, #70 grid styling, or a 4D renderer redesign;
+- E5 cockpit consolidation, Hold, topology, Explorer, campaign, or simulation;
+- rewriting, deleting, resetting, or absorbing the separate E3 defect branch;
+- claiming any documented defect fixed;
+- self-certifying E4a REVIEWED GREEN; or
+- pushing or opening a PR.
 
 ## Acceptance Criteria
 
-1. Every preset-like operation in the Godot shell is inventoried, including the
-   Stage 54E-2c compatibility adapter, Fit View, Reset View, and preset-adjacent
-   settings; concepts sharing the word "preset" from other domains are recorded
-   as out of scope with a reason.
-2. Each preset's recorded mutations match the traced runtime path rather than
-   its name.
-3. Every mutable presentation property resolves to exactly one semantic owner.
-4. The taxonomy decision states whether layout and GUI preset families exist,
-   with the reason, rather than assuming them from the architecture's spaces.
-5. The `B` policy is explicit and audited against current behaviour.
-6. Reset View has exactly one documented meaning, consistent with the accepted
-   section 14 contract.
-7. Every preset-owned property has a persistence classification, and no
-   presentation state enters deterministic identity.
-8. View identity cannot disagree with the state that produced it.
-9. Every legacy preset ID has a disposition and, where applicable, an explicit
-   mapping.
-10. The Stage 54E-4b plan names files, old and target behaviour, migration,
-    tests, evidence, authority impact, and forbidden adjacent work.
-11. Unresolved product decisions number at most three and are stated with a
-    recommendation, the strongest alternative, and the tradeoff.
-12. No runtime file is modified, and resolver-required verification passes with
-    a clean worktree.
+1. The active architecture has one non-contradictory transient/persistent split.
+2. Reset View, Fit View, restart, same-context new game, teardown, and re-entry
+   have complete 2D/3D/4D/replay semantics.
+3. Named presets are actions and no continuous identity machinery remains in
+   the product contract.
+4. UI scale belongs operationally to Accessibility Reset; Display Reset,
+   Reset View, Fit View, and Restart preserve it.
+5. Projection is resolved from actual product affordances, not implementation
+   convenience.
+6. The E4b plan identifies exact components, migration steps, automated
+   evidence, focused visible review, authority impact, and forbidden scope.
+7. Stage 54E-3 remains COMPLETE / REVIEWED GREEN with human product review
+   deferred to 54F; Stage 54E-4a is ready only for independent re-review; E4b
+   is not started/ineligible; Hold remains independently eligible.
+8. Both pre-54F correctness defects have reproduction, owner, components,
+   invariant, regression strategy, visible verification, exclusions, and
+   timing.
+9. 54F retains #69, #70, 4D-slice volumetric readability, and validation-error
+   colour without claiming fixes.
+10. Only documentation changes, required verification passes, one semantic
+    commit is created, and the final worktree is clean.
 
 ## Automated Verification
 
-- Policy resolver: `godot_product_shell` with `staged_handoff`, affected layers
-  `documentation` and `governance`, requirements `documentation` and
-  `governance_structure`.
-- The typical `godot` requirement is omitted with the recorded reason that this
-  slice changes no Godot runtime, scene, resource, or test, so the Godot suite
-  would prove nothing about the diff.
-- Governance and documentation validators required by the touched paths,
-  through `CODEX_MODE=1 ./scripts/verify.sh`.
-- `git diff --check` and `./scripts/check_git_sanitation_repo.sh`.
+- policy-backed resolver for the classification above;
+- `git diff --check`;
+- `./scripts/check_git_sanitation_repo.sh`;
+- documentation/governance/configuration validators; and
+- `CODEX_MODE=1 ./scripts/verify.sh` because an architecture authority and
+  independent-review handoff are changed.
+
+No manual verification is required for this documentation-only slice. The
+contract records focused E4b and integrated 54F human-visible obligations.
 
 ## Manual Verification
 
-None. This slice changes no visible behaviour. The human-visible verification
-design it records is an obligation of Stage 54E-4b, not of this slice.
+None for this documentation-only slice. Focused E4b and integrated 54F
+human-visible obligations are specified but not performed or claimed here.
 
 ## Documentation Updates
 
-- `docs/architecture/camera_gui_preset_semantics.md`: new canonical owner of
-  preset semantics.
-- `docs/architecture/4d_presentation_interaction_architecture.md`: section 13
-  pointer to that owner.
-- `docs/plans/professional_godot_game_programme.md`, `docs/BACKLOG.md`, and
-  `CURRENT_STATE.md`: Stage 54E-4a status and next steps.
-
-## Resolved Decisions
-
-- Exactly one preset family exists: View. Layout has one adaptive algorithm and
-  no player-facing alternatives; GUI state is already a set of independent
-  persistent settings including the three-step `display.hud_density`. Neither
-  justifies a preset family, so neither is created.
-- No ordinary View preset may change the exact basis `B`. Current behaviour
-  already complies and becomes an explicit test.
-- No combined View/Layout/GUI presets. With no layout or GUI families there is
-  nothing to combine, so a composite family would only rebuild the coupling
-  Stage 54E-2 removed.
-- Reset View restores the canonical product default, matching the accepted
-  section 14 contract, rather than a persisted preference or session-entry
-  state.
-- View identity derives from state equality rather than a tracked flag, which
-  structurally removes the current false "Iso" label after Fit View and Reset
-  View. Identity uses wrapped yaw equality and bounded pitch equality with one
-  contract-owned `0.001`-radian tolerance, so equivalent whole-turn yaw
-  representations cannot resolve as `custom` and callers cannot introduce
-  independent epsilon values.
-- `display.ui_scale` has exactly one semantic owner:
-  `ACCESSIBILITY_PRESENTATION`. Layout adapts to this user preference but does
-  not own it.
-- Fit View is framing-only: `B`, `L`, slice layout, and anchors remain
-  unchanged while outer framing is recomputed from current bounds.
-- Nothing new is persisted and no schema changes, because view identity is
-  derived and `L` and framing remain session-local.
-- Presentation presets do not belong in game setup. Stage 54E-4b adds no setup
-  field and requires no Stage 54E-3 change.
-- Decision A, accepted 2026-08-17: the View selector is hidden in Live 2D and
-  retained in Live 3D and Live 4D. Section 12.1 of the design generalises this
-  into a durable rule — a presentation control is not offered in a mode where
-  it cannot change what the player sees — and records the only other live
-  violation, `display.show_w_labels`, which needs a settings-registry
-  applicability mechanism and is therefore assigned to Stage 54E-5.
-- Decision B, accepted 2026-08-17: applying a View preset restores the fitted
-  framing baseline, discarding manual pan and zoom. This matches current
-  behaviour, so it becomes a declared rule rather than a change.
-
-No unresolved design question remains.
+- `docs/architecture/camera_gui_preset_semantics.md`: corrected canonical
+  forward contract and E4b evidence plan.
+- `docs/architecture/4d_presentation_interaction_architecture.md`: lifecycle
+  supersession and canonical-owner pointer.
+- `docs/architecture/authority_map.md`: clarified existing Godot presentation
+  authority.
+- `docs/plans/professional_godot_game_programme.md`: programme status, defect
+  briefs, 54F criteria, and human-review register.
+- `docs/BACKLOG.md` and `CURRENT_STATE.md`: open-work and restart handoff.
+- this task contract: corrected scope and acceptance.
 
 ## Explicit Deferrals
 
-- Stage 54E-4b implementation of the accepted contract.
-- A persisted user-configured starting view preference, deliberately not
-  introduced; canonical defaults are retained on Restart and Reset View.
-- Named composite profiles for a future Explorer or campaign surface.
-- Stage 54E-5 cockpit consolidation, including any renaming of the inspector
-  `Camera` panel.
-- Stage 54F visual acceptance, including issues #69 and #70.
-- Stage 54D-3 Hold and Explorer.
+- all E4b runtime work;
+- both pre-54F correctness fixes;
+- Stage 54F visual/comprehension implementation and integrated audit;
+- E5 cockpit consolidation, Hold, and later programme stages.
 
-## Review Outcome
+## Handoff target
 
-Stage 54E-4a's two product decisions were accepted on 2026-08-17. Independent
-contract review then found conflicting UI-scale ownership, an incorrect Fit
-View lifecycle row, and an underspecified angular-identity comparison. Those
-contract findings are corrected and Stage 54E-4a is ready for independent
-re-review. Stage 54E-4b has not started and is not eligible until that review is
-green. No runtime work has been performed.
+Stage 54E-4a ends with human semantics accepted, the contract corrected, and a
+fresh independent technical re-review required. Stage 54E-4b remains
+ineligible until that review returns green.

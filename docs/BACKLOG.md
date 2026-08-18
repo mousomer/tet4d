@@ -127,15 +127,24 @@ roll remains reusable. Persistence and deterministic-isolation tests exclude
 ephemeral presentation state while retaining established preferences. No
 authority transfer or establishment occurs. External technical review accepted
 the implementation and its evidence. Aggregate Stage 54E-2 is COMPLETE /
-REVIEWED GREEN. Stage 54E-3 is COMPLETE / REVIEWED GREEN: Stage 54E-3a
+REVIEWED GREEN.
+The fresh-restart statement above is historical implementation evidence. The
+accepted Stage 54E-4 forward contract intentionally changes same-context
+Restart/new-game behaviour to preserve current view; it does not rewrite the
+Stage 54E-2d review outcome.
+
+Stage 54E-3 is COMPLETE / REVIEWED GREEN: Stage 54E-3a
 taxonomy and classification and Stage 54E-3b progressive-disclosure rendering
 are implemented and accepted by external technical review. Ordinary setup is
 the board preset shortcut, the piece-set choice where a mode publishes more
 than one set, and the starting speed; board customization, reproducibility, and
 control frames sit behind secondary disclosure. Disclosure is ephemeral
 presentation state excluded from canonical session setup, setup persistence,
-and native session state, so no schema version changes. Stage 54E-4 is now NEXT
-/ ELIGIBLE.
+and native session state, so no schema version changes. Its distinct human
+product review remains outstanding and is owned by integrated Stage 54F unless
+performed sooner. Stage 54E-4a has accepted human semantics and a corrected
+contract ready for independent technical re-review; Stage 54E-4b is not
+started and remains ineligible until that review is green.
 
 ## Hold
 
@@ -161,12 +170,13 @@ a placeholder authority record in advance.
   and board-axis controls remain `stepper` because their ranges make stepping
   the primary interaction. No control factory was introduced.
 - Stage 54E-4 — camera/GUI presets: Stage 54E-4a contract review findings are
-  FIXED and ready for independent re-review. The corrected contract in
-  `docs/architecture/camera_gui_preset_semantics.md` gives
-  `display.ui_scale` one accessibility-presentation owner, keeps Fit View
-  framing-only, and defines wrapped-yaw/bounded-pitch preset identity with one
-  contract tolerance. Both product decisions remain accepted. Stage 54E-4b
-  has not started and is not eligible until independent re-review is green.
+  closed at design level and the contract is ready for independent technical
+  re-review. It defines transient presentation-context view state, one
+  composite Reset View, framing-only Fit View, restart/new-game preservation,
+  context re-entry defaults, mode-specific 2D/3D/4D/replay ownership,
+  accessibility-owned UI scale, and action-based presets with no continuous
+  `Custom`/state-equality identity. Human semantics are accepted. Stage 54E-4b
+  is NOT STARTED / INELIGIBLE until independent re-review is green.
 - Stage 54E-5 — cockpit consolidation. Carries two findings from Stage 54E-4a
   section 12.1: `display.show_w_labels` is presented in 2D and 3D where the
   renderer gates it on `dimension >= 4`, which needs a declared applicability
@@ -188,6 +198,31 @@ a placeholder authority record in advance.
   thinner muted-yellow outer wireframe; keep active-slice emphasis visible
   without an excessively thick frame; and ensure pieces and Ghost dominate the
   visual hierarchy.
+- Every displayed 4D W-slice must read as a genuinely 3D board volume, with
+  legible front/back/depth structure, pieces and Ghost visibly occupying that
+  volume, and adjacent slices remaining separate related volumes. This is a
+  perceptual criterion beyond spacing or line thickness, not a duplicate of
+  #69 or #70.
+- Invalid setup state must look unmistakably invalid. Carry the Stage 54E-3
+  advisory that runtime style variation can leave a validation summary in the
+  accent colour instead of the error colour; do not reopen E3 IA for it.
+
+### Pre-54F correctness findings
+
+- **3D control-arrow truthfulness — OPEN / PRE-54F CORRECTNESS DEFECT.** In
+  both Relative and Absolute translation-frame modes, reproduce after camera
+  rotation and compare arrow claims, `ControlFrameMapping`, issued canonical
+  command, and actual movement. Arrows must always describe the movement that
+  will occur. The bounded implementation/review brief is in the professional
+  programme. Fix and re-review before integrated 54F acceptance; do not absorb
+  it into E4a.
+- **3D/4D NEXT geometry fidelity — OPEN / PRE-54F
+  PRESENTATION-CORRECTNESS DEFECT.** Enumerate every production 3D piece and
+  every production 4D piece/piece-set variant, including embedded
+  lower-dimensional sets, and compare normalized thumbnail geometry with the
+  authoritative queued piece. The bounded implementation/review brief is in
+  the professional programme. Fix and re-review before integrated 54F
+  acceptance; do not absorb it into E4a.
 
 ## Authority Transition Work
 

@@ -601,10 +601,12 @@ coherent compatibility decomposition and does not modify current definitions.
 
 Stage 54E-4a completed that redesign. `docs/architecture/camera_gui_preset_semantics.md`
 is the canonical owner of preset taxonomy, per-family mutation permissions,
-view identity, preset-owned reset and lifecycle behaviour, persistence
-ownership, and the compatibility mapping for the existing IDs. It consumes the
-separation and the section 14 lifecycle contract defined here without
-reopening either.
+view-action semantics, Reset View/Fit View orchestration, presentation-context
+lifetime, persistence ownership, and the compatibility disposition for the
+existing IDs. It consumes the state-owner separation defined here. Its
+human-approved lifecycle deliberately refines the earlier Stage 54E-2d rule:
+Restart Game now preserves the current view, while Reset View establishes the
+complete canonical view.
 
 ## 14. Ownership contract
 
@@ -627,33 +629,30 @@ materially false; it does not claim that the missing state already exists.
 
 ## 15. Persistence and lifecycle contract
 
-`B`, `L`, anchors, and outer `V` are live-session presentation state. `B` is
-specifically a non-persistent exact basis state; `L` and outer `V` are
-ephemeral interaction state in 54E-2 unless 54E-4 later establishes a
-persistent preference contract. Anchors are setup-derived state recomputed from
-dimensions, `B`, layout policy, and viewport/layout inputs. Projection mode is
-a live presentation state; translation/rotation frame preferences are the
-existing persistent presentation preferences. Camera sensitivity, invert-Y,
-and interpolation scale retain their existing presentation-preference status.
+`B`, `L`, anchors, and outer `V/P` are transient presentation-context state.
+They are not gameplay-run state or application preferences. Anchors are
+derived from dimensions, `B`, layout policy, and viewport/layout inputs.
+Projection mode is transient canonical-view state because the product exposes
+no player-selectable camera-projection preference. Translation/rotation frame
+preferences, camera sensitivity, invert-Y, and accessibility policy retain
+their existing preference owners.
 
 | Lifecycle event | B | L | anchors | V/P | frame preferences |
 | --- | --- | --- | --- | --- | --- |
 | application launch / Live 4D entry | identity | default yaw/pitch; no roll | recompute | fitted default | load existing preferences |
-| start new game / Restart Game | identity | default yaw/pitch; no roll | recompute | fitted default | retain |
+| start new game / Restart Game in the same presentation context | preserve current | preserve current | preserve current | preserve current | retain |
 | Change Setup / main-menu return | clear with session | clear with session | discard | clear with session | retain |
 | Reset View | identity | default yaw/pitch; no roll | recompute, not manually transformed | fitted outer default/projection default | retain |
 | basis reset | identity only | unchanged | recompute from identity | unchanged unless invoked through Reset View | retain |
 | changing mode | clear Live 4D state | clear | discard | mode owner chooses its default | retain |
-| persisted setup load | identity on subsequent session | local default | recompute | fitted default | load |
+| re-entry / application restart | identity | local default | recompute | canonical fitted view | load/retain |
 | applying a preset | unchanged | receives yaw/pitch component | unchanged | receives zoom/pan/fit component | unchanged |
 
-Stage 54E-2 must decompose the existing preset API across `L` and `V/P` as
-specified above; it must not retain a combined-rig path or create a
-viewer-relative mismatch. This does not decide that current names or values
-are final product design. If later accepted presets persist `L`, anchors, or
-`V`, Stage 54E-4 must add a versioned presentation schema and recovery rules.
-Stage 54E-2 must not create such a schema merely to retain current
-combined-rig values.
+The active forward-looking lifecycle, including mode-specific 2D/3D/4D/replay
+semantics, one composite Reset View, framing-only Fit View, and action-based
+presets, is canonical in `camera_gui_preset_semantics.md`. No current view
+state is persisted. A future saved-view/bookmark feature would require an
+explicit versioned contract and recovery rules.
 
 ## 16. Scene-graph and implementation-structure implications
 
