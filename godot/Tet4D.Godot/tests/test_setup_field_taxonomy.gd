@@ -27,6 +27,7 @@ const EXPECTED_FIELD_IDS := {
 func run() -> Array:
 	var failures: Array = []
 	_check_registry_declarations(failures)
+	_check_declarations_cannot_vanish(failures)
 	_check_total_classification(failures)
 	_check_disclosure_assignment(failures)
 	_check_contextual_visibility(failures)
@@ -43,6 +44,25 @@ func _check_registry_declarations(failures: Array) -> void:
 	var registry_failures: Array = SetupFieldRegistryScript.validate()
 	if not registry_failures.is_empty():
 		failures.append("declared setup fields must validate: %s" % str(registry_failures))
+
+
+func _check_declarations_cannot_vanish(failures: Array) -> void:
+	var declarations: Array = SetupFieldRegistryScript.INVARIANT_FIELDS.duplicate(true)
+	var declaration := declarations[0] as Dictionary
+	var field_id := str(declaration.get("id", ""))
+	declaration["modes"] = []
+
+	var resolved_count := 0
+	for mode in GameSetupSpecScript.modes():
+		for spec_data in SetupFieldRegistryScript.field_data_for_mode(mode, declarations):
+			if str((spec_data as Dictionary).get("id", "")) == field_id:
+				resolved_count += 1
+	var registry_failures: Array = SetupFieldRegistryScript.validate(declarations)
+
+	if resolved_count != 0:
+		failures.append("the empty-modes regression declaration must produce zero resolved fields")
+	if registry_failures.is_empty():
+		failures.append("an invalid declaration must fail before zero mode expansions can hide it")
 
 
 func _check_total_classification(failures: Array) -> void:

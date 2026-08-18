@@ -169,7 +169,9 @@ a placeholder authority record in advance.
 - Stage 54E-3 — setup/menu information architecture (COMPLETE / REVIEWED
   GREEN): direct seed input is the semantic control type `numeric_entry`,
   and board-axis controls remain `stepper` because their ranges make stepping
-  the primary interaction. No control factory was introduced.
+  the primary interaction. No control factory was introduced. A
+  post-acceptance registry validation defect is FIXED: declarations are now
+  validated before mode expansion, so empty mode sets cannot disappear.
 - Stage 54E-4 — camera/GUI presets: Stage 54E-4a contract and implementation-
   plan findings are closed at design level and the contract is ready for final
   confirmation review, with no remaining human decisions. It defines transient

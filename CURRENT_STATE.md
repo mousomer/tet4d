@@ -93,7 +93,10 @@ history ledger. Detailed history is preserved in
   disclosure out of canonical session setup, setup persistence, and native
   session state. Its distinct human product review is outstanding and belongs
   to integrated Stage 54F unless performed sooner; E3 remains COMPLETE /
-  REVIEWED GREEN. Stage 54E-4a human view semantics are ACCEPTED, its contract
+  REVIEWED GREEN. A post-acceptance registry validation defect is FIXED:
+  declarations are validated before mode expansion, so an empty mode set
+  cannot disappear without a validation failure. Stage 54E-4a human view
+  semantics are ACCEPTED, its contract
   and implementation plan close the final blocking technical findings, and it
   is READY FOR FINAL CONFIRMATION REVIEW with no remaining human decisions. It
   changed no runtime. The active contract in
