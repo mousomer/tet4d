@@ -94,7 +94,8 @@ history ledger. Detailed history is preserved in
   session state. Its distinct human product review is outstanding and belongs
   to integrated Stage 54F unless performed sooner; E3 remains COMPLETE /
   REVIEWED GREEN. Stage 54E-4a human view semantics are ACCEPTED, its contract
-  is CORRECTED, and it is READY FOR INDEPENDENT TECHNICAL RE-REVIEW. It changed
+  and implementation plan close the independent re-review findings, and it is
+  READY FOR FINAL INDEPENDENT TECHNICAL RE-REVIEW. It changed
   no runtime. The active contract in
   `docs/architecture/camera_gui_preset_semantics.md` treats current view as
   transient presentation-context state; exposes one composite Reset View and a
@@ -244,7 +245,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Independently re-review the corrected Stage 54E-4a contract in
+1. Perform the final independent technical re-review of the corrected Stage 54E-4a contract in
    `docs/architecture/camera_gui_preset_semantics.md`. Do not begin Stage
    54E-4b until that review is green. Verify the transient/persistent split,
    Reset/Fit separation, restart preservation, context re-entry, mode-specific

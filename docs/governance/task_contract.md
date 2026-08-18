@@ -1,11 +1,11 @@
-# Task Contract — Reconcile Stage 54E-4a View Semantics and Human Findings
+# Task Contract — Close Stage 54E-4a Independent Re-review Findings
 
 ## Objective
 
-Correct the Stage 54E-4a architecture contract to the accepted human
-view/persistence/reset model, reconcile active programme status, and assign all
-current human-visible findings to bounded owners. This is documentation-only
-architecture and staged handoff work. It implements no runtime or visual fix.
+Close the independent Stage 54E-4a technical re-review's implementation-audit
+and planning findings without reopening the accepted human view semantics or
+starting E4b. This is documentation-only architecture and staged handoff work.
+It implements no runtime, test, configuration, scene, gameplay, or visual fix.
 
 ## Classification
 
@@ -45,29 +45,24 @@ native authority establishment.
 
 ## Required Changes
 
-1. Define current view as transient presentation-context state, not a
-   preference or gameplay-run state.
-2. Define one composite Reset View that restores every mode-owned canonical
-   view component without taking ownership of those components.
-3. Define Fit View as framing-only and require a separate internal canonical
-   establishment path.
-4. Refine lifecycle so same-context Restart/new game preserves view, while
-   setup/menu/mode exit destroys it and re-entry/application restart establishes
-   a fresh canonical view.
-5. Replace persistent/derived current-preset identity with named view actions;
-   retire `Custom`, `resolve_id()`, and the `0.001`-radian identity requirement
-   where they have no other product purpose.
-6. Define canonical/reset/fit ownership for 2D, 3D, Live 4D, and replay, with a
-   flat/front-on canonical 2D view.
-7. Classify projection from runtime evidence and reconcile UI-scale reset
-   ownership as accessibility presentation.
-8. Make the E4b component and automated/visible evidence plans implementable
-   without another product decision.
-9. Record bounded pre-54F correctness briefs for 3D control-arrow truthfulness
-   and 3D/4D NEXT geometry fidelity.
-10. Preserve #69, #70, the 4D-slice-as-3D comprehension criterion, and the E3
-    validation-error colour advisory under Stage 54F.
-11. Reconcile programme status and the E4a/E4b/E5/54F/54G human-review register.
+1. Assign the real identity machinery and every writer/reader/HUD consumer to
+   `camera_rig.gd`; remove planned runtime-removal work for the already-absent
+   `resolve_id()` and membership tolerance while classifying the real `CUSTOM`
+   sentinel.
+2. Give `apply_framing_preset()` and `apply_preset()` concrete action-based E4b
+   dispositions, permitted mutations, forbidden mutations, and callers.
+3. Inventory the six public IDs, `CUSTOM`, and
+   `PYTHON_DIAGRAM_REPLAY_VIEW`, including replay's current `Camera: Iso`
+   fallback and its removal path.
+4. State canonical Live-4D `L` numerically as `(0.0, 0.0)`.
+5. Clarify that Fit preserves projection while today's fitted production path
+   supports only orthographic projection and needs no fictitious perspective
+   regression.
+6. Complete the `fit_bounds()` mutation audit, including identity/diagnostic
+   bookkeeping and snap-to-current effects.
+7. Recheck every E4b component row against real files, symbols, callers,
+   retained fields, removed fields, and target behaviour.
+8. Reconcile staged status to final independent technical re-review pending.
 
 ## Forbidden Changes
 
@@ -82,27 +77,21 @@ native authority establishment.
 
 ## Acceptance Criteria
 
-1. The active architecture has one non-contradictory transient/persistent split.
-2. Reset View, Fit View, restart, same-context new game, teardown, and re-entry
-   have complete 2D/3D/4D/replay semantics.
-3. Named presets are actions and no continuous identity machinery remains in
-   the product contract.
-4. UI scale belongs operationally to Accessibility Reset; Display Reset,
-   Reset View, Fit View, and Restart preserve it.
-5. Projection is resolved from actual product affordances, not implementation
-   convenience.
-6. The E4b plan identifies exact components, migration steps, automated
-   evidence, focused visible review, authority impact, and forbidden scope.
-7. Stage 54E-3 remains COMPLETE / REVIEWED GREEN with human product review
-   deferred to 54F; Stage 54E-4a is ready only for independent re-review; E4b
-   is not started/ineligible; Hold remains independently eligible.
-8. Both pre-54F correctness defects have reproduction, owner, components,
-   invariant, regression strategy, visible verification, exclusions, and
-   timing.
-9. 54F retains #69, #70, 4D-slice volumetric readability, and validation-error
-   colour without claiming fixes.
-10. Only documentation changes, required verification passes, one semantic
-    commit is created, and the final worktree is clean.
+1. The eight-value current identity inventory and replay mislabel are exact.
+2. Every real identity symbol, writer, reader, diagnostic coupling, HUD caller,
+   and test impact has an owner and target disposition.
+3. No plan row assigns nonexistent runtime removal work.
+4. The framing adapter and 3D/replay orientation action have fixed, compatible
+   target contracts; Live-4D orientation reaches only `L`.
+5. Canonical `L`, Fit/projection evidence, and the complete `fit_bounds()`
+   mutation set are explicit.
+6. The E4b table is implementable without another mechanical or product choice.
+7. Accepted lifecycle, Reset, Fit, persistence, UI-scale, mode, and defect
+   semantics remain unchanged.
+8. E4a is ready for final independent technical re-review but is not self-
+   certified green; E4b remains not started/ineligible.
+9. Only documentation changes, required verification passes, one semantic
+   commit is created, and the final worktree is clean.
 
 ## Automated Verification
 
@@ -123,16 +112,12 @@ human-visible obligations are specified but not performed or claimed here.
 
 ## Documentation Updates
 
-- `docs/architecture/camera_gui_preset_semantics.md`: corrected canonical
-  forward contract and E4b evidence plan.
-- `docs/architecture/4d_presentation_interaction_architecture.md`: lifecycle
-  supersession and canonical-owner pointer.
-- `docs/architecture/authority_map.md`: clarified existing Godot presentation
-  authority.
-- `docs/plans/professional_godot_game_programme.md`: programme status, defect
-  briefs, 54F criteria, and human-review register.
-- `docs/BACKLOG.md` and `CURRENT_STATE.md`: open-work and restart handoff.
-- this task contract: corrected scope and acceptance.
+- `docs/architecture/camera_gui_preset_semantics.md`: corrected runtime audit,
+  adapter/inventory dispositions, evidence wording, and exact E4b plan.
+- `docs/architecture/authority_map.md`,
+  `docs/plans/professional_godot_game_programme.md`, `docs/BACKLOG.md`, and
+  `CURRENT_STATE.md`: final independent re-review handoff status.
+- this task contract: bounded re-review scope and acceptance.
 
 ## Explicit Deferrals
 
@@ -143,6 +128,6 @@ human-visible obligations are specified but not performed or claimed here.
 
 ## Handoff target
 
-Stage 54E-4a ends with human semantics accepted, the contract corrected, and a
-fresh independent technical re-review required. Stage 54E-4b remains
-ineligible until that review returns green.
+Stage 54E-4a ends with human semantics accepted, all current technical findings
+corrected, and final independent technical re-review required. Stage 54E-4b
+remains ineligible until that review returns green.

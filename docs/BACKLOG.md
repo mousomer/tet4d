@@ -142,9 +142,9 @@ control frames sit behind secondary disclosure. Disclosure is ephemeral
 presentation state excluded from canonical session setup, setup persistence,
 and native session state, so no schema version changes. Its distinct human
 product review remains outstanding and is owned by integrated Stage 54F unless
-performed sooner. Stage 54E-4a has accepted human semantics and a corrected
-contract ready for independent technical re-review; Stage 54E-4b is not
-started and remains ineligible until that review is green.
+performed sooner. Stage 54E-4a has accepted human semantics, closes the current
+technical findings, and is ready for final independent technical re-review;
+Stage 54E-4b is not started and remains ineligible until that review is green.
 
 ## Hold
 
@@ -169,9 +169,9 @@ a placeholder authority record in advance.
   GREEN): direct seed input is the semantic control type `numeric_entry`,
   and board-axis controls remain `stepper` because their ranges make stepping
   the primary interaction. No control factory was introduced.
-- Stage 54E-4 — camera/GUI presets: Stage 54E-4a contract review findings are
-  closed at design level and the contract is ready for independent technical
-  re-review. It defines transient presentation-context view state, one
+- Stage 54E-4 — camera/GUI presets: Stage 54E-4a contract and implementation-
+  plan findings are closed at design level and the contract is ready for final
+  independent technical re-review. It defines transient presentation-context view state, one
   composite Reset View, framing-only Fit View, restart/new-game preservation,
   context re-entry defaults, mode-specific 2D/3D/4D/replay ownership,
   accessibility-owned UI scale, and action-based presets with no continuous
