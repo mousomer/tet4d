@@ -142,8 +142,9 @@ control frames sit behind secondary disclosure. Disclosure is ephemeral
 presentation state excluded from canonical session setup, setup persistence,
 and native session state, so no schema version changes. Its distinct human
 product review remains outstanding and is owned by integrated Stage 54F unless
-performed sooner. Stage 54E-4a has accepted human semantics, closes the current
-technical findings, and is ready for final independent technical re-review;
+performed sooner. Stage 54E-4a has accepted human semantics, closes the final
+blocking technical findings, and is ready for final confirmation review with
+no remaining human decisions;
 Stage 54E-4b is not started and remains ineligible until that review is green.
 
 ## Hold
@@ -171,12 +172,13 @@ a placeholder authority record in advance.
   the primary interaction. No control factory was introduced.
 - Stage 54E-4 — camera/GUI presets: Stage 54E-4a contract and implementation-
   plan findings are closed at design level and the contract is ready for final
-  independent technical re-review. It defines transient presentation-context view state, one
-  composite Reset View, framing-only Fit View, restart/new-game preservation,
+  confirmation review, with no remaining human decisions. It defines transient
+  presentation-context view state, one composite Reset View, framing-only Fit
+  View, restart/new-game preservation,
   context re-entry defaults, mode-specific 2D/3D/4D/replay ownership,
   accessibility-owned UI scale, and action-based presets with no continuous
   `Custom`/state-equality identity. Human semantics are accepted. Stage 54E-4b
-  is NOT STARTED / INELIGIBLE until independent re-review is green.
+  is NOT STARTED / INELIGIBLE until final confirmation review is green.
 - Stage 54E-5 — cockpit consolidation. Carries two findings from Stage 54E-4a
   section 12.1: `display.show_w_labels` is presented in 2D and 3D where the
   renderer gates it on `dimension >= 4`, which needs a declared applicability

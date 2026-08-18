@@ -785,9 +785,10 @@ definition while being presented secondarily.
 
 #### Stage 54E-4 — Camera/GUI presets
 
-Status: Stage 54E-4a HUMAN VIEW SEMANTICS ACCEPTED / RE-REVIEW FINDINGS
-CORRECTED / READY FOR FINAL INDEPENDENT TECHNICAL RE-REVIEW. Stage 54E-4b NOT
-STARTED / INELIGIBLE pending a green E4a re-review.
+Status: Stage 54E-4a HUMAN VIEW SEMANTICS ACCEPTED / FINAL REVIEW BLOCKERS
+CORRECTED / READY FOR FINAL CONFIRMATION REVIEW / REMAINING HUMAN DECISIONS
+NONE. Stage 54E-4b NOT STARTED / INELIGIBLE pending a green E4a confirmation
+review.
 
 Stage 54E-4a audited every preset-like operation and recorded the durable
 contract in `docs/architecture/camera_gui_preset_semantics.md`, which is now
@@ -935,9 +936,9 @@ not cosmetic polish and is not part of E4a.
 
 ### Human-review register
 
-- **E4a:** human product semantics accepted; technical findings corrected and
-  awaiting final independent technical re-review. No second human gate unless
-  a new decision emerges.
+- **E4a:** human product semantics accepted; final blocking technical findings
+  corrected and awaiting final confirmation review. Remaining human decisions:
+  none.
 - **E4b:** after implementation, focused real-window review of flat 2D,
   Fit/Reset separation, restart preservation, re-entry defaults, action-based
   presets, UI-scale ownership, and 3D/4D/replay mode behaviour.
@@ -1226,10 +1227,10 @@ The active order is:
    progressive-disclosure rendering are implemented and accepted by external
    technical review, with automated evidence and a recorded real-window
    acceptance checklist.
-7. Stage 54E-4a has accepted human semantics and closes the current technical
-   findings; it is ready for final independent technical re-review. Stage
-   54E-4b is NOT STARTED / INELIGIBLE
-   until that review is green.
+7. Stage 54E-4a has accepted human semantics and closes the final blocking
+   technical findings; it is ready for final confirmation review, with no
+   remaining human decisions. Stage 54E-4b is NOT STARTED / INELIGIBLE until
+   that review is green.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.
 10. Stage 54G — remaining professional release hardening.

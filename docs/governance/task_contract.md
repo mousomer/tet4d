@@ -1,11 +1,12 @@
-# Task Contract — Close Stage 54E-4a Independent Re-review Findings
+# Task Contract — Close Final Stage 54E-4a Review Blockers
 
 ## Objective
 
-Close the independent Stage 54E-4a technical re-review's implementation-audit
-and planning findings without reopening the accepted human view semantics or
-starting E4b. This is documentation-only architecture and staged handoff work.
-It implements no runtime, test, configuration, scene, gameplay, or visual fix.
+Close P1-1/P1-2 and the related P2-1/P2-2 findings from the final independent
+Stage 54E-4a technical re-review without reopening the accepted human view
+semantics or starting E4b. This is documentation-only architecture and staged
+handoff work. It implements no runtime, test, configuration, scene, gameplay,
+or visual fix.
 
 ## Classification
 
@@ -39,30 +40,34 @@ native authority establishment.
 ## Allowed Systems and Paths
 
 - the E4a view architecture owner and its consumed 4D architecture pointer;
+- the historical configurable-board architecture statement about dead
+  `frame_board()`;
 - authority-map wording;
 - programme, backlog, restart-handoff, and this task contract; and
 - no runtime, config, test, scene, asset, or generated-maintenance file.
 
 ## Required Changes
 
-1. Assign the real identity machinery and every writer/reader/HUD consumer to
-   `camera_rig.gd`; remove planned runtime-removal work for the already-absent
-   `resolve_id()` and membership tolerance while classifying the real `CUSTOM`
-   sentinel.
-2. Give `apply_framing_preset()` and `apply_preset()` concrete action-based E4b
-   dispositions, permitted mutations, forbidden mutations, and callers.
-3. Inventory the six public IDs, `CUSTOM`, and
-   `PYTHON_DIAGRAM_REPLAY_VIEW`, including replay's current `Camera: Iso`
-   fallback and its removal path.
-4. State canonical Live-4D `L` numerically as `(0.0, 0.0)`.
-5. Clarify that Fit preserves projection while today's fitted production path
-   supports only orthographic projection and needs no fictitious perspective
-   regression.
-6. Complete the `fit_bounds()` mutation audit, including identity/diagnostic
-   bookkeeping and snap-to-current effects.
-7. Recheck every E4b component row against real files, symbols, callers,
-   retained fields, removed fields, and target behaviour.
-8. Reconcile staged status to final independent technical re-review pending.
+1. Define `CameraRig.establish_outer_view(yaw, pitch, roll,
+   reflection_active)` as an arbitrary absolute outer-orientation seam with
+   exact allowed/forbidden mutations and an orientation-only snap.
+2. Define named outer actions as target resolution followed by that seam, and
+   define Reset/re-entry as mode-owner restoration, arbitrary outer-view
+   establishment, then framing-only fit.
+3. Keep Live-4D local yaw/pitch exclusively `L`-owned while using the new seam
+   only for its fixed outer mount/reflection during canonical establishment.
+4. Record that `CameraRig.frame_board()` has zero live callers and require its
+   deletion in E4b; correct the historical document that presented it as an
+   active production path.
+5. Extend the identity audit to both unknown-ID replay fallback and known-ID
+   false labels, including Live-4D `Camera: Iso` at outer yaw 205 degrees.
+6. Make reflection routing consistent: defined outer targets may establish it;
+   current 3D/replay actions use false; Live-4D `L` actions and all Fit/framing
+   paths preserve it.
+7. Recheck exact CameraRig/TraceReplayApp/action routing so E4b needs no further
+   API or product decision.
+8. Reconcile staged status to final confirmation review pending, with no
+   remaining human decision.
 
 ## Forbidden Changes
 
@@ -77,19 +82,21 @@ native authority establishment.
 
 ## Acceptance Criteria
 
-1. The eight-value current identity inventory and replay mislabel are exact.
-2. Every real identity symbol, writer, reader, diagnostic coupling, HUD caller,
-   and test impact has an owner and target disposition.
-3. No plan row assigns nonexistent runtime removal work.
-4. The framing adapter and 3D/replay orientation action have fixed, compatible
-   target contracts; Live-4D orientation reaches only `L`.
-5. Canonical `L`, Fit/projection evidence, and the complete `fit_bounds()`
-   mutation set are explicit.
+1. The rig-owned arbitrary outer-orientation seam has exact arguments, state
+   effects, snap behavior, exclusions, and presentation-only scope.
+2. Named actions and canonical Reset/re-entry compose that seam with the right
+   mode owners and framing operations; Live-4D `L` remains separate.
+3. Zero-caller `frame_board()` is classified as dead and assigned deletion,
+   with no active production evidence attributed to it.
+4. Both persistent-identity false-label classes and their common retirement
+   path are explicit, with no replacement continuous identity.
+5. Reflection semantics agree across actions, canonical establishment, Fit,
+   and framing helpers.
 6. The E4b table is implementable without another mechanical or product choice.
 7. Accepted lifecycle, Reset, Fit, persistence, UI-scale, mode, and defect
    semantics remain unchanged.
-8. E4a is ready for final independent technical re-review but is not self-
-   certified green; E4b remains not started/ineligible.
+8. E4a is ready for final confirmation review but is not self-certified green;
+   E4b remains not started/ineligible and no human decision remains.
 9. Only documentation changes, required verification passes, one semantic
    commit is created, and the final worktree is clean.
 
@@ -113,10 +120,13 @@ human-visible obligations are specified but not performed or claimed here.
 ## Documentation Updates
 
 - `docs/architecture/camera_gui_preset_semantics.md`: corrected runtime audit,
-  adapter/inventory dispositions, evidence wording, and exact E4b plan.
+  canonical outer-orientation seam, dead-code/label/reflection dispositions,
+  composition, and exact E4b plan.
+- `docs/architecture/configurable_plain_boards_and_4d_layout.md`: classify
+  `frame_board()` as dead rather than a production presentation assumption.
 - `docs/architecture/authority_map.md`,
   `docs/plans/professional_godot_game_programme.md`, `docs/BACKLOG.md`, and
-  `CURRENT_STATE.md`: final independent re-review handoff status.
+  `CURRENT_STATE.md`: final confirmation-review handoff status.
 - this task contract: bounded re-review scope and acceptance.
 
 ## Explicit Deferrals
@@ -128,6 +138,7 @@ human-visible obligations are specified but not performed or claimed here.
 
 ## Handoff target
 
-Stage 54E-4a ends with human semantics accepted, all current technical findings
-corrected, and final independent technical re-review required. Stage 54E-4b
-remains ineligible until that review returns green.
+Stage 54E-4a ends with human semantics accepted, the final two blocking
+technical findings and related P2 findings corrected, and final confirmation
+review required. Stage 54E-4b remains ineligible until that review returns
+green. Remaining human decisions: none.
