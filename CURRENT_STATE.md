@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-10
+Last updated: 2026-08-18
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -92,13 +92,16 @@ history ledger. Detailed history is preserved in
   disclosure, removes the panel's duplicate visibility rules, and keeps
   disclosure out of canonical session setup, setup persistence, and native
   session state. Stage 54E-4a — camera/GUI preset semantic audit and design —
-  is DESIGN ACCEPTED. It changed no runtime and recorded the durable contract
+  has its contract review findings FIXED and is ready for independent
+  re-review. It changed no runtime and recorded the durable contract
   in `docs/architecture/camera_gui_preset_semantics.md`: one View preset
   family, no layout or GUI preset families, no combined presets, no preset may
   change the exact basis `B`, view identity derived from state equality, and no
   new persistence or schema. Both product decisions were accepted on
-  2026-08-17. Stage 54E-4b — implement the accepted contract — is now NEXT /
-  ELIGIBLE.
+  2026-08-17. Review corrections assign `display.ui_scale` only to
+  accessibility presentation, keep Fit View framing-only, and define wrapped
+  yaw plus bounded-pitch identity with one contract tolerance. Stage 54E-4b
+  has not started and is not eligible until independent re-review is green.
 - Integrated professional playability/visual acceptance is now Stage 54F;
   professional gaming-experience and release hardening is Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -231,12 +234,11 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Implement Stage 54E-4b against the accepted contract in
-   `docs/architecture/camera_gui_preset_semantics.md`, following its section 15
-   plan, section 16 evidence design, and section 17 human-visible verification.
-   The design concludes that presentation presets do not belong in game setup,
-   so Stage 54E-3 needs no follow-up field. Stage 54D-3 Hold remains
-   independently eligible. Stage 54E-5 remains later programme work.
+1. Independently re-review the corrected Stage 54E-4a contract in
+   `docs/architecture/camera_gui_preset_semantics.md`. Do not begin Stage
+   54E-4b until that review is green. The design concludes that presentation
+   presets do not belong in game setup. Stage 54D-3 Hold remains independently
+   eligible. Stage 54E-5 remains later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

@@ -141,7 +141,15 @@ design it records is an obligation of Stage 54E-4b, not of this slice.
   state.
 - View identity derives from state equality rather than a tracked flag, which
   structurally removes the current false "Iso" label after Fit View and Reset
-  View.
+  View. Identity uses wrapped yaw equality and bounded pitch equality with one
+  contract-owned `0.001`-radian tolerance, so equivalent whole-turn yaw
+  representations cannot resolve as `custom` and callers cannot introduce
+  independent epsilon values.
+- `display.ui_scale` has exactly one semantic owner:
+  `ACCESSIBILITY_PRESENTATION`. Layout adapts to this user preference but does
+  not own it.
+- Fit View is framing-only: `B`, `L`, slice layout, and anchors remain
+  unchanged while outer framing is recomputed from current bounds.
 - Nothing new is persisted and no schema changes, because view identity is
   derived and `L` and framing remain session-local.
 - Presentation presets do not belong in game setup. Stage 54E-4b adds no setup
@@ -171,7 +179,9 @@ No unresolved design question remains.
 
 ## Review Outcome
 
-Stage 54E-4a is design complete and its two product decisions were accepted on
-2026-08-17. Stage 54E-4 itself remains incomplete: Stage 54E-4b must still
-implement and verify the accepted contract, and no runtime work has been
-performed.
+Stage 54E-4a's two product decisions were accepted on 2026-08-17. Independent
+contract review then found conflicting UI-scale ownership, an incorrect Fit
+View lifecycle row, and an underspecified angular-identity comparison. Those
+contract findings are corrected and Stage 54E-4a is ready for independent
+re-review. Stage 54E-4b has not started and is not eligible until that review is
+green. No runtime work has been performed.

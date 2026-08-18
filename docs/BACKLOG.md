@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-10
+Updated: 2026-08-18
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -160,11 +160,13 @@ a placeholder authority record in advance.
   GREEN): direct seed input is the semantic control type `numeric_entry`,
   and board-axis controls remain `stepper` because their ranges make stepping
   the primary interaction. No control factory was introduced.
-- Stage 54E-4 — camera/GUI presets: Stage 54E-4a semantic audit and design is
-  DESIGN ACCEPTED, recorded in
-  `docs/architecture/camera_gui_preset_semantics.md`; both product decisions
-  were accepted on 2026-08-17. Stage 54E-4b — implement the accepted preset
-  contract — is NEXT / ELIGIBLE as one bounded PR.
+- Stage 54E-4 — camera/GUI presets: Stage 54E-4a contract review findings are
+  FIXED and ready for independent re-review. The corrected contract in
+  `docs/architecture/camera_gui_preset_semantics.md` gives
+  `display.ui_scale` one accessibility-presentation owner, keeps Fit View
+  framing-only, and defines wrapped-yaw/bounded-pitch preset identity with one
+  contract tolerance. Both product decisions remain accepted. Stage 54E-4b
+  has not started and is not eligible until independent re-review is green.
 - Stage 54E-5 — cockpit consolidation. Carries two findings from Stage 54E-4a
   section 12.1: `display.show_w_labels` is presented in 2D and 3D where the
   renderer gates it on `dimension >= 4`, which needs a declared applicability

@@ -1,12 +1,12 @@
 # Camera and GUI Preset Semantics
 
 Role: architecture
-Status: design accepted; Stage 54E-4b implements this contract
+Status: contract review findings fixed; ready for independent re-review
 Scope: Godot product-shell view/layout/GUI preset semantics across Live 2D/3D/4D
 Canonical owner: this file
 Consumes: docs/architecture/4d_presentation_interaction_architecture.md
 Stage: 54E-4a design and audit
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 ## 1. Purpose and boundary
 
@@ -26,9 +26,9 @@ It does not own the presentation-space separation itself, which belongs to
 Stage 54E-4a performed no runtime change.
 
 The two product decisions this design raised were accepted on 2026-08-17 and
-are recorded in section 20. Every statement in this document is therefore
-decided, either by repository evidence, by already-accepted authority, or by
-that acceptance. Stage 54E-4b implements it without reopening the design.
+are recorded in section 20. Independent contract-review findings were
+corrected before implementation. Stage 54E-4b must not begin until independent
+re-review accepts the corrected contract.
 
 ## 2. Consumed architecture
 
@@ -184,7 +184,8 @@ This is a clean result, recorded so a future change cannot silently regress it.
 | outer roll | `OUTER_FRAMING` | absent from normal gameplay; Explorer capability retained |
 | camera projection type | `PROJECTION` | forced orthographic in every fitted product view |
 | `display.projection_strength` | `PROJECTION` | 4D slice projection strength; independent persistent setting |
-| `theme.name`, `display.ui_scale` | `GUI_LAYOUT` | |
+| `theme.name` | `GUI_LAYOUT` | palette and style-role selection |
+| `display.ui_scale` | `ACCESSIBILITY_PRESENTATION` | user presentation/accessibility preference; layout adapts to it but does not own it |
 | `display.hud_density`, `display.board_detail`, `display.show_w_labels`, `interface.show_onboarding`, `diagnostics.show_layout_bounds`, `ghost.enabled`, `settled_cells.opacity` | `GUI_VISIBILITY` | |
 | `accessibility.*` | `ACCESSIBILITY_PRESENTATION` | |
 | `camera.sensitivity`, `camera.invert_y` | `OTHER` | input preference, not view state |
@@ -303,6 +304,29 @@ defect structurally: Fit View and Reset View leave `L = (0,0)`, which equals
 `front`, so the selector truthfully reads "Front" instead of the current false
 "Iso". A label can no longer disagree with the state that produced it.
 
+Identity compares semantic angular state, not raw floating-point
+representation. Yaw is periodic, so its comparison uses the wrapped signed
+difference in the canonical `[-PI, PI)` interval:
+
+```text
+angular_delta(a, b) = wrap_to_pi(a - b)
+yaw_equal(a, b) = abs(angular_delta(a, b)) <= view_identity_epsilon
+```
+
+Consequently `0`, `2*PI`, and `-2*PI` are equivalent yaw representations.
+This rule applies both to the already-wrapped Live-4D local yaw and to outer
+3D/replay yaw, which may accumulate outside the canonical interval.
+
+Pitch is not periodic presentation state. Both normal Live-4D pitch and outer
+3D/replay pitch are admitted through bounded domains, so pitch uses direct
+bounded comparison: `abs(current_pitch - target_pitch) <=
+view_identity_epsilon`. It must not wrap across `PI`.
+
+The preset-definition owner declares one View-identity tolerance of `0.001`
+radians. `resolve_id()` and its tests consume that contract-owned value;
+callers must not scatter independent epsilon literals or choose per-call
+tolerances. The implementation may choose the constant/helper names.
+
 ### 8.8 Combined presets
 
 **No combined presets.** Option A, strictly separate, is adopted. With no
@@ -323,7 +347,7 @@ column is new and follows from section 8.7.
 | Apply View preset | unchanged | set to named target | unchanged | restore fitted framing | unchanged | that preset |
 | Manual yaw / pitch | unchanged | changed | unchanged | unchanged | unchanged | derived; `Custom` unless it lands on a named target |
 | Manual pan / zoom | unchanged | unchanged | unchanged | changed | unchanged | derived from orientation only, so unchanged |
-| Fit View | unchanged | unchanged | recompute | fitted default | unchanged | derived, unchanged |
+| Fit View | unchanged | unchanged | unchanged | recomputed from current bounds | unchanged | derived, unchanged |
 | Reset View | identity | `(0,0)` | recompute | fitted default | unchanged | `Front` by derivation |
 | Restart Game | identity | `(0,0)` | recompute | fitted default | unchanged | `Front` |
 | New Game | identity | `(0,0)` | recompute | fitted default | unchanged | `Front` |
@@ -482,7 +506,7 @@ dependency that would justify splitting it.
 
 | Component | Old behaviour | Target behaviour |
 | --- | --- | --- |
-| `scripts/presentation/camera_preset.gd` | six records of yaw/pitch/zoom/pan plus `custom` constant | six records of yaw/pitch only; add `resolve_id(yaw, pitch, epsilon)` returning the matching ID or `custom` |
+| `scripts/presentation/camera_preset.gd` | six records of yaw/pitch/zoom/pan plus `custom` constant | six records of yaw/pitch only; own the single `0.001`-radian identity tolerance and add `resolve_id(yaw, pitch)` using wrapped yaw and bounded pitch comparison to return the matching ID or `custom` |
 | `scripts/rendering/camera_rig.gd` | `apply_framing_preset()` adapter; `_current_view_preset` flag set by `_mark_custom_view()` and `fit_bounds()` | `restore_fitted_framing()`; `current_preset_id()` derives from outer `(yaw, pitch)` via `resolve_id()`; delete the flag and `_mark_custom_view()` |
 | `scripts/app/trace_replay_app.gd` | `_apply_live_4d_preset()` calls `apply_framing_preset()`; label read from rig in all modes | `_apply_live_4d_preset()` sets `L` then calls `restore_fitted_framing()`; in Live 4D the label derives from `L` via `resolve_id()`, not from the rig |
 | `scripts/ui/replay_hud.gd` | camera panel visible in every live mode when density is not compact | hidden in Live 2D; tooltip and section wording corrected per section 7 |
@@ -525,11 +549,16 @@ This locks finding F6.
 **View identity** — `resolve_id()` returns the named ID at each target,
 `custom` after a manual yaw or pitch nudge, and is unaffected by manual pan or
 zoom. After Fit View and after Reset View the identity is `front`, not `iso`,
-which is the direct regression test for F3.
+which is the direct regression test for F3. Equivalent yaw representations at
+the target plus and minus whole turns resolve to the same ID; yaw or pitch
+outside the one contract-owned tolerance resolves to `custom`, and no caller
+supplies an independent epsilon.
 
 **Reset and lifecycle** — for each of Reset View, Restart Game, New Game,
 Change Setup, return to menu, mode change, re-entry, and settings reload, assert
-the row of the section 9 matrix.
+the row of the section 9 matrix. Fit View separately proves `B`, `L`, slice
+layout, and anchors unchanged while outer framing is recomputed from the
+current bounds.
 
 **Persistence** — the persisted settings document contains no view preset, `L`,
 framing, `B`, or layout key; presentation preferences reload correctly; the
