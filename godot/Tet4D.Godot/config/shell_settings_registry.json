@@ -46,7 +46,7 @@
       "id": "display.ui_scale",
       "label": "UI Scale",
       "description": "Changes the size of menus, text, and the HUD.",
-      "category": "display",
+      "category": "accessibility",
       "value_type": "enum",
       "control_type": "dropdown",
       "default": "standard",

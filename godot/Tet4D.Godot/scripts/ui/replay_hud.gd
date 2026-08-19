@@ -46,6 +46,7 @@ signal accessibility_policy_changed(policy: Dictionary)
 signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
 signal camera_preset_requested(id: String)
 signal fit_view_requested()
+signal reset_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
 signal live_2d_requested()
@@ -56,7 +57,6 @@ signal change_setup_requested(mode: String)
 signal new_random_game_requested()
 signal main_menu_requested()
 signal basis_turn_requested(plane: String, direction: int)
-signal basis_reset_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -70,7 +70,7 @@ const SCREEN_GAME_SETUP := "game_setup"
 const REPLAY_HELP_TEXT := "Replay controls only: Space toggles replay playback, arrows browse exported frames/cases, 1/2/3 switch trace families, F fits the current trace bounds, Q quits the replay shell. These controls do not move gameplay pieces."
 const LIVE_2D_HELP_TEXT := "Move, rotate, and drop the piece with the controls shown here. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
 const LIVE_3D_HELP_TEXT := "Move on X and Z, drop separately, and rotate in the XY, XZ, or YZ plane. Camera controls change the view; movement controls move the piece. Use the View Options buttons above the board to restore Quick Settings or toggle grid detail. Esc returns to the Main Menu."
-const LIVE_4D_HELP_TEXT := "The same 4D board can be re-sliced through X, Z, or W. Exact 90° view controls change the presentation basis; slice orientation changes shared yaw/pitch; framing controls pan, zoom, and Fit without changing either. Y remains down. Reset View restores basis, slice orientation, and framing; Restart Game also reconstructs the current frozen setup. Q/E moves along the current slice axis. Esc returns to the Main Menu."
+const LIVE_4D_HELP_TEXT := "The same 4D board can be re-sliced through X, Z, or W. Exact 90° view controls change the presentation basis; slice orientation changes shared yaw/pitch; framing controls pan, zoom, and Fit without changing either. Y remains down. Reset View restores basis, slice orientation, layout, outer view, and framing. Restart Game reconstructs gameplay from the frozen setup while preserving the current view. Q/E moves along the current slice axis. Esc returns to the Main Menu."
 const ABOUT_DEMO_TEXT := """Tet4D is a 2D/3D/4D Tetris project. This Godot front end lets you inspect replay demos and play the plain-board 2D, 3D, and 4D modes.
 
 Choose a mode:
@@ -148,7 +148,7 @@ var _help_panel: PanelContainer
 var _trace_integrity_label: Label
 var _bundle_detail_label: Label
 var _camera_status_label: Label
-var _camera_preset_selector: OptionButton
+var _camera_view_action_menu: MenuButton
 var _help_label: Label
 var _top_state_badge_label: Label
 var _inspector_hint_panel: VBoxContainer
@@ -319,15 +319,6 @@ func set_camera_status(text: String) -> void:
 		_camera_status_label.text = text
 
 
-func set_camera_preset(id: String) -> void:
-	if _camera_preset_selector == null:
-		return
-	for index in range(_camera_preset_selector.item_count):
-		if str(_camera_preset_selector.get_item_metadata(index)) == id:
-			_camera_preset_selector.select(index)
-			return
-
-
 func set_trace_families(families: Array, selected: String) -> void:
 	if _case_browser != null:
 		_case_browser.set_trace_families(families, selected)
@@ -444,9 +435,11 @@ func set_live_2d_mode(
 	_set_live_declutter_mode(true)
 	if _live_view_actions != null:
 		_live_view_actions.visible = true
+	if _camera_view_action_menu != null:
+		_camera_view_action_menu.visible = false
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
-		_reset_button.text = "Reset Live"
+		_reset_button.text = "Restart Game"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live" if paused else "Running Live")
 	if _summary_title != null:
 		_summary_title.text = "Live Session"
@@ -494,9 +487,11 @@ func set_live_3d_mode(
 	_set_live_declutter_mode(true)
 	if _live_view_actions != null:
 		_live_view_actions.visible = true
+	if _camera_view_action_menu != null:
+		_camera_view_action_menu.visible = true
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
-		_reset_button.text = "Reset Live 3D"
+		_reset_button.text = "Restart Game"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 3D" if paused else "Running Live 3D")
 	if _summary_title != null:
 		_summary_title.text = "Live Session"
@@ -544,9 +539,11 @@ func set_live_4d_mode(
 	_set_live_declutter_mode(true)
 	if _live_view_actions != null:
 		_live_view_actions.visible = true
+	if _camera_view_action_menu != null:
+		_camera_view_action_menu.visible = true
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
-		_reset_button.text = "Reset Live 4D"
+		_reset_button.text = "Restart Game"
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 4D" if paused else "Running Live 4D")
 	if _summary_title != null:
 		_summary_title.text = "Live Session"
@@ -585,6 +582,8 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 		_next_piece_panel.visible = false
 	if _live_view_actions != null:
 		_live_view_actions.visible = false
+	if _camera_view_action_menu != null:
+		_camera_view_action_menu.visible = true
 	set_playback_state(is_playing, speed, diagnostics_visible)
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
@@ -1720,19 +1719,23 @@ func _build_layout() -> void:
 	camera_title.text = "Camera"
 	camera_title.theme_type_variation = "SecondaryLabel"
 	camera_box.add_child(camera_title)
-	_camera_preset_selector = OptionButton.new()
-	_camera_preset_selector.name = "CameraPresetSelector"
-	_camera_preset_selector.tooltip_text = "Presentation-only camera shortcut; 4D view rotation remains independent"
+	_camera_view_action_menu = MenuButton.new()
+	_camera_view_action_menu.name = "CameraViewActionMenu"
+	_camera_view_action_menu.text = "View Actions"
+	_camera_view_action_menu.tooltip_text = "Apply a named view action; this does not select a persistent camera mode"
+	var view_action_popup := _camera_view_action_menu.get_popup()
 	for id in CameraPresetScript.ids():
-		_camera_preset_selector.add_item(CameraPresetScript.label(str(id)))
-		_camera_preset_selector.set_item_metadata(_camera_preset_selector.item_count - 1, id)
-	_camera_preset_selector.item_selected.connect(func(index: int) -> void:
-		camera_preset_requested.emit(str(_camera_preset_selector.get_item_metadata(index)))
+		view_action_popup.add_item(CameraPresetScript.label(str(id)))
+		view_action_popup.set_item_metadata(view_action_popup.item_count - 1, id)
+	view_action_popup.id_pressed.connect(func(item_id: int) -> void:
+		var index := view_action_popup.get_item_index(item_id)
+		if index >= 0:
+			camera_preset_requested.emit(str(view_action_popup.get_item_metadata(index)))
 	)
-	camera_box.add_child(_camera_preset_selector)
+	camera_box.add_child(_camera_view_action_menu)
 	_camera_status_label = Label.new()
 	_camera_status_label.name = "InspectorCameraValueLabel"
-	_camera_status_label.text = "Camera: pending"
+	_camera_status_label.text = "View: pending"
 	_camera_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_camera_status_label.theme_type_variation = "AccentLabel"
 	camera_box.add_child(_camera_status_label)
@@ -1822,6 +1825,14 @@ func _build_layout() -> void:
 		reset_requested.emit()
 	)
 	control_group.add_child(_reset_button)
+	var reset_view_button := Button.new()
+	reset_view_button.name = "ResetViewButton"
+	reset_view_button.text = "Reset View"
+	reset_view_button.tooltip_text = "Restore the canonical view without changing gameplay or preferences"
+	reset_view_button.pressed.connect(func() -> void:
+		reset_view_requested.emit()
+	)
+	control_group.add_child(reset_view_button)
 	var fit_button := Button.new()
 	fit_button.text = "Fit View"
 	fit_button.pressed.connect(func() -> void:
@@ -2359,13 +2370,6 @@ func _build_basis_panel() -> PanelContainer:
 		var direction := int(action[3])
 		button.pressed.connect(func() -> void: basis_turn_requested.emit(plane, direction))
 		controls.add_child(button)
-	var reset_button := Button.new()
-	reset_button.name = "BasisResetButton"
-	reset_button.text = "%s  Reset View" % LiveInputContractScript.display_key("reset")
-	reset_button.tooltip_text = "Reset the camera and the exact 4D slice basis"
-	reset_button.set_meta("semantic_role", "action_button")
-	reset_button.pressed.connect(func() -> void: basis_reset_requested.emit())
-	controls.add_child(reset_button)
 	return panel
 
 

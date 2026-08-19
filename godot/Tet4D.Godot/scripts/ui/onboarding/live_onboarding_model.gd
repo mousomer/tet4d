@@ -12,7 +12,7 @@ const MODE_STEPS := {
 	"live_3d": [
 		{"id": "move", "title": "Move across the board", "body": "Movement uses X and Z; falling is separate. Rotations happen in the XY, XZ, and YZ planes.", "accepted_commands": ["move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"]},
 		{"id": "rotate", "title": "Rotate in planes", "body": "Rotate in the XY, XZ, and YZ planes. Start with one plane at a time.", "accepted_commands": ["rotate_xy_neg", "rotate_xy_pos", "rotate_xz_neg", "rotate_xz_pos", "rotate_yz_neg", "rotate_yz_pos"]},
-		{"id": "camera", "title": "Move the view", "body": "Camera movement changes only the view, not the piece. Fit View restores orientation.", "accepted_commands": []},
+		{"id": "camera", "title": "Move the view", "body": "Camera movement changes only the view, not the piece. Fit View reframes without changing orientation; Reset View restores the canonical view.", "accepted_commands": []},
 	],
 	"live_4d": [
 		{"id": "same_object", "title": "Same object, rotated view", "body": "Use one 90° View Rotation control. Watch the presentation change while the falling object stays the same.", "predicate": "basis_changed", "completion": "Same object. Exact view rotation."},

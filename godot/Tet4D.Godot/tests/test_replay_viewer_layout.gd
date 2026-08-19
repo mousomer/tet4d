@@ -35,7 +35,7 @@ func run() -> Array:
 		await tree.process_frame
 		await tree.process_frame
 		hud.set_bundle_status("Bundle: OK · 12 cases", "Bundle: exported_bundle · digest abc123")
-		hud.set_camera_status("Camera: LIVE_3D_EXTERNAL_DIAGRAM_VIEW · ortho · above exterior · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
+		hud.set_camera_status("View: ortho · size 16.00 · zoom 1.00x · outer view · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
 		await tree.process_frame
 		failures.append_array(_check_layout(hud, viewport_size))
 		failures.append_array(await _check_keyboard_hint_visibility_setting(hud))
@@ -161,8 +161,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: top bundle status should stay compact and readable" % label)
 	if bundle_detail_text.find("digest abc123") == -1:
 		failures.append("%s: inspector should preserve detailed bundle status" % label)
-	if camera_status_text.find("LIVE_3D_EXTERNAL_DIAGRAM_VIEW") == -1 or camera_status_text.find("above") == -1:
-		failures.append("%s: inspector should expose Live 3D camera preset diagnostics" % label)
+	if not camera_status_text.begins_with("View:") or camera_status_text.find("above") == -1 or camera_status_text.find("Camera:") != -1:
+		failures.append("%s: inspector should expose numeric view diagnostics without preset identity" % label)
 	if viewport_hint_text.find("Quick") == -1 or viewport_hint_text.find("Space") == -1 or viewport_hint_text.find("Play / Pause") == -1:
 		failures.append("%s: viewport should expose structured replay quick keycap/action hints" % label)
 	if bottom_hint_text.find("Quick") == -1 or bottom_hint_text.find("Esc") == -1 or bottom_hint_text.find("Main Menu") == -1:

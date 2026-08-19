@@ -76,6 +76,7 @@ func _test_live_propagation() -> Array:
 	panel._on_control_value_changed("accessibility.high_contrast", true)
 	panel._on_control_value_changed("accessibility.reduced_motion", true)
 	panel._on_control_value_changed("accessibility.show_help_hints", false)
+	panel._on_control_value_changed("display.ui_scale", "extra_large")
 	await tree.process_frame
 	var policy: Dictionary = hud.presentation_preferences_snapshot().get("accessibility", {})
 	if policy.get("high_contrast") != true or policy.get("reduced_motion") != true or policy.get("show_help_hints") != false:
@@ -102,8 +103,8 @@ func _test_live_propagation() -> Array:
 	await tree.process_frame
 	if panel.setting_value("theme.name") != "plain":
 		failures.append("Reset Accessibility Settings must preserve display theme")
-	if panel.setting_value("accessibility.high_contrast") != false or panel.setting_value("accessibility.reduced_motion") != false or panel.setting_value("accessibility.show_help_hints") != true:
-		failures.append("Reset Accessibility Settings should reset only its three bounded preferences")
+	if panel.setting_value("accessibility.high_contrast") != false or panel.setting_value("accessibility.reduced_motion") != false or panel.setting_value("accessibility.show_help_hints") != true or panel.setting_value("display.ui_scale") != "standard":
+		failures.append("Reset Accessibility Settings should reset accessibility preferences and UI scale")
 	root.queue_free()
 	await tree.process_frame
 	return failures

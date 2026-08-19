@@ -361,7 +361,6 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 
 - `display.window_mode`: default `"windowed"`; enum; options: windowed, fullscreen
 - `display.windowed_size`: default `[1280, 720]`; size; min [634, 660]; max [16384, 16384]
-- `display.ui_scale`: default `"standard"`; enum; options: small, standard, large, extra_large
 - `display.hud_density`: default `"standard"`; enum; options: compact, standard, detailed
 - `display.board_detail`: default `"standard"`; enum; options: minimal, standard, full
 - `ghost.enabled`: default `true`; bool
@@ -379,6 +378,7 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 
 ### Accessibility
 
+- `display.ui_scale`: default `"standard"`; enum; options: small, standard, large, extra_large
 - `accessibility.high_contrast`: default `false`; bool
 - `accessibility.reduced_motion`: default `false`; bool
 - `accessibility.show_help_hints`: default `true`; bool
