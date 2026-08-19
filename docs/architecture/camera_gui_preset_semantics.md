@@ -1,12 +1,12 @@
 # Camera and GUI Preset Semantics
 
 Role: architecture
-Status: Stage 54E-4a reviewed green; Stage 54E-4b implemented and ready for focused visible review
+Status: Stage 54E-4a reviewed green; Stage 54E-4b complete with focused visible review accepted
 Scope: Godot product-shell view lifecycle, preset actions, fit/reset, and preference boundaries across Live 2D/3D/4D and replay
 Canonical owner: this file
 Consumes: docs/architecture/4d_presentation_interaction_architecture.md
-Stage: 54E-4b implementation handoff
-Last updated: 2026-08-19
+Stage: 54E-4b focused visible review accepted
+Last updated: 2026-08-20
 
 ## 1. Purpose, authority, and stage boundary
 
@@ -187,6 +187,14 @@ There are no parallel ordinary reset families named Reset Camera, Reset
 Orientation, Reset Slice View, Reset Layout, Reset Basis, or Reset Framing.
 Internal owner-specific helpers are required, but they are implementation
 seams behind the one command.
+
+That one command must also be reachable. Every live mode invokes it through the
+shared `reset` action, and replay additionally exposes the `Reset View` footer
+button; the live footer is hidden by the live declutter mode, so a live mode
+that documents a Reset View button it does not present is a defect. Player-facing
+control help is executable truth: each listed camera command must name the
+binding the runtime actually routes. Live 3D therefore documents its Fit View
+affordance as the viewport double-click, because `F` is Rotate XZ in that mode.
 
 Reset View preserves gameplay, frozen setup, deterministic identity, replay
 content, and every persistent preference. It restores the complete canonical

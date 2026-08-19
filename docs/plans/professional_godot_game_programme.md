@@ -785,9 +785,8 @@ definition while being presented secondarily.
 
 #### Stage 54E-4 — Camera/GUI presets
 
-Status: Stage 54E-4a REVIEWED GREEN. Stage 54E-4b IMPLEMENTED /
-READY_FOR_FOCUSED_VISIBLE_REVIEW. Aggregate Stage 54E-4 remains open until the
-focused real-window review is accepted.
+Status: Stage 54E-4a REVIEWED GREEN. Stage 54E-4b COMPLETE / FOCUSED VISIBLE
+REVIEW ACCEPTED. Aggregate Stage 54E-4 is COMPLETE / REVIEWED GREEN.
 
 Stage 54E-4a audited every preset-like operation and recorded the durable
 contract in `docs/architecture/camera_gui_preset_semantics.md`, which is the
@@ -795,7 +794,18 @@ the canonical owner of transient view lifetime, action-based named views, one
 composite Reset View, framing-only Fit View, mode-specific canonical views,
 preference ownership, and the E4b evidence plan. The independently reviewed
 contract is now implemented in the Godot presentation shell with focused
-automated coverage; focused real-window acceptance remains required.
+automated coverage, and focused real-window acceptance is recorded. That review
+confirmed flat front-on 2D, framing-only Fit, complete canonical Reset,
+view-preserving Restart/new-game/game-over, fresh canonical views on context
+re-entry, stateless 3D/replay view actions, Live-4D actions that move slice-local
+orientation `L` rather than the outer mount, no surviving preset identity, and
+Accessibility ownership of UI scale. It also required two player-facing
+affordance corrections before acceptance: Live 2D and Live 3D exposed no Reset
+View invocation at all while their help advertised a Reset View button, and Live
+3D help advertised `F` as Fit View although `F` is Rotate XZ there. Both live
+modes now route the existing `reset` action (key `0`) to the same composite
+Reset View that Live 4D already used, and Live 3D help states its real
+double-click Fit affordance.
 
 Current view is transient presentation-context state, never an application
 preference or gameplay-run identity. Named views are actions, not persistent
@@ -1228,8 +1238,8 @@ The active order is:
    technical review, with automated evidence and a recorded real-window
    acceptance checklist.
 7. Stage 54E-4a is REVIEWED GREEN. Stage 54E-4b implements the accepted
-   contract and is READY_FOR_FOCUSED_VISIBLE_REVIEW; aggregate Stage 54E-4
-   remains open until that review is accepted.
+   contract and is COMPLETE / FOCUSED VISIBLE REVIEW ACCEPTED; aggregate Stage
+   54E-4 is COMPLETE / REVIEWED GREEN.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.
 10. Stage 54G — remaining professional release hardening.

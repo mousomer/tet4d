@@ -97,8 +97,8 @@ history ledger. Detailed history is preserved in
   declarations are validated before mode expansion, so an empty mode set
   cannot disappear without a validation failure. Stage 54E-4a human view
   semantics and final technical findings are REVIEWED GREEN. Stage 54E-4b
-  implements that contract and is READY_FOR_FOCUSED_VISIBLE_REVIEW. The active
-  contract in
+  implements that contract and is COMPLETE / FOCUSED VISIBLE REVIEW ACCEPTED.
+  The active contract in
   `docs/architecture/camera_gui_preset_semantics.md` treats current view as
   transient presentation-context state; exposes one composite Reset View and a
   framing-only Fit View; preserves view across same-context Restart/new game;
@@ -112,8 +112,13 @@ history ledger. Detailed history is preserved in
   preset identity and dead `frame_board()`, preserves view across Restart/new
   same-context games, rebuilds canonical views on context re-entry, and routes
   UI-scale reset ownership to Accessibility without changing persistence ID or
-  schema. Aggregate Stage 54E-4 remains open pending focused real-window
-  acceptance.
+  schema. The focused real-window review found and closed two player-facing
+  affordance blockers: Reset View had no invocation path in Live 2D or Live 3D,
+  and Live 3D help advertised `F` as Fit View while `F` is Rotate XZ. Live 2D
+  and Live 3D now route the existing `reset` action (key `0`) to the same
+  composite Reset View that Live 4D already used, and the Live 3D Camera help
+  states its real double-click Fit affordance. Aggregate Stage 54E-4 is
+  COMPLETE / REVIEWED GREEN.
 - Two pre-54F correctness findings are OPEN: 3D control arrows must truthfully
   match Relative/Absolute movement resolution, and every production 3D/4D NEXT
   thumbnail must be geometrically faithful to its authoritative queued piece.
@@ -252,12 +257,13 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Perform the focused Stage 54E-4b real-window review of flat 2D,
-   Reset/Fit separation, restart and same-context new-game preservation,
-   context re-entry, stateless 3D/4D/replay view actions, UI-scale ownership,
-   and misleading-identity removal. Do not mark aggregate Stage 54E-4 complete
-   until that review is accepted. Stage 54D-3 Hold remains independently
-   eligible; Stage 54E-5 remains later programme work.
+1. Stage 54E-4 is COMPLETE / REVIEWED GREEN: the focused Stage 54E-4b
+   real-window review of flat 2D, Reset/Fit separation, restart and
+   same-context new-game preservation, context re-entry, stateless 3D/4D/replay
+   view actions, UI-scale ownership, and misleading-identity removal is
+   accepted, including the two live view-affordance corrections it required.
+   Stage 54D-3 Hold remains independently eligible; Stage 54E-5 remains later
+   programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
