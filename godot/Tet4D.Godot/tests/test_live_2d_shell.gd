@@ -26,6 +26,7 @@ func run() -> Array:
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
 	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XW - / + (re-slice)") or not live_4d_hint.contains("; / ' ZW - / + (re-slice)") or not live_4d_hint.contains("[ / ] ZX - / +") or not live_4d_hint.contains("I / K") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose separated slice orientation, framing, exact basis, piece rotation, and Esc-only quit")
+	_assert_camera_command_help_is_executable_truth(live_hint, live_3d_hint, live_4d_hint, failures)
 	for roll_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
 		if LiveInputContractScript.ACTION_SPECS.has(roll_action):
 			failures.append("normal Live 4D action contract must omit %s" % roll_action)
@@ -892,6 +893,39 @@ func _canonical_4d_delta(command: String) -> Array:
 		"move_z_neg": return [0, 0, -1, 0]
 		"move_z_pos": return [0, 0, 1, 0]
 		_: return [0, 0, 0, 0]
+
+
+# Player-facing camera help must be executable truth: every listed command has
+# to name the binding the runtime actually routes. Live 3D binds F/G to Rotate
+# XZ, so its Fit affordance is the viewport double-click, not F.
+func _assert_camera_command_help_is_executable_truth(
+	live_2d_hint: String,
+	live_3d_hint: String,
+	live_4d_hint: String,
+	failures: Array
+) -> void:
+	var reset_key := LiveInputContractScript.display_key("reset")
+	if reset_key != "0":
+		failures.append("Reset View helper key should resolve from the reset action contract, got %s" % reset_key)
+	if not live_2d_hint.contains("%s Reset View" % reset_key):
+		failures.append("live 2D hint text should advertise Reset View by its real key binding")
+	if not live_2d_hint.contains("F Fit View (framing only)"):
+		failures.append("live 2D hint text should advertise the F Fit View binding it actually routes")
+	if not live_3d_hint.contains("%s Reset View" % reset_key):
+		failures.append("live 3D hint text should advertise Reset View by its real key binding")
+	if not live_3d_hint.contains("Double-click Fit View (framing only)"):
+		failures.append("live 3D hint text should advertise the double-click Fit View affordance it actually routes")
+	if live_3d_hint.contains("F Fit View"):
+		failures.append("live 3D hint text must not advertise F as Fit View; F is Rotate XZ in Live 3D")
+	if not live_3d_hint.contains("F/G Rotate XZ"):
+		failures.append("live 3D hint text should keep F/G documented as Rotate XZ")
+	if not live_4d_hint.contains("%s Reset View" % reset_key):
+		failures.append("live 4D hint text should keep advertising Reset View by its real key binding")
+	if not live_4d_hint.contains("Double-click Fit View (framing only)"):
+		failures.append("live 4D hint text should keep advertising the double-click Fit View affordance")
+	for hint in [live_2d_hint, live_3d_hint, live_4d_hint]:
+		if hint.contains("Reset View button"):
+			failures.append("live control hints must not point at a Reset View button that live modes do not present")
 
 
 func _assert_live_gameplay_hud_copy(failures: Array) -> void:

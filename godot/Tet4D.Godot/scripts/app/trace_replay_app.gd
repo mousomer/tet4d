@@ -297,6 +297,9 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("replay_fit_view"):
 		_fit_view()
 		return true
+	if _event_action_pressed_once(event, ["reset"]):
+		_reset_view()
+		return true
 	if event.is_action_pressed("replay_toggle_help"):
 		_hud.toggle_help()
 		return true
@@ -335,6 +338,9 @@ func _handle_live_3d_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed(event, ["live_3d_reset"]):
 		_reset_live_3d()
+		return true
+	if _event_action_pressed_once(event, ["reset"]):
+		_reset_view()
 		return true
 	if event.is_action_pressed("replay_toggle_help"):
 		_hud.toggle_help()

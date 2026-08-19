@@ -141,7 +141,7 @@ static func _live_2d_groups() -> Array:
 		{"group": "Piece movement", "items": [[_pair("live_move_left", "live_move_right"), "Move left / right"], [_pair("live_2d_move_left", "live_2d_move_right"), "Move left / right"]]},
 		{"group": "Piece rotation", "items": [[_all_keys("live_rotate_cw"), "Rotate clockwise"], [_display_key("live_rotate_ccw"), "Rotate counter-clockwise"]]},
 		{"group": "Drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop"], [_display_key("live_hard_drop"), "Hard Drop"]]},
-		{"group": "Camera", "items": [["F", "Fit View (framing only)"], ["Reset View button", "Restore flat canonical view"]]},
+		{"group": "Camera", "items": [["F", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore flat canonical view)"]]},
 		{"group": "Session", "items": [[_display_key("live_pause"), "Pause"], [_display_key("live_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 3D"], ["Esc", "Main Menu"]]},
 	]
@@ -159,7 +159,7 @@ static func _live_3d_groups(control_frame: Dictionary = {}) -> Array:
 		{"group": "Piece movement", "note": "Controls follow the current view." if relative else "Canonical X/Z axes.", "items": move_rows},
 		{"group": "Piece rotation", "note": rotation_note, "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ"]]},
 		{"group": "Drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop"], [_display_key("live_3d_hard_drop"), "Hard Drop"]]},
-		{"group": "Camera", "items": camera_helper_items() + [["F", "Fit View (framing only)"], ["Reset View button", "Restore canonical view"]]},
+		{"group": "Camera", "items": camera_helper_items() + [["Double-click", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore canonical view)"]]},
 		{"group": "Session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
 	]
