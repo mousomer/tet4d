@@ -13,7 +13,12 @@ func run() -> Array:
 	for id in CameraPresetScript.ids():
 		if seen.has(id) or not CameraPresetScript.is_known(str(id)):
 			failures.append("camera preset IDs must be unique and authority-owned")
+		var definition := CameraPresetScript.definition(str(id))
+		if definition.has("zoom") or definition.has("pan"):
+			failures.append("view action %s must not own framing fields" % id)
 		seen[id] = true
+	if not CameraPresetScript.definition("custom").is_empty() or CameraPresetScript.is_known("custom"):
+		failures.append("Custom must not survive as a public or fallback view identity")
 	if ControlFrameMappingScript.for_3d(PI).translation_command("move_z_neg", "relative") != "move_z_neg":
 		failures.append("Back preset yaw must preserve viewer-relative forward mapping")
 	if ControlFrameMappingScript.for_3d(PI).translation_command("move_z_neg", "absolute") != "move_z_neg":

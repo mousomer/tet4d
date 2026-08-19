@@ -78,6 +78,21 @@ func run() -> Array:
 			if hud.current_screen() != hud.SCREEN_GAME_SETUP:
 				failures.append("%s Main Menu transition should activate the focused card with Space" % mode)
 
+	var random_setup := _setup("live_2d", mode_shapes["live_2d"])
+	random_setup["random_mode"] = "true_random"
+	app._start_configured_live_game(random_setup)
+	await tree.process_frame
+	app._camera_rig.nudge_yaw(0.37)
+	app._camera_rig.zoom(-1.0)
+	var view_before_new_random: Dictionary = app._camera_rig.presentation_snapshot()
+	var seed_before_new_random := int(app._current_snapshot.get("effective_seed", -1))
+	app._start_new_random_game()
+	await tree.process_frame
+	if app._camera_rig.presentation_snapshot() != view_before_new_random:
+		failures.append("same-context New Random Game must preserve the current view")
+	if int(app._current_snapshot.get("effective_seed", -1)) == seed_before_new_random:
+		failures.append("New Random Game should still reconstruct gameplay with a new effective seed")
+
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size

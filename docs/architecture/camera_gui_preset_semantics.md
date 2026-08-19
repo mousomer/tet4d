@@ -1,12 +1,12 @@
 # Camera and GUI Preset Semantics
 
 Role: architecture
-Status: human view semantics accepted; final review blockers corrected; ready for final confirmation review
+Status: Stage 54E-4a reviewed green; Stage 54E-4b implemented and ready for focused visible review
 Scope: Godot product-shell view lifecycle, preset actions, fit/reset, and preference boundaries across Live 2D/3D/4D and replay
 Canonical owner: this file
 Consumes: docs/architecture/4d_presentation_interaction_architecture.md
-Stage: 54E-4a design and audit
-Last updated: 2026-08-18
+Stage: 54E-4b implementation handoff
+Last updated: 2026-08-19
 
 ## 1. Purpose, authority, and stage boundary
 
@@ -16,11 +16,11 @@ boundary between current view state and persistent shell preferences. It
 consumes the accepted Live-4D pipeline `C -> B -> G_D -> L -> anchor/layout ->
 V/P` without merging its state owners.
 
-The human product semantics in this revision are accepted. Stage 54E-4a
-changes documentation only and does not implement them. Stage 54E-4b is not
-eligible until a final confirmation review accepts this corrected
-contract. No further human E4a decision gate is required unless implementation
-evidence reveals a genuinely new product contradiction.
+The human product semantics are accepted and Stage 54E-4a passed final
+independent technical review. Stage 54E-4b implements this contract in the
+Godot presentation shell and is ready for its focused visible review. No
+further E4a decision gate is required unless implementation evidence reveals a
+genuinely new product contradiction.
 
 This revision clarifies and supersedes the forward-looking presentation
 lifecycle chosen at Stage 54E-2d. Stage 54E-2d correctly implemented and
@@ -568,7 +568,8 @@ The corrected design closes the independent review findings at contract level:
   repaired;
 - the lifecycle matrix covers 2D, 3D, 4D, replay, restart, same-context new
   game, setup/menu/mode exit, re-entry, and application restart;
-- E4b is explicitly ineligible pending a green final confirmation review; and
+- E4b was explicitly gated on a green final confirmation review, which is now
+  satisfied; and
 - window mode/size plus replay speed/loop complete the mutable-presentation
   inventory.
 
@@ -588,11 +589,11 @@ canonical outer orientation/reflection now has the exact rig-owned
 labels are retired; and action, canonical-reset, Live-4D `L`, reflection, and
 framing routing are mutually consistent.
 
-Final confirmation review must verify the transient/persistent split, composite
-Reset View, Fit isolation, restart preservation, context re-entry, mode-specific
-canonical views, flat 2D target, UI-scale ownership, projection conclusion,
-removal of obsolete preset identity, E4b implementability, programme status,
-and human-finding ownership. E4a must not self-certify REVIEWED GREEN.
+The independent final confirmation review verified the transient/persistent
+split, composite Reset View, Fit isolation, restart preservation, context
+re-entry, mode-specific canonical views, flat 2D target, UI-scale ownership,
+projection conclusion, obsolete-identity removal plan, E4b implementability,
+programme status, and human-finding ownership.
 
 Remaining human decisions: none. The accepted human semantics are not reopened
 by this technical correction.
@@ -603,3 +604,26 @@ Stage 54E-4a implements no camera, settings, movement, NEXT, renderer, spacing,
 grid, cockpit, Hold, topology, Explorer, campaign, physics, simulation, or
 general GUI changes. Separate defects remain open when documented; recording
 them is not a fix.
+
+## 16. Stage 54E-4b implementation record
+
+The Godot runtime now implements the accepted ownership model:
+
+- `CameraRig.establish_outer_view()` uses an orientation-only snap, while
+  `fit_current_bounds()` and `restore_fitted_framing()` use a framing-only snap;
+- the app composes explicit canonical projection, mode-owned orientation/state,
+  and framing for 2D, 3D, Live 4D, and replay;
+- Restart Game and same-context New Random Game preserve current view, while
+  menu/setup/mode exit clears it and re-entry establishes canonical view;
+- Live-4D `B`, `L`, layout, outer mount/reflection, and framing remain separate;
+- the six retained IDs are stateless actions; continuous identity, `Custom`,
+  pseudo-preset status labels, ID-owned framing, and `frame_board()` are gone;
+- ordinary 2D exposes no named view-action surface and opens/resets at exact
+  front-on orthographic yaw/pitch/roll zero; and
+- `display.ui_scale` retains its persisted ID/schema while Accessibility Reset,
+  rather than Display Reset, owns its default restoration.
+
+Executable tests cover seam isolation, all-mode canonical reset, framing-only
+Fit, gameplay/preference preservation, restart/new-game/context lifecycle,
+action routing, retirement checks, and reset-category persistence. This record
+does not claim the required focused real-window review has been accepted.

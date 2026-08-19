@@ -1,144 +1,123 @@
-# Task Contract — Close Final Stage 54E-4a Review Blockers
+# Task Contract — Stage 54E-4b View / Camera Runtime
 
 ## Objective
 
-Close P1-1/P1-2 and the related P2-1/P2-2 findings from the final independent
-Stage 54E-4a technical re-review without reopening the accepted human view
-semantics or starting E4b. This is documentation-only architecture and staged
-handoff work. It implements no runtime, test, configuration, scene, gameplay,
-or visual fix.
+Implement the independently reviewed-green Stage 54E-4a contract without
+reopening its product decisions. The target handoff is Stage 54E-4b
+`IMPLEMENTED / READY_FOR_FOCUSED_VISIBLE_REVIEW`; aggregate Stage 54E-4 remains
+open until that focused real-window review is accepted.
 
 ## Classification
 
 - Primary task type: `godot_product_shell`.
 - Workflow modifier: `staged_handoff`.
-- Affected layers: documentation and governance records.
-- Verification requirements: `documentation`, `governance_structure`.
-- Typical `godot` evidence is omitted because no Godot runtime, scene,
-  resource, configuration, or test changes; executable evidence cannot prove a
-  prose-only architecture correction.
-- Full repository gate: required because this changes an architecture
-  authority and prepares an independent-review handoff.
+- Affected layers: Godot product shell, tests, documentation, and governance.
+- Required evidence: `godot`, `integration`, `human_visual`, `documentation`,
+  and `governance_structure`.
+- Full repository gate: required because the implementation consumes an
+  architecture authority and changes shared camera/lifecycle behavior.
 
 ## Current Authority
 
-- `docs/architecture/camera_gui_preset_semantics.md` for the forward view
-  lifecycle and operation contract;
-- `docs/architecture/4d_presentation_interaction_architecture.md` for the
-  accepted `B/L/layout/V/P` separation and historical Stage 54E-2 evidence;
-- `docs/plans/professional_godot_game_programme.md` for programme gates and
-  human-review responsibilities;
-- `docs/rds/RDS_MENU_STRUCTURE.md` for setup/presentation separation;
-- `docs/ARCHITECTURE_CONTRACT.md` and `docs/architecture/authority_map.md` for
-  subsystem boundaries; and
-- `docs/BACKLOG.md` and `CURRENT_STATE.md` for open work and restart handoff.
+- `docs/architecture/camera_gui_preset_semantics.md` owns the accepted view
+  lifecycle, operation, action, reset, fit, and preference contract.
+- `docs/architecture/4d_presentation_interaction_architecture.md` owns the
+  accepted `B/L/layout/V/P` separation.
+- `docs/architecture/authority_map.md` and `docs/ARCHITECTURE_CONTRACT.md` own
+  subsystem boundaries.
+- `docs/plans/professional_godot_game_programme.md`, `docs/BACKLOG.md`, and
+  `CURRENT_STATE.md` own programme and handoff status.
 
-Authority effect: clarify/supersede presentation lifecycle semantics within
-existing Godot presentation authority. No gameplay authority transfer and no
-native authority establishment.
+Authority effect: implement within existing Godot presentation authority. No
+native deterministic gameplay or Python authority transfer is performed.
 
 ## Allowed Systems and Paths
 
-- the E4a view architecture owner and its consumed 4D architecture pointer;
-- the historical configurable-board architecture statement about dead
-  `frame_board()`;
-- authority-map wording;
-- programme, backlog, restart-handoff, and this task contract; and
-- no runtime, config, test, scene, asset, or generated-maintenance file.
+- Godot camera rig, app orchestration, HUD/help/onboarding, and settings
+  registry paths required by the accepted contract;
+- focused Godot tests for those contracts; and
+- owning architecture, generated settings reference, programme, backlog,
+  current-state, and governance records.
 
 ## Required Changes
 
-1. Define `CameraRig.establish_outer_view(yaw, pitch, roll,
-   reflection_active)` as an arbitrary absolute outer-orientation seam with
-   exact allowed/forbidden mutations and an orientation-only snap.
-2. Define named outer actions as target resolution followed by that seam, and
-   define Reset/re-entry as mode-owner restoration, arbitrary outer-view
-   establishment, then framing-only fit.
-3. Keep Live-4D local yaw/pitch exclusively `L`-owned while using the new seam
-   only for its fixed outer mount/reflection during canonical establishment.
-4. Record that `CameraRig.frame_board()` has zero live callers and require its
-   deletion in E4b; correct the historical document that presented it as an
-   active production path.
-5. Extend the identity audit to both unknown-ID replay fallback and known-ID
-   false labels, including Live-4D `Camera: Iso` at outer yaw 205 degrees.
-6. Make reflection routing consistent: defined outer targets may establish it;
-   current 3D/replay actions use false; Live-4D `L` actions and all Fit/framing
-   paths preserve it.
-7. Recheck exact CameraRig/TraceReplayApp/action routing so E4b needs no further
-   API or product decision.
-8. Reconcile staged status to final confirmation review pending, with no
-   remaining human decision.
+1. Split canonical outer orientation and framing into
+   `establish_outer_view()`, `fit_current_bounds()`, and
+   `restore_fitted_framing()` with disjoint snap paths.
+2. Compose mode-aware canonical entry/reset in the app: flat orthographic 2D,
+   the accepted 3D mount, canonical `B/L/layout` plus accepted reflected outer
+   mount for Live 4D, and the replay-owned mount.
+3. Make Restart Game and same-context New Random Game preserve current view;
+   clear transient view on setup/menu/mode exit and establish canonical view on
+   re-entry.
+4. Retire continuous preset identity, `Custom`, pseudo-preset status labels,
+   ID-owned framing, and zero-caller `frame_board()`.
+5. Present the six retained IDs as stateless view actions, hide them in 2D,
+   expose one composite Reset View, and correct help/onboarding text.
+6. Route `display.ui_scale` to Accessibility reset ownership without changing
+   its persistent ID or schema.
+7. Add executable state-ownership, reset, lifecycle, action, retirement, and
+   settings coverage.
 
 ## Forbidden Changes
 
-- E4b runtime camera/settings implementation;
-- the 3D movement/control fix or NEXT renderer/geometry fix;
-- #69 spacing, #70 grid styling, or a 4D renderer redesign;
-- E5 cockpit consolidation, Hold, topology, Explorer, campaign, or simulation;
-- rewriting, deleting, resetting, or absorbing the separate E3 defect branch;
-- claiming any documented defect fixed;
-- self-certifying E4a REVIEWED GREEN; or
-- pushing or opening a PR.
+- issue #74 movement-resolution changes;
+- 3D/4D NEXT geometry work;
+- Stage 54F spacing, grid, slice-readability, validation-colour, or polish;
+- Stage 54E-5 cockpit consolidation, Hold, topology, Explorer, campaign,
+  simulation, or general settings/input redesign;
+- native gameplay or Python parity implementation; and
+- push or PR creation.
 
 ## Acceptance Criteria
 
-1. The rig-owned arbitrary outer-orientation seam has exact arguments, state
-   effects, snap behavior, exclusions, and presentation-only scope.
-2. Named actions and canonical Reset/re-entry compose that seam with the right
-   mode owners and framing operations; Live-4D `L` remains separate.
-3. Zero-caller `frame_board()` is classified as dead and assigned deletion,
-   with no active production evidence attributed to it.
-4. Both persistent-identity false-label classes and their common retirement
-   path are explicit, with no replacement continuous identity.
-5. Reflection semantics agree across actions, canonical establishment, Fit,
-   and framing helpers.
-6. The E4b table is implementable without another mechanical or product choice.
-7. Accepted lifecycle, Reset, Fit, persistence, UI-scale, mode, and defect
-   semantics remain unchanged.
-8. E4a is ready for final confirmation review but is not self-certified green;
-   E4b remains not started/ineligible and no human decision remains.
-9. Only documentation changes, required verification passes, one semantic
-   commit is created, and the final worktree is clean.
+1. Orientation helpers cannot copy framing state, and framing helpers cannot
+   write orientation, projection, reflection-active state, `B`, `L`, or layout.
+2. Reset View restores exact canonical presentation while preserving gameplay
+   and preferences in 2D, 3D, 4D, and replay.
+3. Fit preserves current orientation, projection, reflection-active state,
+   `B`, `L`, layout, content, and preferences.
+4. Restart/new same context preserve view; context destruction and re-entry do
+   not leak transient pose.
+5. No continuous preset identity or `frame_board()` definition/caller remains.
+6. Display Reset preserves UI scale; Accessibility Reset restores its default;
+   persistence remains compatible.
+7. Focused tests, pinned Godot verification, full repository verification, and
+   real-window review evidence are recorded truthfully.
 
 ## Automated Verification
 
-- policy-backed resolver for the classification above;
+- focused Godot suite and touched-contract tests;
 - `git diff --check`;
 - `./scripts/check_git_sanitation_repo.sh`;
-- documentation/governance/configuration validators; and
-- `CODEX_MODE=1 ./scripts/verify.sh` because an architecture authority and
-  independent-review handoff are changed.
-
-No manual verification is required for this documentation-only slice. The
-contract records focused E4b and integrated 54F human-visible obligations.
+- routed documentation/governance/configuration validators;
+- pinned `GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot
+  ./scripts/verify_godot_4_7.sh`;
+- `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ## Manual Verification
 
-None for this documentation-only slice. Focused E4b and integrated 54F
-human-visible obligations are specified but not performed or claimed here.
+- real-window 2D/3D/4D/replay review without claiming headless tests as visual
+  acceptance.
 
 ## Documentation Updates
 
-- `docs/architecture/camera_gui_preset_semantics.md`: corrected runtime audit,
-  canonical outer-orientation seam, dead-code/label/reflection dispositions,
-  composition, and exact E4b plan.
-- `docs/architecture/configurable_plain_boards_and_4d_layout.md`: classify
-  `frame_board()` as dead rather than a production presentation assumption.
-- `docs/architecture/authority_map.md`,
-  `docs/plans/professional_godot_game_programme.md`, `docs/BACKLOG.md`, and
-  `CURRENT_STATE.md`: final confirmation-review handoff status.
-- this task contract: bounded re-review scope and acceptance.
+- record the concrete implementation in the canonical view architecture and
+  Live-4D pointer;
+- update authority-map wording without claiming an authority transfer;
+- update the programme, backlog, and restart handoff to the E4b visible-review
+  gate; and
+- regenerate the settings reference after the UI-scale category correction.
 
 ## Explicit Deferrals
 
-- all E4b runtime work;
-- both pre-54F correctness fixes;
-- Stage 54F visual/comprehension implementation and integrated audit;
-- E5 cockpit consolidation, Hold, and later programme stages.
+- issue #74 movement resolution;
+- NEXT geometry fidelity;
+- Stage 54F findings; and
+- Stage 54E-5 and later programme work.
 
-## Handoff target
+## Handoff
 
-Stage 54E-4a ends with human semantics accepted, the final two blocking
-technical findings and related P2 findings corrected, and final confirmation
-review required. Stage 54E-4b remains ineligible until that review returns
-green. Remaining human decisions: none.
+Automated completion advances Stage 54E-4b only to
+`IMPLEMENTED / READY_FOR_FOCUSED_VISIBLE_REVIEW`. Issue #74, NEXT fidelity,
+Stage 54F findings, and E5/later remain explicitly open and separate.

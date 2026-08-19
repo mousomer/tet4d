@@ -142,10 +142,9 @@ control frames sit behind secondary disclosure. Disclosure is ephemeral
 presentation state excluded from canonical session setup, setup persistence,
 and native session state, so no schema version changes. Its distinct human
 product review remains outstanding and is owned by integrated Stage 54F unless
-performed sooner. Stage 54E-4a has accepted human semantics, closes the final
-blocking technical findings, and is ready for final confirmation review with
-no remaining human decisions;
-Stage 54E-4b is not started and remains ineligible until that review is green.
+performed sooner. Stage 54E-4a is REVIEWED GREEN. Stage 54E-4b implements the
+accepted contract and is READY_FOR_FOCUSED_VISIBLE_REVIEW; aggregate Stage
+54E-4 remains open pending acceptance of that real-window review.
 
 ## Hold
 
@@ -172,15 +171,16 @@ a placeholder authority record in advance.
   the primary interaction. No control factory was introduced. A
   post-acceptance registry validation defect is FIXED: declarations are now
   validated before mode expansion, so empty mode sets cannot disappear.
-- Stage 54E-4 — camera/GUI presets: Stage 54E-4a contract and implementation-
-  plan findings are closed at design level and the contract is ready for final
-  confirmation review, with no remaining human decisions. It defines transient
+- Stage 54E-4 — camera/GUI presets: Stage 54E-4a is REVIEWED GREEN and Stage
+  54E-4b implements its contract, with no remaining human design decisions. It
+  defines transient
   presentation-context view state, one composite Reset View, framing-only Fit
   View, restart/new-game preservation,
   context re-entry defaults, mode-specific 2D/3D/4D/replay ownership,
   accessibility-owned UI scale, and action-based presets with no continuous
-  `Custom`/state-equality identity. Human semantics are accepted. Stage 54E-4b
-  is NOT STARTED / INELIGIBLE until final confirmation review is green.
+  `Custom`/state-equality identity. The implementation is
+  READY_FOR_FOCUSED_VISIBLE_REVIEW; aggregate 54E-4 is not complete until that
+  review is accepted.
 - Stage 54E-5 — cockpit consolidation. Carries two findings from Stage 54E-4a
   section 12.1: `display.show_w_labels` is presented in 2D and 3D where the
   renderer gates it on `dimension >= 4`, which needs a declared applicability

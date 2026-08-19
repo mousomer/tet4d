@@ -785,16 +785,17 @@ definition while being presented secondarily.
 
 #### Stage 54E-4 — Camera/GUI presets
 
-Status: Stage 54E-4a HUMAN VIEW SEMANTICS ACCEPTED / FINAL REVIEW BLOCKERS
-CORRECTED / READY FOR FINAL CONFIRMATION REVIEW / REMAINING HUMAN DECISIONS
-NONE. Stage 54E-4b NOT STARTED / INELIGIBLE pending a green E4a confirmation
-review.
+Status: Stage 54E-4a REVIEWED GREEN. Stage 54E-4b IMPLEMENTED /
+READY_FOR_FOCUSED_VISIBLE_REVIEW. Aggregate Stage 54E-4 remains open until the
+focused real-window review is accepted.
 
 Stage 54E-4a audited every preset-like operation and recorded the durable
-contract in `docs/architecture/camera_gui_preset_semantics.md`, which is now
+contract in `docs/architecture/camera_gui_preset_semantics.md`, which is the
 the canonical owner of transient view lifetime, action-based named views, one
 composite Reset View, framing-only Fit View, mode-specific canonical views,
-preference ownership, and the E4b evidence plan. It changed no runtime.
+preference ownership, and the E4b evidence plan. The independently reviewed
+contract is now implemented in the Godot presentation shell with focused
+automated coverage; focused real-window acceptance remains required.
 
 Current view is transient presentation-context state, never an application
 preference or gameplay-run identity. Named views are actions, not persistent
@@ -936,10 +937,9 @@ not cosmetic polish and is not part of E4a.
 
 ### Human-review register
 
-- **E4a:** human product semantics accepted; final blocking technical findings
-  corrected and awaiting final confirmation review. Remaining human decisions:
-  none.
-- **E4b:** after implementation, focused real-window review of flat 2D,
+- **E4a:** accepted human product semantics and final blocking technical
+  findings are REVIEWED GREEN. Remaining human decisions: none.
+- **E4b:** implementation is ready for focused real-window review of flat 2D,
   Fit/Reset separation, restart preservation, re-entry defaults, action-based
   presets, UI-scale ownership, and 3D/4D/replay mode behaviour.
 - **E5:** focused cockpit human-visible review remains required.
@@ -1227,10 +1227,9 @@ The active order is:
    progressive-disclosure rendering are implemented and accepted by external
    technical review, with automated evidence and a recorded real-window
    acceptance checklist.
-7. Stage 54E-4a has accepted human semantics and closes the final blocking
-   technical findings; it is ready for final confirmation review, with no
-   remaining human decisions. Stage 54E-4b is NOT STARTED / INELIGIBLE until
-   that review is green.
+7. Stage 54E-4a is REVIEWED GREEN. Stage 54E-4b implements the accepted
+   contract and is READY_FOR_FOCUSED_VISIBLE_REVIEW; aggregate Stage 54E-4
+   remains open until that review is accepted.
 8. Stage 54E-5 — cockpit consolidation.
 9. Stage 54F — integrated professional playability/visual acceptance.
 10. Stage 54G — remaining professional release hardening.

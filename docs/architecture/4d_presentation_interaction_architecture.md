@@ -579,11 +579,11 @@ type, and viewport geometry may not influence command resolution.
 
 ## 13. Camera-preset audit
 
-`camera_preset.gd` contains no direct resolver call. However,
-`TraceReplayApp` currently calls `CameraRig.apply_preset()`, which writes
-combined target yaw/pitch; `_control_frame_mapping()` then reads its yaw.
-Thus Front, Side, Back, Top, Iso, and Opposite Iso currently can change
-relative command interpretation through the defective combined rig.
+`camera_preset.gd` contains no direct resolver call. Before Stage 54E-4b,
+`TraceReplayApp` called `CameraRig.apply_preset()`, which wrote combined target
+yaw/pitch; `_control_frame_mapping()` then read its yaw. Front, Side, Back,
+Top, Iso, and Opposite Iso could therefore change relative command
+interpretation through the defective combined rig.
 
 Under the corrected model their names are **ambiguous**, not intrinsically
 local-orientation, outer-framing, or combined presets. In 54E-2 a bounded
@@ -593,7 +593,7 @@ targets layout anchors and no outer rotation remains. This prevents the invalid
 intermediate Side/Back mismatch in which a visible orientation changes while
 relative controls retain a different frame.
 
-Stage 54E-4 therefore requires **semantic redesign**, including separate
+Stage 54E-4 therefore required **semantic redesign**, including separate
 local-orientation versus outer-framing preset categories and an explicit
 decision whether named combined presets are allowed. It decides persistence,
 reset, labels, and any future layout preset scope; 54E-2 only provides the
@@ -607,6 +607,11 @@ existing IDs. It consumes the state-owner separation defined here. Its
 human-approved lifecycle deliberately refines the earlier Stage 54E-2d rule:
 Restart Game now preserves the current view, while Reset View establishes the
 complete canonical view.
+
+Stage 54E-4b implements that contract: Live-4D actions now mutate `L` through
+its owner, preserve the outer mount and reflection state, and request
+ID-independent fitted framing. No continuous preset identity feeds the HUD or
+the relative-control resolver.
 
 ## 14. Ownership contract
 
@@ -646,7 +651,7 @@ their existing preference owners.
 | basis reset | identity only | unchanged | recompute from identity | unchanged unless invoked through Reset View | retain |
 | changing mode | clear Live 4D state | clear | discard | mode owner chooses its default | retain |
 | re-entry / application restart | identity | local default | recompute | canonical fitted view | load/retain |
-| applying a preset | unchanged | receives yaw/pitch component | unchanged | receives zoom/pan/fit component | unchanged |
+| applying a Live-4D view action | unchanged | receives the action yaw/pitch target | unchanged | outer mount/reflection preserved; fitted framing restored | unchanged |
 
 The active forward-looking lifecycle, including mode-specific 2D/3D/4D/replay
 semantics, one composite Reset View, framing-only Fit View, and action-based
@@ -1009,9 +1014,10 @@ domain must satisfy Pitch-depth preservation, including
 
 ## 20. Stage boundary
 
-The accepted sequential Stage 54E-2 implementation through 54E-2d is complete
-and reviewed green. Stage 54E-3 — setup/menu information architecture — is now
-the next eligible Stage 54E implementation slice. Stage 54E-4/5 remain later
-programme work, and Stage 54D-3 Hold remains independently eligible.
+The accepted sequential Stage 54E-2 implementation through 54E-2d and Stage
+54E-3 are complete and reviewed green. Stage 54E-4a is reviewed green and
+Stage 54E-4b implements the forward view contract, pending focused visible
+review. Stage 54E-5 remains later programme work, and Stage 54D-3 Hold remains
+independently eligible.
 
 **STAGE 54E-1 COMPLETE — HUMAN ACCEPTED**

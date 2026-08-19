@@ -96,10 +96,9 @@ history ledger. Detailed history is preserved in
   REVIEWED GREEN. A post-acceptance registry validation defect is FIXED:
   declarations are validated before mode expansion, so an empty mode set
   cannot disappear without a validation failure. Stage 54E-4a human view
-  semantics are ACCEPTED, its contract
-  and implementation plan close the final blocking technical findings, and it
-  is READY FOR FINAL CONFIRMATION REVIEW with no remaining human decisions. It
-  changed no runtime. The active contract in
+  semantics and final technical findings are REVIEWED GREEN. Stage 54E-4b
+  implements that contract and is READY_FOR_FOCUSED_VISIBLE_REVIEW. The active
+  contract in
   `docs/architecture/camera_gui_preset_semantics.md` treats current view as
   transient presentation-context state; exposes one composite Reset View and a
   framing-only Fit View; preserves view across same-context Restart/new game;
@@ -108,8 +107,13 @@ history ledger. Detailed history is preserved in
   accessibility reset ownership; resolves camera projection as transient; and
   treats named presets as actions with no continuous `Custom`/state-equality
   identity. This deliberately refines the then-accepted Stage 54E-2d restart
-  lifecycle without rewriting its historical reviewed-green evidence. Stage
-  54E-4b is NOT STARTED / INELIGIBLE until final confirmation review is green.
+  lifecycle without rewriting its historical reviewed-green evidence. The
+  implementation splits outer orientation from framing, removes continuous
+  preset identity and dead `frame_board()`, preserves view across Restart/new
+  same-context games, rebuilds canonical views on context re-entry, and routes
+  UI-scale reset ownership to Accessibility without changing persistence ID or
+  schema. Aggregate Stage 54E-4 remains open pending focused real-window
+  acceptance.
 - Two pre-54F correctness findings are OPEN: 3D control arrows must truthfully
   match Relative/Absolute movement resolution, and every production 3D/4D NEXT
   thumbnail must be geometrically faithful to its authoritative queued piece.
@@ -248,14 +252,12 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Perform the final confirmation review of the corrected Stage 54E-4a
-   contract in `docs/architecture/camera_gui_preset_semantics.md`. Do not begin
-   Stage 54E-4b until that review is green. Verify the transient/persistent split,
-   Reset/Fit separation, restart preservation, context re-entry, mode-specific
-   canonical views, flat 2D target, UI-scale ownership, projection conclusion,
-   action-based presets, implementation evidence plan, programme consistency,
-   and human-finding ownership. Stage 54D-3 Hold remains independently
-   eligible. Stage 54E-5 remains later programme work.
+1. Perform the focused Stage 54E-4b real-window review of flat 2D,
+   Reset/Fit separation, restart and same-context new-game preservation,
+   context re-entry, stateless 3D/4D/replay view actions, UI-scale ownership,
+   and misleading-identity removal. Do not mark aggregate Stage 54E-4 complete
+   until that review is accepted. Stage 54D-3 Hold remains independently
+   eligible; Stage 54E-5 remains later programme work.
 2. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.
