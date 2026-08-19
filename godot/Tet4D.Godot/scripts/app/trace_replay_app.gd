@@ -576,7 +576,7 @@ func _handle_live_4d_basis_input(event: InputEvent) -> bool:
 		_apply_live_4d_basis_turn("zx", 1)
 		return true
 	if _event_action_pressed_once(event, ["reset"]):
-		_reset_live_4d_view()
+		_reset_view()
 		return true
 	return false
 
@@ -646,9 +646,8 @@ func _wire_hud() -> void:
 			_refresh_camera_status()
 	)
 	_hud.camera_preset_requested.connect(func(id: String) -> void:
-		var applied := _apply_live_4d_preset(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_preset(id))
+		var applied := _apply_live_4d_view_action(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_outer_view_action(id))
 		if applied and _camera_rig != null:
-			_hud.set_camera_preset(_camera_rig.current_preset_id())
 			_refresh_camera_status()
 	)
 	_hud.diagnostics_visibility_changed.connect(func(visible: bool) -> void:
@@ -665,6 +664,7 @@ func _wire_hud() -> void:
 		_refresh_hud()
 	)
 	_hud.fit_view_requested.connect(_fit_view)
+	_hud.reset_view_requested.connect(_reset_view)
 	_hud.quit_requested.connect(_quit_application)
 	_hud.main_menu_requested.connect(_return_to_main_menu)
 	_hud.live_2d_requested.connect(_enter_live_2d_mode)
@@ -675,7 +675,6 @@ func _wire_hud() -> void:
 	_hud.new_random_game_requested.connect(_start_new_random_game)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
 	_hud.basis_turn_requested.connect(_apply_live_4d_basis_turn)
-	_hud.basis_reset_requested.connect(_reset_live_4d_view)
 
 
 func _quit_application() -> void:
@@ -812,7 +811,6 @@ func _reset_playback() -> void:
 	_state.reset(_state.is_playing)
 	_playback_accumulator = 0.0
 	_refresh_snapshot()
-	_fit_view()
 
 
 func _refresh_snapshot() -> void:
@@ -883,7 +881,7 @@ func ghost_cache_snapshot() -> Dictionary:
 	return result
 
 
-func _apply_live_4d_preset(id: String) -> bool:
+func _apply_live_4d_view_action(id: String) -> bool:
 	if _mode != MODE_LIVE_4D or _camera_rig == null or not CameraPresetScript.is_known(id):
 		return false
 	var preset := CameraPresetScript.definition(id)
@@ -891,42 +889,71 @@ func _apply_live_4d_preset(id: String) -> bool:
 		float(preset.get("yaw", _live_4d_local_orientation.local_yaw)),
 		float(preset.get("pitch", _live_4d_local_orientation.local_pitch))
 	)
-	return _camera_rig.apply_framing_preset(id)
+	_camera_rig.restore_fitted_framing()
+	return true
 
 
 func _fit_view() -> void:
 	_resolve_scene_nodes()
-	if _camera_rig == null or _renderer == null or not _camera_rig.has_method("fit_bounds"):
+	if _camera_rig == null or _renderer == null:
 		_pending_fit_view = true
 		return
 	var bounds := _renderer.current_bounds()
 	if not bounds.get("ok", false):
 		_pending_fit_view = true
 		return
-	if _mode == MODE_LIVE_4D:
-		_camera_rig.fit_bounds(
-			bounds,
-			CameraRigScript.LIVE_4D_FIT_MARGIN,
-			CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
-			CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
-			CameraPresetScript.ISO,
-			"fitted W slices",
-			true
-		)
+	var margin := 1.14
+	if _mode == MODE_LIVE_2D:
+		margin = CameraRigScript.LIVE_2D_FIT_MARGIN
 	elif _mode == MODE_LIVE_3D:
-		_camera_rig.fit_bounds(
-			bounds,
-			CameraRigScript.LIVE_3D_FIT_MARGIN,
-			CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
-			CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
-			CameraPresetScript.ISO,
-			"above exterior"
-		)
-	else:
-		_camera_rig.fit_bounds(bounds, CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else 1.14)
+		margin = CameraRigScript.LIVE_3D_FIT_MARGIN
+	elif _mode == MODE_LIVE_4D:
+		margin = CameraRigScript.LIVE_4D_FIT_MARGIN
+	_camera_rig.fit_current_bounds(bounds, margin)
 	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
 	_refresh_camera_status()
+
+
+func _establish_canonical_view_and_fit(mode_name: String) -> void:
+	_resolve_scene_nodes()
+	if _camera_rig == null or _renderer == null:
+		_pending_fit_view = true
+		return
+	if mode_name == MODE_LIVE_4D:
+		_restore_live_4d_presentation_defaults()
+		_refresh_live_4d_presentation(true)
+	_camera_rig.establish_canonical_projection()
+	match mode_name:
+		MODE_LIVE_2D:
+			_camera_rig.establish_outer_view(0.0, 0.0, 0.0, false)
+		MODE_LIVE_3D:
+			_camera_rig.establish_outer_view(
+				CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
+				CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
+				0.0,
+				false
+			)
+		MODE_LIVE_4D:
+			_camera_rig.establish_outer_view(
+				CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
+				CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
+				0.0,
+				true
+			)
+		_:
+			_camera_rig.establish_outer_view(
+				CameraRigScript.PYTHON_DISPLAY_YAW_RAD,
+				CameraRigScript.PYTHON_DISPLAY_PITCH_RAD,
+				0.0,
+				false
+			)
+	_fit_view()
+
+
+func _reset_view() -> void:
+	_establish_canonical_view_and_fit(_mode)
+	_refresh_hud()
 
 
 func _resolve_scene_nodes() -> void:
@@ -1058,8 +1085,6 @@ func _refresh_camera_status() -> void:
 	_resolve_scene_nodes()
 	if _camera_rig != null and _camera_rig.has_method("view_status_text"):
 		_hud.set_camera_status(_camera_rig.view_status_text())
-		if _camera_rig.has_method("current_preset_id"):
-			_hud.set_camera_preset(_camera_rig.current_preset_id())
 	_refresh_control_frame_presentation()
 
 
@@ -1108,7 +1133,7 @@ func _bundle_case_count() -> int:
 	return total
 
 
-func _start_configured_live_game(setup: Dictionary) -> void:
+func _start_configured_live_game(setup: Dictionary, preserve_current_view: bool = false) -> void:
 	_sync_control_frames_from_setup()
 	var mode_name := str(setup.get("mode", ""))
 	var configured := false
@@ -1133,17 +1158,17 @@ func _start_configured_live_game(setup: Dictionary) -> void:
 	_live_gravity_interval_seconds = _gravity_interval_for_setup(_active_live_setup)
 	match mode_name:
 		MODE_LIVE_2D:
-			_enter_live_2d_mode()
+			_enter_live_2d_mode(preserve_current_view)
 		MODE_LIVE_3D:
-			_enter_live_3d_mode()
+			_enter_live_3d_mode(preserve_current_view)
 		MODE_LIVE_4D:
-			_enter_live_4d_mode()
+			_enter_live_4d_mode(preserve_current_view)
 
 
 func _start_new_random_game() -> void:
 	if _active_live_setup.is_empty() or str(_active_live_setup.get("random_mode", "")) != "true_random":
 		return
-	_start_configured_live_game(_active_live_setup.duplicate(true))
+	_start_configured_live_game(_active_live_setup.duplicate(true), true)
 
 
 # tet4d-semantic-boundary: allow adapter-routing
@@ -1162,42 +1187,47 @@ func _gravity_interval_for_setup(setup: Dictionary) -> float:
 	return float(maxi(min_ms, int(base_ms / speed))) / 1000.0
 
 
-func _enter_live_2d_mode() -> void:
-	_prepare_live_mode_entry(MODE_LIVE_2D)
+func _enter_live_2d_mode(preserve_current_view: bool = false) -> void:
+	_prepare_live_mode_entry(MODE_LIVE_2D, preserve_current_view)
 	if not _live_2d_session_started:
 		_live_bridge.live_2d_reset()
 		_live_2d_session_started = true
 	_refresh_live_2d_snapshot()
-	_fit_view()
+	if not preserve_current_view:
+		_establish_canonical_view_and_fit(MODE_LIVE_2D)
 	_hud.show_replay_viewer()
 
 
-func _enter_live_3d_mode() -> void:
-	_prepare_live_mode_entry(MODE_LIVE_3D)
+func _enter_live_3d_mode(preserve_current_view: bool = false) -> void:
+	_prepare_live_mode_entry(MODE_LIVE_3D, preserve_current_view)
 	if not _live_3d_session_started:
 		_live_bridge.live_3d_reset()
 		_live_3d_session_started = true
 	_refresh_live_3d_snapshot()
-	_fit_view()
+	if not preserve_current_view:
+		_establish_canonical_view_and_fit(MODE_LIVE_3D)
 	_hud.show_replay_viewer()
 	_refresh_live_3d_snapshot()
 
 
-func _enter_live_4d_mode() -> void:
-	_prepare_live_mode_entry(MODE_LIVE_4D)
+func _enter_live_4d_mode(preserve_current_view: bool = false) -> void:
+	_prepare_live_mode_entry(MODE_LIVE_4D, preserve_current_view)
 	if not _live_4d_session_started:
 		_live_bridge.live_4d_reset()
 		_live_4d_session_started = true
-	_restore_live_4d_presentation_defaults()
 	_refresh_live_4d_snapshot()
-	_fit_view()
+	if not preserve_current_view:
+		_establish_canonical_view_and_fit(MODE_LIVE_4D)
 	_hud.show_replay_viewer()
 	_refresh_live_4d_snapshot()
 
 
-func _prepare_live_mode_entry(mode_name: String) -> void:
-	if _mode == MODE_LIVE_4D and mode_name != MODE_LIVE_4D:
-		_clear_live_4d_presentation_state(false)
+func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = false) -> void:
+	if not preserve_current_view or _mode != mode_name:
+		if _mode == MODE_LIVE_4D:
+			_clear_live_4d_presentation_state(false)
+		elif _camera_rig != null:
+			_camera_rig.clear_presentation_state()
 	_mode = mode_name
 	_state.is_playing = false
 	if mode_name == MODE_LIVE_4D:
@@ -1223,6 +1253,8 @@ func _return_to_main_menu() -> void:
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(true)
 	else:
+		if _camera_rig != null:
+			_camera_rig.clear_presentation_state()
 		_refresh_render()
 	_hud.show_screen(ReplayHud.SCREEN_MAIN_MENU)
 
@@ -1238,6 +1270,8 @@ func _change_live_setup(mode_name: String) -> void:
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(true)
 	else:
+		if _camera_rig != null:
+			_camera_rig.clear_presentation_state()
 		_refresh_render()
 	_hud.open_game_setup(mode_name)
 
@@ -1245,6 +1279,8 @@ func _change_live_setup(mode_name: String) -> void:
 func _enter_replay_mode() -> void:
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(false)
+	elif _camera_rig != null:
+		_camera_rig.clear_presentation_state()
 	_mode = MODE_REPLAY
 	_clear_ghost_cache()
 	_hud.set_live_keyboard_capture(false)
@@ -1257,8 +1293,8 @@ func _enter_replay_mode() -> void:
 		_select_trace_family(trace_type, _choose_startup_case_id(trace_type), false, true)
 	else:
 		_refresh_snapshot()
-		_fit_view()
-		_hud.show_replay_viewer()
+	_establish_canonical_view_and_fit(MODE_REPLAY)
+	_hud.show_replay_viewer()
 
 
 func _clear_live_ui_focus() -> void:
@@ -1373,7 +1409,6 @@ func _restore_live_4d_presentation_defaults() -> void:
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
 		_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
 	if _camera_rig != null:
-		_camera_rig.clear_presentation_state()
 		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_pending_fit_view = false
 
@@ -1383,20 +1418,13 @@ func _restore_live_4d_presentation_defaults() -> void:
 # native deterministic state is otherwise untouched at teardown time.
 func _clear_live_4d_presentation_state(end_session: bool) -> void:
 	_restore_live_4d_presentation_defaults()
+	if _camera_rig != null:
+		_camera_rig.clear_presentation_state()
 	_clear_ghost_cache()
 	_live_4d_last_rotation_label = "none"
 	_live_4d_last_rotation_status = "none"
 	if end_session:
 		_live_4d_session_started = false
-
-
-func _reset_live_4d_view() -> void:
-	if _mode != MODE_LIVE_4D:
-		return
-	_restore_live_4d_presentation_defaults()
-	_refresh_live_4d_presentation()
-	_fit_view()
-	_refresh_hud()
 
 
 func _reset_live_2d() -> void:
@@ -1406,7 +1434,6 @@ func _reset_live_2d() -> void:
 	_live_2d_paused = false
 	_reset_live_repeat_state()
 	_refresh_live_2d_snapshot()
-	_fit_view()
 
 
 func _reset_live_3d() -> void:
@@ -1418,20 +1445,17 @@ func _reset_live_3d() -> void:
 	_live_3d_paused = false
 	_reset_live_repeat_state()
 	_refresh_live_3d_snapshot()
-	_fit_view()
 
 
 func _reset_live_4d() -> void:
 	_live_4d_last_rotation_label = "none"
 	_live_4d_last_rotation_status = "none"
-	_restore_live_4d_presentation_defaults()
 	_live_bridge.live_4d_reset()
 	_live_4d_session_started = true
 	_live_tick_accumulator = 0.0
 	_live_4d_paused = false
 	_reset_live_repeat_state()
 	_refresh_live_4d_snapshot()
-	_fit_view()
 
 
 func _toggle_live_2d_pause() -> void:

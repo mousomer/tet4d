@@ -4,9 +4,6 @@ class_name CameraRig
 
 const PYTHON_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const PYTHON_DISPLAY_PITCH_RAD := -0.4537856055185257  # -26 degrees.
-const REPLAY_DISPLAY_VIEW_PRESET_NAME := "PYTHON_DIAGRAM_REPLAY_VIEW"
-const LIVE_3D_VIEW_PRESET_NAME := "LIVE_3D_EXTERNAL_DIAGRAM_VIEW"
-const LIVE_4D_VIEW_PRESET_NAME := "LIVE_4D_FITTED_W_SLICE_VIEW"
 const LIVE_3D_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const LIVE_3D_DISPLAY_PITCH_RAD := 0.4537856055185257  # +26 degrees above the board.
 # The fitted gameplay mount sits 25 degrees past the board's far side. A fixed
@@ -50,15 +47,12 @@ var _current_roll := 0.0
 var _base_distance := 22.0
 var _base_orthographic_size := DEFAULT_ORTHOGRAPHIC_SIZE
 var _zoom_multiplier := 1.0
-var _last_frame_signature := ""
-var _current_view_preset := CameraPresetScript.ISO
-var _current_view_octant := "python replay"
-var _current_fit_state := "initial"
+var _view_context := "replay view"
+var _framing_status := "initial"
 var _sensitivity_factor := 1.0
 var _invert_y := false
 var _interpolation_scale := 1.0
 var _horizontal_reflection_active := false
-var _horizontal_reflection_focus := Vector3.ZERO
 var _world_presentation_root: Node3D
 var _orientation_gizmo: Node3D
 var _orientation_basis_snapshot := {
@@ -87,66 +81,52 @@ func _process(delta: float) -> void:
 	_update_camera()
 
 
-func frame_board(board_shape: Array, dimension: int, slice_stride: float) -> void:
-	if board_shape.is_empty():
-		return
-	var signature := "%s|%d|%.4f" % [str(board_shape), dimension, slice_stride]
-	var x_extent := float(board_shape[0]) if board_shape.size() > 0 else 4.0
-	var y_extent := float(board_shape[1]) if board_shape.size() > 1 else 4.0
-	var z_extent := float(board_shape[2]) if board_shape.size() > 2 else 1.0
-	var w_extent := float(board_shape[3]) if dimension >= 4 and board_shape.size() > 3 else 1.0
-	if dimension >= 4:
-		x_extent += max(w_extent - 1.0, 0.0) * slice_stride
-	var x_center: float = maxf(w_extent - 1.0, 0.0) * slice_stride * 0.5 if dimension >= 4 else 0.0
-	_target_focus = Vector3(x_center, 0.0, 0.0)
-	_fit_focus = _target_focus
-	var framed_distance := clampf(max(x_extent, y_extent, z_extent * 2.0) * 1.6 + 4.0, min_distance, max_distance)
-	if signature != _last_frame_signature:
-		_base_distance = framed_distance
-		_last_frame_signature = signature
-	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
-	_target_yaw = PYTHON_DISPLAY_YAW_RAD
-	_target_pitch = PYTHON_DISPLAY_PITCH_RAD
-	_target_roll = 0.0
-	_current_view_preset = REPLAY_DISPLAY_VIEW_PRESET_NAME
-	_current_view_octant = "python replay"
-	_current_fit_state = "framed"
-	_set_horizontal_reflection(false, Vector3.ZERO)
+func establish_canonical_projection() -> void:
+	if _camera != null:
+		_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 
 
-func fit_bounds(
-	bounds: Dictionary,
-	margin: float = 1.14,
-	yaw: float = PYTHON_DISPLAY_YAW_RAD,
-	pitch: float = PYTHON_DISPLAY_PITCH_RAD,
-	view_preset: String = REPLAY_DISPLAY_VIEW_PRESET_NAME,
-	view_octant: String = "python replay",
-	horizontal_reflection_active: bool = false
+func establish_outer_view(
+	yaw: float,
+	pitch: float,
+	roll_radians: float,
+	horizontal_reflection_active: bool
 ) -> void:
+	_target_yaw = yaw
+	_target_pitch = pitch
+	_target_roll = roll_radians
+	_set_horizontal_reflection(horizontal_reflection_active)
+	_view_context = "outer view"
+	_snap_orientation_to_targets()
+
+
+func fit_current_bounds(bounds: Dictionary, margin: float = 1.14) -> void:
 	if not bounds.get("ok", false):
 		return
-	# Every fitted product view starts from the canonical orthographic
-	# projection; perspective/free-inspection state cannot leak across modes.
-	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	var size := max_pos - min_pos
 	_target_focus = (min_pos + max_pos) * 0.5
 	_fit_focus = _target_focus
-	_target_yaw = yaw
-	_target_pitch = pitch
-	_target_roll = 0.0
-	_current_view_preset = view_preset
-	_current_view_octant = view_octant
-	_current_fit_state = "fit OK"
-	_set_horizontal_reflection(horizontal_reflection_active, _target_focus)
+	_framing_status = "fit OK"
 	var max_extent := maxf(size.x, maxf(size.y, maxf(size.z, 1.0)))
 	_base_distance = clampf(max_extent * 1.45 + 6.0, min_distance, max_distance)
 	_zoom_multiplier = 1.0
 	_target_distance = _base_distance
-	_base_orthographic_size = maxf(_projected_orthographic_size(min_pos, max_pos, _target_yaw, _target_pitch, margin), 4.0)
-	_camera.size = _base_orthographic_size
-	_snap_to_targets()
+	_base_orthographic_size = maxf(_projected_orthographic_size(min_pos, max_pos, _current_yaw, _current_pitch, margin), 4.0)
+	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+		_camera.size = _base_orthographic_size
+	_snap_framing_to_targets()
+
+
+func restore_fitted_framing() -> void:
+	_target_focus = _fit_focus
+	_zoom_multiplier = 1.0
+	_target_distance = _base_distance
+	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+		_camera.size = _base_orthographic_size
+	_framing_status = "fitted baseline"
+	_snap_framing_to_targets()
 
 
 # Clears mode-owned framing/reflection/interpolation state without touching
@@ -166,29 +146,27 @@ func clear_presentation_state() -> void:
 	_current_roll = 0.0
 	_zoom_multiplier = 1.0
 	_base_orthographic_size = DEFAULT_ORTHOGRAPHIC_SIZE
-	_last_frame_signature = ""
-	_current_view_preset = CameraPresetScript.ISO
-	_current_view_octant = "cleared"
-	_current_fit_state = "cleared"
-	_set_horizontal_reflection(false, Vector3.ZERO)
+	_view_context = "cleared"
+	_framing_status = "cleared"
+	_set_horizontal_reflection(false)
 	set_orientation_gizmo_visible(false)
 	if _camera != null:
 		_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 		_camera.size = DEFAULT_ORTHOGRAPHIC_SIZE
-		_snap_to_targets()
+		_update_camera()
 
 
 func orbit(delta: Vector2) -> void:
 	_target_yaw -= delta.x * orbit_sensitivity * _sensitivity_factor
 	var vertical_direction := 1.0 if _invert_y else -1.0
 	_target_pitch = clampf(_target_pitch + delta.y * orbit_sensitivity * _sensitivity_factor * vertical_direction, -1.2, 1.2)
-	_mark_custom_view("manual")
+	_mark_manual_view("manual")
 
 
 func nudge_yaw(delta_radians: float) -> void:
 	_target_yaw += delta_radians * _sensitivity_factor
 	_current_yaw = _target_yaw
-	_mark_custom_view("manual")
+	_mark_manual_view("manual")
 	_update_camera()
 
 
@@ -196,25 +174,25 @@ func nudge_pitch(delta_radians: float) -> void:
 	var vertical_direction := -1.0 if _invert_y else 1.0
 	_target_pitch = clampf(_target_pitch + delta_radians * _sensitivity_factor * vertical_direction, -1.2, 1.2)
 	_current_pitch = _target_pitch
-	_mark_custom_view("manual")
+	_mark_manual_view("manual")
 	_update_camera()
 
 
 func nudge_roll(delta_radians: float) -> void:
 	_target_roll += delta_radians * _sensitivity_factor
 	_current_roll = _target_roll
-	_mark_custom_view("manual")
+	_mark_manual_view("manual")
 	_update_camera()
 
 
 func roll(delta: Vector2) -> void:
 	_target_roll += delta.x * orbit_sensitivity * _sensitivity_factor
-	_mark_custom_view("manual")
+	_mark_manual_view("manual")
 
 
 func pan_focus(offset: Vector3) -> void:
 	_target_focus += offset
-	_mark_custom_view("matrix scroll")
+	_mark_manual_view("matrix scroll")
 	if _camera != null:
 		_update_camera()
 
@@ -234,7 +212,7 @@ func pan_screen(delta: Vector2) -> void:
 	) * world_units_per_pixel
 	_target_focus += offset
 	_current_focus = _target_focus
-	_mark_custom_view("manual pan")
+	_mark_manual_view("manual pan")
 	_update_camera()
 
 
@@ -269,50 +247,19 @@ func control_frame_yaw() -> float:
 	return _target_yaw
 
 
-func apply_preset(id: String) -> bool:
+func apply_outer_view_action(id: String) -> bool:
 	if not CameraPresetScript.is_known(id):
 		return false
 	var preset := CameraPresetScript.definition(id)
-	_target_yaw = float(preset.get("yaw", _target_yaw))
-	_target_pitch = float(preset.get("pitch", _target_pitch))
-	_target_roll = 0.0
-	_set_horizontal_reflection(false, Vector3.ZERO)
-	_zoom_multiplier = float(preset.get("zoom", 1.0))
-	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
-	_current_view_preset = id
-	_current_view_octant = CameraPresetScript.label(id)
-	_current_fit_state = "preset"
-	_snap_to_targets()
+	establish_outer_view(
+		float(preset.get("yaw", _target_yaw)),
+		float(preset.get("pitch", _target_pitch)),
+		0.0,
+		false
+	)
+	_view_context = "view action"
+	restore_fitted_framing()
 	return true
-
-
-# Stage 54E-2c compatibility adapter: legacy preset orientation is applied to
-# shared SliceLocalOrientation by the app. CameraRig receives framing only.
-# Stage 54E-4 owns the eventual preset taxonomy and persistence redesign.
-func apply_framing_preset(id: String) -> bool:
-	if not CameraPresetScript.is_known(id):
-		return false
-	var preset := CameraPresetScript.definition(id)
-	var pan: Vector3 = preset.get("pan", Vector3.ZERO)
-	_target_focus = _fit_focus + pan
-	_current_focus = _target_focus
-	_zoom_multiplier = float(preset.get("zoom", 1.0))
-	_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
-	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
-		_camera.size = clampf(
-			_base_orthographic_size * _zoom_multiplier,
-			MIN_ORTHOGRAPHIC_SIZE,
-			MAX_ORTHOGRAPHIC_SIZE
-		)
-	_current_view_preset = id
-	_current_view_octant = "%s framing" % CameraPresetScript.label(id)
-	_current_fit_state = "preset framing"
-	_snap_to_targets()
-	return true
-
-
-func current_preset_id() -> String:
-	return _current_view_preset
 
 
 func zoom(step: float) -> void:
@@ -328,27 +275,26 @@ func zoom(step: float) -> void:
 	else:
 		_zoom_multiplier = clampf(_zoom_multiplier * multiplier, min_distance / maxf(_base_distance, 0.001), max_distance / maxf(_base_distance, 0.001))
 		_target_distance = clampf(_base_distance * _zoom_multiplier, min_distance, max_distance)
-	_mark_custom_view("manual")
+	_mark_manual_view("manual")
 
 
 func view_status_text() -> String:
 	if _camera == null:
-		return "Camera: %s · pending" % _current_view_preset
+		return "View: pending"
 	var projection_label := "ortho" if _camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective"
 	var yaw_degrees := rad_to_deg(_current_yaw)
 	var pitch_degrees := rad_to_deg(_current_pitch)
 	var roll_degrees := rad_to_deg(_current_roll)
 	var pitch_label := "above %.0f deg" % pitch_degrees if pitch_degrees >= 0.0 else "below %.0f deg" % absf(pitch_degrees)
-	return "Camera: %s · %s · size %.2f · zoom %.2fx · %s · yaw %.0f deg · pitch %s · roll %.0f deg · %s" % [
-		CameraPresetScript.label(_current_view_preset),
+	return "View: %s · size %.2f · zoom %.2fx · %s · yaw %.0f deg · pitch %s · roll %.0f deg · %s" % [
 		projection_label,
 		_camera.size,
 		_zoom_multiplier,
-		_current_view_octant,
+		_view_context,
 		yaw_degrees,
 		pitch_label,
 		roll_degrees,
-		_current_fit_state,
+		_framing_status,
 	]
 
 
@@ -366,10 +312,20 @@ func presentation_snapshot() -> Dictionary:
 		"target_yaw": _target_yaw,
 		"target_pitch": _target_pitch,
 		"target_roll": _target_roll,
+		"current_yaw": _current_yaw,
+		"current_pitch": _current_pitch,
+		"current_roll": _current_roll,
 		"target_focus": _target_focus,
+		"current_focus": _current_focus,
+		"fit_focus": _fit_focus,
+		"target_distance": _target_distance,
+		"current_distance": _current_distance,
 		"zoom_multiplier": _zoom_multiplier,
+		"projection": _camera.projection if _camera != null else -1,
 		"orthographic_size": _camera.size if _camera != null else 0.0,
 		"horizontal_reflection_active": _horizontal_reflection_active,
+		"view_context": _view_context,
+		"framing_status": _framing_status,
 		"orientation_gizmo_visible": _orientation_gizmo != null and _orientation_gizmo.visible,
 	}
 
@@ -446,19 +402,22 @@ static func _live_4d_fitted_camera_outward() -> Vector3:
 	)
 
 
-func _snap_to_targets() -> void:
-	_current_focus = _target_focus
-	_current_distance = _target_distance
+func _snap_orientation_to_targets() -> void:
 	_current_yaw = _target_yaw
 	_current_pitch = _target_pitch
 	_current_roll = _target_roll
 	_update_camera()
 
 
-func _mark_custom_view(fit_state: String) -> void:
-	_current_view_preset = CameraPresetScript.CUSTOM
-	_current_view_octant = "free camera"
-	_current_fit_state = fit_state
+func _snap_framing_to_targets() -> void:
+	_current_focus = _target_focus
+	_current_distance = _target_distance
+	_update_camera()
+
+
+func _mark_manual_view(framing_status: String) -> void:
+	_view_context = "free view"
+	_framing_status = framing_status
 
 
 func _update_camera() -> void:
@@ -476,9 +435,8 @@ func _update_camera() -> void:
 	_update_orientation_gizmo()
 
 
-func _set_horizontal_reflection(active: bool, reflection_focus: Vector3) -> void:
+func _set_horizontal_reflection(active: bool) -> void:
 	_horizontal_reflection_active = active
-	_horizontal_reflection_focus = reflection_focus
 	_apply_world_presentation_transform()
 	_update_gizmo_axes()
 
@@ -502,7 +460,7 @@ func _apply_world_presentation_transform() -> void:
 	)
 	_world_presentation_root.transform = Transform3D(
 		reflection_basis,
-		_horizontal_reflection_focus - reflection_basis * _horizontal_reflection_focus
+		_current_focus - reflection_basis * _current_focus
 	)
 
 
