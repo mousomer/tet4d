@@ -119,9 +119,10 @@ history ledger. Detailed history is preserved in
   composite Reset View that Live 4D already used, and the Live 3D Camera help
   states its real double-click Fit affordance. Aggregate Stage 54E-4 is
   COMPLETE / REVIEWED GREEN.
-- Two pre-54F correctness findings are OPEN: 3D control arrows must truthfully
-  match Relative/Absolute movement resolution, and every production 3D/4D NEXT
-  thumbnail must be geometrically faithful to its authoritative queued piece.
+- Pre-54F issue #74 is COMPLETE / REVIEWED GREEN. The 3D/4D NEXT correction is
+  IMPLEMENTED / AUTOMATED GREEN / HUMAN VISIBLE REVIEW PENDING: the renderer
+  now retains one complete-piece XYZ projection frame across labeled W panes,
+  and registry-led structural coverage proves all production geometry paths.
   Stage 54F also retains #69 spacing, #70 grid/wireframe/active-frame hierarchy,
   the criterion that every 4D slice reads as a 3D board, and the setup
   validation-error colour advisory.
@@ -273,6 +274,14 @@ CODEX_MODE=1 ./scripts/verify.sh
    Absolute and accepted 4D behaviour remain regression-protected. Focused
    Godot verification and the full repository gate pass. This does not reopen
    Stage 54E-4 lifecycle or view architecture.
-3. Keep piece/config-bundle import readers and unrelated settings recovery as
+3. Pre-54F 3D/4D NEXT geometry fidelity is IMPLEMENTED / AUTOMATED GREEN /
+   HUMAN VISIBLE REVIEW PENDING. The fault was independent renderer fitting of
+   each W pane, not queue identity, production geometry, embedding, W grouping,
+   or the thumbnail model. One complete-piece projection frame now preserves
+   cross-W XYZ offsets. Exhaustive registry tests cover 14 Live-3D and 21
+   Live-4D definitions across every admitted piece set, plus queue updates and
+   named FORK4 regression. Perform the focused real-window comparison before
+   marking this correctness item complete.
+4. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

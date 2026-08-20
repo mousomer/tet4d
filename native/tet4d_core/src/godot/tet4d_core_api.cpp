@@ -7,6 +7,7 @@
 #include "tet4d_core/generated/board_extent_contract_v1.hpp"
 #include "tet4d_core/geometry.hpp"
 #include "tet4d_core/plain_game_setup.hpp"
+#include "tet4d_core/plain_piece_catalog.hpp"
 #include "tet4d_core/query.hpp"
 #include "tet4d_core/topology_transport.hpp"
 
@@ -439,6 +440,7 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("topology_transport_resolve_cell_step", "profile", "query"), &Tet4DCoreApi::topology_transport_resolve_cell_step);
 	ClassDB::bind_method(D_METHOD("get_board_extent_contract"), &Tet4DCoreApi::get_board_extent_contract);
 	ClassDB::bind_method(D_METHOD("validate_live_board_setup", "setup"), &Tet4DCoreApi::validate_live_board_setup);
+	ClassDB::bind_method(D_METHOD("get_live_nd_production_piece_catalog"), &Tet4DCoreApi::get_live_nd_production_piece_catalog);
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
 	ClassDB::bind_method(D_METHOD("list_plain_2d_parity_cases"), &Tet4DCoreApi::list_plain_2d_parity_cases);
 	ClassDB::bind_method(D_METHOD("get_plain_2d_parity_status"), &Tet4DCoreApi::get_plain_2d_parity_status);
@@ -670,6 +672,16 @@ Dictionary Tet4DCoreApi::validate_live_board_setup(const Variant &setup) const {
 		return configuration_error_dictionary("$", "The live setup contains an unsupported Variant value.");
 	}
 	return board_extent_result_dictionary(tet4d::core::validate_live_board_setup_transport(*transported.value));
+}
+
+Array Tet4DCoreApi::get_live_nd_production_piece_catalog() const {
+	Array result;
+	for (const tet4d::core::ProductionPieceSetND &catalog : tet4d::core::production_piece_catalogs_nd()) {
+		for (const tet4d::core::PieceShapeND &piece : catalog.pieces) {
+			result.push_back(piece_preview_dictionary(piece, catalog.piece_set_id));
+		}
+	}
+	return result;
 }
 
 bool Tet4DCoreApi::run_builtin_plain_2d_smoke_case() const {

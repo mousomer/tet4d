@@ -922,8 +922,11 @@ of accepted 4D behaviour. It is not E4a documentation implementation.
 
 ### Pre-54F correctness defect B — 3D/4D NEXT geometry fidelity
 
-Classification: OPEN / PRE-54F PRESENTATION-CORRECTNESS DEFECT. Recommended
-timing: fix and independently re-review before integrated 54F acceptance. It is
+Classification: IMPLEMENTED / AUTOMATED GREEN / HUMAN VISIBLE REVIEW PENDING.
+The native queue payload and thumbnail model were exact; the renderer fitted
+each 4D W pane from pane-local bounds and thereby erased shared XYZ placement
+between panes. The bounded correction derives one scale and pane-local origin
+from the complete piece, while retaining separate labeled pane anchors. It is
 not cosmetic polish and is not part of E4a.
 
 - Reproduce in Live 3D and Live 4D by cycling production piece sets until
@@ -944,7 +947,13 @@ not cosmetic polish and is not part of E4a.
 - Regression: enumerate every production 3D piece and every production 4D
   piece/piece-set variant, including embedded lower-dimensional sets; compare
   normalized thumbnail cell geometry with authoritative piece geometry. A few
-  representative pieces are insufficient.
+  representative pieces are insufficient. The implemented oracle enumerates
+  14 Live-3D definitions across `embedded_2d`/`native_3d` and 21 Live-4D
+  definitions across `embedded_2d`/`embedded_3d`/`standard_4d_5`, without a
+  hand-maintained allow-list. It proves exact cells, extents, face adjacency,
+  embeddings, W membership, renderer completeness/clipping, shared cross-W
+  placement, and queue identity/update. `FORK4` is retained as a named
+  independent-recentering regression.
 - Human verification: inspect a real-window exhaustive gallery/cycle for 3D
   and 4D, verifying recognisable geometry, grouping, and orientation against
   the queued piece evidence.

@@ -1,7 +1,7 @@
 # One-Piece Next Preview Contract
 
-Status: Stage 54D-1 implementation and mechanical verification complete;
-developer-rendered inspection complete; human acceptance pending Stage 54E
+Status: Stage 54D-1 implementation complete; pre-54F 3D/4D geometry-fidelity
+correction implemented and automated green; focused human-visible review pending
 
 ## Objective and authority
 
@@ -68,8 +68,10 @@ High Contrast, outlines, and all other accessibility styling.
 ## Shared thumbnail presentation
 
 `PieceThumbnailModel` is a reusable Godot presentation model. It validates and
-normalizes the query dictionary for drawing while retaining the canonical
-piece-local cells. It exposes deterministic drawing groups:
+normalizes payload ordering for drawing while retaining the exact canonical
+piece-local cells. "Normalize" here permits no geometric rotation, reflection,
+axis permutation, dimensional collapse, or per-group translation. It exposes
+deterministic drawing groups:
 
 - 2D: one XY cell group;
 - 3D: one compact isometric XYZ group;
@@ -81,6 +83,52 @@ projected cube-face edge as their centre-to-centre step, so a connected piece
 reads as one face-connected polycube without background gaps. Distinct 4D `W`
 groups remain intentionally separated and explicitly labeled; presentation
 must not merge cells across different `W` coordinates into a false 3D shape.
+
+The thumbnail coordinate contract is exact. Embedded 2D pieces retain fixed
+`Z=0` in 3D and fixed `Z=W=0` in 4D; embedded 3D pieces retain fixed `W=0` in
+4D. The model may sort cells and the renderer may fit the piece with one
+uniform scale and translation. No other transform is authorized.
+
+For 4D slice decomposition, every occupied W pane uses the same XYZ isometric
+projection, uniform scale, and pane-local origin derived from the complete
+piece before W grouping. Pane anchors separate the labeled W views, but cannot
+independently center or scale their cells. Consequently equal XYZ coordinates
+align in every pane, relative XYZ offsets between panes remain visible, and a
+cross-W face adjacency is represented by equal pane-local XYZ position in
+adjacent W labels.
+
+## Pre-54F geometry-fidelity correction
+
+The authoritative query and thumbnail model retain correct geometry. The
+original renderer fitted every W pane from that pane's local bounds. Those
+independent bounds, scales, and origins erased shared XYZ placement between W
+groups even though cell count and labels remained correct. `FORK4` exposes the
+failure: its canonical cells are:
+
+```text
+W=0: (-1,0,0), (0,0,0), (1,0,0)
+W=1: (0,0,1), (0,1,0)
+```
+
+The W=1 cells carry a Z/Y offset pattern relative to the centre of the W=0 X
+bar, not a pane-local two-cell bar normalized to an unrelated origin. The
+correction must fit both panes from one whole-piece XYZ frame and retain the
+existing face-connected cube projection. It must not special-case `FORK4`.
+
+Exhaustive conformance enumerates the admitted 3D and 4D piece-set registries
+and their native production definitions through a read-only diagnostic. Every
+definition passes through the actual `PieceThumbnailModel` and renderer plan.
+The oracle requires exact reconstructed cells, uniqueness, coordinate extents,
+dimensional embedding, W membership, face-adjacency edges, one renderer cell
+per model cell, and one pane per occupied W coordinate. Named `FORK4` and
+independent-W-recentering cases supplement, but do not replace, that registry
+coverage.
+
+Current registry coverage is 14 Live-3D definitions (`embedded_2d` and
+`native_3d`) and 21 Live-4D definitions (`embedded_2d`, `embedded_3d`, and
+`standard_4d_5`). This count is descriptive rather than a test allow-list: the
+oracle iterates the registry and therefore automatically covers future
+production additions.
 
 `PieceThumbnail` is the shared renderer. `NextPiecePanel` supplies the `NEXT`
 title and piece name and owns no queue decisions. Stage 54D-3 Hold must reuse

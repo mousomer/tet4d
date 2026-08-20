@@ -49,6 +49,38 @@ void require_production_shape(
 	require(match != catalogue.end(), "ND preview must be an exact production-catalogue shape");
 }
 
+void test_production_piece_catalog_registry_is_complete() {
+	const auto &catalogs = tet4d::core::production_piece_catalogs_nd();
+	require(!catalogs.empty(), "production ND piece-set registry must not be empty");
+	std::vector<std::string> seen_catalogs;
+	bool saw_3d = false;
+	bool saw_4d = false;
+	for (const tet4d::core::ProductionPieceSetND &catalog : catalogs) {
+		require(catalog.dimension == 3 || catalog.dimension == 4, "production ND catalogue rank must be 3 or 4");
+		require(!catalog.piece_set_id.empty() && !catalog.pieces.empty(), "production ND catalogue identity and pieces are required");
+		const std::string key = std::to_string(catalog.dimension) + ":" + catalog.piece_set_id;
+		require(std::find(seen_catalogs.begin(), seen_catalogs.end(), key) == seen_catalogs.end(), "production ND catalogue keys must be unique");
+		seen_catalogs.push_back(key);
+		saw_3d = saw_3d || catalog.dimension == 3;
+		saw_4d = saw_4d || catalog.dimension == 4;
+		const std::vector<tet4d::core::PieceShapeND> selected =
+				tet4d::core::plain_piece_catalog_nd(catalog.dimension, catalog.piece_set_id);
+		require(selected.size() == catalog.pieces.size(), "session catalogue lookup must consume the enumerated production registry");
+		std::vector<std::string> seen_pieces;
+		for (std::size_t index = 0; index < catalog.pieces.size(); ++index) {
+			const tet4d::core::PieceShapeND &piece = catalog.pieces[index];
+			require(same_shape(piece, selected[index]), "enumerated and session production geometry must match exactly");
+			require(!piece.name.empty() && !piece.blocks.empty(), "production piece identity and cells are required");
+			require(std::find(seen_pieces.begin(), seen_pieces.end(), piece.name) == seen_pieces.end(), "piece identities must be unique within a production set");
+			seen_pieces.push_back(piece.name);
+			for (const tet4d::core::CoordND &cell : piece.blocks) {
+				require(cell.dimension() == catalog.dimension, "production piece cells must retain the catalogue rank");
+			}
+		}
+	}
+	require(saw_3d && saw_4d, "production ND registry must enumerate both Live 3D and Live 4D");
+}
+
 tet4d::core::PlainGameSetup setup_nd(
 		int dimension,
 		const std::vector<int> &shape,
@@ -774,6 +806,7 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	test_coord_and_board_model();
+	test_production_piece_catalog_registry_is_complete();
 	test_3d_state_stepper();
 	test_4d_state_stepper();
 	test_authoritative_hard_drop_destination_nd();

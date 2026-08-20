@@ -226,13 +226,15 @@ a placeholder authority record in advance.
   review accepted 2D Relative Left/Right, 3D Relative Left/Right and
   Forward/Back, and preservation of accepted 4D behaviour. E4 lifecycle and
   view architecture remain closed.
-- **3D/4D NEXT geometry fidelity — OPEN / PRE-54F
-  PRESENTATION-CORRECTNESS DEFECT.** Enumerate every production 3D piece and
-  every production 4D piece/piece-set variant, including embedded
-  lower-dimensional sets, and compare normalized thumbnail geometry with the
-  authoritative queued piece. The bounded implementation/review brief is in
-  the professional programme. Fix and re-review before integrated 54F
-  acceptance; do not absorb it into E4a.
+- **3D/4D NEXT geometry fidelity — IMPLEMENTED / AUTOMATED GREEN / HUMAN
+  VISIBLE REVIEW PENDING.** The queue payload and thumbnail model were exact;
+  independent renderer fitting per W pane erased shared XYZ placement. One
+  complete-piece projection frame now preserves cross-W offsets. Registry-led
+  conformance covers all 14 production Live-3D and 21 production Live-4D
+  definitions, embedded lower-dimensional paths, FORK4, renderer completeness,
+  and queued identity/update without changing queue or RNG semantics. Complete
+  the focused real-window 3D/4D review before integrated 54F acceptance; do not
+  absorb it into E4a.
 
 ## Authority Transition Work
 

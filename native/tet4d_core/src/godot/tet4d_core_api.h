@@ -34,6 +34,9 @@ public:
 	Dictionary topology_transport_resolve_cell_step(const Variant &profile, const Variant &query) const;
 	Dictionary get_board_extent_contract() const;
 	Dictionary validate_live_board_setup(const Variant &setup) const;
+	// Value-owned, read-only production geometry for presentation conformance;
+	// this observation does not construct or mutate a live session or its RNG.
+	Array get_live_nd_production_piece_catalog() const;
 	bool run_builtin_plain_2d_smoke_case() const;
 	PackedStringArray list_plain_2d_parity_cases() const;
 	String get_plain_2d_parity_status() const;

@@ -1,123 +1,139 @@
-# Task Contract — Stage 54E-4b View / Camera Runtime
+# Task Contract — Pre-54F NEXT Geometry Fidelity
 
 ## Objective
 
-Implement the independently reviewed-green Stage 54E-4a contract without
-reopening its product decisions. The target handoff is Stage 54E-4b
-`IMPLEMENTED / READY_FOR_FOCUSED_VISIBLE_REVIEW`; aggregate Stage 54E-4 remains
-open until that focused real-window review is accepted.
+Make every production Live 3D and Live 4D NEXT thumbnail a faithful
+presentation of the authoritative queued piece. Correct the earliest faulty
+presentation transform, add exhaustive production-registry coverage, and keep
+queue, RNG, gameplay, and native piece definitions unchanged.
 
 ## Classification
 
 - Primary task type: `godot_product_shell`.
-- Workflow modifier: `staged_handoff`.
-- Affected layers: Godot product shell, tests, documentation, and governance.
-- Required evidence: `godot`, `integration`, `human_visual`, `documentation`,
-  and `governance_structure`.
-- Full repository gate: required because the implementation consumes an
-  architecture authority and changes shared camera/lifecycle behavior.
+- Workflow modifier: `cross_layer` because the exhaustive Godot oracle consumes
+  a read-only native production-catalogue diagnostic.
+- Affected layers: native diagnostic boundary, Godot thumbnail model/renderer,
+  tests, documentation, and visible product.
+- Required evidence: `documentation`, `godot`, `native`,
+  `parity_or_conformance`, `integration`, and `human_visual`.
+- Full repository gate: required because the change extends the NEXT authority,
+  touches the shared GDExtension boundary, and makes an exhaustive production
+  claim.
 
-## Current Authority
+## Current Authority and Finding
 
-- `docs/architecture/camera_gui_preset_semantics.md` owns the accepted view
-  lifecycle, operation, action, reset, fit, and preference contract.
-- `docs/architecture/4d_presentation_interaction_architecture.md` owns the
-  accepted `B/L/layout/V/P` separation.
-- `docs/architecture/authority_map.md` and `docs/ARCHITECTURE_CONTRACT.md` own
-  subsystem boundaries.
-- `docs/plans/professional_godot_game_programme.md`, `docs/BACKLOG.md`, and
-  `CURRENT_STATE.md` own programme and handoff status.
+- The inherited deterministic queue owner selects the next piece.
+- Native production catalogues own the queued piece identity, dimensional
+  embedding, colour ID, and canonical occupied cells.
+- `docs/architecture/next_piece_preview.md` owns the one-piece query and shared
+  thumbnail presentation contract.
+- Godot owns only validation, whole-piece presentation normalization, W-slice
+  decomposition, drawing, HUD placement, and readability.
+- The current native payload and `PieceThumbnailModel` preserve exact cells.
+  The renderer then derives bounds, scale, and origin independently for every
+  4D W group, destroying their shared XYZ placement. This is a cross-group
+  presentation-normalization defect, not an authoritative geometry defect.
 
-Authority effect: implement within existing Godot presentation authority. No
-native deterministic gameplay or Python authority transfer is performed.
+Authority effect: reuse the existing boundary. No gameplay authority transfer
+or establishment occurs.
 
 ## Allowed Systems and Paths
 
-- Godot camera rig, app orchestration, HUD/help/onboarding, and settings
-  registry paths required by the accepted contract;
-- focused Godot tests for those contracts; and
-- owning architecture, generated settings reference, programme, backlog,
-  current-state, and governance records.
+- native production-catalogue registry declarations, exact read-only
+  GDExtension transport, and native completeness tests;
+- Godot NEXT bridge, shared thumbnail renderer/planning seam, and focused
+  model/renderer/queue integration tests; and
+- the existing NEXT architecture authority, task contract, professional
+  programme, backlog, and current-state handoff records.
+
+## Scope Matrix
+
+| Layer | Allowed change | Required evidence |
+| --- | --- | --- |
+| Native/GDExtension | Read-only enumeration of supported production piece sets and their canonical definitions | Native build/tests and exact adapter transport |
+| Godot model/renderer | Exact reconstruction, shared whole-piece projection fit, W grouping, renderer plan | Exhaustive structural and renderer tests |
+| Integration | Production registry and queued preview feed the same thumbnail builder | Queue identity/update and catalogue-to-model coverage |
+| Documentation | Extend the existing NEXT authority and update active programme/handoff state | Governance/documentation checks |
+| Visible product | Focused 3D/4D NEXT inspection, explicitly including FORK4 | Real-window evidence |
 
 ## Required Changes
 
-1. Split canonical outer orientation and framing into
-   `establish_outer_view()`, `fit_current_bounds()`, and
-   `restore_fitted_framing()` with disjoint snap paths.
-2. Compose mode-aware canonical entry/reset in the app: flat orthographic 2D,
-   the accepted 3D mount, canonical `B/L/layout` plus accepted reflected outer
-   mount for Live 4D, and the replay-owned mount.
-3. Make Restart Game and same-context New Random Game preserve current view;
-   clear transient view on setup/menu/mode exit and establish canonical view on
-   re-entry.
-4. Retire continuous preset identity, `Custom`, pseudo-preset status labels,
-   ID-owned framing, and zero-caller `frame_board()`.
-5. Present the six retained IDs as stateless view actions, hide them in 2D,
-   expose one composite Reset View, and correct help/onboarding text.
-6. Route `display.ui_scale` to Accessibility reset ownership without changing
-   its persistent ID or schema.
-7. Add executable state-ownership, reset, lifecycle, action, retirement, and
-   settings coverage.
+1. Document the only permitted geometry transform: no rotation, reflection,
+   axis permutation, or per-group normalization; exact canonical cells are
+   retained, and drawing may apply one shared uniform scale plus translation.
+2. Preserve one shared XYZ projection scale and origin across every W pane;
+   only the pane anchor and explicit W label may differ.
+3. Expose a read-only diagnostic derived from native production registries so
+   tests never duplicate the piece library or infer geometry from names.
+4. Enumerate every production 3D/4D piece set from the live registries and pass
+   every canonical definition through the actual thumbnail model and renderer
+   plan.
+5. Compare exact cells, counts, uniqueness, extents, embeddings, W membership,
+   and face-adjacency edges. Prove renderer cell/group completeness.
+6. Add named FORK4 and independent-W-recentering regressions plus queued-piece
+   identity/update coverage.
 
 ## Forbidden Changes
 
-- issue #74 movement-resolution changes;
-- 3D/4D NEXT geometry work;
-- Stage 54F spacing, grid, slice-readability, validation-colour, or polish;
-- Stage 54E-5 cockpit consolidation, Hold, topology, Explorer, campaign,
-  simulation, or general settings/input redesign;
-- native gameplay or Python parity implementation; and
-- push or PR creation.
+- #74 relative-control semantics or Stage 54E-4 lifecycle behavior;
+- production piece definitions, gameplay embedding rules, movement, rotation,
+  collision, gravity, drop, lock, scoring, RNG, bag, queue, snapshots, hashes,
+  replay, trace, setup, or persistence;
+- Hold, Stage 54E-5 cockpit consolidation, #69 board spacing, #70 grid
+  hierarchy, general 54F polish, topology, Explorer, campaign, or simulation;
+- a second hand-authored preview catalogue, name-based reconstruction, Python
+  mirror, or FORK4-specific production rendering path; and
+- push or pull-request creation.
 
 ## Acceptance Criteria
 
-1. Orientation helpers cannot copy framing state, and framing helpers cannot
-   write orientation, projection, reflection-active state, `B`, `L`, or layout.
-2. Reset View restores exact canonical presentation while preserving gameplay
-   and preferences in 2D, 3D, 4D, and replay.
-3. Fit preserves current orientation, projection, reflection-active state,
-   `B`, `L`, layout, content, and preferences.
-4. Restart/new same context preserve view; context destruction and re-entry do
-   not leak transient pose.
-5. No continuous preset identity or `frame_board()` definition/caller remains.
-6. Display Reset preserves UI scale; Accessibility Reset restores its default;
-   persistence remains compatible.
-7. Focused tests, pinned Godot verification, full repository verification, and
-   real-window review evidence are recorded truthfully.
+1. Every production Live 3D and Live 4D piece/piece-set variant is enumerated
+   from registries and accepted by the actual thumbnail model.
+2. Model geometry equals canonical geometry exactly; cell count, uniqueness,
+   extents, embedding, W membership, and face adjacency are unchanged.
+3. All W panes use one whole-piece XYZ projection frame, preserving cross-W
+   offsets and the visual alignment that encodes cross-W face adjacency.
+4. Renderer plans contain exactly one cell instance per model cell and one
+   pane per occupied W coordinate.
+5. FORK4 retains its three-cell X bar in W=0 and its offset Y/Z branch in W=1
+   without independently re-centering either pane.
+6. NEXT identity equals the authoritative queue head, updates after spawn, and
+   does not change RNG or queue semantics.
+7. Focused native/Godot checks, pinned Godot verification, sanitation,
+   governance/documentation checks, and the full repository gate pass.
+8. Real-window inspection is reported truthfully and is not inferred from
+   headless structural evidence.
 
 ## Automated Verification
 
-- focused Godot suite and touched-contract tests;
+- focused native catalogue/GDExtension tests;
+- focused Godot NEXT model, renderer, registry, and queue integration tests;
 - `git diff --check`;
 - `./scripts/check_git_sanitation_repo.sh`;
-- routed documentation/governance/configuration validators;
-- pinned `GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot
+- routed governance/documentation checks;
+- `GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot
   ./scripts/verify_godot_4_7.sh`;
 - `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ## Manual Verification
 
-- real-window 2D/3D/4D/replay review without claiming headless tests as visual
-  acceptance.
+- In a real Godot window, inspect representative elongated, planar,
+  volumetric, branched, embedded, single-W, multi-W, and cross-W pieces.
+- Explicitly compare FORK4 NEXT with its subsequent active spawn.
+- Automated completion alone advances only to
+  `IMPLEMENTED / AUTOMATED GREEN / HUMAN VISIBLE REVIEW PENDING`.
 
 ## Documentation Updates
 
-- record the concrete implementation in the canonical view architecture and
-  Live-4D pointer;
-- update authority-map wording without claiming an authority transfer;
-- update the programme, backlog, and restart handoff to the E4b visible-review
-  gate; and
-- regenerate the settings reference after the UI-scale category correction.
+- extend `docs/architecture/next_piece_preview.md` with the exact transform and
+  shared-W-frame invariant;
+- record the root cause and exhaustive coverage in the professional programme;
+- update `docs/BACKLOG.md` and `CURRENT_STATE.md` proportionally; and
+- leave the authority map unchanged unless ownership actually changes.
 
 ## Explicit Deferrals
 
-- issue #74 movement resolution;
-- NEXT geometry fidelity;
-- Stage 54F findings; and
-- Stage 54E-5 and later programme work.
-
-## Handoff
-
-Automated completion advances Stage 54E-4b only to
-`IMPLEMENTED / READY_FOR_FOCUSED_VISIBLE_REVIEW`. Issue #74, NEXT fidelity,
-Stage 54F findings, and E5/later remain explicitly open and separate.
+- all forbidden adjacent programme work listed above;
+- optional piece sets that are not admitted by current production registries;
+- general thumbnail redesign beyond geometry readability; and
+- integrated Stage 54F acceptance.
