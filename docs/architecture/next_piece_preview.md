@@ -1,7 +1,7 @@
 # One-Piece Next Preview Contract
 
-Status: Stage 54D-1 implementation complete; pre-54F 3D/4D geometry-fidelity
-correction implemented and automated green; focused human-visible review pending
+Status: Stage 54D-1 implementation complete; pre-54F 3D/4D NEXT geometry
+fidelity COMPLETE / HUMAN VISIBLE REVIEW ACCEPTED
 
 ## Objective and authority
 

@@ -226,15 +226,17 @@ a placeholder authority record in advance.
   review accepted 2D Relative Left/Right, 3D Relative Left/Right and
   Forward/Back, and preservation of accepted 4D behaviour. E4 lifecycle and
   view architecture remain closed.
-- **3D/4D NEXT geometry fidelity — IMPLEMENTED / AUTOMATED GREEN / HUMAN
-  VISIBLE REVIEW PENDING.** The queue payload and thumbnail model were exact;
+- **3D/4D NEXT geometry fidelity — COMPLETE / HUMAN VISIBLE REVIEW
+  ACCEPTED.** The queue payload and thumbnail model were exact;
   independent renderer fitting per W pane erased shared XYZ placement. One
   complete-piece projection frame now preserves cross-W offsets. Registry-led
   conformance covers all 14 production Live-3D and 21 production Live-4D
   definitions, embedded lower-dimensional paths, FORK4, renderer completeness,
-  and queued identity/update without changing queue or RNG semantics. Complete
-  the focused real-window 3D/4D review before integrated 54F acceptance; do not
-  absorb it into E4a.
+  and queued identity/update without changing queue or RNG semantics. Focused
+  Godot 4.7.1 real-window review accepted representative native and embedded
+  3D/4D pieces, FORK4's shared cross-W placement, renderer completeness, and
+  queue progression. This closes only the bounded correctness item; do not
+  absorb it into E4a or integrated 54F acceptance.
 
 ## Authority Transition Work
 

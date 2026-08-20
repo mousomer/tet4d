@@ -274,14 +274,15 @@ CODEX_MODE=1 ./scripts/verify.sh
    Absolute and accepted 4D behaviour remain regression-protected. Focused
    Godot verification and the full repository gate pass. This does not reopen
    Stage 54E-4 lifecycle or view architecture.
-3. Pre-54F 3D/4D NEXT geometry fidelity is IMPLEMENTED / AUTOMATED GREEN /
-   HUMAN VISIBLE REVIEW PENDING. The fault was independent renderer fitting of
+3. Pre-54F 3D/4D NEXT geometry fidelity is COMPLETE / HUMAN VISIBLE REVIEW
+   ACCEPTED. The fault was independent renderer fitting of
    each W pane, not queue identity, production geometry, embedding, W grouping,
    or the thumbnail model. One complete-piece projection frame now preserves
    cross-W XYZ offsets. Exhaustive registry tests cover 14 Live-3D and 21
    Live-4D definitions across every admitted piece set, plus queue updates and
-   named FORK4 regression. Perform the focused real-window comparison before
-   marking this correctness item complete.
+   named FORK4 regression. Focused Godot 4.7.1 real-window review accepted
+   representative native and embedded 3D/4D shapes, FORK4's non-recentered
+   cross-W placement, complete labeled panes, and NEXT-to-spawn queue updates.
 4. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

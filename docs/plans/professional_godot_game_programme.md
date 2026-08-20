@@ -922,12 +922,18 @@ of accepted 4D behaviour. It is not E4a documentation implementation.
 
 ### Pre-54F correctness defect B — 3D/4D NEXT geometry fidelity
 
-Classification: IMPLEMENTED / AUTOMATED GREEN / HUMAN VISIBLE REVIEW PENDING.
+Classification: COMPLETE / HUMAN VISIBLE REVIEW ACCEPTED.
 The native queue payload and thumbnail model were exact; the renderer fitted
 each 4D W pane from pane-local bounds and thereby erased shared XYZ placement
 between panes. The bounded correction derives one scale and pane-local origin
 from the complete piece, while retaining separate labeled pane anchors. It is
 not cosmetic polish and is not part of E4a.
+
+Focused Godot 4.7.1 real-window review accepted representative native and
+embedded 3D/4D pieces, single- and multi-W presentation, FORK4's authoritative
+cross-W XYZ placement, complete labeled panes, and NEXT-to-spawn queue
+progression. General 4D board readability and integrated 54F review remain
+outside this bounded correctness closure.
 
 - Reproduce in Live 3D and Live 4D by cycling production piece sets until
   affected queued identities appear; capture authoritative queued identity and
