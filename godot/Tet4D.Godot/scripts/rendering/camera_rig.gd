@@ -2,6 +2,8 @@ extends Node3D
 
 class_name CameraRig
 
+signal presented_orientation_changed
+
 const PYTHON_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
 const PYTHON_DISPLAY_PITCH_RAD := -0.4537856055185257  # -26 degrees.
 const LIVE_3D_DISPLAY_YAW_RAD := 0.5585053606381855  # 32 degrees.
@@ -72,6 +74,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	var yaw_before := _current_yaw
 	var t: float = 1.0 if _interpolation_scale <= 0.0 else clampf(delta * 8.0 * _interpolation_scale, 0.0, 1.0)
 	_current_focus = _current_focus.lerp(_target_focus, t)
 	_current_distance = lerpf(_current_distance, _target_distance, t)
@@ -79,6 +82,8 @@ func _process(delta: float) -> void:
 	_current_pitch = lerpf(_current_pitch, _target_pitch, t)
 	_current_roll = lerpf(_current_roll, _target_roll, t)
 	_update_camera()
+	if not is_equal_approx(yaw_before, _current_yaw):
+		presented_orientation_changed.emit()
 
 
 func establish_canonical_projection() -> void:
@@ -240,11 +245,13 @@ func set_control_frame_mapping(mapping: Dictionary) -> void:
 		return
 	_orientation_basis_snapshot["visible_axes"] = [str(mapping.get("horizontal_axis", "+X")), "+Y", str(mapping.get("depth_axis", "+Z"))]
 	_orientation_basis_snapshot["slice_axis"] = str(mapping.get("slice_axis", "+W"))
+	_orientation_basis_snapshot["control_frame_dimension"] = int(mapping.get("dimension", 4))
+	_orientation_basis_snapshot["translation_commands"] = mapping.get("translation_commands", {}).duplicate(true)
 	_update_gizmo_axes()
 
 
 func control_frame_yaw() -> float:
-	return _target_yaw
+	return _current_yaw
 
 
 func apply_outer_view_action(id: String) -> bool:
@@ -535,10 +542,13 @@ func _update_gizmo_axes() -> void:
 	var visible_axes: Array = _orientation_basis_snapshot.get("visible_axes", ["+X", "+Y", "+Z"])
 	var horizontal := str(visible_axes[0]) if visible_axes.size() > 0 else "+X"
 	var depth := str(visible_axes[2]) if visible_axes.size() > 2 else "+Z"
-	_update_gizmo_axis("Horizontal", horizontal, _presented_direction(_signed_direction(Vector3.RIGHT, horizontal)))
+	var control_frame_dimension := int(_orientation_basis_snapshot.get("control_frame_dimension", 4))
+	var horizontal_direction := _canonical_axis_direction(horizontal) if control_frame_dimension == 3 else _signed_direction(Vector3.RIGHT, horizontal)
+	var depth_direction := _canonical_axis_direction(depth) if control_frame_dimension == 3 else _signed_direction(Vector3.BACK, depth)
+	_update_gizmo_axis("Horizontal", horizontal, _presented_direction(horizontal_direction))
 	# +Y is fixed as the gravity/down direction in every valid presentation basis.
 	_update_gizmo_axis("Gravity", str(_orientation_basis_snapshot.get("gravity_axis", "+Y")), Vector3.DOWN)
-	_update_gizmo_axis("Depth", depth, _presented_direction(_signed_direction(Vector3.BACK, depth)))
+	_update_gizmo_axis("Depth", depth, _presented_direction(depth_direction))
 
 
 func _presented_direction(direction: Vector3) -> Vector3:
@@ -571,6 +581,17 @@ func _update_gizmo_axis(slot: String, label_text: String, direction: Vector3) ->
 
 func _signed_direction(base: Vector3, signed_axis: String) -> Vector3:
 	return -base if signed_axis.begins_with("-") else base
+
+
+func _canonical_axis_direction(signed_axis: String) -> Vector3:
+	match signed_axis:
+		"+X": return Vector3.RIGHT
+		"-X": return Vector3.LEFT
+		"+Y": return Vector3.UP
+		"-Y": return Vector3.DOWN
+		"+Z": return Vector3.BACK
+		"-Z": return Vector3.FORWARD
+		_: return Vector3.ZERO
 
 
 func _axis_quaternion(direction: Vector3) -> Quaternion:

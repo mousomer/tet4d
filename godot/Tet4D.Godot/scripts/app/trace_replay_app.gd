@@ -57,6 +57,7 @@ var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
 var _translation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _rotation_frame := ControlFrameMappingScript.FRAME_RELATIVE
+var _control_frame_presentation_key := ""
 var _live_tick_accumulator := 0.0
 var _live_gravity_interval_seconds := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
 var _active_live_setup: Dictionary = {}
@@ -309,10 +310,10 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if _live_2d_paused or _live_snapshot_game_over():
 		return _event_action_pressed(event, _live_gameplay_action_names())
 	if _event_action_pressed_once(event, ["live_move_left", "live_2d_move_left"]):
-		_dispatch_live_gameplay_command("move_left")
+		_dispatch_live_2d_control_intent("move_left")
 		return true
 	if _event_action_pressed_once(event, ["live_move_right", "live_2d_move_right"]):
-		_dispatch_live_gameplay_command("move_right")
+		_dispatch_live_2d_control_intent("move_right")
 		return true
 	if _event_action_pressed_once(event, ["live_rotate_cw", "live_2d_rotate_cw"]):
 		_dispatch_live_gameplay_command("rotate_cw")
@@ -973,6 +974,7 @@ func _resolve_scene_nodes() -> void:
 		_live_4d_presentation_root = _world_root.get_node_or_null("Live4DPresentationRoot") as Node3D
 	if _camera_rig != null:
 		_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
+		_connect_camera_control_frame_signal()
 
 
 func _build_world_in_game_viewport() -> void:
@@ -1000,6 +1002,7 @@ func _build_world_in_game_viewport() -> void:
 	camera.fov = 50.0
 	_camera_rig.add_child(camera)
 	_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
+	_connect_camera_control_frame_signal()
 
 	var light := DirectionalLight3D.new()
 	light.name = "DirectionalLight3D"
@@ -1118,17 +1121,35 @@ func _sync_control_frames_from_setup() -> void:
 	_rotation_frame = ControlFrameMappingScript.normalize_frame(str(frames.get("rotation_frame", _rotation_frame)))
 
 
-func _refresh_control_frame_presentation() -> void:
-	if _mode not in [MODE_LIVE_3D, MODE_LIVE_4D]:
-		return
-	var mapping = _control_frame_mapping(4 if _mode == MODE_LIVE_4D else 3)
-	var snapshot: Dictionary = mapping.snapshot()
-	snapshot["translation_frame"] = _translation_frame
+func _refresh_control_frame_presentation() -> bool:
+	if _mode not in [MODE_LIVE_2D, MODE_LIVE_3D, MODE_LIVE_4D]:
+		_control_frame_presentation_key = ""
+		return false
+	var dimension := 4 if _mode == MODE_LIVE_4D else (3 if _mode == MODE_LIVE_3D else 2)
+	var mapping = _control_frame_mapping(dimension)
+	var snapshot: Dictionary = mapping.effective_translation_snapshot(_translation_frame)
 	snapshot["rotation_frame"] = _rotation_frame
+	var presentation_key := "%s|%s" % [_mode, str(snapshot)]
+	var changed := presentation_key != _control_frame_presentation_key
+	_control_frame_presentation_key = presentation_key
 	if _camera_rig != null and _camera_rig.has_method("set_control_frame_mapping"):
 		_camera_rig.set_control_frame_mapping(snapshot)
 	if _hud != null and _hud.has_method("set_control_frame_snapshot"):
 		_hud.set_control_frame_snapshot(snapshot)
+	return changed
+
+
+func _connect_camera_control_frame_signal() -> void:
+	if _camera_rig == null or not _camera_rig.has_signal("presented_orientation_changed"):
+		return
+	var callback := Callable(self, "_on_camera_presented_orientation_changed")
+	if not _camera_rig.is_connected("presented_orientation_changed", callback):
+		_camera_rig.connect("presented_orientation_changed", callback)
+
+
+func _on_camera_presented_orientation_changed() -> void:
+	if _mode in [MODE_LIVE_2D, MODE_LIVE_3D] and _refresh_control_frame_presentation():
+		_refresh_hud()
 
 
 func _bundle_case_count() -> int:
@@ -1361,7 +1382,11 @@ func _control_frame_mapping(dimension: int):
 			_live_4d_local_orientation.local_yaw
 		)
 	var yaw := _camera_rig.control_frame_yaw() if _camera_rig != null and _camera_rig.has_method("control_frame_yaw") else 0.0
-	return ControlFrameMappingScript.for_3d(yaw)
+	return ControlFrameMappingScript.for_3d(yaw) if dimension == 3 else ControlFrameMappingScript.for_2d(yaw)
+
+
+func _dispatch_live_2d_control_intent(intent: String) -> bool:
+	return _dispatch_live_gameplay_command(_control_frame_mapping(2).translation_command(intent, _translation_frame))
 
 
 func _dispatch_live_3d_control_intent(intent: String) -> bool:
@@ -1685,7 +1710,10 @@ func _process_live_repeat_action(
 		else:
 			_dispatch_live_3d_gameplay_command(command)
 	else:
-		_dispatch_live_gameplay_command(command)
+		if command in ["move_left", "move_right"]:
+			_dispatch_live_2d_control_intent(command)
+		else:
+			_dispatch_live_gameplay_command(command)
 
 
 func _reset_live_repeat_state() -> void:

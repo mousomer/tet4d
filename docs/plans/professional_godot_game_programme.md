@@ -884,16 +884,20 @@ an explicit blocker, and non-blocking defects have an owner or deliberate
 deferral. Grid strengthening is required only if evidence classifies grid
 visibility as blocking comprehension or accessibility.
 
-### Pre-54F correctness defect A — 3D control-arrow truthfulness
+### Pre-54F correctness defect A — cross-dimensional relative-control truthfulness
 
-Classification: OPEN / PRE-54F CORRECTNESS DEFECT. Recommended timing: fix and
-independently re-review after the E4 contract is stable and before integrated
-54F acceptance. It is not E4a documentation implementation.
+Classification: COMPLETE / REVIEWED GREEN. The bounded issue #74 correction is
+implemented after the stable E4 contract; focused Godot projection/integration
+tests and the full repository gate are green. Human-visible review accepted 2D
+Relative Left/Right, 3D Relative Left/Right and Forward/Back, and preservation
+of accepted 4D behaviour. It is not E4a documentation implementation.
 
-- Reproduce a Live 3D game with Translation frame = Relative, rotate the
-  camera, record what the orientation arrows claim, issue each horizontal/depth
-  movement command, and compare the configured resolver mapping with actual
-  movement. Repeat the complete procedure with Translation frame = Absolute.
+- Reproduce Live 2D and Live 3D games with Translation frame = Relative,
+  rotate the outer camera, issue each advertised movement intent, and compare
+  the resolver mapping with actual projected movement. In 2D, Left/Right must
+  remain screen-relative. In 3D, Left/Right must remain screen-relative while
+  Forward recedes and Back approaches. Repeat with Translation frame =
+  Absolute and protect accepted Live-4D behaviour as the reference regression.
 - Authority owner: the established movement-command resolver/native gameplay
   boundary owns actual legal movement; Godot's control-frame mapping, input
   routing, and orientation-gizmo presentation own truthful command guidance.
@@ -905,12 +909,14 @@ independently re-review after the E4 contract is stable and before integrated
   the selected frame. Relative may rotate resolver and arrows together;
   Absolute may keep canonical movement and arrows together. Arrows rotating
   while movement meaning does not is forbidden.
-- Regression: cross-product Relative/Absolute, canonical and rotated camera
-  orientations, each advertised Right/Left/Forward/Back command, resolver
-  output, actual native displacement, and rendered arrow label/direction.
-- Human verification: in a real window, rotate the camera and play commands in
-  both frame modes; arrows and observed motion must agree without relying on
-  test-only diagnostics.
+- Regression: cross-product Relative/Absolute, canonical and rotated 2D/3D
+  camera orientations, representative 3D pitches, each advertised
+  Right/Left/Forward/Back command, initial and repeated input, resolver output,
+  actual native displacement, and rendered helper/arrow label and direction.
+  The accepted 4D `B + Q(L.local_yaw)` matrix must remain unchanged.
+- Human verification: in a real window, rotate the 2D and 3D cameras and play
+  commands in both frame modes; help, arrows where present, and observed motion
+  must agree without relying on test-only diagnostics.
 - Exclusions: no movement-rule redesign, no 4D basis/lifecycle change, no
   camera-preset implementation, and no remapping UI overhaul.
 

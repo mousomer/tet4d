@@ -215,13 +215,17 @@ a placeholder authority record in advance.
 
 ### Pre-54F correctness findings
 
-- **3D control-arrow truthfulness — OPEN / PRE-54F CORRECTNESS DEFECT.** In
-  both Relative and Absolute translation-frame modes, reproduce after camera
-  rotation and compare arrow claims, `ControlFrameMapping`, issued canonical
-  command, and actual movement. Arrows must always describe the movement that
-  will occur. The bounded implementation/review brief is in the professional
-  programme. Fix and re-review before integrated 54F acceptance; do not absorb
-  it into E4a.
+- **Cross-dimensional relative-control truthfulness — COMPLETE / REVIEWED GREEN
+  / issue #74.** Live 2D now resolves
+  signed canonical X from presented outer yaw. Live 3D now resolves
+  screen-relative Left/Right and viewer-away/viewer-toward Forward/Back from
+  the outer-camera convention. Initial/repeated input, HUD, and the 3D gizmo
+  consume one effective mapping; Absolute and accepted Live-4D
+  `B + Q(L.local_yaw)` behaviour are protected by regression tests. Focused
+  Godot verification and the full repository gate are green. Human-visible
+  review accepted 2D Relative Left/Right, 3D Relative Left/Right and
+  Forward/Back, and preservation of accepted 4D behaviour. E4 lifecycle and
+  view architecture remain closed.
 - **3D/4D NEXT geometry fidelity — OPEN / PRE-54F
   PRESENTATION-CORRECTNESS DEFECT.** Enumerate every production 3D piece and
   every production 4D piece/piece-set variant, including embedded

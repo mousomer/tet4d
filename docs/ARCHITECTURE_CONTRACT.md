@@ -114,6 +114,16 @@ outside its ownership. Screen-right acceptance uses actual
 inspection. Normal gameplay does not expose roll, while generic camera roll
 remains reusable outside that mode.
 
+The same Godot input-adaptation authority owns dimension-specific relative
+translation adapters without changing native movement legality. Live 2D
+selects signed canonical X from the currently rendered outer yaw; Live 3D
+selects signed canonical X/Z so Left/Right remain screen-horizontal and
+Forward/Back remain viewer-away/viewer-toward. Live 4D retains exact
+`B + Q(L.local_yaw)` semantics. These adapters share one effective mapping
+snapshot with input dispatch, held-input repetition, HUD guidance, and gizmo
+labels/directions. Absolute translation bypasses presentation remapping, and
+pitch never promotes gravity axis Y into ordinary movement.
+
 The Live-4D app owns presentation lifecycle orchestration. Entry, new/random
 launch, Restart Game, and Reset View restore ephemeral `B/L/V/P` defaults and
 recompute anchors, bounds, and fit reference. Reset View is presentation-only;

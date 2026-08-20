@@ -2416,7 +2416,7 @@ func _update_control_hint_panel(
 		return
 	compact = bool(panel.get_meta("hint_compact", compact))
 	var basis_key := str(_live_4d_basis_snapshot.get("key", "")) if mode == "live_4d" else ""
-	var control_frame_key := str(_control_frame_snapshot) if mode in ["live_3d", "live_4d"] else ""
+	var control_frame_key := str(_control_frame_snapshot) if mode in ["live_2d", "live_3d", "live_4d"] else ""
 	var cache_key := "%s|%s|%s|%s|%s|%s" % [mode, str(warning), warning_text, str(compact), basis_key, control_frame_key]
 	if str(panel.get_meta("hint_cache_key", "")) == cache_key:
 		return
@@ -2443,7 +2443,7 @@ func _update_control_hint_panel(
 func _control_hint_groups_for_mode(mode: String) -> Array:
 	match mode:
 		"live_2d":
-			return live_2d_control_hint_groups()
+			return LiveInputContractScript.control_hint_groups("live_2d", {}, _control_frame_snapshot)
 		"live_3d":
 			return LiveInputContractScript.control_hint_groups("live_3d", {}, _control_frame_snapshot)
 		"live_4d":

@@ -59,7 +59,13 @@ Define requirements for the classic `(x, y)` mode implemented by:
 
 ## 5. Controls and UX
 
-1. Movement: left/right.
+1. Movement: left/right. In the default `relative` translation frame these
+   intents mean presented screen-left/screen-right even after the outer camera
+   rotates; the Godot adapter selects canonical `-X/+X` from the currently
+   rendered yaw. `absolute` keeps canonical `-X/+X` movement. Because 2D has
+   no ordinary Z translation, the relative mapping changes only after an
+   edge-on `+/-90` degree boundary; the exact zero-projection tie retains the
+   canonical sign deterministically and verification covers both sides.
 2. Soft drop, hard drop, and `x-y` rotation only.
 3. System controls: restart/menu/quit/toggle-grid.
 4. Grid off mode must keep a visible board shadow.

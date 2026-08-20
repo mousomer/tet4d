@@ -86,6 +86,22 @@ func run() -> Array:
 			failures.append("Live 2D must open with orthographic projection")
 		if app._hud._camera_view_action_menu == null or app._hud._camera_view_action_menu.visible:
 			failures.append("ordinary Live 2D must not expose named view actions")
+		app._camera_rig._current_yaw = PI
+		app._camera_rig._target_yaw = PI
+		app._camera_rig._update_camera()
+		app._refresh_hud()
+		app._dispatch_live_2d_control_intent("move_right")
+		if str(app._current_snapshot.get("last_command", "")) != "move_left":
+			failures.append("Live 2D Relative Right must dispatch canonical Left from the rear view")
+		if not str(LiveInputContractScript.control_hint_groups("live_2d", {}, app._hud._control_frame_snapshot)).contains("Left / Right [-X]"):
+			failures.append("Live 2D helper must share the rear-view Relative Right mapping")
+		app._reset_live_2d()
+		app._process_live_repeat_action("move_right", true, "move_right", 0.0, 0.0, 0.0)
+		app._process_live_repeat_action("move_right", true, "move_right", 0.0, 0.0, 0.01)
+		if str(app._current_snapshot.get("last_command", "")) != "move_left":
+			failures.append("held Live 2D Relative Right must use the same rear-view mapping")
+		app._reset_live_repeat_state()
+		app._reset_live_2d()
 		app._camera_rig.nudge_yaw(0.25)
 		app._camera_rig.zoom(-1.0)
 		app._hud._settings_store.set_value("display.ui_scale", "large")
@@ -187,6 +203,17 @@ func run() -> Array:
 			failures.append("live 3D mode should create a live 3D snapshot, got %s" % str(live_3d_snapshot.get("trace_type", "")))
 		if str(live_3d_snapshot.get("current_piece", "")) != "I3":
 			failures.append("live 3D should start with native I3 piece, got %s" % str(live_3d_snapshot.get("current_piece", "")))
+		app._camera_rig._current_yaw = PI * 0.5
+		app._camera_rig._target_yaw = PI * 0.5
+		app._camera_rig._update_camera()
+		app._refresh_hud()
+		app._dispatch_live_3d_control_intent("move_x_pos")
+		if str(app._current_snapshot.get("last_command", "")) != "move_z_neg":
+			failures.append("Live 3D Relative Right must dispatch canonical -Z at +90 yaw")
+		var live_3d_control_help := str(LiveInputContractScript.control_hint_groups("live_3d", {}, app._hud._control_frame_snapshot))
+		if not live_3d_control_help.contains("Left / Right [-Z]") or not live_3d_control_help.contains("Forward / Back [-X]"):
+			failures.append("Live 3D helper must share the +90 yaw Right/Forward mapping")
+		app._reset_live_3d()
 		var live_3d_initial_hash := str(app._live_bridge.live_3d_state_hash())
 		app._dispatch_live_3d_gameplay_command("move_x_pos")
 		if str(app._live_bridge.live_3d_state_hash()) == live_3d_initial_hash:

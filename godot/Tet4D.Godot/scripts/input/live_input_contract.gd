@@ -127,7 +127,7 @@ static func display_key(action_name: String) -> String:
 static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
 	match mode:
 		"live_2d":
-			return _live_2d_groups()
+			return _live_2d_groups(control_frame)
 		"live_3d":
 			return _live_3d_groups(control_frame)
 		"live_4d":
@@ -136,9 +136,13 @@ static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}, c
 			return []
 
 
-static func _live_2d_groups() -> Array:
+static func _live_2d_groups(control_frame: Dictionary = {}) -> Array:
+	var legacy := control_frame.is_empty()
+	var relative := str(control_frame.get("translation_frame", "relative")) == "relative"
+	var horizontal := str(control_frame.get("horizontal_axis", "+X"))
+	var movement_label := "Move left / right" if legacy else ("Left / Right [%s]" % horizontal if relative else "X− / X+")
 	return [
-		{"group": "Piece movement", "items": [[_pair("live_move_left", "live_move_right"), "Move left / right"], [_pair("live_2d_move_left", "live_2d_move_right"), "Move left / right"]]},
+		{"group": "Piece movement", "note": "Controls follow the current view." if relative else "Canonical X axis.", "items": [[_pair("live_move_left", "live_move_right"), movement_label], [_pair("live_2d_move_left", "live_2d_move_right"), movement_label]]},
 		{"group": "Piece rotation", "items": [[_all_keys("live_rotate_cw"), "Rotate clockwise"], [_display_key("live_rotate_ccw"), "Rotate counter-clockwise"]]},
 		{"group": "Drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop"], [_display_key("live_hard_drop"), "Hard Drop"]]},
 		{"group": "Camera", "items": [["F", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore flat canonical view)"]]},
@@ -156,7 +160,7 @@ static func _live_3d_groups(control_frame: Dictionary = {}) -> Array:
 	var move_rows := [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "X− / X+"], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Z− / Z+"]] if legacy or not relative else [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "Left / Right [%s]" % horizontal], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Forward / Back [%s]" % depth]]
 	var rotation_note := "Planes follow the current view." if rotation_relative else "Canonical XYZ planes."
 	return [
-		{"group": "Piece movement", "note": "Controls follow the current view." if relative else "Canonical X/Z axes.", "items": move_rows},
+		{"group": "Piece movement", "note": "Controls follow the current view; Forward recedes and Back approaches." if relative else "Canonical X/Z axes.", "items": move_rows},
 		{"group": "Piece rotation", "note": rotation_note, "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ"]]},
 		{"group": "Drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop"], [_display_key("live_3d_hard_drop"), "Hard Drop"]]},
 		{"group": "Camera", "items": camera_helper_items() + [["Double-click", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore canonical view)"]]},

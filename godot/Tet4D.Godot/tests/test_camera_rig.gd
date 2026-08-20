@@ -71,6 +71,7 @@ func run() -> Array:
 		failures.append("live 3D view status must not claim persistent action identity")
 	if status.find("above") == -1 or status.find("fit OK") == -1 or status.find("ortho") == -1 or not status.begins_with("View:"):
 		failures.append("live 3D camera status should show orthographic above-board fit state: %s" % status)
+	_assert_live_2d_3d_relative_projection(failures, rig)
 
 	rig.establish_outer_view(CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD, 0.0, true)
 	rig.fit_current_bounds(
@@ -322,6 +323,56 @@ func _assert_live_4d_signed_correspondence(failures: Array, rig, presentation_ro
 					failures.append("%s production away depth %.9f must match residual-yaw helper %.9f" % [label, away_depth, analytical_depth])
 
 
+func _assert_live_2d_3d_relative_projection(failures: Array, rig) -> void:
+	var focus: Vector3 = rig._current_focus
+	for yaw in [0.0, deg_to_rad(100.0), PI, deg_to_rad(-100.0)]:
+		rig.establish_outer_view(yaw, 0.0, 0.0, false)
+		var mapping_2d = ControlFrameMappingScript.for_2d(rig.control_frame_yaw())
+		var right_command_2d: String = mapping_2d.translation_command("move_right", "relative")
+		var right_delta_2d := Vector3.RIGHT if right_command_2d == "move_right" else Vector3.LEFT
+		var origin_screen_2d: Vector2 = rig.project_world_point(focus)
+		var destination_screen_2d: Vector2 = rig.project_world_point(focus + right_delta_2d)
+		if destination_screen_2d.x - origin_screen_2d.x <= SCREEN_RIGHT_TOLERANCE_PX:
+			failures.append("2D Relative Right must increase actual screen X at yaw %.0f" % rad_to_deg(yaw))
+		if mapping_2d.translation_command("move_right", "absolute") != "move_right":
+			failures.append("2D Absolute Right must remain canonical at yaw %.0f" % rad_to_deg(yaw))
+	for yaw in [0.0, PI * 0.5, PI, -PI * 0.5]:
+		for pitch in [0.0, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD, deg_to_rad(60.0)]:
+			rig.establish_outer_view(yaw, pitch, 0.0, false)
+			var mapping_3d = ControlFrameMappingScript.for_3d(rig.control_frame_yaw())
+			var effective: Dictionary = mapping_3d.effective_translation_snapshot("relative")
+			var commands: Dictionary = effective.get("translation_commands", {})
+			var right_command := str(commands.get("right", ""))
+			var forward_command := str(commands.get("forward", ""))
+			var right_delta := _canonical_world_delta(right_command)
+			var forward_delta := _canonical_world_delta(forward_command)
+			var origin_screen: Vector2 = rig.project_world_point(focus)
+			var right_screen: Vector2 = rig.project_world_point(focus + right_delta)
+			if right_screen.x - origin_screen.x <= SCREEN_RIGHT_TOLERANCE_PX:
+				failures.append("3D Relative Right must increase actual screen X at yaw %.0f pitch %.0f" % [rad_to_deg(yaw), rad_to_deg(pitch)])
+			var forward_origin_view: Vector3 = rig.camera_space_point(focus)
+			var forward_destination_view: Vector3 = rig.camera_space_point(focus + forward_delta)
+			if forward_origin_view.z - forward_destination_view.z <= AWAY_DEPTH_TOLERANCE:
+				failures.append("3D Relative Forward must recede at yaw %.0f pitch %.0f" % [rad_to_deg(yaw), rad_to_deg(pitch)])
+			rig.set_control_frame_mapping(effective)
+			var gizmo := rig.get_node_or_null("OrientationGizmo") as Node3D
+			var horizontal_arrow: MeshInstance3D = gizmo.get_node_or_null("HorizontalArrow") as MeshInstance3D if gizmo != null else null
+			var depth_arrow: MeshInstance3D = gizmo.get_node_or_null("DepthArrow") as MeshInstance3D if gizmo != null else null
+			if horizontal_arrow == null or horizontal_arrow.position.normalized().distance_to(right_delta) > 0.001 or str(horizontal_arrow.get_meta("signed_axis", "")) != str(effective.get("horizontal_axis", "")):
+				failures.append("3D horizontal gizmo must share the effective Right mapping at yaw %.0f" % rad_to_deg(yaw))
+			if depth_arrow == null or depth_arrow.position.normalized().distance_to(forward_delta) > 0.001 or str(depth_arrow.get_meta("signed_axis", "")) != str(effective.get("depth_axis", "")):
+				failures.append("3D depth gizmo must share the effective Forward mapping at yaw %.0f" % rad_to_deg(yaw))
+	var current_yaw_before: float = rig._current_yaw
+	var target_yaw_before: float = rig._target_yaw
+	rig._current_yaw = 0.0
+	rig._target_yaw = PI
+	if not is_equal_approx(rig.control_frame_yaw(), 0.0):
+		failures.append("control-frame resolution must consume rendered current yaw during interpolation")
+	rig._current_yaw = current_yaw_before
+	rig._target_yaw = target_yaw_before
+	rig._update_camera()
+
+
 func _mapped_displayed_points(mapper, orientation, command: String) -> Array:
 	var delta := _canonical_delta(command)
 	var destination := LIVE_4D_INTERIOR_POINT.duplicate()
@@ -399,6 +450,15 @@ func _canonical_delta(command: String) -> Array:
 		"move_z_neg": return [0, 0, -1, 0]
 		"move_z_pos": return [0, 0, 1, 0]
 		_: return [0, 0, 0, 0]
+
+
+func _canonical_world_delta(command: String) -> Vector3:
+	match command:
+		"move_x_neg": return Vector3.LEFT
+		"move_x_pos": return Vector3.RIGHT
+		"move_z_neg": return Vector3.FORWARD
+		"move_z_pos": return Vector3.BACK
+		_: return Vector3.ZERO
 
 
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:

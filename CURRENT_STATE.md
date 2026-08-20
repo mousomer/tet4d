@@ -264,6 +264,15 @@ CODEX_MODE=1 ./scripts/verify.sh
    accepted, including the two live view-affordance corrections it required.
    Stage 54D-3 Hold remains independently eligible; Stage 54E-5 remains later
    programme work.
-2. Keep piece/config-bundle import readers and unrelated settings recovery as
+2. Pre-54F correctness issue #74 is COMPLETE / REVIEWED GREEN as a bounded
+   Godot input/presentation correction. Human-visible review accepted 2D
+   Relative Left/Right, 3D Relative Left/Right and Forward/Back, and preservation
+   of accepted 4D behaviour.
+   Relative Left/Right is resolved from presented yaw in 2D and 3D; 3D Forward
+   recedes and Back approaches; guidance consumes the same effective mapping;
+   Absolute and accepted 4D behaviour remain regression-protected. Focused
+   Godot verification and the full repository gate pass. This does not reopen
+   Stage 54E-4 lifecycle or view architecture.
+3. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

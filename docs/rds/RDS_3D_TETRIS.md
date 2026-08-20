@@ -94,9 +94,17 @@ System:
 Viewer-consistent translation requirement:
 1. Arrow and movement intents are interpreted in viewer space, not fixed board axes.
 2. `Left/Right` always move the active piece screen-left/screen-right.
-3. `Up` always means away from the viewer.
-4. `Down` always means closer to the viewer.
+3. `Up`, presented as `Forward`, always means recede/away from the viewer.
+4. `Down`, presented as `Back`, always means approach/closer to the viewer.
 5. After yaw turns, movement remaps to board axes so these viewer semantics stay consistent.
+6. With canonical axes and quantized yaw `0/+90/180/-90`, Relative
+   `Right` resolves respectively to `+X/-Z/-X/+Z`, and Relative `Forward`
+   resolves respectively to `-Z/-X/+Z/+X`; opposite intents are exact
+   inverses. Pitch does not promote gravity axis Y into ordinary movement.
+7. `absolute` translation retains canonical `X-/X+` and `Z-/Z+` commands.
+   Resolver output, repeated input, helper text, and orientation-gizmo labels
+   and directions must consume the same effective mapping for the currently
+   rendered outer-camera yaw.
 
 ## 6. Rendering and UX
 
