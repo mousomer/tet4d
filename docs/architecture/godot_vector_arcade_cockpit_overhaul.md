@@ -632,3 +632,92 @@ changing gameplay dispatch:
 - Control-hint panels avoid unnecessary per-frame rebuilds.
 - No gameplay, topology, replay, trace, parity, fixture, native semantic, or
   authority-transfer behavior changes.
+
+## Stage 54E-5 Gameplay Cockpit Consolidation
+
+Stage 54E-5 supersedes the historical assumption that every live mode needs
+the same complete right-inspector control map. The dimensional modes share a
+semantic language, not equal information density. The board remains primary;
+the cockpit is organized by player purpose rather than by the shared replay
+implementation that happens to construct it.
+
+### Ordinary live hierarchy
+
+The live shell presents these layers in order:
+
+1. board, active piece, and immediate running/paused/game-over state;
+2. score/clears, active piece identity, and speed;
+3. authoritative NEXT;
+4. mode-appropriate gameplay guidance;
+5. visible View actions and visible Session actions;
+6. optional onboarding and detailed display settings; and
+7. development diagnostics only through the existing replay/Advanced
+   Diagnostics routes.
+
+Replay navigation, bundle status, authority/engine ownership, raw last-input
+status, topology labels, and numeric camera state are not ordinary live-game
+information. Hiding them in live play does not remove observability: replay
+and Advanced Diagnostics retain those surfaces.
+
+### Semantic action families
+
+The top live cockpit exposes two visually distinct families:
+
+- **View:** stateless View Actions in 3D/4D, mode-truthful Fit View, composite
+  Reset View, grid detail, and secondary Quick Settings disclosure.
+- **Session:** Restart Game, conditional New Random Game, Change Setup, and
+  Main Menu.
+
+Restart Game is always reachable and remains a gameplay lifecycle operation
+that preserves the current view. Reset View remains presentation-only and
+restores the complete current-mode canonical view. Fit View remains
+framing-only. Their shared placement does not merge their semantics.
+
+The named-view control is a `MenuButton` labelled as an action launcher. It
+never reports a selected view, never displays `Custom`, and manual orientation
+after an action does not update any identity. While its popup is open, the HUD
+owns keyboard interaction and the app suppresses otherwise-unhandled live
+gameplay input; closing the popup restores ordinary live capture.
+
+### Dimensional progression and de-duplication
+
+- **2D:** no named View Actions, numeric camera state, basis/slice concepts, or
+  3D/4D controls. Gameplay guidance contains movement, rotation, drop, and
+  pause; Fit/Reset/Restart are visible actions rather than repeated help rows.
+- **3D:** adds relative Forward/Back guidance, three piece-rotation planes,
+  camera gestures, and stateless View Actions. Forward remains receding and
+  Back approaching according to the accepted effective control frame.
+- **4D:** adds signed current slice-axis movement, six piece-rotation planes,
+  exact interactive re-slice actions, shared slice-orientation/framing
+  gestures, and player-facing visible/slice-axis cues. It does not display the
+  internal `B` or `L` architecture names.
+
+The full help/control contract remains in `LiveInputContract`. The ordinary
+cockpit derives a filtered subset from those same structured groups; it does
+not copy bindings or compute movement axes. Exact 4D view-rotation rows are
+omitted from passive cockpit help because the basis panel already renders the
+same contract as reachable buttons. Fit, Reset, Restart, Change Setup, and Main
+Menu are likewise not repeated as passive inspector rows when visible actions
+already provide them. Full How to Play remains available separately.
+
+### Density and shared replay boundary
+
+Standard is the intended ordinary-player cockpit. Compact retains the board,
+state, NEXT, action families, and 4D orientation cues while reducing passive
+guidance. Detailed adds numeric camera status and generated Quick Settings but
+does not promote engine/bundle/session diagnostics back into ordinary live
+play. The right inspector remains scrollable at the supported minimum; NEXT
+stays ahead of view/control/settings content.
+
+Replay keeps its case browser, bundle/authority/diagnostic surfaces, stateless
+view actions, footer Reset/Fit operations, and replay controls. E5 changes
+shared construction only where mode-specific visibility and input ownership
+are explicit.
+
+### E5 boundary
+
+E5 changes no gameplay command, binding, effective control-frame resolver,
+camera lifecycle, named-view mutation, NEXT/Ghost data path, deterministic
+state, replay schema, setting schema, or renderer geometry. Hold, 4D inter-slice
+spacing, grid/wireframe hierarchy, 4D volume readability, Settings overflow,
+and integrated visual polish remain deferred to their owning stages.

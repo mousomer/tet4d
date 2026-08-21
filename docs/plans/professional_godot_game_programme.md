@@ -833,14 +833,46 @@ surfaces, indicators, buttons, camera/layout controls, and presentation
 affordances. This is a bounded consolidation pass, not authorization for an
 unbounded visual rewrite.
 
+The accepted E5 design is recorded in
+`docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. Ordinary live play
+uses a board-first hierarchy: immediate game state, concise score/clears and
+active-piece information, authoritative NEXT, mode-appropriate gameplay
+guidance, visible View actions, visible Session actions, and secondary display
+settings. Replay navigation, bundle/authority ownership, raw session/last-input
+metadata, and numeric camera diagnostics do not occupy the ordinary live
+cockpit; the existing replay and Advanced Diagnostics routes retain them.
+
+The modes intentionally progress in complexity. Live 2D omits named View
+Actions and 3D/4D concepts. Live 3D adds relative depth guidance, camera
+gestures, and stateless View Actions. Live 4D adds W/slice-axis movement, six
+piece-rotation planes, exact reachable re-slice actions, shared slice
+orientation/framing, and player-facing visible/slice-axis cues without exposing
+the internal `B`/`L` terminology. Cockpit help is filtered from the existing
+structured `LiveInputContract`; no second binding table or movement resolver is
+introduced.
+
+Reset View, Fit View, and Restart Game are visibly separate actions backed by
+their existing owners. Named views remain actions with no selected/`Custom`
+identity. A View Actions popup explicitly owns keyboard interaction while open
+so gameplay input cannot leak through it. Standard is the intended ordinary
+cockpit; Compact reduces passive guidance while retaining critical state and
+actions; Detailed adds numeric camera status and Quick Settings without
+restoring development diagnostics.
+
 Stage 54E-5 completes when the cockpit surfaces identified by the accepted
 54E architecture are consolidated onto their intended state owners,
 contradictory or redundant presentation/control displays are removed, and the
 resulting cockpit passes focused consistency and visible-GUI review. It does
 not authorize unrelated visual redesign.
 
-A focused human-visible cockpit review remains required after E5
-implementation. Stage 54E-5 does not replace the integrated Stage 54F audit.
+Stage 54E-5 is COMPLETE / HUMAN PRODUCT REVIEW ACCEPTED. The focused
+real-window review accepted ordinary Live 2D, Live 3D, and Live 4D at normal,
+smaller, and larger window requests, including dimensional progression,
+board/NEXT hierarchy, stateless View Actions followed by manual camera
+manipulation, distinct Fit/Reset/Restart actions, Quick Settings disclosure,
+and setup/menu recovery. Focused and full automated gates also accepted popup
+input ownership and replay-shared regression safety. Stage 54E-5 does not
+replace the integrated Stage 54F audit.
 
 ### Stage 54F — Integrated professional playability/visual acceptance
 
@@ -1261,7 +1293,9 @@ The active order is:
 7. Stage 54E-4a is REVIEWED GREEN. Stage 54E-4b implements the accepted
    contract and is COMPLETE / FOCUSED VISIBLE REVIEW ACCEPTED; aggregate Stage
    54E-4 is COMPLETE / REVIEWED GREEN.
-8. Stage 54E-5 — cockpit consolidation.
+8. Stage 54E-5 — cockpit consolidation — is COMPLETE / HUMAN PRODUCT REVIEW
+   ACCEPTED, with focused/full automated evidence and normal, smaller, and
+   larger real-window review.
 9. Stage 54F — integrated professional playability/visual acceptance.
 10. Stage 54G — remaining professional release hardening.
 11. Stage 55A — first-class 2D bounded, Strip, and Möbius games.

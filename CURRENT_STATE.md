@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-18
+Last updated: 2026-08-21
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -119,6 +119,16 @@ history ledger. Detailed history is preserved in
   composite Reset View that Live 4D already used, and the Live 3D Camera help
   states its real double-click Fit affordance. Aggregate Stage 54E-4 is
   COMPLETE / REVIEWED GREEN.
+- Stage 54E-5 gameplay cockpit consolidation is COMPLETE / HUMAN PRODUCT
+  REVIEW ACCEPTED on `codex/54e-5-cockpit-consolidation`. Ordinary live play
+  is board-first, keeps NEXT prominent, separates View, Display, and Session
+  actions, derives progressively richer 2D/3D/4D guidance from the shared live
+  input contract, and hides replay/developer diagnostics without removing
+  their existing routes. View Actions remain stateless and own input while
+  open. Focused, keybinding, sanitation, pinned Godot 4.7.1, and full
+  repository gates pass; normal, smaller, and larger real-window review is
+  accepted. No gameplay, view lifecycle, control-frame, NEXT, Ghost,
+  deterministic, native, topology, or persistence authority changed.
 - Pre-54F issue #74 is COMPLETE / REVIEWED GREEN. The 3D/4D NEXT correction is
   IMPLEMENTED / AUTOMATED GREEN / HUMAN VISIBLE REVIEW PENDING: the renderer
   now retains one complete-piece XYZ projection frame across labeled W panes,

@@ -183,7 +183,21 @@ a placeholder authority record in advance.
   route the existing `reset` action (key `0`) to the one composite Reset View,
   and Live 3D help states its real double-click Fit affordance instead of
   advertising `F`, which remains Rotate XZ.
-- Stage 54E-5 — cockpit consolidation. Carries two findings from Stage 54E-4a
+- Stage 54E-5 — gameplay cockpit consolidation — COMPLETE / HUMAN PRODUCT
+  REVIEW ACCEPTED. The accepted
+  bounded design removes replay/developer chrome from ordinary live play,
+  simplifies the live status summary, exposes distinct View and Session action
+  families, derives mode-specific cockpit guidance from the existing live
+  input contract, suppresses gameplay input while View Actions owns its popup,
+  keeps NEXT prominent, and preserves replay diagnostics through their existing
+  routes. It changes no gameplay, view lifecycle, movement/control-frame,
+  NEXT, Ghost, or deterministic authority. Focused Godot, keybinding,
+  sanitation, pinned Godot 4.7.1, and full repository verification passed.
+  Real-window 2D/3D/4D review accepted the default, smaller, and larger cockpit
+  composition, stateless View Actions, recovery/session actions, and
+  progressive disclosure.
+
+  E5 also carries two findings from Stage 54E-4a
   section 12.1: `display.show_w_labels` is presented in 2D and 3D where the
   renderer gates it on `dimension >= 4`, which needs a declared applicability
   mechanism in the settings registry; and `display.projection_strength` is

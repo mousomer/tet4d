@@ -130,7 +130,10 @@ func _process(delta: float) -> void:
 		_fit_view()
 	if _is_live_mode():
 		if not _live_mode_paused() and not _live_snapshot_game_over():
-			_process_live_input_repeat(delta)
+			if _hud != null and _hud.live_interaction_owns_input():
+				_reset_live_repeat_state()
+			else:
+				_process_live_input_repeat(delta)
 			_live_tick_accumulator += delta
 			if _live_tick_accumulator >= _live_gravity_interval_seconds:
 				_live_tick_accumulator = 0.0
@@ -167,6 +170,8 @@ func _input(event: InputEvent) -> void:
 		return
 	if not _is_live_viewer_active():
 		return
+	if _hud != null and _hud.live_interaction_owns_input():
+		return
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -180,6 +185,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _hud != null and _hud.live_interaction_owns_input():
+		return
 	if _is_live_mode() and not _is_live_viewer_active():
 		if _event_action_pressed(event, ["quit", "replay_quit"]) or _event_is_escape(event):
 			_return_to_main_menu()

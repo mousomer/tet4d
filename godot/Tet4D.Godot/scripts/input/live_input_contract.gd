@@ -136,6 +136,33 @@ static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}, c
 			return []
 
 
+# The live cockpit is a progressive-disclosure view of the same public action
+# contract, not a second binding table. Visible action buttons own Fit, Reset,
+# Restart, navigation, and exact 4D re-slicing, so passive cockpit help omits
+# those conceptual duplicates while the full How to Play surface stays intact.
+static func cockpit_hint_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
+	var groups := control_hint_groups(mode, basis_snapshot, control_frame)
+	var result: Array = []
+	for source_group in groups:
+		var group: Dictionary = source_group.duplicate(true)
+		var group_name := str(group.get("group", ""))
+		if group_name == "Navigation" or (mode == "live_4d" and group_name == "90° View Rotation"):
+			continue
+		var items: Array = []
+		for item in group.get("items", []):
+			var action_label := str(item[1]) if item.size() > 1 else ""
+			if action_label.begins_with("Fit View") or action_label.begins_with("Reset View") or action_label == "Restart Game":
+				continue
+			items.append(item)
+		if items.is_empty():
+			continue
+		group["items"] = items
+		if group_name == "Camera":
+			group["group"] = "View gestures"
+		result.append(group)
+	return result
+
+
 static func _live_2d_groups(control_frame: Dictionary = {}) -> Array:
 	var legacy := control_frame.is_empty()
 	var relative := str(control_frame.get("translation_frame", "relative")) == "relative"

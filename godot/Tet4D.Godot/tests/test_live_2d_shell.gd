@@ -229,8 +229,21 @@ func run() -> Array:
 		app._dispatch_live_3d_gameplay_command("hard_drop")
 		if str(app._current_snapshot.get("current_piece", "")) != "O3":
 			failures.append("live 3D hard drop should route to C++ and spawn O3")
-		if str(app._hud._summary_label.text).find("O3 > L3") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
-			failures.append("Live 3D HUD should expose the new piece queue and lock feedback")
+		if str(app._hud._summary_label.text).find("Active O3") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
+			failures.append("Live 3D HUD should expose the active piece and lock feedback while NEXT owns queue presentation")
+		var popup_owned_hash := str(app._live_bridge.live_3d_state_hash())
+		app._hud._live_interaction_owns_input = true
+		var popup_move_event := InputEventAction.new()
+		popup_move_event.action = "live_3d_move_x_pos"
+		popup_move_event.pressed = true
+		app._unhandled_input(popup_move_event)
+		var popup_space_event := InputEventKey.new()
+		popup_space_event.keycode = KEY_SPACE
+		popup_space_event.pressed = true
+		app._input(popup_space_event)
+		if str(app._live_bridge.live_3d_state_hash()) != popup_owned_hash:
+			failures.append("cockpit popup ownership must suppress unhandled movement and pre-UI Space hard drop")
+		app._hud._live_interaction_owns_input = false
 		app._enter_replay_mode()
 		await tree.process_frame
 		var replay_3d_hash := str(app._live_bridge.live_3d_state_hash())
@@ -972,8 +985,11 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 		"initial_speed_level": 1,
 	}
 	var summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D")
-	if summary != "Live Plain 3D | Board 6 × 10 × 6 | True 3D | Speed 1 | Seed 1337 | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
-		failures.append("live gameplay summary should prioritize score, clears, and piece queue, got %s" % summary)
+	if summary != "Live Plain 3D | SCORE 45 | CLEARS 1 | Active O3 | Speed 1 | LOCKED":
+		failures.append("ordinary live summary should prioritize actionable gameplay state and leave NEXT to its panel, got %s" % summary)
+	var detailed_summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D", {}, true)
+	if detailed_summary.find("Board 6 × 10 × 6") == -1 or detailed_summary.find("Seed 1337") == -1 or detailed_summary.find("O3 > L3") != -1:
+		failures.append("detailed live summary should add setup detail without duplicating the NEXT queue")
 	var feedback := ReplayHudScript.live_command_feedback_text(live_snapshot)
 	if feedback != "Piece locked":
 		failures.append("accepted hard drop should produce decisive lock feedback, got %s" % feedback)

@@ -111,7 +111,14 @@ var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
 var _viewport_hint: Label
-var _live_view_actions: HBoxContainer
+var _viewer_nav: VBoxContainer
+var _viewer_nav_label: Label
+var _replay_navigation_controls: Array[Control] = []
+var _live_view_actions: VBoxContainer
+var _live_view_action_row: HBoxContainer
+var _live_display_action_row: HBoxContainer
+var _live_fit_view_button: Button
+var _live_reset_view_button: Button
 var _quick_settings_button: Button
 var _grid_toggle_button: Button
 var _frame_slider: HSlider
@@ -149,6 +156,7 @@ var _trace_integrity_label: Label
 var _bundle_detail_label: Label
 var _camera_status_label: Label
 var _camera_view_action_menu: MenuButton
+var _camera_box: VBoxContainer
 var _help_label: Label
 var _top_state_badge_label: Label
 var _inspector_hint_panel: VBoxContainer
@@ -209,6 +217,7 @@ var _game_setup_model = GameSetupModelScript.new()
 var _game_setup_store = GameSetupStoreScript.new()
 var _game_setup_panel
 var _active_live_mode := ""
+var _live_interaction_owns_input := false
 
 
 static func replay_hint_text() -> String:
@@ -347,7 +356,10 @@ func set_summary(trace_type: String, case_id: String, dimension: int, frame_inde
 
 
 func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
-	_diagnostics_panel.visible = diagnostics_visible
+	# Replay may honor its diagnostics toggle. Ordinary live play never promotes
+	# raw snapshots back into the cockpit, even when that replay preference was
+	# persisted before entering a live session.
+	_diagnostics_panel.visible = diagnostics_visible and _active_live_mode.is_empty()
 	_diagnostics_panel.set_snapshot(snapshot)
 	_event_panel.set_events(snapshot.get("event_lines", []))
 	if _diagnostics_screen_panel != null:
@@ -433,10 +445,7 @@ func set_live_2d_mode(
 		_basis_panel.visible = false
 	_render_onboarding()
 	_set_live_declutter_mode(true)
-	if _live_view_actions != null:
-		_live_view_actions.visible = true
-	if _camera_view_action_menu != null:
-		_camera_view_action_menu.visible = false
+	_configure_live_cockpit_mode(GameSetupSpecScript.MODE_2D)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Restart Game"
@@ -485,10 +494,7 @@ func set_live_3d_mode(
 		_basis_panel.visible = false
 	_render_onboarding()
 	_set_live_declutter_mode(true)
-	if _live_view_actions != null:
-		_live_view_actions.visible = true
-	if _camera_view_action_menu != null:
-		_camera_view_action_menu.visible = true
+	_configure_live_cockpit_mode(GameSetupSpecScript.MODE_3D)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Restart Game"
@@ -537,10 +543,7 @@ func set_live_4d_mode(
 		_basis_panel.visible = true
 	_render_onboarding()
 	_set_live_declutter_mode(true)
-	if _live_view_actions != null:
-		_live_view_actions.visible = true
-	if _camera_view_action_menu != null:
-		_camera_view_action_menu.visible = true
+	_configure_live_cockpit_mode(GameSetupSpecScript.MODE_4D)
 	_play_button.text = "Resume Live" if paused else "Pause Live"
 	if _reset_button != null:
 		_reset_button.text = "Restart Game"
@@ -583,7 +586,9 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 	if _live_view_actions != null:
 		_live_view_actions.visible = false
 	if _camera_view_action_menu != null:
+		_move_view_action_menu(_camera_box)
 		_camera_view_action_menu.visible = true
+	_live_interaction_owns_input = false
 	set_playback_state(is_playing, speed, diagnostics_visible)
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
@@ -607,6 +612,34 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 		_update_control_hint_panel(_inspector_hint_panel, "replay")
 	if _help_label != null:
 		_help_label.text = REPLAY_HELP_TEXT
+
+
+func _configure_live_cockpit_mode(mode: String) -> void:
+	_active_live_mode = mode
+	if _live_view_actions != null:
+		_live_view_actions.visible = true
+	if _camera_view_action_menu != null:
+		_move_view_action_menu(_live_view_action_row)
+		_camera_view_action_menu.visible = mode != GameSetupSpecScript.MODE_2D
+		_camera_view_action_menu.text = "View Actions"
+		_camera_view_action_menu.tooltip_text = "Apply a stateless named view action"
+	if _basis_panel != null:
+		_basis_panel.visible = mode == GameSetupSpecScript.MODE_4D
+	if _inspector_hint_panel != null:
+		_inspector_hint_panel.set_meta("hint_cache_key", "")
+		_update_control_hint_panel(_inspector_hint_panel, mode)
+	_set_live_inspector_density(true)
+
+
+func _move_view_action_menu(parent: Control) -> void:
+	if _camera_view_action_menu == null or parent == null:
+		return
+	if _camera_view_action_menu.get_parent() != parent:
+		_camera_view_action_menu.reparent(parent, false)
+
+
+func live_interaction_owns_input() -> bool:
+	return _live_interaction_owns_input
 
 
 func set_display_mode(mode: String) -> void:
@@ -762,6 +795,21 @@ func layout_contract_snapshot() -> Dictionary:
 		"basis": _live_4d_basis_snapshot.duplicate(true),
 		"basis_indicator_text": _basis_indicator_label.text if _basis_indicator_label != null else "",
 		"basis_panel_visible": _basis_panel.visible if _basis_panel != null else false,
+		"top_bundle_panel_visible": _top_status_panel.visible if _top_status_panel != null else false,
+		"top_authority_panel_visible": _authority_panel.visible if _authority_panel != null else false,
+		"live_view_actions_visible": _live_view_actions.visible if _live_view_actions != null else false,
+		"live_fit_view_button_visible": _live_fit_view_button.visible if _live_fit_view_button != null else false,
+		"live_fit_view_button_rect": _control_rect(_live_fit_view_button),
+		"live_reset_view_button_visible": _live_reset_view_button.visible if _live_reset_view_button != null else false,
+		"live_reset_view_button_rect": _control_rect(_live_reset_view_button),
+		"view_action_menu_visible": _camera_view_action_menu.visible if _camera_view_action_menu != null else false,
+		"view_action_menu_text": _camera_view_action_menu.text if _camera_view_action_menu != null else "",
+		"view_action_menu_parent": str(_camera_view_action_menu.get_parent().name) if _camera_view_action_menu != null and _camera_view_action_menu.get_parent() != null else "",
+		"camera_panel_visible": _camera_panel.visible if _camera_panel != null else false,
+		"integrity_panel_visible": _integrity_panel.visible if _integrity_panel != null else false,
+		"bundle_detail_panel_visible": _bundle_detail_panel.visible if _bundle_detail_panel != null else false,
+		"controls_panel_visible": _inspector_hint_panel.visible if _inspector_hint_panel != null else false,
+		"live_interaction_owns_input": _live_interaction_owns_input,
 		"focused_control": get_viewport().gui_get_focus_owner().name if get_viewport() != null and get_viewport().gui_get_focus_owner() != null else "",
 		"main_menu_scroll": _scroll_contract(_main_menu_scroll),
 		"controls_scroll": _scroll_contract(_controls_scroll),
@@ -944,18 +992,27 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 				_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
 		_style_applier.apply_to_tree(_top_state_badge_label, _style_manager)
 	if _restart_game_button != null:
-		_restart_game_button.visible = state_label == "Game Over"
+		_restart_game_button.visible = not _active_live_mode.is_empty()
 		_restart_game_button.text = "Restart Game"
 
 
 func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String) -> void:
 	if _summary_label != null:
-		_summary_label.text = live_gameplay_summary_text(snapshot, mode_label, _live_4d_basis_snapshot)
+		_summary_label.text = live_gameplay_summary_text(
+			snapshot,
+			mode_label,
+			_live_4d_basis_snapshot,
+			_hud_density == "detailed"
+		)
 
 
-static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String, basis_snapshot: Dictionary = {}) -> String:
+static func live_gameplay_summary_text(
+	snapshot: Dictionary,
+	mode_label: String,
+	basis_snapshot: Dictionary = {},
+	detailed: bool = false
+) -> String:
 	var current_piece := str(snapshot.get("current_piece", "-")).strip_edges()
-	var next_piece := str(snapshot.get("next_piece", "-")).strip_edges()
 	var shape: Array = snapshot.get("board_shape", [])
 	var board_text := GameSetupSpecScript.format_shape(shape)
 	var dimension := int(snapshot.get("dimension", 2))
@@ -980,18 +1037,22 @@ static func live_gameplay_summary_text(snapshot: Dictionary, mode_label: String,
 			int(basis_snapshot.get("layer_count", snapshot.get("w_slice_count", shape[3] if shape.size() > 3 else 1))),
 			",".join(active_labels),
 		]
-	return "%s | Board %s%s | %s | %s | %s | SCORE %d | CLEARS %d | %s > %s | %s" % [
+	var primary := "%s | SCORE %d | CLEARS %d | Active %s | %s | %s" % [
 		mode_label,
-		board_text,
-		layer_text,
-		piece_text,
-		speed_text,
-		seed_text,
 		int(snapshot.get("score", 0)),
 		int(snapshot.get("lines", 0)),
 		current_piece if not current_piece.is_empty() else "-",
-		next_piece if not next_piece.is_empty() else "-",
+		speed_text,
 		_live_feedback_short(snapshot),
+	]
+	if not detailed:
+		return primary
+	return "%s | Board %s%s | %s | %s" % [
+		primary,
+		board_text,
+		layer_text,
+		piece_text,
+		seed_text,
 	]
 
 
@@ -1039,17 +1100,30 @@ static func _live_feedback_short(snapshot: Dictionary) -> String:
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
+	if _viewer_nav != null:
+		_viewer_nav.custom_minimum_size = Vector2(430 if live_mode else 270, ReplayVisuals.TOP_BAR_HEIGHT)
+	if _viewer_nav_label != null:
+		_viewer_nav_label.text = "SESSION" if live_mode else "NAVIGATION"
+	for control in _replay_navigation_controls:
+		if control != null:
+			control.visible = not live_mode
+	if _top_status_panel != null:
+		_top_status_panel.visible = not live_mode
+	if _authority_panel != null:
+		_authority_panel.visible = not live_mode
 	if _left_panel != null:
 		_left_panel.visible = not live_mode
 		_left_panel.custom_minimum_size = Vector2(0, 0) if live_mode else Vector2(ReplayVisuals.LEFT_PANEL_WIDTH, 0)
 	if _bottom_panel != null:
 		_bottom_panel.visible = not live_mode
-	if _restart_game_button != null and not live_mode:
-		_restart_game_button.visible = false
+	if _restart_game_button != null:
+		_restart_game_button.visible = live_mode
 	if _new_random_game_button != null and not live_mode:
 		_new_random_game_button.visible = false
 	if _change_setup_button != null:
 		_change_setup_button.visible = live_mode
+	if _live_view_actions != null:
+		_live_view_actions.visible = live_mode
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = (not live_mode) and _keyboard_hints_visible
 	if _hint_label != null:
@@ -1077,6 +1151,9 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_basis_panel.visible = false
 	if _next_piece_panel != null:
 		_next_piece_panel.visible = live_mode
+	if not live_mode:
+		_active_live_mode = ""
+		_live_interaction_owns_input = false
 
 
 func set_next_piece_preview(preview: Dictionary) -> bool:
@@ -1117,11 +1194,19 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 	if live_mode:
 		var detailed := _hud_density == "detailed"
 		var compact := _hud_density == "compact"
-		_bundle_detail_panel.visible = detailed
-		_camera_panel.visible = not compact
+		var show_controls := not compact and _keyboard_hints_visible
+		_inspector_header.visible = false
+		_integrity_panel.visible = false
+		_bundle_detail_panel.visible = false
+		_view_header.visible = detailed and _active_live_mode != GameSetupSpecScript.MODE_2D
+		_camera_panel.visible = _view_header.visible
+		if _camera_status_label != null:
+			_camera_status_label.visible = _camera_panel.visible
 		_diagnostics_header.visible = false
 		_diagnostics_panel.visible = false
 		_event_panel.visible = false
+		_controls_header.visible = show_controls
+		_inspector_hint_panel.visible = show_controls
 		_quick_settings_header.visible = detailed
 		_settings_panel.visible = detailed
 		_move_right_column_child(_onboarding_panel, 0)
@@ -1129,16 +1214,16 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 		_move_right_column_child(_basis_panel, 2)
 		_move_right_column_child(_controls_header, 3)
 		_move_right_column_child(_inspector_hint_panel, 4)
-		_move_right_column_child(_inspector_header, 5)
-		_move_right_column_child(_integrity_panel, 6)
-		_move_right_column_child(_bundle_detail_panel, 7)
-		_move_right_column_child(_view_header, 8)
-		_move_right_column_child(_camera_panel, 9)
-		_move_right_column_child(_diagnostics_header, 10)
-		_move_right_column_child(_diagnostics_panel, 11)
-		_move_right_column_child(_event_panel, 12)
-		_move_right_column_child(_quick_settings_header, 13)
-		_move_right_column_child(_settings_panel, 14)
+		_move_right_column_child(_view_header, 5)
+		_move_right_column_child(_camera_panel, 6)
+		_move_right_column_child(_quick_settings_header, 7)
+		_move_right_column_child(_settings_panel, 8)
+		_move_right_column_child(_inspector_header, 9)
+		_move_right_column_child(_integrity_panel, 10)
+		_move_right_column_child(_bundle_detail_panel, 11)
+		_move_right_column_child(_diagnostics_header, 12)
+		_move_right_column_child(_diagnostics_panel, 13)
+		_move_right_column_child(_event_panel, 14)
 		return
 	_bundle_detail_panel.visible = true
 	_camera_panel.visible = true
@@ -1236,9 +1321,9 @@ func _set_keyboard_hints_visible(visible: bool) -> void:
 	if _hint_label != null:
 		_hint_label.visible = visible and (_bottom_panel == null or _bottom_panel.visible)
 	if _inspector_hint_panel != null:
-		_inspector_hint_panel.visible = visible
+		_inspector_hint_panel.visible = visible and (_active_live_mode.is_empty() or _hud_density != "compact")
 	if _controls_header != null:
-		_controls_header.visible = visible
+		_controls_header.visible = visible and (_active_live_mode.is_empty() or _hud_density != "compact")
 	if _help_panel != null and not visible:
 		_help_panel.visible = false
 
@@ -1420,11 +1505,16 @@ func _build_layout() -> void:
 	outer.add_child(top_bar)
 
 	var viewer_nav := VBoxContainer.new()
+	_viewer_nav = viewer_nav
 	viewer_nav.custom_minimum_size = Vector2(270, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_child(viewer_nav)
 	var nav_row_a := HBoxContainer.new()
 	nav_row_a.add_theme_constant_override("separation", 6)
 	viewer_nav.add_child(nav_row_a)
+	_viewer_nav_label = Label.new()
+	_viewer_nav_label.text = "NAVIGATION"
+	_viewer_nav_label.theme_type_variation = "SecondaryLabel"
+	nav_row_a.add_child(_viewer_nav_label)
 	var nav_row_b := HBoxContainer.new()
 	nav_row_b.add_theme_constant_override("separation", 6)
 	viewer_nav.add_child(nav_row_b)
@@ -1440,50 +1530,85 @@ func _build_layout() -> void:
 		show_screen(SCREEN_BROWSER)
 	)
 	nav_row_a.add_child(browser_button)
+	_replay_navigation_controls.append(browser_button)
 	var replay_button := Button.new()
 	replay_button.text = "Replay"
 	replay_button.pressed.connect(func() -> void:
 		replay_mode_requested.emit()
 	)
 	nav_row_b.add_child(replay_button)
+	_replay_navigation_controls.append(replay_button)
 	var live_button := Button.new()
 	live_button.text = "Live 2D"
 	live_button.pressed.connect(func() -> void:
 		live_2d_requested.emit()
 	)
 	nav_row_b.add_child(live_button)
+	_replay_navigation_controls.append(live_button)
 	var live_3d_button := Button.new()
 	live_3d_button.text = "Live 3D"
 	live_3d_button.pressed.connect(func() -> void:
 		live_3d_requested.emit()
 	)
 	nav_row_b.add_child(live_3d_button)
+	_replay_navigation_controls.append(live_3d_button)
 	var live_4d_button := Button.new()
 	live_4d_button.text = "Live 4D"
 	live_4d_button.pressed.connect(func() -> void:
 		live_4d_requested.emit()
 	)
 	nav_row_b.add_child(live_4d_button)
-	_live_view_actions = HBoxContainer.new()
+	_replay_navigation_controls.append(live_4d_button)
+	_live_view_actions = VBoxContainer.new()
 	_live_view_actions.name = "CockpitButtonPanel"
 	_live_view_actions.set_meta("semantic_role", "interactive_button_panel")
 	_live_view_actions.visible = false
-	_live_view_actions.add_theme_constant_override("separation", 6)
+	_live_view_actions.add_theme_constant_override("separation", 4)
 	viewer_nav.add_child(_live_view_actions)
+	_live_view_action_row = HBoxContainer.new()
+	_live_view_action_row.name = "LiveViewActions"
+	_live_view_action_row.add_theme_constant_override("separation", 6)
+	_live_view_actions.add_child(_live_view_action_row)
+	var view_label := Label.new()
+	view_label.text = "VIEW"
+	view_label.theme_type_variation = "SecondaryLabel"
+	_live_view_action_row.add_child(view_label)
+	_live_fit_view_button = Button.new()
+	_live_fit_view_button.name = "LiveFitViewButton"
+	_live_fit_view_button.text = "Fit View"
+	_live_fit_view_button.tooltip_text = "Refit the board without changing orientation"
+	_live_fit_view_button.set_meta("semantic_role", "action_button")
+	_live_fit_view_button.pressed.connect(func() -> void: fit_view_requested.emit())
+	_live_view_action_row.add_child(_live_fit_view_button)
+	_live_reset_view_button = Button.new()
+	_live_reset_view_button.name = "LiveResetViewButton"
+	_live_reset_view_button.text = "Reset View · %s" % LiveInputContractScript.display_key("reset")
+	_live_reset_view_button.tooltip_text = "Restore the complete canonical view without restarting gameplay"
+	_live_reset_view_button.set_meta("semantic_role", "action_button")
+	_live_reset_view_button.pressed.connect(func() -> void: reset_view_requested.emit())
+	_live_view_action_row.add_child(_live_reset_view_button)
+	_live_display_action_row = HBoxContainer.new()
+	_live_display_action_row.name = "LiveDisplayActions"
+	_live_display_action_row.add_theme_constant_override("separation", 6)
+	_live_view_actions.add_child(_live_display_action_row)
+	var display_label := Label.new()
+	display_label.text = "DISPLAY"
+	display_label.theme_type_variation = "SecondaryLabel"
+	_live_display_action_row.add_child(display_label)
 	_quick_settings_button = Button.new()
 	_quick_settings_button.name = "QuickSettingsToggle"
 	_quick_settings_button.custom_minimum_size = Vector2(168, 34)
 	_quick_settings_button.tooltip_text = "Show or hide Quick Settings in the right inspector"
 	_quick_settings_button.set_meta("semantic_role", "action_button")
 	_quick_settings_button.pressed.connect(_toggle_quick_settings)
-	_live_view_actions.add_child(_quick_settings_button)
+	_live_display_action_row.add_child(_quick_settings_button)
 	_grid_toggle_button = Button.new()
 	_grid_toggle_button.name = "GridVisibilityToggle"
 	_grid_toggle_button.custom_minimum_size = Vector2(84, 34)
 	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail"
 	_grid_toggle_button.set_meta("semantic_role", "action_button")
 	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
-	_live_view_actions.add_child(_grid_toggle_button)
+	_live_display_action_row.add_child(_grid_toggle_button)
 	_update_live_view_action_labels()
 
 	_top_status_panel = PanelContainer.new()
@@ -1713,10 +1838,11 @@ func _build_layout() -> void:
 	_camera_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_column.add_child(_camera_panel)
 	var camera_box := VBoxContainer.new()
+	_camera_box = camera_box
 	_camera_panel.add_child(camera_box)
 	var camera_title := Label.new()
 	camera_title.name = "InspectorSectionHeader__Camera"
-	camera_title.text = "Camera"
+	camera_title.text = "View Detail"
 	camera_title.theme_type_variation = "SecondaryLabel"
 	camera_box.add_child(camera_title)
 	_camera_view_action_menu = MenuButton.new()
@@ -1724,6 +1850,12 @@ func _build_layout() -> void:
 	_camera_view_action_menu.text = "View Actions"
 	_camera_view_action_menu.tooltip_text = "Apply a named view action; this does not select a persistent camera mode"
 	var view_action_popup := _camera_view_action_menu.get_popup()
+	view_action_popup.about_to_popup.connect(func() -> void:
+		_live_interaction_owns_input = not _active_live_mode.is_empty()
+	)
+	view_action_popup.popup_hide.connect(func() -> void:
+		_live_interaction_owns_input = false
+	)
 	for id in CameraPresetScript.ids():
 		view_action_popup.add_item(CameraPresetScript.label(str(id)))
 		view_action_popup.set_item_metadata(view_action_popup.item_count - 1, id)
@@ -2339,7 +2471,7 @@ func _build_basis_panel() -> PanelContainer:
 	content.add_theme_constant_override("separation", 8)
 	panel.add_child(content)
 	var title := Label.new()
-	title.text = "4D VIEW ROTATION"
+	title.text = "4D VIEW ACTIONS"
 	title.theme_type_variation = "AccentLabel"
 	content.add_child(title)
 	_basis_indicator_label = Label.new()
@@ -2443,11 +2575,11 @@ func _update_control_hint_panel(
 func _control_hint_groups_for_mode(mode: String) -> Array:
 	match mode:
 		"live_2d":
-			return LiveInputContractScript.control_hint_groups("live_2d", {}, _control_frame_snapshot)
+			return LiveInputContractScript.cockpit_hint_groups("live_2d", {}, _control_frame_snapshot)
 		"live_3d":
-			return LiveInputContractScript.control_hint_groups("live_3d", {}, _control_frame_snapshot)
+			return LiveInputContractScript.cockpit_hint_groups("live_3d", {}, _control_frame_snapshot)
 		"live_4d":
-			return LiveInputContractScript.control_hint_groups("live_4d", _live_4d_basis_snapshot, _control_frame_snapshot)
+			return LiveInputContractScript.cockpit_hint_groups("live_4d", _live_4d_basis_snapshot, _control_frame_snapshot)
 		_:
 			return replay_control_hint_groups()
 
