@@ -1144,6 +1144,8 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_quit_button.text = "Quit Application"
 	if _diagnostics_panel != null:
 		_diagnostics_panel.set_title("Diagnostics" if live_mode else "Replay Diagnostics")
+	if _settings_panel != null:
+		_settings_panel.set_presentation_context(_active_live_mode if live_mode else "replay")
 	_set_live_inspector_density(live_mode)
 	if not live_mode and _onboarding_panel != null:
 		_onboarding_panel.visible = false
@@ -1903,6 +1905,7 @@ func _build_layout() -> void:
 	_settings_panel.registry = _settings_registry
 	_settings_panel.set_store(_settings_store)
 	_settings_panel.set_style_manager(_style_manager)
+	_settings_panel.set_presentation_context("replay")
 	_wire_settings_panel(_settings_panel)
 	_quick_settings_header = _inspector_section_header("QUICK SETTINGS")
 	_right_column.add_child(_quick_settings_header)
@@ -2226,6 +2229,7 @@ func _build_game_setup_screen(screen: Control) -> void:
 	_game_setup_panel = GameSetupPanelScript.new()
 	_fill_parent(_game_setup_panel)
 	screen.add_child(_game_setup_panel)
+	_game_setup_panel.visual_style_changed.connect(_apply_shell_style)
 	_game_setup_panel.configure(_game_setup_model)
 	_screen_focus_targets[SCREEN_GAME_SETUP] = _game_setup_panel.first_focus_control()
 	_game_setup_panel.last_valid_changed.connect(func() -> void:

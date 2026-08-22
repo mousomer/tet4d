@@ -51,8 +51,11 @@ func _apply_control(control: Control, style_manager) -> void:
 	elif control is OptionButton:
 		_apply_button(control as OptionButton, style_manager)
 	elif control is Button:
-		if str(control.get_meta("semantic_role", "")) == "action_button":
+		var semantic_role := str(control.get_meta("semantic_role", ""))
+		if semantic_role == "action_button":
 			_apply_action_button(control as Button, style_manager)
+		elif semantic_role == "error_disclosure":
+			_apply_error_button(control as Button, style_manager)
 		else:
 			_apply_button(control as Button, style_manager)
 	elif control is HSlider:
@@ -152,6 +155,21 @@ func _apply_action_button(button: Button, style_manager) -> void:
 	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
 	button.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_PRIMARY, margin, 2))
 	button.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.CONTROL_DISABLED, margin, 2))
+
+
+func _apply_error_button(button: Button, style_manager) -> void:
+	_apply_button(button, style_manager)
+	button.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.STATE_ERROR))
+	button.add_theme_stylebox_override(
+		"normal",
+		_button_box(
+			style_manager,
+			ShellStyleRolesScript.BACKGROUND_ELEVATED,
+			ShellStyleRolesScript.STATE_ERROR,
+			ShellDesignTokensScript.CONTROL_PADDING,
+			2
+		)
+	)
 
 
 func _apply_checkbox(checkbox: CheckBox, style_manager) -> void:

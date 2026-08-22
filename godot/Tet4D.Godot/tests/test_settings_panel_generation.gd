@@ -53,6 +53,30 @@ func run() -> Array:
 	_assert_control_type(failures, panel, "interface.show_onboarding", CheckBox, "onboarding preference should produce checkbox")
 	_assert_dropdown_options(failures, panel, "theme.name", ["diagnostic", "plain", "tron"])
 	_assert_wrapped_setting_label(failures, content, "display.projection_strength")
+	panel.set_presentation_context("live_2d")
+	if panel.get_node("SettingsScroll/SettingsContent/SettingRow__display__show_w_labels").visible:
+		failures.append("Live 2D Quick Settings must hide the 4D-only slice-label preference")
+	if panel.get_node("SettingsScroll/SettingsContent/SettingRow__display__projection_strength").visible:
+		failures.append("live Quick Settings must hide replay-only object scale")
+	if panel.get_node("SettingsScroll/SettingsContent/SettingRow__replay__playback_speed").visible:
+		failures.append("live Quick Settings must hide replay playback controls")
+	if not panel.get_node("SettingsScroll/SettingsContent/SettingRow__display__board_detail").visible:
+		failures.append("live Quick Settings must retain applicable cell-outline controls")
+	if panel.first_focus_control() != panel.generated_control("display.window_mode"):
+		failures.append("context filtering must remove hidden replay rows from focus order")
+	panel.set_presentation_context("live_4d")
+	if not panel.get_node("SettingsScroll/SettingsContent/SettingRow__display__show_w_labels").visible:
+		failures.append("Live 4D Quick Settings must expose slice-label visibility")
+	panel.set_presentation_context("global_settings")
+	var scroll := panel.get_node("SettingsScroll") as ScrollContainer
+	var accessibility_reset := panel.get_node("SettingsScroll/SettingsContent/ResetAccessibilitySettingsButton") as Button
+	accessibility_reset.grab_focus()
+	await tree.process_frame
+	await tree.process_frame
+	if scroll.scroll_vertical <= 0:
+		failures.append("focusing an off-screen Settings action must scroll it into view")
+	elif not Rect2(scroll.global_position, scroll.size).intersects(accessibility_reset.get_global_rect()):
+		failures.append("focused Settings reset action must be visible inside the scroll viewport")
 	if panel.first_focus_control() != panel.generated_control("replay.playback_speed").get_node_or_null("Slider"):
 		failures.append("settings panel should focus the first generated preference")
 	panel.queue_free()

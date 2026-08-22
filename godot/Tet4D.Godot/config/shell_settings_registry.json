@@ -79,16 +79,16 @@
     },
     {
       "id": "display.board_detail",
-      "label": "Board Detail",
-      "description": "Changes grid and edge detail without changing gameplay.",
+      "label": "Cell Outline Strength",
+      "description": "Adjusts active, locked, and Ghost cell outlines without changing board geometry or gameplay.",
       "category": "display",
       "value_type": "enum",
       "control_type": "dropdown",
       "default": "standard",
       "options": [
-        {"value": "minimal", "label": "Minimal"},
+        {"value": "minimal", "label": "Subtle"},
         {"value": "standard", "label": "Standard"},
-        {"value": "full", "label": "Full"}
+        {"value": "full", "label": "Strong"}
       ],
       "authority": "godot_shell",
       "persistence": "local_shell",
@@ -133,6 +133,7 @@
       "max": 3.0,
       "step": 0.25,
       "unit": "x",
+      "ui_contexts": ["global_settings", "replay"],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true
@@ -145,26 +146,28 @@
       "value_type": "bool",
       "control_type": "checkbox",
       "default": true,
+      "ui_contexts": ["global_settings", "replay"],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true
     },
     {
       "id": "display.show_w_labels",
-      "label": "Show W labels",
-      "description": "Shows W/layer labels in the replay view.",
+      "label": "4D Slice Labels",
+      "description": "Shows signed slice-axis labels in 4D play and 4D replays.",
       "category": "display",
       "value_type": "bool",
       "control_type": "checkbox",
       "default": true,
+      "ui_contexts": ["global_settings", "replay", "live_4d"],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true
     },
     {
       "id": "display.projection_strength",
-      "label": "Projection strength",
-      "description": "Controls visual projection emphasis only. Does not change topology or coordinates.",
+      "label": "Replay Object Scale",
+      "description": "Scales replay cells, particles, and event markers without changing coordinates.",
       "category": "display",
       "value_type": "float",
       "control_type": "slider",
@@ -172,6 +175,7 @@
       "min": 0.0,
       "max": 2.0,
       "step": 0.1,
+      "ui_contexts": ["global_settings", "replay"],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true

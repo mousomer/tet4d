@@ -229,6 +229,8 @@ func _check_advanced_game_disclosure(failures: Array) -> void:
 	var panel = harness["panel"]
 	var model = harness["model"]
 	var tree: SceneTree = harness["tree"]
+	var style_events: Array = []
+	panel.visual_style_changed.connect(func() -> void: style_events.append(true))
 	if panel._random_selector.is_visible_in_tree():
 		failures.append("randomness must not dominate the ordinary setup surface")
 	if panel._random_selector.focus_mode != Control.FOCUS_NONE:
@@ -275,6 +277,15 @@ func _check_advanced_game_disclosure(failures: Array) -> void:
 		failures.append("a hidden seed failure must still be explained in the summary")
 	if not panel._validation_label.is_visible_in_tree():
 		failures.append("a hidden seed failure must leave the summary visible")
+	if panel._validation_label.theme_type_variation != "StatusErrorLabel":
+		failures.append("a hidden setup failure must select the semantic error style role")
+	var advanced_button := panel._section_buttons.get(panel.SECTION_ADVANCED) as Button
+	if advanced_button == null or advanced_button.text.find("ERROR") == -1:
+		failures.append("a collapsed section must retain a non-colour hidden-error marker")
+	elif str(advanced_button.get_meta("semantic_role", "")) != "error_disclosure":
+		failures.append("a collapsed invalid section must select the shared error-control role")
+	if style_events.is_empty():
+		failures.append("runtime validation changes must request a shell style refresh")
 	await _free_panel(harness)
 
 

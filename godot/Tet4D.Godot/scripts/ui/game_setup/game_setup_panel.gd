@@ -11,6 +11,7 @@ signal start_requested(setup: Dictionary)
 signal back_requested()
 signal setup_changed()
 signal last_valid_changed()
+signal visual_style_changed()
 
 # Disclosure sections are presentation state only. They are rebuilt from the
 # model on every `configure()` and never enter the canonical session setup, the
@@ -49,6 +50,7 @@ var _refreshing := false
 var _expanded := {}
 var _section_buttons := {}
 var _section_bodies := {}
+var _section_errors := {}
 # Mode applicability and conditional visibility come from the declared taxonomy
 # rather than a second copy of the same rules in this panel.
 var _seed_spec
@@ -117,6 +119,7 @@ func _clear_build_state() -> void:
 	_expanded.clear()
 	_section_buttons.clear()
 	_section_bodies.clear()
+	_section_errors.clear()
 	_title = null
 	_scroll = null
 	_board_selector = null
@@ -368,8 +371,10 @@ func _apply_section_state(section_id: String) -> void:
 	var button := _section_buttons.get(section_id) as Button
 	if button != null:
 		var title := str(SECTION_TITLES.get(section_id, section_id))
-		button.text = "%s  %s" % ["▾" if expanded else "▸", title]
+		var has_error := bool(_section_errors.get(section_id, false))
+		button.text = "%s  %s%s" % ["▾" if expanded else "▸", title, "  · ERROR" if has_error else ""]
 		button.tooltip_text = "%s %s" % ["Hide" if expanded else "Show", title]
+		button.set_meta("semantic_role", "error_disclosure" if has_error else "")
 
 
 func _focus_is_inside_section(section_id: String) -> bool:
@@ -612,6 +617,7 @@ func _refresh_validation_state() -> void:
 	else:
 		_validation_label.theme_type_variation = "StatusErrorLabel"
 		_validation_label.text = "Not launchable: %s" % _format_validation_errors(errors)
+	_refresh_section_error_state(errors)
 	# A failure is always visible. The all-clear confirmation is feedback for
 	# dimension editing, so it stays out of the ordinary path.
 	_validation_label.visible = not errors.is_empty() or is_section_expanded(SECTION_BOARD)
@@ -628,6 +634,18 @@ func _refresh_validation_state() -> void:
 	_start_button.disabled = not _model.is_current_valid() or not _seed_error.text.is_empty()
 	# Showing or hiding the reveal action changes the focus ring.
 	_configure_focus()
+	visual_style_changed.emit()
+
+
+func _refresh_section_error_state(errors: Array) -> void:
+	for section_id in disclosure_section_ids():
+		_section_errors[section_id] = false
+	for detail in errors:
+		var section_id := _section_for_error_path(str((detail as Dictionary).get("path", "")))
+		if not section_id.is_empty() and _section_buttons.has(section_id):
+			_section_errors[section_id] = true
+	for section_id in disclosure_section_ids():
+		_apply_section_state(section_id)
 
 
 # Seed text that never reached the model would otherwise disable Start with no

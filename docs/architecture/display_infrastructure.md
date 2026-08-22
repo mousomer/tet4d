@@ -254,3 +254,25 @@ presentation, editor/sandbox presentation, physics-simulator views, and future
 control/input configuration may consume this infrastructure. They must extend
 the canonical registry/store/runtime flow rather than introduce another
 settings file, local enum family, or presentation cache.
+
+## 20. Stage 54F applicability and truthful naming refinement
+
+The schema-3 registry may declare optional `ui_contexts` presentation metadata
+for a setting. The admitted values are `global_settings`, `replay`,
+`live_2d`, `live_3d`, and `live_4d`. Omission retains the historical all-context
+behavior. This metadata controls only whether a generated row is relevant in
+the current Settings-panel context; it does not alter validation, defaults,
+persistence, reset ownership, runtime propagation, or authority.
+
+The full global Settings screen remains a place to configure every supported
+preference. Generated Quick Settings filters context-specific controls:
+replay speed/loop and replay object scale are replay-only there, while 4D slice
+labels appear only in Live 4D or 4D-capable replay/global settings. Existing
+IDs remain stable for persistence compatibility.
+
+Player-facing copy names actual effects. `display.projection_strength` is
+presented as replay object scale because the renderer scales replay cells,
+particles, and event markers rather than camera projection. The persisted
+`display.board_detail` ID is presented as cell-outline strength because its
+minimal/standard/full policy changes active, locked, and Ghost outline weight,
+not board geometry or grid density.
