@@ -59,6 +59,7 @@ func _test_shell_preferences() -> Array:
 		return ["display presentation runtime test requires ReplayHud"]
 	var panel = hud._settings_screen_panel
 	var state_hash_before := str(app._current_snapshot.get("state_hash", "")) if app != null else ""
+	var theme_before_scale = hud.theme
 	panel._on_control_value_changed("display.ui_scale", "extra_large")
 	panel._on_control_value_changed("display.hud_density", "compact")
 	panel._on_control_value_changed("display.board_detail", "full")
@@ -68,6 +69,15 @@ func _test_shell_preferences() -> Array:
 	var preferences: Dictionary = hud.presentation_preferences_snapshot()
 	if absf(float(preferences.get("ui_scale_factor")) - 1.3) > 0.001:
 		failures.append("maximum UI scale should apply through the central shell owner")
+	if (
+		hud.theme == theme_before_scale
+		or hud.theme.has_default_base_scale()
+		or absf(ThemeDB.fallback_base_scale - 1.3) > 0.001
+	):
+		failures.append("runtime UI scaling should rebuild the theme so cached control metrics relayout")
+	var scaled_extent: Vector2 = hud.size * hud.scale
+	if hud.scale.distance_to(Vector2(1.3, 1.3)) > 0.001 or scaled_extent.x + 0.5 < tree.root.size.x or scaled_extent.y + 0.5 < tree.root.size.y:
+		failures.append("runtime UI scaling should enlarge the HUD while preserving transformed viewport coverage")
 	if preferences.get("hud_density") != "compact":
 		failures.append("HUD density should apply through the shell owner")
 	if absf(float(preferences.get("camera_sensitivity_factor")) - 1.45) > 0.001 or preferences.get("camera_invert_y") != true:
@@ -111,6 +121,10 @@ func _test_shell_preferences() -> Array:
 		failures.append("display preferences must not reset or hide separate onboarding")
 	if str(layout.get("top_summary_text", "")).find("SCORE") == -1:
 		failures.append("compact HUD should retain essential live score information")
+	panel._on_control_value_changed("display.ui_scale", "standard")
+	await tree.process_frame
+	if hud.scale.distance_to(Vector2.ONE) > 0.001 or hud.size.x + 0.5 < tree.root.size.x or hud.size.y + 0.5 < tree.root.size.y:
+		failures.append("standard UI scale should restore identity transform and full logical viewport bounds")
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size

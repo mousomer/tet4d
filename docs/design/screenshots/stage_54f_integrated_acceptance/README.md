@@ -36,6 +36,7 @@ candidate. They are evidence for review, not pixel-diff test oracles.
 | `after_live_4d_1920x1080.png` | larger desktop window |
 | `after_settings_960x640.png` | Settings at supported minimum |
 | `after_settings_focus_bottom_960x640.png` | keyboard focus revealed the bottom reset action |
+| `after_settings_large_ui_960x640.png` | Extra Large UI reflow at the supported minimum |
 | `after_setup_invalid_1600x960.png` | ordinary invalid summary and collapsed error disclosure |
 | `after_setup_invalid_hc_1600x960.png` | the same invalid state under High Contrast |
 

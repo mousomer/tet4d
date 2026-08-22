@@ -1349,8 +1349,24 @@ func _apply_accessibility_settings() -> void:
 
 func _apply_ui_scale(scale_id: String) -> void:
 	_ui_scale_factor = ShellPresentationPreferencesScript.ui_scale_factor(scale_id)
+	ThemeDB.fallback_base_scale = _ui_scale_factor
 	if theme != null:
-		theme.default_base_scale = _ui_scale_factor
+		# Rebuild the Theme resource so Godot invalidates cached control metrics.
+		# Mutating default_base_scale in place updates the stored preference but
+		# does not reliably relayout an already-rendered live shell.
+		theme = ReplayVisuals.build_theme(_current_display_mode)
+		# A zero resource scale delegates to ThemeDB's runtime fallback scale.
+		theme.default_base_scale = 0.0
+	var viewport_size := get_viewport_rect().size
+	set_anchor(SIDE_LEFT, 0.0)
+	set_anchor(SIDE_TOP, 0.0)
+	set_anchor(SIDE_RIGHT, 0.0)
+	set_anchor(SIDE_BOTTOM, 0.0)
+	offset_left = 0.0
+	offset_top = 0.0
+	offset_right = viewport_size.x / _ui_scale_factor
+	offset_bottom = viewport_size.y / _ui_scale_factor
+	scale = Vector2(_ui_scale_factor, _ui_scale_factor)
 	_apply_shell_style()
 	call_deferred("_focus_current_screen")
 

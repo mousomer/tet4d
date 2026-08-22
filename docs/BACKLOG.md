@@ -232,7 +232,9 @@ a placeholder authority record in advance.
 - [x] The E5 display-setting findings are closed without changing setting IDs
   or persistence schema: runtime UI contexts now filter inapplicable quick
   settings, and player-facing labels describe cell-outline strength, 4D slice
-  labels, and replay-object scale truthfully.
+  labels, and replay-object scale truthfully. The same audit also corrected
+  runtime UI scale so it visibly reflows the shell instead of changing only a
+  stored factor.
 - [x] Supported-small-window Settings reachability is repaired: content and
   both reset actions scroll into range, and keyboard focus reveals an
   off-screen target instead of remaining stranded.

@@ -276,3 +276,13 @@ particles, and event markers rather than camera projection. The persisted
 `display.board_detail` ID is presented as cell-outline strength because its
 minimal/standard/full policy changes active, locked, and Ghost outline weight,
 not board geometry or grid density.
+
+Runtime UI scale must change rendered geometry, not merely a stored factor or
+Theme resource hint. `ReplayHud` owns the scale transform: it applies the
+canonical factor to the HUD root and inversely adjusts the root's logical
+bounds so the transformed shell continues to cover the physical viewport.
+ThemeDB receives the same fallback factor for controls that consume Godot's
+theme scale. This reflows menus, text, HUD controls, Settings scrolling, and
+focus geometry without changing the OS window, game viewport authority,
+gameplay state, camera state, or persistence schema. Returning to Standard
+restores an identity transform and the full logical viewport bounds.

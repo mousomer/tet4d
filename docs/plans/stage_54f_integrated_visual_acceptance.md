@@ -62,6 +62,8 @@ relative-control semantics, but the integrated review confirmed these Stage
 7. `display.show_w_labels`, `display.projection_strength`, and
    `display.board_detail` were exposed with inapplicable or misleading
    player-facing presentation.
+8. `display.ui_scale` updated its stored/runtime factor but did not visibly
+   resize an already-rendered live shell.
 
 Live 3D depth, stateless View Actions, the E5 cockpit hierarchy, NEXT fidelity,
 Ghost authority, and accepted movement/view semantics were not defective and
@@ -105,6 +107,10 @@ were not redesigned.
 - Player-facing labels now truthfully describe Cell Outline Strength, 4D Slice
   Labels, and Replay Object Scale. IDs, stored values, categories, reset
   ownership, and persistence schema are unchanged.
+- Runtime UI scale now applies a responsive HUD-root transform with inverse
+  logical bounds, so Large and Extra Large visibly reflow controls while the
+  transformed shell still covers the viewport. ThemeDB receives the same
+  fallback factor; Standard restores the identity transform.
 
 ### 2D spawn grammar
 
@@ -123,6 +129,7 @@ fabricating hidden cells or colliding with the active piece.
 | 4D compact/standard/detailed HUD | density-specific inspector disclosure | board remains primary and NEXT remains prominent |
 | 4D rotated | occupied board after outer camera orbit | volumes, labels, cells, and Ghost remain distinguishable |
 | High Contrast | occupied 4D plus invalid setup | non-colour identity and hierarchy retained |
+| Large/Extra Large UI | Live 2D at 1600x960; Settings at supported minimum | controls visibly enlarge; play remains coherent; Settings still scrolls |
 | Settings minimum | OS-clamped 960x660 | all rows and both resets scroll into range |
 | Settings focus reveal | focus moved directly to Reset Accessibility | scroll moved from 0 to 901 and focused control became visible |
 | Setup invalid | Advanced Game collapsed with invalid seed | global summary, Show Problem, and `Advanced Game · ERROR` are unmistakable |
