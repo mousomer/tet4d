@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -129,15 +129,21 @@ history ledger. Detailed history is preserved in
   repository gates pass; normal, smaller, and larger real-window review is
   accepted. No gameplay, view lifecycle, control-frame, NEXT, Ghost,
   deterministic, native, topology, or persistence authority changed.
-- Pre-54F issue #74 is COMPLETE / REVIEWED GREEN. The 3D/4D NEXT correction is
-  IMPLEMENTED / AUTOMATED GREEN / HUMAN VISIBLE REVIEW PENDING: the renderer
-  now retains one complete-piece XYZ projection frame across labeled W panes,
-  and registry-led structural coverage proves all production geometry paths.
-  Stage 54F also retains #69 spacing, #70 grid/wireframe/active-frame hierarchy,
-  the criterion that every 4D slice reads as a 3D board, and the setup
-  validation-error colour advisory.
-- Integrated professional playability/visual acceptance is now Stage 54F;
-  professional gaming-experience and release hardening is Stage 54G.
+- Pre-54F issue #74 is COMPLETE / REVIEWED GREEN, and the 3D/4D NEXT
+  correction is COMPLETE / HUMAN VISIBLE REVIEW ACCEPTED.
+- Stage 54F integrated professional playability/visual acceptance is
+  IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW on
+  `codex/54f-integrated-playability-visual-acceptance`. The candidate closes
+  #69 responsive slice spacing, #70 board hierarchy, 4D label collisions,
+  setup-error presentation, small-window Settings reachability, 2D spawn-entry
+  grammar, and concrete setting naming/applicability defects. Focused tests and
+  agent-driven Godot 4.7.1 real-window evidence cover 2D, 3D, occupied/rotated/
+  wide-W 4D, High Contrast, and 1600x960, 1180x760, and OS-clamped 960x660
+  windows; the pinned Godot 4.7.1 and full repository gates pass. No
+  deterministic gameplay, view, movement, NEXT, Ghost, native, topology, or
+  persistence authority changed. Independent human integrated product
+  acceptance remains required before COMPLETE status.
+- Professional gaming-experience and release hardening remains Stage 54G.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -268,31 +274,14 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Stage 54E-4 is COMPLETE / REVIEWED GREEN: the focused Stage 54E-4b
-   real-window review of flat 2D, Reset/Fit separation, restart and
-   same-context new-game preservation, context re-entry, stateless 3D/4D/replay
-   view actions, UI-scale ownership, and misleading-identity removal is
-   accepted, including the two live view-affordance corrections it required.
-   Stage 54D-3 Hold remains independently eligible; Stage 54E-5 remains later
-   programme work.
-2. Pre-54F correctness issue #74 is COMPLETE / REVIEWED GREEN as a bounded
-   Godot input/presentation correction. Human-visible review accepted 2D
-   Relative Left/Right, 3D Relative Left/Right and Forward/Back, and preservation
-   of accepted 4D behaviour.
-   Relative Left/Right is resolved from presented yaw in 2D and 3D; 3D Forward
-   recedes and Back approaches; guidance consumes the same effective mapping;
-   Absolute and accepted 4D behaviour remain regression-protected. Focused
-   Godot verification and the full repository gate pass. This does not reopen
-   Stage 54E-4 lifecycle or view architecture.
-3. Pre-54F 3D/4D NEXT geometry fidelity is COMPLETE / HUMAN VISIBLE REVIEW
-   ACCEPTED. The fault was independent renderer fitting of
-   each W pane, not queue identity, production geometry, embedding, W grouping,
-   or the thumbnail model. One complete-piece projection frame now preserves
-   cross-W XYZ offsets. Exhaustive registry tests cover 14 Live-3D and 21
-   Live-4D definitions across every admitted piece set, plus queue updates and
-   named FORK4 regression. Focused Godot 4.7.1 real-window review accepted
-   representative native and embedded 3D/4D shapes, FORK4's non-recentered
-   cross-W placement, complete labeled panes, and NEXT-to-spawn queue updates.
-4. Keep piece/config-bundle import readers and unrelated settings recovery as
+1. Run independent human integrated product review against
+   `docs/plans/stage_54f_integrated_visual_acceptance.md`. If accepted, change
+   only the Stage 54F terminal state to COMPLETE / HUMAN INTEGRATED
+   PLAYABILITY ACCEPTED; if defects are found, classify and correct 54F
+   blockers before acceptance.
+2. Stage 54D-3 Hold remains independently eligible and was not absorbed into
+   Stage 54F. Stage 54G remains the next release-hardening/final-manual-
+   acceptance stage after Stage 54F human acceptance.
+3. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

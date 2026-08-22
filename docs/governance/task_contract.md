@@ -1,4 +1,216 @@
-# Task Contract — Stage 54E-5 Gameplay Cockpit Consolidation
+# Task Contract — Stage 54F Integrated Professional Playability and Visual Acceptance
+
+Status: IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW (2026-08-22)
+
+## Objective
+
+Make the accepted Godot 2D, 3D, and Live-4D product shell visually legible,
+coherent, usable, and professionally presentable in actual play. Close the
+known Stage 54F presentation and responsive-shell blockers without reopening
+accepted gameplay, view, movement, NEXT, Ghost, cockpit, or persistence
+semantics and without absorbing new features.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifiers: none.
+- Affected layers: Godot presentation shell and governing documentation.
+- Required evidence: `documentation`, `godot`, `integration`, and
+  `human_visual`.
+- Full repository gate: required because shared rendering, setup, Settings,
+  accessibility, and integrated product-acceptance claims are in scope.
+
+## Current Authority
+
+- The relevant product RDS documents own durable behavior.
+- `docs/architecture/4d_presentation_interaction_architecture.md` owns the
+  accepted `B -> G_D -> L -> anchor/layout -> V/P` composition. Adaptive
+  layout owns anchors, arrangement, gaps, and layout bounds.
+- `docs/architecture/camera_gui_preset_semantics.md` owns Reset View, Fit View,
+  lifecycle, flat 2D, and stateless named view actions.
+- `docs/architecture/godot_vector_arcade_cockpit_overhaul.md` owns the accepted
+  board-first cockpit hierarchy and progressive disclosure.
+- The NEXT, Ghost, display, and accessibility architecture documents own their
+  existing presentation/data boundaries, semantic roles, responsive
+  scrolling/focus, contrast, motion, and non-colour cues.
+- `docs/architecture/authority_map.md` assigns these presentation concerns to
+  Godot/GDScript.
+
+Authority effect: existing Godot presentation owners are refined. No
+deterministic gameplay authority is transferred or established. Native rules,
+topology, queue/RNG, collision, scoring, piece definitions, snapshots, hashes,
+replay identity, and persistence schemas remain unchanged.
+
+## Known Findings to Reproduce and Classify
+
+1. Live-4D inter-slice spacing may visually fuse adjacent 3D volumes (#69).
+2. Grid, inactive wireframe, active frame, Ghost, and piece strength may not
+   express the required hierarchy (#70).
+3. Each 4D W slice must perceptually read as a 3D board volume.
+4. Invalid setup must be unmistakable in standard and High Contrast themes,
+   including when the responsible section is collapsed.
+5. Settings controls and both reset actions must remain reachable after
+   Display Reset and at every supported constrained size.
+6. 4D slice labels must communicate semantic slice membership without
+   colliding with pieces, frames, neighbouring slices, or viewport edges.
+7. View Actions must still look interactive while remaining stateless.
+8. Above-board 2D spawn presentation must clarify the playable boundary
+   without changing spawn rules or fabricating hidden cells.
+9. Player-facing display setting names and applicability must match their
+   actual runtime effects.
+
+Every observed issue is classified as a 54F blocker, a 54G hardening item, a
+new feature, or a correctness regression in an accepted subsystem. Correctness
+regressions are diagnosed separately and are not masked by visual changes.
+
+## Allowed Systems and Paths
+
+- adaptive 4D slice-layout policy and structural tests;
+- shared Godot board-rendering roles, depth cues, labels, theme palettes,
+  accessibility derivatives, and focused tests;
+- setup validation presentation and progressive-disclosure tests, without
+  changing validation rules;
+- Settings registry presentation metadata, generated panel scrolling/focus,
+  applicability filtering, and responsive-layout tests;
+- bounded HUD/control affordance corrections proven by current review;
+- existing architecture/programme/backlog/handoff docs and before/after
+  screenshots; and
+- test-only seams needed to inspect layout/style state without pixel-diff
+  acceptance.
+
+## Required Changes
+
+1. Capture and inspect a real-window baseline for 2D, 3D, 4D, setup,
+   Settings, accessibility, HUD densities, and representative window sizes.
+2. Route confirmed spacing through `AdaptiveLayerLayout`, preserving stable
+   assignment, anchor-only composition, non-overlap, Fit bounds, resize, and
+   deterministic output.
+3. Express the required board hierarchy through shared semantic roles and
+   render-state selection so active piece/Ghost dominate grid and frames while
+   active board identity remains clear in standard and High Contrast modes.
+4. Preserve volumetric depth cues for 3D and every 4D slice.
+5. Place slice labels by a stable, camera-aware rule outside gameplay
+   geometry, with a subtle readability treatment if required.
+6. Make validation failure unmistakable with error text, theme role, field
+   treatment, and collapsed-section indication; reapply runtime style changes.
+7. Make Settings genuinely scrollable and focus-reachable at the supported
+   minimum and after reset/resizing, including focus reveal for off-screen
+   controls.
+8. Correct only concrete setting applicability/naming defects, preserving IDs,
+   persistence compatibility, and settings taxonomy.
+9. Add executable structural evidence and record the final real-window review,
+   accessibility result, performance sanity, and any 54G deferrals.
+
+## Forbidden Changes
+
+- deterministic gameplay, native sessions, queue/RNG, collision, scoring,
+  topology, piece definitions, spawn rules, snapshots, hashes, or replay/trace
+  schemas;
+- movement/control-frame resolution or accepted relative-control semantics;
+- camera projection policy, Reset/Fit/Restart lifecycle, view ownership, or
+  named-preset identity;
+- NEXT geometry/data construction or Ghost landing authority;
+- E5 cockpit information-architecture redesign;
+- Hold, campaign, topology gameplay, Explorer, a new renderer, a new control
+  system, or other new features;
+- viewport-coordinate rendering hacks, persisted transient layout pose,
+  screenshot pixel diffs as the primary oracle, or per-frame node churn; and
+- push or pull-request creation.
+
+## Acceptance Criteria
+
+1. Live 2D is intentional, simple, and clear about its board/spawn boundary.
+2. Live 3D depth is readable without grid/wireframe noise dominating.
+3. Every Live-4D W slice reads as a 3D volume and adjacent slices remain
+   visibly separate but related.
+4. Active piece and Ghost are the strongest gameplay content; active frame,
+   inactive wireframe, and internal grid follow in that order.
+5. Slice labels remain legible, semantically assigned, and unobtrusive.
+6. NEXT remains visible, faithful, and prominent without competing with play.
+7. The accepted cockpit, view actions, Fit/Reset, relative controls, and
+   session actions retain their semantics and reachability.
+8. Invalid setup is unmistakable locally and globally, including a hidden
+   error in a collapsed section and High Contrast mode.
+9. Settings scrolling reaches every control and both reset actions at the
+   supported minimum; keyboard focus does not become stranded off-screen.
+10. Exposed display setting names and applicability are truthful.
+11. Compact, Standard, and Detailed HUD remain coherent across modes.
+12. Larger UI scale, High Contrast, and Reduced Motion retain semantic
+    hierarchy and label reachability.
+13. No essential clipping, overlap, or obvious performance regression blocks
+    play at the declared minimum, constrained, normal, and larger windows.
+14. Focused checks, pinned Godot 4.7.1 verification, and the full gate pass.
+15. Real DisplayServer review accepts integrated 2D, 3D, and 4D playability;
+    otherwise the stage stops at ready-for-human-review status.
+
+## Automated Verification
+
+- focused layout, rendering-role, label, setup-validation, settings,
+  accessibility, HUD, NEXT, Ghost, input, and view-lifecycle tests selected by
+  the actual diff;
+- `git diff --check`;
+- `./scripts/check_git_sanitation_repo.sh`;
+- `./scripts/check_keybinding_contract.sh`;
+- routed documentation/governance checks;
+- pinned Godot 4.7.1 verification; and
+- `CODEX_MODE=1 ./scripts/verify.sh`.
+
+Native, packaging, and platform checks are omitted unless their files become
+legitimately in scope. No deterministic semantics change.
+
+## Manual Verification
+
+- Real Godot 4.7.1 window with fresh throwaway user state, not headless.
+- 2D: play, spawn boundary, NEXT, Ghost, setup, invalid setup, constrained
+  window, larger UI scale.
+- 3D: canonical and rotated camera, depth, pieces/Ghost/NEXT, relative movement,
+  cockpit, constrained window.
+- 4D: simple and occupied boards, multi-W piece/Ghost, labels, HUD densities,
+  constrained/normal/large windows, Fit/Reset, and representative board sizes.
+- Settings: default, Display Reset, supported minimum, keyboard traversal,
+  focus reveal, and both reset actions.
+- Accessibility: High Contrast, larger UI scale, Reduced Motion sanity, and
+  non-colour semantic cues.
+- Capture representative before/after screenshots and inspect interaction, not
+  screenshots alone.
+
+## Documentation Updates
+
+- extend existing presentation/cockpit architecture rather than creating a
+  parallel visual authority;
+- update the programme and backlog with closed 54F findings and bounded 54G
+  deferrals;
+- update this contract and `CURRENT_STATE.md` with final status; and
+- preserve historical E3/E4/E5 evidence.
+
+## Explicit Deferrals
+
+- Stage 54D-3 Hold;
+- non-blocking cosmetic/release polish classified for Stage 54G;
+- packaging, platform, controller, audio, localisation, and broader
+  accessibility work; and
+- every new gameplay, topology, Explorer, challenge, campaign, or simulation
+  feature.
+
+## Verification and Handoff Result
+
+The Stage 54F candidate closes the reproduced implementation blockers and has
+green focused Godot, sanitation, keybinding, project-contract, generated-doc,
+pinned Godot 4.7.1, and full `CODEX_MODE=1 ./scripts/verify.sh` evidence.
+Agent-driven real-DisplayServer review is green at the supported minimum,
+constrained, normal, and larger window requests across the required 2D, 3D,
+4D, setup, Settings, HUD-density, camera, and accessibility scenarios. The
+durable evidence is
+`docs/plans/stage_54f_integrated_visual_acceptance.md`.
+
+This evidence is not independent human product sign-off. No Stage 54F
+implementation blocker remains, but the contract intentionally stops at
+`IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW` until that review accepts the
+integrated product.
+
+---
+
+## Prior Contract — Stage 54E-5 Gameplay Cockpit Consolidation
 
 Status: COMPLETE / HUMAN PRODUCT REVIEW ACCEPTED (2026-08-21)
 

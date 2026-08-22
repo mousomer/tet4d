@@ -203,29 +203,43 @@ a placeholder authority record in advance.
   mechanism in the settings registry; and `display.projection_strength` is
   misleadingly named, since it scales cell, particle, and event size in every
   mode rather than expressing a 4D projection.
-- Stage 54F — integrated professional playability/visual acceptance.
+- Stage 54F — IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW. The bounded
+  implementation and agent-driven real-DisplayServer evidence are recorded in
+  `docs/plans/stage_54f_integrated_visual_acceptance.md`; independent human
+  product acceptance remains the terminal gate.
 - Stage 54G — professional gaming-experience and release hardening.
 
-### Stage 54F deferred Live-4D visual findings
+### Stage 54F integrated visual findings
 
-- [Increase Live-4D inter-slice board spacing (#69)](https://github.com/mousomer/tet4d/issues/69):
-  increase the visual gutter between simultaneously displayed slice boards
-  while preserving anchor-only layout semantics, stable slice ordering, and
-  whole-collection Fit. Validate `W=1` and representative `2x2` and larger
-  slice layouts.
-- [Refine Live-4D grid and board-wireframe visual hierarchy (#70)](https://github.com/mousomer/tet4d/issues/70):
-  reduce internal-grid contrast and line weight; use a weak dark-blue grid and
-  thinner muted-yellow outer wireframe; keep active-slice emphasis visible
-  without an excessively thick frame; and ensure pieces and Ghost dominate the
-  visual hierarchy.
-- Every displayed 4D W-slice must read as a genuinely 3D board volume, with
-  legible front/back/depth structure, pieces and Ghost visibly occupying that
-  volume, and adjacent slices remaining separate related volumes. This is a
-  perceptual criterion beyond spacing or line thickness, not a duplicate of
-  #69 or #70.
-- Invalid setup state must look unmistakably invalid. Carry the Stage 54E-3
-  advisory that runtime style variation can leave a validation summary in the
-  accent colour instead of the error colour; do not reopen E3 IA for it.
+- [x] [Increase Live-4D inter-slice board spacing (#69)](https://github.com/mousomer/tet4d/issues/69):
+  closed in the Stage 54F candidate through deterministic board-size-derived
+  horizontal/vertical gutters, label-aware row clearance, stable slice
+  assignment, non-overlap tests, and whole-collection Fit evidence for
+  representative `2x2`, `W=8`, asymmetric, and constrained-window layouts.
+- [x] [Refine Live-4D grid and board-wireframe visual hierarchy (#70)](https://github.com/mousomer/tet4d/issues/70):
+  closed in the Stage 54F candidate. Internal-grid alpha is now operational
+  and subordinate; wireframe and active-frame roles remain distinct; the
+  active-frame multipliers are reduced; High Contrast preserves the ordering;
+  and occupied real-window evidence keeps pieces and Ghost dominant.
+- [x] Every displayed 4D W-slice reads as a 3D board volume in the agent-driven
+  real-window matrix: front/back face grids, floor lattice, wireframe cage,
+  piece/Ghost depth, responsive separation, and rotated-view evidence remain
+  legible. Independent human product acceptance is still required.
+- [x] The Stage 54E-3 setup-colour advisory is closed. Invalid setup now
+  carries error-coloured summary and disclosure treatment plus literal
+  `ERROR` text when the responsible section is collapsed, in standard and
+  High Contrast modes.
+- [x] The E5 display-setting findings are closed without changing setting IDs
+  or persistence schema: runtime UI contexts now filter inapplicable quick
+  settings, and player-facing labels describe cell-outline strength, 4D slice
+  labels, and replay-object scale truthfully.
+- [x] Supported-small-window Settings reachability is repaired: content and
+  both reset actions scroll into range, and keyboard focus reveals an
+  off-screen target instead of remaining stranded.
+
+No new Stage 54F blockers remain in automated or agent-driven real-window
+review. Stage 54G retains its existing release-hardening scope; no cosmetic
+item discovered here requires a new backlog entry.
 
 ### Pre-54F correctness findings
 
