@@ -138,5 +138,10 @@ func _collection_bounds() -> Dictionary:
 			maxf(max_world.z, layer_max.z)
 		)
 	if dimension >= 4:
-		max_world.y += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_world.x -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_world.y -= ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD
+		min_world.z -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_world.x += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_world.y += ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD
+		max_world.z += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
 	return {"ok": true, "min": min_world, "max": max_world}

@@ -721,3 +721,67 @@ camera lifecycle, named-view mutation, NEXT/Ghost data path, deterministic
 state, replay schema, setting schema, or renderer geometry. Hold, 4D inter-slice
 spacing, grid/wireframe hierarchy, 4D volume readability, Settings overflow,
 and integrated visual polish remain deferred to their owning stages.
+
+## Stage 54F Integrated Playability and Visual Grammar
+
+Stage 54F retains the E5 information architecture and refines the shared board
+and shell presentation after controlled real-window review. Professional
+playability is defined by comprehension and reachability, not ornament.
+
+### Board hierarchy and dimensional progression
+
+The normative live-board hierarchy is:
+
+1. active piece, with Ghost visibly related but subordinate;
+2. active board or slice frame;
+3. inactive outer wireframe;
+4. internal grid and floor lattice.
+
+Grid opacity and thickness must be operational material properties rather than
+inactive alpha constants. High Contrast strengthens the same semantic order;
+it does not flatten every role to equal intensity. Cell faces, floor cues,
+rear-face lattice selection, and occlusion preserve 3D depth. Live 4D reuses
+those cues inside every W slice so the collection reads as related 3D volumes,
+not as flat cards or one fused wireframe.
+
+The adaptive-layout owner computes responsive gutters from slice extent under
+bounded minimum/maximum policy. Layout continues to change anchors only;
+stable layer assignment, slice-local bases, exact `B`, Fit bounds, Reset View,
+resize behavior, and non-persistence remain unchanged. Whole-collection Fit
+absorbs the larger envelope rather than rendering slices on top of one another.
+
+### Slice labels and 2D spawn entry
+
+W labels remain semantic-axis labels derived from slice identity, never screen
+order. They use a stable camera-aware edge, sit outside the board volume, and
+remain included in the fit envelope. A strong outline supplies a subtle halo;
+labels do not grow into primary gameplay content. Spacing must reserve enough
+room for adjacent rows and columns so labels do not collide with frames or
+neighbouring slices.
+
+Native above-board spawn cells remain valid gameplay state. Live 2D marks the
+open top boundary as a spawn entry with a small non-cell label/guide outside
+the playable rectangle. It does not clamp active cells, change the native
+spawn, extend board dimensions, or fabricate hidden grid cells.
+
+### Setup and Settings reachability
+
+Setup errors always carry redundant text: a global `Not launchable` summary,
+an enabled `Show Problem` recovery action, field-level treatment, and an
+`ERROR` marker on any collapsed section that owns a hidden failure. Runtime
+changes to semantic theme variations must trigger a style-role refresh so the
+error role is visually current in base and High Contrast themes.
+
+The generated Settings panel remains one scroll owner. Every generated focus
+target and reset action requests deferred `ensure_control_visible()` when it
+receives focus. Manual scrolling remains available, but focus may not be
+stranded outside the visible scroll viewport after resize or Display Reset.
+The taxonomy, persisted values, and reset ownership remain unchanged.
+
+### 54F boundary
+
+Stage 54F changes presentation roles, transient slice spacing/labels, setup
+error styling, Settings focus reveal, and truthful setting presentation only.
+It changes no gameplay, controls, camera/view semantics, NEXT geometry, Ghost
+landing, cockpit grouping, native code, topology, persistence ID/schema,
+replay identity, or Hold scope.

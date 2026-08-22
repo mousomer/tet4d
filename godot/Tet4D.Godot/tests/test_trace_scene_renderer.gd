@@ -115,6 +115,11 @@ func run() -> Array:
 			failures.append("live 2D renderer should build an explicit 12-edge ordinary wireframe")
 		if _count_presentation_role(live_grid, "board.grid") != 6:
 			failures.append("live 2D internal grid should exclude its six coincident outer-boundary lines")
+		var spawn_cue := live_grid.find_child("SpawnEntryLabel", true, false) as Label3D
+		if spawn_cue == null or spawn_cue.text.find("SPAWN ENTRY") == -1:
+			failures.append("live 2D should identify intended above-board spawn entry without adding cells")
+		elif spawn_cue.position.y <= 2.0:
+			failures.append("live 2D spawn-entry cue should sit outside the playable board bounds")
 		renderer.set_grid_visible(false)
 		renderer.render_snapshot(renderer._presentation.snapshot)
 		await tree.process_frame
@@ -257,16 +262,22 @@ func run() -> Array:
 				var expected_font_size := ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 				if label.font_size != expected_font_size or absf(label.pixel_size - ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE) > 0.0001:
 					failures.append("live 4D W labels should remain readable at fitted overview scale")
-				var rear_axis := int(label.get_meta("rear_face_axis", -1))
-				var rear_sign := float(label.get_meta("rear_face_sign", 0.0))
+				var anchor_axis := int(label.get_meta("rear_face_axis", -1))
+				var anchor_side := float(label.get_meta("label_anchor_side", 0.0))
 				var label_min: Vector3 = label.get_meta("slice_bounds_min", Vector3.ZERO)
 				var label_max: Vector3 = label.get_meta("slice_bounds_max", Vector3.ZERO)
-				if rear_axis not in [Vector3.AXIS_X, Vector3.AXIS_Z]:
-					failures.append("W labels should attach to a camera-relative rear vertical face")
+				if anchor_axis not in [Vector3.AXIS_X, Vector3.AXIS_Z]:
+					failures.append("W labels should use a camera-relative vertical edge")
 				else:
-					var expected_face := label_min[rear_axis] if rear_sign < 0.0 else label_max[rear_axis]
-					if absf(label.position[rear_axis] - expected_face) > 0.05:
-						failures.append("W labels should attach to a camera-relative rear vertical face")
+					var expected_position := (
+						label_max[anchor_axis] + ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
+						if anchor_side > 0.0
+						else label_min[anchor_axis] - ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
+					)
+					if absf(label.position[anchor_axis] - expected_position) > 0.05:
+						failures.append("W labels should remain outside the camera-facing slice edge")
+				if label.position.y >= label_min.y:
+					failures.append("W labels should remain below occupied slice geometry")
 		if slice_label_count < 4:
 			failures.append("live 4D renderer should label each basis-derived slice")
 

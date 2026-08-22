@@ -18,9 +18,9 @@ func configure(board_shape: Array, basis = null) -> void:
 	_basis = basis if basis != null else SliceBasis4DScript.identity()
 	_visible_board_shape = _basis.visible_dimensions(_board_shape) if _board_shape.size() == 4 else _board_shape.duplicate()
 	var width := float(_visible_board_shape[0]) if not _visible_board_shape.is_empty() else 4.0
-	slice_stride = width + ReplayVisuals.SLICE_PADDING
 	var height := float(_visible_board_shape[1]) if _visible_board_shape.size() > 1 else 4.0
 	layer_layout.configure(current_layer_count(), width, height)
+	slice_stride = width + layer_layout.horizontal_gap
 
 
 func unoriented_world_position(coordinates: Array, dimension: int) -> Vector3:
@@ -116,9 +116,9 @@ func slice_label_position(w_index: int = 0) -> Vector3:
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	return Vector3(
-		min_pos.x + ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET,
-		max_pos.y + ReplayVisuals.W_SLICE_LABEL_VERTICAL_OFFSET,
-		min_pos.z + ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
+		min_pos.x - ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET,
+		min_pos.y - ReplayVisuals.W_SLICE_LABEL_VERTICAL_OFFSET,
+		min_pos.z - ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
 	)
 
 
@@ -137,7 +137,12 @@ func board_bounds(board_shape: Array, dimension: int, basis = null) -> Dictionar
 		min_pos = Vector3(minf(min_pos.x, layer_min.x), minf(min_pos.y, layer_min.y), minf(min_pos.z, layer_min.z))
 		max_pos = Vector3(maxf(max_pos.x, layer_max.x), maxf(max_pos.y, layer_max.y), maxf(max_pos.z, layer_max.z))
 	if dimension >= 4:
-		max_pos.y += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_pos.x -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_pos.y -= ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD
+		min_pos.z -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_pos.x += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_pos.y += ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD
+		max_pos.z += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
 	return {"ok": true, "min": min_pos, "max": max_pos}
 
 

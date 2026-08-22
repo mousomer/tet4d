@@ -23,6 +23,18 @@ func run() -> Array:
 			failures.append("layout should assign %d unique stable layers" % count)
 		if int(snapshot.get("rows", 0)) * int(snapshot.get("columns", 0)) < count:
 			failures.append("layout capacity should cover %d layers" % count)
+		if float(snapshot.get("horizontal_gap", 0.0)) < AdaptiveLayerLayoutScript.MIN_SLICE_GUTTER:
+			failures.append("layout should reserve the minimum horizontal perceptual gutter")
+		if float(snapshot.get("vertical_gap", 0.0)) < AdaptiveLayerLayoutScript.MIN_VERTICAL_SLICE_GUTTER:
+			failures.append("layout should reserve the minimum vertical perceptual gutter")
+		for first_index in range(count):
+			for second_index in range(first_index + 1, count):
+				if layout.tile_rect_for_layer(first_index).intersects(layout.tile_rect_for_layer(second_index)):
+					failures.append("layout tiles %d and %d must not overlap" % [first_index, second_index])
+		var repeated = AdaptiveLayerLayoutScript.new()
+		repeated.configure(count, 8.0, 16.0)
+		if repeated.snapshot() != snapshot:
+			failures.append("layout output should be deterministic for the same presentation input")
 	var mapper = TraceCoordinateMapperScript.new()
 	var bounds: Dictionary = mapper.board_bounds([8, 16, 5, 8], 4)
 	if not bounds.get("ok", false) or mapper.layer_layout.rows <= 1:
@@ -63,6 +75,8 @@ func _test_anchor_only_layout(failures: Array) -> void:
 	var first_anchor_after: Vector3 = layout.anchor_for_layer(1)
 	if first_anchor_after == first_anchor_before:
 		failures.append("layout configuration must be able to change anchors")
+	if layout.horizontal_gap <= AdaptiveLayerLayoutScript.MIN_SLICE_GUTTER:
+		failures.append("larger slices should receive responsive spacing above the minimum")
 	var local_axes_after: Array = [
 		orientation.passive_yaw_basis() * Vector3(1.0, 0.0, 0.0),
 		orientation.passive_yaw_basis() * Vector3(0.0, 1.0, 0.0),

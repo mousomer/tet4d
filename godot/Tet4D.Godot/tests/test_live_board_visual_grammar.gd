@@ -25,4 +25,16 @@ func run() -> Array:
 		failures.append("absolute translation must remain canonical under Back yaw")
 	if ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY != 0.75 or ReplayVisuals.MIN_LOCKED_CELL_OPACITY != 0.35 or ReplayVisuals.MAX_LOCKED_CELL_OPACITY != 1.0:
 		failures.append("locked-cell opacity authority must retain its documented default and range")
+	var normal_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN, false)
+	var contrast_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN, true)
+	if normal_grid.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA:
+		failures.append("normal internal-grid alpha must be an operational material property")
+	if normal_grid.albedo_color.a >= 0.5 or contrast_grid.albedo_color.a <= normal_grid.albedo_color.a:
+		failures.append("internal grid should remain weak normally and strengthen in High Contrast")
+	var outline_thickness := ReplayVisuals.slice_outline_thickness()
+	if ReplayVisuals.grid_internal_thickness() >= outline_thickness:
+		failures.append("internal grid must remain thinner than the inactive outer wireframe")
+	var active_thickness := outline_thickness * ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER
+	if active_thickness <= outline_thickness or active_thickness >= ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE * 0.2:
+		failures.append("active frame should beat the inactive frame without competing with piece volume")
 	return failures

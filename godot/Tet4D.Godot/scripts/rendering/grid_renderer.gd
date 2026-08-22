@@ -76,6 +76,8 @@ func rebuild(
 		if live_2d and dimension >= 3:
 			_add_floor_face(local_bounds, display_mode, slice_root)
 			_add_floor_lattice(local_bounds, visible_board_shape, display_mode, high_contrast, slice_root)
+		if live_2d and dimension == 2:
+			_add_spawn_entry_cue(local_bounds, display_mode, high_contrast, slice_root)
 		_add_outline_box(
 			local_bounds,
 			display_mode,
@@ -177,6 +179,36 @@ func _add_floor_face(slice_bounds: Dictionary, display_mode: String, parent: Nod
 	floor.material_override = ReplayVisuals.live_board_floor_material(display_mode)
 	floor.position = Vector3((min_pos.x + max_pos.x) * 0.5, min_pos.y + 0.0125, (min_pos.z + max_pos.z) * 0.5)
 	parent.add_child(floor)
+
+
+func _add_spawn_entry_cue(
+	slice_bounds: Dictionary,
+	display_mode: String,
+	high_contrast: bool,
+	parent: Node3D
+) -> void:
+	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
+	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
+	var label := Label3D.new()
+	label.name = "SpawnEntryLabel"
+	label.text = "SPAWN ENTRY  ↘"
+	label.font_size = ReplayVisuals.SPAWN_ENTRY_LABEL_FONT_SIZE
+	label.pixel_size = ReplayVisuals.SPAWN_ENTRY_LABEL_PIXEL_SIZE
+	label.modulate = ReplayVisuals.color_for_role(
+		ReplayVisuals.ROLE_TEXT if high_contrast else ReplayVisuals.ROLE_TEXT_DIM,
+		display_mode
+	)
+	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
+	label.outline_size = ReplayVisuals.SPAWN_ENTRY_LABEL_OUTLINE_SIZE
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.position = Vector3(
+		min_pos.x - 0.18,
+		max_pos.y + ReplayVisuals.SPAWN_ENTRY_LABEL_VERTICAL_OFFSET,
+		min_pos.z - 0.03
+	)
+	label.set_meta("presentation_role", "board.spawn_entry_cue")
+	parent.add_child(label)
 
 
 func _add_floor_lattice(
@@ -358,13 +390,16 @@ func _update_slice_labels(camera_position: Vector3) -> void:
 		var center := (min_pos + max_pos) * 0.5
 		var camera_delta := camera_position - center
 		var axis := Vector3.AXIS_X if absf(camera_delta.x) >= absf(camera_delta.z) else Vector3.AXIS_Z
-		var sign_value := -1.0 if camera_delta[axis] >= 0.0 else 1.0
-		var inward_offset := 0.035
-		var position := Vector3(center.x, max_pos.y - 0.55, center.z)
-		position[axis] = (min_pos[axis] + inward_offset) if sign_value < 0.0 else (max_pos[axis] - inward_offset)
+		var camera_on_positive_side := camera_delta[axis] >= 0.0
+		var position := Vector3(center.x, min_pos.y - ReplayVisuals.W_SLICE_LABEL_VERTICAL_OFFSET, center.z)
+		position[axis] = (
+			max_pos[axis] + ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
+			if camera_on_positive_side
+			else min_pos[axis] - ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
+		)
 		label.position = position
 		label.set_meta("rear_face_axis", axis)
-		label.set_meta("rear_face_sign", sign_value)
+		label.set_meta("label_anchor_side", 1.0 if camera_on_positive_side else -1.0)
 
 
 func _add_w_label_chip(label_position: Vector3, display_mode: String) -> void:
