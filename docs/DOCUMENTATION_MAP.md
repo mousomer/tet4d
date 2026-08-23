@@ -148,6 +148,7 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Strict internal Python topology constructor and source-adapter boundary | `docs/architecture/python_topology_domain_model.md` |
 | Explorer topology persistence versions, strict loading, and legacy recovery | `docs/architecture/topology_persistence_recovery.md` |
 | Subsystem authority, inherited reference ownership, and new authority establishment | `docs/architecture/authority_map.md`, `docs/architecture/authority_transfer_protocol.md` |
+| Authoritative deterministic Hold transition, queue/RNG, state identity, and presentation boundary | `docs/architecture/authoritative_hold.md` |
 | Repo-wide structural cleanup sequencing | `docs/plans/cleanup_master_plan.md` |
 | Repository static-analysis, formatting, and CI coverage evidence | `docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md` |
 | Current Python semantic-boundary, coercion, retirement, and complexity audit | `docs/plans/audits/python_boundary_audit_2026-08-02.md` |

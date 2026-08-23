@@ -29,6 +29,10 @@ public:
 	// Observational queue query. The returned production shape is the next real
 	// draw and querying never mutates the bag or RNG, including at refill.
 	PieceShapeND peek_next_piece_shape() const;
+	// Authoritative Hold queries. Empty means the one slot is intentionally
+	// empty; availability also requires a live active-piece lifecycle.
+	std::optional<PieceShapeND> held_piece_shape() const;
+	bool hold_available() const;
 	// Exact read-only destination used by the next hard drop, or nullopt when
 	// the session is terminal or has no active piece.
 	std::optional<ActivePieceND> hard_drop_destination() const;
@@ -51,10 +55,13 @@ private:
 	std::string last_command_status_;
 	int command_count_ = 0;
 	std::size_t next_piece_index_ = 0;
+	std::optional<PieceShapeND> held_piece_;
+	bool hold_available_ = true;
 
 	void refill_piece_bag();
 	PieceShapeND draw_next_piece_shape();
 	void spawn_next_piece();
+	bool apply_hold();
 	std::string current_piece_name() const;
 	std::string next_piece_name() const;
 	std::string command_status(const std::string &command) const;
