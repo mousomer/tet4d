@@ -3,6 +3,7 @@ extends RefCounted
 const PieceThumbnailModelScript = preload("res://scripts/ui/pieces/piece_thumbnail_model.gd")
 const PieceThumbnailScript = preload("res://scripts/ui/pieces/piece_thumbnail.gd")
 const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.gd")
+const HoldPiecePanelScript = preload("res://scripts/ui/pieces/hold_piece_panel.gd")
 const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 
@@ -12,6 +13,7 @@ func run() -> Array:
 	_test_model_validation_and_dimensions(failures)
 	_test_isometric_face_adjacency(failures)
 	_test_shared_panel_renderer(failures)
+	_test_hold_panel_reuses_preview_pipeline(failures)
 	_test_exhaustive_production_geometry(failures)
 	_test_queue_identity_and_update(failures)
 	return failures
@@ -112,6 +114,24 @@ func _test_shared_panel_renderer(failures: Array) -> void:
 	snapshot = panel.deterministic_snapshot()
 	if bool(snapshot.get("model", {}).get("available", true)) or snapshot.get("piece_name_text") != "—" or snapshot.get("status_text") != "Preview unavailable":
 		failures.append("provider failure should clear stale geometry and show bounded unavailable state")
+	panel.free()
+
+
+func _test_hold_panel_reuses_preview_pipeline(failures: Array) -> void:
+	var panel = HoldPiecePanelScript.new()
+	if not panel.set_hold_state({}, true):
+		failures.append("intentional empty HOLD state should be valid")
+	var snapshot: Dictionary = panel.deterministic_snapshot()
+	if snapshot.get("piece_name_text") != "EMPTY" or snapshot.get("status_text") != "Available · C":
+		failures.append("empty HOLD must use intentional product language and the shared binding")
+	var fork4 := {"ok": true, "status": "piece", "dimension": 4, "piece_set_id": "standard_4d_5", "piece_name": "FORK4", "color_id": 7, "cells": [[0, 0, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]]}
+	if not panel.set_hold_state(fork4, false):
+		failures.append("HOLD must accept authoritative production preview payloads")
+	snapshot = panel.deterministic_snapshot()
+	if snapshot.get("piece_name_text") != "FORK4" or snapshot.get("status_text") != "Used until lock" or bool(snapshot.get("available", true)):
+		failures.append("populated unavailable HOLD must expose identity and redundant text status")
+	if snapshot.get("thumbnail", {}).get("render_mode") != "w_sliced_xyz_isometric" or snapshot.get("thumbnail", {}).get("group_count") != 2:
+		failures.append("HOLD must reuse the accepted shared cross-W thumbnail renderer")
 	panel.free()
 
 
@@ -291,11 +311,42 @@ func _test_queue_identity_and_update(failures: Array) -> void:
 			failures.append("%s queue-identity fixture must configure" % piece_set_id)
 			continue
 		_assert_live_queue_preview(failures, bridge, catalog_by_identity, dimension, piece_set_id, "initial")
+		var initial_snapshot = JSON.parse_string(bridge.live_3d_snapshot_json() if dimension == 3 else bridge.live_4d_snapshot_json())
+		var initial_active := str(initial_snapshot.get("current_piece", "")) if initial_snapshot is Dictionary else ""
+		var first_next: Dictionary = bridge.live_3d_next_piece_preview() if dimension == 3 else bridge.live_4d_next_piece_preview()
+		if dimension == 3:
+			bridge.live_3d_apply_command("hold")
+		else:
+			bridge.live_4d_apply_command("hold")
+		var held: Dictionary = bridge.live_3d_held_piece_preview() if dimension == 3 else bridge.live_4d_held_piece_preview()
+		var available: bool = bridge.live_3d_hold_available() if dimension == 3 else bridge.live_4d_hold_available()
+		var after_hold = JSON.parse_string(bridge.live_3d_snapshot_json() if dimension == 3 else bridge.live_4d_snapshot_json())
+		if str(held.get("piece_name", "")) != initial_active or not after_hold is Dictionary or str(after_hold.get("current_piece", "")) != str(first_next.get("piece_name", "")) or available:
+			failures.append("%dD %s first Hold transport must synchronize active, HOLD, NEXT, and availability" % [dimension, piece_set_id])
+		var rejected_hash: String = bridge.live_3d_state_hash() if dimension == 3 else bridge.live_4d_state_hash()
+		if dimension == 3:
+			bridge.live_3d_apply_command("hold")
+		else:
+			bridge.live_4d_apply_command("hold")
+		var after_rejected_hash: String = bridge.live_3d_state_hash() if dimension == 3 else bridge.live_4d_state_hash()
+		if after_rejected_hash != rejected_hash:
+			failures.append("%dD %s rejected Hold transport must be a deterministic no-op" % [dimension, piece_set_id])
 		if dimension == 3:
 			bridge.live_3d_apply_command("hard_drop")
 		else:
 			bridge.live_4d_apply_command("hard_drop")
+		available = bridge.live_3d_hold_available() if dimension == 3 else bridge.live_4d_hold_available()
+		if not available:
+			failures.append("%dD %s successful lock must reset authoritative Hold availability" % [dimension, piece_set_id])
 		_assert_live_queue_preview(failures, bridge, catalog_by_identity, dimension, piece_set_id, "post-lock")
+		var occupied_next: Dictionary = bridge.live_3d_next_piece_preview() if dimension == 3 else bridge.live_4d_next_piece_preview()
+		if dimension == 3:
+			bridge.live_3d_apply_command("hold")
+		else:
+			bridge.live_4d_apply_command("hold")
+		var next_after_swap: Dictionary = bridge.live_3d_next_piece_preview() if dimension == 3 else bridge.live_4d_next_piece_preview()
+		if _payload_identity(occupied_next) != _payload_identity(next_after_swap):
+			failures.append("%dD %s occupied Hold transport must not consume NEXT" % [dimension, piece_set_id])
 
 
 func _assert_live_queue_preview(failures: Array, bridge, catalog_by_identity: Dictionary, dimension: int, piece_set_id: String, phase: String) -> void:

@@ -308,13 +308,18 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: game area should remain larger than the inspector column, game=%s inspector=%s" % [label, game_rect, inspector_rect])
 	if replay_game_width > 0.0 and game_rect.size.x <= replay_game_width + 0.5:
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
-	if right_inspector_order.size() < 5 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "NextPiecePanel" or str(right_inspector_order[2]) != "Live4DBasisPanel" or str(right_inspector_order[3]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[4]) != "InspectorControlHints":
-		failures.append("%s: live right inspector should present onboarding, NEXT, basis, and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
+	if right_inspector_order.size() < 6 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "NextPiecePanel" or str(right_inspector_order[2]) != "HoldPiecePanel" or str(right_inspector_order[3]) != "Live4DBasisPanel" or str(right_inspector_order[4]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[5]) != "InspectorControlHints":
+		failures.append("%s: live right inspector should present onboarding, NEXT, HOLD, basis, and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
 	var next_piece_panel: Dictionary = snapshot.get("next_piece_panel", {})
 	if not bool(next_piece_panel.get("visible", false)) or next_piece_panel.get("piece_name_text") != "CROSS4":
 		failures.append("%s: live right inspector should expose the authoritative NEXT piece" % label)
 	if float(next_piece_panel.get("minimum_height", 0.0)) > inspector_rect.size.y:
 		failures.append("%s: NEXT panel should remain bounded within the scrollable inspector viewport" % label)
+	var hold_piece_panel: Dictionary = snapshot.get("hold_piece_panel", {})
+	if not bool(hold_piece_panel.get("visible", false)) or hold_piece_panel.get("piece_name_text") != "EMPTY" or hold_piece_panel.get("status_text") != "Available · C":
+		failures.append("%s: live right inspector should expose intentional authoritative HOLD state" % label)
+	if float(hold_piece_panel.get("minimum_height", 0.0)) > inspector_rect.size.y:
+		failures.append("%s: HOLD panel should remain bounded within the scrollable inspector viewport" % label)
 	var view_actions := hud.find_child("CockpitButtonPanel", true, false) as Control
 	var live_view_row := hud.find_child("LiveViewActions", true, false) as Control
 	var live_display_row := hud.find_child("LiveDisplayActions", true, false) as Control

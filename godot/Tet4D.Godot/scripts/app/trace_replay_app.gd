@@ -334,6 +334,9 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if _event_action_pressed_once(event, ["live_hard_drop", "live_2d_hard_drop"]):
 		_dispatch_live_gameplay_command("hard_drop")
 		return true
+	if _event_action_pressed_once(event, ["live_hold"]):
+		_dispatch_live_gameplay_command("hold")
+		return true
 	return false
 
 
@@ -375,6 +378,9 @@ func _handle_live_3d_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed_once(event, ["live_hard_drop", "live_3d_hard_drop"]):
 		_dispatch_live_3d_gameplay_command("hard_drop")
+		return true
+	if _event_action_pressed_once(event, ["live_hold"]):
+		_dispatch_live_3d_gameplay_command("hold")
 		return true
 	if _event_action_pressed_once(event, ["live_3d_rotate_xy_neg"]):
 		_dispatch_live_3d_rotation_intent("rotate_xy_neg")
@@ -439,6 +445,9 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed_once(event, ["live_hard_drop", "live_4d_hard_drop"]):
 		_dispatch_live_4d_gameplay_command("hard_drop")
+		return true
+	if _event_action_pressed_once(event, ["live_hold"]):
+		_dispatch_live_4d_gameplay_command("hold")
 		return true
 	if _event_action_pressed_once(event, ["live_4d_rotate_xy_neg"]):
 		_dispatch_live_4d_rotation_intent("rotate_xy_neg")
@@ -1048,6 +1057,7 @@ func _refresh_hud() -> void:
 		var game_over := _live_snapshot_game_over()
 		if not game_over:
 			_hud.set_next_piece_preview(_live_bridge.live_2d_next_piece_preview())
+		_hud.set_hold_piece_state(_live_bridge.live_2d_held_piece_preview(), _live_bridge.live_2d_hold_available())
 		_hud.set_live_2d_mode(
 			_live_2d_paused,
 			game_over,
@@ -1059,6 +1069,7 @@ func _refresh_hud() -> void:
 		var game_over := _live_snapshot_game_over()
 		if not game_over:
 			_hud.set_next_piece_preview(_live_bridge.live_3d_next_piece_preview())
+		_hud.set_hold_piece_state(_live_bridge.live_3d_held_piece_preview(), _live_bridge.live_3d_hold_available())
 		_hud.set_live_3d_mode(
 			_live_3d_paused,
 			game_over,
@@ -1070,6 +1081,7 @@ func _refresh_hud() -> void:
 		var game_over := _live_snapshot_game_over()
 		if not game_over:
 			_hud.set_next_piece_preview(_live_bridge.live_4d_next_piece_preview())
+		_hud.set_hold_piece_state(_live_bridge.live_4d_held_piece_preview(), _live_bridge.live_4d_hold_available())
 		_hud.set_live_4d_basis_snapshot(_live_4d_basis_hud_snapshot())
 		_hud.set_live_4d_mode(
 			_live_4d_paused,
@@ -2015,6 +2027,7 @@ func _live_gameplay_action_names() -> Array:
 		"live_2d_soft_drop",
 		"live_hard_drop",
 		"live_2d_hard_drop",
+		"live_hold",
 	]
 
 
@@ -2027,6 +2040,7 @@ func _live_3d_gameplay_action_names() -> Array:
 		"live_3d_soft_drop",
 		"live_hard_drop",
 		"live_3d_hard_drop",
+		"live_hold",
 		"live_3d_rotate_xy_neg",
 		"live_3d_rotate_xy_pos",
 		"live_3d_rotate_xz_neg",
@@ -2047,6 +2061,7 @@ func _live_4d_gameplay_action_names() -> Array:
 		"live_4d_soft_drop",
 		"live_hard_drop",
 		"live_4d_hard_drop",
+		"live_hold",
 		"live_4d_rotate_xy_neg",
 		"live_4d_rotate_xy_pos",
 		"live_4d_rotate_xz_neg",

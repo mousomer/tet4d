@@ -125,6 +125,33 @@ func run() -> Array:
 		var initial_piece := str(live_snapshot.get("current_piece", ""))
 		if initial_piece != "I":
 			failures.append("live mode should start with native I piece, got %s" % initial_piece)
+		var hold_panel_snapshot: Dictionary = app._hud._hold_piece_panel.deterministic_snapshot()
+		if hold_panel_snapshot.get("piece_name_text") != "EMPTY" or hold_panel_snapshot.get("status_text") != "Available · C":
+			failures.append("Live 2D cockpit must begin with an intentional available HOLD state")
+		var hold_event := InputEventKey.new()
+		hold_event.keycode = KEY_C
+		hold_event.pressed = true
+		app._unhandled_input(hold_event)
+		if str(app._current_snapshot.get("current_piece", "")) != "O" or str(app._current_snapshot.get("held_piece", {}).get("shape", "")) != "I":
+			failures.append("one physical C press must dispatch the native first-Hold transition")
+		hold_panel_snapshot = app._hud._hold_piece_panel.deterministic_snapshot()
+		if hold_panel_snapshot.get("piece_name_text") != "I" or hold_panel_snapshot.get("status_text") != "Used until lock":
+			failures.append("Live cockpit HOLD preview must follow authoritative populated/unavailable state")
+		var hash_after_hold := str(app._live_bridge.live_2d_state_hash())
+		var repeated_hold_event := InputEventKey.new()
+		repeated_hold_event.keycode = KEY_C
+		repeated_hold_event.pressed = true
+		repeated_hold_event.echo = true
+		app._unhandled_input(repeated_hold_event)
+		if str(app._live_bridge.live_2d_state_hash()) != hash_after_hold:
+			failures.append("held C key repeat must not dispatch another Hold attempt")
+		app._toggle_live_2d_pause()
+		var paused_hold_hash := str(app._live_bridge.live_2d_state_hash())
+		app._unhandled_input(hold_event)
+		if str(app._live_bridge.live_2d_state_hash()) != paused_hold_hash:
+			failures.append("paused gameplay ownership must suppress Hold")
+		app._toggle_live_2d_pause()
+		app._reset_live_2d()
 		app._dispatch_live_gameplay_command("hard_drop")
 		live_snapshot = app._current_snapshot
 		if str(live_snapshot.get("current_piece", "")) != "O":
@@ -241,8 +268,12 @@ func run() -> Array:
 		popup_space_event.keycode = KEY_SPACE
 		popup_space_event.pressed = true
 		app._input(popup_space_event)
+		var popup_hold_event := InputEventKey.new()
+		popup_hold_event.keycode = KEY_C
+		popup_hold_event.pressed = true
+		app._input(popup_hold_event)
 		if str(app._live_bridge.live_3d_state_hash()) != popup_owned_hash:
-			failures.append("cockpit popup ownership must suppress unhandled movement and pre-UI Space hard drop")
+			failures.append("cockpit popup ownership must suppress movement, Space hard drop, and Hold")
 		app._hud._live_interaction_owns_input = false
 		app._enter_replay_mode()
 		await tree.process_frame
