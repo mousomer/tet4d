@@ -1,6 +1,6 @@
 # Task Contract — Stage 54F Integrated Professional Playability and Visual Acceptance
 
-Status: IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW (2026-08-22)
+Status: COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED (2026-08-23)
 
 ## Objective
 
@@ -186,7 +186,10 @@ legitimately in scope. No deterministic semantics change.
 ## Explicit Deferrals
 
 - Stage 54D-3 Hold;
-- non-blocking cosmetic/release polish classified for Stage 54G;
+- non-blocking cosmetic/release polish classified for Stage 54G, including a
+  modest standard-mode Live-4D volume-legibility pass that must preserve
+  accepted slice/layout, projection, grid/wireframe hierarchy, control, and
+  gameplay semantics;
 - packaging, platform, controller, audio, localisation, and broader
   accessibility work; and
 - every new gameplay, topology, Explorer, challenge, campaign, or simulation
@@ -203,10 +206,13 @@ constrained, normal, and larger window requests across the required 2D, 3D,
 durable evidence is
 `docs/plans/stage_54f_integrated_visual_acceptance.md`.
 
-This evidence is not independent human product sign-off. No Stage 54F
-implementation blocker remains, but the contract intentionally stops at
-`IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW` until that review accepts the
-integrated product.
+The automated and agent-driven evidence was not independent human product
+sign-off. Human integrated review subsequently accepted 2D, 3D, and 4D on
+2026-08-23, so no Stage 54F gate remains. That review recorded slightly weaker
+standard-mode Live-4D gamebox legibility than the equivalent 2D/3D boards as
+non-blocking Stage 54G polish; the usable current presentation and strong High
+Contrast alternative keep it outside the Stage 54F correctness and
+architecture gates.
 
 ---
 

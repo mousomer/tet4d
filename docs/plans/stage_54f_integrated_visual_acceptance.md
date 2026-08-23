@@ -1,10 +1,10 @@
 # Stage 54F Integrated Visual Acceptance Record
 
 Role: verification record
-Status: implemented; agent-driven real-window review green; independent human product review pending
+Status: complete; human integrated playability accepted
 Source of truth: Stage 54F task contract and the established Godot presentation authorities
 Supersedes: none
-Last updated: 2026-08-22
+Last updated: 2026-08-23
 
 ## Purpose
 
@@ -34,11 +34,14 @@ viewport. Headless tests were used only for structural regression evidence.
 
 ## Verifier and Acceptance Boundary
 
-This was an agent-driven session: real windows, rendered frames, focus changes,
-camera orbit, native hard drops, occupied boards, HUD density changes, and
-accessibility modes were exercised and visually inspected. It is human-visible
-evidence but not a human sign-off. Therefore the truthful terminal state is
-`IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW`.
+The implementation session was agent-driven: real windows, rendered frames,
+focus changes, camera orbit, native hard drops, occupied boards, HUD density
+changes, and accessibility modes were exercised and visually inspected. That
+evidence was human-visible but was not itself human sign-off. On 2026-08-23,
+human integrated review accepted 2D, 3D, and 4D playability and classified the
+remaining standard-mode Live-4D legibility observation as non-blocking Stage
+54G polish. The truthful terminal state is therefore
+`COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED`.
 
 ## Baseline Findings
 
@@ -214,7 +217,13 @@ frame to the finding or matrix cell it demonstrates.
 
 ## Remaining Work
 
-No Stage 54F blocker remains in automated or agent-driven real-window review.
-Independent human integrated product review is still required. Stage 54G keeps
-its existing release-hardening/final-manual-acceptance scope; this review found
-no additional non-blocking cosmetic item that merits a new 54G entry.
+No Stage 54F blocker remains. Human integrated product review accepted 2D, 3D,
+and 4D playability on 2026-08-23.
+
+Human review recorded one non-blocking Stage 54G polish finding: standard-mode
+Live-4D gameboxes remain slightly less legible than equivalent 2D/3D boards.
+The current presentation remains usable and comprehensible, and High Contrast
+provides a strong alternative, so this does not block Stage 54F acceptance.
+Any 54G refinement must remain modest and must not reopen slice/layout,
+projection, grid/wireframe hierarchy, control, or gameplay semantics. This is
+polish, not a correctness or architecture defect.

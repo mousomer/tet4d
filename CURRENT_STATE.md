@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-22
+Last updated: 2026-08-23
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -132,7 +132,7 @@ history ledger. Detailed history is preserved in
 - Pre-54F issue #74 is COMPLETE / REVIEWED GREEN, and the 3D/4D NEXT
   correction is COMPLETE / HUMAN VISIBLE REVIEW ACCEPTED.
 - Stage 54F integrated professional playability/visual acceptance is
-  IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW on
+  COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED on
   `codex/54f-integrated-playability-visual-acceptance`. The candidate closes
   #69 responsive slice spacing, #70 board hierarchy, 4D label collisions,
   setup-error presentation, small-window Settings reachability, 2D spawn-entry
@@ -141,9 +141,13 @@ history ledger. Detailed history is preserved in
   wide-W 4D, High Contrast, and 1600x960, 1180x760, and OS-clamped 960x660
   windows; the pinned Godot 4.7.1 and full repository gates pass. No
   deterministic gameplay, view, movement, NEXT, Ghost, native, topology, or
-  persistence authority changed. Independent human integrated product
-  acceptance remains required before COMPLETE status.
-- Professional gaming-experience and release hardening remains Stage 54G.
+  persistence authority changed. Human integrated review accepted 2D, 3D, and
+  4D on 2026-08-23. It recorded slightly weaker standard-mode Live-4D gamebox
+  legibility than equivalent 2D/3D boards as non-blocking Stage 54G polish;
+  the usable current presentation and strong High Contrast alternative keep it
+  outside the 54F correctness and architecture gates.
+- Professional gaming-experience and release hardening remains Stage 54G,
+  including the bounded standard-mode Live-4D volume-legibility polish above.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -274,14 +278,15 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Run independent human integrated product review against
-   `docs/plans/stage_54f_integrated_visual_acceptance.md`. If accepted, change
-   only the Stage 54F terminal state to COMPLETE / HUMAN INTEGRATED
-   PLAYABILITY ACCEPTED; if defects are found, classify and correct 54F
-   blockers before acceptance.
+1. Begin Stage 54G release hardening and final manual acceptance from the
+   accepted Stage 54F chain. Treat the standard-mode Live-4D legibility note as
+   bounded polish only, not a reopened 54F implementation or architecture
+   defect.
 2. Stage 54D-3 Hold remains independently eligible and was not absorbed into
    Stage 54F. Stage 54G remains the next release-hardening/final-manual-
-   acceptance stage after Stage 54F human acceptance.
+   acceptance stage after Stage 54F human acceptance; its Live-4D legibility
+   polish must not reopen stabilized layout, projection, hierarchy, control,
+   or gameplay semantics.
 3. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

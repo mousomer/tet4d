@@ -876,7 +876,7 @@ replace the integrated Stage 54F audit.
 
 ### Stage 54F — Integrated professional playability/visual acceptance
 
-Status: IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW (2026-08-22).
+Status: COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED (2026-08-23).
 
 The bounded implementation closes #69, #70, the setup-error advisory,
 small-window Settings reachability, 4D label collisions, 2D spawn-boundary
@@ -884,8 +884,11 @@ grammar, and concrete display-setting naming/applicability defects. Focused
 structural evidence and agent-driven Godot 4.7.1 real-DisplayServer review are
 green across 2D, 3D, simple/occupied/rotated/wide-W 4D, standard and High
 Contrast presentation, and normal/constrained/supported-minimum windows. This
-is human-visible evidence, not independent human product sign-off; the latter
-remains the only open Stage 54F gate. Detailed evidence is recorded in
+was human-visible evidence rather than independent sign-off. Human integrated
+review accepted 2D, 3D, and 4D on 2026-08-23. It classified slightly weaker
+standard-mode Live-4D gamebox legibility than equivalent 2D/3D boards as
+non-blocking Stage 54G polish because standard remains usable and High Contrast
+is strong. Detailed evidence is recorded in
 `docs/plans/stage_54f_integrated_visual_acceptance.md`.
 
 Objective:
@@ -1031,6 +1034,10 @@ Close the gap between a verified prototype and a professional game release.
 
 Use focused slices for demonstrated needs such as:
 
+- modest standard-mode Live-4D volume-legibility polish, preserving accepted
+  slice/layout, projection, grid/wireframe hierarchy, control, and gameplay
+  semantics; the current presentation remains usable and High Contrast
+  remains the strong alternative, so this is not a Stage 54F blocker;
 - full keybinding/remapping workflow;
 - gamepad support if adopted;
 - audio, mute, and volume controls;

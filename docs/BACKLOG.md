@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-18
+Updated: 2026-08-23
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -203,10 +203,10 @@ a placeholder authority record in advance.
   mechanism in the settings registry; and `display.projection_strength` is
   misleadingly named, since it scales cell, particle, and event size in every
   mode rather than expressing a 4D projection.
-- Stage 54F — IMPLEMENTED / READY FOR INTEGRATED HUMAN REVIEW. The bounded
-  implementation and agent-driven real-DisplayServer evidence are recorded in
-  `docs/plans/stage_54f_integrated_visual_acceptance.md`; independent human
-  product acceptance remains the terminal gate.
+- Stage 54F — COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED. The bounded
+  implementation, agent-driven real-DisplayServer evidence, and 2026-08-23
+  human verdict are recorded in
+  `docs/plans/stage_54f_integrated_visual_acceptance.md`.
 - Stage 54G — professional gaming-experience and release hardening.
 
 ### Stage 54F integrated visual findings
@@ -240,8 +240,17 @@ a placeholder authority record in advance.
   off-screen target instead of remaining stranded.
 
 No new Stage 54F blockers remain in automated or agent-driven real-window
-review. Stage 54G retains its existing release-hardening scope; no cosmetic
-item discovered here requires a new backlog entry.
+review.
+
+- **Stage 54G polish — modest standard-mode Live-4D volume legibility.**
+  Human review found that Live-4D gameboxes remain slightly less legible than
+  equivalent 2D/3D boards in the standard presentation. The current
+  presentation remains usable and comprehensible, and High Contrast provides
+  a strong alternative, so this does not block Stage 54F acceptance. During
+  54G, consider a bounded standard-mode polish pass without reopening slice or
+  layout semantics, projection semantics, the accepted grid/wireframe
+  hierarchy, control semantics, or gameplay authority. Treat this as polish,
+  not a correctness or architecture defect.
 
 ### Pre-54F correctness findings
 
