@@ -223,6 +223,7 @@ for its operation and the authority map agrees.
 | id | operation | subsystem | normative_contract | implementation_authority | data_authority | scope | semantic_boundaries | conformance_evidence | compatibility_rules | known_exclusions | safe_failure_or_fallback | authority_map_update | validation | status | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | AE-0054 | establishment | professional live-board setup admissibility and extent validation | `contracts/board_extent_contract_v1.json`; `docs/architecture/topology_aware_board_extent_contract.md`; RDS 2.3 | Native C++ `board_extent_contract`, shared production catalogue, and checked GDExtension boundary | Versioned board-extent JSON and generated bindings | professional 2D/3D/4D axis envelopes, bounded-profile admission, product volume, and tuple-level board-shape/piece-set/rank/spawn compatibility with structured validation | Native owns this new admission rule; Godot owns setup interaction; Python general engine remains outside the envelope; topology seam and gameplay semantics remain unchanged | generator tests; native board-extent contract tests; configured-session regressions; Godot checked-boundary, editable-draft, and persistence-migration tests | schema 3 persists only native-validated concrete shapes; schemas 1/2 remain readable and migrate preset IDs to candidates; valid live setup/hash/replay/trace behaviour is unchanged; parameterized construction uses checked factories and configure APIs | topology semantics, movement, rotation, collision, gravity, scoring, bag semantics, replay/trace/hash rules, Strip, and Möbius | invalid setup returns ordered errors before construction or mutation; no default-size fallback; source adapters recover before validation | authority matrix row for AE-0054 | generator `--check`; native build/tests; Godot verification; project-contract validation; full repository gate | established | Axis bounds do not imply every piece set fits every shape; this establishes tuple-level admission only and does not transfer topology or the gameplay loop. |
+| AE-0055 | establishment | authoritative deterministic one-slot Hold | `docs/architecture/authoritative_hold.md`; Stage 54D-3 programme contract | Native C++ `Plain2DSession` and `PlainNDSession` | Existing production piece catalogues; no new data schema | all production 2D/3D/4D live piece sets; held identity, once-per-lifecycle legality, queue/RNG effects, canonical respawn, blocked-spawn game over, restart, snapshot, and hash | Native owns Hold truth and consequences; Godot owns edge-triggered `C` input, shared-thumbnail presentation, and help; queue, randomizer, spawn/collision, Ghost, view, and preview geometry owners remain unchanged; Python is not mirrored | transition-table native tests; registry-driven production-piece tests; deterministic replay/value-restore and query/hash checks; GDExtension transport; Godot HOLD/NEXT/Ghost/input/cockpit tests; real-window 2D/3D/4D review | fixed trace/replay schema unchanged because it does not serialize live sessions; historical fixtures contain no Hold and retain results; older setup data starts empty/available; live hashes intentionally add held identity and availability | setup toggle, multiple slots, buffering, queue redesign, new pieces, scoring, rotation, projection, topology, Explorer, and Stage 54G polish | rejected Hold is a deterministic no-op; incoming pieces use ordinary canonical spawn and `spawn_blocked`; reset reconstructs empty/available state | authority matrix row for AE-0055 | native tests; keybinding/sanitation; pinned Godot 4.7.1; project-contract validation; full repository gate | established | Godot JSON is presentation transport; native session value copies preserve complete deterministic state. HOLD reuses the Stage 54D-1 model/renderer. |
 
 ## 6. Deferred candidates
 
@@ -240,19 +241,14 @@ Potential inherited transfer candidates include:
 
 Potential new establishment candidates include:
 
-- Hold state covering held-piece identity, once-per-active-piece availability,
-  queue interaction, canonical respawn, snapshot/hash identity, replay and
-  trace compatibility, old-session handling, restart semantics, and failed-
-  spawn policy;
 - Godot 4D view-basis state;
 - Explorer complete camera/basis controls;
 - challenge content schema;
 - deterministic challenge predicates;
 - future physics beyond the inherited explosion model.
 
-The Stage 54D-3 implementation slice adds a Hold `AE-####` row only after its
-normative contract, code owner, compatibility rules, conformance evidence,
-safe-failure policy, and authority-map update can be recorded honestly.
+Stage 54D-3 completed the Hold establishment as `AE-0055`; it is no longer a
+deferred candidate.
 
 Do not transfer or establish the full gameplay loop, full topology system,
 Explorer, or challenge campaign as one undifferentiated subsystem.

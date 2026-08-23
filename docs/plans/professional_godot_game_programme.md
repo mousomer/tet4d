@@ -579,8 +579,8 @@ explicitly replaces it.
 
 #### Stage 54D-3 — Hold
 
-Status: unblocked deterministic-core work after the accepted Stage 54E-1
-record is merged. Hold does not require Stage 54E-2.
+Status: COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED / HUMAN VISIBLE
+ACCEPTED under `AE-0055`. Hold does not require Stage 54E-2.
 
 Add one-slot Hold after next-piece and ghost presentation are accepted. Its
 only presentation dependency is the shared piece thumbnail already delivered
@@ -632,11 +632,11 @@ Hold changes deterministic state. Its implementation slice must define:
 - conformance evidence;
 - authority-map update.
 
-Keep Hold as refined deferred-candidate prose in
-`docs/architecture/authority_transfer_protocol.md` until implementation
-provides concrete contracts, code, compatibility decisions, and evidence.
-Stage 54D-3 then creates and completes an `AE-####` authority-establishment
-record. Do not create an incomplete placeholder row in advance.
+The completed implementation and evidence are normative in
+`docs/architecture/authoritative_hold.md`. Native owns deterministic Hold;
+Godot owns its edge-triggered `C` affordance and shared-thumbnail presentation.
+The fixed trace/replay schema remains unchanged and historical fixtures retain
+their results.
 
 ### Stage 54E — 4D Presentation & Interaction Architecture
 
@@ -1296,7 +1296,8 @@ The active order is:
    through PR #63 at `c93dcc8cfa93857d514a14b925002efc4404b007`.
 2. Stage 54E-1 — presentation-space architecture/design is complete, human
    accepted, and merged at `7e3558f823dd496b8896eabe6da9c18951bdb005`.
-3. Stage 54D-3 — Hold is eligible and does not wait for 54E-2.
+3. Stage 54D-3 — Hold is COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED /
+   HUMAN VISIBLE ACCEPTED as `AE-0055`.
 4. Stage 54E-2a — presentation state and coordinate decomposition is complete
    and reviewed green.
 5. Stage 54E-2b — renderer composition — is complete and reviewed green;
@@ -1315,8 +1316,9 @@ The active order is:
 8. Stage 54E-5 — cockpit consolidation — is COMPLETE / HUMAN PRODUCT REVIEW
    ACCEPTED, with focused/full automated evidence and normal, smaller, and
    larger real-window review.
-9. Stage 54F — integrated professional playability/visual acceptance.
-10. Stage 54G — remaining professional release hardening.
+9. Stage 54F — integrated professional playability/visual acceptance is
+   complete and human accepted.
+10. Stage 54G — remaining professional release hardening is the next action.
 11. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
 12. Later Explorer, challenge, topology, and simulation phases.
 

@@ -415,3 +415,15 @@ checked by the focused executable suite. No E5 blocker remained.
 - display-setting applicability/name findings carried from E4a unless a direct
   cockpit regression makes a minimal shared correction unavoidable; and
 - replay-specific redesign beyond regression safety for shared components.
+
+## Stage 54D-3 Authoritative Hold Completion
+
+Stage 54D-3 is COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED / HUMAN VISIBLE
+ACCEPTED under `AE-0055`. Its normative transition and boundary contract is
+`docs/architecture/authoritative_hold.md`. Native live sessions own held-piece
+identity, lifecycle legality, queue/RNG and canonical-spawn consequences,
+snapshot fields, and deterministic hash participation. Godot owns one
+edge-triggered `C` input affordance and HOLD presentation through the existing
+thumbnail model/renderer. The fixed replay schema is unchanged; historical
+fixtures remain compatible. This completion does not rewrite the historical
+E5 deferral record above and does not authorize Stage 54G work in this batch.

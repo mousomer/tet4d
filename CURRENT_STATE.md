@@ -146,6 +146,17 @@ history ledger. Detailed history is preserved in
   legibility than equivalent 2D/3D boards as non-blocking Stage 54G polish;
   the usable current presentation and strong High Contrast alternative keep it
   outside the 54F correctness and architecture gates.
+- Stage 54D-3 Hold is COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED / HUMAN
+  VISIBLE ACCEPTED under `AE-0055` on
+  `codex/54d-3-authoritative-hold`. Native live sessions own the one-slot
+  identity, lifecycle legality, queue/RNG and canonical-spawn consequences,
+  snapshots, and hashes. Godot dispatches one non-repeat `C` action and renders
+  empty, populated, and unavailable HOLD state through the accepted NEXT
+  thumbnail model/renderer. Transition-table, production-registry,
+  deterministic replay/value-restore, GDExtension conformance, input/modal,
+  responsive cockpit, pinned Godot 4.7.1, and full repository evidence are
+  green. The fixed trace/replay schema and historical fixture results are
+  unchanged. No Stage 54G polish was absorbed.
 - Professional gaming-experience and release hardening remains Stage 54G,
   including the bounded standard-mode Live-4D volume-legibility polish above.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
@@ -278,15 +289,12 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Begin Stage 54G release hardening and final manual acceptance from the
-   accepted Stage 54F chain. Treat the standard-mode Live-4D legibility note as
-   bounded polish only, not a reopened 54F implementation or architecture
-   defect.
-2. Stage 54D-3 Hold remains independently eligible and was not absorbed into
-   Stage 54F. Stage 54G remains the next release-hardening/final-manual-
-   acceptance stage after Stage 54F human acceptance; its Live-4D legibility
-   polish must not reopen stabilized layout, projection, hierarchy, control,
-   or gameplay semantics.
+1. Resume Stage 54G release hardening and final manual acceptance from the
+   accepted Stage 54F plus authoritative Hold chain. Treat the standard-mode
+   Live-4D legibility note as bounded polish only, not a reopened 54F
+   implementation or architecture defect.
+2. Keep Stage 54G's Live-4D legibility polish from reopening stabilized layout,
+   projection, hierarchy, control, or gameplay semantics.
 3. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

@@ -35,6 +35,7 @@ Do not implement a new capability in Python solely to manufacture an oracle.
 | New Godot 2D/3D/4D/replay view and Live-4D presentation state | Godot/GDScript | Includes mode-owned camera orientation; the Stage 54C exact signed-axis basis; shared `SliceLocalOrientation`; centred point mapper; anchor-only layout; Stage 54E-2b renderer composition and corner-derived fit bounds; Stage 54E-2c shared-L interaction, `B + Q(L.local_yaw)` resolution, fitted reflection, actual Camera3D projection evidence, pitch policy, and view-action compatibility; and Stage 54E-2d's historical lifecycle evidence. Stage 54E-4a is reviewed green and Stage 54E-4b implements the forward contract: same-context Restart/new game preserves transient current view; one composite Reset View restores complete mode-specific canonical view; Fit View is framing-only; named IDs are stateless actions; flat orthographic 2D and replay-owned reset/fit are explicit; Live-4D `B`, `L`, layout, outer mount/reflection, and framing remain separate; and context exit/re-entry clears/rebuilds transient state. Current view remains excluded from gameplay coordinates, legality, deterministic identity, setup, and persistence. Stage 54E-4b is ready for focused visible review. No authority transfer or establishment occurs. |
 | Live one-piece next preview | Inherited deterministic queue owner for piece selection; Godot/GDScript for presentation | Native sessions expose the observational shape query defined by `next_piece_preview.md`. Godot owns the shared 2D/3D/4D thumbnail and HUD placement and must not infer queue order or mutate RNG. No authority transfer occurs. |
 | Live authoritative ghost piece | Existing deterministic drop/collision owner for landing; Godot/GDScript for presentation | Native hard drop and the read-only query share `hard_drop_destination` as defined by `ghost_piece.md`. Godot owns visibility, settings, basis-aware projection, and styling only. No authority transfer or establishment occurs. |
+| Authoritative one-slot Hold (`AE-0055`) | Native C++ live sessions under `authoritative_hold.md` | Native owns held identity, lifecycle legality, transitions, queue/RNG and canonical-spawn consequences, snapshots, and hashes. Godot owns the `C` affordance, semantic dispatch, and HOLD presentation over pure native queries. Python has no competing Hold authority. |
 | New deterministic core behaviour without a Python predecessor | Owning native C++ subsystem named by its contract | Examples may include Hold transitions, challenge predicates, and later shared geometric evaluation. |
 | Challenge and campaign content | Versioned declarative data | Runtime implementations validate and execute the content but do not silently redefine it. |
 | Challenge flow, hints, progress, and Explorer interaction | Godot/GDScript | Deterministic success predicates may be native. |
@@ -76,6 +77,12 @@ Godot is the product-shell direction and owns:
 Godot may consume inherited or native deterministic core state. It must not
 reimplement inherited gameplay, topology, scoring, or replay semantics in
 presentation glue.
+
+Stage 54D-3 Hold follows `docs/architecture/authoritative_hold.md` and
+`AE-0055`. Godot dispatches only the semantic `hold` command and renders the
+native held-piece/availability queries through the shared thumbnail pipeline.
+It must not infer legality, retain a parallel held piece, consume queue state,
+or choose a spawn pose. Hold never mutates the Godot view/control frame.
 
 ## Native C++ / GDExtension status
 

@@ -150,13 +150,15 @@ Stage 54E-4 is COMPLETE / REVIEWED GREEN.
 
 ### Stage 54D-3 — Hold
 
-Status: unblocked deterministic-core work after the 54E-1 acceptance record
-is merged.
+Status: COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED / HUMAN VISIBLE
+ACCEPTED (`AE-0055`).
 
-Hold does not require 54E-2. Its shared thumbnail dependency is already
-satisfied by 54D-1. Its eventual implementation must establish the one-slot
-deterministic contract and complete its concrete `AE-####` record; do not add
-a placeholder authority record in advance.
+Native live sessions own the one-slot transition, lifecycle legality,
+queue/RNG and canonical-spawn consequences, state hash, and snapshot fields.
+Godot dispatches one edge-triggered `C` action and renders authoritative HOLD
+state through the shared NEXT thumbnail pipeline. Fixed replay/trace schema and
+historical fixtures remain unchanged. Multiple slots, buffering, and a setup
+toggle remain outside this stage.
 
 ## Forward Work
 

@@ -148,6 +148,14 @@ and style those canonical cells, but it must not calculate drop distance,
 collision, or landing legality. Basis and camera changes remap cached
 presentation data and do not invoke native gameplay semantics.
 
+The Stage 54D-3 Hold boundary is defined by
+`docs/architecture/authoritative_hold.md` and established as `AE-0055`.
+Native live sessions exclusively own held identity, lifecycle availability,
+queue/RNG and canonical-spawn consequences, snapshots, and hashes. Godot owns
+the edge-triggered `C` input and HOLD presentation over read-only GDExtension
+queries, reusing the NEXT thumbnail model/renderer. Godot must not keep a
+parallel Hold state machine or derive legality from presentation state.
+
 ### AI (`src/tet4d/ai/playbot`)
 
 Owns:

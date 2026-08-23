@@ -92,13 +92,15 @@ query path.
 
 ## Stage 54D-3 acceptance evidence
 
-The 2026-08-23 pinned Godot 4.7.1 real-window review exercised Hold after an
-empty-slot transition in live 2D, 3D, and 4D. It covered compact, standard, and
-detailed cockpit density; standard, large, and extra-large UI scale; requested
-960x640, 1180x760, 1600x960, and 1920x1080 window sizes; and the actual High
-Contrast accessibility policy. In every case NEXT and HOLD remained distinct,
-the held identity and `Used until lock` state were readable without relying on
-colour, the board remained primary, and no gameplay/view semantics changed.
+The 2026-08-23 pinned Godot 4.7.1 real-window review exercised empty-slot and
+occupied-swap Hold transitions in live 2D, 3D, and 4D, including embedded 2D,
+native 3D, embedded 3D, and multi-W native 4D production sets. It covered
+compact, standard, and detailed cockpit density; standard, large, and
+extra-large UI scale; requested 960x640, 1180x760, 1600x960, and 1920x1080
+window sizes; and the actual High Contrast accessibility policy. In every case
+NEXT and HOLD remained distinct, the held identity and `Used until lock` state
+were readable without relying on colour, the board remained primary, and no
+gameplay/view semantics changed.
 
 Verdict: accepted with no Stage 54D-3 blocker. The already-recorded slight
 standard-mode 4D volume-legibility weakness remains bounded to Stage 54G polish
