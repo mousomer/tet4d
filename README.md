@@ -2,11 +2,14 @@
 
 Tet4D is a playable 2D/3D/4D Tetris-like project about learning to think spatially beyond ordinary 3D intuition.
 
-The current full playable/reference implementation is the **Python/pygame game**. It contains the authoritative gameplay
-semantics, topology experiments, sandbox tools, and higher-dimensional simulation work.
+The current professional-core product is the **Godot 4.7.1 game**: polished
+bounded 2D, 3D, and 4D live play with NEXT, Ghost, Hold, replay, setup,
+settings, display, and accessibility infrastructure.
 
-A **Godot version** is under active migration as a partial demo front end and future product shell. It demonstrates
-playable 2D/3D/4D loops, but it is not yet feature-complete against the Python game.
+The **Python/pygame implementation** remains reference authority for inherited
+semantics that have not been transferred, and it retains topology, sandbox,
+and simulation tools not yet integrated into the Godot product. It is not the
+current professional-core release shell.
 
 ![4D game mode](img.png)
 
@@ -15,12 +18,12 @@ playable 2D/3D/4D loops, but it is not yet feature-complete against the Python g
 Tet4D began as a higher-dimensional Tetris experiment: falling pieces, slices, rotations, projections, and the attempt
 to make four-dimensional structure playable rather than merely diagrammed. It now has three connected parts:
 
-- **Game:** the playable Python/pygame implementation and reference baseline.
+- **Game:** the Godot bounded 2D/3D/4D professional-core product.
 - **Structure explorer:** topology and sandbox tools for inspecting how spaces connect and transform.
-- **4D simulation sandbox:** higher-dimensional play and experimentation, with Godot serving as the partial
-  migration/demo front end.
+- **Reference and simulation tools:** Python-owned inherited semantics,
+  topology experiments, and higher-dimensional simulation work.
 
-## Python Quick Start
+## Python Reference / Legacy Tools
 
 From the repo root:
 
@@ -47,7 +50,7 @@ python cli/front.py --topology-playground 4
 - `cli/front.py --topology-playground` opens the Topology Playground, which remains in Python.
 - `cli/front.py --topology-playground 4` opens the 4D topology playground path.
 
-## Godot Migration / Demo Front End
+## Godot Product Quick Start
 
 From the repo root:
 
@@ -56,7 +59,7 @@ From the repo root:
 godot --path godot/Tet4D.Godot
 ```
 
-Godot currently provides:
+Godot provides:
 
 - `Replay Demos` under `Advanced / Diagnostics` for exported gameplay,
   topology, and endgame traces
@@ -64,7 +67,18 @@ Godot currently provides:
 - `Live Plain 3D`
 - `Live Plain 4D`
 
-Godot does not currently host the Topology Playground. That remains in the Python launcher.
+Godot does not currently host the Topology Playground. That remains a Python
+reference/tooling path outside the professional-core release gate.
+
+Build the current macOS 13+ Universal release candidate with the exact pinned
+Godot 4.7.1 editor and matching export templates:
+
+```bash
+GODOT_BIN=/path/to/Godot packaging/godot/build_macos.sh
+```
+
+See `docs/RELEASE_INSTALLERS.md` for the supported target, artifact checks,
+outside-tree smoke procedure, and legacy packaging disposition.
 
 ## Why This Exists
 
@@ -153,12 +167,16 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Known Limitations
 
-- Python remains the rules reference implementation.
-- Godot is the partial migration/demo front end and future product shell.
-- Native C++ currently powers accepted plain live sessions plus geometry/query helpers; it does not replace Python as
-  the rules source.
+- Python remains reference authority for inherited, untransferred semantics;
+  authority is subsystem-specific rather than language-global.
+- Godot is the current bounded 2D/3D/4D professional-core product shell.
+- Native C++ powers accepted live sessions plus geometry/query helpers and
+  owns authoritative Hold under `AE-0055`.
 - Topology Playground, broader topology editing, and Python-first development flows still live in the Python launcher.
-- This repo is verified for development use; packaging and release polish are not the focus of the current milestone.
+- The current supported release target is a macOS 13+ Universal Godot app/ZIP.
+  Linux and Windows Godot artifacts are development-configured but not
+  runtime-accepted release targets. The old PyInstaller installers are retained
+  legacy packaging.
 
 ## More Docs
 
@@ -175,7 +193,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 ## Developer References
 
 - Packaging:
-  - `packaging/scripts/build_macos.sh`
+  - `packaging/godot/build_macos.sh`
 - Verification:
   - `scripts/ci_check.sh`
   - `tools/governance/scan_secrets.py`

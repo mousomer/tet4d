@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08-24
+
+### Changed
+
+1. Stage 54G defines the current professional-core release path as a Godot
+   4.7.1 macOS 13+ Universal app/ZIP with consistent `Tet4D` 0.7.5 metadata,
+   an explicit release GDExtension deployment target, artifact inspection, and
+   current release-workflow coverage.
+2. The prior Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders are retained
+   as a legacy Python-product path and are no longer presented or published as
+   the current Godot professional-core release.
+
 ## 2026-04-15
 
 ### Release

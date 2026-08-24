@@ -265,6 +265,13 @@
           "executable": "Godot.app/Contents/MacOS/Godot"
         }
       },
+      "export_templates": {
+        "name": "Godot_v4.7.1-stable_export_templates.tpz",
+        "url": "https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_export_templates.tpz",
+        "sha512": "afcc83d8d3d298038f19c58744a0d660fa75dd4baa33cb55d1011bb2565a2a8c2381728924564cb909e37c205a23f21b521b23bd057993afd43ae4da0b2f9d47",
+        "version_directory": "4.7.1.stable",
+        "macos_member": "templates/macos.zip"
+      },
       "godot_cpp": {
         "repository": "https://github.com/godotengine/godot-cpp.git",
         "previous_commit": "a7770ef949fc664892e46b7e98a708672e8a44a8",
@@ -287,6 +294,7 @@
         "native_build": "./scripts/build_godot_tet4d_core.sh",
         "native_tests": "./scripts/test_godot_tet4d_core.sh",
         "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh",
+        "macos_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh",
         "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"
       },
       "results": {
@@ -1531,6 +1539,9 @@
         ".githooks/pre-push"
       ],
       "packaging_scripts": [
+        "godot/Tet4D.Godot/export_presets.cfg",
+        "packaging/godot/build_macos.sh",
+        "packaging/godot/smoke_macos.sh",
         "packaging/pyinstaller/tet4d.spec",
         "packaging/scripts/build_macos.sh",
         "packaging/scripts/build_linux.sh",
@@ -1562,7 +1573,7 @@
           "config/project/constants.json",
           "config/project/policy/manifests/secret_scan.json",
           "docs/RELEASE_INSTALLERS.md",
-          "packaging/scripts/build_macos.sh",
+          "packaging/godot/build_macos.sh",
           "docs/CONFIGURATION_REFERENCE.md",
           "docs/USER_SETTINGS_REFERENCE.md"
         ]
@@ -1756,10 +1767,10 @@
       {
         "file": "docs/RELEASE_INSTALLERS.md",
         "must_contain": [
-          "PyInstaller",
-          "packaging/scripts/build_macos.sh",
-          "packaging/scripts/build_linux.sh",
-          "packaging/scripts/build_windows.ps1",
+          "Godot 4.7.1",
+          "packaging/godot/build_macos.sh",
+          "macOS 13+",
+          "legacy",
           ".github/workflows/release-packaging.yml"
         ]
       },
@@ -1767,6 +1778,8 @@
         "file": "docs/rds/RDS_PACKAGING.md",
         "must_contain": [
           "Desktop Packaging RDS",
+          "godot/Tet4D.Godot/export_presets.cfg",
+          "packaging/godot/build_macos.sh",
           "packaging/pyinstaller/tet4d.spec",
           ".github/workflows/release-packaging.yml"
         ]

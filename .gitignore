@@ -46,12 +46,12 @@ unity/**/TestResults/
 godot/**/.godot/
 godot/**/imported/
 godot/**/.import/
-godot/**/export_presets.cfg
 godot/**/*.translation
 godot/**/mono/
 godot/**/.mono/
 godot/**/builds/
 godot/**/exports/
+artifacts/godot/
 godot/**/addons/tet4d_core/bin/
 
 # Native/GDExtension build outputs

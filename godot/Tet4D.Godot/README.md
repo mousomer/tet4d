@@ -1,7 +1,7 @@
 # Tet4D Godot Front End
 
-This Godot 4.7.1 project is the partial migration of Tet4D into a demo front
-end and future product shell.
+This Godot 4.7.1 project is Tet4D's current bounded 2D/3D/4D
+professional-core product shell.
 
 It currently supports:
 
@@ -11,9 +11,9 @@ It currently supports:
 - `Live Plain 3D`
 - `Live Plain 4D`
 
-Python remains the fuller current playable/reference implementation. The
-Topology Playground stays in the Python launcher, and this shell is not yet
-feature-complete against the Python game.
+Python remains reference authority for inherited, untransferred semantics and
+retains the Topology Playground and later simulation/tooling surfaces. The
+professional core does not require feature parity with those separate tools.
 
 ## Quick Start
 
@@ -43,6 +43,22 @@ Godot suite, GDExtension load, and bounded startup. Upgrade proposals must pin
 an official stable patch and checksums, audit the official migration guide,
 advance godot-cpp to a matching immutable API commit, perform a clean native
 rebuild, and update the migration record and CI together.
+
+## Release Export
+
+The current supported product artifact is a macOS 13+ Universal 2 app and ZIP.
+Install the exact matching Godot 4.7.1 export templates, then run from the
+repository root:
+
+```bash
+GODOT_BIN=/path/to/Godot packaging/godot/build_macos.sh
+```
+
+The checked-in export preset selects the universal release GDExtension,
+excludes the test tree, uses bundle identifier `io.github.mousomer.tet4d`, and
+uses the repository's `0.7.5` candidate version. See
+`docs/RELEASE_INSTALLERS.md` for artifact inspection, outside-tree launch,
+platform limits, and the retained legacy Python installer path.
 
 ## What The Shell Does
 
@@ -128,8 +144,8 @@ accessibility, arbitrary colour settings, and topology remain deferred.
 
 ## Boundaries
 
-- Python remains the rules reference implementation.
-- Godot is the partial migration/demo front end and future product shell.
+- Python remains reference authority for inherited, untransferred semantics.
+- Godot is the current bounded professional-core product shell.
 - Native C++ powers accepted plain live sessions plus geometry/query helpers.
 - This shell does not own gameplay-rule authority, topology-rule authority, or replay-schema authority.
 

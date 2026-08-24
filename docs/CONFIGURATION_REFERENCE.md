@@ -2139,9 +2139,15 @@ Parameters:
 - `governance.godot_toolchain.build_identifier`: `"4.7.1.stable.official.a13da4feb"` (`string`)
 - `governance.godot_toolchain.canonical_commands.full_repository`: `"CODEX_MODE=1 ./scripts/verify.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.godot_verification`: `"GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh"` (`string`)
+- `governance.godot_toolchain.canonical_commands.macos_release_export`: `"GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.native_build`: `"./scripts/build_godot_tet4d_core.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.native_tests`: `"./scripts/test_godot_tet4d_core.sh"` (`string`)
 - `governance.godot_toolchain.engine_commit`: `"a13da4feb8d8aefc283c3763d33a2f170a18d541"` (`string`)
+- `governance.godot_toolchain.export_templates.macos_member`: `"templates/macos.zip"` (`string`)
+- `governance.godot_toolchain.export_templates.name`: `"Godot_v4.7.1-stable_export_templates.tpz"` (`string`)
+- `governance.godot_toolchain.export_templates.sha512`: `"afcc83d8d3d298038f19c58744a0d660fa75dd4baa33cb55d1011bb2565a2a8c2381...` (`string`)
+- `governance.godot_toolchain.export_templates.url`: `"https://github.com/godotengine/godot/releases/download/4.7.1-stable/...` (`string`)
+- `governance.godot_toolchain.export_templates.version_directory`: `"4.7.1.stable"` (`string`)
 - `governance.godot_toolchain.gdextension.compatibility_minimum`: `"4.7"` (`string`)
 - `governance.godot_toolchain.gdextension.entry_symbol`: `"tet4d_core_library_init"` (`string`)
 - `governance.godot_toolchain.gdextension.reloadable`: `true` (`bool`)
@@ -2354,7 +2360,7 @@ Parameters:
 - `maintenance_contract.required_paths.help_assets[]`: array[`string`]; examples: `"src/tet4d/ui/pygame/render/control_icons.py"`, `"assets/help/icons/transform/svg/16/dark/move_x_pos.svg"`
 - `maintenance_contract.required_paths.help_contract[]`: array[`string`]; examples: `"docs/help/HELP_INDEX.md"`, `"config/project/policy/manifests/help_assets_manifest.json"`
 - `maintenance_contract.required_paths.migration_ledgers[]`: array[`string`]; examples: `"docs/migrations/menu_settings.md"`, `"docs/migrations/save_state.md"`
-- `maintenance_contract.required_paths.packaging_scripts[]`: array[`string`]; examples: `"packaging/pyinstaller/tet4d.spec"`, `"packaging/scripts/build_macos.sh"`, `"packaging/scripts/build_linux.sh"`
+- `maintenance_contract.required_paths.packaging_scripts[]`: array[`string`]; examples: `"godot/Tet4D.Godot/export_presets.cfg"`, `"packaging/godot/build_macos.sh"`, `"packaging/godot/smoke_macos.sh"`
 - `maintenance_contract.required_paths.rds_docs[]`: array[`string`]; examples: `"docs/rds/RDS_TETRIS_GENERAL.md"`, `"docs/rds/RDS_2D_TETRIS.md"`, `"docs/rds/RDS_3D_TETRIS.md"`
 - `maintenance_contract.required_paths.release_contract[]`: array[`string`]; examples: `"docs/RELEASE_CHECKLIST.md"`, `"docs/RELEASE_INSTALLERS.md"`
 - `maintenance_contract.required_paths.replay_contract[]`: array[`string`]; examples: `"config/project/policy/manifests/replay_manifest.json"`, `"tests/replay/golden/.gitkeep"`

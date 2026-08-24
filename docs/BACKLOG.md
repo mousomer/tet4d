@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-23
+Updated: 2026-08-24
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -209,7 +209,11 @@ toggle remain outside this stage.
   implementation, agent-driven real-DisplayServer evidence, and 2026-08-23
   human verdict are recorded in
   `docs/plans/stage_54f_integrated_visual_acceptance.md`.
-- Stage 54G — professional gaming-experience and release hardening.
+- Stage 54G — IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE. The
+  current macOS 13+ Universal 2 Godot candidate, automated export/outside-tree
+  startup evidence, agent real-window matrix, platform/legacy truth, and
+  pending independent human matrix are recorded in
+  `docs/plans/stage_54g_release_acceptance.md`.
 
 ### Stage 54F integrated visual findings
 
@@ -249,10 +253,10 @@ review.
   equivalent 2D/3D boards in the standard presentation. The current
   presentation remains usable and comprehensible, and High Contrast provides
   a strong alternative, so this does not block Stage 54F acceptance. During
-  54G, consider a bounded standard-mode polish pass without reopening slice or
-  layout semantics, projection semantics, the accepted grid/wireframe
-  hierarchy, control semantics, or gameplay authority. Treat this as polish,
-  not a correctness or architecture defect.
+  The 54G comparison selected disposition B: no sufficiently clear low-risk
+  improvement justified reopening the human-accepted rendering candidate.
+  Retain this as non-blocking post-release polish, not a correctness or
+  architecture defect.
 
 ### Pre-54F correctness findings
 

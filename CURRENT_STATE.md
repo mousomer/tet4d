@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -157,8 +157,19 @@ history ledger. Detailed history is preserved in
   responsive cockpit, pinned Godot 4.7.1, and full repository evidence are
   green. The fixed trace/replay schema and historical fixture results are
   unchanged. No Stage 54G polish was absorbed.
-- Professional gaming-experience and release hardening remains Stage 54G,
-  including the bounded standard-mode Live-4D volume-legibility polish above.
+- Stage 54G is IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE on
+  `codex/54g-release-hardening`. The current candidate is the Godot 4.7.1
+  macOS 13+ Universal 2 app/ZIP. Exact export-template pinning, release native
+  build, metadata/signature/artifact inspection, two-user outside-tree smoke,
+  persisted/invalid-state launches, and agent real-window 2D/3D/4D/Hold/
+  Settings/replay-browser evidence are recorded in
+  `docs/plans/stage_54g_release_acceptance.md`. Linux and Windows are
+  development-configured only, and Python/PyInstaller packaging is retained
+  legacy. No deterministic authority or accepted gameplay/presentation
+  semantics changed. The bounded 4D polish decision is disposition B: leave
+  the usable Standard presentation unchanged and retain the strong High
+  Contrast alternative. Independent human release-candidate acceptance is the
+  only remaining gate; `PROFESSIONAL_CORE_GAME_READY` remains `NO`.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -289,12 +300,13 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Resume Stage 54G release hardening and final manual acceptance from the
-   accepted Stage 54F plus authoritative Hold chain. Treat the standard-mode
-   Live-4D legibility note as bounded polish only, not a reopened 54F
-   implementation or architecture defect.
-2. Keep Stage 54G's Live-4D legibility polish from reopening stabilized layout,
-   projection, hierarchy, control, or gameplay semantics.
+1. Perform the independent Stage 54G human matrix against the actual exported
+   macOS candidate in `docs/plans/stage_54g_release_acceptance.md`. Do not mark
+   Stage 54G complete or set `PROFESSIONAL_CORE_GAME_READY` to `YES` until the
+   verdict is recorded.
+2. If the human matrix finds a blocker, classify and fix only that reproducible
+   release regression; keep the Standard Live-4D legibility note as
+   non-blocking post-release polish.
 3. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

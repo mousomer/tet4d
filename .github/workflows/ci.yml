@@ -323,49 +323,86 @@ jobs:
 
       - name: Validate packaging contracts
         run: |
+          bash -n packaging/godot/build_macos.sh
+          bash -n packaging/godot/smoke_macos.sh
           bash -n packaging/scripts/build_linux.sh
           bash -n packaging/scripts/build_macos.sh
-          python -m pytest -q tests/unit/engine/test_windows_packaging.py
+          python -m pytest -q \
+            tests/unit/boundary/test_godot_release_packaging.py \
+            tests/unit/engine/test_windows_packaging.py
 
   platform:
-    name: Platform package (${{ matrix.target }})
+    name: Current Godot platform package (macOS Universal)
     needs: plan
     if: needs.plan.outputs.lane_platform == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            target: linux-amd64
-          - runner: windows-latest
-            target: windows-x64
-          - runner: macos-15-intel
-            target: macos-x64
-          - runner: macos-latest
-            target: macos-arm64
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
-      - name: Build and smoke-check Linux package
-        if: runner.os == 'Linux'
-        shell: bash
-        run: bash packaging/scripts/build_linux.sh
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
 
-      - name: Build and smoke-check macOS package
-        if: runner.os == 'macOS'
-        shell: bash
-        run: bash packaging/scripts/build_macos.sh
+      - name: Resolve pinned Godot editor and export templates
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
 
-      - name: Build and smoke-check Windows package
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./packaging/scripts/build_windows.ps1
+          toolchain = json.loads(
+              Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+          )["governance"]["godot_toolchain"]
+          editor = toolchain["assets"]["macos_universal"]
+          templates = toolchain["export_templates"]
+          values = {
+              "GODOT_ASSET_NAME": editor["name"],
+              "GODOT_ASSET_URL": editor["url"],
+              "GODOT_ASSET_SHA256": editor["sha256"],
+              "GODOT_ASSET_EXECUTABLE": editor["executable"],
+              "GODOT_TEMPLATE_NAME": templates["name"],
+              "GODOT_TEMPLATE_URL": templates["url"],
+              "GODOT_TEMPLATE_SHA512": templates["sha512"],
+              "GODOT_TEMPLATE_VERSION": templates["version_directory"],
+          }
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  env_file.write(f"{key}={value}\n")
+          PY
+
+      - name: Install exact Godot editor and macOS export template
+        run: |
+          mkdir -p "$RUNNER_TEMP/tet4d-godot"
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
+            "$GODOT_ASSET_URL"
+          echo "$GODOT_ASSET_SHA256  $RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
+            | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
+            -d "$RUNNER_TEMP/tet4d-godot"
+          echo "GODOT_BIN=$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE" \
+            >> "$GITHUB_ENV"
+
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            "$GODOT_TEMPLATE_URL"
+          echo "$GODOT_TEMPLATE_SHA512  $RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            | shasum -a 512 --check
+          template_dir="$HOME/Library/Application Support/Godot/export_templates/$GODOT_TEMPLATE_VERSION"
+          mkdir -p "$template_dir"
+          unzip -j -o "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            templates/macos.zip templates/version.txt -d "$template_dir"
+
+      - name: Build and validate current Godot release package
+        run: GODOT_BIN="$GODOT_BIN" packaging/godot/build_macos.sh
 
   integration:
     name: Cross-layer integration gate

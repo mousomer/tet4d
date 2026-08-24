@@ -1,4 +1,161 @@
-# Task Contract — Stage 54F Integrated Professional Playability and Visual Acceptance
+# Task Contract — Stage 54G Release Hardening and Final Manual Acceptance
+
+Status: IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE
+
+## Objective
+
+Prove that the accepted Godot professional core game can be built, exported,
+launched outside the source tree, recovered from clean and malformed user
+state, and exercised through its supported release path without a known
+professional-quality blocker. Preserve accepted gameplay and presentation
+semantics, introduce no features, and close only concrete release defects.
+
+## Classification
+
+- Primary task type: `packaging_and_release`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: documentation, governance, Godot, native,
+  deterministic-state and conformance evidence, integration boundary, visible
+  product, packaging, current platform, and release acceptance.
+- Required evidence: `documentation`, `godot`, `native`, `deterministic`,
+  `parity_or_conformance`, `integration`, `human_visual`, `packaging`,
+  `platform`, `release_acceptance`, and `governance_structure`.
+- Full repository gate: required because this stage makes a release claim
+  across the Godot/native boundary and closes the Phase I product gate.
+
+## Current Authority
+
+- `docs/plans/professional_godot_game_programme.md` owns the Professional Core
+  Game Gate and Stage 54G outcome.
+- `docs/rds/RDS_PACKAGING.md` and `docs/RELEASE_CHECKLIST.md` own supported
+  release-path requirements and must be reconciled with the accepted Godot
+  product direction before completion.
+- `docs/ARCHITECTURE_CONTRACT.md` and
+  `docs/architecture/authority_map.md` own subsystem boundaries.
+- `docs/architecture/authoritative_hold.md` and `AE-0055` own deterministic
+  Hold; this stage performs release regression only.
+- Existing view, controls, NEXT, Ghost, cockpit, and Stage 54F presentation
+  authorities remain frozen unless a reproducible release regression is found.
+
+Authority effect: none. Stage 54G establishes or transfers no deterministic
+authority.
+
+## Allowed Systems and Paths
+
+- Godot export presets and narrowly required release/export scripts;
+- native GDExtension build configuration and artifact-selection metadata;
+- current release CI, packaging RDS/checklists, launch/build documentation,
+  version metadata, and release evidence;
+- focused automated seams for clean, persisted, malformed, and transient-state
+  startup; export contents; outside-tree launch; and release regressions;
+- programme, backlog, task contract, and restart handoff status; and
+- a tiny presentation-only 4D polish correction only if direct comparison
+  proves an obvious low-risk improvement.
+
+## Required Changes
+
+1. Establish the factual current versus development-only versus legacy release
+   inventory, including supported targets, metadata, native artifacts, and CI.
+2. Reconcile the supported Godot release path with any stale Python packaging
+   claims without repairing obsolete packaging solely for historical parity.
+3. Build the native extension, export the supported current-platform artifact,
+   inspect its contents, and launch it outside the repository with isolated
+   user data and no current-working-directory dependency.
+4. Verify clean, persisted, and malformed settings/setup startup, including
+   correct preference ownership and exclusion of transient view/gameplay/Hold
+   state.
+5. Run final 2D/3D/4D, Hold/NEXT/Ghost, replay, setup, Settings,
+   accessibility, focus/modal, warning/error, resize, and performance sanity.
+6. Run policy-routed focused, release-specific, sanitation, pinned Godot, and
+   full repository gates.
+7. Record release evidence and present the exported candidate for independent
+   human acceptance before declaring Stage 54G or the programme gate complete.
+
+## Forbidden Changes
+
+- new gameplay, topology, Explorer, challenge, campaign, simulation,
+  controller, audio, localisation, or migration features;
+- deterministic gameplay semantics, queue/RNG, collision, scoring, piece
+  definitions, projection, control-frame, replay schema, or persistence
+  architecture changes absent a reproduced release blocker;
+- accepted Reset/Fit/Restart lifecycle, relative controls, NEXT, Ghost, Hold,
+  cockpit, #69/#70, setup, Settings, or Stage 54F visual redesign;
+- speculative optimization or structural 4D rendering experimentation;
+- treating agent-driven inspection as independent human acceptance; and
+- push, pull-request creation, or unsupported-platform runtime claims.
+
+## Acceptance Criteria
+
+1. Every formal pre-54G programme prerequisite, including Stage 54F and
+   `AE-0055`, remains complete.
+2. Supported release targets and legacy paths are documented truthfully.
+3. Two isolated clean-user launches and persisted/corrupt-state launches
+   succeed with correct recovery and ownership.
+4. Transient view and live gameplay state, including Hold, never persist as
+   preferences; new sessions reconstruct canonical empty/available Hold.
+5. Final 2D, 3D, 4D, Hold, NEXT/Ghost, replay, setup, Settings,
+   accessibility, modal/input, resize, warning/error, and performance checks
+   have no release blocker.
+6. The current supported release path reproducibly builds and exports the
+   correct native artifact and runtime resources.
+7. The exported artifact launches and plays outside the source tree with
+   isolated user data and no repository-relative dependency.
+8. Cross-platform evidence is explicitly limited to static/configuration or CI
+   evidence where the platform cannot run locally.
+9. Sanitation, keybinding, native/conformance, pinned Godot 4.7.1, release
+   checks, and `CODEX_MODE=1 ./scripts/verify.sh` pass.
+10. An independent human accepts the exported release candidate matrix.
+11. No known release blocker remains; unresolved observations are classified
+    as non-blocking polish or future work.
+
+## Automated Verification
+
+- focused Godot startup, persistence, input, UI, replay, Hold/NEXT/Ghost,
+  setup, accessibility, and release/export tests selected by the actual diff;
+- clean native build and native/conformance/parity checks required by the
+  packaged GDExtension boundary;
+- `git diff --check`;
+- `./scripts/check_git_sanitation_repo.sh`;
+- `./scripts/check_keybinding_contract.sh`;
+- project/governance and release-package validators;
+- `GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh`; and
+- `CODEX_MODE=1 ./scripts/verify.sh`.
+
+## Manual Verification
+
+- Prefer the exported macOS artifact with isolated user data, launched outside
+  the source tree.
+- Exercise fresh startup; persisted preferences and transient-state reset;
+  representative 2D, 3D, and 4D play; Hold lifecycle; NEXT/Ghost
+  synchronization; Standard and High Contrast; constrained/normal/large
+  windows; Settings and resets; replay; navigation and modal recovery; quit;
+  and relaunch.
+- Agent-driven real-window inspection may prepare evidence and diagnose
+  defects but does not satisfy final independent human acceptance.
+
+## Documentation Updates
+
+- reconcile the packaging RDS, release checklist, installer/export guide,
+  README, and platform/version claims with the factual supported path;
+- record 54G evidence and cross-platform limitations;
+- update the programme, backlog, this contract, and `CURRENT_STATE.md` with the
+  final verified versus human-accepted state; and
+- preserve completed Stage 54F, Hold, and architecture evidence.
+
+## Explicit Deferrals
+
+- signing/notarization and store distribution unless current policy already
+  claims them as required for this gate;
+- unsupported-platform runtime evidence unavailable on this machine;
+- legacy Python installer repairs when that path is formally classified as
+  retained legacy rather than the Godot professional-core release path;
+- non-blocking standard-mode Live-4D legibility polish if no obvious local,
+  low-risk improvement is demonstrably better; and
+- all new features listed under Forbidden Changes.
+
+---
+
+# Prior Contract — Stage 54F Integrated Professional Playability and Visual Acceptance
 
 Status: COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED (2026-08-23)
 

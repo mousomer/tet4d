@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-08-10
+Last updated: 2026-08-24
 
 ## 1. Purpose
 
@@ -1024,9 +1024,21 @@ outside this bounded correctness closure.
 - **54F:** serious integrated GUI/playability audit with the complete scope and
   known findings above, including the outstanding human setup/product review
   from E3.
-- **54G:** final manual release acceptance remains required.
+- **54G:** implementation and automated/agent release evidence are ready;
+  independent final manual release acceptance remains required. Until it
+  passes, `PROFESSIONAL_CORE_GAME_READY` remains `NO`.
 
 ### Stage 54G — Professional gaming-experience and release hardening
+
+Status: IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE.
+
+The macOS 13+ Universal 2 Godot 4.7.1 app/ZIP is the current candidate. Build,
+export, signature, native-framework, outside-tree clean/persisted/corrupt
+startup, real-window 2D/3D/4D/Hold/Settings/replay-browser, and release
+documentation evidence is recorded in
+`docs/plans/stage_54g_release_acceptance.md`. Linux and Windows Godot paths are
+development-configured only; the Python/PyInstaller installers are retained
+legacy. Independent human acceptance is the only remaining 54G gate.
 
 Objective:
 
