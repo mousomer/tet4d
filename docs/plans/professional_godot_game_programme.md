@@ -1030,7 +1030,7 @@ outside this bounded correctness closure.
 
 ### Stage 54G — Professional gaming-experience and release hardening
 
-Status: IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE.
+Status: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING.
 
 The macOS 13+ Universal 2 Godot 4.7.1 app/ZIP is the current candidate. Build,
 export, signature, native-framework, outside-tree clean/persisted/corrupt
@@ -1038,7 +1038,17 @@ startup, real-window 2D/3D/4D/Hold/Settings/replay-browser, and release
 documentation evidence is recorded in
 `docs/plans/stage_54g_release_acceptance.md`. Linux and Windows Godot paths are
 development-configured only; the Python/PyInstaller installers are retained
-legacy. Independent human acceptance is the only remaining 54G gate.
+legacy. Narrow independent human blocker re-acceptance is the only remaining
+54G gate.
+
+The first independent matrix found one blocker: retained Live-4D gameplay
+returned from Main Menu through Advanced / Diagnostics, Replay Demos, and
+Viewer with cleared board presentation. The bounded correction routes Viewer
+navigation through the Godot app lifecycle owner and establishes a fresh
+canonical live presentation without resetting native gameplay. Automated,
+pinned-engine, full-gate, rebuilt-package, and outside-tree actual-app evidence
+is green. A narrow independent blocker re-test remains required, so the
+programme gate remains `NO`.
 
 Objective:
 

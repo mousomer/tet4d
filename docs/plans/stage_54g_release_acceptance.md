@@ -1,6 +1,6 @@
 # Stage 54G Release-Candidate Evidence
 
-Status: IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE
+Status: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING
 
 Candidate date: 2026-08-24
 
@@ -14,7 +14,7 @@ required by the Professional Core Game Gate. Agent-driven real-window evidence
 is release diagnosis only. Until the human matrix below passes:
 
 ```text
-Stage 54G: IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE
+Stage 54G: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING
 PROFESSIONAL_CORE_GAME_READY: NO
 ```
 
@@ -71,7 +71,7 @@ template produced:
 - `artifacts/godot/macos/Tet4D-0.7.5-macos-universal.zip`;
 - app size approximately 165 MiB and ZIP size approximately 59 MiB; and
 - candidate ZIP SHA-256
-  `9c0d9727dcf9dcb741c4a26fd6ae74b35b957c463758a394427187916a2247f2`.
+  `3f3bc759091abd52c398114aae2f22d3ee3db59f90415270c4610cdcb60b2859`.
 
 Artifact inspection proved:
 
@@ -135,6 +135,44 @@ This evidence does not claim exhaustive human play acceptance. Accepted
 gameplay, controls, camera, Reset/Fit/Restart, modal ownership, setup recovery,
 and replay contracts are also exercised by the pinned Godot and native suites.
 
+## Independent-acceptance blocker correction
+
+The first independent matrix passed the release candidate except for one
+reproduced blocker. A retained Live-4D session returned from Main Menu through
+Advanced / Diagnostics, Replay Demos, and Viewer with its HUD, NEXT, HOLD, and
+running native session intact but no visible board. Fit could not recover it;
+Reset could.
+
+Executable Godot 4.7.1 diagnosis established that Main Menu correctly destroys
+the presentation context. The HUD Viewer button then bypassed the app lifecycle
+owner and exposed the still-live mode directly. In 2D and 3D this lost the
+required canonical re-entry pose but geometry remained. In 4D the teardown also
+cleared renderer instances, bounds, `B`, and `L`, so the exposed viewport was
+blank. The viewport, renderer node, presentation root, and current camera all
+remained visible and in the scene tree; the failure was missing presentation
+reconstruction, not a hidden node, inactive viewport, wrong camera, or native
+session loss.
+
+Viewer navigation now emits an ownership request to the app. For a retained
+live mode, the app restores running/paused state, live keyboard ownership,
+snapshot/Ghost/HUD rendering, canonical presentation, bounds, geometry, camera,
+and framing, then opens Viewer. Native gameplay is never reset or recreated.
+Because Main Menu is an E4 presentation-context destruction boundary, the
+deliberately noncanonical prior pose is not preserved; 2D, 3D, and 4D re-enter
+their defined canonical presentation. Actual replay mode continues through the
+unchanged replay path.
+
+Reset recovered the old failure because its composite contract reconstructs
+4D `B`, `L`, renderer geometry/bounds, canonical outer view, and fitted framing.
+Fit intentionally reads existing valid bounds and changes framing only; with
+the renderer cleared and bounds invalid, it correctly could not repair the
+presentation. Fit semantics remain unchanged.
+
+The rebuilt outside-tree exported app passed the exact Live-4D sequence with a
+populated Hold: the board remained visible after Viewer without Fit, Reset, or
+Restart; post-return Hold input was accepted; and selecting an actual 4D replay
+still opened a valid replay view.
+
 ## Finding classification
 
 - Release blocker: the first export correctly failed because macOS universal
@@ -166,6 +204,14 @@ The known Standard-mode difference remains non-blocking post-release polish.
 
 Completed focused evidence:
 
+- executable all-mode live-navigation lifecycle regression, including
+  unchanged native bridge/state hash/snapshot, Hold, NEXT, Hold availability,
+  Ghost destination, canonical re-entry, restored geometry/bounds/camera,
+  retained running/paused state, input/focus ownership, Fit preservation, and
+  replay isolation;
+- pre-fix mutation evidence: seven expected failures across 2D/3D canonical
+  re-entry and 4D session/bounds/grid/cells/canonical re-entry; zero failures
+  after the correction;
 - release packaging unit tests and shell syntax;
 - workflow YAML parsing;
 - project-contract and generated-configuration checks;
@@ -185,22 +231,20 @@ The pinned Godot suite emits expected diagnostics from deliberate invalid-input
 tests and its editor/test teardown, while ordinary exported-candidate smoke and
 real-window logs contain no error or warning diagnostics.
 
-## Independent human matrix — pending
+## Independent blocker re-acceptance — pending
 
-The human reviewer must use the actual exported app and record pass/fail for:
+The prior independent matrix passed all other release surfaces. The human
+reviewer may therefore use the rebuilt exported app for this narrow re-test:
 
-1. fresh startup and setup;
-2. a short 2D game including movement, rotation, Ghost, NEXT, full Hold
-   lifecycle, Reset, Fit, and Restart;
-3. a short 3D game including depth, relative controls, camera/View Actions,
-   Ghost, NEXT, Hold swap, Reset, Fit, and Restart;
-4. a short Standard and High Contrast 4D game including multiple W slices,
-   W movement, relative controls, View Actions, Ghost, NEXT, multi-W Hold,
-   Reset, Fit, and Restart;
-5. small-window Settings, UI scale, High Contrast, resets, and scrolling;
-6. replay open, playback, navigation, and recovery; and
-7. relaunch with preferences retained, transient view fresh, and canonical
-   empty/available Hold in the new game context.
+1. start Live 4D and establish a visible board, preferably with populated Hold
+   and a deliberately changed view;
+2. navigate Main Menu, Advanced / Diagnostics, Replay Demos, and Viewer;
+3. confirm the live board is visible without Fit, Reset, or Restart and that
+   gameplay, Hold, NEXT, Ghost, pause state, camera input, and keyboard input
+   remain correct;
+4. open a real replay and confirm replay UI/camera behavior; and
+5. perform quick 2D and 3D Viewer-return checks because the owner seam is
+   shared.
 
 Any crash, export/startup/native failure, source-tree dependency, incorrect
 persistence, stale Hold/NEXT/Ghost state, unreachable required UI, replay

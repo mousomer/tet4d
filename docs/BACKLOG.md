@@ -209,11 +209,16 @@ toggle remain outside this stage.
   implementation, agent-driven real-DisplayServer evidence, and 2026-08-23
   human verdict are recorded in
   `docs/plans/stage_54f_integrated_visual_acceptance.md`.
-- Stage 54G — IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE. The
-  current macOS 13+ Universal 2 Godot candidate, automated export/outside-tree
-  startup evidence, agent real-window matrix, platform/legacy truth, and
-  pending independent human matrix are recorded in
-  `docs/plans/stage_54g_release_acceptance.md`.
+- Stage 54G — IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING. The
+  independent matrix found one release blocker: after Live 4D exited through
+  Main Menu and navigated through Advanced / Diagnostics, Replay Demos, and
+  Viewer, the retained native session was exposed with cleared live board
+  presentation. Viewer navigation now returns through the app lifecycle owner,
+  rebuilds the canonical live presentation, and preserves native gameplay and
+  the retained pause state. Focused all-mode/replay coverage, pinned Godot,
+  full verification, rebuilt packaging, outside-tree smoke, and an actual-app
+  Live-4D reproduction pass. Narrow independent human re-acceptance remains
+  required; all other matrix findings remain accepted at their prior scope.
 
 ### Stage 54F integrated visual findings
 
@@ -257,6 +262,10 @@ review.
   improvement justified reopening the human-accepted rendering candidate.
   Retain this as non-blocking post-release polish, not a correctness or
   architecture defect.
+- **Post-release polish — live pause status badge.** Pausing correctly stops
+  live gameplay, but the cockpit badge can continue to display `[ RUNNING ]`.
+  Track this separately from the Viewer-return release blocker; do not expand
+  the bounded restoration fix into status-presentation work.
 
 ### Pre-54F correctness findings
 

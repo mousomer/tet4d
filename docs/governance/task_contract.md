@@ -1,4 +1,112 @@
-# Task Contract — Stage 54G Release Hardening and Final Manual Acceptance
+# Task Contract — Stage 54G Live Presentation Restoration Blocker
+
+Status: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING
+
+## Objective
+
+Fix the single Stage 54G manual-acceptance blocker in which returning to the
+Viewer through Main Menu, Advanced / Diagnostics, and Replay Demos leaves an
+existing Live-4D session with no rendered board geometry. Restore a valid live
+presentation through the app-owned lifecycle seam without changing native
+gameplay, replay semantics, Fit/Reset semantics, or accepted presentation
+architecture.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: Godot shell, replay/live navigation integration, visible
+  product, and release acceptance.
+- Required evidence: `godot`, `integration`, `human_visual`, `platform`, and
+  `release_acceptance`.
+- Full repository gate: required because this corrects a reproduced packaged
+  release blocker on a shared live/replay navigation path.
+
+## Current Authority
+
+- `docs/architecture/camera_gui_preset_semantics.md` owns presentation-context
+  teardown and canonical re-entry, composite Reset View, and framing-only Fit.
+- `docs/architecture/4d_presentation_interaction_architecture.md` owns the
+  separate Live-4D `B`, `L`, layout, and outer camera presentation state.
+- `docs/architecture/authority_map.md` assigns live/replay presentation and
+  camera ownership to Godot while native sessions retain gameplay authority.
+- Native Hold, NEXT, Ghost, board, queue/RNG, and state hashes remain frozen.
+
+Authority effect: none. This fix restores an accepted Godot lifecycle seam and
+does not establish or transfer deterministic authority.
+
+## Allowed Systems and Paths
+
+- the app-owned live/replay navigation and presentation re-entry seam;
+- the HUD Viewer request boundary needed to route navigation to that owner;
+- executable Godot integration coverage for 2D, 3D, 4D, replay, native-state
+  preservation, view lifecycle, and input/focus restoration;
+- the owning lifecycle contract and bounded release/backlog evidence; and
+- rebuilt current-platform release evidence.
+
+## Forbidden Changes
+
+- gameplay/session recreation as a way to hide the blank board;
+- changes to native gameplay, Hold, NEXT, Ghost, RNG, queue, score, replay
+  schema/content, relative controls, projection, or camera ownership;
+- broadening Fit View into a repair/reset operation;
+- calling composite Reset View as a hidden return-navigation workaround;
+- preserving a noncanonical pose across Main Menu when E4 defines that exit as
+  presentation-context destruction;
+- pause-status UI work or any other non-blocking Stage 54G finding; and
+- push, PR creation, or final acceptance declaration before independent human
+  re-review.
+
+## Acceptance Criteria
+
+1. The original packaged-app Live-4D navigation failure is reproduced before
+   implementation and classified against Live 2D and Live 3D.
+2. Viewer navigation routes through the app lifecycle owner rather than
+   exposing a stale live mode through a raw HUD screen switch.
+3. Returning to retained live gameplay after Main Menu establishes the
+   canonical mode presentation required by E4, with visible renderer bounds
+   and geometry in 2D, 3D, and 4D.
+4. Native bridge identity and state hash, active piece, Hold state and
+   availability, NEXT, Ghost, score, and game-over state remain unchanged.
+5. Fit remains framing-only; Reset remains the explicit composite canonical
+   action and is not required for recovery.
+6. Replay Viewer behavior, camera ownership, diagnostics, navigation, and
+   input/focus behavior remain correct.
+7. Focused lifecycle regression, pinned Godot 4.7.1, sanitation, keybinding,
+   full repository, rebuilt package, and outside-tree real-app checks pass.
+8. Stage 54G remains `NO` until the independent narrow human re-review passes.
+
+## Explicit Deferrals
+
+- the live pause badge continuing to display `[ RUNNING ]` is post-release
+  polish and a separate task;
+- minimum-window enforcement, HiDPI point-size behavior, small-width SPAWN
+  ENTRY clipping, replay-list keyboard accessibility, window-position
+  persistence, notarization, and mouse-only 3D camera coverage; and
+- all unrelated Stage 54G polish and future features.
+
+## Verification Evidence
+
+- The pre-fix executable Godot 4.7.1 diagnostic reproduced cleared camera
+  presentation in 2D and 3D and the blank-board failure only in 4D. In all
+  modes the native bridge, native state hash, renderer owner, viewport, and
+  camera node remained live; 4D alone had zero grid/cell instances and invalid
+  bounds after the presentation teardown.
+- The focused integration test was mutation-checked against the original
+  implementation: it failed for the missing 2D/3D canonical re-entry and 4D
+  session/bounds/geometry/canonical re-entry, then passed after the correction.
+- Focused lifecycle, sanitation, keybinding/native, pinned Godot 4.7.1, and
+  full repository gates pass.
+- A rebuilt macOS Universal 2 app passed its integrated two-user outside-tree
+  smoke. The exact packaged Live-4D path returned to visible board geometry
+  without Fit, Reset, or Restart; post-return Hold input and actual 4D replay
+  viewing also worked.
+- Independent narrow human re-acceptance is still required. Stage 54G remains
+  not complete and `PROFESSIONAL_CORE_GAME_READY` remains `NO`.
+
+---
+
+# Prior Contract — Stage 54G Release Hardening and Final Manual Acceptance
 
 Status: IMPLEMENTED / READY FOR FINAL MANUAL RELEASE ACCEPTANCE
 

@@ -50,6 +50,7 @@ signal fit_view_requested()
 signal reset_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
+signal viewer_requested()
 signal live_2d_requested()
 signal live_3d_requested()
 signal live_4d_requested()
@@ -2422,7 +2423,7 @@ func _screen_nav(title_text: String) -> HFlowContainer:
 	var viewer_button := Button.new()
 	viewer_button.text = "Viewer"
 	viewer_button.pressed.connect(func() -> void:
-		show_screen(SCREEN_VIEWER)
+		viewer_requested.emit()
 	)
 	nav.add_child(viewer_button)
 	var diagnostics_button := Button.new()

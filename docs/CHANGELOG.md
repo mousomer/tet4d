@@ -12,6 +12,13 @@
    as a legacy Python-product path and are no longer presented or published as
    the current Godot professional-core release.
 
+### Fixed
+
+1. Returning from Main Menu through Advanced / Diagnostics and Replay Demos to
+   Viewer now restores the canonical 2D, 3D, or 4D live presentation through
+   the app lifecycle owner while preserving the authoritative native session,
+   pause state, Hold, NEXT, Ghost, and gameplay hash.
+
 ## 2026-04-15
 
 ### Release

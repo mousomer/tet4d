@@ -43,6 +43,8 @@ var _mouse_orbiting := false
 var _mouse_panning := false
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
+var _retained_live_navigation_mode := ""
+var _retained_live_navigation_paused := false
 var _live_2d_paused := false
 var _live_2d_session_started := false
 var _live_3d_paused := false
@@ -697,6 +699,7 @@ func _wire_hud() -> void:
 	_hud.change_setup_requested.connect(_change_live_setup)
 	_hud.new_random_game_requested.connect(_start_new_random_game)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
+	_hud.viewer_requested.connect(_return_to_viewer_from_navigation)
 	_hud.basis_turn_requested.connect(_apply_live_4d_basis_turn)
 
 
@@ -1269,6 +1272,7 @@ func _enter_live_4d_mode(preserve_current_view: bool = false) -> void:
 
 
 func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = false) -> void:
+	_clear_retained_live_navigation_state()
 	if not preserve_current_view or _mode != mode_name:
 		if _mode == MODE_LIVE_4D:
 			_clear_live_4d_presentation_state(false)
@@ -1289,6 +1293,11 @@ func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = f
 
 
 func _return_to_main_menu() -> void:
+	if _is_live_mode():
+		_retained_live_navigation_mode = _mode
+		_retained_live_navigation_paused = _live_mode_paused()
+	else:
+		_clear_retained_live_navigation_state()
 	_state.is_playing = false
 	_live_2d_paused = true
 	_live_3d_paused = true
@@ -1305,7 +1314,54 @@ func _return_to_main_menu() -> void:
 	_hud.show_screen(ReplayHud.SCREEN_MAIN_MENU)
 
 
+func _return_to_viewer_from_navigation() -> void:
+	if not _is_live_mode():
+		_hud.show_replay_viewer()
+		return
+	if _retained_live_navigation_mode != _mode:
+		_hud.show_replay_viewer()
+		return
+	var retained_pause := _retained_live_navigation_paused
+	_state.is_playing = false
+	_live_2d_paused = retained_pause if _mode == MODE_LIVE_2D else true
+	_live_3d_paused = retained_pause if _mode == MODE_LIVE_3D else true
+	_live_4d_paused = retained_pause if _mode == MODE_LIVE_4D else true
+	match _mode:
+		MODE_LIVE_2D:
+			_live_2d_session_started = true
+		MODE_LIVE_3D:
+			_live_3d_session_started = true
+		MODE_LIVE_4D:
+			_live_4d_session_started = true
+	_live_tick_accumulator = 0.0
+	_reset_live_repeat_state()
+	_hud.set_live_keyboard_capture(true)
+	_clear_live_ui_focus()
+	_refresh_current_live_snapshot()
+	_establish_canonical_view_and_fit(_mode)
+	_hud.show_replay_viewer()
+	_refresh_current_live_snapshot()
+	_clear_live_ui_focus()
+	_clear_retained_live_navigation_state()
+
+
+func _refresh_current_live_snapshot() -> void:
+	match _mode:
+		MODE_LIVE_2D:
+			_refresh_live_2d_snapshot()
+		MODE_LIVE_3D:
+			_refresh_live_3d_snapshot()
+		MODE_LIVE_4D:
+			_refresh_live_4d_snapshot()
+
+
+func _clear_retained_live_navigation_state() -> void:
+	_retained_live_navigation_mode = ""
+	_retained_live_navigation_paused = false
+
+
 func _change_live_setup(mode_name: String) -> void:
+	_clear_retained_live_navigation_state()
 	_state.is_playing = false
 	_live_2d_paused = true
 	_live_3d_paused = true
@@ -1323,6 +1379,7 @@ func _change_live_setup(mode_name: String) -> void:
 
 
 func _enter_replay_mode() -> void:
+	_clear_retained_live_navigation_state()
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(false)
 	elif _camera_rig != null:

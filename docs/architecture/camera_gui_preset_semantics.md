@@ -285,6 +285,15 @@ belongs to the context-exit category. E4b must not invent hidden persistence to
 recreate the old pose after that transition. A configured or random new game
 started without leaving the live presentation context preserves the view.
 
+Main Menu likewise destroys the transient presentation context, but it does
+not authorize a HUD-only Viewer screen switch to expose a cleared live renderer
+while a native session is retained. If Viewer navigation returns to retained
+live gameplay after that exit, the request must route through the app lifecycle
+owner: native gameplay remains unchanged and the mode establishes its fresh
+canonical presentation before the Viewer becomes interactive. The previous
+noncanonical pose is intentionally not restored across Main Menu. Replay mode
+uses its separate replay owner and must not execute the live re-entry seam.
+
 ## 8. Named view presets are actions
 
 Named view presets are commands that move the relevant mode-owned orientation
