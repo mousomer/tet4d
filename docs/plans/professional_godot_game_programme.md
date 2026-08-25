@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 
 ## 1. Purpose
 
@@ -1017,20 +1017,16 @@ outside this bounded correctness closure.
 
 - **E4a:** accepted human product semantics and final blocking technical
   findings are REVIEWED GREEN. Remaining human decisions: none.
-- **E4b:** implementation is ready for focused real-window review of flat 2D,
-  Fit/Reset separation, restart preservation, re-entry defaults, action-based
-  presets, UI-scale ownership, and 3D/4D/replay mode behaviour.
-- **E5:** focused cockpit human-visible review remains required.
-- **54F:** serious integrated GUI/playability audit with the complete scope and
-  known findings above, including the outstanding human setup/product review
-  from E3.
-- **54G:** implementation and automated/agent release evidence are ready;
-  independent final manual release acceptance remains required. Until it
-  passes, `PROFESSIONAL_CORE_GAME_READY` remains `NO`.
+- **E4b:** COMPLETE / FOCUSED VISIBLE REVIEW ACCEPTED.
+- **E5:** COMPLETE / HUMAN PRODUCT REVIEW ACCEPTED.
+- **54F:** COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED.
+- **54G:** COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED. The independent
+  final blocker re-acceptance verdict is `PASS`, so
+  `PROFESSIONAL_CORE_GAME_READY` is `YES`.
 
 ### Stage 54G — Professional gaming-experience and release hardening
 
-Status: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING.
+Status: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED.
 
 The macOS 13+ Universal 2 Godot 4.7.1 app/ZIP is the current candidate. Build,
 export, signature, native-framework, outside-tree clean/persisted/corrupt
@@ -1038,8 +1034,8 @@ startup, real-window 2D/3D/4D/Hold/Settings/replay-browser, and release
 documentation evidence is recorded in
 `docs/plans/stage_54g_release_acceptance.md`. Linux and Windows Godot paths are
 development-configured only; the Python/PyInstaller installers are retained
-legacy. Narrow independent human blocker re-acceptance is the only remaining
-54G gate.
+legacy. The accepted runtime candidate is
+`fcaa450a57a43f6e1c931ceb35b98cdf2b0ccfbc`.
 
 The first independent matrix found one blocker: retained Live-4D gameplay
 returned from Main Menu through Advanced / Diagnostics, Replay Demos, and
@@ -1047,8 +1043,23 @@ Viewer with cleared board presentation. The bounded correction routes Viewer
 navigation through the Godot app lifecycle owner and establishes a fresh
 canonical live presentation without resetting native gameplay. Automated,
 pinned-engine, full-gate, rebuilt-package, and outside-tree actual-app evidence
-is green. A narrow independent blocker re-test remains required, so the
-programme gate remains `NO`.
+is green. Independent final blocker re-acceptance passed running and paused
+Live 4D, shared Live 2D/3D return, replay, immediate board visibility, retained
+gameplay/HOLD/NEXT/Ghost coherence, restored input ownership, and clean runtime
+logs.
+
+Stage 54G closes the Professional Core Game gate:
+
+```text
+Stage 54G: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED
+PROFESSIONAL_CORE_GAME_READY: YES
+```
+
+The Stage 54 programme is complete. No further Stage 54 implementation slice is
+required for this gate; future product development begins as a new programme
+or stage. This product-readiness result does not claim public macOS distribution
+readiness: the accepted candidate is ad-hoc signed, not Developer ID signed,
+and not notarized.
 
 Objective:
 
@@ -1340,7 +1351,9 @@ The active order is:
    larger real-window review.
 9. Stage 54F — integrated professional playability/visual acceptance is
    complete and human accepted.
-10. Stage 54G — remaining professional release hardening is the next action.
+10. Stage 54G — COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED; it closes
+    the Stage 54 Professional Core Game programme and
+    `PROFESSIONAL_CORE_GAME_READY` is `YES`.
 11. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
 12. Later Explorer, challenge, topology, and simulation phases.
 

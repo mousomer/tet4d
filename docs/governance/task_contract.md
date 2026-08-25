@@ -1,6 +1,60 @@
-# Task Contract — Stage 54G Live Presentation Restoration Blocker
+# Task Contract — Stage 54G and Professional Core Game Closure
 
-Status: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING
+Status: COMPLETE / FINAL DOCUMENTATION AND GOVERNANCE CLOSURE
+
+## Objective
+
+Record the independent final blocker re-acceptance, close Stage 54G and the
+Professional Core Game gate, preserve non-blocking findings, and identify the
+accepted release candidate without changing runtime implementation or
+established authority.
+
+## Classification
+
+- Primary task type: `product_planning`.
+- Workflow modifiers: none.
+- Affected layers: documentation and recorded release acceptance.
+- Required evidence: `documentation` and `release_acceptance`.
+- Full repository gate: required because this records the final release claim.
+
+## Authority and Scope
+
+- `docs/plans/professional_godot_game_programme.md` owns the gate.
+- `docs/plans/stage_54g_release_acceptance.md` owns candidate evidence.
+- `CURRENT_STATE.md`, `docs/BACKLOG.md`, and this contract own current handoff,
+  deferrals, and task scope.
+- Allowed changes are limited to authoritative status and release-history
+  documentation. Runtime, packaging, tests, CI, and authority records are
+  forbidden.
+
+Authority effect: none. This task records acceptance of already-established
+deterministic gameplay, `AE-0055` Hold authority, product-shell semantics, and
+the frozen release candidate.
+
+## Acceptance and Verification
+
+1. Re-read the gate and confirm every formal prerequisite is complete.
+2. Record `Stage 54G: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED`,
+   `PROFESSIONAL_CORE_GAME_READY: YES`, and
+   `FINAL HUMAN BLOCKER RE-ACCEPTANCE: PASS`.
+3. Record the exact accepted candidate, signature limitations, and separation
+   between product readiness and public macOS distribution readiness.
+4. Preserve non-blocking post-release findings and close Stage 54 without
+   creating Stage 54H or absorbing later product work.
+5. Run the policy-routed documentation/governance checks, sanitation, and full
+   repository gate; commit only documentation and leave a clean worktree.
+
+## Explicit Deferrals
+
+Topology gameplay, Explorer, challenge/campaign, simulation, broader
+distribution, signing/notarization, and post-release UI polish begin under a
+new contract and programme or stage.
+
+---
+
+# Prior Contract — Stage 54G Live Presentation Restoration Blocker
+
+Status: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED
 
 ## Objective
 
@@ -74,7 +128,8 @@ does not establish or transfer deterministic authority.
    input/focus behavior remain correct.
 7. Focused lifecycle regression, pinned Godot 4.7.1, sanitation, keybinding,
    full repository, rebuilt package, and outside-tree real-app checks pass.
-8. Stage 54G remains `NO` until the independent narrow human re-review passes.
+8. Stage 54G remains incomplete until the independent narrow human re-review
+   passes; the recorded final verdict now satisfies this criterion.
 
 ## Explicit Deferrals
 
@@ -101,8 +156,11 @@ does not establish or transfer deterministic authority.
   smoke. The exact packaged Live-4D path returned to visible board geometry
   without Fit, Reset, or Restart; post-return Hold input and actual 4D replay
   viewing also worked.
-- Independent narrow human re-acceptance is still required. Stage 54G remains
-  not complete and `PROFESSIONAL_CORE_GAME_READY` remains `NO`.
+- Independent narrow human re-acceptance passed. Running and paused Live 4D,
+  shared Live 2D/3D return, replay, immediate board visibility, retained native
+  gameplay/HOLD/NEXT/Ghost coherence, restored input ownership, and clean
+  runtime logs were accepted. Stage 54G is complete and
+  `PROFESSIONAL_CORE_GAME_READY` is `YES`.
 
 ---
 

@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -157,12 +157,13 @@ history ledger. Detailed history is preserved in
   responsive cockpit, pinned Godot 4.7.1, and full repository evidence are
   green. The fixed trace/replay schema and historical fixture results are
   unchanged. No Stage 54G polish was absorbed.
-- Stage 54G is IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING on
+- Stage 54G is COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED on
   `codex/54g-release-hardening`. The current candidate is the Godot 4.7.1
-  macOS 13+ Universal 2 app/ZIP. Exact export-template pinning, release native
-  build, metadata/signature/artifact inspection, two-user outside-tree smoke,
-  persisted/invalid-state launches, and agent real-window 2D/3D/4D/Hold/
-  Settings/replay-browser evidence are recorded in
+  macOS 13+ Universal 2 app/ZIP at runtime HEAD
+  `fcaa450a57a43f6e1c931ceb35b98cdf2b0ccfbc`. Exact export-template pinning,
+  release native build, metadata/signature/artifact inspection, two-user
+  outside-tree smoke, persisted/invalid-state launches, and agent real-window
+  2D/3D/4D/Hold/Settings/replay-browser evidence are recorded in
   `docs/plans/stage_54g_release_acceptance.md`. Linux and Windows are
   development-configured only, and Python/PyInstaller packaging is retained
   legacy. The first independent matrix found one Live-4D blocker after Main
@@ -172,9 +173,15 @@ history ledger. Detailed history is preserved in
   full verification, rebuilt packaging, outside-tree smoke, and actual-app
   reproduction pass. No deterministic authority or accepted Fit/Reset,
   gameplay, Hold, NEXT, Ghost, replay, controls, or camera semantics changed.
-  The bounded 4D polish decision remains disposition B. Narrow independent
-  human blocker re-acceptance is the only remaining gate;
-  `PROFESSIONAL_CORE_GAME_READY` remains `NO`.
+  The independent final blocker re-acceptance passed for running and paused
+  Live 4D, shared Live 2D/3D return, replay, immediate board visibility,
+  retained gameplay/HOLD/NEXT/Ghost state, restored input ownership, and clean
+  runtime logs. The bounded 4D polish decision remains disposition B.
+  `PROFESSIONAL_CORE_GAME_READY` is `YES`, and the Stage 54 Professional Core
+  Game programme is complete. No further Stage 54 implementation slice is
+  required; later product and distribution work begins under a new programme
+  or stage. The accepted package is ad-hoc signed and not notarized, so this
+  product gate does not claim frictionless public macOS distribution.
 - Godot topology gameplay, the Godot Topology Lab, the full Explorer, the
   challenge campaign, and unified gameplay/endgame/topology/explosion
   integration remain later programme phases.
@@ -305,10 +312,8 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Perform the narrow independent Stage 54G blocker re-test against the rebuilt
-   exported macOS candidate in `docs/plans/stage_54g_release_acceptance.md`.
-   Do not mark Stage 54G complete or set `PROFESSIONAL_CORE_GAME_READY` to
-   `YES` until that verdict is recorded in a separate status commit.
+1. Stop Stage 54. Future product implementation begins as a separately
+   contracted programme or stage; do not extend 54G or create Stage 54H.
 2. Keep the Standard Live-4D legibility and live pause-badge findings as
    non-blocking post-release polish; do not reopen the already-passed matrix.
 3. Keep piece/config-bundle import readers and unrelated settings recovery as

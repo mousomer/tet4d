@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-25
+
+### Release
+
+1. Independent final blocker re-acceptance passed for the Tet4D 0.7.5 macOS
+   13+ Universal 2 candidate, closing Stage 54G and setting
+   `PROFESSIONAL_CORE_GAME_READY` to `YES`. The accepted ZIP remains ad-hoc
+   signed and non-notarized; Developer ID signing and notarization are separate
+   public-distribution prerequisites.
+
 ## 2026-08-24
 
 ### Changed

@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-24
+Updated: 2026-08-25
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -45,6 +45,12 @@ The first priority is a fully playable and professionally presented 4D Godot
 game ready for later topology, Explorer, challenge, and simulation extensions.
 The programme is owned by
 `docs/plans/professional_godot_game_programme.md`.
+
+Status: `PROFESSIONAL_CORE_GAME_READY: YES`. Stage 54G passed final manual
+release acceptance, closing the Stage 54 Professional Core Game programme.
+Future implementation starts as a new programme or stage rather than extending
+54G; topology, Explorer, challenge/campaign, simulation, broader distribution,
+and post-release polish remain outside this completed gate.
 
 ## Next Work
 
@@ -209,7 +215,7 @@ toggle remain outside this stage.
   implementation, agent-driven real-DisplayServer evidence, and 2026-08-23
   human verdict are recorded in
   `docs/plans/stage_54f_integrated_visual_acceptance.md`.
-- Stage 54G — IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING. The
+- Stage 54G — COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED. The
   independent matrix found one release blocker: after Live 4D exited through
   Main Menu and navigated through Advanced / Diagnostics, Replay Demos, and
   Viewer, the retained native session was exposed with cleared live board
@@ -217,8 +223,10 @@ toggle remain outside this stage.
   rebuilds the canonical live presentation, and preserves native gameplay and
   the retained pause state. Focused all-mode/replay coverage, pinned Godot,
   full verification, rebuilt packaging, outside-tree smoke, and an actual-app
-  Live-4D reproduction pass. Narrow independent human re-acceptance remains
-  required; all other matrix findings remain accepted at their prior scope.
+  Live-4D reproduction pass. Independent final blocker re-acceptance passed
+  running and paused Live 4D, shared Live 2D/3D return, replay, immediate board
+  visibility, retained gameplay/HOLD/NEXT/Ghost coherence, restored input
+  ownership, and clean runtime logs. `PROFESSIONAL_CORE_GAME_READY` is `YES`.
 
 ### Stage 54F integrated visual findings
 
@@ -235,7 +243,7 @@ toggle remain outside this stage.
 - [x] Every displayed 4D W-slice reads as a 3D board volume in the agent-driven
   real-window matrix: front/back face grids, floor lattice, wireframe cage,
   piece/Ghost depth, responsive separation, and rotated-view evidence remain
-  legible. Independent human product acceptance is still required.
+  legible. Human integrated acceptance and final release acceptance passed.
 - [x] The Stage 54E-3 setup-colour advisory is closed. Invalid setup now
   carries error-coloured summary and disclosure treatment plus literal
   `ERROR` text when the responsible section is collapsed, in standard and
@@ -266,6 +274,12 @@ review.
   live gameplay, but the cockpit badge can continue to display `[ RUNNING ]`.
   Track this separately from the Viewer-return release blocker; do not expand
   the bounded restoration fix into status-presentation work.
+- **Post-release shell/accessibility follow-ups.** Preserve the non-blocking
+  small-width `SPAWN ENTRY` clipping, replay case-list keyboard limitation,
+  very-small-window/minimum-size behavior, HiDPI default physical-point
+  sizing, and window size/position persistence observations for later bounded
+  product work. Developer ID signing and notarization remain a separate macOS
+  distribution prerequisite, not part of Professional Core Game readiness.
 
 ### Pre-54F correctness findings
 

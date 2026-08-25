@@ -1,21 +1,23 @@
 # Stage 54G Release-Candidate Evidence
 
-Status: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING
+Status: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED
 
 Candidate date: 2026-08-24
+Final acceptance date: 2026-08-25
 
 Candidate branch: `codex/54g-release-hardening`
 Starting commit: `162bfad57053a250051bb4b2bbb7dfaae108d10f`
+Runtime candidate HEAD: `fcaa450a57a43f6e1c931ceb35b98cdf2b0ccfbc`
 
 ## Decision boundary
 
-This record prepares, but does not replace, the independent human acceptance
-required by the Professional Core Game Gate. Agent-driven real-window evidence
-is release diagnosis only. Until the human matrix below passes:
+Independent final blocker re-acceptance is complete. The authoritative result
+is:
 
 ```text
-Stage 54G: IMPLEMENTED / BLOCKER FIXED / HUMAN RE-ACCEPTANCE PENDING
-PROFESSIONAL_CORE_GAME_READY: NO
+Stage 54G: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED
+PROFESSIONAL_CORE_GAME_READY: YES
+FINAL HUMAN BLOCKER RE-ACCEPTANCE: PASS
 ```
 
 No deterministic authority is established or transferred by this stage.
@@ -52,7 +54,8 @@ prerequisites. No formal pre-54G blocker remains.
 | Supported minimum shell size | 634 x 660 |
 | Supported modes | bounded 2D, 3D, and 4D live play plus replay demos |
 | User data | platform application-data directory `Tet4D`; schema-3 shell settings and schema-4 game setup |
-| Current release target | macOS 13+, Universal 2 app and ZIP |
+| Current release target | macOS 13+ Universal 2 app and ZIP |
+| Accepted artifact | `Tet4D-0.7.5-macos-universal.zip` |
 | Current export preset | `macOS Universal` |
 | Current native artifact | `libtet4d_core.macos.template_release.framework`, `x86_64` + `arm64` |
 | Development-configured targets | Linux and Windows GDExtension names only |
@@ -88,8 +91,9 @@ Artifact inspection proved:
   evidence, and machine-local source paths are absent; and
 - the build completed without an export warning or error.
 
-The package is ad-hoc signed and not notarized. It is a local release candidate,
-not a public Gatekeeper-ready distribution. Developer-ID signing,
+The package is ad-hoc signed, passes local strict codesign verification, is not
+Developer ID signed, and is not notarized. It is not a public
+Gatekeeper-frictionless distribution. Developer ID signing,
 notarization, stores, and unsupported-platform installers remain separate
 distribution work.
 
@@ -231,22 +235,28 @@ The pinned Godot suite emits expected diagnostics from deliberate invalid-input
 tests and its editor/test teardown, while ordinary exported-candidate smoke and
 real-window logs contain no error or warning diagnostics.
 
-## Independent blocker re-acceptance — pending
+## Independent blocker re-acceptance — PASS
 
-The prior independent matrix passed all other release surfaces. The human
-reviewer may therefore use the rebuilt exported app for this narrow re-test:
+Final independent re-test accepted:
 
-1. start Live 4D and establish a visible board, preferably with populated Hold
-   and a deliberately changed view;
-2. navigate Main Menu, Advanced / Diagnostics, Replay Demos, and Viewer;
-3. confirm the live board is visible without Fit, Reset, or Restart and that
-   gameplay, Hold, NEXT, Ghost, pause state, camera input, and keyboard input
-   remain correct;
-4. open a real replay and confirm replay UI/camera behavior; and
-5. perform quick 2D and 3D Viewer-return checks because the owner seam is
-   shared.
+- Live 4D running: PASS;
+- Live 4D paused: PASS;
+- Live 2D shared regression: PASS;
+- Live 3D shared regression: PASS;
+- replay regression: PASS;
+- the board is visible immediately before Fit or Reset;
+- gameplay state and HOLD/NEXT/Ghost remain retained and coherent;
+- input ownership is restored; and
+- no new runtime errors were observed.
 
-Any crash, export/startup/native failure, source-tree dependency, incorrect
-persistence, stale Hold/NEXT/Ghost state, unreachable required UI, replay
-corruption, control/help mismatch, unreadable core 4D play, or false platform
-claim changes this candidate to CHANGES REQUIRED.
+The original blocker was a blank running Live-4D presentation after Viewer
+return. App-owned lifecycle restoration now rebuilds canonical live
+presentation after Main Menu presentation teardown while preserving retained
+native gameplay. No Stage 54G release blocker remains.
+
+The accepted candidate is Tet4D 0.7.5 for macOS 13+ Universal 2,
+`Tet4D-0.7.5-macos-universal.zip`, SHA-256
+`3f3bc759091abd52c398114aae2f22d3ee3db59f90415270c4610cdcb60b2859`,
+built from runtime HEAD `fcaa450a57a43f6e1c931ceb35b98cdf2b0ccfbc`.
+Professional Core Game readiness is complete; Developer ID signing and
+notarization remain separate public-distribution prerequisites.
