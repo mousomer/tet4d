@@ -365,11 +365,17 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 - `display.board_detail`: default `"standard"`; enum; options: minimal, standard, full
 - `ghost.enabled`: default `true`; bool
 - `settled_cells.opacity`: default `0.75`; float
+- `board.grid_opacity`: default `0.31`; float
+- `board.boundary_opacity`: default `0.9`; float
+- `active_cells.opacity`: default `1.0`; float
+- `ghost.opacity`: default `1.0`; float
+- `slice_set.spacing`: default `1.0`; float
 - `display.show_w_labels`: default `true`; bool
 - `display.projection_strength`: default `1.0`; float
 
 ### Theme
 
+- `environment.background_intensity`: default `1.0`; float
 - `theme.name`: default `"plain"`; enum; options: diagnostic, plain, tron
 
 ### Interface

@@ -18,12 +18,18 @@ var horizontal_gap := 2.0
 var vertical_gap := 2.0
 
 
-func configure(count: int, local_width: float, local_height: float, viewport_aspect: float = 1.7777778) -> void:
+func configure(
+	count: int,
+	local_width: float,
+	local_height: float,
+	viewport_aspect: float = 1.7777778,
+	spacing_scale: float = 1.0
+) -> void:
 	layer_count = maxi(count, 1)
 	tile_width = maxf(local_width, 1.0)
 	tile_height = maxf(local_height, 1.0)
-	horizontal_gap = clampf(tile_width * HORIZONTAL_GUTTER_RATIO, MIN_SLICE_GUTTER, MAX_SLICE_GUTTER)
-	vertical_gap = clampf(tile_height * VERTICAL_GUTTER_RATIO, MIN_VERTICAL_SLICE_GUTTER, MAX_VERTICAL_SLICE_GUTTER)
+	horizontal_gap = clampf(tile_width * HORIZONTAL_GUTTER_RATIO, MIN_SLICE_GUTTER, MAX_SLICE_GUTTER) * spacing_scale
+	vertical_gap = clampf(tile_height * VERTICAL_GUTTER_RATIO, MIN_VERTICAL_SLICE_GUTTER, MAX_VERTICAL_SLICE_GUTTER) * spacing_scale
 	if layer_count <= 3:
 		columns = layer_count
 	elif layer_count == 4:

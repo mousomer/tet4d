@@ -21,6 +21,8 @@ const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 const ControlFrameMappingScript = preload("res://scripts/presentation/control_frame_mapping.gd")
 const GhostPieceModelScript = preload("res://scripts/presentation/ghost_piece_model.gd")
+const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
 
 const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
@@ -101,6 +103,7 @@ var _ghost_model = GhostPieceModelScript.new()
 var _ghost_enabled := true
 var _ghost_semantic_revision := ""
 var _ghost_query_count := 0
+var _presentation_profile = PresentationProfileScript.canonical_defaults()
 
 var _world_root: Node3D
 var _live_4d_presentation_root: Node3D
@@ -629,47 +632,7 @@ func _wire_hud() -> void:
 	_hud.replay_loop_changed.connect(func(enabled: bool) -> void:
 		_state.loop_enabled = enabled
 	)
-	_hud.display_w_labels_changed.connect(func(visible: bool) -> void:
-		_renderer.set_show_w_labels(visible)
-		_refresh_render()
-	)
-	_hud.projection_strength_changed.connect(func(value: float) -> void:
-		_renderer.set_projection_strength(value)
-		_refresh_render()
-	)
-	_hud.board_detail_changed.connect(func(detail: String) -> void:
-		_renderer.set_board_detail(detail)
-		_refresh_render()
-	)
-	_hud.ghost_visibility_changed.connect(func(visible: bool) -> void:
-		_ghost_enabled = visible
-		if visible:
-			_ghost_semantic_revision = ""
-			_refresh_ghost_cache()
-		else:
-			_clear_ghost_cache()
-		_refresh_render()
-	)
-	_hud.locked_cell_opacity_changed.connect(func(opacity: float) -> void:
-		_renderer.set_locked_cell_opacity(opacity)
-		_refresh_render()
-	)
-	_hud.grid_visibility_changed.connect(func(visible: bool) -> void:
-		_renderer.set_grid_visible(visible)
-		_refresh_render()
-	)
-	_hud.accessibility_policy_changed.connect(func(policy: Dictionary) -> void:
-		_renderer.set_accessibility_policy(
-			bool(policy.get("high_contrast", false)),
-			bool(policy.get("reduced_motion", false))
-		)
-		_refresh_render()
-	)
-	_hud.camera_preferences_changed.connect(func(sensitivity_factor: float, invert_y: bool, interpolation_scale: float) -> void:
-		if _camera_rig != null:
-			_camera_rig.set_presentation_preferences(sensitivity_factor, invert_y, interpolation_scale)
-			_refresh_camera_status()
-	)
+	_hud.presentation_profile_changed.connect(apply_presentation_profile)
 	_hud.camera_preset_requested.connect(func(id: String) -> void:
 		var applied := _apply_live_4d_view_action(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_outer_view_action(id))
 		if applied and _camera_rig != null:
@@ -677,15 +640,6 @@ func _wire_hud() -> void:
 	)
 	_hud.diagnostics_visibility_changed.connect(func(visible: bool) -> void:
 		_state.diagnostics_visible = visible
-		_refresh_hud()
-	)
-	_hud.display_mode_changed.connect(func(display_mode: String) -> void:
-		_state.display_mode = ReplayVisuals.normalize_display_mode(display_mode)
-		_renderer.set_display_mode(_state.display_mode)
-		_apply_world_palette(_state.display_mode)
-		_hud.set_display_mode(_state.display_mode)
-		if not _current_snapshot.is_empty():
-			_refresh_render()
 		_refresh_hud()
 	)
 	_hud.fit_view_requested.connect(_fit_view)
@@ -1045,13 +999,56 @@ func _build_world_in_game_viewport() -> void:
 	_refresh_camera_status()
 
 
-func _apply_world_palette(display_mode: String) -> void:
+func _apply_world_palette(display_mode: String, intensity: float = -1.0) -> void:
 	if _world_environment == null or _world_environment.environment == null:
 		return
-	_world_environment.environment.background_color = ReplayVisuals.color_for_role(
+	if intensity < 0.0:
+		intensity = float(_presentation_profile.value("environment.background_intensity"))
+	var palette_color := ReplayVisuals.color_for_role(
 		ReplayVisuals.ROLE_BACKGROUND,
 		display_mode
 	)
+	_world_environment.environment.background_color = _scaled_background_color(palette_color, intensity)
+
+
+func _scaled_background_color(color: Color, intensity: float) -> Color:
+	if intensity <= 1.0:
+		return Color(color.r * intensity, color.g * intensity, color.b * intensity, color.a)
+	return color.lerp(Color(1.0, 1.0, 1.0, color.a), minf((intensity - 1.0) * 0.35, 0.35))
+
+
+func apply_presentation_profile(profile) -> bool:
+	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
+		return false
+	var previous_ghost_enabled := _ghost_enabled
+	_presentation_profile = profile.detached_copy()
+	_state.display_mode = ReplayVisuals.normalize_display_mode(str(_presentation_profile.value("theme.name")))
+	_state.playback_speed = float(_presentation_profile.value("replay.playback_speed"))
+	_state.loop_enabled = bool(_presentation_profile.value("replay.loop_enabled"))
+	_ghost_enabled = bool(_presentation_profile.value("ghost.enabled"))
+	if _hud != null:
+		_hud.apply_presentation_profile(_presentation_profile)
+	if _renderer != null:
+		_renderer.apply_presentation_profile(_presentation_profile)
+	if _camera_rig != null:
+		_camera_rig.set_presentation_preferences(
+			ShellPresentationPreferencesScript.camera_sensitivity_factor(str(_presentation_profile.value("camera.sensitivity"))),
+			bool(_presentation_profile.value("camera.invert_y")),
+			0.0 if bool(_presentation_profile.value("accessibility.reduced_motion")) else 1.0
+		)
+		_refresh_camera_status()
+	_apply_world_palette(_state.display_mode, float(_presentation_profile.value("environment.background_intensity")))
+	if _ghost_enabled != previous_ghost_enabled:
+		if _ghost_enabled:
+			_ghost_semantic_revision = ""
+			_refresh_ghost_cache()
+		else:
+			_clear_ghost_cache()
+	if not _current_snapshot.is_empty():
+		_refresh_render()
+	if _hud != null:
+		_refresh_hud()
+	return true
 
 
 func _refresh_hud() -> void:

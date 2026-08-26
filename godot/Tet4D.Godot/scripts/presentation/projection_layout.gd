@@ -14,13 +14,13 @@ var bounds: Dictionary = {"ok": false}
 var applies_local_orientation := false
 
 
-func configure(snapshot: Dictionary, basis = null, orientation = null) -> void:
+func configure(snapshot: Dictionary, basis = null, orientation = null, spacing_scale: float = 1.0) -> void:
 	board_shape = snapshot.get("board_shape", []).duplicate()
 	dimension = int(snapshot.get("dimension", 0))
 	if orientation != null:
 		local_orientation = orientation
 	applies_local_orientation = dimension == 4 and orientation != null
-	mapper.configure(board_shape, basis)
+	mapper.configure(board_shape, basis, spacing_scale)
 	bounds = _collection_bounds()
 
 

@@ -23,7 +23,7 @@ func run() -> Array:
 		failures.append("Back preset yaw must map Forward to canonical +Z so it recedes")
 	if ControlFrameMappingScript.for_3d(PI).translation_command("move_z_neg", "absolute") != "move_z_neg":
 		failures.append("absolute translation must remain canonical under Back yaw")
-	if ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY != 0.75 or ReplayVisuals.MIN_LOCKED_CELL_OPACITY != 0.35 or ReplayVisuals.MAX_LOCKED_CELL_OPACITY != 1.0:
+	if ReplayVisuals.presentation_parameter_default("settled_cells.opacity") != 0.75 or ReplayVisuals.presentation_parameter_minimum("settled_cells.opacity") != 0.35 or ReplayVisuals.presentation_parameter_maximum("settled_cells.opacity") != 1.0:
 		failures.append("locked-cell opacity authority must retain its documented default and range")
 	var normal_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN, false)
 	var contrast_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN, true)

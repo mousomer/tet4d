@@ -2,6 +2,17 @@
 
 Status: Stage 51 display-only architecture contract.
 
+Current reconciliation: the post-Stage-54 presentation parameter contract
+retains this display authority and routes complete validated values through a
+detached schema-1 `PresentationProfile`. The checked-in settings registry is
+now also authoritative for each parameter's unique semantic owner,
+accessibility classification, and runtime applicability. Representative board,
+piece, Ghost, slice-set, palette, and environment values apply through the
+single `TraceReplayApp.apply_presentation_profile()` entry point. Applying a
+profile rebuilds presentation from the current exported snapshot; it does not
+restart a native session or reset current camera pose, basis, or slice-local
+orientation. See `presentation_parameter_contract.md`.
+
 ## 1. Purpose and boundaries
 
 Stage 51 establishes one Godot-owned display-settings path for the product
@@ -94,11 +105,13 @@ shell_settings_registry.json
             |
        SettingsPanel
             |
-  ReplayHud presentation owner
+  ReplayHud + detached PresentationProfile
       /      |       |       \
  window   theme/UI   HUD   app signals
                               |
-                     renderer and camera
+              TraceReplayApp bounded apply
+                     /       |       \
+              renderer    camera   environment
 ```
 
 Generated controls submit bounded values to the store. The panel emits the

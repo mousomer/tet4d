@@ -2122,8 +2122,9 @@ Parameters:
 - `governance.godot_settings_externalization_contract.registry_loader_path`: `"godot/Tet4D.Godot/scripts/ui/settings/settings_registry.gd"` (`string`)
 - `governance.godot_settings_externalization_contract.registry_path`: `"godot/Tet4D.Godot/config/shell_settings_registry.json"` (`string`)
 - `governance.godot_settings_externalization_contract.required_setting_fields[]`: array[`string`]; examples: `"id"`, `"label"`, `"description"`
+- `governance.godot_settings_externalization_contract.runtime_non_setting_dotted_tokens[]`: array[`string`]; examples: `"board.frame_active"`, `"board.grid"`, `"board.slice_geometry"`
 - `governance.godot_settings_externalization_contract.runtime_source_root`: `"godot/Tet4D.Godot/scripts"` (`string`)
-- `governance.godot_settings_externalization_contract.statement`: `"Every Godot shell setting and its default must be declared in the ch...` (`string`)
+- `governance.godot_settings_externalization_contract.statement`: `"Every Godot presentation parameter, its default, exactly-one semanti...` (`string`)
 - `governance.godot_settings_externalization_contract.store_path`: `"godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd"` (`string`)
 - `governance.godot_toolchain.assets.linux_x86_64.executable`: `"Godot_v4.7.1-stable_linux.x86_64"` (`string`)
 - `governance.godot_toolchain.assets.linux_x86_64.name`: `"Godot_v4.7.1-stable_linux.x86_64.zip"` (`string`)

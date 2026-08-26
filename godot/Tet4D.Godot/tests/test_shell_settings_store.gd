@@ -51,13 +51,15 @@ func run() -> Array:
 	store.set_value("theme.name", "plain")
 	store.set_value("accessibility.show_help_hints", false)
 	store.set_value("replay.playback_speed", 1.5)
+	store.set_value("board.grid_opacity", 0.55)
+	store.set_value("slice_set.spacing", 1.4)
 	store.set_value("diagnostics.show_layout_bounds", true)
 	var save_count := int(store.deterministic_snapshot().get("save_count", 0))
 	store.set_value("theme.name", "plain")
 	if int(store.deterministic_snapshot().get("save_count", 0)) != save_count:
 		failures.append("unchanged values should not rewrite settings")
 	var fresh = StoreScript.new(registry, TEST_PATH)
-	if fresh.value("theme.name") != "plain" or fresh.value("accessibility.show_help_hints") != false or absf(float(fresh.value("replay.playback_speed")) - 1.5) > 0.001:
+	if fresh.value("theme.name") != "plain" or fresh.value("accessibility.show_help_hints") != false or absf(float(fresh.value("replay.playback_speed")) - 1.5) > 0.001 or absf(float(fresh.value("board.grid_opacity")) - 0.55) > 0.001 or absf(float(fresh.value("slice_set.spacing")) - 1.4) > 0.001:
 		failures.append("persistent enum, bool, and numeric values should round-trip")
 	if fresh.value("diagnostics.show_layout_bounds") != false:
 		failures.append("session-only diagnostics should not round-trip")
@@ -70,7 +72,7 @@ func run() -> Array:
 			failures.append("canonical file should contain every and only persistent registry key")
 		for forbidden in ["score", "lines", "board_state", "active_cells", "locked_cells", "paused", "game_over", "topology", "native_trace_state", "basis", "basis_state", "local_yaw", "local_pitch", "target_focus", "zoom_multiplier", "projection", "horizontal_reflection_active", "fit_reference"]:
 			if saved.has(forbidden): failures.append("settings file must exclude semantic state %s" % forbidden)
-		for persistent_preference in ["display.show_w_labels", "display.projection_strength", "display.board_detail", "accessibility.reduced_motion", "camera.sensitivity", "camera.invert_y"]:
+		for persistent_preference in ["display.show_w_labels", "display.projection_strength", "display.board_detail", "accessibility.reduced_motion", "camera.sensitivity", "camera.invert_y", "board.grid_opacity", "board.boundary_opacity", "active_cells.opacity", "ghost.opacity", "slice_set.spacing", "environment.background_intensity"]:
 			if not saved.has(persistent_preference):
 				failures.append("settings file must retain established preference %s" % persistent_preference)
 	_test_invalid_inputs(failures, registry)

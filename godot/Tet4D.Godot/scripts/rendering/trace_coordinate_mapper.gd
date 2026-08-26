@@ -13,13 +13,13 @@ var _basis = SliceBasis4DScript.identity()
 var layer_layout = AdaptiveLayerLayoutScript.new()
 
 
-func configure(board_shape: Array, basis = null) -> void:
+func configure(board_shape: Array, basis = null, spacing_scale: float = 1.0) -> void:
 	_board_shape = board_shape.duplicate()
 	_basis = basis if basis != null else SliceBasis4DScript.identity()
 	_visible_board_shape = _basis.visible_dimensions(_board_shape) if _board_shape.size() == 4 else _board_shape.duplicate()
 	var width := float(_visible_board_shape[0]) if not _visible_board_shape.is_empty() else 4.0
 	var height := float(_visible_board_shape[1]) if _visible_board_shape.size() > 1 else 4.0
-	layer_layout.configure(current_layer_count(), width, height)
+	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale)
 	slice_stride = width + layer_layout.horizontal_gap
 
 

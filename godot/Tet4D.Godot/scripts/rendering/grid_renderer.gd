@@ -32,7 +32,9 @@ func rebuild(
 	active_layers: Array = [],
 	board_detail: String = "standard",
 	high_contrast: bool = false,
-	show_grid: bool = true
+	show_grid: bool = true,
+	grid_opacity: float = -1.0,
+	boundary_opacity: float = -1.0
 ) -> void:
 	for child in get_children():
 		child.queue_free()
@@ -62,20 +64,21 @@ func rebuild(
 		# but it must never silently suppress the lattice.
 		if show_grid and live_2d and dimension >= 2:
 			if dimension == 2:
-				_add_flat_grid(local_bounds, visible_board_shape, display_mode, high_contrast, slice_root)
+				_add_flat_grid(local_bounds, visible_board_shape, display_mode, high_contrast, grid_opacity, slice_root)
 			else:
 				_add_volumetric_boundary_grids(
 					local_bounds,
 					visible_board_shape,
 					display_mode,
 					high_contrast,
+					grid_opacity,
 					slice_root,
 					projection.slice_anchor(w_index),
 					projection.local_render_basis()
 				)
 		if live_2d and dimension >= 3:
 			_add_floor_face(local_bounds, display_mode, slice_root)
-			_add_floor_lattice(local_bounds, visible_board_shape, display_mode, high_contrast, slice_root)
+			_add_floor_lattice(local_bounds, visible_board_shape, display_mode, high_contrast, grid_opacity, slice_root)
 		if live_2d and dimension == 2:
 			_add_spawn_entry_cue(local_bounds, display_mode, high_contrast, slice_root)
 		_add_outline_box(
@@ -85,6 +88,7 @@ func rebuild(
 			ReplayVisuals.slice_outline_thickness(display_mode) * (1.20 if high_contrast else 1.0),
 			PRESENTATION_ROLE_WIREFRAME,
 			high_contrast,
+			boundary_opacity,
 			slice_root
 		)
 		if active_layers.has(w_index):
@@ -95,6 +99,7 @@ func rebuild(
 				ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER),
 				PRESENTATION_ROLE_ACTIVE_FRAME,
 				high_contrast,
+				boundary_opacity,
 				slice_root
 			)
 		if dimension >= 4 and show_w_labels:
@@ -120,9 +125,10 @@ func _add_outline_box(
 	thickness_override: float = -1.0,
 	presentation_role: String = PRESENTATION_ROLE_WIREFRAME,
 	high_contrast: bool = false,
+	boundary_opacity: float = -1.0,
 	parent: Node3D = null
 ) -> void:
-	var board_material := ReplayVisuals.board_outline_material(display_mode, high_contrast) if material_override == null else material_override
+	var board_material := ReplayVisuals.board_outline_material(display_mode, high_contrast, boundary_opacity) if material_override == null else material_override
 	var thickness := ReplayVisuals.slice_outline_thickness(display_mode) if thickness_override < 0.0 else thickness_override
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
@@ -216,6 +222,7 @@ func _add_floor_lattice(
 	board_shape: Array,
 	display_mode: String,
 	high_contrast: bool,
+	grid_opacity: float,
 	parent: Node3D
 ) -> void:
 	if board_shape.size() < 3:
@@ -223,7 +230,7 @@ func _add_floor_lattice(
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var thickness := ReplayVisuals.grid_internal_thickness(high_contrast) * 0.86
-	var material := ReplayVisuals.live_board_floor_grid_material(display_mode, high_contrast)
+	var material := ReplayVisuals.live_board_floor_grid_material(display_mode, high_contrast, grid_opacity)
 	var floor_y := min_pos.y + thickness * 0.70
 	var lattice := Node3D.new()
 	lattice.name = "GravityFloorLattice"
@@ -242,6 +249,7 @@ func _add_flat_grid(
 	board_shape: Array,
 	display_mode: String,
 	high_contrast: bool,
+	grid_opacity: float,
 	parent: Node3D
 ) -> void:
 	if board_shape.size() < 2:
@@ -251,7 +259,7 @@ func _add_flat_grid(
 	var min_pos: Vector3 = slice_bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var thickness := ReplayVisuals.grid_internal_thickness(high_contrast)
-	var material := ReplayVisuals.live_board_grid_material(display_mode, high_contrast)
+	var material := ReplayVisuals.live_board_grid_material(display_mode, high_contrast, grid_opacity)
 	var grid_z := min_pos.z - 0.02
 	for x in range(1, width):
 		var x_pos := min_pos.x + float(x)
@@ -278,6 +286,7 @@ func _add_volumetric_boundary_grids(
 	board_shape: Array,
 	display_mode: String,
 	high_contrast: bool,
+	grid_opacity: float,
 	parent: Node3D,
 	anchor: Vector3,
 	render_basis: Basis
@@ -288,7 +297,7 @@ func _add_volumetric_boundary_grids(
 	var max_pos: Vector3 = slice_bounds.get("max", Vector3.ZERO)
 	var center := (min_pos + max_pos) * 0.5
 	var thickness := ReplayVisuals.grid_internal_thickness(high_contrast)
-	var material := ReplayVisuals.live_board_grid_material(display_mode, high_contrast)
+	var material := ReplayVisuals.live_board_grid_material(display_mode, high_contrast, grid_opacity)
 	for axis in range(3):
 		for sign_value in [-1.0, 1.0]:
 			var face := Node3D.new()

@@ -156,6 +156,17 @@ the edge-triggered `C` input and HOLD presentation over read-only GDExtension
 queries, reusing the NEXT thumbnail model/renderer. Godot must not keep a
 parallel Hold state machine or derive legality from presentation state.
 
+Tweakable Godot presentation configuration follows
+`docs/architecture/presentation_parameter_contract.md`. The checked-in shell
+settings registry owns parameter IDs, types, defaults, ranges/options, exactly
+one semantic owner, persistence eligibility, accessibility classification, and
+runtime applicability. The semantic palette remains the colour-role owner. A
+detached versioned `PresentationProfile` composes validated registry values and
+enters the product through one bounded application seam; renderers consume it
+without reading user storage or maintaining duplicate registered defaults.
+Presentation profiles never contain current view/basis state and cannot reach
+canonical setup, native state, gameplay snapshots, traces, replays, or hashes.
+
 ### AI (`src/tet4d/ai/playbot`)
 
 Owns:

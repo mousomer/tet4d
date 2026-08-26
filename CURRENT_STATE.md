@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-25
+Last updated: 2026-08-26
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -12,6 +12,18 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Completed bounded follow-on: `codex/presentation-parameter-contract` starts
+  from the locally accepted release-hardening stack at
+  `7d9d3872180905e67874329f8046f336744a348e`. It implements a typed,
+  uniquely-owned presentation-parameter registry, detached schema-1
+  `PresentationProfile`, schema-3 settings reuse, and one bounded live app
+  apply path over unchanged deterministic state. Focused, governance,
+  sanitation, pinned Godot 4.7.1, full-repository, and agent-driven real-window
+  checks pass. The acceptance record is
+  `docs/plans/presentation_parameter_contract_acceptance.md`. This work does
+  not reopen historical Stage 54E-4 or alter native/gameplay, replay/hash,
+  basis, Hold, NEXT, Ghost-truth, or camera-pose authority.
 
 - The accepted Godot foundation is merged on `master` at `eb584e4f`. It
   includes configurable bounded setup, display/accessibility infrastructure,

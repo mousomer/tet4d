@@ -1061,6 +1061,30 @@ or stage. This product-readiness result does not claim public macOS distribution
 readiness: the accepted candidate is ad-hoc signed, not Developer ID signed,
 and not notarized.
 
+#### Post-Stage-54 follow-on — Presentation parameter contract
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/presentation-parameter-contract`.
+
+This bounded follow-on does not reopen the completed historical Stage 54E-4
+camera/GUI preset work and does not create another Stage 54 slice. It makes the
+existing Godot shell-settings registry the typed owner/default/persistence,
+accessibility-classification, and runtime-applicability authority for tweakable
+presentation parameters. A detached schema-1 `PresentationProfile` and one
+bounded app apply entry point support live board, piece, Ghost, slice-set,
+palette, camera-preference, and environment changes over an unchanged exported
+gameplay state.
+
+The canonical contract is
+`docs/architecture/presentation_parameter_contract.md`. Presentation
+configuration is non-gameplay state and cannot contribute to deterministic
+session identity. Named profile libraries, Designer Lab UI, experiment
+assignment/telemetry, procedural environments, and structural 3D/4D geometry
+reconciliation remain future work. Focused Godot, settings/persistence,
+governance, sanitation, pinned Godot 4.7.1, full-repository, and agent-driven
+real-window evidence pass and are recorded in
+`docs/plans/presentation_parameter_contract_acceptance.md`.
+
 Objective:
 
 Close the gap between a verified prototype and a professional game release.

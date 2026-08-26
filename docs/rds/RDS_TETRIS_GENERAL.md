@@ -148,6 +148,23 @@ C++ ownership are established.
 3. The setting is excluded from gameplay setup, native queries, snapshots,
    hashes, replay, trace, queue, RNG, collision, and locking semantics.
 
+### 2.7 Presentation parameter and profile contract
+
+1. Godot tweakable presentation values use one typed registry with a unique
+   semantic owner, canonical type/default/bounds or options, persistence
+   policy, accessibility classification, and runtime applicability.
+2. A presentation profile is a complete detached value set validated against
+   that registry. A board preset remains a gameplay/setup shortcut; current
+   camera pose, exact 4D basis, slice-local orientation, focus, zoom, and
+   framing remain transient runtime view state.
+3. `TraceReplayApp.apply_presentation_profile()` may rebuild materials,
+   presentation nodes, responsive 4D slice anchors, palette, and environment
+   from the current exported snapshot. It must not start/reset a session,
+   issue gameplay commands, regenerate a queue, advance RNG, or change board,
+   active/next/Hold state, score, setup, snapshots, replay identity, or hashes.
+4. Presentation configuration is non-gameplay state and cannot contribute to
+   deterministic session identity.
+
 ## 3. Shared Rules and Axis Conventions
 
 1. Axis `0`=`x`(horizontal), axis`1`=`y` (gravity/downward).

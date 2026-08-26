@@ -10,19 +10,26 @@ const EventMarkerRendererScript = preload("res://scripts/rendering/event_marker_
 const BoardPresentationModelScript = preload("res://scripts/presentation/board_presentation_model.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
+const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 
 var current_slice_stride := 6.0
-var _cell_scale := ReplayVisuals.CELL_SCALE
-var _particle_scale := ReplayVisuals.PARTICLE_SCALE
-var _event_scale := ReplayVisuals.EVENT_SCALE
-var _display_mode := ReplayVisuals.default_display_mode()
-var _show_w_labels := true
-var _projection_strength := 1.0
-var _board_detail := "standard"
-var _show_grid := true
-var _locked_cell_opacity := ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY
-var _high_contrast := false
-var _reduced_motion := false
+var _presentation_profile = PresentationProfileScript.canonical_defaults()
+var _projection_strength := float(_presentation_profile.value("display.projection_strength"))
+var _cell_scale := ReplayVisuals.CELL_SCALE * _projection_strength
+var _particle_scale := ReplayVisuals.PARTICLE_SCALE * _projection_strength
+var _event_scale := ReplayVisuals.EVENT_SCALE * _projection_strength
+var _display_mode := str(_presentation_profile.value("theme.name"))
+var _show_w_labels = _presentation_profile.value("display.show_w_labels")
+var _board_detail := str(_presentation_profile.value("display.board_detail"))
+var _show_grid = _presentation_profile.value("display.grid_visible")
+var _locked_cell_opacity := float(_presentation_profile.value("settled_cells.opacity"))
+var _high_contrast = _presentation_profile.value("accessibility.high_contrast")
+var _reduced_motion = _presentation_profile.value("accessibility.reduced_motion")
+var _grid_opacity := float(_presentation_profile.value("board.grid_opacity"))
+var _boundary_opacity := float(_presentation_profile.value("board.boundary_opacity"))
+var _active_cell_opacity := float(_presentation_profile.value("active_cells.opacity"))
+var _ghost_opacity_multiplier := float(_presentation_profile.value("ghost.opacity"))
+var _slice_spacing_scale := float(_presentation_profile.value("slice_set.spacing"))
 var _last_case_id := ""
 var _last_frame_index := -1
 var _particle_trails: Dictionary = {}
@@ -48,6 +55,7 @@ func _ready() -> void:
 	_cell_root = _ensure_child("CellRoot")
 	_particle_root = _ensure_child("ParticleRoot")
 	_marker_root = _ensure_child("MarkerRoot")
+	_apply_profile_values()
 
 
 func _process(delta: float) -> void:
@@ -59,35 +67,66 @@ func _process(delta: float) -> void:
 
 
 func set_display_mode(display_mode: String) -> void:
-	_display_mode = ReplayVisuals.normalize_display_mode(display_mode)
+	_apply_parameter_override("theme.name", ReplayVisuals.normalize_display_mode(display_mode))
 
 
 func set_show_w_labels(visible: bool) -> void:
-	_show_w_labels = visible
+	_apply_parameter_override("display.show_w_labels", visible)
 
 
 func set_projection_strength(value: float) -> void:
-	_projection_strength = clampf(value, 0.0, 2.0)
-	_cell_scale = ReplayVisuals.CELL_SCALE * _projection_strength
-	_particle_scale = ReplayVisuals.PARTICLE_SCALE * _projection_strength
-	_event_scale = ReplayVisuals.EVENT_SCALE * _projection_strength
+	_apply_parameter_override("display.projection_strength", value)
 
 
 func set_board_detail(detail: String) -> void:
-	_board_detail = detail if detail in ["minimal", "standard", "full"] else "standard"
+	_apply_parameter_override("display.board_detail", detail)
 
 
 func set_grid_visible(visible: bool) -> void:
-	_show_grid = visible
+	_apply_parameter_override("display.grid_visible", visible)
 
 
 func set_locked_cell_opacity(opacity: float) -> void:
-	_locked_cell_opacity = ReplayVisuals.normalize_locked_cell_opacity(opacity)
+	_apply_parameter_override("settled_cells.opacity", opacity)
 
 
 func set_accessibility_policy(high_contrast: bool, reduced_motion: bool) -> void:
-	_high_contrast = high_contrast
-	_reduced_motion = reduced_motion
+	var candidate = _presentation_profile.with_overrides({
+		"accessibility.high_contrast": high_contrast,
+		"accessibility.reduced_motion": reduced_motion,
+	})
+	apply_presentation_profile(candidate)
+
+
+func apply_presentation_profile(profile) -> bool:
+	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
+		return false
+	_presentation_profile = profile.detached_copy()
+	_apply_profile_values()
+	return true
+
+
+func _apply_parameter_override(setting_id: String, value) -> bool:
+	return apply_presentation_profile(_presentation_profile.with_overrides({setting_id: value}))
+
+
+func _apply_profile_values() -> void:
+	_display_mode = ReplayVisuals.normalize_display_mode(str(_presentation_profile.value("theme.name")))
+	_show_w_labels = bool(_presentation_profile.value("display.show_w_labels"))
+	_projection_strength = float(_presentation_profile.value("display.projection_strength"))
+	_cell_scale = ReplayVisuals.CELL_SCALE * _projection_strength
+	_particle_scale = ReplayVisuals.PARTICLE_SCALE * _projection_strength
+	_event_scale = ReplayVisuals.EVENT_SCALE * _projection_strength
+	_board_detail = str(_presentation_profile.value("display.board_detail"))
+	_show_grid = bool(_presentation_profile.value("display.grid_visible"))
+	_locked_cell_opacity = float(_presentation_profile.value("settled_cells.opacity"))
+	_high_contrast = bool(_presentation_profile.value("accessibility.high_contrast"))
+	_reduced_motion = bool(_presentation_profile.value("accessibility.reduced_motion"))
+	_grid_opacity = float(_presentation_profile.value("board.grid_opacity"))
+	_boundary_opacity = float(_presentation_profile.value("board.boundary_opacity"))
+	_active_cell_opacity = float(_presentation_profile.value("active_cells.opacity"))
+	_ghost_opacity_multiplier = float(_presentation_profile.value("ghost.opacity"))
+	_slice_spacing_scale = float(_presentation_profile.value("slice_set.spacing"))
 
 
 func set_live_4d_basis(basis, animate: bool = true) -> void:
@@ -154,7 +193,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	_presentation.configure(
 		snapshot,
 		presentation_basis,
-		_live_4d_local_orientation if str(snapshot.get("trace_type", "")) == "live_4d" else null
+		_live_4d_local_orientation if str(snapshot.get("trace_type", "")) == "live_4d" else null,
+		_slice_spacing_scale
 	)
 	current_slice_stride = _presentation.projection.mapper.slice_stride
 	_last_bounds = _presentation.current_bounds()
@@ -176,7 +216,9 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_presentation.active_layer_indices(),
 		_board_detail,
 		_high_contrast,
-		_show_grid
+		_show_grid,
+		_grid_opacity,
+		_boundary_opacity
 	)
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode, _locked_cell_opacity)
@@ -221,7 +263,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var ghost_size := ReplayVisuals.LIVE_3D_GHOST_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_GHOST_CELL_SCALE
 		ghost_node.setup(
 			_presentation.render_world_position(cell.get("position", [])),
-			ReplayVisuals.ghost_cell_material(_display_mode, int(cell.get("color_id", 0)), _high_contrast),
+			ReplayVisuals.ghost_cell_material(_display_mode, int(cell.get("color_id", 0)), _high_contrast, _ghost_opacity_multiplier),
 			ghost_size,
 			ghost_size if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_CELL_DEPTH,
 			ReplayVisuals.ghost_cell_border_material(_display_mode, _high_contrast),
@@ -367,16 +409,16 @@ func _live_locked_material(color_id: int, is_live_3d_snapshot: bool, is_live_sna
 
 func _live_active_material(color_id: int, is_live_3d_snapshot: bool, is_live_snapshot: bool) -> Material:
 	if is_live_3d_snapshot:
-		return ReplayVisuals.live_3d_active_cell_material(_display_mode, color_id)
+		return ReplayVisuals.live_3d_active_cell_material(_display_mode, color_id, _active_cell_opacity)
 	if is_live_snapshot:
-		return ReplayVisuals.live_active_cell_material(_display_mode, color_id)
-	return ReplayVisuals.gameplay_active_cell_material(_display_mode)
+		return ReplayVisuals.live_active_cell_material(_display_mode, color_id, _active_cell_opacity)
+	return ReplayVisuals.gameplay_active_cell_material(_display_mode, _active_cell_opacity)
 
 
 func _live_exterior_active_face_materials(color_id: int) -> Dictionary:
 	if _presentation.is_live_4d:
-		return ReplayVisuals.live_4d_active_face_materials(_display_mode, color_id)
-	return ReplayVisuals.live_3d_active_face_materials(_display_mode, color_id)
+		return ReplayVisuals.live_4d_active_face_materials(_display_mode, color_id, _active_cell_opacity)
+	return ReplayVisuals.live_3d_active_face_materials(_display_mode, color_id, _active_cell_opacity)
 
 
 func _live_locked_border_material(is_live_3d_snapshot: bool, is_live_snapshot: bool) -> Material:
@@ -409,6 +451,7 @@ func presentation_preferences_snapshot() -> Dictionary:
 		"board_detail": _board_detail,
 		"high_contrast": _high_contrast,
 		"reduced_motion": _reduced_motion,
+		"profile": _presentation_profile.snapshot(),
 	}
 
 

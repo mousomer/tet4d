@@ -25,6 +25,7 @@ const GameSetupStoreScript = preload("res://scripts/ui/game_setup/game_setup_sto
 const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_panel.gd")
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
+const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -59,6 +60,7 @@ signal change_setup_requested(mode: String)
 signal new_random_game_requested()
 signal main_menu_requested()
 signal basis_turn_requested(plane: String, direction: int)
+signal presentation_profile_changed(profile)
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -883,6 +885,37 @@ func apply_shell_settings() -> void:
 		_applying_initial_settings = true
 		_settings_panel.apply_initial_settings()
 		_applying_initial_settings = false
+		presentation_profile_changed.emit(presentation_profile())
+
+
+func presentation_profile():
+	return PresentationProfileScript.from_store(_settings_registry, _settings_store)
+
+
+func apply_presentation_profile(profile) -> bool:
+	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
+		return false
+	_accessibility_policy.configure(
+		bool(profile.value("accessibility.high_contrast")),
+		bool(profile.value("accessibility.reduced_motion")),
+		bool(profile.value("accessibility.show_help_hints"))
+	)
+	_keyboard_hints_visible = _accessibility_policy.should_show_help_hints()
+	_camera_sensitivity_factor = ShellPresentationPreferencesScript.camera_sensitivity_factor(
+		str(profile.value("camera.sensitivity"))
+	)
+	_camera_invert_y = bool(profile.value("camera.invert_y"))
+	_grid_visible = bool(profile.value("display.grid_visible"))
+	set_display_mode(str(profile.value("theme.name")))
+	_apply_ui_scale(str(profile.value("display.ui_scale")))
+	_apply_hud_density(str(profile.value("display.hud_density")))
+	_style_manager.set_high_contrast_enabled(_accessibility_policy.is_high_contrast_enabled())
+	_apply_shell_style()
+	_set_keyboard_hints_visible(_keyboard_hints_visible)
+	_set_onboarding_visible(bool(profile.value("interface.show_onboarding")))
+	_set_layout_bounds_visible(bool(profile.value("diagnostics.show_layout_bounds")))
+	_update_live_view_action_labels()
+	return true
 
 
 func presentation_preferences_snapshot() -> Dictionary:
@@ -900,6 +933,8 @@ func presentation_preferences_snapshot() -> Dictionary:
 func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.setting_changed.connect(func(setting_id: String, value) -> void:
 		_sync_setting_controls(panel, setting_id)
+		if not _applying_initial_settings:
+			presentation_profile_changed.emit(presentation_profile())
 	)
 	panel.playback_speed_changed.connect(func(value: float) -> void:
 		playback_speed_changed.emit(value)
@@ -957,6 +992,7 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	)
 	panel.settings_reset.connect(func() -> void:
 		_sync_all_setting_controls(panel)
+		presentation_profile_changed.emit(presentation_profile())
 	)
 
 
@@ -1401,7 +1437,10 @@ func _toggle_quick_settings() -> void:
 
 func _toggle_grid_visibility() -> void:
 	_grid_visible = not _grid_visible
+	if _settings_store != null:
+		_settings_store.set_value("display.grid_visible", _grid_visible)
 	_update_live_view_action_labels()
+	presentation_profile_changed.emit(presentation_profile())
 	grid_visibility_changed.emit(_grid_visible)
 
 

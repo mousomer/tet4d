@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-25
+Updated: 2026-08-26
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -51,6 +51,22 @@ release acceptance, closing the Stage 54 Professional Core Game programme.
 Future implementation starts as a new programme or stage rather than extending
 54G; topology, Explorer, challenge/campaign, simulation, broader distribution,
 and post-release polish remain outside this completed gate.
+
+Completed bounded follow-on: the Presentation Parameter Contract is locally
+accepted on `codex/presentation-parameter-contract`. It reuses the existing
+registry, store, palettes, renderer, and 54E presentation spaces; it does not
+reopen Stage 54 or change deterministic/native authority. Focused, pinned,
+full-repository, and agent-driven real-window checks pass. The durable contract
+is `docs/architecture/presentation_parameter_contract.md`, and the acceptance
+record is `docs/plans/presentation_parameter_contract_acceptance.md`.
+
+Explicit deferrals from this follow-on are named presentation-profile library
+persistence, Designer Lab UI, A/B assignment/telemetry, free-form palette-role
+editing, procedural/animated environments, and canonical projected 3D/4D board
+geometry reconciliation. The recommended next geometry scope is one separately
+contracted task comparing canonical shape, shared slice-local volume geometry,
+slice-set composition, camera fit/mount, and the deliberately different 3D/4D
+active material derivative without adding profile-specific compensation.
 
 ## Next Work
 

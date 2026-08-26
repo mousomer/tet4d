@@ -31,7 +31,7 @@ func run() -> Array:
 		failures.append("Settings screen should focus its first preference")
 	var visited: Dictionary = {}
 	var current := first
-	for _index in range(25):
+	for _index in range(32):
 		if current == null or visited.has(current):
 			break
 		visited[current] = true
@@ -42,7 +42,7 @@ func run() -> Array:
 	var accessibility_reset := panel.get_node_or_null("SettingsScroll/SettingsContent/ResetAccessibilitySettingsButton") as Button
 	if accessibility_reset == null or not visited.has(accessibility_reset):
 		failures.append("deterministic arrow-key focus order should reach Reset Accessibility Settings")
-	if visited.size() != 20:
+	if visited.size() != 26:
 		failures.append("focus order should include all visible shell setting controls and resets")
 	var down := InputEventKey.new()
 	down.keycode = KEY_DOWN

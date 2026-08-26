@@ -43,6 +43,15 @@ piece-owned gameplay colour. Diagnostic may strengthen blue and amber
 separation. Vector Arcade may use cyan as its primary accent, but the board
 still outranks the shell.
 
+Tweakable values over these roles are declared only in
+`config/shell_settings_registry.json` and composed into a detached
+`PresentationProfile`; their owner/default/range/persistence/accessibility and
+runtime applicability may not be duplicated in renderer constants. Palette
+selection changes role mappings, while parameters such as grid, boundary,
+active/locked/Ghost opacity and background intensity modulate the selected
+roles. Presentation configuration is non-gameplay state and cannot contribute
+to deterministic session identity.
+
 ## Typography
 
 - Display title: 30 px, used once per primary screen.
@@ -132,7 +141,8 @@ The shared shell palette is the sole owner of the live-board identities:
 `axis.x/y/z/w`. Consumers may derive alpha, depth attenuation, and transient
 emphasis from those roles but may not replace their base colour locally. Normal
 internal grid lines use an unshaded dark/desaturated steel-blue `grid.major`
-derivative (0.055 world units at 0.31 alpha, 63% of the rejected calibration);
+derivative (0.055 world units at the registry-owned default `0.31` alpha, 63%
+of the rejected calibration);
 the `grid.minor` wireframe is 0.099 world units and remains independently
 stronger. High
 Contrast increases thickness and contrast while keeping active, ghost, locked,

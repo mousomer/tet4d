@@ -31,6 +31,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/game_safe_4d_slice_basis.md`
 - `docs/architecture/4d_presentation_interaction_architecture.md`
 - `docs/architecture/camera_gui_preset_semantics.md`
+- `docs/architecture/presentation_parameter_contract.md`
 - `docs/architecture/ghost_piece.md`
 - `docs/architecture/godot_shell_layout_stabilization.md`
 - `docs/architecture/godot_shell_settings_source_of_truth.md`
@@ -54,6 +55,7 @@ or debt ledgers.
 - `docs/plans/README.md`
 - `docs/plans/plan_authority_map.md`
 - `docs/plans/professional_godot_game_programme.md`
+- `docs/plans/presentation_parameter_contract_acceptance.md`
 - `docs/plans/cleanup_master_plan.md`
 - domain-specific active plan files under `docs/plans/`
 - recent planning-adjacent audits under `docs/plans/audits/`
@@ -173,6 +175,8 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 54C exact game-safe 4D presentation basis, coordinate mapping, and input routing | `docs/architecture/game_safe_4d_slice_basis.md` |
 | Stage 54E-1 accepted 4D presentation-space separation, relative-control audit, and bounded 54E-2 plan | `docs/architecture/4d_presentation_interaction_architecture.md` |
 | Stage 54E-4a camera/view/layout/GUI preset taxonomy, ownership, identity, reset, and persistence semantics | `docs/architecture/camera_gui_preset_semantics.md` |
+| Post-Stage-54 typed presentation parameters, semantic ownership, profiles, live application, persistence isolation, and 3D/4D divergence audit | `docs/architecture/presentation_parameter_contract.md` |
+| Post-Stage-54 presentation-parameter implementation and agent-driven acceptance evidence | `docs/plans/presentation_parameter_contract_acceptance.md` |
 | Stage 54D-1 authoritative one-piece queue query and shared live thumbnail presentation | `docs/architecture/next_piece_preview.md` |
 | Stage 54D-2 authoritative hard-drop destination query and live ghost presentation | `docs/architecture/ghost_piece.md` |
 | Completed Stage 50 canonical bounded plain-game setup, RNG, piece-set, speed, restart, and acceptance contract | `docs/architecture/plain_game_setup_completion.md` |
@@ -275,6 +279,10 @@ It is not the product contract or complete roadmap.
 - If you need the accepted separation of exact basis, slice-local orientation,
   slice layout, final view, or the Stage 54E-1 resolver verdict: use
   `docs/architecture/4d_presentation_interaction_architecture.md`.
+- If you need presentation-parameter identity, ownership, bounds, profile
+  composition, persistence isolation, live application, or the documented
+  3D/4D divergence: use
+  `docs/architecture/presentation_parameter_contract.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
 - If you need to constrain a repository-changing task: use

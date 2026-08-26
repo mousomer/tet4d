@@ -29,10 +29,33 @@ const ALLOWED_VALUE_TYPES := ["bool", "int", "float", "enum", "string", "size", 
 const ALLOWED_CONTROL_TYPES := ["checkbox", "slider", "dropdown", "text_field", "button", "label"]
 const ALLOWED_AUTHORITIES := ["godot_shell", "python_oracle", "future_parity", "forbidden"]
 const ALLOWED_PERSISTENCE := ["none", "session", "local_shell"]
+const ALLOWED_SEMANTIC_OWNERS := [
+	"SHELL_PRESENTATION",
+	"HUD_PRESENTATION",
+	"BOARD_PRESENTATION",
+	"PIECE_PRESENTATION",
+	"GHOST_PRESENTATION",
+	"SLICE_SET_PRESENTATION",
+	"CAMERA_PRESENTATION",
+	"ENVIRONMENT_PRESENTATION",
+	"ACCESSIBILITY_PRESENTATION",
+	"PALETTE_PRESENTATION",
+	"REPLAY_PRESENTATION",
+	"DIAGNOSTICS_PRESENTATION",
+	"GUIDANCE_PRESENTATION",
+]
+const ALLOWED_ACCESSIBILITY_CLASSIFICATIONS := [
+	"neutral",
+	"aesthetic",
+	"accessibility_composable",
+	"accessibility_preference",
+]
+const ALLOWED_RUNTIME_APPLICABILITY := ["shell", "replay", "live_2d", "live_3d", "live_4d"]
 const ALLOWED_SPEC_FIELDS := [
 	"id", "label", "description", "category", "value_type", "control_type",
 	"default", "min", "max", "step", "unit", "options", "authority",
 	"persistence", "persist", "action_id", "ui_visible", "ui_contexts",
+	"semantic_owner", "accessibility_classification", "runtime_applicability",
 ]
 const ALLOWED_UI_CONTEXTS := ["global_settings", "replay", "live_2d", "live_3d", "live_4d"]
 const CONTROL_TYPE_BY_VALUE_TYPE := {
@@ -83,6 +106,23 @@ func authority() -> String:
 
 func persistence() -> String:
 	return str(data.get("persistence", "none"))
+
+
+func semantic_owner() -> String:
+	return str(data.get("semantic_owner", ""))
+
+
+func accessibility_classification() -> String:
+	return str(data.get("accessibility_classification", ""))
+
+
+func runtime_applicability() -> Array:
+	var applicability = data.get("runtime_applicability", [])
+	return applicability.duplicate() if applicability is Array else []
+
+
+func applies_at_runtime(runtime_context: String) -> bool:
+	return runtime_applicability().has(runtime_context)
 
 
 func default_value():
@@ -149,6 +189,8 @@ static func validate(spec_data: Dictionary, known_categories: Array) -> Array:
 	var control_type := str(spec_data.get("control_type", ""))
 	var authority := str(spec_data.get("authority", ""))
 	var persistence := str(spec_data.get("persistence", ""))
+	var semantic_owner := str(spec_data.get("semantic_owner", ""))
+	var accessibility_classification := str(spec_data.get("accessibility_classification", ""))
 	if setting_id.is_empty():
 		failures.append("setting id is required")
 	if category_id.is_empty():
@@ -165,6 +207,10 @@ static func validate(spec_data: Dictionary, known_categories: Array) -> Array:
 		failures.append("%s: unknown authority %s" % [setting_id, authority])
 	if authority != "godot_shell":
 		failures.append("%s: Stage 29 registry may only expose godot_shell editable settings" % setting_id)
+	if not ALLOWED_SEMANTIC_OWNERS.has(semantic_owner):
+		failures.append("%s: unknown presentation semantic owner %s" % [setting_id, semantic_owner])
+	if not ALLOWED_ACCESSIBILITY_CLASSIFICATIONS.has(accessibility_classification):
+		failures.append("%s: unknown accessibility classification %s" % [setting_id, accessibility_classification])
 	if not ALLOWED_PERSISTENCE.has(persistence):
 		failures.append("%s: unknown persistence %s" % [setting_id, persistence])
 	if typeof(spec_data.get("persist")) != TYPE_BOOL:
@@ -186,6 +232,18 @@ static func validate(spec_data: Dictionary, known_categories: Array) -> Array:
 			elif seen_contexts.has(context_id):
 				failures.append("%s: duplicate UI context %s" % [setting_id, context_id])
 			seen_contexts.append(context_id)
+	var runtime_contexts = spec_data.get("runtime_applicability", [])
+	if not (runtime_contexts is Array) or runtime_contexts.is_empty():
+		failures.append("%s: runtime_applicability must be a non-empty array" % setting_id)
+	else:
+		var seen_runtime_contexts: Array = []
+		for context in runtime_contexts:
+			var context_id := str(context)
+			if not ALLOWED_RUNTIME_APPLICABILITY.has(context_id):
+				failures.append("%s: unknown runtime applicability %s" % [setting_id, context_id])
+			elif seen_runtime_contexts.has(context_id):
+				failures.append("%s: duplicate runtime applicability %s" % [setting_id, context_id])
+			seen_runtime_contexts.append(context_id)
 	for token in FORBIDDEN_CATEGORY_TOKENS:
 		if setting_id.find(token) >= 0 or category_id.find(token) >= 0:
 			failures.append("%s: forbidden semantic token %s in id/category" % [setting_id, token])

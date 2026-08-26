@@ -32,6 +32,7 @@ Do not implement a new capability in Python solely to manufacture an oracle.
 | Native topology profile and resolver-query transport | Native C++ | Strict transport implementation ownership only. |
 | Professional live-board setup admissibility and extent validation (`AE-0054`) | Versioned board-extent contract and native C++ | Established only for the live product envelope, bounded-profile admission, production-piece compatibility, canonical spawn viability, volume safety, and structured safe failure. It does not transfer topology seams or gameplay transitions. |
 | Godot product shell, menus, setup interaction, input routing, rendering, camera, animation, HUD, guidance, accessibility, and diagnostics | Godot/GDScript | Godot must not duplicate inherited gameplay or topology rules. |
+| Godot presentation parameters and detached presentation profiles | Versioned shell-settings registry metadata and Godot/GDScript | The registry owns IDs, types, defaults, bounds/options, exactly-one semantic owner, persistence eligibility, accessibility classification, and applicability; the semantic palette owns base colours; `PresentationProfile` owns validated detached composition and bounded switching. Profiles are non-gameplay state and cannot contribute to setup, native state, snapshots, replay/trace/hash identity, or current camera/basis state. This formalizes existing Godot presentation authority and performs no transfer or establishment. |
 | New Godot 2D/3D/4D/replay view and Live-4D presentation state | Godot/GDScript | Includes mode-owned camera orientation; the Stage 54C exact signed-axis basis; shared `SliceLocalOrientation`; centred point mapper; anchor-only layout; Stage 54E-2b renderer composition and corner-derived fit bounds; Stage 54E-2c shared-L interaction, `B + Q(L.local_yaw)` resolution, fitted reflection, actual Camera3D projection evidence, pitch policy, and view-action compatibility; and Stage 54E-2d's historical lifecycle evidence. Stage 54E-4a is reviewed green and Stage 54E-4b implements the forward contract: same-context Restart/new game preserves transient current view; one composite Reset View restores complete mode-specific canonical view; Fit View is framing-only; named IDs are stateless actions; flat orthographic 2D and replay-owned reset/fit are explicit; Live-4D `B`, `L`, layout, outer mount/reflection, and framing remain separate; and context exit/re-entry clears/rebuilds transient state. Current view remains excluded from gameplay coordinates, legality, deterministic identity, setup, and persistence. Stage 54E-4b is ready for focused visible review. No authority transfer or establishment occurs. |
 | Live one-piece next preview | Inherited deterministic queue owner for piece selection; Godot/GDScript for presentation | Native sessions expose the observational shape query defined by `next_piece_preview.md`. Godot owns the shared 2D/3D/4D thumbnail and HUD placement and must not infer queue order or mutate RNG. No authority transfer occurs. |
 | Live authoritative ghost piece | Existing deterministic drop/collision owner for landing; Godot/GDScript for presentation | Native hard drop and the read-only query share `hard_drop_destination` as defined by `ghost_piece.md`. Godot owns visibility, settings, basis-aware projection, and styling only. No authority transfer or establishment occurs. |
@@ -73,6 +74,13 @@ Godot is the product-shell direction and owns:
 - accessibility and product usability;
 - Explorer shell and interaction;
 - visual diagnostics.
+
+Within that authority, presentation parameters and profile composition follow
+`docs/architecture/presentation_parameter_contract.md`. Parameter ownership is
+declarative and exactly one owner per ID; consumers may compose accessibility
+minimums but may not claim a second semantic owner. The existing settings store
+is the only preference writer, and applying a detached profile is not a native
+or gameplay operation.
 
 Godot may consume inherited or native deterministic core state. It must not
 reimplement inherited gameplay, topology, scoring, or replay semantics in

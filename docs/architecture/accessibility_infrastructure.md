@@ -2,6 +2,15 @@
 
 Status: Stage 52 accepted on integrated foundation head `bb9d5b6a`.
 
+Current reconciliation: every presentation parameter now declares one
+accessibility classification. `ACCESSIBILITY_PRESENTATION` uniquely owns High
+Contrast, Reduced Motion, help hints, and UI scale. Values classified
+`accessibility_composable` retain their ordinary semantic owner; accessibility
+policy may enforce minimum legibility (for example stronger grid/boundary
+alpha) without taking ownership of the aesthetic value. Theme selection
+remains `PALETTE_PRESENTATION`, not an accessibility theme alias. The complete
+owner/classification inventory is in `presentation_parameter_contract.md`.
+
 ## 1. Purpose
 
 Stage 52 completes the Godot product shell's accessibility layer on top of the

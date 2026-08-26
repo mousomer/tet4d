@@ -105,7 +105,7 @@ func run() -> Array:
 		var unchanged_active := (renderer.get_node_or_null("CellRoot") as Node).get_child(2) as Node3D
 		if absf(_cell_alpha(translucent_locked) - 0.60) > 0.001 or absf(_cell_alpha(unchanged_active) - 1.0) > 0.001:
 			failures.append("locked-cell opacity must restyle only locked fill without weakening active cells")
-		renderer.set_locked_cell_opacity(ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY)
+		renderer.set_locked_cell_opacity(ReplayVisuals.presentation_parameter_default("settled_cells.opacity"))
 	var grid_root := renderer.get_node_or_null("GridRoot")
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live renderer should keep one shared grid renderer")
@@ -501,7 +501,7 @@ func _assert_live_3d_exterior_block(failures: Array, cell: Node3D, label: String
 		if material == null:
 			failures.append("%s face %d should have material" % [label, index])
 		elif label.contains("locked"):
-			if material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or absf(material.albedo_color.a - ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY) > 0.001:
+			if material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or absf(material.albedo_color.a - ReplayVisuals.presentation_parameter_default("settled_cells.opacity")) > 0.001:
 				failures.append("%s face %d should use the configured translucent locked fill" % [label, index])
 		elif material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or material.albedo_color.a < 0.99:
 			failures.append("%s face %d should be opaque" % [label, index])

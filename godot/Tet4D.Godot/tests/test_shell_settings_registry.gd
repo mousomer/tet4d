@@ -11,7 +11,7 @@ func run() -> Array:
 	failures.append_array(registry.validate())
 	_assert_equal(failures, registry.schema_version, 3, "Stage 52 registry schema version")
 	_assert_equal(failures, registry.categories.size(), 8, "Stage 52 category count")
-	_assert_equal(failures, registry.settings.size(), 19, "shell setting count after locked-cell opacity preference")
+	_assert_equal(failures, registry.settings.size(), 26, "presentation parameter contract setting count")
 	var setting_ids: Array = []
 	for spec in registry.settings:
 		var setting_id: String = spec.id()
@@ -24,6 +24,12 @@ func run() -> Array:
 			failures.append("%s should use required value/control mapping" % setting_id)
 		if spec.authority() != "godot_shell":
 			failures.append("%s should be editable only by godot_shell authority" % setting_id)
+		if not SettingSpecScript.ALLOWED_SEMANTIC_OWNERS.has(spec.semantic_owner()):
+			failures.append("%s should declare exactly one known presentation semantic owner" % setting_id)
+		if not SettingSpecScript.ALLOWED_ACCESSIBILITY_CLASSIFICATIONS.has(spec.accessibility_classification()):
+			failures.append("%s should declare an accessibility composition classification" % setting_id)
+		if spec.runtime_applicability().is_empty():
+			failures.append("%s should declare at least one runtime applicability context" % setting_id)
 		for token in SettingSpecScript.FORBIDDEN_CATEGORY_TOKENS:
 			if setting_id.find(token) >= 0 or spec.category().find(token) >= 0:
 				failures.append("%s should not expose forbidden semantic token %s" % [setting_id, token])
@@ -44,6 +50,8 @@ func run() -> Array:
 	_assert_has_setting(failures, registry, "interface.show_onboarding")
 	_assert_has_setting(failures, registry, "ghost.enabled")
 	_assert_has_setting(failures, registry, "settled_cells.opacity")
+	for setting_id in ["display.grid_visible", "board.grid_opacity", "board.boundary_opacity", "active_cells.opacity", "ghost.opacity", "slice_set.spacing", "environment.background_intensity"]:
+		_assert_has_setting(failures, registry, setting_id)
 	for setting_id in [
 		"display.window_mode",
 		"display.windowed_size",
@@ -54,8 +62,8 @@ func run() -> Array:
 		"camera.invert_y",
 	]:
 		_assert_has_setting(failures, registry, setting_id)
-	if registry.persistent_specs().size() != 18:
-		failures.append("shell should persist exactly eighteen whitelisted presentation preferences")
+	if registry.persistent_specs().size() != 24:
+		failures.append("shell should persist exactly twenty-four whitelisted presentation preferences")
 	if registry.get_spec("display.windowed_size").is_ui_visible():
 		failures.append("remembered window size should remain automatic and hidden")
 	if registry.get_spec("diagnostics.show_layout_bounds").is_persistent():

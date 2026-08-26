@@ -1,5 +1,24 @@
 # Stage 48 Godot Shell Settings Persistence
 
+## Current post-Stage-54 state
+
+The guarded writer remains at schema 3. The registry currently declares 26
+presentation parameters: 24 `local_shell` values are serialized, while
+`diagnostics.show_layout_bounds` and the quick-control
+`display.grid_visible` are session-only. Additive registry keys do not require
+a settings-envelope bump: supported schema-1/2/3 documents retain valid known
+values and receive current defaults for absent keys.
+
+The schema-1 `PresentationProfile` is an in-memory validated value object, not
+a second persistence file. It is reconstructed from the shared store and may
+be switched transiently without writing. `user://shell_settings.json` remains
+the only presentation-preference document, and `user://game_setup.json`
+remains the distinct gameplay/setup document.
+
+Presentation configuration is non-gameplay state and cannot contribute to
+deterministic session identity, native state, snapshots, traces, replay
+identity, queue/RNG state, or gameplay hashes.
+
 Status: implementation complete; interactive acceptance pending
 Date: 2026-07-12
 
@@ -52,8 +71,9 @@ persistence, reset, focus, and semantic whitelist coverage.
 ## Persistence contract
 
 - Storage path: `user://shell_settings.json`.
-- Current schema: JSON object with `schema_version = 2` and a `settings`
-  object. Stage 48 introduced schema 1; Stage 51 migrates it field by field.
+- Current schema: JSON object with `schema_version = 3` and a `settings`
+  object. Stage 48 introduced schema 1; Stages 51 and 52 added the field-by-
+  field schema-2/schema-3 migration path.
 - Stored keys: only registry entries explicitly marked `persist: true`.
 - Stored values: validated JSON-safe booleans, strings, and numbers.
 - Ordering: persistent registry order, producing deterministic canonical JSON.

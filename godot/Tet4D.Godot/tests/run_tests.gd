@@ -14,6 +14,7 @@ func _run_all() -> void:
 		"res://tests/test_shell_theme_palettes.gd",
 		"res://tests/test_shell_style_manager.gd",
 		"res://tests/test_shell_settings_registry.gd",
+		"res://tests/test_presentation_parameter_contract.gd",
 		"res://tests/test_shell_settings_store.gd",
 		"res://tests/test_shell_settings_persistence.gd",
 		"res://tests/test_shell_display_settings.gd",

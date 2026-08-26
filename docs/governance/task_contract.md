@@ -1,4 +1,190 @@
-# Task Contract — Stage 54G and Professional Core Game Closure
+# Task Contract — Presentation Parameter Contract Follow-on
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+Starting branch: `codex/54g-release-hardening`
+
+Starting SHA: `7d9d3872180905e67874329f8046f336744a348e`
+
+Implementation branch: `codex/presentation-parameter-contract`
+
+## Objective
+
+Establish one explicit, typed, authoritative contract for tweakable Godot
+presentation parameters on top of the locally accepted Stage 54E-4, Stage 54F,
+Hold, and Stage 54G stack. Reuse the existing shell settings registry, guarded
+settings store, semantic palette roles, presentation-space decomposition, and
+renderer consumers. Make validated presentation profiles independently
+applicable to a frozen game state without changing deterministic gameplay,
+reopening accepted view semantics, or introducing a second settings/theme
+architecture.
+
+This task is a post-Stage-54 follow-on. It does not retroactively replace the
+completed Stage 54E-4 camera/GUI preset contract and does not create Stage 54H.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: declarative Godot settings metadata, presentation-profile
+  composition, shell preference persistence, HUD/application propagation,
+  renderer/material/layout consumers, Godot tests, and governing documents.
+- Claims: typed and uniquely owned presentation parameters; default visual
+  parity; bounded live profile application; settings-only persistence;
+  deterministic/session/replay/hash isolation; palette-role reuse; and
+  documented 3D/4D presentation divergence.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `deterministic`, `integration`, and `human_visual`.
+- Full repository gate: required because the canonical settings declaration,
+  persistence schema interpretation, shared rendering, and architecture
+  authority are all in scope.
+
+## Current Authority and Design Comparison
+
+- `docs/design/godot_visual_system.md` already owns the semantic colour roles,
+  accepted visual hierarchy, and accessibility composition. Palette roles stay
+  in `config/shell_theme_palettes.json`; the parameter contract selects or
+  modulates them and never creates renderer-local replacement colours.
+- `docs/architecture/display_infrastructure.md` and
+  `docs/architecture/godot_shell_settings_persistence.md` already make
+  `config/shell_settings_registry.json` the declaration/default authority and
+  `user://shell_settings.json` the sole preference store. This task extends
+  that path rather than adding a profile document.
+- `docs/architecture/accessibility_infrastructure.md` owns invariant versus
+  preference behavior. Accessibility overrides compose with aesthetic values
+  and retain final say over minimum legibility.
+- `docs/architecture/4d_presentation_interaction_architecture.md` and
+  `docs/architecture/camera_gui_preset_semantics.md` own `B`, shared `L`,
+  anchor/layout, outer view/framing, Fit, Reset, and lifecycle. A presentation
+  profile may tune safe layout spacing and camera preferences, but never stores
+  or replaces current basis, pose, projection, focus, zoom, or preset-action
+  state.
+- `docs/architecture/authority_map.md` assigns rendering, camera, HUD,
+  accessibility, and new presentation semantics to Godot. This task formalizes
+  data and application ownership inside that existing authority; it performs
+  no authority transfer or new-authority establishment.
+
+## Scope Matrix
+
+| Layer | Required change | Provider evidence | Consumer evidence |
+| --- | --- | --- | --- |
+| Registry/config | Add exactly-one semantic owner, accessibility classification, and runtime applicability to every presentation parameter; add the bounded initial envelope. | Registry/spec validation and policy-backed externalization check. | Profile and Settings tests consume the declared type/default/range/options only. |
+| Profile/runtime | Add a detached, versioned `PresentationProfile` built from validated registry/store values with copy-on-override profile switching. | Profile integrity/default/override tests. | HUD/app expose one bounded live application entry point. |
+| Persistence | Reuse schema-3 `user://shell_settings.json`; new keys default when absent and remain excluded from setup/session persistence. | Store round-trip/migration/whitelist tests. | Reopened settings reconstruct the same profile without gameplay fields. |
+| Renderer/layout | Consume profile values for representative board, piece, Ghost, slice-set, palette, and environment properties. | Structural material/layout/property assertions. | 2D, 3D, 4D Standard, custom 4D, and W=1 render/app isolation tests. |
+| Documentation | Define inventory, terminology, lifecycle, isolation, and 3D/4D investigation. | Documentation/governance checks. | Programme, backlog, authority map, visual system, persistence, and handoff agree. |
+
+## Initial Parameter Envelope
+
+Preserve every existing shell preference and classify it. Add only these
+currently useful, presentation-only controls:
+
+- board grid opacity and boundary opacity;
+- active-piece fill opacity, retaining the existing locked-cell opacity;
+- Ghost fill opacity, retaining the existing Ghost visibility preference;
+- 4D slice-set spacing as a multiplier over accepted responsive layout;
+- world-background intensity as a multiplier over the selected palette role.
+
+Existing theme selection is the palette/profile identity seam. Existing UI
+scale, HUD density, board/cell-outline emphasis, camera sensitivity/inversion,
+high contrast, reduced motion, labels, replay presentation, diagnostics, and
+guidance preferences are reconciled into the same ownership inventory. Direct
+per-role colour editing, procedural environment motion, named profile-library
+management, Designer Lab UI, and A/B assignment remain deferred.
+
+## Required Changes
+
+1. Extend the existing setting specification with required, validated
+   `semantic_owner`, `accessibility_classification`, and
+   `runtime_applicability` fields. Each parameter has one owner, one type, one
+   default, one persistence policy, and valid bounds/options.
+2. Add a versioned detached `PresentationProfile` value object. It accepts only
+   known validated IDs, fills omitted values from the registry, returns safe
+   copies, and produces new profiles for overrides rather than mutating a
+   process-global theme.
+3. Route live profile application through one explicit app entry point. It may
+   refresh presentation geometry/materials and derived fit bounds; it may not
+   construct, reset, command, or otherwise mutate a native session.
+4. Make migrated renderer/layout values consume profile values. Registered
+   defaults and ranges must not be duplicated in renderer code.
+5. Keep the existing palette contract authoritative for semantic colours and
+   keep High Contrast as a compositional accessibility override.
+6. Retain the shell settings store as the sole disk owner. No presentation
+   value may enter `canonical_session_setup()`, native state, snapshots, trace
+   or replay identity, state hashes, queue/RNG, score, Hold, or Ghost landing
+   truth.
+7. Record whether observed 3D/4D divergence comes from shared local geometry,
+   mode-specific materials, slice-set composition, and/or camera framing. Do
+   not repair structural divergence with mode-specific profile constants.
+
+## Forbidden Changes
+
+- deterministic gameplay, native rules, board extent/topology, pieces,
+  coordinates, legality, gravity, scoring, RNG/queue, Hold, clearing, replay,
+  trace, hash, or snapshot semantics;
+- current camera pose, `B`, `L`, outer view/framing, Fit/Reset lifecycle, or
+  named view-action persistence;
+- profile-specific board offsets, scales, camera hacks, or mode-specific
+  geometry compensation for 3D/4D divergence;
+- a second settings file, theme/palette framework, persistence writer, or
+  presentation-global singleton;
+- the full Designer Lab, named theme library, A/B assignment/telemetry,
+  procedural Tron environment, or Stage 54 cockpit/view redesign;
+- push, PR creation, or unrelated release/topology work.
+
+## Acceptance Criteria
+
+1. Every registry entry has a unique ID and exactly one known semantic owner,
+   valid type/default/bounds/options, known persistence policy, accessibility
+   classification, and non-empty valid runtime applicability.
+2. A canonical default profile reproduces representative pre-change material,
+   layout, palette, HUD, and camera-preference values structurally.
+3. Representative board, piece, Ghost, slice-set, palette, and environment
+   values update through one live profile application entry without restarting
+   or replacing the native session.
+4. Applying profile A and profile B to the same frozen snapshot leaves
+   canonical setup, native snapshot/hash, board, active/next/Hold state,
+   queue/RNG-observable state, score, basis semantics, and current camera pose
+   unchanged; only presentation outputs differ.
+5. Schema-1/2/3 preference files remain readable; new values default when
+   absent; a round trip persists only registry-approved shell preferences; no
+   presentation field appears in game setup or deterministic persistence.
+6. Renderer consumers use the authoritative profile value for every migrated
+   property and retain no independent range/default.
+7. Focused mode coverage includes 2D, 3D, 4D Standard, custom 4D, and W=1.
+8. The 3D/4D divergence investigation records common geometry and deliberate
+   differences without adding compensating style hacks.
+9. Focused Godot, settings-externalization, governance/documentation,
+   sanitation, pinned Godot 4.7.1, full repository, and real-window checks pass
+   or any environmental limitation is reported explicitly.
+10. Programme, backlog, current-state, visual-system, persistence, authority,
+    and documentation routing are reconciled; the tracked worktree is clean.
+
+## Verification Plan
+
+- focused profile/registry/store/renderer/layout/application Godot tests;
+- `python tools/governance/check_godot_settings_externalization.py`;
+- policy resolver and project/governance document checks;
+- `git diff --check` and repository sanitation;
+- `GODOT_BIN=... ./scripts/verify_godot_4_7.sh`;
+- agent-driven real-window 2D/3D/4D/custom/W=1/default/live-modification
+  inspection, explicitly not independent human sign-off; and
+- `CODEX_MODE=1 ./scripts/verify.sh`.
+
+## Explicit Deferrals
+
+- direct colour editors and arbitrary palette authoring;
+- named presentation-profile save/load/library UI beyond the versioned runtime
+  value object and existing settings persistence;
+- Designer Lab, controlled experiment assignment, telemetry, and statistics;
+- animated/procedural backgrounds and complete theme packs;
+- canonical 3D/4D board-presentation geometry redesign if the recorded
+  divergence proves structural; and
+- all post-release backlog items unrelated to presentation parameters.
+
+---
+
+# Prior Contract — Stage 54G and Professional Core Game Closure
 
 Status: COMPLETE / FINAL DOCUMENTATION AND GOVERNANCE CLOSURE
 
