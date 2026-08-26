@@ -13,6 +13,19 @@ history ledger. Detailed history is preserved in
 
 ## Active Focus
 
+- Completed bounded follow-on: `codex/canonical-local-board-geometry` starts
+  from presentation-parameter HEAD
+  `addd0d194f8fb53f57daf03e8b48ca4dd07ee6d4`. It establishes one canonical
+  local-board geometry for Live 2D, Live 3D, and every local Live-4D slice;
+  adapts 2D to presentation-only `[X,Y,1]`; consumes exact signed 4D basis
+  axes; unifies cell mapping, centring, grids, floors, and boundaries; and
+  removes the thin 2D depth exception. Focused, deterministic/profile,
+  governance, pinned Godot 4.7.1, full-repository, and agent-driven real-window
+  evidence pass. The acceptance record is
+  `docs/plans/canonical_local_board_presentation_geometry_acceptance.md`.
+  Gameplay extents, native/session/replay/hash state, exact-basis laws, 4D
+  slice-set layout, camera framing, and profile ownership are unchanged.
+
 - Completed bounded follow-on: `codex/presentation-parameter-contract` starts
   from the locally accepted release-hardening stack at
   `7d9d3872180905e67874329f8046f336744a348e`. It implements a typed,

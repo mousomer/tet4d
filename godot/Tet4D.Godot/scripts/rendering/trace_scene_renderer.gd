@@ -207,7 +207,6 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	var grid := GridRendererScript.new()
 	_grid_root.add_child(grid)
 	grid.rebuild(
-		_presentation.board_shape(),
 		_presentation.dimension,
 		_presentation.projection,
 		_display_mode,
@@ -248,7 +247,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				locked_position,
 				_live_locked_material(locked_color_id, _presentation.uses_live_exterior_cells, _presentation.is_live, locked_material),
 				locked_size if _presentation.is_live else _cell_scale * 0.95,
-				ReplayVisuals.LIVE_CELL_DEPTH if _presentation.is_live else -1.0,
+				locked_size if _presentation.is_live else -1.0,
 				_live_locked_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(locked_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0
 			)
@@ -265,7 +264,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 			_presentation.render_world_position(cell.get("position", [])),
 			ReplayVisuals.ghost_cell_material(_display_mode, int(cell.get("color_id", 0)), _high_contrast, _ghost_opacity_multiplier),
 			ghost_size,
-			ghost_size if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_CELL_DEPTH,
+			ghost_size,
 			ReplayVisuals.ghost_cell_border_material(_display_mode, _high_contrast),
 			ghost_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()
 		)
@@ -300,7 +299,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				position,
 				_live_active_material(active_color_id, _presentation.uses_live_exterior_cells, _presentation.is_live),
 				active_size if _presentation.is_live else ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE,
-				ReplayVisuals.LIVE_CELL_DEPTH if _presentation.is_live else -1.0,
+				active_size if _presentation.is_live else -1.0,
 				_live_active_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(active_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0
 			)

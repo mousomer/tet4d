@@ -1,4 +1,173 @@
-# Task Contract — Presentation Parameter Contract Follow-on
+# Task Contract — Canonical Local Board Presentation Geometry
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+Starting branch: `codex/presentation-parameter-contract`
+
+Starting SHA: `addd0d194f8fb53f57daf03e8b48ca4dd07ee6d4`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Establish one canonical `LocalBoardPresentationGeometry` for the geometry of a
+single displayed board volume. Adapt semantic 2D `[X,Y]` to presentation-only
+`[X,Y,1]`, consume semantic 3D extents directly, and derive 4D slice-local
+extents and signed coordinate orientation from the exact `SliceBasis4D`.
+Migrate cells, centering, grid subdivisions, outer boundaries, and relevant
+active/Ghost/locked placement without changing gameplay identity, exact-basis
+laws, camera framing, presentation-profile ownership, or 4D slice-set layout.
+
+This is Stage 54F-1, delivered as bounded internal slices 54F-1a contract,
+54F-1b renderer migration, and 54F-1c cleanup/acceptance. They are one
+architectural change and one local commit, not separate long-lived systems.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: Godot presentation geometry, exact-basis dimensional
+  adaptation, coordinate mapping, cell/grid/boundary rendering, Godot tests,
+  real-window acceptance evidence, and governing documents.
+- Claims: exactly-one local-board geometry owner; presentation-only degenerate
+  2D depth; exact signed-basis 4D adaptation; unified centering, cells, grids,
+  and boundaries; deterministic isolation; and retained presentation-profile
+  compatibility.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `deterministic`, `integration`, and `human_visual`.
+- Full repository gate: required because a shared presentation construction
+  path, exact-basis consumer, visible product behavior, and architecture
+  contract are all in scope.
+
+## Current Authority and Design Comparison
+
+- `docs/architecture/topology_aware_board_extent_contract.md` remains the sole
+  owner of valid semantic board extents. Presentation consumes validated
+  extents and does not establish gameplay minima, maxima, or topology rules.
+- `docs/architecture/game_safe_4d_slice_basis.md` owns the exact signed 4D
+  basis, coordinate reversal, and gravity-preserving `+Y` slot. The geometry
+  receives its visible axis mapping from that owner and never invents or
+  persists basis semantics.
+- `docs/architecture/4d_presentation_interaction_architecture.md` owns the
+  `B -> G_D -> L -> anchor -> view` composition. This task makes `G_D` an
+  explicit canonical geometry and leaves `L`, slice anchors, adaptive slice-set
+  layout, and camera framing as separate downstream transforms.
+- `docs/architecture/presentation_parameter_contract.md` owns tweakable style
+  values. Geometry supplies mathematical structure; it is not another profile
+  registry and does not absorb opacity, materials, camera, or accessibility.
+- `docs/architecture/authority_map.md` already assigns board rendering and new
+  presentation semantics to Godot. This task formalizes an owner within that
+  existing authority and performs no gameplay authority transfer or separate
+  authority-establishment event.
+
+## Audited Divergence Table
+
+| Concern | Current 2D owner/path | Current 3D owner/path | Current 4D owner/path | Shared? | Legitimate mode difference? | Migration action |
+| --- | --- | --- | --- | --- | --- | --- |
+| Dimensional adaptation | `TraceCoordinateMapper` implicitly supplies missing Z as size 1 | mapper copies XYZ | `SliceBasis4D.visible_dimensions()` supplies three visible extents | Yes | Basis decomposition is 4D-only | Make adapters explicit and construct one canonical geometry with authoritative axis mapping. |
+| Coordinate-to-local position | mapper `centered_local_point()` with absent Z fallback | same mapper formula | exact basis coordinate then same mapper formula | Yes | Signed basis remap occurs before geometry | Delegate the sole affine conversion to canonical geometry. |
+| Origin/centering/bounds | mapper `_axis_size()` and `local_slice_bounds()` | same implicit code | same implicit code per slice | Yes | None | Canonical geometry owns center, extent, cell bounds, and board bounds. |
+| Cell physical envelope | flat `CellRenderer.setup()` plus `LIVE_CELL_DEPTH = 0.08` | full exterior cubic block | full exterior cubic block per slice | Yes | Material/facing treatment may differ | Use the canonical one-cell physical depth and shared cell pitch; retain mode-specific surface/material treatment only. |
+| Locked/active/Ghost placement | `BoardPresentationModel -> ProjectionLayout -> mapper` | same | exact basis -> projection -> mapper -> slice anchor | Yes | Slice anchor and local orientation are 4D-only | Retain one placement chain and expose/test its canonical geometry input. |
+| Grid subdivisions | `_add_flat_grid()` recomputes X/Y lines | `_add_boundary_face_grid()` recomputes six faces | same volumetric helper per slice | Yes | 2D may display one planar face; 3D/4D choose camera-relative rear faces | Canonical geometry returns face-grid segments; renderer only chooses visibility/material/offset. |
+| Gravity floor lattice | absent | `_add_floor_lattice()` recomputes X/Z lines | same per slice | Underlying face geometry yes | Floor visibility/emphasis is 3D/4D presentation | Reuse canonical negative-Y face-grid segments with floor styling. |
+| Outer boundary/active frame | `_add_outline_box()` manually derives 12 edges | same | same per slice | Yes | Active-slice frame is 4D-only styling | Canonical geometry returns the 12 boundary segments; renderer applies role/material/thickness. |
+| Local orientation | identity | identity | `SliceLocalOrientation` applies `L` after local mapping | No | Yes, accepted 4D physical rotation | Keep downstream of canonical geometry. |
+| Slice placement | none | none | `AdaptiveLayerLayout` anchors every slice | No | Yes, essential 4D slice-set composition | Keep separate; canonical geometry owns one slice only. |
+| Camera/framing | planar product defaults | volumetric defaults | complete slice-set fit/envelope | No | Yes | Consume geometry bounds but retain existing camera owners. |
+
+## Scope Matrix
+
+| Layer | Required change | Provider evidence | Consumer evidence |
+| --- | --- | --- | --- |
+| Canonical geometry | Add a pure bounded value object for dimensions, axis mapping, pitch, extent, center, cell transforms/bounds, face-grid segments, and boundary segments. | Focused geometry tests over asymmetric and degenerate extents. | Mapper and grid renderer consume it without recomputing formulas. |
+| Dimensional adapters | Adapt 2D to `[X,Y,1]`, 3D directly, and 4D through exact visible signed basis slots. | Adapter, permutation, and sign assertions. | Projection/cell placement and each 4D slice expose the same geometry snapshot. |
+| Renderer | Replace flat/volumetric/floor/boundary construction formulas with canonical segment descriptors and use one-cell physical depth for 2D. | Structural node metadata/count tests. | Live 2D/3D/4D locked, active, Ghost, grid, frame, and boundary paths. |
+| Isolation | Preserve gameplay setup/state/hash/replay/Ghost landing and Stage 54E-4 profile ownership. | Existing deterministic/profile suites plus targeted snapshots. | Same native session and canonical snapshot before/after presentation changes. |
+| Documentation | Record the durable semantic/presentation dimensional split and owner boundaries. | Governance/document checks. | Programme, backlog, RDS/architecture, authority map, and handoff agree. |
+
+## Required Changes
+
+1. Add one canonical local-board presentation geometry with a unit cell pitch,
+   one-cell non-zero degenerate extents, zero-centered board extent, canonical
+   cell centers/bounds, face-grid segments, and twelve outer-boundary segments.
+2. Make `TraceCoordinateMapper` the dimensional-adaptation seam only: it
+   selects semantic extents/axis mapping, delegates local geometry, then composes
+   4D slice anchors. Preserve exact-basis coordinate mapping ahead of geometry.
+3. Make `GridRenderer` consume canonical grid/boundary descriptors for flat,
+   volumetric, floor, ordinary-frame, and active-frame construction; retain
+   mode-specific visibility, materials, camera-relative face selection, labels,
+   and z-fighting offsets outside the geometry contract.
+4. Remove the 2D thin-depth geometry distinction. Keep 2D visually planar
+   through its existing camera/projection and material treatment, not a second
+   local board geometry.
+5. Prove structural equivalence for 2D `[X,Y]`, direct local `[X,Y,1]`, 3D
+   `[X,Y,1]`, and a one-slice 4D basis-visible `[X,Y,1]`, without weakening
+   gameplay validity rules.
+6. Cover asymmetric odd/even/single-axis extents, every supported live basis
+   exchange, negative signed axes, and slice-index isolation.
+
+## Forbidden Changes
+
+- gameplay coordinates, semantic dimension, board validity/topology, native
+  schemas, deterministic identity, snapshots/hashes/replays, collision,
+  clearing, gravity, scoring, RNG/queue, pieces, Hold, or Ghost landing truth;
+- exact `SliceBasis4D` laws, slice-set layout/spacing/centering, current local
+  orientation `L`, camera pose/projection/framing, Fit/Reset lifecycle, labels,
+  HUD, or presentation-profile persistence/ownership;
+- mode-specific compensating board offsets or retained parallel local-geometry
+  paths hidden behind wrappers;
+- Designer Lab, profiles/themes, telemetry, topology expansion, gameplay
+  features, unrelated visual redesign, push, or PR creation.
+
+## Acceptance Criteria
+
+1. One geometry object owns dimensions, axis mapping, unit cell convention,
+   extent, center, local cell mapping/bounds, grid segments, and boundary edges.
+2. 2D `[X,Y]` becomes presentation-only `[X,Y,1]`; semantic setup remains 2D.
+3. 3D consumes the same geometry directly; 4D uses exact visible basis axes and
+   the same geometry per slice before orientation/anchor/layout.
+4. Odd, even, asymmetric, and single-cell axes center without drift.
+5. 2D/3D/4D degenerate local geometry snapshots are structurally equivalent;
+   negative axes preserve extent and reverse authoritative coordinates.
+6. Grid, floor lattice, boundary, and active frame derive from canonical
+   segment descriptors; obsolete duplicate formulas are removed.
+7. Locked, active, and Ghost presentation use the shared mapping and one-cell
+   depth convention while retaining legitimate material differences.
+8. Deterministic gameplay identity and Stage 54E-4 live parameters are
+   unchanged and their existing suites remain green.
+9. Agent-driven real-window acceptance covers requested default, asymmetric,
+   narrow, W=1, multi-slice, permuted-basis, and signed-basis states and records
+   controlled convergence evidence; independent human sign-off is not claimed.
+10. Focused Godot, governance, sanitation, pinned Godot 4.7.1, and full
+    repository checks pass; documentation is reconciled and the committed
+    tracked worktree is clean.
+
+## Verification Plan
+
+- focused canonical geometry, coordinate mapper, renderer, exact basis,
+  deterministic-isolation, and presentation-profile Godot tests;
+- governance/documentation, settings externalization, semantic-boundary, and
+  sanitation checks derived by policy;
+- `GODOT_BIN=... ./scripts/verify_godot_4_7.sh`;
+- agent-driven real-window scenarios and controlled dimensional comparison,
+  with Godot/platform/setup/profile/screenshots/observations recorded; and
+- `CODEX_MODE=1 ./scripts/verify.sh`.
+
+## Explicit Deferrals
+
+- camera/framing redesign, material/theme redesign, Designer Lab, named
+  profiles, procedural environments, topology/gameplay work, thumbnails that
+  do not consume live board geometry, and unrelated release hardening;
+- independent human visual review, which may follow the recorded agent-driven
+  acceptance; and
+- Stage 54F-2, limited to any separately contracted post-convergence visual
+  polish identified by real-window acceptance rather than another geometry
+  abstraction.
+
+---
+
+# Prior Contract — Presentation Parameter Contract Follow-on
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
 

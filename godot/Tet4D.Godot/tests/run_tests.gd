@@ -32,6 +32,7 @@ func _run_all() -> void:
 		"res://tests/test_next_piece_preview.gd",
 		"res://tests/test_ghost_piece.gd",
 		"res://tests/test_configurable_live_sessions.gd",
+		"res://tests/test_local_board_presentation_geometry.gd",
 		"res://tests/test_coordinate_mapper.gd",
 		"res://tests/test_board_presentation_model.gd",
 		"res://tests/test_camera_rig.gd",

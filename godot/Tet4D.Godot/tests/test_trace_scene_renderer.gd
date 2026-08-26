@@ -90,6 +90,9 @@ func run() -> Array:
 		_assert_box_size(failures, active_cell, ReplayVisuals.LIVE_ACTIVE_CELL_SCALE, "live active cell scale")
 		_assert_box_size(failures, locked_cell, ReplayVisuals.LIVE_LOCKED_CELL_SCALE, "live locked cell scale")
 		_assert_box_size(failures, ghost_cell, ReplayVisuals.LIVE_GHOST_CELL_SCALE, "live ghost cell scale")
+		_assert_box_depth(failures, active_cell, ReplayVisuals.LIVE_ACTIVE_CELL_SCALE, "live 2D active cell uses one-cell presentation depth convention")
+		_assert_box_depth(failures, locked_cell, ReplayVisuals.LIVE_LOCKED_CELL_SCALE, "live 2D locked cell uses one-cell presentation depth convention")
+		_assert_box_depth(failures, ghost_cell, ReplayVisuals.LIVE_GHOST_CELL_SCALE, "live 2D Ghost cell uses one-cell presentation depth convention")
 		if active_cell.get_child_count() < 2:
 			failures.append("live active cell should include a crisp border mesh")
 		if locked_cell.get_child_count() < 2:

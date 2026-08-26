@@ -4,6 +4,7 @@ class_name TraceCoordinateMapper
 
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const AdaptiveLayerLayoutScript = preload("res://scripts/presentation/adaptive_layer_layout.gd")
+const LocalBoardPresentationGeometryScript = preload("res://scripts/presentation/local_board_presentation_geometry.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
 
 var slice_stride := 6.0
@@ -11,12 +12,25 @@ var _board_shape: Array = []
 var _visible_board_shape: Array = []
 var _basis = SliceBasis4DScript.identity()
 var layer_layout = AdaptiveLayerLayoutScript.new()
+var _local_geometry = LocalBoardPresentationGeometryScript.new()
 
 
 func configure(board_shape: Array, basis = null, spacing_scale: float = 1.0) -> void:
 	_board_shape = board_shape.duplicate()
 	_basis = basis if basis != null else SliceBasis4DScript.identity()
-	_visible_board_shape = _basis.visible_dimensions(_board_shape) if _board_shape.size() == 4 else _board_shape.duplicate()
+	var axis_mapping := []
+	if _board_shape.size() == 4:
+		_visible_board_shape = _basis.visible_dimensions(_board_shape)
+		axis_mapping = _basis.slots().slice(0, 3)
+	elif _board_shape.size() >= 3:
+		_visible_board_shape = _board_shape.slice(0, 3)
+		axis_mapping = [SliceBasis4DScript.AXIS_X + 1, SliceBasis4DScript.AXIS_Y + 1, SliceBasis4DScript.AXIS_Z + 1]
+	elif _board_shape.size() == 2:
+		_visible_board_shape = [_board_shape[0], _board_shape[1], 1]
+		axis_mapping = [SliceBasis4DScript.AXIS_X + 1, SliceBasis4DScript.AXIS_Y + 1, LocalBoardPresentationGeometryScript.PRESENTATION_DEGENERATE_AXIS]
+	else:
+		_visible_board_shape = []
+	_local_geometry.configure(_visible_board_shape, axis_mapping)
 	var width := float(_visible_board_shape[0]) if not _visible_board_shape.is_empty() else 4.0
 	var height := float(_visible_board_shape[1]) if _visible_board_shape.size() > 1 else 4.0
 	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale)
@@ -58,15 +72,12 @@ func centered_local_point(visible_coordinates: Array) -> Vector3:
 	# board axis around zero and invert Y for screen/world-up rendering. This is
 	# the affine point mapping G_D; displacement vectors must use differences of
 	# two mapped points rather than entering this function directly.
-	if visible_coordinates.is_empty():
+	if visible_coordinates.is_empty() or not _local_geometry.is_configured():
 		return Vector3.ZERO
-	var x_size := _axis_size(0)
-	var y_size := _axis_size(1)
-	var z_size := _axis_size(2)
-	var x := float(visible_coordinates[0]) - (x_size - 1.0) * 0.5
-	var y := -(float(visible_coordinates[1]) - (y_size - 1.0) * 0.5) if visible_coordinates.size() > 1 else 0.0
-	var z := float(visible_coordinates[2]) - (z_size - 1.0) * 0.5 if visible_coordinates.size() > 2 else 0.0
-	return Vector3(x, y, z)
+	var local_coordinate := visible_coordinates.duplicate()
+	while local_coordinate.size() < 3:
+		local_coordinate.append(0)
+	return _local_geometry.cell_position(local_coordinate, int(local_coordinate[1]) < 0)
 
 
 func compose_anchored_point(centered_local_point_value: Vector3, anchor: Vector3) -> Vector3:
@@ -87,16 +98,7 @@ func slice_offset(w_index: int) -> Vector3:
 
 
 func local_slice_bounds() -> Dictionary:
-	if _board_shape.is_empty():
-		return {"ok": false}
-	var x_size := _axis_size(0)
-	var y_size := _axis_size(1)
-	var z_size := _axis_size(2)
-	return {
-		"ok": true,
-		"min": Vector3(-x_size * 0.5, -y_size * 0.5, -z_size * 0.5),
-		"max": Vector3(x_size * 0.5, y_size * 0.5, z_size * 0.5),
-	}
+	return _local_geometry.local_bounds()
 
 
 func unoriented_slice_bounds(w_index: int = 0) -> Dictionary:
@@ -146,14 +148,12 @@ func board_bounds(board_shape: Array, dimension: int, basis = null) -> Dictionar
 	return {"ok": true, "min": min_pos, "max": max_pos}
 
 
-func _axis_size(axis: int) -> float:
-	if _visible_board_shape.size() > axis:
-		return maxf(1.0, float(_visible_board_shape[axis]))
-	return 1.0
-
-
 func visible_board_shape() -> Array:
 	return _visible_board_shape.duplicate()
+
+
+func local_geometry():
+	return _local_geometry
 
 
 func current_layer_count() -> int:

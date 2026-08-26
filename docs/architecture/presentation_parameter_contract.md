@@ -229,13 +229,14 @@ Live application may:
 It may not call session start/reset/command APIs. Current pose and basis are
 captured before profile application and must compare unchanged afterward.
 
-## 12. 3D/4D divergence investigation
+## 12. Dimensional divergence and canonical-geometry follow-on
 
-The local implementation does not construct unrelated 3D and 4D board
-geometry. Both use `BoardPresentationModel -> ProjectionLayout ->
-TraceCoordinateMapper`, the same centred local cell mapping, the same
-`GridRenderer` per-volume wireframe/grids, the same exterior cell body sizes,
-and the same camera-relative rear-face grid rule.
+Stage 54F-1 completed the separately contracted structural follow-on recorded
+in `canonical_local_board_presentation_geometry.md`. Live 2D, Live 3D, and
+each local Live-4D slice now consume one explicit geometry object for cell
+transforms/bounds, centred extent, face-grid segments, and boundary segments.
+The 2D embedding is `[X,Y,1]` in presentation only, while 4D dimensions and
+axis signs derive from exact `SliceBasis4D`.
 
 The visible divergence is real and has four documented sources:
 
@@ -250,12 +251,12 @@ The visible divergence is real and has four documented sources:
 4. Active 4D face materials deliberately use a darker/lower-emission
    derivative than active 3D face materials to control matrix brightness.
 
-The shared local geometry is therefore not the sole cause. The differences are
+The shared local geometry is therefore not the cause of remaining divergence. The differences are
 shape, composition, framing, and one mode-specific material derivative. This
-stage parameterizes common safe roles and spacing but adds no 3D/4D offsets,
-camera compensation, per-mode scale, or alternate grid construction. Any
-future demand for identical projected geometry belongs to a separately
-contracted canonical 3D/4D board-presentation geometry task.
+parameter contract owns common safe roles and spacing but no geometry,
+3D/4D offsets, camera compensation, or per-mode scale. Stage 54F-1 adds no
+profile-specific compensation and does not require projected screenshots to
+match.
 
 ## 13. Verification contract
 

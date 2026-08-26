@@ -95,8 +95,16 @@ indicator, presentation-only transition, and focused basis instruction defined
 in `docs/architecture/game_safe_4d_slice_basis.md` and
 `docs/architecture/4d_presentation_interaction_architecture.md`.
 
+Across Live 2D, Live 3D, and each displayed Live-4D slice, Godot uses the one
+`LocalBoardPresentationGeometry` defined by
+`docs/architecture/canonical_local_board_presentation_geometry.md`. Semantic
+2D `[X,Y]` adapts only in presentation to `[X,Y,1]`; 3D consumes `[X,Y,Z]`;
+and 4D derives three visible signed axes from exact `B`. This owner supplies
+unit cells, centred local extent, grid segments, and boundary segments. Camera
+framing, presentation styling, `L`, and 4D slice-set layout remain separate.
+
 Live-4D renderer composition is owned by `ProjectionLayout`: canonical cells
-are mapped through exact `B`, affine centred `G_D`, one shared continuous `L`,
+are mapped through exact `B`, canonical local geometry `G_D`, one shared continuous `L`,
 and only then an anchor translation. Grid/frame scene nodes encode the same
 order as separate anchor translation and local orientation transforms. Oriented
 corner-derived collection bounds are the renderer's camera-fit input; slice

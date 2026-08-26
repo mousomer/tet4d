@@ -614,7 +614,12 @@ it does not transfer semantic authority or redefine Play drop/lock policy.
 38. In `3D` and `4D`, projected sandbox piece cells must render as clear piece boxes rather than neighbor-style dots.
 39. Neighbor markers must appear as small dots only when the explicit Explorer `neighbor search` control is enabled, and those markers must not replace, hide, or visually masquerade as the sandbox piece.
 40. On the live `Play This Topology` path, move acceptance, continued fall eligibility, support/grounded checks, lock decisions, and active-piece rendering inputs must all derive from the same canonical gameplay state rather than retained shell snapshots, panel-owned selection state, or projection-only coordinates.
-40a. `2D` keeps its simpler cell/grid layering path; projected-depth board-line occlusion machinery is for projected `3D` / `4D` board-box renderers only.
+40a. Live `2D`, `3D`, and each local `4D` slice consume one canonical local
+board presentation geometry for unit cells, centred extent, grids, and outer
+boundaries. `2D` embeds semantic `[X,Y]` as presentation `[X,Y,1]` only and
+keeps its simpler visible-face/material/layering treatment; projected-depth
+board-line occlusion machinery remains for projected `3D` / `4D` presentation
+only.
 40b. In projected `3D` / `4D` board-box renderers, board gridlines and box edges must resolve visibility against the active piece per projected fragment based on screen-space overlap plus projected depth, not by one global whole-pass ordering.
 40c. When projected board lines cross the active-piece projection, the renderer must split them into under-piece and over-piece fragments before final draw ordering.
 41. Play-mode movement classes must remain explicit: deliberate translation, rotation, gravity tick, soft drop, and hard drop must not silently share one generic seam-transport rule.

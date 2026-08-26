@@ -671,7 +671,7 @@ The minimum conceptual structure is:
 
 ```text
 canonical-to-basis mapper (B)
-  -> per-slice local content coordinate (G_D)
+  -> canonical LocalBoardPresentationGeometry cell coordinate (G_D)
   -> shared slice-local orientation (L)
   -> per-layer anchor/layout point (anchor_i)
   -> outer CameraRig / Camera3D (V, P)
@@ -685,6 +685,13 @@ a locally oriented content root—but it is not a prerequisite. The data API
 must expose/test local coordinate, local orientation, anchor, and outer view
 before composition. Any such nodes must retain one shared `L` value and must
 not move an anchor into local-content coordinates.
+
+Stage 54F-1 makes `G_D` the shared canonical local-board geometry described by
+`canonical_local_board_presentation_geometry.md`. Live 2D, Live 3D, and every
+Live-4D slice now share its cell, extent, grid, boundary, and centring rules.
+This does not change the composition above: exact `B` still supplies 4D's
+signed visible coordinate, `L` remains downstream, and adaptive slice-set
+anchors/layout remain outside the local geometry.
 
 ## 17. Testing policy and executable verification design for Stage 54E-2
 

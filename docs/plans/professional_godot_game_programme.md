@@ -1085,6 +1085,27 @@ governance, sanitation, pinned Godot 4.7.1, full-repository, and agent-driven
 real-window evidence pass and are recorded in
 `docs/plans/presentation_parameter_contract_acceptance.md`.
 
+#### Post-Stage-54 follow-on — Stage 54F-1 canonical local board geometry
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+The 54F-1 name identifies the supplied follow-on contract and does not reopen
+the completed Stage 54 gate. Live 2D, Live 3D, and every local Live-4D slice
+now consume one `LocalBoardPresentationGeometry` for unit cells, centred
+extent, coordinate conversion, face grids, and outer boundaries. Semantic 2D
+adapts to presentation `[X,Y,1]`; 4D receives signed visible extents from exact
+`SliceBasis4D`; continuous local orientation, slice-set anchors/layout,
+camera/framing, and profile-owned styling remain separate.
+
+The durable contract is
+`docs/architecture/canonical_local_board_presentation_geometry.md`, and
+structural, deterministic, profile-regression, pinned/full, and real-window
+evidence is recorded in
+`docs/plans/canonical_local_board_presentation_geometry_acceptance.md`. No
+gameplay authority, validity rule, state schema, basis law, deterministic
+identity, or presentation-parameter owner changes.
+
 Objective:
 
 Close the gap between a verified prototype and a professional game release.
