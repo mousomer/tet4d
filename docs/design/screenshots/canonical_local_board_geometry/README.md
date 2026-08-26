@@ -21,9 +21,13 @@ window on Metal Forward+.
 | `4d_basis_xw_visible_wyz.png` | XW turn derives local `[W,Y,Z] = [2,7,3]` and `-X` slices. |
 | `4d_signed_basis_visible_zy_negx.png` | ZX- turn visibly reports `+Z,+Y,-X`; sign changes orientation, not extent. |
 | `controlled_structural_convergence_4x7x1.png` | Real-window direct comparison of 2D adaptation, direct 3D local geometry, and one-slice 4D local geometry after suppressing labels/active-frame differences; capture reported `structural_equal=true`. |
+| `stage_54f1r/2d_fractional_endgame.png` | Stage 54F-1R production `endgame_2d_classic` at half-frame interpolation: four distinct non-origin fractional particles and visible motion trails over unchanged board geometry. |
+| `stage_54f1r/3d_fractional_endgame.png` | Stage 54F-1R production `endgame_3d_classic` at half-frame interpolation: four distinct non-origin fractional particles, visible motion trails, and the particle-derived boundary-event marker. |
 
 The complete environment, observations, automated evidence, and acceptance
 boundary are in
 `docs/plans/canonical_local_board_presentation_geometry_acceptance.md`.
 These frames are review artifacts rather than pixel-diff golden tests or
-independent human sign-off.
+independent human sign-off. The two `stage_54f1r` frames are the focused
+agent-driven correction pass; the capture reported four distinct non-origin
+particles and four moving trails in each mode, plus one event marker in 3D.

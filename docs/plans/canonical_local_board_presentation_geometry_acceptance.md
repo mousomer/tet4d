@@ -1,12 +1,44 @@
 # Canonical Local Board Presentation Geometry Acceptance
 
-Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+Status: COMPLETE / REVIEWED GREEN
 
-Date: 2026-08-26
+Date: 2026-08-27
 
 Branch: `codex/canonical-local-board-geometry`
 
 Starting HEAD: `addd0d194f8fb53f57daf03e8b48ca4dd07ee6d4`
+
+Stage 54F-1 implementation HEAD: `d85605966ef9eb145f969a3d8e6550563c45b268`
+
+## Stage 54F-1R Review Correction
+
+Stage 54F-1 established the correct canonical local-board architecture, but
+independent code review found a P1 domain regression: the mapper routed finite
+continuous endgame particle positions through the new strict lattice-cell API.
+Fractional and out-of-board 2D/3D particles, their interpolation/trails, and
+derived event markers therefore collapsed to the local origin even though the
+repository gates were green.
+
+Stage 54F-1R preserves the one-owner architecture and separates its public
+domains. `cell_position()` remains integral and in-board, with only the
+existing explicit negative-Y active-spawn allowance. `point_position()` accepts
+arbitrary well-formed finite three-axis presentation points. Both delegate to
+the same canonical pitch, centring, Y inversion, and orientation formula, and
+valid integral coordinates map identically through both APIs. Locked, active,
+and Ghost cells use the strict path; particles and event/probe presentation
+points use the continuous path. Malformed, NaN, and infinite input is rejected
+before it can contaminate a transform.
+
+The correction also replaces the former self-comparison slice-isolation test
+with independently configured same-local/different-slice states, and makes
+`AdaptiveLayerLayout` consume canonical `local_extent.x/y` rather than raw
+semantic cell counts. Layout remains downstream and continues to own only
+slice-set rows, columns, gaps, centring, and anchors.
+
+The exact Stage 54C `SliceBasis4D` conversion is unchanged. Its pre-existing
+integral coordinate validation still constrains 4D continuous replay points;
+54F-1R neither weakens exact-basis semantics nor invents fractional signed-axis
+rules.
 
 ## Outcome
 
@@ -39,12 +71,38 @@ camera/material treatment keeps the game visually two-dimensional.
 | Full chain | 2D `[4,7]`, direct 3D `[4,7,1]`, and identity 4D `[4,7,1,1]` have equal structural snapshots and cell transforms. | PASS |
 | Basis permutations | Identity and both signs of XW, ZW, and ZX turns derive asymmetric local extents/axis slots and separate slice counts from `[4,7,11,3]`. | PASS |
 | Signed orientation | `ZX-` exposes `[+Z,+Y,-X]`; canonical X endpoints reverse local Z by three cells while extent remains `[11,7,4]`. | PASS |
-| Slice isolation | Every layer lookup under each basis returns the same canonical local geometry; slice index affects only anchor/content/presentation. | PASS |
+| Discrete/continuous domains | Valid integral points agree through both APIs; real fractional 3D and finite out-of-board points map to independently derived exact values; fractional cells and malformed/non-finite points are rejected. | PASS |
+| Slice isolation | Independent `[4,7,11,1]` and `[4,7,11,5]` mapper states use different slice counts and layout/spacing snapshots while retaining identical local-geometry structural snapshots. | PASS |
+| Layout extent ownership | A focused internal-pitch perturbation produces canonical extent `[8,14,6]`; adaptive tile width/height and stride consume that extent rather than semantic counts `[4,7,3]`. No configurable pitch is introduced. | PASS |
 | Renderer migration | Existing renderer tests retain grid counts, six cached volume faces, twelve boundaries per slice, active frames, shared `L`, cell placement, Ghost, and stable node counts; 2D adds full-depth assertions. | PASS |
+| Endgame fractional production path | `TraceSceneRenderer` maps committed 2D `[-0.224,1.032]` to `[-1.724,0.468,0]` and committed 3D `[-0.192,1.016,1.048]` to `[-1.692,0.484,-0.452]`; a second particle remains distinct. | PASS |
+| Out-of-board/interpolation/trail | Committed finite out-of-board coordinates map affinely; two committed particle frames interpolate to an independently derived midpoint and retain distinct trail samples. | PASS |
+| Event marker | The committed 3D boundary event marker equals its mapped particle position plus only `EVENT_MARKER_HEIGHT`. | PASS |
+| Strict cell regression | Renderer locked/Ghost cells and active cells use explicit strict APIs; fractional cell input remains invalid and active spawn retains only its authorized negative-Y allowance. | PASS |
 | Profile compatibility | Existing default/override, grid/boundary, piece, Ghost, slice-spacing, palette/accessibility, and frozen-state profile tests pass unchanged. | PASS |
 | Deterministic isolation | Existing native setup, state/hash, replay, active/next/Hold/Ghost, basis, and profile-isolation suites pass; no native/gameplay/schema source changed. | PASS |
 
 ## Real-Window Review
+
+Evidence taxonomy: all visual evidence in this record is agent-driven. The
+original Stage 54F-1 campaign and the focused Stage 54F-1R endgame pass are not
+independent-human acceptance; no such claim is made.
+
+### Stage 54F-1R focused endgame findings
+
+The correction pass loaded committed `endgame_2d_classic` and
+`endgame_3d_classic` through the production bundle loader, snapshot extractor,
+`trace_replay.tscn`, and `TraceSceneRenderer` in a real Godot 4.7.1 macOS
+DisplayServer window on Metal Forward+.
+
+At half-frame interpolation, both modes reported four distinct, non-origin
+particles and four non-degenerate moving trails. The 2D frame keeps ordinary
+board centring/wireframe geometry unchanged while fractional particles occupy
+separate affine positions. The 3D frame does the same in volume and visibly
+places one boundary-event marker over its corresponding particle using the
+authorized marker-height offset. The focused frames are
+`stage_54f1r/2d_fractional_endgame.png` and
+`stage_54f1r/3d_fractional_endgame.png` under the evidence directory below.
 
 Environment:
 
@@ -134,6 +192,14 @@ topology transport matrix; and the full repository gate reported `verify: OK`.
 Expected negative-path settings/native-input messages and existing headless
 resource-teardown advisories remain non-failing.
 
+Stage 54F-1R reran the same complete gate set on the corrected tree on
+2026-08-27. The dedicated geometry/mapper/model/renderer run reported
+`Stage 54F-1R focused Godot tests passed`; the full Godot suite reported
+`Godot replay tests passed`; semantic-boundary validation scanned 111 scripts;
+project-contract validation checked 117 required paths; the pinned Godot
+4.7.1 gate passed all 59 shared topology transport cases; focused real-window
+2D/3D endgame capture exited zero; and the full gate reported `verify: OK`.
+
 ## Authority, Risks, and Deferrals
 
 Authority effect: none. This names and formalizes one implementation owner
@@ -143,7 +209,9 @@ inherited systems retain gameplay authority, and no AE record is required.
 
 Remaining advisory: independent human product review may still assess the
 intentional full-depth 2D mesh under unusual camera/debug views. No ordinary
-2D regression was observed.
+2D regression was observed. Independently, exact `SliceBasis4D` still accepts
+only its established integral coordinate domain, so fractional 4D replay-point
+semantics remain a pre-existing limitation outside Stage 54F-1R.
 
 Recommended exact Stage 54F-2 scope: only separately evidenced visual polish
 above this fixed geometry contract—projection/camera/material treatment or

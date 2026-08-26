@@ -233,7 +233,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_cell_root.add_child(node)
 		var locked_color_id := int(cell.get("color_id", 0))
 		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
-		var locked_position := _presentation.render_world_position(cell.get("position", []))
+		var locked_position := _presentation.render_cell_world_position(cell.get("position", []))
 		if _presentation.uses_live_exterior_cells:
 			node.setup_exterior_block(
 				locked_position,
@@ -261,7 +261,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_cell_root.add_child(ghost_node)
 		var ghost_size := ReplayVisuals.LIVE_3D_GHOST_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_GHOST_CELL_SCALE
 		ghost_node.setup(
-			_presentation.render_world_position(cell.get("position", [])),
+			_presentation.render_cell_world_position(cell.get("position", [])),
 			ReplayVisuals.ghost_cell_material(_display_mode, int(cell.get("color_id", 0)), _high_contrast, _ghost_opacity_multiplier),
 			ghost_size,
 			ghost_size,

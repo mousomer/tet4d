@@ -8,9 +8,12 @@ const TraceCoordinateMapperScript = preload("res://scripts/rendering/trace_coord
 func run() -> Array:
 	var failures: Array = []
 	_test_canonical_contract(failures)
+	_test_discrete_and_continuous_domains(failures)
 	_test_odd_even_and_degenerate_centering(failures)
 	_test_dimensional_chain(failures)
 	_test_exact_basis_adaptation(failures)
+	_test_independent_slice_isolation(failures)
+	_test_layout_consumes_canonical_extent(failures)
 	_test_signed_basis_orientation(failures)
 	return failures
 
@@ -50,6 +53,35 @@ func _test_canonical_contract(failures: Array) -> void:
 	var invalid := LocalBoardPresentationGeometryScript.new()
 	if invalid.configure([4, 0, 7], [1, 2, 3]) or invalid.is_configured():
 		failures.append("presentation geometry must not invent validity for zero semantic extents")
+
+
+func _test_discrete_and_continuous_domains(failures: Array) -> void:
+	var geometry := LocalBoardPresentationGeometryScript.new()
+	geometry.configure([4, 4, 4], [1, 2, 3])
+	for coordinate in [[0, 0, 0], [1, 2, 3], [3, 3, 3]]:
+		_assert_vector(
+			failures,
+			geometry.point_position(coordinate),
+			geometry.cell_position(coordinate),
+			"integral point and strict cell equivalence %s" % str(coordinate)
+		)
+	_assert_vector(
+		failures,
+		geometry.point_position([-0.192, 1.016, 1.048]),
+		Vector3(-1.692, 0.484, -0.452),
+		"continuous fractional affine point"
+	)
+	_assert_vector(
+		failures,
+		geometry.point_position([3.441246, 2.037972, 1.515474]),
+		Vector3(1.941246, -0.537972, 0.015474),
+		"continuous out-of-board affine point"
+	)
+	if geometry.accepts_cell_input([-0.192, 1.016, 1.048]) or geometry.cell_bounds([-0.192, 1.016, 1.048]).get("ok", false):
+		failures.append("fractional presentation points must not become valid lattice cells")
+	for invalid_point in [[NAN, 1.0, 1.0], [INF, 1.0, 1.0], [-INF, 1.0, 1.0], [1.0, 2.0], [1.0, "2", 3.0]]:
+		if geometry.accepts_point_input(invalid_point) or geometry.point_position(invalid_point) != Vector3.ZERO:
+			failures.append("malformed or non-finite continuous point must fail safely: %s" % str(invalid_point))
 
 
 func _test_odd_even_and_degenerate_centering(failures: Array) -> void:
@@ -120,10 +152,34 @@ func _test_exact_basis_adaptation(failures: Array) -> void:
 			failures.append("basis %s must preserve signed authoritative axes %s, got %s" % [basis_case["basis"].key(), basis_case["axes"], geometry.axis_mapping])
 		if mapper.current_layer_count() != int(basis_case["layers"]):
 			failures.append("basis %s must keep slice-axis extent outside local geometry" % basis_case["basis"].key())
-		var first_snapshot: Dictionary = geometry.structural_snapshot()
-		for _layer_index in range(mapper.current_layer_count()):
-			if mapper.local_geometry().structural_snapshot() != first_snapshot:
-				failures.append("slice index must not alter canonical local geometry for basis %s" % basis_case["basis"].key())
+
+
+func _test_independent_slice_isolation(failures: Array) -> void:
+	var one_slice_mapper := TraceCoordinateMapperScript.new()
+	var five_slice_mapper := TraceCoordinateMapperScript.new()
+	one_slice_mapper.configure([4, 7, 11, 1], SliceBasis4DScript.identity(), 0.8)
+	five_slice_mapper.configure([4, 7, 11, 5], SliceBasis4DScript.identity(), 1.4)
+	if one_slice_mapper.current_layer_count() != 1 or five_slice_mapper.current_layer_count() != 5:
+		failures.append("independent slice-isolation fixtures must have different slice counts")
+	if one_slice_mapper.layer_layout.snapshot() == five_slice_mapper.layer_layout.snapshot():
+		failures.append("independent slice-isolation fixtures must exercise different slice-set layouts")
+	if one_slice_mapper.local_geometry().structural_snapshot() != five_slice_mapper.local_geometry().structural_snapshot():
+		failures.append("same visible local dimensions must retain identical geometry across independent slice states")
+
+
+func _test_layout_consumes_canonical_extent(failures: Array) -> void:
+	var mapper := TraceCoordinateMapperScript.new()
+	# `cell_size` is an existing internal geometry field, not a new product
+	# parameter. Perturbing it before configuration distinguishes canonical world
+	# extent from the raw semantic cell counts at this ownership boundary.
+	mapper.local_geometry().cell_size = 2.0
+	mapper.configure([4, 7, 3, 2], SliceBasis4DScript.identity())
+	var geometry = mapper.local_geometry()
+	_assert_vector(failures, geometry.local_extent, Vector3(8.0, 14.0, 6.0), "test-only canonical extent perturbation")
+	if absf(mapper.layer_layout.tile_width - 8.0) > 0.001 or absf(mapper.layer_layout.tile_height - 14.0) > 0.001:
+		failures.append("adaptive layout must consume canonical local X/Y extent rather than semantic cell counts")
+	if absf(mapper.slice_stride - (geometry.local_extent.x + mapper.layer_layout.horizontal_gap)) > 0.001:
+		failures.append("slice stride must derive from canonical local width plus adaptive gap")
 
 
 func _test_signed_basis_orientation(failures: Array) -> void:

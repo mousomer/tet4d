@@ -27,6 +27,16 @@ func run() -> Array:
 	var position := model.render_world_position([0, 0, 0])
 	if position.distance_to(Vector3(-1.5, 2.0, -2.5)) > 0.001:
 		failures.append("presentation model should use the canonical mapper, got %s" % str(position))
+	_assert_vector(
+		failures,
+		model.render_world_position([-0.192, 1.016, 1.048]),
+		Vector3(-1.692, 0.984, -1.452),
+		"presentation model continuous affine path"
+	)
+	if model.render_cell_world_position([-0.192, 1.016, 1.048]) != Vector3.ZERO:
+		failures.append("presentation model locked/Ghost cell path must reject fractional coordinates")
+	if model.render_active_world_position([-0.192, 1.016, 1.048]) != Vector3.ZERO:
+		failures.append("presentation model active-cell path must reject fractional coordinates")
 	var live_4d_model := BoardPresentationModelScript.new()
 	live_4d_model.configure({
 		"trace_type": "live_4d",
@@ -65,3 +75,8 @@ func run() -> Array:
 	if live_4d_model.active_layer_indices() != [1, 2]:
 		failures.append("above-board active cells must retain their basis-derived active slices")
 	return failures
+
+
+func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:
+	if actual.distance_to(expected) > 0.001:
+		failures.append("%s: expected %s, got %s" % [label, expected, actual])

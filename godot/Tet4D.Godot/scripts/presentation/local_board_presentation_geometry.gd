@@ -52,10 +52,33 @@ func cell_transform(local_coordinate: Array, allow_above_board_y: bool = false) 
 func cell_position(local_coordinate: Array, allow_above_board_y: bool = false) -> Vector3:
 	if not _valid_local_coordinate(local_coordinate, allow_above_board_y):
 		return Vector3.ZERO
+	return _affine_position(local_coordinate)
+
+
+func point_position(local_point: Array) -> Vector3:
+	if not accepts_point_input(local_point):
+		return Vector3.ZERO
+	return _affine_position(local_point)
+
+
+func accepts_point_input(local_point: Array) -> bool:
+	if not is_configured() or local_point.size() != 3:
+		return false
+	for value in local_point:
+		if not _is_finite_number(value):
+			return false
+	return true
+
+
+func accepts_cell_input(local_coordinate: Array, allow_above_board_y: bool = false) -> bool:
+	return _valid_local_coordinate(local_coordinate, allow_above_board_y)
+
+
+func _affine_position(local_point: Array) -> Vector3:
 	return Vector3(
-		float(local_coordinate[0]) - (float(local_dimensions[0]) - 1.0) * 0.5,
-		-(float(local_coordinate[1]) - (float(local_dimensions[1]) - 1.0) * 0.5),
-		float(local_coordinate[2]) - (float(local_dimensions[2]) - 1.0) * 0.5
+		float(local_point[0]) - (float(local_dimensions[0]) - 1.0) * 0.5,
+		-(float(local_point[1]) - (float(local_dimensions[1]) - 1.0) * 0.5),
+		float(local_point[2]) - (float(local_dimensions[2]) - 1.0) * 0.5
 	) * cell_size
 
 
@@ -190,3 +213,7 @@ func _is_integral_number(value) -> bool:
 	if typeof(value) == TYPE_INT:
 		return true
 	return typeof(value) == TYPE_FLOAT and is_finite(float(value)) and float(value) == float(int(value))
+
+
+func _is_finite_number(value) -> bool:
+	return typeof(value) in [TYPE_INT, TYPE_FLOAT] and is_finite(float(value))

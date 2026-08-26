@@ -1,7 +1,7 @@
 # Canonical Local Board Presentation Geometry
 
 Status: canonical Godot presentation contract
-Stage: 54F-1
+Stage: 54F-1 with 54F-1R review correction
 Owner: Godot/GDScript presentation
 Authority effect: formalizes existing presentation authority; no gameplay
 authority transfer or establishment
@@ -14,7 +14,9 @@ displayed local board volume. It owns:
 - three local presentation extents and their authoritative semantic-axis map;
 - a unit cell pitch and one-cell physical extent on every local axis;
 - a zero-centred local origin and local board bounds;
-- local cell centres, transforms, and cell bounds;
+- strict local cell centres, transforms, and cell bounds;
+- finite continuous affine presentation-point mapping over the same pitch,
+  centring, and orientation convention;
 - the interior subdivision segments on each of the six local faces; and
 - the twelve outer-boundary segments.
 
@@ -58,7 +60,8 @@ For local dimensions `[D_x,D_y,D_z]`, the cell pitch and full cell extent are
 `1`. The local board extent is therefore the vector `[D_x,D_y,D_z]`, its
 centre is the origin, and its bounds are `-extent/2 .. +extent/2`.
 
-For a basis-local cell coordinate `[x,y,z]`, the canonical centre is:
+For a basis-local coordinate or continuous presentation point `[x,y,z]`, the
+canonical affine position is:
 
 ```text
 (x - (D_x - 1)/2,
@@ -70,6 +73,18 @@ The Y inversion is the accepted Godot world-up presentation convention; it is
 not a gravity or gameplay-coordinate mutation. Odd, even, asymmetric, and
 single-cell axes use the same formula. A single-cell axis occupies
 `[-0.5,+0.5]`, never zero thickness.
+
+The two public coordinate domains are deliberately distinct:
+
+- `cell_position()` accepts only integral lattice coordinates inside the local
+  board, apart from the existing explicit negative-Y active-spawn allowance;
+- `point_position()` accepts any well-formed finite three-axis presentation
+  point, including fractional and out-of-board endgame particle positions.
+
+Every valid lattice coordinate must map identically through both APIs. Invalid,
+malformed, NaN, or infinite points fail safely. Continuous acceptance never
+makes a fractional value a semantic cell, and renderers/mappers must not copy
+the affine formula merely to distinguish these domains.
 
 Piece body inset, opacity, face panels, outlines, and emission are style above
 the unit-cell geometry. In particular, 2D may use a simpler face/material
@@ -98,17 +113,19 @@ The accepted composition is:
 ```text
 semantic coordinate
   -> exact basis coordinate (4D only, B)
-  -> LocalBoardPresentationGeometry cell transform (G_D)
+  -> LocalBoardPresentationGeometry strict cell or continuous point map (G_D)
   -> shared slice-local orientation (4D only, L)
   -> slice-set anchor (4D only)
   -> outer camera/framing (V/P)
 ```
 
 `AdaptiveLayerLayout` continues to own slice spacing, row/column arrangement,
-slice-set centring, and anchors. It never changes local dimensions, cells,
-grids, or boundaries. `SliceLocalOrientation` continues to own `L` and applies
-after canonical local mapping. Camera owners frame exposed bounds and may use
-different 2D, 3D, and 4D defaults.
+slice-set centring, and anchors. It receives canonical `local_extent.x/y` from
+the geometry owner rather than interpreting semantic cell counts as world
+units. It never changes local dimensions, pitch, cells, grids, or boundaries.
+`SliceLocalOrientation` continues to own `L` and applies after canonical local
+mapping. Camera owners frame exposed bounds and may use different 2D, 3D, and
+4D defaults.
 
 ## 6. Structural equivalence
 
@@ -130,6 +147,10 @@ Negative visible basis axes preserve dimensions and geometry extent while
 slice of one 4D state consumes the same local geometry; only content,
 slice-set transform, labels, and active/inactive presentation can differ.
 
+Slice isolation is proven with independently configured mapper states that
+have identical visible local dimensions but different slice-axis extents and
+layout/spacing state. Repeated access to one geometry object is not evidence.
+
 ## 7. Isolation and verification
 
 The contract is presentation-only. No method validates or mutates gameplay
@@ -137,9 +158,17 @@ setup, state, legality, gravity, topology, queue/RNG, Hold, Ghost landing,
 score, replay, or hashes.
 
 Required evidence includes asymmetric and degenerate geometry tests,
-odd/even centring, the full dimensional chain, all supported exact basis
-turns and signs, renderer segment consumption, deterministic/profile
-regressions, pinned Godot verification, full repository verification, and
-agent-driven real-window 2D/3D/4D acceptance. Visual evidence may differ in
-camera, HUD, materials, and slice framing; structural equality is executable
-evidence rather than screenshot equality.
+odd/even centring, strict/continuous integral equivalence, finite fractional
+and out-of-board point mapping, invalid-input sanitation, production endgame
+particle/interpolation/trail/event-marker coverage, the full dimensional chain,
+independent slice isolation, canonical-extent layout consumption, all supported
+exact basis turns and signs, renderer segment consumption,
+deterministic/profile regressions, pinned Godot verification, full repository
+verification, and agent-driven real-window acceptance. Visual evidence may
+differ in camera, HUD, materials, and slice framing; structural equality is
+executable evidence rather than screenshot equality.
+
+Stage 54F-1 established the correct canonical local-board architecture. The
+54F-1R review correction repaired a domain regression in which continuous
+endgame presentation points had been routed through the new strict cell API;
+it did not redesign the architecture or change exact 4D basis authority.

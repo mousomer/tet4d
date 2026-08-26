@@ -1,4 +1,139 @@
-# Task Contract — Canonical Local Board Presentation Geometry
+# Task Contract — Stage 54F-1R Geometry Review Corrections
+
+Status: COMPLETE / REVIEWED GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `d85605966ef9eb145f969a3d8e6550563c45b268`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Preserve the Stage 54F-1 canonical local-board architecture while correcting
+the review regression caused by routing continuous endgame presentation points
+through the strict lattice-cell API. Keep one geometry owner with separate
+discrete-cell and continuous-affine domains, route the production particle and
+event-marker path through the continuous domain, make slice layout consume the
+canonical local extent, and replace tautological slice-isolation evidence.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: canonical Godot presentation geometry, coordinate mapping,
+  slice-set layout consumption, endgame renderer integration, Godot tests,
+  focused real-window evidence, and governing documents.
+- Claims: distinct strict-cell and finite continuous-point domains over one
+  affine formula; restored 2D/3D fractional and out-of-board effects;
+  non-degenerate interpolation/trails and marker following; canonical-extent
+  layout ownership; meaningful slice isolation; strict cell preservation; and
+  unchanged deterministic and 4D basis authority.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `deterministic`, `integration`, and `human_visual`.
+- Full repository gate: required because this corrects a reviewer-reported P1
+  in a shared presentation construction path and reconciles its acceptance.
+
+## Current Authority and Design Comparison
+
+- `docs/architecture/canonical_local_board_presentation_geometry.md` already
+  assigns pitch, centering, Y inversion, local extent, cells, grids, and bounds
+  to `LocalBoardPresentationGeometry`. The correction adds a second input
+  domain to that owner; it does not restore mapper- or renderer-local math.
+- `docs/architecture/game_safe_4d_slice_basis.md` continues to own exact signed
+  4D coordinate conversion. Its integral validation is pre-existing and is not
+  weakened or reinterpreted as a fractional basis contract here.
+- `docs/architecture/4d_presentation_interaction_architecture.md` retains
+  `B -> G_D -> L -> anchor -> view`. Canonical local extent remains an input to
+  downstream adaptive layout; slice spacing remains outside local geometry.
+- `docs/architecture/presentation_parameter_contract.md` continues to own the
+  slice-spacing multiplier. No cell-pitch preference or profile parameter is
+  introduced.
+- `docs/architecture/authority_map.md` already assigns this new presentation
+  geometry to Godot. The correction transfers and establishes no authority.
+
+## Scope Matrix
+
+| Layer | Required change | Provider evidence | Consumer evidence |
+| --- | --- | --- | --- |
+| Canonical geometry | Keep strict `cell_position()` and add a finite continuous affine point API using identical pitch/centering/orientation. | Exact integral equivalence, fractional/out-of-board, malformed, NaN, and infinity tests. | Mapper consumes the continuous API; locked/active/Ghost remain strict. |
+| Mapper/layout | Route presentation points through canonical continuous geometry and pass canonical X/Y extent to adaptive layout. | Mapper/layout snapshots and structural source assertion. | Renderer positions and slice anchors use the corrected outputs. |
+| Endgame renderer | Preserve extraction and rendering flow while restoring fractional particles, interpolation/trails, and event markers. | Committed 2D/3D fixture values and independently derived exact expectations. | Production `TraceSceneRenderer` nodes occupy distinct affine positions. |
+| Isolation | Replace repeated access to one geometry object with independently configured same-local/different-slice states. | Structural snapshot equality across differing slice counts/layouts. | Exact 4D basis and deterministic suites remain unchanged and green. |
+| Documentation | Record the correction history and evidence without recasting the canonical architecture as failed. | Governance/document checks. | Acceptance, backlog, authority, and restart status agree. |
+
+## Required Changes
+
+1. Preserve `cell_position()` as an integral, in-board lattice API with the
+   existing above-board active-Y policy. Add a separate API for arbitrary
+   finite three-axis presentation points; malformed or non-finite input must
+   fail safely without contaminating transforms.
+2. Share exactly one canonical affine implementation so every valid integral
+   cell maps identically through both public domains.
+3. Keep cells on the strict path and route `TraceCoordinateMapper` continuous
+   presentation points through the new API. Fix the confirmed 2D/3D endgame
+   regression without broadening Stage 54C fractional 4D semantics.
+4. Configure `AdaptiveLayerLayout` from canonical `local_extent.x/y`, retaining
+   its existing adaptive algorithm and the profile-owned spacing multiplier.
+5. Add production-path exact-value regressions for real committed 2D and 3D
+   fractional points, a finite out-of-board point, distinct particles,
+   interpolation/trail movement, and event-marker offset composition.
+6. Replace the slice-isolation self-comparison with independently configured
+   states that share visible local dimensions but differ in slice count and
+   layout state.
+
+## Forbidden Changes
+
+- gameplay coordinates/dimensions, native/session state, snapshots, hashes,
+  replay identity, queue/RNG, collision, gravity, scoring, pieces, Hold,
+  Ghost truth, or topology validity;
+- exact Stage 54C basis laws or fractional signed-axis basis invention;
+- separate 2D/3D/4D local geometry, mapper/renderer centering formulas,
+  duplicated pitch, configurable cell size, or slice layout inside geometry;
+- Stage 54E-4 profile ownership, camera/view lifecycle, Designer Lab, themes,
+  unrelated cleanup, push, or pull-request creation.
+
+## Acceptance Criteria
+
+1. Canonical geometry remains the sole local-board mathematics owner with
+   explicitly separate discrete-cell and continuous-point domains.
+2. Both APIs share pitch, centering, and orientation, and agree for every valid
+   integral coordinate covered by the focused suite.
+3. Real fractional 2D and 3D fixture points plus finite out-of-board points map
+   affinely rather than to the origin.
+4. Production particles remain distinct; interpolation/trails move; event
+   markers equal mapped particle positions plus the authorized local offset.
+5. Locked, active, and Ghost cells retain strict lattice validation, including
+   the existing above-board active-Y exception only.
+6. Exact 4D basis authority, 2D semantic rank, deterministic identity, and
+   presentation-profile ownership remain unchanged.
+7. Independently configured slice states prove local-geometry isolation.
+8. Adaptive layout consumes canonical local extent without changing its
+   algorithm or absorbing slice spacing into geometry.
+9. Focused Godot, governance, sanitation, pinned Godot 4.7.1, full repository,
+   and agent-driven focused real-window 2D/3D checks pass.
+10. Acceptance/status documents tell the correction history accurately and
+    the final committed worktree is clean.
+
+## Verification Plan
+
+- focused canonical geometry, mapper, renderer, particle/trail, exact-basis,
+  deterministic-isolation, and profile tests;
+- project-contract, settings externalization, generated maintenance/config,
+  semantic-boundary, sanitation, and diff checks;
+- the pinned Godot 4.7.1 gate and `CODEX_MODE=1 ./scripts/verify.sh`;
+- agent-driven real-window 2D and 3D endgame inspection with particle,
+  interpolation/trail, marker, and ordinary-board observations recorded.
+
+## Explicit Deferrals
+
+- fractional 4D basis semantics beyond the existing exact Stage 54C contract;
+- independent human acceptance, the full prior 13-image visual campaign, and
+  unrelated Stage 54F-2 or later presentation work.
+
+---
+
+# Prior Contract — Canonical Local Board Presentation Geometry
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
 

@@ -31,8 +31,8 @@ func configure(board_shape: Array, basis = null, spacing_scale: float = 1.0) -> 
 	else:
 		_visible_board_shape = []
 	_local_geometry.configure(_visible_board_shape, axis_mapping)
-	var width := float(_visible_board_shape[0]) if not _visible_board_shape.is_empty() else 4.0
-	var height := float(_visible_board_shape[1]) if _visible_board_shape.size() > 1 else 4.0
+	var width: float = _local_geometry.local_extent.x if _local_geometry.is_configured() else 4.0
+	var height: float = _local_geometry.local_extent.y if _local_geometry.is_configured() else 4.0
 	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale)
 	slice_stride = width + layer_layout.horizontal_gap
 
@@ -45,6 +45,14 @@ func unoriented_world_position(coordinates: Array, dimension: int) -> Vector3:
 
 
 func decompose_position(coordinates: Array, dimension: int, allow_above_board_y: bool = false) -> Dictionary:
+	return _decompose_position(coordinates, dimension, allow_above_board_y, false)
+
+
+func decompose_cell_position(coordinates: Array, dimension: int, allow_above_board_y: bool = false) -> Dictionary:
+	return _decompose_position(coordinates, dimension, allow_above_board_y, true)
+
+
+func _decompose_position(coordinates: Array, dimension: int, allow_above_board_y: bool, strict_cell: bool) -> Dictionary:
 	if coordinates.is_empty():
 		return {"ok": false}
 	var visible_coordinates := coordinates.duplicate()
@@ -55,7 +63,19 @@ func decompose_position(coordinates: Array, dimension: int, allow_above_board_y:
 			return {"ok": false}
 		visible_coordinates = mapped.get("visible_cell_3d", [])
 		layer_index = int(mapped.get("layer_index", 0))
-	var local_point := centered_local_point(visible_coordinates)
+	var local_coordinate := _local_coordinate_3d(visible_coordinates)
+	var accepted_local_coordinate := (
+		_local_geometry.accepts_cell_input(local_coordinate, allow_above_board_y)
+		if strict_cell
+		else _local_geometry.accepts_point_input(local_coordinate)
+	)
+	if not accepted_local_coordinate:
+		return {"ok": false}
+	var local_point := (
+		_local_geometry.cell_position(local_coordinate, allow_above_board_y)
+		if strict_cell
+		else _local_geometry.point_position(local_coordinate)
+	)
 	var anchor := slice_anchor(layer_index) if dimension >= 4 and coordinates.size() > 3 else Vector3.ZERO
 	return {
 		"ok": true,
@@ -74,10 +94,18 @@ func centered_local_point(visible_coordinates: Array) -> Vector3:
 	# two mapped points rather than entering this function directly.
 	if visible_coordinates.is_empty() or not _local_geometry.is_configured():
 		return Vector3.ZERO
+	return _local_geometry.point_position(_local_coordinate_3d(visible_coordinates))
+
+
+func centered_local_cell(visible_coordinates: Array, allow_above_board_y: bool = false) -> Vector3:
+	return _local_geometry.cell_position(_local_coordinate_3d(visible_coordinates), allow_above_board_y)
+
+
+func _local_coordinate_3d(visible_coordinates: Array) -> Array:
 	var local_coordinate := visible_coordinates.duplicate()
 	while local_coordinate.size() < 3:
 		local_coordinate.append(0)
-	return _local_geometry.cell_position(local_coordinate, int(local_coordinate[1]) < 0)
+	return local_coordinate
 
 
 func compose_anchored_point(centered_local_point_value: Vector3, anchor: Vector3) -> Vector3:

@@ -33,6 +33,10 @@ func render_world_position(coordinates: Array) -> Vector3:
 	return projection.oriented_world_position(coordinates)
 
 
+func render_cell_world_position(coordinates: Array) -> Vector3:
+	return projection.oriented_cell_world_position(coordinates)
+
+
 func render_active_world_position(coordinates: Array) -> Vector3:
 	# Native spawn cells may legitimately sit above the board at negative Y.
 	# Keep ordinary locked/Ghost mapping strict while preserving those active

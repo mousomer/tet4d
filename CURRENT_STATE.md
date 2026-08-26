@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-26
+Last updated: 2026-08-27
 Worktree expectation: clean unless an active batch is in progress
 
 ## Purpose
@@ -13,15 +13,23 @@ history ledger. Detailed history is preserved in
 
 ## Active Focus
 
-- Completed bounded follow-on: `codex/canonical-local-board-geometry` starts
+- Completed bounded review correction: `codex/canonical-local-board-geometry` starts
   from presentation-parameter HEAD
   `addd0d194f8fb53f57daf03e8b48ca4dd07ee6d4`. It establishes one canonical
   local-board geometry for Live 2D, Live 3D, and every local Live-4D slice;
   adapts 2D to presentation-only `[X,Y,1]`; consumes exact signed 4D basis
   axes; unifies cell mapping, centring, grids, floors, and boundaries; and
-  removes the thin 2D depth exception. Focused, deterministic/profile,
-  governance, pinned Godot 4.7.1, full-repository, and agent-driven real-window
-  evidence pass. The acceptance record is
+  removes the thin 2D depth exception. Review of implementation HEAD
+  `d85605966ef9eb145f969a3d8e6550563c45b268` found one P1 domain regression:
+  continuous fractional/out-of-board 2D/3D endgame points were entering the
+  strict lattice-cell API and collapsing to the origin. Stage 54F-1R now
+  separates strict-cell and finite continuous affine domains under the same
+  geometry owner, keeps cells strict, routes particle/marker presentation
+  points continuously, feeds canonical local extent to adaptive layout, and
+  replaces tautological slice-isolation evidence. Focused Godot, governance,
+  sanitation, pinned Godot 4.7.1, full-repository, deterministic-isolation, and
+  focused agent-driven 2D/3D endgame visual evidence pass. Independent human
+  visual acceptance is not claimed. The acceptance record is
   `docs/plans/canonical_local_board_presentation_geometry_acceptance.md`.
   Gameplay extents, native/session/replay/hash state, exact-basis laws, 4D
   slice-set layout, camera framing, and profile ownership are unchanged.

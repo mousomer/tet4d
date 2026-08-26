@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-26
+Updated: 2026-08-27
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -60,14 +60,20 @@ full-repository, and agent-driven real-window checks pass. The durable contract
 is `docs/architecture/presentation_parameter_contract.md`, and the acceptance
 record is `docs/plans/presentation_parameter_contract_acceptance.md`.
 
-Completed bounded geometry follow-on: Stage 54F-1 is locally accepted on
-`codex/canonical-local-board-geometry`. One canonical local-board geometry now
-owns unit cells, centred extent, coordinate conversion, face-grid segments,
+Completed bounded geometry review correction: Stage 54F-1 established the correct
+canonical local-board architecture on `codex/canonical-local-board-geometry`,
+but review found that continuous 2D/3D endgame points were routed through its
+strict cell domain. Stage 54F-1R preserves one geometry owner while separating
+strict lattice-cell and finite continuous affine APIs, adds production
+particle/interpolation/trail/event-marker regressions, replaces tautological
+slice-isolation evidence, and makes adaptive slice layout consume canonical
+local extent. One canonical local-board geometry continues to own unit cells,
+centred extent, coordinate conversion, face-grid segments,
 and boundary segments for Live 2D, Live 3D, and every local Live-4D slice.
 Semantic 2D embeds as presentation `[X,Y,1]`; exact `SliceBasis4D` supplies 4D
 visible signed axes; slice-set layout, camera/framing, and profile styling stay
-separate. Focused, governance, pinned/full, structural, and agent-driven
-real-window evidence is recorded in
+separate. Focused, governance, sanitation, pinned/full, deterministic-isolation,
+and agent-driven 2D/3D endgame evidence pass; evidence is recorded in
 `docs/plans/canonical_local_board_presentation_geometry_acceptance.md`.
 
 Explicit deferrals from these follow-ons are named presentation-profile
