@@ -1290,6 +1290,10 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_change_setup_button.visible = live_mode
 	if _live_view_actions != null:
 		_live_view_actions.visible = live_mode
+	# Reset View is reparented into a camera container shared with replay
+	# diagnostics, so its mode scope must never depend on parent visibility.
+	if _live_reset_view_button != null:
+		_live_reset_view_button.visible = live_mode
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = (not live_mode) and _keyboard_hints_visible
 	if _hint_label != null:
@@ -1789,6 +1793,7 @@ func _build_layout() -> void:
 	_live_view_action_row.add_child(_live_fit_view_button)
 	_live_reset_view_button = Button.new()
 	_live_reset_view_button.name = "LiveResetViewButton"
+	_live_reset_view_button.visible = false
 	_live_reset_view_button.text = "Reset View · %s" % LiveInputContractScript.display_key("reset")
 	_live_reset_view_button.tooltip_text = "Restore the complete canonical view without restarting gameplay"
 	_live_reset_view_button.set_meta("semantic_role", "action_button")

@@ -2,6 +2,7 @@ extends RefCounted
 
 const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
+const LivePieceControlStripScript = preload("res://scripts/ui/live_piece_control_strip.gd")
 const DesignerScript = preload("res://scripts/ui/presentation_designer.gd")
 
 
@@ -47,9 +48,49 @@ func _check_authoritative_piece_sets() -> Array:
 			if text.find(str(forbidden)) != -1:
 				failures.append("%s piece strip must omit inapplicable control %s" % [mode, forbidden])
 	var strip_source := FileAccess.get_file_as_string("res://scripts/ui/live_piece_control_strip.gd")
-	for forbidden_inventory in ["live_2d_move", "live_3d_rotate", "live_4d_rotate", "KEY_A", "KEY_R"]:
+	for forbidden_inventory in ["live_2d_move", "live_3d_rotate", "live_4d_rotate", "KEY_A", "KEY_R", "Slice Down / Up", "begins_with(\"Left / Right\")", "begins_with(\"Forward / Back\")"]:
 		if strip_source.find(forbidden_inventory) != -1:
 			failures.append("piece-control presentation must not maintain action/binding inventory %s" % forbidden_inventory)
+	failures.append_array(_check_semantic_compaction())
+	return failures
+
+
+func _check_semantic_compaction() -> Array:
+	var failures: Array = []
+	var cases := {
+		"live_2d": {
+			"frame": {"translation_frame": "relative", "horizontal_axis": "-X"},
+			"expected": [["horizontal", "-X", "← → [-X]", "A/D · Left/Right"]],
+		},
+		"live_3d": {
+			"frame": {"translation_frame": "relative", "horizontal_axis": "+X", "depth_axis": "-Z"},
+			"expected": [["horizontal", "+X", "← → [+X]", "A/D"], ["depth", "-Z", "↑ ↓ [-Z]", "W/S"]],
+		},
+		"live_4d": {
+			"frame": {"translation_frame": "relative", "horizontal_axis": "+X", "depth_axis": "+Z", "slice_axis": "+W"},
+			"expected": [["horizontal", "+X", "← → [+X]", "A / D"], ["depth", "+Z", "↑ ↓ [+Z]", "W / S"], ["slice", "+W", "W− W+ [+W]", "Q / E"]],
+		},
+	}
+	for mode in cases:
+		var strip = LivePieceControlStripScript.new()
+		strip.configure(mode, {}, cases[mode]["frame"])
+		var compact_items: Array = strip.deterministic_snapshot().get("compact_items", [])
+		var translations: Array = compact_items.filter(func(item: Dictionary) -> bool: return item.get("role") == "translate")
+		var expected: Array = cases[mode]["expected"]
+		if translations.size() != expected.size():
+			failures.append("%s must expose %d semantic compact translation rows exactly once, got %s" % [mode, expected.size(), translations])
+			strip.free()
+			continue
+		for index in range(expected.size()):
+			var semantic: Dictionary = translations[index].get("semantic", {})
+			if (
+				semantic.get("cockpit_direction") != expected[index][0]
+				or semantic.get("signed_axis") != expected[index][1]
+				or translations[index].get("compact_label") != expected[index][2]
+				or translations[index].get("binding") != expected[index][3]
+			):
+				failures.append("%s semantic compact row %d should be %s, got %s" % [mode, index, expected[index], translations[index]])
+		strip.free()
 	return failures
 
 

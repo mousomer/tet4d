@@ -38,6 +38,7 @@ func run() -> Array:
 		hud.set_camera_status("View: ortho · size 16.00 · zoom 1.00x · outer view · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
 		await tree.process_frame
 		failures.append_array(_check_layout(hud, viewport_size))
+		failures.append_array(await _check_reset_view_lifecycle(hud, viewport_size))
 		failures.append_array(await _check_keyboard_hint_visibility_setting(hud))
 		var replay_snapshot: Dictionary = hud.layout_contract_snapshot()
 		var replay_game_rect: Rect2 = replay_snapshot.get("game_area", Rect2())
@@ -99,9 +100,37 @@ func run() -> Array:
 			failures.append("replay mode should restore bundle status after live mode")
 		if bool(restored_snapshot.get("next_piece_panel", {}).get("visible", true)):
 			failures.append("returning to replay must hide the NEXT panel")
+		if bool(restored_snapshot.get("live_reset_view_button_visible", true)):
+			failures.append("returning to replay must explicitly hide the actual Reset View action")
 		root.queue_free()
 		await tree.process_frame
 	failures.append_array(_check_live_control_maps())
+	return failures
+
+
+func _check_reset_view_lifecycle(hud: Node, viewport_size: Vector2i) -> Array:
+	var failures: Array = []
+	var fresh: Dictionary = hud.layout_contract_snapshot()
+	if bool(fresh.get("live_reset_view_button_visible", true)):
+		failures.append("fresh replay viewport %s must hide the actual Reset View action" % str(viewport_size))
+	for mode in ["live_2d", "live_3d", "live_4d"]:
+		match mode:
+			"live_2d": hud.set_live_2d_mode(false, false, "none")
+			"live_3d": hud.set_live_3d_mode(false, false, "none")
+			"live_4d": hud.set_live_4d_mode(false, false, "none")
+		await Engine.get_main_loop().process_frame
+		var live: Dictionary = hud.layout_contract_snapshot()
+		if not bool(live.get("live_reset_view_button_visible", false)):
+			failures.append("%s viewport %s must explicitly show Reset View" % [mode, viewport_size])
+		if not bool(live.get("live_view_actions_visible", false)) or not bool(live.get("piece_control_strip", {}).get("visible", false)):
+			failures.append("%s viewport %s must retain neighbouring live-only surfaces" % [mode, viewport_size])
+		hud.set_replay_mode_labels(false, 1.0, false)
+		await Engine.get_main_loop().process_frame
+		var replay: Dictionary = hud.layout_contract_snapshot()
+		if bool(replay.get("live_reset_view_button_visible", true)):
+			failures.append("%s -> replay viewport %s must explicitly hide Reset View" % [mode, viewport_size])
+		if bool(replay.get("live_view_actions_visible", true)) or bool(replay.get("piece_control_strip", {}).get("visible", true)) or bool(replay.get("next_piece_panel", {}).get("visible", true)):
+			failures.append("%s -> replay viewport %s must hide neighbouring live-only surfaces" % [mode, viewport_size])
 	return failures
 
 

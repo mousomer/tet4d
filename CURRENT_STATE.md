@@ -13,6 +13,18 @@ history ledger. Detailed history is preserved in
 
 ## Active Focus
 
+- Completed bounded post-review cleanup: Stage 54F-2R.1 starts from reviewed-
+  green cockpit HEAD `d77aca9a3a7556d6e4db71ba47af24894e75e5ad` on
+  `codex/canonical-local-board-geometry`. It makes Reset View visibility
+  explicitly live-only across replay -> Live 2D/3D/4D -> replay, and replaces
+  the dead W/slice display-string matcher with direction/signed-axis metadata
+  supplied by `LiveInputContract`. The passive strip retains authoritative
+  bindings and exact mode applicability. No layout, camera behavior, Designer,
+  gameplay, deterministic state, geometry, basis, NEXT/HOLD, input, or
+  authority change is included. Closure evidence is appended to
+  `docs/plans/live_presentation_designer_acceptance.md`; the parent stages
+  remain REVIEWED GREEN.
+
 - Completed bounded review correction: Stage 54F-2R starts from local Designer
   HEAD `4c2dc44c89865193bf2022ffab822741feac1bdb` on
   `codex/canonical-local-board-geometry`. It recovers vertical board space with

@@ -336,3 +336,58 @@ diagnostic output rather than test failures.
 Authority effect: none. Deferred scope remains named/persistent profiles,
 import/export, themes, new parameters/actions, remapping, touch commands,
 topology/challenge work, release hardening, and independent human acceptance.
+
+## Stage 54F-2R.1 Bounded Post-Review Cleanup
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+The independent Stage 54F-2R review remains `REVIEWED GREEN`. Its two adjacent
+P2 findings are closed without changing that acceptance or reopening cockpit
+architecture:
+
+- `LiveResetViewButton` is constructed hidden and receives an explicit
+  `visible = live_mode` assignment at the shared mode boundary. Focused tests
+  inspect the actual button across fresh replay and replay -> Live 2D/3D/4D ->
+  replay; neighbouring NEXT, piece-strip, and live-action surfaces retain their
+  mode lifecycle. Reset behavior and camera semantics are unchanged.
+- Existing movement items now carry minimal `cockpit_direction` and current
+  `signed_axis` presentation metadata from `LiveInputContract`. The passive
+  strip renders horizontal, depth, and W/slice compact labels from that
+  metadata. The dead `Slice Down / Up` matcher and all translation display-
+  string parsing are removed. Action identities, mode applicability, and
+  keycaps remain supplied by the same input contract.
+
+Focused production-scene assertions cover one 2D horizontal row, two 3D rows,
+and exactly three 4D rows: `← → [+X]` with `A / D`, `↑ ↓ [+Z]` with
+`W / S`, and `W− W+ [+W]` with `Q / E`. The strip remains mouse-ignoring and
+contains no gameplay button or callback. Stage 54F-2R board allocation,
+NEXT/HOLD density, hierarchy, Designer full/compact behavior, input isolation,
+and deterministic state are unchanged; its existing real-window campaign
+therefore remains applicable.
+
+A bounded production Godot 4.7.1 Metal inspection, rather than a duplicate
+six-image campaign, confirmed the three compact 4D translation rows in the
+unchanged cockpit. After the actual app returned from Live 4D to replay, the
+live Reset action, live action row, and piece strip were absent. Replay's
+separate established footer Reset View remained present as intended; it is not
+the leaked `LiveResetViewButton`. This is agent-driven inspection, not new
+independent human acceptance.
+
+Final-tree verification is green:
+
+- focused `LiveInputContract`, cockpit density/semantic presentation, and
+  replay-viewer transition tests: PASS;
+- canonical Godot suite through the pinned gate: PASS
+  (`Godot replay tests passed`);
+- pinned Godot 4.7.1 and topology parity: PASS
+  (`Godot 4.7.1 verification passed`, 59 shared cases);
+- the single full repository gate, including governance, semantic-boundary,
+  generated-document, sanitation, and deterministic checks: PASS
+  (`CODEX_MODE=1 ./scripts/verify.sh` -> `verify: OK`).
+
+To avoid redundant testing of the just-reviewed Stage 54F-2R stack, the
+canonical suite was not run separately from the pinned gate and individual
+governance checks were not repeated before the full gate. Only final lightweight
+document/hygiene checks follow this verification-record update. Expected
+negative-path messages and existing non-failing headless teardown advisories
+remain diagnostic output.

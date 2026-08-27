@@ -182,8 +182,9 @@ static func _live_2d_groups(control_frame: Dictionary = {}) -> Array:
 	var relative := str(control_frame.get("translation_frame", "relative")) == "relative"
 	var horizontal := str(control_frame.get("horizontal_axis", "+X"))
 	var movement_label := "Move left / right" if legacy else ("Left / Right [%s]" % horizontal if relative else "X− / X+")
+	var movement_meta := {"cockpit_direction": "horizontal", "signed_axis": horizontal if relative else "+X"}
 	return [
-		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X axis.", "items": [[_pair("live_move_left", "live_move_right"), movement_label], [_pair("live_2d_move_left", "live_2d_move_right"), movement_label]]},
+		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X axis.", "items": [[_pair("live_move_left", "live_move_right"), movement_label, movement_meta], [_pair("live_2d_move_left", "live_2d_move_right"), movement_label, movement_meta]]},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "items": [[_all_keys("live_rotate_cw"), "Rotate clockwise"], [_display_key("live_rotate_ccw"), "Rotate counter-clockwise"]]},
 		{"group": "Drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop"], [_display_key("live_hard_drop"), "Hard Drop"]]},
 		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
@@ -199,7 +200,13 @@ static func _live_3d_groups(control_frame: Dictionary = {}) -> Array:
 	var rotation_relative := str(control_frame.get("rotation_frame", "relative")) == "relative"
 	var horizontal := str(control_frame.get("horizontal_axis", "+X"))
 	var depth := str(control_frame.get("depth_axis", "+Z"))
-	var move_rows := [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "X− / X+"], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Z− / Z+"]] if legacy or not relative else [[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "Left / Right [%s]" % horizontal], [_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Forward / Back [%s]" % depth]]
+	var move_rows := [
+		[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "X− / X+", {"cockpit_direction": "horizontal", "signed_axis": "+X"}],
+		[_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Z− / Z+", {"cockpit_direction": "depth", "signed_axis": "+Z"}],
+	] if legacy or not relative else [
+		[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "Left / Right [%s]" % horizontal, {"cockpit_direction": "horizontal", "signed_axis": horizontal}],
+		[_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Forward / Back [%s]" % depth, {"cockpit_direction": "depth", "signed_axis": depth}],
+	]
 	var rotation_note := "Planes follow the current view." if rotation_relative else "Canonical XYZ planes."
 	return [
 		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view; Forward recedes and Back approaches." if relative else "Canonical X/Z axes.", "items": move_rows},
@@ -220,7 +227,19 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 	var horizontal_axis := str(control_frame.get("horizontal_axis", visible_axes[0] if visible_axes.size() > 0 else "+X"))
 	var depth_axis := str(control_frame.get("depth_axis", visible_axes[2] if visible_axes.size() > 2 else "+Z"))
 	var slice_axis := str(control_frame.get("slice_axis", basis_snapshot.get("slice_axis", "+W")))
-	var move_rows := [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Visible X - / +"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Visible Z - / +"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice W - / +"]] if legacy else ([[ _pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Left / Right [%s]" % horizontal_axis], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Forward / Back [%s]" % depth_axis], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice - / + [%s]" % slice_axis]] if relative else [[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "X− / X+"], [_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Z− / Z+"], [_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W− / W+"]])
+	var move_rows := [
+		[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Visible X - / +", {"cockpit_direction": "horizontal", "signed_axis": "+X"}],
+		[_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Visible Z - / +", {"cockpit_direction": "depth", "signed_axis": "+Z"}],
+		[_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice W - / +", {"cockpit_direction": "slice", "signed_axis": "+W"}],
+	] if legacy else ([
+		[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "Left / Right [%s]" % horizontal_axis, {"cockpit_direction": "horizontal", "signed_axis": horizontal_axis}],
+		[_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Forward / Back [%s]" % depth_axis, {"cockpit_direction": "depth", "signed_axis": depth_axis}],
+		[_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "Slice - / + [%s]" % slice_axis, {"cockpit_direction": "slice", "signed_axis": slice_axis}],
+	] if relative else [
+		[_pair("live_4d_move_x_neg", "live_4d_move_x_pos", " / "), "X− / X+", {"cockpit_direction": "horizontal", "signed_axis": "+X"}],
+		[_pair("live_4d_move_z_neg", "live_4d_move_z_pos", " / "), "Z− / Z+", {"cockpit_direction": "depth", "signed_axis": "+Z"}],
+		[_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W− / W+", {"cockpit_direction": "slice", "signed_axis": "+W"}],
+	])
 	return [
 		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X/Z/W axes.", "items": move_rows},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},

@@ -88,6 +88,16 @@ production-window evidence is recorded in
 `docs/plans/live_presentation_designer_acceptance.md`; independent human
 acceptance remains unclaimed.
 
+Completed bounded post-review cleanup: Stage 54F-2R.1 closes the two P2
+advisories from the independent reviewed-green cockpit review. Reset View now
+has explicit live-only visibility across replay -> live -> replay rather than
+depending on its shared camera parent. X/Z/W translation rows now compact from
+minimal direction/signed-axis metadata supplied by `LiveInputContract`, with
+no HUD display-string parsing or duplicate action/binding inventory. The
+reviewed Stage 54F-2R hierarchy, layout, Designer, camera behavior, gameplay,
+and authority boundaries remain unchanged. Evidence is appended to
+`docs/plans/live_presentation_designer_acceptance.md`.
+
 Completed bounded geometry review correction: Stage 54F-1 established the correct
 canonical local-board architecture on `codex/canonical-local-board-geometry`,
 but review found that continuous 2D/3D endgame points were routed through its

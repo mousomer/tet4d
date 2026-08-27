@@ -1,3 +1,114 @@
+# Task Contract — Stage 54F-2R.1 Bounded Cockpit Review Cleanup
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `d77aca9a3a7556d6e4db71ba47af24894e75e5ad`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Close exactly two non-blocking P2 findings from the independent reviewed-green
+Stage 54F-2R review: explicitly hide the live Reset View action after returning
+to replay, and make the 4D W/slice translation row consume reachable semantic
+compaction metadata instead of a dead display-string matcher. Do not reopen the
+accepted cockpit, Designer, camera, input, or gameplay architecture.
+
+## Classification and Authority Comparison
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer` because one existing Godot input-contract
+  provider projection is consumed by the live HUD presentation and verified at
+  the mode-transition integration boundary.
+- Affected layers: live/replay HUD visibility lifecycle, authoritative input-
+  contract presentation descriptors, passive compact-control rendering,
+  focused Godot integration tests, and bounded acceptance/status documents.
+- Claims: Reset View is deterministically live-only across replay -> live ->
+  replay; X/Z/W compact presentation uses authoritative semantic descriptors;
+  existing bindings, action applicability, hierarchy, Designer behavior, and
+  deterministic gameplay remain unchanged.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `integration`, `deterministic`, and bounded `human_visual` inspection.
+- Full repository gate: required by the supplied post-review correction brief.
+
+Existing authorities already define the solution boundary. `ReplayHud` owns
+shell visibility and mode lifecycle. `LiveInputContract` owns action identity,
+bindings, mode applicability, and control-frame labels; its new metadata is
+only a query/presentation projection of those same items. `LivePieceControlStrip`
+remains a passive consumer with no gameplay callbacks. The Stage 54F-2R
+cockpit hierarchy, Designer contract, camera semantics, native state, exact
+basis, canonical geometry, NEXT/HOLD, persistence, and deterministic identity
+are consumed unchanged. No authority transfers.
+
+## Scope Matrix
+
+| Layer | Required correction | Evidence |
+| --- | --- | --- |
+| HUD lifecycle | Set Reset View visibility explicitly at both replay and live boundaries. | Actual-button replay -> live -> replay assertions plus neighbouring live-only surfaces. |
+| Input presentation contract | Attach minimal direction and signed-axis semantics to existing movement items. | Exact 2D/3D/4D descriptor and binding assertions. |
+| Passive strip | Render compact X/Z/W labels from metadata; remove translation label parsing. | Compact-output snapshot, exactly-once W/slice assertion, and no action/key inventory check. |
+| Documentation | Record closure without changing reviewed-green parent status. | Contract, acceptance, backlog, and restart handoff checks. |
+
+## Required Changes
+
+1. `LiveResetViewButton.visible` is false in fresh replay, true in each live
+   mode, and false again after live -> replay, independent of parent visibility
+   or reparenting.
+2. Existing movement items expose only the minimal semantic direction and
+   signed-axis values required for compact display, including current 4D
+   control-frame/basis semantics.
+3. The strip renders horizontal, depth, and slice rows through that metadata;
+   no translation display-string matching, action table, binding table, or
+   gameplay callback remains or is introduced in the presentation consumer.
+4. Focused tests cover lifecycle, 2D/3D exclusion, one compact 4D slice row,
+   signed axes, authoritative keycaps, and passive behavior.
+5. Only the four review-closure documents routed by the brief are reconciled.
+
+## Forbidden Changes
+
+- Reset/Fit/named-view/camera behavior; gameplay actions, bindings, remapping,
+  native state, basis, geometry, deterministic identity, or input routing;
+- cockpit/NEXT/HOLD/Designer/layout redesign, more 4D enlargement, Drop strip,
+  profile/theme/Stage 54F-3/release work, or review-adjacent advisories;
+- reset, rebase, amendment of the reviewed parent, push, PR, or publication.
+
+## Acceptance Criteria
+
+1. The actual Reset View button is hidden in fresh replay, visible in live 2D,
+   3D, and 4D, and hidden after each return to replay; other live-only surfaces
+   retain their lifecycle.
+2. Reset behavior and all camera semantics are byte-for-byte unchanged outside
+   visibility assignments.
+3. Translation compaction uses semantic metadata, not display-string parsing.
+4. 2D exposes one horizontal compact row and no slice row; 3D exposes
+   horizontal/depth and no slice row; 4D exposes horizontal/depth/slice exactly
+   once with correct current signed axes and authoritative bindings.
+5. The W/slice row is compact and understandable, and the strip remains passive
+   with no duplicate action, keybinding, applicability, or rotation inventory.
+6. Stage 54F-2R hierarchy, board allocation, NEXT/HOLD, Fit, helper, full/
+   compact Designer, input isolation, and deterministic state remain unchanged.
+7. Focused tests, canonical Godot suite, pinned Godot 4.7.1, required
+   governance/semantic/sanitation checks, and one full repository gate pass.
+8. A bounded production-window inspection confirms the W row and replay-after-
+   live state; a new full visual campaign is not required.
+9. One local commit is created, the worktree is clean, and nothing is published.
+
+## Verification and Deferrals
+
+Run the focused cockpit/layout tests first; then the canonical Godot suite,
+pinned 4.7.1 gate, supplied governance/hygiene checks, and one full verifier.
+Reuse the reviewed Stage 54F-2R campaign for unchanged layout/input claims and
+perform only a bounded production inspection of the two corrected states.
+
+All Stage 54F-3 work, horizontal-letterboxing and Hard Drop advisories, profile
+or theme work, new controls, remapping/touch, layout/camera/NEXT/HOLD/Designer
+changes, native/basis/geometry work, release hardening, and independent human
+acceptance remain explicitly deferred.
+
+---
+
 # Task Contract — Stage 54F-2R Gameplay Cockpit Density and Control Hierarchy
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN

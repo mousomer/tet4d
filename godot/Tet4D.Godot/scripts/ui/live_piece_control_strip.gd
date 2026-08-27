@@ -55,17 +55,28 @@ func deterministic_snapshot() -> Dictionary:
 	var roles: Array = []
 	var bindings: Array = []
 	var action_labels: Array = []
+	var compact_items: Array = []
 	for group in _groups:
-		roles.append(str(group.get("cockpit_role", "")))
+		var role := str(group.get("cockpit_role", ""))
+		roles.append(role)
 		for item in group.get("items", []):
 			bindings.append(str(item[0]))
 			action_labels.append(str(item[1]))
+		for item in _merged_items(group.get("items", [])):
+			compact_items.append({
+				"role": role,
+				"binding": str(item[0]),
+				"source_label": str(item[1]),
+				"compact_label": _compact_action_label(item, role),
+				"semantic": _item_metadata(item),
+			})
 	return {
 		"source": "LiveInputContract",
 		"mode": _mode,
 		"roles": roles,
 		"bindings": bindings,
 		"action_labels": action_labels,
+		"compact_items": compact_items,
 		"group_count": _groups.size(),
 		"visible": visible,
 		"rect": get_global_rect(),
@@ -123,7 +134,7 @@ func _build_item(role: String, item: Array) -> Control:
 	row.custom_minimum_size.x = 190.0 if role == "translate" else 90.0
 	var action := Label.new()
 	action.name = "PieceControlAction"
-	action.text = _compact_action_label(str(item[1]), role)
+	action.text = _compact_action_label(item, role)
 	action.theme_type_variation = "SecondaryLabel"
 	action.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -141,31 +152,41 @@ func _build_item(role: String, item: Array) -> Control:
 
 func _merged_items(source_items: Array) -> Array:
 	var order: Array[String] = []
-	var bindings_by_label := {}
+	var bindings_by_key := {}
+	var label_by_key := {}
+	var metadata_by_key := {}
 	for item in source_items:
 		if not (item is Array) or item.size() < 2:
 			continue
 		var label := str(item[1])
-		if not bindings_by_label.has(label):
-			bindings_by_label[label] = []
-			order.append(label)
+		var metadata := _item_metadata(item)
+		var semantic_key := JSON.stringify([label, metadata])
+		if not bindings_by_key.has(semantic_key):
+			bindings_by_key[semantic_key] = []
+			label_by_key[semantic_key] = label
+			metadata_by_key[semantic_key] = metadata
+			order.append(semantic_key)
 		var binding := str(item[0])
-		if not bindings_by_label[label].has(binding):
-			bindings_by_label[label].append(binding)
+		if not bindings_by_key[semantic_key].has(binding):
+			bindings_by_key[semantic_key].append(binding)
 	var result: Array = []
-	for label in order:
-		result.append([" · ".join(bindings_by_label[label]), label])
+	for semantic_key in order:
+		result.append([" · ".join(bindings_by_key[semantic_key]), label_by_key[semantic_key], metadata_by_key[semantic_key]])
 	return result
 
 
-func _compact_action_label(label: String, role: String) -> String:
+func _compact_action_label(item: Array, role: String) -> String:
+	var label := str(item[1])
 	if role == "translate":
-		if label.begins_with("Left / Right"):
-			return "← →%s" % _axis_suffix(label)
-		if label.begins_with("Forward / Back"):
-			return "↑ ↓%s" % _axis_suffix(label)
-		if label.begins_with("Slice Down / Up"):
-			return "W− W+%s" % _axis_suffix(label)
+		var metadata := _item_metadata(item)
+		var symbol := str({
+			"horizontal": "← →",
+			"depth": "↑ ↓",
+			"slice": "W− W+",
+		}.get(str(metadata.get("cockpit_direction", "")), ""))
+		var signed_axis := str(metadata.get("signed_axis", ""))
+		if not symbol.is_empty() and not signed_axis.is_empty():
+			return "%s [%s]" % [symbol, signed_axis]
 	if role == "rotate" and label.ends_with("counter-clockwise"):
 		return "CCW"
 	if role == "rotate" and label.ends_with("clockwise"):
@@ -175,8 +196,7 @@ func _compact_action_label(label: String, role: String) -> String:
 	return label
 
 
-func _axis_suffix(label: String) -> String:
-	var axis_start := label.rfind(" [")
-	if axis_start < 0:
-		return ""
-	return label.substr(axis_start)
+func _item_metadata(item: Array) -> Dictionary:
+	if item.size() < 3 or not (item[2] is Dictionary):
+		return {}
+	return item[2].duplicate(true)
