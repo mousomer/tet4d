@@ -175,10 +175,12 @@ func _test_live_app_integration() -> Array:
 	if (
 		not hud._next_piece_panel.is_visible_in_tree()
 		or not hud._hold_piece_panel.is_visible_in_tree()
+		or not hud._piece_control_strip.is_visible_in_tree()
 		or not _rect_contains_rect(inspector_rect, hud._next_piece_panel.get_global_rect())
 		or not _rect_contains_rect(inspector_rect, hud._hold_piece_panel.get_global_rect())
+		or not _rect_contains_rect(inspector_rect, hud._piece_control_strip.get_global_rect())
 	):
-		failures.append("NEXT and HOLD must remain simultaneously present while the full Designer is open")
+		failures.append("NEXT, HOLD, and primary piece controls must remain simultaneously present while the full Designer is open")
 	if not hud._right_scroll.is_visible_in_tree() or hud._right_scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED:
 		failures.append("helper/status content should remain immediately reachable through the existing inspector scroll surface")
 
@@ -317,6 +319,8 @@ func _test_live_app_integration() -> Array:
 			failures.append("4D slice presentation editing must preserve camera pose field %s" % pose_key)
 	if not hud._basis_panel.is_visible_in_tree() or str(hud.layout_contract_snapshot().get("basis_indicator_text", "")).find("Slice:") == -1:
 		failures.append("4D basis/slice information should remain readable while tuning presentation")
+	if not _rect_contains_rect(hud._right_scroll.get_global_rect(), hud._piece_control_strip.get_global_rect()):
+		failures.append("4D primary piece controls should remain visible without scrolling while tuning presentation")
 	if str(hud.layout_contract_snapshot().get("inspector_hint_text", "")).find("Slice") == -1:
 		failures.append("4D helper guidance should remain present and scroll-reachable while tuning presentation")
 

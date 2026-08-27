@@ -90,6 +90,12 @@ cross-W projection framing. Hold changes no view/control-frame state, and
 Ghost refreshes from the newly authoritative active piece through its existing
 query path.
 
+Stage 54F-2R makes NEXT and HOLD compact side-by-side glanceable indicators.
+Both panels consume one shared compact geometry convention and the existing
+thumbnail model/renderer. Reduced padding, thumbnail minimums, and panel height
+are presentation-only: native identity, availability, deterministic Hold
+state, palette ownership, and `AE-0055` authority remain unchanged.
+
 ## Stage 54D-3 acceptance evidence
 
 The 2026-08-23 pinned Godot 4.7.1 real-window review exercised empty-slot and

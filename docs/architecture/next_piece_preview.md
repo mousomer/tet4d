@@ -140,21 +140,25 @@ and high-contrast outlines, and scales with the existing UI-scale policy.
 
 ## HUD placement and lifecycle
 
-The preview is a live-only panel in the scrollable right inspector. Visible
-direct-child order is:
+The preview is a live-only panel in the scrollable right inspector. Stage
+54F-2R places it beside authoritative HOLD inside one compact preview row.
+Visible semantic order is:
 
 ```text
 onboarding, when enabled
-NEXT
+NEXT | HOLD
+permanent piece-control vocabulary
 4D BASIS, in live 4D only
-CONTROLS
+secondary view controls
+detailed CONTROLS
 remaining inspector sections
 ```
 
-In live 2D and 3D, `NEXT` occupies the same slot and the 4D basis panel is
-hidden. The preview uses the inspector width and a bounded height so the board
-remains the primary surface and controls remain reachable by scrolling at the
-supported minimum viewport.
+In live 2D and 3D, the paired preview row occupies the same slot and the 4D
+basis panel is hidden. NEXT and HOLD use the same compact panel geometry and
+shared thumbnail renderer. The row uses the inspector width and a bounded
+height so the board remains primary and the permanent piece-control vocabulary
+is visible before any inspector scrolling at the supported minimum viewport.
 
 The application refreshes the preview after a successful live configure,
 reset, tick, or nonterminal command snapshot refresh. Ordinary game over
@@ -199,7 +203,8 @@ presentation, ghost pieces, and Hold behaviour are explicitly deferred.
    or command status, including at a bag-refill boundary.
 4. One shared model and renderer cover 2D, 3D, and W-sliced 4D thumbnails and
    are suitable for later Hold reuse.
-5. The live inspector order is onboarding, `NEXT`, optional `4D BASIS`, then
+5. The live inspector order is onboarding, the compact `NEXT | HOLD` row,
+   permanent piece guidance, optional `4D BASIS`, secondary View, then detailed
    controls; Replay never shows the panel.
 6. The panel composes with supported viewport, UI-scale, theme, and high-
    contrast settings without obscuring the gameplay board.

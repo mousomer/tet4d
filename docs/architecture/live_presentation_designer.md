@@ -133,6 +133,14 @@ parallel thumbnail/palette implementation. HOLD exists in the accepted stack
 as native authority `AE-0055`; Godot continues to render it through the shared
 NEXT thumbnail model and renderer.
 
+Stage 54F-2R clarifies the priority within that coexistence contract. The full
+Designer must preserve the board, active/Ghost pieces, compact NEXT/HOLD row,
+and the permanent authority-derived piece-control strip. Camera guidance and
+detailed helper prose are secondary and may require inspector scrolling.
+Compact Designer mode does not reallocate the ordinary cockpit. These layout
+rules do not change detached A/B state, application, focus, persistence, or
+input-isolation semantics.
+
 ## Input and focus isolation
 
 Opening full mode focuses a visible Designer action and causes

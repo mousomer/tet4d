@@ -182,3 +182,157 @@ formal randomized A/B assignment, experiment telemetry/statistics/participants,
 free-form palette or colour editing, new theme packs, procedural backgrounds,
 major HUD redesign, topology/challenge/physics work, independent human
 acceptance, and all changes to completed Stage 54G history.
+
+---
+
+# Stage 54F-2R Cockpit Density Review Correction
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+This bounded correction retains the Stage 54F-2 Designer architecture and
+changes only live cockpit allocation, information hierarchy, shared preview
+geometry, authority-derived piece guidance, and the established bounds-driven
+Live-4D fit clearance.
+
+## Root Cause and Measured Allocation
+
+The undersized default 4D presentation had two causes. The live top action
+stack consumed 96 logical pixels and the full-width stacked NEXT/HOLD cards
+consumed 452 pixels before gaps, wasting vertical board and inspector space.
+After that allocation cost, the existing 1.32 bounds-derived Live-4D fit
+margin left excessive recovery clearance around a height-limited collection.
+Layout was corrected first; framing was refined only afterward.
+
+At the production 1600x960 logical canvas:
+
+| Surface | Before | After |
+| --- | ---: | ---: |
+| top live actions | 96 px, two rows | 46 px, one row |
+| body | 1576x789 | 1576x836 |
+| gameplay viewport | 1250x714 | 1207x788 |
+| gameplay viewport/body area | 71.8% | 72.2% |
+| right inspector | 268x789 | 311x836 |
+| NEXT + HOLD | two 260-wide cards, 452 px stacked height | one 180 px paired row |
+| Live-4D projected collection | about 342x541 | about 415x657 |
+| collection share of viewport | 27.3% x 75.8%, 20.7% area | 34.4% x 83.3%, 28.6% area |
+
+The authoritative collection grows about 21% in each projected dimension and
+about 46% in raw projected area. The normalized viewport share grows about
+38%. The 47-pixel body-height recovery contributes a 10.4% height increase
+before the fit change; reducing bounds-derived clearance from 1.32 to 1.20
+contributes a further 10%. Allocation is therefore the first and slightly
+larger dimensional contributor, not an offset or compensating camera hack.
+
+The project intentionally scales one fixed 1600x960 logical canvas into
+requested outer windows, so 960x720, 1440x900, and normal desktop inspection
+share normalized layout. In the constrained production capture, the requested
+960x720 outer window yields a 960x576 rendered canvas under the project's
+aspect-preserving policy; the primary hierarchy remains intact.
+
+## Implemented Hierarchy
+
+- NEXT and HOLD use one `PiecePreviewLayout` compact convention and remain
+  separate panels backed by the existing shared `PieceThumbnailModel` and
+  `PieceThumbnail`. Labels, 3D/4D recognition, empty/availability text, native
+  identities, and `AE-0055` Hold authority are preserved.
+- `LivePieceControlStrip` is passive (`MOUSE_FILTER_IGNORE`) and has no gameplay
+  buttons. It consumes `LiveInputContract.piece_control_groups()`; role
+  metadata filters the existing movement/rotation groups without copying
+  action IDs, bindings, applicability, control-frame labels, or plane maps.
+- Live 2D shows X translation with `A/D` and arrow bindings plus CW/CCW with
+  `Up/W/X` and `Z`. Live 3D shows X/Z translation with `A/D`, `W/S` and the
+  XY/XZ/YZ planes with `R/T`, `F/G`, `V/B`. Live 4D shows X/Z/W translation
+  with `A/D`, `W/S`, `Q/E` and XY/XZ/YZ/XW/YW/ZW with
+  `R/T`, `F/G`, `V/B`, `Y/U`, `H/J`, `N/M`.
+- Directional arrows and current signed-axis suffixes compact translation;
+  plane names compact multidimensional rotation; short keycaps expose the
+  authoritative bindings. Detailed prose remains in the generated helper.
+- Fit View stays in the single promoted top action row. Named view actions,
+  Reset View, pointer gestures, and optional numeric camera status move below
+  piece guidance and the 4D basis. Camera capability is retained but its
+  presentation priority is secondary.
+- The permanent piece surface, NEXT/HOLD, and basis fit within the initial
+  inspector fold at standard density. At larger UI scales, primary content
+  wraps inside the inspector while secondary help scrolls.
+- Full Designer retains a judgeable board plus visible NEXT, HOLD, and piece
+  controls. Compact Designer remains a small board overlay and does not alter
+  normal cockpit allocation.
+
+## Deterministic and Authority Evidence
+
+Focused layout tests compare the production scene rects, verify the projected
+authoritative collection is contained, assert the compact preview row's
+substantially reduced structure, and prove the piece strip is wholly inside
+the inspector viewport before scrolling at supported density/scale cases.
+Contract tests assert the exact 2D/3D/4D control groups and binding labels,
+that camera guidance follows piece guidance, that the strip contains no
+`BaseButton`, and that its source snapshot is `LiveInputContract`.
+
+Existing Designer integration tests continue to cover Slider, SpinBox,
+scroll, pointer-camera rejection, full-mode hard-drop suppression, and
+compact/hidden release. Existing live-input and deterministic tests continue
+to cover Hold, translation, rotation, camera orbit/pan/zoom, A/B isolation,
+store/save-count isolation, snapshots/hashes, exact basis, canonical bounds,
+NEXT/HOLD signatures, and current camera pose. No native or gameplay source is
+changed by 54F-2R.
+
+## Production Godot 4.7.1 Evidence
+
+The production scene `res://scenes/trace_replay.tscn` was captured with Godot
+`4.7.1.stable.official.a13da4feb` on the macOS DisplayServer using Metal
+Forward+ on an Apple M1 Pro. Evidence is under
+`docs/design/screenshots/cockpit_density_control_hierarchy/`:
+
+- `01_live_2d_normal.png` — large planar board, paired previews, compact 2D
+  translation/rotation strip, secondary View, and detailed helper;
+- `02_live_3d_normal.png` — large volume, X/Z vocabulary and all three 3D
+  rotation planes ahead of camera gestures;
+- `03_live_4d_normal.png` — principal corrected 4D cockpit with materially
+  larger slices, active/Ghost cues, compact previews, full 4D piece vocabulary,
+  basis actions, and subordinate View;
+- `04_live_4d_designer_full.png` — bounded tuning panel with board, NEXT, HOLD,
+  and primary piece strip still visible;
+- `05_live_4d_designer_compact.png` — near-normal cockpit with a small A/B
+  strip and substantially unobstructed board;
+- `06_live_4d_constrained_960x720.png` — requested constrained outer window,
+  rendered as 960x576 by the fixed-aspect policy, with primary hierarchy
+  preserved and secondary detail scrollable.
+
+## Explicit Human-Visible Questions
+
+1. **4D size — Yes.** The default board is immediately readable without
+   manual zoom: individual cells, the active piece, Ghost, active-slice frame,
+   signed W labels, and four-slice relationships are visible.
+2. **NEXT/HOLD density — Yes.** They are compact glanceable indicators in one
+   paired row rather than dominant stacked cards, while thumbnails and state
+   labels remain recognizable.
+3. **Piece controls — Yes.** A first-time player can see every applicable
+   translation and piece-rotation plane plus its current binding before
+   scrolling.
+4. **Hierarchy — Yes.** The bordered PIECE CONTROLS surface precedes the basis
+   and VIEW sections; camera gestures/named actions are lower and quieter while
+   Fit remains promoted.
+5. **Designer coexistence — Yes.** Full and compact Designer evidence retains
+   a judgeable board, NEXT, HOLD, and the primary piece-control vocabulary.
+
+These are agent-driven visual answers, not independent human acceptance.
+
+## Verification
+
+Final-tree results:
+
+- focused cockpit/authority/layout test: PASS;
+- canonical Godot suite: PASS (`Godot replay tests passed`);
+- pinned Godot 4.7.1 gate: PASS (`Godot 4.7.1 verification passed`);
+- topology transport parity: PASS (59 shared cases);
+- governance, generated maintenance/configuration, semantic-boundary,
+  sanitation, and diff checks: PASS through the full repository gate;
+- `CODEX_MODE=1 ./scripts/verify.sh`: PASS (`verify: OK`).
+
+Expected negative-path settings-write and invalid-native-setup messages, plus
+the existing non-failing headless teardown/resource advisories, remain
+diagnostic output rather than test failures.
+
+Authority effect: none. Deferred scope remains named/persistent profiles,
+import/export, themes, new parameters/actions, remapping, touch commands,
+topology/challenge work, release hardening, and independent human acceptance.

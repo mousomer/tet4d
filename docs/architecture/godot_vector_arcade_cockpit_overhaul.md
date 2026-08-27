@@ -785,3 +785,46 @@ error styling, Settings focus reveal, and truthful setting presentation only.
 It changes no gameplay, controls, camera/view semantics, NEXT geometry, Ghost
 landing, cockpit grouping, native code, topology, persistence ID/schema,
 replay identity, or Hold scope.
+
+## Stage 54F-2R Cockpit Density and Control Hierarchy
+
+The live gameplay hierarchy is, durably:
+
+1. the gameplay board and pieces as the dominant visual surface;
+2. compact, permanently visible piece translation and rotation guidance;
+3. compact glanceable NEXT and HOLD state;
+4. exact basis and active-slice state where applicable;
+5. contextual helper detail;
+6. secondary camera controls and numeric presentation detail.
+
+The first inspector fold may arrange NEXT/HOLD before the piece strip to keep
+the paired previews glanceable, but it may not place camera guidance ahead of
+piece guidance. Fit View remains a promoted recovery action. Named views,
+Reset View, pointer gestures, and numeric camera status remain available below
+primary gameplay vocabulary. The detailed helper remains the explanatory
+surface; it is not the only place where a player can discover piece actions.
+
+The permanent piece strip is passive instructional UI. It selects the
+movement and piece-rotation groups from `LiveInputContract` using cockpit-role
+metadata on those existing groups, then derives compact symbols from their
+labels. It owns no action identity, applicability rule, key binding, control
+frame, rotation-plane mapping, or command dispatch path.
+
+NEXT and HOLD share one compact cockpit layout convention and remain backed by
+the existing `PieceThumbnailModel` and `PieceThumbnail`. Compactness changes
+panel margins, thumbnail minimums, and side-by-side placement only. Native
+NEXT/HOLD identity, availability, geometry, palette ownership, and gameplay
+authority do not change.
+
+The live top action stack uses one row so recovered vertical space enlarges
+the board viewport before framing is considered. Live-4D framing continues to
+consume the authoritative collection bounds. Its bounded clearance is 10% per
+projected dimension; it introduces no translation offset and does not merge
+local geometry, slice-set layout, collection bounds, or camera authority.
+
+Full and compact Designer modes retain their bounded overlay contract. Full
+mode may constrain secondary helper/camera detail, but board, NEXT, HOLD, and
+the primary piece strip remain judgeable. Compact mode leaves the ordinary
+cockpit allocation intact. This correction changes no gameplay, input,
+persistence, deterministic identity, canonical geometry, exact basis,
+Designer A/B semantics, or authority boundary.

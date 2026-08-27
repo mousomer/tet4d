@@ -1,3 +1,199 @@
+# Task Contract — Stage 54F-2R Gameplay Cockpit Density and Control Hierarchy
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `4c2dc44c89865193bf2022ffab822741feac1bdb`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Correct the accepted Stage 54F-2 cockpit's three bounded visual defects: make
+the default Live 4D slice collection materially larger, make native NEXT and
+HOLD compact glanceable state, and keep mode-applicable piece translation and
+rotation vocabulary permanently visible above secondary camera guidance. Keep
+the registry-driven Designer, detached A/B semantics, input and persistence
+isolation, canonical local-board geometry, exact basis, native NEXT/HOLD,
+helper ownership, and deterministic gameplay unchanged.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: Godot live cockpit allocation and hierarchy, shared
+  NEXT/HOLD presentation geometry, authoritative live-input presentation,
+  bounded fit policy, layout/input integration tests, focused real-window
+  evidence, and governing documents.
+- Claims: materially larger default Live 4D presentation; compact simultaneous
+  NEXT/HOLD; always-visible authority-derived piece guidance; subordinate but
+  available camera guidance; responsive Designer coexistence; and unchanged
+  gameplay, input, persistence, geometry, basis, and native preview authority.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `deterministic`, `integration`, and `human_visual`.
+- Full repository gate: required because this is a reviewer-requested
+  correction to shared live HUD layout, input-facing guidance, and visible
+  presentation framing.
+
+## Current Authority and Design Comparison
+
+- `godot_vector_arcade_cockpit_overhaul.md` makes the board primary and keeps
+  the ordinary cockpit a filtered consumer of `LiveInputContract`; this stage
+  strengthens that hierarchy without creating new commands or bindings.
+- `next_piece_preview.md` and `authoritative_hold.md` retain native gameplay
+  identity and the shared `PieceThumbnailModel` / `PieceThumbnail` rendering
+  path. Compactness changes only panel geometry and HUD placement.
+- `live_presentation_designer.md` retains registry generation, detached A/B,
+  non-persistence, and bounded full/compact/hidden overlay semantics. Designer
+  state does not become a gameplay-layout or camera authority.
+- `camera_gui_preset_semantics.md` and
+  `4d_presentation_interaction_architecture.md` retain the decomposition
+  `local geometry -> slice layout -> collection bounds -> fit`. Any bounded
+  framing refinement must continue to consume authoritative collection bounds
+  and must not add a mode translation offset or merge layout with camera pose.
+- Canonical local-board geometry, exact `BasisState`, native session/queue/Hold,
+  Ghost truth, deterministic identity, and persistence owners are consumed
+  unchanged. This task transfers no authority.
+
+## Pre-change Production Allocation Record
+
+The production scene was inspected in Live 2D, Live 3D, and Live 4D with the
+Designer hidden, full, and compact. Requested 960x720, 1440x900, and 1600x960
+windows all use the project's fixed 1600x960 logical canvas and scale that
+canvas to the physical window, so the normalized allocation is invariant;
+real-window captures remain required for physical-size readability.
+
+At the 1600x960 logical canvas before correction:
+
+| Surface | Baseline allocation |
+| --- | --- |
+| body | `(12,159) 1576x789` |
+| game area | `(12,159) 1298x789`, 82.4% of body width |
+| gameplay viewport | `(36,210) 1250x714`, 71.8% of body area |
+| right inspector | `(1320,159) 268x789`, 17.0% of body width |
+| top live action stack | 96 px high inside the 159 px top allocation |
+| NEXT, Live 4D | 260x240 |
+| HOLD, Live 4D | 260x212 |
+| NEXT + HOLD | 452 px before gaps; separate full-width cards |
+| basis panel | begins at y=635; 260x200 |
+| detailed 4D helper | begins at y=877; 260x895, below the initial fold |
+| standard camera detail | hidden; View Actions / Fit / Reset remain promoted in the top stack |
+| Designer full | `(20,167) 420x773`, board overlay only |
+| Designer compact | `(20,167) 493x63`, board overlay only |
+
+The default fitted 4D authoritative collection envelope projects to about
+342x541 inside the 1250x714 gameplay viewport: 27.3% of viewport width, 75.8%
+of viewport height, and 20.7% of viewport area. The fit is height-limited by
+the tall collection envelope; widening the already-dominant board region alone
+cannot materially enlarge it. The root cause is therefore both allocation and
+framing: a tall top stack removes useful vertical board space, while the
+existing 1.32 Live-4D fit margin leaves excessive recovery clearance around an
+already authoritative collection envelope. Layout allocation is corrected
+first; any fit-policy refinement follows and remains bounds-derived.
+
+## Scope Matrix
+
+| Layer | Required change | Provider evidence | Consumer evidence |
+| --- | --- | --- | --- |
+| Cockpit allocation | Compress the top live action stack and prioritize permanent inspector content. | Ratio/rect layout contract and responsive tests. | Larger gameplay viewport and fold-safe primary guidance. |
+| NEXT/HOLD | Apply one compact shared geometry convention and one side-by-side cockpit region while retaining the shared thumbnail path. | Model/renderer identity and panel geometry tests. | Simultaneous readable previews with reduced combined footprint. |
+| Piece guidance | Select movement/rotation groups inside `LiveInputContract` via metadata on the existing groups; render compact symbols, authoritative labels, and bindings. | 2D/3D/4D group and binding tests. | One always-visible passive surface without input capture or duplicate action inventory. |
+| Camera hierarchy | Keep Fit readily discoverable; place view actions/gestures/reset below piece and basis guidance with details progressive. | Semantic order/reachability tests. | Camera remains available but visibly secondary. |
+| Framing | After allocation correction, refine only the existing bounds-derived Live-4D fit clearance if needed. | Camera projected-bounds containment tests. | Default cells/slices become materially larger without manual zoom. |
+| Designer/input | Preserve overlay bounds and Stage 54F-2 pointer/keyboard isolation. | Full/compact layout and input regression tests. | Board, NEXT, HOLD, and piece guidance remain visible during tuning. |
+| Documentation | Reconcile hierarchy, evidence, programme, backlog, and restart handoff. | Governance/document checks. | Durable authorities and deferrals remain unambiguous. |
+
+## Required Changes
+
+1. Reduce top live cockpit height before changing camera fit, and keep the
+   gameplay viewport the dominant live surface at supported sizes.
+2. Present NEXT and HOLD together using one compact geometry convention while
+   retaining exact native identities and the existing shared thumbnail model
+   and renderer.
+3. Add one passive, always-visible piece-control surface generated from the
+   existing `LiveInputContract` movement and rotation groups. Show actual
+   bindings, directional category symbolism, and exact rotation-plane labels
+   applicable to 2D, 3D, or 4D.
+4. Keep Fit readily visible; move named view actions, reset, gestures, and
+   optional numeric camera detail below piece guidance and 4D basis/slice
+   state. Keep detailed prose in the existing helper.
+5. Preserve the full and compact Designer overlays and all Stage 54F-2 input,
+   persistence, deterministic, and presentation-authority isolation.
+6. If allocation alone is insufficient, refine only the established Live-4D
+   bounds-derived fit margin and prove the authoritative envelope remains
+   inside the viewport across supported aspect ratios.
+
+## Forbidden Changes
+
+- named profiles, profile persistence/import/export, themes, new presentation
+  parameters, telemetry, or a general cockpit redesign;
+- new gameplay actions, bindings, remapping, clickable piece-command UI, or a
+  parallel input/action inventory;
+- native gameplay, queue/randomizer/Hold, Ghost truth, snapshots/hashes,
+  deterministic state, replay/session identity, or settings writes;
+- canonical board geometry, slice-set identity/layout ownership, exact basis,
+  topology, or native/presentation authority transfer;
+- mode-specific camera translation offsets or fit constants that bypass
+  authoritative collection bounds;
+- push, rebase, reset, prior-commit amendment, pull request, or publication.
+
+## Acceptance Criteria
+
+1. The default Live 4D collection is materially larger and immediately legible
+   without manual zoom; authoritative bounds remain wholly framed.
+2. Layout allocation is corrected before the bounded framing refinement, and
+   the gameplay viewport retains the documented minimum body share.
+3. NEXT and HOLD are simultaneous, non-overlapping, wholly inside the
+   inspector, compact, labelled, and recognizable at supported viewport and
+   accessibility scales.
+4. NEXT/HOLD preserve native authority and one shared thumbnail model,
+   renderer, palette, and compact geometry convention.
+5. One passive surface permanently shows mode-applicable translation and
+   rotation vocabulary, exact current bindings, and 4D plane labels without
+   inspector scrolling.
+6. The permanent surface consumes `LiveInputContract` groups and introduces no
+   second action/binding/mode-applicability inventory or gameplay input path.
+7. 2D omits 3D/4D planes; 3D shows XY/XZ/YZ; 4D shows
+   XY/XZ/YZ/XW/YW/ZW and applicable X/Z/W translations.
+8. Piece guidance appears before and is more prominent than camera guidance;
+   Fit remains easy to locate and all existing camera functions remain
+   reachable.
+9. The contextual helper remains available for detailed semantics while
+   primary piece vocabulary requires no helper scrolling.
+10. At requested 960x720 and 1440x900 windows and the normal 1600x960 logical
+    desktop, the board, NEXT, HOLD, and piece surface survive without clipping;
+    wrapping stays inside the inspector at supported UI/accessibility scales.
+11. Full Designer preserves judgeable board, NEXT, HOLD, and piece guidance;
+    compact Designer preserves the near-normal cockpit.
+12. Slider, SpinBox, scroll, orbit, pan, zoom, hard drop, Hold, translation,
+    and rotation routing retain Stage 54F-2 isolation and deterministic state.
+13. Focused tests, canonical Godot tests, pinned Godot 4.7.1, governance,
+    semantic-boundary, sanitation, and full repository verification pass.
+14. Agent-driven production-window 2D/3D/4D normal, 4D full/compact Designer,
+    and constrained-window evidence explicitly answers all five visual
+    questions Yes; independent human review is not claimed without a human.
+15. One local correction commit is produced, no publication occurs, and the
+    final worktree is clean.
+
+## Verification Plan
+
+- focused `LiveInputContract`, compact preview, cockpit layout, camera fit,
+  Designer coexistence, and live input/deterministic integration tests;
+- canonical Godot test runner plus pinned Godot 4.7.1 verification;
+- governance, generated maintenance/config, semantic-boundary, sanitation,
+  diff, and `CODEX_MODE=1 ./scripts/verify.sh` full gate;
+- production Godot 4.7.1 real-window captures for Live 2D, 3D, 4D normal,
+  Live 4D Designer full/compact, and approximately 960x720 constrained use.
+
+## Explicit Deferrals
+
+- named/persistent profiles, import/export, themes, new parameters/actions,
+  control remapping, touch controls, topology/challenge work, release
+  hardening, independent human acceptance, and all Stage 54G work.
+
+---
+
 # Task Contract — Stage 54F-2 Live Presentation Designer
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN

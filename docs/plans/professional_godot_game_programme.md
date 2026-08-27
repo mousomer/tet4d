@@ -1132,6 +1132,27 @@ owners or visibility settings. Named/saved profiles, import/export, formal
 experiments/telemetry, broader theme work, and independent human sign-off
 remain deferred.
 
+#### Post-Stage-54 review correction — Stage 54F-2R cockpit density
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+Stage 54F-2R corrects only the accepted Designer cockpit's density and control
+hierarchy. The board is the dominant visual surface; NEXT and authoritative
+HOLD are one compact paired row; and a passive permanent piece-control strip
+consumes `LiveInputContract` so translation, applicable rotation planes, and
+current bindings are discoverable before secondary camera guidance. Fit View
+remains promoted while named views, Reset, gestures, and numeric camera detail
+remain available lower in the inspector.
+
+Vertical allocation is corrected before the bounded Live-4D fit clearance is
+reduced from 1.32 to 1.20. Framing still consumes authoritative collection
+bounds, and canonical local geometry, slice-set layout, exact basis, camera
+pose semantics, native NEXT/HOLD, Designer A/B/input/persistence isolation,
+and deterministic gameplay remain unchanged. Evidence and the five explicit
+visual answers are recorded in
+`docs/plans/live_presentation_designer_acceptance.md`.
+
 Objective:
 
 Close the gap between a verified prototype and a professional game release.

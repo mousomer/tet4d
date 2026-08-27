@@ -11,24 +11,29 @@ const OUTER_PAD := 6.0
 const ISOMETRIC_HALF_WIDTH := 0.46
 const ISOMETRIC_HALF_HEIGHT := 0.25
 const ISOMETRIC_DEPTH := 0.48
+const STANDARD_MIN_HEIGHT := 104.0
+const STANDARD_4D_MIN_HEIGHT := 132.0
+const COMPACT_MIN_HEIGHT := 72.0
+const COMPACT_4D_MIN_HEIGHT := 88.0
 
 var _model
 var _style_manager
 var _geometry_revision := 0
 var _style_revision := 0
+var _compact_cockpit := false
 
 
 func _init() -> void:
 	name = "PieceThumbnail"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(0, 104)
+	custom_minimum_size = Vector2(0, STANDARD_MIN_HEIGHT)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 
 func set_model(model) -> void:
 	_model = model
 	_geometry_revision += 1
-	custom_minimum_size.y = 132.0 if _model != null and int(_model.dimension) == 4 else 104.0
+	_apply_minimum_height()
 	queue_redraw()
 
 
@@ -36,7 +41,13 @@ func clear() -> void:
 	if _model != null:
 		_geometry_revision += 1
 	_model = null
-	custom_minimum_size.y = 104.0
+	_apply_minimum_height()
+	queue_redraw()
+
+
+func set_compact_cockpit(enabled: bool) -> void:
+	_compact_cockpit = enabled
+	_apply_minimum_height()
 	queue_redraw()
 
 
@@ -54,7 +65,16 @@ func deterministic_snapshot() -> Dictionary:
 		"geometry_revision": _geometry_revision,
 		"style_revision": _style_revision,
 		"render_mode": _render_mode(),
+		"compact_cockpit": _compact_cockpit,
 	}
+
+
+func _apply_minimum_height() -> void:
+	var four_d := _model != null and int(_model.dimension) == 4
+	if _compact_cockpit:
+		custom_minimum_size.y = COMPACT_4D_MIN_HEIGHT if four_d else COMPACT_MIN_HEIGHT
+	else:
+		custom_minimum_size.y = STANDARD_4D_MIN_HEIGHT if four_d else STANDARD_MIN_HEIGHT
 
 
 func _notification(what: int) -> void:

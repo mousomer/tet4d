@@ -15,6 +15,7 @@ const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onbo
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
 const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.gd")
 const HoldPiecePanelScript = preload("res://scripts/ui/pieces/hold_piece_panel.gd")
+const LivePieceControlStripScript = preload("res://scripts/ui/live_piece_control_strip.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
@@ -203,6 +204,8 @@ var _onboarding_model = LiveOnboardingModelScript.new()
 var _onboarding_panel: PanelContainer
 var _next_piece_panel: PanelContainer
 var _hold_piece_panel: PanelContainer
+var _piece_preview_row: HBoxContainer
+var _piece_control_strip: PanelContainer
 var _basis_panel: PanelContainer
 var _basis_indicator_label: Label
 var _live_4d_basis_snapshot: Dictionary = {
@@ -213,6 +216,7 @@ var _live_4d_basis_snapshot: Dictionary = {
 	"text": "View: +X · +Y · +Z\nSlice: +W · Gravity: Y down",
 }
 var _control_frame_snapshot: Dictionary = {}
+var _camera_guidance_flow: HFlowContainer
 var _last_onboarding_result_signature := ""
 var _screen_focus_targets := {}
 var _screen_last_focus := {}
@@ -272,6 +276,7 @@ func live_control_frames() -> Dictionary:
 
 func set_control_frame_snapshot(snapshot: Dictionary) -> void:
 	_control_frame_snapshot = snapshot.duplicate(true)
+	_refresh_piece_control_strip()
 
 
 static func quick_control_hint_groups(mode: String) -> Array:
@@ -597,6 +602,10 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 		_next_piece_panel.visible = false
 	if _hold_piece_panel != null:
 		_hold_piece_panel.visible = false
+	if _piece_preview_row != null:
+		_piece_preview_row.visible = false
+	if _piece_control_strip != null:
+		_piece_control_strip.visible = false
 	if _live_view_actions != null:
 		_live_view_actions.visible = false
 	if _camera_view_action_menu != null:
@@ -637,16 +646,53 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 	if _live_view_actions != null:
 		_live_view_actions.visible = true
 	if _camera_view_action_menu != null:
-		_move_view_action_menu(_live_view_action_row)
+		_move_view_action_menu(_camera_box)
 		_camera_view_action_menu.visible = mode != GameSetupSpecScript.MODE_2D
 		_camera_view_action_menu.text = "View Actions"
 		_camera_view_action_menu.tooltip_text = "Apply a stateless named view action"
+	if _live_reset_view_button != null and _camera_box != null and _live_reset_view_button.get_parent() != _camera_box:
+		_live_reset_view_button.reparent(_camera_box, false)
 	if _basis_panel != null:
 		_basis_panel.visible = mode == GameSetupSpecScript.MODE_4D
+	_refresh_piece_control_strip()
+	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
 		_update_control_hint_panel(_inspector_hint_panel, mode)
 	_set_live_inspector_density(true)
+
+
+func _refresh_piece_control_strip() -> void:
+	if _piece_control_strip == null or _active_live_mode.is_empty():
+		return
+	_piece_control_strip.configure(
+		_active_live_mode,
+		_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
+		_control_frame_snapshot
+	)
+	if is_inside_tree():
+		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
+
+
+func _update_camera_guidance(mode: String) -> void:
+	if _camera_guidance_flow == null:
+		return
+	for child in _camera_guidance_flow.get_children():
+		_camera_guidance_flow.remove_child(child)
+		child.queue_free()
+	if mode == GameSetupSpecScript.MODE_2D:
+		return
+	for item in LiveInputContractScript.camera_helper_items():
+		var label := Label.new()
+		label.name = "CameraGuidanceItem"
+		label.text = "%s · %s" % [str(item[0]), str(item[1])]
+		label.theme_type_variation = "DimLabel"
+		label.add_theme_font_size_override("font_size", 11)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.custom_minimum_size = Vector2(112, 0)
+		_camera_guidance_flow.add_child(label)
+	if is_inside_tree():
+		_style_applier.apply_to_tree(_camera_guidance_flow, _style_manager)
 
 
 func _move_view_action_menu(parent: Control) -> void:
@@ -861,6 +907,11 @@ func layout_contract_snapshot() -> Dictionary:
 		"onboarding_panel": _onboarding_panel.deterministic_snapshot() if _onboarding_panel != null else {},
 		"next_piece_panel": _next_piece_panel.deterministic_snapshot() if _next_piece_panel != null else {},
 		"hold_piece_panel": _hold_piece_panel.deterministic_snapshot() if _hold_piece_panel != null else {},
+		"piece_preview_row_rect": _control_rect(_piece_preview_row),
+		"piece_preview_row_visible": _piece_preview_row.visible if _piece_preview_row != null else false,
+		"piece_control_strip": _piece_control_strip.deterministic_snapshot() if _piece_control_strip != null else {},
+		"piece_control_strip_rect": _control_rect(_piece_control_strip),
+		"camera_guidance_rect": _control_rect(_camera_panel),
 		"basis": _live_4d_basis_snapshot.duplicate(true),
 		"basis_indicator_text": _basis_indicator_label.text if _basis_indicator_label != null else "",
 		"basis_panel_visible": _basis_panel.visible if _basis_panel != null else false,
@@ -875,6 +926,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"view_action_menu_text": _camera_view_action_menu.text if _camera_view_action_menu != null else "",
 		"view_action_menu_parent": str(_camera_view_action_menu.get_parent().name) if _camera_view_action_menu != null and _camera_view_action_menu.get_parent() != null else "",
 		"camera_panel_visible": _camera_panel.visible if _camera_panel != null else false,
+		"camera_status_visible": _camera_status_label.visible if _camera_status_label != null else false,
 		"integrity_panel_visible": _integrity_panel.visible if _integrity_panel != null else false,
 		"bundle_detail_panel_visible": _bundle_detail_panel.visible if _bundle_detail_panel != null else false,
 		"controls_panel_visible": _inspector_hint_panel.visible if _inspector_hint_panel != null else false,
@@ -1250,6 +1302,8 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_viewport_hint.visible = not live_mode
 		if live_mode:
 			_viewport_hint.text = ""
+	if _viewport_title != null:
+		_viewport_title.visible = not live_mode
 	if _hash_label != null:
 		_hash_label.visible = not live_mode
 		if live_mode:
@@ -1269,6 +1323,10 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_next_piece_panel.visible = live_mode
 	if _hold_piece_panel != null:
 		_hold_piece_panel.visible = live_mode
+	if _piece_preview_row != null:
+		_piece_preview_row.visible = live_mode
+	if _piece_control_strip != null:
+		_piece_control_strip.visible = live_mode
 	if not live_mode:
 		_active_live_mode = ""
 		_live_interaction_owns_input = false
@@ -1295,6 +1353,7 @@ func set_live_4d_basis_snapshot(snapshot: Dictionary) -> void:
 	if _inspector_hint_panel != null and _active_live_mode == GameSetupSpecScript.MODE_4D:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
 		_update_control_hint_panel(_inspector_hint_panel, "live_4d", _live_4d_game_over, "")
+	_refresh_piece_control_strip()
 	_render_onboarding()
 
 
@@ -1322,10 +1381,10 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 		_inspector_header.visible = false
 		_integrity_panel.visible = false
 		_bundle_detail_panel.visible = false
-		_view_header.visible = detailed and _active_live_mode != GameSetupSpecScript.MODE_2D
-		_camera_panel.visible = _view_header.visible
+		_view_header.visible = true
+		_camera_panel.visible = true
 		if _camera_status_label != null:
-			_camera_status_label.visible = _camera_panel.visible
+			_camera_status_label.visible = detailed
 		_diagnostics_header.visible = false
 		_diagnostics_panel.visible = false
 		_event_panel.visible = false
@@ -1334,13 +1393,13 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 		_quick_settings_header.visible = detailed
 		_settings_panel.visible = detailed
 		_move_right_column_child(_onboarding_panel, 0)
-		_move_right_column_child(_next_piece_panel, 1)
-		_move_right_column_child(_hold_piece_panel, 2)
+		_move_right_column_child(_piece_preview_row, 1)
+		_move_right_column_child(_piece_control_strip, 2)
 		_move_right_column_child(_basis_panel, 3)
-		_move_right_column_child(_controls_header, 4)
-		_move_right_column_child(_inspector_hint_panel, 5)
-		_move_right_column_child(_view_header, 6)
-		_move_right_column_child(_camera_panel, 7)
+		_move_right_column_child(_view_header, 4)
+		_move_right_column_child(_camera_panel, 5)
+		_move_right_column_child(_controls_header, 6)
+		_move_right_column_child(_inspector_hint_panel, 7)
 		_move_right_column_child(_quick_settings_header, 8)
 		_move_right_column_child(_settings_panel, 9)
 		_move_right_column_child(_inspector_header, 10)
@@ -1370,8 +1429,8 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 	_move_right_column_child(_event_panel, 10)
 	_move_right_column_child(_quick_settings_header, 11)
 	_move_right_column_child(_settings_panel, 12)
-	_move_right_column_child(_next_piece_panel, 13)
-	_move_right_column_child(_hold_piece_panel, 14)
+	_move_right_column_child(_piece_preview_row, 13)
+	_move_right_column_child(_piece_control_strip, 14)
 	_move_right_column_child(_basis_panel, 15)
 
 
@@ -1718,7 +1777,7 @@ func _build_layout() -> void:
 	_live_view_action_row.add_theme_constant_override("separation", 6)
 	_live_view_actions.add_child(_live_view_action_row)
 	var view_label := Label.new()
-	view_label.text = "VIEW"
+	view_label.text = "RECOVER"
 	view_label.theme_type_variation = "SecondaryLabel"
 	_live_view_action_row.add_child(view_label)
 	_live_fit_view_button = Button.new()
@@ -1735,10 +1794,10 @@ func _build_layout() -> void:
 	_live_reset_view_button.set_meta("semantic_role", "action_button")
 	_live_reset_view_button.pressed.connect(func() -> void: reset_view_requested.emit())
 	_live_view_action_row.add_child(_live_reset_view_button)
-	_live_display_action_row = HBoxContainer.new()
-	_live_display_action_row.name = "LiveDisplayActions"
-	_live_display_action_row.add_theme_constant_override("separation", 6)
-	_live_view_actions.add_child(_live_display_action_row)
+	# Fit remains a top-level recovery action. Secondary view actions and Reset
+	# move into the inspector, allowing display disclosure to share this one
+	# compact row and returning vertical space to the gameplay viewport.
+	_live_display_action_row = _live_view_action_row
 	var display_label := Label.new()
 	display_label.text = "DISPLAY"
 	display_label.theme_type_variation = "SecondaryLabel"
@@ -1995,10 +2054,11 @@ func _build_layout() -> void:
 	_right_column.add_child(_camera_panel)
 	var camera_box := VBoxContainer.new()
 	_camera_box = camera_box
+	camera_box.name = "SecondaryViewControls"
 	_camera_panel.add_child(camera_box)
 	var camera_title := Label.new()
 	camera_title.name = "InspectorSectionHeader__Camera"
-	camera_title.text = "View Detail"
+	camera_title.text = "VIEW · SECONDARY"
 	camera_title.theme_type_variation = "SecondaryLabel"
 	camera_box.add_child(camera_title)
 	_camera_view_action_menu = MenuButton.new()
@@ -2021,6 +2081,13 @@ func _build_layout() -> void:
 			camera_preset_requested.emit(str(view_action_popup.get_item_metadata(index)))
 	)
 	camera_box.add_child(_camera_view_action_menu)
+	if _live_reset_view_button != null:
+		_live_reset_view_button.reparent(camera_box, false)
+	_camera_guidance_flow = HFlowContainer.new()
+	_camera_guidance_flow.name = "CameraGuidanceFlow"
+	_camera_guidance_flow.add_theme_constant_override("h_separation", 7)
+	_camera_guidance_flow.add_theme_constant_override("v_separation", 3)
+	camera_box.add_child(_camera_guidance_flow)
 	_camera_status_label = Label.new()
 	_camera_status_label.name = "InspectorCameraValueLabel"
 	_camera_status_label.text = "View: pending"
@@ -2039,14 +2106,23 @@ func _build_layout() -> void:
 		_set_persistent_setting("interface.show_onboarding", false)
 	)
 	_right_column.add_child(_onboarding_panel)
+	_piece_preview_row = HBoxContainer.new()
+	_piece_preview_row.name = "PiecePreviewRow"
+	_piece_preview_row.visible = false
+	_piece_preview_row.add_theme_constant_override("separation", 8)
+	_piece_preview_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_right_column.add_child(_piece_preview_row)
 	_next_piece_panel = NextPiecePanelScript.new()
 	_next_piece_panel.visible = false
 	_next_piece_panel.set_style_manager(_style_manager)
-	_right_column.add_child(_next_piece_panel)
+	_piece_preview_row.add_child(_next_piece_panel)
 	_hold_piece_panel = HoldPiecePanelScript.new()
 	_hold_piece_panel.visible = false
 	_hold_piece_panel.set_style_manager(_style_manager)
-	_right_column.add_child(_hold_piece_panel)
+	_piece_preview_row.add_child(_hold_piece_panel)
+	_piece_control_strip = LivePieceControlStripScript.new()
+	_piece_control_strip.visible = false
+	_right_column.add_child(_piece_control_strip)
 	_basis_panel = _build_basis_panel()
 	_basis_panel.visible = false
 	_right_column.add_child(_basis_panel)

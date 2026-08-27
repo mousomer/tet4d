@@ -13,6 +13,21 @@ history ledger. Detailed history is preserved in
 
 ## Active Focus
 
+- Completed bounded review correction: Stage 54F-2R starts from local Designer
+  HEAD `4c2dc44c89865193bf2022ffab822741feac1bdb` on
+  `codex/canonical-local-board-geometry`. It recovers vertical board space with
+  a single live action row, puts NEXT/HOLD in one compact shared-thumbnail row,
+  and permanently displays mode-applicable piece translation/rotation guidance
+  derived from `LiveInputContract` before secondary camera controls. The
+  Live-4D fit margin changes only after allocation, from 1.32 to 1.20, while
+  consuming authoritative collection bounds. Production Godot 4.7.1 Metal
+  captures cover 2D/3D/4D, full/compact Designer, and a requested 960x720
+  constrained window. Designer A/B/input/persistence isolation, deterministic
+  gameplay, canonical geometry, exact basis, helper authority, and native
+  NEXT/HOLD remain unchanged. This is local agent-driven acceptance, not
+  independent human sign-off; evidence is in
+  `docs/plans/live_presentation_designer_acceptance.md`.
+
 - Completed bounded follow-on: Stage 54F-2 Live Presentation Designer starts
   from reviewed Stage 54F-1R HEAD
   `32e9d2a9e8f431693761a25ba6cd9736419ab4bf` on

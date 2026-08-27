@@ -4,6 +4,7 @@ class_name HoldPiecePanel
 
 const PieceThumbnailModelScript = preload("res://scripts/ui/pieces/piece_thumbnail_model.gd")
 const PieceThumbnailScript = preload("res://scripts/ui/pieces/piece_thumbnail.gd")
+const PiecePreviewLayoutScript = preload("res://scripts/ui/pieces/piece_preview_layout.gd")
 
 var _model = PieceThumbnailModelScript.new()
 var _thumbnail
@@ -11,30 +12,27 @@ var _piece_label: Label
 var _status_label: Label
 var _preview_signature := ""
 var _available := true
+var _margin: MarginContainer
+var _content: VBoxContainer
 
 
 func _init() -> void:
 	name = "HoldPiecePanel"
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	custom_minimum_size = Vector2(0, 156)
+	custom_minimum_size = Vector2(0, PiecePreviewLayoutScript.PANEL_MIN_HEIGHT)
 	theme_type_variation = "ViewportFrame"
 	set_meta("semantic_role", "passive_preview_panel")
-	var margin := MarginContainer.new()
-	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_%s" % side, 12)
-	for side in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 10)
-	add_child(margin)
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 6)
-	margin.add_child(content)
+	_margin = MarginContainer.new()
+	add_child(_margin)
+	_content = VBoxContainer.new()
+	_margin.add_child(_content)
 	var header := HBoxContainer.new()
-	content.add_child(header)
+	_content.add_child(header)
 	var title := Label.new()
 	title.name = "HoldPieceTitle"
 	title.text = "HOLD"
 	title.theme_type_variation = "AccentLabel"
-	title.add_theme_font_size_override("font_size", 15)
+	title.add_theme_font_size_override("font_size", 13)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	_piece_label = Label.new()
@@ -44,13 +42,15 @@ func _init() -> void:
 	_piece_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	header.add_child(_piece_label)
 	_thumbnail = PieceThumbnailScript.new()
-	content.add_child(_thumbnail)
+	_content.add_child(_thumbnail)
 	_status_label = Label.new()
 	_status_label.name = "HoldPieceStatus"
 	_status_label.text = "Available · C"
 	_status_label.theme_type_variation = "DimLabel"
+	_status_label.add_theme_font_size_override("font_size", 11)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(_status_label)
+	_content.add_child(_status_label)
+	PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, 0)
 	_render_state()
 
 
@@ -61,7 +61,7 @@ func set_hold_state(payload: Dictionary, available: bool) -> bool:
 		_preview_signature = ""
 		_thumbnail.clear()
 		_piece_label.text = "EMPTY"
-		custom_minimum_size.y = 156.0
+		PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, 0)
 		_render_state()
 		return true
 	var candidate = PieceThumbnailModelScript.new()
@@ -78,7 +78,7 @@ func set_hold_state(payload: Dictionary, available: bool) -> bool:
 		_preview_signature = candidate_signature
 		_thumbnail.set_model(_model)
 	_piece_label.text = _model.piece_name
-	custom_minimum_size.y = 184.0 if _model.dimension == 4 else 156.0
+	PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, _model.dimension)
 	_render_state()
 	return true
 

@@ -15,7 +15,10 @@ const LIVE_4D_DISPLAY_YAW_RAD := 3.5779249665883754  # 205 degrees.
 const LIVE_4D_DISPLAY_PITCH_RAD := 0.3490658503988659  # +20 degrees above the board.
 const LIVE_2D_FIT_MARGIN := 1.32
 const LIVE_3D_FIT_MARGIN := 1.38
-const LIVE_4D_FIT_MARGIN := 1.32
+# The full authoritative collection envelope (including W labels and spawn
+# clearance) keeps ten percent framing clearance on each projected dimension.
+# Cockpit chrome is not part of this calculation.
+const LIVE_4D_FIT_MARGIN := 1.20
 const DEFAULT_ORTHOGRAPHIC_SIZE := 16.0
 const MIN_ORTHOGRAPHIC_SIZE := 2.0
 const MAX_ORTHOGRAPHIC_SIZE := 96.0

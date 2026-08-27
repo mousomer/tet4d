@@ -75,6 +75,19 @@ Godot 4.7.1, and full-repository evidence is recorded in
 gameplay, profile, registry, geometry, basis, NEXT, HOLD, or camera-pose
 authority changes.
 
+Completed bounded review correction: Stage 54F-2R makes the gameplay board the
+dominant visual surface, presents native NEXT and HOLD as one compact shared-
+thumbnail row, and keeps a passive `LiveInputContract`-derived translation and
+rotation vocabulary permanently visible above secondary camera guidance. It
+first recovers vertical board allocation, then narrows only the bounds-derived
+Live-4D fit clearance. Fit remains readily available. Full/compact Designer,
+input and persistence isolation, deterministic state, canonical geometry,
+exact basis, helper authority, and native NEXT/HOLD authority are unchanged.
+Focused, pinned/full, governance, deterministic/input, responsive-layout, and
+production-window evidence is recorded in
+`docs/plans/live_presentation_designer_acceptance.md`; independent human
+acceptance remains unclaimed.
+
 Completed bounded geometry review correction: Stage 54F-1 established the correct
 canonical local-board architecture on `codex/canonical-local-board-geometry`,
 but review found that continuous 2D/3D endgame points were routed through its
