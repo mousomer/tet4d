@@ -60,6 +60,21 @@ full-repository, and agent-driven real-window checks pass. The durable contract
 is `docs/architecture/presentation_parameter_contract.md`, and the acceptance
 record is `docs/plans/presentation_parameter_contract_acceptance.md`.
 
+Completed bounded follow-on: Stage 54F-2 adds the Live Presentation Designer
+on `codex/canonical-local-board-geometry`. It generates 16/18/20 applicable
+Live-2D/3D/4D controls from the established registry and semantic owners,
+edits a detached working B profile, captures immutable A, supports exact
+numeric editing plus parameter/group/opening/factory resets, and previews only
+through the existing bounded app seam. Full/compact/hidden layout preserves
+the board and the existing right cockpit; NEXT and authoritative HOLD
+(`AE-0055`) remain simultaneously viewable, while 4D basis and helper/status
+content remain visible or immediately inspector-scroll-reachable. Focused,
+input/layout, deterministic/store isolation, non-headless visual, pinned
+Godot 4.7.1, and full-repository evidence is recorded in
+`docs/plans/live_presentation_designer_acceptance.md`. No persistence,
+gameplay, profile, registry, geometry, basis, NEXT, HOLD, or camera-pose
+authority changes.
+
 Completed bounded geometry review correction: Stage 54F-1 established the correct
 canonical local-board architecture on `codex/canonical-local-board-geometry`,
 but review found that continuous 2D/3D endgame points were routed through its
@@ -77,11 +92,12 @@ and agent-driven 2D/3D endgame evidence pass; evidence is recorded in
 `docs/plans/canonical_local_board_presentation_geometry_acceptance.md`.
 
 Explicit deferrals from these follow-ons are named presentation-profile
-library persistence, Designer Lab UI, A/B assignment/telemetry, free-form
-palette-role editing, procedural/animated environments, and independent human
-review of the intentional full-depth 2D mesh under unusual debug camera views.
-Any Stage 54F-2 must be separately evidenced visual treatment above the fixed
-geometry contract, not another geometry implementation.
+library persistence, import/export, formal A/B assignment/telemetry,
+free-form palette-role editing, procedural/animated environments, broader
+theme work, and independent human review of both the Designer workflow and the
+intentional full-depth 2D mesh under unusual debug camera views. Stage 54F-2
+adds the editing instrument only; it does not begin the following
+profile-management/theme stage or another geometry implementation.
 
 ## Next Work
 

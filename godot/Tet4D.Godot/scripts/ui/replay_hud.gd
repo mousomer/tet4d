@@ -26,6 +26,7 @@ const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_pan
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const PresentationDesignerScript = preload("res://scripts/ui/presentation_designer.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -125,6 +126,8 @@ var _live_fit_view_button: Button
 var _live_reset_view_button: Button
 var _quick_settings_button: Button
 var _grid_toggle_button: Button
+var _designer_button: Button
+var _presentation_designer: PresentationDesigner
 var _frame_slider: HSlider
 var _frame_label: Label
 var _hash_label: Label
@@ -223,6 +226,7 @@ var _game_setup_store = GameSetupStoreScript.new()
 var _game_setup_panel
 var _active_live_mode := ""
 var _live_interaction_owns_input := false
+var _active_presentation_profile
 
 
 static func replay_hint_text() -> String:
@@ -301,7 +305,9 @@ func _ready() -> void:
 	theme = ReplayVisuals.build_theme(_current_display_mode)
 	_install_shell_layout_contract()
 	_build_layout()
+	_build_presentation_designer()
 	_apply_shell_style()
+	call_deferred("_layout_presentation_designer")
 	call_deferred("_log_geometry_diagnostics", "ready")
 
 
@@ -315,6 +321,7 @@ func _process(delta: float) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_inside_tree():
+		call_deferred("_layout_presentation_designer")
 		call_deferred("_log_geometry_diagnostics", "resize")
 		call_deferred("_remember_current_windowed_size")
 		call_deferred("_sync_observed_window_mode")
@@ -596,6 +603,8 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 		_move_view_action_menu(_camera_box)
 		_camera_view_action_menu.visible = true
 	_live_interaction_owns_input = false
+	if _presentation_designer != null:
+		_presentation_designer.hide_preserving_preview()
 	set_playback_state(is_playing, speed, diagnostics_visible)
 	if _authority_label != null:
 		_authority_label.text = ReplayVisuals.authority_label(_current_display_mode)
@@ -623,6 +632,8 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 
 func _configure_live_cockpit_mode(mode: String) -> void:
 	_active_live_mode = mode
+	if _presentation_designer != null:
+		_presentation_designer.set_runtime_context(mode)
 	if _live_view_actions != null:
 		_live_view_actions.visible = true
 	if _camera_view_action_menu != null:
@@ -646,7 +657,55 @@ func _move_view_action_menu(parent: Control) -> void:
 
 
 func live_interaction_owns_input() -> bool:
-	return _live_interaction_owns_input
+	return _live_interaction_owns_input or (
+		_presentation_designer != null and _presentation_designer.full_editor_visible()
+	)
+
+
+func presentation_designer_contains_global_point(point: Vector2) -> bool:
+	return _presentation_designer != null and _presentation_designer.contains_global_point(point)
+
+
+func _build_presentation_designer() -> void:
+	_presentation_designer = PresentationDesignerScript.new()
+	_presentation_designer.z_index = 50
+	add_child(_presentation_designer)
+	if not _presentation_designer.configure(_settings_registry):
+		push_error("Presentation Designer requires a valid presentation registry")
+	_presentation_designer.profile_preview_requested.connect(func(profile) -> void:
+		presentation_profile_changed.emit(profile)
+	)
+	_presentation_designer.state_changed.connect(func(_state: String) -> void:
+		_update_live_view_action_labels()
+		call_deferred("_layout_presentation_designer")
+	)
+
+
+func _open_presentation_designer() -> void:
+	if _presentation_designer == null or _active_live_mode.is_empty():
+		return
+	var active_profile = presentation_profile()
+	if _presentation_designer.open_with_profile(active_profile, _active_live_mode):
+		_layout_presentation_designer()
+
+
+func _layout_presentation_designer() -> void:
+	if _presentation_designer == null or _game_area == null or not _game_area.is_inside_tree():
+		return
+	var game_rect := _game_area.get_global_rect()
+	var inverse := get_global_transform().affine_inverse()
+	var local_origin: Vector2 = inverse * game_rect.position
+	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
+	var local_rect := Rect2(local_origin, local_far - local_origin)
+	var inset := 8.0
+	if _presentation_designer.state() == PresentationDesignerScript.STATE_COMPACT:
+		var compact_width := minf(maxf(320.0, local_rect.size.x * 0.38), maxf(220.0, local_rect.size.x - inset * 2.0))
+		_presentation_designer.position = local_rect.position + Vector2(inset, inset)
+		_presentation_designer.size = Vector2(compact_width, 44.0)
+	else:
+		var full_width := minf(maxf(300.0, local_rect.size.x * 0.42), minf(420.0, maxf(260.0, local_rect.size.x - inset * 2.0)))
+		_presentation_designer.position = local_rect.position + Vector2(inset, inset)
+		_presentation_designer.size = Vector2(full_width, maxf(260.0, local_rect.size.y - inset * 2.0))
 
 
 func set_display_mode(mode: String) -> void:
@@ -681,6 +740,8 @@ func show_screen(screen_name: String) -> void:
 		var screen := _screens.get(key) as Control
 		if screen != null:
 			screen.visible = key == _current_screen
+	if _current_screen != SCREEN_VIEWER and _presentation_designer != null:
+		_presentation_designer.hide_preserving_preview()
 	call_deferred("_log_geometry_diagnostics", "screen:%s" % _current_screen)
 	call_deferred("_focus_current_screen")
 
@@ -817,7 +878,8 @@ func layout_contract_snapshot() -> Dictionary:
 		"integrity_panel_visible": _integrity_panel.visible if _integrity_panel != null else false,
 		"bundle_detail_panel_visible": _bundle_detail_panel.visible if _bundle_detail_panel != null else false,
 		"controls_panel_visible": _inspector_hint_panel.visible if _inspector_hint_panel != null else false,
-		"live_interaction_owns_input": _live_interaction_owns_input,
+		"live_interaction_owns_input": live_interaction_owns_input(),
+		"presentation_designer": _presentation_designer.deterministic_snapshot() if _presentation_designer != null else {},
 		"focused_control": get_viewport().gui_get_focus_owner().name if get_viewport() != null and get_viewport().gui_get_focus_owner() != null else "",
 		"main_menu_scroll": _scroll_contract(_main_menu_scroll),
 		"controls_scroll": _scroll_contract(_controls_scroll),
@@ -885,16 +947,23 @@ func apply_shell_settings() -> void:
 		_applying_initial_settings = true
 		_settings_panel.apply_initial_settings()
 		_applying_initial_settings = false
-		presentation_profile_changed.emit(presentation_profile())
+		presentation_profile_changed.emit(_profile_from_store())
 
 
 func presentation_profile():
+	if _active_presentation_profile != null:
+		return _active_presentation_profile.detached_copy()
+	return _profile_from_store()
+
+
+func _profile_from_store():
 	return PresentationProfileScript.from_store(_settings_registry, _settings_store)
 
 
 func apply_presentation_profile(profile) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
+	_active_presentation_profile = profile.detached_copy()
 	_accessibility_policy.configure(
 		bool(profile.value("accessibility.high_contrast")),
 		bool(profile.value("accessibility.reduced_motion")),
@@ -934,7 +1003,7 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.setting_changed.connect(func(setting_id: String, value) -> void:
 		_sync_setting_controls(panel, setting_id)
 		if not _applying_initial_settings:
-			presentation_profile_changed.emit(presentation_profile())
+			presentation_profile_changed.emit(_profile_from_store())
 	)
 	panel.playback_speed_changed.connect(func(value: float) -> void:
 		playback_speed_changed.emit(value)
@@ -992,7 +1061,7 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	)
 	panel.settings_reset.connect(func() -> void:
 		_sync_all_setting_controls(panel)
-		presentation_profile_changed.emit(presentation_profile())
+		presentation_profile_changed.emit(_profile_from_store())
 	)
 
 
@@ -1009,10 +1078,13 @@ func _sync_all_setting_controls(source: SettingsPanel = null) -> void:
 
 
 func _set_persistent_setting(setting_id: String, value) -> void:
-	if _settings_store != null and _settings_store.set_value(setting_id, value):
+	var changed: bool = _settings_store != null and _settings_store.set_value(setting_id, value)
+	if changed:
 		_sync_all_setting_controls()
 	if setting_id == "interface.show_onboarding":
 		_set_onboarding_visible(bool(_settings_store.value(setting_id)))
+	if changed:
+		presentation_profile_changed.emit(_profile_from_store())
 
 
 func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
@@ -1440,7 +1512,7 @@ func _toggle_grid_visibility() -> void:
 	if _settings_store != null:
 		_settings_store.set_value("display.grid_visible", _grid_visible)
 	_update_live_view_action_labels()
-	presentation_profile_changed.emit(presentation_profile())
+	presentation_profile_changed.emit(_profile_from_store())
 	grid_visibility_changed.emit(_grid_visible)
 
 
@@ -1449,6 +1521,9 @@ func _update_live_view_action_labels() -> void:
 		_quick_settings_button.text = "Hide Quick Settings" if _hud_density == "detailed" else "Show Quick Settings"
 	if _grid_toggle_button != null:
 		_grid_toggle_button.text = "Grid: On" if _grid_visible else "Grid: Off"
+	if _designer_button != null:
+		var designer_state := _presentation_designer.state() if _presentation_designer != null else "hidden"
+		_designer_button.text = "Designer: %s" % ("Open" if designer_state == "hidden" else designer_state.capitalize())
 
 
 func _emit_camera_preferences() -> void:
@@ -1682,6 +1757,14 @@ func _build_layout() -> void:
 	_grid_toggle_button.set_meta("semantic_role", "action_button")
 	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
 	_live_display_action_row.add_child(_grid_toggle_button)
+	_designer_button = Button.new()
+	_designer_button.name = "PresentationDesignerButton"
+	_designer_button.text = "Designer"
+	_designer_button.custom_minimum_size = Vector2(92, 34)
+	_designer_button.tooltip_text = "Open the detached live Presentation Designer; changes are not saved"
+	_designer_button.set_meta("semantic_role", "action_button")
+	_designer_button.pressed.connect(_open_presentation_designer)
+	_live_display_action_row.add_child(_designer_button)
 	_update_live_view_action_labels()
 
 	_top_status_panel = PanelContainer.new()
@@ -2752,9 +2835,11 @@ func _apply_shell_style() -> void:
 		_settings_panel.apply_shell_style()
 	if _settings_screen_panel != null:
 		_settings_screen_panel.apply_shell_style()
+	call_deferred("_layout_presentation_designer")
 
 
 func _apply_responsive_layout() -> void:
+	_layout_presentation_designer()
 	_log_geometry_diagnostics("responsive-compat")
 
 

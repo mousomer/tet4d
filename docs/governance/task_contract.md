@@ -1,3 +1,193 @@
+# Task Contract — Stage 54F-2 Live Presentation Designer
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `32e9d2a9e8f431693761a25ba6cd9736419ab4bf`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Add a registry-driven, live Presentation Designer to the Godot product shell.
+The Designer edits only a detached working `PresentationProfile`, previews it
+through `TraceReplayApp.apply_presentation_profile()`, compares an immutable A
+reference with working B, and supplies deterministic parameter/group/profile
+resets. It must not persist values or alter gameplay, replay identity, camera
+pose, board geometry, NEXT/HOLD state, or helper/status reachability.
+
+## Classification
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: presentation registry/profile consumption, Godot HUD and
+  application preview seam, input/layout ownership, scene tests, focused
+  real-window evidence, and governing documents.
+- Claims: registry-complete live controls; detached and non-persistent B state;
+  immutable A comparison; bounded live apply; deterministic reset semantics;
+  responsive full/compact/hidden presentation; and gameplay/input isolation.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `deterministic`, `integration`, and `human_visual`.
+- Full repository gate: required because a registry-wide visible product
+  surface, shared HUD input boundary, and application presentation seam are in
+  scope.
+
+## Current Authority and Design Comparison
+
+- `presentation_parameter_contract.md` keeps the registry as the sole owner of
+  parameter identity, type, bounds/options, defaults, semantic owner,
+  persistence class, and runtime applicability. The Designer generates rows
+  from that metadata and declares no parallel parameter list.
+- `PresentationProfile` remains the detached typed value carrier.
+  `SettingsStore` remains the only persistence writer; the Designer receives
+  neither a store nor a save callback.
+- `TraceReplayApp.apply_presentation_profile()` remains the single bounded
+  preview seam. Designer UI and rows do not write renderers, cameras, geometry,
+  gameplay state, replay state, or settings directly.
+- `visual_system_contract.md`, `live_hud_cockpit_architecture.md`, and
+  `accessibility_contract.md` retain product-shell layout and input ownership.
+  Full Designer mode owns interactive input; compact/hidden modes release
+  gameplay keys while their own pointer hit area remains isolated.
+- `next_piece_preview_contract.md` remains NEXT authority. HOLD is already
+  established native authority under `AE-0055`; NEXT, HOLD, helper/status, and
+  the board therefore remain simultaneous viewability constraints, not future
+  placeholders.
+- Canonical local-board geometry, exact 4D basis, slice layout, gameplay,
+  session, and replay authorities are consumed unchanged. This task transfers
+  no authority.
+
+## Registry Inventory and Live Exposure Decision
+
+The runtime-applicability metadata decides exposure. Every applicable entry is
+generated and editable; every non-applicable entry is omitted from the live
+surface. `ui_visible` is not an exclusion because this is the explicit
+developer-facing presentation surface, while `applies_at_runtime` is the
+authoritative safety boundary.
+
+| Registry parameter | Type / owner | Live modes | Designer decision and refresh class |
+| --- | --- | --- | --- |
+| `display.window_mode` | enum / shell | none | Hidden; shell/window transition is inappropriate during live play. |
+| `display.windowed_size` | size / shell | none | Hidden; shell/window transition is inappropriate during live play. |
+| `display.ui_scale` | enum / shell | 2D/3D/4D | Editable; bounded shell/HUD relayout. |
+| `display.hud_density` | enum / hud | 2D/3D/4D | Editable; bounded HUD relayout. |
+| `display.board_detail` | enum / board | 2D/3D/4D | Editable; renderer refresh. |
+| `ghost.enabled` | bool / ghost | 2D/3D/4D | Editable; renderer refresh. |
+| `settled_cells.opacity` | float / board | 2D/3D/4D | Editable; renderer refresh. |
+| `display.grid_visible` | bool / board | 2D/3D/4D | Editable; renderer refresh. |
+| `board.grid_opacity` | float / board | 2D/3D/4D | Editable; renderer refresh. |
+| `board.boundary_opacity` | float / board | 2D/3D/4D | Editable; renderer refresh. |
+| `active_cells.opacity` | float / piece | 2D/3D/4D | Editable; renderer refresh. |
+| `ghost.opacity` | float / ghost | 2D/3D/4D | Editable; renderer refresh. |
+| `slice_set.spacing` | float / slice | 4D | Editable only in 4D; slice-layout refresh. |
+| `environment.background_intensity` | float / environment | 2D/3D/4D | Editable; environment refresh. |
+| `replay.playback_speed` | float / replay | none | Hidden; replay-only and inappropriate for live play. |
+| `replay.loop_enabled` | bool / replay | none | Hidden; replay-only and inappropriate for live play. |
+| `display.show_w_labels` | bool / slice | 4D | Editable only in 4D; renderer/HUD refresh. |
+| `display.projection_strength` | float / camera | none | Hidden; replay-only and inappropriate for live play. |
+| `theme.name` | enum / palette | 2D/3D/4D | Editable; theme and renderer refresh. |
+| `accessibility.high_contrast` | bool / accessibility | 2D/3D/4D | Editable; theme and renderer refresh. |
+| `accessibility.reduced_motion` | bool / accessibility | 2D/3D/4D | Editable; renderer motion-policy refresh. |
+| `accessibility.show_help_hints` | bool / accessibility | 2D/3D/4D | Editable; HUD/helper relayout. |
+| `camera.sensitivity` | enum / camera | 3D/4D | Editable only in 3D/4D; preference update without pose mutation. |
+| `camera.invert_y` | bool / camera | 3D/4D | Editable only in 3D/4D; preference update without pose mutation. |
+| `diagnostics.show_layout_bounds` | bool / diagnostics | none | Hidden; shell/replay diagnostics are not live-applicable. |
+| `interface.show_onboarding` | bool / guidance | 2D/3D/4D | Editable; HUD/helper relayout. |
+
+Current live-applicable registry types are boolean, float, and enum. The
+control factory remains type-driven; no speculative colour control or setting
+is introduced.
+
+## Scope Matrix
+
+| Layer | Required change | Provider evidence | Consumer evidence |
+| --- | --- | --- | --- |
+| Designer component | Generate owner groups and typed controls from registry metadata; hold opening/reference/working detached profiles. | Registry-count/type/range/option and reset unit tests. | HUD embeds one component without a parallel parameter table. |
+| Preview seam | Relay A/B/edit/reset previews through the existing app apply method. | Signal and detached-profile tests. | HUD, renderer, environment, camera preferences, and shell consume one profile snapshot. |
+| Persistence/gameplay | Never receive/write `SettingsStore`; preserve deterministic game/session/replay/camera-pose state. | Store snapshot/save-count and deterministic before/after assertions. | Live preview changes presentation only. |
+| Layout/input | Full, compact, and hidden states with bounded panel/strip geometry and pointer/focus isolation. | Responsive layout and synthetic input tests. | Board, NEXT, HOLD, helper/status stay visible or immediately reachable; gameplay recovers in compact/hidden states. |
+| Documentation | Record authority, reset/baseline semantics, evidence, and Stage 54G preservation. | Governance and generated-document checks. | Programme, backlog, architecture, and restart state agree. |
+
+## Required Changes
+
+1. Add a reusable registry-driven Designer component grouped by existing
+   `semantic_owner`, with boolean, numeric slider-plus-exact-value, and enum
+   controls, per-parameter reset, per-owner reset, and whole-profile reset.
+2. Capture an immutable opening baseline and detached B profile. Capture A only
+   by explicit user action; A/B selection and compact mode must expose an
+   accessible textual state.
+3. Define reset semantics exactly: parameter/group/`Reset B` restore opening
+   values; `Factory defaults` constructs a detached registry-default profile;
+   `Revert & Hide` restores the opening profile; hiding/collapsing otherwise
+   preserves A, B, and the currently previewed slot.
+4. Preview every edit/toggle/reset through
+   `TraceReplayApp.apply_presentation_profile()` and retain one detached active
+   profile in the HUD. Do not call `SettingsStore` or renderer/camera/gameplay
+   consumers directly.
+5. Provide responsive full, compact, and hidden states. Full mode owns keyboard
+   input; compact/hidden release gameplay input; Designer pointer hits never
+   leak to camera/gameplay handling.
+6. Preserve board visibility and existing right-inspector reachability for
+   NEXT, HOLD, helper, and status content across 2D/3D/4D and supported window
+   and UI-scale conditions.
+
+## Forbidden Changes
+
+- setting persistence, profile naming/import/export, telemetry, undo history,
+  speculative parameters, colour settings, or general-purpose editor scope;
+- gameplay/session/native/replay state, snapshots, hashes, input semantics,
+  queue/RNG, scoring, pieces, Ghost truth, NEXT/HOLD truth, or authority;
+- canonical board geometry, exact 4D basis, slice semantics, camera pose, or
+  renderer-local parameter ownership;
+- weakening runtime applicability, deterministic identity, sanitation, tests,
+  explicit deferrals, or the existing Stage 54G programme history;
+- push, force operation, pull-request creation, or publication.
+
+## Acceptance Criteria
+
+1. Controls, groups, defaults, validation, options, and live visibility derive
+   from registry metadata; a registry mutation is reflected without editing a
+   Designer parameter list.
+2. All and only live-applicable parameters are editable in each of 2D, 3D, and
+   4D, with exact numeric input paired to sliders.
+3. B is detached and non-persistent; edits leave store values/save count,
+   gameplay snapshot/hash, replay identity, board basis/geometry, and camera
+   pose unchanged unless the edited registry preference explicitly owns a
+   presentation refresh.
+4. A is immutable after capture. A/B buttons and toggle produce exact,
+   repeatable profile snapshots and plainly announce the displayed slot.
+5. Parameter/group/profile resets use the documented opening baseline;
+   factory defaults and revert-and-hide have distinct deterministic semantics.
+6. Full, compact, hide, reopen, and resize/UI-scale transitions preserve
+   working/reference state. Compact and hidden modes restore ordinary gameplay
+   controls; all Designer pointer input remains isolated.
+7. The board plus NEXT and HOLD are simultaneously viewable, and helper/status
+   content remains visible or immediately scroll-reachable, at supported 2D,
+   3D, 4D, window-size, HUD-density, and UI-scale combinations.
+8. Focused component/integration/deterministic/input/layout tests, governance
+   checks, sanitation, pinned Godot 4.7.1, full repository verification, and
+   real-window 2D/3D/4D full/compact/A/B evidence pass.
+9. Governing documents agree, Stage 54G history is preserved, one local commit
+   contains the stage, and the final worktree is clean.
+
+## Verification Plan
+
+- focused registry/control-generation, A/B, reset, persistence isolation,
+  app-preview, deterministic invariance, input, and responsive-layout tests;
+- project-contract, settings externalization, generated maintenance/config,
+  semantic-boundary, sanitation, and diff checks;
+- pinned Godot 4.7.1 and `CODEX_MODE=1 ./scripts/verify.sh`;
+- agent-driven real-window screenshots in 2D, 3D, and 4D covering full,
+  compact, and A/B states, with board/NEXT/HOLD/helper observations recorded.
+
+## Explicit Deferrals
+
+- named/saved profiles, persistence, import/export, undo/redo, telemetry,
+  advanced colour authoring, and general-purpose scene/editor tooling;
+- independent human acceptance and all Stage 54G work.
+
+---
+
 # Task Contract — Stage 54F-1R Geometry Review Corrections
 
 Status: COMPLETE / REVIEWED GREEN

@@ -13,6 +13,25 @@ history ledger. Detailed history is preserved in
 
 ## Active Focus
 
+- Completed bounded follow-on: Stage 54F-2 Live Presentation Designer starts
+  from reviewed Stage 54F-1R HEAD
+  `32e9d2a9e8f431693761a25ba6cd9736419ab4bf` on
+  `codex/canonical-local-board-geometry`. It generates its live parameter rows
+  and semantic-owner groups from the existing registry, edits only detached B,
+  captures immutable A, supports opening-baseline and factory resets, and
+  previews through `TraceReplayApp.apply_presentation_profile()`. Full mode
+  owns input; compact/hidden restore gameplay keys; the remaining panel hit
+  area blocks pointer pass-through. Store/save count, deterministic live
+  state, canonical geometry/bounds, exact basis/slice orientation, camera pose,
+  NEXT, and authoritative HOLD (`AE-0055`) remain unchanged. Non-headless Godot
+  4.7.1 Metal captures cover full 2D/3D/4D, compact 4D, and frozen-state A/B;
+  focused, pinned, full-repository, governance, and sanitation checks pass.
+  This is local agent-driven acceptance, not independent human sign-off. The
+  contract and evidence are `docs/architecture/live_presentation_designer.md`
+  and `docs/plans/live_presentation_designer_acceptance.md`. Named-profile
+  persistence/import/export, formal experiments/telemetry, broader theme work,
+  and Stage 54G changes remain out of scope.
+
 - Completed bounded review correction: `codex/canonical-local-board-geometry` starts
   from presentation-parameter HEAD
   `addd0d194f8fb53f57daf03e8b48ca4dd07ee6d4`. It establishes one canonical

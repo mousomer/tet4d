@@ -1106,6 +1106,32 @@ evidence is recorded in
 gameplay authority, validity rule, state schema, basis law, deterministic
 identity, or presentation-parameter owner changes.
 
+#### Post-Stage-54 follow-on — Stage 54F-2 Live Presentation Designer
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+The 54F-2 name identifies the supplied Designer follow-on and does not reopen
+or renumber the completed Stage 54F integrated acceptance or Stage 54G release
+hardening. The live Godot cockpit now exposes a registry-generated,
+developer/designer-facing surface over the existing 26-parameter envelope.
+It creates a detached working B profile, explicitly captured immutable A,
+opening-baseline and factory resets, and full/compact/hidden states. Every
+preview enters through `TraceReplayApp.apply_presentation_profile()`; the
+Designer receives no settings writer and owns no gameplay or presentation
+semantics.
+
+The durable contract is
+`docs/architecture/live_presentation_designer.md`, and automated, pinned/full,
+input/layout, deterministic-isolation, and agent-driven non-headless Godot
+evidence is recorded in
+`docs/plans/live_presentation_designer_acceptance.md`. HOLD is present under
+native authority `AE-0055`; board, NEXT, HOLD, 4D basis, helper, and status
+viewability are Designer acceptance properties without becoming new semantic
+owners or visibility settings. Named/saved profiles, import/export, formal
+experiments/telemetry, broader theme work, and independent human sign-off
+remain deferred.
+
 Objective:
 
 Close the gap between a verified prototype and a professional game release.

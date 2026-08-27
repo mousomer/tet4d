@@ -175,6 +175,16 @@ without reading user storage or maintaining duplicate registered defaults.
 Presentation profiles never contain current view/basis state and cannot reach
 canonical setup, native state, gameplay snapshots, traces, replays, or hashes.
 
+The live developer/designer workflow follows
+`docs/architecture/live_presentation_designer.md`. Its UI is generated from
+the same registry, edits detached B and captured A profiles, and previews only
+through the bounded app apply seam. It has no settings writer and no direct
+renderer, camera, HUD, geometry, or gameplay mutation path. Full mode owns
+interactive input; compact/hidden modes release gameplay keys while the
+remaining GUI hit area blocks pointer pass-through. Board, NEXT, established
+HOLD (`AE-0055`), basis, helper, and status viewability are shell-layout
+acceptance properties, not new semantic owners or visibility parameters.
+
 ### AI (`src/tet4d/ai/playbot`)
 
 Owns:

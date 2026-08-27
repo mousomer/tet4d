@@ -175,6 +175,14 @@ func _input(event: InputEvent) -> void:
 		return
 	if not _is_live_viewer_active():
 		return
+	if (
+		_hud != null
+		and (event is InputEventMouseButton or event is InputEventMouseMotion)
+		and _hud.presentation_designer_contains_global_point(event.position)
+	):
+		# Leave the event available to Godot GUI dispatch while preventing the
+		# compact overlay from also orbiting, panning, zooming, or hard-dropping.
+		return
 	if _hud != null and _hud.live_interaction_owns_input():
 		return
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
