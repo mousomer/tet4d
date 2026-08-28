@@ -3,6 +3,7 @@ extends PanelContainer
 class_name PresentationDesigner
 
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const PresentationProfileLibraryScript = preload("res://scripts/presentation/presentation_profile_library.gd")
 
 signal profile_preview_requested(profile)
 signal state_changed(state: String)
@@ -14,6 +15,7 @@ const SLOT_REFERENCE := "A"
 const SLOT_WORKING := "B"
 
 var _registry
+var _profile_library
 var _runtime_context := "live_2d"
 var _opening_profile
 var _reference_profile
@@ -21,6 +23,12 @@ var _working_profile
 var _displayed_slot := SLOT_WORKING
 var _state := STATE_HIDDEN
 var _syncing_controls := false
+var _library_expanded := false
+var _loaded_profile_id := ""
+var _loaded_profile_name := ""
+var _saved_profile_baseline
+var _pending_delete_profile_id := ""
+var _pending_export_profile_id := ""
 
 var _full_root: VBoxContainer
 var _compact_root: HBoxContainer
@@ -28,6 +36,16 @@ var _groups_box: VBoxContainer
 var _slot_state_label: Label
 var _status_label: Label
 var _compact_state_label: Label
+var _library_toggle_button: Button
+var _library_state_label: Label
+var _library_root: VBoxContainer
+var _profile_name_input: LineEdit
+var _profile_list: ItemList
+var _save_profile_button: Button
+var _import_dialog: FileDialog
+var _export_dialog: FileDialog
+var _delete_confirmation: ConfirmationDialog
+var _overwrite_confirmation: ConfirmationDialog
 var _reference_button: Button
 var _compact_reference_button: Button
 var _working_button: Button
@@ -46,11 +64,13 @@ func _ready() -> void:
 	_refresh_state_visibility()
 
 
-func configure(registry) -> bool:
+func configure(registry, profile_library = null) -> bool:
 	if registry == null or not registry.has_method("validate") or not registry.validate().is_empty():
 		return false
 	_registry = registry
+	_profile_library = profile_library if profile_library != null else PresentationProfileLibraryScript.new(registry)
 	_rebuild_registry_controls()
+	_refresh_library_list()
 	return true
 
 
@@ -62,6 +82,7 @@ func open_with_profile(active_profile, runtime_context: String) -> bool:
 		_opening_profile = active_profile.detached_copy()
 		_working_profile = active_profile.detached_copy()
 		_displayed_slot = SLOT_WORKING
+		_clear_loaded_profile()
 	_rebuild_registry_controls()
 	_set_state(STATE_FULL)
 	_refresh_all_text("Live edits preview B only; nothing is saved.")
@@ -116,6 +137,12 @@ func end_session() -> void:
 	_reference_profile = null
 	_working_profile = null
 	_displayed_slot = SLOT_WORKING
+	_clear_loaded_profile()
+	_library_expanded = false
+	if _library_root != null:
+		_library_root.visible = false
+	if _library_toggle_button != null:
+		_library_toggle_button.text = "PROFILE LIBRARY ▸"
 	_sync_controls_from_working()
 	_refresh_all_text("Open the Designer to begin a detached preview session.")
 
@@ -203,6 +230,135 @@ func reset_working_to_factory_defaults() -> bool:
 	return true
 
 
+func save_working_as(display_name: String) -> Dictionary:
+	if _profile_library == null or _working_profile == null:
+		return _library_failure("Open the Designer before saving working B.")
+	var result: Dictionary = _profile_library.save_new(display_name, _working_profile)
+	if bool(result.get("ok", false)):
+		var record: Dictionary = result.get("record", {})
+		_set_loaded_profile(record, _working_profile)
+		_refresh_library_list(_loaded_profile_id)
+		_refresh_all_text("Saved working B as '%s'." % _loaded_profile_name)
+	else:
+		_refresh_all_text(str(result.get("error", "Profile could not be saved.")))
+	return result
+
+
+func save_working() -> Dictionary:
+	if _profile_library == null or _working_profile == null or _loaded_profile_id.is_empty():
+		return _library_failure("Use Save As before saving this working B.")
+	var result: Dictionary = _profile_library.save_existing(_loaded_profile_id, _working_profile)
+	if bool(result.get("ok", false)):
+		_set_loaded_profile(result.get("record", {}), _working_profile)
+		_refresh_library_list(_loaded_profile_id)
+		_refresh_all_text("Saved working B to '%s'." % _loaded_profile_name)
+	else:
+		_refresh_all_text(str(result.get("error", "Profile could not be saved.")))
+	return result
+
+
+func load_saved_profile(profile_id: String) -> Dictionary:
+	if _profile_library == null or _working_profile == null:
+		return _library_failure("Open the Designer before loading a profile.")
+	var result: Dictionary = _profile_library.load_profile(profile_id)
+	if not bool(result.get("ok", false)):
+		_refresh_all_text(str(result.get("error", "Profile could not be loaded.")))
+		return result
+	var loaded_profile = result.get("profile")
+	if not _valid_profile(loaded_profile):
+		return _library_failure("Stored profile did not produce a detached conforming B.")
+	_working_profile = loaded_profile.detached_copy()
+	_displayed_slot = SLOT_WORKING
+	_set_loaded_profile(result.get("record", {}), _working_profile)
+	_sync_controls_from_working()
+	_emit_preview(_working_profile, "Loaded '%s' into detached working B; A is unchanged." % _loaded_profile_name)
+	return result
+
+
+func duplicate_saved_profile(profile_id: String, display_name: String = "") -> Dictionary:
+	if _profile_library == null:
+		return _library_failure("Profile library is unavailable.")
+	var result: Dictionary = _profile_library.duplicate_profile(profile_id, display_name)
+	if bool(result.get("ok", false)):
+		var record: Dictionary = result.get("record", {})
+		_refresh_library_list(str(record.get("profile_id", "")))
+		_refresh_all_text("Duplicated profile as '%s'." % record.get("display_name", ""))
+	else:
+		_refresh_all_text(str(result.get("error", "Profile could not be duplicated.")))
+	return result
+
+
+func rename_saved_profile(profile_id: String, display_name: String) -> Dictionary:
+	if _profile_library == null:
+		return _library_failure("Profile library is unavailable.")
+	var result: Dictionary = _profile_library.rename_profile(profile_id, display_name)
+	if bool(result.get("ok", false)):
+		var record: Dictionary = result.get("record", {})
+		if profile_id == _loaded_profile_id:
+			_loaded_profile_name = str(record.get("display_name", ""))
+		_refresh_library_list(profile_id)
+		_refresh_all_text("Renamed profile to '%s' without applying it." % record.get("display_name", ""))
+	else:
+		_refresh_all_text(str(result.get("error", "Profile could not be renamed.")))
+	return result
+
+
+func delete_saved_profile(profile_id: String) -> Dictionary:
+	if _profile_library == null:
+		return _library_failure("Profile library is unavailable.")
+	var result: Dictionary = _profile_library.delete_profile(profile_id)
+	if bool(result.get("ok", false)):
+		if profile_id == _loaded_profile_id:
+			_clear_loaded_profile()
+		_refresh_library_list()
+		_refresh_all_text("Deleted the stored profile; detached working B remains active.")
+	else:
+		_refresh_all_text(str(result.get("error", "Profile could not be deleted.")))
+	return result
+
+
+func import_saved_profile(source_path: String, display_name: String = "") -> Dictionary:
+	if _profile_library == null:
+		return _library_failure("Profile library is unavailable.")
+	var result: Dictionary = _profile_library.import_profile(source_path, display_name)
+	if bool(result.get("ok", false)):
+		var record: Dictionary = result.get("record", {})
+		_refresh_library_list(str(record.get("profile_id", "")))
+		_refresh_all_text("Imported '%s'; working B was not changed." % record.get("display_name", ""))
+	else:
+		_refresh_all_text(str(result.get("error", "Profile could not be imported.")))
+	return result
+
+
+func export_saved_profile(profile_id: String, destination_path: String, allow_overwrite: bool = false) -> Dictionary:
+	if _profile_library == null:
+		return _library_failure("Profile library is unavailable.")
+	var result: Dictionary = _profile_library.export_profile(profile_id, destination_path, allow_overwrite)
+	_refresh_all_text(
+		"Exported profile to %s." % destination_path
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Profile could not be exported."))
+	)
+	return result
+
+
+func set_library_expanded(expanded: bool) -> void:
+	_library_expanded = expanded
+	if _library_root != null:
+		_library_root.visible = expanded
+	if _library_toggle_button != null:
+		_library_toggle_button.text = "PROFILE LIBRARY %s" % ("▾" if expanded else "▸")
+	_refresh_all_text("Profile library expanded." if expanded else "Profile library collapsed.")
+
+
+func working_profile_dirty() -> bool:
+	return (
+		_working_profile != null
+		and _saved_profile_baseline != null
+		and _working_profile.values() != _saved_profile_baseline.values()
+	)
+
+
 func state() -> String:
 	return _state
 
@@ -248,6 +404,13 @@ func deterministic_snapshot() -> Dictionary:
 		"opening": _opening_profile.snapshot() if _opening_profile != null else {},
 		"reference": _reference_profile.snapshot() if _reference_profile != null else {},
 		"working": _working_profile.snapshot() if _working_profile != null else {},
+		"profile_library": _profile_library.deterministic_snapshot() if _profile_library != null else {},
+		"library_expanded": _library_expanded,
+		"library_visible": _library_root.visible if _library_root != null else false,
+		"loaded_profile_id": _loaded_profile_id,
+		"loaded_profile_name": _loaded_profile_name,
+		"working_dirty": working_profile_dirty(),
+		"saved_profile_baseline": _saved_profile_baseline.snapshot() if _saved_profile_baseline != null else {},
 		"slot_text": _slot_state_label.text if _slot_state_label != null else "",
 		"status_text": _status_label.text if _status_label != null else "",
 		"compact_text": _compact_state_label.text if _compact_state_label != null else "",
@@ -285,7 +448,7 @@ func _build_surface() -> void:
 	header.add_child(hide_button)
 
 	var detached_note := Label.new()
-	detached_note.text = "DETACHED PREVIEW · Current run only · Settings are never saved"
+	detached_note.text = "DETACHED PREVIEW · Ordinary settings are never saved · Library writes require explicit Save"
 	detached_note.theme_type_variation = "DimLabel"
 	detached_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_full_root.add_child(detached_note)
@@ -320,6 +483,78 @@ func _build_surface() -> void:
 	_slot_state_label.theme_type_variation = "SecondaryLabel"
 	_slot_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_full_root.add_child(_slot_state_label)
+
+	var library_header := HBoxContainer.new()
+	library_header.name = "DesignerProfileLibraryHeader"
+	library_header.add_theme_constant_override("separation", 6)
+	_full_root.add_child(library_header)
+	_library_toggle_button = Button.new()
+	_library_toggle_button.name = "DesignerProfileLibraryToggle"
+	_library_toggle_button.text = "PROFILE LIBRARY ▸"
+	_library_toggle_button.tooltip_text = "Manage explicitly saved presentation profiles"
+	_library_toggle_button.pressed.connect(func() -> void: set_library_expanded(not _library_expanded))
+	library_header.add_child(_library_toggle_button)
+	_library_state_label = Label.new()
+	_library_state_label.name = "DesignerProfileLibraryState"
+	_library_state_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_library_state_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_library_state_label.theme_type_variation = "DimLabel"
+	library_header.add_child(_library_state_label)
+
+	_library_root = VBoxContainer.new()
+	_library_root.name = "DesignerProfileLibrary"
+	_library_root.visible = false
+	_library_root.add_theme_constant_override("separation", 5)
+	_full_root.add_child(_library_root)
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 5)
+	_library_root.add_child(name_row)
+	_profile_name_input = LineEdit.new()
+	_profile_name_input.name = "DesignerProfileName"
+	_profile_name_input.placeholder_text = "Profile name for Save As / Rename"
+	_profile_name_input.max_length = PresentationProfileLibraryScript.MAX_DISPLAY_NAME_LENGTH
+	_profile_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_row.add_child(_profile_name_input)
+	var save_as_button := Button.new()
+	save_as_button.name = "DesignerProfileSaveAs"
+	save_as_button.text = "Save As"
+	save_as_button.tooltip_text = "Explicitly persist detached working B as a new named profile"
+	save_as_button.pressed.connect(_save_as_from_ui)
+	name_row.add_child(save_as_button)
+	_save_profile_button = Button.new()
+	_save_profile_button.name = "DesignerProfileSave"
+	_save_profile_button.text = "Save Profile"
+	_save_profile_button.tooltip_text = "Explicitly overwrite the loaded/saved profile with working B"
+	_save_profile_button.pressed.connect(_request_save_from_ui)
+	name_row.add_child(_save_profile_button)
+
+	_profile_list = ItemList.new()
+	_profile_list.name = "DesignerSavedProfiles"
+	_profile_list.custom_minimum_size = Vector2(0, 92)
+	_profile_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_profile_list.select_mode = ItemList.SELECT_SINGLE
+	_profile_list.item_selected.connect(_on_library_item_selected)
+	_profile_list.item_activated.connect(func(_index: int) -> void: _load_selected_from_ui())
+	_library_root.add_child(_profile_list)
+
+	var lifecycle_grid := GridContainer.new()
+	lifecycle_grid.name = "DesignerProfileLifecycleActions"
+	lifecycle_grid.columns = 4
+	_library_root.add_child(lifecycle_grid)
+	for action in [
+		["Load", "Load selected profile into detached B without changing A", _load_selected_from_ui],
+		["Duplicate", "Create an independent copy of the selected profile", _duplicate_selected_from_ui],
+		["Rename", "Rename the selected profile without applying it", _rename_selected_from_ui],
+		["Delete", "Delete the selected stored profile after confirmation", _request_delete_from_ui],
+		["Import", "Import and validate a portable profile artifact without applying it", _open_import_dialog],
+		["Export", "Export the selected named profile as portable versioned JSON", _open_export_dialog],
+	]:
+		var button := Button.new()
+		button.text = str(action[0])
+		button.tooltip_text = str(action[1])
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(action[2])
+		lifecycle_grid.add_child(button)
 
 	var scroll := ScrollContainer.new()
 	scroll.name = "DesignerParameterScroll"
@@ -397,7 +632,164 @@ func _build_surface() -> void:
 	compact_hide.text = "Hide"
 	compact_hide.pressed.connect(hide_preserving_preview)
 	_compact_root.add_child(compact_hide)
+
+	_overwrite_confirmation = ConfirmationDialog.new()
+	_overwrite_confirmation.title = "Save Presentation Profile"
+	_overwrite_confirmation.dialog_text = "Replace the saved profile with detached working B?"
+	_overwrite_confirmation.confirmed.connect(save_working)
+	add_child(_overwrite_confirmation)
+	_delete_confirmation = ConfirmationDialog.new()
+	_delete_confirmation.title = "Delete Presentation Profile"
+	_delete_confirmation.dialog_text = "Delete the selected saved profile? Detached working B will remain active."
+	_delete_confirmation.confirmed.connect(_delete_selected_after_confirmation)
+	add_child(_delete_confirmation)
+	_import_dialog = FileDialog.new()
+	_import_dialog.title = "Import Presentation Profile"
+	_import_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	_import_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	_import_dialog.filters = PackedStringArray(["*.json ; Tet4D presentation profile JSON"])
+	_import_dialog.file_selected.connect(_on_import_file_selected)
+	add_child(_import_dialog)
+	_export_dialog = FileDialog.new()
+	_export_dialog.title = "Export Presentation Profile"
+	_export_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	_export_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	_export_dialog.filters = PackedStringArray(["*.json ; Tet4D presentation profile JSON"])
+	_export_dialog.file_selected.connect(_on_export_file_selected)
+	add_child(_export_dialog)
 	_refresh_all_text("Open the Designer to begin a detached preview session.")
+
+
+func _save_as_from_ui() -> void:
+	save_working_as(_profile_name_input.text if _profile_name_input != null else "")
+
+
+func _request_save_from_ui() -> void:
+	if _loaded_profile_id.is_empty():
+		_refresh_all_text("Use Save As before saving this working B.")
+		return
+	_overwrite_confirmation.dialog_text = "Replace '%s' with detached working B?" % _loaded_profile_name
+	_overwrite_confirmation.popup_centered()
+
+
+func _load_selected_from_ui() -> void:
+	var profile_id := _selected_library_profile_id()
+	if profile_id.is_empty():
+		_refresh_all_text("Select a saved profile to load.")
+		return
+	load_saved_profile(profile_id)
+
+
+func _duplicate_selected_from_ui() -> void:
+	var profile_id := _selected_library_profile_id()
+	if profile_id.is_empty():
+		_refresh_all_text("Select a saved profile to duplicate.")
+		return
+	var requested_name := _profile_name_input.text.strip_edges() if _profile_name_input != null else ""
+	var selected := _selected_library_record()
+	if requested_name.to_lower() == str(selected.get("display_name", "")).to_lower():
+		requested_name = ""
+	duplicate_saved_profile(profile_id, requested_name)
+
+
+func _rename_selected_from_ui() -> void:
+	var profile_id := _selected_library_profile_id()
+	if profile_id.is_empty():
+		_refresh_all_text("Select a saved profile to rename.")
+		return
+	rename_saved_profile(profile_id, _profile_name_input.text if _profile_name_input != null else "")
+
+
+func _request_delete_from_ui() -> void:
+	_pending_delete_profile_id = _selected_library_profile_id()
+	if _pending_delete_profile_id.is_empty():
+		_refresh_all_text("Select a saved profile to delete.")
+		return
+	_delete_confirmation.popup_centered()
+
+
+func _delete_selected_after_confirmation() -> void:
+	var profile_id := _pending_delete_profile_id
+	_pending_delete_profile_id = ""
+	if not profile_id.is_empty():
+		delete_saved_profile(profile_id)
+
+
+func _open_import_dialog() -> void:
+	_import_dialog.popup_centered_ratio(0.75)
+
+
+func _open_export_dialog() -> void:
+	_pending_export_profile_id = _selected_library_profile_id()
+	if _pending_export_profile_id.is_empty():
+		_refresh_all_text("Select a saved profile to export.")
+		return
+	var record := _selected_library_record()
+	_export_dialog.current_file = "%s.json" % str(record.get("display_name", "presentation-profile"))
+	_export_dialog.popup_centered_ratio(0.75)
+
+
+func _on_import_file_selected(path: String) -> void:
+	import_saved_profile(path)
+
+
+func _on_export_file_selected(path: String) -> void:
+	var profile_id := _pending_export_profile_id
+	_pending_export_profile_id = ""
+	if not profile_id.is_empty():
+		export_saved_profile(profile_id, path, true)
+
+
+func _on_library_item_selected(_index: int) -> void:
+	var record := _selected_library_record()
+	if _profile_name_input != null:
+		_profile_name_input.text = str(record.get("display_name", ""))
+
+
+func _refresh_library_list(preferred_profile_id: String = "") -> void:
+	if _profile_list == null or _profile_library == null:
+		return
+	_profile_list.clear()
+	var preferred_index := -1
+	for record in _profile_library.list_profiles():
+		var index := _profile_list.add_item(str(record.get("display_name", "")))
+		_profile_list.set_item_metadata(index, record.duplicate(true))
+		if str(record.get("profile_id", "")) == preferred_profile_id:
+			preferred_index = index
+	if preferred_index >= 0:
+		_profile_list.select(preferred_index)
+		_on_library_item_selected(preferred_index)
+
+
+func _selected_library_record() -> Dictionary:
+	if _profile_list == null:
+		return {}
+	var selected := _profile_list.get_selected_items()
+	if selected.is_empty():
+		return {}
+	var metadata = _profile_list.get_item_metadata(int(selected[0]))
+	return metadata.duplicate(true) if metadata is Dictionary else {}
+
+
+func _selected_library_profile_id() -> String:
+	return str(_selected_library_record().get("profile_id", ""))
+
+
+func _set_loaded_profile(record: Dictionary, profile) -> void:
+	_loaded_profile_id = str(record.get("profile_id", ""))
+	_loaded_profile_name = str(record.get("display_name", ""))
+	_saved_profile_baseline = profile.detached_copy() if _valid_profile(profile) else null
+
+
+func _clear_loaded_profile() -> void:
+	_loaded_profile_id = ""
+	_loaded_profile_name = ""
+	_saved_profile_baseline = null
+
+
+func _library_failure(message: String) -> Dictionary:
+	_refresh_all_text(message)
+	return {"ok": false, "error": message}
 
 
 func _rebuild_registry_controls() -> void:
@@ -635,16 +1027,24 @@ func _release_designer_focus() -> void:
 
 func _refresh_all_text(message: String) -> void:
 	var has_a := _reference_profile != null
-	var slot_description := "Showing %s · %s · Not saved" % [
+	var saved_state := "Not saved"
+	if not _loaded_profile_id.is_empty():
+		saved_state = "Loaded from: \"%s\"%s" % [_loaded_profile_name, " *" if working_profile_dirty() else ""]
+	var slot_description := "Showing %s · %s · %s" % [
 		_displayed_slot,
 		"immutable reference" if _displayed_slot == SLOT_REFERENCE else "detached working profile",
+		saved_state,
 	]
 	if _slot_state_label != null:
 		_slot_state_label.text = slot_description
 	if _compact_state_label != null:
-		_compact_state_label.text = "%s shown · Designer · Not saved" % _displayed_slot
+		_compact_state_label.text = "%s shown · %s" % [_displayed_slot, saved_state]
+	if _library_state_label != null:
+		_library_state_label.text = saved_state
 	if _status_label != null:
 		_status_label.text = message
+	if _save_profile_button != null:
+		_save_profile_button.disabled = _loaded_profile_id.is_empty() or _working_profile == null
 	for button in [_reference_button, _compact_reference_button]:
 		if button != null:
 			button.disabled = not has_a

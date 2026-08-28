@@ -1,3 +1,153 @@
+# Task Contract — Stage 54F-3 Presentation Profile Library
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `5a2e648124ed4ea0f62003fd95fb3d8dca1a57f6`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Add one bounded, explicit, portable library for named `PresentationProfile`
+artifacts without changing ordinary shell preferences or the Stage 54F-2 rule
+that Designer edits, A/B switching, resets, and hide actions are runtime-only.
+The user crosses the persistence boundary only through an explicit library
+save, save-as, duplicate, rename, delete, import, or export action.
+
+## Classification and Authority Comparison
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`, because the new presentation-artifact
+  storage provider is consumed by the existing Designer UI and bounded runtime
+  application seam.
+- Affected layers: versioned presentation-artifact storage, detached
+  `PresentationProfile` composition, Designer library UI/state, HUD wiring,
+  Godot integration tests, and governing architecture/programme records.
+- Claims: explicit persistence only; safe named-artifact lifecycle; strict
+  current-schema import; detached load into B; unchanged A, ordinary settings,
+  gameplay identity, current camera pose, applicability, and cockpit hierarchy.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `integration`, `deterministic`, and bounded `human_visual` evidence.
+- Full repository gate: required because this establishes a persistent user-
+  artifact owner and integrates it with a shared live product surface.
+
+The versioned shell-settings registry remains the only parameter inventory and
+semantic authority. Schema-1 `PresentationProfile` remains the value schema:
+it rejects unknown or invalid IDs/values and fills omitted current keys from
+registry defaults. `SettingsStore` remains the only ordinary-preference writer.
+The library establishes authority only for named artifact identity, naming,
+storage, listing, and explicit lifecycle operations. It does not own parameter
+meaning, applicability, renderer application, gameplay, camera pose, A/B
+semantics, factory defaults, or shell startup preferences.
+
+The exact predecessor commit was clean and verified before this stage with
+`CODEX_MODE=1 ./scripts/verify.sh` -> `verify: OK`.
+
+## Scope Matrix
+
+| Layer | Required change | Evidence |
+| --- | --- | --- |
+| Artifact store | One validated file per generated stable ID under the repository-standard Godot user-data boundary; safe replacement, isolated corruption, and no index drift. | Focused lifecycle, corruption, write-failure, and path-safety tests. |
+| Profile contract | Embed and deserialize the existing `PresentationProfile.snapshot()` without a second parameter schema. | Current/future version, unknown/missing, type, bound, enum, and finite-number tests. |
+| Designer | Add a collapsed-by-default library surface; save working B explicitly, load a detached B, preserve A, and expose loaded/dirty state. | Component and scene integration tests plus bounded real-window review. |
+| Runtime integration | Apply only loaded detached B through the existing preview signal. | 2D/3D/4D applicability, settings, gameplay, camera, NEXT/HOLD, Ghost, basis, and cockpit assertions. |
+| Documentation | Establish artifact ownership and reconcile completed programme/backlog/handoff state. | Architecture, authority map, acceptance, programme, backlog, and governance validation. |
+
+## Required Changes
+
+1. Store user profiles as independently readable, versioned JSON artifacts
+   whose filesystem names derive only from generated validated IDs.
+2. Define artifact type/version, stable local identity, display name, and one
+   embedded authoritative `PresentationProfile` snapshot.
+3. Support list, Save As, explicit Save/overwrite, load, duplicate, rename,
+   deliberate delete, import, and export without an index or database.
+4. Reject invalid names, duplicate display names, unsafe IDs, malformed/root-
+   shape-invalid JSON, unsupported artifact/profile versions, unknown IDs,
+   invalid types/bounds/enums, and non-finite numbers before mutation.
+5. Preserve the profile contract's current same-schema missing-key policy:
+   fill from registry defaults; do not add implicit cross-version migration.
+6. Load into a detached working B, display B, leave captured A unchanged, and
+   apply through the existing bounded preview signal only.
+7. Track dirty state by semantic B values against the loaded/saved baseline;
+   A/B display, camera manipulation, collapse, scroll, and gameplay do not
+   affect it.
+8. Keep explicit library persistence separate from `SettingsStore`; imports do
+   not auto-apply, loads do not rewrite preferences, and edits never auto-save.
+9. Keep the library collapsed when not managed and preserve the accepted board,
+   NEXT/HOLD, piece controls, basis/slice, Fit, full, and compact hierarchy.
+10. Add focused tests and record bounded production-window save/load/A-B/
+    delete/import/export evidence.
+
+## Forbidden Changes
+
+- New presentation parameters, themes or built-in style packs, palette-role
+  editing, theme authoring, marketplace/sharing/cloud/account synchronization;
+- gameplay/setup/replay/profile-preset semantics, current camera pose, exact
+  basis, active slice, native state, queue/RNG, Ghost truth, NEXT/HOLD, score,
+  collision, hash, or trace changes;
+- using named profiles as shell-settings persistence or inventing Set as Default;
+- storing Designer open/collapse/scroll/A-B state, gameplay/session fields,
+  screenshots, hashes, absolute machine paths, or transient camera state;
+- an index/database, display-name-derived paths, silent overwrite, partial
+  import/application, automatic save prompts, or Designer auto-save;
+- cockpit enlargement, right-inspector growth, board shrinkage, camera-fit,
+  slice-set, geometry, controls/remapping, or unrelated review cleanup;
+- reset, rebase, predecessor amendment, push, PR, or publication.
+
+## Acceptance Criteria
+
+1. All eight lifecycle operations work through one explicit library owner.
+2. Artifacts are portable, deterministic enough to review, versioned, and
+   contain every and only authoritative presentation values plus library
+   identity/name metadata.
+3. Display names are validated case-insensitively for uniqueness and never
+   participate in storage paths; stable IDs survive rename and duplicates gain
+   new IDs.
+4. Corrupt artifacts are isolated; unsupported or invalid imports and failed
+   writes leave library, B, A, runtime presentation, settings, and gameplay
+   unchanged.
+5. Designer edits, resets, A/B switching, Factory Defaults, Keep B & Hide,
+   collapse, and hide perform zero library writes.
+6. Save As persists working B; explicit Save updates only the selected stable
+   profile; loading replaces/displays detached B and leaves A unchanged.
+7. Editing loaded B or a duplicate does not mutate any stored source; rename
+   preserves identity/values; delete preserves currently active detached B.
+8. Dirty state depends only on semantic B-versus-baseline values.
+9. Export/import round-trip preserves asymmetric representative values across
+   board, piece, Ghost, slice-set, HUD/environment, and accessibility owners.
+10. Current/future schema policy, unknown/missing policy, types, bounds, enums,
+    finite values, name/path attacks, and storage failures have focused tests.
+11. 2D/3D/4D application remains registry-driven, and settings, gameplay hash/
+    snapshot, camera pose, basis/slice, Ghost semantics, NEXT/HOLD, geometry,
+    and cockpit controls remain unchanged.
+12. The library is collapsed by default and full/compact Designer remain usable
+    without changing the accepted cockpit allocation.
+13. Focused tests, canonical Godot suite, pinned Godot 4.7.1, settings/storage,
+    governance/generated-doc, semantic-boundary, sanitation, diff, and one full
+    repository gate pass.
+14. Bounded agent-driven production-window evidence covers Save As, visible
+    restoration on load, A/B, detached delete, and an actual export/import path.
+15. Documentation names the new artifact owner without transferring parameter
+    semantic authority; one coherent local commit leaves a clean worktree.
+
+## Verification and Explicit Deferrals
+
+Run focused library/Designer tests first, then the canonical Godot suite,
+pinned Godot 4.7.1 gate, settings externalization, project-contract,
+generated-maintenance/configuration, semantic-boundary, sanitation, and diff
+checks, followed by one final full repository gate. A bounded visual campaign
+is sufficient because the library is collapsible and does not alter board or
+inspector geometry.
+
+Predefined/built-in theme profiles, theme packs/authoring, procedural
+backgrounds, sharing/cloud/telemetry/recommendations, startup/default profile
+selection, gameplay presets, new parameters, remapping, and all camera/geometry/
+slice/cockpit follow-ons remain deferred.
+
+---
+
 # Task Contract — Stage 54F-2R.1 Bounded Cockpit Review Cleanup
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN

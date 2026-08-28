@@ -13,6 +13,23 @@ history ledger. Detailed history is preserved in
 
 ## Active Focus
 
+- Completed bounded follow-on: Stage 54F-3 starts from verified local HEAD
+  `5a2e648124ed4ea0f62003fd95fb3d8dca1a57f6` on
+  `codex/canonical-local-board-geometry`. It adds an explicit one-file-per-
+  profile `PresentationProfileLibrary` under Godot user data, with generated
+  stable IDs, validated display names, the existing schema-1 profile payload,
+  safe replacement, corruption isolation, and list/save/load/duplicate/rename/
+  delete/import/export lifecycle. The Designer integrates a collapsed-by-
+  default library surface; Save targets working B, load replaces/displays a
+  detached B without changing A, and semantic dirty state is separate from
+  runtime-only edits. Ordinary settings, gameplay, native hash, camera pose,
+  basis/slice, Ghost truth, NEXT/HOLD, controls, and cockpit allocation remain
+  unchanged. Focused, canonical/pinned Godot 4.7.1, settings/persistence,
+  semantic-boundary, governance, sanitation, full-repository, and bounded real-
+  window evidence is green. Authority and acceptance are recorded in
+  `docs/architecture/presentation_profile_library.md` and
+  `docs/plans/presentation_profile_library_acceptance.md`.
+
 - Completed bounded post-review cleanup: Stage 54F-2R.1 starts from reviewed-
   green cockpit HEAD `d77aca9a3a7556d6e4db71ba47af24894e75e5ad` on
   `codex/canonical-local-board-geometry`. It makes Reset View visibility

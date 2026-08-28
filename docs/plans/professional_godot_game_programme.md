@@ -1153,6 +1153,29 @@ and deterministic gameplay remain unchanged. Evidence and the five explicit
 visual answers are recorded in
 `docs/plans/live_presentation_designer_acceptance.md`.
 
+#### Post-Stage-54 follow-on — Stage 54F-3 Presentation Profile Library
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+Stage 54F-3 adds explicit persistence for named, versioned, portable
+`PresentationProfile` artifacts without changing ordinary settings or making
+Designer experimentation persistent. One validated file per generated stable
+ID under Godot user data supports list, Save As, deliberate Save, detached
+load into B, duplicate, rename, confirmed delete, import, and export. Display
+names are not paths, one corrupt file is isolated, and import delegates value
+validation/default completion to the existing profile/registry authority.
+
+The durable contract is
+`docs/architecture/presentation_profile_library.md`; focused storage,
+Designer, 2D/3D/4D applicability, cockpit, deterministic-isolation, and bounded
+production-window evidence is recorded in
+`docs/plans/presentation_profile_library_acceptance.md`. This follow-on does
+not reopen the completed Stage 54F/54G history, add themes or parameters, or
+transfer presentation semantics away from the registry. Canonical/pinned Godot,
+59-case topology transport, persistence/governance/semantic-boundary,
+sanitation, and full repository verification pass.
+
 Objective:
 
 Close the gap between a verified prototype and a professional game release.

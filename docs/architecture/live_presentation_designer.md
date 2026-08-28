@@ -9,8 +9,10 @@ Stage: 54F-2
 The Live Presentation Designer is a developer/designer instrument for changing
 registered presentation values against one running deterministic live game. It
 exists to shorten visual iteration without restarting a session, editing source
-constants, or contaminating player settings. It is not a profile library,
-gameplay editor, scene editor, or new presentation-semantics owner.
+constants, or contaminating player settings. It is not a profile-library
+storage owner, gameplay editor, scene editor, or new presentation-semantics
+owner. Stage 54F-3 integrates the separate library owner through the bounded
+surface and lifecycle defined by `presentation_profile_library.md`.
 
 The production flow is:
 
@@ -41,6 +43,9 @@ The following objects are distinct:
   replaced by validated `PresentationProfile.with_overrides()` results;
 - **reference A** is created only by explicit `Capture B as A` and remains
   detached from later B edits.
+- **named library profile** is an independently stored artifact owned by
+  `PresentationProfileLibrary`; load copies it into B and explicit Save copies B
+  back across the persistence boundary.
 
 Object aliasing between A, B, the opening baseline, active runtime state, and
 the settings store is forbidden. The Designer is intentionally not given a
@@ -92,8 +97,12 @@ Reset wording and behavior are normative:
 - `Keep B & Hide` explicitly reapplies B and hides;
 - ordinary Hide or Compact preserves A, B, and the currently displayed slot.
 
-Named profiles, save/load, import/export, undo history, randomized assignment,
-telemetry, and statistical experimentation are outside this contract.
+Named profile storage/versioning/import/export remain outside this Designer
+contract and are owned by `presentation_profile_library.md`. The integrated UI
+may invoke that owner, but ordinary edits, reset actions, A/B switching,
+`Keep B & Hide`, collapse, and hide retain the runtime-only behavior above.
+Undo history, randomized assignment, telemetry, and statistical experimentation
+remain outside both contracts.
 
 ## Presentation and deterministic isolation
 

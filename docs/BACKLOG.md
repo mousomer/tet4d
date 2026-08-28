@@ -98,6 +98,20 @@ reviewed Stage 54F-2R hierarchy, layout, Designer, camera behavior, gameplay,
 and authority boundaries remain unchanged. Evidence is appended to
 `docs/plans/live_presentation_designer_acceptance.md`.
 
+Completed bounded follow-on: Stage 54F-3 implements the explicit Presentation
+Profile Library on `codex/canonical-local-board-geometry`. Named user profiles
+use generated stable IDs and independently validated versioned files under
+Godot user data. The lifecycle includes list, Save As, explicit Save, detached
+load into B, duplicate, rename, confirmed delete, import, and export. The
+existing registry/profile schema remains authoritative, ordinary settings are
+not rewritten, and normal Designer edits remain runtime-only. Focused storage,
+validation, Designer, 2D/3D/4D, cockpit, deterministic-isolation, canonical/
+pinned Godot 4.7.1, settings/governance/semantic-boundary, sanitation, full-
+repository, and bounded production-window evidence is green. The durable
+contract and evidence are
+`docs/architecture/presentation_profile_library.md` and
+`docs/plans/presentation_profile_library_acceptance.md`.
+
 Completed bounded geometry review correction: Stage 54F-1 established the correct
 canonical local-board architecture on `codex/canonical-local-board-geometry`,
 but review found that continuous 2D/3D endgame points were routed through its
@@ -114,10 +128,10 @@ separate. Focused, governance, sanitation, pinned/full, deterministic-isolation,
 and agent-driven 2D/3D endgame evidence pass; evidence is recorded in
 `docs/plans/canonical_local_board_presentation_geometry_acceptance.md`.
 
-Explicit deferrals from these follow-ons are named presentation-profile
-library persistence, import/export, formal A/B assignment/telemetry,
-free-form palette-role editing, procedural/animated environments, broader
-theme work, and independent human review of both the Designer workflow and the
+Explicit deferrals from these follow-ons are formal A/B assignment/telemetry,
+free-form palette-role editing, built-in style/theme profiles,
+procedural/animated environments, broader theme work, and independent human
+review of both the Designer workflow and the
 intentional full-depth 2D mesh under unusual debug camera views. Stage 54F-2
 adds the editing instrument only; it does not begin the following
 profile-management/theme stage or another geometry implementation.

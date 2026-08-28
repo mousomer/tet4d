@@ -9,9 +9,10 @@ to deterministic session identity.
 
 This contract makes tweakable Godot presentation values explicit without
 replacing the accepted visual, settings, accessibility, view, or 4D
-presentation architectures. It is the foundation for later designer tuning,
-named presentation profiles, controlled A/B rendering, and procedural themes;
-those product surfaces are not implemented here.
+presentation architectures. Stage 54F-2 later added detached Designer tuning,
+and Stage 54F-3 added explicitly persisted named artifacts under
+`presentation_profile_library.md`. Controlled experiment assignment and
+procedural themes remain outside this parameter contract.
 
 ## 2. Existing authorities retained
 
@@ -198,9 +199,12 @@ Applying a profile never replaces the store automatically. This separation
 permits future controlled `render(S, A)` / `render(S, B)` use without
 experiment assignment in this stage.
 
-Presentation-profile snapshots are not written as a new document. Existing
+Applying presentation-profile snapshots never writes a document. Existing
 settings persistence remains user/product preference state and reconstructs a
-profile on load.
+profile on load. Separately, Stage 54F-3 may write the same authoritative
+snapshot only when the user explicitly saves or imports a named artifact
+through `PresentationProfileLibrary`; that operation does not replace or write
+the settings store.
 
 ## 10. Persistence decision
 
@@ -210,8 +214,13 @@ documents already default any absent current registry entry. The setting
 document contains no fixed key inventory and needs no schema bump for this
 additive envelope.
 
-Only `local_shell` plus `persist: true` entries reach disk. Diagnostics and
-`display.grid_visible` remain session-only. `PresentationProfile` itself does not write.
+Only `local_shell` plus `persist: true` entries reach the ordinary settings
+document. Diagnostics and `display.grid_visible` remain session-only there.
+`PresentationProfile` itself does not write. Named profile artifacts are a
+separate explicit persistence boundary and may contain the complete validated
+profile value set, including session-only presentation values, because loading
+them still applies only detached runtime presentation and never changes
+ordinary startup preferences.
 No profile or setting reaches `user://game_setup.json`, native snapshots,
 replay/trace files, or deterministic identity.
 
