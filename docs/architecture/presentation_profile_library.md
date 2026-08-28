@@ -1,6 +1,7 @@
 # Presentation Profile Library
 
-Status: active Stage 54F-3 Godot product-shell contract
+Status: active Stage 54F-3 Godot product-shell contract with bounded Stage
+54F-3R persistence robustness closure
 
 ## 1. Purpose and invariant
 
@@ -44,9 +45,12 @@ Each user profile is one UTF-8 JSON file under:
 user://presentation_profiles/<32-lowercase-hex-id>.tet4d-presentation-profile.json
 ```
 
-There is no index. Listing scans the directory, validates each matching file,
-and sorts by case-insensitive display name then stable ID. One corrupt file is
-diagnosed and skipped without affecting other profiles.
+There is no index. Listing sorts matching filenames before validation, rebuilds
+one current-scan diagnostic set, and sorts valid records by case-insensitive
+display name then stable ID. One corrupt file produces one stable diagnostic
+and is skipped without affecting other profiles. Repeated scans over unchanged
+storage therefore expose identical records and diagnostics; diagnostics are not
+an append-only operation log.
 
 Artifact schema 1 is:
 
@@ -67,12 +71,21 @@ The outer schema owns artifact lifecycle metadata only. The embedded snapshot
 is the existing authoritative profile schema; the library does not maintain a
 parameter inventory or migration table.
 
-Files are written through a temporary file and replacement/restore sequence
-consistent with shell-settings persistence. A generated validated ID, never a
-display name or imported path fragment, selects a library filename. Display
-names are trimmed, length-bounded, reject control/path separators and traversal
-tokens, and are unique case-insensitively. Rename changes display name while
-preserving ID and values. Duplicate and import allocate fresh local IDs.
+Files use the same bounded persistent-file mechanics as shell settings while
+remaining a separate persistence domain. The sibling temporary file is written
+and flushed, and Godot's file error is checked before installation. A failed or
+incomplete write is removed where safe and cannot replace the destination. If
+installation after backup fails, restoration tries rename then copy. The backup
+is removed only after installation or restoration succeeds; if both restore
+paths fail, the operation reports failure and retains the prior content at the
+explicit backup path for recovery.
+
+A generated validated ID, never a display name or imported path fragment,
+selects a library filename. Display names are trimmed, length-bounded, reject
+control/path separators and traversal tokens, and are unique case-insensitively.
+Rename changes display name while preserving ID and values. Duplicate and
+import allocate fresh local IDs. Sibling `.tmp` and `.bak` files are mechanics
+artifacts and never match the profile enumeration suffix.
 
 ## 4. Compatibility policy
 
@@ -139,6 +152,11 @@ by default. Compact and hidden modes retain their accepted dimensions and
 input behavior. The Designer displays the loaded/saved source and a `*` when
 working B differs semantically from its stored/saved baseline.
 
+Expanding the library consumes space inside the already allocated full Designer
+overlay. It cannot change the Designer's production cockpit rect or the
+gameplay `SubViewportContainer` rect. Live-4D NEXT, HOLD, piece controls, and
+basis/slice state remain visible under both disclosure states.
+
 Dirty state compares complete `PresentationProfile.values()` only. It is not
 affected by selecting A/B, current camera manipulation, gameplay advancement,
 Designer collapse/hide/scroll, or the library section's disclosure state. No
@@ -166,9 +184,12 @@ sharing service.
 ## 9. Verification contract
 
 Focused evidence covers lifecycle independence, explicit-write boundaries,
-strict validation, corruption isolation, safe replacement, path safety,
-round-trip fidelity, A/B detachment, settings/gameplay/camera isolation,
-2D/3D/4D applicability, and cockpit structure. Production Godot 4.7.1 review
-covers Save As, load restoration, A/B comparison, detached delete, and one
-actual export/import path. The canonical, pinned, persistence/governance,
+incomplete-write rejection, rename/copy/retained-backup recovery, strict
+validation, deterministic current-scan diagnostics, corruption isolation,
+stale mechanics-file invisibility, path safety, round-trip fidelity, A/B
+detachment, settings/gameplay/camera isolation, 2D/3D/4D applicability, and
+exact Live-4D collapsed/expanded gameplay viewport allocation. Production
+Godot 4.7.1 review covers Save As, load restoration, A/B comparison, detached
+delete, one actual export/import path, and the unchanged collapsed/expanded
+cockpit footprint. The canonical, pinned, persistence/governance,
 semantic-boundary, sanitation, and full repository gates remain required.

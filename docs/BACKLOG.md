@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-27
+Updated: 2026-08-28
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -111,6 +111,21 @@ repository, and bounded production-window evidence is green. The durable
 contract and evidence are
 `docs/architecture/presentation_profile_library.md` and
 `docs/plans/presentation_profile_library_acceptance.md`.
+
+Completed bounded post-review hardening: Stage 54F-3R starts from reviewed-green
+Stage 54F-3 HEAD `47c90c67d5a13a84bd826f17f2838f0de3f38ec5`
+on the same unpublished branch. It closes only four P2 findings: shared profile/
+settings file mechanics now check the flushed temporary write before install;
+profile replacement restores by rename then copy and retains an explicit
+recoverable backup on total failure; library diagnostics are deterministic
+current-scan state; and a production Live-4D regression protects exact gameplay
+viewport allocation across collapsed/expanded library disclosure. Focused
+profile, settings, and cockpit suites; canonical and pinned Godot 4.7.1;
+governance/generated-doc/settings/semantic-boundary and sanitation checks; the
+full repository gate; and bounded production-window inspection are green.
+Stage 54F-3 semantics and reviewed-green status, separate persistence ownership,
+schemas, Designer A/B behavior, gameplay/deterministic state, camera/basis, and
+cockpit design are unchanged.
 
 Completed bounded geometry review correction: Stage 54F-1 established the correct
 canonical local-board architecture on `codex/canonical-local-board-geometry`,

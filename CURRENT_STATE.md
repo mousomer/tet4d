@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-27
-Worktree expectation: clean unless an active batch is in progress
+Last updated: 2026-08-28
+Worktree expectation: clean after the Stage 54F-3R bounded hardening commit
 
 ## Purpose
 
@@ -12,6 +12,24 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Completed bounded post-review hardening: Stage 54F-3R starts from reviewed-green
+  Stage 54F-3 HEAD `47c90c67d5a13a84bd826f17f2838f0de3f38ec5`
+  on `codex/canonical-local-board-geometry`. One small Godot helper now owns only
+  temp-write/replace/backup/restore mechanics for the still-separate
+  `PresentationProfileLibrary` and `SettingsStore`: flushed write errors abort
+  before installation, restoration uses rename then copy, and total restore
+  failure retains an explicit recoverable backup. Profile listing rebuilds
+  sorted current-scan diagnostics, so repeated deterministic snapshots no
+  longer accumulate corrupt-artifact messages. A production Live-4D test proves
+  collapsed/expanded Profile Library disclosure leaves the gameplay viewport
+  and full Designer rect unchanged while NEXT, HOLD, piece controls, and basis/
+  slice state remain visible. Focused profile/settings/cockpit, canonical and
+  pinned Godot 4.7.1, governance/generated-doc/settings/semantic-boundary,
+  sanitation, full-repository, and bounded production-window evidence is green.
+  This slice changes no schema, identity, Designer A/B/dirty semantics,
+  ordinary settings ownership, gameplay/deterministic state, camera/basis, or
+  authority.
 
 - Completed bounded follow-on: Stage 54F-3 starts from verified local HEAD
   `5a2e648124ed4ea0f62003fd95fb3d8dca1a57f6` on

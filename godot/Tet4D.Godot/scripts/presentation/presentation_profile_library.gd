@@ -3,6 +3,7 @@ extends RefCounted
 class_name PresentationProfileLibrary
 
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
 
 const ARTIFACT_TYPE := "tet4d.presentation_profile"
 const ARTIFACT_SCHEMA_VERSION := 1
@@ -26,30 +27,37 @@ func _init(registry = null, storage_directory: String = DEFAULT_DIRECTORY, stora
 
 func list_profiles() -> Array:
 	var records: Array = []
+	var scan_diagnostics: Array = []
 	var directory := DirAccess.open(ProjectSettings.globalize_path(_storage_directory))
 	if directory == null:
+		_diagnostics = scan_diagnostics
 		return records
+	var file_names: Array = []
 	directory.list_dir_begin()
 	var file_name := directory.get_next()
 	while not file_name.is_empty():
 		if not directory.current_is_dir() and file_name.ends_with(FILE_SUFFIX):
-			var result := _read_artifact(_storage_directory.path_join(file_name))
-			if bool(result.get("ok", false)):
-				var artifact: Dictionary = result.get("artifact", {})
-				var expected_file := _file_name(str(artifact.get("profile_id", "")))
-				if file_name == expected_file:
-					records.append(_record_for_artifact(artifact))
-				else:
-					_diagnostics.append("Ignored profile artifact whose filename does not match its stable identity: %s" % file_name)
-			else:
-				_diagnostics.append("Ignored damaged profile %s: %s" % [file_name, result.get("error", "invalid artifact")])
+			file_names.append(file_name)
 		file_name = directory.get_next()
 	directory.list_dir_end()
+	file_names.sort()
+	for candidate_name in file_names:
+		var result := _read_artifact(_storage_directory.path_join(str(candidate_name)))
+		if bool(result.get("ok", false)):
+			var artifact: Dictionary = result.get("artifact", {})
+			var expected_file := _file_name(str(artifact.get("profile_id", "")))
+			if candidate_name == expected_file:
+				records.append(_record_for_artifact(artifact))
+			else:
+				scan_diagnostics.append("Ignored profile artifact whose filename does not match its stable identity: %s" % candidate_name)
+		else:
+			scan_diagnostics.append("Ignored damaged profile %s: %s" % [candidate_name, result.get("error", "invalid artifact")])
 	records.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
 		var left_name := str(left.get("display_name", "")).to_lower()
 		var right_name := str(right.get("display_name", "")).to_lower()
 		return left_name < right_name if left_name != right_name else str(left.get("profile_id", "")) < str(right.get("profile_id", ""))
 	)
+	_diagnostics = scan_diagnostics
 	return records
 
 
@@ -192,10 +200,11 @@ func diagnostics() -> Array:
 
 
 func deterministic_snapshot() -> Dictionary:
+	var profiles := list_profiles()
 	return {
 		"artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
 		"storage_directory": _storage_directory,
-		"profiles": list_profiles(),
+		"profiles": profiles,
 		"write_count": _write_count,
 		"mutation_count": _mutation_count,
 		"diagnostics": diagnostics(),
@@ -287,40 +296,19 @@ func _write_artifact(path: String, artifact: Dictionary, allow_overwrite: bool) 
 func _write_json_file(path: String, payload: Dictionary, allow_overwrite: bool) -> Dictionary:
 	if _storage_ops != null and _storage_ops.has_method("write_json_file"):
 		return _storage_ops.write_json_file(path, payload.duplicate(true), allow_overwrite)
-	if FileAccess.file_exists(path) and not allow_overwrite:
-		return _failure("Destination already exists; overwrite was not requested.")
-	var temporary_path := "%s.tmp" % path
-	var file := FileAccess.open(temporary_path, FileAccess.WRITE)
-	if file == null:
-		return _failure("Profile temporary file could not be opened.")
-	file.store_string(JSON.stringify(payload, "  ", true) + "\n")
-	file.close()
-	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
-	var destination_absolute := ProjectSettings.globalize_path(path)
-	if not FileAccess.file_exists(path):
-		var install_error := DirAccess.rename_absolute(temporary_absolute, destination_absolute)
-		if install_error == OK:
-			return _success()
-		_remove_if_present(temporary_absolute)
-		return _failure("Profile file could not be installed (error %s)." % install_error)
-	var backup_absolute := "%s.bak" % destination_absolute
-	var stale_cleanup := _remove_if_present(backup_absolute)
-	if stale_cleanup != OK:
-		_remove_if_present(temporary_absolute)
-		return _failure("Profile backup cleanup failed; the previous artifact was not modified.")
-	var backup_error := DirAccess.rename_absolute(destination_absolute, backup_absolute)
-	if backup_error != OK:
-		_remove_if_present(temporary_absolute)
-		return _failure("Profile artifact could not be backed up; it was not modified.")
-	var install_error := DirAccess.rename_absolute(temporary_absolute, destination_absolute)
-	if install_error == OK:
-		_remove_if_present(backup_absolute)
-		return _success()
-	var restore_error := DirAccess.rename_absolute(backup_absolute, destination_absolute)
-	_remove_if_present(temporary_absolute)
-	if restore_error != OK:
-		return _failure("Profile replacement failed and the previous artifact remains at its backup path.")
-	return _failure("Profile replacement failed; the previous artifact was restored.")
+	var replacement: Dictionary = PersistentFileReplacementScript.write_text(
+		path,
+		JSON.stringify(payload, "  ", true) + "\n",
+		allow_overwrite,
+		_storage_ops
+	)
+	if bool(replacement.get("ok", false)):
+		return _success({"warning": replacement.get("warning", "")})
+	var result := _failure("Profile file could not be saved: %s." % replacement.get("detail", "replacement failed"))
+	for key in ["destination_untouched", "previous_restored", "backup_recoverable", "backup_path", "restoration", "write_error", "install_error", "restore_error"]:
+		if replacement.has(key):
+			result[key] = replacement.get(key)
+	return result
 
 
 func _ensure_storage_directory() -> Dictionary:
@@ -386,10 +374,6 @@ func _file_name(profile_id: String) -> String:
 	return "%s%s" % [profile_id, FILE_SUFFIX]
 
 
-func _remove_if_present(absolute_path: String) -> Error:
-	return DirAccess.remove_absolute(absolute_path) if FileAccess.file_exists(absolute_path) else OK
-
-
 func _success(extra: Dictionary = {}) -> Dictionary:
 	var result := {"ok": true, "error": ""}
 	result.merge(extra, true)
@@ -397,5 +381,4 @@ func _success(extra: Dictionary = {}) -> Dictionary:
 
 
 func _failure(message: String) -> Dictionary:
-	_diagnostics.append(message)
 	return {"ok": false, "error": message}

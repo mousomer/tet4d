@@ -160,6 +160,28 @@ func _check_production_layout() -> Array:
 	if hud._presentation_designer.state() != DesignerScript.STATE_FULL:
 		failures.append("Designer should open full for coexistence evidence")
 	failures.append_array(_check_primary_surfaces(hud, "live_4d", "Designer full"))
+	hud._presentation_designer.set_library_expanded(false)
+	await tree.process_frame
+	await tree.process_frame
+	var collapsed_viewport: Rect2 = hud._game_viewport_container.get_global_rect()
+	var collapsed_designer: Rect2 = hud._presentation_designer.get_global_rect()
+	hud._presentation_designer.set_library_expanded(true)
+	await tree.process_frame
+	await tree.process_frame
+	var expanded_viewport: Rect2 = hud._game_viewport_container.get_global_rect()
+	var expanded_designer: Rect2 = hud._presentation_designer.get_global_rect()
+	if not _same_rect(collapsed_viewport, expanded_viewport):
+		failures.append("expanding the Profile Library must not change Live 4D gameplay viewport allocation: %s -> %s" % [collapsed_viewport, expanded_viewport])
+	if not _same_rect(collapsed_designer, expanded_designer):
+		failures.append("Profile Library expansion must consume internal Designer space without enlarging its cockpit footprint")
+	failures.append_array(_check_primary_surfaces(hud, "live_4d", "Designer library expanded"))
+	if not hud._basis_panel.is_visible_in_tree() or str(hud.layout_contract_snapshot().get("basis_indicator_text", "")).find("Slice:") == -1:
+		failures.append("expanded Profile Library must preserve visible Live 4D basis/slice state")
+	hud._presentation_designer.set_library_expanded(false)
+	await tree.process_frame
+	await tree.process_frame
+	if not _same_rect(expanded_viewport, hud._game_viewport_container.get_global_rect()):
+		failures.append("collapsing the Profile Library must retain the same Live 4D gameplay viewport allocation")
 	hud._presentation_designer.collapse_to_compact()
 	await tree.process_frame
 	await tree.process_frame
@@ -239,3 +261,7 @@ func _contains_rect(outer: Rect2, inner: Rect2) -> bool:
 		and inner.end.x <= outer.end.x + 0.5
 		and inner.end.y <= outer.end.y + 0.5
 	)
+
+
+func _same_rect(left: Rect2, right: Rect2) -> bool:
+	return left.position.is_equal_approx(right.position) and left.size.is_equal_approx(right.size)

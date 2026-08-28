@@ -1,3 +1,129 @@
+# Task Contract — Stage 54F-3R Profile Persistence Robustness
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ROBUSTNESS GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `47c90c67d5a13a84bd826f17f2838f0de3f38ec5`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Close the four P2 findings from the reviewed-green Stage 54F-3 implementation:
+reject incomplete temporary writes before installation, give profile replacement
+the existing settings-store rename/copy restoration guarantees, make library
+scan diagnostics idempotent and deterministically ordered, and mechanically
+protect the Live-4D gameplay viewport allocation from Profile Library expansion.
+The accepted explicit-persistence architecture and all profile, Designer,
+settings, gameplay, camera, basis, schema, and authority semantics remain
+unchanged.
+
+## Classification and Authority Comparison
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`, because one bounded persistent-file
+  mechanics provider is shared by the existing named-profile store and ordinary
+  settings store, while the cockpit assertion crosses library UI and production
+  HUD layout.
+- Affected layers: Godot persistent-file mechanics, named profile artifact
+  storage, ordinary shell-settings write safety, current-scan diagnostics,
+  Designer/HUD layout tests, and governing architecture/acceptance records.
+- Claims: incomplete writes never install; failed replacement preserves or
+  explicitly retains recoverable prior content; unchanged storage produces an
+  unchanged snapshot; library disclosure consumes internal Designer space
+  without changing the gameplay viewport; Stage 54F-3 semantics remain intact.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `integration`, `deterministic`, and bounded `human_visual` inspection.
+- Full repository gate: required because this is a reviewer-requested correction
+  that hardens mechanics shared by two persistent product-shell domains.
+- Authority effect: none. `PresentationProfileLibrary` retains named-artifact
+  lifecycle ownership, `SettingsStore` retains ordinary-preference ownership,
+  and the registry plus `PresentationProfile` retain parameter/schema authority.
+
+The owning Stage 54F-3 library contract already requires temporary replacement
+consistent with shell-settings persistence and isolated deterministic listing.
+The shell-settings persistence contract already requires rename restoration
+with copy fallback. This slice corrects implementation/evidence drift against
+those accepted contracts; it does not revise product semantics or establish a
+new persistence domain.
+
+## Scope Matrix
+
+| Layer | Required change | Evidence |
+| --- | --- | --- |
+| Shared file mechanics | Check the Godot file error after writing/flushing a sibling temp; install only a confirmed write; preserve backup until install or restoration succeeds. | Injected write, rename, copy, and cleanup failure tests through both existing owners as applicable. |
+| Profile library | Use the shared mechanics without changing artifact paths/schema/counters; report restored, backup-recoverable, and failed-restoration outcomes explicitly. | Persisted-state overwrite/Save-As tests and restore rename/copy/total-failure cases. |
+| SettingsStore | Adopt only the shared write-completion check while preserving schema, save-on-change, diagnostics, injection ordering, and ordinary-preference ownership. | Existing focused settings-store suite plus incomplete-write regression. |
+| Diagnostics | Rebuild one sorted current-scan diagnostic set per listing operation. | Three equal deterministic snapshots with healthy, corrupt, stale-temp, and stale-backup artifacts. |
+| Cockpit layout | Assert full Live-4D Designer library collapse/expansion leaves the production gameplay viewport rect unchanged. | Structural production-scene test retaining NEXT, HOLD, piece controls, and basis/slice visibility. |
+| Documentation | Record the bounded robustness closure without downgrading Stage 54F-3 reviewed-green status. | Governance/generated-doc validation and updated architecture, acceptance, backlog, and restart handoff. |
+
+## Allowed and Required Changes
+
+1. Add one small Godot helper for temp write, replacement, backup, and
+   restoration mechanics; do not create a general filesystem abstraction.
+2. Route only `PresentationProfileLibrary` and `SettingsStore` through it,
+   preserving their separate paths, schemas, diagnostics, counters, and APIs.
+3. Check `FileAccess.get_error()` after the write/flush and before installation;
+   remove an invalid temporary artifact where safe and leave the destination
+   untouched.
+4. Restore by rename, then copy; retain a valid backup and report failure if all
+   restoration paths fail. Never report success or delete the backup in that
+   total-failure state.
+5. Treat diagnostics exposed by listing/snapshot as deterministic current-scan
+   state, with stable artifact order and no query-driven accumulation.
+6. Add focused persisted-state, isolation, stale-artifact, Stage 54F-3 semantic,
+   settings, and production cockpit-allocation regressions.
+7. Update the library/settings architecture records, Stage 54F-3 acceptance,
+   backlog, and `CURRENT_STATE.md`; run every task-requested gate.
+
+## Forbidden Changes
+
+- profile/artifact schema, migration, unknown/missing/future-version policy,
+  profile identity/naming, startup/default-profile, or ordinary settings policy;
+- Designer A/B, dirty-state, Save/Save As/load/import/delete behavior, automatic
+  persistence, or application authority;
+- themes, catalog/built-in profiles, Tron/Python-reference styles, palette or
+  authoring infrastructure, cloud/sharing, telemetry, or new parameters;
+- gameplay/setup/native/replay/hash, camera, basis/slice, NEXT/HOLD/Ghost,
+  cockpit geometry, responsive redesign, or presentation semantics;
+- reset, rebase, predecessor amendment, push, PR, or publication.
+
+## Acceptance Criteria
+
+1. Write/flush success is checked explicitly before any temp installation.
+2. Injected incomplete overwrite preserves the exact old readable artifact,
+   reports failure, installs no invalid artifact, and increments no success
+   counter; failed Save As creates no listed phantom.
+3. Install failure restores the old artifact by rename; failed restore rename
+   falls back to copy; total restoration failure is explicit and retains a
+   recoverable backup while unrelated healthy profiles remain listed.
+4. Backups are deleted only after successful installation/restoration, and
+   stale `.tmp`/`.bak` artifacts never appear as profiles.
+5. Repeated deterministic snapshots over one healthy and one corrupt artifact
+   are equal, diagnostics stay stable and ordered, and corruption isolation
+   remains intact.
+6. Full Live-4D Designer library collapse/expansion leaves the production
+   gameplay viewport rect unchanged while NEXT, HOLD, piece controls, and
+   basis/slice state remain visible.
+7. Save B while A is displayed, detached load, delete-with-active-B, import
+   persistence-only, ordinary settings separation, deterministic isolation,
+   and all Stage 54F-3 schema/identity semantics remain unchanged.
+8. Focused profile/settings/cockpit tests, canonical and pinned Godot gates,
+   governance/generated-doc/settings/semantic-boundary/sanitation/diff checks,
+   bounded production Live-4D inspection, and the full repository gate pass.
+9. Documentation accurately records this post-review closure; one coherent
+   local commit leaves a clean worktree without push or PR.
+
+## Explicit Deferrals
+
+All Stage 54F-3 non-goals remain deferred, including themes/catalogs, built-in
+profiles, new presentation parameters, schema migration, cloud/sharing,
+gameplay persistence, shell-settings redesign, and Designer/cockpit redesign.
+
+---
+
 # Task Contract — Stage 54F-3 Presentation Profile Library
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN

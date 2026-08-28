@@ -8,6 +8,12 @@ const RegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const TEST_DIRECTORY := "user://stage54f3_presentation_profiles"
 const DESIGNER_DIRECTORY := "user://stage54f3_designer_profiles"
 const INTEGRATION_DIRECTORY := "user://stage54f3_integration_profiles"
+const WRITE_FAILURE_DIRECTORY := "user://stage54f3r_write_failure_profiles"
+const DESIGNER_FAILURE_DIRECTORY := "user://stage54f3r_designer_failure_profiles"
+const RESTORE_RENAME_DIRECTORY := "user://stage54f3r_restore_rename_profiles"
+const RESTORE_COPY_DIRECTORY := "user://stage54f3r_restore_copy_profiles"
+const RESTORE_TOTAL_FAILURE_DIRECTORY := "user://stage54f3r_restore_total_failure_profiles"
+const DIAGNOSTIC_DIRECTORY := "user://stage54f3r_diagnostic_profiles"
 const EXPORT_PATH := "user://stage54f3_exported_profile.json"
 const INVALID_PATH := "user://stage54f3_invalid_profile.json"
 
@@ -22,14 +28,74 @@ class FailingStorageOps:
 		return {"ok": false, "error": "Injected storage write failure."}
 
 
+class InjectedPersistenceOps:
+	extends RefCounted
+
+	var write_failures: Dictionary = {}
+	var rename_failures: Dictionary = {}
+	var copy_failures: Dictionary = {}
+	var remove_failures: Dictionary = {}
+	var write_count := 0
+	var rename_count := 0
+	var copy_count := 0
+	var remove_count := 0
+
+	func ensure_directory(path: String) -> Dictionary:
+		var absolute := ProjectSettings.globalize_path(path)
+		if DirAccess.dir_exists_absolute(absolute):
+			return {"ok": true, "error": ""}
+		var error := DirAccess.make_dir_recursive_absolute(absolute)
+		return {"ok": error == OK, "error": "" if error == OK else "Injected directory creation failed."}
+
+	func write_text_file(path: String, contents: String) -> Error:
+		write_count += 1
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		if file == null:
+			return FileAccess.get_open_error()
+		if write_failures.has(write_count):
+			file.store_string(contents.left(maxi(1, contents.length() / 4)))
+			file.flush()
+			file.close()
+			return write_failures.get(write_count)
+		file.store_string(contents)
+		file.flush()
+		var error := file.get_error()
+		file.close()
+		return error
+
+	func file_exists(path: String) -> bool:
+		return FileAccess.file_exists(path)
+
+	func rename_absolute(from_path: String, to_path: String) -> Error:
+		rename_count += 1
+		if rename_failures.has(rename_count):
+			return rename_failures.get(rename_count)
+		return DirAccess.rename_absolute(from_path, to_path)
+
+	func copy_absolute(from_path: String, to_path: String) -> Error:
+		copy_count += 1
+		if copy_failures.has(copy_count):
+			return copy_failures.get(copy_count)
+		return DirAccess.copy_absolute(from_path, to_path)
+
+	func remove_absolute(path: String) -> Error:
+		remove_count += 1
+		if remove_failures.has(remove_count):
+			return remove_failures.get(remove_count)
+		return DirAccess.remove_absolute(path)
+
+
 func run() -> Array:
 	var failures: Array = []
 	_cleanup_all()
 	var registry = RegistryScript.new()
 	registry.load_from_path(RegistryScript.REGISTRY_PATH)
 	failures.append_array(_test_store_lifecycle(registry))
+	failures.append_array(_test_write_and_restore_robustness(registry))
+	failures.append_array(_test_deterministic_diagnostics(registry))
 	failures.append_array(_test_import_validation(registry))
 	failures.append_array(await _test_designer_boundary(registry))
+	failures.append_array(await _test_designer_failed_save(registry))
 	failures.append_array(await _test_live_integration(registry))
 	_cleanup_all()
 	return failures
@@ -124,6 +190,138 @@ func _test_store_lifecycle(registry) -> Array:
 	var failed_save := blocked_library.save_new("Cannot Write", source)
 	if bool(failed_save.get("ok", false)) or blocked_library.deterministic_snapshot().get("write_count") != before_failure.get("write_count"):
 		failures.append("storage failure should report cleanly without claiming a write")
+	return failures
+
+
+func _test_write_and_restore_robustness(registry) -> Array:
+	var failures: Array = []
+	var source = _asymmetric_profile(registry)
+	var edited = source.with_overrides({"ghost.opacity": 0.45})
+
+	var write_library = LibraryScript.new(registry, WRITE_FAILURE_DIRECTORY)
+	var original: Dictionary = write_library.save_new("Write Failure Original", source)
+	write_library.save_new("Write Failure Healthy", source)
+	var original_id := str(original.get("record", {}).get("profile_id", ""))
+	var original_path := WRITE_FAILURE_DIRECTORY.path_join("%s%s" % [original_id, LibraryScript.FILE_SUFFIX])
+	var original_text := _read_text(original_path)
+	var write_ops := InjectedPersistenceOps.new()
+	write_ops.write_failures = {1: ERR_FILE_CANT_WRITE, 2: ERR_FILE_CANT_WRITE}
+	var blocked = LibraryScript.new(registry, WRITE_FAILURE_DIRECTORY, write_ops)
+	var overwrite_result: Dictionary = blocked.save_existing(original_id, edited)
+	if bool(overwrite_result.get("ok", false)) or not bool(overwrite_result.get("destination_untouched", false)):
+		failures.append("incomplete overwrite must fail explicitly before modifying the destination")
+	if _read_text(original_path) != original_text or blocked.load_profile(original_id).get("profile").values() != source.values():
+		failures.append("incomplete overwrite must preserve the exact readable previous profile")
+	if int(blocked.deterministic_snapshot().get("write_count", -1)) != 0 or int(blocked.deterministic_snapshot().get("mutation_count", -1)) != 0:
+		failures.append("incomplete overwrite must not increment successful write or mutation counters")
+	if FileAccess.file_exists("%s.tmp" % original_path):
+		failures.append("incomplete overwrite should remove its invalid temporary artifact")
+	var before_save_as: Array = blocked.list_profiles()
+	var save_as_result: Dictionary = blocked.save_new("Write Failure Phantom", edited)
+	var after_save_as: Array = blocked.list_profiles()
+	if bool(save_as_result.get("ok", false)) or after_save_as != before_save_as:
+		failures.append("incomplete Save As must fail without creating a phantom profile")
+	if _records_contain_name(after_save_as, "Write Failure Phantom") or _directory_has_suffix(WRITE_FAILURE_DIRECTORY, ".tmp"):
+		failures.append("failed Save As must leave neither a listed record nor a stale temporary artifact")
+
+	failures.append_array(_test_restore_case(
+		registry,
+		RESTORE_RENAME_DIRECTORY,
+		{1: ERR_CANT_CREATE, 3: ERR_CANT_CREATE},
+		{},
+		"rename"
+	))
+	failures.append_array(_test_restore_case(
+		registry,
+		RESTORE_COPY_DIRECTORY,
+		{1: ERR_CANT_CREATE, 3: ERR_CANT_CREATE, 4: ERR_CANT_CREATE},
+		{},
+		"copy"
+	))
+	failures.append_array(_test_restore_case(
+		registry,
+		RESTORE_TOTAL_FAILURE_DIRECTORY,
+		{1: ERR_CANT_CREATE, 3: ERR_CANT_CREATE, 4: ERR_CANT_CREATE},
+		{1: ERR_FILE_CANT_WRITE},
+		"failed"
+	))
+	return failures
+
+
+func _test_restore_case(
+	registry,
+	directory: String,
+	rename_failures: Dictionary,
+	copy_failures: Dictionary,
+	expected_restoration: String
+) -> Array:
+	var failures: Array = []
+	var source = _asymmetric_profile(registry)
+	var edited = source.with_overrides({"ghost.opacity": 0.45})
+	var initial = LibraryScript.new(registry, directory)
+	var original: Dictionary = initial.save_new("Restore Target", source)
+	initial.save_new("Unrelated Healthy", source)
+	var original_id := str(original.get("record", {}).get("profile_id", ""))
+	var original_path := directory.path_join("%s%s" % [original_id, LibraryScript.FILE_SUFFIX])
+	var original_text := _read_text(original_path)
+	var ops := InjectedPersistenceOps.new()
+	ops.rename_failures = rename_failures
+	ops.copy_failures = copy_failures
+	var library = LibraryScript.new(registry, directory, ops)
+	var result: Dictionary = library.save_existing(original_id, edited)
+	if bool(result.get("ok", false)) or str(result.get("restoration", "")) != expected_restoration:
+		failures.append("%s restoration case must report explicit replacement failure metadata" % expected_restoration)
+	if int(library.deterministic_snapshot().get("write_count", -1)) != 0 or int(library.deterministic_snapshot().get("mutation_count", -1)) != 0:
+		failures.append("%s restoration failure must not increment successful counters" % expected_restoration)
+	var backup_path := "%s.bak" % original_path
+	if expected_restoration == "failed":
+		if bool(result.get("previous_restored", true)) or not bool(result.get("backup_recoverable", false)):
+			failures.append("total restoration failure must explicitly report a recoverable retained backup")
+		if FileAccess.file_exists(original_path) or not FileAccess.file_exists(backup_path) or _read_text(backup_path) != original_text:
+			failures.append("total restoration failure must retain the exact previous artifact only at its backup path")
+		var visible: Array = library.list_profiles()
+		if visible.size() != 1 or not _records_contain_name(visible, "Unrelated Healthy"):
+			failures.append("total restoration failure must keep unrelated healthy profiles visible without exposing the backup")
+		if not str(result.get("error", "")).to_lower().contains("recoverable"):
+			failures.append("total restoration failure must explain recoverability in its public error")
+	else:
+		if not bool(result.get("previous_restored", false)) or _read_text(original_path) != original_text:
+			failures.append("%s restoration must recover the exact previous destination" % expected_restoration)
+		if library.load_profile(original_id).get("profile").values() != source.values():
+			failures.append("%s restoration must leave the previous profile readable through the library" % expected_restoration)
+		if FileAccess.file_exists(backup_path):
+			failures.append("%s restoration should remove the backup after confirming destination recovery" % expected_restoration)
+		if expected_restoration == "copy" and ops.copy_count != 1:
+			failures.append("restore rename failure must invoke the copy fallback exactly once")
+	if _directory_has_suffix(directory, ".tmp"):
+		failures.append("%s restoration case should clean the temporary artifact" % expected_restoration)
+	return failures
+
+
+func _test_deterministic_diagnostics(registry) -> Array:
+	var failures: Array = []
+	var library = LibraryScript.new(registry, DIAGNOSTIC_DIRECTORY)
+	var source = _asymmetric_profile(registry)
+	var healthy: Dictionary = library.save_new("Diagnostic Healthy", source)
+	var healthy_id := str(healthy.get("record", {}).get("profile_id", ""))
+	var corrupt_id := "c".repeat(32)
+	var corrupt_path := DIAGNOSTIC_DIRECTORY.path_join("%s%s" % [corrupt_id, LibraryScript.FILE_SUFFIX])
+	_write_text(corrupt_path, "{damaged")
+	_write_text("%s.tmp" % corrupt_path, "{partial")
+	_write_text("%s.bak" % corrupt_path, "recoverable but not a listed artifact")
+	var snapshot_1: Dictionary = library.deterministic_snapshot()
+	var snapshot_2: Dictionary = library.deterministic_snapshot()
+	var snapshot_3: Dictionary = library.deterministic_snapshot()
+	if snapshot_1 != snapshot_2 or snapshot_2 != snapshot_3:
+		failures.append("deterministic profile-library snapshots must be identical on unchanged storage")
+	var profiles: Array = snapshot_1.get("profiles", [])
+	var diagnostics: Array = snapshot_1.get("diagnostics", [])
+	if profiles.size() != 1 or str(profiles[0].get("profile_id", "")) != healthy_id:
+		failures.append("deterministic scanning must retain the healthy profile and reject corrupt/stale artifacts")
+	if diagnostics.size() != 1 or not _contains_fragment(diagnostics, "damaged") or library.diagnostics() != diagnostics:
+		failures.append("corrupt-artifact diagnostics must be one stable current-scan record without accumulation")
+	if _records_contain_name(profiles, "recoverable but not a listed artifact"):
+		failures.append("stale temporary and backup files must never become visible profiles")
 	return failures
 
 
@@ -291,6 +489,36 @@ func _test_designer_boundary(registry) -> Array:
 	return failures
 
 
+func _test_designer_failed_save(registry) -> Array:
+	var failures: Array = []
+	var tree := Engine.get_main_loop() as SceneTree
+	var ops := InjectedPersistenceOps.new()
+	ops.write_failures = {1: ERR_FILE_CANT_WRITE}
+	var library = LibraryScript.new(registry, DESIGNER_FAILURE_DIRECTORY, ops)
+	var designer = DesignerScript.new()
+	designer.size = Vector2(420, 700)
+	tree.root.add_child(designer)
+	await tree.process_frame
+	var opening = _asymmetric_profile(registry)
+	if not designer.configure(registry, library) or not designer.open_with_profile(opening, "live_4d"):
+		designer.queue_free()
+		return ["Designer write-failure regression requires a configured detached profile"]
+	designer.set_parameter_value("ghost.opacity", 0.45)
+	var working_before: Dictionary = designer.working_profile().snapshot()
+	var result: Dictionary = designer.save_working_as("Designer Cannot Persist")
+	var snapshot: Dictionary = designer.deterministic_snapshot()
+	if bool(result.get("ok", false)) or not str(snapshot.get("loaded_profile_id", "")).is_empty():
+		failures.append("failed Designer Save As must not establish loaded/saved profile state")
+	if designer.working_profile().snapshot() != working_before or snapshot.get("displayed_slot") != DesignerScript.SLOT_WORKING:
+		failures.append("failed Designer Save As must preserve detached working B and its displayed state")
+	var library_snapshot: Dictionary = snapshot.get("profile_library", {})
+	if not library_snapshot.get("profiles", []).is_empty() or int(library_snapshot.get("write_count", -1)) != 0:
+		failures.append("failed Designer Save As must create no phantom profile or successful write")
+	designer.queue_free()
+	await tree.process_frame
+	return failures
+
+
 func _test_live_integration(registry) -> Array:
 	var failures: Array = []
 	var tree := Engine.get_main_loop() as SceneTree
@@ -380,9 +608,36 @@ func _contains_fragment(values: Array, fragment: String) -> bool:
 	return false
 
 
+func _records_contain_name(records: Array, display_name: String) -> bool:
+	for record in records:
+		if str(record.get("display_name", "")) == display_name:
+			return true
+	return false
+
+
+func _directory_has_suffix(path: String, suffix: String) -> bool:
+	var directory := DirAccess.open(ProjectSettings.globalize_path(path))
+	if directory == null:
+		return false
+	directory.list_dir_begin()
+	var entry := directory.get_next()
+	while not entry.is_empty():
+		if not directory.current_is_dir() and entry.ends_with(suffix):
+			directory.list_dir_end()
+			return true
+		entry = directory.get_next()
+	directory.list_dir_end()
+	return false
+
+
 func _read_json(path: String):
 	var file := FileAccess.open(path, FileAccess.READ)
 	return JSON.parse_string(file.get_as_text()) if file != null else null
+
+
+func _read_text(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
+	return file.get_as_text() if file != null else ""
 
 
 func _write_text(path: String, text: String) -> void:
@@ -393,7 +648,17 @@ func _write_text(path: String, text: String) -> void:
 
 
 func _cleanup_all() -> void:
-	for directory in [TEST_DIRECTORY, DESIGNER_DIRECTORY, INTEGRATION_DIRECTORY]:
+	for directory in [
+		TEST_DIRECTORY,
+		DESIGNER_DIRECTORY,
+		INTEGRATION_DIRECTORY,
+		WRITE_FAILURE_DIRECTORY,
+		DESIGNER_FAILURE_DIRECTORY,
+		RESTORE_RENAME_DIRECTORY,
+		RESTORE_COPY_DIRECTORY,
+		RESTORE_TOTAL_FAILURE_DIRECTORY,
+		DIAGNOSTIC_DIRECTORY,
+	]:
 		_cleanup_directory(directory)
 	for path in [EXPORT_PATH, "%s.tmp" % EXPORT_PATH, "%s.bak" % EXPORT_PATH, INVALID_PATH]:
 		if FileAccess.file_exists(path):

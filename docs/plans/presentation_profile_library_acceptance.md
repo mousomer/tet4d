@@ -136,6 +136,61 @@ The canonical/pinned logs retain established negative-path settings/setup
 diagnostics and existing non-failing Godot teardown advisories. No new runtime
 failure was accepted or bypassed.
 
+## Stage 54F-3R post-review robustness closure
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ROBUSTNESS GREEN
+
+The reviewed-green Stage 54F-3 architecture remains accepted. Its bounded
+54F-3R follow-up corrects four P2 implementation/evidence gaps without changing
+profile semantics or authority:
+
+- a shared Godot file-mechanics helper writes and flushes the sibling temp,
+  checks `FileAccess.get_error()` before install, and lets an incomplete write
+  cleanly fail without moving the current destination;
+- profile and settings persistence remain separate owners, paths, schemas,
+  counters, and diagnostics while reusing the same direct-replace, backup,
+  retry, restore-rename, and restore-copy sequence;
+- total profile restoration failure reports failure and retains the exact prior
+  artifact at its explicit backup path; it never deletes the last valid copy or
+  reports success;
+- profile diagnostics are sorted current-scan state. Repeated snapshots over
+  unchanged healthy/corrupt/stale storage are identical and do not accumulate
+  duplicate corrupt-artifact messages;
+- the production cockpit test compares the actual Live-4D gameplay viewport and
+  full Designer rect with the library collapsed and expanded. Both remain equal,
+  while NEXT, HOLD, piece controls, and basis/slice state remain visible.
+
+Focused Godot 4.7.1 evidence passes for profile persistence, `SettingsStore`,
+and cockpit hierarchy. It inspects persisted bytes/values and covers incomplete
+overwrite, failed Save As and Designer state, rename restoration, copy fallback,
+total restoration failure with retained backup, unrelated healthy listing,
+three equal corrupt-storage snapshots, stable diagnostic count/content, stale
+`.tmp`/`.bak` invisibility, and exact viewport allocation. Existing lifecycle
+coverage continues to prove Save B while A is displayed, detached load, delete
+with runtime B active, import without auto-apply, ordinary settings separation,
+and gameplay/camera/basis/NEXT/HOLD isolation.
+
+Completion evidence:
+
+- focused profile, `SettingsStore`, and production cockpit suites: PASS;
+- canonical Godot 4.7.1 suite in an isolated temporary project/user-data copy:
+  `Godot replay tests passed.`;
+- pinned Godot 4.7.1 gate: 59 topology transport cases and
+  `Godot 4.7.1 verification passed.`;
+- settings externalization, project-contract, generated maintenance/
+  configuration, semantic-boundary (119 scripts), sanitation, and
+  `git diff --check`: PASS;
+- full `CODEX_MODE=1 ./scripts/verify.sh`: `verify: OK`;
+- one production Live-4D real-window session: collapsed and expanded Profile
+  Library states retained the same visible gameplay frame and full Designer
+  allocation, with NEXT, HOLD, piece controls, 4D actions, and basis/slice
+  labels visible.
+
+Intentional negative-path persistence diagnostics and the repository's known
+non-failing Godot teardown advisories remain visible in automated output; no
+failure was bypassed. The production-window inspection is agent-driven, so no
+independent human sign-off is claimed.
+
 ## Explicit deferrals
 
 No themes, built-in style pack, new parameters, palette editor, procedural

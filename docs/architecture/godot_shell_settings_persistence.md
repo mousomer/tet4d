@@ -80,12 +80,16 @@ persistence, reset, focus, and semantic whitelist coverage.
 - Save timing: validated save-on-change; unchanged values do not write.
 - Save feedback: the Settings screen reports `Shell settings saved automatically.`
   after a successful write; no separate Save button is required.
-- Replacement: write a sibling temporary file and first use Godot's
-  overwrite-capable rename. If that operation fails while an existing settings
-  file remains, preserve it as a sibling backup before retrying installation.
-  A failed retry restores the previous file by rename or copy fallback. Clean
-  temporary/backup files where safe; retain the backup and report its path only
-  if restoration itself cannot complete.
+- Replacement: use the bounded persistent-file helper shared only at the file-
+  mechanics layer with named presentation-profile artifacts. Write and flush a
+  sibling temporary file, check Godot's file error before installation, and
+  first use the overwrite-capable rename. An incomplete write fails before the
+  existing settings file is modified. If direct replacement fails while an
+  existing settings file remains, preserve it as a sibling backup before
+  retrying installation. A failed retry restores the previous file by rename or
+  copy fallback. Clean temporary/backup files where safe; retain the backup and
+  report its path only if restoration itself cannot complete. Sharing these
+  mechanics does not merge paths, schemas, diagnostics, or semantic ownership.
 - Reset API: the store can restore registry defaults atomically. The Stage 51
   Settings action scopes reset to Display, Theme, and Camera categories so
   replay, keyboard-hint, and onboarding preferences remain unchanged.

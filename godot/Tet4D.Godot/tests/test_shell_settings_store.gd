@@ -12,9 +12,27 @@ class InjectedReplacementOps:
 	var rename_failures: Dictionary = {}
 	var copy_failures: Dictionary = {}
 	var remove_failures: Dictionary = {}
+	var write_failures: Dictionary = {}
 	var rename_count := 0
 	var copy_count := 0
 	var remove_count := 0
+	var write_count := 0
+
+	func write_text_file(path: String, contents: String) -> Error:
+		write_count += 1
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		if file == null:
+			return FileAccess.get_open_error()
+		if write_failures.has(write_count):
+			file.store_string(contents.left(maxi(1, contents.length() / 4)))
+			file.flush()
+			file.close()
+			return write_failures.get(write_count)
+		file.store_string(contents)
+		file.flush()
+		var error := file.get_error()
+		file.close()
+		return error
 
 	func file_exists(path: String) -> bool:
 		return FileAccess.file_exists(path)
@@ -152,9 +170,30 @@ func _test_schema_representations(failures: Array, registry) -> void:
 
 func _test_failure_safe_replacement(failures: Array, registry) -> void:
 	_test_successful_existing_replacement(failures, registry)
+	_test_incomplete_write_preserves_existing_file(failures, registry)
 	_test_failure_before_existing_file_changes(failures, registry)
 	_test_failure_after_backup_restores_previous_file(failures, registry)
 	_test_restore_copy_fallback(failures, registry)
+
+
+func _test_incomplete_write_preserves_existing_file(failures: Array, registry) -> void:
+	_write_valid_settings("tron")
+	var original := _read_file()
+	var ops := InjectedReplacementOps.new()
+	ops.write_failures = {1: ERR_FILE_CANT_WRITE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "plain")
+	if _read_file() != original:
+		failures.append("incomplete settings write must preserve the exact existing settings file")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 0:
+		failures.append("incomplete settings write must not increment save count")
+	if not _diagnostics_contain(store, "temporary write failed") or _diagnostics_contain(store, "saved automatically"):
+		failures.append("incomplete settings write must report failure without success")
+	if _path_exists("%s.tmp" % TEST_PATH) or _path_exists("%s.bak" % TEST_PATH):
+		failures.append("incomplete settings write should remove its invalid temporary artifact without creating a backup")
+	var reopened = StoreScript.new(registry, TEST_PATH)
+	if reopened.value("theme.name") != "tron":
+		failures.append("settings should reopen from the prior valid artifact after an incomplete write")
 
 
 func _test_successful_existing_replacement(failures: Array, registry) -> void:
