@@ -1,7 +1,7 @@
 # Presentation Profile Library
 
 Status: active Stage 54F-3 Godot product-shell contract with bounded Stage
-54F-3R persistence robustness closure
+54F-3R robustness closure and Stage 54F-3R.1 review corrections
 
 ## 1. Purpose and invariant
 
@@ -79,6 +79,20 @@ installation after backup fails, restoration tries rename then copy. The backup
 is removed only after installation or restoration succeeds; if both restore
 paths fail, the operation reports failure and retains the prior content at the
 explicit backup path for recovery.
+
+Sibling backup cleanup is owned only by an existing-destination replacement
+lifecycle. The helper captures whether the destination existed before the
+direct install attempt. A successful write to a previously absent arbitrary
+destination, including a fresh export path selected by the user, does not claim,
+modify, or delete an unrelated sibling `<destination>.bak`. Existing managed
+destinations retain the accepted direct-replace, backup/install, and restoration
+behavior.
+
+A cleanup failure after successful installation is a successful write with an
+explicit warning, not silent success or destructive rollback. The warning is
+returned by `PresentationProfileLibrary` and surfaced in Designer status text.
+It is not appended to library scan diagnostics, which remain deterministic
+current-scan artifact state rather than an operation log.
 
 A generated validated ID, never a display name or imported path fragment,
 selects a library filename. Display names are trimmed, length-bounded, reject
@@ -188,7 +202,11 @@ incomplete-write rejection, rename/copy/retained-backup recovery, strict
 validation, deterministic current-scan diagnostics, corruption isolation,
 stale mechanics-file invisibility, path safety, round-trip fidelity, A/B
 detachment, settings/gameplay/camera isolation, 2D/3D/4D applicability, and
-exact Live-4D collapsed/expanded gameplay viewport allocation. Production
+exact Live-4D collapsed/expanded gameplay viewport allocation. Direct
+state-machine evidence additionally covers absent-destination install failure,
+existing-destination backup/install success, and stale-backup cleanup warning;
+the production export path proves that a fresh destination preserves an
+unrelated sibling backup byte-for-byte. Production
 Godot 4.7.1 review covers Save As, load restoration, A/B comparison, detached
 delete, one actual export/import path, and the unchanged collapsed/expanded
 cockpit footprint. The canonical, pinned, persistence/governance,

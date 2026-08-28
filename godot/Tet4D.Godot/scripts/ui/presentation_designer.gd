@@ -238,7 +238,7 @@ func save_working_as(display_name: String) -> Dictionary:
 		var record: Dictionary = result.get("record", {})
 		_set_loaded_profile(record, _working_profile)
 		_refresh_library_list(_loaded_profile_id)
-		_refresh_all_text("Saved working B as '%s'." % _loaded_profile_name)
+		_refresh_all_text(_library_success_message("Saved working B as '%s'." % _loaded_profile_name, result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be saved.")))
 	return result
@@ -251,7 +251,7 @@ func save_working() -> Dictionary:
 	if bool(result.get("ok", false)):
 		_set_loaded_profile(result.get("record", {}), _working_profile)
 		_refresh_library_list(_loaded_profile_id)
-		_refresh_all_text("Saved working B to '%s'." % _loaded_profile_name)
+		_refresh_all_text(_library_success_message("Saved working B to '%s'." % _loaded_profile_name, result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be saved.")))
 	return result
@@ -282,7 +282,7 @@ func duplicate_saved_profile(profile_id: String, display_name: String = "") -> D
 	if bool(result.get("ok", false)):
 		var record: Dictionary = result.get("record", {})
 		_refresh_library_list(str(record.get("profile_id", "")))
-		_refresh_all_text("Duplicated profile as '%s'." % record.get("display_name", ""))
+		_refresh_all_text(_library_success_message("Duplicated profile as '%s'." % record.get("display_name", ""), result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be duplicated.")))
 	return result
@@ -297,7 +297,7 @@ func rename_saved_profile(profile_id: String, display_name: String) -> Dictionar
 		if profile_id == _loaded_profile_id:
 			_loaded_profile_name = str(record.get("display_name", ""))
 		_refresh_library_list(profile_id)
-		_refresh_all_text("Renamed profile to '%s' without applying it." % record.get("display_name", ""))
+		_refresh_all_text(_library_success_message("Renamed profile to '%s' without applying it." % record.get("display_name", ""), result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be renamed.")))
 	return result
@@ -324,7 +324,7 @@ func import_saved_profile(source_path: String, display_name: String = "") -> Dic
 	if bool(result.get("ok", false)):
 		var record: Dictionary = result.get("record", {})
 		_refresh_library_list(str(record.get("profile_id", "")))
-		_refresh_all_text("Imported '%s'; working B was not changed." % record.get("display_name", ""))
+		_refresh_all_text(_library_success_message("Imported '%s'; working B was not changed." % record.get("display_name", ""), result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be imported.")))
 	return result
@@ -335,7 +335,7 @@ func export_saved_profile(profile_id: String, destination_path: String, allow_ov
 		return _library_failure("Profile library is unavailable.")
 	var result: Dictionary = _profile_library.export_profile(profile_id, destination_path, allow_overwrite)
 	_refresh_all_text(
-		"Exported profile to %s." % destination_path
+		_library_success_message("Exported profile to %s." % destination_path, result)
 		if bool(result.get("ok", false))
 		else str(result.get("error", "Profile could not be exported."))
 	)
@@ -790,6 +790,11 @@ func _clear_loaded_profile() -> void:
 func _library_failure(message: String) -> Dictionary:
 	_refresh_all_text(message)
 	return {"ok": false, "error": message}
+
+
+func _library_success_message(message: String, result: Dictionary) -> String:
+	var warning := str(result.get("warning", "")).trim_suffix(".")
+	return message if warning.is_empty() else "%s Warning: %s." % [message, warning]
 
 
 func _rebuild_registry_controls() -> void:

@@ -1176,6 +1176,45 @@ transfer presentation semantics away from the registry. Canonical/pinned Godot,
 59-case topology transport, persistence/governance/semantic-boundary,
 sanitation, and full repository verification pass.
 
+#### Post-Stage-54 review hardening — Stage 54F-3R persistence
+
+Status: LOCAL CORRECTION GREEN / INDEPENDENT RE-REVIEW PENDING after Stage
+54F-3R.1 on `codex/canonical-local-board-geometry`.
+
+Stage 54F-3R preserves the accepted profile-library architecture while closing
+bounded persistence-mechanics and test-integrity findings. It does not create or
+compare candidate visual designs. Completion of the parameter, geometry,
+Designer A/B, cockpit, and profile-library stages establishes the controlled
+comparison apparatus; it is not completion of the visual-design comparison.
+
+#### Next follow-on — Stage 54F-4 Built-in Style Catalog
+
+Status: PLANNED.
+
+Create the actual read-only candidate presentation designs over the accepted
+registry and `PresentationProfile` payload. Candidate directions may include
+restrained/classic, Python-reference, arcade-neon or TRON-like, technical/
+blueprint, minimal-dark, and high-contrast accessibility treatments. This stage
+authors and validates distinct candidates; it does not rank them or select the
+product default.
+
+#### Next follow-on — Stage 54F-5 Comparative Visual Evaluation
+
+Status: PLANNED.
+
+Compare the catalog candidates systematically on identical deterministic 2D,
+3D, and 4D states, including dense boards, active/Ghost/NEXT/HOLD combinations,
+slice arrangements, and supported screen sizes. Use the existing A/B machinery
+and record human-visible evidence and tradeoffs separately from style creation.
+
+#### Next follow-on — Stage 54F-6 Default Presentation Selection / Polish
+
+Status: PLANNED.
+
+Select and refine the product default only after the comparative evaluation.
+This stage owns final visual-language selection and bounded polish; neither the
+comparison apparatus nor the existence of a catalog predetermines its outcome.
+
 Objective:
 
 Close the gap between a verified prototype and a professional game release.

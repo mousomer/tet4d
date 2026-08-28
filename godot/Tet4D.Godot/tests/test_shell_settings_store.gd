@@ -169,11 +169,32 @@ func _test_schema_representations(failures: Array, registry) -> void:
 
 
 func _test_failure_safe_replacement(failures: Array, registry) -> void:
+	_test_absent_destination_install_failure(failures, registry)
 	_test_successful_existing_replacement(failures, registry)
+	_test_backup_then_install_success(failures, registry)
+	_test_stale_backup_cleanup_warning(failures, registry)
 	_test_incomplete_write_preserves_existing_file(failures, registry)
 	_test_failure_before_existing_file_changes(failures, registry)
 	_test_failure_after_backup_restores_previous_file(failures, registry)
 	_test_restore_copy_fallback(failures, registry)
+
+
+func _test_absent_destination_install_failure(failures: Array, registry) -> void:
+	_cleanup()
+	_write_file_at("%s.bak" % TEST_PATH, "unrelated sibling backup sentinel")
+	var ops := InjectedReplacementOps.new()
+	ops.rename_failures = {1: ERR_CANT_CREATE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "tron")
+	if _path_exists(TEST_PATH) or _path_exists("%s.tmp" % TEST_PATH):
+		failures.append("absent settings destination install failure must leave no destination or temporary phantom")
+	if _read_file_at("%s.bak" % TEST_PATH) != "unrelated sibling backup sentinel":
+		failures.append("absent settings destination install failure must not touch the sibling backup")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 0:
+		failures.append("absent settings destination install failure must not increment save count")
+	if not _diagnostics_contain(store, "installation failed") or _diagnostics_contain(store, "saved automatically"):
+		failures.append("absent settings destination install failure must report failure without success")
+	_cleanup()
 
 
 func _test_incomplete_write_preserves_existing_file(failures: Array, registry) -> void:
@@ -208,6 +229,43 @@ func _test_successful_existing_replacement(failures: Array, registry) -> void:
 		failures.append("successful replacement should increment save count exactly once")
 	if _path_exists("%s.tmp" % TEST_PATH) or _path_exists("%s.bak" % TEST_PATH):
 		failures.append("successful replacement should clean temporary and backup files")
+
+
+func _test_backup_then_install_success(failures: Array, registry) -> void:
+	_write_valid_settings("tron")
+	var ops := InjectedReplacementOps.new()
+	ops.rename_failures = {1: ERR_CANT_CREATE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "plain")
+	if _saved_theme() != "plain":
+		failures.append("backup-then-install fallback should install the new settings file")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 1:
+		failures.append("backup-then-install fallback should increment settings save count exactly once")
+	if ops.rename_count != 3 or ops.copy_count != 0:
+		failures.append("backup-then-install fallback should execute direct, backup, and install renames exactly once")
+	if _path_exists("%s.tmp" % TEST_PATH) or _path_exists("%s.bak" % TEST_PATH):
+		failures.append("backup-then-install fallback should clean owned temporary and backup files")
+	if not _diagnostics_contain(store, "saved automatically") or _diagnostics_contain(store, "could not be saved"):
+		failures.append("backup-then-install fallback should report one successful settings save")
+
+
+func _test_stale_backup_cleanup_warning(failures: Array, registry) -> void:
+	_write_valid_settings("tron")
+	_write_file_at("%s.bak" % TEST_PATH, "managed stale settings backup")
+	var ops := InjectedReplacementOps.new()
+	ops.remove_failures = {1: ERR_CANT_CREATE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "plain")
+	if _saved_theme() != "plain" or _read_file_at("%s.bak" % TEST_PATH) != "managed stale settings backup":
+		failures.append("settings cleanup warning should preserve the new destination and retained backup")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 1:
+		failures.append("settings cleanup warning should still increment save count exactly once")
+	if not _diagnostics_contain(store, "saved, but stale backup cleanup failed"):
+		failures.append("settings cleanup warning should remain explicit in owner diagnostics")
+	if _diagnostics_contain(store, "could not be saved") or _path_exists("%s.tmp" % TEST_PATH):
+		failures.append("settings cleanup warning must not report bounded failure or leave a temporary artifact")
+	if _path_exists("%s.bak" % TEST_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("%s.bak" % TEST_PATH))
 
 
 func _test_failure_before_existing_file_changes(failures: Array, registry) -> void:
@@ -292,7 +350,11 @@ func _write_file_at(path: String, text: String) -> void:
 
 
 func _read_file() -> String:
-	var file := FileAccess.open(TEST_PATH, FileAccess.READ)
+	return _read_file_at(TEST_PATH)
+
+
+func _read_file_at(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
 	return file.get_as_text() if file != null else ""
 
 

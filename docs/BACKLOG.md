@@ -112,6 +112,26 @@ contract and evidence are
 `docs/architecture/presentation_profile_library.md` and
 `docs/plans/presentation_profile_library_acceptance.md`.
 
+Completed bounded independent-review correction: Stage 54F-3R.1 starts from
+`31fef3718c967a20fcb6b9d14b83356f92ea40d2` on the same unpublished branch.
+It closes only the fresh-destination sibling-backup ownership regression, two
+unsafe Stage 54F-3R test dereferences, and three missing shared-replacement
+state-machine transitions. A previously absent export destination does not
+claim an unrelated sibling `.bak`; existing managed profile/settings paths
+retain the accepted replacement and recovery sequence. Cleanup warnings reach
+the existing profile result/Designer status and settings diagnostic boundaries
+without changing deterministic scan diagnostics. No schema, identity, A/B,
+dirty-state, settings, gameplay, camera, basis, cockpit, or authority behavior
+changes. Focused/canonical/pinned Godot 4.7.1, mutation, governance/generated-
+doc/settings/semantic-boundary, sanitation, diff, and full-repository evidence
+is green. Stage 54F-3 remains reviewed green; Stage 54F-3R remains pending
+independent re-review.
+
+The presentation comparison apparatus is nearly complete, not the visual-design
+comparison. After Stage 54F-3R is re-reviewed, the next distinct stages are
+54F-4 built-in candidate style creation, 54F-5 systematic comparative visual
+evaluation, and 54F-6 default presentation selection/polish.
+
 Completed bounded post-review hardening: Stage 54F-3R starts from reviewed-green
 Stage 54F-3 HEAD `47c90c67d5a13a84bd826f17f2838f0de3f38ec5`
 on the same unpublished branch. It closes only four P2 findings: shared profile/

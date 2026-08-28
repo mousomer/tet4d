@@ -1,3 +1,156 @@
+# Task Contract — Stage 54F-3R.1 Shared Replacement Review Corrections
+
+Status: COMPLETE / LOCAL CORRECTION GREEN / INDEPENDENT RE-REVIEW PENDING
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `31fef3718c967a20fcb6b9d14b83356f92ea40d2`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Close only the three findings from the independent Stage 54F-3R review: keep
+unrelated sibling backups intact when exporting to a previously absent arbitrary
+destination, guard the two newly introduced persistence-test load paths from the
+repository runner's pre-existing false-green crash behavior, and directly cover
+the three missing shared-replacement transitions. Preserve the accepted profile,
+settings, Designer, cockpit, gameplay, and persistence architecture.
+
+## Classification and Authority Comparison
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`, because the bounded filesystem-mechanics
+  provider is consumed by the separate named-profile and ordinary-settings
+  persistence owners.
+- Affected layers: shared Godot persistent-file mechanics, profile artifact
+  export/persistence results, ordinary shell-settings write regression tests,
+  Godot persistence tests, and governing architecture/acceptance records.
+- Claims: sibling backup cleanup is limited to an existing-destination
+  replacement lifecycle; the three unexercised state-machine transitions are
+  explicit and deterministic; failed profile loads append ordinary test failures
+  instead of dereferencing null; existing profile/settings behavior remains
+  intact.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `integration`, and `deterministic`.
+- Full repository gate: required because this is an independent-review
+  correction to shared product-shell persistence infrastructure.
+- Authority effect: none. `PersistentFileReplacement` continues to own only
+  filesystem mechanics; `PresentationProfileLibrary` retains named-artifact
+  lifecycle and export semantics; `SettingsStore` retains ordinary-preference
+  ownership; the registry and `PresentationProfile` retain parameter/schema
+  authority.
+- Visual-design status: this task uses the completed presentation-comparison
+  apparatus but neither creates candidate styles nor performs comparative visual
+  evaluation or default-presentation selection. Those remain separate future
+  stages (54F-4, 54F-5, and 54F-6 respectively).
+
+The existing profile-library contract makes export an explicit write to an
+arbitrary user-selected path, while the settings contract owns a fixed app path.
+The shared helper may use pre-operation destination existence as filesystem
+state, but may not infer ownership from caller type or destination semantics.
+Therefore a successful direct install may clean a sibling backup only when the
+destination existed before this replacement operation. Existing-destination
+backup/install/restore behavior remains unchanged.
+
+## Scope Matrix
+
+| Layer | Required change | Evidence |
+| --- | --- | --- |
+| Shared file mechanics | Capture whether the destination existed before direct install; preserve unrelated sibling backup state for a fresh destination; make stale-backup cleanup failure explicit. | Failure-injected absent-install, backup/install-success, and cleanup-failure transition tests. |
+| Profile library | Preserve fresh-export sibling `.bak` byte-for-byte and surface actionable helper warnings through the existing result boundary. | Production-path `export_profile()` regression plus existing lifecycle/restore coverage. |
+| SettingsStore | Preserve fixed app-path save, cleanup, restoration, counters, and warning diagnostics. | Focused existing-destination and failure-regression suite. |
+| Test integrity | Guard the two Stage 54F-3R load assertions before profile dereference. | Scratch mutation produces an ordinary recorded test failure without a script crash. |
+| Documentation | Record backup-ownership, warning, test-guard, and transition closure without downgrading Stage 54F-3 reviewed-green status or claiming visual comparison. | Governance, generated-document, semantic-boundary, sanitation, and diff checks. |
+
+## Allowed and Required Changes
+
+1. Track pre-operation destination existence inside
+   `PersistentFileReplacement`; do not add caller-semantic knowledge.
+2. Preserve a sibling `.bak` on successful installation to a destination that
+   did not exist before the operation.
+3. Preserve existing-destination direct replacement, backup/install, restoration,
+   recoverability, and cleanup guarantees.
+4. Add direct failure-injection coverage for absent-destination install failure,
+   existing-destination backup/install success, and stale-backup cleanup failure.
+5. Exercise actual `PresentationProfileLibrary.export_profile()` with a fresh
+   destination and unrelated sibling backup whose bytes must remain unchanged.
+6. Guard the two newly introduced Stage 54F-3R profile-load assertions and
+   perform a non-committed mutation sanity check.
+7. Propagate an actionable successful-write cleanup warning through existing
+   profile-library results; do not create a diagnostics framework.
+8. Update only the routed architecture, acceptance, backlog, and restart-handoff
+   records, then run every task-requested gate.
+
+## Forbidden Changes
+
+- profile/artifact/settings schemas, IDs, names, import/export format, Save/Save
+  As/load/A-B/dirty-state behavior, startup defaults, or ordinary settings policy;
+- gameplay/setup/native/replay/hash, camera, basis/slice, NEXT/HOLD/Ghost,
+  cockpit geometry, layout, input, or Designer persistence boundaries;
+- the global Godot test runner, a new test framework, new backup naming, export
+  UX, themes, style catalogs, candidate visual designs, comparative visual
+  evaluation, or default-presentation selection;
+- reset, rebase, merge, predecessor amendment, push, PR, or publication.
+
+## Acceptance Criteria
+
+1. A successful write to a previously absent destination preserves any
+   pre-existing sibling `.bak` byte-for-byte.
+2. Actual profile export to a fresh arbitrary destination proves that behavior.
+3. Existing-destination profile and settings replacement semantics remain intact.
+4. Destination-absent install failure reports failure, creates no destination or
+   phantom artifact, cleans temp according to contract, leaves backup untouched,
+   and increments no success counter.
+5. Direct-replace failure followed by backup/install success installs the new
+   destination, cleans owned backup state, reports success, and increments once.
+6. Stale-backup cleanup failure has explicit deterministic non-destructive
+   semantics and is not silently swallowed.
+7. Actionable successful-write cleanup warnings reach the profile-library result
+   boundary; settings retain their existing diagnostic propagation.
+8. The two affected profile-load assertions append a failure and return rather
+   than crashing when load fails; a scratch mutation proves ordinary failure
+   reporting.
+9. Partial-write, failed Save As, restore rename, restore copy fallback, total
+   restoration failure, SettingsStore, deterministic diagnostics, corruption
+   isolation, and viewport-allocation regressions remain green.
+10. No semantic authority transfers and no visual-design comparison is claimed.
+11. Focused, canonical Godot, pinned Godot 4.7.1, governance, generated-doc,
+    settings-externalization, semantic-boundary, sanitation, diff, and full
+    repository gates pass.
+12. One coherent local commit is verified as the exact final tree and leaves a
+    clean worktree without push or PR.
+
+## Explicit Deferrals
+
+The repository-wide Godot runner false-green architecture remains advisory-only.
+All Stage 54F-3 non-goals remain deferred. Candidate style creation belongs to
+Stage 54F-4, comparative visual evaluation to Stage 54F-5, and default visual
+selection/polish to Stage 54F-6; the comparison apparatus being available is not
+evidence that any of those visual-design stages is complete.
+
+## Completion Evidence
+
+- focused helper, profile-library, SettingsStore, settings-integration, and
+  cockpit tests pass in Godot 4.7.1;
+- a scratch-copy mutation forces the guarded restored-profile load to fail as an
+  ordinary recorded assertion with process exit 1 and no script crash;
+- the isolated canonical Godot suite prints `Godot replay tests passed.`;
+- the pinned clean-copy gate passes engine/API checks, the canonical suite, 59
+  topology transport cases, and Godot 4.7.1 verification;
+- settings externalization, 117-path project-contract validation, generated
+  maintenance/configuration checks, 120-script semantic-boundary validation,
+  repository sanitation, and diff checks pass;
+- the full repository gate reports `verify: OK`.
+
+The existing host-user-data canonical invocation still reproduces the documented
+unrelated onboarding-preference contamination; the isolated canonical and pinned
+invocations are green. Intentional negative-path persistence diagnostics and
+known non-failing Godot teardown advisories remain visible. No push or PR is
+performed, and Stage 54F-3R remains pending independent re-review.
+
+---
+
 # Task Contract — Stage 54F-3R Profile Persistence Robustness
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ROBUSTNESS GREEN

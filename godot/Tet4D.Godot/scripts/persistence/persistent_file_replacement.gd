@@ -40,9 +40,10 @@ static func replace_temporary_file(
 	operations = null
 ) -> Dictionary:
 	var backup_path := "%s%s" % [destination_path, BACKUP_SUFFIX]
+	var destination_existed := _file_exists(destination_path, operations)
 	var replace_error := _rename_absolute(temporary_path, destination_path, operations)
 	if replace_error == OK:
-		var stale_cleanup := _remove_if_present(backup_path, operations)
+		var stale_cleanup := _remove_if_present(backup_path, operations) if destination_existed else OK
 		return _success({
 			"warning": _cleanup_warning("stale backup", stale_cleanup),
 			"replacement": "direct",

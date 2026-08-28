@@ -90,6 +90,12 @@ persistence, reset, focus, and semantic whitelist coverage.
   copy fallback. Clean temporary/backup files where safe; retain the backup and
   report its path only if restoration itself cannot complete. Sharing these
   mechanics does not merge paths, schemas, diagnostics, or semantic ownership.
+  Sibling backup cleanup is limited to backup state owned by a destination that
+  existed before the replacement attempt. This filesystem-state rule is neutral
+  for the fixed app-owned settings path while preventing arbitrary fresh export
+  paths in other persistence domains from claiming unrelated sibling files. A
+  cleanup failure after successful settings installation remains explicit in
+  `SettingsStore` diagnostics while the successful save count increments once.
 - Reset API: the store can restore registry defaults atomically. The Stage 51
   Settings action scopes reset to Display, Theme, and Camera categories so
   replay, keyboard-hint, and onboarding preferences remain unchanged.

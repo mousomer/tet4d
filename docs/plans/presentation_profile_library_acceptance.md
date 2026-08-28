@@ -191,6 +191,49 @@ non-failing Godot teardown advisories remain visible in automated output; no
 failure was bypassed. The production-window inspection is agent-driven, so no
 independent human sign-off is claimed.
 
+## Stage 54F-3R.1 independent-review corrections
+
+Status: COMPLETE / LOCAL CORRECTION GREEN / INDEPENDENT RE-REVIEW PENDING
+
+The independent Stage 54F-3R review confirmed the original four P2 findings
+closed and identified three bounded follow-ups. The shared helper now captures
+whether the destination existed before replacement and cleans a sibling backup
+only for an existing-destination lifecycle. Actual profile export to a fresh
+path preserves a pre-existing unrelated sibling `.bak` byte-for-byte, while
+existing profile and settings replacement retains direct, backup/install,
+restore-rename, restore-copy, and retained-recovery behavior.
+
+Direct injected transition coverage now exercises absent-destination install
+failure, existing-destination backup/install success, and stale-backup cleanup
+failure. Cleanup failure after a successful install returns an explicit warning;
+`PresentationProfileLibrary` preserves it, Designer status surfaces it, and
+`SettingsStore` retains its existing warning diagnostic. Profile scan
+diagnostics remain deterministic current-scan state rather than an operation
+log.
+
+The two Stage 54F-3R assertions that read a restored profile now validate the
+load result and detached profile before calling `values()`. A scratch-copy
+mutation that removed the expected restored artifact produced an ordinary
+recorded failure and Godot exit 1, without a script error or false-green pass.
+Focused helper, profile-library, settings, settings-integration, and cockpit
+tests pass in Godot 4.7.1. The isolated canonical suite passes; the pinned clean-
+copy gate passes engine/API checks, the canonical suite, 59 topology transport
+cases, and Godot 4.7.1 verification. Settings externalization, 117-path project-
+contract validation, generated maintenance/configuration checks, 120-script
+semantic-boundary validation, sanitation, diff checks, and the full repository
+gate pass. The bare host-user-data canonical invocation retains the documented
+unrelated onboarding-preference contamination; intentional negative-path and
+known non-failing teardown diagnostics remain visible.
+
+This correction completes no visual-design comparison. Stages 54E-4 and
+54F-1/2/3 provide the parameter, geometry, A/B, cockpit, and profile apparatus;
+candidate creation, comparative evaluation, and default selection remain
+separate future Stages 54F-4, 54F-5, and 54F-6.
+
+Stage 54F-3 remains reviewed green. Stage 54F-3R is locally correction-green and
+remains pending independent re-review; no human acceptance, push, or PR is
+claimed.
+
 ## Explicit deferrals
 
 No themes, built-in style pack, new parameters, palette editor, procedural

@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-08-28
-Worktree expectation: clean after the Stage 54F-3R bounded hardening commit
+Worktree expectation: clean after the Stage 54F-3R.1 review-correction commit
 
 ## Purpose
 
@@ -12,6 +12,27 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Completed independent-review correction: Stage 54F-3R.1 starts from
+  `31fef3718c967a20fcb6b9d14b83356f92ea40d2` on
+  `codex/canonical-local-board-geometry`. The bounded fix limits sibling backup
+  cleanup to destinations that existed before replacement, so fresh arbitrary
+  profile exports preserve unrelated `.bak` files while existing managed
+  profile/settings paths retain their accepted recovery mechanics. Direct tests
+  cover absent install failure, backup/install success, and cleanup warning;
+  the two new persistence load assertions fail normally rather than crashing.
+  Focused helper/profile/settings/cockpit, scratch mutation, isolated canonical,
+  pinned Godot 4.7.1, governance/generated-doc/settings/semantic-boundary,
+  sanitation, diff, and full-repository evidence is green. Stage 54F-3 remains
+  reviewed green; Stage 54F-3R remains pending independent re-review. No
+  semantic authority transfers.
+
+- Programme clarification: the parameter contract, canonical geometry,
+  Designer A/B machinery, compact cockpit, profile library, and persistence
+  isolation form the comparison apparatus. They do not constitute candidate
+  visual-design comparison. Stage 54F-4 creates a built-in style catalog, Stage
+  54F-5 compares candidates systematically, and Stage 54F-6 selects/polishes the
+  default presentation.
 
 - Completed bounded post-review hardening: Stage 54F-3R starts from reviewed-green
   Stage 54F-3 HEAD `47c90c67d5a13a84bd826f17f2838f0de3f38ec5`

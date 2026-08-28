@@ -73,7 +73,10 @@ func save_new(display_name: String, profile) -> Dictionary:
 	var write_result := _write_artifact(_artifact_path(profile_id), artifact, false)
 	if not bool(write_result.get("ok", false)):
 		return write_result
-	return _success({"record": _record_for_artifact(artifact), "profile": profile.detached_copy()})
+	return _success_after_write(
+		{"record": _record_for_artifact(artifact), "profile": profile.detached_copy()},
+		write_result
+	)
 
 
 func save_existing(profile_id: String, profile) -> Dictionary:
@@ -88,7 +91,10 @@ func save_existing(profile_id: String, profile) -> Dictionary:
 	var write_result := _write_artifact(_artifact_path(profile_id), artifact, true)
 	if not bool(write_result.get("ok", false)):
 		return write_result
-	return _success({"record": _record_for_artifact(artifact), "profile": profile.detached_copy()})
+	return _success_after_write(
+		{"record": _record_for_artifact(artifact), "profile": profile.detached_copy()},
+		write_result
+	)
 
 
 func load_profile(profile_id: String) -> Dictionary:
@@ -125,7 +131,10 @@ func rename_profile(profile_id: String, display_name: String) -> Dictionary:
 	var write_result := _write_artifact(_artifact_path(profile_id), artifact, true)
 	if not bool(write_result.get("ok", false)):
 		return write_result
-	return _success({"record": _record_for_artifact(artifact), "profile": profile.detached_copy()})
+	return _success_after_write(
+		{"record": _record_for_artifact(artifact), "profile": profile.detached_copy()},
+		write_result
+	)
 
 
 func delete_profile(profile_id: String) -> Dictionary:
@@ -148,7 +157,10 @@ func export_profile(profile_id: String, destination_path: String, allow_overwrit
 	var result := _write_json_file(destination_path, loaded.get("artifact", {}), allow_overwrite)
 	if not bool(result.get("ok", false)):
 		return result
-	return _success({"path": destination_path, "record": _record_for_artifact(loaded.get("artifact", {}))})
+	return _success_after_write(
+		{"path": destination_path, "record": _record_for_artifact(loaded.get("artifact", {}))},
+		result
+	)
 
 
 func import_profile(source_path: String, requested_name: String = "") -> Dictionary:
@@ -378,6 +390,11 @@ func _success(extra: Dictionary = {}) -> Dictionary:
 	var result := {"ok": true, "error": ""}
 	result.merge(extra, true)
 	return result
+
+
+func _success_after_write(extra: Dictionary, write_result: Dictionary) -> Dictionary:
+	extra["warning"] = str(write_result.get("warning", ""))
+	return _success(extra)
 
 
 func _failure(message: String) -> Dictionary:

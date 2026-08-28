@@ -14,8 +14,11 @@ const RESTORE_RENAME_DIRECTORY := "user://stage54f3r_restore_rename_profiles"
 const RESTORE_COPY_DIRECTORY := "user://stage54f3r_restore_copy_profiles"
 const RESTORE_TOTAL_FAILURE_DIRECTORY := "user://stage54f3r_restore_total_failure_profiles"
 const DIAGNOSTIC_DIRECTORY := "user://stage54f3r_diagnostic_profiles"
+const WARNING_DIRECTORY := "user://stage54f3r1_warning_profiles"
 const EXPORT_PATH := "user://stage54f3_exported_profile.json"
+const ABSENT_INSTALL_EXPORT_PATH := "user://stage54f3r1_absent_install_export.json"
 const INVALID_PATH := "user://stage54f3_invalid_profile.json"
+const UNRELATED_BACKUP_SENTINEL := "unrelated sibling backup sentinel\n"
 
 
 class FailingStorageOps:
@@ -96,6 +99,7 @@ func run() -> Array:
 	failures.append_array(_test_import_validation(registry))
 	failures.append_array(await _test_designer_boundary(registry))
 	failures.append_array(await _test_designer_failed_save(registry))
+	failures.append_array(await _test_designer_cleanup_warning(registry))
 	failures.append_array(await _test_live_integration(registry))
 	_cleanup_all()
 	return failures
@@ -159,6 +163,7 @@ func _test_store_lifecycle(registry) -> Array:
 		if detached_edit.values() == detached.values() or library.load_profile(source_id).get("profile").values() != edited_source.values():
 			failures.append("loaded profiles should be detached from their stored artifact")
 
+	_write_text("%s.bak" % EXPORT_PATH, UNRELATED_BACKUP_SENTINEL)
 	var export_result := library.export_profile(source_id, EXPORT_PATH)
 	if not bool(export_result.get("ok", false)):
 		failures.append("export should write a selected portable artifact")
@@ -171,6 +176,8 @@ func _test_store_lifecycle(registry) -> Array:
 			failures.append("a valid exported profile should import successfully: %s" % imported.get("error", ""))
 		elif imported.get("record", {}).get("profile_id") == source_id or imported.get("profile").values() != library.load_profile(source_id).get("profile").values():
 			failures.append("export/import should allocate a fresh local ID and preserve semantic values")
+	if _read_text("%s.bak" % EXPORT_PATH) != UNRELATED_BACKUP_SENTINEL:
+		failures.append("fresh profile export must preserve an unrelated sibling backup byte-for-byte")
 
 	var active_detached = library.load_profile(source_id).get("profile")
 	var active_values: Dictionary = active_detached.values()
@@ -210,7 +217,15 @@ func _test_write_and_restore_robustness(registry) -> Array:
 	var overwrite_result: Dictionary = blocked.save_existing(original_id, edited)
 	if bool(overwrite_result.get("ok", false)) or not bool(overwrite_result.get("destination_untouched", false)):
 		failures.append("incomplete overwrite must fail explicitly before modifying the destination")
-	if _read_text(original_path) != original_text or blocked.load_profile(original_id).get("profile").values() != source.values():
+	var preserved_load: Dictionary = blocked.load_profile(original_id)
+	if not bool(preserved_load.get("ok", false)):
+		failures.append("incomplete overwrite must leave the previous profile loadable: %s" % preserved_load.get("error", ""))
+		return failures
+	var preserved_profile = preserved_load.get("profile")
+	if preserved_profile == null:
+		failures.append("successful load after incomplete overwrite must return a detached profile")
+		return failures
+	if _read_text(original_path) != original_text or preserved_profile.values() != source.values():
 		failures.append("incomplete overwrite must preserve the exact readable previous profile")
 	if int(blocked.deterministic_snapshot().get("write_count", -1)) != 0 or int(blocked.deterministic_snapshot().get("mutation_count", -1)) != 0:
 		failures.append("incomplete overwrite must not increment successful write or mutation counters")
@@ -223,6 +238,25 @@ func _test_write_and_restore_robustness(registry) -> Array:
 		failures.append("incomplete Save As must fail without creating a phantom profile")
 	if _records_contain_name(after_save_as, "Write Failure Phantom") or _directory_has_suffix(WRITE_FAILURE_DIRECTORY, ".tmp"):
 		failures.append("failed Save As must leave neither a listed record nor a stale temporary artifact")
+
+	_write_text("%s.bak" % ABSENT_INSTALL_EXPORT_PATH, UNRELATED_BACKUP_SENTINEL)
+	var install_ops := InjectedPersistenceOps.new()
+	install_ops.rename_failures = {1: ERR_CANT_CREATE}
+	var install_library = LibraryScript.new(registry, WRITE_FAILURE_DIRECTORY, install_ops)
+	var install_before: Dictionary = install_library.deterministic_snapshot()
+	var install_result: Dictionary = install_library.export_profile(original_id, ABSENT_INSTALL_EXPORT_PATH)
+	var install_after: Dictionary = install_library.deterministic_snapshot()
+	if bool(install_result.get("ok", false)) or not bool(install_result.get("destination_untouched", false)):
+		failures.append("fresh export install failure must report bounded failure before creating a destination")
+	if FileAccess.file_exists(ABSENT_INSTALL_EXPORT_PATH) or FileAccess.file_exists("%s.tmp" % ABSENT_INSTALL_EXPORT_PATH):
+		failures.append("fresh export install failure must leave no destination or temporary phantom")
+	if _read_text("%s.bak" % ABSENT_INSTALL_EXPORT_PATH) != UNRELATED_BACKUP_SENTINEL:
+		failures.append("fresh export install failure must not touch an unrelated sibling backup")
+	if (
+		install_after.get("write_count") != install_before.get("write_count")
+		or install_after.get("mutation_count") != install_before.get("mutation_count")
+	):
+		failures.append("fresh export install failure must not increment profile-library success counters")
 
 	failures.append_array(_test_restore_case(
 		registry,
@@ -287,7 +321,15 @@ func _test_restore_case(
 	else:
 		if not bool(result.get("previous_restored", false)) or _read_text(original_path) != original_text:
 			failures.append("%s restoration must recover the exact previous destination" % expected_restoration)
-		if library.load_profile(original_id).get("profile").values() != source.values():
+		var restored_load: Dictionary = library.load_profile(original_id)
+		if not bool(restored_load.get("ok", false)):
+			failures.append("%s restoration must leave the previous profile loadable: %s" % [expected_restoration, restored_load.get("error", "")])
+			return failures
+		var restored_profile = restored_load.get("profile")
+		if restored_profile == null:
+			failures.append("successful load after %s restoration must return a detached profile" % expected_restoration)
+			return failures
+		if restored_profile.values() != source.values():
 			failures.append("%s restoration must leave the previous profile readable through the library" % expected_restoration)
 		if FileAccess.file_exists(backup_path):
 			failures.append("%s restoration should remove the backup after confirming destination recovery" % expected_restoration)
@@ -519,6 +561,47 @@ func _test_designer_failed_save(registry) -> Array:
 	return failures
 
 
+func _test_designer_cleanup_warning(registry) -> Array:
+	var failures: Array = []
+	var tree := Engine.get_main_loop() as SceneTree
+	var opening = _asymmetric_profile(registry)
+	var initial_library = LibraryScript.new(registry, WARNING_DIRECTORY)
+	var created: Dictionary = initial_library.save_new("Cleanup Warning Target", opening)
+	if not bool(created.get("ok", false)):
+		return ["cleanup-warning regression requires an existing managed profile"]
+	var profile_id := str(created.get("record", {}).get("profile_id", ""))
+	var artifact_path := WARNING_DIRECTORY.path_join("%s%s" % [profile_id, LibraryScript.FILE_SUFFIX])
+	_write_text("%s.bak" % artifact_path, UNRELATED_BACKUP_SENTINEL)
+	var ops := InjectedPersistenceOps.new()
+	ops.remove_failures = {1: ERR_CANT_CREATE}
+	var library = LibraryScript.new(registry, WARNING_DIRECTORY, ops)
+	var designer = DesignerScript.new()
+	designer.size = Vector2(420, 700)
+	tree.root.add_child(designer)
+	await tree.process_frame
+	if not designer.configure(registry, library) or not designer.open_with_profile(opening, "live_4d"):
+		designer.queue_free()
+		return ["cleanup-warning regression requires a configured Designer"]
+	var load_result: Dictionary = designer.load_saved_profile(profile_id)
+	if not bool(load_result.get("ok", false)):
+		designer.queue_free()
+		return ["cleanup-warning regression requires the managed profile to load"]
+	designer.set_parameter_value("ghost.opacity", 0.45)
+	var result: Dictionary = designer.save_working()
+	var snapshot: Dictionary = designer.deterministic_snapshot()
+	if not bool(result.get("ok", false)) or str(result.get("warning", "")).is_empty():
+		failures.append("successful profile replacement must propagate stale-backup cleanup warning metadata")
+	if not str(snapshot.get("status_text", "")).contains("Warning: stale backup cleanup failed"):
+		failures.append("Designer status must surface an actionable successful-write cleanup warning")
+	if _read_text("%s.bak" % artifact_path) != UNRELATED_BACKUP_SENTINEL:
+		failures.append("profile cleanup warning must leave the retained backup intact")
+	if int(library.deterministic_snapshot().get("write_count", -1)) != 1:
+		failures.append("profile replacement with a cleanup warning must increment its success counter exactly once")
+	designer.queue_free()
+	await tree.process_frame
+	return failures
+
+
 func _test_live_integration(registry) -> Array:
 	var failures: Array = []
 	var tree := Engine.get_main_loop() as SceneTree
@@ -658,9 +741,18 @@ func _cleanup_all() -> void:
 		RESTORE_COPY_DIRECTORY,
 		RESTORE_TOTAL_FAILURE_DIRECTORY,
 		DIAGNOSTIC_DIRECTORY,
+		WARNING_DIRECTORY,
 	]:
 		_cleanup_directory(directory)
-	for path in [EXPORT_PATH, "%s.tmp" % EXPORT_PATH, "%s.bak" % EXPORT_PATH, INVALID_PATH]:
+	for path in [
+		EXPORT_PATH,
+		"%s.tmp" % EXPORT_PATH,
+		"%s.bak" % EXPORT_PATH,
+		ABSENT_INSTALL_EXPORT_PATH,
+		"%s.tmp" % ABSENT_INSTALL_EXPORT_PATH,
+		"%s.bak" % ABSENT_INSTALL_EXPORT_PATH,
+		INVALID_PATH,
+	]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
