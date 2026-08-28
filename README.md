@@ -2,7 +2,7 @@
 
 Tet4D is a playable 2D/3D/4D Tetris-like project about learning to think spatially beyond ordinary 3D intuition.
 
-The current professional-core product is the **Godot 4.7.1 game**: polished
+The current professional-core product is the **Godot 4.7.2 game**: polished
 bounded 2D, 3D, and 4D live play with NEXT, Ghost, Hold, replay, setup,
 settings, display, and accessibility infrastructure.
 
@@ -71,7 +71,7 @@ Godot does not currently host the Topology Playground. That remains a Python
 reference/tooling path outside the professional-core release gate.
 
 Build the current macOS 13+ Universal release candidate with the exact pinned
-Godot 4.7.1 editor and matching export templates:
+Godot 4.7.2 editor and matching export templates:
 
 ```bash
 GODOT_BIN=/path/to/Godot packaging/godot/build_macos.sh

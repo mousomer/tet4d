@@ -19,7 +19,7 @@ The Stage 54G release candidate is:
 
 - product: `Tet4D`;
 - version authority: `pyproject.toml` (`0.7.5` for this candidate);
-- engine: the exact Godot 4.7.1 stable build pinned in
+- engine: the exact Godot 4.7.2 stable build pinned in
   `config/project/policy_pack.json`;
 - platform: macOS 13 or newer;
 - architecture: Universal 2 (`x86_64` and `arm64`);

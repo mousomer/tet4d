@@ -1,6 +1,6 @@
 # Godot Release Export
 
-Tet4D's current professional-core release path is the Godot 4.7.1 macOS
+Tet4D's current professional-core release path is the Godot 4.7.2 macOS
 Universal app. The earlier Python/PyInstaller installers are retained as a
 legacy path and are not the Stage 54G product artifact.
 
@@ -9,9 +9,9 @@ legacy path and are not the Stage 54G product artifact.
 Requirements:
 
 1. macOS 13 or newer;
-2. the exact Godot 4.7.1 stable editor pinned by
+2. the exact Godot 4.7.2 stable editor pinned by
    `config/project/policy_pack.json`;
-3. the matching official Godot 4.7.1 export templates;
+3. the matching official Godot 4.7.2 export templates;
 4. the pinned `native/third_party/godot-cpp` submodule; and
 5. the repository development environment with SCons 4.10.1.
 

@@ -19,7 +19,7 @@ if [[ -z "${GODOT_BIN:-}" ]]; then
   GODOT_BIN="$(command -v godot || true)"
 fi
 if [[ -z "$GODOT_BIN" || ! -x "$GODOT_BIN" ]]; then
-  echo "Set GODOT_BIN to the exact supported Godot 4.7.1 executable." >&2
+  echo "Set GODOT_BIN to the exact supported Godot 4.7.2 executable." >&2
   exit 1
 fi
 

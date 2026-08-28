@@ -112,6 +112,20 @@ contract and evidence are
 `docs/architecture/presentation_profile_library.md` and
 `docs/plans/presentation_profile_library_acceptance.md`.
 
+Completed toolchain baseline upgrade: Stage 54F-3R.2 starts from
+`e2e1ef9254f12c528ce7a67599b43510abfc0902` on the same unpublished branch. It
+moves the pinned engine from `4.7.1-stable` to `4.7.2-stable`
+(`4.7.2.stable.official.ed1daf0bf`), the newest published stable 4.7 patch,
+under the existing selection rule with no governance amendment. The `godot-cpp`
+binding is retained on proven extension-API equivalence. Only the project
+target-version declaration and three version literals moved. Gameplay and
+presentation are provably unchanged across engines by identical state hashes,
+identical layout rects, and byte-identical rendered frames. Pinned Godot, native
+build/tests, governance, generated-doc, settings, semantic-boundary, sanitation,
+full-repository, and bounded macOS window evidence are green. Linux re-proof is
+deferred to CI on publication and Windows packaging remains unverified. The
+durable record is `docs/plans/audits/godot_4_7_2_upgrade_2026-08-28.md`.
+
 Completed bounded independent-review correction: Stage 54F-3R.1 starts from
 `31fef3718c967a20fcb6b9d14b83356f92ea40d2` on the same unpublished branch.
 It closes only the fresh-destination sibling-backup ownership regression, two

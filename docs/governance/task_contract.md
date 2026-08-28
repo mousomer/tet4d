@@ -1,3 +1,97 @@
+# Task Contract — Stage 54F-3R.2 Godot 4.7.2 Baseline Upgrade
+
+Status: COMPLETE / LOCAL TOOLCHAIN BASELINE GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `e2e1ef9254f12c528ce7a67599b43510abfc0902`
+
+Implementation branch: `codex/canonical-local-board-geometry`
+
+## Objective
+
+Move the pinned Godot baseline from `4.7.1-stable` to `4.7.2-stable`, the newest
+officially published stable 4.7 patch and the newest Godot 4.x stable overall.
+This is an engine/toolchain baseline change only. No gameplay, presentation,
+profile-library, schema, authority, or product behavior changes, and no
+opportunistic refactoring is performed.
+
+## Classification and Authority Comparison
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `toolchain_migration`, isolated from product behavior per
+  `docs/WORKFLOW_CODEX.md`.
+- Affected layers: pinned engine manifest, project target declaration, version
+  literals in verification/packaging/CI strings, generated configuration
+  reference, and operator documentation.
+- Claims: the newest stable 4.7 patch is adopted under the existing selection
+  rule; the retained binding baseline remains API-equivalent; gameplay,
+  presentation, and layout are provably unchanged.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `integration`, `deterministic`, and bounded `human_visual` inspection.
+- Full repository gate: required, because the pinned engine underlies every
+  Godot-facing gate.
+- Authority effect: none. Godot remains the product shell, Python remains the
+  semantic oracle, and native C++ remains provisional and parity-backed.
+
+The policy pack's existing `selection_rule` — "newest officially published stable
+Godot 4.7 patch release" — already authorizes this move. No governance rule was
+amended and no new persistence, presentation, or gameplay decision was reopened.
+
+## Scope Matrix
+
+| Layer | Required change | Evidence |
+| --- | --- | --- |
+| Engine manifest | Version, commit, release URL, per-platform assets and hashes, template directory, refreshed results | Locally computed SHA-256 cross-checked against upstream SHA512-SUMS |
+| Binding baseline | Retain unless compatibility evidence requires an advance | Dumped 4.7.2 extension API identical to the pinned binding with header excluded |
+| Project declaration | Raise `config/tet4d_target_godot_version` only | Pinned-gate declaration-drift check |
+| Version literals | Update three strings in place, no refactoring | Grep sweep for residual references |
+| Generated docs | Regenerate configuration/user-settings references | `--check` modes |
+| Documentation | New audit plus current operator docs; historical records untouched | Governance and contract validation |
+
+## Allowed and Required Changes
+
+1. Update `governance.godot_toolchain` to `4.7.2-stable` with verified inputs.
+2. Prove extension-API equivalence before editing; retain `godot-cpp` if equal.
+3. Raise the project target-version declaration; leave minor-scoped `4.7`
+   declarations untouched.
+4. Update version literals in place without converting them to manifest lookups.
+5. Update the `docs/RELEASE_INSTALLERS.md` governance contract literal in lockstep
+   with that document.
+6. Regenerate derived documentation and write the upgrade audit.
+7. Run every task-requested gate against the final tree.
+
+## Forbidden Changes
+
+- gameplay, topology, replay, state-hash, RNG, scoring, or setup behavior;
+- presentation, cockpit, camera, basis/slice, or Designer behavior;
+- profile-library or settings persistence behavior, schema, or authority;
+- opportunistic refactoring, including making version literals manifest-driven;
+- weakening or bypassing any verification gate;
+- amending the engine selection rule;
+- reset, rebase, predecessor amendment, push, PR, or publication.
+
+## Acceptance Criteria
+
+1. The adopted build is the newest published stable 4.7 patch, confirmed against
+   the official release feed and by `Godot --version`.
+2. Archive hashes are verified against upstream before use.
+3. Extension-API equivalence is proven, and the binding advances only if required.
+4. The pinned gate, native build and tests, governance, generated-doc,
+   settings-externalization, semantic-boundary, sanitation, and full repository
+   gates pass on the final tree.
+5. Gameplay and presentation are provably unchanged across engines.
+6. Documentation records the upgrade accurately without rewriting history.
+7. One coherent local commit leaves a clean worktree without push or PR.
+
+## Explicit Deferrals
+
+Linux re-proof is deferred to CI on publication. Windows native packaging remains
+unverified. The pre-existing clipped `DOWN ENTRY` label in live 2D is recorded as
+a non-regression and left for separate presentation work.
+
+---
+
 # Task Contract — Stage 54F-3R.1 Shared Replacement Review Corrections
 
 Status: COMPLETE / LOCAL CORRECTION GREEN / INDEPENDENT RE-REVIEW PENDING

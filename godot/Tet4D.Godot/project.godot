@@ -17,7 +17,7 @@ config/use_custom_user_dir=true
 config/custom_user_dir_name="Tet4D"
 run/main_scene="res://scenes/trace_replay.tscn"
 config/features=PackedStringArray("4.7")
-config/tet4d_target_godot_version="4.7.1-stable"
+config/tet4d_target_godot_version="4.7.2-stable"
 
 [display]
 

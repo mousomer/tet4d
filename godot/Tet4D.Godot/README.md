@@ -1,6 +1,6 @@
 # Tet4D Godot Front End
 
-This Godot 4.7.1 project is Tet4D's current bounded 2D/3D/4D
+This Godot 4.7.2 project is Tet4D's current bounded 2D/3D/4D
 professional-core product shell.
 
 It currently supports:
@@ -27,7 +27,7 @@ GODOT_BIN=/path/to/Godot
 ```
 
 The executable must report
-`4.7.1.stable.official.a13da4feb`. Official Linux and macOS archive URLs,
+`4.7.2.stable.official.ed1daf0bf`. Official Linux and macOS archive URLs,
 SHA-256 checksums, and executable paths are pinned in
 `config/project/policy_pack.json`.
 
@@ -47,7 +47,7 @@ rebuild, and update the migration record and CI together.
 ## Release Export
 
 The current supported product artifact is a macOS 13+ Universal 2 app and ZIP.
-Install the exact matching Godot 4.7.1 export templates, then run from the
+Install the exact matching Godot 4.7.2 export templates, then run from the
 repository root:
 
 ```bash

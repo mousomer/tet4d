@@ -225,7 +225,7 @@ jobs:
             tests/unit/migration/test_cpp_topology_contract_foundation.py
 
   godot-4-7:
-    name: Godot 4.7.1 / native parity
+    name: Godot 4.7.2 / native parity
     needs: plan
     if: needs.plan.outputs.lane_godot == 'true'
     runs-on: ubuntu-24.04

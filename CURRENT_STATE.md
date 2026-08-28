@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-08-28
-Worktree expectation: clean after the Stage 54F-3R.1 review-correction commit
+Worktree expectation: clean after the Stage 54F-3R.2 Godot 4.7.2 baseline commit
 
 ## Purpose
 
@@ -12,6 +12,27 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Completed toolchain baseline upgrade: Stage 54F-3R.2 starts from
+  `e2e1ef9254f12c528ce7a67599b43510abfc0902` on
+  `codex/canonical-local-board-geometry`. The pinned engine moves from
+  `4.7.1-stable` to `4.7.2-stable` (`4.7.2.stable.official.ed1daf0bf`, published
+  2026-08-18), the newest published stable 4.7 patch and newest Godot 4.x stable
+  overall, under the policy pack's existing selection rule. Archive hashes were
+  verified against upstream `SHA512-SUMS.txt` before use. The `godot-cpp` binding
+  is deliberately retained: the dumped 4.7.2 extension API is identical to the
+  pinned 4.7-stable baseline once the header is excluded, and upstream has
+  published no newer API sync. Only the project target-version declaration and
+  three version literals moved; `config/features`, `compatibility_minimum`, and
+  the native `api_version` stay minor-scoped at `4.7`. Gameplay and presentation
+  are provably unchanged: `live_4d_state_hash` and every layout contract rect are
+  identical across engines, and four rendered frames including the full Designer
+  with the Profile Library expanded are byte-identical to their 4.7.1 captures.
+  Pinned Godot, native build/tests, governance, generated-doc, settings,
+  semantic-boundary, sanitation, full-repository, and bounded macOS Metal window
+  evidence are green. This slice changes no gameplay, presentation,
+  profile-library, schema, or authority behavior. The durable record is
+  `docs/plans/audits/godot_4_7_2_upgrade_2026-08-28.md`.
 
 - Completed independent-review correction: Stage 54F-3R.1 starts from
   `31fef3718c967a20fcb6b9d14b83356f92ea40d2` on
