@@ -515,7 +515,7 @@ func _test_designer_boundary(registry) -> Array:
 		designer.set_runtime_context(mode)
 		designer.load_saved_profile(saved_id)
 		var snapshot: Dictionary = designer.deterministic_snapshot()
-		var expected_count := 16 if mode == "live_2d" else 18 if mode == "live_3d" else 20
+		var expected_count := 19 if mode == "live_2d" else 21 if mode == "live_3d" else 23
 		if snapshot.get("applicable_ids", []).size() != expected_count or designer.working_profile().values() != library.load_profile(saved_id).get("profile").values():
 			failures.append("%s load should preserve the full payload while exposure remains registry-applicable" % mode)
 	designer.set_library_expanded(true)

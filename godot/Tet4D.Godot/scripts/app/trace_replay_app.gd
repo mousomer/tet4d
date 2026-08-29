@@ -14,6 +14,7 @@ const REPLAY_BASE_FPS := 4.0
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
+const AnimatedBackgroundScript = preload("res://scripts/rendering/animated_background.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
@@ -110,6 +111,7 @@ var _live_4d_presentation_root: Node3D
 var _renderer: TraceSceneRenderer
 var _camera_rig: CameraRig
 var _world_environment: WorldEnvironment
+var _animated_background: AnimatedBackground
 @onready var _hud: ReplayHud = get_parent().get_node("ReplayHud") as ReplayHud
 
 
@@ -953,6 +955,8 @@ func _resolve_scene_nodes() -> void:
 		_camera_rig = _world_root.get_node_or_null("CameraRig") as CameraRig
 	if _live_4d_presentation_root == null:
 		_live_4d_presentation_root = _world_root.get_node_or_null("Live4DPresentationRoot") as Node3D
+	if _animated_background == null:
+		_animated_background = _world_root.get_node_or_null("CameraRig/Camera3D/AnimatedBackground") as AnimatedBackground
 	if _camera_rig != null:
 		_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
 		_connect_camera_control_frame_signal()
@@ -982,6 +986,9 @@ func _build_world_in_game_viewport() -> void:
 	camera.current = true
 	camera.fov = 50.0
 	_camera_rig.add_child(camera)
+	_animated_background = AnimatedBackgroundScript.new() as AnimatedBackground
+	_animated_background.name = "AnimatedBackground"
+	camera.add_child(_animated_background)
 	_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
 	_connect_camera_control_frame_signal()
 
@@ -1016,7 +1023,11 @@ func _apply_world_palette(display_mode: String, intensity: float = -1.0) -> void
 		ReplayVisuals.ROLE_BACKGROUND,
 		display_mode
 	)
-	_world_environment.environment.background_color = _scaled_background_color(palette_color, intensity)
+	var world_background := _scaled_background_color(palette_color, intensity)
+	_world_environment.environment.background_color = world_background
+	if _animated_background != null:
+		_animated_background.set_display_mode(display_mode)
+		_animated_background.set_base_color(world_background)
 
 
 func _scaled_background_color(color: Color, intensity: float) -> Color:
@@ -1038,6 +1049,8 @@ func apply_presentation_profile(profile) -> bool:
 		_hud.apply_presentation_profile(_presentation_profile)
 	if _renderer != null:
 		_renderer.apply_presentation_profile(_presentation_profile)
+	if _animated_background != null:
+		_animated_background.apply_presentation_profile(_presentation_profile)
 	if _camera_rig != null:
 		_camera_rig.set_presentation_preferences(
 			ShellPresentationPreferencesScript.camera_sensitivity_factor(str(_presentation_profile.value("camera.sensitivity"))),

@@ -42,7 +42,7 @@ func run() -> Array:
 	var accessibility_reset := panel.get_node_or_null("SettingsScroll/SettingsContent/ResetAccessibilitySettingsButton") as Button
 	if accessibility_reset == null or not visited.has(accessibility_reset):
 		failures.append("deterministic arrow-key focus order should reach Reset Accessibility Settings")
-	if visited.size() != 26:
+	if visited.size() != 29:
 		failures.append("focus order should include all visible shell setting controls and resets")
 	var down := InputEventKey.new()
 	down.keycode = KEY_DOWN

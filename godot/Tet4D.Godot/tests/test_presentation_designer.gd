@@ -34,8 +34,8 @@ func _test_registry_driven_component() -> Array:
 		return failures
 	var snapshot: Dictionary = designer.deterministic_snapshot()
 	failures.append_array(_check_generated_controls(designer, registry, "live_2d"))
-	if snapshot.get("applicable_ids", []).size() != 16:
-		failures.append("live 2D Designer should generate exactly the registry's 16 applicable parameters")
+	if snapshot.get("applicable_ids", []).size() != 19:
+		failures.append("live 2D Designer should generate exactly the registry's 19 applicable parameters")
 	for hidden_id in [
 		"display.window_mode",
 		"display.windowed_size",
@@ -96,13 +96,13 @@ func _test_registry_driven_component() -> Array:
 
 	designer.set_runtime_context("live_3d")
 	failures.append_array(_check_generated_controls(designer, registry, "live_3d"))
-	if designer.deterministic_snapshot().get("applicable_ids", []).size() != 18:
-		failures.append("live 3D Designer should generate exactly 18 registry-applicable controls")
+	if designer.deterministic_snapshot().get("applicable_ids", []).size() != 21:
+		failures.append("live 3D Designer should generate exactly 21 registry-applicable controls")
 	designer.set_runtime_context("live_4d")
 	failures.append_array(_check_generated_controls(designer, registry, "live_4d"))
 	var four_d_ids: Array = designer.deterministic_snapshot().get("applicable_ids", [])
-	if four_d_ids.size() != 20 or not four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
-		failures.append("live 4D Designer should generate all 20 applicable controls including slice settings")
+	if four_d_ids.size() != 23 or not four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
+		failures.append("live 4D Designer should generate all 23 applicable controls including slice settings")
 
 	var registry_data := {"schema_version": registry.schema_version, "categories": registry.categories.duplicate(true), "settings": []}
 	for spec in registry.settings:

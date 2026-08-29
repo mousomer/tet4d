@@ -4,6 +4,7 @@ class_name PresentationDesigner
 
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const PresentationProfileLibraryScript = preload("res://scripts/presentation/presentation_profile_library.gd")
+const BuiltInStyleCatalogScript = preload("res://scripts/presentation/built_in_style_catalog.gd")
 
 signal profile_preview_requested(profile)
 signal state_changed(state: String)
@@ -16,6 +17,7 @@ const SLOT_WORKING := "B"
 
 var _registry
 var _profile_library
+var _style_catalog
 var _runtime_context := "live_2d"
 var _opening_profile
 var _reference_profile
@@ -24,8 +26,11 @@ var _displayed_slot := SLOT_WORKING
 var _state := STATE_HIDDEN
 var _syncing_controls := false
 var _library_expanded := false
+var _built_in_expanded := false
 var _loaded_profile_id := ""
 var _loaded_profile_name := ""
+var _applied_style_id := ""
+var _applied_style_name := ""
 var _saved_profile_baseline
 var _pending_delete_profile_id := ""
 var _pending_export_profile_id := ""
@@ -39,6 +44,11 @@ var _compact_state_label: Label
 var _library_toggle_button: Button
 var _library_state_label: Label
 var _library_root: VBoxContainer
+var _built_in_toggle_button: Button
+var _built_in_state_label: Label
+var _built_in_root: VBoxContainer
+var _built_in_list: ItemList
+var _built_in_description_label: Label
 var _profile_name_input: LineEdit
 var _profile_list: ItemList
 var _save_profile_button: Button
@@ -64,13 +74,15 @@ func _ready() -> void:
 	_refresh_state_visibility()
 
 
-func configure(registry, profile_library = null) -> bool:
+func configure(registry, profile_library = null, style_catalog = null) -> bool:
 	if registry == null or not registry.has_method("validate") or not registry.validate().is_empty():
 		return false
 	_registry = registry
 	_profile_library = profile_library if profile_library != null else PresentationProfileLibraryScript.new(registry)
+	_style_catalog = style_catalog if style_catalog != null else BuiltInStyleCatalogScript.new(registry)
 	_rebuild_registry_controls()
 	_refresh_library_list()
+	_refresh_built_in_list()
 	return true
 
 
@@ -139,10 +151,15 @@ func end_session() -> void:
 	_displayed_slot = SLOT_WORKING
 	_clear_loaded_profile()
 	_library_expanded = false
+	_built_in_expanded = false
 	if _library_root != null:
 		_library_root.visible = false
 	if _library_toggle_button != null:
 		_library_toggle_button.text = "PROFILE LIBRARY ▸"
+	if _built_in_root != null:
+		_built_in_root.visible = false
+	if _built_in_toggle_button != null:
+		_built_in_toggle_button.text = "BUILT-IN STYLES ▸"
 	_sync_controls_from_working()
 	_refresh_all_text("Open the Designer to begin a detached preview session.")
 
@@ -342,12 +359,73 @@ func export_saved_profile(profile_id: String, destination_path: String, allow_ov
 	return result
 
 
+func built_in_style_records() -> Array:
+	return _style_catalog.list_styles() if _style_catalog != null else []
+
+
+func apply_built_in_style(style_id: String) -> Dictionary:
+	if _style_catalog == null or _working_profile == null:
+		return _library_failure("Open the Designer before applying a built-in style.")
+	var result: Dictionary = _style_catalog.style_profile(style_id)
+	if not bool(result.get("ok", false)):
+		_refresh_all_text(str(result.get("error", "Built-in style could not be applied.")))
+		return result
+	var style_profile = result.get("profile")
+	if not _valid_profile(style_profile):
+		return _library_failure("Built-in style did not produce a detached conforming B.")
+	_working_profile = style_profile.detached_copy()
+	_displayed_slot = SLOT_WORKING
+	_set_applied_style(result.get("record", {}), _working_profile)
+	_sync_controls_from_working()
+	_emit_preview(
+		_working_profile,
+		"Applied built-in style '%s' to detached B; A and the built-in source are unchanged." % _applied_style_name
+	)
+	return result
+
+
+func copy_built_in_style_to_library(style_id: String, display_name: String = "") -> Dictionary:
+	if _style_catalog == null or _profile_library == null:
+		return _library_failure("Profile library is unavailable.")
+	var result: Dictionary = _style_catalog.style_profile(style_id)
+	if not bool(result.get("ok", false)):
+		_refresh_all_text(str(result.get("error", "Built-in style could not be copied.")))
+		return result
+	var record: Dictionary = result.get("record", {})
+	var requested := display_name.strip_edges()
+	if requested.is_empty():
+		requested = str(record.get("display_name", "Built-in Style"))
+	var saved: Dictionary = _profile_library.save_new(requested, result.get("profile"))
+	if bool(saved.get("ok", false)):
+		var saved_record: Dictionary = saved.get("record", {})
+		_refresh_library_list(str(saved_record.get("profile_id", "")))
+		_refresh_all_text(_library_success_message(
+			"Copied built-in style '%s' into the editable user library as '%s'." % [
+				record.get("display_name", ""),
+				saved_record.get("display_name", ""),
+			],
+			saved
+		))
+	else:
+		_refresh_all_text(str(saved.get("error", "Built-in style could not be copied.")))
+	return saved
+
+
+func set_built_in_styles_expanded(expanded: bool) -> void:
+	_built_in_expanded = expanded
+	if expanded and _library_expanded:
+		# The two disclosure sections are mutually exclusive so combined
+		# minimum content can never exceed the allocated Designer overlay.
+		_set_library_disclosure(false)
+	_apply_built_in_disclosure()
+	_refresh_all_text("Built-in style catalog expanded." if expanded else "Built-in style catalog collapsed.")
+
+
 func set_library_expanded(expanded: bool) -> void:
-	_library_expanded = expanded
-	if _library_root != null:
-		_library_root.visible = expanded
-	if _library_toggle_button != null:
-		_library_toggle_button.text = "PROFILE LIBRARY %s" % ("▾" if expanded else "▸")
+	if expanded and _built_in_expanded:
+		_built_in_expanded = false
+		_apply_built_in_disclosure()
+	_set_library_disclosure(expanded)
 	_refresh_all_text("Profile library expanded." if expanded else "Profile library collapsed.")
 
 
@@ -405,10 +483,15 @@ func deterministic_snapshot() -> Dictionary:
 		"reference": _reference_profile.snapshot() if _reference_profile != null else {},
 		"working": _working_profile.snapshot() if _working_profile != null else {},
 		"profile_library": _profile_library.deterministic_snapshot() if _profile_library != null else {},
+		"built_in_catalog": _style_catalog.deterministic_snapshot() if _style_catalog != null else {},
 		"library_expanded": _library_expanded,
 		"library_visible": _library_root.visible if _library_root != null else false,
+		"built_in_expanded": _built_in_expanded,
+		"built_in_visible": _built_in_root.visible if _built_in_root != null else false,
 		"loaded_profile_id": _loaded_profile_id,
 		"loaded_profile_name": _loaded_profile_name,
+		"applied_style_id": _applied_style_id,
+		"applied_style_name": _applied_style_name,
 		"working_dirty": working_profile_dirty(),
 		"saved_profile_baseline": _saved_profile_baseline.snapshot() if _saved_profile_baseline != null else {},
 		"slot_text": _slot_state_label.text if _slot_state_label != null else "",
@@ -483,6 +566,56 @@ func _build_surface() -> void:
 	_slot_state_label.theme_type_variation = "SecondaryLabel"
 	_slot_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_full_root.add_child(_slot_state_label)
+
+	var built_in_header := HBoxContainer.new()
+	built_in_header.name = "DesignerBuiltInStylesHeader"
+	built_in_header.add_theme_constant_override("separation", 6)
+	_full_root.add_child(built_in_header)
+	_built_in_toggle_button = Button.new()
+	_built_in_toggle_button.name = "DesignerBuiltInStylesToggle"
+	_built_in_toggle_button.text = "BUILT-IN STYLES ▸"
+	_built_in_toggle_button.tooltip_text = "Browse the read-only styles shipped with Tet4D"
+	_built_in_toggle_button.pressed.connect(func() -> void: set_built_in_styles_expanded(not _built_in_expanded))
+	built_in_header.add_child(_built_in_toggle_button)
+	_built_in_state_label = Label.new()
+	_built_in_state_label.name = "DesignerBuiltInStylesState"
+	_built_in_state_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_built_in_state_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_built_in_state_label.theme_type_variation = "DimLabel"
+	built_in_header.add_child(_built_in_state_label)
+
+	_built_in_root = VBoxContainer.new()
+	_built_in_root.name = "DesignerBuiltInStyles"
+	_built_in_root.visible = false
+	_built_in_root.add_theme_constant_override("separation", 5)
+	_full_root.add_child(_built_in_root)
+	_built_in_list = ItemList.new()
+	_built_in_list.name = "DesignerBuiltInStyleList"
+	_built_in_list.custom_minimum_size = Vector2(0, 84)
+	_built_in_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_built_in_list.select_mode = ItemList.SELECT_SINGLE
+	_built_in_list.item_selected.connect(_on_built_in_item_selected)
+	_built_in_list.item_activated.connect(func(_index: int) -> void: _apply_built_in_from_ui())
+	_built_in_root.add_child(_built_in_list)
+	_built_in_description_label = Label.new()
+	_built_in_description_label.name = "DesignerBuiltInStyleDescription"
+	_built_in_description_label.theme_type_variation = "DimLabel"
+	_built_in_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_built_in_root.add_child(_built_in_description_label)
+	var built_in_actions := HBoxContainer.new()
+	built_in_actions.name = "DesignerBuiltInStyleActions"
+	built_in_actions.add_theme_constant_override("separation", 5)
+	_built_in_root.add_child(built_in_actions)
+	for built_in_action in [
+		["Apply to B", "Load the selected read-only style into detached working B without changing A", _apply_built_in_from_ui],
+		["Copy to User Library", "Save the selected read-only style as a new editable user profile", _copy_built_in_from_ui],
+	]:
+		var built_in_button := Button.new()
+		built_in_button.text = str(built_in_action[0])
+		built_in_button.tooltip_text = str(built_in_action[1])
+		built_in_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		built_in_button.pressed.connect(built_in_action[2])
+		built_in_actions.add_child(built_in_button)
 
 	var library_header := HBoxContainer.new()
 	library_header.name = "DesignerProfileLibraryHeader"
@@ -657,6 +790,7 @@ func _build_surface() -> void:
 	_export_dialog.filters = PackedStringArray(["*.json ; Tet4D presentation profile JSON"])
 	_export_dialog.file_selected.connect(_on_export_file_selected)
 	add_child(_export_dialog)
+	_refresh_built_in_list()
 	_refresh_all_text("Open the Designer to begin a detached preview session.")
 
 
@@ -746,6 +880,88 @@ func _on_library_item_selected(_index: int) -> void:
 		_profile_name_input.text = str(record.get("display_name", ""))
 
 
+func _apply_built_in_from_ui() -> void:
+	var style_id := _selected_built_in_style_id()
+	if style_id.is_empty():
+		_refresh_all_text("Select a built-in style to apply.")
+		return
+	apply_built_in_style(style_id)
+
+
+func _copy_built_in_from_ui() -> void:
+	var style_id := _selected_built_in_style_id()
+	if style_id.is_empty():
+		_refresh_all_text("Select a built-in style to copy.")
+		return
+	var requested := _profile_name_input.text.strip_edges() if _profile_name_input != null else ""
+	copy_built_in_style_to_library(style_id, requested)
+
+
+func _on_built_in_item_selected(_index: int) -> void:
+	_refresh_built_in_description()
+
+
+func _refresh_built_in_description() -> void:
+	if _built_in_description_label == null:
+		return
+	var record := _selected_built_in_record()
+	if record.is_empty():
+		_built_in_description_label.text = "Select a built-in style. Built-in styles are read-only: apply one to B, then use Save As to keep an editable copy."
+		return
+	_built_in_description_label.text = "%s %s Read-only built-in; Save As keeps an editable copy." % [
+		str(record.get("short_description", "")),
+		"Animated background." if bool(record.get("animated", false)) else "Static background.",
+	]
+
+
+func _refresh_built_in_list() -> void:
+	if _built_in_list == null or _style_catalog == null:
+		return
+	_built_in_list.clear()
+	var records: Array = _style_catalog.list_styles()
+	for record in records:
+		var index := _built_in_list.add_item("BUILT-IN · %s%s" % [
+			str(record.get("display_name", "")),
+			" · animated" if bool(record.get("animated", false)) else "",
+		])
+		_built_in_list.set_item_metadata(index, record.duplicate(true))
+		_built_in_list.set_item_tooltip(index, str(record.get("short_description", "")))
+	if _built_in_state_label != null:
+		_built_in_state_label.text = "Read-only · %d shipped" % records.size()
+	if not records.is_empty():
+		_built_in_list.select(0)
+	_refresh_built_in_description()
+
+
+func _selected_built_in_record() -> Dictionary:
+	if _built_in_list == null:
+		return {}
+	var selected := _built_in_list.get_selected_items()
+	if selected.is_empty():
+		return {}
+	var metadata = _built_in_list.get_item_metadata(int(selected[0]))
+	return metadata.duplicate(true) if metadata is Dictionary else {}
+
+
+func _selected_built_in_style_id() -> String:
+	return str(_selected_built_in_record().get("style_id", ""))
+
+
+func _apply_built_in_disclosure() -> void:
+	if _built_in_root != null:
+		_built_in_root.visible = _built_in_expanded
+	if _built_in_toggle_button != null:
+		_built_in_toggle_button.text = "BUILT-IN STYLES %s" % ("▾" if _built_in_expanded else "▸")
+
+
+func _set_library_disclosure(expanded: bool) -> void:
+	_library_expanded = expanded
+	if _library_root != null:
+		_library_root.visible = expanded
+	if _library_toggle_button != null:
+		_library_toggle_button.text = "PROFILE LIBRARY %s" % ("▾" if expanded else "▸")
+
+
 func _refresh_library_list(preferred_profile_id: String = "") -> void:
 	if _profile_list == null or _profile_library == null:
 		return
@@ -778,12 +994,26 @@ func _selected_library_profile_id() -> String:
 func _set_loaded_profile(record: Dictionary, profile) -> void:
 	_loaded_profile_id = str(record.get("profile_id", ""))
 	_loaded_profile_name = str(record.get("display_name", ""))
+	_applied_style_id = ""
+	_applied_style_name = ""
+	_saved_profile_baseline = profile.detached_copy() if _valid_profile(profile) else null
+
+
+func _set_applied_style(record: Dictionary, profile) -> void:
+	# A built-in style is never a save target, so the loaded user-profile
+	# identity is cleared and explicit Save stays disabled.
+	_loaded_profile_id = ""
+	_loaded_profile_name = ""
+	_applied_style_id = str(record.get("style_id", ""))
+	_applied_style_name = str(record.get("display_name", ""))
 	_saved_profile_baseline = profile.detached_copy() if _valid_profile(profile) else null
 
 
 func _clear_loaded_profile() -> void:
 	_loaded_profile_id = ""
 	_loaded_profile_name = ""
+	_applied_style_id = ""
+	_applied_style_name = ""
 	_saved_profile_baseline = null
 
 
@@ -1032,9 +1262,17 @@ func _release_designer_focus() -> void:
 
 func _refresh_all_text(message: String) -> void:
 	var has_a := _reference_profile != null
+	var dirty_marker := " *" if working_profile_dirty() else ""
 	var saved_state := "Not saved"
+	# The compact strip has room for roughly one short phrase, so it keeps the
+	# source name and drops the qualifier the full surface already states.
+	var compact_saved_state := "Not saved"
 	if not _loaded_profile_id.is_empty():
-		saved_state = "Loaded from: \"%s\"%s" % [_loaded_profile_name, " *" if working_profile_dirty() else ""]
+		saved_state = "Loaded from: \"%s\"%s" % [_loaded_profile_name, dirty_marker]
+		compact_saved_state = "%s%s" % [_loaded_profile_name, dirty_marker]
+	elif not _applied_style_id.is_empty():
+		saved_state = "Built-in: \"%s\" (read-only)%s" % [_applied_style_name, dirty_marker]
+		compact_saved_state = "%s%s" % [_applied_style_name, dirty_marker]
 	var slot_description := "Showing %s · %s · %s" % [
 		_displayed_slot,
 		"immutable reference" if _displayed_slot == SLOT_REFERENCE else "detached working profile",
@@ -1043,7 +1281,7 @@ func _refresh_all_text(message: String) -> void:
 	if _slot_state_label != null:
 		_slot_state_label.text = slot_description
 	if _compact_state_label != null:
-		_compact_state_label.text = "%s shown · %s" % [_displayed_slot, saved_state]
+		_compact_state_label.text = "%s shown · %s" % [_displayed_slot, compact_saved_state]
 	if _library_state_label != null:
 		_library_state_label.text = saved_state
 	if _status_label != null:

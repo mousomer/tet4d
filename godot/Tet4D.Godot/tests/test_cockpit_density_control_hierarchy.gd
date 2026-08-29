@@ -182,6 +182,22 @@ func _check_production_layout() -> Array:
 	await tree.process_frame
 	if not _same_rect(expanded_viewport, hud._game_viewport_container.get_global_rect()):
 		failures.append("collapsing the Profile Library must retain the same Live 4D gameplay viewport allocation")
+
+	hud._presentation_designer.set_built_in_styles_expanded(true)
+	await tree.process_frame
+	await tree.process_frame
+	if not _same_rect(collapsed_viewport, hud._game_viewport_container.get_global_rect()):
+		failures.append("expanding Built-in Styles must not change Live 4D gameplay viewport allocation")
+	if not _same_rect(collapsed_designer, hud._presentation_designer.get_global_rect()):
+		failures.append("Built-in Styles expansion must consume internal Designer space without enlarging its cockpit footprint")
+	failures.append_array(_check_primary_surfaces(hud, "live_4d", "Designer built-in styles expanded"))
+	if not hud._basis_panel.is_visible_in_tree() or str(hud.layout_contract_snapshot().get("basis_indicator_text", "")).find("Slice:") == -1:
+		failures.append("expanded Built-in Styles must preserve visible Live 4D basis/slice state")
+	hud._presentation_designer.set_built_in_styles_expanded(false)
+	await tree.process_frame
+	await tree.process_frame
+	if not _same_rect(collapsed_viewport, hud._game_viewport_container.get_global_rect()):
+		failures.append("collapsing Built-in Styles must retain the same Live 4D gameplay viewport allocation")
 	hud._presentation_designer.collapse_to_compact()
 	await tree.process_frame
 	await tree.process_frame

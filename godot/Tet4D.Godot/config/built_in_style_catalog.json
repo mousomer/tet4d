@@ -1,0 +1,206 @@
+{
+  "catalog_type": "tet4d.built_in_style_catalog",
+  "catalog_schema_version": 1,
+  "styles": [
+    {
+      "style_id": "tet4d_balanced",
+      "display_name": "Tet4D Balanced",
+      "short_description": "Restrained shipped baseline. Even grid, calm background, readable in every mode.",
+      "category": "baseline",
+      "ordering": 10,
+      "animated": false,
+      "accent_summary": "Instrument palette, moderate grid, calm world background",
+      "recommended_modes": ["live_2d", "live_3d", "live_4d"],
+      "presentation_profile": {
+        "schema_version": 1,
+        "values": {
+          "theme.name": "plain",
+          "display.hud_density": "standard",
+          "display.board_detail": "standard",
+          "display.grid_visible": true,
+          "display.show_w_labels": true,
+          "board.grid_opacity": 0.35,
+          "board.boundary_opacity": 0.92,
+          "active_cells.opacity": 1.0,
+          "settled_cells.opacity": 0.95,
+          "ghost.enabled": true,
+          "ghost.opacity": 1.05,
+          "slice_set.spacing": 1.0,
+          "environment.background_intensity": 0.95,
+          "environment.background_animation_mode": "none",
+          "environment.background_animation_intensity": 0.0,
+          "environment.background_animation_speed": 1.0,
+          "accessibility.high_contrast": false,
+          "accessibility.reduced_motion": false
+        }
+      }
+    },
+    {
+      "style_id": "python_reference",
+      "display_name": "Python Reference",
+      "short_description": "Flat, quiet homage to the Python build. Hard board edges, minimal background.",
+      "category": "heritage",
+      "ordering": 20,
+      "animated": false,
+      "accent_summary": "Diagnostic palette, fine grid, crisp boundary, subdued Ghost",
+      "recommended_modes": ["live_2d", "live_3d"],
+      "presentation_profile": {
+        "schema_version": 1,
+        "values": {
+          "theme.name": "diagnostic",
+          "display.hud_density": "standard",
+          "display.board_detail": "standard",
+          "display.grid_visible": true,
+          "display.show_w_labels": true,
+          "board.grid_opacity": 0.22,
+          "board.boundary_opacity": 1.0,
+          "active_cells.opacity": 1.0,
+          "settled_cells.opacity": 1.0,
+          "ghost.enabled": true,
+          "ghost.opacity": 0.75,
+          "slice_set.spacing": 0.9,
+          "environment.background_intensity": 0.55,
+          "environment.background_animation_mode": "none",
+          "environment.background_animation_intensity": 0.0,
+          "environment.background_animation_speed": 1.0,
+          "accessibility.high_contrast": false,
+          "accessibility.reduced_motion": false
+        }
+      }
+    },
+    {
+      "style_id": "arcade_neon",
+      "display_name": "Arcade Neon",
+      "short_description": "Vivid cabinet look. Bold grid, bright world, emphatic active piece.",
+      "category": "vivid",
+      "ordering": 30,
+      "animated": false,
+      "accent_summary": "Instrument palette pushed bright, strong grid and Ghost separation",
+      "recommended_modes": ["live_2d", "live_3d", "live_4d"],
+      "presentation_profile": {
+        "schema_version": 1,
+        "values": {
+          "theme.name": "plain",
+          "display.hud_density": "standard",
+          "display.board_detail": "full",
+          "display.grid_visible": true,
+          "display.show_w_labels": true,
+          "board.grid_opacity": 0.55,
+          "board.boundary_opacity": 1.0,
+          "active_cells.opacity": 1.0,
+          "settled_cells.opacity": 1.0,
+          "ghost.enabled": true,
+          "ghost.opacity": 1.3,
+          "slice_set.spacing": 1.15,
+          "environment.background_intensity": 1.25,
+          "environment.background_animation_mode": "none",
+          "environment.background_animation_intensity": 0.0,
+          "environment.background_animation_speed": 1.0,
+          "accessibility.high_contrast": false,
+          "accessibility.reduced_motion": false
+        }
+      }
+    },
+    {
+      "style_id": "tron_grid_flow",
+      "display_name": "Tron Grid Flow",
+      "short_description": "Dark cyan circuit field. The only shipped style with a moving background.",
+      "category": "animated",
+      "ordering": 40,
+      "animated": true,
+      "accent_summary": "Vector Arcade palette, luminous grid flow behind a dark board field",
+      "recommended_modes": ["live_3d", "live_4d"],
+      "presentation_profile": {
+        "schema_version": 1,
+        "values": {
+          "theme.name": "tron",
+          "display.hud_density": "standard",
+          "display.board_detail": "full",
+          "display.grid_visible": true,
+          "display.show_w_labels": true,
+          "board.grid_opacity": 0.42,
+          "board.boundary_opacity": 1.0,
+          "active_cells.opacity": 1.0,
+          "settled_cells.opacity": 0.92,
+          "ghost.enabled": true,
+          "ghost.opacity": 1.15,
+          "slice_set.spacing": 1.1,
+          "environment.background_intensity": 0.45,
+          "environment.background_animation_mode": "tron_grid_flow",
+          "environment.background_animation_intensity": 0.4,
+          "environment.background_animation_speed": 0.85,
+          "accessibility.high_contrast": false,
+          "accessibility.reduced_motion": false
+        }
+      }
+    },
+    {
+      "style_id": "blueprint_technical",
+      "display_name": "Blueprint Technical",
+      "short_description": "Schematic reading. Dense grid logic, translucent fills, separated slices.",
+      "category": "technical",
+      "ordering": 50,
+      "animated": false,
+      "accent_summary": "Diagnostic palette, dominant grid, diagrammatic 4D spacing",
+      "recommended_modes": ["live_3d", "live_4d"],
+      "presentation_profile": {
+        "schema_version": 1,
+        "values": {
+          "theme.name": "diagnostic",
+          "display.hud_density": "detailed",
+          "display.board_detail": "full",
+          "display.grid_visible": true,
+          "display.show_w_labels": true,
+          "board.grid_opacity": 0.72,
+          "board.boundary_opacity": 1.0,
+          "active_cells.opacity": 0.88,
+          "settled_cells.opacity": 0.78,
+          "ghost.enabled": true,
+          "ghost.opacity": 0.9,
+          "slice_set.spacing": 1.25,
+          "environment.background_intensity": 0.4,
+          "environment.background_animation_mode": "none",
+          "environment.background_animation_intensity": 0.0,
+          "environment.background_animation_speed": 1.0,
+          "accessibility.high_contrast": false,
+          "accessibility.reduced_motion": false,
+          "accessibility.show_help_hints": true
+        }
+      }
+    },
+    {
+      "style_id": "high_contrast_access",
+      "display_name": "High Contrast",
+      "short_description": "Maximum separation and no motion. Board reads first under every condition.",
+      "category": "accessibility",
+      "ordering": 60,
+      "animated": false,
+      "accent_summary": "High Contrast invariant, darkest world background, strongest Ghost",
+      "recommended_modes": ["live_2d", "live_3d", "live_4d"],
+      "presentation_profile": {
+        "schema_version": 1,
+        "values": {
+          "theme.name": "plain",
+          "display.hud_density": "standard",
+          "display.board_detail": "full",
+          "display.grid_visible": true,
+          "display.show_w_labels": true,
+          "board.grid_opacity": 0.55,
+          "board.boundary_opacity": 1.0,
+          "active_cells.opacity": 1.0,
+          "settled_cells.opacity": 1.0,
+          "ghost.enabled": true,
+          "ghost.opacity": 1.35,
+          "slice_set.spacing": 1.1,
+          "environment.background_intensity": 0.3,
+          "environment.background_animation_mode": "none",
+          "environment.background_animation_intensity": 0.0,
+          "environment.background_animation_speed": 0.0,
+          "accessibility.high_contrast": true,
+          "accessibility.reduced_motion": true,
+          "accessibility.show_help_hints": true
+        }
+      }
+    }
+  ]
+}
