@@ -86,15 +86,104 @@ jobs:
           path: artifacts/godot/macos/Tet4D-*-macos-universal.zip
           if-no-files-found: error
 
+  package-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Resolve pinned Windows Godot and templates
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          toolchain = json.loads(
+              Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+          )["governance"]["godot_toolchain"]
+          editor = toolchain["assets"]["windows_x86_64"]
+          templates = toolchain["export_templates"]
+          values = {
+              "GODOT_ASSET_NAME": editor["name"],
+              "GODOT_ASSET_URL": editor["url"],
+              "GODOT_ASSET_SHA512": editor["sha512"],
+              "GODOT_ASSET_EXECUTABLE": editor["executable"],
+              "GODOT_TEMPLATE_NAME": templates["name"],
+              "GODOT_TEMPLATE_URL": templates["url"],
+              "GODOT_TEMPLATE_SHA512": templates["sha512"],
+          }
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  env_file.write(f"{key}={value}\n")
+          PY
+
+      - name: Install exact Windows Godot editor and templates
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .godot-bin, .godot-templates | Out-Null
+          Invoke-WebRequest -Uri $env:GODOT_ASSET_URL -OutFile ".godot-bin/$env:GODOT_ASSET_NAME"
+          $editorHash = (Get-FileHash ".godot-bin/$env:GODOT_ASSET_NAME" -Algorithm SHA512).Hash.ToLower()
+          if ($editorHash -ne $env:GODOT_ASSET_SHA512) { throw "Godot editor hash mismatch" }
+          Expand-Archive ".godot-bin/$env:GODOT_ASSET_NAME" -DestinationPath .godot-bin
+          Invoke-WebRequest -Uri $env:GODOT_TEMPLATE_URL -OutFile ".godot-bin/$env:GODOT_TEMPLATE_NAME"
+          $templateHash = (Get-FileHash ".godot-bin/$env:GODOT_TEMPLATE_NAME" -Algorithm SHA512).Hash.ToLower()
+          if ($templateHash -ne $env:GODOT_TEMPLATE_SHA512) { throw "Godot template hash mismatch" }
+          Copy-Item ".godot-bin/$env:GODOT_TEMPLATE_NAME" .godot-bin/templates.zip
+          7z e .godot-bin/templates.zip "templates/windows_release_x86_64.exe" "templates/windows_debug_x86_64.exe" -o.godot-templates -y
+          "GODOT_BIN=$env:GITHUB_WORKSPACE/.godot-bin/$env:GODOT_ASSET_EXECUTABLE" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "GODOT_TEMPLATE_ROOT=$env:GITHUB_WORKSPACE/.godot-templates" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build and validate Godot Windows release
+        shell: bash
+        run: |
+          SCONS_PLATFORM=windows SCONS_ARCH=x86_64 SCONS_TARGET=template_debug \
+            ./scripts/build_godot_tet4d_core.sh
+          "$GODOT_BIN" --headless --path godot/Tet4D.Godot \
+            --script tests/run_design_laboratory_tests.gd
+          GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
+            packaging/godot/build_windows.sh
+
+      - name: Smoke packaged Windows runtime
+        shell: bash
+        run: |
+          designer_exe="$(find 'artifacts/godot/windows/Tet4D Designer' -name 'Tet4DDesigner.exe' -print -quit)"
+          test -n "$designer_exe"
+          "$designer_exe" --headless --quit-after 5
+
+      - name: Upload Godot Windows release artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tet4d-designer-windows-x86_64-godot
+          path: artifacts/godot/windows/Tet4D-Designer-*-windows-x86_64.zip
+          if-no-files-found: error
+
   publish-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: package-macos
+    needs: [package-macos, package-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Download packaged release
         uses: actions/download-artifact@v8
         with:
           name: tet4d-macos-universal-godot
+          path: artifacts/release
+
+      - name: Download Windows Designer release
+        uses: actions/download-artifact@v8
+        with:
+          name: tet4d-designer-windows-x86_64-godot
           path: artifacts/release
 
       - name: Publish GitHub release asset
@@ -109,3 +198,5 @@ jobs:
             gh release create "$tag" --repo "$GH_REPO" --title "$title" --generate-notes
           gh release upload "$tag" --repo "$GH_REPO" \
             artifacts/release/Tet4D-*-macos-universal.zip --clobber
+          gh release upload "$tag" --repo "$GH_REPO" \
+            artifacts/release/Tet4D-Designer-*-windows-x86_64.zip --clobber
