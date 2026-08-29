@@ -19,6 +19,8 @@ func _run_all() -> void:
 		"res://tests/test_persistent_file_replacement.gd",
 		"res://tests/test_presentation_profile_library.gd",
 		"res://tests/test_built_in_style_catalog.gd",
+		"res://tests/test_design_evaluation_laboratory.gd",
+		"res://tests/test_design_laboratory_runtime.gd",
 		"res://tests/test_shell_settings_store.gd",
 		"res://tests/test_shell_settings_persistence.gd",
 		"res://tests/test_shell_display_settings.gd",
@@ -67,6 +69,7 @@ func _run_all() -> void:
 		var test_case = load(script_path).new()
 		if script_path in [
 			"res://tests/test_camera_rig.gd",
+			"res://tests/test_design_laboratory_runtime.gd",
 			"res://tests/test_presentation_designer.gd",
 			"res://tests/test_presentation_profile_library.gd",
 			"res://tests/test_built_in_style_catalog.gd",
@@ -88,7 +91,7 @@ func _run_all() -> void:
 			"res://tests/test_live_viewer_restoration.gd",
 			"res://tests/test_plain_setup_navigation.gd",
 			"res://tests/test_setup_field_taxonomy.gd",
-		"res://tests/test_setup_progressive_disclosure.gd",
+			"res://tests/test_setup_progressive_disclosure.gd",
 		]:
 			failures.append_array(await test_case.run())
 		else:
