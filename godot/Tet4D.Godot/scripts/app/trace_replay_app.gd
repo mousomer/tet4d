@@ -24,6 +24,7 @@ const ControlFrameMappingScript = preload("res://scripts/presentation/control_fr
 const GhostPieceModelScript = preload("res://scripts/presentation/ghost_piece_model.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
+const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
 
 const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
@@ -130,6 +131,14 @@ func _ready() -> void:
 func _deferred_ready() -> void:
 	_wire_hud()
 	_build_world_in_game_viewport()
+	if not _hud.configure_design_laboratory({
+		"load_scenario": Callable(self, "_load_design_laboratory_scenario"),
+		"apply_profile": Callable(self, "apply_presentation_profile"),
+		"current_fingerprint": Callable(self, "_design_laboratory_fingerprint"),
+		"capture_image": Callable(self, "_capture_design_laboratory_image"),
+		"build_identity": Callable(self, "_design_laboratory_build_identity"),
+	}):
+		push_error("Design Laboratory could not be configured")
 	_renderer.set_display_mode(_state.display_mode)
 	_apply_world_palette(_state.display_mode)
 	_hud.set_display_mode(_state.display_mode)
@@ -670,6 +679,106 @@ func _wire_hud() -> void:
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
 	_hud.viewer_requested.connect(_return_to_viewer_from_navigation)
 	_hud.basis_turn_requested.connect(_apply_live_4d_basis_turn)
+	_hud.design_laboratory_requested.connect(_open_design_laboratory)
+
+
+func _open_design_laboratory() -> void:
+	_state.is_playing = false
+	_hud.open_design_laboratory()
+
+
+func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
+	if str(scenario.get("scenario_kind", "replay_fixture")) == "live_session":
+		var setup = scenario.get("live_setup")
+		if not (setup is Dictionary):
+			return {"ok": false, "error": "Live design scenario setup is invalid."}
+		_start_configured_live_game(setup.duplicate(true))
+		if _mode != str(setup.get("mode", "")):
+			return {"ok": false, "error": "Live design scenario could not start."}
+		for command in scenario.get("commands", []):
+			match _mode:
+				MODE_LIVE_2D:
+					_live_2d_command(str(command))
+				MODE_LIVE_3D:
+					_live_3d_command(str(command))
+				MODE_LIVE_4D:
+					_live_4d_command(str(command))
+		_live_2d_paused = true
+		_live_3d_paused = true
+		_live_4d_paused = true
+		_refresh_hud()
+		var live_fingerprint := _design_laboratory_fingerprint()
+		return {
+			"ok": true,
+			"error": "",
+			"fingerprint": live_fingerprint,
+			"fingerprint_hash": DesignValueScript.canonical_hash(live_fingerprint),
+		}
+	var family := str(scenario.get("trace_family", ""))
+	var case_id := str(scenario.get("trace_case_id", ""))
+	var frame_index := int(scenario.get("frame_index", -1))
+	if not TRACE_FAMILIES.has(family) or case_id.is_empty() or frame_index < 0:
+		return {"ok": false, "error": "Design scenario replay reference is invalid."}
+	_select_trace_family(family, case_id, false, true)
+	if _state.selected_case_id != case_id or _current_document == null:
+		return {"ok": false, "error": "Design scenario replay case could not be loaded."}
+	_restore_live_4d_presentation_defaults()
+	_set_frame(frame_index)
+	_state.is_playing = false
+	_establish_canonical_view_and_fit(MODE_REPLAY)
+	_refresh_hud()
+	var fingerprint := _design_laboratory_fingerprint()
+	return {
+		"ok": true,
+		"error": "",
+		"fingerprint": fingerprint,
+		"fingerprint_hash": DesignValueScript.canonical_hash(fingerprint),
+	}
+
+
+func _design_laboratory_fingerprint() -> Dictionary:
+	var camera: Dictionary = _camera_rig.presentation_snapshot() if _camera_rig != null else {}
+	return {
+		"mode": _mode,
+		"trace_type": _state.selected_trace_type,
+		"case_id": _state.selected_case_id,
+		"frame_index": _state.current_frame_index,
+		"live_setup": _active_live_setup.duplicate(true),
+		"gameplay_snapshot": _current_snapshot.duplicate(true),
+		"basis": _live_4d_basis.indicator_snapshot() if _live_4d_basis != null else {},
+		"slice_local_orientation": _live_4d_local_orientation.snapshot() if _live_4d_local_orientation != null else {},
+		"camera_pose": {
+			"target_yaw": camera.get("target_yaw", 0.0),
+			"target_pitch": camera.get("target_pitch", 0.0),
+			"target_roll": camera.get("target_roll", 0.0),
+			"current_yaw": camera.get("current_yaw", 0.0),
+			"current_pitch": camera.get("current_pitch", 0.0),
+			"current_roll": camera.get("current_roll", 0.0),
+			"target_focus": str(camera.get("target_focus", Vector3.ZERO)),
+			"current_focus": str(camera.get("current_focus", Vector3.ZERO)),
+			"target_distance": camera.get("target_distance", 0.0),
+			"current_distance": camera.get("current_distance", 0.0),
+			"zoom_multiplier": camera.get("zoom_multiplier", 1.0),
+			"projection": camera.get("projection", -1),
+			"orthographic_size": camera.get("orthographic_size", 0.0),
+			"view_context": camera.get("view_context", ""),
+		},
+	}
+
+
+func _capture_design_laboratory_image() -> Image:
+	var viewport := _hud.game_viewport() if _hud != null else null
+	return viewport.get_texture().get_image() if viewport != null and viewport.get_texture() != null else Image.new()
+
+
+func _design_laboratory_build_identity() -> Dictionary:
+	var engine := Engine.get_version_info()
+	return {
+		"application_name": str(ProjectSettings.get_setting("application/config/name", "Tet4D")),
+		"application_version": str(ProjectSettings.get_setting("application/config/version", "unknown")),
+		"engine_build": str(engine.get("string", "unknown")),
+		"design_lab_schema_version": 1,
+	}
 
 
 func _quit_application() -> void:

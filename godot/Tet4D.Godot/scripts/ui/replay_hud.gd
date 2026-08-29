@@ -28,6 +28,7 @@ const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const PresentationDesignerScript = preload("res://scripts/ui/presentation_designer.gd")
+const DesignLaboratoryPanelScript = preload("res://scripts/ui/design_laboratory_panel.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -63,6 +64,7 @@ signal new_random_game_requested()
 signal main_menu_requested()
 signal basis_turn_requested(plane: String, direction: int)
 signal presentation_profile_changed(profile)
+signal design_laboratory_requested()
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -129,6 +131,7 @@ var _quick_settings_button: Button
 var _grid_toggle_button: Button
 var _designer_button: Button
 var _presentation_designer: PresentationDesigner
+var _design_laboratory
 var _frame_slider: HSlider
 var _frame_label: Label
 var _hash_label: Label
@@ -703,13 +706,55 @@ func _move_view_action_menu(parent: Control) -> void:
 
 
 func live_interaction_owns_input() -> bool:
-	return _live_interaction_owns_input or (
+	return (_design_laboratory != null and _design_laboratory.interaction_owns_input()) or _live_interaction_owns_input or (
 		_presentation_designer != null and _presentation_designer.full_editor_visible()
 	)
 
 
 func presentation_designer_contains_global_point(point: Vector2) -> bool:
 	return _presentation_designer != null and _presentation_designer.contains_global_point(point)
+
+
+func configure_design_laboratory(callbacks: Dictionary) -> bool:
+	if _design_laboratory != null:
+		return true
+	_design_laboratory = DesignLaboratoryPanelScript.new()
+	_design_laboratory.z_index = 80
+	_design_laboratory.visible = false
+	_design_laboratory.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	_design_laboratory.offset_left = 12.0
+	_design_laboratory.offset_top = 12.0
+	_design_laboratory.offset_right = 472.0
+	_design_laboratory.offset_bottom = -12.0
+	add_child(_design_laboratory)
+	_design_laboratory.close_requested.connect(func() -> void:
+		_design_laboratory.close()
+		main_menu_requested.emit()
+	)
+	callbacks["edit_candidate"] = Callable(self, "_open_design_candidate")
+	var configured: bool = _design_laboratory.configure(_settings_registry, callbacks)
+	if configured:
+		_apply_shell_style()
+	return configured
+
+
+func open_design_laboratory() -> void:
+	if _design_laboratory == null:
+		return
+	show_screen(SCREEN_VIEWER)
+	_design_laboratory.open()
+
+
+func _open_design_candidate(profile_id: String) -> void:
+	if _design_laboratory != null:
+		_design_laboratory.close()
+	_open_presentation_designer()
+	if _presentation_designer != null:
+		_presentation_designer.load_saved_profile(profile_id)
+
+
+func design_laboratory_snapshot() -> Dictionary:
+	return _design_laboratory.deterministic_snapshot() if _design_laboratory != null else {}
 
 
 func _build_presentation_designer() -> void:
@@ -788,6 +833,8 @@ func show_screen(screen_name: String) -> void:
 			screen.visible = key == _current_screen
 	if _current_screen != SCREEN_VIEWER and _presentation_designer != null:
 		_presentation_designer.hide_preserving_preview()
+	if _current_screen != SCREEN_VIEWER and _design_laboratory != null:
+		_design_laboratory.close()
 	call_deferred("_log_geometry_diagnostics", "screen:%s" % _current_screen)
 	call_deferred("_focus_current_screen")
 
@@ -805,6 +852,8 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 			open_game_setup(GameSetupSpecScript.MODE_3D)
 		KEY_4:
 			open_game_setup(GameSetupSpecScript.MODE_4D)
+		KEY_L:
+			design_laboratory_requested.emit()
 		KEY_H:
 			show_screen(SCREEN_CONTROLS)
 		KEY_A:
@@ -932,6 +981,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"controls_panel_visible": _inspector_hint_panel.visible if _inspector_hint_panel != null else false,
 		"live_interaction_owns_input": live_interaction_owns_input(),
 		"presentation_designer": _presentation_designer.deterministic_snapshot() if _presentation_designer != null else {},
+		"design_laboratory": design_laboratory_snapshot(),
 		"focused_control": get_viewport().gui_get_focus_owner().name if get_viewport() != null and get_viewport().gui_get_focus_owner() != null else "",
 		"main_menu_scroll": _scroll_contract(_main_menu_scroll),
 		"controls_scroll": _scroll_contract(_controls_scroll),
@@ -2384,6 +2434,12 @@ func _build_main_menu_screen(screen: Control) -> void:
 		open_game_setup(GameSetupSpecScript.MODE_4D)
 	)
 	layout.add_child(live_4d_button)
+	layout.add_child(_menu_group_header("DESIGN"))
+	var design_lab_button := _make_command_card("Design Laboratory", "Deterministic A/B style evaluation, evidence, capture, and nomination", "L")
+	design_lab_button.pressed.connect(func() -> void:
+		design_laboratory_requested.emit()
+	)
+	layout.add_child(design_lab_button)
 	layout.add_child(_menu_group_header("LEARN"))
 	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
 	controls_button.pressed.connect(func() -> void:
@@ -2409,7 +2465,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
-	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, controls_button, about_button, settings_button, advanced_button, quit_button]
+	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
 	_configure_linear_focus(focus_order)
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
 

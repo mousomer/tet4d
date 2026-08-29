@@ -1,0 +1,127 @@
+{
+  "catalog_type": "tet4d.design_scenario_catalog",
+  "catalog_schema_version": 1,
+  "scenarios": [
+    {
+      "scenario_id": "live_2d_next_hold_ghost_v1",
+      "display_name": "2D · Live NEXT / HOLD / Ghost",
+      "description": "Fixed-seed live 2D opening with the full player-facing preview cockpit.",
+      "scenario_kind": "live_session",
+      "dimension": 2,
+      "density": "sparse",
+      "feature_tags": ["ghost", "next", "hold", "live_cockpit"],
+      "live_setup": {"schema_version": 2, "contract_version": 1, "mode": "live_2d", "board_preset_id": "standard", "board_shape": [6, 6], "piece_set_id": "classic", "random_mode": "fixed_seed", "seed": 540502, "initial_speed_level": 1, "topology_profile": {"contract_version": 1, "rank": 2, "dimensions": [6, 6], "seams": []}},
+      "commands": [],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "live_3d_next_hold_ghost_v1",
+      "display_name": "3D · Live NEXT / HOLD / Ghost",
+      "description": "Fixed-seed live 3D opening with depth, Ghost, queue and held-piece surfaces.",
+      "scenario_kind": "live_session",
+      "dimension": 3,
+      "density": "sparse",
+      "feature_tags": ["ghost", "next", "hold", "depth", "live_cockpit"],
+      "live_setup": {"schema_version": 2, "contract_version": 1, "mode": "live_3d", "board_preset_id": "standard", "board_shape": [6, 10, 6], "piece_set_id": "native_3d", "random_mode": "fixed_seed", "seed": 540503, "initial_speed_level": 1, "topology_profile": {"contract_version": 1, "rank": 3, "dimensions": [6, 10, 6], "seams": []}},
+      "commands": [],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "live_4d_next_hold_ghost_v1",
+      "display_name": "4D · Live NEXT / HOLD / Ghost",
+      "description": "Fixed-seed live 4D opening with slice set, Ghost, queue and held-piece surfaces.",
+      "scenario_kind": "live_session",
+      "dimension": 4,
+      "density": "sparse",
+      "feature_tags": ["ghost", "next", "hold", "depth", "slice_set", "live_cockpit"],
+      "live_setup": {"schema_version": 2, "contract_version": 1, "mode": "live_4d", "board_preset_id": "standard", "board_shape": [5, 10, 4, 4], "piece_set_id": "standard_4d_5", "random_mode": "fixed_seed", "seed": 540504, "initial_speed_level": 1, "topology_profile": {"contract_version": 1, "rank": 4, "dimensions": [5, 10, 4, 4], "seams": []}},
+      "commands": [],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "plain_2d_sparse_v1",
+      "display_name": "2D · Sparse Opening",
+      "description": "Early bounded 2D state for silhouette, Ghost, NEXT and HOLD balance.",
+      "scenario_kind": "replay_fixture",
+      "trace_family": "gameplay",
+      "trace_case_id": "gameplay_plain_2d_short",
+      "frame_index": 0,
+      "dimension": 2,
+      "density": "sparse",
+      "feature_tags": ["ghost", "next", "hold"],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "plain_2d_dense_v1",
+      "display_name": "2D · Dense Endgame",
+      "description": "Late bounded 2D state for hierarchy and occupied-board readability.",
+      "trace_family": "endgame",
+      "trace_case_id": "endgame_2d_classic",
+      "frame_index": 7,
+      "dimension": 2,
+      "density": "dense",
+      "feature_tags": ["ghost", "next", "hold", "late_board"],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "plain_3d_sparse_v1",
+      "display_name": "3D · Sparse Opening",
+      "description": "Early bounded 3D state for volume, depth and piece separation.",
+      "trace_family": "gameplay",
+      "trace_case_id": "gameplay_plain_3d_short",
+      "frame_index": 0,
+      "dimension": 3,
+      "density": "sparse",
+      "feature_tags": ["ghost", "next", "hold", "depth"],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "plain_3d_dense_v1",
+      "display_name": "3D · Dense Endgame",
+      "description": "Late bounded 3D state for occlusion and spatial comprehension.",
+      "trace_family": "endgame",
+      "trace_case_id": "endgame_3d_classic",
+      "frame_index": 7,
+      "dimension": 3,
+      "density": "dense",
+      "feature_tags": ["ghost", "next", "hold", "depth", "late_board"],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "plain_4d_sparse_v1",
+      "display_name": "4D · Sparse Slice Set",
+      "description": "Early bounded 4D state for slice hierarchy, labels and local depth.",
+      "trace_family": "gameplay",
+      "trace_case_id": "gameplay_plain_4d_short",
+      "frame_index": 0,
+      "dimension": 4,
+      "density": "sparse",
+      "feature_tags": ["ghost", "next", "hold", "depth", "slice_set"],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "plain_4d_dense_v1",
+      "display_name": "4D · Dense Slice Set",
+      "description": "Late bounded 4D state for matrix allocation and occupied-slice legibility.",
+      "trace_family": "endgame",
+      "trace_case_id": "endgame_4d_classic",
+      "frame_index": 7,
+      "dimension": 4,
+      "density": "dense",
+      "feature_tags": ["ghost", "next", "hold", "depth", "slice_set", "late_board"],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    },
+    {
+      "scenario_id": "sphere_like_4d_topology_v1",
+      "display_name": "4D · Sphere-like Topology",
+      "description": "Topology-oriented 4D presentation using the existing sphere-like gameplay fixture.",
+      "trace_family": "topology",
+      "trace_case_id": "topology_sphere_like_4d",
+      "frame_index": 1,
+      "dimension": 4,
+      "density": "sparse",
+      "feature_tags": ["topology", "sphere_like", "slice_set"],
+      "presentation_profile": {"schema_version": 1, "values": {}}
+    }
+  ]
+}
