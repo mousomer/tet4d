@@ -1,9 +1,9 @@
 # Desktop Packaging RDS
 
-Status: Active v0.3 (Stage 54G candidate)
+Status: Active v0.4 (Stage 54G accepted; Stage 54F-5 Windows laboratory candidate)
 Author: Omer + Codex
-Date: 2026-08-24
-Scope: current Godot professional-core export plus retained legacy Python packaging.
+Date: 2026-08-29
+Scope: current Godot product exports plus retained legacy Python packaging.
 
 ## 1. Purpose
 
@@ -29,6 +29,24 @@ The Stage 54G release candidate is:
 - persistent data root: the platform application-data directory named `Tet4D`,
   containing `shell_settings.json` and `game_setup.json`.
 
+The accepted macOS product remains unchanged. Stage 54F-5 additionally
+defines a structurally validated Windows x86-64 portable Design Laboratory
+candidate named `Tet4D Designer`. It uses the same Godot product shell and
+entry point, adds the deterministic design-evaluation workflow, and contains
+no Python runtime or editor. The current Windows deliverable is a ZIP with
+`Tet4DDesigner.exe`, `Tet4DDesigner.pck`, and
+`libtet4d_core.windows.template_release.x86_64.dll`. Extracting the ZIP is the
+installation operation and deleting the extracted directory is uninstallation;
+it intentionally creates no Start Menu item, desktop shortcut, or registry
+uninstaller.
+
+The Windows artifact has passed local cross-build, PE/resource/package
+validation, and the laboratory's local Godot tests on macOS. Direct launch on
+a clean Windows machine remains pending and must not be inferred from those
+results. The Windows CI job performs the native Windows build, focused
+laboratory suite, package validation, and a bounded launch of the packaged
+executable when the workflow is run.
+
 The exported product must contain the release GDExtension framework, scenes,
 scripts, theme resources, fonts, configuration registries, help assets, and
 copied replay bundle required by the product. It must exclude the Godot test
@@ -40,10 +58,12 @@ The current canonical files are:
 1. `godot/Tet4D.Godot/export_presets.cfg`;
 2. `packaging/godot/build_macos.sh`;
 3. `packaging/godot/smoke_macos.sh`;
-4. `scripts/build_godot_tet4d_core.sh`;
-5. `godot/Tet4D.Godot/addons/tet4d_core/tet4d_core.gdextension`;
-6. `.github/workflows/release-packaging.yml`; and
-7. `docs/RELEASE_INSTALLERS.md` and `docs/RELEASE_CHECKLIST.md`.
+4. `packaging/godot/build_windows.sh`;
+5. `packaging/godot/validate_windows_package.py`;
+6. `scripts/build_godot_tet4d_core.sh`;
+7. `godot/Tet4D.Godot/addons/tet4d_core/tet4d_core.gdextension`;
+8. `.github/workflows/release-packaging.yml`; and
+9. `docs/RELEASE_INSTALLERS.md` and `docs/RELEASE_CHECKLIST.md`.
 
 ## 3. Native release boundary
 
@@ -58,15 +78,22 @@ The current canonical files are:
    working-directory dependency.
 5. Debug artifacts remain development-only and are not valid release evidence.
 
-## 4. Other Godot platform declarations
+## 4. Windows design-laboratory boundary
 
-The GDExtension descriptor names Linux and Windows debug/release artifact
-locations so those platforms can be developed and verified incrementally.
-There is no checked-in Godot export preset, current Godot installer, or Stage
-54G runtime acceptance for Linux or Windows. They are therefore
-development-configured targets, not supported professional-core release
-targets. Static descriptor or CI evidence must not be reported as runtime
-success.
+1. Windows release builds use `template_release`, `arch=x86_64`, the exact
+   Godot 4.7.2 editor/templates, and a MinGW cross-toolchain on non-Windows
+   builders.
+2. The checked-in `Windows x86_64` preset exports a separate PCK and selects
+   `libtet4d_core.windows.template_release.x86_64.dll` through the checked-in
+   GDExtension descriptor.
+3. The validator checks the exact three-file payload, PE executables, version
+   metadata, required laboratory resources, absence of source/test/editor
+   payloads, and absence of repository/user path leakage.
+4. Mutable profiles, evaluations, captures, and proposal exports remain under
+   Godot's writable `user://design_lab` root, never beside the executable.
+5. Linux remains development-configured only. Windows is a packaged
+   Design-Laboratory candidate, not a clean-machine runtime-accepted target
+   until the recorded Windows acceptance is complete.
 
 ## 5. Legacy Python installer path
 
@@ -99,7 +126,9 @@ legacy packaging require a separate task.
    Ghost, passes final manual release-candidate review.
 7. Normal startup emits no release-blocking resource, parser, persistence, or
    GDExtension warning/error.
-8. The current release workflow uploads only the Godot macOS ZIP for this
-   supported path.
-9. Linux, Windows, signing/notarization, and legacy Python installers are
-   reported with their exact verification limits.
+8. The current release workflow uploads the accepted Godot macOS ZIP and the
+   separately named Windows Designer ZIP.
+9. The Windows candidate passes exact three-file structural validation and its
+   native CI job runs the focused laboratory suite plus bounded packaged start.
+10. Linux, direct clean-machine Windows acceptance, signing/notarization, and
+    legacy Python installers are reported with their exact verification limits.

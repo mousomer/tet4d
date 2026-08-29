@@ -1,4 +1,137 @@
-# Task Contract — Stage 54F-4 Built-in Style Catalog
+# Task Contract — Stage 54F-5 Standalone Design Laboratory
+
+Status: COMPLETE / AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN DESIGN AND CLEAN-WINDOWS ACCEPTANCE PENDING
+
+Starting branch: `codex/built-in-style-catalog`
+
+Starting SHA: `1edd764abd3ab04d44546f97be317bec1c4be57e`
+
+Baseline evidence: `CODEX_MODE=1 ./scripts/verify.sh` -> `verify: OK`
+
+## Objective and classification
+
+Complete the existing presentation-candidate apparatus as a standalone design
+laboratory. Reuse `BuiltInStyleCatalog`, `PresentationProfile`,
+`PresentationProfileLibrary`, the canonical settings registry, and deterministic
+replay fixtures. Add one scenario owner, one isolated A/B session owner, one
+schema-versioned evaluation/capture/export contract, one repository-side
+validator, and a current-Godot Windows distributable. The installed product is
+an evaluation and proposal-authoring tool; accepting a proposal remains a
+human-reviewed repository change and does not select the Stage 54F-6 default.
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`, because the Godot shell, shipped resources,
+  repository-side validation, documentation, CI, and Windows packaging consume
+  the same explicit artifact contracts.
+- Affected layers: Godot presentation product shell; read-only catalog and
+  mutable profile-library consumers; deterministic replay-scenario selection;
+  local evaluation/capture/export storage; repository validation tooling;
+  Windows GDExtension/export/package workflow; tests and governing documents.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `deterministic`, `integration`, `packaging`, `platform`, and `human_visual`.
+- Full repository gate: required. This change establishes new persisted schemas,
+  a product route, and a supported packaging target.
+- Authority effect: establishes Godot product-shell authority for design-scenario
+  identity, comparison-session orchestration, evaluation records, captures, and
+  portable proposal bundles. It does not transfer gameplay, replay, native,
+  geometry, camera, basis, slice-layout, registry, profile-persistence, or
+  production-default authority.
+
+## Scope matrix
+
+| Layer | Provider change | Consumer / conformance evidence |
+| --- | --- | --- |
+| Presets | Resolve shipped built-ins and mutable user profiles into detached, registry-validated snapshots. | Catalog UI, comparison, evaluation, export, and immutable-source tests use the same resolver. |
+| Scenarios | Ship stable scenario metadata over existing deterministic replay cases and presentation starts. | Laboratory loads/resets the referenced fixture; repeat-load tests compare canonical identity. |
+| A/B | Own immutable A/B snapshots, deterministic blind labels, active arm, and reset identity. | UI applies profiles only; tests prove non-style identity and `A -> B -> A` restoration. |
+| Evidence | Persist schema-versioned evaluations and capture metadata under `user://` with replacement-safe writes. | Reload/history/export tests retain exact profile snapshots and hashes after later edits. |
+| Export | Produce `preset.json`, `comparison_summary.json`, and `DESIGN_PROPOSAL.md`. | Godot tests and the repository validator resolve every property and owner without mutating authorities. |
+| Product UI | Add a dedicated catalog/scenario/comparison/evaluation workflow while retaining the existing parameter editor. | Menu/input-isolation/runtime tests plus bounded real-window review. |
+| Windows | Add the current Godot export, native DLL build, portable package, CI smoke contract, and structural validator. | Local build/package inspection plus Windows CI/runtime path; macOS does not claim Windows execution. |
+| Governance | Establish the laboratory contract and reconcile programme, packaging, backlog, state, and acceptance docs. | Resolver, generated-doc, sanitation, diff, and full verification gates. |
+
+## Acceptance criteria
+
+1. Built-ins remain shipped/read-only and user candidates remain ordinary
+   replacement-safe `PresentationProfileLibrary` artifacts.
+2. Stable representative 2D, 3D, 4D, sparse, dense, NEXT/HOLD/Ghost, and
+   topology scenarios resolve to existing deterministic fixtures and reset
+   reproducibly.
+3. A comparison session freezes scenario identity and detached A/B snapshots;
+   switching changes only registry-owned presentation values, never canonical
+   gameplay/replay state, RNG, queue, Hold/NEXT/Ghost truth, basis, slice identity,
+   geometry, or unrelated app state. `A -> B -> A` restores A exactly and repeated
+   toggling accumulates no hidden state.
+4. Blind mode hides underlying names during judgment, uses deterministic stored
+   arm labels, and retains true identities in evidence.
+5. Preference, eight optional 1-5 ratings, notes, build/catalog versions,
+   timestamp, blind state, scenario identity, and exact preset snapshots/hashes
+   round-trip locally without historical mutation.
+6. A/B/pair captures create PNGs plus provenance metadata without changing
+   gameplay or presentation semantics and without embedding names in the images.
+7. Explicit nomination exports exact canonical values, resolved semantic owners,
+   evaluation provenance, and a review-ready proposal; it mutates no catalog,
+   production default, or authority document.
+8. A repository helper rejects malformed bundles, unknown/invalid properties,
+   and owner mismatches and reports the human promotion steps without auto-import.
+9. A Windows x86_64 current-Godot distributable includes the application,
+   release GDExtension, catalog/scenarios, version identity, and no Python/editor/
+   checkout dependency. Local structural validation passes; direct clean-Windows
+   install/launch may remain the sole explicitly unexecuted acceptance item.
+10. Focused tests, canonical/pinned Godot gates, resolver-selected checks, full
+    verification, sanitation, diff checks, package validation, and bounded
+    real-window review pass with no unexpected Godot errors.
+11. Authorities and maintenance docs describe automated versus human evidence,
+    the Windows path, and the Stage 54F-6 human promotion boundary accurately.
+12. A small coherent local commit series is created; nothing is pushed.
+
+## Verification evidence
+
+- The policy resolver selected `documentation`, `governance_structure`,
+  `godot`, `native`, `deterministic`, `parity_or_conformance`, `integration`,
+  `human_visual`, `packaging`, `platform`, and `release_acceptance`, with the
+  full repository gate required and no typical check omitted.
+- Focused repository validator coverage passed: 8 tests. Focused Design
+  Laboratory domain/persistence/export tests and the runtime integration matrix
+  both passed under exact Godot `4.7.2.stable.official.ed1daf0bf`.
+- The runtime matrix loaded every one of the ten scenarios after deliberate
+  camera/basis disturbance and applied/rendered every one of the six shipped
+  styles without non-style fingerprint drift.
+- The exact pinned `GODOT_BIN=... ./scripts/verify_godot_4_7.sh` gate passed,
+  including the complete Godot suite, native load, 59 shared topology transport
+  cases, and bounded startup. `CODEX_MODE=1 ./scripts/verify.sh` returned
+  `verify: OK` after governance, generated-document, Ruff, test, sanitation,
+  and repository integration checks.
+- Agent-driven real-window review under the pinned macOS Godot build confirmed
+  the main-menu route and readable laboratory catalog/scenario/comparison/
+  capture/evaluation layout at the minimum product window. This is visual
+  implementation evidence, not independent human preference acceptance.
+- `packaging/godot/build_windows.sh` produced and validated
+  `artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip`: exactly
+  three files, 39,307,591 compressed bytes, x86-64 PE executable/release DLL,
+  required PCK resources, and no Tet4D developer-path leakage. SHA-512:
+  `df4c27a589bab7a412bc4e67b783774e47a9b3416b408ee5060c1a2918b6ea2653846baac300879b358b5b4289114f5d605ed7ddd3188224b6d755cdf34ce991`.
+- Direct clean-machine Windows launch was not executable on the macOS host and
+  remains explicitly pending. Independent human comparative evaluation and
+  Stage 54F-6 default selection also remain pending by contract.
+
+## Forbidden changes and explicit deferrals
+
+- No gameplay, scoring, queue/RNG, Hold/NEXT/Ghost truth, deterministic core,
+  topology, canonical geometry, input semantics, basis, camera-pose, or
+  slice-layout redesign.
+- No second property registry, semantic-owner table, user-profile persistence
+  subsystem, gameplay fixture system, or style-specific gameplay branch.
+- No automatic production-default/catalog/architecture-document mutation from
+  an installed nomination bundle, no telemetry/statistical claim, and no
+  pixel-perfect screenshot oracle.
+- Stage 54F-6 default selection/polish remains a separate human-reviewed change.
+  Windows signing and public installer reputation remain release-credential work;
+  direct clean-machine Windows runtime acceptance remains platform evidence.
+
+---
+
+# Previous Task Contract — Stage 54F-4 Built-in Style Catalog
 
 Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN / STARTUP REGRESSION REPAIR VERIFIED GREEN
 

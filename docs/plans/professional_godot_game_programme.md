@@ -1218,14 +1218,30 @@ matrix and real-window evidence are in
 validates distinct candidates; it does not rank them or select the product
 default.
 
-#### Next follow-on — Stage 54F-5 Comparative Visual Evaluation
+#### Post-Stage-54 follow-on — Stage 54F-5 Comparative Visual Evaluation Laboratory
 
-Status: PLANNED.
+Status: IMPLEMENTED / AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN COMPARATIVE RUN PENDING.
 
-Compare the catalog candidates systematically on identical deterministic 2D,
-3D, and 4D states, including dense boards, active/Ghost/NEXT/HOLD combinations,
-slice arrangements, and supported screen sizes. Use the existing A/B machinery
-and record human-visible evidence and tradeoffs separately from style creation.
+The standalone Design Laboratory now provides the controlled evaluation path:
+ten stable scenarios over existing fixed-seed native sessions and replay
+fixtures cover 2D/3D/4D, sparse/dense states, NEXT/HOLD/Ghost, slice sets, and
+sphere-like topology presentation. Built-in and user profiles resolve through
+the existing registry/profile owners; a dedicated session freezes exact A/B
+snapshots and the non-style fingerprint, provides deterministic blind labels,
+fails closed on drift, and resets gameplay plus view/basis state canonically.
+
+Preference, eight optional ordinal ratings, notes, A/B PNGs, and immutable
+provenance persist under user data. Explicit nomination exports exact canonical
+values/owners, actual comparison records, and a review-only design proposal. A
+read-only repository validator enforces the human promotion boundary. The
+current-Godot Windows x86_64 portable ZIP builds and passes local structural/
+resource/PE validation; direct clean-machine Windows execution and the human
+comparative judgments remain unclaimed.
+
+The durable contract is
+`docs/architecture/design_evaluation_laboratory.md`; the human and platform
+checklist is `docs/plans/design_evaluation_laboratory_acceptance.md`. Completing
+the comparison apparatus does not select a winner or close Stage 54F-6.
 
 #### Next follow-on — Stage 54F-6 Default Presentation Selection / Polish
 

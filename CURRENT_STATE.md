@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-08-29
-Worktree expectation: clean after the Stage 54F-4 built-in style catalog commits
+Worktree expectation: clean after the Stage 54F-5 Design Laboratory commit series
 
 ## Purpose
 
@@ -12,6 +12,29 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Stage 54F-5 Design Laboratory implementation and local automated acceptance are
+  complete from starting SHA `1edd764abd3ab04d44546f97be317bec1c4be57e` on
+  `codex/built-in-style-catalog`. The new main-menu route combines the existing
+  immutable built-in catalog and mutable replacement-safe profile library with
+  ten deterministic live/replay scenarios, frozen A/B and deterministic blind
+  comparison, canonical reset, preference/eight-rating/notes persistence, A/B
+  PNG capture, and explicit nomination. Exported `preset.json`,
+  `comparison_summary.json`, and `DESIGN_PROPOSAL.md` are review evidence only;
+  the read-only repository validator resolves all 29 properties and owners and
+  never promotes them. The runtime matrix reloads every scenario and
+  applies/renders every shipped preset without non-style drift.
+
+  A current-Godot Windows x86_64 portable ZIP is now an explicit build artifact
+  with its release DLL, PCK/resources, product metadata/icon, structural
+  validator, and Windows CI/focused-smoke lane. It requires no Python, editor, or
+  checkout. Local macOS evidence validates the PE/package but does not execute
+  it. The only platform gap is direct clean-machine Windows acceptance; the
+  human design comparison itself is also intentionally pending and does not
+  block implementation acceptance. Durable ownership and the exact checklist
+  are `docs/architecture/design_evaluation_laboratory.md` and
+  `docs/plans/design_evaluation_laboratory_acceptance.md`. Stage 54F-6 remains a
+  separate human-reviewed default-selection change.
 
 - Completed candidate-style creation: Stage 54F-4 starts from
   `1cb6e8db474d57832c0b715fd9bc5d57716aa354` on the new branch
@@ -445,7 +468,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.92`
+1. `delivery_size_pressure = 2.93`
 2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -497,9 +520,10 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Run Stage 54F-5 comparative visual evaluation over the six shipped built-in
-   styles on identical deterministic 2D/3D/4D states, then Stage 54F-6 default
-   presentation selection and polish. Do not fold either into style creation.
+1. Execute the Stage 54F-5 human checklist over the six shipped built-in styles,
+   including a clean Windows launch, and preserve real preference/capture/export
+   evidence. Then contract Stage 54F-6 default presentation selection and polish;
+   do not infer a winner from automated or agent-driven evidence.
 2. Stop Stage 54 implementation otherwise. Future product work begins as a
    separately contracted programme or stage; do not extend 54G or create Stage
    54H.

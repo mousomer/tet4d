@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-28
+Updated: 2026-08-29
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -118,6 +118,27 @@ and production real-window evidence are green. The durable contract and evidence
 are `docs/architecture/built_in_style_catalog.md` and
 `docs/plans/built_in_style_catalog_acceptance.md`. This stage creates candidates
 only; 54F-5 compares them and 54F-6 selects the default.
+
+Completed implementation follow-on: Stage 54F-5 supplies the standalone Design
+Laboratory on `codex/built-in-style-catalog`, starting from
+`1edd764abd3ab04d44546f97be317bec1c4be57e`. It reuses the six shipped styles,
+the canonical registry and apply seam, and the existing user profile library.
+Ten versioned scenarios reconstruct existing fixed-seed native/replay truth for
+2D/3D/4D, sparse/dense, NEXT/HOLD/Ghost, and topology review. Frozen A/B
+sessions enforce one non-style fingerprint, exact `A -> B -> A`, deterministic
+blind labels, canonical reset, and fail-closed drift detection. Replacement-safe
+evaluations, viewport PNG pairs, immutable hashes/snapshots, explicit nomination,
+three-file proposal export, and a read-only repository validator provide the
+evidence/promotion path without selecting a default or mutating authority.
+
+The current Godot Windows x86_64 portable ZIP builds with a release
+GDExtension, application identity/icon, shipped resources, no Python/editor
+dependency, and structural/PE/path validation. The Windows CI lane runs focused
+laboratory coverage and packaged-runtime startup when published. Local macOS
+evidence does not claim Windows execution; clean-machine Windows and human
+comparative design acceptance remain the explicit follow-ups in
+`docs/plans/design_evaluation_laboratory_acceptance.md`. Stage 54F-6 default
+selection/polish remains planned and must consume reviewed human evidence.
 
 Completed bounded regression repair (2026-08-29): direct game startup could retain an
 ignored Godot `global_script_class_cache.cfg` from the preceding revision. The

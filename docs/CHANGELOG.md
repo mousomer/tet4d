@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-08-29
+
+### Added
+
+1. The main-menu Design Laboratory now provides ten deterministic live,
+   replay, and sphere-like 4D scenarios; a merged shipped/user preset catalog;
+   frozen blind A/B comparison; immutable evaluation provenance; paired PNG
+   capture; and non-mutating proposal export.
+2. Shipped styles remain read-only while `Duplicate / Edit` creates a mutable
+   candidate and opens it in the established live Presentation Designer.
+3. The separately named `Tet4D Designer` Windows x86-64 portable ZIP now has
+   an exact Godot export preset, MinGW-aware native build, structural validator,
+   focused Windows CI tests, and bounded packaged startup. Direct clean-machine
+   Windows acceptance remains pending and is not implied by local cross-builds.
+
 ## 2026-08-25
 
 ### Release

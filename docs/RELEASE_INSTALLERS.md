@@ -1,4 +1,4 @@
-# Godot Release Export
+# Godot Release Exports
 
 Tet4D's current professional-core release path is the Godot 4.7.2 macOS
 Universal app. The earlier Python/PyInstaller installers are retained as a
@@ -45,6 +45,40 @@ artifacts/godot/macos/Tet4D-0.7.5-macos-universal.zip
 The versioned filename follows `pyproject.toml`; do not edit the export-preset
 version independently.
 
+## Build the Windows Design Laboratory candidate
+
+Requirements are the exact pinned Godot 4.7.2 editor and matching export
+templates, the pinned godot-cpp submodule, SCons 4.10.1, and either a native
+Windows C++ toolchain or MinGW-w64 on macOS/Linux. From the repository root:
+
+```bash
+GODOT_BIN=/path/to/Godot \
+GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
+packaging/godot/build_windows.sh
+```
+
+The script cross-builds the release GDExtension, exports from a disposable
+project copy, and validates the exact portable payload, PE binaries, version,
+required laboratory resources, exclusions, and path sanitation. Its ignored
+output is:
+
+```text
+artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip
+```
+
+Extract that ZIP to any user-writable directory and launch
+`Tet4D Designer.exe`. This is an equivalent portable distributable, not an
+MSI: extraction installs it, deleting that extracted directory uninstalls it,
+and it creates no Start Menu entry, desktop shortcut, or registry uninstaller.
+Profiles, evaluations, captures, and proposal exports are written to the
+platform application-data directory through Godot `user://`, not the extracted
+application directory. The package embeds no Python runtime or Godot editor.
+
+Local cross-build and validation do not establish Windows runtime acceptance.
+The Windows workflow builds natively, runs the focused laboratory suite,
+validates the package, and performs a bounded headless start; a direct clean
+Windows-machine review remains an explicit Stage 54F-5 acceptance item.
+
 ## Smoke and manual acceptance
 
 The build already runs the two-user headless outside-tree smoke. For manual
@@ -62,8 +96,9 @@ authorized and provisioned.
 ## Platform support boundary
 
 - Current supported release: macOS 13+, Universal 2, Godot app/ZIP.
-- Development-configured only: Linux and Windows Godot GDExtension artifact
-  names. Neither has a current export preset or Stage 54G runtime verdict.
+- Current packaged design candidate: Windows x86-64 portable Godot
+  Design-Laboratory ZIP; clean-machine runtime acceptance pending.
+- Development-configured only: Linux Godot GDExtension artifact names.
 - Legacy retained path: Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders
   under `packaging/scripts/` and `packaging/pyinstaller/`.
 
@@ -72,6 +107,7 @@ Godot runtime release evidence.
 
 ## Current release workflow
 
-`.github/workflows/release-packaging.yml` builds the macOS Godot ZIP from the
-exact pinned editor and template. A matching tag may publish that ZIP to its
-GitHub release. The workflow does not publish retained Python installers.
+`.github/workflows/release-packaging.yml` builds the macOS Godot ZIP and the
+separately named Windows Designer ZIP from exact pinned editors and templates.
+A matching tag may publish both to its GitHub release after both jobs pass.
+The workflow does not publish retained Python installers.

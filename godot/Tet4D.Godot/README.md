@@ -10,6 +10,8 @@ It currently supports:
 - `Live Plain 2D`
 - `Live Plain 3D`
 - `Live Plain 4D`
+- `Design Laboratory` for deterministic scenario/style evaluation, capture,
+  scored records, and proposal export
 
 Python remains reference authority for inherited, untransferred semantics and
 retains the Topology Playground and later simulation/tooling surfaces. The
@@ -44,6 +46,25 @@ an official stable patch and checksums, audit the official migration guide,
 advance godot-cpp to a matching immutable API commit, perform a clean native
 rebuild, and update the migration record and CI together.
 
+## Design Laboratory
+
+Open `Design Laboratory` from the main menu (or press `L` while the main menu
+owns input). Choose one of the fixed-seed live, replay, or sphere-like 4D
+scenarios and two shipped or user presets. `Start comparison` freezes both
+preset snapshots and the non-style scenario identity; A/B switching then
+fails closed if gameplay, basis, camera, trace/frame, or canonical setup drifts.
+Blind labels, paired PNG capture, ordinal evaluation, free-form notes, and
+proposal nomination all preserve exact preset provenance. Shipped presets are
+read-only; `Duplicate / Edit` creates a user candidate and opens it directly
+in the existing live Presentation Designer.
+
+Evaluations, captures, and proposal bundles are written below
+`user://design_lab`. A proposal contains `preset.json`,
+`comparison_summary.json`, and `DESIGN_PROPOSAL.md`; exporting a proposal does
+not mutate production defaults. See
+`docs/plans/design_evaluation_laboratory_acceptance.md` for the comparative
+acceptance workflow.
+
 ## Release Export
 
 The current supported product artifact is a macOS 13+ Universal 2 app and ZIP.
@@ -59,6 +80,20 @@ excludes the test tree, uses bundle identifier `io.github.mousomer.tet4d`, and
 uses the repository's `0.7.5` candidate version. See
 `docs/RELEASE_INSTALLERS.md` for artifact inspection, outside-tree launch,
 platform limits, and the retained legacy Python installer path.
+
+The standalone Windows x86-64 laboratory candidate is a three-file portable
+ZIP. With the exact editor and matching official templates installed:
+
+```bash
+GODOT_BIN=/path/to/Godot \
+GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
+packaging/godot/build_windows.sh
+```
+
+The script emits
+`artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` and performs
+structural validation. Direct clean-machine Windows runtime acceptance remains
+separate and pending until recorded.
 
 ## What The Shell Does
 

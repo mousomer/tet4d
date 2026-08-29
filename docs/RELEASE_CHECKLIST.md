@@ -35,6 +35,8 @@
 5. The app excludes user data, editor state, source-tree dependencies,
    temporary evidence, and machine-local paths.
 6. `codesign --verify --deep --strict` passes for the app.
+7. The Windows Designer ZIP contains only its EXE, PCK, and release DLL, and
+   `packaging/godot/validate_windows_package.py` passes.
 
 ## Current-platform package
 
@@ -53,10 +55,15 @@
 
 ## Platform and legacy truth
 
-1. Report macOS as the only current Godot professional-core release target.
-2. Report Linux and Windows Godot support as development-configured and not
+1. Report macOS as the accepted Godot professional-core release target.
+2. Report Windows x86-64 as a structurally validated portable Designer
+   candidate, including whether native CI and direct clean-machine launch ran.
+3. For Windows, run `packaging/godot/build_windows.sh`, inspect the three-file
+   ZIP, and complete `docs/plans/design_evaluation_laboratory_acceptance.md`
+   before any runtime-support claim.
+4. Report Linux Godot support as development-configured and not
    runtime-verified for this release.
-3. Report Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders as retained
+5. Report Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders as retained
    legacy packaging, not current release evidence.
-4. Report ad-hoc signing and absent notarization; do not imply public
+6. Report ad-hoc signing and absent notarization; do not imply public
    Gatekeeper-ready distribution.
