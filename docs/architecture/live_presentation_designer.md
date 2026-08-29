@@ -2,7 +2,7 @@
 
 Status: active Godot product-shell contract
 
-Stage: 54F-2
+Stage: 54F-2, extended by the Stage 54F-4 built-in style catalog surface
 
 ## Purpose
 
@@ -46,6 +46,9 @@ The following objects are distinct:
 - **named library profile** is an independently stored artifact owned by
   `PresentationProfileLibrary`; load copies it into B and explicit Save copies B
   back across the persistence boundary.
+- **built-in style** is a read-only shipped artifact owned by
+  `BuiltInStyleCatalog`; applying one copies detached values into B and can
+  never be a save target.
 
 Object aliasing between A, B, the opening baseline, active runtime state, and
 the settings store is forbidden. The Designer is intentionally not given a
@@ -75,9 +78,11 @@ speculative editor type. A future registered type requires a bounded contract
 and factory extension rather than a parameter-specific row.
 
 Non-applicable controls are hidden consistently. In the current registry that
-yields 16 controls in Live 2D, 18 in Live 3D, and 20 in Live 4D. Shell window
+yields 19 controls in Live 2D, 21 in Live 3D, and 23 in Live 4D. Shell window
 transitions, replay playback/loop/projection, and shell/replay-only layout
-diagnostics do not appear in the live Designer.
+diagnostics do not appear in the live Designer. Stage 54F-4's three
+`ENVIRONMENT_PRESENTATION` background-animation parameters are ordinary
+registry-generated rows; they required no new control type.
 
 ## A/B and reset semantics
 
@@ -98,11 +103,21 @@ Reset wording and behavior are normative:
 - ordinary Hide or Compact preserves A, B, and the currently displayed slot.
 
 Named profile storage/versioning/import/export remain outside this Designer
-contract and are owned by `presentation_profile_library.md`. The integrated UI
-may invoke that owner, but ordinary edits, reset actions, A/B switching,
+contract and are owned by `presentation_profile_library.md`. Read-only shipped
+styles are owned by `built_in_style_catalog.md`. The integrated UI may invoke
+either owner, but ordinary edits, reset actions, A/B switching,
 `Keep B & Hide`, collapse, and hide retain the runtime-only behavior above.
+
+Applying a built-in style behaves exactly like any other detached B replacement:
+it displays B, leaves captured A untouched, and performs no write. It also
+clears the loaded user-profile identity, so explicit `Save Profile` is disabled
+and the shipped style cannot be overwritten. The Designer hosts two collapsed-by-
+default disclosure sections, `BUILT-IN STYLES` and `PROFILE LIBRARY`, which are
+mutually exclusive so their combined minimum content cannot exceed the allocated
+overlay. Expanding either consumes internal Designer space only.
+
 Undo history, randomized assignment, telemetry, and statistical experimentation
-remain outside both contracts.
+remain outside all three contracts.
 
 ## Presentation and deterministic isolation
 

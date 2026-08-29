@@ -1,3 +1,181 @@
+# Task Contract — Stage 54F-4 Built-in Style Catalog
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+
+Starting branch: `codex/canonical-local-board-geometry`
+
+Starting SHA: `1cb6e8db474d57832c0b715fd9bc5d57716aa354`
+
+Implementation branch: `codex/built-in-style-catalog`
+
+## Objective
+
+Ship the first concrete presentation styles. Add one read-only, repository-shipped
+built-in style catalog beside the existing mutable `PresentationProfileLibrary`,
+six curated built-in styles that are visually distinct and immediately usable,
+and the minimum bounded animated-background capability required for one genuine
+Tron-like style. The catalog reuses the existing registry and
+`PresentationProfile` payload; it creates no second parameter schema, no second
+applicability model, and no second persistence subsystem.
+
+This stage creates candidates. It does not rank them (Stage 54F-5) and does not
+select or polish the product default (Stage 54F-6).
+
+## Classification and Authority Comparison
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`, because one new read-only catalog provider
+  and three new registry parameters are consumed by the Designer UI, the bounded
+  application seam, and a new environment/background renderer component.
+- Affected layers: presentation parameter registry, shipped read-only style
+  catalog data and owner, environment/background rendering, Designer/profile-
+  library UI, Godot focused tests, generated configuration documentation, and
+  governing architecture/acceptance records.
+- Claims: built-in styles are shipped, read-only, and distinct from user
+  profiles; they validate through the existing `PresentationProfile` contract;
+  applying one produces a detached working B and leaves captured A and the
+  catalog source unchanged; the animated background is confined to the
+  environment layer behind gameplay; deterministic gameplay, board geometry,
+  camera pose, basis/slice state, NEXT/HOLD, and cockpit allocation are
+  unchanged; 2D, 3D, and 4D remain judgeable.
+- Required evidence: `documentation`, `governance_structure`, `godot`,
+  `integration`, `deterministic`, and `human_visual`.
+- Full repository gate: required, because a registry-wide parameter addition, a
+  new shipped-data owner, and a visible product surface are all in scope.
+- Authority effect: establishes Godot product-shell ownership only for
+  read-only built-in style identity, shipped catalog data, and the bounded
+  animated-background presentation surface. The registry retains parameter
+  identity/type/bounds/owner/applicability; `PresentationProfile` retains value
+  composition and validation; `PresentationProfileLibrary` retains mutable
+  user-artifact lifecycle; `SettingsStore` retains ordinary preferences. No
+  gameplay, native, deterministic, replay, topology, geometry, basis, or camera
+  authority transfers.
+
+`presentation_profile_library.md` section 8 already anticipates read-only
+built-in profiles sharing the same authoritative payload, and
+`presentation_parameter_contract.md` section 5 already defines how a new
+parameter is declared. This stage exercises both without amending either
+ownership rule.
+
+## Scope Matrix
+
+| Layer | Required change | Provider evidence | Consumer evidence |
+| --- | --- | --- | --- |
+| Registry | Add exactly three `ENVIRONMENT_PRESENTATION` background-animation parameters with types, bounds, options, defaults, and applicability. | Registry validation, count, ownership, and default assertions. | Designer generates the rows; profiles snapshot/round-trip them. |
+| Style catalog | One shipped JSON catalog plus one read-only `BuiltInStyleCatalog` owner with no write API. | Catalog structural, validation, immutability, and diagnostics tests. | Designer lists and applies entries; user storage stays empty. |
+| Animated background | One bounded environment-layer component driven only by authorized profile values and its own phase. | Component mode/parameter/phase/base-colour tests. | App wires it behind gameplay; layout rects and state hash unchanged. |
+| Designer | Add a collapsed-by-default built-in section with Apply and Copy to User Library, distinct from the mutable library section. | Component apply/copy/detachment tests. | Full and compact Designer and gameplay viewport allocation unchanged. |
+| Documentation | New catalog architecture record plus acceptance matrix; reconcile parameter, library, Designer, authority, programme, backlog, and handoff records. | Governance, generated-document, and semantic-boundary checks. | Ownership, animation scope, and 54F-5/54F-6 boundary stay unambiguous. |
+
+## Allowed and Required Changes
+
+1. Add three registry parameters: `environment.background_animation_mode`,
+   `environment.background_animation_intensity`, and
+   `environment.background_animation_speed`.
+2. Ship `godot/Tet4D.Godot/config/built_in_style_catalog.json` as versioned
+   read-only data outside `user://`.
+3. Add `BuiltInStyleCatalog` with list/read/diagnostics/snapshot only.
+4. Add one `AnimatedBackground` environment-layer component and one shader,
+   consuming only authorized profile values and a locally owned phase.
+5. Integrate a collapsed-by-default built-in section into the existing Designer
+   surface with `Apply to B` and `Copy to User Library`.
+6. Ship six curated styles with explicit reviewed parameter values.
+7. Add focused catalog, animation, applicability, persistence-separation, and
+   cockpit-regression tests, and update the three registry/Designer counts that
+   the additive registry growth changes.
+8. Update the routed architecture, acceptance, programme, backlog, and
+   restart-handoff records and run every task-requested gate.
+
+## Forbidden Changes
+
+- a second parameter schema, applicability model, persistence subsystem, or
+  parameter registry; theme-authoring, palette-role editing, or shader scripting
+  surfaces; cloud/sharing/telemetry/recommendation/voting features;
+- gameplay, setup, native, queue/RNG, scoring, Hold/NEXT/Ghost truth, replay,
+  trace, snapshot, or deterministic hash behavior;
+- board geometry, slice-set identity, exact basis, topology, camera pose or
+  camera behavior beyond registered preferences, or input/control changes;
+- mutating built-in catalog data at runtime, writing built-in entries into
+  `user://`, or changing user profile schema, identity, import/export, or A/B
+  and dirty-state semantics;
+- ranking styles, selecting a default style, or claiming comparative visual
+  evaluation;
+- foreground VFX, glow bleed over gameplay, particle systems, background video,
+  audio reactivity, or camera-coupled background motion;
+- reset, rebase, predecessor amendment, push, PR, or publication.
+
+## Acceptance Criteria
+
+1. A read-only built-in catalog exists, shipped in the repository, separate from
+   `user://` mutable storage, and has no rename/delete/overwrite API.
+2. Built-in styles reuse `PresentationProfile` payloads and the single registry;
+   no second schema or applicability system is introduced.
+3. Applying a built-in style replaces working B with a detached profile, leaves
+   captured A unchanged, and leaves the catalog source unmutated.
+4. A user can save a modified built-in style as a normal user profile, and an
+   explicit copy action creates a normal mutable user profile.
+5. At least five real built-in styles ship; one is a true Tron-like style whose
+   background is actually animated.
+6. The animated background is bounded to the environment layer, draws behind
+   gameplay, and changes no layout rect, gameplay state, or deterministic hash.
+7. `mode = none` preserves the current static background behavior exactly.
+8. 2D, 3D, and 4D remain judgeable, and NEXT, HOLD, piece controls, and 4D
+   basis/slice state remain readable under every shipped style.
+9. Full and compact Designer remain usable and the gameplay viewport allocation
+   is not regressed by the new section in either disclosure state.
+10. Motion has an accessibility escape: non-animated styles set `none`, the
+    accessibility style disables motion, and `accessibility.reduced_motion`
+    freezes the animation.
+11. Focused tests, the canonical Godot suite, the pinned Godot 4.7.2 gate,
+    governance/generated-document/settings/semantic-boundary/sanitation/diff
+    checks, and one full repository gate pass.
+12. Real-window production evidence exists for every style across 2D, 3D, and
+    4D plus full/compact Designer, including two Tron frames at different
+    animation phases.
+13. Documentation records the catalog, read-only semantics, animation scope, new
+    parameters, and the 54F-5/54F-6 boundary; the worktree ends clean without
+    push or PR.
+
+## Explicit Deferrals
+
+Comparative visual evaluation is Stage 54F-5 and default selection/polish is
+Stage 54F-6. Additional animation modes, background animation scale, procedural
+style authoring, thumbnail preview rendering, palette-role editing, and built-in
+catalog versioning/migration remain deferred. The repository-wide Godot runner
+false-green architecture remains advisory-only on this branch.
+
+## Completion Evidence
+
+- the isolated canonical Godot 4.7.2 suite prints `Godot replay tests passed.`
+  with zero `SCRIPT ERROR`, including the new
+  `tests/test_built_in_style_catalog.gd`;
+- the pinned gate reports `Godot 4.7.2 verification passed.` with 59 topology
+  transport parity cases;
+- settings externalization, 117-path project-contract validation, generated
+  maintenance and configuration checks, 123-script semantic-boundary
+  validation, repository sanitation, and `git diff --check` pass;
+- the full repository gate reports `verify: OK`;
+- production Metal 4.0 Forward+ capture under Godot 4.7.2 covers all six styles
+  in Live 2D, 3D, and 4D plus full, built-in-expanded, library-expanded, and
+  compact Designer, with two Tron frames at flow phases `0.0054` and `2.1748`;
+- the capture driver reported `hash_stable=true`, `snapshot_stable=true`,
+  `bounds_stable=true`, `layout_stable=true`, and all of NEXT, HOLD, piece
+  controls, and basis/slice visible.
+
+The first capture pass was rejected on readability: the Tron background competed
+with the board in Live 2D. The surface was corrected, re-captured, and only then
+accepted; both passes are recorded in the acceptance document.
+
+Registry growth from 26 to 29 parameters moved four documented count assertions
+(19/21/23 live-applicable Designer controls, 29 registry settings, 27 persistent
+preferences, 29 focus-order stops). Those were updated to the new truth; none
+was weakened or deleted.
+
+This is agent-driven acceptance, not independent human sign-off. No push or PR
+is performed.
+
+---
+
 # Task Contract — Stage 54F-3R.2 Godot 4.7.2 Baseline Upgrade
 
 Status: COMPLETE / LOCAL TOOLCHAIN BASELINE GREEN

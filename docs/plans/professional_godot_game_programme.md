@@ -1187,16 +1187,36 @@ compare candidate visual designs. Completion of the parameter, geometry,
 Designer A/B, cockpit, and profile-library stages establishes the controlled
 comparison apparatus; it is not completion of the visual-design comparison.
 
-#### Next follow-on — Stage 54F-4 Built-in Style Catalog
+#### Post-Stage-54 follow-on — Stage 54F-4 Built-in Style Catalog
 
-Status: PLANNED.
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/built-in-style-catalog`.
 
-Create the actual read-only candidate presentation designs over the accepted
-registry and `PresentationProfile` payload. Candidate directions may include
-restrained/classic, Python-reference, arcade-neon or TRON-like, technical/
-blueprint, minimal-dark, and high-contrast accessibility treatments. This stage
-authors and validates distinct candidates; it does not rank them or select the
-product default.
+Stage 54F-4 creates the actual read-only candidate presentation designs over the
+accepted registry and `PresentationProfile` payload. `BuiltInStyleCatalog` is a
+third artifact kind beside runtime working state and mutable user profiles: it
+reads one repository-shipped versioned JSON catalog through `res://`, never
+touches `user://`, and exposes no write API at all. Applying a built-in style
+replaces detached working B, leaves captured A and the shipped entry unchanged,
+and clears the loaded user-profile identity so explicit Save cannot overwrite a
+shipped style. `Save As` and `Copy to User Library` are the two paths to an
+ordinary mutable user profile.
+
+Six styles ship: Tet4D Balanced, Python Reference, Arcade Neon, Tron Grid Flow,
+Blueprint Technical, and High Contrast. Tron Grid Flow is a real animated style,
+not cyan colours over a static field. Three new `ENVIRONMENT_PRESENTATION`
+registry parameters drive one bounded `AnimatedBackground` component that renders
+a screen-space luminous grid flow far behind the play volume, writes no depth,
+derives every colour from existing semantic palette roles, damps the frame centre
+where the board sits, and owns a resettable component-local phase excluded from
+every deterministic snapshot. `accessibility.reduced_motion` freezes it, and the
+accessibility style ships with motion off.
+
+The durable contract is `docs/architecture/built_in_style_catalog.md`; the style
+matrix and real-window evidence are in
+`docs/plans/built_in_style_catalog_acceptance.md`. This stage authors and
+validates distinct candidates; it does not rank them or select the product
+default.
 
 #### Next follow-on — Stage 54F-5 Comparative Visual Evaluation
 

@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-28
-Worktree expectation: clean after the Stage 54F-3R.2 Godot 4.7.2 baseline commit
+Last updated: 2026-08-29
+Worktree expectation: clean after the Stage 54F-4 built-in style catalog commits
 
 ## Purpose
 
@@ -12,6 +12,35 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Completed candidate-style creation: Stage 54F-4 starts from
+  `1cb6e8db474d57832c0b715fd9bc5d57716aa354` on the new branch
+  `codex/built-in-style-catalog`. It adds `BuiltInStyleCatalog`, a third
+  presentation artifact kind beside runtime working state and mutable user
+  profiles. The catalog reads one repository-shipped versioned JSON document
+  through `res://config/built_in_style_catalog.json`, never touches `user://`,
+  and exposes no save/rename/delete/overwrite API, so read-only is structural.
+  Applying a style replaces detached working B, leaves captured A and the shipped
+  entry unchanged, and clears the loaded user-profile identity so explicit Save
+  cannot target a built-in; `Save As` and `Copy to User Library` create ordinary
+  mutable user profiles. Six curated styles ship: Tet4D Balanced, Python
+  Reference, Arcade Neon, Tron Grid Flow, Blueprint Technical, and High Contrast.
+  Three new `ENVIRONMENT_PRESENTATION` registry parameters
+  (`environment.background_animation_mode`, `..._intensity`, `..._speed`) drive
+  one bounded `AnimatedBackground` component. It renders a screen-space luminous
+  grid flow on a camera-anchored quad far behind the play volume, never writes
+  depth, derives colour only from existing palette roles, damps the frame centre
+  where the board sits, and owns a resettable component-local phase that is
+  deliberately excluded from every deterministic snapshot.
+  `accessibility.reduced_motion` freezes it and the accessibility style ships
+  with motion off. `mode = none` is byte-equivalent to the previous static
+  background. The registry grows from 26 to 29 parameters, so the documented
+  live-applicable Designer counts move to 19/21/23; those count assertions were
+  updated, not weakened. The durable records are
+  `docs/architecture/built_in_style_catalog.md` and
+  `docs/plans/built_in_style_catalog_acceptance.md`. This stage creates
+  candidates only: Stage 54F-5 compares them and Stage 54F-6 selects and polishes
+  the default.
 
 - Completed toolchain baseline upgrade: Stage 54F-3R.2 starts from
   `e2e1ef9254f12c528ce7a67599b43510abfc0902` on
@@ -50,10 +79,10 @@ history ledger. Detailed history is preserved in
 
 - Programme clarification: the parameter contract, canonical geometry,
   Designer A/B machinery, compact cockpit, profile library, and persistence
-  isolation form the comparison apparatus. They do not constitute candidate
-  visual-design comparison. Stage 54F-4 creates a built-in style catalog, Stage
-  54F-5 compares candidates systematically, and Stage 54F-6 selects/polishes the
-  default presentation.
+  isolation form the comparison apparatus, and Stage 54F-4 has now supplied the
+  candidate styles. Neither constitutes candidate visual-design comparison.
+  Stage 54F-5 compares candidates systematically and Stage 54F-6
+  selects/polishes the default presentation.
 
 - Completed bounded post-review hardening: Stage 54F-3R starts from reviewed-green
   Stage 54F-3 HEAD `47c90c67d5a13a84bd826f17f2838f0de3f38ec5`
@@ -468,10 +497,14 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 ## Next Steps
 
-1. Stop Stage 54. Future product implementation begins as a separately
-   contracted programme or stage; do not extend 54G or create Stage 54H.
-2. Keep the Standard Live-4D legibility and live pause-badge findings as
+1. Run Stage 54F-5 comparative visual evaluation over the six shipped built-in
+   styles on identical deterministic 2D/3D/4D states, then Stage 54F-6 default
+   presentation selection and polish. Do not fold either into style creation.
+2. Stop Stage 54 implementation otherwise. Future product work begins as a
+   separately contracted programme or stage; do not extend 54G or create Stage
+   54H.
+3. Keep the Standard Live-4D legibility and live pause-badge findings as
    non-blocking post-release polish; do not reopen the already-passed matrix.
-3. Keep piece/config-bundle import readers and unrelated settings recovery as
+4. Keep piece/config-bundle import readers and unrelated settings recovery as
    bounded, format-specific deferrals rather than reopening generic governance
    work.

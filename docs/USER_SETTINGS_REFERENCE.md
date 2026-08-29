@@ -376,6 +376,9 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 ### Theme
 
 - `environment.background_intensity`: default `1.0`; float
+- `environment.background_animation_mode`: default `"none"`; enum; options: none, tron_grid_flow
+- `environment.background_animation_intensity`: default `0.55`; float
+- `environment.background_animation_speed`: default `1.0`; float
 - `theme.name`: default `"plain"`; enum; options: diagnostic, plain, tron
 
 ### Interface

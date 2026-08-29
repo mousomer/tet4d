@@ -32,6 +32,7 @@ These files define the codebase shape and architectural rules.
 - `docs/architecture/4d_presentation_interaction_architecture.md`
 - `docs/architecture/camera_gui_preset_semantics.md`
 - `docs/architecture/presentation_parameter_contract.md`
+- `docs/architecture/built_in_style_catalog.md`
 - `docs/architecture/canonical_local_board_presentation_geometry.md`
 - `docs/architecture/ghost_piece.md`
 - `docs/architecture/godot_shell_layout_stabilization.md`

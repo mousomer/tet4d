@@ -138,6 +138,9 @@ Allowed runtime applicability values are `shell`, `replay`, `live_2d`,
 | `ghost.opacity` | `GHOST_PRESENTATION` | all live modes | accessibility_composable |
 | `slice_set.spacing` | `SLICE_SET_PRESENTATION` | live 4D | aesthetic |
 | `environment.background_intensity` | `ENVIRONMENT_PRESENTATION` | replay, all live modes | accessibility_composable |
+| `environment.background_animation_mode` | `ENVIRONMENT_PRESENTATION` | replay, all live modes | accessibility_composable |
+| `environment.background_animation_intensity` | `ENVIRONMENT_PRESENTATION` | replay, all live modes | accessibility_composable |
+| `environment.background_animation_speed` | `ENVIRONMENT_PRESENTATION` | replay, all live modes | accessibility_composable |
 
 `display.board_detail` has one owner even though the shared cell-edge policy
 is consumed by active, locked, and Ghost render paths: `PIECE_PRESENTATION`
@@ -159,6 +162,9 @@ The existing parameters retain their accepted values. The new values are:
 | `ghost.opacity` | float multiplier, `0.25..1.50` | `1.00` | Multiplies the selected palette/theme's accepted Ghost fill baseline. |
 | `slice_set.spacing` | float multiplier, `0.60..1.60` | `1.00` | Multiplies the responsive 4D horizontal/vertical gutter only. It never changes slice-local geometry. |
 | `environment.background_intensity` | float, `0.25..1.50` | `1.00` | Scales the selected semantic world-background role without changing the shell palette. |
+| `environment.background_animation_mode` | enum `none`, `tron_grid_flow` | `none` | Selects the bounded animated world-background treatment. `none` is the static themed background. |
+| `environment.background_animation_intensity` | float, `0.00..1.00` | `0.55` | Scales how strongly the animated treatment reads. `0` falls back to the static background. |
+| `environment.background_animation_speed` | float, `0.00..2.00` | `1.00` | Scales the animation flow rate. `0` holds a still frame. |
 
 Defaults reproduce the accepted local presentation. A renderer may retain
 theme-specific material derivation, but it may not retain another user-control
@@ -267,7 +273,24 @@ parameter contract owns common safe roles and spacing but no geometry,
 profile-specific compensation and does not require projected screenshots to
 match.
 
-## 13. Verification contract
+## 13. Animated environment scope
+
+Stage 54F-4 adds the three background-animation parameters above and one bounded
+`AnimatedBackground` consumer under `built_in_style_catalog.md`. The animated
+surface is confined to the environment/background layer: it renders behind the
+play volume, never writes depth, derives every colour from existing semantic
+palette roles, and owns a component-local flow phase rather than shader `TIME`.
+
+`accessibility.reduced_motion` retains final motion authority over these
+aesthetic values, which is why they are classified `accessibility_composable`
+rather than as a second motion preference. The animation phase is deliberately
+excluded from every deterministic snapshot.
+
+This contract still owns no geometry, per-mode scale, camera compensation, or
+shader authoring surface. Procedural themes and free-form effect graphs remain
+outside it.
+
+## 14. Verification contract
 
 Automated evidence covers registry integrity, exact ownership, default
 profile parity, copy-on-override switching, renderer consumption, schema-1/2/3

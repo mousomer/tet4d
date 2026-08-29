@@ -188,12 +188,24 @@ applicability remains registry-driven for Live 2D, 3D, and 4D; serialization
 does not give an inapplicable value new semantics. Profile application may
 change registered camera preferences but never restores arbitrary current pose.
 
-## 8. Future built-in profiles
+## 8. Built-in styles
 
-The artifact model can later distinguish read-only built-in profiles from
-user-managed profiles while sharing the same authoritative payload. Stage
-54F-3 creates no built-in themes, theme pack, palette editor, marketplace, or
-sharing service.
+Stage 54F-4 realizes the anticipated read-only built-in profiles as a separate
+owner rather than as entries in this library. `BuiltInStyleCatalog` under
+`built_in_style_catalog.md` reads repository-shipped styles from `res://` and
+shares this library's authoritative `PresentationProfile` payload without
+sharing its storage, identity, or lifecycle.
+
+Ownership stays distinct:
+
+- this library owns mutable user artifacts under `user://` and every write;
+- the catalog owns shipped read-only styles and exposes no write API.
+
+Applying a built-in style performs no library write. The user crosses into this
+library only through the ordinary explicit `Save As` action or the equivalent
+`Copy to User Library` action, both of which allocate a normal generated user
+identity and produce an ordinary mutable profile. No theme pack, palette editor,
+marketplace, or sharing service exists in either owner.
 
 ## 9. Verification contract
 

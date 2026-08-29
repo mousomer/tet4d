@@ -98,6 +98,27 @@ reviewed Stage 54F-2R hierarchy, layout, Designer, camera behavior, gameplay,
 and authority boundaries remain unchanged. Evidence is appended to
 `docs/plans/live_presentation_designer_acceptance.md`.
 
+Completed bounded follow-on: Stage 54F-4 ships the built-in style catalog on
+`codex/built-in-style-catalog`, starting from
+`1cb6e8db474d57832c0b715fd9bc5d57716aa354`. `BuiltInStyleCatalog` reads one
+repository-shipped versioned JSON catalog through `res://`, never touches
+`user://`, and exposes no write API, so read-only is structural rather than a
+runtime flag. Applying a style replaces detached working B, leaves captured A and
+the shipped entry unchanged, and clears the loaded user-profile identity so
+explicit Save cannot overwrite a built-in; `Save As` and `Copy to User Library`
+produce ordinary mutable user profiles. Six curated styles ship, one of which,
+Tron Grid Flow, is genuinely animated. Three new `ENVIRONMENT_PRESENTATION`
+registry parameters drive one bounded `AnimatedBackground` component confined to
+the environment layer: screen-space pattern, no depth write, palette-derived
+colour, damped frame centre, and a resettable component-local phase excluded from
+every deterministic snapshot. `accessibility.reduced_motion` freezes it. Focused
+catalog/animation/Designer/cockpit tests, canonical and pinned Godot 4.7.2,
+governance/generated-doc/settings/semantic-boundary, sanitation, full-repository,
+and production real-window evidence are green. The durable contract and evidence
+are `docs/architecture/built_in_style_catalog.md` and
+`docs/plans/built_in_style_catalog_acceptance.md`. This stage creates candidates
+only; 54F-5 compares them and 54F-6 selects the default.
+
 Completed bounded follow-on: Stage 54F-3 implements the explicit Presentation
 Profile Library on `codex/canonical-local-board-geometry`. Named user profiles
 use generated stable IDs and independently validated versioned files under
@@ -141,10 +162,11 @@ doc/settings/semantic-boundary, sanitation, diff, and full-repository evidence
 is green. Stage 54F-3 remains reviewed green; Stage 54F-3R remains pending
 independent re-review.
 
-The presentation comparison apparatus is nearly complete, not the visual-design
-comparison. After Stage 54F-3R is re-reviewed, the next distinct stages are
-54F-4 built-in candidate style creation, 54F-5 systematic comparative visual
-evaluation, and 54F-6 default presentation selection/polish.
+The presentation comparison apparatus and its candidate styles now both exist,
+but the visual-design comparison does not. Stage 54F-4 created the candidates;
+the next distinct stages are 54F-5 systematic comparative visual evaluation and
+54F-6 default presentation selection/polish. Stage 54F-3R also remains pending
+independent re-review.
 
 Completed bounded post-review hardening: Stage 54F-3R starts from reviewed-green
 Stage 54F-3 HEAD `47c90c67d5a13a84bd826f17f2838f0de3f38ec5`
@@ -178,12 +200,13 @@ and agent-driven 2D/3D endgame evidence pass; evidence is recorded in
 `docs/plans/canonical_local_board_presentation_geometry_acceptance.md`.
 
 Explicit deferrals from these follow-ons are formal A/B assignment/telemetry,
-free-form palette-role editing, built-in style/theme profiles,
-procedural/animated environments, broader theme work, and independent human
-review of both the Designer workflow and the
-intentional full-depth 2D mesh under unusual debug camera views. Stage 54F-2
-adds the editing instrument only; it does not begin the following
-profile-management/theme stage or another geometry implementation.
+free-form palette-role editing, procedural style authoring, style thumbnail
+generation, additional background-animation modes, broader theme work, and
+independent human review of the Designer workflow, the built-in style catalog,
+and the intentional full-depth 2D mesh under unusual debug camera views. Stage
+54F-2 added the editing instrument only; Stage 54F-4 has since delivered the
+read-only built-in style catalog and its bounded animated background, so those
+two items are no longer deferred.
 
 ## Next Work
 
