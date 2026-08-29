@@ -25,6 +25,7 @@ func run() -> Array:
 	_cleanup_all()
 	var registry = RegistryScript.new()
 	registry.load_from_path(RegistryScript.REGISTRY_PATH)
+	failures.append_array(_test_cache_independent_startup_contract())
 	failures.append_array(_test_animation_parameters(registry))
 	failures.append_array(_test_catalog_structure(registry))
 	failures.append_array(_test_catalog_read_only(registry))
@@ -33,6 +34,20 @@ func run() -> Array:
 	failures.append_array(await _test_designer_integration(registry))
 	failures.append_array(await _test_live_integration(registry))
 	_cleanup_all()
+	return failures
+
+
+func _test_cache_independent_startup_contract() -> Array:
+	var failures: Array = []
+	var app_source := FileAccess.get_file_as_string("res://scripts/app/trace_replay_app.gd")
+	if app_source.is_empty():
+		return ["cache-independent startup test must be able to read the application controller"]
+	if app_source.find('const AnimatedBackgroundScript = preload("res://scripts/rendering/animated_background.gd")') == -1:
+		failures.append("the application controller must explicitly preload AnimatedBackground")
+	if app_source.find("AnimatedBackgroundScript.new()") == -1:
+		failures.append("the application controller must construct the background through its explicit preload")
+	if app_source.find(": AnimatedBackground") != -1 or app_source.find("as AnimatedBackground") != -1:
+		failures.append("application startup must not depend on ignored global-script-class cache metadata for AnimatedBackground")
 	return failures
 
 

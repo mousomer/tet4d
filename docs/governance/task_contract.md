@@ -1,12 +1,68 @@
 # Task Contract — Stage 54F-4 Built-in Style Catalog
 
-Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN / STARTUP REGRESSION REPAIR VERIFIED GREEN
 
 Starting branch: `codex/canonical-local-board-geometry`
 
 Starting SHA: `1cb6e8db474d57832c0b715fd9bc5d57716aa354`
 
 Implementation branch: `codex/built-in-style-catalog`
+
+## Bounded startup regression repair — 2026-08-29
+
+### Objective and authority comparison
+
+Repair the inert-menu failure introduced by the accepted animated-background
+integration. A repository revision can add `AnimatedBackground` while an
+existing checkout still carries an ignored, stale Godot global-script-class
+cache. The application controller currently uses the missing global class name
+in parse-time annotations even though it already preloads the implementation;
+the controller therefore fails to parse, the HUD renders without its signal
+wiring, and every visible menu action appears stuck.
+
+This is a `godot_product_shell` task with no workflow modifier. The affected
+layers are the Godot application controller, focused startup/menu regression
+coverage, the built-in-style architecture record, and the backlog. The claim is
+limited to cache-independent controller startup and restored menu/setup launch;
+style behavior, presentation values, gameplay, native authority, persistence,
+and deterministic identity do not change. Required evidence is
+`documentation` plus `godot`; no full repository gate is required for this
+narrow dependency correction unless focused checks expose broader drift.
+
+### Acceptance criteria
+
+1. The main application script parses when generated Godot script-class metadata
+   is absent or stale.
+2. The visible main menu has its controller wiring, menu cards remain pointer-
+   and keyboard-activatable, and `Start Game` enters the viewer.
+3. `AnimatedBackground` still resolves, constructs, and receives presentation
+   profiles through its explicit preload.
+4. Focused scene-integrity, main-menu input-routing, configured-launch, and
+   built-in-style tests pass, followed by the repository Godot gate available on
+   the pinned engine.
+5. No global cache file is checked in and no authority or product behavior is
+   transferred.
+
+### Verification evidence
+
+- A real macOS game window was launched directly against the ignored stale
+  cache that reproduced the failure, without an intervening editor import. The
+  controller parsed with no script error, `Play 2D` opened setup, and the
+  focused `Start Game` action entered a running live viewer.
+- The isolated pinned Godot 4.7.2 gate passed the complete Godot suite,
+  including the new cache-independence assertion, all 59 shared topology
+  transport parity cases, and bounded main-scene startup.
+- Project-contract validation passed all 117 routed paths; repository
+  sanitation and `git diff --check` passed.
+- An earlier unisolated diagnostic run under the machine's obsolete Godot
+  4.7.1 executable reached the suite end but inherited the player's dismissed
+  onboarding preference. Its onboarding-only failures are not accepted as
+  branch evidence and are superseded by the isolated pinned-engine result.
+
+### Explicit deferrals
+
+No style comparison, default selection, visual redesign, gameplay change,
+toolchain migration, or adjacent cleanup is included.
 
 ## Objective
 

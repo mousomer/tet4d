@@ -111,7 +111,12 @@ var _live_4d_presentation_root: Node3D
 var _renderer: TraceSceneRenderer
 var _camera_rig: CameraRig
 var _world_environment: WorldEnvironment
-var _animated_background: AnimatedBackground
+# Keep this dynamically typed and construct it through AnimatedBackgroundScript.
+# `global_script_class_cache.cfg` is ignored generated state, so a checkout may
+# legitimately have a stale cache that predates this component. A global-class
+# annotation here would make the whole application controller fail to parse and
+# leave the otherwise visible main menu inert until the editor refreshes metadata.
+var _animated_background
 @onready var _hud: ReplayHud = get_parent().get_node("ReplayHud") as ReplayHud
 
 
@@ -956,7 +961,7 @@ func _resolve_scene_nodes() -> void:
 	if _live_4d_presentation_root == null:
 		_live_4d_presentation_root = _world_root.get_node_or_null("Live4DPresentationRoot") as Node3D
 	if _animated_background == null:
-		_animated_background = _world_root.get_node_or_null("CameraRig/Camera3D/AnimatedBackground") as AnimatedBackground
+		_animated_background = _world_root.get_node_or_null("CameraRig/Camera3D/AnimatedBackground")
 	if _camera_rig != null:
 		_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
 		_connect_camera_control_frame_signal()
@@ -986,7 +991,7 @@ func _build_world_in_game_viewport() -> void:
 	camera.current = true
 	camera.fov = 50.0
 	_camera_rig.add_child(camera)
-	_animated_background = AnimatedBackgroundScript.new() as AnimatedBackground
+	_animated_background = AnimatedBackgroundScript.new()
 	_animated_background.name = "AnimatedBackground"
 	camera.add_child(_animated_background)
 	_camera_rig.set_world_presentation_root(_live_4d_presentation_root)

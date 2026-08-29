@@ -119,6 +119,15 @@ are `docs/architecture/built_in_style_catalog.md` and
 `docs/plans/built_in_style_catalog_acceptance.md`. This stage creates candidates
 only; 54F-5 compares them and 54F-6 selects the default.
 
+Completed bounded regression repair (2026-08-29): direct game startup could retain an
+ignored Godot `global_script_class_cache.cfg` from the preceding revision. The
+new application-controller annotations then failed to resolve
+`AnimatedBackground`, leaving a visible but unwired main menu whose options and
+`Start Game` did nothing. The repair removes that generated-cache dependency,
+adds cache-independent startup/menu regression evidence, and changes no style,
+gameplay, persistence, or authority behavior. A direct stale-cache real-window
+launch and the isolated pinned Godot 4.7.2 gate are green.
+
 Completed bounded follow-on: Stage 54F-3 implements the explicit Presentation
 Profile Library on `codex/canonical-local-board-geometry`. Named user profiles
 use generated stable IDs and independently validated versioned files under

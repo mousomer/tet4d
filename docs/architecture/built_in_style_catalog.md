@@ -135,6 +135,21 @@ Dirty state continues to compare complete `PresentationProfile.values()` against
 the applied baseline, so editing after applying a built-in style reads as
 modified without implying a stored artifact exists.
 
+### Runtime startup integration
+
+The application controller must load and construct `AnimatedBackground` through
+its explicit preloaded script resource. It must not require the optional
+project-global `class_name` registration to parse. Godot's generated
+`global_script_class_cache.cfg` is local, ignored state and may legitimately be
+absent or stale after switching to a revision that adds the component. In that
+state the main menu must still wire its controller before the first interactive
+frame; a visible but inert menu is a startup failure, not an acceptable cache-
+refresh requirement for the player.
+
+The same rule applies when resolving an already-created background node: the
+stable scene path and the preloaded implementation contract are sufficient.
+Generated editor metadata is never a runtime dependency or a shipped authority.
+
 ## 6. Animated background surface
 
 A genuine Tron-like style needs motion, so this stage adds one bounded
@@ -231,7 +246,10 @@ paths, the absence of silent user-profile writes, `none`-mode equivalence,
 animated activation, parameter propagation, phase advancement, reduced-motion
 freeze, backdrop placement behind gameplay, 2D/3D/4D application through the
 registry, unchanged cockpit rects across both disclosure states, and unchanged
-deterministic state hash and camera pose.
+deterministic state hash and camera pose. Startup evidence must also load the
+main scene without first refreshing generated editor/script-class metadata and
+must reject any application-controller dependency on the ignored global class
+cache.
 
 Because this stage ships visible styles, structural evidence is not sufficient.
 Production real-window review records every shipped style across Live 2D, 3D,
