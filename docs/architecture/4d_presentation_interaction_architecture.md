@@ -7,7 +7,43 @@ Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
 Implementation evidence: Stage 54E-2a complete — reviewed green; Stage 54E-2b
 complete — reviewed green; Stage 54E-2c complete — reviewed green; Stage
-54E-2d complete — reviewed green; aggregate Stage 54E-2 complete — reviewed green
+54E-2d complete — reviewed green; aggregate Stage 54E-2 complete — reviewed green;
+2026-08-30 live-presentation regression refinement implemented and locally
+verified
+
+## 0. 2026-08-30 presentation-correctness refinement
+
+The accepted `B -> G_D -> L -> anchor -> V/P` separation remains unchanged.
+The following refinements make its visible consequences explicit:
+
+1. Live active and locked exterior faces are structural geometry. When a style
+   requests an alpha below `1.0`, those faces retain that alpha but use a
+   depth-writing structural render path so camera-angle changes cannot make
+   authoritative faces disappear through transparent-object sorting. Ghost and
+   environmental transparency remain separate, subordinate roles.
+2. Live-4D left-drag follows the same apparent screen convention as Live 3D:
+   physical right/left and up/down input move the rendered volume in the
+   corresponding apparent direction. `camera.invert_y` reverses vertical input
+   only. The adapter accounts for the passive `L` render transform; it does not
+   move this interaction into outer `V/P`.
+3. Normal-gameplay `L` is bounded to `-40..+80` degrees pitch. The positive
+   extension remains strictly short of the semantic-Forward inversion boundary;
+   yaw remains unrestricted and the exact basis `B` remains unchanged.
+4. `AdaptiveLayerLayout` sizes each tile from a stable, geometry-derived
+   envelope for the complete supported `L` range, not from the instantaneous
+   mouse angle and not from an axis-aligned unrotated slice. Anchors therefore
+   do not breathe during manipulation, while representative extreme
+   orientations retain a readable deterministic gutter.
+5. `slice_set.spacing` multiplies the governed envelope stride. It never shrinks
+   cells, changes 2D/3D geometry, or reinterprets the slice sequence as a local
+   axis.
+6. Renderer bounds consumed by Fit include renderer-root stabilization scale
+   and translation. Fit then adds one modest framing margin to already complete
+   required bounds; it does not compound an unscaled collection envelope with
+   an excessive second safety factor.
+7. Fit remains framing-only and idempotent. It may change focus and zoom in
+   `V/P`; it changes no `B`, `L`, anchors, gameplay state, deterministic hash,
+   replay/trace identity, or persisted preference.
 
 ## 1. Purpose and current audit result
 

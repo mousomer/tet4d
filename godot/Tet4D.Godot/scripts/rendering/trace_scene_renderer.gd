@@ -363,7 +363,14 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 
 
 func current_bounds() -> Dictionary:
-	return _last_bounds
+	if not _last_bounds.get("ok", false):
+		return _last_bounds
+	# Basis-envelope stabilization is a real renderer-root transform. Camera
+	# fitting must consume the render-effective bounds, not the larger unscaled
+	# source AABB, or non-identity presentations are fitted twice and look tiny.
+	var minimum: Vector3 = _last_bounds.get("min", Vector3.ZERO) * scale + position
+	var maximum: Vector3 = _last_bounds.get("max", Vector3.ZERO) * scale + position
+	return {"ok": true, "min": minimum, "max": maximum}
 
 
 func _update_live_4d_fit_envelope(trace_type: String) -> void:

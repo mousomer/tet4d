@@ -33,8 +33,9 @@ func configure(board_shape: Array, basis = null, spacing_scale: float = 1.0) -> 
 	_local_geometry.configure(_visible_board_shape, axis_mapping)
 	var width: float = _local_geometry.local_extent.x if _local_geometry.is_configured() else 4.0
 	var height: float = _local_geometry.local_extent.y if _local_geometry.is_configured() else 4.0
-	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale)
-	slice_stride = width + layer_layout.horizontal_gap
+	var depth: float = _local_geometry.local_extent.z if _local_geometry.is_configured() else 4.0
+	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale, depth)
+	slice_stride = layer_layout.tile_width + layer_layout.horizontal_gap
 
 
 func unoriented_world_position(coordinates: Array, dimension: int) -> Vector3:

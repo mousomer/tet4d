@@ -585,8 +585,8 @@ func run() -> Array:
 			failures.append("Live 4D preset orientation must leave bounds and fit reference coherent")
 		if app._live_bridge.live_4d_snapshot_json() != preset_native_snapshot or str(app._live_bridge.live_4d_state_hash()) != preset_hash:
 			failures.append("Live 4D presentation presets must not mutate canonical gameplay state")
-		if not app._apply_live_4d_view_action(CameraPresetScript.TOP) or not is_equal_approx(app._live_4d_local_orientation.local_pitch, SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD):
-			failures.append("Live 4D Top preset pitch should reach the admitted shared-L boundary")
+		if not app._apply_live_4d_view_action(CameraPresetScript.TOP) or not is_equal_approx(app._live_4d_local_orientation.local_pitch, float(CameraPresetScript.definition(CameraPresetScript.TOP).get("pitch", 0.0))):
+			failures.append("Live 4D Top preset should retain its established +60-degree shared-L action inside the expanded range")
 		if not is_equal_approx(float(app._camera_rig.presentation_snapshot().get("zoom_multiplier", 0.0)), 1.0):
 			failures.append("Live 4D view action should restore fitted framing without action-owned zoom")
 		app._set_live_4d_local_orientation(0.0, 0.0)
@@ -645,7 +645,7 @@ func run() -> Array:
 		endgame_motion.position = viewport_center + Vector2(10.0, 0.0)
 		endgame_motion.relative = Vector2(10.0, 0.0)
 		app._input(endgame_motion)
-		if app._live_4d_local_orientation.local_yaw >= endgame_local_yaw_before:
+		if app._live_4d_local_orientation.local_yaw <= endgame_local_yaw_before:
 			failures.append("Live 4D left drag should continue to orient shared L after game over")
 		if not is_equal_approx(app._camera_rig._target_yaw, endgame_outer_yaw_before):
 			failures.append("Live 4D post-game left drag must not rotate outer framing")

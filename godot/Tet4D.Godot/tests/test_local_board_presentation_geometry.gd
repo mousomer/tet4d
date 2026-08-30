@@ -2,6 +2,7 @@ extends RefCounted
 
 const LocalBoardPresentationGeometryScript = preload("res://scripts/presentation/local_board_presentation_geometry.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 const TraceCoordinateMapperScript = preload("res://scripts/rendering/trace_coordinate_mapper.gd")
 
 
@@ -176,10 +177,11 @@ func _test_layout_consumes_canonical_extent(failures: Array) -> void:
 	mapper.configure([4, 7, 3, 2], SliceBasis4DScript.identity())
 	var geometry = mapper.local_geometry()
 	_assert_vector(failures, geometry.local_extent, Vector3(8.0, 14.0, 6.0), "test-only canonical extent perturbation")
-	if absf(mapper.layer_layout.tile_width - 8.0) > 0.001 or absf(mapper.layer_layout.tile_height - 14.0) > 0.001:
-		failures.append("adaptive layout must consume canonical local X/Y extent rather than semantic cell counts")
-	if absf(mapper.slice_stride - (geometry.local_extent.x + mapper.layer_layout.horizontal_gap)) > 0.001:
-		failures.append("slice stride must derive from canonical local width plus adaptive gap")
+	var expected_envelope := SliceLocalOrientationScript.normal_gameplay_extent_envelope(geometry.local_extent)
+	if absf(mapper.layer_layout.tile_width - expected_envelope.x) > 0.001 or absf(mapper.layer_layout.tile_height - expected_envelope.y) > 0.001:
+		failures.append("adaptive layout must consume the canonical local extent through the supported orientation envelope")
+	if absf(mapper.slice_stride - (expected_envelope.x + mapper.layer_layout.horizontal_gap)) > 0.001:
+		failures.append("slice stride must derive from the governed orientation envelope plus adaptive gap")
 
 
 func _test_signed_basis_orientation(failures: Array) -> void:

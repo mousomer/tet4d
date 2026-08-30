@@ -609,14 +609,24 @@ static func _live_3d_face_materials(base: Color, mode: String, active: bool, emi
 	var back := _shade_color(base, back_factor if active else 0.6)
 	var bottom := _shade_color(base, bottom_factor if active else 0.54)
 	return {
-		"base": _apply_opacity(_make_lit_material(base, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"top": _apply_opacity(_make_lit_material(top, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"front": _apply_opacity(_make_lit_material(front, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"right": _apply_opacity(_make_lit_material(right, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"left": _apply_opacity(_make_lit_material(left, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"back": _apply_opacity(_make_lit_material(back, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"bottom": _apply_opacity(_make_lit_material(bottom, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+		"base": _apply_structural_opacity(_make_lit_material(base, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+		"top": _apply_structural_opacity(_make_lit_material(top, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+		"front": _apply_structural_opacity(_make_lit_material(front, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+		"right": _apply_structural_opacity(_make_lit_material(right, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+		"left": _apply_structural_opacity(_make_lit_material(left, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+		"back": _apply_structural_opacity(_make_lit_material(back, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+		"bottom": _apply_structural_opacity(_make_lit_material(bottom, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
 	}
+
+
+static func _apply_structural_opacity(material: StandardMaterial3D, opacity: float, setting_id: String) -> StandardMaterial3D:
+	material = _apply_opacity(material, opacity, setting_id)
+	if material.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA:
+		# Live exterior cells are six separate face meshes. Keep requested alpha,
+		# but write depth so their structural faces cannot disappear through
+		# ordinary transparent-pass ordering as the camera crosses an edge.
+		material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	return material
 
 
 static func _apply_opacity(material: StandardMaterial3D, opacity: float, setting_id: String = "settled_cells.opacity") -> StandardMaterial3D:

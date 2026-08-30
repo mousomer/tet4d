@@ -21,10 +21,8 @@ func run() -> Array:
 	var failures: Array = []
 	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3:
 		failures.append("live entry fit margins should preserve visible breathing room around the board")
-	if CameraRigScript.LIVE_4D_FIT_MARGIN < 1.2:
-		failures.append("live 4D entry fit must preserve the bounded ten-percent projected clearance")
-	if CameraRigScript.LIVE_4D_FIT_MARGIN >= 1.4:
-		failures.append("live 4D entry fit should keep the W-slice matrix close enough to inspect")
+	if CameraRigScript.LIVE_4D_FIT_MARGIN < 1.04 or CameraRigScript.LIVE_4D_FIT_MARGIN > 1.10:
+		failures.append("live 4D entry fit must add only modest clearance beyond required padded bounds")
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return ["camera rig test requires SceneTree"]

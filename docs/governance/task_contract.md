@@ -1,4 +1,199 @@
-# Task Contract — Stage 54F-5 Standalone Design Laboratory
+# Task Contract — Live Rendering and 4D Presentation Correctness
+
+Status: COMPLETE — LOCALLY VERIFIED; NO PUSH OR PR
+
+Starting branch: `codex/built-in-style-catalog`
+
+Starting SHA: `47df7cef84db32a2aa7dff383a84cdb968b53223`
+
+Starting remote divergence after `git fetch origin`: `0 ahead / 0 behind`
+
+Pre-change baseline:
+`GODOT_BIN=/private/tmp/tet4d-godot-4.7.2.SRc0YK/Godot.app/Contents/MacOS/Godot ./scripts/verify_godot_4_7.sh`
+passed on exact Godot `4.7.2.stable.official.ed1daf0bf`. The run retained the
+known intentional failure-injection settings/native-input diagnostics, temporary
+ObjectDB snapshot warning, and exit-time test resource/RID leak diagnostics;
+there was no unexplained `SCRIPT ERROR`.
+
+## Objective and classification
+
+Correct four related Godot presentation regressions found in the shipped live
+viewer: unsafe alpha-sorted structural cell faces, reversed apparent Live-4D
+slice-orientation drag, slice crowding across the supported local-orientation
+range, and over-conservative Live-4D Fit View framing. The change must preserve
+the accepted separation of exact basis `B`, slice-local orientation `L`,
+anchor-only slice-set layout, and outer framing/projection `V/P`.
+
+- Primary task type: `godot_product_shell`.
+- Workflow modifier: `cross_layer`, because the presentation material provider,
+  input adapter, local-orientation owner, adaptive layout owner, renderer fit
+  bounds, application framing seam, focused tests, and governing documents must
+  enforce one coherent visible contract.
+- Priority: four P1 presentation/camera correctness items. Locked authoritative
+  state becomes unreadable; direct manipulation is directionally reversed;
+  supported inspection crowds adjacent slices; and Fit View wastes substantial
+  gameplay viewport area.
+- Affected layers: Godot presentation materials and structural live-cell scene
+  composition; Live-4D input adaptation; shared slice-local orientation;
+  adaptive slice-anchor layout; renderer bounds and camera framing; focused
+  Godot tests; architecture, backlog, acceptance, and current-state records.
+- Required evidence: `documentation`, `godot`, `integration`, and
+  `human_visual`. Deterministic-isolation assertions are required inside the
+  Godot evidence because the change must leave gameplay state, basis identity,
+  replay/trace identity, and hashes unchanged.
+- Full repository gate: required because four P1 fixes cross shared rendering,
+  input, layout, and framing infrastructure and extend accepted presentation
+  contracts.
+- Authority effect: none transferred or newly established. Godot's existing
+  presentation/input authorities are refined; native gameplay authority and
+  inherited deterministic semantics remain untouched.
+
+## Authority comparison
+
+The proposal extends, without replacing, the accepted contracts in
+`docs/architecture/4d_presentation_interaction_architecture.md`,
+`docs/architecture/canonical_local_board_presentation_geometry.md`,
+`docs/architecture/configurable_plain_boards_and_4d_layout.md`,
+`docs/architecture/camera_gui_preset_semantics.md`, and
+`docs/plans/gameboard_visual_language_design.md`.
+
+Those authorities already require `B -> G_D -> L -> anchor -> V/P`, shared
+slice-local `L`, anchor-only deterministic layout, asymmetric pitch safety,
+framing-only Fit, and structural cell legibility. The intended change corrects
+provider implementations and strengthens their executable evidence. It does
+not reopen the architecture or permit the slice sequence to become a local
+slice axis.
+
+## Scope matrix
+
+| Layer | Provider change | Consumer / conformance evidence |
+| --- | --- | --- |
+| Structural materials | Give translucent active/locked exterior faces a depth-stable render path while keeping requested alpha. | Material-property and scene-structure tests distinguish active, locked, and Ghost roles; real-window plain/Tron representative angles verify faces remain readable. |
+| Input adaptation | Map physical Live-4D left-drag deltas to the passive render transform's correct apparent screen direction; invert-Y gates vertical input only. | Probe-point projection tests compare right/left/up/down drag and invert-Y behavior in screen space. |
+| Local orientation | Expand only the positive normal-gameplay pitch limit within the existing all-yaw semantic-forward proof. | Boundary/all-yaw tests cover minimum, zero, old maximum, new maximum, relative-control coherence, and unchanged exact `BasisState`. |
+| Slice layout | Derive stable tile envelopes and gutters from the supported rotated local-board extent, with `slice_set.spacing` remaining a multiplier. | Representative shapes/layer counts prove deterministic anchors, governed extreme-orientation clearance, predictable spacing scale, and unchanged 2D/3D paths. |
+| Fit/framing | Remove the actual duplicate or excessive fit conservatism and use the complete required oriented presentation bounds once. | Multi-aspect occupancy/containment tests prove modest clearance, 80-90% target utilization where possible, idempotence, and framing-only state isolation. |
+| Governance | Record structural readability, drag, pitch, layout-envelope, and Fit invariants in the owning architecture and execution records. | Documentation review, project-contract checks, diff/sanitation checks, and full repository gate. |
+
+## Acceptance criteria
+
+1. `tron_grid_flow` retains `settled_cells.opacity = 0.92`; at least one other
+   translucent style remains visibly translucent. Structural active and locked
+   exterior faces use the approved depth-stable path and remain spatially
+   readable at supported camera angles. Ghost/environment transparency remains
+   a distinct subordinate role.
+2. At canonical Live-4D orientation, equal physical horizontal and vertical
+   drags produce the same apparent screen-direction convention as Live 3D.
+   Right/left and up/down are inverses. `camera.invert_y` reverses only vertical
+   behavior, never horizontal behavior. Keyboard/nudge orientation remains
+   coherent with the displayed result.
+3. Normal-gameplay pitch retains the existing proven negative limit and gains
+   substantially more positive inspection range, targeted at `+80 degrees`,
+   without semantic-Forward inversion, relative-control or command-label drift,
+   or mutation of exact 4D basis/gameplay state.
+4. For representative board shapes and layer counts, adjacent slice-local board
+   envelopes retain a clearly readable deterministic gutter across the complete
+   supported orientation range. `slice_set.spacing` predictably scales that
+   governed baseline. Two- and three-dimensional layout/geometry remain
+   unchanged, cells are not shrunk, and anchors do not breathe per mouse pixel.
+5. Live-4D Fit View produces the largest safe view of required board boundaries,
+   slices, W labels, and legitimate above-board active spawn positions with a
+   modest margin. Actual slice-collection utilization targets 80-90% of the
+   limiting viewport dimension on representative desktop aspects, without
+   brittle pixel coupling or clipping at supported orientation extremes.
+6. Fit is deterministic, repeated Fit is idempotent, and Fit changes no exact
+   `BasisState`, slice-local orientation, layout semantics, gameplay state,
+   snapshot/hash/trace identity, or persisted preference.
+7. Focused tests cover the material contract, screen-space drag, asymmetric
+   pitch proof, orientation-envelope layout, and occupancy-based Fit behavior.
+   The pinned aggregate Godot gate, keybinding/contract checks, full repository
+   gate, and manual visual matrix pass with no unexplained `SCRIPT ERROR`.
+8. Owning architecture, backlog/task record, acceptance evidence, and
+   `CURRENT_STATE.md` are reconciled only after implementation and verification.
+   One focused local commit is created; nothing is pushed and no PR is opened.
+
+## Allowed paths
+
+- `godot/Tet4D.Godot/scripts/presentation/`
+- `godot/Tet4D.Godot/scripts/rendering/`
+- the bounded Live input seam in
+  `godot/Tet4D.Godot/scripts/app/trace_replay_app.gd`
+- the bounded structural-material seam in
+  `godot/Tet4D.Godot/scripts/ui/replay_visuals.gd`
+- focused files under `godot/Tet4D.Godot/tests/`
+- existing presentation data only where required to preserve/verify values
+- owning architecture, plan/acceptance, backlog, current-state, and governance
+  documents
+
+## Forbidden changes and explicit non-goals
+
+- No gameplay-rule, native-state, topology, legality, collision, scoring,
+  queue/RNG, Hold/NEXT/Ghost truth, replay/trace schema, hash, or deterministic
+  identity changes.
+- No opacity-1.0 preset workaround and no global promotion of Ghost or
+  environmental transparency onto the structural-cell render path.
+- No conflation of exact `B`, slice-local `L`, layout anchors, or outer `V/P`;
+  no routing Live-4D drag through ordinary outer `CameraRig.orbit()`.
+- No slice-sequence interpretation as local slice X/Z, no continuously moving
+  anchors, no global 2D/3D spacing increase, no cell shrink, and no whole-
+  collection shrink disguised as spacing.
+- No blind symmetric pitch expansion outside the proven asymmetric interval.
+- No unproven constant-only Fit tweak, no brittle viewport pixel oracle, no
+  destructive Git operation, no push, and no PR.
+
+## Planned verification
+
+- Focused Godot material, renderer, drag/input, slice-orientation,
+  control-frame, adaptive-layout, camera-rig, shell, profile/catalog, visual-
+  grammar, restoration, and cockpit tests.
+- Exact pinned aggregate command:
+  `GODOT_BIN=/private/tmp/tet4d-godot-4.7.2.SRc0YK/Godot.app/Contents/MacOS/Godot ./scripts/verify_godot_4_7.sh`.
+- `./scripts/check_keybinding_contract.sh`, project-contract/generated-doc and
+  sanitation checks selected by the final diff, `git diff --check`, and
+  `CODEX_MODE=1 ./scripts/verify.sh`.
+- Real-window deterministic locked-cell review in Instrument/plain and Tron Grid
+  Flow, with the requested Live-3D angle sweep and Live-4D yaw/pitch/Fit/reset/
+  restart matrix. Capture before/after evidence where the existing evaluation
+  workflow permits it.
+
+## Completion evidence
+
+- The focused asynchronous regression suite passes on exact Godot
+  `4.7.2.stable.official.ed1daf0bf`. It asserts structural face alpha/depth
+  policy (including Tron `0.92` and distinct Ghost behavior), actual
+  `Camera3D` screen projections for both drag axes and invert-Y, the asymmetric
+  pitch/all-yaw proof, stable geometry-derived envelopes and spacing scaling,
+  required-bounds containment, approximately `95%` required-envelope limiting
+  utilization, repeated-Fit idempotence, and unchanged basis/native snapshot
+  and hash identity.
+- The pinned aggregate `verify_godot_4_7.sh` passes all Godot replay tests and
+  59 shared topology-transport parity cases. Its intentional settings/native
+  failure-injection diagnostics and known exit resource/RID diagnostics match
+  the pre-change baseline; there is no unexplained `SCRIPT ERROR`.
+- `check_keybinding_contract.sh` passes 103 tests and 50 subtests. Project
+  contract validation passes 117 required paths. Generated-maintenance,
+  generated-configuration-reference, and `git diff --check` checks pass.
+- `CODEX_MODE=1 ./scripts/verify.sh` passes with `verify: OK`.
+- A real macOS Metal product window on exact Godot 4.7.2 verified a five-piece
+  plain Live-3D locked stack, initial and extreme-orientation Live-4D layout,
+  repeated Fit, Reset View, and Restart. A temporary production-scene harness
+  applied Tron Grid Flow to Live 4D, locked four pieces, selected `L` yaw/pitch
+  of `25/+55` degrees, and fitted the result: translucent structural faces
+  remained readable, Ghost remained subordinate, the animated environment
+  stayed behind the play volume, and all four slice gutters remained clear.
+  The temporary harness and editor-generated UID/import artifacts were removed.
+- The local Computer Use bridge could deliver keyboard actions but not native
+  mouse drag/click events to this Godot build. Therefore manual drag motion is
+  not claimed; the direction acceptance is instead covered by the production
+  scene's real `Camera3D` screen-projection test for right/left/up/down and
+  invert-Y behavior.
+- Before/after review captures remain local review artifacts outside the
+  repository. No opacity preset was changed, no gameplay/native/schema
+  authority moved, nothing was pushed, and no PR was opened.
+
+---
+
+# Previous Task Contract — Stage 54F-5 Standalone Design Laboratory
 
 Status: CORE AND WINDOWS COMPLETE / ANDROID AND IPADOS CONFIGURATION COMPLETE, ARTIFACTS BLOCKED ON HOST TOOLCHAIN / HUMAN DESIGN ACCEPTANCE PENDING ON ALL THREE PLATFORMS
 

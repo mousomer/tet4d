@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name AdaptiveLayerLayout
 
+const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
+
 const MIN_SLICE_GUTTER := 3.0
 const MAX_SLICE_GUTTER := 5.0
 const MIN_VERTICAL_SLICE_GUTTER := 4.0
@@ -23,11 +25,15 @@ func configure(
 	local_width: float,
 	local_height: float,
 	viewport_aspect: float = 1.7777778,
-	spacing_scale: float = 1.0
+	spacing_scale: float = 1.0,
+	local_depth: float = 1.0
 ) -> void:
 	layer_count = maxi(count, 1)
-	tile_width = maxf(local_width, 1.0)
-	tile_height = maxf(local_height, 1.0)
+	var supported_envelope := SliceLocalOrientationScript.normal_gameplay_extent_envelope(
+		Vector3(maxf(local_width, 1.0), maxf(local_height, 1.0), maxf(local_depth, 1.0))
+	)
+	tile_width = supported_envelope.x
+	tile_height = supported_envelope.y
 	horizontal_gap = clampf(tile_width * HORIZONTAL_GUTTER_RATIO, MIN_SLICE_GUTTER, MAX_SLICE_GUTTER) * spacing_scale
 	vertical_gap = clampf(tile_height * VERTICAL_GUTTER_RATIO, MIN_VERTICAL_SLICE_GUTTER, MAX_VERTICAL_SLICE_GUTTER) * spacing_scale
 	if layer_count <= 3:

@@ -147,11 +147,11 @@ func _check_production_layout() -> Array:
 		failures.append("Live 4D gameplay viewport must retain at least 63%% of live body area, got %.4f in %s / %s" % [viewport_area_share, viewport, body])
 	if body.position.y > 120.0:
 		failures.append("compact live top cockpit must return vertical space to the board")
-	if absf(CameraRigScript.LIVE_4D_FIT_MARGIN - 1.20) > 0.0001:
-		failures.append("Live 4D fit must retain the documented bounds-derived clearance")
+	if absf(CameraRigScript.LIVE_4D_FIT_MARGIN - 1.05) > 0.0001:
+		failures.append("Live 4D fit must retain the documented modest clearance beyond required bounds")
 	var projected_share := _projected_bounds_height_share(app)
-	if projected_share < 0.82 or projected_share > 0.84:
-		failures.append("authoritative Live 4D bounds should occupy about five-sixths of viewport height, got %.4f" % projected_share)
+	if projected_share < 0.94 or projected_share > 0.96:
+		failures.append("authoritative Live 4D bounds should use about 95 percent of the limiting viewport dimension, got %.4f" % projected_share)
 
 	var deterministic_before := str(app._live_bridge.live_4d_state_hash())
 	hud._open_presentation_designer()

@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-08-30
-Worktree expectation: clean after the Stage 54F-5 Design Laboratory commit series
-and its cross-platform enlargement
+Worktree expectation: clean after the focused live-rendering and Live-4D
+presentation-regression repair commit
 
 ## Purpose
 
@@ -13,6 +13,25 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Completed bounded live-presentation regression repair on
+  `codex/built-in-style-catalog`, starting from
+  `47df7cef84db32a2aa7dff383a84cdb968b53223`. Translucent active/locked
+  exterior faces now retain requested alpha on a depth-writing structural path;
+  Ghost and environment transparency remain distinct. Live-4D left-drag now
+  accounts for passive `L` so its apparent screen convention matches Live 3D,
+  with invert-Y affecting only vertical input. Normal-gameplay pitch is
+  `-40..+80` degrees inside the proven all-yaw safe interval. Stable
+  shape-derived slice envelopes reserve full supported `L` clearance, spacing
+  remains a multiplier, renderer bounds include root stabilization, and Fit
+  uses one `1.05` framing margin. Focused regression, pinned Godot 4.7.2,
+  keybinding, governance/generated-doc, full repository, and plain/Tron real-
+  window evidence pass. Manual mouse drag was unavailable through the local UI
+  automation bridge; an actual production `Camera3D` projection test covers the
+  four drag directions and invert-Y. No basis/gameplay/native hash/trace/schema,
+  2D/3D geometry, or authority change occurred. Nothing was pushed and no PR
+  was opened. Detailed evidence is in `docs/governance/task_contract.md` and
+  `docs/governance/completion_report.md`.
 
 - Stage 54F-5 was enlarged on 2026-08-30 from one distribution target to three:
   Windows, Android tablet, and iPadOS, both tablets for landscape use with a

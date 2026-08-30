@@ -52,6 +52,22 @@ Future implementation starts as a new programme or stage rather than extending
 54G; topology, Explorer, challenge/campaign, simulation, broader distribution,
 and post-release polish remain outside this completed gate.
 
+Completed bounded regression repair (2026-08-30): live active/locked exterior
+faces now retain style alpha on a depth-stable structural path; Live-4D
+left-drag matches the apparent Live-3D screen-direction convention with
+invert-Y limited to vertical input; normal-gameplay pitch expands
+asymmetrically from `-40` to `+80` degrees; slice anchors use one stable
+geometry-derived envelope over that full orientation range; and Fit consumes
+the renderer's effective scaled bounds with one modest framing margin. Focused
+screen-projection, material, envelope, spacing, pitch, fit, idempotence, and
+deterministic-isolation tests plus the pinned Godot 4.7.2 aggregate gate are
+green. This repair changes presentation providers only: exact basis, gameplay,
+native hashes, trace/replay identity, 2D/3D geometry, Ghost hierarchy, and
+persistence remain unchanged. The governing refinement is recorded in
+`docs/architecture/4d_presentation_interaction_architecture.md`; final
+repository and real-window evidence is recorded in the current task contract
+and completion report.
+
 Completed bounded follow-on: the Presentation Parameter Contract is locally
 accepted on `codex/presentation-parameter-contract`. It reuses the existing
 registry, store, palettes, renderer, and 54E presentation spaces; it does not

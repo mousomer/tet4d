@@ -5,12 +5,12 @@ class_name SliceLocalOrientation
 # The actual fitted-view semantic-Forward proof includes the residual yaw
 # between continuous L.local_yaw and its nearest-quarter resolver frame. Its
 # strict all-yaw pitch interval is approximately (-42.480, +86.240) degrees.
-# The asymmetric product range retains Top at +60 degrees and selects a round
-# -40-degree lower limit, leaving 2.480 degrees (and positive normalized away
-# depth) before the worst-case inversion boundary. Explorer/free-inspection
+# The asymmetric product range expands Top to +80 degrees and retains the round
+# -40-degree lower limit, staying strictly inside the all-yaw safe interval.
+# Explorer/free-inspection
 # code may continue to use the unconstrained set_angles() primitive.
 const NORMAL_GAMEPLAY_MIN_PITCH_RAD := -PI * 2.0 / 9.0  # -40 degrees.
-const NORMAL_GAMEPLAY_MAX_PITCH_RAD := PI / 3.0  # +60 degrees.
+const NORMAL_GAMEPLAY_MAX_PITCH_RAD := PI * 4.0 / 9.0  # +80 degrees.
 
 # Shared, presentation-only orientation for the centred contents of every 4D
 # slice. This state is deliberately independent of exact SliceBasis4D state,
@@ -64,6 +64,40 @@ func passive_render_basis() -> Basis:
 
 func orient_local_point(centered_local_point: Vector3) -> Vector3:
 	return passive_render_basis() * centered_local_point
+
+
+static func normal_gameplay_extent_envelope(local_extent: Vector3) -> Vector3:
+	# Yaw spans the full circle, so either local horizontal axis may contribute
+	# to displayed X or Z. Pitch then mixes that horizontal diagonal with Y.
+	# This conservative, shape-derived envelope is stable for a board shape and
+	# never makes anchors breathe while the player drags.
+	var extent := local_extent.abs()
+	var horizontal_diagonal := Vector2(extent.x, extent.z).length()
+	var height := _maximum_mixed_extent(
+		extent.y,
+		horizontal_diagonal,
+		NORMAL_GAMEPLAY_MIN_PITCH_RAD,
+		NORMAL_GAMEPLAY_MAX_PITCH_RAD
+	)
+	var depth := _maximum_mixed_extent(
+		horizontal_diagonal,
+		extent.y,
+		NORMAL_GAMEPLAY_MIN_PITCH_RAD,
+		NORMAL_GAMEPLAY_MAX_PITCH_RAD
+	)
+	return Vector3(horizontal_diagonal, height, depth)
+
+
+static func _maximum_mixed_extent(cosine_extent: float, sine_extent: float, minimum_pitch: float, maximum_pitch: float) -> float:
+	var candidates := [minimum_pitch, 0.0, maximum_pitch]
+	var optimum := atan2(sine_extent, cosine_extent)
+	for signed_optimum in [-optimum, optimum]:
+		if signed_optimum >= minimum_pitch and signed_optimum <= maximum_pitch:
+			candidates.append(signed_optimum)
+	var maximum := 0.0
+	for pitch in candidates:
+		maximum = maxf(maximum, absf(cos(pitch)) * cosine_extent + absf(sin(pitch)) * sine_extent)
+	return maximum
 
 
 func snapshot() -> Dictionary:

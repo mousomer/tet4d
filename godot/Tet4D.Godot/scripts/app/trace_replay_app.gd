@@ -562,7 +562,10 @@ func _apply_live_4d_orientation_drag(delta: Vector2) -> void:
 		sensitivity_factor = float(preferences.get("sensitivity_factor", 1.0))
 		invert_y = bool(preferences.get("invert_y", false))
 		orbit_sensitivity = _camera_rig.orbit_sensitivity
-	var yaw_delta := -delta.x * orbit_sensitivity * sensitivity_factor
+	# L is a passive object-space render transform. Its horizontal sign is the
+	# inverse of outer CameraRig orbit so an identical physical drag has the
+	# same apparent screen-space direction in Live 3D and Live 4D.
+	var yaw_delta := delta.x * orbit_sensitivity * sensitivity_factor
 	var vertical_direction := 1.0 if invert_y else -1.0
 	var pitch_delta := delta.y * orbit_sensitivity * sensitivity_factor * vertical_direction
 	_set_live_4d_local_orientation(

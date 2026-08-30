@@ -33,6 +33,7 @@ func _run_all() -> void:
 		"res://tests/test_setup_field_taxonomy.gd",
 		"res://tests/test_setup_progressive_disclosure.gd",
 		"res://tests/test_adaptive_4d_layer_layout.gd",
+		"res://tests/test_live_presentation_regressions.gd",
 		"res://tests/test_slice_basis_4d.gd",
 		"res://tests/test_slice_local_orientation.gd",
 		"res://tests/test_control_frame_mapping.gd",
@@ -70,6 +71,7 @@ func _run_all() -> void:
 		var test_case = load(script_path).new()
 		if script_path in [
 			"res://tests/test_camera_rig.gd",
+			"res://tests/test_live_presentation_regressions.gd",
 			"res://tests/test_design_laboratory_runtime.gd",
 			"res://tests/test_presentation_designer.gd",
 			"res://tests/test_presentation_profile_library.gd",

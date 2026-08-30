@@ -1,4 +1,81 @@
-# Completion Report — Stage 54E-2d
+# Completion Report — Live Rendering and 4D Presentation Regressions
+
+Last updated: 2026-08-30
+
+## Summary
+
+COMPLETE / LOCALLY VERIFIED. The live shell now keeps translucent structural
+cell faces readable, maps Live-4D manipulation to the accepted apparent screen
+convention, reserves stable slice clearance over the full supported local
+orientation, exposes the proven `-40..+80` degree pitch range, and fits the
+render-effective collection rather than an unscaled pre-stabilization AABB.
+
+The change is presentation-only. Exact basis `B`, native gameplay, deterministic
+hashes/snapshots, trace/replay identity, persistence, 2D/3D geometry, Ghost
+hierarchy, and authority boundaries are unchanged. Nothing was pushed and no PR
+was opened.
+
+## Files Changed
+
+- `scripts/ui/replay_visuals.gd`: depth-stable translucent structural faces.
+- `scripts/app/trace_replay_app.gd`: corrected passive-`L` horizontal drag sign.
+- `scripts/presentation/`: expanded pitch and stable supported-orientation
+  envelope/stride.
+- `scripts/rendering/`: render-effective bounds and one modest Live-4D Fit
+  margin.
+- `tests/`: focused material, screen-projection, envelope, pitch, Fit,
+  idempotence, and isolation regressions plus reconciled existing expectations.
+- Architecture, visual-language, backlog, task-contract, current-state, and
+  completion records.
+
+## Verification
+
+Passed:
+
+```bash
+GODOT_BIN=<exact-4.7.2> ./scripts/verify_godot_4_7.sh
+./scripts/check_keybinding_contract.sh
+.venv/bin/python tools/governance/validate_project_contracts.py
+.venv/bin/python tools/governance/generate_maintenance_docs.py --check
+.venv/bin/python tools/governance/generate_configuration_reference.py --check
+git diff --check
+CODEX_MODE=1 GODOT_BIN=<exact-4.7.2> ./scripts/verify.sh
+```
+
+The pinned Godot gate passed all replay tests and 59 shared topology-transport
+cases. The keybinding gate passed 103 tests and 50 subtests; project validation
+covered 117 required paths. The repository-wide result was `verify: OK`.
+Known intentional negative-path and shutdown diagnostics matched baseline, with
+no unexplained `SCRIPT ERROR`.
+
+Real-window macOS Metal review covered a plain Live-3D five-piece locked stack;
+initial and extreme-angle Live-4D spacing; repeated Fit; Reset View; Restart;
+and a Tron Live-4D production scene with four locked pieces at `25/+55` degree
+local orientation. Faces, Ghost hierarchy, slice gutters, attachments, and
+framing remained readable and safe. The local UI automation bridge did not
+deliver native mouse drags, so no manual drag claim is made; production
+`Camera3D` screen-projection assertions cover right/left/up/down and invert-Y.
+
+## Authority, Risk, and Unverified Areas
+
+- Authority effect: none. Existing Godot presentation/input owners are refined.
+- Remaining risk is renderer/backend-specific translucent depth behavior on
+  non-Metal platforms; the material contract is deterministic, but this task did
+  not perform Direct3D/Vulkan mobile visual acceptance.
+- Manual mouse-drag input delivery was not available through local UI
+  automation. The application mapping and resulting screen motion are exercised
+  in the production scene by automated projection evidence.
+- No packaging, device, remote CI, push, or PR claim is included.
+
+## Starting State
+
+Branch: `codex/built-in-style-catalog`.
+Starting SHA: `47df7cef84db32a2aa7dff383a84cdb968b53223`.
+Starting divergence after fetch: `0 ahead / 0 behind`.
+
+---
+
+# Previous Completion Report — Stage 54E-2d
 
 Last updated: 2026-08-10
 
