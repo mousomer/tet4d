@@ -139,6 +139,9 @@ evidence does not claim Windows execution; clean-machine Windows and human
 comparative design acceptance remain the explicit follow-ups in
 `docs/plans/design_evaluation_laboratory_acceptance.md`. Stage 54F-6 default
 selection/polish remains planned and must consume reviewed human evidence.
+The exact locally validated ZIP is now a tracked test candidate under
+`release-candidates/windows/`, unblocking retrieval on a separate Windows
+machine while leaving direct launch and human acceptance explicitly pending.
 
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical

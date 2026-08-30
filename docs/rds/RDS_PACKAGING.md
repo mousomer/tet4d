@@ -49,6 +49,14 @@ results. The Windows CI job performs the native Windows build, focused
 laboratory suite, package validation, and a bounded launch of the packaged
 executable when the workflow is run.
 
+The exact locally validated ZIP selected for clean-machine evaluation is also
+checked into `release-candidates/windows/`. This is a narrow distribution
+exception for the nominated test candidate: reproducible build outputs remain
+ignored under `artifacts/godot/`, and a new candidate must replace the tracked
+ZIP, update its checksum record, and pass the repository validator before it is
+published. Tracking a candidate makes it retrievable through Git; it does not
+promote Windows runtime acceptance.
+
 The same Design Laboratory additionally ships to two tablet targets, both
 intended for landscape use with a physical keyboard rather than as touch-first
 games:
@@ -84,7 +92,8 @@ The current canonical files are:
 6. `scripts/build_godot_tet4d_core.sh`;
 7. `godot/Tet4D.Godot/addons/tet4d_core/tet4d_core.gdextension`;
 8. `.github/workflows/release-packaging.yml`; and
-9. `docs/RELEASE_INSTALLERS.md` and `docs/RELEASE_CHECKLIST.md`.
+9. `release-candidates/windows/README.md`; and
+10. `docs/RELEASE_INSTALLERS.md` and `docs/RELEASE_CHECKLIST.md`.
 
 ## 3. Native release boundary
 
@@ -115,6 +124,8 @@ The current canonical files are:
 5. Linux remains development-configured only. Windows is a packaged
    Design-Laboratory candidate, not a clean-machine runtime-accepted target
    until the recorded Windows acceptance is complete.
+6. Only a validator-approved, checksum-recorded Windows ZIP may be copied from
+   ignored build output into `release-candidates/windows/` for remote testing.
 
 ## 4a. Tablet design-laboratory boundary
 

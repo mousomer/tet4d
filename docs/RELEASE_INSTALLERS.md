@@ -59,12 +59,25 @@ packaging/godot/build_windows.sh
 
 The script cross-builds the release GDExtension, exports from a disposable
 project copy, and validates the exact portable payload, PE binaries, version,
-required laboratory resources, exclusions, and path sanitation. Its ignored
-output is:
+required laboratory resources, exclusions, and path sanitation. Its generated
+output remains ignored:
 
 ```text
 artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip
 ```
+
+The exact validator-approved candidate nominated for clean-machine testing is
+tracked separately so another machine can retrieve it with an ordinary clone
+or pull of `codex/built-in-style-catalog`:
+
+```text
+release-candidates/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip
+SHA-256 04941cb3f6d1070521f7a4d2d306fee5478908e3cf5e51d782c96a7e973913b9
+```
+
+See `release-candidates/windows/README.md` for retrieval and verification.
+Publishing this candidate through Git does not establish clean-machine Windows
+runtime acceptance.
 
 Extract that ZIP to any user-writable directory and launch
 `Tet4D Designer.exe`. This is an equivalent portable distributable, not an

@@ -72,7 +72,7 @@ export templates were verified against the SHA-512 recorded in
 
 | Artifact | SHA-256 |
 | --- | --- |
-| Windows exact generated ZIP (timestamp-bearing) — `artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` | `04941cb3f6d1070521f7a4d2d306fee5478908e3cf5e51d782c96a7e973913b9` |
+| Windows exact tracked test candidate (copied from the timestamp-bearing generated ZIP) — `release-candidates/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` | `04941cb3f6d1070521f7a4d2d306fee5478908e3cf5e51d782c96a7e973913b9` |
 | Android configuration resource pack — `artifacts/godot/android/Tet4D-Designer-0.7.5-android-arm64.pck` | `a17dedd6689d931175dc7de633cbea60d498fd0b2f8a8c1418692bb0c0fa7b00` |
 | iPad configuration PCK (reduced 1,298-byte descriptor) — `artifacts/godot/ipad/configuration-export/Tet4DDesigner.pck` | `6e0f54e4f44e3c66a77e273973f9519646a420078f497a329521d9c91a25b3f8` |
 | iPad configuration Xcode project — `artifacts/godot/ipad/configuration-export/Tet4DDesigner.xcodeproj/project.pbxproj` | `39198a7c473cbcf053e833af296d7ff879b26ed2b075b78a549b3bef30667858` |
@@ -92,7 +92,8 @@ configuration-only evidence; it is not silently replaced or promoted to the
 equipped build produces the complete descriptor and matching release
 xcframework.
 
-The Windows ZIP checksum identifies the exact valid generated release artifact.
+The Windows ZIP checksum identifies the exact valid generated release artifact
+and its byte-identical tracked test-candidate copy.
 Because ZIP timestamps/mtimes are not normalized, it is not a claim that a
 second build is bit-for-bit reproducible; the shared PCK equivalence evidence is
 separate. The configuration Xcode project also contains two inert visionOS
@@ -131,6 +132,11 @@ the extracted directory to uninstall. The portable distribution intentionally
 does not register a Start Menu entry, desktop shortcut, or Windows uninstall
 record. Mutable profiles, evaluations, captures, and exports live under Godot's
 per-user application-data root, never beside the executable.
+
+For cross-machine testing, clone or pull `codex/built-in-style-catalog` and use
+`release-candidates/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip`. Verify the
+SHA-256 above before extracting it. The generated `artifacts/godot/` tree is not
+required on the test machine.
 
 Direct clean-machine Windows execution is not executable on the macOS
 implementation host. Do not describe that step as passed until a Windows
