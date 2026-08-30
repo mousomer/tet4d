@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-30
-Worktree expectation: clean after the focused live-rendering and Live-4D
-presentation-regression repair commit
+Last updated: 2026-08-31
+Worktree expectation: active governed integration work on
+`codex/built-in-style-catalog`; do not treat the worktree as a clean handoff
 
 ## Purpose
 
@@ -13,6 +13,29 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Draft integration PR #75 targets `master` from
+  `codex/built-in-style-catalog` and is explicitly NOT MERGE READY. Its
+  diagnostic matrix ran on published pre-fix SHA `47df7cef`: documentation,
+  Python 3.11-3.14, native, deterministic/parity, packaging contracts, macOS
+  platform packaging, and release acceptance passed. Godot/native parity
+  failed because the existing animation-isolation test left live gravity
+  running across awaited frames; cross-layer and required gates correctly
+  propagated that failure. Pausing native Live 4D before the presentation-only
+  assertion removes the CI-speed race, and the full Godot replay suite passes
+  locally.
+
+- The merge-blocking Design Laboratory A/B correction is implemented locally.
+  The catalogue exposes `Apply Live`, `Set as A`, and `Set as B`; the session
+  stores frozen A/B slots separately from `shown_arm`; assignment never follows
+  the visible arm; blind labels retain true provenance; candidate edit/save is
+  unassigned; reassignment rotates the evidence identity so captures from
+  different pairings cannot mix. Focused state and real production-panel
+  runtime tests pass. Remaining sequence: real-window checklist, commit,
+  rewrite the unmerged integration history to remove the 39 MB Windows ZIP,
+  publish the exact candidate, require fresh green PR CI, merge, classify/prune
+  branches, then prove existing Python packaging on Windows/macOS/Linux before
+  any unified-release workflow change.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

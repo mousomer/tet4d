@@ -36,9 +36,11 @@ var _build_identity: Callable
 var _edit_candidate: Callable
 
 var _scenario_select: OptionButton
-var _preset_a_select: OptionButton
-var _preset_b_select: OptionButton
+var _catalog_select: OptionButton
+var _pending_arms: Dictionary = {}
 var _blind_check: CheckBox
+var _arm_a_assignment: Label
+var _arm_b_assignment: Label
 var _arm_a_button: Button
 var _arm_b_button: Button
 var _toggle_button: Button
@@ -141,30 +143,45 @@ func _build_ui() -> void:
 	_scenario_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form.add_child(_scenario_select)
 	form.add_child(_section_label("PRESET CATALOG"))
-	_preset_a_select = OptionButton.new()
-	_preset_b_select = OptionButton.new()
-	form.add_child(_labeled_control("A", _preset_a_select))
-	form.add_child(_labeled_control("B", _preset_b_select))
-	_preset_a_select.item_selected.connect(func(_index: int) -> void: _update_preset_detail())
-	_preset_b_select.item_selected.connect(func(_index: int) -> void: _update_preset_detail())
+	_catalog_select = OptionButton.new()
+	_catalog_select.name = "PresetCatalogSelect"
+	form.add_child(_labeled_control("Preset", _catalog_select))
+	_catalog_select.item_selected.connect(func(_index: int) -> void: _update_preset_detail())
 	_preset_detail = Label.new()
 	_preset_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_preset_detail.theme_type_variation = "SecondaryLabel"
 	form.add_child(_preset_detail)
 	var catalog_actions := HBoxContainer.new()
 	var apply_button := Button.new()
-	apply_button.text = "Apply"
-	apply_button.pressed.connect(_apply_selected_b)
+	apply_button.name = "ApplyLiveButton"
+	apply_button.text = "Apply Live"
+	apply_button.pressed.connect(_apply_selected)
 	catalog_actions.add_child(apply_button)
+	var set_a_button := Button.new()
+	set_a_button.name = "SetArmAButton"
+	set_a_button.text = "Set as A"
+	set_a_button.pressed.connect(_set_selected_arm.bind("A"))
+	catalog_actions.add_child(set_a_button)
+	var set_b_button := Button.new()
+	set_b_button.name = "SetArmBButton"
+	set_b_button.text = "Set as B"
+	set_b_button.pressed.connect(_set_selected_arm.bind("B"))
+	catalog_actions.add_child(set_b_button)
 	var duplicate_button := Button.new()
 	duplicate_button.text = "Duplicate / Edit"
-	duplicate_button.pressed.connect(_duplicate_selected_b)
+	duplicate_button.pressed.connect(_duplicate_selected)
 	catalog_actions.add_child(duplicate_button)
 	form.add_child(catalog_actions)
 	form.add_child(_section_label("A/B COMPARISON"))
+	_arm_a_assignment = Label.new()
+	_arm_a_assignment.name = "ArmAAssignmentLabel"
+	_arm_b_assignment = Label.new()
+	_arm_b_assignment.name = "ArmBAssignmentLabel"
+	form.add_child(_arm_a_assignment)
+	form.add_child(_arm_b_assignment)
 	_blind_check = CheckBox.new()
 	_blind_check.text = "Blind labels"
-	_blind_check.button_pressed = true
+	_blind_check.button_pressed = false
 	_blind_check.toggled.connect(func(enabled: bool) -> void:
 		if _comparison.active():
 			_comparison.set_blind(enabled)
@@ -172,19 +189,23 @@ func _build_ui() -> void:
 	)
 	form.add_child(_blind_check)
 	var start_button := Button.new()
+	start_button.name = "StartComparisonButton"
 	start_button.text = "Start comparison"
 	start_button.pressed.connect(_start_comparison)
 	form.add_child(start_button)
 	var arm_row := HBoxContainer.new()
 	_arm_a_button = Button.new()
-	_arm_a_button.text = "A"
+	_arm_a_button.name = "ShowArmAButton"
+	_arm_a_button.text = "Show A"
 	_arm_a_button.pressed.connect(func() -> void: _activate_arm("A"))
 	arm_row.add_child(_arm_a_button)
 	_arm_b_button = Button.new()
-	_arm_b_button.text = "B"
+	_arm_b_button.name = "ShowArmBButton"
+	_arm_b_button.text = "Show B"
 	_arm_b_button.pressed.connect(func() -> void: _activate_arm("B"))
 	arm_row.add_child(_arm_b_button)
 	_toggle_button = Button.new()
+	_toggle_button.name = "ToggleArmButton"
 	_toggle_button.text = "Toggle"
 	_toggle_button.pressed.connect(_toggle_arm)
 	arm_row.add_child(_toggle_button)
@@ -254,6 +275,7 @@ func _refresh_catalogs() -> void:
 	_fill_scenarios()
 	_fill_presets()
 	_update_preset_detail()
+	_refresh_arm_labels()
 
 
 func _fill_scenarios() -> void:
@@ -261,19 +283,26 @@ func _fill_scenarios() -> void:
 	for record in _scenarios.list_scenarios():
 		_scenario_select.add_item(str(record.get("display_name", "Scenario")))
 		_scenario_select.set_item_metadata(_scenario_select.item_count - 1, record.duplicate(true))
+	if _scenario_select.item_count > 0:
+		_scenario_select.select(0)
 
 
 func _fill_presets() -> void:
 	var presets: Array = _resolver.list_presets()
-	for select in [_preset_a_select, _preset_b_select, _nominate_select]:
+	for select in [_catalog_select, _nominate_select]:
 		select.clear()
 		for descriptor in presets:
 			var prefix := "BUILT-IN" if bool(descriptor.get("read_only", false)) else "USER"
 			select.add_item("%s · %s" % [prefix, str(descriptor.get("display_name", "Preset"))])
 			select.set_item_metadata(select.item_count - 1, descriptor.duplicate(true))
-	if _preset_b_select.item_count > 1:
-		_preset_b_select.select(1)
+	if _catalog_select.item_count > 1:
+		_catalog_select.select(1)
 		_nominate_select.select(1)
+	if _pending_arms.is_empty() and presets.size() >= 2:
+		_pending_arms = {
+			"A": _resolver.resolve(str(presets[0].get("source_kind", "")), str(presets[0].get("preset_id", ""))),
+			"B": _resolver.resolve(str(presets[1].get("source_kind", "")), str(presets[1].get("preset_id", ""))),
+		}
 
 
 func _selected_descriptor(select: OptionButton) -> Dictionary:
@@ -294,7 +323,7 @@ func _start_comparison() -> void:
 	if not bool(loaded.get("ok", false)):
 		_set_status(str(loaded.get("error", "Scenario could not be loaded.")), true)
 		return
-	var started := _comparison.start(scenario, _resolve_selected(_preset_a_select), _resolve_selected(_preset_b_select), loaded.get("fingerprint", {}), _blind_check.button_pressed)
+	var started := _comparison.start(scenario, _pending_arms.get("A", {}), _pending_arms.get("B", {}), loaded.get("fingerprint", {}), _blind_check.button_pressed)
 	if not bool(started.get("ok", false)):
 		_set_status(str(started.get("error", "Comparison could not start.")), true)
 		return
@@ -320,7 +349,7 @@ func _toggle_arm() -> void:
 	if not _comparison.active():
 		_set_status("Start a comparison first.", true)
 		return
-	_activate_arm("B" if _comparison.active_arm() == "A" else "A")
+	_activate_arm("B" if _comparison.shown_arm() == "A" else "A")
 
 
 func _reset_scenario() -> void:
@@ -338,16 +367,38 @@ func _reset_scenario() -> void:
 	_set_status("Scenario reset to canonical state and arm A.")
 
 
-func _apply_selected_b() -> void:
-	var resolved := _resolve_selected(_preset_b_select)
+func _apply_selected() -> void:
+	var resolved := _resolve_selected(_catalog_select)
 	if not bool(resolved.get("ok", false)) or not _apply_snapshot(resolved.get("snapshot", {})):
 		_set_status(str(resolved.get("error", "Preset could not be applied.")), true)
 		return
 	_set_status("Applied %s without changing gameplay state." % resolved.get("descriptor", {}).get("display_name", "preset"))
 
 
-func _duplicate_selected_b() -> void:
-	var descriptor := _selected_descriptor(_preset_b_select)
+func _set_selected_arm(arm: String) -> void:
+	var resolved := _resolve_selected(_catalog_select)
+	if not bool(resolved.get("ok", false)):
+		_set_status(str(resolved.get("error", "Preset could not be assigned.")), true)
+		return
+	if not _comparison.active():
+		_pending_arms[arm] = resolved
+		_refresh_arm_labels()
+		_set_status("Prepared %s as comparison arm %s." % [resolved.get("descriptor", {}).get("display_name", "preset"), arm])
+		return
+	var assigned := _comparison.assign(arm, resolved, _current_fingerprint.call())
+	if not bool(assigned.get("ok", false)):
+		_set_status(str(assigned.get("error", "Preset could not be assigned.")), true)
+		return
+	_pending_arms[arm] = resolved
+	if bool(assigned.get("refresh_shown", false)) and not _apply_snapshot(assigned.get("profile", {})):
+		_set_status("The arm was assigned, but its shown profile could not be applied.", true)
+		return
+	_refresh_arm_labels()
+	_set_status("Set %s as %s without changing the shown arm." % [resolved.get("descriptor", {}).get("display_name", "preset"), arm])
+
+
+func _duplicate_selected() -> void:
+	var descriptor := _selected_descriptor(_catalog_select)
 	var result: Dictionary = _resolver.duplicate_as_candidate(str(descriptor.get("source_kind", "")), str(descriptor.get("preset_id", "")))
 	if not bool(result.get("ok", false)):
 		_set_status(str(result.get("error", "Candidate could not be duplicated.")), true)
@@ -392,7 +443,7 @@ func _capture_pair() -> void:
 	if not _comparison.active():
 		_set_status("Start a comparison before capturing.", true)
 		return
-	var restore_arm := _comparison.active_arm()
+	var restore_arm := _comparison.shown_arm()
 	for arm in ["A", "B"]:
 		if not await _activate_and_settle(arm):
 			return
@@ -413,7 +464,7 @@ func _activate_and_settle(arm: String) -> bool:
 
 func _export_nomination() -> void:
 	var candidate := _resolve_selected(_nominate_select)
-	var reference := _resolve_selected(_preset_a_select)
+	var reference: Dictionary = _pending_arms.get("A", {})
 	var evaluations := _evaluations.records_for_preset(str(candidate.get("descriptor", {}).get("source_kind", "")), str(candidate.get("descriptor", {}).get("preset_id", ""))) if bool(candidate.get("ok", false)) else []
 	var result: Dictionary = _exporter.export_candidate(candidate, reference, evaluations, DEFAULT_EXPORT_DIRECTORY, _build_identity.call(), BuiltInStyleCatalogScript.CATALOG_SCHEMA_VERSION)
 	if not bool(result.get("ok", false)):
@@ -469,8 +520,16 @@ func _selected_scenario() -> Dictionary:
 
 
 func _refresh_arm_labels() -> void:
-	_arm_a_button.text = _comparison.arm_label("A")
-	_arm_b_button.text = _comparison.arm_label("B")
+	if _arm_a_assignment == null or _arm_b_assignment == null:
+		return
+	_arm_a_button.text = "Show A"
+	_arm_b_button.text = "Show B"
+	if _comparison.active():
+		_arm_a_assignment.text = "A: %s" % _comparison.arm_label("A")
+		_arm_b_assignment.text = "B: %s" % _comparison.arm_label("B")
+	else:
+		_arm_a_assignment.text = "A: %s" % _pending_arm_name("A")
+		_arm_b_assignment.text = "B: %s" % _pending_arm_name("B")
 	_arm_a_button.disabled = not _comparison.active()
 	_arm_b_button.disabled = not _comparison.active()
 	_toggle_button.disabled = not _comparison.active()
@@ -479,13 +538,17 @@ func _refresh_arm_labels() -> void:
 func _update_preset_detail() -> void:
 	if _preset_detail == null:
 		return
-	var descriptor := _selected_descriptor(_preset_b_select)
+	var descriptor := _selected_descriptor(_catalog_select)
 	_preset_detail.text = "%s · %s · %s\n%s" % [
 		str(descriptor.get("preset_id", "")),
 		str(descriptor.get("status", "candidate")),
 		str(descriptor.get("provenance", "")),
 		str(descriptor.get("description", "")),
 	]
+
+
+func _pending_arm_name(arm: String) -> String:
+	return str(_pending_arms.get(arm, {}).get("descriptor", {}).get("display_name", "Not assigned"))
 
 
 func _set_status(text: String, error: bool = false) -> void:

@@ -147,6 +147,16 @@ evaluations, viewport PNG pairs, immutable hashes/snapshots, explicit nomination
 three-file proposal export, and a read-only repository validator provide the
 evidence/promotion path without selecting a default or mutating authority.
 
+Active integration correction (2026-08-31): comparison assignment is being
+made explicit before merge. One catalogue selector exposes `Apply Live`,
+`Set as A`, and `Set as B`; frozen A/B slots and `shown_arm` are independent.
+Showing, toggling, reset, blind mode, candidate edit/save, evaluation, and
+capture never infer an assignment target. Focused session and production-panel
+runtime tests cover reassignment while B is shown, repeated display changes,
+reset, blind entry/exit, candidate isolation, snapshot restoration, and exact
+provenance. Draft integration PR #75 remains not merge-ready until the binary
+history rewrite, real-window checklist, and fresh final CI matrix are complete.
+
 The current Godot Windows x86_64 portable ZIP builds with a release
 GDExtension, application identity/icon, shipped resources, no Python/editor
 dependency, and structural/PE/path validation. The Windows CI lane runs focused
@@ -155,9 +165,11 @@ evidence does not claim Windows execution; clean-machine Windows and human
 comparative design acceptance remain the explicit follow-ups in
 `docs/plans/design_evaluation_laboratory_acceptance.md`. Stage 54F-6 default
 selection/polish remains planned and must consume reviewed human evidence.
-The exact locally validated ZIP is now a tracked test candidate under
-`release-candidates/windows/`, unblocking retrieval on a separate Windows
-machine while leaving direct launch and human acceptance explicitly pending.
+The exact locally validated ZIP was temporarily tracked under
+`release-candidates/windows/`; integration now requires that generated binary
+to be removed from the unmerged branch's history while its source metadata and
+validator tests remain. Future Windows candidates must use Actions, release,
+or canonical release-candidate asset storage outside normal Git history.
 
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical

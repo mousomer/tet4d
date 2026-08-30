@@ -72,15 +72,31 @@ second profile or mutate shipped metadata.
 
 ## 5. Comparison-session invariant
 
-`DesignComparisonSession` freezes:
+`DesignComparisonSession` owns three independent session dimensions:
+
+```text
+A = frozen detached preset identity and snapshot
+B = frozen detached preset identity and snapshot
+shown_arm = A | B
+```
+
+The catalogue exposes separate `Apply Live`, `Set as A`, and `Set as B`
+operations. Assignment copies the selected resolved preset into exactly one
+slot and never chooses the shown arm. Showing or toggling an arm changes only
+`shown_arm` and never infers an assignment target. When the slot currently
+being shown is reassigned, the renderer refreshes that slot's new snapshot
+without changing `shown_arm`; assigning the hidden slot leaves the visible
+profile untouched.
+
+The session freezes:
 
 - session ID and creation time;
 - scenario ID and deterministic non-style identity;
 - exact detached A and B snapshots plus canonical hashes;
 - deterministic blind display assignment; and
-- the active arm.
+- the shown arm.
 
-Switching arms returns only the selected detached profile to the product's
+Switching shown arms returns only the selected detached profile to the product's
 existing presentation-application path. It cannot call gameplay commands,
 advance replay, consume RNG, change the selected case/frame, reset camera pose,
 or write settings/profile storage. The application verifies the scenario's
@@ -88,9 +104,17 @@ non-style fingerprint before and after a switch. Any mismatch aborts the
 comparison instead of silently continuing.
 
 The observable style contract is the complete canonical profile snapshot, so
-`A -> B -> A` is exact by construction. Each arm is copied on creation and on
-read; user edits cannot leak across arms. Blind mode displays deterministic
-neutral labels while the stored session always retains true IDs.
+`A -> B -> A` is exact by construction. Each arm is copied on assignment and
+on read; user edits and saves cannot leak across arms. Reassignment advances
+the comparison evidence identity so captures made under an earlier pairing
+cannot be merged into the new pairing. The serializable session snapshot
+round-trips both frozen slots and `shown_arm` with hash validation.
+
+Blind mode begins only after both slots are assigned. It displays deterministic
+neutral labels while the stored session always retains true IDs. Entering or
+leaving blind mode changes neither assignment nor `shown_arm`; candidate
+creation, editing, saving, applying live, reset, capture, and evaluation never
+silently assign either slot.
 
 ## 6. Evaluation records
 

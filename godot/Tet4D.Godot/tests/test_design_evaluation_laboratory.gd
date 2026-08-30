@@ -69,8 +69,8 @@ func _test_scenarios(scenarios) -> Array:
 func _test_candidate_and_comparison(catalog, library, scenarios, resolver) -> Array:
 	var failures: Array = []
 	var built_ins: Array = catalog.list_styles()
-	if built_ins.size() < 2:
-		return ["design laboratory requires at least two built-in presets"]
+	if built_ins.size() < 5:
+		return ["design laboratory requires at least five built-in presets for explicit assignment coverage"]
 	var built_in_snapshot: Dictionary = catalog.deterministic_snapshot()
 	var first_id := str(built_ins[0].get("style_id"))
 	var second_id := str(built_ins[1].get("style_id"))
@@ -97,6 +97,7 @@ func _test_candidate_and_comparison(catalog, library, scenarios, resolver) -> Ar
 	if not bool(started.get("ok", false)):
 		return ["comparison session should start from two detached presets: %s" % started.get("error", "")]
 	var initial_a := session.arm_profile_snapshot("A")
+	var initial_b := session.frozen_arm("B")
 	var switched_b := session.activate("B", non_style)
 	var restored_a := session.activate("A", non_style)
 	if not bool(switched_b.get("ok", false)) or not bool(restored_a.get("ok", false)) or session.arm_profile_snapshot("A") != initial_a:
@@ -107,17 +108,67 @@ func _test_candidate_and_comparison(catalog, library, scenarios, resolver) -> Ar
 			failures.append("repeated A/B toggles must preserve the frozen non-style fingerprint")
 	if session.snapshot().get("non_style_fingerprint") != non_style:
 		failures.append("A/B switching must not mutate gameplay, replay, RNG, basis, or scenario identity")
+
+	var resolved_3: Dictionary = resolver.resolve(PresetResolverScript.SOURCE_BUILT_IN, str(built_ins[2].get("style_id")))
+	var resolved_4: Dictionary = resolver.resolve(PresetResolverScript.SOURCE_BUILT_IN, str(built_ins[3].get("style_id")))
+	var resolved_5: Dictionary = resolver.resolve(PresetResolverScript.SOURCE_BUILT_IN, str(built_ins[4].get("style_id")))
+	var assigned_3 := session.assign("A", resolved_3, non_style)
+	if not bool(assigned_3.get("ok", false)) or session.frozen_arm("B") != initial_b:
+		failures.append("Set preset_3 as A must replace only A")
+	session.activate("B", non_style)
+	var b_before_hidden_a_assignment := session.frozen_arm("B")
+	var assigned_4 := session.assign("A", resolved_4, non_style)
+	if (
+		not bool(assigned_4.get("ok", false))
+		or session.frozen_arm("B") != b_before_hidden_a_assignment
+		or session.shown_arm() != "B"
+		or bool(assigned_4.get("refresh_shown", true))
+	):
+		failures.append("assigning A while B is shown must preserve B and shown_arm B")
+	var a_before_b_assignment := session.frozen_arm("A")
+	var assigned_5 := session.assign("B", resolved_5, non_style)
+	if not bool(assigned_5.get("ok", false)) or session.frozen_arm("A") != a_before_b_assignment or session.shown_arm() != "B":
+		failures.append("Set preset_5 as B must replace only B without changing shown_arm")
+	var assignments_before_display_actions: Dictionary = session.snapshot().get("arms", {}).duplicate(true)
+	for arm in ["A", "B", "A"]:
+		session.activate(arm, non_style)
+	for index in range(8):
+		session.toggle(non_style)
+	if session.snapshot().get("arms", {}) != assignments_before_display_actions:
+		failures.append("show and repeated toggle operations must never mutate A/B assignments")
+	var reset := session.reset_request(non_style)
+	if not bool(reset.get("ok", false)) or session.snapshot().get("arms", {}) != assignments_before_display_actions:
+		failures.append("scenario reset must preserve A/B assignments")
+	var before_blind: Dictionary = session.snapshot().get("arms", {}).duplicate(true)
+	session.set_blind(true)
+	if session.arm_label("A").contains(str(session.frozen_arm("A").get("display_name", ""))):
+		failures.append("blind labels must hide the current true arm identities")
+	session.set_blind(false)
+	if session.snapshot().get("arms", {}) != before_blind:
+		failures.append("entering and exiting blind mode must preserve A/B assignments")
+	var persisted: Dictionary = session.snapshot()
+	var restored_session = ComparisonSessionScript.new()
+	var restored := restored_session.restore(persisted)
+	if not bool(restored.get("ok", false)) or restored_session.snapshot().get("arms", {}) != persisted.get("arms", {}) or restored_session.shown_arm() != persisted.get("shown_arm"):
+		failures.append("comparison session persistence must retain A/B assignments and shown_arm")
 	var drifted := non_style.duplicate(true)
 	drifted["rng_state"] = "advanced"
 	if bool(session.toggle(drifted).get("ok", false)):
 		failures.append("A/B switching must fail closed when non-style state drifts")
-	if session.arm_label("A").contains(str(resolved_a.get("descriptor", {}).get("display_name", ""))):
-		failures.append("blind comparison labels must hide true preset names")
-	var b_before_edit := session.frozen_arm("B")
+	var assignments_before_edit: Dictionary = session.snapshot().get("arms", {}).duplicate(true)
 	var user_profile = library.load_profile(candidate_id).get("profile")
 	library.save_existing(candidate_id, user_profile.with_overrides({"ghost.opacity": 0.4}))
-	if session.frozen_arm("B") != b_before_edit:
-		failures.append("later user edits must not mutate the frozen B arm")
+	if session.snapshot().get("arms", {}) != assignments_before_edit:
+		failures.append("editing and saving a candidate must not mutate either frozen arm")
+	var edited_candidate: Dictionary = resolver.resolve(PresetResolverScript.SOURCE_USER, candidate_id)
+	var b_before_explicit_candidate_assignment := session.frozen_arm("B")
+	var assigned_candidate := session.assign("A", edited_candidate, non_style)
+	if (
+		not bool(assigned_candidate.get("ok", false))
+		or session.frozen_arm("B") != b_before_explicit_candidate_assignment
+		or session.arm_profile_snapshot("A") != edited_candidate.get("snapshot", {})
+	):
+		failures.append("explicit Set edited candidate as A must replace only A")
 	failures.append_array(_test_evaluation_capture_export(session, resolved_b, resolved_a))
 	return failures
 

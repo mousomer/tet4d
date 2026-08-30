@@ -2,7 +2,7 @@
 
 Status: AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN DESIGN ACCEPTANCE PENDING ON ALL THREE PLATFORMS
 
-Date: 2026-08-30
+Last updated: 2026-08-31
 
 Authority: maintenance acceptance record for Stage 54F-5. The durable behavior
 and promotion boundary are owned by
@@ -39,6 +39,36 @@ The automated rows are platform independent by construction and are asserted as
 such: `tests/test_cross_platform_design_boundary.gd` exports the same candidate
 under Windows, Android, and iPadOS provenance and requires the preset identity,
 properties, semantic owners, and snapshot hash to be identical.
+
+## 2026-08-31 agent-driven real-window A/B regression pass
+
+The pinned Godot `4.7.2.stable.official.ed1daf0bf` production scene ran in a
+real macOS Metal window with an isolated user-data root. This was agent-driven
+verification, not independent human design sign-off.
+
+Passed sequence:
+
+1. explicitly assigned visibly distinct `Tet4D Balanced` and
+   `Blueprint Technical` presets to A and B;
+2. showed A, showed B, and kept `Blueprint Technical` visible in B;
+3. while B was shown, explicitly assigned `Arcade Neon` to A; the panel still
+   displayed `B: Blueprint Technical`, the rendered B style remained present,
+   and the window checkpoint reported `B SHOWN · NEW A ASSIGNED`;
+4. entered and exited blind mode with frozen true identities and unchanged
+   slots;
+5. duplicated `Tron Grid Flow`, edited and saved the user candidate, and
+   confirmed neither slot changed;
+6. explicitly assigned the edited `Tron Grid Flow Candidate` to A, showed A,
+   and confirmed B remained `Blueprint Technical`.
+
+The normal Computer Use keyboard bridge opened and inspected the production
+panel, but its native coordinate-click pipe closed for this Godot build. As in
+the earlier presentation review, a temporary production-scene harness therefore
+drove the exact panel/session/designer APIs and paused at visible checkpoints.
+The temporary harness was removed after it printed
+`A/B_REAL_WINDOW_RESULT=PASS`. This evidence establishes real-window rendering
+and product-path behavior; it does not claim physical mouse acceptance or
+independent human preference review.
 
 ## Implementation-host evidence boundary
 
@@ -173,12 +203,21 @@ sections that follow add only what differs.
 
 ### A/B and blind mode
 
-- [ ] Select a scenario and two presets, then start comparison.
-- [ ] Exercise **A**, **B**, **Toggle**, and **Reset scenario** repeatedly.
+- [ ] Select a scenario; use explicit **Set as A** and **Set as B** actions on
+  two visibly different presets; then start comparison.
+- [ ] Confirm the comparison panel visibly identifies both assignments outside
+  blind mode and exposes separate **Show A**, **Show B**, and **Toggle** actions.
+- [ ] Exercise **Show A**, **Show B**, **Toggle**, and **Reset scenario**
+  repeatedly; confirm neither assignment changes.
+- [ ] While B is shown, set a third preset as A. Confirm B remains assigned and
+  visible, then show A and confirm the third preset is present.
 - [ ] Confirm switching is immediate, the gameplay state never jumps, and reset
   returns to the same board/piece/queue/HOLD/Ghost/camera/basis state.
 - [ ] Enable blind mode and confirm judgment labels hide preset names while
-  retaining enough orientation to choose an arm.
+  retaining enough orientation to choose an arm; exit blind mode and confirm
+  the true A/B assignments are unchanged.
+- [ ] Duplicate/edit and save a candidate; confirm neither A nor B changes
+  until the candidate receives an explicit **Set as A** or **Set as B** action.
 
 ### Evaluation and screenshots
 

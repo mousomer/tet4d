@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-08-31
+
+### Fixed
+
+1. Design Laboratory catalogue actions now distinguish `Apply Live`,
+   `Set as A`, and `Set as B`. Frozen A/B assignment is independent of the
+   shown arm, so assigning A while B is visible preserves B and keeps B shown.
+   Toggle, reset, blind labels, candidate edit/save, evaluation, capture, and
+   session restoration preserve exact assignment and true provenance.
+2. Comparison creation now accepts the catalogue's canonical fixed-seed live
+   scenarios as well as replay fixtures, so the default scenario can start a
+   comparison instead of being rejected by a replay-only guard.
+3. The animated-style deterministic-isolation test now pauses Live 4D before
+   awaiting presentation frames. Slow CI can no longer mistake an ordinary
+   gravity tick for animation-driven gameplay mutation.
+
+### Integration
+
+1. Draft PR #75 was opened against the published pre-fix integration head to
+   obtain a diagnostic full matrix. Every selected lane passed except the
+   Godot lane's timing race above; the dependent integration and aggregate
+   gates failed as designed. Fresh final-SHA CI remains required before merge.
+
 ## 2026-08-30
 
 ### Added

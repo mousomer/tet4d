@@ -1,4 +1,161 @@
-# Task Contract — Live Rendering and 4D Presentation Correctness
+# Task Contract — Integration, Explicit A/B Assignment, and Unified Release Proof
+
+Status: ACTIVE — DRAFT PR OPEN; DIAGNOSTIC CI RUNNING; NOT MERGE READY
+
+Starting branch: `codex/built-in-style-catalog`
+
+Starting local SHA: `17ef8a8bd634afcbfa9ac4218047ec855d27b6a2`
+
+Starting published SHA: `47df7cef84db32a2aa7dff383a84cdb968b53223`
+
+Integration target: `origin/master` at
+`ad36562725043d613e21c6f6cc8c9b223e61618a` when the task began. The
+integration branch was `52` commits ahead and `0` behind. Draft PR #75 was
+opened against the published pre-fix head so its first pull-request CI matrix
+is diagnostic evidence rather than final merge evidence.
+
+## Objective and classification
+
+Stabilize and merge the accumulated post-54E presentation, Design Laboratory,
+and Designer-packaging work without changing inherited Python gameplay truth;
+correct the merge-blocking A/B assignment contract; remove the tracked Windows
+ZIP from branch history while preserving its source changes; prove the final
+cross-language and release gates; then, only after real Python packages build
+and smoke-test from integrated `master`, make the release workflow build the
+Python and Godot product families from one source SHA with tag/version and
+manifest invariants.
+
+- Primary task type: `packaging_and_release`.
+- Workflow modifier: `cross_layer`.
+- Affected layers: Godot Design Laboratory state/UI/evidence; presentation and
+  runtime fixes; Python packaging; Godot/native packaging; CI and release
+  orchestration; Git history and branch governance; documentation.
+- Required evidence: `documentation`, `governance_structure`, `python`,
+  `godot`, `native`, `deterministic`, `parity_or_conformance`, `integration`,
+  `human_visual`, `packaging`, `platform`, and `release_acceptance`.
+- Full repository gate: required because this task integrates broad shared
+  infrastructure, rewrites an unmerged history, makes release claims, and
+  changes release orchestration.
+- Authority effect: no gameplay or deterministic authority transfer. Existing
+  Godot product-shell authority is refined for explicit comparison assignment;
+  `pyproject.toml` remains version authority; existing Python PyInstaller and
+  Godot export owners remain product-family build authorities.
+
+## Authority comparison
+
+`docs/architecture/design_evaluation_laboratory.md` currently freezes A/B only
+at comparison creation and names an `active_arm`. The newer task requires a
+strictly separated model: persistent frozen A/B assignments plus a display-only
+`shown_arm`. The architecture and acceptance record must be updated with that
+higher-precedence contract before implementation is finalized. Candidate
+copy/edit/save remains owned by `PresentationProfileLibrary` and must not imply
+assignment.
+
+`docs/rds/RDS_PACKAGING.md` and `docs/RELEASE_INSTALLERS.md` currently describe
+the Python/PyInstaller path as retained legacy and the release workflow as
+Godot-only. The task explicitly restores Python as an active packaged product,
+but only after the existing platform scripts produce real smoke-tested packages
+from integrated `master`. Release orchestration may then unite both existing
+product-family builders without inventing a new version source or product
+branch.
+
+## Scope matrix
+
+| Layer | Required change | Provider/consumer evidence |
+| --- | --- | --- |
+| Godot Design Laboratory | Add explicit `Set as A`/`Set as B`; keep frozen arm assignment independent of `shown_arm`, blind state, reset, capture, and candidate editing. | Focused session/UI tests, persistence/provenance/capture assertions, real-window acceptance labelled agent-driven. |
+| Existing runtime fixes | Publish only reviewed, complete fixes intended for this product state. | Commit/worktree provenance plus their focused and full-gate evidence. |
+| Git/history | Rewrite only the unmerged integration branch so `47df7cef` retains docs/tests/metadata but never introduces the 39 MB ZIP blob. | Tree/path/object reachability checks on rewritten branch and merged master. |
+| CI/conformance | Preserve path routing and run fresh final PR checks on the exact candidate. | Exact Python, Godot, native, deterministic, parity/conformance, packaging, platform, and governance lane results. |
+| Python packaging | Execute existing Windows, macOS, and Linux builders from clean checkouts of integrated master; repair demonstrated rot only. | Package construction, version inspection, checksums, outside-source runtime smoke, platform-specific install/launch evidence. |
+| Unified release | After Python proof, build Python and Godot families from one checked-out SHA, validate tag against `pyproject.toml`, publish explicit artifacts and a truthful manifest. | Workflow contract tests plus actual platform jobs and release-gate evidence. |
+| Branch governance | Classify squash-era remote branches with tree, patch, virtual-merge, code-conflict, and ledger-conflict evidence before deletion. | Reviewed classification table and post-prune remote inventory. |
+
+## Acceptance criteria
+
+1. Draft PR #75 remains not merge-ready until all blockers clear; its initial
+   CI is recorded as diagnostic and its final fresh matrix runs on the exact
+   rewritten candidate.
+2. Accepted existing fixes are incorporated by commit, not reimplemented.
+3. Explicit catalogue actions apply live or assign only A or B. Assignment
+   copies a frozen resolved preset; it never follows the currently shown arm.
+4. Showing, toggling, reset, blind entry/exit, capture, evaluation, candidate
+   duplication/edit/save, and catalogue refresh do not silently mutate A/B.
+5. Evaluation and capture provenance retain the true frozen identities even in
+   blind mode; comparison-session state round-trips A/B and `shown_arm`.
+6. Focused regression tests cover the task's specified assignment, display,
+   toggle, reset, blind, candidate, persistence, capture, and provenance cases;
+   the real-window checklist is recorded without mislabelling agent execution
+   as independent human sign-off.
+7. The Windows ZIP blob is unreachable from the final integration branch and
+   master; useful `47df7cef` changes remain; binaries use Actions/release
+   storage.
+8. Final required PR lanes and repository gates are green before the normal
+   squash merge. Local master is updated only after merge.
+9. Every non-master remote branch receives content-aware classification;
+   deletion occurs only for reviewed `DELETE` verdicts and remaining unique
+   implementation branches are reported.
+10. Real Windows, macOS, and Linux Python builders run from clean integrated
+    source, create correctly versioned artifacts, and pass no-source-checkout
+    runtime smoke tests; demonstrated packaging rot is repaired narrowly.
+11. Only after criterion 10, the release workflow builds both product families
+    from the same SHA, rejects tag/project version mismatch before publish,
+    uses explicit product artifact names, and generates checksum-bearing
+    metadata without claiming unbuilt or hardware-unaccepted artifacts.
+12. Owning architecture, packaging RDS, installer guide, release checklist,
+    backlog, changelog, task/completion records, and staged handoff state are
+    reconciled; no long-lived Python/Godot product branches are introduced.
+
+## Allowed paths
+
+- existing Design Laboratory session, panel, evidence, and focused Godot tests;
+- existing presentation/runtime fix commit and its owning documents/tests;
+- existing Python and Godot packaging scripts/specs and their tests;
+- `.github/workflows/ci.yml` and `.github/workflows/release-packaging.yml` only
+  where the proven release contract requires changes;
+- existing release/version validation or a narrowly owned validator and tests;
+- owning architecture, RDS, release, backlog, changelog, governance,
+  acceptance, and handoff documents;
+- integration-branch history and reviewed obsolete remote refs as expressly
+  authorized by the task.
+
+## Forbidden changes and deferrals
+
+- No direct push or history rewrite of `master`; no long-lived Python/Godot
+  branches; no ancestry-only branch deletion.
+- No gameplay, replay/trace, RNG, topology, legality, collision, scoring, or
+  inherited deterministic semantic change; no authority transfer by parity.
+- No weakening or bypassing CI routing, tests, sanitation, parity, conformance,
+  or release gates.
+- No later deletion commit masquerading as binary-history removal; no normal
+  Git storage for generated release binaries.
+- No release-workflow unification before all three existing Python platform
+  builders actually build and smoke-test from integrated master.
+- No independent-human, signing, notarization, physical-device, or platform
+  acceptance claim without that exact evidence.
+- Generic branch-triage tooling is deferred unless repeatability proves it
+  necessary and it receives its own tests/routing.
+
+## Planned verification
+
+- Diagnostic and final PR CI matrices, with exact routed job/check names and
+  conclusions recorded by SHA.
+- Focused Design Laboratory Godot tests, UI-contract checks, evaluation/capture
+  persistence/provenance tests, real-window checklist, pinned aggregate Godot
+  gate, keybinding contract, governance/generated-doc/sanitation checks.
+- `CODEX_MODE=1 ./scripts/verify.sh` on the final candidate and, where required,
+  integrated master.
+- Object/path reachability proof for the original ZIP blob after rewrite and
+  after merge.
+- Clean-checkout Windows/macOS/Linux Python package builds, version inspection,
+  SHA-256 checksums, and outside-tree smoke tests.
+- Unified workflow contract tests plus real Actions jobs for all available
+  Python and Designer package targets, with iPadOS evidence class stated
+  precisely.
+
+---
+
+# Previous Task Contract — Live Rendering and 4D Presentation Correctness
 
 Status: COMPLETE — LOCALLY VERIFIED; NO PUSH OR PR
 

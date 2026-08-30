@@ -50,6 +50,50 @@ func _test_menu_entry(tree: SceneTree, app, hud) -> Array:
 		failures.append("Design Laboratory overlay must expose shipped scenarios and coherent presets")
 	if not hud.live_interaction_owns_input():
 		failures.append("visible Design Laboratory overlay must own gameplay/camera input")
+	var panel = hud._design_laboratory
+	var required_controls := {
+		"PresetCatalogSelect": "catalogue preset selector",
+		"ApplyLiveButton": "Apply Live",
+		"SetArmAButton": "Set as A",
+		"SetArmBButton": "Set as B",
+		"ArmAAssignmentLabel": "visible A assignment",
+		"ArmBAssignmentLabel": "visible B assignment",
+		"ShowArmAButton": "Show A",
+		"ShowArmBButton": "Show B",
+		"ToggleArmButton": "Toggle",
+	}
+	for control_name in required_controls:
+		if panel.find_child(control_name, true, false) == null:
+			failures.append("Design Laboratory must expose %s" % required_controls.get(control_name))
+	var start_button := panel.find_child("StartComparisonButton", true, false) as Button
+	var show_b_button := panel.find_child("ShowArmBButton", true, false) as Button
+	var set_a_button := panel.find_child("SetArmAButton", true, false) as Button
+	var catalog_select := panel.find_child("PresetCatalogSelect", true, false) as OptionButton
+	if start_button != null and show_b_button != null and set_a_button != null and catalog_select != null and catalog_select.item_count >= 3:
+		start_button.pressed.emit()
+		await tree.process_frame
+		var started_comparison: Dictionary = panel.deterministic_snapshot().get("comparison", {})
+		if started_comparison.is_empty():
+			failures.append("runtime Start comparison must activate the prepared A/B slots: %s" % str(panel.deterministic_snapshot().get("status", "")))
+		else:
+			show_b_button.pressed.emit()
+			await tree.process_frame
+			var before_assignment: Dictionary = panel.deterministic_snapshot().get("comparison", {})
+			catalog_select.select(2)
+			set_a_button.pressed.emit()
+			await tree.process_frame
+			var after_assignment: Dictionary = panel.deterministic_snapshot().get("comparison", {})
+			if (
+				str(after_assignment.get("shown_arm", "")) != "B"
+				or after_assignment.get("arms", {}).get("B", {}) != before_assignment.get("arms", {}).get("B", {})
+				or after_assignment.get("arms", {}).get("A", {}) == before_assignment.get("arms", {}).get("A", {})
+			):
+				failures.append("Set as A while B is shown must replace only A and preserve shown_arm B: shown=%s b_same=%s a_changed=%s status=%s" % [
+					str(after_assignment.get("shown_arm", "")),
+					str(after_assignment.get("arms", {}).get("B", {}) == before_assignment.get("arms", {}).get("B", {})),
+					str(after_assignment.get("arms", {}).get("A", {}) != before_assignment.get("arms", {}).get("A", {})),
+					str(panel.deterministic_snapshot().get("status", "")),
+				])
 	hud._design_laboratory.close()
 	return failures
 

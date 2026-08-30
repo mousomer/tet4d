@@ -29,7 +29,7 @@ func _init(directory: String = DEFAULT_DIRECTORY) -> void:
 
 
 func create_record(session: Dictionary, preference: String, ratings: Dictionary, notes: String, build_identity: Dictionary, catalog_version: int) -> Dictionary:
-	if int(session.get("session_schema_version", 0)) != 1 or not DesignValueScript.safe_id(str(session.get("session_id", ""))):
+	if not [1, 2].has(int(session.get("session_schema_version", 0))) or not DesignValueScript.safe_id(str(session.get("session_id", ""))):
 		return _failure("A valid frozen comparison session is required.")
 	if not PREFERENCES.has(preference):
 		return _failure("Evaluation preference is unsupported.")
