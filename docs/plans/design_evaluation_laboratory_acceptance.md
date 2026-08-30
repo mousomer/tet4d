@@ -1,12 +1,88 @@
 # Design Evaluation Laboratory Acceptance
 
-Status: AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN DESIGN AND CLEAN-WINDOWS ACCEPTANCE PENDING
+Status: AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN DESIGN ACCEPTANCE PENDING ON ALL THREE PLATFORMS
 
-Date: 2026-08-29
+Date: 2026-08-30
 
 Authority: maintenance acceptance record for Stage 54F-5. The durable behavior
 and promotion boundary are owned by
 `docs/architecture/design_evaluation_laboratory.md`.
+
+The Design Laboratory now targets three distribution platforms. Windows is the
+reference platform; Android tablet and iPadOS are adapters over the identical
+Design Laboratory. Nothing about a design means anything different on one
+platform than another, so this record splits by *evidence*, not by behaviour.
+
+## Platform evidence matrix
+
+Nothing below is marked from expectation. Every filled cell names evidence that
+was actually produced, and every unfilled cell is a real gap.
+
+| Capability | Windows | Android tablet | iPad |
+| --- | --- | --- | --- |
+| Launch | not run (no Windows host) | not run (no APK) | not run (no Xcode/device) |
+| Keyboard gameplay | automated InputMap tests | automated InputMap tests | automated InputMap tests |
+| 4D/W controls | automated InputMap tests | automated InputMap tests | automated InputMap tests |
+| Designer navigation | automated runtime tests | automated runtime tests | automated runtime tests |
+| A/B toggle | automated runtime tests | automated runtime tests | automated runtime tests |
+| Input isolation | automated runtime tests | automated runtime tests | automated runtime tests |
+| Save candidate | automated runtime tests | automated runtime tests | automated runtime tests |
+| Evaluation persistence | automated runtime tests | automated runtime tests | automated runtime tests |
+| Screenshot pair | automated runtime tests | automated runtime tests | automated runtime tests |
+| Nomination | automated + repository validator | automated + repository validator | automated + repository validator |
+| External export/share | implemented; not exercised on device | implemented; not exercised on device | implemented; not exercised on device |
+| Background/resume | N/A (desktop) | not run (no device/emulator) | not run (no simulator/device) |
+| Physical keyboard tested | no | no | no |
+| Artifact builds | yes (portable ZIP) | no (needs JDK/SDK/NDK) | Xcode project only (no iPhoneOS SDK) |
+
+The automated rows are platform independent by construction and are asserted as
+such: `tests/test_cross_platform_design_boundary.gd` exports the same candidate
+under Windows, Android, and iPadOS provenance and requires the preset identity,
+properties, semantic owners, and snapshot hash to be identical.
+
+## Implementation-host evidence boundary
+
+These gaps are properties of the host this work was done on, not of the
+implementation. Each is a toolchain or hardware absence, not an unfinished
+feature.
+
+- **Windows execution.** The macOS host builds and validates the Windows PE
+  artifact and its resource closure. It cannot execute it. The `package-windows`
+  CI job launches the packaged runtime headlessly.
+- **Android APK.** Godot 4.7.2 requires a Java SDK and an Android SDK with
+  `platform-tools` and `build-tools` unconditionally in `can_export()`; setting
+  `package/signed=false` does not bypass it, which was verified directly. The
+  arm64 GDExtension additionally needs the NDK. None are installed on this host
+  and installing them was declined. The `package-android` CI job runs on
+  `ubuntu-latest`, which has all three.
+- **iPadOS build.** This host has Command Line Tools but not Xcode, so there is
+  no iPhoneOS SDK for `xcodebuild` or for the iOS GDExtension. The Xcode project
+  itself exports and validates locally. The `package-ipados` CI job runs on
+  `macos-latest`, which has full Xcode, and compiles the exported project
+  unsigned for the simulator.
+- **Devices.** No Android tablet, emulator, `adb`, iPad, iOS Simulator, or
+  external physical keyboard was available. No claim of emulator, simulator, or
+  physical-keyboard acceptance is made anywhere in this record.
+
+## Artifacts produced on the implementation host
+
+SHA-256, `Tet4D 0.7.5`, pinned Godot `4.7.2.stable.official.ed1daf0bf`. The
+export templates were verified against the SHA-512 recorded in
+`config/project/policy_pack.json` before use.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` | `04941cb3f6d1070521f7a4d2d306fee5478908e3cf5e51d782c96a7e973913b9` |
+| `artifacts/godot/android/Tet4D-Designer-0.7.5-android-arm64.pck` | `a17dedd6689d931175dc7de633cbea60d498fd0b2f8a8c1418692bb0c0fa7b00` |
+| `artifacts/godot/ipad/Tet4DDesigner.pck` | `6e0f54e4f44e3c66a77e273973f9519646a420078f497a329521d9c91a25b3f8` |
+| `artifacts/godot/ipad/Tet4DDesigner.xcodeproj/project.pbxproj` | `39198a7c473cbcf053e833af296d7ff879b26ed2b075b78a549b3bef30667858` |
+| `artifacts/godot/ipad/Tet4DDesigner/Tet4DDesigner-Info.plist` | `57fa06c3adf2e9ff6e73e0f53e87c97d33824c8b2dda02ad0157655fee349b80` |
+| `artifacts/godot/ipad` (aggregate of 47 files, path-ordered) | `7b6d3c366df5a93b22ee41026d0b9e7c0ff22d026079b8e65abc214d14bda244` |
+
+The Android entry is the resource pack, not an APK. The iPadOS entries are the
+exported Xcode project, not a compiled or signed application. Neither may be
+described as a distributable artifact. Both are produced by CI, where the
+required toolchains exist.
 
 ## Automated acceptance scope
 
@@ -41,13 +117,15 @@ does not register a Start Menu entry, desktop shortcut, or Windows uninstall
 record. Mutable profiles, evaluations, captures, and exports live under Godot's
 per-user application-data root, never beside the executable.
 
-Direct clean-machine Windows execution is the only platform item not executable
-on the macOS implementation host. Do not describe that step as passed until a
-Windows reviewer executes the checklist below.
+Direct clean-machine Windows execution is not executable on the macOS
+implementation host. Do not describe that step as passed until a Windows
+reviewer executes the checklist below.
 
 ## Human evaluation checklist
 
-Start only from a green automated build.
+Start only from a green automated build. The checklist below is the shared
+evaluation workflow and is identical on every platform; the per-platform
+sections that follow add only what differs.
 
 ### Launch and catalogue
 
@@ -106,6 +184,88 @@ Start only from a green automated build.
 - [ ] Delete the extracted application directory and confirm no installed
   application files remain. Retain or remove per-user evidence separately as
   the reviewer intends.
+
+## Android tablet acceptance
+
+Configuration: a landscape Android tablet with a physical Bluetooth or USB
+keyboard, optionally a mouse or trackpad. Touch is supplementary; the entire
+evaluation workflow must be operable from the keyboard.
+
+Requires `Tet4D-Designer-<version>-android-arm64.apk`, which this host cannot
+build. Do not begin until that artifact exists.
+
+- [ ] `adb install` the APK on a landscape tablet, launch it, and confirm no
+  Python and no Godot editor are present on the device.
+- [ ] Confirm the application opens landscape and stays landscape when the
+  tablet is rotated 180 degrees.
+- [ ] With the external keyboard only, exercise piece translation, every
+  rotation plane, both W-axis directions, soft drop, hard drop, and hold.
+- [ ] Confirm Ctrl soft drop works and that Shift+Ctrl does not trigger it.
+- [ ] Open and close the Design Laboratory from the keyboard; navigate presets,
+  select A and B, toggle, and reset.
+- [ ] Focus the evaluation notes field and confirm typing never moves a piece.
+- [ ] With the Design Laboratory visible, confirm gameplay controls are not
+  consumed by the board.
+- [ ] Press the system Back gesture in each of: gameplay, open Design
+  Laboratory, main menu. Confirm it never terminates the application and never
+  changes which arm is active or discards an in-flight comparison.
+- [ ] Confirm the board keeps primary space, the 4D board stays usefully large,
+  NEXT/HOLD stay compact, and piece controls stay prominent.
+- [ ] Save a candidate, record an evaluation, capture a screenshot pair, and
+  nominate.
+- [ ] Use **Share exported bundle** and confirm the Android document picker
+  appears and writes the archive somewhere reachable outside the application.
+- [ ] Background the application, resume it, then force-stop and relaunch.
+  Confirm built-ins, candidates, evaluations, and A/B identity are unchanged.
+- [ ] Disconnect and reconnect the keyboard mid-session; confirm control
+  resumes without restarting.
+- [ ] Uninstall and confirm no application files remain.
+
+## iPadOS acceptance
+
+Configuration: an iPad in landscape with a Magic Keyboard, Bluetooth, or USB
+keyboard, optionally a trackpad. Touch and trackpad are supplementary.
+
+Requires a build installed from the exported Xcode project. Signing needs a real
+Apple Developer team identifier; set `TET4D_IOS_TEAM_ID` before exporting and
+configure a provisioning profile in Xcode. The exported project targets iPad
+only and requires an A12 device or newer, which is an engine-level requirement
+of the Godot 4.7 mobile renderer, not a project choice.
+
+- [ ] Build, sign, and install onto a physical iPad from Xcode.
+- [ ] Confirm the application opens landscape and honours both landscape
+  orientations.
+- [ ] Confirm the cockpit respects the safe area: nothing important sits under
+  the camera housing, rounded corners, or home indicator.
+- [ ] With the external keyboard only, exercise piece translation, every
+  rotation plane, both W-axis directions, soft drop, hard drop, and hold.
+- [ ] Confirm Ctrl soft drop works and that Shift+Ctrl does not trigger it.
+- [ ] Confirm Escape cancels and closes as it does on desktop.
+- [ ] Open the Design Laboratory, navigate presets, select A and B, toggle, and
+  reset from the keyboard.
+- [ ] Focus the evaluation notes field and confirm typing never moves a piece.
+- [ ] Save a candidate, record an evaluation, capture a screenshot pair, and
+  nominate.
+- [ ] Open the Files app, find the **Tet4D Designer** folder under *On My iPad*,
+  and confirm the nominated archive is there and can be shared out of the
+  device.
+- [ ] Background the application, resume it, then terminate and relaunch.
+  Confirm built-ins, candidates, evaluations, and A/B identity are unchanged.
+- [ ] Disconnect and reconnect the keyboard mid-session; confirm control
+  resumes without restarting.
+
+## Cross-platform equivalence check
+
+Perform once any two platforms are available to a human.
+
+- [ ] Create the same candidate on two platforms from the same built-in.
+- [ ] Nominate both and run
+  `python3 tools/design_lab/validate_design_export.py <bundle-directory>` on
+  each; both must pass the same validator.
+- [ ] Diff the two `preset.json` files. Only `build_identity` may differ, and
+  only in its `platform` and `export_transport` provenance fields, timestamps,
+  and engine build string. Any difference in `properties`, `semantic_owners`,
+  or `snapshot_hash` is a defect.
 
 ## Repository promotion checklist
 

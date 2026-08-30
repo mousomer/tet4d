@@ -30,7 +30,8 @@ PCK_RESOURCES = (
 # Reject host and repository coupling introduced by Tet4D packaging only.
 FORBIDDEN_PATH_MARKERS = (
     b"workspace/personal/repos",
-    b"/Users/" + b"omer",
+    b"/" + b"Users/",
+    b"/" + b"home/",
 )
 SIGNING_SUFFIXES = (".RSA", ".DSA", ".EC")
 

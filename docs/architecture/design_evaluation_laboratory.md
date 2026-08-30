@@ -137,7 +137,65 @@ The repository validator repeats schema, value, and single-owner validation and
 prints the manual promotion checklist. It never writes runtime configuration,
 the built-in catalog, or design authorities.
 
-## 9. Windows distribution
+## 9. Platform adapter boundary
+
+The Design Laboratory is one implementation with three distribution targets.
+Everything that gives a design meaning is platform independent:
+
+```text
+                    Canonical Design Laboratory
+                              |
+          +-------------------+-------------------+
+          |                   |                   |
+       Windows             Android             iPadOS
+       adapter             adapter              adapter
+```
+
+`DesignPlatformProfile` is the single authority for platform identity. It
+resolves the platform, its export transport, whether the platform delivers a
+system Back gesture, and whether the window needs safe-area insets. Nothing else
+in the shell compares `OS.get_name()`. An unknown platform resolves to the
+desktop reference target rather than inventing a fourth behaviour.
+
+Only these concerns may differ by platform:
+
+- **Export transport.** `DesignExportTransport` moves an already generated
+  bundle somewhere a human can reach: the file manager on desktop, the system
+  document picker on Android, and the file-sharing enabled Documents directory
+  on iPadOS. It never inspects, rewrites, or re-schemas bundle contents. Handheld
+  targets additionally receive one deterministic single-file archive of the same
+  bundle, because they have no desktop file manager to browse a directory with.
+- **Window adaptation.** Handheld safe-area insets are expressed purely as
+  additional outer margin on the shell root. The cockpit hierarchy — board
+  primacy, a usefully large 4D board, compact NEXT/HOLD, prominent piece
+  controls, secondary camera guidance — is identical everywhere. Tablet
+  adaptation must never be satisfied by scaling the UI up and starving the
+  board.
+- **Lifecycle.** Android's system Back gesture follows the same deterministic
+  ladder as Escape and is inert at the main menu. It cannot terminate the
+  process or mutate an in-flight comparison session.
+- **Input resolution.** The canonical live action contract is the only binding
+  authority on every platform. External keyboards on handheld targets, and
+  non-US desktop layouts, can report a logical keycode that differs from the
+  physical key position a binding was designed around; `PhysicalKeyFallback`
+  retries such an event by physical position, but only when the typed character
+  is bound to nothing at all. One key press therefore can never dispatch two
+  actions, and the fallback is inert wherever logical and physical keycodes
+  agree.
+
+Platform reaches an exported bundle only as `build_identity.platform` and
+`build_identity.export_transport` provenance. It must never change what a
+property means. Equivalent candidates authored on different platforms produce
+`preset.json` files whose identity, properties, semantic owners, and snapshot
+hash are identical, and all three pass the same repository-side validator.
+
+`display/window/stretch/aspect` is deliberately left at the engine default.
+Forcing `expand` varies the viewport aspect that fit-view derives camera
+distance from, and the comparison fingerprint includes camera pose, so it
+destabilises deterministic scenario reload. A fixed reference viewport also
+means an A/B comparison frames the board identically on every platform.
+
+## 9a. Windows distribution
 
 The current Godot Windows artifact is a versioned x86_64 portable ZIP built from
 the exact pinned editor/export templates and a release Windows GDExtension. It
@@ -156,12 +214,53 @@ headlessly. Direct clean-machine Windows human execution remains distinct
 acceptance evidence. A non-Windows host may prove package structure and resource
 closure but may not claim Windows execution.
 
+## 9b. Android tablet distribution
+
+The Android artifact is a versioned arm64 APK built from the pinned editor and
+Android export templates, targeting large and extra-large screens in landscape.
+Handset screen support is explicitly refused: this is a tablet build for use
+with a physical keyboard, not a touch-first game. It uses the prebuilt export
+template rather than a Gradle build, so no parallel Android build system enters
+the repository. Signing uses a debug keystore generated at build time; no
+signing material is ever committed.
+
+Mutable data stays in Godot's per-user application-data directory. Because that
+directory is application private on Android, nomination additionally writes a
+portable archive and offers it to the system document picker, so a nominated
+design is never trapped inside the application. No broad filesystem permission
+is requested.
+
+Configuration and packaged resources are validated on any host through the
+exported resource pack, which needs no Java SDK, Android SDK, emulator, or
+device. The APK itself requires the full Android toolchain.
+
+## 9c. iPadOS distribution
+
+The iPadOS artifact is a Godot-generated Xcode project targeting the iPad device
+family in landscape, built and signed through Xcode. Godot 4.7's mobile renderer
+requires an A12 device or newer; that is an engine constraint, not a project
+choice.
+
+`UIFileSharingEnabled` and `LSSupportsOpeningDocumentsInPlace` expose the
+application's Documents directory in the Files app, which is what makes a
+nominated bundle retrievable from the device. This is the canonical Apple
+mechanism and needs no native plugin, so the platform export boundary stays
+where it is.
+
+Repository-owned metadata — display name, bundle identifier, version, device
+family, orientation, deployment target — lives in the export preset. Signing
+identity does not: the committed team identifier is a placeholder that
+`TET4D_IOS_TEAM_ID` overrides, and no certificate, provisioning profile, or
+credential is committed.
+
 ## 10. Verification contract
 
 Automated evidence covers catalog ownership, candidate copy/persistence,
 scenario repeatability, A/B isolation and restoration, evaluation immutability,
 capture files/metadata and state isolation, export consistency, repository
-validation, resource closure, and Windows package structure. Product runtime
+validation, resource closure, Windows package structure, Android export
+configuration and packed resources, iPadOS Xcode project structure and
+metadata, and cross-platform semantic equivalence. Product runtime
 evidence exercises every built-in across representative dimensional scenarios
 and rejects script/resource/ownership errors.
 
@@ -169,3 +268,8 @@ Human acceptance begins only after automation is green and evaluates readability
 spatial comprehension, hierarchy, focus, comfort, UI clarity, blind labeling,
 capture provenance, and proposal portability. Human preference is evidence, not
 automatic authority.
+
+Evidence must be labelled by the level at which it was actually obtained.
+Automated InputMap tests, emulator or simulator testing, and real physical
+keyboard testing on a real device are three different claims, and the weaker
+one may never be reported as the stronger.

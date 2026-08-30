@@ -1,5 +1,52 @@
 # Changelog
 
+## 2026-08-30
+
+### Added
+
+1. The Design Laboratory now targets three distribution platforms from one
+   implementation: Windows, Android tablet, and iPadOS, both tablets intended
+   for landscape use with a physical keyboard. The catalogue, scenarios, A/B
+   model, evaluation schema, nomination bundle, and repository-side validator
+   are unchanged and platform independent; platform reaches an exported bundle
+   only as provenance, which a new cross-platform test asserts.
+2. A platform adapter boundary resolves platform identity, export transport,
+   handheld safe-area insets, and system Back behaviour from one authority.
+   Android offers a nominated bundle to the system document picker and iPadOS
+   exposes it in the Files app, so an installed application never needs the
+   development repository to surrender a design.
+3. Android and iPadOS export presets, build scripts, configuration and artifact
+   validators, and CI jobs. Android runs on `ubuntu-latest` and iPadOS on
+   `macos-latest`, which carry the Android and Xcode toolchains a development
+   host may lack.
+
+### Fixed
+
+1. The canonical live action contract was registered by logical keycode only,
+   so an external keyboard reporting a logical keycode different from the
+   physical key position the binding was designed around resolved nothing. A
+   narrow positional fallback now runs only for characters the contract does not
+   claim, so it cannot make one key press dispatch two actions and is inert on a
+   US-layout desktop keyboard.
+2. Android's system Back gesture would have quit the process by engine default,
+   discarding an in-flight comparison session. It now follows the same
+   deterministic ladder as Escape and is inert at the main menu.
+3. `display/window/handheld/orientation` is an integer enum; a string value is
+   silently ignored and falls back to a single pinned landscape orientation. It
+   is now set numerically to Sensor Landscape and asserted by both tablet
+   validators.
+
+### Known limits
+
+1. The Android APK does not build on the implementation host: Godot 4.7.2
+   requires a Java SDK and an Android SDK with `platform-tools` and
+   `build-tools` unconditionally, plus the NDK for the arm64 GDExtension.
+2. The iPadOS application does not compile on the implementation host, which
+   has Command Line Tools but no Xcode and therefore no iPhoneOS SDK. The Xcode
+   project itself exports and validates.
+3. No emulator, simulator, device, or physical-keyboard acceptance has been
+   performed on any platform.
+
 ## 2026-08-29
 
 ### Added

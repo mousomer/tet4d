@@ -95,6 +95,22 @@ The script emits
 structural validation. Direct clean-machine Windows runtime acceptance remains
 separate and pending until recorded.
 
+The same Design Laboratory also targets Android tablets and iPadOS, both for
+landscape use with a physical keyboard. Neither is a separate touch-first
+implementation: the catalogue, scenarios, A/B model, evaluation schema, and
+nomination bundle are the Windows ones, and platform appears in an exported
+bundle only as provenance.
+
+```bash
+packaging/godot/build_android.sh --configuration-only
+packaging/godot/build_ipados.sh --configuration-only
+```
+
+Both `--configuration-only` modes need nothing beyond the pinned editor and its
+export templates, so they run on any host. Dropping the flag builds the real
+artifact and needs the full platform toolchain: a Java SDK, the Android SDK, and
+the NDK for Android; full Xcode for iPadOS. See `docs/RELEASE_INSTALLERS.md`.
+
 ## What The Shell Does
 
 - Presents the main menu, secondary advanced/diagnostics routes, replay browser,

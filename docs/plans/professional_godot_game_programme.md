@@ -1220,7 +1220,7 @@ default.
 
 #### Post-Stage-54 follow-on — Stage 54F-5 Comparative Visual Evaluation Laboratory
 
-Status: IMPLEMENTED / AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN COMPARATIVE RUN PENDING.
+Status: IMPLEMENTED ON THREE PLATFORMS / AUTOMATED LOCAL ACCEPTANCE GREEN / ANDROID AND IPADOS ARTIFACTS BLOCKED ON HOST TOOLCHAIN / HUMAN COMPARATIVE RUN PENDING.
 
 The standalone Design Laboratory now provides the controlled evaluation path:
 ten stable scenarios over existing fixed-seed native sessions and replay
@@ -1237,6 +1237,17 @@ read-only repository validator enforces the human promotion boundary. The
 current-Godot Windows x86_64 portable ZIP builds and passes local structural/
 resource/PE validation; direct clean-machine Windows execution and the human
 comparative judgments remain unclaimed.
+
+The same laboratory now also targets Android tablets and iPadOS, both for
+landscape use with a physical keyboard. They are adapters, not separate
+products: one catalogue, one scenario system, one A/B implementation, one
+evaluation schema, one nomination schema, and one repository-side validator
+serve all three, and platform reaches an exported bundle only as provenance.
+Each platform exposes a user-accessible way to retrieve a nominated bundle, so
+an installed application never requires the development repository. The Android
+APK and the compiled iPadOS application are blocked on toolchains absent from
+the implementation host and are produced by CI; no emulator, simulator, device,
+or physical-keyboard evidence is claimed on any platform.
 
 The durable contract is
 `docs/architecture/design_evaluation_laboratory.md`; the human and platform

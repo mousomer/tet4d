@@ -37,6 +37,14 @@
 6. `codesign --verify --deep --strict` passes for the app.
 7. The Windows Designer ZIP contains only its EXE, PCK, and release DLL, and
    `packaging/godot/validate_windows_package.py` passes.
+8. `packaging/godot/validate_android_export.py` passes, and where an APK was
+   built, `packaging/godot/validate_android_package.py` passes and the APK is
+   signed.
+9. `packaging/godot/validate_ipados_project.py` passes against the exported
+   Xcode project, without `--allow-missing-native-extension` if the iOS
+   GDExtension was built.
+10. No keystore, certificate, provisioning profile, or other signing secret is
+    committed on any platform.
 
 ## Current-platform package
 
@@ -61,6 +69,17 @@
 3. For Windows, run `packaging/godot/build_windows.sh`, inspect the three-file
    ZIP, and complete `docs/plans/design_evaluation_laboratory_acceptance.md`
    before any runtime-support claim.
+3a. For Android, run `packaging/godot/build_android.sh`, and report whether the
+    APK itself was built or only the export configuration was validated. State
+    the evidence level exactly: automated InputMap tests, emulator keyboard
+    testing, and real physical Android keyboard testing are three different
+    claims and the weaker may not be reported as the stronger.
+3b. For iPadOS, run `packaging/godot/build_ipados.sh`, and report the build
+    result, the signing status, and whether evidence came from the simulator or
+    a physical iPad. Simulator keyboard input is not physical-iPad keyboard
+    acceptance.
+3c. Rebuild every platform artifact after any shared Design Laboratory change,
+    and record a SHA-256 for each produced artifact.
 4. Report Linux Godot support as development-configured and not
    runtime-verified for this release.
 5. Report Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders as retained

@@ -37,9 +37,14 @@ func profile():
 # byte-comparable member lists.
 func portable_archive(bundle_directory: String, archive_path: String = "") -> Dictionary:
 	var source := bundle_directory.trim_suffix("/")
-	if source.is_empty() or not DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(source)):
+	# Every filesystem operation here uses the globalized absolute path.
+	# `DirAccess.open()` given a `user://` path can return a handle rooted at the
+	# project directory instead of failing, which would silently archive the
+	# wrong tree. Absolute paths remove that ambiguity on every platform.
+	var absolute_source := ProjectSettings.globalize_path(source)
+	if source.is_empty() or not DirAccess.dir_exists_absolute(absolute_source):
 		return _failure("A generated bundle directory is required before it can be shared.")
-	var members := _collect_members(source)
+	var members := _collect_members(absolute_source)
 	if members.is_empty():
 		return _failure("The bundle directory contains no files to share.")
 	var destination := archive_path if not archive_path.is_empty() else "%s%s" % [source, ARCHIVE_EXTENSION]
@@ -47,12 +52,14 @@ func portable_archive(bundle_directory: String, archive_path: String = "") -> Di
 	var open_error := packer.open(ProjectSettings.globalize_path(destination), ZIPPacker.APPEND_CREATE)
 	if open_error != OK:
 		return _failure("Portable design archive could not be created (error %s)." % open_error)
-	var bundle_name := source.get_file()
+	var bundle_name := absolute_source.get_file()
 	for member in members:
-		var bytes := FileAccess.get_file_as_bytes(source.path_join(str(member)))
-		if bytes.is_empty() and FileAccess.get_open_error() != OK:
+		var handle := FileAccess.open(absolute_source.path_join(str(member)), FileAccess.READ)
+		if handle == null:
 			packer.close()
 			return _failure("Portable design archive could not read %s." % str(member))
+		var bytes := handle.get_buffer(handle.get_length())
+		handle.close()
 		packer.start_file("%s/%s" % [bundle_name, str(member)])
 		packer.write_file(bytes)
 		packer.close_file()
@@ -156,6 +163,7 @@ func _install_into_user_visible_root(archive_path: String) -> Dictionary:
 	return _success({"archive_path": destination})
 
 
+# `directory` must already be a globalized absolute path.
 static func _collect_members(directory: String) -> Array:
 	var members: Array = []
 	var listing := DirAccess.open(directory)

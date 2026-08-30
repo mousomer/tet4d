@@ -1,7 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 Worktree expectation: clean after the Stage 54F-5 Design Laboratory commit series
+and its cross-platform enlargement
 
 ## Purpose
 
@@ -12,6 +13,36 @@ history ledger. Detailed history is preserved in
 `docs/history/DONE_SUMMARIES.md`.
 
 ## Active Focus
+
+- Stage 54F-5 was enlarged on 2026-08-30 from one distribution target to three:
+  Windows, Android tablet, and iPadOS, both tablets for landscape use with a
+  physical keyboard rather than as touch-first games. There is still exactly one
+  Design Laboratory. The catalogue, scenario system, A/B implementation,
+  evaluation schema, capture semantics, nomination bundle, semantic-owner
+  registry, and repository-side validator are unchanged and platform
+  independent; `tests/test_cross_platform_design_boundary.gd` asserts that a
+  candidate exported under Windows, Android, and iPadOS provenance yields
+  identical preset identity, properties, semantic owners, and snapshot hash. A
+  platform adapter boundary owns export transport, handheld safe-area insets,
+  and system Back behaviour, and owns nothing else.
+
+  Implementation is complete on all three targets. Two artifacts are not:
+
+  - The Android APK does not build on this host. Godot 4.7.2 requires a Java SDK
+    and an Android SDK with `platform-tools` and `build-tools` unconditionally
+    in `can_export()` (verified directly; `package/signed=false` does not bypass
+    it), and the arm64 GDExtension needs the NDK. Installing them was declined.
+    The Android resource pack does export and validate locally.
+  - The iPadOS application does not compile on this host, which has Command Line
+    Tools but no Xcode and therefore no iPhoneOS SDK. The Xcode project itself
+    exports and validates locally.
+
+  Both build scripts and both CI jobs are complete: `package-android` on
+  `ubuntu-latest` and `package-ipados` on `macos-latest` carry the toolchains
+  this host lacks. No emulator, simulator, device, or physical-keyboard evidence
+  exists on any platform, and none is claimed. The Windows artifact was rebuilt
+  and revalidated after the shared changes. The exact evidence matrix is
+  `docs/plans/design_evaluation_laboratory_acceptance.md`.
 
 - Stage 54F-5 Design Laboratory implementation and local automated acceptance are
   complete from starting SHA `1edd764abd3ab04d44546f97be317bec1c4be57e` on

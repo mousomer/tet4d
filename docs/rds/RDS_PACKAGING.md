@@ -1,8 +1,10 @@
 # Desktop Packaging RDS
 
-Status: Active v0.4 (Stage 54G accepted; Stage 54F-5 Windows laboratory candidate)
+Status: Active v0.5 (Stage 54G accepted; Stage 54F-5 Windows, Android tablet,
+and iPadOS Design Laboratory candidates. Scope now covers desktop and tablet
+distribution; the document title is a governed identity token and is retained.)
 Author: Omer + Codex
-Date: 2026-08-29
+Date: 2026-08-30
 Scope: current Godot product exports plus retained legacy Python packaging.
 
 ## 1. Purpose
@@ -46,6 +48,25 @@ a clean Windows machine remains pending and must not be inferred from those
 results. The Windows CI job performs the native Windows build, focused
 laboratory suite, package validation, and a bounded launch of the packaged
 executable when the workflow is run.
+
+The same Design Laboratory additionally ships to two tablet targets, both
+intended for landscape use with a physical keyboard rather than as touch-first
+games:
+
+- **Android tablet.** An arm64 APK supporting only large and extra-large
+  screens, built from the prebuilt Godot export template with no Gradle build
+  entering the repository. Because Godot `user://` is application private on
+  Android, nomination additionally writes a portable archive and offers it to
+  the system document picker.
+- **iPadOS.** A Godot-generated Xcode project for the iPad device family, built
+  and signed through Xcode. `UIFileSharingEnabled` and
+  `LSSupportsOpeningDocumentsInPlace` expose the Documents directory in the
+  Files app so a nominated bundle is retrievable from the device.
+
+Both are configuration-validated on any host through the exported resource pack
+or Xcode project. Neither artifact may be reported as device-accepted, and
+automated InputMap tests, emulator or simulator testing, and real physical
+keyboard testing must be reported as the three distinct claims they are.
 
 The exported product must contain the release GDExtension framework, scenes,
 scripts, theme resources, fonts, configuration registries, help assets, and
@@ -95,6 +116,30 @@ The current canonical files are:
    Design-Laboratory candidate, not a clean-machine runtime-accepted target
    until the recorded Windows acceptance is complete.
 
+## 4a. Tablet design-laboratory boundary
+
+1. Android release builds use the pinned 4.7.2 Android export templates, the
+   prebuilt template rather than a Gradle build, `arm64-v8a` only, and large and
+   extra-large screen support only.
+2. iPadOS builds use the pinned 4.7.2 iOS export template, the iPad device
+   family, and landscape orientation. Godot 4.7's mobile renderer requires an
+   A12 device or newer.
+3. `display/window/handheld/orientation` is an integer enum. A string value is
+   silently ignored by the engine and falls back to a single pinned landscape
+   orientation, so the validators assert the numeric value.
+4. Both validators check application or bundle identity, screen or device
+   targeting, orientation, packed laboratory resources, absence of test and
+   Python payloads, and absence of repository path leakage.
+5. No keystore, certificate, provisioning profile, password, or other signing
+   secret is committed. Android debug signing is generated at build time; the
+   iPadOS team identifier is a placeholder overridden by `TET4D_IOS_TEAM_ID`.
+6. Mutable profiles, evaluations, captures, and proposal exports remain under
+   Godot's writable `user://design_lab` root on every platform. Only the
+   transport that externalises a finished bundle differs by platform.
+7. Neither tablet target is a clean-device runtime-accepted target until the
+   recorded acceptance in
+   `docs/plans/design_evaluation_laboratory_acceptance.md` is complete.
+
 ## 5. Legacy Python installer path
 
 The following path is retained for the earlier Python/pygame product and its
@@ -126,9 +171,14 @@ legacy packaging require a separate task.
    Ghost, passes final manual release-candidate review.
 7. Normal startup emits no release-blocking resource, parser, persistence, or
    GDExtension warning/error.
-8. The current release workflow uploads the accepted Godot macOS ZIP and the
-   separately named Windows Designer ZIP.
+8. The current release workflow uploads the accepted Godot macOS ZIP, the
+   separately named Windows Designer ZIP, the Android tablet APK, and the
+   iPadOS Xcode project.
 9. The Windows candidate passes exact three-file structural validation and its
    native CI job runs the focused laboratory suite plus bounded packaged start.
-10. Linux, direct clean-machine Windows acceptance, signing/notarization, and
-    legacy Python installers are reported with their exact verification limits.
+10. The Android and iPadOS candidates pass their configuration and artifact
+    validators, and the recorded evidence names the exact level at which it was
+    obtained.
+11. Linux, direct clean-machine Windows acceptance, tablet device acceptance,
+    signing/notarization, and legacy Python installers are reported with their
+    exact verification limits.

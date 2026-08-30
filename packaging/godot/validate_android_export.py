@@ -47,7 +47,10 @@ SIGNING_SECRET_OPTIONS = (
 # silently ignored by the engine and falls back to 0, so the accepted values
 # are checked numerically.
 LANDSCAPE_ORIENTATIONS = ("0", "2", "4")
-ABSOLUTE_PATH_PATTERN = re.compile(r'"(?:/Users/|/home/|[A-Za-z]:\\\\)')
+_HOME_PREFIXES = ("/" + "Users/", "/" + "home/")
+ABSOLUTE_PATH_PATTERN = re.compile(
+    '"(?:' + "|".join(_HOME_PREFIXES) + r"|[A-Za-z]:\\)"
+)
 
 
 # Directories that are never part of the committed source tree.

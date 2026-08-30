@@ -181,11 +181,11 @@ These files preserve useful background, completed pass notes, and retired plans.
 | Stage 54E-1 accepted 4D presentation-space separation, relative-control audit, and bounded 54E-2 plan | `docs/architecture/4d_presentation_interaction_architecture.md` |
 | Stage 54E-4a camera/view/layout/GUI preset taxonomy, ownership, identity, reset, and persistence semantics | `docs/architecture/camera_gui_preset_semantics.md` |
 | Post-Stage-54 typed presentation parameters, semantic ownership, profiles, live application, persistence isolation, and 3D/4D divergence audit | `docs/architecture/presentation_parameter_contract.md` |
-| Stage 54F-5 deterministic design scenarios, isolated/blind A/B sessions, evaluation/capture evidence, nomination/export, and repository promotion boundary | `docs/architecture/design_evaluation_laboratory.md` |
+| Stage 54F-5 deterministic design scenarios, isolated/blind A/B sessions, evaluation/capture evidence, nomination/export, the Windows/Android/iPadOS platform adapter boundary, and repository promotion boundary | `docs/architecture/design_evaluation_laboratory.md` |
 | Stage 54F-1 canonical local board cells, extents, centring, grids, boundaries, dimensional adaptation, and slice-layout separation | `docs/architecture/canonical_local_board_presentation_geometry.md` |
 | Post-Stage-54 presentation-parameter implementation and agent-driven acceptance evidence | `docs/plans/presentation_parameter_contract_acceptance.md` |
 | Stage 54F-1 canonical local-board geometry implementation and agent-driven structural/real-window acceptance evidence | `docs/plans/canonical_local_board_presentation_geometry_acceptance.md` |
-| Stage 54F-5 automated, Windows-package, and pending human design-evaluation acceptance evidence | `docs/plans/design_evaluation_laboratory_acceptance.md` |
+| Stage 54F-5 automated, Windows/Android/iPadOS package, and pending human design-evaluation acceptance evidence | `docs/plans/design_evaluation_laboratory_acceptance.md` |
 | Stage 54D-1 authoritative one-piece queue query and shared live thumbnail presentation | `docs/architecture/next_piece_preview.md` |
 | Stage 54D-2 authoritative hard-drop destination query and live ghost presentation | `docs/architecture/ghost_piece.md` |
 | Completed Stage 50 canonical bounded plain-game setup, RNG, piece-set, speed, restart, and acceptance contract | `docs/architecture/plain_game_setup_completion.md` |

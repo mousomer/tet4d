@@ -79,6 +79,63 @@ The Windows workflow builds natively, runs the focused laboratory suite,
 validates the package, and performs a bounded headless start; a direct clean
 Windows-machine review remains an explicit Stage 54F-5 acceptance item.
 
+## Build the Android tablet Design Laboratory candidate
+
+Requirements are the pinned Godot 4.7.2 editor and Android export templates. A
+full artifact additionally requires a working Java SDK, an Android SDK with
+`platform-tools` and `build-tools`, and the NDK. Godot 4.7.2 requires all of
+these unconditionally; `package/signed=false` does not bypass the check.
+
+```bash
+GODOT_BIN=/path/to/Godot \
+GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
+packaging/godot/build_android.sh --configuration-only
+```
+
+`--configuration-only` exports and validates the Android resource pack and
+export configuration using only Godot, so it runs on any host. Dropping the flag
+additionally cross-compiles the arm64 GDExtension and exports the signed APK:
+
+```text
+artifacts/godot/android/Tet4D-Designer-0.7.5-android-arm64.apk
+```
+
+The APK is a landscape arm64 tablet build for use with a physical keyboard.
+Handset screen support is deliberately refused. Signing uses a debug keystore
+generated into the staged editor at build time; no keystore, password, or
+credential is committed. Profiles, evaluations, captures, and proposal exports
+are written through Godot `user://`, which is application private on Android, so
+nomination also writes a portable archive and offers it to the system document
+picker.
+
+## Build the iPadOS Design Laboratory candidate
+
+Requirements are macOS, the pinned Godot 4.7.2 editor, and the iOS export
+template. A compiled application additionally requires full Xcode; Command Line
+Tools alone do not provide the iPhoneOS SDK.
+
+```bash
+GODOT_BIN=/path/to/Godot \
+GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
+packaging/godot/build_ipados.sh --configuration-only
+```
+
+`--configuration-only` exports and validates the Xcode project on a host without
+the iPhoneOS SDK. Dropping the flag additionally cross-compiles the iOS
+GDExtension and compiles the exported project unsigned for the simulator, which
+proves it builds without any signing credential. Its output is:
+
+```text
+artifacts/godot/ipad/Tet4DDesigner.xcodeproj
+```
+
+Open that project in Xcode to build, sign, and install. Set `TET4D_IOS_TEAM_ID`
+to your own Apple Developer team identifier before exporting; the committed
+value is a placeholder. No certificate, provisioning profile, or credential is
+committed. The exported application exposes its Documents directory to the Files
+app, so a nominated bundle can be retrieved from the device without the
+development repository.
+
 ## Smoke and manual acceptance
 
 The build already runs the two-user headless outside-tree smoke. For manual
@@ -96,8 +153,11 @@ authorized and provisioned.
 ## Platform support boundary
 
 - Current supported release: macOS 13+, Universal 2, Godot app/ZIP.
-- Current packaged design candidate: Windows x86-64 portable Godot
-  Design-Laboratory ZIP; clean-machine runtime acceptance pending.
+- Current packaged design candidates, all three from one Design Laboratory:
+  - Windows x86-64 portable Godot ZIP; clean-machine runtime acceptance pending.
+  - Android arm64 landscape tablet APK; built in CI, device acceptance pending.
+  - iPadOS Xcode project for the iPad device family; built in CI, device
+    acceptance pending.
 - Development-configured only: Linux Godot GDExtension artifact names.
 - Legacy retained path: Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders
   under `packaging/scripts/` and `packaging/pyinstaller/`.
@@ -107,7 +167,10 @@ Godot runtime release evidence.
 
 ## Current release workflow
 
-`.github/workflows/release-packaging.yml` builds the macOS Godot ZIP and the
-separately named Windows Designer ZIP from exact pinned editors and templates.
-A matching tag may publish both to its GitHub release after both jobs pass.
-The workflow does not publish retained Python installers.
+`.github/workflows/release-packaging.yml` builds the macOS Godot ZIP, the
+Windows Designer ZIP, the Android tablet APK, and the iPadOS Xcode project from
+exact pinned editors and templates. The Android job runs on `ubuntu-latest` and
+the iPadOS job on `macos-latest`, because those runners carry the Android and
+Xcode toolchains that a given development host may not. A matching tag may
+publish to its GitHub release after all jobs pass. The workflow does not publish
+retained Python installers.

@@ -1,6 +1,11 @@
 # Task Contract — Stage 54F-5 Standalone Design Laboratory
 
-Status: COMPLETE / AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN DESIGN AND CLEAN-WINDOWS ACCEPTANCE PENDING
+Status: CORE AND WINDOWS COMPLETE / ANDROID AND IPADOS CONFIGURATION COMPLETE, ARTIFACTS BLOCKED ON HOST TOOLCHAIN / HUMAN DESIGN ACCEPTANCE PENDING ON ALL THREE PLATFORMS
+
+Scope note: this contract was enlarged on 2026-08-30 from one distribution
+target to three. See *Platform scope enlargement* below; the objective, scope
+matrix, and acceptance criteria stated for the Windows target remain in force
+unchanged and are the reference the other two targets are held to.
 
 Starting branch: `codex/built-in-style-catalog`
 
@@ -196,6 +201,92 @@ narrow dependency correction unless focused checks expose broader drift.
 
 No style comparison, default selection, visual redesign, gameplay change,
 toolchain migration, or adjacent cleanup is included.
+
+## Platform scope enlargement — 2026-08-30
+
+### Objective and authority comparison
+
+Extend the accepted Design Laboratory from one distribution target to three:
+Windows, Android tablet with a physical keyboard, and iPadOS with a physical
+keyboard. Windows is the reference platform and is not rewritten for symmetry.
+
+This is a `godot_product_shell` task with the `cross_layer` modifier, because
+the Godot shell, export configuration, packaging scripts, repository-side
+validation, CI, and governing documents consume the same explicit contracts.
+Affected layers are the Godot application controller and HUD, the platform
+adapter boundary, export presets, packaging and validation tooling, CI, tests,
+and governing documents. Required evidence is `documentation`,
+`governance_structure`, `godot`, `deterministic`, `integration`, `packaging`,
+`platform`, and `human_visual`.
+
+Authority effect: none is transferred. The catalogue, scenario system,
+comparison model, evaluation schema, capture semantics, nomination bundle,
+semantic-owner registry, and repository-side validator remain exactly the
+owners established for the Windows target. Platform is recorded as provenance
+only.
+
+### Scope matrix
+
+| Layer | Provider change | Consumer / conformance evidence |
+| --- | --- | --- |
+| Platform identity | `DesignPlatformProfile` resolves platform, export transport, Back-gesture presence, and safe-area need from one authority. | Cross-platform boundary tests assert every branch from one headless host. |
+| Export transport | `DesignExportTransport` externalises a finished bundle per platform without touching bundle contents. | Portable-archive and share-plan tests; every platform must reach the bundle without repository access. |
+| Input | `PhysicalKeyFallback` resolves the canonical action contract when an external keyboard reports a logical keycode differing from the physical key position. | Fallback tests prove it is inert on desktop, cannot double-fire, and preserves modifiers. |
+| Window adaptation | `SafeAreaInsets` expresses handheld adaptation purely as outer margin. | Inset resolution tests over desktop, notched-landscape, and degenerate device geometry. |
+| Lifecycle | Android system Back follows the Escape ladder and is inert at the main menu. | Validator asserts `quit_on_go_back=false`; runtime ladder is shared with Escape. |
+| Android packaging | Export preset, build script, configuration validator, APK validator, CI job. | Android resource pack builds and validates locally; APK build is gated in CI. |
+| iPadOS packaging | Export preset, build script, Xcode project validator, CI job. | Xcode project exports and validates locally; the build is gated in CI. |
+| Governance | Enlarge this contract, rewrite acceptance as a platform matrix, extend release governance. | Generated-doc, sanitation, diff, and full verification gates. |
+
+### Acceptance criteria
+
+1. One catalogue, one scenario system, one A/B implementation, one evaluation
+   schema, one nomination schema, and one repository-side validator serve all
+   three platforms.
+2. An exported bundle records platform only as provenance. Equivalent
+   candidates authored on different platforms produce `preset.json` files whose
+   identity, properties, semantic owners, and snapshot hash are identical.
+3. The canonical live action contract drives all three platforms. No platform
+   gains its own gameplay or Designer action IDs.
+4. Focus isolation holds on handheld targets: a focused text field never moves a
+   piece, and the system Back gesture never terminates the application or
+   mutates a comparison session.
+5. Landscape is the handheld orientation, and handheld adaptation never
+   satisfies itself by scaling the UI up and starving the board.
+6. Every platform exposes a user-accessible mechanism for retrieving a
+   nominated bundle. An installed application never requires repository access.
+7. No signing secret, certificate, provisioning profile, or credential is
+   committed on any platform.
+8. Windows behaviour is preserved and its artifact is rebuilt after every
+   shared-code change.
+
+### Verification evidence
+
+- Full pinned Godot 4.7.2 suite green, including the new cross-platform
+  boundary test. The Windows artifact was rebuilt after the shared changes and
+  revalidated.
+- Android: resource pack exported and validated from the repository project
+  (226 resources, catalogue and scenarios present, no tests and no Python).
+- iPadOS: Xcode project exported and validated from the repository project
+  (iPad device family, landscape only, Files-app exposure, 226 resources).
+- A rejected change is recorded rather than hidden:
+  `display/window/stretch/aspect="expand"` was reverted because it varies the
+  viewport aspect that fit-view derives camera distance from, which destabilised
+  the deterministic 2D scenario reload check. Handheld aspect adaptation uses
+  `canvas_items` stretch plus safe-area insets instead.
+
+### Explicit deferrals
+
+- The Android APK artifact. Godot 4.7.2 requires a Java SDK and an Android SDK
+  with `platform-tools` and `build-tools` unconditionally, plus the NDK for the
+  arm64 GDExtension. None are present on the implementation host and installing
+  them was declined. The build script and CI job are complete and ready.
+- The iPadOS compiled application. The implementation host has Command Line
+  Tools but no Xcode, so there is no iPhoneOS SDK. The build script and CI job
+  are complete and ready.
+- All emulator, simulator, device, and physical-keyboard acceptance.
+- No gameplay, native, geometry, camera, basis, registry, or production-default
+  change is included, and no Android or iOS native plugin is introduced.
 
 ## Objective
 

@@ -140,6 +140,27 @@ comparative design acceptance remain the explicit follow-ups in
 `docs/plans/design_evaluation_laboratory_acceptance.md`. Stage 54F-6 default
 selection/polish remains planned and must consume reviewed human evidence.
 
+Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
+targets Android tablets and iPadOS, both for landscape use with a physical
+keyboard. One catalogue, one scenario system, one A/B implementation, one
+evaluation schema, one nomination schema, and one repository-side validator
+serve all three; platform reaches an exported bundle only as provenance. A
+platform adapter boundary owns export transport, handheld safe-area insets, and
+system Back behaviour, and nothing else.
+
+Open follow-ups, in order of what unblocks the most:
+
+1. Produce the Android APK. The build script and `ubuntu-latest` CI job are
+   complete; the implementation host lacks the Java SDK, Android SDK, and NDK
+   that Godot 4.7.2 requires unconditionally.
+2. Compile the iPadOS application. The build script and `macos-latest` CI job
+   are complete; the implementation host has Command Line Tools but no Xcode
+   and therefore no iPhoneOS SDK.
+3. Device acceptance on all three platforms, including real physical keyboard
+   testing, background/resume, and on-device share/export. No emulator,
+   simulator, device, or physical-keyboard evidence exists yet, and none is
+   claimed.
+
 Completed bounded regression repair (2026-08-29): direct game startup could retain an
 ignored Godot `global_script_class_cache.cfg` from the preceding revision. The
 new application-controller annotations then failed to resolve
