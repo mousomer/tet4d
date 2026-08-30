@@ -49,13 +49,12 @@ results. The Windows CI job performs the native Windows build, focused
 laboratory suite, package validation, and a bounded launch of the packaged
 executable when the workflow is run.
 
-The exact locally validated ZIP selected for clean-machine evaluation is also
-checked into `release-candidates/windows/`. This is a narrow distribution
-exception for the nominated test candidate: reproducible build outputs remain
-ignored under `artifacts/godot/`, and a new candidate must replace the tracked
-ZIP, update its checksum record, and pass the repository validator before it is
-published. Tracking a candidate makes it retrievable through Git; it does not
-promote Windows runtime acceptance.
+The exact locally validated ZIP selected for clean-machine evaluation is stored
+outside Git as an Actions artifact, release asset, or canonical candidate
+asset. Reproducible build outputs remain ignored under `artifacts/godot/`; a
+new candidate must update its checksum record and pass the repository validator
+before publication. Asset availability does not promote Windows runtime
+acceptance.
 
 The same Design Laboratory additionally ships to two tablet targets, both
 intended for landscape use with a physical keyboard rather than as touch-first
@@ -124,8 +123,9 @@ The current canonical files are:
 5. Linux remains development-configured only. Windows is a packaged
    Design-Laboratory candidate, not a clean-machine runtime-accepted target
    until the recorded Windows acceptance is complete.
-6. Only a validator-approved, checksum-recorded Windows ZIP may be copied from
-   ignored build output into `release-candidates/windows/` for remote testing.
+6. Only a validator-approved, checksum-recorded Windows ZIP may be published
+   from ignored build output to Actions, release, or canonical candidate asset
+   storage for remote testing; generated archives never enter Git history.
 
 ## 4a. Tablet design-laboratory boundary
 

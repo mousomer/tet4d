@@ -25,17 +25,28 @@ history ledger. Detailed history is preserved in
   assertion removes the CI-speed race, and the full Godot replay suite passes
   locally.
 
-- The merge-blocking Design Laboratory A/B correction is implemented locally.
+- The merge-blocking Design Laboratory A/B correction is implemented and
+  committed on the rewritten integration branch.
   The catalogue exposes `Apply Live`, `Set as A`, and `Set as B`; the session
   stores frozen A/B slots separately from `shown_arm`; assignment never follows
   the visible arm; blind labels retain true provenance; candidate edit/save is
   unassigned; reassignment rotates the evidence identity so captures from
   different pairings cannot mix. Focused state and real production-panel
-  runtime tests pass. Remaining sequence: real-window checklist, commit,
-  rewrite the unmerged integration history to remove the 39 MB Windows ZIP,
-  publish the exact candidate, require fresh green PR CI, merge, classify/prune
-  branches, then prove existing Python packaging on Windows/macOS/Linux before
-  any unified-release workflow change.
+  runtime tests pass. An agent-driven real-window production-scene checklist
+  also passed: assigning A while B was shown left B visible, blind entry/exit
+  preserved the true arms, edit/save did not assign, and the edited candidate
+  changed A only after the explicit action. This is not independent human
+  sign-off.
+
+- The 39 MB Windows ZIP has been removed from the unmerged integration
+  history. The replacement commit retains all seven useful documentation,
+  metadata, and validator-test files; the ZIP path and original blob ID are not
+  reachable from `codex/built-in-style-catalog`. Windows candidates now remain
+  outside Git in Actions, release, or canonical candidate asset storage.
+  Remaining sequence: commit the storage-contract reconciliation, run the full
+  local gate, force-with-lease publish the rewritten candidate, require a fresh
+  green PR matrix, merge, classify/prune branches, then prove existing Python
+  packaging on Windows/macOS/Linux before any unified-release workflow change.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

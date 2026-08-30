@@ -165,11 +165,11 @@ evidence does not claim Windows execution; clean-machine Windows and human
 comparative design acceptance remain the explicit follow-ups in
 `docs/plans/design_evaluation_laboratory_acceptance.md`. Stage 54F-6 default
 selection/polish remains planned and must consume reviewed human evidence.
-The exact locally validated ZIP was temporarily tracked under
-`release-candidates/windows/`; integration now requires that generated binary
-to be removed from the unmerged branch's history while its source metadata and
-validator tests remain. Future Windows candidates must use Actions, release,
-or canonical release-candidate asset storage outside normal Git history.
+The exact locally validated ZIP was removed from the unmerged integration
+branch's history while its source metadata and validator tests were retained.
+Its original path and blob are unreachable from the rewritten branch. Future
+Windows candidates must use Actions, release, or canonical release-candidate
+asset storage outside normal Git history.
 
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical

@@ -67,17 +67,17 @@ artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip
 ```
 
 The exact validator-approved candidate nominated for clean-machine testing is
-tracked separately so another machine can retrieve it with an ordinary clone
-or pull of `codex/built-in-style-catalog`:
+stored outside Git as an Actions artifact or release-candidate asset:
 
 ```text
-release-candidates/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip
+Tet4D-Designer-0.7.5-windows-x86_64.zip
 SHA-256 04941cb3f6d1070521f7a4d2d306fee5478908e3cf5e51d782c96a7e973913b9
 ```
 
 See `release-candidates/windows/README.md` for retrieval and verification.
-Publishing this candidate through Git does not establish clean-machine Windows
-runtime acceptance.
+Publishing this candidate as an external build asset does not establish
+clean-machine Windows runtime acceptance, and generated ZIPs must not enter
+normal repository history.
 
 Extract that ZIP to any user-writable directory and launch
 `Tet4D Designer.exe`. This is an equivalent portable distributable, not an

@@ -1,6 +1,7 @@
 # Task Contract — Integration, Explicit A/B Assignment, and Unified Release Proof
 
-Status: ACTIVE — DRAFT PR OPEN; DIAGNOSTIC CI RUNNING; NOT MERGE READY
+Status: ACTIVE — DRAFT PR OPEN; LOCAL FIXES AND HISTORY REWRITE COMPLETE;
+FINAL GATES PENDING; NOT MERGE READY
 
 Starting branch: `codex/built-in-style-catalog`
 

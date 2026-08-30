@@ -22,6 +22,10 @@
    obtain a diagnostic full matrix. Every selected lane passed except the
    Godot lane's timing race above; the dependent integration and aggregate
    gates failed as designed. Fresh final-SHA CI remains required before merge.
+2. The unmerged integration history was rewritten to retain the Windows
+   candidate documentation, metadata, and validator tests without the 39 MB
+   ZIP. Generated candidates now remain outside Git in Actions, release, or
+   canonical candidate asset storage.
 
 ## 2026-08-30
 
