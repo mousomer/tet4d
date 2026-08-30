@@ -1246,8 +1246,10 @@ serve all three, and platform reaches an exported bundle only as provenance.
 Each platform exposes a user-accessible way to retrieve a nominated bundle, so
 an installed application never requires the development repository. The Android
 APK and the compiled iPadOS application are blocked on toolchains absent from
-the implementation host and are produced by CI; no emulator, simulator, device,
-or physical-keyboard evidence is claimed on any platform.
+the implementation host and are produced by equipped CI paths; the local iPad
+configuration export is a separately named evidence class and never a release
+payload. No emulator, simulator, device, or physical-keyboard evidence is
+claimed on any platform.
 
 The durable contract is
 `docs/architecture/design_evaluation_laboratory.md`; the human and platform

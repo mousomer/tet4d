@@ -33,7 +33,7 @@ was actually produced, and every unfilled cell is a real gap.
 | External export/share | implemented; not exercised on device | implemented; not exercised on device | implemented; not exercised on device |
 | Background/resume | N/A (desktop) | not run (no device/emulator) | not run (no simulator/device) |
 | Physical keyboard tested | no | no | no |
-| Artifact builds | yes (portable ZIP) | no (needs JDK/SDK/NDK) | Xcode project only (no iPhoneOS SDK) |
+| Artifact builds | yes (portable ZIP) | no (needs JDK/SDK/NDK) | configuration export only (no iPhoneOS SDK) |
 
 The automated rows are platform independent by construction and are asserted as
 such: `tests/test_cross_platform_design_boundary.gd` exports the same candidate
@@ -72,17 +72,32 @@ export templates were verified against the SHA-512 recorded in
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` | `04941cb3f6d1070521f7a4d2d306fee5478908e3cf5e51d782c96a7e973913b9` |
-| `artifacts/godot/android/Tet4D-Designer-0.7.5-android-arm64.pck` | `a17dedd6689d931175dc7de633cbea60d498fd0b2f8a8c1418692bb0c0fa7b00` |
-| `artifacts/godot/ipad/Tet4DDesigner.pck` | `6e0f54e4f44e3c66a77e273973f9519646a420078f497a329521d9c91a25b3f8` |
-| `artifacts/godot/ipad/Tet4DDesigner.xcodeproj/project.pbxproj` | `39198a7c473cbcf053e833af296d7ff879b26ed2b075b78a549b3bef30667858` |
-| `artifacts/godot/ipad/Tet4DDesigner/Tet4DDesigner-Info.plist` | `57fa06c3adf2e9ff6e73e0f53e87c97d33824c8b2dda02ad0157655fee349b80` |
-| `artifacts/godot/ipad` (aggregate of 47 files, path-ordered) | `7b6d3c366df5a93b22ee41026d0b9e7c0ff22d026079b8e65abc214d14bda244` |
+| Windows exact generated ZIP (timestamp-bearing) — `artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` | `04941cb3f6d1070521f7a4d2d306fee5478908e3cf5e51d782c96a7e973913b9` |
+| Android configuration resource pack — `artifacts/godot/android/Tet4D-Designer-0.7.5-android-arm64.pck` | `a17dedd6689d931175dc7de633cbea60d498fd0b2f8a8c1418692bb0c0fa7b00` |
+| iPad configuration PCK (reduced 1,298-byte descriptor) — `artifacts/godot/ipad/configuration-export/Tet4DDesigner.pck` | `6e0f54e4f44e3c66a77e273973f9519646a420078f497a329521d9c91a25b3f8` |
+| iPad configuration Xcode project — `artifacts/godot/ipad/configuration-export/Tet4DDesigner.xcodeproj/project.pbxproj` | `39198a7c473cbcf053e833af296d7ff879b26ed2b075b78a549b3bef30667858` |
+| iPad configuration Info.plist — `artifacts/godot/ipad/configuration-export/Tet4DDesigner/Tet4DDesigner-Info.plist` | `57fa06c3adf2e9ff6e73e0f53e87c97d33824c8b2dda02ad0157655fee349b80` |
+| iPad configuration export_options.plist (`method=development`) | `2501952ce0655af361ad718ecf01d24fe77c25a5982fb086665f0fd0c86cbb24` |
+| iPad configuration export aggregate (47 files; relative paths and file hashes, path-ordered) | `65cee1069d404d470dafd87858e329faed7862cc1a1e826042287c2855d01089` |
 
-The Android entry is the resource pack, not an APK. The iPadOS entries are the
-exported Xcode project, not a compiled or signed application. Neither may be
-described as a distributable artifact. Both are produced by CI, where the
-required toolchains exist.
+The Android entry is the resource pack, not an APK. Its staged release-signing
+configuration is fixed, but no APK was produced on this host. The iPad entries
+are explicitly the **configuration export**, not a compiled, signed, or release
+application. The earlier record put checksum
+`6e0f54e4f44e3c66a77e273973f9519646a420078f497a329521d9c91a25b3f8`
+under a generic iPad path even though its descriptor was 1,298 bytes and omitted
+the `ios.*` declarations. That checksum is retained and corrected here as
+configuration-only evidence; it is not silently replaced or promoted to the
+1,476-byte full release descriptor. No iPad release checksum exists until an
+equipped build produces the complete descriptor and matching release
+xcframework.
+
+The Windows ZIP checksum identifies the exact valid generated release artifact.
+Because ZIP timestamps/mtimes are not normalized, it is not a claim that a
+second build is bit-for-bit reproducible; the shared PCK equivalence evidence is
+separate. The configuration Xcode project also contains two inert visionOS
+camera-placeholder xcframework directories emitted by Godot 4.7.2. They are
+recorded inventory, not an additional target, and are not custom-filtered.
 
 ## Automated acceptance scope
 

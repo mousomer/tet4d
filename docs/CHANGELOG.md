@@ -22,16 +22,27 @@
 
 ### Fixed
 
-1. The canonical live action contract was registered by logical keycode only,
+1. Android release packaging previously supplied only debug-keystore editor
+   settings while invoking `--export-release`. The disposable build now injects
+   its ephemeral test key into the release fields of a structured staged preset;
+   the tracked preset remains credential-free.
+2. iPadOS silently inherited Godot's App Store release-method default. The
+   source preset now sets integer enum `1`, generated Xcode export options are
+   validated as Development, and the team-ID override remains external.
+3. The local iPad configuration-only PCK checksum was presented without naming
+   its reduced descriptor. Configuration and release exports are now distinct
+   validated artifact classes; only release mode may claim the complete iOS
+   descriptor and native framework.
+4. The canonical live action contract was registered by logical keycode only,
    so an external keyboard reporting a logical keycode different from the
    physical key position the binding was designed around resolved nothing. A
    narrow positional fallback now runs only for characters the contract does not
    claim, so it cannot make one key press dispatch two actions and is inert on a
    US-layout desktop keyboard.
-2. Android's system Back gesture would have quit the process by engine default,
+5. Android's system Back gesture would have quit the process by engine default,
    discarding an in-flight comparison session. It now follows the same
    deterministic ladder as Escape and is inert at the main menu.
-3. `display/window/handheld/orientation` is an integer enum; a string value is
+6. `display/window/handheld/orientation` is an integer enum; a string value is
    silently ignored and falls back to a single pinned landscape orientation. It
    is now set numerically to Sensor Landscape and asserted by both tablet
    validators.
@@ -43,7 +54,8 @@
    `build-tools` unconditionally, plus the NDK for the arm64 GDExtension.
 2. The iPadOS application does not compile on the implementation host, which
    has Command Line Tools but no Xcode and therefore no iPhoneOS SDK. The Xcode
-   project itself exports and validates.
+   configuration project itself exports and validates; that reduced artifact
+   is not release-payload evidence.
 3. No emulator, simulator, device, or physical-keyboard acceptance has been
    performed on any platform.
 

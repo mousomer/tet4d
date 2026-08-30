@@ -120,10 +120,14 @@ The current canonical files are:
 
 1. Android release builds use the pinned 4.7.2 Android export templates, the
    prebuilt template rather than a Gradle build, `arm64-v8a` only, and large and
-   extra-large screen support only.
+   extra-large screen support only. Automated release export copies the
+   credential-free canonical preset into the disposable project, generates an
+   ephemeral test key, and injects that key into all three release-signing
+   fields of the staged copy only.
 2. iPadOS builds use the pinned 4.7.2 iOS export template, the iPad device
-   family, and landscape orientation. Godot 4.7's mobile renderer requires an
-   A12 device or newer.
+   family, landscape orientation, and integer
+   `application/export_method_release=1` (Development). Godot 4.7's mobile
+   renderer requires an A12 device or newer.
 3. `display/window/handheld/orientation` is an integer enum. A string value is
    silently ignored by the engine and falls back to a single pinned landscape
    orientation, so the validators assert the numeric value.
@@ -131,14 +135,19 @@ The current canonical files are:
    targeting, orientation, packed laboratory resources, absence of test and
    Python payloads, and absence of repository path leakage.
 5. No keystore, certificate, provisioning profile, password, or other signing
-   secret is committed. Android debug signing is generated at build time; the
-   iPadOS team identifier is a placeholder overridden by `TET4D_IOS_TEAM_ID`.
+   secret is committed. Android test release signing exists only in disposable
+   build state; the iPadOS team identifier is a placeholder overridden by
+   `TET4D_IOS_TEAM_ID`.
 6. Mutable profiles, evaluations, captures, and proposal exports remain under
    Godot's writable `user://design_lab` root on every platform. Only the
    transport that externalises a finished bundle differs by platform.
 7. Neither tablet target is a clean-device runtime-accepted target until the
    recorded acceptance in
    `docs/plans/design_evaluation_laboratory_acceptance.md` is complete.
+8. iPad configuration exports and release exports are distinct artifact
+   classes. Configuration mode may carry the deliberately reduced descriptor
+   only when explicitly validated as configuration evidence. Release mode must
+   carry both iOS library declarations and the release native xcframework.
 
 ## 5. Legacy Python installer path
 

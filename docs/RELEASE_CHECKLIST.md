@@ -41,8 +41,11 @@
    built, `packaging/godot/validate_android_package.py` passes and the APK is
    signed.
 9. `packaging/godot/validate_ipados_project.py` passes against the exported
-   Xcode project, without `--allow-missing-native-extension` if the iOS
-   GDExtension was built.
+   Xcode project with explicit `--artifact-mode configuration` or
+   `--artifact-mode release`. Configuration mode must have the deliberately
+   reduced descriptor and no native framework; release mode must have the
+   complete iOS descriptor and release xcframework. The generated export
+   method must be `development` in both modes.
 10. No keystore, certificate, provisioning profile, or other signing secret is
     committed on any platform.
 
@@ -79,7 +82,10 @@
     a physical iPad. Simulator keyboard input is not physical-iPad keyboard
     acceptance.
 3c. Rebuild every platform artifact after any shared Design Laboratory change,
-    and record a SHA-256 for each produced artifact.
+    and record a SHA-256 for each produced artifact with its exact class.
+    An iPad configuration-export checksum is not a release checksum. A Windows
+    ZIP SHA identifies the exact timestamp-bearing ZIP; do not call that ZIP
+    bit-reproducible unless its metadata is normalized.
 4. Report Linux Godot support as development-configured and not
    runtime-verified for this release.
 5. Report Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders as retained

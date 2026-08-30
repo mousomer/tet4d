@@ -267,8 +267,12 @@ only.
   revalidated.
 - Android: resource pack exported and validated from the repository project
   (226 resources, catalogue and scenarios present, no tests and no Python).
-- iPadOS: Xcode project exported and validated from the repository project
-  (iPad device family, landscape only, Files-app exposure, 226 resources).
+  The release-signing correction is structurally proven in a disposable staged
+  preset; an APK still requires an equipped runner.
+- iPadOS: configuration-class Xcode project exported and validated from the
+  repository project (iPad device family, landscape only, Files-app exposure,
+  Development export method, reduced descriptor, no native framework, 226
+  resources). This evidence is not a release payload or release checksum.
 - A rejected change is recorded rather than hidden:
   `display/window/stretch/aspect="expand"` was reverted because it varies the
   viewport aspect that fit-view derives camera distance from, which destabilised

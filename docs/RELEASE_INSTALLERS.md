@@ -101,8 +101,10 @@ artifacts/godot/android/Tet4D-Designer-0.7.5-android-arm64.apk
 ```
 
 The APK is a landscape arm64 tablet build for use with a physical keyboard.
-Handset screen support is deliberately refused. Signing uses a debug keystore
-generated into the staged editor at build time; no keystore, password, or
+Handset screen support is deliberately refused. The build generates an
+ephemeral test keystore, copies the canonical credential-free preset into the
+disposable project, and injects the key's release path, alias, and password into
+that staged copy before keeping `--export-release`. No keystore, password, or
 credential is committed. Profiles, evaluations, captures, and proposal exports
 are written through Godot `user://`, which is application private on Android, so
 nomination also writes a portable archive and offers it to the system document
@@ -120,14 +122,22 @@ GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
 packaging/godot/build_ipados.sh --configuration-only
 ```
 
-`--configuration-only` exports and validates the Xcode project on a host without
-the iPhoneOS SDK. Dropping the flag additionally cross-compiles the iOS
-GDExtension and compiles the exported project unsigned for the simulator, which
-proves it builds without any signing credential. Its output is:
+`--configuration-only` exports and validates a configuration-class Xcode
+project on a host without the iPhoneOS SDK. Its reduced GDExtension descriptor
+deliberately omits the unavailable iOS libraries, so its checksums are
+configuration evidence only. Dropping the flag produces the distinct release
+class, cross-compiles the iOS GDExtension, retains the complete descriptor, and
+compiles the exported project unsigned for the simulator, which proves it
+builds without any signing credential. Their project outputs are:
 
 ```text
-artifacts/godot/ipad/Tet4DDesigner.xcodeproj
+artifacts/godot/ipad/configuration-export/Tet4DDesigner.xcodeproj
+artifacts/godot/ipad/release-export/Tet4DDesigner.xcodeproj
 ```
+
+Both generated `export_options.plist` files must resolve to
+`method = development`, sourced from integer
+`application/export_method_release=1` in the canonical preset.
 
 Open that project in Xcode to build, sign, and install. Set `TET4D_IOS_TEAM_ID`
 to your own Apple Developer team identifier before exporting; the committed

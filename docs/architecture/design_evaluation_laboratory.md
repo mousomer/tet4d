@@ -221,8 +221,10 @@ Android export templates, targeting large and extra-large screens in landscape.
 Handset screen support is explicitly refused: this is a tablet build for use
 with a physical keyboard, not a touch-first game. It uses the prebuilt export
 template rather than a Gradle build, so no parallel Android build system enters
-the repository. Signing uses a debug keystore generated at build time; no
-signing material is ever committed.
+the repository. `--export-release` uses an ephemeral test keystore generated at
+build time and injected into the release-signing fields of the disposable
+staged preset. The tracked preset remains credential-free, and no signing
+material is ever committed.
 
 Mutable data stays in Godot's per-user application-data directory. Because that
 directory is application private on Android, nomination additionally writes a
@@ -248,10 +250,19 @@ mechanism and needs no native plugin, so the platform export boundary stays
 where it is.
 
 Repository-owned metadata — display name, bundle identifier, version, device
-family, orientation, deployment target — lives in the export preset. Signing
-identity does not: the committed team identifier is a placeholder that
+family, orientation, deployment target, and the integer release-method enum —
+lives in the export preset. The design-evaluation path sets Godot 4.7.2's
+`application/export_method_release` to `1` (Development). Signing identity does
+not live there: the committed team identifier is a placeholder that
 `TET4D_IOS_TEAM_ID` overrides, and no certificate, provisioning profile, or
 credential is committed.
+
+iPad configuration and release exports are different artifact classes. A
+configuration export deliberately omits the unavailable `ios.*` GDExtension
+descriptor lines and native framework, and is configuration evidence only. A
+release export must retain the complete descriptor and contain the matching
+release xcframework. A checksum identifies only the class actually generated;
+a configuration-export checksum is never release-payload evidence.
 
 ## 10. Verification contract
 
@@ -260,9 +271,10 @@ scenario repeatability, A/B isolation and restoration, evaluation immutability,
 capture files/metadata and state isolation, export consistency, repository
 validation, resource closure, Windows package structure, Android export
 configuration and packed resources, iPadOS Xcode project structure and
-metadata, and cross-platform semantic equivalence. Product runtime
-evidence exercises every built-in across representative dimensional scenarios
-and rejects script/resource/ownership errors.
+metadata, generated Development export method, explicit artifact class,
+descriptor/native-payload consistency, and cross-platform semantic equivalence.
+Product runtime evidence exercises every built-in across representative
+dimensional scenarios and rejects script/resource/ownership errors.
 
 Human acceptance begins only after automation is green and evaluates readability,
 spatial comprehension, hierarchy, focus, comfort, UI clarity, blind labeling,

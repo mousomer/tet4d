@@ -74,33 +74,32 @@ trap cleanup EXIT
 
 # Godot has no command-line option for an arbitrary export-template root, so a
 # temporary self-contained editor copy keeps packaging isolated from the user's
-# editor state. This mirrors packaging/godot/build_windows.sh.
-if [[ -n "${GODOT_TEMPLATE_ROOT:-}" ]]; then
-  staged_editor_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-editor.XXXXXX")"
-  case "$(uname -s)" in
-    Darwin)
-      app_bundle="$(cd "$(dirname "$GODOT_BIN")/../.." && pwd)"
-      if [[ ! -d "$app_bundle/Contents/MacOS" ]]; then
-        echo "GODOT_BIN is not inside a macOS Godot application bundle" >&2
-        exit 1
-      fi
-      cp -R "$app_bundle" "$staged_editor_root/Godot.app"
-      export_godot_bin="$staged_editor_root/Godot.app/Contents/MacOS/Godot"
-      touch "$staged_editor_root/Godot.app/Contents/MacOS/_sc_"
-      ;;
-    *)
-      export_godot_bin="$staged_editor_root/Godot"
-      cp "$GODOT_BIN" "$export_godot_bin"
-      touch "$staged_editor_root/_sc_"
-      ;;
-  esac
-  # A self-contained macOS editor resolves editor_data beside the bundle.
-  staged_template_root="$staged_editor_root/editor_data/export_templates/4.7.2.stable"
-  mkdir -p "$staged_template_root"
-  cp "$template_root/android_debug.apk" "$template_root/android_release.apk" "$staged_template_root/"
-  if [[ -f "$template_root/android_source.zip" ]]; then
-    cp "$template_root/android_source.zip" "$staged_template_root/"
-  fi
+# editor state. Always stage it: the SDK paths and ephemeral debug/test key must
+# never be written into a developer's editor settings.
+staged_editor_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-editor.XXXXXX")"
+case "$(uname -s)" in
+  Darwin)
+    app_bundle="$(cd "$(dirname "$GODOT_BIN")/../.." && pwd)"
+    if [[ ! -d "$app_bundle/Contents/MacOS" ]]; then
+      echo "GODOT_BIN is not inside a macOS Godot application bundle" >&2
+      exit 1
+    fi
+    cp -R "$app_bundle" "$staged_editor_root/Godot.app"
+    export_godot_bin="$staged_editor_root/Godot.app/Contents/MacOS/Godot"
+    touch "$staged_editor_root/Godot.app/Contents/MacOS/_sc_"
+    ;;
+  *)
+    export_godot_bin="$staged_editor_root/Godot"
+    cp "$GODOT_BIN" "$export_godot_bin"
+    touch "$staged_editor_root/_sc_"
+    ;;
+esac
+# A self-contained macOS editor resolves editor_data beside the bundle.
+staged_template_root="$staged_editor_root/editor_data/export_templates/4.7.2.stable"
+mkdir -p "$staged_template_root"
+cp "$template_root/android_debug.apk" "$template_root/android_release.apk" "$staged_template_root/"
+if [[ -f "$template_root/android_source.zip" ]]; then
+  cp "$template_root/android_source.zip" "$staged_template_root/"
 fi
 
 # Export from a disposable project copy. Godot 4.7 may synthesize `.uid`
@@ -124,6 +123,9 @@ missing_toolchain=()
 if ! java -version >/dev/null 2>&1; then
   missing_toolchain+=("a working Java SDK (java -version must succeed)")
 fi
+if ! command -v keytool >/dev/null 2>&1; then
+  missing_toolchain+=("a Java SDK containing keytool")
+fi
 android_home="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [[ -z "$android_home" || ! -d "$android_home/platform-tools" || ! -d "$android_home/build-tools" ]]; then
   missing_toolchain+=("the Android SDK with platform-tools and build-tools (ANDROID_HOME)")
@@ -140,28 +142,30 @@ if [[ ${#missing_toolchain[@]} -gt 0 ]]; then
   exit 1
 fi
 
-# Godot has no command line option for the Android SDK, Java SDK, or debug
-# keystore; they are editor settings. Writing them into the staged
-# self-contained editor keeps them out of the user's own editor state and out
-# of the repository. The keystore is generated locally and never committed.
-if [[ -n "$staged_editor_root" ]]; then
-  debug_keystore="$staged_editor_root/debug.keystore"
-  keytool -keyalg RSA -genkeypair -alias androiddebugkey \
-    -keypass android -keystore "$debug_keystore" -storepass android \
-    -dname "CN=Android Debug,O=Android,C=US" -validity 9999 \
-    -deststoretype pkcs12 >/dev/null 2>&1
-  java_home="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
-  cat > "$staged_editor_root/editor_data/editor_settings-4.7.tres" <<TRES
+# Godot's SDK and debug-keystore paths are editor settings. The same ephemeral
+# test key is injected into the release fields of the staged export preset,
+# because --export-release does not use debug-only signing configuration.
+test_keystore="$staged_editor_root/test-release.keystore"
+keytool -keyalg RSA -genkeypair -alias androiddebugkey \
+  -keypass android -keystore "$test_keystore" -storepass android \
+  -dname "CN=Tet4D Test Release,O=Tet4D,C=IE" -validity 1 \
+  -deststoretype pkcs12 >/dev/null 2>&1
+java_home="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
+cat > "$staged_editor_root/editor_data/editor_settings-4.7.tres" <<TRES
 [gd_resource type="EditorSettings" format=3]
 
 [resource]
 export/android/android_sdk_path = "$android_home"
 export/android/java_sdk_path = "$java_home"
-export/android/debug_keystore = "$debug_keystore"
+export/android/debug_keystore = "$test_keystore"
 export/android/debug_keystore_user = "androiddebugkey"
 export/android/debug_keystore_pass = "android"
 TRES
-fi
+
+"$PYTHON_BIN" "$ROOT_DIR/packaging/godot/stage_android_export_preset.py" \
+  "$PROJECT_DIR/export_presets.cfg" \
+  "$staged_project_root/export_presets.cfg" \
+  "$test_keystore"
 
 SCONS_PLATFORM=android SCONS_ARCH=arm64 SCONS_TARGET=template_release \
   "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"

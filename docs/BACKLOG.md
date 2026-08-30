@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-29
+Updated: 2026-08-30
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -150,12 +150,15 @@ system Back behaviour, and nothing else.
 
 Open follow-ups, in order of what unblocks the most:
 
-1. Produce the Android APK. The build script and `ubuntu-latest` CI job are
-   complete; the implementation host lacks the Java SDK, Android SDK, and NDK
-   that Godot 4.7.2 requires unconditionally.
+1. Produce the Android APK on an equipped runner. The release-signing defect is
+   corrected: the canonical preset stays credential-free while an ephemeral
+   test key is injected into the staged release fields. The implementation host
+   still lacks the Java SDK, Android SDK, and NDK that Godot 4.7.2 requires, so
+   configuration proof is not reported as APK success.
 2. Compile the iPadOS application. The build script and `macos-latest` CI job
    are complete; the implementation host has Command Line Tools but no Xcode
-   and therefore no iPhoneOS SDK.
+   and therefore no iPhoneOS SDK. The local configuration export is a distinct
+   reduced-descriptor artifact class and has no release checksum.
 3. Device acceptance on all three platforms, including real physical keyboard
    testing, background/resume, and on-device share/export. No emulator,
    simulator, device, or physical-keyboard evidence exists yet, and none is

@@ -107,9 +107,11 @@ packaging/godot/build_ipados.sh --configuration-only
 ```
 
 Both `--configuration-only` modes need nothing beyond the pinned editor and its
-export templates, so they run on any host. Dropping the flag builds the real
-artifact and needs the full platform toolchain: a Java SDK, the Android SDK, and
-the NDK for Android; full Xcode for iPadOS. See `docs/RELEASE_INSTALLERS.md`.
+export templates, so they run on any host. The iPad output is explicitly
+configuration evidence with a reduced native descriptor, not a release
+payload. Dropping the flag builds the real artifact and needs the full platform
+toolchain: a Java SDK, the Android SDK, and the NDK for Android; full Xcode for
+iPadOS. See `docs/RELEASE_INSTALLERS.md`.
 
 ## What The Shell Does
 

@@ -20,7 +20,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROJECT_DIR="$ROOT_DIR/godot/Tet4D.Godot"
-ARTIFACT_DIR="$ROOT_DIR/artifacts/godot/ipad"
+ARTIFACT_BASE_DIR="$ROOT_DIR/artifacts/godot/ipad"
 PRESET_NAME="iPadOS"
 PLACEHOLDER_TEAM_ID="0000000000"
 
@@ -28,6 +28,12 @@ CONFIGURATION_ONLY=0
 if [[ "${1:-}" == "--configuration-only" ]]; then
   CONFIGURATION_ONLY=1
 fi
+if [[ "$CONFIGURATION_ONLY" == "1" ]]; then
+  ARTIFACT_MODE="configuration"
+else
+  ARTIFACT_MODE="release"
+fi
+ARTIFACT_DIR="$ARTIFACT_BASE_DIR/$ARTIFACT_MODE-export"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "The iPadOS target can only be exported from macOS" >&2
@@ -141,6 +147,12 @@ else
   fi
   SCONS_PLATFORM=ios SCONS_ARCH=arm64 SCONS_TARGET=template_release \
     "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
+  native_xcframework="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.ios.template_release.xcframework"
+  if [[ ! -d "$native_xcframework" ]]; then
+    echo "iPadOS release GDExtension was not produced" >&2
+    exit 1
+  fi
+  cp -R "$native_xcframework" "$staged_project_root/addons/tet4d_core/bin/"
 fi
 
 rm -rf "$ARTIFACT_DIR"
@@ -148,14 +160,12 @@ mkdir -p "$ARTIFACT_DIR"
 "$export_godot_bin" --headless --path "$staged_project_root" \
   --export-release "$PRESET_NAME" "$ARTIFACT_DIR/Tet4DDesigner.xcodeproj"
 
-validator_args=("$ARTIFACT_DIR")
-if [[ "$CONFIGURATION_ONLY" == "1" ]]; then
-  validator_args+=("--allow-missing-native-extension")
-fi
+validator_args=("$ARTIFACT_DIR" "--artifact-mode" "$ARTIFACT_MODE")
 "$PYTHON_BIN" "$ROOT_DIR/packaging/godot/validate_ipados_project.py" "${validator_args[@]}"
 
 if [[ "$CONFIGURATION_ONLY" == "1" ]]; then
-  echo "iPadOS Xcode project exported and validated: $ARTIFACT_DIR"
+  echo "iPadOS configuration export generated and validated: $ARTIFACT_DIR"
+  echo "This is configuration evidence, not a release payload."
   echo "Open Tet4DDesigner.xcodeproj in Xcode to build, sign, and install."
   exit 0
 fi
@@ -166,7 +176,8 @@ xcodebuild -project "$ARTIFACT_DIR/Tet4DDesigner.xcodeproj" \
   -scheme Tet4DDesigner -sdk iphonesimulator -configuration Release \
   CODE_SIGNING_ALLOWED=NO build
 
-archive_path="$ARTIFACT_DIR/Tet4D-Designer-$version-ipados-xcodeproject.zip"
+archive_path="$ARTIFACT_BASE_DIR/Tet4D-Designer-$version-ipados-xcodeproject.zip"
+rm -f "$archive_path"
 "$PYTHON_BIN" - "$ARTIFACT_DIR" "$archive_path" <<'PY'
 from pathlib import Path
 import sys
