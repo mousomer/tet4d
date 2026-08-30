@@ -530,6 +530,13 @@ func _test_live_integration(registry) -> Array:
 	if app._live_4d_presentation_root.is_ancestor_of(background):
 		failures.append("the animated background must not join the gameplay presentation subtree")
 
+	# Freeze the native clock before asserting presentation-only isolation. On a
+	# slower CI runner an unpaused live gravity tick may legitimately advance the
+	# game between awaited frames and would make this an animation timing test
+	# instead of an isolation test.
+	if not app._live_4d_paused:
+		app._toggle_live_4d_pause()
+	await tree.process_frame
 	var hash_before := str(app._live_bridge.live_4d_state_hash())
 	var snapshot_before: Dictionary = app._current_snapshot.duplicate(true)
 	var settings_before: Dictionary = hud._settings_store.deterministic_snapshot()
