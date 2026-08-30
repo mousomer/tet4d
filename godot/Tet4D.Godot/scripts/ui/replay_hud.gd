@@ -29,6 +29,7 @@ const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd"
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const PresentationDesignerScript = preload("res://scripts/ui/presentation_designer.gd")
 const DesignLaboratoryPanelScript = preload("res://scripts/ui/design_laboratory_panel.gd")
+const SafeAreaInsetsScript = preload("res://scripts/ui/safe_area_insets.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -233,6 +234,7 @@ var _game_setup_store = GameSetupStoreScript.new()
 var _game_setup_panel
 var _active_live_mode := ""
 var _live_interaction_owns_input := false
+var _shell_root_margin: MarginContainer
 var _active_presentation_profile
 
 
@@ -329,6 +331,7 @@ func _process(delta: float) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_inside_tree():
+		call_deferred("_apply_safe_area_insets")
 		call_deferred("_layout_presentation_designer")
 		call_deferred("_log_geometry_diagnostics", "resize")
 		call_deferred("_remember_current_windowed_size")
@@ -755,6 +758,36 @@ func _open_design_candidate(profile_id: String) -> void:
 
 func design_laboratory_snapshot() -> Dictionary:
 	return _design_laboratory.deterministic_snapshot() if _design_laboratory != null else {}
+
+
+# Handheld adaptation is expressed only as outer margin. The cockpit hierarchy
+# is identical on every platform, so a tablet never gains its own layout.
+func _apply_safe_area_insets() -> void:
+	if _shell_root_margin == null:
+		return
+	var insets := SafeAreaInsetsScript.current()
+	for side in ["left", "top", "right", "bottom"]:
+		_shell_root_margin.add_theme_constant_override(
+			"margin_%s" % side,
+			ReplayVisuals.OUTER_MARGIN + int(insets.get(side, 0))
+		)
+
+
+func safe_area_insets() -> Dictionary:
+	return SafeAreaInsetsScript.current()
+
+
+func design_laboratory_visible() -> bool:
+	return _design_laboratory != null and _design_laboratory.visible
+
+
+# Closes the Design Laboratory exactly as its own Close control does, so a
+# system Back gesture cannot reach a state the Close button cannot.
+func close_design_laboratory() -> void:
+	if _design_laboratory == null or not _design_laboratory.visible:
+		return
+	_design_laboratory.close()
+	main_menu_requested.emit()
 
 
 func _build_presentation_designer() -> void:
@@ -1730,11 +1763,9 @@ func _build_layout() -> void:
 	var root := MarginContainer.new()
 	_fill_parent(root)
 	root.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
-	root.add_theme_constant_override("margin_left", ReplayVisuals.OUTER_MARGIN)
-	root.add_theme_constant_override("margin_top", ReplayVisuals.OUTER_MARGIN)
-	root.add_theme_constant_override("margin_right", ReplayVisuals.OUTER_MARGIN)
-	root.add_theme_constant_override("margin_bottom", ReplayVisuals.OUTER_MARGIN)
 	add_child(root)
+	_shell_root_margin = root
+	_apply_safe_area_insets()
 
 	var screen_stack := Control.new()
 	_fill_parent(screen_stack)

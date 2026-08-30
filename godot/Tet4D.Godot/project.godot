@@ -16,6 +16,8 @@ config/version="0.7.5"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="Tet4D"
 run/main_scene="res://scenes/trace_replay.tscn"
+config/icon="res://assets/icons/tet4d_designer.svg"
+config/quit_on_go_back=false
 config/features=PackedStringArray("4.7")
 config/tet4d_target_godot_version="4.7.2-stable"
 
@@ -24,6 +26,11 @@ config/tet4d_target_godot_version="4.7.2-stable"
 window/size/viewport_width=1600
 window/size/viewport_height=960
 window/stretch/mode="canvas_items"
+window/handheld/orientation="landscape"
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
 
 [native_extensions]
 

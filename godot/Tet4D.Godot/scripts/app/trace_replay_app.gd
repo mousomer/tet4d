@@ -25,6 +25,8 @@ const GhostPieceModelScript = preload("res://scripts/presentation/ghost_piece_mo
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
 const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
+const PhysicalKeyFallbackScript = preload("res://scripts/input/physical_key_fallback.gd")
+const DesignPlatformProfileScript = preload("res://scripts/platform/design_platform_profile.gd")
 
 const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
@@ -100,6 +102,12 @@ var _live_repeat_held := {
 	"move_w_pos": false,
 	"soft_drop": false,
 }
+# Keycodes the shell claims by printed character, plus the actions currently
+# held through a positional fallback. Both exist so external keyboards on
+# handheld targets drive the same action IDs as a desktop keyboard.
+var _physical_fallback_bound: Dictionary = {}
+var _physical_fallback_held: Dictionary = {}
+var _platform_profile = DesignPlatformProfileScript.new()
 var _live_bridge = Tet4DCoreBridgeScript.new()
 var _ghost_model = GhostPieceModelScript.new()
 var _ghost_enabled := true
@@ -186,6 +194,8 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		_track_physical_fallback(event)
 	if _hud != null and _hud.handle_main_menu_shortcut(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -778,7 +788,32 @@ func _design_laboratory_build_identity() -> Dictionary:
 		"application_version": str(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"engine_build": str(engine.get("string", "unknown")),
 		"design_lab_schema_version": 1,
+		# Provenance only. The catalogue, scenarios, comparison model, and
+		# evaluation records are identical on every platform; this records
+		# where a candidate was authored, never what its properties mean.
+		"platform": str(_platform_profile.platform_id()),
+		"export_transport": str(_platform_profile.export_transport_id()),
 	}
+
+
+# Android delivers a system Back gesture. Without this the engine default would
+# quit the process, discarding an in-flight comparison session. Back instead
+# follows the same deterministic ladder as Escape and is inert at the main menu.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_handle_system_back_request()
+
+
+func _handle_system_back_request() -> bool:
+	if _hud == null:
+		return false
+	if _hud.design_laboratory_visible():
+		_hud.close_design_laboratory()
+		return true
+	if _is_live_mode():
+		_return_to_main_menu()
+		return true
+	return false
 
 
 func _quit_application() -> void:
@@ -1925,6 +1960,7 @@ func _process_live_repeat_action(
 
 
 func _reset_live_repeat_state() -> void:
+	_physical_fallback_held.clear()
 	for key in _live_repeat_held.keys():
 		_reset_live_repeat_action(str(key))
 
@@ -2138,6 +2174,12 @@ func _event_action_pressed(event: InputEvent, action_names: Array) -> bool:
 	for action_name in action_names:
 		if event.is_action_pressed(str(action_name)):
 			return true
+	var positional := PhysicalKeyFallbackScript.synthesize(event, _physical_fallback_bound)
+	if positional == null:
+		return false
+	for action_name in action_names:
+		if positional.is_action_pressed(str(action_name)):
+			return true
 	return false
 
 
@@ -2197,9 +2239,27 @@ func _handle_live_space_hard_drop() -> bool:
 
 func _any_action_pressed(action_names: Array) -> bool:
 	for action_name in action_names:
-		if Input.is_action_pressed(str(action_name)):
+		if Input.is_action_pressed(str(action_name)) or _physical_fallback_held.has(str(action_name)):
 			return true
 	return false
+
+
+# Auto-repeat polls `Input`, which only knows the registered logical bindings.
+# Positional fallbacks are therefore tracked explicitly across press/release so
+# held movement repeats identically on every keyboard layout.
+func _track_physical_fallback(event: InputEvent) -> void:
+	var positional := PhysicalKeyFallbackScript.synthesize(event, _physical_fallback_bound)
+	if positional == null:
+		return
+	for action_name in _live_repeat_action_names():
+		if positional.is_action_pressed(str(action_name)):
+			_physical_fallback_held[str(action_name)] = true
+		elif positional.is_action_released(str(action_name)):
+			_physical_fallback_held.erase(str(action_name))
+
+
+func _live_repeat_action_names() -> Array:
+	return _live_gameplay_action_names() + _live_3d_gameplay_action_names() + _live_4d_gameplay_action_names()
 
 
 func _live_gameplay_action_names() -> Array:
@@ -2332,6 +2392,7 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("quit", KEY_ESCAPE)
 	_ensure_key_action("mode_toggle_replay_live", KEY_TAB)
 	var live_action_specs := LiveInputContractScript.action_specs()
+	_physical_fallback_bound = PhysicalKeyFallbackScript.bound_keycodes(live_action_specs)
 	for action_name in live_action_specs:
 		var spec: Dictionary = live_action_specs.get(action_name, {})
 		for forbidden_key in spec.get("forbidden_keys", []):

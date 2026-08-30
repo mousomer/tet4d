@@ -11,6 +11,7 @@ const DesignComparisonSessionScript = preload("res://scripts/design_lab/design_c
 const DesignEvaluationStoreScript = preload("res://scripts/design_lab/design_evaluation_store.gd")
 const DesignCaptureStoreScript = preload("res://scripts/design_lab/design_capture_store.gd")
 const DesignExportBundleScript = preload("res://scripts/design_lab/design_export_bundle.gd")
+const DesignExportTransportScript = preload("res://scripts/design_lab/design_export_transport.gd")
 
 signal close_requested()
 
@@ -25,6 +26,8 @@ var _comparison = DesignComparisonSessionScript.new()
 var _evaluations = DesignEvaluationStoreScript.new()
 var _captures = DesignCaptureStoreScript.new()
 var _exporter
+var _transport = DesignExportTransportScript.new()
+var _last_export: Dictionary = {}
 var _load_scenario: Callable
 var _apply_profile: Callable
 var _current_fingerprint: Callable
@@ -45,6 +48,7 @@ var _preference_select: OptionButton
 var _rating_inputs: Dictionary = {}
 var _notes: TextEdit
 var _nominate_select: OptionButton
+var _share_button: Button
 
 
 func configure(registry, callbacks: Dictionary) -> bool:
@@ -91,6 +95,7 @@ func deterministic_snapshot() -> Dictionary:
 		"preset_count": _resolver.list_presets().size() if _resolver != null else 0,
 		"comparison": _comparison.snapshot(),
 		"status": _status.text if _status != null else "",
+		"export_transport": str(_transport.profile().export_transport_id()),
 	}
 
 
@@ -229,6 +234,14 @@ func _build_ui() -> void:
 	export_button.text = "Nominate and export proposal"
 	export_button.pressed.connect(_export_nomination)
 	form.add_child(export_button)
+	# Externalising the finished bundle is the only part of nomination that
+	# differs by platform, so it is a separate control backed by the platform
+	# transport rather than a branch inside bundle generation.
+	_share_button = Button.new()
+	_share_button.text = "Share exported bundle"
+	_share_button.disabled = true
+	_share_button.pressed.connect(_share_export)
+	form.add_child(_share_button)
 	_status = Label.new()
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.theme_type_variation = "SecondaryLabel"
@@ -406,7 +419,41 @@ func _export_nomination() -> void:
 	if not bool(result.get("ok", false)):
 		_set_status(str(result.get("error", "Nomination export failed.")), true)
 		return
-	_set_status("Nominated proposal exported to %s" % ProjectSettings.globalize_path(str(result.get("directory", ""))))
+	var directory := str(result.get("directory", ""))
+	var published: Dictionary = _transport.publish(directory)
+	if not bool(published.get("ok", false)):
+		# The canonical bundle is already written; only externalisation failed.
+		_last_export = {"directory": directory, "archive_path": ""}
+		_share_button.disabled = false
+		_set_status("Exported to %s, but the portable archive failed: %s" % [
+			ProjectSettings.globalize_path(directory),
+			str(published.get("error", "unknown transport error")),
+		], true)
+		return
+	_last_export = {
+		"directory": directory,
+		"archive_path": str(published.get("archive_path", "")),
+	}
+	_share_button.disabled = false
+	var plan: Dictionary = published.get("plan", {})
+	_set_status("Nominated proposal exported to %s · %s" % [
+		ProjectSettings.globalize_path(directory),
+		str(plan.get("hint", "")),
+	])
+
+
+func _share_export() -> void:
+	if _last_export.is_empty():
+		_set_status("Export a nominated proposal before sharing it.", true)
+		return
+	var shared: Dictionary = _transport.execute_share(
+		str(_last_export.get("archive_path", "")),
+		str(_last_export.get("directory", ""))
+	)
+	if not bool(shared.get("ok", false)):
+		_set_status(str(shared.get("error", "Sharing is unavailable on this device.")), true)
+		return
+	_set_status("Handed the nominated bundle to the %s transport." % str(shared.get("mechanism", "")))
 
 
 func _apply_snapshot(snapshot: Dictionary) -> bool:
