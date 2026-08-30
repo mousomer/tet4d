@@ -278,7 +278,11 @@
         "version_directory": "4.7.2.stable",
         "macos_member": "templates/macos.zip",
         "windows_release_member": "templates/windows_release_x86_64.exe",
-        "windows_debug_member": "templates/windows_debug_x86_64.exe"
+        "windows_debug_member": "templates/windows_debug_x86_64.exe",
+        "android_release_member": "templates/android_release.apk",
+        "android_debug_member": "templates/android_debug.apk",
+        "android_source_member": "templates/android_source.zip",
+        "ios_member": "templates/ios.zip"
       },
       "godot_cpp": {
         "repository": "https://github.com/godotengine/godot-cpp.git",
@@ -304,6 +308,8 @@
         "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh",
         "macos_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh",
         "windows_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_windows.sh",
+        "android_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh --configuration-only",
+        "android_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh",
         "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"
       },
       "results": {

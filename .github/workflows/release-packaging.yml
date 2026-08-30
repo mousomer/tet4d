@@ -169,9 +169,98 @@ jobs:
           path: artifacts/godot/windows/Tet4D-Designer-*-windows-x86_64.zip
           if-no-files-found: error
 
+  package-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Resolve pinned Linux Godot and templates
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          toolchain = json.loads(
+              Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+          )["governance"]["godot_toolchain"]
+          editor = toolchain["assets"]["linux_x86_64"]
+          templates = toolchain["export_templates"]
+          values = {
+              "GODOT_ASSET_NAME": editor["name"],
+              "GODOT_ASSET_URL": editor["url"],
+              "GODOT_ASSET_SHA256": editor["sha256"],
+              "GODOT_ASSET_EXECUTABLE": editor["executable"],
+              "GODOT_TEMPLATE_NAME": templates["name"],
+              "GODOT_TEMPLATE_URL": templates["url"],
+              "GODOT_TEMPLATE_SHA512": templates["sha512"],
+              "GODOT_ANDROID_RELEASE_MEMBER": templates["android_release_member"],
+              "GODOT_ANDROID_DEBUG_MEMBER": templates["android_debug_member"],
+              "GODOT_ANDROID_SOURCE_MEMBER": templates["android_source_member"],
+          }
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  env_file.write(f"{key}={value}\n")
+          PY
+
+      - name: Install exact Godot editor and Android export templates
+        run: |
+          mkdir -p "$RUNNER_TEMP/tet4d-godot" .godot-templates
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" "$GODOT_ASSET_URL"
+          echo "$GODOT_ASSET_SHA256  $RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" -d "$RUNNER_TEMP/tet4d-godot"
+          chmod +x "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE"
+          echo "GODOT_BIN=$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE" >> "$GITHUB_ENV"
+
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" "$GODOT_TEMPLATE_URL"
+          echo "$GODOT_TEMPLATE_SHA512  $RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" | sha512sum --check
+          unzip -j -o "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            "$GODOT_ANDROID_RELEASE_MEMBER" "$GODOT_ANDROID_DEBUG_MEMBER" \
+            "$GODOT_ANDROID_SOURCE_MEMBER" -d .godot-templates
+          echo "GODOT_TEMPLATE_ROOT=$GITHUB_WORKSPACE/.godot-templates" >> "$GITHUB_ENV"
+
+      - name: Resolve Android NDK
+        run: |
+          ndk_root="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -n 1)"
+          echo "ANDROID_NDK_ROOT=$ndk_root" >> "$GITHUB_ENV"
+
+      - name: Verify shared Design Laboratory semantics
+        run: |
+          "$GODOT_BIN" --headless --path godot/Tet4D.Godot \
+            --script tests/run_cross_platform_design_tests.gd
+
+      - name: Build and validate the Android tablet Designer
+        run: GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
+          packaging/godot/build_android.sh
+
+      - name: Upload Android Designer artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tet4d-designer-android-arm64-godot
+          path: artifacts/godot/android/Tet4D-Designer-*-android-arm64.apk
+          if-no-files-found: error
+
   publish-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [package-macos, package-windows]
+    needs: [package-macos, package-windows, package-android]
     runs-on: ubuntu-latest
     steps:
       - name: Download packaged release
