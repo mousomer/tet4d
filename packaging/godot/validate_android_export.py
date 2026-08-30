@@ -42,6 +42,11 @@ SIGNING_SECRET_OPTIONS = (
     "keystore/release_password",
     "keystore/release_user",
 )
+# display/window/handheld/orientation is an integer enum, not a string: 0
+# Landscape, 2 Reverse Landscape, 4 Sensor Landscape. A string value is
+# silently ignored by the engine and falls back to 0, so the accepted values
+# are checked numerically.
+LANDSCAPE_ORIENTATIONS = ("0", "2", "4")
 ABSOLUTE_PATH_PATTERN = re.compile(r'"(?:/Users/|/home/|[A-Za-z]:\\\\)')
 
 
@@ -53,6 +58,11 @@ PRUNED_DIRECTORIES = frozenset(
 
 class AndroidExportError(ValueError):
     """The Android export configuration violates the packaging contract."""
+
+
+def _project_setting(project_text: str, key: str) -> str:
+    match = re.search(rf'^{re.escape(key)}="?([^"\n]*)"?$', project_text, re.MULTILINE)
+    return match.group(1) if match else ""
 
 
 def _committed_signing_material(repository_root: Path) -> list[str]:
@@ -100,8 +110,9 @@ def _check_tablet_shape(options: configparser.SectionProxy) -> None:
 
 def _check_project_settings(repository_root: Path) -> None:
     project_text = (repository_root / "godot/Tet4D.Godot/project.godot").read_text(encoding="utf-8")
-    if 'window/handheld/orientation="landscape"' not in project_text:
-        raise AndroidExportError("handheld orientation must be landscape")
+    orientation = _project_setting(project_text, "window/handheld/orientation")
+    if orientation not in LANDSCAPE_ORIENTATIONS:
+        raise AndroidExportError(f"handheld orientation must be landscape, not {orientation!r}")
     # The engine default would let the system Back gesture quit the process and
     # discard an in-flight comparison session.
     if "config/quit_on_go_back=false" not in project_text:

@@ -26,7 +26,7 @@ config/tet4d_target_godot_version="4.7.2-stable"
 window/size/viewport_width=1600
 window/size/viewport_height=960
 window/stretch/mode="canvas_items"
-window/handheld/orientation="landscape"
+window/handheld/orientation=4
 
 [input_devices]
 

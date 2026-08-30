@@ -82,7 +82,7 @@ def test_pack_must_not_carry_development_only_files(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("replacement", "expected"),
     [
-        ('window/handheld/orientation="portrait"', "orientation must be landscape"),
+        ("window/handheld/orientation=1", "orientation must be landscape"),
         ("config/quit_on_go_back=true", "Back must not quit"),
     ],
 )
@@ -90,7 +90,7 @@ def test_project_settings_are_enforced(tmp_path: Path, replacement: str, expecte
     module = _module(EXPORT_VALIDATOR, "android_export_validator")
     root = _repository(tmp_path)
     project = root / "godot/Tet4D.Godot/project.godot"
-    original = 'window/handheld/orientation="landscape"' if "orientation" in replacement else "config/quit_on_go_back=false"
+    original = "window/handheld/orientation=4" if "orientation" in replacement else "config/quit_on_go_back=false"
     project.write_text(project.read_text(encoding="utf-8").replace(original, replacement), encoding="utf-8")
     with pytest.raises(module.AndroidExportError, match=expected):
         module.validate(root)

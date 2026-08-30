@@ -310,6 +310,8 @@
         "windows_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_windows.sh",
         "android_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh --configuration-only",
         "android_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh",
+        "ipados_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh --configuration-only",
+        "ipados_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh",
         "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"
       },
       "results": {

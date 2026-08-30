@@ -2146,6 +2146,8 @@ Parameters:
 - `governance.godot_toolchain.canonical_commands.android_release_export`: `"GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.full_repository`: `"CODEX_MODE=1 ./scripts/verify.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.godot_verification`: `"GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh"` (`string`)
+- `governance.godot_toolchain.canonical_commands.ipados_configuration_export`: `"GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh --configu...` (`string`)
+- `governance.godot_toolchain.canonical_commands.ipados_release_export`: `"GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.macos_release_export`: `"GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.native_build`: `"./scripts/build_godot_tet4d_core.sh"` (`string`)
 - `governance.godot_toolchain.canonical_commands.native_tests`: `"./scripts/test_godot_tet4d_core.sh"` (`string`)
