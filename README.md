@@ -176,9 +176,11 @@ CODEX_MODE=1 ./scripts/verify.sh
 - The current supported release target is a macOS 13+ Universal Godot app/ZIP.
   Linux and Windows Godot artifacts are development-configured but not
   runtime-accepted release targets. The Python/PyInstaller desktop packages are
-  an active, separately named product family; macOS arm64 and Linux amd64 proof
-  is complete, while Windows exit/uninstall proof remains pending before
-  unified release publication.
+  an active, separately named product family; macOS arm64, Linux amd64, and
+  Windows x64 package/install/runtime/removal proof is complete from one
+  integrated source SHA. The unified release workflow now builds these three
+  installers plus the four explicitly named Godot Designer packages from one
+  source SHA and emits a checksum manifest after all seven pass.
 
 ## More Docs
 

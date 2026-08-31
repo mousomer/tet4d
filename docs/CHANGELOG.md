@@ -45,6 +45,18 @@
    a successful runtime smoke, but the PowerShell harness read an unset
    `$LASTEXITCODE`; it now waits for the process and checks its actual exit code
    before continuing to uninstall verification.
+3. The corrected proof then passed macOS arm64, Linux amd64, and Windows x64 at
+   exact integrated master `d542d682`, including project version checks,
+   outside-checkout launch, and mount/removal or install/uninstall. Unified
+   Python-plus-Designer release orchestration is now permitted.
+4. Release orchestration now builds the three Python installers and four Godot
+   Designer artifacts from one exact SHA, rejects a tag that disagrees with
+   `pyproject.toml`, and produces a seven-artifact checksum/source-SHA manifest
+   before tag publication. Explicit product-family filenames and truthful
+   unsigned simulator-only iPadOS status are part of the enforced contract.
+   The historical `0.8.0` publication label remains documented as a release
+   label/project-version mismatch; it is not silently promoted to project
+   version truth.
 
 ## 2026-08-30
 

@@ -1572,7 +1572,8 @@
         "packaging/pyinstaller/tet4d.spec",
         "packaging/scripts/build_macos.sh",
         "packaging/scripts/build_linux.sh",
-        "packaging/scripts/build_windows.ps1"
+        "packaging/scripts/build_windows.ps1",
+        "tools/release/release_metadata.py"
       ]
     },
     "content_rules": [
