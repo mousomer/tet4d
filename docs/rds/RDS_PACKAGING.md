@@ -278,6 +278,18 @@ exact executable non-interactively to install the pinned NDK, and then retain
 the existing exact Clang assertion. PATH inventory is not Android toolchain
 authority, and an unbounded `yes` pipeline is not part of the install contract.
 
+The same dispatch still rejected the Windows package after the source cache and
+export filters were corrected. A local MinGW build of the identical package
+passes strict validation, while the hosted Windows lane uses MSVC with release
+debug symbols. MSVC records the linker's absolute PDB location in the produced
+DLL unless `/PDBALTPATH` supplies an alternate CodeView path. The native build
+must therefore retain `/pathmap` for compiler records and add
+`/PDBALTPATH:%_PDB%` for MSVC links, so the embedded PDB reference is the actual
+PDB basename without the runner checkout. MinGW remains governed by its three
+prefix-map flags. Strict archive validation must identify the member containing
+a forbidden path so future failures remain attributable without weakening the
+marker contract.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.

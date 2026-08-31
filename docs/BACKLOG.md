@@ -244,6 +244,14 @@ command-line-tools executable under `$ANDROID_HOME`, install the pinned NDK
 without a `yes` pipeline, retain the Clang assertion, and rerun the complete
 gates before closing the unified release item.
 
+Windows in dispatch 33421053972 still failed strict host-path validation after
+cache isolation and preset exclusions were active. The same current package
+passes from local MinGW, isolating the remaining hosted-runner exposure to
+MSVC's embedded absolute PDB reference. Add `/PDBALTPATH:%_PDB%` to MSVC native
+links, retain the existing compiler path maps, improve the validator to name the
+offending ZIP member, and prove the correction through full PR and fresh
+integrated release gates.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

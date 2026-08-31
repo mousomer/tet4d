@@ -20,6 +20,7 @@ DISPOSABLE_PLATFORM_BUILD_SCRIPTS = (
     ROOT / "packaging/godot/build_android.sh",
     ROOT / "packaging/godot/build_ipados.sh",
 )
+NATIVE_SCONSTRUCT = ROOT / "native/tet4d_core/SConstruct"
 
 
 def _project_version() -> str:
@@ -114,6 +115,16 @@ def test_windows_template_output_is_one_absolute_7zip_argument() -> None:
     assert "$templateOutput = (Resolve-Path .godot-templates).Path" in workflow
     assert '"-o$templateOutput"' in workflow
     assert " -o.godot-templates " not in workflow
+
+
+def test_windows_native_build_sanitizes_compiler_and_linker_debug_paths() -> None:
+    build = NATIVE_SCONSTRUCT.read_text(encoding="utf-8")
+
+    assert 'if ARGUMENTS.get("use_mingw") == "yes":' in build
+    for flag in ["-ffile-prefix-map", "-fdebug-prefix-map", "-fmacro-prefix-map"]:
+        assert flag in build
+    assert 'CCFLAGS=["/pathmap:{}=.".format(repository_root)]' in build
+    assert 'LINKFLAGS=["/PDBALTPATH:%_PDB%"]' in build
 
 
 def test_disposable_platform_projects_drop_copied_editor_cache() -> None:

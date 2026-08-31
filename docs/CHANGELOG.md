@@ -94,6 +94,12 @@
     found Android command-line tools absent from PATH. Android release setup now
     resolves the exact `sdkmanager` under `$ANDROID_HOME` and invokes it without
     an unbounded `yes` pipeline before asserting the pinned Clang toolchain.
+12. The same integrated dispatch isolated the remaining Windows host-path leak
+    to hosted MSVC native output: the equivalent MinGW package validates, while
+    MSVC release debug information records an absolute PDB path in the DLL.
+    Windows native links now require `/PDBALTPATH:%_PDB%`, preserving compiler
+    source maps while embedding only the PDB basename; strict validation also
+    reports the specific archive member that contains any forbidden marker.
 
 ## 2026-08-30
 

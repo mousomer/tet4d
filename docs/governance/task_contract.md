@@ -111,6 +111,14 @@ bare PATH command. Acceptance requires resolving and asserting the exact
 pinned NDK without an unbounded `yes` pipeline, retaining the Clang assertion,
 and repeating the full PR and integrated seven-artifact gates.
 
+Windows follow-up from dispatch 33421053972: copied-cache removal and all four
+export exclusions were active, but the hosted MSVC build still embedded the
+runner checkout in the native release payload; the identical local MinGW
+package passes. Acceptance requires `/PDBALTPATH:%_PDB%` on MSVC native links,
+preservation of the existing MSVC `/pathmap` and MinGW prefix maps, member-level
+strict-validator diagnostics, focused packaging coverage, the complete
+repository/PR gates, and a fresh integrated Windows/unified release proof.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,
