@@ -120,7 +120,7 @@ def _project(
         _pack(list(module.REQUIRED_PACK_RESOURCES), descriptor)
     )
     if native:
-        (root / module.RELEASE_NATIVE_FRAMEWORK).mkdir()
+        (root / module.RELEASE_NATIVE_FRAMEWORK_PATH).mkdir(parents=True)
     return root
 
 
@@ -155,7 +155,10 @@ def test_configuration_artifact_cannot_masquerade_as_release(tmp_path: Path) -> 
 def test_release_artifact_requires_native_framework(tmp_path: Path) -> None:
     module = _module()
     project = _project(tmp_path, artifact_mode="release")
-    with pytest.raises(module.IpadOsProjectError, match="missing libtet4d_core"):
+    with pytest.raises(
+        module.IpadOsProjectError,
+        match="missing Tet4DDesigner/dylibs/addons/tet4d_core/bin/libtet4d_core",
+    ):
         module.validate(project, ROOT, "release")
 
 
@@ -201,6 +204,16 @@ def test_build_script_separates_configuration_and_release_outputs() -> None:
         'cp -R "$native_xcframework" "$staged_project_root/addons/tet4d_core/bin/"'
         in script
     )
+
+
+def test_ipados_build_creates_native_staging_directory_before_copy() -> None:
+    script = (ROOT / "packaging/godot/build_ipados.sh").read_text(encoding="utf-8")
+    mkdir = 'mkdir -p "$staged_project_root/addons/tet4d_core/bin"'
+    copy = 'cp -R "$native_xcframework" "$staged_project_root/addons/tet4d_core/bin/"'
+
+    assert mkdir in script
+    assert copy in script
+    assert script.index(mkdir) < script.index(copy)
 
 
 def test_iphone_device_family_is_rejected(tmp_path: Path) -> None:

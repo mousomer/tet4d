@@ -167,6 +167,7 @@ else
     echo "iPadOS release GDExtension was not produced" >&2
     exit 1
   fi
+  mkdir -p "$staged_project_root/addons/tet4d_core/bin"
   cp -R "$native_xcframework" "$staged_project_root/addons/tet4d_core/bin/"
 fi
 

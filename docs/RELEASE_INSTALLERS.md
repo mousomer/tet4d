@@ -147,8 +147,10 @@ project on a host without the iPhoneOS SDK. Its reduced GDExtension descriptor
 deliberately omits the unavailable iOS libraries, so its checksums are
 configuration evidence only. Dropping the flag produces the distinct release
 class, cross-compiles the iOS GDExtension, retains the complete descriptor, and
-compiles the exported project unsigned for the simulator, which proves it
-builds without any signing credential. Their project outputs are:
+stages the complete XCFramework directory before Godot copies it to
+`Tet4DDesigner/dylibs/addons/tet4d_core/bin/`. It then compiles the exported
+project unsigned for the simulator, which proves it builds without any signing
+credential. Their project outputs are:
 
 ```text
 artifacts/godot/ipad/configuration-export/Tet4DDesigner.xcodeproj

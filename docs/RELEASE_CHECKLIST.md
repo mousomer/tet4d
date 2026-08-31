@@ -46,7 +46,8 @@
    Xcode project with explicit `--artifact-mode configuration` or
    `--artifact-mode release`. Configuration mode must have the deliberately
    reduced descriptor and no native framework; release mode must have the
-   complete iOS descriptor and release xcframework. The generated export
+   complete iOS descriptor and release xcframework at Godot's canonical
+   `Tet4DDesigner/dylibs/addons/tet4d_core/bin/` path. The generated export
    method must be `development` in both modes.
 10. No keystore, certificate, provisioning profile, or other signing secret is
     committed on any platform.

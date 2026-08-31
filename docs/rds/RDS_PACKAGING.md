@@ -143,7 +143,10 @@ The current canonical files are:
 2. iPadOS builds use the pinned 4.7.2 iOS export template, the iPad device
    family, landscape orientation, and integer
    `application/export_method_release=1` (Development). Godot 4.7's mobile
-   renderer requires an A12 device or newer.
+   renderer requires an A12 device or newer. Release assembly stages the
+   complete XCFramework directory under the disposable add-on `bin` directory;
+   Godot exports it under
+   `Tet4DDesigner/dylibs/addons/tet4d_core/bin/` in the Xcode project.
 3. `display/window/handheld/orientation` is an integer enum. A string value is
    silently ignored by the engine and falls back to a single pinned landscape
    orientation, so the validators assert the numeric value.
