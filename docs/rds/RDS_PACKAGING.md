@@ -188,8 +188,15 @@ Proof status at 2026-08-31:
   `191b566d361bdd19784d826fee83458b657a5fea14f9ae9d3a5ca80161c1a7a8`.
   The embedded PyInstaller Mach-O is ad-hoc signed; the outer app bundle and
   shell launcher are unsigned, and the package is not notarized.
-- Linux and Windows: real-runner build, version, installation,
-  outside-checkout launch, and uninstall proof remain pending.
+- Linux amd64: Actions run 33390087916 built
+  `tet4d_0.7.5_amd64.deb` at integrated master `ede6cf92`, verified its package
+  version and architecture, installed it, launched `/usr/bin/tet4d` from the
+  runner temporary directory with isolated user state, and purged it. SHA-256:
+  `89eae81e4cfd2c92bbd530e0fbd97b62cd112a45783abfb4edf1da730cea30cb`.
+- Windows x64: the same run built and installed the MSI and its installed
+  runtime emitted a successful smoke result. The GUI-subsystem process-wait
+  defect in the proof harness prevented exit-code and uninstall acceptance, so
+  Windows remains pending until the corrected proof passes.
 
 Until all three pass, `.github/workflows/release-packaging.yml` remains
 Godot-only. The temporary manual

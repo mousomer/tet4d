@@ -162,8 +162,10 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("/usr/bin/tet4d --runtime-smoke-check", workflow)
         self.assertIn("sudo dpkg --purge tet4d", workflow)
         self.assertIn("Start-Process msiexec.exe", workflow)
-        self.assertIn("Push-Location $env:RUNNER_TEMP", workflow)
-        self.assertIn("& $installedExe --runtime-smoke-check", workflow)
+        self.assertIn("Start-Process -FilePath $installedExe", workflow)
+        self.assertIn("-WorkingDirectory $env:RUNNER_TEMP -Wait -PassThru", workflow)
+        self.assertIn("$smoke.ExitCode", workflow)
+        self.assertIn("Uninstall registration remains after removal", workflow)
         self.assertIn("Python packaging proof gate", workflow)
 
     def test_pyinstaller_spec_includes_lazy_playbot_hiddenimports(self) -> None:
