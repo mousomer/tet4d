@@ -77,8 +77,8 @@ Godot 4.7.2 editor and matching export templates:
 GODOT_BIN=/path/to/Godot packaging/godot/build_macos.sh
 ```
 
-See `docs/RELEASE_INSTALLERS.md` for the supported target, artifact checks,
-outside-tree smoke procedure, and legacy packaging disposition.
+See `docs/RELEASE_INSTALLERS.md` for the product families, artifact checks,
+outside-tree smoke procedures, and current platform evidence.
 
 ## Why This Exists
 
@@ -175,8 +175,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 - Topology Playground, broader topology editing, and Python-first development flows still live in the Python launcher.
 - The current supported release target is a macOS 13+ Universal Godot app/ZIP.
   Linux and Windows Godot artifacts are development-configured but not
-  runtime-accepted release targets. The old PyInstaller installers are retained
-  legacy packaging.
+  runtime-accepted release targets. The Python/PyInstaller desktop packages are
+  an active, separately named product family; macOS arm64 proof is complete and
+  Linux/Windows proof remains pending before unified release publication.
 
 ## More Docs
 

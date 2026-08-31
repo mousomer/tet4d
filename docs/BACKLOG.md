@@ -147,15 +147,16 @@ evaluations, viewport PNG pairs, immutable hashes/snapshots, explicit nomination
 three-file proposal export, and a read-only repository validator provide the
 evidence/promotion path without selecting a default or mutating authority.
 
-Active integration correction (2026-08-31): comparison assignment is being
-made explicit before merge. One catalogue selector exposes `Apply Live`,
+Completed integration correction (2026-08-31): comparison assignment was made
+explicit before merge. One catalogue selector exposes `Apply Live`,
 `Set as A`, and `Set as B`; frozen A/B slots and `shown_arm` are independent.
 Showing, toggling, reset, blind mode, candidate edit/save, evaluation, and
 capture never infer an assignment target. Focused session and production-panel
 runtime tests cover reassignment while B is shown, repeated display changes,
 reset, blind entry/exit, candidate isolation, snapshot restoration, and exact
-provenance. Draft integration PR #75 remains not merge-ready until the binary
-history rewrite, real-window checklist, and fresh final CI matrix are complete.
+provenance. The fresh final matrix for PR #75 was green at rewritten head
+`9dfabd44` and it was squash-merged to master as `eb112dc2`. Its agent-driven real-window
+check is recorded without claiming independent human sign-off.
 
 The current Godot Windows x86_64 portable ZIP builds with a release
 GDExtension, application identity/icon, shipped resources, no Python/editor
@@ -170,6 +171,16 @@ branch's history while its source metadata and validator tests were retained.
 Its original path and blob are unreachable from the rewritten branch. Future
 Windows candidates must use Actions, release, or canonical release-candidate
 asset storage outside normal Git history.
+
+Active packaging proof (2026-08-31): Python/PyInstaller is restored as an
+active, separately named product family. The existing macOS builder produced a
+versioned arm64 DMG from integrated master; its mounted app launched from
+outside the checkout with isolated user state. Windows and Linux must still
+pass real-runner build, version, install, outside-checkout runtime smoke, and
+uninstall checks. The Godot-only release workflow must not be unified until all
+three platform builders pass. Remote branch review deleted 22 content-proven
+obsolete refs and retained `codex/explosion-architecture-inventory` for manual
+inspection because it contains unique implementation changes and conflicts.
 
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical

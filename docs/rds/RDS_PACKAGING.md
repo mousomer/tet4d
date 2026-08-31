@@ -5,15 +5,16 @@ and iPadOS Design Laboratory candidates. Scope now covers desktop and tablet
 distribution; the document title is a governed identity token and is retained.)
 Author: Omer + Codex
 Date: 2026-08-30
-Scope: current Godot product exports plus retained legacy Python packaging.
+Scope: current Godot product exports plus the active Python/PyInstaller product
+family.
 
 ## 1. Purpose
 
-Define the release path that distributes the accepted Godot 2D/3D/4D product
-without a repository checkout, Python runtime, or developer-only native build
-tree. Keep the earlier Python/PyInstaller installers identifiable as a retained
-legacy product path rather than allowing them to masquerade as the current
-professional-core release.
+Define the release paths that distribute the accepted Godot 2D/3D/4D product
+and the active Python product without a repository checkout or developer-only
+build tree. Product-family names and evidence remain explicit: a Python bundle
+embeds its own runtime and must never masquerade as the Godot professional-core
+artifact, while neither family may claim a platform it did not build and test.
 
 ## 2. Current supported release path
 
@@ -160,10 +161,9 @@ The current canonical files are:
    only when explicitly validated as configuration evidence. Release mode must
    carry both iOS library declarations and the release native xcframework.
 
-## 5. Legacy Python installer path
+## 5. Active Python installer path
 
-The following path is retained for the earlier Python/pygame product and its
-historical releases:
+The following path owns the active Python/pygame packaged product family:
 
 - `packaging/pyinstaller/tet4d.spec`;
 - `packaging/scripts/build_macos.sh`;
@@ -171,10 +171,30 @@ historical releases:
 - `packaging/scripts/build_windows.ps1`; and
 - `.dmg`, `.deb`, and `.msi` outputs described by prior changelog entries.
 
-This path embeds Python and launches `front.py`. It is not the Stage 54G Godot
-professional-core release path, is not required to close that gate, and must
-not be attached by the current Godot release workflow. Repairs to retained
-legacy packaging require a separate task.
+This path embeds Python and launches `front.py`. It is distinct from the Stage
+54G Godot professional-core release path and is not required to close that
+gate. Before it enters the unified release workflow, every existing builder
+must run from clean integrated source on its real operating system, produce the
+version from `pyproject.toml`, and pass package installation plus an
+outside-checkout `--runtime-smoke-check` followed by uninstallation where the
+platform has an installer.
+
+Proof status at 2026-08-31:
+
+- macOS arm64: the existing builder produced
+  `tet4d-0.7.5-macos-arm64.dmg` from integrated master
+  `eb112dc26ef8c87aa86be94d6cfc026f134e8d94`; the mounted app ran from
+  `/private/tmp` with isolated user state and no checkout dependency. SHA-256:
+  `191b566d361bdd19784d826fee83458b657a5fea14f9ae9d3a5ca80161c1a7a8`.
+  The embedded PyInstaller Mach-O is ad-hoc signed; the outer app bundle and
+  shell launcher are unsigned, and the package is not notarized.
+- Linux and Windows: real-runner build, version, installation,
+  outside-checkout launch, and uninstall proof remain pending.
+
+Until all three pass, `.github/workflows/release-packaging.yml` remains
+Godot-only. The temporary manual
+`.github/workflows/python-packaging-proof.yml` is evidence infrastructure, not
+a publication path.
 
 ## 6. Acceptance criteria
 
@@ -199,6 +219,10 @@ legacy packaging require a separate task.
 10. The Android and iPadOS candidates pass their configuration and artifact
     validators, and the recorded evidence names the exact level at which it was
     obtained.
-11. Linux, direct clean-machine Windows acceptance, tablet device acceptance,
-    signing/notarization, and legacy Python installers are reported with their
-    exact verification limits.
+11. Linux Godot, direct clean-machine Windows Godot acceptance, tablet device
+    acceptance, signing/notarization, and each Python installer are reported
+    with their exact verification limits.
+12. Python packages use the project version, build on their real platform,
+    install or mount successfully, launch from outside the checkout with
+    isolated user state, and uninstall cleanly where applicable before they are
+    admitted to the unified release workflow.

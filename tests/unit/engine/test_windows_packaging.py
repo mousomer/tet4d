@@ -46,6 +46,16 @@ class TestWindowsPackagingScript(unittest.TestCase):
         return workflow_path.read_text(encoding="utf-8")
 
     @staticmethod
+    def _proof_workflow() -> str:
+        workflow_path = (
+            Path(__file__).resolve().parents[3]
+            / ".github"
+            / "workflows"
+            / "python-packaging-proof.yml"
+        )
+        return workflow_path.read_text(encoding="utf-8")
+
+    @staticmethod
     def _pyinstaller_spec() -> str:
         spec_path = (
             Path(__file__).resolve().parents[3]
@@ -121,13 +131,40 @@ class TestWindowsPackagingScript(unittest.TestCase):
         )
         self.assertNotIn("artifacts/installers/", workflow)
 
-    def test_legacy_packaging_scripts_are_not_release_workflow_inputs(self) -> None:
+    def test_python_packaging_scripts_are_not_yet_release_workflow_inputs(self) -> None:
         workflow = self._release_workflow()
 
         self.assertIn("packaging/godot/build_macos.sh", workflow)
         self.assertNotIn("packaging/scripts/build_linux.sh", workflow)
         self.assertNotIn("packaging/scripts/build_macos.sh", workflow)
         self.assertNotIn("packaging/scripts/build_windows.ps1", workflow)
+
+    def test_python_packaging_proof_runs_existing_builders_on_real_platforms(
+        self,
+    ) -> None:
+        workflow = self._proof_workflow()
+
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("runs-on: macos-latest", workflow)
+        self.assertIn("runs-on: ubuntu-latest", workflow)
+        self.assertIn("runs-on: windows-latest", workflow)
+        self.assertIn("ref: ${{ github.sha }}", workflow)
+        self.assertIn("packaging/scripts/build_macos.sh", workflow)
+        self.assertIn("packaging/scripts/build_linux.sh", workflow)
+        self.assertIn("packaging/scripts/build_windows.ps1", workflow)
+
+    def test_python_packaging_proof_checks_installed_runtime_and_removal(self) -> None:
+        workflow = self._proof_workflow()
+
+        self.assertIn("hdiutil attach -nobrowse -readonly", workflow)
+        self.assertIn("cd \"$RUNNER_TEMP\"", workflow)
+        self.assertIn("sudo dpkg --install", workflow)
+        self.assertIn("/usr/bin/tet4d --runtime-smoke-check", workflow)
+        self.assertIn("sudo dpkg --purge tet4d", workflow)
+        self.assertIn("Start-Process msiexec.exe", workflow)
+        self.assertIn("Push-Location $env:RUNNER_TEMP", workflow)
+        self.assertIn("& $installedExe --runtime-smoke-check", workflow)
+        self.assertIn("Python packaging proof gate", workflow)
 
     def test_pyinstaller_spec_includes_lazy_playbot_hiddenimports(self) -> None:
         spec = self._pyinstaller_spec()

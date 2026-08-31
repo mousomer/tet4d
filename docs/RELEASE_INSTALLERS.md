@@ -1,8 +1,11 @@
 # Godot Release Exports
 
-Tet4D's current professional-core release path is the Godot 4.7.2 macOS
-Universal app. The earlier Python/PyInstaller installers are retained as a
-legacy path and are not the Stage 54G product artifact.
+Tet4D has two explicitly named product families: the current Godot 4.7.2
+professional-core exports and the active Python/PyInstaller desktop product.
+The Python packages are not Stage 54G Godot artifacts and do not enter the
+unified release workflow until their real-platform proof gate passes.
+Earlier release records call the Python path legacy; that term is historical,
+not its current product status.
 
 ## Build the current release candidate
 
@@ -182,11 +185,12 @@ authorized and provisioned.
   - iPadOS Xcode project for the iPad device family; built in CI, device
     acceptance pending.
 - Development-configured only: Linux Godot GDExtension artifact names.
-- Legacy retained path: Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders
-  under `packaging/scripts/` and `packaging/pyinstaller/`.
+- Active Python product family: PyInstaller `.dmg`, `.deb`, and `.msi`
+  builders under `packaging/scripts/` and `packaging/pyinstaller/`; macOS arm64
+  is proven from integrated master, while Linux and Windows proof is pending.
 
-Do not report legacy installer CI or static GDExtension declarations as current
-Godot runtime release evidence.
+Do not report Python installer CI or static GDExtension declarations as Godot
+runtime release evidence; keep the two product families explicit.
 
 ## Current release workflow
 
@@ -195,5 +199,6 @@ Windows Designer ZIP, the Android tablet APK, and the iPadOS Xcode project from
 exact pinned editors and templates. The Android job runs on `ubuntu-latest` and
 the iPadOS job on `macos-latest`, because those runners carry the Android and
 Xcode toolchains that a given development host may not. A matching tag may
-publish to its GitHub release after all jobs pass. The workflow does not publish
-retained Python installers.
+publish to its GitHub release after all jobs pass. It does not yet publish
+Python installers. The manual `python-packaging-proof.yml` workflow must prove
+all three existing Python builders before release orchestration is unified.
