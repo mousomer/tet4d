@@ -175,9 +175,11 @@ asset storage outside normal Git history.
 Active packaging proof (2026-08-31): Python/PyInstaller is restored as an
 active, separately named product family. The existing macOS builder produced a
 versioned arm64 DMG from integrated master; its mounted app launched from
-outside the checkout with isolated user state. Windows and Linux must still
-pass real-runner build, version, install, outside-checkout runtime smoke, and
-uninstall checks. The Godot-only release workflow must not be unified until all
+outside the checkout with isolated user state. Actions run 33390087916 also
+proved the Linux DEB end to end. Windows built and installed its MSI and printed
+`runtime smoke check: OK`, but its GUI-subsystem process returned control before
+the harness could inspect a process exit code, so explicit wait plus uninstall
+proof remains pending. The Godot-only release workflow must not be unified until all
 three platform builders pass. Remote branch review deleted 22 content-proven
 obsolete refs and retained `codex/explosion-architecture-inventory` for manual
 inspection because it contains unique implementation changes and conflicts.

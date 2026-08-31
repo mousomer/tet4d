@@ -45,9 +45,13 @@ history ledger. Detailed history is preserved in
   `191b566d361bdd19784d826fee83458b657a5fea14f9ae9d3a5ca80161c1a7a8`;
   the mounted app passed an isolated outside-checkout runtime smoke. Its
   embedded PyInstaller executable is ad-hoc signed, while the outer app bundle
-  is unsigned and not notarized. Linux and Windows build, version, install,
-  outside-checkout runtime, and uninstall proof remain pending on real runners.
-  The release workflow remains Godot-only until all three Python builders pass.
+  is unsigned and not notarized. Actions run 33390087916 proved Linux build,
+  version, installation, outside-checkout runtime, checksum, and purge. Windows
+  built and installed its MSI and the installed runtime printed success, but
+  the GUI-subsystem process returned control before PowerShell populated
+  `$LASTEXITCODE`; explicit process waiting and the still-unreached uninstall
+  checks remain pending. The release workflow remains Godot-only until all
+  three Python builders pass.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

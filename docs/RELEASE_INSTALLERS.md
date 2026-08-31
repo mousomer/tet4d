@@ -187,7 +187,8 @@ authorized and provisioned.
 - Development-configured only: Linux Godot GDExtension artifact names.
 - Active Python product family: PyInstaller `.dmg`, `.deb`, and `.msi`
   builders under `packaging/scripts/` and `packaging/pyinstaller/`; macOS arm64
-  is proven from integrated master, while Linux and Windows proof is pending.
+  and Linux amd64 are proven from integrated master. Windows built, installed,
+  and launched, but explicit process-exit and uninstall proof remains pending.
 
 Do not report Python installer CI or static GDExtension declarations as Godot
 runtime release evidence; keep the two product families explicit.

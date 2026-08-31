@@ -179,9 +179,8 @@ jobs:
           $env:APPDATA = $smokeAppData
           $env:SDL_VIDEODRIVER = "dummy"
           $env:SDL_AUDIODRIVER = "dummy"
-          Push-Location $env:RUNNER_TEMP
-          try { & $installedExe --runtime-smoke-check } finally { Pop-Location }
-          if ($LASTEXITCODE -ne 0) { throw "Installed runtime smoke failed" }
+          $smoke = Start-Process -FilePath $installedExe -ArgumentList "--runtime-smoke-check" -WorkingDirectory $env:RUNNER_TEMP -Wait -PassThru
+          if ($smoke.ExitCode -ne 0) { throw "Installed runtime smoke failed with $($smoke.ExitCode)" }
           Get-FileHash $artifact -Algorithm SHA256 | Format-List
           $uninstallLog = Join-Path $env:RUNNER_TEMP "tet4d-uninstall.log"
           $remove = Start-Process msiexec.exe -ArgumentList @("/x", "`"$artifact`"", "/qn", "/norestart", "/l*v", "`"$uninstallLog`"") -Wait -PassThru
@@ -189,6 +188,10 @@ jobs:
           foreach ($path in @($installedExe, $startMenuShortcut, $desktopShortcut)) {
             if (Test-Path $path) { throw "Uninstall left path behind: $path" }
           }
+          $remainingRegistration = Get-ItemProperty (Join-Path $uninstallRoot "*") |
+            Where-Object { $_.DisplayName -eq "tet4d" } |
+            Select-Object -First 1
+          if ($remainingRegistration) { throw "Uninstall registration remains after removal" }
 
       - name: Upload proven Python Windows package
         uses: actions/upload-artifact@v7

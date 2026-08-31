@@ -40,6 +40,11 @@
    while the outer bundle is unsigned and not notarized. Windows and Linux
    real-runner proof remains required before the release workflow may be
    unified.
+2. The first three-runner proof built all Python packages and accepted macOS
+   and Linux end to end. The installed Windows GUI-subsystem executable emitted
+   a successful runtime smoke, but the PowerShell harness read an unset
+   `$LASTEXITCODE`; it now waits for the process and checks its actual exit code
+   before continuing to uninstall verification.
 
 ## 2026-08-30
 

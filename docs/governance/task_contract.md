@@ -22,6 +22,16 @@ remain unreachable from integrated `master`. Twenty-two reviewed obsolete
 remote branches were deleted; `codex/explosion-architecture-inventory` remains
 for inspection because it carries unique implementation work and conflicts.
 
+Python proof result at integrated master `ede6cf92708f188cdb09dd3838104a8f393b6f17`:
+macOS and Linux passed build, package-version inspection, outside-checkout
+runtime, and removal checks in Actions run 33390087916. Windows built and
+installed its MSI and the installed GUI-subsystem executable printed
+`runtime smoke check: OK`, but the PowerShell harness incorrectly inspected an
+unset `$LASTEXITCODE` before the process completed. The proof workflow must wait
+for that process explicitly, inspect its process `ExitCode`, then reach and
+pass the uninstall checks before Windows or the three-platform criterion is
+accepted.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,
