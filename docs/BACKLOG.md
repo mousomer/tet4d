@@ -178,11 +178,19 @@ versioned arm64 DMG from integrated master; its mounted app launched from
 outside the checkout with isolated user state. Actions run 33390087916 also
 proved the Linux DEB end to end. Windows built and installed its MSI and printed
 `runtime smoke check: OK`, but its GUI-subsystem process returned control before
-the harness could inspect a process exit code, so explicit wait plus uninstall
-proof remains pending. The Godot-only release workflow must not be unified until all
-three platform builders pass. Remote branch review deleted 22 content-proven
+the harness could inspect a process exit code. That first-run harness defect was
+corrected before the final proof. Remote branch review deleted 22 content-proven
 obsolete refs and retained `codex/explosion-architecture-inventory` for manual
 inspection because it contains unique implementation changes and conflicts.
+
+The corrected follow-up run 33392862609 was green for all three Python platform jobs
+at exact master `d542d682`: macOS arm64 DMG, Linux amd64 DEB, and Windows x64
+MSI each built, reported 0.7.5, launched outside the checkout, and completed
+their mount/removal or install/uninstall checks. The release-unification gate
+is open. The seven-artifact Python-plus-Designer workflow,
+tag/project-version agreement check, and source-SHA/checksum manifest with
+truthful iPadOS status are implemented and awaiting integrated CI plus a real
+manual workflow-dispatch proof.
 
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical

@@ -2,8 +2,9 @@
 
 Tet4D has two explicitly named product families: the current Godot 4.7.2
 professional-core exports and the active Python/PyInstaller desktop product.
-The Python packages are not Stage 54G Godot artifacts and do not enter the
-unified release workflow until their real-platform proof gate passes.
+The Python packages are not Stage 54G Godot artifacts. Their three-platform
+proof gate passed, so the unified workflow now builds them alongside the Godot
+Designer family while keeping names and evidence separate.
 Earlier release records call the Python path legacy; that term is historical,
 not its current product status.
 
@@ -186,20 +187,30 @@ authorized and provisioned.
     acceptance pending.
 - Development-configured only: Linux Godot GDExtension artifact names.
 - Active Python product family: PyInstaller `.dmg`, `.deb`, and `.msi`
-  builders under `packaging/scripts/` and `packaging/pyinstaller/`; macOS arm64
-  and Linux amd64 are proven from integrated master. Windows built, installed,
-  and launched, but explicit process-exit and uninstall proof remains pending.
+  builders under `packaging/scripts/` and `packaging/pyinstaller/`; macOS arm64,
+  Linux amd64, and Windows x64 are proven from exact integrated master
+  `d542d682`, including outside-checkout launch and removal/uninstall.
 
 Do not report Python installer CI or static GDExtension declarations as Godot
 runtime release evidence; keep the two product families explicit.
 
 ## Current release workflow
 
-`.github/workflows/release-packaging.yml` builds the macOS Godot ZIP, the
-Windows Designer ZIP, the Android tablet APK, and the iPadOS Xcode project from
-exact pinned editors and templates. The Android job runs on `ubuntu-latest` and
-the iPadOS job on `macos-latest`, because those runners carry the Android and
-Xcode toolchains that a given development host may not. A matching tag may
-publish to its GitHub release after all jobs pass. It does not yet publish
-Python installers. The manual `python-packaging-proof.yml` workflow must prove
-all three existing Python builders before release orchestration is unified.
+`.github/workflows/release-packaging.yml` builds seven explicitly named
+artifacts from the exact triggering SHA: three Python installers and four Godot
+Designer packages. The Android job runs on `ubuntu-latest` and the iPadOS job
+on `macos-latest`, because those runners carry the Android and Xcode toolchains
+that a given development host may not. Every package job depends on a release
+identity contract. On tag runs, `v0.7.5` and `0.7.5` both normalize to the
+`pyproject.toml` version; a mismatch such as the historical `v0.8.0` release
+label against project version `0.7.5` fails before package construction or
+publication.
+
+After all seven package jobs pass, the workflow creates
+`tet4d-release-<version>-manifest.json`. It binds every exact filename and
+SHA-256 to the full 40-character source commit and records evidence boundaries,
+including that the iPadOS output is an unsigned Xcode project compiled for the
+simulator rather than a signed or device-accepted application. A matching tag
+publishes all seven artifacts plus this manifest to one GitHub release. Manual
+workflow dispatch exercises the same build and manifest gates without creating
+a release.

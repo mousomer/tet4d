@@ -48,6 +48,15 @@
    method must be `development` in both modes.
 10. No keystore, certificate, provisioning profile, or other signing secret is
     committed on any platform.
+11. Run `python tools/release/release_metadata.py validate-tag --tag <tag>` and
+    confirm the normalized tag exactly matches `pyproject.toml`; do not publish
+    a historical or proposed version label that disagrees with project truth.
+12. Confirm the unified workflow checked out one exact source SHA in all seven
+    package jobs and generated `tet4d-release-<version>-manifest.json` only
+    after every package passed.
+13. Verify the manifest names all three Python installers and all four Godot
+    Designer artifacts, records their SHA-256 values, and describes iPadOS as
+    an unsigned simulator-compiled Xcode project without device acceptance.
 
 ## Current-platform package
 
@@ -96,3 +105,6 @@
    to the unified release workflow until all three pass.
 6. Report ad-hoc signing and absent notarization; do not imply public
    Gatekeeper-ready distribution.
+7. Do not create or upload a tagged release unless the tag/project-version
+   invariant passes. A manual dispatch proves packaging and manifest assembly
+   without publishing a release.

@@ -329,7 +329,8 @@ jobs:
           bash -n packaging/scripts/build_macos.sh
           python -m pytest -q \
             tests/unit/boundary/test_godot_release_packaging.py \
-            tests/unit/engine/test_windows_packaging.py
+            tests/unit/engine/test_windows_packaging.py \
+            tests/unit/engine/test_release_metadata.py
 
   platform:
     name: Current Godot platform package (macOS Universal)
@@ -491,7 +492,9 @@ jobs:
           test -s docs/RELEASE_INSTALLERS.md
           python tools/governance/generate_configuration_reference.py --check
           python tools/governance/generate_maintenance_docs.py --check
-          python -m pytest -q tests/unit/engine/test_windows_packaging.py
+          python -m pytest -q \
+            tests/unit/engine/test_windows_packaging.py \
+            tests/unit/engine/test_release_metadata.py
 
   required-gate:
     name: CI required gate

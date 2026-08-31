@@ -1,20 +1,227 @@
-name: Godot Release Packaging
+name: Tet4D Release Packaging
 
 on:
   workflow_dispatch:
   push:
     tags:
       - "v*"
+      - "[0-9]*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  package-macos:
+  release-contract:
+    name: release identity contract
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.identity.outputs.version }}
+      source_sha: ${{ steps.identity.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Resolve project and source identity
+        id: identity
+        run: |
+          version="$(python tools/release/release_metadata.py project-version)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Require release tag to match project version
+        if: github.ref_type == 'tag'
+        run: python tools/release/release_metadata.py validate-tag --tag "$GITHUB_REF_NAME"
+
+  package-python-macos:
+    name: package Python Tet4D macOS arm64
+    needs: release-contract
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Require expected runner architecture
+        run: test "$(uname -m)" = arm64
+
+      - name: Build existing Python macOS package
+        env:
+          PYINSTALLER_CONFIG_DIR: ${{ runner.temp }}/pyinstaller
+          PYTHON_BIN: python
+        run: packaging/scripts/build_macos.sh
+
+      - name: Verify, mount, and launch outside checkout
+        env:
+          VERSION: ${{ needs.release-contract.outputs.version }}
+        run: |
+          artifact="$GITHUB_WORKSPACE/artifacts/installers/tet4d-$VERSION-macos-arm64.dmg"
+          test -f "$artifact"
+          mount_dir="$RUNNER_TEMP/tet4d-python-mount"
+          smoke_home="$RUNNER_TEMP/tet4d-python-home"
+          mkdir -p "$mount_dir" "$smoke_home"
+          hdiutil attach -nobrowse -readonly -mountpoint "$mount_dir" "$artifact"
+          trap 'hdiutil detach "$mount_dir"' EXIT
+          app="$mount_dir/tet4d.app"
+          test "$(defaults read "$app/Contents/Info" CFBundleShortVersionString)" = "$VERSION"
+          file "$app/Contents/Resources/tet4d-runtime/tet4d" | grep -q arm64
+          codesign -dv --verbose=4 "$app/Contents/Resources/tet4d-runtime/tet4d" 2>&1 | grep -q 'Signature=adhoc'
+          cd "$RUNNER_TEMP"
+          env HOME="$smoke_home" SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+            "$app/Contents/MacOS/tet4d" --runtime-smoke-check
+          shasum -a 256 "$artifact"
+          mkdir -p "$GITHUB_WORKSPACE/artifacts/release"
+          cp "$artifact" \
+            "$GITHUB_WORKSPACE/artifacts/release/tet4d-python-$VERSION-macos-arm64.dmg"
+
+      - name: Upload Python macOS package
+        uses: actions/upload-artifact@v7
+        with:
+          name: tet4d-python-${{ needs.release-contract.outputs.version }}-macos-arm64
+          path: artifacts/release/tet4d-python-*-macos-arm64.dmg
+          if-no-files-found: error
+
+  package-python-linux:
+    name: package Python Tet4D Linux x86_64
+    needs: release-contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Build existing Python Linux package
+        env:
+          PYINSTALLER_CONFIG_DIR: ${{ runner.temp }}/pyinstaller
+          PYTHON_BIN: python
+        run: packaging/scripts/build_linux.sh
+
+      - name: Verify, install, launch outside checkout, and uninstall
+        env:
+          VERSION: ${{ needs.release-contract.outputs.version }}
+        run: |
+          artifact="$GITHUB_WORKSPACE/artifacts/installers/tet4d_${VERSION}_amd64.deb"
+          test -f "$artifact"
+          test "$(dpkg-deb --field "$artifact" Version)" = "$VERSION"
+          test "$(dpkg-deb --field "$artifact" Architecture)" = amd64
+          sudo dpkg --install "$artifact"
+          test "$(dpkg-query --showformat='${Version}' --show tet4d)" = "$VERSION"
+          test -x /usr/bin/tet4d
+          test -f /usr/share/applications/tet4d.desktop
+          smoke_data="$RUNNER_TEMP/tet4d-python-xdg"
+          mkdir -p "$smoke_data"
+          cd "$RUNNER_TEMP"
+          env XDG_DATA_HOME="$smoke_data" SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+            /usr/bin/tet4d --runtime-smoke-check
+          sha256sum "$artifact"
+          sudo dpkg --purge tet4d
+          test ! -e /usr/bin/tet4d
+          test ! -e /opt/tet4d
+          test ! -e /usr/share/applications/tet4d.desktop
+          mkdir -p "$GITHUB_WORKSPACE/artifacts/release"
+          cp "$artifact" \
+            "$GITHUB_WORKSPACE/artifacts/release/tet4d-python-$VERSION-linux-x86_64.deb"
+
+      - name: Upload Python Linux package
+        uses: actions/upload-artifact@v7
+        with:
+          name: tet4d-python-${{ needs.release-contract.outputs.version }}-linux-x86_64
+          path: artifacts/release/tet4d-python-*-linux-x86_64.deb
+          if-no-files-found: error
+
+  package-python-windows:
+    name: package Python Tet4D Windows x86_64
+    needs: release-contract
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Build existing Python Windows package
+        shell: pwsh
+        env:
+          PYINSTALLER_CONFIG_DIR: ${{ runner.temp }}\pyinstaller
+          PYTHON_BIN: python
+        run: packaging/scripts/build_windows.ps1
+
+      - name: Verify, install, launch outside checkout, and uninstall
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.release-contract.outputs.version }}
+        run: |
+          $artifact = Join-Path $env:GITHUB_WORKSPACE "artifacts\installers\tet4d-$env:VERSION-windows-x64.msi"
+          if (-not (Test-Path $artifact)) { throw "Missing MSI: $artifact" }
+          $installLog = Join-Path $env:RUNNER_TEMP "tet4d-install.log"
+          $install = Start-Process msiexec.exe -ArgumentList @("/i", "`"$artifact`"", "/qn", "/norestart", "/l*v", "`"$installLog`"") -Wait -PassThru
+          if ($install.ExitCode -notin @(0, 3010)) { throw "MSI install failed with $($install.ExitCode)" }
+          $installedExe = Join-Path $env:ProgramFiles "tet4d\tet4d.exe"
+          $startMenuShortcut = Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\tet4d\tet4d.lnk"
+          $desktopShortcut = Join-Path $env:PUBLIC "Desktop\tet4d.lnk"
+          foreach ($path in @($installedExe, $startMenuShortcut, $desktopShortcut)) {
+            if (-not (Test-Path $path)) { throw "Installer omitted expected path: $path" }
+          }
+          $uninstallRoot = Join-Path "HKLM:" "Software\Microsoft\Windows\CurrentVersion\Uninstall"
+          $uninstall = Get-ItemProperty (Join-Path $uninstallRoot "*") |
+            Where-Object { $_.DisplayName -eq "tet4d" } |
+            Select-Object -First 1
+          if (-not $uninstall) { throw "tet4d uninstall registration is missing" }
+          if ($uninstall.DisplayVersion -ne $env:VERSION) {
+            throw "Installed version '$($uninstall.DisplayVersion)' does not match '$env:VERSION'"
+          }
+          $smokeAppData = Join-Path $env:RUNNER_TEMP "tet4d-python-appdata\Roaming"
+          New-Item -ItemType Directory -Path $smokeAppData -Force | Out-Null
+          $env:APPDATA = $smokeAppData
+          $env:SDL_VIDEODRIVER = "dummy"
+          $env:SDL_AUDIODRIVER = "dummy"
+          $smoke = Start-Process -FilePath $installedExe -ArgumentList "--runtime-smoke-check" -WorkingDirectory $env:RUNNER_TEMP -Wait -PassThru
+          if ($smoke.ExitCode -ne 0) { throw "Installed runtime smoke failed with $($smoke.ExitCode)" }
+          Get-FileHash $artifact -Algorithm SHA256 | Format-List
+          $uninstallLog = Join-Path $env:RUNNER_TEMP "tet4d-uninstall.log"
+          $remove = Start-Process msiexec.exe -ArgumentList @("/x", "`"$artifact`"", "/qn", "/norestart", "/l*v", "`"$uninstallLog`"") -Wait -PassThru
+          if ($remove.ExitCode -notin @(0, 3010)) { throw "MSI uninstall failed with $($remove.ExitCode)" }
+          foreach ($path in @($installedExe, $startMenuShortcut, $desktopShortcut)) {
+            if (Test-Path $path) { throw "Uninstall left path behind: $path" }
+          }
+          $remainingRegistration = Get-ItemProperty (Join-Path $uninstallRoot "*") |
+            Where-Object { $_.DisplayName -eq "tet4d" } |
+            Select-Object -First 1
+          if ($remainingRegistration) { throw "Uninstall registration remains after removal" }
+          $releaseDir = Join-Path $env:GITHUB_WORKSPACE "artifacts\release"
+          New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
+          Copy-Item $artifact (Join-Path $releaseDir "tet4d-python-$env:VERSION-windows-x86_64.msi")
+
+      - name: Upload Python Windows package
+        uses: actions/upload-artifact@v7
+        with:
+          name: tet4d-python-${{ needs.release-contract.outputs.version }}-windows-x86_64
+          path: artifacts/release/tet4d-python-*-windows-x86_64.msi
+          if-no-files-found: error
+
+  package-designer-macos:
+    name: package Godot Designer macOS Universal
+    needs: release-contract
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -79,18 +286,27 @@ jobs:
       - name: Build and validate Godot macOS release
         run: GODOT_BIN="$GODOT_BIN" packaging/godot/build_macos.sh
 
+      - name: Stage explicit Designer artifact name
+        run: |
+          mkdir -p artifacts/release
+          cp "artifacts/godot/macos/Tet4D-${{ needs.release-contract.outputs.version }}-macos-universal.zip" \
+            "artifacts/release/tet4d-designer-${{ needs.release-contract.outputs.version }}-macos-universal.zip"
+
       - name: Upload Godot macOS release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-macos-universal-godot
-          path: artifacts/godot/macos/Tet4D-*-macos-universal.zip
+          name: tet4d-designer-${{ needs.release-contract.outputs.version }}-macos-universal
+          path: artifacts/release/tet4d-designer-*-macos-universal.zip
           if-no-files-found: error
 
-  package-windows:
+  package-designer-windows:
+    name: package Godot Designer Windows x86_64
+    needs: release-contract
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -162,18 +378,28 @@ jobs:
           test -n "$designer_exe"
           "$designer_exe" --headless --quit-after 5
 
+      - name: Stage explicit Designer artifact name
+        shell: bash
+        run: |
+          mkdir -p artifacts/release
+          cp "artifacts/godot/windows/Tet4D-Designer-${{ needs.release-contract.outputs.version }}-windows-x86_64.zip" \
+            "artifacts/release/tet4d-designer-${{ needs.release-contract.outputs.version }}-windows-x86_64.zip"
+
       - name: Upload Godot Windows release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-designer-windows-x86_64-godot
-          path: artifacts/godot/windows/Tet4D-Designer-*-windows-x86_64.zip
+          name: tet4d-designer-${{ needs.release-contract.outputs.version }}-windows-x86_64
+          path: artifacts/release/tet4d-designer-*-windows-x86_64.zip
           if-no-files-found: error
 
-  package-android:
+  package-designer-android:
+    name: package Godot Designer Android arm64
+    needs: release-contract
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -251,18 +477,27 @@ jobs:
         run: GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
           packaging/godot/build_android.sh
 
+      - name: Stage explicit Designer artifact name
+        run: |
+          mkdir -p artifacts/release
+          cp "artifacts/godot/android/Tet4D-Designer-${{ needs.release-contract.outputs.version }}-android-arm64.apk" \
+            "artifacts/release/tet4d-designer-${{ needs.release-contract.outputs.version }}-android-arm64.apk"
+
       - name: Upload Android Designer artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-designer-android-arm64-godot
-          path: artifacts/godot/android/Tet4D-Designer-*-android-arm64.apk
+          name: tet4d-designer-${{ needs.release-contract.outputs.version }}-android-arm64
+          path: artifacts/release/tet4d-designer-*-android-arm64.apk
           if-no-files-found: error
 
-  package-ipados:
+  package-designer-ipados:
+    name: package Godot Designer iPadOS Xcode project
+    needs: release-contract
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -329,31 +564,73 @@ jobs:
         run: GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
           packaging/godot/build_ipados.sh
 
+      - name: Stage explicit Designer artifact name
+        run: |
+          mkdir -p artifacts/release
+          cp "artifacts/godot/ipad/Tet4D-Designer-${{ needs.release-contract.outputs.version }}-ipados-xcodeproject.zip" \
+            "artifacts/release/tet4d-designer-${{ needs.release-contract.outputs.version }}-ipados-xcodeproject.zip"
+
       - name: Upload iPadOS Xcode project artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-designer-ipados-xcodeproject
-          path: artifacts/godot/ipad/Tet4D-Designer-*-ipados-xcodeproject.zip
+          name: tet4d-designer-${{ needs.release-contract.outputs.version }}-ipados-xcodeproject
+          path: artifacts/release/tet4d-designer-*-ipados-xcodeproject.zip
+          if-no-files-found: error
+
+  release-manifest:
+    name: bind release artifacts to source identity
+    needs:
+      - release-contract
+      - package-python-macos
+      - package-python-linux
+      - package-python-windows
+      - package-designer-macos
+      - package-designer-windows
+      - package-designer-android
+      - package-designer-ipados
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Download all release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: tet4d-*
+          path: artifacts/release
+          merge-multiple: true
+
+      - name: Generate source-SHA and checksum manifest
+        run: |
+          python tools/release/release_metadata.py manifest \
+            --artifact-dir artifacts/release \
+            --source-sha "${{ needs.release-contract.outputs.source_sha }}" \
+            --output "artifacts/release/tet4d-release-${{ needs.release-contract.outputs.version }}-manifest.json"
+
+      - name: Upload release manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: tet4d-release-${{ needs.release-contract.outputs.version }}-manifest
+          path: artifacts/release/tet4d-release-*-manifest.json
           if-no-files-found: error
 
   publish-release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [package-macos, package-windows, package-android, package-ipados]
+    name: publish validated tag release
+    if: github.ref_type == 'tag'
+    needs: [release-contract, release-manifest]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Download packaged release
+      - name: Download validated release payload
         uses: actions/download-artifact@v8
         with:
-          name: tet4d-macos-universal-godot
+          pattern: tet4d-*
           path: artifacts/release
+          merge-multiple: true
 
-      - name: Download Windows Designer release
-        uses: actions/download-artifact@v8
-        with:
-          name: tet4d-designer-windows-x86_64-godot
-          path: artifacts/release
-
-      - name: Publish GitHub release asset
+      - name: Publish all release assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -363,7 +640,4 @@ jobs:
           title="Tet4D ${tag#v}"
           gh release view "$tag" --repo "$GH_REPO" >/dev/null 2>&1 || \
             gh release create "$tag" --repo "$GH_REPO" --title "$title" --generate-notes
-          gh release upload "$tag" --repo "$GH_REPO" \
-            artifacts/release/Tet4D-*-macos-universal.zip --clobber
-          gh release upload "$tag" --repo "$GH_REPO" \
-            artifacts/release/Tet4D-Designer-*-windows-x86_64.zip --clobber
+          gh release upload "$tag" --repo "$GH_REPO" artifacts/release/* --clobber

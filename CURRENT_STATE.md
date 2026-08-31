@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-08-31
-Worktree expectation: active governed packaging proof on
-`codex/prove-python-packaging`; do not treat the worktree as a clean handoff
+Worktree expectation: active governed unified-release implementation on
+`codex/unify-release-packaging`; do not treat the worktree as a clean handoff
 
 ## Purpose
 
@@ -40,18 +40,20 @@ history ledger. Detailed history is preserved in
   retained only `codex/explosion-architecture-inventory` for inspection because
   it contains unique implementation work and conflicts.
 
-- Python packaging proof is active. The unchanged macOS builder produced
-  `tet4d-0.7.5-macos-arm64.dmg` from integrated master with SHA-256
-  `191b566d361bdd19784d826fee83458b657a5fea14f9ae9d3a5ca80161c1a7a8`;
-  the mounted app passed an isolated outside-checkout runtime smoke. Its
-  embedded PyInstaller executable is ad-hoc signed, while the outer app bundle
-  is unsigned and not notarized. Actions run 33390087916 proved Linux build,
-  version, installation, outside-checkout runtime, checksum, and purge. Windows
-  built and installed its MSI and the installed runtime printed success, but
-  the GUI-subsystem process returned control before PowerShell populated
-  `$LASTEXITCODE`; explicit process waiting and the still-unreached uninstall
-  checks remain pending. The release workflow remains Godot-only until all
-  three Python builders pass.
+- Initial Actions proof run 33390087916 accepted macOS arm64 and Linux amd64
+  end to end. Windows built and installed its MSI and the installed runtime
+  printed success, but its GUI-subsystem process returned control before
+  PowerShell populated `$LASTEXITCODE`. The proof harness was corrected to wait
+  for the process and inspect its real exit code before uninstall verification.
+
+- Final Actions proof run 33392862609 was green for all three Python jobs at exact
+  integrated master `d542d682ab9f66a6e8ca95b888232b90524ef266`. macOS arm64,
+  Linux amd64, and Windows x64 each built version 0.7.5, launched outside the
+  checkout with isolated user state, and completed mount/removal or
+  install/uninstall. The release-unification gate is open. The seven-artifact
+  Python-plus-Designer workflow, tag/project-version invariant, and
+  source-SHA/checksum manifest with truthful iPadOS status are implemented and
+  awaiting integrated CI plus real workflow-dispatch evidence.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

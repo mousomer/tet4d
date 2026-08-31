@@ -1,7 +1,7 @@
 # Task Contract — Integration, Explicit A/B Assignment, and Unified Release Proof
 
-Status: ACTIVE — INTEGRATION MERGED; REMOTE BRANCH REVIEW COMPLETE; PYTHON
-PACKAGE PROOF IN PROGRESS; UNIFIED RELEASE BLOCKED ON WINDOWS/LINUX EVIDENCE
+Status: ACTIVE — INTEGRATION MERGED; REMOTE BRANCH REVIEW COMPLETE; ALL THREE
+PYTHON PACKAGES PROVEN; UNIFIED RELEASE IMPLEMENTED, VERIFICATION PENDING
 
 Starting branch: `codex/built-in-style-catalog`
 
@@ -31,6 +31,24 @@ unset `$LASTEXITCODE` before the process completed. The proof workflow must wait
 for that process explicitly, inspect its process `ExitCode`, then reach and
 pass the uninstall checks before Windows or the three-platform criterion is
 accepted.
+
+Final Python proof: the narrow process-wait correction was merged, and Actions
+run 33392862609 passed the three-platform proof gate at exact integrated master
+`d542d682ab9f66a6e8ca95b888232b90524ef266`. macOS arm64, Linux amd64, and
+Windows x64 all built from clean real-platform checkouts, reported version
+0.7.5, launched outside the checkout with isolated user state, and completed
+mount/removal or install/uninstall checks. This satisfies acceptance criterion
+10 and opens the release-unification gate. Exact package SHA-256 values are:
+
+- macOS DMG: `3cbd29ec0a9d139b4687c41ad8e55c9a0f628ec52d9a21f9e7cbad896466c91d`;
+- Linux DEB: `5090caaef6328e3ff7c8d87945c96defc39760b0a1655bc4701e9ecf099b11c2`;
+- Windows MSI: `abd25b01129810cdbe4433b17d8921b651b5a520aac67cf954f22c5f855e4f91`.
+
+The unified workflow may now replace the proof-only workflow. It must retain
+those installation/runtime assertions, check out one exact SHA in every job,
+reject tag/project-version disagreement before builds or publication, give all
+seven artifacts explicit product-family names, and generate checksum-bearing
+metadata with truthful iPadOS evidence classification.
 
 ## Objective and classification
 

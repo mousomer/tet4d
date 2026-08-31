@@ -183,25 +183,38 @@ Proof status at 2026-08-31:
 
 - macOS arm64: the existing builder produced
   `tet4d-0.7.5-macos-arm64.dmg` from integrated master
-  `eb112dc26ef8c87aa86be94d6cfc026f134e8d94`; the mounted app ran from
-  `/private/tmp` with isolated user state and no checkout dependency. SHA-256:
-  `191b566d361bdd19784d826fee83458b657a5fea14f9ae9d3a5ca80161c1a7a8`.
+  `d542d682ab9f66a6e8ca95b888232b90524ef266`; the mounted app ran from the
+  runner temporary directory with isolated user state and no checkout
+  dependency. SHA-256:
+  `3cbd29ec0a9d139b4687c41ad8e55c9a0f628ec52d9a21f9e7cbad896466c91d`.
   The embedded PyInstaller Mach-O is ad-hoc signed; the outer app bundle and
   shell launcher are unsigned, and the package is not notarized.
-- Linux amd64: Actions run 33390087916 built
-  `tet4d_0.7.5_amd64.deb` at integrated master `ede6cf92`, verified its package
+- Linux amd64: Actions run 33392862609 built
+  `tet4d_0.7.5_amd64.deb` at integrated master `d542d682`, verified its package
   version and architecture, installed it, launched `/usr/bin/tet4d` from the
   runner temporary directory with isolated user state, and purged it. SHA-256:
-  `89eae81e4cfd2c92bbd530e0fbd97b62cd112a45783abfb4edf1da730cea30cb`.
-- Windows x64: the same run built and installed the MSI and its installed
-  runtime emitted a successful smoke result. The GUI-subsystem process-wait
-  defect in the proof harness prevented exit-code and uninstall acceptance, so
-  Windows remains pending until the corrected proof passes.
+  `5090caaef6328e3ff7c8d87945c96defc39760b0a1655bc4701e9ecf099b11c2`.
+- Windows x64: after the proof harness was corrected to wait for the installed
+  GUI-subsystem process, Actions run 33392862609 built and installed
+  `tet4d-0.7.5-windows-x64.msi`, verified the installed version, executable and
+  shortcuts, launched it from the runner temporary directory with isolated
+  user state, uninstalled it, and verified files, shortcuts, and registration
+  were removed. SHA-256:
+  `abd25b01129810cdbe4433b17d8921b651b5a520aac67cf954f22c5f855e4f91`.
 
-Until all three pass, `.github/workflows/release-packaging.yml` remains
-Godot-only. The temporary manual
-`.github/workflows/python-packaging-proof.yml` is evidence infrastructure, not
-a publication path.
+Run 33392862609 therefore satisfies the three-platform Python proof gate at
+source `d542d682ab9f66a6e8ca95b888232b90524ef266`. Release orchestration may now
+admit the Python family, provided it preserves these checks and binds both
+product families to one source SHA and project version.
+
+The proven checks are folded into `.github/workflows/release-packaging.yml` and
+the temporary proof-only workflow is removed. The unified workflow retains the
+real-platform install, outside-checkout runtime, and removal checks; gives all
+seven product-family artifacts explicit names; rejects tag/project-version
+disagreement before builds; and generates a checksum/source-SHA manifest only
+after all package jobs pass. Its iPadOS manifest entry must remain explicit
+that the output is unsigned, simulator-compiled Xcode-project evidence without
+physical-device acceptance.
 
 ## 6. Acceptance criteria
 

@@ -46,16 +46,6 @@ class TestWindowsPackagingScript(unittest.TestCase):
         return workflow_path.read_text(encoding="utf-8")
 
     @staticmethod
-    def _proof_workflow() -> str:
-        workflow_path = (
-            Path(__file__).resolve().parents[3]
-            / ".github"
-            / "workflows"
-            / "python-packaging-proof.yml"
-        )
-        return workflow_path.read_text(encoding="utf-8")
-
-    @staticmethod
     def _pyinstaller_spec() -> str:
         spec_path = (
             Path(__file__).resolve().parents[3]
@@ -122,27 +112,22 @@ class TestWindowsPackagingScript(unittest.TestCase):
             '& (Join-Path $PayloadRoot "tet4d.exe") --runtime-smoke-check', windows
         )
 
-    def test_release_workflow_publishes_only_current_godot_candidate(self) -> None:
+    def test_release_workflow_packages_both_product_families(self) -> None:
         workflow = self._release_workflow()
 
-        self.assertIn("name: Upload Godot macOS release artifact", workflow)
-        self.assertIn(
-            "path: artifacts/godot/macos/Tet4D-*-macos-universal.zip", workflow
-        )
-        self.assertNotIn("artifacts/installers/", workflow)
-
-    def test_python_packaging_scripts_are_not_yet_release_workflow_inputs(self) -> None:
-        workflow = self._release_workflow()
-
+        self.assertIn("name: Tet4D Release Packaging", workflow)
         self.assertIn("packaging/godot/build_macos.sh", workflow)
-        self.assertNotIn("packaging/scripts/build_linux.sh", workflow)
-        self.assertNotIn("packaging/scripts/build_macos.sh", workflow)
-        self.assertNotIn("packaging/scripts/build_windows.ps1", workflow)
+        self.assertIn("packaging/godot/build_windows.sh", workflow)
+        self.assertIn("packaging/godot/build_android.sh", workflow)
+        self.assertIn("packaging/godot/build_ipados.sh", workflow)
+        self.assertIn("packaging/scripts/build_linux.sh", workflow)
+        self.assertIn("packaging/scripts/build_macos.sh", workflow)
+        self.assertIn("packaging/scripts/build_windows.ps1", workflow)
 
-    def test_python_packaging_proof_runs_existing_builders_on_real_platforms(
+    def test_release_workflow_runs_python_builders_on_real_platforms(
         self,
     ) -> None:
-        workflow = self._proof_workflow()
+        workflow = self._release_workflow()
 
         self.assertIn("workflow_dispatch:", workflow)
         self.assertIn("runs-on: macos-latest", workflow)
@@ -153,8 +138,8 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("packaging/scripts/build_linux.sh", workflow)
         self.assertIn("packaging/scripts/build_windows.ps1", workflow)
 
-    def test_python_packaging_proof_checks_installed_runtime_and_removal(self) -> None:
-        workflow = self._proof_workflow()
+    def test_release_workflow_checks_installed_runtime_and_removal(self) -> None:
+        workflow = self._release_workflow()
 
         self.assertIn("hdiutil attach -nobrowse -readonly", workflow)
         self.assertIn("cd \"$RUNNER_TEMP\"", workflow)
@@ -166,7 +151,36 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("-WorkingDirectory $env:RUNNER_TEMP -Wait -PassThru", workflow)
         self.assertIn("$smoke.ExitCode", workflow)
         self.assertIn("Uninstall registration remains after removal", workflow)
-        self.assertIn("Python packaging proof gate", workflow)
+
+    def test_release_workflow_enforces_identity_names_and_manifest(self) -> None:
+        workflow = self._release_workflow()
+
+        self.assertIn('tags:', workflow)
+        self.assertIn('"v*"', workflow)
+        self.assertIn('"[0-9]*"', workflow)
+        self.assertIn("validate-tag --tag", workflow)
+        self.assertIn("ref: ${{ github.sha }}", workflow)
+        for filename in (
+            "tet4d-python-$env:VERSION-windows-x86_64.msi",
+            "tet4d-python-$VERSION-macos-arm64.dmg",
+            "tet4d-python-$VERSION-linux-x86_64.deb",
+            "tet4d-designer-${{ needs.release-contract.outputs.version }}-windows-x86_64.zip",
+            "tet4d-designer-${{ needs.release-contract.outputs.version }}-macos-universal.zip",
+            "tet4d-designer-${{ needs.release-contract.outputs.version }}-android-arm64.apk",
+            "tet4d-designer-${{ needs.release-contract.outputs.version }}-ipados-xcodeproject.zip",
+        ):
+            self.assertIn(filename, workflow)
+        self.assertIn("release-manifest:", workflow)
+        self.assertIn("tools/release/release_metadata.py manifest", workflow)
+        self.assertIn("--source-sha", workflow)
+        self.assertIn("gh release upload", workflow)
+
+    def test_temporary_python_proof_workflow_is_removed(self) -> None:
+        root = Path(__file__).resolve().parents[3]
+
+        self.assertFalse(
+            (root / ".github" / "workflows" / "python-packaging-proof.yml").exists()
+        )
 
     def test_pyinstaller_spec_includes_lazy_playbot_hiddenimports(self) -> None:
         spec = self._pyinstaller_spec()
