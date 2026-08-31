@@ -171,6 +171,16 @@ def test_android_release_installs_the_binding_owned_ndk_pin() -> None:
     assert 'ls -d "$ANDROID_HOME"/ndk/*' not in workflow
 
 
+def test_android_release_creates_native_staging_directory_before_copy() -> None:
+    builder = (ROOT / "packaging/godot/build_android.sh").read_text(encoding="utf-8")
+    mkdir = 'mkdir -p "$staged_project_root/addons/tet4d_core/bin"'
+    copy = 'cp "$native_so" "$staged_project_root/addons/tet4d_core/bin/"'
+
+    assert mkdir in builder
+    assert copy in builder
+    assert builder.index(mkdir) < builder.index(copy)
+
+
 def test_ipados_release_assembles_device_and_simulator_xcframework() -> None:
     wrapper = (ROOT / "scripts/build_godot_tet4d_core.sh").read_text(
         encoding="utf-8"

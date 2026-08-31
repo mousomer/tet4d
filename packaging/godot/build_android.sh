@@ -176,6 +176,7 @@ if [[ ! -f "$native_so" ]]; then
   echo "Android release GDExtension was not produced" >&2
   exit 1
 fi
+mkdir -p "$staged_project_root/addons/tet4d_core/bin"
 cp "$native_so" "$staged_project_root/addons/tet4d_core/bin/"
 
 apk_path="$ARTIFACT_DIR/Tet4D-Designer-$version-android-arm64.apk"
