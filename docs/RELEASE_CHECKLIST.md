@@ -39,7 +39,9 @@
    `packaging/godot/validate_windows_package.py` passes.
 8. `packaging/godot/validate_android_export.py` passes, and where an APK was
    built, `packaging/godot/validate_android_package.py` passes and the APK is
-   signed.
+   signed. The APK contains Godot 4.7.2's `assets/assets.sparsepck` metadata and
+   individually stored required project assets; it is not required to contain
+   a conventional `.pck` member.
 9. `packaging/godot/validate_ipados_project.py` passes against the exported
    Xcode project with explicit `--artifact-mode configuration` or
    `--artifact-mode release`. Configuration mode must have the deliberately

@@ -136,6 +136,10 @@ The current canonical files are:
    credential-free canonical preset into the disposable project, generates an
    ephemeral test key, and injects that key into all three release-signing
    fields of the staged copy only.
+   Godot 4.7.2 stores exported project files as individual APK `assets/`
+   members and records their directory in `assets/assets.sparsepck`; the APK
+   validator must require that sparse metadata and the named laboratory assets
+   rather than assuming that Android embeds a conventional `.pck` member.
 2. iPadOS builds use the pinned 4.7.2 iOS export template, the iPad device
    family, landscape orientation, and integer
    `application/export_method_release=1` (Development). Godot 4.7's mobile

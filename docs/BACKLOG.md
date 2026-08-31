@@ -271,6 +271,15 @@ shared linking, then found the clean disposable project lacks the ignored
 native `bin` directory. Create that staging directory before copying the `.so`,
 cover the order, and repeat full PR and integrated APK gates.
 
+PR #86 merged explicit Android native staging as `b4498c27`. Integrated
+dispatch 33436190052 then compiled and linked the arm64 GDExtension, exported,
+aligned, signed, and verified the APK through Godot before the repository
+validator rejected the absence of a conventional `.pck` ZIP member. Godot
+4.7.2 intentionally stores Android project files individually under `assets/`
+with `assets/assets.sparsepck` metadata. Align the validator and normative
+packaging documentation with that exact upstream layout, retain required-asset
+and path-hygiene checks, and repeat focused, full, PR, and integrated APK gates.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one
