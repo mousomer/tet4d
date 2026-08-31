@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-08-31
-Worktree expectation: active governed integration work on
-`codex/built-in-style-catalog`; do not treat the worktree as a clean handoff
+Worktree expectation: active governed packaging proof on
+`codex/prove-python-packaging`; do not treat the worktree as a clean handoff
 
 ## Purpose
 
@@ -14,16 +14,12 @@ history ledger. Detailed history is preserved in
 
 ## Active Focus
 
-- Draft integration PR #75 targets `master` from
-  `codex/built-in-style-catalog` and is explicitly NOT MERGE READY. Its
-  diagnostic matrix ran on published pre-fix SHA `47df7cef`: documentation,
-  Python 3.11-3.14, native, deterministic/parity, packaging contracts, macOS
-  platform packaging, and release acceptance passed. Godot/native parity
-  failed because the existing animation-isolation test left live gravity
-  running across awaited frames; cross-layer and required gates correctly
-  propagated that failure. Pausing native Live 4D before the presentation-only
-  assertion removes the CI-speed race, and the full Godot replay suite passes
-  locally.
+- The fresh final matrix for integration PR #75 was green at rewritten head
+  `9dfabd44f8242e2c4d935e86f9eb40eeb39e0abf` and was squash-merged to
+  `master` as `eb112dc26ef8c87aa86be94d6cfc026f134e8d94`. The earlier diagnostic
+  Godot timing failure was corrected before the final run; Python 3.11-3.14,
+  native, deterministic/parity, Godot, integration, packaging, platform,
+  release-acceptance, and aggregate required gates all passed.
 
 - The merge-blocking Design Laboratory A/B correction is implemented and
   committed on the rewritten integration branch.
@@ -38,15 +34,20 @@ history ledger. Detailed history is preserved in
   changed A only after the explicit action. This is not independent human
   sign-off.
 
-- The 39 MB Windows ZIP has been removed from the unmerged integration
-  history. The replacement commit retains all seven useful documentation,
-  metadata, and validator-test files; the ZIP path and original blob ID are not
-  reachable from `codex/built-in-style-catalog`. Windows candidates now remain
-  outside Git in Actions, release, or canonical candidate asset storage.
-  Remaining sequence: commit the storage-contract reconciliation, run the full
-  local gate, force-with-lease publish the rewritten candidate, require a fresh
-  green PR matrix, merge, classify/prune branches, then prove existing Python
-  packaging on Windows/macOS/Linux before any unified-release workflow change.
+- The 39 MB Windows ZIP path and original blob are unreachable from integrated
+  master; all seven useful documentation, metadata, and validator-test files
+  remain. Content-aware branch review deleted 22 obsolete remote refs and
+  retained only `codex/explosion-architecture-inventory` for inspection because
+  it contains unique implementation work and conflicts.
+
+- Python packaging proof is active. The unchanged macOS builder produced
+  `tet4d-0.7.5-macos-arm64.dmg` from integrated master with SHA-256
+  `191b566d361bdd19784d826fee83458b657a5fea14f9ae9d3a5ca80161c1a7a8`;
+  the mounted app passed an isolated outside-checkout runtime smoke. Its
+  embedded PyInstaller executable is ad-hoc signed, while the outer app bundle
+  is unsigned and not notarized. Linux and Windows build, version, install,
+  outside-checkout runtime, and uninstall proof remain pending on real runners.
+  The release workflow remains Godot-only until all three Python builders pass.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from
@@ -552,7 +553,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.93`
+1. `delivery_size_pressure = 2.94`
 2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

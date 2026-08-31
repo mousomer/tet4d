@@ -13,8 +13,8 @@
 
 1. `README.md` and `godot/Tet4D.Godot/README.md` identify Godot as the current
    bounded 2D/3D/4D professional-core product shell.
-2. `docs/rds/RDS_PACKAGING.md` and `docs/RELEASE_INSTALLERS.md` match the
-   supported target and legacy-path disposition.
+2. `docs/rds/RDS_PACKAGING.md` and `docs/RELEASE_INSTALLERS.md` match each
+   supported product family and its precise evidence level.
 3. `docs/BACKLOG.md`, the professional programme, task contract, and
    `CURRENT_STATE.md` distinguish automatically verified, human accepted, and
    deferred release state.
@@ -64,7 +64,7 @@
    focus/modal, resize, accessibility, warning, and performance matrix.
 9. Record independent human acceptance before declaring Stage 54G complete.
 
-## Platform and legacy truth
+## Platform and product-family truth
 
 1. Report macOS as the accepted Godot professional-core release target.
 2. Report Windows x86-64 as a structurally validated portable Designer
@@ -88,7 +88,11 @@
     bit-reproducible unless its metadata is normalized.
 4. Report Linux Godot support as development-configured and not
    runtime-verified for this release.
-5. Report Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders as retained
-   legacy packaging, not current release evidence.
+5. For Python/PyInstaller, run the existing `.dmg`, `.deb`, and `.msi`
+   builders on real macOS, Linux, and Windows runners from one integrated SHA.
+   Record version and SHA-256, install or mount, launch the installed app from
+   outside the checkout with isolated user state, and uninstall where
+   applicable. Report unproven platforms as pending and do not add the family
+   to the unified release workflow until all three pass.
 6. Report ad-hoc signing and absent notarization; do not imply public
    Gatekeeper-ready distribution.

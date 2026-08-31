@@ -1,7 +1,7 @@
 # Task Contract — Integration, Explicit A/B Assignment, and Unified Release Proof
 
-Status: ACTIVE — DRAFT PR OPEN; LOCAL FIXES AND HISTORY REWRITE COMPLETE;
-FINAL GATES PENDING; NOT MERGE READY
+Status: ACTIVE — INTEGRATION MERGED; REMOTE BRANCH REVIEW COMPLETE; PYTHON
+PACKAGE PROOF IN PROGRESS; UNIFIED RELEASE BLOCKED ON WINDOWS/LINUX EVIDENCE
 
 Starting branch: `codex/built-in-style-catalog`
 
@@ -9,11 +9,18 @@ Starting local SHA: `17ef8a8bd634afcbfa9ac4218047ec855d27b6a2`
 
 Starting published SHA: `47df7cef84db32a2aa7dff383a84cdb968b53223`
 
-Integration target: `origin/master` at
+Original integration target: `origin/master` at
 `ad36562725043d613e21c6f6cc8c9b223e61618a` when the task began. The
 integration branch was `52` commits ahead and `0` behind. Draft PR #75 was
 opened against the published pre-fix head so its first pull-request CI matrix
 is diagnostic evidence rather than final merge evidence.
+
+Integration result: PR #75 passed the fresh final matrix at rewritten head
+`9dfabd44f8242e2c4d935e86f9eb40eeb39e0abf` and was squash-merged as
+`eb112dc26ef8c87aa86be94d6cfc026f134e8d94`. The original ZIP path and blob
+remain unreachable from integrated `master`. Twenty-two reviewed obsolete
+remote branches were deleted; `codex/explosion-architecture-inventory` remains
+for inspection because it carries unique implementation work and conflicts.
 
 ## Objective and classification
 
@@ -52,13 +59,14 @@ higher-precedence contract before implementation is finalized. Candidate
 copy/edit/save remains owned by `PresentationProfileLibrary` and must not imply
 assignment.
 
-`docs/rds/RDS_PACKAGING.md` and `docs/RELEASE_INSTALLERS.md` currently describe
-the Python/PyInstaller path as retained legacy and the release workflow as
-Godot-only. The task explicitly restores Python as an active packaged product,
-but only after the existing platform scripts produce real smoke-tested packages
-from integrated `master`. Release orchestration may then unite both existing
-product-family builders without inventing a new version source or product
-branch.
+`docs/rds/RDS_PACKAGING.md` and `docs/RELEASE_INSTALLERS.md` previously
+described the Python/PyInstaller path as retained legacy. This task restores
+Python as an active packaged product family while keeping the existing release
+workflow Godot-only until the existing platform scripts produce real,
+smoke-tested packages from integrated `master`. A short-lived manual proof
+workflow may execute those authoritative builders on real platform runners.
+Release orchestration may then unite both existing product-family builders
+without inventing a new version source or product branch.
 
 ## Scope matrix
 
@@ -74,9 +82,8 @@ branch.
 
 ## Acceptance criteria
 
-1. Draft PR #75 remains not merge-ready until all blockers clear; its initial
-   CI is recorded as diagnostic and its final fresh matrix runs on the exact
-   rewritten candidate.
+1. PR #75 records its initial CI as diagnostic and its fully green final matrix
+   on the exact rewritten candidate; only that final candidate is merged.
 2. Accepted existing fixes are incorporated by commit, not reimplemented.
 3. Explicit catalogue actions apply live or assign only A or B. Assignment
    copies a frozen resolved preset; it never follows the currently shown arm.
@@ -112,8 +119,10 @@ branch.
 - existing Design Laboratory session, panel, evidence, and focused Godot tests;
 - existing presentation/runtime fix commit and its owning documents/tests;
 - existing Python and Godot packaging scripts/specs and their tests;
-- `.github/workflows/ci.yml` and `.github/workflows/release-packaging.yml` only
-  where the proven release contract requires changes;
+- `.github/workflows/python-packaging-proof.yml` as short-lived manual proof
+  infrastructure, plus `.github/workflows/ci.yml` and
+  `.github/workflows/release-packaging.yml` only where the proven release
+  contract requires changes;
 - existing release/version validation or a narrowly owned validator and tests;
 - owning architecture, RDS, release, backlog, changelog, governance,
   acceptance, and handoff documents;

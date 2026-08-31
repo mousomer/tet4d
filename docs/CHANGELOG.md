@@ -18,14 +18,28 @@
 
 ### Integration
 
-1. Draft PR #75 was opened against the published pre-fix integration head to
+1. PR #75 was opened against the published pre-fix integration head to
    obtain a diagnostic full matrix. Every selected lane passed except the
    Godot lane's timing race above; the dependent integration and aggregate
-   gates failed as designed. Fresh final-SHA CI remains required before merge.
+   gates failed as designed. The rewritten final head then passed every fresh
+   required lane and was squash-merged as `eb112dc2`.
 2. The unmerged integration history was rewritten to retain the Windows
    candidate documentation, metadata, and validator tests without the 39 MB
    ZIP. Generated candidates now remain outside Git in Actions, release, or
    canonical candidate asset storage.
+3. Content-aware review deleted 22 obsolete remote branches and retained
+   `codex/explosion-architecture-inventory` because it still has unique
+   implementation work and code conflicts against integrated master.
+
+### Packaging
+
+1. Python/PyInstaller is restored as an active, separately named product
+   family. The unchanged macOS builder produced a 0.7.5 arm64 DMG from
+   integrated master, and the mounted app passed an isolated runtime smoke from
+   outside the checkout. Its embedded PyInstaller executable is ad-hoc signed,
+   while the outer bundle is unsigned and not notarized. Windows and Linux
+   real-runner proof remains required before the release workflow may be
+   unified.
 
 ## 2026-08-30
 
