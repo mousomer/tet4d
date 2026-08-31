@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/android-ar-response-file`; do not treat the worktree as a clean
+`codex/android-ar-response-log`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -125,6 +125,16 @@ history ledger. Detailed history is preserved in
   required. Windows remains isolated to the native DLL despite the PDB-path
   correction, and iPadOS remains isolated to Godot additional-asset export;
   neither is silently included in this Android objective.
+
+- PR #84 had a green selected exact-head matrix and squash-merged as
+  `61437bd682c09adfc73482ca291073343e5541e3`. Integrated dispatch
+  33429888428 proved SCons creates the Android archive response file and the
+  old `Argument list too long` failure is gone. It then terminated before
+  `ar` returned because the wrapper omitted `TEMPFILE`'s compact display-string
+  argument, causing SCons to expand the enormous command into the CI log. The
+  active follow-up passes `ARCOMSTR` as that second argument; focused, full,
+  PR, and fresh integrated APK evidence remain required. Windows and iPadOS
+  retained their prior isolated failures and remain outside this correction.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

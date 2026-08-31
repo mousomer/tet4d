@@ -300,6 +300,16 @@ share that response-file boundary. This is command transport only: archive
 contents, compiler flags, ABI, native semantics, and release validation remain
 unchanged.
 
+PR #84 integrated the Android/Linux response-file branch as `61437bd6`.
+Dispatch 33429888428 confirms SCons created the Android response file and the
+old operating-system argument-limit failure is gone, but the wrapper supplied
+only the command argument to `TEMPFILE`. With no compact display-string
+argument, SCons deliberately expands and prints the entire original command;
+that CI log write terminated the step before `ar` returned. The archive wrapper
+must pass `ARCOMSTR` as `TEMPFILE`'s second argument so execution remains
+response-file based while logs retain the existing bounded static-library
+message.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.

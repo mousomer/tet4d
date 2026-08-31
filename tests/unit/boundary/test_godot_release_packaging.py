@@ -132,7 +132,10 @@ def test_android_and_linux_native_archives_use_response_files() -> None:
 
     assert 'ARGUMENTS.get("platform") in ("android", "linux")' in build
     assert 'bootstrap_env["ARCOM_POSIX"] = bootstrap_env["ARCOM"]' in build
-    assert 'bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX)}"' in build
+    assert (
+        'bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX, ARCOMSTR)}"'
+        in build
+    )
     response_file_branch = build.split('elif ARGUMENTS.get("platform") == "windows":', 1)[0]
     assert '"windows"' not in response_file_branch
 

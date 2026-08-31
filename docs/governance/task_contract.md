@@ -126,6 +126,13 @@ requires Android to share Linux's existing SCons `TEMPFILE` archive-command
 transport, a regression contract that leaves Windows outside that branch, the
 complete repository/PR gates, and a fresh integrated APK/unified release proof.
 
+Follow-up after PR #84: dispatch 33429888428 reached `Using tempfile`, proving
+the response file replaced the oversized Android command, then terminated when
+SCons attempted to log the omitted display string as the full expanded command.
+Acceptance additionally requires `ARCOMSTR` as `TEMPFILE`'s second argument,
+preserving bounded archive logs, focused/full/PR gates, and a fresh integrated
+APK proof.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,

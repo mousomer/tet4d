@@ -105,6 +105,11 @@
     inline POSIX `ar` command for pinned `godot-cpp` exceeded the hosted process
     argument limit. Android now shares Linux's existing SCons response-file
     archive command without changing archive contents, ABI, or semantics.
+14. The first Android response-file proof removed the operating-system argument
+    limit but exposed SCons's fallback logging behavior: without a second
+    `TEMPFILE` argument it prints the full expanded command. The archive wrapper
+    now supplies `ARCOMSTR`, retaining compact library-link logs while executing
+    the unchanged response-file command.
 
 ## 2026-08-30
 
