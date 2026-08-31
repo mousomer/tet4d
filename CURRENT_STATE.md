@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/sanitize-windows-msvc-pdb-path`; do not treat the worktree as a clean
+`codex/android-ar-response-file`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -114,6 +114,17 @@ history ledger. Detailed history is preserved in
   PDB basename through `/PDBALTPATH:%_PDB%`; it retains existing compiler path
   maps and adds member-level strict-validator diagnostics. Focused, full, PR,
   and fresh integrated release evidence remain required.
+
+- PR #83 had a green complete exact-head matrix (Actions run 33424857253) and
+  squash-merged as `9058e93ede45efe79ef841209c1f6fbe96af2401`.
+  Integrated dispatch 33426937123 proved all three Python packages and Godot
+  macOS again. Android cleared the exact SDK/NDK setup and reached native
+  archiving, where pinned `godot-cpp` exceeded the POSIX `ar` argument limit.
+  The active correction extends Linux's existing SCons response-file archive
+  command to Android; focused, full, PR, and fresh integrated evidence remain
+  required. Windows remains isolated to the native DLL despite the PDB-path
+  correction, and iPadOS remains isolated to Godot additional-asset export;
+  neither is silently included in this Android objective.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

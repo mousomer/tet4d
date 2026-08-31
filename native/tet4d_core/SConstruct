@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 bootstrap_env = Environment(tools=["default"], PLATFORM="")
-if ARGUMENTS.get("platform") == "linux":
+if ARGUMENTS.get("platform") in ("android", "linux"):
     bootstrap_env["ARCOM_POSIX"] = bootstrap_env["ARCOM"]
     bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX)}"
 elif ARGUMENTS.get("platform") == "windows":

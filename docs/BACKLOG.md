@@ -252,6 +252,12 @@ links, retain the existing compiler path maps, improve the validator to name the
 offending ZIP member, and prove the correction through full PR and fresh
 integrated release gates.
 
+Android in dispatch 33426937123 cleared exact `sdkmanager`, NDK installation,
+and Clang validation, then failed while archiving pinned `godot-cpp`: the POSIX
+`ar` invocation exceeded the hosted process argument limit. Extend the existing
+Linux SCons response-file `ARCOM` boundary to Android, cover the platform split,
+and prove the APK through full PR and fresh integrated release gates.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

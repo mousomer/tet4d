@@ -127,6 +127,16 @@ def test_windows_native_build_sanitizes_compiler_and_linker_debug_paths() -> Non
     assert 'LINKFLAGS=["/PDBALTPATH:%_PDB%"]' in build
 
 
+def test_android_and_linux_native_archives_use_response_files() -> None:
+    build = NATIVE_SCONSTRUCT.read_text(encoding="utf-8")
+
+    assert 'ARGUMENTS.get("platform") in ("android", "linux")' in build
+    assert 'bootstrap_env["ARCOM_POSIX"] = bootstrap_env["ARCOM"]' in build
+    assert 'bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX)}"' in build
+    response_file_branch = build.split('elif ARGUMENTS.get("platform") == "windows":', 1)[0]
+    assert '"windows"' not in response_file_branch
+
+
 def test_disposable_platform_projects_drop_copied_editor_cache() -> None:
     copy_command = 'cp -R "$PROJECT_DIR/." "$staged_project_root/"'
     cache_removal = 'rm -rf "$staged_project_root/.godot"'
