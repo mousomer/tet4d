@@ -74,6 +74,10 @@ func validate_live_board_setup(setup: Dictionary) -> Dictionary:
 	return _api().validate_live_board_setup(setup)
 
 
+func live_nd_production_piece_catalog() -> Array:
+	return _api().get_live_nd_production_piece_catalog()
+
+
 func run_builtin_plain_2d_smoke_case() -> bool:
 	return bool(_api().run_builtin_plain_2d_smoke_case())
 
@@ -142,6 +146,14 @@ func live_2d_next_piece_preview() -> Dictionary:
 	return _api().live_2d_next_piece_preview()
 
 
+func live_2d_held_piece_preview() -> Dictionary:
+	return _api().live_2d_held_piece_preview()
+
+
+func live_2d_hold_available() -> bool:
+	return _api().live_2d_hold_available()
+
+
 func live_2d_hard_drop_destination() -> Dictionary:
 	return _api().live_2d_hard_drop_destination()
 
@@ -182,6 +194,14 @@ func live_3d_next_piece_preview() -> Dictionary:
 	return _api().live_3d_next_piece_preview()
 
 
+func live_3d_held_piece_preview() -> Dictionary:
+	return _api().live_3d_held_piece_preview()
+
+
+func live_3d_hold_available() -> bool:
+	return _api().live_3d_hold_available()
+
+
 func live_3d_hard_drop_destination() -> Dictionary:
 	return _api().live_3d_hard_drop_destination()
 
@@ -220,6 +240,14 @@ func live_4d_snapshot_json() -> String:
 
 func live_4d_next_piece_preview() -> Dictionary:
 	return _api().live_4d_next_piece_preview()
+
+
+func live_4d_held_piece_preview() -> Dictionary:
+	return _api().live_4d_held_piece_preview()
+
+
+func live_4d_hold_available() -> bool:
+	return _api().live_4d_hold_available()
 
 
 func live_4d_hard_drop_destination() -> Dictionary:

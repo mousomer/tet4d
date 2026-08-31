@@ -1,5 +1,25 @@
 # Godot Shell Settings Registry Foundation
 
+## Current presentation-contract reconciliation
+
+The post-Stage-54 presentation parameter contract extends this foundation
+without replacing it. The registry now covers 26 validated Godot presentation
+parameters across the eight admitted categories (`replay`, `display`, `theme`,
+`diagnostics`, `controls_help`, `interface`, `accessibility`, and `camera`).
+Every entry declares exactly one `semantic_owner`, one
+`accessibility_classification`, and a non-empty `runtime_applicability` list in
+addition to its existing type/default/bounds/options and persistence fields.
+
+`PresentationProfile` is the schema-1 detached in-memory value set built from
+this registry and `SettingsStore`. It adds no second declaration or disk
+authority. Unknown or invalid values reject a candidate profile; valid
+overrides create a new profile instead of mutating process-global renderer
+configuration. The full inventory and application boundary are authoritative
+in `presentation_parameter_contract.md`.
+
+Presentation configuration is non-gameplay state and cannot contribute to
+deterministic session identity.
+
 Stage 29 introduces a centralized declarative registry for Godot shell
 settings. The registry is the single declaration point for shell/view/replay
 settings that Godot may own. It is not a gameplay authority, a Python config
@@ -7,13 +27,17 @@ replacement, a parity surface, or a port of the pygame menu tree.
 
 ## Scope
 
-Allowed Stage 29 categories:
+Allowed registry categories (the original Stage 29 set plus accepted later
+extensions):
 
 - `replay`
 - `display`
 - `theme`
 - `diagnostics`
 - `controls_help`
+- `interface`
+- `accessibility`
+- `camera`
 
 Forbidden Stage 29 categories and setting IDs include gameplay, topology,
 movement, rotation, drop, collision, lock, clear, spawn, piece, and keyboard
@@ -50,6 +74,7 @@ The supporting Godot scripts are:
 - `godot/Tet4D.Godot/scripts/ui/settings/setting_spec.gd`
 - `godot/Tet4D.Godot/scripts/ui/settings/settings_registry.gd`
 - `godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd`
+- `godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd`
 - `godot/Tet4D.Godot/scripts/ui/settings/setting_control_factory.gd`
 - `godot/Tet4D.Godot/scripts/ui/settings/settings_panel.gd`
 - `godot/Tet4D.Godot/scripts/ui/settings_panel.gd`

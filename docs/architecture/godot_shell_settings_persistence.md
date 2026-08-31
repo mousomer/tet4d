@@ -1,5 +1,24 @@
 # Stage 48 Godot Shell Settings Persistence
 
+## Current post-Stage-54 state
+
+The guarded writer remains at schema 3. The registry currently declares 26
+presentation parameters: 24 `local_shell` values are serialized, while
+`diagnostics.show_layout_bounds` and the quick-control
+`display.grid_visible` are session-only. Additive registry keys do not require
+a settings-envelope bump: supported schema-1/2/3 documents retain valid known
+values and receive current defaults for absent keys.
+
+The schema-1 `PresentationProfile` is an in-memory validated value object, not
+a second persistence file. It is reconstructed from the shared store and may
+be switched transiently without writing. `user://shell_settings.json` remains
+the only presentation-preference document, and `user://game_setup.json`
+remains the distinct gameplay/setup document.
+
+Presentation configuration is non-gameplay state and cannot contribute to
+deterministic session identity, native state, snapshots, traces, replay
+identity, queue/RNG state, or gameplay hashes.
+
 Status: implementation complete; interactive acceptance pending
 Date: 2026-07-12
 
@@ -52,20 +71,31 @@ persistence, reset, focus, and semantic whitelist coverage.
 ## Persistence contract
 
 - Storage path: `user://shell_settings.json`.
-- Current schema: JSON object with `schema_version = 2` and a `settings`
-  object. Stage 48 introduced schema 1; Stage 51 migrates it field by field.
+- Current schema: JSON object with `schema_version = 3` and a `settings`
+  object. Stage 48 introduced schema 1; Stages 51 and 52 added the field-by-
+  field schema-2/schema-3 migration path.
 - Stored keys: only registry entries explicitly marked `persist: true`.
 - Stored values: validated JSON-safe booleans, strings, and numbers.
 - Ordering: persistent registry order, producing deterministic canonical JSON.
 - Save timing: validated save-on-change; unchanged values do not write.
 - Save feedback: the Settings screen reports `Shell settings saved automatically.`
   after a successful write; no separate Save button is required.
-- Replacement: write a sibling temporary file and first use Godot's
-  overwrite-capable rename. If that operation fails while an existing settings
-  file remains, preserve it as a sibling backup before retrying installation.
-  A failed retry restores the previous file by rename or copy fallback. Clean
-  temporary/backup files where safe; retain the backup and report its path only
-  if restoration itself cannot complete.
+- Replacement: use the bounded persistent-file helper shared only at the file-
+  mechanics layer with named presentation-profile artifacts. Write and flush a
+  sibling temporary file, check Godot's file error before installation, and
+  first use the overwrite-capable rename. An incomplete write fails before the
+  existing settings file is modified. If direct replacement fails while an
+  existing settings file remains, preserve it as a sibling backup before
+  retrying installation. A failed retry restores the previous file by rename or
+  copy fallback. Clean temporary/backup files where safe; retain the backup and
+  report its path only if restoration itself cannot complete. Sharing these
+  mechanics does not merge paths, schemas, diagnostics, or semantic ownership.
+  Sibling backup cleanup is limited to backup state owned by a destination that
+  existed before the replacement attempt. This filesystem-state rule is neutral
+  for the fixed app-owned settings path while preventing arbitrary fresh export
+  paths in other persistence domains from claiming unrelated sibling files. A
+  cleanup failure after successful settings installation remains explicit in
+  `SettingsStore` diagnostics while the successful save count increments once.
 - Reset API: the store can restore registry defaults atomically. The Stage 51
   Settings action scopes reset to Display, Theme, and Camera categories so
   replay, keyboard-hint, and onboarding preferences remain unchanged.

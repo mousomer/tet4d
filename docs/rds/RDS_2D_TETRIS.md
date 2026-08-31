@@ -59,13 +59,24 @@ Define requirements for the classic `(x, y)` mode implemented by:
 
 ## 5. Controls and UX
 
-1. Movement: left/right.
+1. Movement: left/right. In the default `relative` translation frame these
+   intents mean presented screen-left/screen-right even after the outer camera
+   rotates; the Godot adapter selects canonical `-X/+X` from the currently
+   rendered yaw. `absolute` keeps canonical `-X/+X` movement. Because 2D has
+   no ordinary Z translation, the relative mapping changes only after an
+   edge-on `+/-90` degree boundary; the exact zero-projection tie retains the
+   canonical sign deterministically and verification covers both sides.
 2. Soft drop, hard drop, and `x-y` rotation only.
 3. System controls: restart/menu/quit/toggle-grid.
 4. Grid off mode must keep a visible board shadow.
 5. Shared render-only projection-guide modes must exist in 2D: `bottom_boundary` projects the active piece onto the bottom board boundary line, and `all_boundaries` projects it onto all board boundary lines.
 6. 2D projection guides must derive from active-piece render state only, follow animated piece motion while the board shadow stays stable, and remain visually distinct from ghost/locked/active cells.
-7. 2D keeps the simpler board-layering path; it must not depend on the projected-depth board-line occlusion machinery used by projected `3D` / `4D` renderers.
+7. 2D consumes the same canonical local board presentation geometry as 3D and
+   each local 4D slice through `[X,Y] -> [X,Y,1]`. Its planar projection,
+   visible grid face, material treatment, and simpler layering remain
+   2D-specific; it must not depend on projected-depth board-line occlusion
+   machinery used by projected `3D` / `4D` renderers, and the presentation
+   depth must not enter gameplay state.
 8. Line clear should be animated.
 9. Terminal game over must enter `endgame_shatter` and then `endgame_relic_field`, with split grid/edge shell segments dying in a finite rupture while locked-cell squares hand off to the dedicated seam-aware explosion subsystem as planar cell particles. Connected seams must transport both position and velocity, non-connected boundaries must obey `boundary_response` (`escape` / `bounce`), and particle-particle resolution must obey the separate `particle_collisions` (`off` / `on`) axis.
 

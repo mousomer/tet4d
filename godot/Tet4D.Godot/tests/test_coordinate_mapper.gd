@@ -10,7 +10,7 @@ func run() -> Array:
 	_assert_vector(
 		failures,
 		mapper.unoriented_world_position([1, 2, 1, 1], 4),
-		Vector3(5.5, -0.0, 0.0),
+		mapper.slice_anchor(1) + Vector3(-0.5, 0.0, 0.0),
 		"4D centered coordinate mapping"
 	)
 	_assert_vector(
@@ -23,9 +23,10 @@ func run() -> Array:
 	if not bounds.get("ok", false):
 		failures.append("bounds should be available")
 		return failures
-	_assert_vector(failures, bounds.get("min", Vector3.ZERO), Vector3(-2.0, -2.5, -1.5), "bounds min")
-	_assert_vector(failures, bounds.get("max", Vector3.ZERO), Vector3(8.0, 3.18, 1.5), "bounds max includes subtle W marker clearance")
-	_assert_vector(failures, mapper.slice_label_position(1), Vector3(4.34, 2.92, -1.16), "W label position")
+	var second_anchor := mapper.slice_anchor(1)
+	_assert_vector(failures, bounds.get("min", Vector3.ZERO), Vector3(-4.1, -4.25, -3.6), "bounds min includes outside-edge W label clearance")
+	_assert_vector(failures, bounds.get("max", Vector3.ZERO), second_anchor + Vector3(4.1, 3.5, 3.6), "bounds max includes active-spawn clearance")
+	_assert_vector(failures, mapper.slice_label_position(1), second_anchor + Vector3(-3.15, -3.7, -2.65), "W label position")
 	_test_decomposed_asymmetric_mapping(failures)
 	return failures
 
@@ -40,8 +41,9 @@ func _test_decomposed_asymmetric_mapping(failures: Array) -> void:
 	if int(decomposition.get("layer_index", -1)) != 1 or decomposition.get("visible_cell_3d", []) != [1, 2, 2]:
 		failures.append("identity B must remain separately queryable in decomposition")
 	_assert_vector(failures, decomposition.get("centered_local_point", Vector3.ZERO), Vector3(-1.0, 1.0, 1.0), "asymmetric G_D centred point")
-	_assert_vector(failures, decomposition.get("anchor", Vector3.ZERO), Vector3(7.0, 0.0, 0.0), "asymmetric anchor_1")
-	_assert_vector(failures, decomposition.get("unoriented_world_point", Vector3.ZERO), Vector3(6.0, 1.0, 1.0), "compatibility composition is G_D plus anchor")
+	var expected_anchor := mapper.slice_anchor(1)
+	_assert_vector(failures, decomposition.get("anchor", Vector3.ZERO), expected_anchor, "asymmetric anchor_1")
+	_assert_vector(failures, decomposition.get("unoriented_world_point", Vector3.ZERO), expected_anchor + Vector3(-1.0, 1.0, 1.0), "compatibility composition is G_D plus anchor")
 	_assert_vector(failures, mapper.unoriented_world_position([1, 2, 2, 1], 4), decomposition.get("unoriented_world_point", Vector3.ZERO), "explicit unoriented path uses decomposed compatibility composition")
 	var mapped_origin: Dictionary = mapper.presentation_coordinate([2, 3, 1, 0])
 	var mapped_destination: Dictionary = mapper.presentation_coordinate([3, 3, 1, 0])

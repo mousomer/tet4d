@@ -16,6 +16,7 @@ tet4d/
 |- migration/                   checked-in migration traces plus generated engine-consumption bundle
 |- native/                      C++ GDExtension skeleton and third-party native dependencies
 |- packaging/                   PyInstaller spec and OS packaging scripts
+|- release-candidates/          validator-approved binaries nominated for cross-machine testing
 |- scripts/                     local verification and architecture checks
 |- unity/                       replay-only Unity spike project consuming copied migration bundle assets
 |- src/tet4d/
@@ -159,6 +160,10 @@ The current rule is one-way:
 9. Keep committed parity fixtures under `tests/fixtures/parity/` and route
    them through the matching parity harness docs rather than treating them as
    runtime assets.
+10. Keep nominated cross-machine binaries under `release-candidates/` only when
+    their packaging RDS permits it, their exact checksum is documented, and a
+    repository test validates the tracked payload. Generated build directories
+    remain ignored.
 10. Keep maintained parity harnesses under `tools/parity/` and
    `tests/unit/migration/`, while migration-only exporters and trace helpers
    remain under `tools/migration/`. Stage 18 parity work must follow

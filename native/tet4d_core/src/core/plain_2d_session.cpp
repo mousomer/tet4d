@@ -53,6 +53,17 @@ std::string active_piece_json(const std::optional<ActivePiece2D> &piece) {
 	return out.str();
 }
 
+std::string held_piece_json(const std::optional<PieceShape2D> &piece) {
+	if (!piece.has_value()) {
+		return "null";
+	}
+	std::ostringstream out;
+	out << "{\"blocks\":" << coords_json(piece->blocks)
+		<< ",\"color_id\":" << piece->color_id
+		<< ",\"shape\":\"" << piece->name << "\"}";
+	return out.str();
+}
+
 std::string locked_cells_json(const Board2D &board) {
 	std::ostringstream out;
 	out << "[";
@@ -109,7 +120,10 @@ std::string hash_payload_json(
 		const PlainGameSetup &setup,
 		const std::vector<PieceShape2D> &piece_bag,
 		std::size_t next_piece_index,
-		std::size_t rng_words_consumed) {
+		std::size_t rng_words_consumed,
+		const std::optional<PieceShape2D> &held_piece,
+		bool hold_available,
+		bool include_hold) {
 	std::ostringstream out;
 	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
 		<< ",\"board_shape\":[" << width << "," << height << "]"
@@ -128,7 +142,12 @@ std::string hash_payload_json(
 		}
 		out << "\"" << piece_bag[index].name << "\"";
 	}
-	out << "]"
+	out << "]";
+	if (include_hold) {
+		out << ",\"held_piece\":" << held_piece_json(held_piece)
+			<< ",\"hold_available\":" << bool_json(hold_available);
+	}
+	out
 		<< ",\"piece_set_id\":\"" << setup.piece_set_id << "\""
 		<< ",\"random_mode\":\"" << setup.random_mode << "\""
 		<< ",\"rng_words_consumed\":" << rng_words_consumed
@@ -140,13 +159,21 @@ std::string legacy_hash_payload_json(
 		const GameState2D &state,
 		int width,
 		int height,
-		std::size_t next_piece_index) {
+		std::size_t next_piece_index,
+		const std::optional<PieceShape2D> &held_piece,
+		bool hold_available,
+		bool include_hold) {
 	std::ostringstream out;
 	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
 		<< ",\"board_shape\":[" << width << "," << height << "]"
 		<< ",\"dimension\":2"
 		<< ",\"game_over\":" << bool_json(state.game_over)
-		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\""
+		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\"";
+	if (include_hold) {
+		out << ",\"held_piece\":" << held_piece_json(held_piece)
+			<< ",\"hold_available\":" << bool_json(hold_available);
+	}
+	out
 		<< ",\"lines\":" << state.lines
 		<< ",\"locked_cells\":" << locked_cells_json(state.board)
 		<< ",\"next_piece_index\":" << next_piece_index
@@ -249,6 +276,8 @@ void Plain2DSession::reset() {
 	next_piece_index_ = 0;
 	piece_bag_.clear();
 	rng_.seed(static_cast<std::uint32_t>(setup_.effective_seed));
+	held_piece_.reset();
+	hold_available_ = true;
 	spawn_next_piece();
 	last_command_ = "reset";
 	last_command_status_ = "reset";
@@ -276,9 +305,16 @@ std::string Plain2DSession::apply_command(const std::string &command) {
 		GameStepper2D::apply(state_, {"rotate_ccw", GameCommandKind2D::Rotate, -1, 0});
 	} else if (command == "soft_drop") {
 		GameStepper2D::apply(state_, {"soft_drop", GameCommandKind2D::SoftDrop, 0, 1});
+	} else if (command == "hold") {
+		const bool accepted = apply_hold();
+		last_command_ = accepted ? command : "rejected:" + command;
+		last_command_status_ = accepted ? "accepted" : "rejected";
+		++command_count_;
+		return command_status(command);
 	} else if (command == "hard_drop") {
 		state_.post_lock_spawn_shape = draw_next_piece_shape();
 		GameStepper2D::apply(state_, {"hard_drop", GameCommandKind2D::HardDrop, 0, 0});
+		hold_available_ = !state_.game_over && state_.active_piece.has_value();
 	} else if (command == "tick") {
 		tick();
 		return command_status(command);
@@ -302,6 +338,7 @@ std::string Plain2DSession::tick() {
 			if (!state_.game_over) {
 				spawn_next_piece();
 			}
+			hold_available_ = !state_.game_over && state_.active_piece.has_value();
 		}
 	}
 	last_command_ = "tick";
@@ -363,6 +400,8 @@ std::string Plain2DSession::snapshot_json() const {
 		<< ",\"probe_markers\":[]"
 		<< ",\"game_over\":" << bool_json(state_.game_over)
 		<< ",\"game_over_reason\":\"" << state_.game_over_reason << "\""
+		<< ",\"held_piece\":" << held_piece_json(held_piece_)
+		<< ",\"hold_available\":" << bool_json(hold_available())
 		<< ",\"configured_seed\":";
 	if (setup_.configured_seed.has_value()) {
 		out << *setup_.configured_seed;
@@ -392,6 +431,8 @@ std::string Plain2DSession::status() const {
 		<< " lines=" << state_.lines
 		<< " current_piece=" << current_piece_name()
 		<< " next_piece=" << next_piece_name()
+		<< " held_piece=" << (held_piece_.has_value() ? held_piece_->name : "empty")
+		<< " hold_available=" << bool_json(hold_available())
 		<< " piece_set=" << setup_.piece_set_id
 		<< " random_mode=" << setup_.random_mode
 		<< " effective_seed=" << setup_.effective_seed
@@ -405,8 +446,9 @@ std::string Plain2DSession::status() const {
 }
 
 std::string Plain2DSession::state_hash() const {
+	const bool include_hold = held_piece_.has_value() || !hold_available_;
 	if (!setup_.shuffle_bag) {
-		return sha256_hex(legacy_hash_payload_json(state_, width_, height_, next_piece_index_));
+		return sha256_hex(legacy_hash_payload_json(state_, width_, height_, next_piece_index_, held_piece_, hold_available_, include_hold));
 	}
 	return sha256_hex(hash_payload_json(
 		state_,
@@ -415,7 +457,10 @@ std::string Plain2DSession::state_hash() const {
 		setup_,
 		piece_bag_,
 		next_piece_index_,
-		rng_.words_consumed()
+		rng_.words_consumed(),
+		held_piece_,
+		hold_available_,
+		include_hold
 	));
 }
 
@@ -431,6 +476,14 @@ PieceShape2D Plain2DSession::peek_next_piece_shape() const {
 	const std::vector<PieceShape2D> preview_bag =
 			build_shuffled_piece_bag(live_piece_sequence(), preview_rng);
 	return preview_bag.back();
+}
+
+std::optional<PieceShape2D> Plain2DSession::held_piece_shape() const {
+	return held_piece_;
+}
+
+bool Plain2DSession::hold_available() const {
+	return hold_available_ && !state_.game_over && state_.active_piece.has_value();
 }
 
 std::optional<ActivePiece2D> Plain2DSession::hard_drop_destination() const {
@@ -462,6 +515,18 @@ PieceShape2D Plain2DSession::draw_next_piece_shape() {
 
 void Plain2DSession::spawn_next_piece() {
 	state_.spawn_piece(draw_next_piece_shape());
+}
+
+bool Plain2DSession::apply_hold() {
+	if (!hold_available()) {
+		return false;
+	}
+	const PieceShape2D outgoing = state_.active_piece->shape;
+	const PieceShape2D incoming = held_piece_.has_value() ? *held_piece_ : draw_next_piece_shape();
+	held_piece_ = outgoing;
+	hold_available_ = false;
+	state_.spawn_piece(incoming);
+	return true;
 }
 
 std::string Plain2DSession::current_piece_name() const {

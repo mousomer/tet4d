@@ -12,9 +12,27 @@ class InjectedReplacementOps:
 	var rename_failures: Dictionary = {}
 	var copy_failures: Dictionary = {}
 	var remove_failures: Dictionary = {}
+	var write_failures: Dictionary = {}
 	var rename_count := 0
 	var copy_count := 0
 	var remove_count := 0
+	var write_count := 0
+
+	func write_text_file(path: String, contents: String) -> Error:
+		write_count += 1
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		if file == null:
+			return FileAccess.get_open_error()
+		if write_failures.has(write_count):
+			file.store_string(contents.left(maxi(1, contents.length() / 4)))
+			file.flush()
+			file.close()
+			return write_failures.get(write_count)
+		file.store_string(contents)
+		file.flush()
+		var error := file.get_error()
+		file.close()
+		return error
 
 	func file_exists(path: String) -> bool:
 		return FileAccess.file_exists(path)
@@ -51,13 +69,15 @@ func run() -> Array:
 	store.set_value("theme.name", "plain")
 	store.set_value("accessibility.show_help_hints", false)
 	store.set_value("replay.playback_speed", 1.5)
+	store.set_value("board.grid_opacity", 0.55)
+	store.set_value("slice_set.spacing", 1.4)
 	store.set_value("diagnostics.show_layout_bounds", true)
 	var save_count := int(store.deterministic_snapshot().get("save_count", 0))
 	store.set_value("theme.name", "plain")
 	if int(store.deterministic_snapshot().get("save_count", 0)) != save_count:
 		failures.append("unchanged values should not rewrite settings")
 	var fresh = StoreScript.new(registry, TEST_PATH)
-	if fresh.value("theme.name") != "plain" or fresh.value("accessibility.show_help_hints") != false or absf(float(fresh.value("replay.playback_speed")) - 1.5) > 0.001:
+	if fresh.value("theme.name") != "plain" or fresh.value("accessibility.show_help_hints") != false or absf(float(fresh.value("replay.playback_speed")) - 1.5) > 0.001 or absf(float(fresh.value("board.grid_opacity")) - 0.55) > 0.001 or absf(float(fresh.value("slice_set.spacing")) - 1.4) > 0.001:
 		failures.append("persistent enum, bool, and numeric values should round-trip")
 	if fresh.value("diagnostics.show_layout_bounds") != false:
 		failures.append("session-only diagnostics should not round-trip")
@@ -70,7 +90,7 @@ func run() -> Array:
 			failures.append("canonical file should contain every and only persistent registry key")
 		for forbidden in ["score", "lines", "board_state", "active_cells", "locked_cells", "paused", "game_over", "topology", "native_trace_state", "basis", "basis_state", "local_yaw", "local_pitch", "target_focus", "zoom_multiplier", "projection", "horizontal_reflection_active", "fit_reference"]:
 			if saved.has(forbidden): failures.append("settings file must exclude semantic state %s" % forbidden)
-		for persistent_preference in ["display.show_w_labels", "display.projection_strength", "display.board_detail", "accessibility.reduced_motion", "camera.sensitivity", "camera.invert_y"]:
+		for persistent_preference in ["display.show_w_labels", "display.projection_strength", "display.board_detail", "accessibility.reduced_motion", "camera.sensitivity", "camera.invert_y", "board.grid_opacity", "board.boundary_opacity", "active_cells.opacity", "ghost.opacity", "slice_set.spacing", "environment.background_intensity"]:
 			if not saved.has(persistent_preference):
 				failures.append("settings file must retain established preference %s" % persistent_preference)
 	_test_invalid_inputs(failures, registry)
@@ -149,10 +169,52 @@ func _test_schema_representations(failures: Array, registry) -> void:
 
 
 func _test_failure_safe_replacement(failures: Array, registry) -> void:
+	_test_absent_destination_install_failure(failures, registry)
 	_test_successful_existing_replacement(failures, registry)
+	_test_backup_then_install_success(failures, registry)
+	_test_stale_backup_cleanup_warning(failures, registry)
+	_test_incomplete_write_preserves_existing_file(failures, registry)
 	_test_failure_before_existing_file_changes(failures, registry)
 	_test_failure_after_backup_restores_previous_file(failures, registry)
 	_test_restore_copy_fallback(failures, registry)
+
+
+func _test_absent_destination_install_failure(failures: Array, registry) -> void:
+	_cleanup()
+	_write_file_at("%s.bak" % TEST_PATH, "unrelated sibling backup sentinel")
+	var ops := InjectedReplacementOps.new()
+	ops.rename_failures = {1: ERR_CANT_CREATE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "tron")
+	if _path_exists(TEST_PATH) or _path_exists("%s.tmp" % TEST_PATH):
+		failures.append("absent settings destination install failure must leave no destination or temporary phantom")
+	if _read_file_at("%s.bak" % TEST_PATH) != "unrelated sibling backup sentinel":
+		failures.append("absent settings destination install failure must not touch the sibling backup")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 0:
+		failures.append("absent settings destination install failure must not increment save count")
+	if not _diagnostics_contain(store, "installation failed") or _diagnostics_contain(store, "saved automatically"):
+		failures.append("absent settings destination install failure must report failure without success")
+	_cleanup()
+
+
+func _test_incomplete_write_preserves_existing_file(failures: Array, registry) -> void:
+	_write_valid_settings("tron")
+	var original := _read_file()
+	var ops := InjectedReplacementOps.new()
+	ops.write_failures = {1: ERR_FILE_CANT_WRITE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "plain")
+	if _read_file() != original:
+		failures.append("incomplete settings write must preserve the exact existing settings file")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 0:
+		failures.append("incomplete settings write must not increment save count")
+	if not _diagnostics_contain(store, "temporary write failed") or _diagnostics_contain(store, "saved automatically"):
+		failures.append("incomplete settings write must report failure without success")
+	if _path_exists("%s.tmp" % TEST_PATH) or _path_exists("%s.bak" % TEST_PATH):
+		failures.append("incomplete settings write should remove its invalid temporary artifact without creating a backup")
+	var reopened = StoreScript.new(registry, TEST_PATH)
+	if reopened.value("theme.name") != "tron":
+		failures.append("settings should reopen from the prior valid artifact after an incomplete write")
 
 
 func _test_successful_existing_replacement(failures: Array, registry) -> void:
@@ -167,6 +229,43 @@ func _test_successful_existing_replacement(failures: Array, registry) -> void:
 		failures.append("successful replacement should increment save count exactly once")
 	if _path_exists("%s.tmp" % TEST_PATH) or _path_exists("%s.bak" % TEST_PATH):
 		failures.append("successful replacement should clean temporary and backup files")
+
+
+func _test_backup_then_install_success(failures: Array, registry) -> void:
+	_write_valid_settings("tron")
+	var ops := InjectedReplacementOps.new()
+	ops.rename_failures = {1: ERR_CANT_CREATE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "plain")
+	if _saved_theme() != "plain":
+		failures.append("backup-then-install fallback should install the new settings file")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 1:
+		failures.append("backup-then-install fallback should increment settings save count exactly once")
+	if ops.rename_count != 3 or ops.copy_count != 0:
+		failures.append("backup-then-install fallback should execute direct, backup, and install renames exactly once")
+	if _path_exists("%s.tmp" % TEST_PATH) or _path_exists("%s.bak" % TEST_PATH):
+		failures.append("backup-then-install fallback should clean owned temporary and backup files")
+	if not _diagnostics_contain(store, "saved automatically") or _diagnostics_contain(store, "could not be saved"):
+		failures.append("backup-then-install fallback should report one successful settings save")
+
+
+func _test_stale_backup_cleanup_warning(failures: Array, registry) -> void:
+	_write_valid_settings("tron")
+	_write_file_at("%s.bak" % TEST_PATH, "managed stale settings backup")
+	var ops := InjectedReplacementOps.new()
+	ops.remove_failures = {1: ERR_CANT_CREATE}
+	var store = StoreScript.new(registry, TEST_PATH, ops)
+	store.set_value("theme.name", "plain")
+	if _saved_theme() != "plain" or _read_file_at("%s.bak" % TEST_PATH) != "managed stale settings backup":
+		failures.append("settings cleanup warning should preserve the new destination and retained backup")
+	if int(store.deterministic_snapshot().get("save_count", 0)) != 1:
+		failures.append("settings cleanup warning should still increment save count exactly once")
+	if not _diagnostics_contain(store, "saved, but stale backup cleanup failed"):
+		failures.append("settings cleanup warning should remain explicit in owner diagnostics")
+	if _diagnostics_contain(store, "could not be saved") or _path_exists("%s.tmp" % TEST_PATH):
+		failures.append("settings cleanup warning must not report bounded failure or leave a temporary artifact")
+	if _path_exists("%s.bak" % TEST_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("%s.bak" % TEST_PATH))
 
 
 func _test_failure_before_existing_file_changes(failures: Array, registry) -> void:
@@ -251,7 +350,11 @@ func _write_file_at(path: String, text: String) -> void:
 
 
 func _read_file() -> String:
-	var file := FileAccess.open(TEST_PATH, FileAccess.READ)
+	return _read_file_at(TEST_PATH)
+
+
+func _read_file_at(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
 	return file.get_as_text() if file != null else ""
 
 

@@ -35,9 +35,10 @@ func run() -> Array:
 		await tree.process_frame
 		await tree.process_frame
 		hud.set_bundle_status("Bundle: OK · 12 cases", "Bundle: exported_bundle · digest abc123")
-		hud.set_camera_status("Camera: LIVE_3D_EXTERNAL_DIAGRAM_VIEW · ortho · above exterior · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
+		hud.set_camera_status("View: ortho · size 16.00 · zoom 1.00x · outer view · yaw 32 deg · pitch above 26 deg · roll 0 deg · fit OK")
 		await tree.process_frame
 		failures.append_array(_check_layout(hud, viewport_size))
+		failures.append_array(await _check_reset_view_lifecycle(hud, viewport_size))
 		failures.append_array(await _check_keyboard_hint_visibility_setting(hud))
 		var replay_snapshot: Dictionary = hud.layout_contract_snapshot()
 		var replay_game_rect: Rect2 = replay_snapshot.get("game_area", Rect2())
@@ -53,6 +54,23 @@ func run() -> Array:
 			"cells": [[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
 		})
 		hud.set_live_4d_mode(false, true, "move_w_negative", "out_of_bounds", 0.5)
+		hud.set_snapshot({
+			"trace_type": "live_4d",
+			"dimension": 4,
+			"board_shape": [5, 10, 4, 4],
+			"piece_set_id": "standard_4d_5",
+			"effective_seed": 1337,
+			"score": 45,
+			"lines": 1,
+			"initial_speed_level": 1,
+			"paused": false,
+			"game_over": true,
+			"game_over_reason": "out_of_bounds",
+			"current_piece": {"name": "CROSS4"},
+			"next_piece": {"name": "STAIR4"},
+			"last_command": "move_w_negative",
+			"last_command_status": "locked",
+		}, true)
 		await tree.process_frame
 		var terminal_preview: Dictionary = hud.layout_contract_snapshot().get("next_piece_panel", {})
 		if terminal_preview.get("piece_name_text") != "CROSS4":
@@ -67,7 +85,11 @@ func run() -> Array:
 			failures.append("Stage 54C basis changes must not rebuild or reorient canonical NEXT geometry")
 		if str(hud.layout_contract_snapshot().get("top_summary_title", "")) != "Live Session":
 			failures.append("live 4D must not retain the Replay summary heading")
+		hud._apply_hud_density("standard")
+		hud._set_keyboard_hints_visible(true)
+		await tree.process_frame
 		failures.append_array(_check_live_4d_cockpit_contract(hud, viewport_size, replay_game_rect.size.x))
+		failures.append_array(await _check_live_mode_progression(hud, viewport_size))
 		failures.append_array(await _check_true_random_action_layout(hud, viewport_size))
 		hud.set_replay_mode_labels(false, 1.0, false)
 		await tree.process_frame
@@ -78,9 +100,37 @@ func run() -> Array:
 			failures.append("replay mode should restore bundle status after live mode")
 		if bool(restored_snapshot.get("next_piece_panel", {}).get("visible", true)):
 			failures.append("returning to replay must hide the NEXT panel")
+		if bool(restored_snapshot.get("live_reset_view_button_visible", true)):
+			failures.append("returning to replay must explicitly hide the actual Reset View action")
 		root.queue_free()
 		await tree.process_frame
 	failures.append_array(_check_live_control_maps())
+	return failures
+
+
+func _check_reset_view_lifecycle(hud: Node, viewport_size: Vector2i) -> Array:
+	var failures: Array = []
+	var fresh: Dictionary = hud.layout_contract_snapshot()
+	if bool(fresh.get("live_reset_view_button_visible", true)):
+		failures.append("fresh replay viewport %s must hide the actual Reset View action" % str(viewport_size))
+	for mode in ["live_2d", "live_3d", "live_4d"]:
+		match mode:
+			"live_2d": hud.set_live_2d_mode(false, false, "none")
+			"live_3d": hud.set_live_3d_mode(false, false, "none")
+			"live_4d": hud.set_live_4d_mode(false, false, "none")
+		await Engine.get_main_loop().process_frame
+		var live: Dictionary = hud.layout_contract_snapshot()
+		if not bool(live.get("live_reset_view_button_visible", false)):
+			failures.append("%s viewport %s must explicitly show Reset View" % [mode, viewport_size])
+		if not bool(live.get("live_view_actions_visible", false)) or not bool(live.get("piece_control_strip", {}).get("visible", false)):
+			failures.append("%s viewport %s must retain neighbouring live-only surfaces" % [mode, viewport_size])
+		hud.set_replay_mode_labels(false, 1.0, false)
+		await Engine.get_main_loop().process_frame
+		var replay: Dictionary = hud.layout_contract_snapshot()
+		if bool(replay.get("live_reset_view_button_visible", true)):
+			failures.append("%s -> replay viewport %s must explicitly hide Reset View" % [mode, viewport_size])
+		if bool(replay.get("live_view_actions_visible", true)) or bool(replay.get("piece_control_strip", {}).get("visible", true)) or bool(replay.get("next_piece_panel", {}).get("visible", true)):
+			failures.append("%s -> replay viewport %s must hide neighbouring live-only surfaces" % [mode, viewport_size])
 	return failures
 
 
@@ -161,8 +211,8 @@ func _check_layout(hud: Node, viewport_size: Vector2i) -> Array:
 		failures.append("%s: top bundle status should stay compact and readable" % label)
 	if bundle_detail_text.find("digest abc123") == -1:
 		failures.append("%s: inspector should preserve detailed bundle status" % label)
-	if camera_status_text.find("LIVE_3D_EXTERNAL_DIAGRAM_VIEW") == -1 or camera_status_text.find("above") == -1:
-		failures.append("%s: inspector should expose Live 3D camera preset diagnostics" % label)
+	if not camera_status_text.begins_with("View:") or camera_status_text.find("above") == -1 or camera_status_text.find("Camera:") != -1:
+		failures.append("%s: inspector should expose numeric view diagnostics without preset identity" % label)
 	if viewport_hint_text.find("Quick") == -1 or viewport_hint_text.find("Space") == -1 or viewport_hint_text.find("Play / Pause") == -1:
 		failures.append("%s: viewport should expose structured replay quick keycap/action hints" % label)
 	if bottom_hint_text.find("Quick") == -1 or bottom_hint_text.find("Esc") == -1 or bottom_hint_text.find("Main Menu") == -1:
@@ -232,10 +282,12 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	var status_badge_color: Color = snapshot.get("top_status_badge_color", Color.TRANSPARENT)
 	var status_badge_border_color: Color = snapshot.get("top_status_badge_border_color", Color.TRANSPARENT)
 	var style_manager = hud.style_manager()
-	if authority_text.find("Native C++ owns gameplay") != -1 or inspector_status_text.find("Native C++ owns gameplay") != -1:
-		failures.append("%s: broad native gameplay ownership wording should not appear" % label)
-	if authority_text.find("Live Plain 4D") == -1 or authority_text.find("C++ PlainNDSession") == -1 or authority_text.find("Godot shell") == -1:
-		failures.append("%s: authority wording should be scoped to the Live Plain 4D C++ session" % label)
+	if bool(snapshot.get("top_bundle_panel_visible", true)) or bool(snapshot.get("top_authority_panel_visible", true)):
+		failures.append("%s: ordinary live play must hide replay bundle and implementation-authority chrome" % label)
+	if bool(snapshot.get("integrity_panel_visible", true)) or bool(snapshot.get("bundle_detail_panel_visible", true)):
+		failures.append("%s: ordinary live play must hide raw session/bundle diagnostics" % label)
+	if authority_text.find("C++ PlainNDSession") == -1 or inspector_status_text.find("Engine      C++ PlainNDSession") == -1:
+		failures.append("%s: hidden diagnostic routes should retain scoped implementation evidence" % label)
 	if top_detail_text != "" or viewport_detail_text.find("Godot command/render shell") != -1:
 		failures.append("%s: live shell detail should not dangle in top or viewport chrome" % label)
 	if top_status_badge_text.find("[ GAME OVER ]") == -1 or top_status_badge_text.find("Piece out of bounds") == -1:
@@ -250,12 +302,11 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: visible Change Setup action should fit above the live body, button=%s body=%s" % [label, change_setup_button_rect, body_rect])
 	if top_status_badge_text.find("out_of_bounds") != -1 or top_summary_text.find("out_of_bounds") != -1 or inspector_status_text.find("out_of_bounds") != -1:
 		failures.append("%s: user-facing live status should not expose raw out_of_bounds reason" % label)
-	if inspector_status_text.find("SESSION") == -1 or inspector_status_text.find("STATUS") == -1 or inspector_status_text.find("VIEW") == -1:
-		failures.append("%s: inspector should use structured sections" % label)
-	if inspector_status_text.find("Mode        Live Plain 4D") == -1 or inspector_status_text.find("Engine      C++ PlainNDSession") == -1:
-		failures.append("%s: inspector should expose aligned session rows" % label)
-	if inspector_status_text.find("Reason      Piece out of bounds") == -1:
-		failures.append("%s: inspector should expose user-facing game-over reason" % label)
+	if top_summary_text.find("SCORE") == -1 or top_summary_text.find("CLEARS") == -1 or top_summary_text.find("Active") == -1:
+		failures.append("%s: concise live summary should expose score, clears, and active piece" % label)
+	for diagnostic_copy in ["C++ PlainNDSession", "Godot shell", "Seed", "Topology", "Last input"]:
+		if top_summary_text.find(diagnostic_copy) != -1:
+			failures.append("%s: ordinary live summary should omit %s" % [label, diagnostic_copy])
 	if viewport_hints_visible or viewport_hint_text != "":
 		failures.append("%s: central board should not repeat partial Live 4D quick controls" % label)
 	if bottom_bar_visible or bottom_hint_text != "":
@@ -264,11 +315,14 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should not show Quit Replay wording" % label)
 	if left_panel_visible:
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
-	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Piece rotation") == -1 or inspector_hint_text.find("Slice orientation") == -1 or inspector_hint_text.find("Framing") == -1 or inspector_hint_text.find("Pointer") == -1 or inspector_hint_text.find("Session") == -1 or inspector_hint_text.find("Navigation") == -1:
-		failures.append("%s: inspector should expose full grouped Live 4D controls" % label)
-	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Left Drag", "Right Drag", "Wheel", "Backspace", "Tab", "Esc"]:
+	if inspector_hint_text.find("Piece movement") == -1 or inspector_hint_text.find("Piece rotation") == -1 or inspector_hint_text.find("Slice orientation") == -1 or inspector_hint_text.find("Framing") == -1 or inspector_hint_text.find("Pointer") == -1 or inspector_hint_text.find("Session") == -1:
+		failures.append("%s: inspector should expose mode-appropriate grouped Live 4D guidance" % label)
+	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Left Drag", "Right Drag", "Wheel", "P"]:
 		if inspector_hint_text.find(required) == -1:
-			failures.append("%s: Live 4D full controls should include %s" % [label, required])
+			failures.append("%s: Live 4D cockpit guidance should include %s" % [label, required])
+	for duplicated in ["90° View Rotation", "Reset View", "Fit View", "Restart Game", "Navigation", "Backspace", "Tab", "Esc"]:
+		if inspector_hint_text.find(duplicated) != -1:
+			failures.append("%s: visible action families should keep %s out of passive cockpit help" % [label, duplicated])
 	if inspector_hint_text.find("Roll left / right") != -1:
 		failures.append("%s: normal Live 4D controls must not advertise gameplay roll" % label)
 	if inspector_hint_text.find("Left: CCW") == -1 or inspector_hint_text.find("Right: CW") == -1:
@@ -283,18 +337,37 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: game area should remain larger than the inspector column, game=%s inspector=%s" % [label, game_rect, inspector_rect])
 	if replay_game_width > 0.0 and game_rect.size.x <= replay_game_width + 0.5:
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
-	if right_inspector_order.size() < 5 or str(right_inspector_order[0]) != "LiveOnboardingPanel" or str(right_inspector_order[1]) != "NextPiecePanel" or str(right_inspector_order[2]) != "Live4DBasisPanel" or str(right_inspector_order[3]) != "InspectorSectionHeader__CONTROLS" or str(right_inspector_order[4]) != "InspectorControlHints":
-		failures.append("%s: live right inspector should present onboarding, NEXT, basis, and controls before diagnostics/settings, order=%s" % [label, str(right_inspector_order)])
+	for required_surface in ["PiecePreviewRow", "LivePieceControlStrip", "Live4DBasisPanel", "InspectorSectionHeader__VIEW", "InspectorCameraPanel", "InspectorControlHints"]:
+		if not right_inspector_order.has(required_surface):
+			failures.append("%s: live right inspector should retain %s, order=%s" % [label, required_surface, str(right_inspector_order)])
+	if (
+		right_inspector_order.find("PiecePreviewRow") > right_inspector_order.find("LivePieceControlStrip")
+		or right_inspector_order.find("LivePieceControlStrip") > right_inspector_order.find("Live4DBasisPanel")
+		or right_inspector_order.find("Live4DBasisPanel") > right_inspector_order.find("InspectorCameraPanel")
+	):
+		failures.append("%s: preview, piece controls, basis, and camera guidance must follow gameplay priority, order=%s" % [label, str(right_inspector_order)])
 	var next_piece_panel: Dictionary = snapshot.get("next_piece_panel", {})
 	if not bool(next_piece_panel.get("visible", false)) or next_piece_panel.get("piece_name_text") != "CROSS4":
 		failures.append("%s: live right inspector should expose the authoritative NEXT piece" % label)
 	if float(next_piece_panel.get("minimum_height", 0.0)) > inspector_rect.size.y:
 		failures.append("%s: NEXT panel should remain bounded within the scrollable inspector viewport" % label)
+	var hold_piece_panel: Dictionary = snapshot.get("hold_piece_panel", {})
+	if not bool(hold_piece_panel.get("visible", false)) or hold_piece_panel.get("piece_name_text") != "EMPTY" or hold_piece_panel.get("status_text") != "Available · C":
+		failures.append("%s: live right inspector should expose intentional authoritative HOLD state" % label)
+	if float(hold_piece_panel.get("minimum_height", 0.0)) > inspector_rect.size.y:
+		failures.append("%s: HOLD panel should remain bounded within the scrollable inspector viewport" % label)
 	var view_actions := hud.find_child("CockpitButtonPanel", true, false) as Control
+	var live_view_row := hud.find_child("LiveViewActions", true, false) as Control
 	var quick_settings := hud.find_child("QuickSettingsToggle", true, false) as Button
 	var grid_toggle := hud.find_child("GridVisibilityToggle", true, false) as Button
 	if view_actions == null or not view_actions.visible or view_actions.get_meta("semantic_role", "") != "interactive_button_panel":
 		failures.append("%s: live navigation should expose persistent action buttons" % label)
+	if not bool(snapshot.get("live_fit_view_button_visible", false)) or not bool(snapshot.get("live_reset_view_button_visible", false)):
+		failures.append("%s: live View family should expose distinct Fit View and Reset View actions" % label)
+	if not bool(snapshot.get("camera_panel_visible", false)) or bool(snapshot.get("camera_status_visible", true)):
+		failures.append("%s: Standard live HUD should expose compact camera guidance without numeric camera diagnostics" % label)
+	if not bool(snapshot.get("view_action_menu_visible", false)) or str(snapshot.get("view_action_menu_text", "")) != "View Actions" or str(snapshot.get("view_action_menu_parent", "")) != "SecondaryViewControls":
+		failures.append("%s: Live 4D should expose stateless View Actions below primary piece controls" % label)
 	if quick_settings == null or quick_settings.text.find("Quick Settings") == -1:
 		failures.append("%s: action row should expose a discoverable Quick Settings toggle" % label)
 	elif quick_settings.text == "Show Quick Settings":
@@ -309,10 +382,73 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		if grid_toggle.text != "Grid: Off":
 			failures.append("%s: grid action should report the hidden-detail state" % label)
 		grid_toggle.pressed.emit()
-	if quick_settings != null and (quick_settings.get_parent() != view_actions or quick_settings.get_meta("semantic_role", "") != "action_button" or quick_settings.get_theme_stylebox("normal") == null):
+	if quick_settings != null and (quick_settings.get_parent() != live_view_row or quick_settings.get_meta("semantic_role", "") != "action_button" or quick_settings.get_theme_stylebox("normal") == null):
 		failures.append("%s: Quick Settings should be an unmistakable styled action button" % label)
-	if grid_toggle != null and (grid_toggle.get_parent() != view_actions or grid_toggle.get_meta("semantic_role", "") != "action_button" or grid_toggle.get_theme_stylebox("normal") == null):
+	if grid_toggle != null and (grid_toggle.get_parent() != live_view_row or grid_toggle.get_meta("semantic_role", "") != "action_button" or grid_toggle.get_theme_stylebox("normal") == null):
 		failures.append("%s: Grid should be an unmistakable styled action button" % label)
+	if live_view_row == null:
+		failures.append("%s: live cockpit should keep one compact recovery/display row" % label)
+	return failures
+
+
+func _check_live_mode_progression(hud: Node, viewport_size: Vector2i) -> Array:
+	var failures: Array = []
+	hud.set_control_frame_snapshot({
+		"translation_frame": "relative",
+		"rotation_frame": "relative",
+		"horizontal_axis": "+X",
+		"depth_axis": "+Z",
+		"slice_axis": "+W",
+	})
+	hud._apply_hud_density("standard")
+	hud._set_keyboard_hints_visible(true)
+	hud.set_live_2d_mode(false, false, "none")
+	await Engine.get_main_loop().process_frame
+	var two_d: Dictionary = hud.layout_contract_snapshot()
+	var two_d_hints := str(two_d.get("inspector_hint_text", ""))
+	if bool(two_d.get("view_action_menu_visible", true)) or bool(two_d.get("basis_panel_visible", true)) or not bool(two_d.get("camera_panel_visible", false)) or bool(two_d.get("camera_status_visible", true)):
+		failures.append("live 2D viewport %s: named views, basis, and numeric diagnostics must be absent while secondary Reset remains available" % str(viewport_size))
+	for leaked_copy in ["Forward / Back", "Slice", "View gestures", "90° View Rotation"]:
+		if two_d_hints.find(leaked_copy) != -1:
+			failures.append("live 2D viewport %s: cockpit must not leak %s" % [str(viewport_size), leaked_copy])
+	if two_d_hints.find("Piece movement") == -1 or two_d_hints.find("Piece rotation") == -1 or two_d_hints.find("Drop") == -1:
+		failures.append("live 2D viewport %s: minimal gameplay guidance must remain visible" % str(viewport_size))
+
+	hud.set_live_3d_mode(false, false, "none")
+	await Engine.get_main_loop().process_frame
+	var three_d: Dictionary = hud.layout_contract_snapshot()
+	var three_d_hints := str(three_d.get("inspector_hint_text", ""))
+	if not bool(three_d.get("view_action_menu_visible", false)) or str(three_d.get("view_action_menu_parent", "")) != "SecondaryViewControls":
+		failures.append("live 3D viewport %s: stateless View Actions must remain available below piece controls" % str(viewport_size))
+	if bool(three_d.get("basis_panel_visible", true)) or not bool(three_d.get("camera_panel_visible", false)) or bool(three_d.get("camera_status_visible", true)):
+		failures.append("live 3D viewport %s: 4D basis and Standard numeric camera diagnostics must stay hidden while compact view guidance remains" % str(viewport_size))
+	for required_copy in ["Forward / Back", "Forward recedes and Back approaches", "View gestures", "Left Drag", "Right Drag", "Wheel"]:
+		if three_d_hints.find(required_copy) == -1:
+			failures.append("live 3D viewport %s: cockpit should explain %s" % [str(viewport_size), required_copy])
+	if three_d_hints.find("Slice") != -1 or three_d_hints.find("W−") != -1:
+		failures.append("live 3D viewport %s: 4D slice concepts must stay hidden" % str(viewport_size))
+
+	var popup := hud._camera_view_action_menu.get_popup() as PopupMenu
+	popup.popup()
+	await Engine.get_main_loop().process_frame
+	if not hud.live_interaction_owns_input():
+		failures.append("live 3D View Actions popup must own keyboard input while open")
+	popup.hide()
+	await Engine.get_main_loop().process_frame
+	if hud.live_interaction_owns_input():
+		failures.append("closing View Actions must restore ordinary live input ownership")
+
+	hud._apply_hud_density("compact")
+	await Engine.get_main_loop().process_frame
+	var compact: Dictionary = hud.layout_contract_snapshot()
+	if bool(compact.get("controls_panel_visible", true)) or not bool(compact.get("next_piece_panel", {}).get("visible", false)) or not bool(compact.get("live_view_actions_visible", false)) or not bool(compact.get("piece_control_strip", {}).get("visible", false)):
+		failures.append("live compact density must reduce detailed help while retaining NEXT, piece controls, and action families")
+	hud._apply_hud_density("detailed")
+	await Engine.get_main_loop().process_frame
+	var detailed: Dictionary = hud.layout_contract_snapshot()
+	if not bool(detailed.get("camera_panel_visible", false)) or bool(detailed.get("integrity_panel_visible", true)) or bool(detailed.get("bundle_detail_panel_visible", true)):
+		failures.append("live detailed density should add view detail without restoring engine/bundle diagnostics")
+	hud._apply_hud_density("standard")
 	return failures
 
 

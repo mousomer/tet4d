@@ -7,6 +7,9 @@ const ReplayHudScript = preload("res://scripts/ui/replay_hud.gd")
 func run() -> Array:
 	var failures: Array = []
 	var specs := LiveInputContractScript.action_specs()
+	var hold_spec: Dictionary = specs.get("live_hold", {})
+	if hold_spec.get("keys", []) != [KEY_C] or int(hold_spec.get("display_key", KEY_NONE)) != KEY_C:
+		failures.append("Hold must have exactly one semantic C binding in the public input authority")
 	for roll_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
 		if specs.has(roll_action):
 			failures.append("normal Live 4D must not register %s" % roll_action)
@@ -29,7 +32,7 @@ func run() -> Array:
 	if not LiveInputContractScript.camera_control_for_button(MOUSE_BUTTON_MIDDLE).is_empty():
 		failures.append("middle drag must not retain an undocumented pan binding")
 	var helper := ReplayHudScript.live_4d_hint_text()
-	for required in ["Ctrl Soft Drop", "Reset View (basis, slice orientation, framing)", "Fit View (framing only)", "Left Drag Orient slices", "Right Drag Translate framing", "Wheel Zoom"]:
+	for required in ["Ctrl Soft Drop", "C Hold", "Reset View (basis, slice orientation, framing)", "Fit View (framing only)", "Left Drag Orient slices", "Right Drag Translate framing", "Wheel Zoom"]:
 		if not helper.contains(required):
 			failures.append("helper must render the authoritative control: %s" % required)
 	var group_names: Array = []

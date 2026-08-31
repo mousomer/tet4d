@@ -14,6 +14,7 @@ const REPLAY_BASE_FPS := 4.0
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
+const AnimatedBackgroundScript = preload("res://scripts/rendering/animated_background.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
@@ -21,6 +22,11 @@ const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 const ControlFrameMappingScript = preload("res://scripts/presentation/control_frame_mapping.gd")
 const GhostPieceModelScript = preload("res://scripts/presentation/ghost_piece_model.gd")
+const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
+const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
+const PhysicalKeyFallbackScript = preload("res://scripts/input/physical_key_fallback.gd")
+const DesignPlatformProfileScript = preload("res://scripts/platform/design_platform_profile.gd")
 
 const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
@@ -43,6 +49,8 @@ var _mouse_orbiting := false
 var _mouse_panning := false
 var _pending_fit_view := false
 var _mode := MODE_REPLAY
+var _retained_live_navigation_mode := ""
+var _retained_live_navigation_paused := false
 var _live_2d_paused := false
 var _live_2d_session_started := false
 var _live_3d_paused := false
@@ -57,6 +65,7 @@ var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
 var _translation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _rotation_frame := ControlFrameMappingScript.FRAME_RELATIVE
+var _control_frame_presentation_key := ""
 var _live_tick_accumulator := 0.0
 var _live_gravity_interval_seconds := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
 var _active_live_setup: Dictionary = {}
@@ -93,17 +102,30 @@ var _live_repeat_held := {
 	"move_w_pos": false,
 	"soft_drop": false,
 }
+# Keycodes the shell claims by printed character, plus the actions currently
+# held through a positional fallback. Both exist so external keyboards on
+# handheld targets drive the same action IDs as a desktop keyboard.
+var _physical_fallback_bound: Dictionary = {}
+var _physical_fallback_held: Dictionary = {}
+var _platform_profile = DesignPlatformProfileScript.new()
 var _live_bridge = Tet4DCoreBridgeScript.new()
 var _ghost_model = GhostPieceModelScript.new()
 var _ghost_enabled := true
 var _ghost_semantic_revision := ""
 var _ghost_query_count := 0
+var _presentation_profile = PresentationProfileScript.canonical_defaults()
 
 var _world_root: Node3D
 var _live_4d_presentation_root: Node3D
 var _renderer: TraceSceneRenderer
 var _camera_rig: CameraRig
 var _world_environment: WorldEnvironment
+# Keep this dynamically typed and construct it through AnimatedBackgroundScript.
+# `global_script_class_cache.cfg` is ignored generated state, so a checkout may
+# legitimately have a stale cache that predates this component. A global-class
+# annotation here would make the whole application controller fail to parse and
+# leave the otherwise visible main menu inert until the editor refreshes metadata.
+var _animated_background
 @onready var _hud: ReplayHud = get_parent().get_node("ReplayHud") as ReplayHud
 
 
@@ -117,6 +139,14 @@ func _ready() -> void:
 func _deferred_ready() -> void:
 	_wire_hud()
 	_build_world_in_game_viewport()
+	if not _hud.configure_design_laboratory({
+		"load_scenario": Callable(self, "_load_design_laboratory_scenario"),
+		"apply_profile": Callable(self, "apply_presentation_profile"),
+		"current_fingerprint": Callable(self, "_design_laboratory_fingerprint"),
+		"capture_image": Callable(self, "_capture_design_laboratory_image"),
+		"build_identity": Callable(self, "_design_laboratory_build_identity"),
+	}):
+		push_error("Design Laboratory could not be configured")
 	_renderer.set_display_mode(_state.display_mode)
 	_apply_world_palette(_state.display_mode)
 	_hud.set_display_mode(_state.display_mode)
@@ -129,7 +159,10 @@ func _process(delta: float) -> void:
 		_fit_view()
 	if _is_live_mode():
 		if not _live_mode_paused() and not _live_snapshot_game_over():
-			_process_live_input_repeat(delta)
+			if _hud != null and _hud.live_interaction_owns_input():
+				_reset_live_repeat_state()
+			else:
+				_process_live_input_repeat(delta)
 			_live_tick_accumulator += delta
 			if _live_tick_accumulator >= _live_gravity_interval_seconds:
 				_live_tick_accumulator = 0.0
@@ -161,10 +194,22 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		_track_physical_fallback(event)
 	if _hud != null and _hud.handle_main_menu_shortcut(event):
 		get_viewport().set_input_as_handled()
 		return
 	if not _is_live_viewer_active():
+		return
+	if (
+		_hud != null
+		and (event is InputEventMouseButton or event is InputEventMouseMotion)
+		and _hud.presentation_designer_contains_global_point(event.position)
+	):
+		# Leave the event available to Godot GUI dispatch while preventing the
+		# compact overlay from also orbiting, panning, zooming, or hard-dropping.
+		return
+	if _hud != null and _hud.live_interaction_owns_input():
 		return
 	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
@@ -179,6 +224,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _hud != null and _hud.live_interaction_owns_input():
+		return
 	if _is_live_mode() and not _is_live_viewer_active():
 		if _event_action_pressed(event, ["quit", "replay_quit"]) or _event_is_escape(event):
 			_return_to_main_menu()
@@ -297,6 +344,9 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("replay_fit_view"):
 		_fit_view()
 		return true
+	if _event_action_pressed_once(event, ["reset"]):
+		_reset_view()
+		return true
 	if event.is_action_pressed("replay_toggle_help"):
 		_hud.toggle_help()
 		return true
@@ -306,10 +356,10 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if _live_2d_paused or _live_snapshot_game_over():
 		return _event_action_pressed(event, _live_gameplay_action_names())
 	if _event_action_pressed_once(event, ["live_move_left", "live_2d_move_left"]):
-		_dispatch_live_gameplay_command("move_left")
+		_dispatch_live_2d_control_intent("move_left")
 		return true
 	if _event_action_pressed_once(event, ["live_move_right", "live_2d_move_right"]):
-		_dispatch_live_gameplay_command("move_right")
+		_dispatch_live_2d_control_intent("move_right")
 		return true
 	if _event_action_pressed_once(event, ["live_rotate_cw", "live_2d_rotate_cw"]):
 		_dispatch_live_gameplay_command("rotate_cw")
@@ -323,6 +373,9 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if _event_action_pressed_once(event, ["live_hard_drop", "live_2d_hard_drop"]):
 		_dispatch_live_gameplay_command("hard_drop")
 		return true
+	if _event_action_pressed_once(event, ["live_hold"]):
+		_dispatch_live_gameplay_command("hold")
+		return true
 	return false
 
 
@@ -335,6 +388,9 @@ func _handle_live_3d_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed(event, ["live_3d_reset"]):
 		_reset_live_3d()
+		return true
+	if _event_action_pressed_once(event, ["reset"]):
+		_reset_view()
 		return true
 	if event.is_action_pressed("replay_toggle_help"):
 		_hud.toggle_help()
@@ -361,6 +417,9 @@ func _handle_live_3d_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed_once(event, ["live_hard_drop", "live_3d_hard_drop"]):
 		_dispatch_live_3d_gameplay_command("hard_drop")
+		return true
+	if _event_action_pressed_once(event, ["live_hold"]):
+		_dispatch_live_3d_gameplay_command("hold")
 		return true
 	if _event_action_pressed_once(event, ["live_3d_rotate_xy_neg"]):
 		_dispatch_live_3d_rotation_intent("rotate_xy_neg")
@@ -425,6 +484,9 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed_once(event, ["live_hard_drop", "live_4d_hard_drop"]):
 		_dispatch_live_4d_gameplay_command("hard_drop")
+		return true
+	if _event_action_pressed_once(event, ["live_hold"]):
+		_dispatch_live_4d_gameplay_command("hold")
 		return true
 	if _event_action_pressed_once(event, ["live_4d_rotate_xy_neg"]):
 		_dispatch_live_4d_rotation_intent("rotate_xy_neg")
@@ -500,7 +562,10 @@ func _apply_live_4d_orientation_drag(delta: Vector2) -> void:
 		sensitivity_factor = float(preferences.get("sensitivity_factor", 1.0))
 		invert_y = bool(preferences.get("invert_y", false))
 		orbit_sensitivity = _camera_rig.orbit_sensitivity
-	var yaw_delta := -delta.x * orbit_sensitivity * sensitivity_factor
+	# L is a passive object-space render transform. Its horizontal sign is the
+	# inverse of outer CameraRig orbit so an identical physical drag has the
+	# same apparent screen-space direction in Live 3D and Live 4D.
+	var yaw_delta := delta.x * orbit_sensitivity * sensitivity_factor
 	var vertical_direction := 1.0 if invert_y else -1.0
 	var pitch_delta := delta.y * orbit_sensitivity * sensitivity_factor * vertical_direction
 	_set_live_4d_local_orientation(
@@ -576,7 +641,7 @@ func _handle_live_4d_basis_input(event: InputEvent) -> bool:
 		_apply_live_4d_basis_turn("zx", 1)
 		return true
 	if _event_action_pressed_once(event, ["reset"]):
-		_reset_live_4d_view()
+		_reset_view()
 		return true
 	return false
 
@@ -604,67 +669,18 @@ func _wire_hud() -> void:
 	_hud.replay_loop_changed.connect(func(enabled: bool) -> void:
 		_state.loop_enabled = enabled
 	)
-	_hud.display_w_labels_changed.connect(func(visible: bool) -> void:
-		_renderer.set_show_w_labels(visible)
-		_refresh_render()
-	)
-	_hud.projection_strength_changed.connect(func(value: float) -> void:
-		_renderer.set_projection_strength(value)
-		_refresh_render()
-	)
-	_hud.board_detail_changed.connect(func(detail: String) -> void:
-		_renderer.set_board_detail(detail)
-		_refresh_render()
-	)
-	_hud.ghost_visibility_changed.connect(func(visible: bool) -> void:
-		_ghost_enabled = visible
-		if visible:
-			_ghost_semantic_revision = ""
-			_refresh_ghost_cache()
-		else:
-			_clear_ghost_cache()
-		_refresh_render()
-	)
-	_hud.locked_cell_opacity_changed.connect(func(opacity: float) -> void:
-		_renderer.set_locked_cell_opacity(opacity)
-		_refresh_render()
-	)
-	_hud.grid_visibility_changed.connect(func(visible: bool) -> void:
-		_renderer.set_grid_visible(visible)
-		_refresh_render()
-	)
-	_hud.accessibility_policy_changed.connect(func(policy: Dictionary) -> void:
-		_renderer.set_accessibility_policy(
-			bool(policy.get("high_contrast", false)),
-			bool(policy.get("reduced_motion", false))
-		)
-		_refresh_render()
-	)
-	_hud.camera_preferences_changed.connect(func(sensitivity_factor: float, invert_y: bool, interpolation_scale: float) -> void:
-		if _camera_rig != null:
-			_camera_rig.set_presentation_preferences(sensitivity_factor, invert_y, interpolation_scale)
-			_refresh_camera_status()
-	)
+	_hud.presentation_profile_changed.connect(apply_presentation_profile)
 	_hud.camera_preset_requested.connect(func(id: String) -> void:
-		var applied := _apply_live_4d_preset(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_preset(id))
+		var applied := _apply_live_4d_view_action(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_outer_view_action(id))
 		if applied and _camera_rig != null:
-			_hud.set_camera_preset(_camera_rig.current_preset_id())
 			_refresh_camera_status()
 	)
 	_hud.diagnostics_visibility_changed.connect(func(visible: bool) -> void:
 		_state.diagnostics_visible = visible
 		_refresh_hud()
 	)
-	_hud.display_mode_changed.connect(func(display_mode: String) -> void:
-		_state.display_mode = ReplayVisuals.normalize_display_mode(display_mode)
-		_renderer.set_display_mode(_state.display_mode)
-		_apply_world_palette(_state.display_mode)
-		_hud.set_display_mode(_state.display_mode)
-		if not _current_snapshot.is_empty():
-			_refresh_render()
-		_refresh_hud()
-	)
 	_hud.fit_view_requested.connect(_fit_view)
+	_hud.reset_view_requested.connect(_reset_view)
 	_hud.quit_requested.connect(_quit_application)
 	_hud.main_menu_requested.connect(_return_to_main_menu)
 	_hud.live_2d_requested.connect(_enter_live_2d_mode)
@@ -674,8 +690,133 @@ func _wire_hud() -> void:
 	_hud.change_setup_requested.connect(_change_live_setup)
 	_hud.new_random_game_requested.connect(_start_new_random_game)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
+	_hud.viewer_requested.connect(_return_to_viewer_from_navigation)
 	_hud.basis_turn_requested.connect(_apply_live_4d_basis_turn)
-	_hud.basis_reset_requested.connect(_reset_live_4d_view)
+	_hud.design_laboratory_requested.connect(_open_design_laboratory)
+
+
+func _open_design_laboratory() -> void:
+	_state.is_playing = false
+	_hud.open_design_laboratory()
+
+
+func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
+	if str(scenario.get("scenario_kind", "replay_fixture")) == "live_session":
+		var setup = scenario.get("live_setup")
+		if not (setup is Dictionary):
+			return {"ok": false, "error": "Live design scenario setup is invalid."}
+		_start_configured_live_game(setup.duplicate(true))
+		if _mode != str(setup.get("mode", "")):
+			return {"ok": false, "error": "Live design scenario could not start."}
+		for command in scenario.get("commands", []):
+			match _mode:
+				MODE_LIVE_2D:
+					_live_2d_command(str(command))
+				MODE_LIVE_3D:
+					_live_3d_command(str(command))
+				MODE_LIVE_4D:
+					_live_4d_command(str(command))
+		_live_2d_paused = true
+		_live_3d_paused = true
+		_live_4d_paused = true
+		_refresh_hud()
+		var live_fingerprint := _design_laboratory_fingerprint()
+		return {
+			"ok": true,
+			"error": "",
+			"fingerprint": live_fingerprint,
+			"fingerprint_hash": DesignValueScript.canonical_hash(live_fingerprint),
+		}
+	var family := str(scenario.get("trace_family", ""))
+	var case_id := str(scenario.get("trace_case_id", ""))
+	var frame_index := int(scenario.get("frame_index", -1))
+	if not TRACE_FAMILIES.has(family) or case_id.is_empty() or frame_index < 0:
+		return {"ok": false, "error": "Design scenario replay reference is invalid."}
+	_select_trace_family(family, case_id, false, true)
+	if _state.selected_case_id != case_id or _current_document == null:
+		return {"ok": false, "error": "Design scenario replay case could not be loaded."}
+	_restore_live_4d_presentation_defaults()
+	_set_frame(frame_index)
+	_state.is_playing = false
+	_establish_canonical_view_and_fit(MODE_REPLAY)
+	_refresh_hud()
+	var fingerprint := _design_laboratory_fingerprint()
+	return {
+		"ok": true,
+		"error": "",
+		"fingerprint": fingerprint,
+		"fingerprint_hash": DesignValueScript.canonical_hash(fingerprint),
+	}
+
+
+func _design_laboratory_fingerprint() -> Dictionary:
+	var camera: Dictionary = _camera_rig.presentation_snapshot() if _camera_rig != null else {}
+	return {
+		"mode": _mode,
+		"trace_type": _state.selected_trace_type,
+		"case_id": _state.selected_case_id,
+		"frame_index": _state.current_frame_index,
+		"live_setup": _active_live_setup.duplicate(true),
+		"gameplay_snapshot": _current_snapshot.duplicate(true),
+		"basis": _live_4d_basis.indicator_snapshot() if _live_4d_basis != null else {},
+		"slice_local_orientation": _live_4d_local_orientation.snapshot() if _live_4d_local_orientation != null else {},
+		"camera_pose": {
+			"target_yaw": camera.get("target_yaw", 0.0),
+			"target_pitch": camera.get("target_pitch", 0.0),
+			"target_roll": camera.get("target_roll", 0.0),
+			"current_yaw": camera.get("current_yaw", 0.0),
+			"current_pitch": camera.get("current_pitch", 0.0),
+			"current_roll": camera.get("current_roll", 0.0),
+			"target_focus": str(camera.get("target_focus", Vector3.ZERO)),
+			"current_focus": str(camera.get("current_focus", Vector3.ZERO)),
+			"target_distance": camera.get("target_distance", 0.0),
+			"current_distance": camera.get("current_distance", 0.0),
+			"zoom_multiplier": camera.get("zoom_multiplier", 1.0),
+			"projection": camera.get("projection", -1),
+			"orthographic_size": camera.get("orthographic_size", 0.0),
+			"view_context": camera.get("view_context", ""),
+		},
+	}
+
+
+func _capture_design_laboratory_image() -> Image:
+	var viewport := _hud.game_viewport() if _hud != null else null
+	return viewport.get_texture().get_image() if viewport != null and viewport.get_texture() != null else Image.new()
+
+
+func _design_laboratory_build_identity() -> Dictionary:
+	var engine := Engine.get_version_info()
+	return {
+		"application_name": str(ProjectSettings.get_setting("application/config/name", "Tet4D")),
+		"application_version": str(ProjectSettings.get_setting("application/config/version", "unknown")),
+		"engine_build": str(engine.get("string", "unknown")),
+		"design_lab_schema_version": 1,
+		# Provenance only. The catalogue, scenarios, comparison model, and
+		# evaluation records are identical on every platform; this records
+		# where a candidate was authored, never what its properties mean.
+		"platform": str(_platform_profile.platform_id()),
+		"export_transport": str(_platform_profile.export_transport_id()),
+	}
+
+
+# Android delivers a system Back gesture. Without this the engine default would
+# quit the process, discarding an in-flight comparison session. Back instead
+# follows the same deterministic ladder as Escape and is inert at the main menu.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_handle_system_back_request()
+
+
+func _handle_system_back_request() -> bool:
+	if _hud == null:
+		return false
+	if _hud.design_laboratory_visible():
+		_hud.close_design_laboratory()
+		return true
+	if _is_live_mode():
+		_return_to_main_menu()
+		return true
+	return false
 
 
 func _quit_application() -> void:
@@ -812,7 +953,6 @@ func _reset_playback() -> void:
 	_state.reset(_state.is_playing)
 	_playback_accumulator = 0.0
 	_refresh_snapshot()
-	_fit_view()
 
 
 func _refresh_snapshot() -> void:
@@ -883,7 +1023,7 @@ func ghost_cache_snapshot() -> Dictionary:
 	return result
 
 
-func _apply_live_4d_preset(id: String) -> bool:
+func _apply_live_4d_view_action(id: String) -> bool:
 	if _mode != MODE_LIVE_4D or _camera_rig == null or not CameraPresetScript.is_known(id):
 		return false
 	var preset := CameraPresetScript.definition(id)
@@ -891,42 +1031,71 @@ func _apply_live_4d_preset(id: String) -> bool:
 		float(preset.get("yaw", _live_4d_local_orientation.local_yaw)),
 		float(preset.get("pitch", _live_4d_local_orientation.local_pitch))
 	)
-	return _camera_rig.apply_framing_preset(id)
+	_camera_rig.restore_fitted_framing()
+	return true
 
 
 func _fit_view() -> void:
 	_resolve_scene_nodes()
-	if _camera_rig == null or _renderer == null or not _camera_rig.has_method("fit_bounds"):
+	if _camera_rig == null or _renderer == null:
 		_pending_fit_view = true
 		return
 	var bounds := _renderer.current_bounds()
 	if not bounds.get("ok", false):
 		_pending_fit_view = true
 		return
-	if _mode == MODE_LIVE_4D:
-		_camera_rig.fit_bounds(
-			bounds,
-			CameraRigScript.LIVE_4D_FIT_MARGIN,
-			CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
-			CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
-			CameraPresetScript.ISO,
-			"fitted W slices",
-			true
-		)
+	var margin := 1.14
+	if _mode == MODE_LIVE_2D:
+		margin = CameraRigScript.LIVE_2D_FIT_MARGIN
 	elif _mode == MODE_LIVE_3D:
-		_camera_rig.fit_bounds(
-			bounds,
-			CameraRigScript.LIVE_3D_FIT_MARGIN,
-			CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
-			CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
-			CameraPresetScript.ISO,
-			"above exterior"
-		)
-	else:
-		_camera_rig.fit_bounds(bounds, CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else 1.14)
+		margin = CameraRigScript.LIVE_3D_FIT_MARGIN
+	elif _mode == MODE_LIVE_4D:
+		margin = CameraRigScript.LIVE_4D_FIT_MARGIN
+	_camera_rig.fit_current_bounds(bounds, margin)
 	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
 	_refresh_camera_status()
+
+
+func _establish_canonical_view_and_fit(mode_name: String) -> void:
+	_resolve_scene_nodes()
+	if _camera_rig == null or _renderer == null:
+		_pending_fit_view = true
+		return
+	if mode_name == MODE_LIVE_4D:
+		_restore_live_4d_presentation_defaults()
+		_refresh_live_4d_presentation(true)
+	_camera_rig.establish_canonical_projection()
+	match mode_name:
+		MODE_LIVE_2D:
+			_camera_rig.establish_outer_view(0.0, 0.0, 0.0, false)
+		MODE_LIVE_3D:
+			_camera_rig.establish_outer_view(
+				CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
+				CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
+				0.0,
+				false
+			)
+		MODE_LIVE_4D:
+			_camera_rig.establish_outer_view(
+				CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
+				CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
+				0.0,
+				true
+			)
+		_:
+			_camera_rig.establish_outer_view(
+				CameraRigScript.PYTHON_DISPLAY_YAW_RAD,
+				CameraRigScript.PYTHON_DISPLAY_PITCH_RAD,
+				0.0,
+				false
+			)
+	_fit_view()
+
+
+func _reset_view() -> void:
+	_establish_canonical_view_and_fit(_mode)
+	_refresh_hud()
 
 
 func _resolve_scene_nodes() -> void:
@@ -938,8 +1107,11 @@ func _resolve_scene_nodes() -> void:
 		_camera_rig = _world_root.get_node_or_null("CameraRig") as CameraRig
 	if _live_4d_presentation_root == null:
 		_live_4d_presentation_root = _world_root.get_node_or_null("Live4DPresentationRoot") as Node3D
+	if _animated_background == null:
+		_animated_background = _world_root.get_node_or_null("CameraRig/Camera3D/AnimatedBackground")
 	if _camera_rig != null:
 		_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
+		_connect_camera_control_frame_signal()
 
 
 func _build_world_in_game_viewport() -> void:
@@ -966,7 +1138,11 @@ func _build_world_in_game_viewport() -> void:
 	camera.current = true
 	camera.fov = 50.0
 	_camera_rig.add_child(camera)
+	_animated_background = AnimatedBackgroundScript.new()
+	_animated_background.name = "AnimatedBackground"
+	camera.add_child(_animated_background)
 	_camera_rig.set_world_presentation_root(_live_4d_presentation_root)
+	_connect_camera_control_frame_signal()
 
 	var light := DirectionalLight3D.new()
 	light.name = "DirectionalLight3D"
@@ -990,13 +1166,62 @@ func _build_world_in_game_viewport() -> void:
 	_refresh_camera_status()
 
 
-func _apply_world_palette(display_mode: String) -> void:
+func _apply_world_palette(display_mode: String, intensity: float = -1.0) -> void:
 	if _world_environment == null or _world_environment.environment == null:
 		return
-	_world_environment.environment.background_color = ReplayVisuals.color_for_role(
+	if intensity < 0.0:
+		intensity = float(_presentation_profile.value("environment.background_intensity"))
+	var palette_color := ReplayVisuals.color_for_role(
 		ReplayVisuals.ROLE_BACKGROUND,
 		display_mode
 	)
+	var world_background := _scaled_background_color(palette_color, intensity)
+	_world_environment.environment.background_color = world_background
+	if _animated_background != null:
+		_animated_background.set_display_mode(display_mode)
+		_animated_background.set_base_color(world_background)
+
+
+func _scaled_background_color(color: Color, intensity: float) -> Color:
+	if intensity <= 1.0:
+		return Color(color.r * intensity, color.g * intensity, color.b * intensity, color.a)
+	return color.lerp(Color(1.0, 1.0, 1.0, color.a), minf((intensity - 1.0) * 0.35, 0.35))
+
+
+func apply_presentation_profile(profile) -> bool:
+	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
+		return false
+	var previous_ghost_enabled := _ghost_enabled
+	_presentation_profile = profile.detached_copy()
+	_state.display_mode = ReplayVisuals.normalize_display_mode(str(_presentation_profile.value("theme.name")))
+	_state.playback_speed = float(_presentation_profile.value("replay.playback_speed"))
+	_state.loop_enabled = bool(_presentation_profile.value("replay.loop_enabled"))
+	_ghost_enabled = bool(_presentation_profile.value("ghost.enabled"))
+	if _hud != null:
+		_hud.apply_presentation_profile(_presentation_profile)
+	if _renderer != null:
+		_renderer.apply_presentation_profile(_presentation_profile)
+	if _animated_background != null:
+		_animated_background.apply_presentation_profile(_presentation_profile)
+	if _camera_rig != null:
+		_camera_rig.set_presentation_preferences(
+			ShellPresentationPreferencesScript.camera_sensitivity_factor(str(_presentation_profile.value("camera.sensitivity"))),
+			bool(_presentation_profile.value("camera.invert_y")),
+			0.0 if bool(_presentation_profile.value("accessibility.reduced_motion")) else 1.0
+		)
+		_refresh_camera_status()
+	_apply_world_palette(_state.display_mode, float(_presentation_profile.value("environment.background_intensity")))
+	if _ghost_enabled != previous_ghost_enabled:
+		if _ghost_enabled:
+			_ghost_semantic_revision = ""
+			_refresh_ghost_cache()
+		else:
+			_clear_ghost_cache()
+	if not _current_snapshot.is_empty():
+		_refresh_render()
+	if _hud != null:
+		_refresh_hud()
+	return true
 
 
 func _refresh_hud() -> void:
@@ -1005,6 +1230,7 @@ func _refresh_hud() -> void:
 		var game_over := _live_snapshot_game_over()
 		if not game_over:
 			_hud.set_next_piece_preview(_live_bridge.live_2d_next_piece_preview())
+		_hud.set_hold_piece_state(_live_bridge.live_2d_held_piece_preview(), _live_bridge.live_2d_hold_available())
 		_hud.set_live_2d_mode(
 			_live_2d_paused,
 			game_over,
@@ -1016,6 +1242,7 @@ func _refresh_hud() -> void:
 		var game_over := _live_snapshot_game_over()
 		if not game_over:
 			_hud.set_next_piece_preview(_live_bridge.live_3d_next_piece_preview())
+		_hud.set_hold_piece_state(_live_bridge.live_3d_held_piece_preview(), _live_bridge.live_3d_hold_available())
 		_hud.set_live_3d_mode(
 			_live_3d_paused,
 			game_over,
@@ -1027,6 +1254,7 @@ func _refresh_hud() -> void:
 		var game_over := _live_snapshot_game_over()
 		if not game_over:
 			_hud.set_next_piece_preview(_live_bridge.live_4d_next_piece_preview())
+		_hud.set_hold_piece_state(_live_bridge.live_4d_held_piece_preview(), _live_bridge.live_4d_hold_available())
 		_hud.set_live_4d_basis_snapshot(_live_4d_basis_hud_snapshot())
 		_hud.set_live_4d_mode(
 			_live_4d_paused,
@@ -1058,8 +1286,6 @@ func _refresh_camera_status() -> void:
 	_resolve_scene_nodes()
 	if _camera_rig != null and _camera_rig.has_method("view_status_text"):
 		_hud.set_camera_status(_camera_rig.view_status_text())
-		if _camera_rig.has_method("current_preset_id"):
-			_hud.set_camera_preset(_camera_rig.current_preset_id())
 	_refresh_control_frame_presentation()
 
 
@@ -1087,17 +1313,35 @@ func _sync_control_frames_from_setup() -> void:
 	_rotation_frame = ControlFrameMappingScript.normalize_frame(str(frames.get("rotation_frame", _rotation_frame)))
 
 
-func _refresh_control_frame_presentation() -> void:
-	if _mode not in [MODE_LIVE_3D, MODE_LIVE_4D]:
-		return
-	var mapping = _control_frame_mapping(4 if _mode == MODE_LIVE_4D else 3)
-	var snapshot: Dictionary = mapping.snapshot()
-	snapshot["translation_frame"] = _translation_frame
+func _refresh_control_frame_presentation() -> bool:
+	if _mode not in [MODE_LIVE_2D, MODE_LIVE_3D, MODE_LIVE_4D]:
+		_control_frame_presentation_key = ""
+		return false
+	var dimension := 4 if _mode == MODE_LIVE_4D else (3 if _mode == MODE_LIVE_3D else 2)
+	var mapping = _control_frame_mapping(dimension)
+	var snapshot: Dictionary = mapping.effective_translation_snapshot(_translation_frame)
 	snapshot["rotation_frame"] = _rotation_frame
+	var presentation_key := "%s|%s" % [_mode, str(snapshot)]
+	var changed := presentation_key != _control_frame_presentation_key
+	_control_frame_presentation_key = presentation_key
 	if _camera_rig != null and _camera_rig.has_method("set_control_frame_mapping"):
 		_camera_rig.set_control_frame_mapping(snapshot)
 	if _hud != null and _hud.has_method("set_control_frame_snapshot"):
 		_hud.set_control_frame_snapshot(snapshot)
+	return changed
+
+
+func _connect_camera_control_frame_signal() -> void:
+	if _camera_rig == null or not _camera_rig.has_signal("presented_orientation_changed"):
+		return
+	var callback := Callable(self, "_on_camera_presented_orientation_changed")
+	if not _camera_rig.is_connected("presented_orientation_changed", callback):
+		_camera_rig.connect("presented_orientation_changed", callback)
+
+
+func _on_camera_presented_orientation_changed() -> void:
+	if _mode in [MODE_LIVE_2D, MODE_LIVE_3D] and _refresh_control_frame_presentation():
+		_refresh_hud()
 
 
 func _bundle_case_count() -> int:
@@ -1108,7 +1352,7 @@ func _bundle_case_count() -> int:
 	return total
 
 
-func _start_configured_live_game(setup: Dictionary) -> void:
+func _start_configured_live_game(setup: Dictionary, preserve_current_view: bool = false) -> void:
 	_sync_control_frames_from_setup()
 	var mode_name := str(setup.get("mode", ""))
 	var configured := false
@@ -1133,17 +1377,17 @@ func _start_configured_live_game(setup: Dictionary) -> void:
 	_live_gravity_interval_seconds = _gravity_interval_for_setup(_active_live_setup)
 	match mode_name:
 		MODE_LIVE_2D:
-			_enter_live_2d_mode()
+			_enter_live_2d_mode(preserve_current_view)
 		MODE_LIVE_3D:
-			_enter_live_3d_mode()
+			_enter_live_3d_mode(preserve_current_view)
 		MODE_LIVE_4D:
-			_enter_live_4d_mode()
+			_enter_live_4d_mode(preserve_current_view)
 
 
 func _start_new_random_game() -> void:
 	if _active_live_setup.is_empty() or str(_active_live_setup.get("random_mode", "")) != "true_random":
 		return
-	_start_configured_live_game(_active_live_setup.duplicate(true))
+	_start_configured_live_game(_active_live_setup.duplicate(true), true)
 
 
 # tet4d-semantic-boundary: allow adapter-routing
@@ -1162,42 +1406,48 @@ func _gravity_interval_for_setup(setup: Dictionary) -> float:
 	return float(maxi(min_ms, int(base_ms / speed))) / 1000.0
 
 
-func _enter_live_2d_mode() -> void:
-	_prepare_live_mode_entry(MODE_LIVE_2D)
+func _enter_live_2d_mode(preserve_current_view: bool = false) -> void:
+	_prepare_live_mode_entry(MODE_LIVE_2D, preserve_current_view)
 	if not _live_2d_session_started:
 		_live_bridge.live_2d_reset()
 		_live_2d_session_started = true
 	_refresh_live_2d_snapshot()
-	_fit_view()
+	if not preserve_current_view:
+		_establish_canonical_view_and_fit(MODE_LIVE_2D)
 	_hud.show_replay_viewer()
 
 
-func _enter_live_3d_mode() -> void:
-	_prepare_live_mode_entry(MODE_LIVE_3D)
+func _enter_live_3d_mode(preserve_current_view: bool = false) -> void:
+	_prepare_live_mode_entry(MODE_LIVE_3D, preserve_current_view)
 	if not _live_3d_session_started:
 		_live_bridge.live_3d_reset()
 		_live_3d_session_started = true
 	_refresh_live_3d_snapshot()
-	_fit_view()
+	if not preserve_current_view:
+		_establish_canonical_view_and_fit(MODE_LIVE_3D)
 	_hud.show_replay_viewer()
 	_refresh_live_3d_snapshot()
 
 
-func _enter_live_4d_mode() -> void:
-	_prepare_live_mode_entry(MODE_LIVE_4D)
+func _enter_live_4d_mode(preserve_current_view: bool = false) -> void:
+	_prepare_live_mode_entry(MODE_LIVE_4D, preserve_current_view)
 	if not _live_4d_session_started:
 		_live_bridge.live_4d_reset()
 		_live_4d_session_started = true
-	_restore_live_4d_presentation_defaults()
 	_refresh_live_4d_snapshot()
-	_fit_view()
+	if not preserve_current_view:
+		_establish_canonical_view_and_fit(MODE_LIVE_4D)
 	_hud.show_replay_viewer()
 	_refresh_live_4d_snapshot()
 
 
-func _prepare_live_mode_entry(mode_name: String) -> void:
-	if _mode == MODE_LIVE_4D and mode_name != MODE_LIVE_4D:
-		_clear_live_4d_presentation_state(false)
+func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = false) -> void:
+	_clear_retained_live_navigation_state()
+	if not preserve_current_view or _mode != mode_name:
+		if _mode == MODE_LIVE_4D:
+			_clear_live_4d_presentation_state(false)
+		elif _camera_rig != null:
+			_camera_rig.clear_presentation_state()
 	_mode = mode_name
 	_state.is_playing = false
 	if mode_name == MODE_LIVE_4D:
@@ -1213,6 +1463,11 @@ func _prepare_live_mode_entry(mode_name: String) -> void:
 
 
 func _return_to_main_menu() -> void:
+	if _is_live_mode():
+		_retained_live_navigation_mode = _mode
+		_retained_live_navigation_paused = _live_mode_paused()
+	else:
+		_clear_retained_live_navigation_state()
 	_state.is_playing = false
 	_live_2d_paused = true
 	_live_3d_paused = true
@@ -1223,11 +1478,60 @@ func _return_to_main_menu() -> void:
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(true)
 	else:
+		if _camera_rig != null:
+			_camera_rig.clear_presentation_state()
 		_refresh_render()
 	_hud.show_screen(ReplayHud.SCREEN_MAIN_MENU)
 
 
+func _return_to_viewer_from_navigation() -> void:
+	if not _is_live_mode():
+		_hud.show_replay_viewer()
+		return
+	if _retained_live_navigation_mode != _mode:
+		_hud.show_replay_viewer()
+		return
+	var retained_pause := _retained_live_navigation_paused
+	_state.is_playing = false
+	_live_2d_paused = retained_pause if _mode == MODE_LIVE_2D else true
+	_live_3d_paused = retained_pause if _mode == MODE_LIVE_3D else true
+	_live_4d_paused = retained_pause if _mode == MODE_LIVE_4D else true
+	match _mode:
+		MODE_LIVE_2D:
+			_live_2d_session_started = true
+		MODE_LIVE_3D:
+			_live_3d_session_started = true
+		MODE_LIVE_4D:
+			_live_4d_session_started = true
+	_live_tick_accumulator = 0.0
+	_reset_live_repeat_state()
+	_hud.set_live_keyboard_capture(true)
+	_clear_live_ui_focus()
+	_refresh_current_live_snapshot()
+	_establish_canonical_view_and_fit(_mode)
+	_hud.show_replay_viewer()
+	_refresh_current_live_snapshot()
+	_clear_live_ui_focus()
+	_clear_retained_live_navigation_state()
+
+
+func _refresh_current_live_snapshot() -> void:
+	match _mode:
+		MODE_LIVE_2D:
+			_refresh_live_2d_snapshot()
+		MODE_LIVE_3D:
+			_refresh_live_3d_snapshot()
+		MODE_LIVE_4D:
+			_refresh_live_4d_snapshot()
+
+
+func _clear_retained_live_navigation_state() -> void:
+	_retained_live_navigation_mode = ""
+	_retained_live_navigation_paused = false
+
+
 func _change_live_setup(mode_name: String) -> void:
+	_clear_retained_live_navigation_state()
 	_state.is_playing = false
 	_live_2d_paused = true
 	_live_3d_paused = true
@@ -1238,13 +1542,18 @@ func _change_live_setup(mode_name: String) -> void:
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(true)
 	else:
+		if _camera_rig != null:
+			_camera_rig.clear_presentation_state()
 		_refresh_render()
 	_hud.open_game_setup(mode_name)
 
 
 func _enter_replay_mode() -> void:
+	_clear_retained_live_navigation_state()
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(false)
+	elif _camera_rig != null:
+		_camera_rig.clear_presentation_state()
 	_mode = MODE_REPLAY
 	_clear_ghost_cache()
 	_hud.set_live_keyboard_capture(false)
@@ -1257,8 +1566,8 @@ func _enter_replay_mode() -> void:
 		_select_trace_family(trace_type, _choose_startup_case_id(trace_type), false, true)
 	else:
 		_refresh_snapshot()
-		_fit_view()
-		_hud.show_replay_viewer()
+	_establish_canonical_view_and_fit(MODE_REPLAY)
+	_hud.show_replay_viewer()
 
 
 func _clear_live_ui_focus() -> void:
@@ -1319,7 +1628,11 @@ func _control_frame_mapping(dimension: int):
 			_live_4d_local_orientation.local_yaw
 		)
 	var yaw := _camera_rig.control_frame_yaw() if _camera_rig != null and _camera_rig.has_method("control_frame_yaw") else 0.0
-	return ControlFrameMappingScript.for_3d(yaw)
+	return ControlFrameMappingScript.for_3d(yaw) if dimension == 3 else ControlFrameMappingScript.for_2d(yaw)
+
+
+func _dispatch_live_2d_control_intent(intent: String) -> bool:
+	return _dispatch_live_gameplay_command(_control_frame_mapping(2).translation_command(intent, _translation_frame))
 
 
 func _dispatch_live_3d_control_intent(intent: String) -> bool:
@@ -1373,7 +1686,6 @@ func _restore_live_4d_presentation_defaults() -> void:
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
 		_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
 	if _camera_rig != null:
-		_camera_rig.clear_presentation_state()
 		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_pending_fit_view = false
 
@@ -1383,20 +1695,13 @@ func _restore_live_4d_presentation_defaults() -> void:
 # native deterministic state is otherwise untouched at teardown time.
 func _clear_live_4d_presentation_state(end_session: bool) -> void:
 	_restore_live_4d_presentation_defaults()
+	if _camera_rig != null:
+		_camera_rig.clear_presentation_state()
 	_clear_ghost_cache()
 	_live_4d_last_rotation_label = "none"
 	_live_4d_last_rotation_status = "none"
 	if end_session:
 		_live_4d_session_started = false
-
-
-func _reset_live_4d_view() -> void:
-	if _mode != MODE_LIVE_4D:
-		return
-	_restore_live_4d_presentation_defaults()
-	_refresh_live_4d_presentation()
-	_fit_view()
-	_refresh_hud()
 
 
 func _reset_live_2d() -> void:
@@ -1406,7 +1711,6 @@ func _reset_live_2d() -> void:
 	_live_2d_paused = false
 	_reset_live_repeat_state()
 	_refresh_live_2d_snapshot()
-	_fit_view()
 
 
 func _reset_live_3d() -> void:
@@ -1418,20 +1722,17 @@ func _reset_live_3d() -> void:
 	_live_3d_paused = false
 	_reset_live_repeat_state()
 	_refresh_live_3d_snapshot()
-	_fit_view()
 
 
 func _reset_live_4d() -> void:
 	_live_4d_last_rotation_label = "none"
 	_live_4d_last_rotation_status = "none"
-	_restore_live_4d_presentation_defaults()
 	_live_bridge.live_4d_reset()
 	_live_4d_session_started = true
 	_live_tick_accumulator = 0.0
 	_live_4d_paused = false
 	_reset_live_repeat_state()
 	_refresh_live_4d_snapshot()
-	_fit_view()
 
 
 func _toggle_live_2d_pause() -> void:
@@ -1655,10 +1956,14 @@ func _process_live_repeat_action(
 		else:
 			_dispatch_live_3d_gameplay_command(command)
 	else:
-		_dispatch_live_gameplay_command(command)
+		if command in ["move_left", "move_right"]:
+			_dispatch_live_2d_control_intent(command)
+		else:
+			_dispatch_live_gameplay_command(command)
 
 
 func _reset_live_repeat_state() -> void:
+	_physical_fallback_held.clear()
 	for key in _live_repeat_held.keys():
 		_reset_live_repeat_action(str(key))
 
@@ -1872,6 +2177,12 @@ func _event_action_pressed(event: InputEvent, action_names: Array) -> bool:
 	for action_name in action_names:
 		if event.is_action_pressed(str(action_name)):
 			return true
+	var positional := PhysicalKeyFallbackScript.synthesize(event, _physical_fallback_bound)
+	if positional == null:
+		return false
+	for action_name in action_names:
+		if positional.is_action_pressed(str(action_name)):
+			return true
 	return false
 
 
@@ -1931,9 +2242,27 @@ func _handle_live_space_hard_drop() -> bool:
 
 func _any_action_pressed(action_names: Array) -> bool:
 	for action_name in action_names:
-		if Input.is_action_pressed(str(action_name)):
+		if Input.is_action_pressed(str(action_name)) or _physical_fallback_held.has(str(action_name)):
 			return true
 	return false
+
+
+# Auto-repeat polls `Input`, which only knows the registered logical bindings.
+# Positional fallbacks are therefore tracked explicitly across press/release so
+# held movement repeats identically on every keyboard layout.
+func _track_physical_fallback(event: InputEvent) -> void:
+	var positional := PhysicalKeyFallbackScript.synthesize(event, _physical_fallback_bound)
+	if positional == null:
+		return
+	for action_name in _live_repeat_action_names():
+		if positional.is_action_pressed(str(action_name)):
+			_physical_fallback_held[str(action_name)] = true
+		elif positional.is_action_released(str(action_name)):
+			_physical_fallback_held.erase(str(action_name))
+
+
+func _live_repeat_action_names() -> Array:
+	return _live_gameplay_action_names() + _live_3d_gameplay_action_names() + _live_4d_gameplay_action_names()
 
 
 func _live_gameplay_action_names() -> Array:
@@ -1950,6 +2279,7 @@ func _live_gameplay_action_names() -> Array:
 		"live_2d_soft_drop",
 		"live_hard_drop",
 		"live_2d_hard_drop",
+		"live_hold",
 	]
 
 
@@ -1962,6 +2292,7 @@ func _live_3d_gameplay_action_names() -> Array:
 		"live_3d_soft_drop",
 		"live_hard_drop",
 		"live_3d_hard_drop",
+		"live_hold",
 		"live_3d_rotate_xy_neg",
 		"live_3d_rotate_xy_pos",
 		"live_3d_rotate_xz_neg",
@@ -1982,6 +2313,7 @@ func _live_4d_gameplay_action_names() -> Array:
 		"live_4d_soft_drop",
 		"live_hard_drop",
 		"live_4d_hard_drop",
+		"live_hold",
 		"live_4d_rotate_xy_neg",
 		"live_4d_rotate_xy_pos",
 		"live_4d_rotate_xz_neg",
@@ -2063,6 +2395,7 @@ func _ensure_input_map() -> void:
 	_ensure_key_action("quit", KEY_ESCAPE)
 	_ensure_key_action("mode_toggle_replay_live", KEY_TAB)
 	var live_action_specs := LiveInputContractScript.action_specs()
+	_physical_fallback_bound = PhysicalKeyFallbackScript.bound_keycodes(live_action_specs)
 	for action_name in live_action_specs:
 		var spec: Dictionary = live_action_specs.get(action_name, {})
 		for forbidden_key in spec.get("forbidden_keys", []):

@@ -2,10 +2,11 @@ extends RefCounted
 
 class_name SettingsStore
 
+const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
+
 const SCHEMA_VERSION := 3
 const MIGRATABLE_SCHEMA_VERSIONS := [1, 2, SCHEMA_VERSION]
 const DEFAULT_PATH := "user://shell_settings.json"
-const BACKUP_SUFFIX := ".bak"
 const LEGACY_HINT_SETTING_ID := "controls_help.show_keyboard_hints"
 const HINT_SETTING_ID := "accessibility.show_help_hints"
 
@@ -198,16 +199,12 @@ func _save_persistent_values() -> bool:
 		"schema_version": SCHEMA_VERSION,
 		"settings": persistent_values(),
 	}
-	var temporary_path := "%s.tmp" % _storage_path
-	var file := FileAccess.open(temporary_path, FileAccess.WRITE)
-	if file == null:
-		_report_save_failure("temporary file could not be opened")
-		return false
-	file.store_string(JSON.stringify(payload, "  ", true) + "\n")
-	file.close()
-	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
-	var destination_absolute := ProjectSettings.globalize_path(_storage_path)
-	var replacement := _replace_temporary_file(temporary_absolute, destination_absolute)
+	var replacement: Dictionary = PersistentFileReplacementScript.write_text(
+		_storage_path,
+		JSON.stringify(payload, "  ", true) + "\n",
+		true,
+		_replacement_ops
+	)
 	if not bool(replacement.get("ok", false)):
 		_report_save_failure(str(replacement.get("detail", "replacement failed")))
 		return false
@@ -215,111 +212,8 @@ func _save_persistent_values() -> bool:
 	_diagnostics.append("Shell settings saved automatically.")
 	var warning := str(replacement.get("warning", ""))
 	if not warning.is_empty():
-		_diagnostics.append(warning)
+		_diagnostics.append("Shell settings saved, but %s." % warning)
 	return true
-
-
-func _replace_temporary_file(temporary_path: String, destination_path: String) -> Dictionary:
-	var backup_path := "%s%s" % [destination_path, BACKUP_SUFFIX]
-	var replace_error := _rename_absolute(temporary_path, destination_path)
-	if replace_error == OK:
-		var stale_cleanup := _remove_if_present(backup_path)
-		return {
-			"ok": true,
-			"warning": _cleanup_warning("stale backup", stale_cleanup),
-		}
-	if not _file_exists(destination_path):
-		var temporary_cleanup := _remove_if_present(temporary_path)
-		return {
-			"ok": false,
-			"detail": "replacement failed with error %s before an existing settings file was modified%s" % [
-				replace_error,
-				_cleanup_detail(temporary_cleanup),
-			],
-		}
-	var stale_backup_cleanup := _remove_if_present(backup_path)
-	if stale_backup_cleanup != OK:
-		_remove_if_present(temporary_path)
-		return {
-			"ok": false,
-			"detail": "stale backup cleanup failed with error %s; previous settings were not modified" % stale_backup_cleanup,
-		}
-	var backup_error := _rename_absolute(destination_path, backup_path)
-	if backup_error != OK:
-		var temporary_cleanup := _remove_if_present(temporary_path)
-		return {
-			"ok": false,
-			"detail": "previous settings could not be backed up (error %s) and were not modified%s" % [
-				backup_error,
-				_cleanup_detail(temporary_cleanup),
-			],
-		}
-	var install_error := _rename_absolute(temporary_path, destination_path)
-	if install_error == OK:
-		var backup_cleanup := _remove_if_present(backup_path)
-		return {
-			"ok": true,
-			"warning": _cleanup_warning("backup", backup_cleanup),
-		}
-	var restore_error := _rename_absolute(backup_path, destination_path)
-	if restore_error != OK:
-		restore_error = _copy_absolute(backup_path, destination_path)
-	var temporary_cleanup := _remove_if_present(temporary_path)
-	if restore_error != OK:
-		return {
-			"ok": false,
-			"detail": "installation failed with error %s; previous settings remain at %s because restoration failed with error %s%s" % [
-				install_error,
-				backup_path,
-				restore_error,
-				_cleanup_detail(temporary_cleanup),
-			],
-		}
-	var backup_cleanup := _remove_if_present(backup_path)
-	return {
-		"ok": false,
-		"detail": "installation failed with error %s; previous settings were restored%s%s" % [
-			install_error,
-			_cleanup_detail(temporary_cleanup),
-			_cleanup_detail(backup_cleanup, "backup"),
-		],
-	}
-
-
-func _file_exists(path: String) -> bool:
-	if _replacement_ops != null:
-		return bool(_replacement_ops.file_exists(path))
-	return FileAccess.file_exists(path)
-
-
-func _rename_absolute(from_path: String, to_path: String) -> Error:
-	if _replacement_ops != null:
-		return _replacement_ops.rename_absolute(from_path, to_path)
-	return DirAccess.rename_absolute(from_path, to_path)
-
-
-func _copy_absolute(from_path: String, to_path: String) -> Error:
-	if _replacement_ops != null:
-		return _replacement_ops.copy_absolute(from_path, to_path)
-	return DirAccess.copy_absolute(from_path, to_path)
-
-
-func _remove_absolute(path: String) -> Error:
-	if _replacement_ops != null:
-		return _replacement_ops.remove_absolute(path)
-	return DirAccess.remove_absolute(path)
-
-
-func _remove_if_present(path: String) -> Error:
-	return _remove_absolute(path) if _file_exists(path) else OK
-
-
-func _cleanup_detail(error: Error, label: String = "temporary file") -> String:
-	return "" if error == OK else "; %s cleanup also failed with error %s" % [label, error]
-
-
-func _cleanup_warning(label: String, error: Error) -> String:
-	return "" if error == OK else "Shell settings saved, but %s cleanup failed with error %s." % [label, error]
 
 
 func _report_save_failure(detail: String) -> void:

@@ -4,6 +4,7 @@ class_name SettingsPanel
 
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
+const SettingSpecScript = preload("res://scripts/ui/settings/setting_spec.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const SettingControlFactoryScript = preload("res://scripts/ui/settings/setting_control_factory.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
@@ -38,9 +39,14 @@ var _control_factory = SettingControlFactoryScript.new()
 var _style_manager = null
 var _style_applier = ShellControlStyleApplierScript.new()
 var _controls_by_id: Dictionary = {}
+var _rows_by_id: Dictionary = {}
+var _category_headers_by_id: Dictionary = {}
 var _updating_controls := false
 var _focus_controls: Array[Control] = []
+var _focus_specs: Dictionary = {}
 var _status_label: Label
+var _scroll: ScrollContainer
+var _presentation_context := "global_settings"
 
 
 func _ready() -> void:
@@ -84,7 +90,14 @@ func refresh_all_controls() -> void:
 
 
 func first_focus_control() -> Control:
-	return _focus_controls[0] if not _focus_controls.is_empty() else null
+	for control in _applicable_focus_controls():
+		return control
+	return null
+
+
+func set_presentation_context(context: String) -> void:
+	_presentation_context = context if context in SettingSpecScript.ALLOWED_UI_CONTEXTS else "global_settings"
+	_apply_context_visibility()
 
 
 func reset_display_settings_to_defaults() -> void:
@@ -149,30 +162,34 @@ func _build_panel() -> void:
 	var validation_failures := registry.validate()
 	if not validation_failures.is_empty():
 		push_error("Shell settings registry validation failed: %s" % "; ".join(validation_failures))
-	var scroll := ScrollContainer.new()
-	scroll.name = "SettingsScroll"
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
+	_scroll = ScrollContainer.new()
+	_scroll.name = "SettingsScroll"
+	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	add_child(_scroll)
 	var content := VBoxContainer.new()
 	content.name = "SettingsContent"
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
-	scroll.add_child(content)
+	_scroll.add_child(content)
 	content.add_child(_panel_intro())
 	for category_data in registry.categories:
 		var category_id := str(category_data.get("id", ""))
 		var specs := registry.settings_for_category(category_id)
 		if specs.is_empty():
 			continue
-		content.add_child(_section_header(registry.category_label(category_id)))
+		var section_header := _section_header(registry.category_label(category_id))
+		_category_headers_by_id[category_id] = section_header
+		content.add_child(section_header)
 		for spec in specs:
 			if not spec.is_ui_visible():
 				continue
 			content.add_child(_setting_row(spec))
 	content.add_child(_reset_settings_button())
 	content.add_child(_reset_accessibility_settings_button())
+	_apply_context_visibility()
 	_configure_focus_order()
 
 
@@ -241,10 +258,13 @@ func _setting_row(spec) -> Control:
 	control.custom_minimum_size = Vector2(96, 0)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_controls_by_id[spec.id()] = control
+	_rows_by_id[spec.id()] = row
 	row_content.add_child(control)
 	var focus_control := _focus_target_for(control)
 	if focus_control != null:
 		_focus_controls.append(focus_control)
+		_focus_specs[focus_control] = spec
+		focus_control.focus_entered.connect(func() -> void: call_deferred("_ensure_focus_visible", focus_control))
 	return row
 
 
@@ -338,6 +358,7 @@ func _reset_settings_button() -> Button:
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(reset_display_settings_to_defaults)
 	_focus_controls.append(button)
+	button.focus_entered.connect(func() -> void: call_deferred("_ensure_focus_visible", button))
 	return button
 
 
@@ -349,6 +370,7 @@ func _reset_accessibility_settings_button() -> Button:
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(reset_accessibility_settings_to_defaults)
 	_focus_controls.append(button)
+	button.focus_entered.connect(func() -> void: call_deferred("_ensure_focus_visible", button))
 	return button
 
 
@@ -359,16 +381,58 @@ func _focus_target_for(control: Control) -> Control:
 
 
 func _configure_focus_order() -> void:
-	if _focus_controls.is_empty():
+	var applicable := _applicable_focus_controls()
+	if applicable.is_empty():
 		return
-	for index in range(_focus_controls.size()):
-		var control := _focus_controls[index]
-		var previous := _focus_controls[(index - 1 + _focus_controls.size()) % _focus_controls.size()]
-		var next := _focus_controls[(index + 1) % _focus_controls.size()]
+	for control in _focus_controls:
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_neighbor_right = NodePath()
+	for index in range(applicable.size()):
+		var control := applicable[index]
+		var previous := applicable[(index - 1 + applicable.size()) % applicable.size()]
+		var next := applicable[(index + 1) % applicable.size()]
 		control.focus_neighbor_top = control.get_path_to(previous)
 		control.focus_neighbor_left = control.get_path_to(previous)
 		control.focus_neighbor_bottom = control.get_path_to(next)
 		control.focus_neighbor_right = control.get_path_to(next)
+
+
+func _apply_context_visibility() -> void:
+	for setting_id in _rows_by_id.keys():
+		var row := _rows_by_id.get(setting_id) as Control
+		var spec = registry.get_spec(str(setting_id))
+		if row != null and spec != null:
+			row.visible = spec.applies_to_ui_context(_presentation_context)
+	for category_id in _category_headers_by_id.keys():
+		var header := _category_headers_by_id.get(category_id) as Control
+		var has_visible_row := false
+		for spec in registry.settings_for_category(str(category_id)):
+			var row := _rows_by_id.get(spec.id()) as Control
+			if row != null and row.visible:
+				has_visible_row = true
+				break
+		if header != null:
+			header.visible = has_visible_row
+	if not _focus_controls.is_empty():
+		_configure_focus_order()
+
+
+func _applicable_focus_controls() -> Array[Control]:
+	var applicable: Array[Control] = []
+	for control in _focus_controls:
+		var spec = _focus_specs.get(control)
+		if spec == null or spec.applies_to_ui_context(_presentation_context):
+			applicable.append(control)
+	return applicable
+
+
+func _ensure_focus_visible(control: Control) -> void:
+	if _scroll == null or control == null or not control.is_visible_in_tree():
+		return
+	if _scroll.is_ancestor_of(control):
+		_scroll.ensure_control_visible(control)
 
 
 func _update_status() -> void:

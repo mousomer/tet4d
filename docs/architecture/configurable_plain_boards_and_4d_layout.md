@@ -77,8 +77,10 @@ behavior.
 
 - `TraceCoordinateMapper` places every 4D W slice in one horizontal row using
   fixed `slice_stride = 6.0`.
-- `CameraRig.frame_board()` expands X by `(W - 1) * slice_stride`; this fits the
-  current row but becomes excessively wide for W greater than four.
+- The former zero-caller `CameraRig.frame_board()` contained historical logic
+  that expanded X by `(W - 1) * slice_stride`; Stage 54E-4b deleted it rather
+  than preserving a false compatibility path. The active renderer/fit path still inherits
+  the mapper's wide single-row bounds for W greater than four.
 - `TraceSceneRenderer`, grid, cells, labels, and camera consume actual
   `board_shape`, but all share the mapper's fixed W-row assumption.
 - Live HUD metadata exposes `w_slice_count` and singular `active_w`; it does

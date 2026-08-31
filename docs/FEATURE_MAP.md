@@ -210,10 +210,11 @@ User-facing feature map for the shipped `tet4d` experience.
 
 ## 11. Desktop packaging
 
-- Frozen desktop bundles are supported via PyInstaller (`packaging/pyinstaller/tet4d.spec`).
-- OS build scripts are provided for local packaging:
-  - `packaging/scripts/build_macos.sh`
-  - `packaging/scripts/build_linux.sh`
-  - `packaging/scripts/build_windows.ps1`
-- CI packaging matrix is available in `.github/workflows/release-packaging.yml`.
+- The current professional-core release path exports a Godot 4.7.1 macOS 13+
+  Universal app and ZIP through `packaging/godot/build_macos.sh` and the
+  checked-in Godot export preset.
+- `.github/workflows/release-packaging.yml` builds the same current Godot
+  artifact from the pinned editor, export template, and GDExtension sources.
+- PyInstaller plus the older macOS/Linux/Windows installer scripts remain a
+  retained legacy Python-product path, not current Godot release evidence.
 - Packaging guidance and output artifact conventions are documented in `docs/RELEASE_INSTALLERS.md`.

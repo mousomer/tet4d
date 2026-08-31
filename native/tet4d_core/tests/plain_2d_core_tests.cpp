@@ -425,6 +425,65 @@ void test_game_over_spawn_blocked_and_rejected_commands() {
 	require(session.state_hash() == tet4d::core::Plain2DSession().state_hash(), "reset game_over session should restore deterministic hash");
 }
 
+void test_authoritative_hold_transition_2d() {
+	tet4d::core::Plain2DSession session;
+	require(!session.held_piece_shape().has_value(), "new 2D session Hold must be empty");
+	require(session.hold_available(), "new 2D active lifecycle must allow Hold");
+	require(session.snapshot_json().find("\"held_piece\":null") != std::string::npos, "2D snapshot must expose intentional empty Hold");
+	require(session.snapshot_json().find("\"hold_available\":true") != std::string::npos, "2D snapshot must expose Hold availability");
+
+	const auto first_next = session.peek_next_piece_shape();
+	const std::string initial_hash = session.state_hash();
+	const std::string first_result = session.apply_command("hold");
+	require(first_result.find("last_command_status=accepted") != std::string::npos, "first 2D Hold must be accepted");
+	require(session.held_piece_shape().has_value() && session.held_piece_shape()->name == "I", "first 2D Hold must store active identity");
+	require(session.snapshot_json().find("\"current_piece\":\"" + first_next.name + "\"") != std::string::npos, "first 2D Hold must consume exactly the former NEXT piece");
+	require(session.peek_next_piece_shape().name == "T", "first 2D Hold must advance the queue exactly once");
+	require(!session.hold_available(), "Hold must be unavailable until the resulting active locks");
+	require(session.state_hash() != initial_hash, "held identity and availability must affect 2D state hash");
+
+	const std::string rejected_hash = session.state_hash();
+	const auto rejected_next = session.peek_next_piece_shape();
+	const auto rejected_held = session.held_piece_shape();
+	require(session.apply_command("hold").find("last_command_status=rejected") != std::string::npos, "second 2D Hold before lock must reject explicitly");
+	require(session.state_hash() == rejected_hash && same_shape(session.peek_next_piece_shape(), rejected_next), "rejected 2D Hold must preserve hash, queue, and RNG");
+	require(session.held_piece_shape().has_value() && same_shape(*session.held_piece_shape(), *rejected_held), "rejected 2D Hold must preserve held identity");
+
+	const std::string query_hash = session.state_hash();
+	(void) session.held_piece_shape();
+	(void) session.hold_available();
+	require(session.state_hash() == query_hash, "2D Hold queries must be observationally pure");
+
+	session.apply_command("hard_drop");
+	require(session.hold_available(), "successful 2D lock and spawn must begin a Hold-eligible lifecycle");
+	const auto occupied_next = session.peek_next_piece_shape();
+	session.apply_command("move_right");
+	session.apply_command("rotate_cw");
+	require(session.apply_command("hold").find("last_command_status=accepted") != std::string::npos, "occupied 2D Hold must be accepted");
+	require(session.snapshot_json().find("\"current_piece\":\"I\"") != std::string::npos, "occupied 2D Hold must retrieve the held identity");
+	require(session.snapshot_json().find("\"current_piece_color_id\":1") != std::string::npos, "retrieved 2D piece must retain production identity");
+	require(session.held_piece_shape().has_value() && session.held_piece_shape()->name == "T", "occupied 2D Hold must store outgoing identity only");
+	require(same_shape(session.peek_next_piece_shape(), occupied_next), "occupied 2D Hold must not consume queue or RNG");
+	require(session.snapshot_json().find("\"active_cells\":[{\"color_id\":1") != std::string::npos, "retrieved 2D piece must use canonical active geometry");
+
+	const tet4d::core::Plain2DSession value_snapshot = session;
+	session.apply_command("hard_drop");
+	session = value_snapshot;
+	require(session.state_hash() == value_snapshot.state_hash() && session.held_piece_shape()->name == "T" && !session.hold_available(), "2D value snapshot/restore must preserve complete Hold state");
+
+	const std::vector<std::string> replay = {"hold", "hold", "hard_drop", "move_right", "rotate_cw", "hold"};
+	tet4d::core::Plain2DSession replay_a;
+	tet4d::core::Plain2DSession replay_b;
+	for (const std::string &command : replay) {
+		replay_a.apply_command(command);
+		replay_b.apply_command(command);
+	}
+	require(replay_a.state_hash() == replay_b.state_hash() && replay_a.snapshot_json() == replay_b.snapshot_json(), "2D semantic Hold command replay must reproduce exact final state");
+
+	session.reset();
+	require(!session.held_piece_shape().has_value() && session.hold_available(), "2D restart must restore empty, available Hold");
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -454,6 +513,7 @@ int main(int argc, char **argv) {
 	test_stage50_true_random_seed_and_restart();
 	test_next_piece_preview_is_exact_and_observational();
 	test_game_over_spawn_blocked_and_rejected_commands();
+	test_authoritative_hold_transition_2d();
 	std::cout << "tet4d_core native plain 2D tests passed\n";
 	return 0;
 }

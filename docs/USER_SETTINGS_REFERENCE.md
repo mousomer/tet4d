@@ -361,16 +361,24 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 
 - `display.window_mode`: default `"windowed"`; enum; options: windowed, fullscreen
 - `display.windowed_size`: default `[1280, 720]`; size; min [634, 660]; max [16384, 16384]
-- `display.ui_scale`: default `"standard"`; enum; options: small, standard, large, extra_large
 - `display.hud_density`: default `"standard"`; enum; options: compact, standard, detailed
 - `display.board_detail`: default `"standard"`; enum; options: minimal, standard, full
 - `ghost.enabled`: default `true`; bool
 - `settled_cells.opacity`: default `0.75`; float
+- `board.grid_opacity`: default `0.31`; float
+- `board.boundary_opacity`: default `0.9`; float
+- `active_cells.opacity`: default `1.0`; float
+- `ghost.opacity`: default `1.0`; float
+- `slice_set.spacing`: default `1.0`; float
 - `display.show_w_labels`: default `true`; bool
 - `display.projection_strength`: default `1.0`; float
 
 ### Theme
 
+- `environment.background_intensity`: default `1.0`; float
+- `environment.background_animation_mode`: default `"none"`; enum; options: none, tron_grid_flow
+- `environment.background_animation_intensity`: default `0.55`; float
+- `environment.background_animation_speed`: default `1.0`; float
 - `theme.name`: default `"plain"`; enum; options: diagnostic, plain, tron
 
 ### Interface
@@ -379,6 +387,7 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 
 ### Accessibility
 
+- `display.ui_scale`: default `"standard"`; enum; options: small, standard, large, extra_large
 - `accessibility.high_contrast`: default `false`; bool
 - `accessibility.reduced_motion`: default `false`; bool
 - `accessibility.show_help_hints`: default `true`; bool

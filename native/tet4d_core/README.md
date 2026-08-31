@@ -43,7 +43,7 @@ The native source tree has two layers:
   wrapper to Godot.
 
 The official `godot-cpp` repository is included as a Git submodule at
-`native/third_party/godot-cpp`. The Godot 4.7.1 baseline pins that submodule to
+`native/third_party/godot-cpp`. The Godot 4.7.2 baseline pins that submodule to
 `5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731` and builds with
 `api_version=4.7`. On a fresh checkout, initialize submodules, build the local
 extension, then run the canonical Godot verification:

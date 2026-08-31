@@ -11,24 +11,29 @@ const OUTER_PAD := 6.0
 const ISOMETRIC_HALF_WIDTH := 0.46
 const ISOMETRIC_HALF_HEIGHT := 0.25
 const ISOMETRIC_DEPTH := 0.48
+const STANDARD_MIN_HEIGHT := 104.0
+const STANDARD_4D_MIN_HEIGHT := 132.0
+const COMPACT_MIN_HEIGHT := 72.0
+const COMPACT_4D_MIN_HEIGHT := 88.0
 
 var _model
 var _style_manager
 var _geometry_revision := 0
 var _style_revision := 0
+var _compact_cockpit := false
 
 
 func _init() -> void:
 	name = "PieceThumbnail"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(0, 104)
+	custom_minimum_size = Vector2(0, STANDARD_MIN_HEIGHT)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 
 func set_model(model) -> void:
 	_model = model
 	_geometry_revision += 1
-	custom_minimum_size.y = 132.0 if _model != null and int(_model.dimension) == 4 else 104.0
+	_apply_minimum_height()
 	queue_redraw()
 
 
@@ -36,7 +41,13 @@ func clear() -> void:
 	if _model != null:
 		_geometry_revision += 1
 	_model = null
-	custom_minimum_size.y = 104.0
+	_apply_minimum_height()
+	queue_redraw()
+
+
+func set_compact_cockpit(enabled: bool) -> void:
+	_compact_cockpit = enabled
+	_apply_minimum_height()
 	queue_redraw()
 
 
@@ -54,7 +65,16 @@ func deterministic_snapshot() -> Dictionary:
 		"geometry_revision": _geometry_revision,
 		"style_revision": _style_revision,
 		"render_mode": _render_mode(),
+		"compact_cockpit": _compact_cockpit,
 	}
+
+
+func _apply_minimum_height() -> void:
+	var four_d := _model != null and int(_model.dimension) == 4
+	if _compact_cockpit:
+		custom_minimum_size.y = COMPACT_4D_MIN_HEIGHT if four_d else COMPACT_MIN_HEIGHT
+	else:
+		custom_minimum_size.y = STANDARD_4D_MIN_HEIGHT if four_d else STANDARD_MIN_HEIGHT
 
 
 func _notification(what: int) -> void:
@@ -65,42 +85,86 @@ func _notification(what: int) -> void:
 func _draw() -> void:
 	if _model == null or not _model.is_available():
 		return
+	var plan: Dictionary = renderer_plan(size)
+	for group_plan in plan.get("groups", []):
+		_draw_group_plan(group_plan, int(plan.get("dimension", 0)))
+
+
+func renderer_plan(target_size: Vector2) -> Dictionary:
+	if _model == null or not _model.is_available():
+		return {"available": false, "dimension": 0, "groups": []}
 	var groups: Array = _model.drawing_groups()
 	var content := Rect2(
 		Vector2(OUTER_PAD, OUTER_PAD),
-		Vector2(max(size.x - OUTER_PAD * 2.0, 1.0), max(size.y - OUTER_PAD * 2.0, 1.0))
+		Vector2(max(target_size.x - OUTER_PAD * 2.0, 1.0), max(target_size.y - OUTER_PAD * 2.0, 1.0))
 	)
 	var width := (content.size.x - GROUP_GAP * float(max(groups.size() - 1, 0))) / float(max(groups.size(), 1))
+	var group_plans: Array = []
 	for index in range(groups.size()):
 		var group: Dictionary = groups[index]
 		var group_rect := Rect2(
 			Vector2(content.position.x + float(index) * (width + GROUP_GAP), content.position.y),
 			Vector2(width, content.size.y)
 		)
-		_draw_group(group, group_rect, int(_model.dimension))
+		var drawing_rect := group_rect.grow(-5.0)
+		if not str(group.get("label", "")).is_empty():
+			drawing_rect.position.y += LABEL_HEIGHT
+			drawing_rect.size.y -= LABEL_HEIGHT
+		group_plans.append({
+			"slice_coordinate": int(group.get("slice_coordinate", 0)),
+			"label": str(group.get("label", "")),
+			"cells": group.get("cells", []).duplicate(true),
+			"rect": group_rect,
+			"drawing_rect": drawing_rect,
+			"rendered_cells": [],
+		})
+	var projection_frame: Dictionary = {}
+	if int(_model.dimension) == 2:
+		_plan_2d_cells(group_plans[0])
+	else:
+		projection_frame = _shared_isometric_frame(group_plans)
+		for group_plan in group_plans:
+			_plan_isometric_cells(group_plan, projection_frame)
+	return {
+		"available": true,
+		"dimension": int(_model.dimension),
+		"projection_frame": projection_frame,
+		"groups": group_plans,
+	}
 
 
-func _draw_group(group: Dictionary, rect: Rect2, dimension_value: int) -> void:
+func _draw_group_plan(group: Dictionary, dimension_value: int) -> void:
+	var rect: Rect2 = group.get("rect", Rect2())
 	var border := _role_color(ShellStyleRolesScript.GRID_MINOR, Color(0.35, 0.4, 0.48, 1.0))
 	var background := _role_color(ShellStyleRolesScript.BACKGROUND_BOARD, Color(0.04, 0.05, 0.07, 1.0))
 	draw_rect(rect, background, true)
 	draw_rect(rect, border, false, 1.0)
 	var label := str(group.get("label", ""))
-	var draw_rect_value := rect.grow(-5.0)
 	if not label.is_empty():
-		draw_string(_font(), draw_rect_value.position + Vector2(0.0, 13.0), label, HORIZONTAL_ALIGNMENT_LEFT, draw_rect_value.size.x, 12, _role_color(ShellStyleRolesScript.LABEL_W_LAYER, Color.WHITE))
-		draw_rect_value.position.y += LABEL_HEIGHT
-		draw_rect_value.size.y -= LABEL_HEIGHT
-	var cells: Array = group.get("cells", [])
+		var label_rect := rect.grow(-5.0)
+		draw_string(_font(), label_rect.position + Vector2(0.0, 13.0), label, HORIZONTAL_ALIGNMENT_LEFT, label_rect.size.x, 12, _role_color(ShellStyleRolesScript.LABEL_W_LAYER, Color.WHITE))
+	var rendered_cells: Array = group.get("rendered_cells", [])
 	if dimension_value == 2:
-		_draw_2d_cells(cells, draw_rect_value)
+		var fill: Color = ReplayVisuals.preview_piece_color(int(_model.color_id))
+		var outline: Color = _outline_color()
+		for rendered_cell in rendered_cells:
+			var cell_rect: Rect2 = rendered_cell.get("rect", Rect2())
+			draw_rect(cell_rect, fill, true)
+			draw_rect(cell_rect, outline, false, _outline_width())
 	else:
-		_draw_isometric_cells(cells, draw_rect_value)
+		for rendered_cell in rendered_cells:
+			_draw_cube(
+				rendered_cell.get("center", Vector2.ZERO),
+				float(rendered_cell.get("unit", 0.0)),
+				ReplayVisuals.preview_piece_color(int(_model.color_id))
+			)
 
 
-func _draw_2d_cells(cells: Array, rect: Rect2) -> void:
+func _plan_2d_cells(group_plan: Dictionary) -> void:
+	var cells: Array = group_plan.get("cells", [])
 	if cells.is_empty():
 		return
+	var rect: Rect2 = group_plan.get("drawing_rect", Rect2())
 	var bounds: Array = _coordinate_bounds(cells, 2)
 	var span_x: int = int(bounds[1]) - int(bounds[0]) + 1
 	var span_y: int = int(bounds[3]) - int(bounds[2]) + 1
@@ -108,40 +172,71 @@ func _draw_2d_cells(cells: Array, rect: Rect2) -> void:
 	cell_size = clamp(cell_size, 8.0, 28.0)
 	var used := Vector2(float(span_x) * cell_size, float(span_y) * cell_size)
 	var origin: Vector2 = rect.position + (rect.size - used) * 0.5
-	var fill: Color = ReplayVisuals.preview_piece_color(int(_model.color_id))
-	var outline: Color = _outline_color()
+	var rendered_cells: Array = []
 	for cell in cells:
 		var position: Vector2 = origin + Vector2(float(int(cell[0]) - int(bounds[0])), float(int(cell[1]) - int(bounds[2]))) * cell_size
-		var cell_rect := Rect2(position + Vector2.ONE, Vector2.ONE * maxf(cell_size - 2.0, 1.0))
-		draw_rect(cell_rect, fill, true)
-		draw_rect(cell_rect, outline, false, _outline_width())
+		rendered_cells.append({
+			"coordinate": cell.duplicate(),
+			"rect": Rect2(position + Vector2.ONE, Vector2.ONE * maxf(cell_size - 2.0, 1.0)),
+		})
+	group_plan["rendered_cells"] = rendered_cells
 
 
-func _draw_isometric_cells(cells: Array, rect: Rect2) -> void:
-	if cells.is_empty():
-		return
+func _shared_isometric_frame(group_plans: Array) -> Dictionary:
 	var projected: Array = []
-	for cell in cells:
-		projected.append(isometric_cell_center(cell))
+	var available_size := Vector2(INF, INF)
+	for group_plan in group_plans:
+		var drawing_rect: Rect2 = group_plan.get("drawing_rect", Rect2())
+		available_size.x = minf(available_size.x, drawing_rect.size.x)
+		available_size.y = minf(available_size.y, drawing_rect.size.y)
+		for cell in group_plan.get("cells", []):
+			projected.append(isometric_cell_center(cell))
+	if projected.is_empty():
+		return {"minimum": Vector2.ZERO, "maximum": Vector2.ZERO, "projected_size": Vector2.ZERO, "unit": 0.0}
 	var min_point: Vector2 = projected[0]
 	var max_point: Vector2 = projected[0]
 	for point: Vector2 in projected:
-		min_point.x = min(min_point.x, point.x)
-		min_point.y = min(min_point.y, point.y)
-		max_point.x = max(max_point.x, point.x)
-		max_point.y = max(max_point.y, point.y)
+		min_point.x = minf(min_point.x, point.x)
+		min_point.y = minf(min_point.y, point.y)
+		max_point.x = maxf(max_point.x, point.x)
+		max_point.y = maxf(max_point.y, point.y)
 	var span: float = maxf(maxf(max_point.x - min_point.x, max_point.y - min_point.y), 1.0)
-	var unit: float = clampf(minf(rect.size.x, rect.size.y) / (span + 1.8), 9.0, 25.0)
-	var projected_size: Vector2 = (max_point - min_point) * unit
-	var origin: Vector2 = rect.position + (rect.size - projected_size) * 0.5 - min_point * unit + Vector2(0.0, unit * 0.12)
+	var unit: float = clampf(minf(available_size.x, available_size.y) / (span + 1.8), 9.0, 25.0)
+	return {
+		"minimum": min_point,
+		"maximum": max_point,
+		"projected_size": (max_point - min_point) * unit,
+		"unit": unit,
+	}
+
+
+func _plan_isometric_cells(group_plan: Dictionary, frame: Dictionary) -> void:
+	var cells: Array = group_plan.get("cells", [])
+	var rect: Rect2 = group_plan.get("drawing_rect", Rect2())
+	var min_point: Vector2 = frame.get("minimum", Vector2.ZERO)
+	var projected_size: Vector2 = frame.get("projected_size", Vector2.ZERO)
+	var unit := float(frame.get("unit", 0.0))
+	var pane_local_origin: Vector2 = (rect.size - projected_size) * 0.5 - min_point * unit + Vector2(0.0, unit * 0.12)
 	var order: Array = range(cells.size())
 	order.sort_custom(func(left: int, right: int) -> bool:
 		var a: Array = cells[left]
 		var b: Array = cells[right]
-		return int(a[0]) + int(a[1]) + int(a[2]) < int(b[0]) + int(b[1]) + int(b[2])
+		var a_depth := int(a[0]) + int(a[1]) + int(a[2])
+		var b_depth := int(b[0]) + int(b[1]) + int(b[2])
+		return a_depth < b_depth if a_depth != b_depth else _coord_less(a, b)
 	)
+	var rendered_cells: Array = []
 	for index in order:
-		_draw_cube(origin + projected[index] * unit, unit, ReplayVisuals.preview_piece_color(int(_model.color_id)))
+		var projected_center := isometric_cell_center(cells[index])
+		var pane_local_center := pane_local_origin + projected_center * unit
+		rendered_cells.append({
+			"coordinate": cells[index].duplicate(),
+			"projected_coordinate": projected_center,
+			"pane_local_center": pane_local_center,
+			"center": rect.position + pane_local_center,
+			"unit": unit,
+		})
+	group_plan["rendered_cells"] = rendered_cells
 
 
 func _draw_cube(center: Vector2, unit: float, base: Color) -> void:
@@ -194,6 +289,13 @@ func _coordinate_bounds(cells: Array, count: int) -> Array:
 		result.append(minimum)
 		result.append(maximum)
 	return result
+
+
+func _coord_less(left: Array, right: Array) -> bool:
+	for index in range(min(left.size(), right.size())):
+		if int(left[index]) != int(right[index]):
+			return int(left[index]) < int(right[index])
+	return left.size() < right.size()
 
 
 func _render_mode() -> String:

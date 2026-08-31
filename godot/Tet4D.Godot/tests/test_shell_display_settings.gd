@@ -90,6 +90,7 @@ func run() -> Array:
 	if partial.value("accessibility.high_contrast") != true:
 		failures.append("valid accessibility fields should survive invalid display fields")
 	partial.set_value("theme.name", "plain")
+	partial.set_value("display.ui_scale", "extra_large")
 	partial.set_value("accessibility.show_help_hints", false)
 	partial.set_value("replay.playback_speed", 2.0)
 	if not partial.reset_categories_to_defaults(["display", "theme", "camera"]):
@@ -97,6 +98,8 @@ func run() -> Array:
 	var reset = StoreScript.new(registry, TEST_PATH)
 	if reset.value("theme.name") != "plain" or reset.value("display.hud_density") != "standard" or reset.value("camera.invert_y") != false:
 		failures.append("display reset should restore display, theme, and camera defaults")
+	if reset.value("display.ui_scale") != "extra_large":
+		failures.append("display reset must preserve accessibility-owned UI scale")
 	if reset.value("accessibility.show_help_hints") != false or reset.value("accessibility.high_contrast") != true or reset.value("interface.show_onboarding") != false or reset.value("replay.playback_speed") != 2.0:
 		failures.append("display reset must preserve help, onboarding, and replay preferences")
 	_write_json(TEST_PATH, {
@@ -124,8 +127,10 @@ func run() -> Array:
 	var accessibility_reset = StoreScript.new(registry, TEST_PATH)
 	if accessibility_reset.value("accessibility.high_contrast") != false or accessibility_reset.value("accessibility.reduced_motion") != false or accessibility_reset.value("accessibility.show_help_hints") != true:
 		failures.append("accessibility reset should restore only accessibility defaults")
-	if accessibility_reset.value("display.ui_scale") != "large" or accessibility_reset.value("camera.invert_y") != true or accessibility_reset.value("interface.show_onboarding") != false or accessibility_reset.value("replay.loop_enabled") != false:
-		failures.append("accessibility reset must preserve display, camera, onboarding, and replay preferences")
+	if accessibility_reset.value("display.ui_scale") != "standard":
+		failures.append("accessibility reset must restore UI scale default")
+	if accessibility_reset.value("camera.invert_y") != true or accessibility_reset.value("interface.show_onboarding") != false or accessibility_reset.value("replay.loop_enabled") != false:
+		failures.append("accessibility reset must preserve camera, onboarding, and replay preferences")
 
 	var clamped := PreferencesScript.clamp_windowed_size(
 		Vector2i(3000, 2000),

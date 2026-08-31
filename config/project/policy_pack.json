@@ -241,37 +241,56 @@
       }
     },
     "godot_toolchain": {
-      "migration_date": "2026-07-25",
+      "migration_date": "2026-08-28",
       "status": "accepted",
       "selection_rule": "newest officially published stable Godot 4.7 patch release",
-      "previous_supported_version": "4.6.3-stable",
-      "selected_supported_version": "4.7.1-stable",
+      "previous_supported_version": "4.7.1-stable",
+      "selected_supported_version": "4.7.2-stable",
       "release_channel": "stable",
-      "release_date": "2026-07-14",
-      "build_identifier": "4.7.1.stable.official.a13da4feb",
-      "engine_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
-      "official_release_url": "https://github.com/godotengine/godot/releases/tag/4.7.1-stable",
+      "release_date": "2026-08-18",
+      "build_identifier": "4.7.2.stable.official.ed1daf0bf",
+      "engine_commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
+      "official_release_url": "https://github.com/godotengine/godot/releases/tag/4.7.2-stable",
       "assets": {
         "linux_x86_64": {
-          "name": "Godot_v4.7.1-stable_linux.x86_64.zip",
-          "url": "https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip",
-          "sha256": "c7ff14fd28472c8d4f193043de30278dcf7e5241a1dcf7566b02e27addaa33ba",
-          "executable": "Godot_v4.7.1-stable_linux.x86_64"
+          "name": "Godot_v4.7.2-stable_linux.x86_64.zip",
+          "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip",
+          "sha256": "cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4",
+          "executable": "Godot_v4.7.2-stable_linux.x86_64"
         },
         "macos_universal": {
-          "name": "Godot_v4.7.1-stable_macos.universal.zip",
-          "url": "https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_macos.universal.zip",
-          "sha256": "897cb7f9799796c717ae75f31446aed883dc92b1d6c3b33d893cc7843fff2fa9",
+          "name": "Godot_v4.7.2-stable_macos.universal.zip",
+          "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip",
+          "sha256": "c58a24e31d720be9d62f60cb5627c4e695fb72f21b0cfe1bc9ccaa9a3b3ba63e",
           "executable": "Godot.app/Contents/MacOS/Godot"
+        },
+        "windows_x86_64": {
+          "name": "Godot_v4.7.2-stable_win64.exe.zip",
+          "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip",
+          "sha512": "83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf868e00778a96984338c1b29dafdb453c6847747694621c6ecf5da2259993",
+          "executable": "Godot_v4.7.2-stable_win64.exe"
         }
+      },
+      "export_templates": {
+        "name": "Godot_v4.7.2-stable_export_templates.tpz",
+        "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz",
+        "sha512": "ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079",
+        "version_directory": "4.7.2.stable",
+        "macos_member": "templates/macos.zip",
+        "windows_release_member": "templates/windows_release_x86_64.exe",
+        "windows_debug_member": "templates/windows_debug_x86_64.exe",
+        "android_release_member": "templates/android_release.apk",
+        "android_debug_member": "templates/android_debug.apk",
+        "android_source_member": "templates/android_source.zip",
+        "ios_member": "templates/ios.zip"
       },
       "godot_cpp": {
         "repository": "https://github.com/godotengine/godot-cpp.git",
-        "previous_commit": "a7770ef949fc664892e46b7e98a708672e8a44a8",
+        "previous_commit": "5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731",
         "selected_commit": "5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731",
-        "selection_basis": "official 2026-06-18 commit synchronizing godot-cpp with Godot 4.7-stable commit 5b4e0cb0fd279832bbdd69fed5354d4e5ad26f88",
+        "selection_basis": "retained unchanged; the 2026-06-18 commit synchronizing godot-cpp with Godot 4.7-stable commit 5b4e0cb0fd279832bbdd69fed5354d4e5ad26f88 remains the newest upstream extension-API sync, so the 4.7.2 patch upgrade required and performed no binding advance",
         "api_version": "4.7",
-        "api_equivalence": "Godot 4.7.1 and the selected 4.7-stable binding baseline have identical extension API content apart from patch-version header metadata"
+        "api_equivalence": "Godot 4.7.2 and the retained 4.7-stable binding baseline have identical extension API content apart from patch-version header metadata, confirmed by dumping the 4.7.2 extension API and comparing it to the pinned binding with only the header excluded"
       },
       "gdextension": {
         "compatibility_minimum": "4.7",
@@ -287,34 +306,40 @@
         "native_build": "./scripts/build_godot_tet4d_core.sh",
         "native_tests": "./scripts/test_godot_tet4d_core.sh",
         "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh",
+        "macos_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh",
+        "windows_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_windows.sh",
+        "android_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh --configuration-only",
+        "android_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh",
+        "ipados_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh --configuration-only",
+        "ipados_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh",
         "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"
       },
       "results": {
-        "migration_guide_audit": "PASS; one compatibility-preserving explicit stretch-aspect setting added and no affected API usage found",
-        "gdscript": "PASS under exact Godot 4.7.1; all 78 scripts register",
-        "scene_resources": "PASS under exact Godot 4.7.1 in an isolated project copy",
-        "native_build": "PASS after clean binding generation and extension rebuild against selected godot-cpp",
-        "native_tests": "PASS after the clean rebuild",
-        "parity": "2D, ND, setup, geometry, and query lanes PASS after the clean rebuild",
-        "visual_review": "PASS on macOS under exact Godot 4.7.1 for main/setup, live 2D/3D/4D, W slices, replay browser, cockpit, settings, typography/theme, and resize",
-        "persistence": "PASS in the full Godot suite, including schema migration and malformed-data recovery",
-        "branch_head": "6bd592e0329547ee03923f01fdaeb7d03aba89e3",
-        "branch_result": "PASS for migration-specific checks and CODEX_MODE=1 ./scripts/verify.sh",
-        "merge_context": "origin/master c10ed4e6a190daa85976162c1feb866c743b9462 plus branch d9e6da3b0868f77aa26a6fd2e3b13496df40f949",
-        "merge_context_result": "PASS for clean native rebuild, native tests, all parity lanes, exact Godot verification, and CODEX_MODE=1 ./scripts/verify.sh",
-        "ci": "PASS on final implementation head 6bd592e0329547ee03923f01fdaeb7d03aba89e3: push run 30179384125 and pull-request run 30179385253 passed Python 3.11-3.14 plus the blocking Linux Godot 4.7.1 native build, native tests, parity, exact Godot verification, and clean-checkout gate",
+        "migration_guide_audit": "PASS; 62 upstream commits between 4.7.1-stable and 4.7.2-stable are bugfix and translation work with no API change, and no affected API usage was found. Two candidates were reviewed and found inapplicable: the Color hash component-order fix (no GDScript-level hashing exists and palette colors are stored as configuration strings) and the simultaneous-shift-release input fix (no keybinding contract change)",
+        "extension_api_equivalence": "PASS; the 4.7.2 dumped extension API is identical to the retained godot-cpp 4.7-stable binding baseline once the header is excluded, so no binding advance was required or performed",
+        "gdscript": "PASS under exact Godot 4.7.2; all scripts register and the headless suite reports no script error",
+        "scene_resources": "PASS under exact Godot 4.7.2 in an isolated project copy",
+        "native_build": "PASS; the extension rebuilds against the unchanged pinned godot-cpp",
+        "native_tests": "PASS; plain 2D, plain ND, geometry, query, topology contract, topology transport, and board extent contract lanes",
+        "parity": "PASS; 59 shared topology transport cases under exact Godot 4.7.2",
+        "visual_review": "PASS on macOS under exact Godot 4.7.2 with Metal 4.0 Forward+; rendered live 2D, live 3D, live 4D W slices, and the full Designer with the Profile Library expanded are byte-identical to the same captures under 4.7.1",
+        "deterministic_isolation": "PASS; live_4d_state_hash and every layout contract rect are identical under 4.7.1 and 4.7.2 on the same working tree",
+        "persistence": "PASS in the full Godot suite, including schema migration, malformed-data recovery, and checked-write replacement and restoration",
+        "branch_head": "e2e1ef9254f12c528ce7a67599b43510abfc0902",
+        "branch_result": "PASS for the pinned Godot gate, native build and tests, governance, generated-doc, settings-externalization, semantic-boundary, sanitation, and CODEX_MODE=1 ./scripts/verify.sh",
+        "ci": "NOT RUN; this upgrade is a local unpublished commit with no push or pull request. The CI lane reads this manifest for asset acquisition, so the Linux lane is exercised on publication",
         "performance": {
-          "editor_import_seconds_before_after": "3.35 / 3.57",
-          "headless_suite_seconds_before_after": "13.26 / 13.36",
-          "bounded_startup_seconds_before_after": "1.35 / 1.36",
-          "native_tests_seconds_before_after": "19.04 / 16.14",
-          "clean_native_rebuild_seconds": "474.20",
-          "assessment": "no material regression; clean pre-migration build timing was not available for an equivalent build comparison"
+          "headless_suite_seconds_before_after": "70.88 / 70.89",
+          "bounded_startup_seconds_before_after": "2.52 / 2.31",
+          "native_tests_seconds": "39.36",
+          "assessment": "no material regression; both engine timings were measured on this same working tree, so they are not comparable to the 4.7 migration figures, which were recorded against a much smaller test suite",
+          "measurement_basis": "same project copy, isolated HOME per engine, one warm run discarded before each timed run"
         },
         "known_limitations": [
           "macOS is the local development evidence platform",
-          "Linux acceptance is headless GitHub Actions evidence",
-          "Windows native packaging remains declared but unverified by this migration"
+          "Linux acceptance for this upgrade is deferred to CI on publication rather than re-proved locally",
+          "Windows packaging is locally cross-built and structurally validated; direct clean-machine Windows runtime acceptance remains pending",
+          "the visual review is agent-driven; no independent human sign-off is claimed"
         ]
       }
     },
@@ -581,6 +606,9 @@
         "value_type",
         "control_type",
         "default",
+        "semantic_owner",
+        "accessibility_classification",
+        "runtime_applicability",
         "authority",
         "persistence",
         "persist"
@@ -590,8 +618,15 @@
         "none",
         "session"
       ],
+      "runtime_non_setting_dotted_tokens": [
+        "board.frame_active",
+        "board.grid",
+        "board.slice_geometry",
+        "board.spawn_entry_cue",
+        "board.wireframe"
+      ],
       "forbid_runtime_default_duplicates": true,
-      "statement": "Every Godot shell setting and its default must be declared in the checked-in registry; runtime code may map validated preset values but must not introduce a second setting default. Persistent user choices must be written only to the separate user-data JSON store."
+      "statement": "Every Godot presentation parameter, its default, exactly-one semantic owner, accessibility classification, and runtime applicability must be declared in the checked-in shell settings registry; runtime code may map validated preset values but must not introduce a second setting default. Persistent user choices must be written only to the separate user-data JSON store."
     },
     "contributor_directives": {
       "required_ci_enforced_ids": [
@@ -1531,6 +1566,9 @@
         ".githooks/pre-push"
       ],
       "packaging_scripts": [
+        "godot/Tet4D.Godot/export_presets.cfg",
+        "packaging/godot/build_macos.sh",
+        "packaging/godot/smoke_macos.sh",
         "packaging/pyinstaller/tet4d.spec",
         "packaging/scripts/build_macos.sh",
         "packaging/scripts/build_linux.sh",
@@ -1562,7 +1600,7 @@
           "config/project/constants.json",
           "config/project/policy/manifests/secret_scan.json",
           "docs/RELEASE_INSTALLERS.md",
-          "packaging/scripts/build_macos.sh",
+          "packaging/godot/build_macos.sh",
           "docs/CONFIGURATION_REFERENCE.md",
           "docs/USER_SETTINGS_REFERENCE.md"
         ]
@@ -1756,10 +1794,10 @@
       {
         "file": "docs/RELEASE_INSTALLERS.md",
         "must_contain": [
-          "PyInstaller",
-          "packaging/scripts/build_macos.sh",
-          "packaging/scripts/build_linux.sh",
-          "packaging/scripts/build_windows.ps1",
+          "Godot 4.7.2",
+          "packaging/godot/build_macos.sh",
+          "macOS 13+",
+          "legacy",
           ".github/workflows/release-packaging.yml"
         ]
       },
@@ -1767,6 +1805,8 @@
         "file": "docs/rds/RDS_PACKAGING.md",
         "must_contain": [
           "Desktop Packaging RDS",
+          "godot/Tet4D.Godot/export_presets.cfg",
+          "packaging/godot/build_macos.sh",
           "packaging/pyinstaller/tet4d.spec",
           ".github/workflows/release-packaging.yml"
         ]

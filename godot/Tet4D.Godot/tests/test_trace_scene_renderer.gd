@@ -53,6 +53,8 @@ func run() -> Array:
 			elif absf(box.size.x - ReplayVisuals.ACTIVE_GAMEPLAY_CELL_SCALE) > 0.001:
 				failures.append("gameplay active cell scale should keep adjacent cells separated")
 
+	await _test_continuous_endgame_rendering(failures, renderer, tree)
+
 	var live_2d_snapshot := {
 		"case_id": "live_plain_2d",
 		"trace_type": "live_2d",
@@ -90,6 +92,9 @@ func run() -> Array:
 		_assert_box_size(failures, active_cell, ReplayVisuals.LIVE_ACTIVE_CELL_SCALE, "live active cell scale")
 		_assert_box_size(failures, locked_cell, ReplayVisuals.LIVE_LOCKED_CELL_SCALE, "live locked cell scale")
 		_assert_box_size(failures, ghost_cell, ReplayVisuals.LIVE_GHOST_CELL_SCALE, "live ghost cell scale")
+		_assert_box_depth(failures, active_cell, ReplayVisuals.LIVE_ACTIVE_CELL_SCALE, "live 2D active cell uses one-cell presentation depth convention")
+		_assert_box_depth(failures, locked_cell, ReplayVisuals.LIVE_LOCKED_CELL_SCALE, "live 2D locked cell uses one-cell presentation depth convention")
+		_assert_box_depth(failures, ghost_cell, ReplayVisuals.LIVE_GHOST_CELL_SCALE, "live 2D Ghost cell uses one-cell presentation depth convention")
 		if active_cell.get_child_count() < 2:
 			failures.append("live active cell should include a crisp border mesh")
 		if locked_cell.get_child_count() < 2:
@@ -105,7 +110,7 @@ func run() -> Array:
 		var unchanged_active := (renderer.get_node_or_null("CellRoot") as Node).get_child(2) as Node3D
 		if absf(_cell_alpha(translucent_locked) - 0.60) > 0.001 or absf(_cell_alpha(unchanged_active) - 1.0) > 0.001:
 			failures.append("locked-cell opacity must restyle only locked fill without weakening active cells")
-		renderer.set_locked_cell_opacity(ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY)
+		renderer.set_locked_cell_opacity(ReplayVisuals.presentation_parameter_default("settled_cells.opacity"))
 	var grid_root := renderer.get_node_or_null("GridRoot")
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live renderer should keep one shared grid renderer")
@@ -115,6 +120,11 @@ func run() -> Array:
 			failures.append("live 2D renderer should build an explicit 12-edge ordinary wireframe")
 		if _count_presentation_role(live_grid, "board.grid") != 6:
 			failures.append("live 2D internal grid should exclude its six coincident outer-boundary lines")
+		var spawn_cue := live_grid.find_child("SpawnEntryLabel", true, false) as Label3D
+		if spawn_cue == null or spawn_cue.text.find("SPAWN ENTRY") == -1:
+			failures.append("live 2D should identify intended above-board spawn entry without adding cells")
+		elif spawn_cue.position.y <= 2.0:
+			failures.append("live 2D spawn-entry cue should sit outside the playable board bounds")
 		renderer.set_grid_visible(false)
 		renderer.render_snapshot(renderer._presentation.snapshot)
 		await tree.process_frame
@@ -257,16 +267,22 @@ func run() -> Array:
 				var expected_font_size := ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 				if label.font_size != expected_font_size or absf(label.pixel_size - ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE) > 0.0001:
 					failures.append("live 4D W labels should remain readable at fitted overview scale")
-				var rear_axis := int(label.get_meta("rear_face_axis", -1))
-				var rear_sign := float(label.get_meta("rear_face_sign", 0.0))
+				var anchor_axis := int(label.get_meta("rear_face_axis", -1))
+				var anchor_side := float(label.get_meta("label_anchor_side", 0.0))
 				var label_min: Vector3 = label.get_meta("slice_bounds_min", Vector3.ZERO)
 				var label_max: Vector3 = label.get_meta("slice_bounds_max", Vector3.ZERO)
-				if rear_axis not in [Vector3.AXIS_X, Vector3.AXIS_Z]:
-					failures.append("W labels should attach to a camera-relative rear vertical face")
+				if anchor_axis not in [Vector3.AXIS_X, Vector3.AXIS_Z]:
+					failures.append("W labels should use a camera-relative vertical edge")
 				else:
-					var expected_face := label_min[rear_axis] if rear_sign < 0.0 else label_max[rear_axis]
-					if absf(label.position[rear_axis] - expected_face) > 0.05:
-						failures.append("W labels should attach to a camera-relative rear vertical face")
+					var expected_position := (
+						label_max[anchor_axis] + ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
+						if anchor_side > 0.0
+						else label_min[anchor_axis] - ReplayVisuals.W_SLICE_LABEL_EDGE_OFFSET
+					)
+					if absf(label.position[anchor_axis] - expected_position) > 0.05:
+						failures.append("W labels should remain outside the camera-facing slice edge")
+				if label.position.y >= label_min.y:
+					failures.append("W labels should remain below occupied slice geometry")
 		if slice_label_count < 4:
 			failures.append("live 4D renderer should label each basis-derived slice")
 
@@ -401,6 +417,103 @@ func run() -> Array:
 	return failures
 
 
+func _test_continuous_endgame_rendering(failures: Array, renderer, tree: SceneTree) -> void:
+	# Values come from the committed endgame_2d_classic trace. Expectations are
+	# independently derived from x-(D.x-1)/2, -(y-(D.y-1)/2), z-(D.z-1)/2.
+	var snapshot_2d := {
+		"case_id": "endgame_2d_classic",
+		"trace_type": "endgame",
+		"frame_index": 0,
+		"dimension": 2,
+		"board_shape": [4, 4],
+		"locked_cells": [],
+		"active_cells": [],
+		"probe_markers": [],
+		"event_markers": [],
+		"particles": [
+			{"particle_id": 0, "color_id": 2, "position": [-0.224, 1.032], "radius": 0.359497, "velocity": [-1.4, 0.2]},
+			{"particle_id": 1, "color_id": 3, "position": [0.875731, 0.297925], "radius": 0.242325, "velocity": [-0.776681, -4.387967]},
+			{"particle_id": 2, "color_id": 4, "position": [3.035555, 2.341661], "radius": 0.309116, "velocity": [3.236109, 1.06769]},
+		],
+	}
+	renderer.render_snapshot(snapshot_2d)
+	await tree.process_frame
+	var particle_root: Node = renderer.get_node_or_null("ParticleRoot")
+	if particle_root == null or particle_root.get_child_count() != 3:
+		failures.append("2D endgame production path should render three fractional fixture particles")
+	else:
+		var particle_a := particle_root.get_child(0) as Node3D
+		var particle_b := particle_root.get_child(1) as Node3D
+		var out_of_board_particle := particle_root.get_child(2) as Node3D
+		_assert_vector(failures, particle_a.position, Vector3(-1.724, 0.468, 0.0), "2D fractional fixture particle A")
+		_assert_vector(failures, particle_b.position, Vector3(-0.624269, 1.202075, 0.0), "2D fractional fixture particle B")
+		_assert_vector(failures, out_of_board_particle.position, Vector3(1.535555, -0.841661, 0.0), "2D finite out-of-board fixture particle")
+		if particle_a.position.is_equal_approx(particle_b.position):
+			failures.append("distinct 2D fractional particles must not stack at the local origin")
+
+	var next_snapshot_2d := {
+		"particles": [
+			{"particle_id": 0, "position": [-0.448, 1.064]},
+			{"particle_id": 1, "position": [0.751462, -0.40415]},
+			{"particle_id": 2, "position": [3.035555, 2.341661]},
+		],
+	}
+	renderer.render_interpolated_snapshot(snapshot_2d, next_snapshot_2d, 0.5)
+	await tree.process_frame
+	particle_root = renderer.get_node_or_null("ParticleRoot")
+	if particle_root == null or particle_root.get_child_count() != 3:
+		failures.append("2D endgame interpolation should preserve particle nodes")
+	else:
+		_assert_vector(
+			failures,
+			(particle_root.get_child(0) as Node3D).position,
+			Vector3(-1.836, 0.452, 0.0),
+			"2D fractional particle interpolation midpoint"
+		)
+	var particle_zero_trail: Array = renderer._particle_trails.get("0", [])
+	if particle_zero_trail.size() < 2:
+		failures.append("production particle trail should retain distinct fractional movement samples")
+	elif (particle_zero_trail[0] as Vector3).distance_to(particle_zero_trail[particle_zero_trail.size() - 1] as Vector3) <= 0.02:
+		failures.append("production fractional particle trail must be non-degenerate")
+
+	# Values and the boundary event association come from the committed
+	# endgame_3d_classic frame 0 fixture.
+	var event_particle_position := [3.441246, 2.037972, 1.515474]
+	var snapshot_3d := {
+		"case_id": "endgame_3d_classic",
+		"trace_type": "endgame",
+		"frame_index": 0,
+		"dimension": 3,
+		"board_shape": [4, 4, 4],
+		"locked_cells": [],
+		"active_cells": [],
+		"probe_markers": [],
+		"event_markers": [{"kind": "boundary_bounce", "position": event_particle_position}],
+		"particles": [
+			{"particle_id": 0, "color_id": 2, "position": [-0.192, 1.016, 1.048], "radius": 0.244567, "velocity": [-1.2, 0.1, 0.3]},
+			{"particle_id": 3, "color_id": 5, "position": event_particle_position, "radius": 0.276636, "velocity": [-3.492174, 0.237329, -3.028305]},
+		],
+	}
+	renderer.render_snapshot(snapshot_3d)
+	await tree.process_frame
+	particle_root = renderer.get_node_or_null("ParticleRoot")
+	if particle_root == null or particle_root.get_child_count() != 2:
+		failures.append("3D endgame production path should render fractional and out-of-board fixture particles")
+	else:
+		_assert_vector(failures, (particle_root.get_child(0) as Node3D).position, Vector3(-1.692, 0.484, -0.452), "3D fractional fixture particle")
+		_assert_vector(failures, (particle_root.get_child(1) as Node3D).position, Vector3(1.941246, -0.537972, 0.015474), "3D out-of-board event particle")
+	var marker_root: Node = renderer.get_node_or_null("MarkerRoot")
+	if marker_root == null or marker_root.get_child_count() != 1:
+		failures.append("3D endgame production path should render the fixture particle event marker")
+	else:
+		_assert_vector(
+			failures,
+			(marker_root.get_child(0) as Node3D).position,
+			Vector3(1.941246, -0.537972 + ReplayVisuals.EVENT_MARKER_HEIGHT, 0.015474),
+			"event marker follows mapped particle plus authorized height"
+		)
+
+
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:
 	if actual.distance_to(expected) > 0.001:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
@@ -490,8 +603,10 @@ func _assert_live_3d_exterior_block(failures: Array, cell: Node3D, label: String
 		if material == null:
 			failures.append("%s face %d should have material" % [label, index])
 		elif label.contains("locked"):
-			if material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or absf(material.albedo_color.a - ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY) > 0.001:
+			if material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or absf(material.albedo_color.a - ReplayVisuals.presentation_parameter_default("settled_cells.opacity")) > 0.001:
 				failures.append("%s face %d should use the configured translucent locked fill" % [label, index])
+			elif material.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
+				failures.append("%s face %d should write depth for camera-angle-stable structure" % [label, index])
 		elif material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or material.albedo_color.a < 0.99:
 			failures.append("%s face %d should be opaque" % [label, index])
 	if label.contains("locked"):

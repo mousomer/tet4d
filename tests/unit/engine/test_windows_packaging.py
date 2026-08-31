@@ -112,24 +112,22 @@ class TestWindowsPackagingScript(unittest.TestCase):
             '& (Join-Path $PayloadRoot "tet4d.exe") --runtime-smoke-check', windows
         )
 
-    def test_release_workflow_uploads_windows_only_as_msi(self) -> None:
+    def test_release_workflow_publishes_only_current_godot_candidate(self) -> None:
         workflow = self._release_workflow()
 
-        self.assertIn("name: Upload Windows installer artifacts", workflow)
-        self.assertIn("path: artifacts/installers/*.msi", workflow)
-        self.assertIn("name: Upload Linux installer artifacts", workflow)
-        self.assertIn("path: artifacts/installers/*.deb", workflow)
-        self.assertIn("name: Upload macOS installer artifacts", workflow)
-        self.assertIn("path: artifacts/installers/*.dmg", workflow)
-        stripped_lines = {line.strip() for line in workflow.splitlines()}
-        self.assertNotIn("path: artifacts/installers/*", stripped_lines)
+        self.assertIn("name: Upload Godot macOS release artifact", workflow)
+        self.assertIn(
+            "path: artifacts/godot/macos/Tet4D-*-macos-universal.zip", workflow
+        )
+        self.assertNotIn("artifacts/installers/", workflow)
 
-    def test_release_workflow_uses_canonical_packaging_scripts(self) -> None:
+    def test_legacy_packaging_scripts_are_not_release_workflow_inputs(self) -> None:
         workflow = self._release_workflow()
 
-        self.assertIn("bash packaging/scripts/build_linux.sh", workflow)
-        self.assertIn("bash packaging/scripts/build_macos.sh", workflow)
-        self.assertIn("./packaging/scripts/build_windows.ps1", workflow)
+        self.assertIn("packaging/godot/build_macos.sh", workflow)
+        self.assertNotIn("packaging/scripts/build_linux.sh", workflow)
+        self.assertNotIn("packaging/scripts/build_macos.sh", workflow)
+        self.assertNotIn("packaging/scripts/build_windows.ps1", workflow)
 
     def test_pyinstaller_spec_includes_lazy_playbot_hiddenimports(self) -> None:
         spec = self._pyinstaller_spec()

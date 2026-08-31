@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-08-10
+Last updated: 2026-08-25
 
 ## 1. Purpose
 
@@ -579,8 +579,8 @@ explicitly replaces it.
 
 #### Stage 54D-3 — Hold
 
-Status: unblocked deterministic-core work after the accepted Stage 54E-1
-record is merged. Hold does not require Stage 54E-2.
+Status: COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED / HUMAN VISIBLE
+ACCEPTED under `AE-0055`. Hold does not require Stage 54E-2.
 
 Add one-slot Hold after next-piece and ghost presentation are accepted. Its
 only presentation dependency is the shared piece thumbnail already delivered
@@ -632,11 +632,11 @@ Hold changes deterministic state. Its implementation slice must define:
 - conformance evidence;
 - authority-map update.
 
-Keep Hold as refined deferred-candidate prose in
-`docs/architecture/authority_transfer_protocol.md` until implementation
-provides concrete contracts, code, compatibility decisions, and evidence.
-Stage 54D-3 then creates and completes an `AE-####` authority-establishment
-record. Do not create an incomplete placeholder row in advance.
+The completed implementation and evidence are normative in
+`docs/architecture/authoritative_hold.md`. Native owns deterministic Hold;
+Godot owns its edge-triggered `C` affordance and shared-thumbnail presentation.
+The fixed trace/replay schema remains unchanged and historical fixtures retain
+their results.
 
 ### Stage 54E — 4D Presentation & Interaction Architecture
 
@@ -736,6 +736,10 @@ basis-only reset; synchronous setup/menu/mode teardown and coherent re-entry;
 public roll removal with generic low-level capability retained; and
 settings/setup/native/replay exclusion evidence. External technical review
 accepted the implementation. No authority transfer or establishment occurs.
+This remains the truthful historical Stage 54E-2d acceptance record. The
+later accepted Stage 54E-4 forward contract intentionally refines only the
+presentation lifecycle: same-context Restart/new game preserves current view,
+while Reset View remains the explicit canonical presentation reset.
 
 #### Stage 54E-3 — Setup/menu information architecture
 
@@ -744,6 +748,11 @@ Stage 54E-3b progressive-disclosure rendering are both implemented and accepted
 by external technical review. Real-window evidence is recorded in
 `docs/plans/stage_54e3_setup_disclosure_manual_acceptance.md`, which records the
 verification as agent-driven rather than a human sign-off.
+
+Stage 54E-3's historical completion status remains unchanged. A distinct human
+product review of the setup surface is still outstanding and is folded into the
+integrated Stage 54F playability audit unless the product owner chooses to run
+it sooner. This is not a new blocking E3 stage.
 
 The 4D setup surface had exceeded an acceptable flat complexity level and now
 uses progressive disclosure. The durable taxonomy and its rules are owned by
@@ -776,13 +785,46 @@ definition while being presented secondarily.
 
 #### Stage 54E-4 — Camera/GUI presets
 
-Current camera/GUI presets are provisional pending the corrected camera-space
-model. After 54E-2, decide what camera and GUI/layout presets transform,
-whether combined presets are permitted, the affected presentation spaces,
-reset behaviour, and persistence ownership. This programme does not make those
-decisions or redesign existing presets now.
+Status: Stage 54E-4a REVIEWED GREEN. Stage 54E-4b COMPLETE / FOCUSED VISIBLE
+REVIEW ACCEPTED. Aggregate Stage 54E-4 is COMPLETE / REVIEWED GREEN.
 
-54E-4 may begin only after 54E-2 is complete.
+Stage 54E-4a audited every preset-like operation and recorded the durable
+contract in `docs/architecture/camera_gui_preset_semantics.md`, which is the
+the canonical owner of transient view lifetime, action-based named views, one
+composite Reset View, framing-only Fit View, mode-specific canonical views,
+preference ownership, and the E4b evidence plan. The independently reviewed
+contract is now implemented in the Godot presentation shell with focused
+automated coverage, and focused real-window acceptance is recorded. That review
+confirmed flat front-on 2D, framing-only Fit, complete canonical Reset,
+view-preserving Restart/new-game/game-over, fresh canonical views on context
+re-entry, stateless 3D/replay view actions, Live-4D actions that move slice-local
+orientation `L` rather than the outer mount, no surviving preset identity, and
+Accessibility ownership of UI scale. It also required two player-facing
+affordance corrections before acceptance: Live 2D and Live 3D exposed no Reset
+View invocation at all while their help advertised a Reset View button, and Live
+3D help advertised `F` as Fit View although `F` is Rotate XZ there. Both live
+modes now route the existing `reset` action (key `0`) to the same composite
+Reset View that Live 4D already used, and Live 3D help states its real
+double-click Fit affordance.
+
+Current view is transient presentation-context state, never an application
+preference or gameplay-run identity. Named views are actions, not persistent
+selected modes; the former continuous `Custom`/state-equality identity and
+`0.001`-radian resolver requirement are retired. Reset View composes the real
+mode owners to restore the complete canonical view, while Fit View preserves
+orientation, `B`, `L`, layout, projection, gameplay, and preferences and
+changes framing only. Same-context Restart/new game preserves the current
+view; setup/menu/mode exit destroys the context and re-entry establishes a
+fresh canonical view. Live 2D's canonical target is flat/front-on and simple.
+
+Projection is resolved: there is no player camera-projection choice, so camera
+projection is transient canonical-view state; `display.projection_strength`
+remains a separate persistent renderer preference. UI scale is an
+accessibility presentation preference: Display Reset preserves it and
+Accessibility Reset restores it. The prior decisions to omit orientation
+presets in 2D and restore fitted framing when a named action is applied remain
+accepted. No new human E4a gate is required unless technical re-review exposes
+a genuinely new product choice.
 
 #### Stage 54E-5 — Cockpit consolidation
 
@@ -791,13 +833,63 @@ surfaces, indicators, buttons, camera/layout controls, and presentation
 affordances. This is a bounded consolidation pass, not authorization for an
 unbounded visual rewrite.
 
+The accepted E5 design is recorded in
+`docs/architecture/godot_vector_arcade_cockpit_overhaul.md`. Ordinary live play
+uses a board-first hierarchy: immediate game state, concise score/clears and
+active-piece information, authoritative NEXT, mode-appropriate gameplay
+guidance, visible View actions, visible Session actions, and secondary display
+settings. Replay navigation, bundle/authority ownership, raw session/last-input
+metadata, and numeric camera diagnostics do not occupy the ordinary live
+cockpit; the existing replay and Advanced Diagnostics routes retain them.
+
+The modes intentionally progress in complexity. Live 2D omits named View
+Actions and 3D/4D concepts. Live 3D adds relative depth guidance, camera
+gestures, and stateless View Actions. Live 4D adds W/slice-axis movement, six
+piece-rotation planes, exact reachable re-slice actions, shared slice
+orientation/framing, and player-facing visible/slice-axis cues without exposing
+the internal `B`/`L` terminology. Cockpit help is filtered from the existing
+structured `LiveInputContract`; no second binding table or movement resolver is
+introduced.
+
+Reset View, Fit View, and Restart Game are visibly separate actions backed by
+their existing owners. Named views remain actions with no selected/`Custom`
+identity. A View Actions popup explicitly owns keyboard interaction while open
+so gameplay input cannot leak through it. Standard is the intended ordinary
+cockpit; Compact reduces passive guidance while retaining critical state and
+actions; Detailed adds numeric camera status and Quick Settings without
+restoring development diagnostics.
+
 Stage 54E-5 completes when the cockpit surfaces identified by the accepted
 54E architecture are consolidated onto their intended state owners,
 contradictory or redundant presentation/control displays are removed, and the
 resulting cockpit passes focused consistency and visible-GUI review. It does
 not authorize unrelated visual redesign.
 
+Stage 54E-5 is COMPLETE / HUMAN PRODUCT REVIEW ACCEPTED. The focused
+real-window review accepted ordinary Live 2D, Live 3D, and Live 4D at normal,
+smaller, and larger window requests, including dimensional progression,
+board/NEXT hierarchy, stateless View Actions followed by manual camera
+manipulation, distinct Fit/Reset/Restart actions, Quick Settings disclosure,
+and setup/menu recovery. Focused and full automated gates also accepted popup
+input ownership and replay-shared regression safety. Stage 54E-5 does not
+replace the integrated Stage 54F audit.
+
 ### Stage 54F — Integrated professional playability/visual acceptance
+
+Status: COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED (2026-08-23).
+
+The bounded implementation closes #69, #70, the setup-error advisory,
+small-window Settings reachability, 4D label collisions, 2D spawn-boundary
+grammar, and concrete display-setting naming/applicability defects. Focused
+structural evidence and agent-driven Godot 4.7.1 real-DisplayServer review are
+green across 2D, 3D, simple/occupied/rotated/wide-W 4D, standard and High
+Contrast presentation, and normal/constrained/supported-minimum windows. This
+was human-visible evidence rather than independent sign-off. Human integrated
+review accepted 2D, 3D, and 4D on 2026-08-23. It classified slightly weaker
+standard-mode Live-4D gamebox legibility than equivalent 2D/3D boards as
+non-blocking Stage 54G polish because standard remains usable and High Contrast
+is strong. Detailed evidence is recorded in
+`docs/plans/stage_54f_integrated_visual_acceptance.md`.
 
 Objective:
 
@@ -811,6 +903,27 @@ camera/GUI presets; cockpit consolidation; NEXT; Ghost; Hold; board/grid/cell
 hierarchy; accessibility; viewport composition; responsiveness; pause,
 restart, setup, and game-over usability.
 
+The integrated audit must cover 2D, 3D, and 4D play; basis and slice-local
+manipulation; slice layout; viewer-relative controls; setup; named view
+actions; cockpit; NEXT; Ghost; Hold; grid/board/cell hierarchy; accessibility;
+viewport composition; pause/restart/setup/game-over; and responsiveness.
+Known findings are evidence inputs, not the limit of the audit. Human-visible
+Hold review covers readability, availability, understandable swap behaviour,
+and composition with NEXT/cockpit; it does not reopen Hold gameplay semantics.
+
+Stage 54F also owns these open visual/comprehension criteria:
+
+- issue #69: sufficient Live-4D inter-slice gutter while preserving
+  anchor-only layout, ordering/membership, whole-collection Fit, asymmetric
+  boards, and `W=1`;
+- issue #70: pieces/Ghost dominate active frame, inactive wireframe, and
+  internal grid, and the active frame is not excessively thick;
+- every displayed 4D W-slice perceptually reads as a genuinely 3D board volume,
+  with legible front/back/depth structure, pieces and Ghost occupying that
+  volume, and adjacent slices remaining separate related volumes; and
+- invalid setup state is unmistakably invalid, including correction of the E3
+  validation-summary accent/error-colour advisory.
+
 Stage 54F completes only when representative human-visible review evidence is
 recorded, findings are classified by severity and gate impact, each
 `PROFESSIONAL_CORE_GAME_READY` blocker is corrected and re-reviewed or remains
@@ -818,7 +931,338 @@ an explicit blocker, and non-blocking defects have an owner or deliberate
 deferral. Grid strengthening is required only if evidence classifies grid
 visibility as blocking comprehension or accessibility.
 
+### Pre-54F correctness defect A — cross-dimensional relative-control truthfulness
+
+Classification: COMPLETE / REVIEWED GREEN. The bounded issue #74 correction is
+implemented after the stable E4 contract; focused Godot projection/integration
+tests and the full repository gate are green. Human-visible review accepted 2D
+Relative Left/Right, 3D Relative Left/Right and Forward/Back, and preservation
+of accepted 4D behaviour. It is not E4a documentation implementation.
+
+- Reproduce Live 2D and Live 3D games with Translation frame = Relative,
+  rotate the outer camera, issue each advertised movement intent, and compare
+  the resolver mapping with actual projected movement. In 2D, Left/Right must
+  remain screen-relative. In 3D, Left/Right must remain screen-relative while
+  Forward recedes and Back approaches. Repeat with Translation frame =
+  Absolute and protect accepted Live-4D behaviour as the reference regression.
+- Authority owner: the established movement-command resolver/native gameplay
+  boundary owns actual legal movement; Godot's control-frame mapping, input
+  routing, and orientation-gizmo presentation own truthful command guidance.
+- Inspect `scripts/presentation/control_frame_mapping.gd`,
+  `scripts/app/trace_replay_app.gd` control-frame construction/refresh,
+  `scripts/rendering/camera_rig.gd` gizmo mapping, setup frame preferences,
+  live input routing/bridge calls, and their focused tests.
+- Invariant: arrows truthfully represent the commands that will occur under
+  the selected frame. Relative may rotate resolver and arrows together;
+  Absolute may keep canonical movement and arrows together. Arrows rotating
+  while movement meaning does not is forbidden.
+- Regression: cross-product Relative/Absolute, canonical and rotated 2D/3D
+  camera orientations, representative 3D pitches, each advertised
+  Right/Left/Forward/Back command, initial and repeated input, resolver output,
+  actual native displacement, and rendered helper/arrow label and direction.
+  The accepted 4D `B + Q(L.local_yaw)` matrix must remain unchanged.
+- Human verification: in a real window, rotate the 2D and 3D cameras and play
+  commands in both frame modes; help, arrows where present, and observed motion
+  must agree without relying on test-only diagnostics.
+- Exclusions: no movement-rule redesign, no 4D basis/lifecycle change, no
+  camera-preset implementation, and no remapping UI overhaul.
+
+### Pre-54F correctness defect B — 3D/4D NEXT geometry fidelity
+
+Classification: COMPLETE / HUMAN VISIBLE REVIEW ACCEPTED.
+The native queue payload and thumbnail model were exact; the renderer fitted
+each 4D W pane from pane-local bounds and thereby erased shared XYZ placement
+between panes. The bounded correction derives one scale and pane-local origin
+from the complete piece, while retaining separate labeled pane anchors. It is
+not cosmetic polish and is not part of E4a.
+
+Focused Godot 4.7.1 real-window review accepted representative native and
+embedded 3D/4D pieces, single- and multi-W presentation, FORK4's authoritative
+cross-W XYZ placement, complete labeled panes, and NEXT-to-spawn queue
+progression. General 4D board readability and integrated 54F review remain
+outside this bounded correctness closure.
+
+- Reproduce in Live 3D and Live 4D by cycling production piece sets until
+  affected queued identities appear; capture authoritative queued identity and
+  cells beside the rendered NEXT thumbnail.
+- Authority owner: Stage 54D-1's authoritative queued piece identity and
+  production piece definitions own semantic geometry; Godot's shared thumbnail
+  model/renderer owns faithful normalization, embedding, grouping, orientation,
+  and presentation.
+- Inspect the native-to-HUD NEXT payload, `next_piece_panel.gd`,
+  `piece_thumbnail_model.gd`, `piece_thumbnail.gd`, cell normalization,
+  dimensional embedding, 3D group construction, 4D W grouping, thumbnail
+  orientation, the recent face-connected grouping correction, and
+  `test_next_piece_preview.gd`.
+- Invariant: every thumbnail is geometrically faithful to the actual queued
+  piece under the documented presentation normalization for every production
+  piece set and supported mode.
+- Regression: enumerate every production 3D piece and every production 4D
+  piece/piece-set variant, including embedded lower-dimensional sets; compare
+  normalized thumbnail cell geometry with authoritative piece geometry. A few
+  representative pieces are insufficient. The implemented oracle enumerates
+  14 Live-3D definitions across `embedded_2d`/`native_3d` and 21 Live-4D
+  definitions across `embedded_2d`/`embedded_3d`/`standard_4d_5`, without a
+  hand-maintained allow-list. It proves exact cells, extents, face adjacency,
+  embeddings, W membership, renderer completeness/clipping, shared cross-W
+  placement, and queue identity/update. `FORK4` is retained as a named
+  independent-recentering regression.
+- Human verification: inspect a real-window exhaustive gallery/cycle for 3D
+  and 4D, verifying recognisable geometry, grouping, and orientation against
+  the queued piece evidence.
+- Exclusions: no queue/randomizer changes, Hold implementation, general HUD
+  redesign, piece-definition redesign, or unrelated board renderer work.
+
+### Human-review register
+
+- **E4a:** accepted human product semantics and final blocking technical
+  findings are REVIEWED GREEN. Remaining human decisions: none.
+- **E4b:** COMPLETE / FOCUSED VISIBLE REVIEW ACCEPTED.
+- **E5:** COMPLETE / HUMAN PRODUCT REVIEW ACCEPTED.
+- **54F:** COMPLETE / HUMAN INTEGRATED PLAYABILITY ACCEPTED.
+- **54G:** COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED. The independent
+  final blocker re-acceptance verdict is `PASS`, so
+  `PROFESSIONAL_CORE_GAME_READY` is `YES`.
+
 ### Stage 54G — Professional gaming-experience and release hardening
+
+Status: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED.
+
+The macOS 13+ Universal 2 Godot 4.7.1 app/ZIP is the current candidate. Build,
+export, signature, native-framework, outside-tree clean/persisted/corrupt
+startup, real-window 2D/3D/4D/Hold/Settings/replay-browser, and release
+documentation evidence is recorded in
+`docs/plans/stage_54g_release_acceptance.md`. Linux and Windows Godot paths are
+development-configured only; the Python/PyInstaller installers are retained
+legacy. The accepted runtime candidate is
+`fcaa450a57a43f6e1c931ceb35b98cdf2b0ccfbc`.
+
+The first independent matrix found one blocker: retained Live-4D gameplay
+returned from Main Menu through Advanced / Diagnostics, Replay Demos, and
+Viewer with cleared board presentation. The bounded correction routes Viewer
+navigation through the Godot app lifecycle owner and establishes a fresh
+canonical live presentation without resetting native gameplay. Automated,
+pinned-engine, full-gate, rebuilt-package, and outside-tree actual-app evidence
+is green. Independent final blocker re-acceptance passed running and paused
+Live 4D, shared Live 2D/3D return, replay, immediate board visibility, retained
+gameplay/HOLD/NEXT/Ghost coherence, restored input ownership, and clean runtime
+logs.
+
+Stage 54G closes the Professional Core Game gate:
+
+```text
+Stage 54G: COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED
+PROFESSIONAL_CORE_GAME_READY: YES
+```
+
+The Stage 54 programme is complete. No further Stage 54 implementation slice is
+required for this gate; future product development begins as a new programme
+or stage. This product-readiness result does not claim public macOS distribution
+readiness: the accepted candidate is ad-hoc signed, not Developer ID signed,
+and not notarized.
+
+#### Post-Stage-54 follow-on — Presentation parameter contract
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/presentation-parameter-contract`.
+
+This bounded follow-on does not reopen the completed historical Stage 54E-4
+camera/GUI preset work and does not create another Stage 54 slice. It makes the
+existing Godot shell-settings registry the typed owner/default/persistence,
+accessibility-classification, and runtime-applicability authority for tweakable
+presentation parameters. A detached schema-1 `PresentationProfile` and one
+bounded app apply entry point support live board, piece, Ghost, slice-set,
+palette, camera-preference, and environment changes over an unchanged exported
+gameplay state.
+
+The canonical contract is
+`docs/architecture/presentation_parameter_contract.md`. Presentation
+configuration is non-gameplay state and cannot contribute to deterministic
+session identity. Named profile libraries, Designer Lab UI, experiment
+assignment/telemetry, procedural environments, and structural 3D/4D geometry
+reconciliation remain future work. Focused Godot, settings/persistence,
+governance, sanitation, pinned Godot 4.7.1, full-repository, and agent-driven
+real-window evidence pass and are recorded in
+`docs/plans/presentation_parameter_contract_acceptance.md`.
+
+#### Post-Stage-54 follow-on — Stage 54F-1 canonical local board geometry
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+The 54F-1 name identifies the supplied follow-on contract and does not reopen
+the completed Stage 54 gate. Live 2D, Live 3D, and every local Live-4D slice
+now consume one `LocalBoardPresentationGeometry` for unit cells, centred
+extent, coordinate conversion, face grids, and outer boundaries. Semantic 2D
+adapts to presentation `[X,Y,1]`; 4D receives signed visible extents from exact
+`SliceBasis4D`; continuous local orientation, slice-set anchors/layout,
+camera/framing, and profile-owned styling remain separate.
+
+The durable contract is
+`docs/architecture/canonical_local_board_presentation_geometry.md`, and
+structural, deterministic, profile-regression, pinned/full, and real-window
+evidence is recorded in
+`docs/plans/canonical_local_board_presentation_geometry_acceptance.md`. No
+gameplay authority, validity rule, state schema, basis law, deterministic
+identity, or presentation-parameter owner changes.
+
+#### Post-Stage-54 follow-on — Stage 54F-2 Live Presentation Designer
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+The 54F-2 name identifies the supplied Designer follow-on and does not reopen
+or renumber the completed Stage 54F integrated acceptance or Stage 54G release
+hardening. The live Godot cockpit now exposes a registry-generated,
+developer/designer-facing surface over the existing 26-parameter envelope.
+It creates a detached working B profile, explicitly captured immutable A,
+opening-baseline and factory resets, and full/compact/hidden states. Every
+preview enters through `TraceReplayApp.apply_presentation_profile()`; the
+Designer receives no settings writer and owns no gameplay or presentation
+semantics.
+
+The durable contract is
+`docs/architecture/live_presentation_designer.md`, and automated, pinned/full,
+input/layout, deterministic-isolation, and agent-driven non-headless Godot
+evidence is recorded in
+`docs/plans/live_presentation_designer_acceptance.md`. HOLD is present under
+native authority `AE-0055`; board, NEXT, HOLD, 4D basis, helper, and status
+viewability are Designer acceptance properties without becoming new semantic
+owners or visibility settings. Named/saved profiles, import/export, formal
+experiments/telemetry, broader theme work, and independent human sign-off
+remain deferred.
+
+#### Post-Stage-54 review correction — Stage 54F-2R cockpit density
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+Stage 54F-2R corrects only the accepted Designer cockpit's density and control
+hierarchy. The board is the dominant visual surface; NEXT and authoritative
+HOLD are one compact paired row; and a passive permanent piece-control strip
+consumes `LiveInputContract` so translation, applicable rotation planes, and
+current bindings are discoverable before secondary camera guidance. Fit View
+remains promoted while named views, Reset, gestures, and numeric camera detail
+remain available lower in the inspector.
+
+Vertical allocation is corrected before the bounded Live-4D fit clearance is
+reduced from 1.32 to 1.20. Framing still consumes authoritative collection
+bounds, and canonical local geometry, slice-set layout, exact basis, camera
+pose semantics, native NEXT/HOLD, Designer A/B/input/persistence isolation,
+and deterministic gameplay remain unchanged. Evidence and the five explicit
+visual answers are recorded in
+`docs/plans/live_presentation_designer_acceptance.md`.
+
+#### Post-Stage-54 follow-on — Stage 54F-3 Presentation Profile Library
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/canonical-local-board-geometry`.
+
+Stage 54F-3 adds explicit persistence for named, versioned, portable
+`PresentationProfile` artifacts without changing ordinary settings or making
+Designer experimentation persistent. One validated file per generated stable
+ID under Godot user data supports list, Save As, deliberate Save, detached
+load into B, duplicate, rename, confirmed delete, import, and export. Display
+names are not paths, one corrupt file is isolated, and import delegates value
+validation/default completion to the existing profile/registry authority.
+
+The durable contract is
+`docs/architecture/presentation_profile_library.md`; focused storage,
+Designer, 2D/3D/4D applicability, cockpit, deterministic-isolation, and bounded
+production-window evidence is recorded in
+`docs/plans/presentation_profile_library_acceptance.md`. This follow-on does
+not reopen the completed Stage 54F/54G history, add themes or parameters, or
+transfer presentation semantics away from the registry. Canonical/pinned Godot,
+59-case topology transport, persistence/governance/semantic-boundary,
+sanitation, and full repository verification pass.
+
+#### Post-Stage-54 review hardening — Stage 54F-3R persistence
+
+Status: LOCAL CORRECTION GREEN / INDEPENDENT RE-REVIEW PENDING after Stage
+54F-3R.1 on `codex/canonical-local-board-geometry`.
+
+Stage 54F-3R preserves the accepted profile-library architecture while closing
+bounded persistence-mechanics and test-integrity findings. It does not create or
+compare candidate visual designs. Completion of the parameter, geometry,
+Designer A/B, cockpit, and profile-library stages establishes the controlled
+comparison apparatus; it is not completion of the visual-design comparison.
+
+#### Post-Stage-54 follow-on — Stage 54F-4 Built-in Style Catalog
+
+Status: COMPLETE / LOCAL AGENT-DRIVEN ACCEPTANCE GREEN on
+`codex/built-in-style-catalog`.
+
+Stage 54F-4 creates the actual read-only candidate presentation designs over the
+accepted registry and `PresentationProfile` payload. `BuiltInStyleCatalog` is a
+third artifact kind beside runtime working state and mutable user profiles: it
+reads one repository-shipped versioned JSON catalog through `res://`, never
+touches `user://`, and exposes no write API at all. Applying a built-in style
+replaces detached working B, leaves captured A and the shipped entry unchanged,
+and clears the loaded user-profile identity so explicit Save cannot overwrite a
+shipped style. `Save As` and `Copy to User Library` are the two paths to an
+ordinary mutable user profile.
+
+Six styles ship: Tet4D Balanced, Python Reference, Arcade Neon, Tron Grid Flow,
+Blueprint Technical, and High Contrast. Tron Grid Flow is a real animated style,
+not cyan colours over a static field. Three new `ENVIRONMENT_PRESENTATION`
+registry parameters drive one bounded `AnimatedBackground` component that renders
+a screen-space luminous grid flow far behind the play volume, writes no depth,
+derives every colour from existing semantic palette roles, damps the frame centre
+where the board sits, and owns a resettable component-local phase excluded from
+every deterministic snapshot. `accessibility.reduced_motion` freezes it, and the
+accessibility style ships with motion off.
+
+The durable contract is `docs/architecture/built_in_style_catalog.md`; the style
+matrix and real-window evidence are in
+`docs/plans/built_in_style_catalog_acceptance.md`. This stage authors and
+validates distinct candidates; it does not rank them or select the product
+default.
+
+#### Post-Stage-54 follow-on — Stage 54F-5 Comparative Visual Evaluation Laboratory
+
+Status: IMPLEMENTED ON THREE PLATFORMS / AUTOMATED LOCAL ACCEPTANCE GREEN / ANDROID AND IPADOS ARTIFACTS BLOCKED ON HOST TOOLCHAIN / HUMAN COMPARATIVE RUN PENDING.
+
+The standalone Design Laboratory now provides the controlled evaluation path:
+ten stable scenarios over existing fixed-seed native sessions and replay
+fixtures cover 2D/3D/4D, sparse/dense states, NEXT/HOLD/Ghost, slice sets, and
+sphere-like topology presentation. Built-in and user profiles resolve through
+the existing registry/profile owners; a dedicated session freezes exact A/B
+snapshots and the non-style fingerprint, provides deterministic blind labels,
+fails closed on drift, and resets gameplay plus view/basis state canonically.
+
+Preference, eight optional ordinal ratings, notes, A/B PNGs, and immutable
+provenance persist under user data. Explicit nomination exports exact canonical
+values/owners, actual comparison records, and a review-only design proposal. A
+read-only repository validator enforces the human promotion boundary. The
+current-Godot Windows x86_64 portable ZIP builds and passes local structural/
+resource/PE validation; direct clean-machine Windows execution and the human
+comparative judgments remain unclaimed.
+
+The same laboratory now also targets Android tablets and iPadOS, both for
+landscape use with a physical keyboard. They are adapters, not separate
+products: one catalogue, one scenario system, one A/B implementation, one
+evaluation schema, one nomination schema, and one repository-side validator
+serve all three, and platform reaches an exported bundle only as provenance.
+Each platform exposes a user-accessible way to retrieve a nominated bundle, so
+an installed application never requires the development repository. The Android
+APK and the compiled iPadOS application are blocked on toolchains absent from
+the implementation host and are produced by equipped CI paths; the local iPad
+configuration export is a separately named evidence class and never a release
+payload. No emulator, simulator, device, or physical-keyboard evidence is
+claimed on any platform.
+
+The durable contract is
+`docs/architecture/design_evaluation_laboratory.md`; the human and platform
+checklist is `docs/plans/design_evaluation_laboratory_acceptance.md`. Completing
+the comparison apparatus does not select a winner or close Stage 54F-6.
+
+#### Next follow-on — Stage 54F-6 Default Presentation Selection / Polish
+
+Status: PLANNED.
+
+Select and refine the product default only after the comparative evaluation.
+This stage owns final visual-language selection and bounded polish; neither the
+comparison apparatus nor the existence of a catalog predetermines its outcome.
 
 Objective:
 
@@ -826,6 +1270,10 @@ Close the gap between a verified prototype and a professional game release.
 
 Use focused slices for demonstrated needs such as:
 
+- modest standard-mode Live-4D volume-legibility polish, preserving accepted
+  slice/layout, projection, grid/wireframe hierarchy, control, and gameplay
+  semantics; the current presentation remains usable and High Contrast
+  remains the strong alternative, so this is not a Stage 54F blocker;
 - full keybinding/remapping workflow;
 - gamepad support if adopted;
 - audio, mute, and volume controls;
@@ -1084,7 +1532,8 @@ The active order is:
    through PR #63 at `c93dcc8cfa93857d514a14b925002efc4404b007`.
 2. Stage 54E-1 — presentation-space architecture/design is complete, human
    accepted, and merged at `7e3558f823dd496b8896eabe6da9c18951bdb005`.
-3. Stage 54D-3 — Hold is eligible and does not wait for 54E-2.
+3. Stage 54D-3 — Hold is COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED /
+   HUMAN VISIBLE ACCEPTED as `AE-0055`.
 4. Stage 54E-2a — presentation state and coordinate decomposition is complete
    and reviewed green.
 5. Stage 54E-2b — renderer composition — is complete and reviewed green;
@@ -1097,10 +1546,17 @@ The active order is:
    progressive-disclosure rendering are implemented and accepted by external
    technical review, with automated evidence and a recorded real-window
    acceptance checklist.
-7. Stage 54E-4 — camera/GUI presets — is NEXT / ELIGIBLE.
-8. Stage 54E-5 — cockpit consolidation.
-9. Stage 54F — integrated professional playability/visual acceptance.
-10. Stage 54G — remaining professional release hardening.
+7. Stage 54E-4a is REVIEWED GREEN. Stage 54E-4b implements the accepted
+   contract and is COMPLETE / FOCUSED VISIBLE REVIEW ACCEPTED; aggregate Stage
+   54E-4 is COMPLETE / REVIEWED GREEN.
+8. Stage 54E-5 — cockpit consolidation — is COMPLETE / HUMAN PRODUCT REVIEW
+   ACCEPTED, with focused/full automated evidence and normal, smaller, and
+   larger real-window review.
+9. Stage 54F — integrated professional playability/visual acceptance is
+   complete and human accepted.
+10. Stage 54G — COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED; it closes
+    the Stage 54 Professional Core Game programme and
+    `PROFESSIONAL_CORE_GAME_READY` is `YES`.
 11. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
 12. Later Explorer, challenge, topology, and simulation phases.
 

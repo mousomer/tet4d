@@ -4,6 +4,7 @@ const ReplayHudScript = preload("res://scripts/ui/replay_hud.gd")
 const TraceReplayAppScript = preload("res://scripts/app/trace_replay_app.gd")
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
+const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 const SCREEN_RIGHT_TOLERANCE_PX := 0.5
 const AWAY_DEPTH_TOLERANCE := 0.0001
@@ -25,6 +26,7 @@ func run() -> Array:
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
 	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XW - / + (re-slice)") or not live_4d_hint.contains("; / ' ZW - / + (re-slice)") or not live_4d_hint.contains("[ / ] ZX - / +") or not live_4d_hint.contains("I / K") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose separated slice orientation, framing, exact basis, piece rotation, and Esc-only quit")
+	_assert_camera_command_help_is_executable_truth(live_hint, live_3d_hint, live_4d_hint, failures)
 	for roll_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
 		if LiveInputContractScript.ACTION_SPECS.has(roll_action):
 			failures.append("normal Live 4D action contract must omit %s" % roll_action)
@@ -77,12 +79,79 @@ func run() -> Array:
 	else:
 		app._enter_live_2d_mode()
 		await tree.process_frame
+		var live_camera := app._camera_rig.get_node_or_null("Camera3D") as Camera3D
+		if not is_equal_approx(app._camera_rig._current_yaw, 0.0) or not is_equal_approx(app._camera_rig._current_pitch, 0.0) or not is_equal_approx(app._camera_rig._current_roll, 0.0):
+			failures.append("Live 2D must open with exact flat front-on outer orientation")
+		if live_camera == null or live_camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
+			failures.append("Live 2D must open with orthographic projection")
+		if app._hud._camera_view_action_menu == null or app._hud._camera_view_action_menu.visible:
+			failures.append("ordinary Live 2D must not expose named view actions")
+		app._camera_rig._current_yaw = PI
+		app._camera_rig._target_yaw = PI
+		app._camera_rig._update_camera()
+		app._refresh_hud()
+		app._dispatch_live_2d_control_intent("move_right")
+		if str(app._current_snapshot.get("last_command", "")) != "move_left":
+			failures.append("Live 2D Relative Right must dispatch canonical Left from the rear view")
+		if not str(LiveInputContractScript.control_hint_groups("live_2d", {}, app._hud._control_frame_snapshot)).contains("Left / Right [-X]"):
+			failures.append("Live 2D helper must share the rear-view Relative Right mapping")
+		app._reset_live_2d()
+		app._process_live_repeat_action("move_right", true, "move_right", 0.0, 0.0, 0.0)
+		app._process_live_repeat_action("move_right", true, "move_right", 0.0, 0.0, 0.01)
+		if str(app._current_snapshot.get("last_command", "")) != "move_left":
+			failures.append("held Live 2D Relative Right must use the same rear-view mapping")
+		app._reset_live_repeat_state()
+		app._reset_live_2d()
+		app._camera_rig.nudge_yaw(0.25)
+		app._camera_rig.zoom(-1.0)
+		app._hud._settings_store.set_value("display.ui_scale", "large")
+		var live_2d_view_before_restart: Dictionary = app._camera_rig.presentation_snapshot()
+		app._reset_live_2d()
+		if app._camera_rig.presentation_snapshot() != live_2d_view_before_restart:
+			failures.append("Live 2D Restart Game must preserve the current view")
+		if app._hud._settings_store.value("display.ui_scale") != "large":
+			failures.append("Restart Game must preserve UI scale")
+		var live_2d_hash_before_reset_view := str(app._live_bridge.live_2d_state_hash())
+		app._reset_view()
+		if not is_equal_approx(app._camera_rig._current_yaw, 0.0) or not is_equal_approx(app._camera_rig._current_pitch, 0.0) or not is_equal_approx(app._camera_rig._current_roll, 0.0):
+			failures.append("Live 2D Reset View must restore exact flat orientation")
+		if str(app._live_bridge.live_2d_state_hash()) != live_2d_hash_before_reset_view:
+			failures.append("Live 2D Reset View must preserve deterministic gameplay")
+		if app._hud._settings_store.value("display.ui_scale") != "large":
+			failures.append("Reset View must preserve UI scale")
 		var live_snapshot: Dictionary = app._current_snapshot
 		if str(live_snapshot.get("trace_type", "")) != "live_2d":
 			failures.append("live mode should create a live snapshot")
 		var initial_piece := str(live_snapshot.get("current_piece", ""))
 		if initial_piece != "I":
 			failures.append("live mode should start with native I piece, got %s" % initial_piece)
+		var hold_panel_snapshot: Dictionary = app._hud._hold_piece_panel.deterministic_snapshot()
+		if hold_panel_snapshot.get("piece_name_text") != "EMPTY" or hold_panel_snapshot.get("status_text") != "Available · C":
+			failures.append("Live 2D cockpit must begin with an intentional available HOLD state")
+		var hold_event := InputEventKey.new()
+		hold_event.keycode = KEY_C
+		hold_event.pressed = true
+		app._unhandled_input(hold_event)
+		if str(app._current_snapshot.get("current_piece", "")) != "O" or str(app._current_snapshot.get("held_piece", {}).get("shape", "")) != "I":
+			failures.append("one physical C press must dispatch the native first-Hold transition")
+		hold_panel_snapshot = app._hud._hold_piece_panel.deterministic_snapshot()
+		if hold_panel_snapshot.get("piece_name_text") != "I" or hold_panel_snapshot.get("status_text") != "Used until lock":
+			failures.append("Live cockpit HOLD preview must follow authoritative populated/unavailable state")
+		var hash_after_hold := str(app._live_bridge.live_2d_state_hash())
+		var repeated_hold_event := InputEventKey.new()
+		repeated_hold_event.keycode = KEY_C
+		repeated_hold_event.pressed = true
+		repeated_hold_event.echo = true
+		app._unhandled_input(repeated_hold_event)
+		if str(app._live_bridge.live_2d_state_hash()) != hash_after_hold:
+			failures.append("held C key repeat must not dispatch another Hold attempt")
+		app._toggle_live_2d_pause()
+		var paused_hold_hash := str(app._live_bridge.live_2d_state_hash())
+		app._unhandled_input(hold_event)
+		if str(app._live_bridge.live_2d_state_hash()) != paused_hold_hash:
+			failures.append("paused gameplay ownership must suppress Hold")
+		app._toggle_live_2d_pause()
+		app._reset_live_2d()
 		app._dispatch_live_gameplay_command("hard_drop")
 		live_snapshot = app._current_snapshot
 		if str(live_snapshot.get("current_piece", "")) != "O":
@@ -91,6 +160,19 @@ func run() -> Array:
 			failures.append("Live 2D HUD should expose score and lock feedback after hard drop")
 		app._enter_replay_mode()
 		await tree.process_frame
+		app._camera_rig.nudge_yaw(0.2)
+		app._camera_rig.nudge_roll(0.1)
+		var replay_orientation_before_fit: Dictionary = app._camera_rig.presentation_snapshot()
+		app._fit_view()
+		for key in ["current_yaw", "current_pitch", "current_roll", "projection", "horizontal_reflection_active"]:
+			if app._camera_rig.presentation_snapshot().get(key) != replay_orientation_before_fit.get(key):
+				failures.append("Replay Fit View must preserve %s" % key)
+		var replay_content_before_reset := str(app._current_snapshot.get("state_hash", ""))
+		app._reset_view()
+		if not is_equal_approx(app._camera_rig._current_yaw, CameraRigScript.PYTHON_DISPLAY_YAW_RAD) or not is_equal_approx(app._camera_rig._current_pitch, CameraRigScript.PYTHON_DISPLAY_PITCH_RAD) or not is_equal_approx(app._camera_rig._current_roll, 0.0):
+			failures.append("Replay Reset View must restore canonical replay orientation")
+		if str(app._current_snapshot.get("state_hash", "")) != replay_content_before_reset:
+			failures.append("Replay Reset View must preserve replay content")
 		var replay_hash := str(app._live_bridge.live_2d_state_hash())
 		var live_event := InputEventAction.new()
 		live_event.action = "live_hard_drop"
@@ -127,6 +209,17 @@ func run() -> Array:
 			failures.append("app should enter Live 3D mode on direct call, got %s" % str(app._mode))
 		if bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)) or app._live_4d_presentation_root.transform != Transform3D.IDENTITY:
 			failures.append("Live 3D must not inherit the fitted Live-4D presentation reflection")
+		if not is_equal_approx(app._camera_rig._current_yaw, CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD) or not is_equal_approx(app._camera_rig._current_pitch, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD) or not is_equal_approx(app._camera_rig._current_roll, 0.0):
+			failures.append("Live 3D must open with its canonical outer orientation")
+		if app._hud._camera_view_action_menu == null or not app._hud._camera_view_action_menu.visible:
+			failures.append("Live 3D must expose named view actions as stateless actions")
+		app._camera_rig.nudge_yaw(0.3)
+		var live_3d_hash_before_reset_view := str(app._live_bridge.live_3d_state_hash())
+		app._reset_view()
+		if not is_equal_approx(app._camera_rig._current_yaw, CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD) or not is_equal_approx(app._camera_rig._current_pitch, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD) or not is_equal_approx(app._camera_rig._current_roll, 0.0):
+			failures.append("Live 3D Reset View must restore canonical outer orientation")
+		if str(app._live_bridge.live_3d_state_hash()) != live_3d_hash_before_reset_view:
+			failures.append("Live 3D Reset View must preserve deterministic gameplay")
 		var direct_live_3d_snapshot = JSON.parse_string(app._live_bridge.live_3d_snapshot_json())
 		if typeof(direct_live_3d_snapshot) == TYPE_DICTIONARY and str(direct_live_3d_snapshot.get("trace_type", "")) != "live_3d":
 			failures.append("direct native live 3D snapshot had trace type %s" % str(direct_live_3d_snapshot.get("trace_type", "")))
@@ -137,6 +230,17 @@ func run() -> Array:
 			failures.append("live 3D mode should create a live 3D snapshot, got %s" % str(live_3d_snapshot.get("trace_type", "")))
 		if str(live_3d_snapshot.get("current_piece", "")) != "I3":
 			failures.append("live 3D should start with native I3 piece, got %s" % str(live_3d_snapshot.get("current_piece", "")))
+		app._camera_rig._current_yaw = PI * 0.5
+		app._camera_rig._target_yaw = PI * 0.5
+		app._camera_rig._update_camera()
+		app._refresh_hud()
+		app._dispatch_live_3d_control_intent("move_x_pos")
+		if str(app._current_snapshot.get("last_command", "")) != "move_z_neg":
+			failures.append("Live 3D Relative Right must dispatch canonical -Z at +90 yaw")
+		var live_3d_control_help := str(LiveInputContractScript.control_hint_groups("live_3d", {}, app._hud._control_frame_snapshot))
+		if not live_3d_control_help.contains("Left / Right [-Z]") or not live_3d_control_help.contains("Forward / Back [-X]"):
+			failures.append("Live 3D helper must share the +90 yaw Right/Forward mapping")
+		app._reset_live_3d()
 		var live_3d_initial_hash := str(app._live_bridge.live_3d_state_hash())
 		app._dispatch_live_3d_gameplay_command("move_x_pos")
 		if str(app._live_bridge.live_3d_state_hash()) == live_3d_initial_hash:
@@ -152,8 +256,25 @@ func run() -> Array:
 		app._dispatch_live_3d_gameplay_command("hard_drop")
 		if str(app._current_snapshot.get("current_piece", "")) != "O3":
 			failures.append("live 3D hard drop should route to C++ and spawn O3")
-		if str(app._hud._summary_label.text).find("O3 > L3") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
-			failures.append("Live 3D HUD should expose the new piece queue and lock feedback")
+		if str(app._hud._summary_label.text).find("Active O3") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
+			failures.append("Live 3D HUD should expose the active piece and lock feedback while NEXT owns queue presentation")
+		var popup_owned_hash := str(app._live_bridge.live_3d_state_hash())
+		app._hud._live_interaction_owns_input = true
+		var popup_move_event := InputEventAction.new()
+		popup_move_event.action = "live_3d_move_x_pos"
+		popup_move_event.pressed = true
+		app._unhandled_input(popup_move_event)
+		var popup_space_event := InputEventKey.new()
+		popup_space_event.keycode = KEY_SPACE
+		popup_space_event.pressed = true
+		app._input(popup_space_event)
+		var popup_hold_event := InputEventKey.new()
+		popup_hold_event.keycode = KEY_C
+		popup_hold_event.pressed = true
+		app._input(popup_hold_event)
+		if str(app._live_bridge.live_3d_state_hash()) != popup_owned_hash:
+			failures.append("cockpit popup ownership must suppress movement, Space hard drop, and Hold")
+		app._hud._live_interaction_owns_input = false
 		app._enter_replay_mode()
 		await tree.process_frame
 		var replay_3d_hash := str(app._live_bridge.live_3d_state_hash())
@@ -205,9 +326,9 @@ func run() -> Array:
 			failures.append("live 4D should start with native TRACE_4D piece, got %s" % str(live_4d_snapshot.get("current_piece", "")))
 		if int(live_4d_snapshot.get("w_slice_count", 0)) != 4:
 			failures.append("live 4D should expose W slice count")
-		if app._camera_rig._current_view_preset != "iso":
-			failures.append("live 4D should open in the fitted W-slice camera preset")
-		if app._camera_rig._current_fit_state != "fit OK":
+		if not is_equal_approx(app._camera_rig._current_yaw, CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD) or not is_equal_approx(app._camera_rig._current_pitch, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD):
+			failures.append("live 4D should open in the canonical W-slice outer mount")
+		if app._camera_rig._framing_status != "fit OK":
 			failures.append("live 4D should open already fitted")
 		if not bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)):
 			failures.append("live 4D fitted view should use the accepted board-depth mount")
@@ -265,7 +386,7 @@ func run() -> Array:
 			failures.append("Live 4D - zoom should increase orthographic size")
 		app._refresh_live_4d_snapshot()
 		await tree.process_frame
-		if live_4d_camera != null and app._camera_rig._current_fit_state != "manual":
+		if live_4d_camera != null and app._camera_rig._framing_status != "manual":
 			failures.append("Live 4D snapshot refresh should not continuously reapply Fit View after zoom")
 		if live_4d_camera != null and live_4d_camera.size <= zoomed_in_camera_size:
 			failures.append("Live 4D manual zoom should survive a live snapshot refresh")
@@ -320,10 +441,8 @@ func run() -> Array:
 		if not is_equal_approx(app._camera_rig._current_roll, roll_before):
 			failures.append("normal Live 4D roll-left input must remain detached")
 		app._fit_view()
-		if app._camera_rig._current_view_preset != "iso" or app._camera_rig._current_fit_state != "fit OK":
-			failures.append("Fit View should restore the full Live 4D W-slice layout")
-		if absf(app._camera_rig._current_roll) > 0.001:
-			failures.append("Fit View should reset Live 4D camera roll")
+		if app._camera_rig._framing_status != "fit OK":
+			failures.append("Fit View should restore fitted Live 4D framing")
 		var wheel_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
 		var wheel_orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
 		var wheel_basis_before: Array = app._live_4d_basis.slots()
@@ -404,7 +523,7 @@ func run() -> Array:
 		var pan_motion := InputEventMouseMotion.new()
 		pan_motion.relative = Vector2(18.0, -9.0)
 		app._handle_camera_input(pan_motion)
-		if app._camera_rig._target_focus == focus_before_pan or app._camera_rig._current_fit_state != "manual pan":
+		if app._camera_rig._target_focus == focus_before_pan or app._camera_rig._framing_status != "manual pan":
 			failures.append("Right-drag should pan the gameboard view")
 		if app._live_4d_local_orientation.snapshot() != orientation_before_pan or app._live_4d_basis.slots() != basis_before_pan or app._control_frame_mapping(4).translation_command("move_z_neg", "relative") != command_before_pan or app._renderer._presentation.projection.slice_anchor(0) != anchor_before_pan:
 			failures.append("Right-drag pan must not change B, L, resolver mapping, or anchors")
@@ -456,7 +575,7 @@ func run() -> Array:
 		var preset_outer_pitch: float = app._camera_rig._current_pitch
 		var preset_native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
 		var preset_hash: String = str(app._live_bridge.live_4d_state_hash())
-		if not app._apply_live_4d_preset(CameraPresetScript.SIDE):
+		if not app._apply_live_4d_view_action(CameraPresetScript.SIDE):
 			failures.append("Live 4D Side preset should apply through the compatibility adapter")
 		elif not is_equal_approx(app._live_4d_local_orientation.local_yaw, PI * 0.5) or app._control_frame_mapping(4).yaw_quarter_turn != 1:
 			failures.append("Live 4D Side preset yaw should reach shared L and its quantized resolver")
@@ -466,24 +585,28 @@ func run() -> Array:
 			failures.append("Live 4D preset orientation must leave bounds and fit reference coherent")
 		if app._live_bridge.live_4d_snapshot_json() != preset_native_snapshot or str(app._live_bridge.live_4d_state_hash()) != preset_hash:
 			failures.append("Live 4D presentation presets must not mutate canonical gameplay state")
-		if not app._apply_live_4d_preset(CameraPresetScript.TOP) or not is_equal_approx(app._live_4d_local_orientation.local_pitch, SliceLocalOrientationScript.NORMAL_GAMEPLAY_MAX_PITCH_RAD):
-			failures.append("Live 4D Top preset pitch should reach the admitted shared-L boundary")
-		if not is_equal_approx(float(app._camera_rig.presentation_snapshot().get("zoom_multiplier", 0.0)), float(CameraPresetScript.definition(CameraPresetScript.TOP).get("zoom", 0.0))):
-			failures.append("Live 4D preset zoom should reach outer framing")
+		if not app._apply_live_4d_view_action(CameraPresetScript.TOP) or not is_equal_approx(app._live_4d_local_orientation.local_pitch, float(CameraPresetScript.definition(CameraPresetScript.TOP).get("pitch", 0.0))):
+			failures.append("Live 4D Top preset should retain its established +60-degree shared-L action inside the expanded range")
+		if not is_equal_approx(float(app._camera_rig.presentation_snapshot().get("zoom_multiplier", 0.0)), 1.0):
+			failures.append("Live 4D view action should restore fitted framing without action-owned zoom")
 		app._set_live_4d_local_orientation(0.0, 0.0)
 		var fit_orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
 		var fit_basis_before: Array = app._live_4d_basis.slots()
 		var fit_mapping_before: Dictionary = app._control_frame_mapping(4).snapshot()
+		var fit_outer_before: Dictionary = app._camera_rig.presentation_snapshot()
 		app._fit_view()
 		if app._live_4d_local_orientation.snapshot() != fit_orientation_before or app._live_4d_basis.slots() != fit_basis_before or app._control_frame_mapping(4).snapshot() != fit_mapping_before:
 			failures.append("Fit must not change B, L, or relative command mapping")
+		for key in ["current_yaw", "current_pitch", "current_roll", "projection", "horizontal_reflection_active"]:
+			if app._camera_rig.presentation_snapshot().get(key) != fit_outer_before.get(key):
+				failures.append("Fit must preserve Live-4D outer %s" % key)
 		app._camera_rig.zoom(-1.0)
 		var double_click_event := InputEventMouseButton.new()
 		double_click_event.button_index = MOUSE_BUTTON_LEFT
 		double_click_event.pressed = true
 		double_click_event.double_click = true
 		app._handle_camera_input(double_click_event)
-		if app._camera_rig._current_fit_state != "fit OK":
+		if app._camera_rig._framing_status != "fit OK":
 			failures.append("Double-click should route to Fit View")
 		if app._hud._reset_button != null and app._hud._reset_button.focus_mode != Control.FOCUS_NONE:
 			failures.append("live viewer buttons should not keep keyboard focus while live gameplay captures Space")
@@ -491,7 +614,7 @@ func run() -> Array:
 			app._hud._reset_button.focus_mode = Control.FOCUS_ALL
 			app._hud._reset_button.grab_focus()
 			app._input(zoom_in_event)
-			if live_4d_camera != null and app._camera_rig._current_fit_state != "manual":
+			if live_4d_camera != null and app._camera_rig._framing_status != "manual":
 				failures.append("Live 4D zoom should still work after a visible button is clicked or focused")
 			app._hud._reset_button.focus_mode = Control.FOCUS_NONE
 			app._fit_view()
@@ -522,7 +645,7 @@ func run() -> Array:
 		endgame_motion.position = viewport_center + Vector2(10.0, 0.0)
 		endgame_motion.relative = Vector2(10.0, 0.0)
 		app._input(endgame_motion)
-		if app._live_4d_local_orientation.local_yaw >= endgame_local_yaw_before:
+		if app._live_4d_local_orientation.local_yaw <= endgame_local_yaw_before:
 			failures.append("Live 4D left drag should continue to orient shared L after game over")
 		if not is_equal_approx(app._camera_rig._target_yaw, endgame_outer_yaw_before):
 			failures.append("Live 4D post-game left drag must not rotate outer framing")
@@ -541,17 +664,20 @@ func run() -> Array:
 			failures.append("Mouse wheel over the live viewport should zoom camera after game over")
 		if str(app._live_bridge.live_4d_state_hash()) != endgame_hash:
 			failures.append("Endgame mouse camera controls should not mutate Live 4D gameplay state")
+		var restart_basis_before: Array = app._live_4d_basis.slots()
+		var restart_local_before: Dictionary = app._live_4d_local_orientation.snapshot()
+		var restart_camera_before: Dictionary = app._camera_rig.presentation_snapshot()
 		app._reset_live_4d()
-		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._current_fit_state != "fit OK":
-			failures.append("Restart Game must restore B, L, and fitted V/P defaults")
+		if app._live_4d_basis.slots() != restart_basis_before or app._live_4d_local_orientation.snapshot() != restart_local_before or app._camera_rig.presentation_snapshot() != restart_camera_before:
+			failures.append("Restart Game must preserve B, L, layout-facing camera state, and framing")
 		app._set_live_4d_local_orientation(0.7, 0.2)
 		app._apply_live_4d_basis_turn("xw", 1)
 		var reset_view_native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
 		var reset_view_hash: String = str(app._live_bridge.live_4d_state_hash())
-		app._reset_live_4d_view()
+		app._reset_view()
 		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0}:
 			failures.append("Reset View should coherently restore identity B and default shared L")
-		if app._renderer._live_4d_fit_reference != app._renderer.current_bounds() or app._camera_rig._current_fit_state != "fit OK":
+		if app._renderer._live_4d_fit_reference != app._renderer.current_bounds() or app._camera_rig._framing_status != "fit OK":
 			failures.append("Reset View should refresh oriented bounds and fitted framing")
 		if app._live_bridge.live_4d_snapshot_json() != reset_view_native_snapshot or str(app._live_bridge.live_4d_state_hash()) != reset_view_hash:
 			failures.append("Reset View must remain presentation-only")
@@ -591,6 +717,7 @@ func run() -> Array:
 		if app._live_bridge.live_4d_snapshot_json() != basis_only_native_before or str(app._live_bridge.live_4d_state_hash()) != basis_only_hash_before:
 			failures.append("basis-only reset must remain outside deterministic identity")
 		app._reset_live_4d()
+		app._reset_view()
 		app._apply_live_4d_basis_turn("zx", 1)
 		if app._live_4d_basis.slots() != [-3, 2, 1, 4]:
 			failures.append("ZX+ should commit the exact visible X/Z basis rotation")
@@ -602,6 +729,7 @@ func run() -> Array:
 		if str(app._current_snapshot.get("last_command", "")) != "move_z_neg":
 			failures.append("ZX viewer-relative movement should agree with the basis-driven horizontal arrow")
 		app._reset_live_4d()
+		app._reset_view()
 		for _turn_index in range(4):
 			app._apply_live_4d_basis_turn("xw", 1)
 		if app._live_4d_basis.slots() != [1, 2, 3, 4]:
@@ -610,18 +738,22 @@ func run() -> Array:
 		if float(app._renderer.live_4d_basis_snapshot().get("transition_progress", 0.0)) < 1.0:
 			failures.append("basis transition should settle without a stuck intermediate state")
 		app._reset_live_4d()
+		app._reset_view()
 		app._dispatch_live_4d_gameplay_command("hard_drop")
 		var identity_drop_hash := str(app._live_bridge.live_4d_state_hash())
 		app._reset_live_4d()
+		app._reset_view()
 		app._apply_live_4d_basis_turn("zw", -1)
 		app._dispatch_live_4d_gameplay_command("hard_drop")
 		if str(app._live_bridge.live_4d_state_hash()) != identity_drop_hash:
 			failures.append("hard drop after a basis turn must preserve canonical Y-gravity outcome")
 		app._reset_live_4d()
+		app._reset_view()
 		for canonical_command in ["move_x_pos", "move_z_neg", "move_w_pos"]:
 			app._dispatch_live_4d_gameplay_command(canonical_command)
 		var canonical_sequence_hash := str(app._live_bridge.live_4d_state_hash())
 		app._reset_live_4d()
+		app._reset_view()
 		app._apply_live_4d_basis_turn("xw", 1)
 		app._dispatch_live_4d_gameplay_command("move_x_pos")
 		app._apply_live_4d_basis_turn("zw", -1)
@@ -631,6 +763,7 @@ func run() -> Array:
 		if str(app._live_bridge.live_4d_state_hash()) != canonical_sequence_hash:
 			failures.append("basis events interleaved with canonical commands must preserve replay identity")
 		app._reset_live_4d()
+		app._reset_view()
 		var live_4d_initial_hash := str(app._live_bridge.live_4d_state_hash())
 		app._dispatch_live_4d_gameplay_command("move_w_pos")
 		if str(app._live_bridge.live_4d_state_hash()) == live_4d_initial_hash:
@@ -677,7 +810,7 @@ func run() -> Array:
 		await tree.process_frame
 		if app._live_4d_paused:
 			failures.append("switching back to Live 4D should resume the selected live mode")
-		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._current_fit_state != "fit OK" or not bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)):
+		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._framing_status != "fit OK" or not bool(app._camera_rig.presentation_snapshot().get("horizontal_reflection_active", false)):
 			failures.append("re-entering Live 4D must use fresh B, L, V/P, and reflection defaults")
 		var switched_fit_size := live_4d_camera.size if live_4d_camera != null else 0.0
 		app._input(zoom_out_event)
@@ -698,7 +831,7 @@ func run() -> Array:
 		if app._live_4d_session_started:
 			failures.append("Change Setup must end the current Live-4D session ownership")
 		app._enter_live_4d_mode()
-		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._current_fit_state != "fit OK":
+		if not app._live_4d_basis.is_identity() or app._live_4d_local_orientation.snapshot() != {"local_yaw": 0.0, "local_pitch": 0.0} or app._camera_rig._framing_status != "fit OK":
 			failures.append("Live-4D relaunch after Change Setup must start from coherent defaults")
 		app._return_to_main_menu()
 		_assert_live_4d_teardown(failures, app, "Main Menu")
@@ -777,6 +910,8 @@ func run() -> Array:
 			expected_event.keycode = int(required_key)
 			if not InputMap.action_has_event(str(action_name), expected_event):
 				failures.append("InputMap %s should consume the shared contract binding %s" % [action_name, str(required_key)])
+	if app != null and app._hud != null:
+		app._hud._settings_store.set_value("display.ui_scale", "standard")
 	root.queue_free()
 	await tree.process_frame
 	return failures
@@ -831,6 +966,39 @@ func _canonical_4d_delta(command: String) -> Array:
 		_: return [0, 0, 0, 0]
 
 
+# Player-facing camera help must be executable truth: every listed command has
+# to name the binding the runtime actually routes. Live 3D binds F/G to Rotate
+# XZ, so its Fit affordance is the viewport double-click, not F.
+func _assert_camera_command_help_is_executable_truth(
+	live_2d_hint: String,
+	live_3d_hint: String,
+	live_4d_hint: String,
+	failures: Array
+) -> void:
+	var reset_key := LiveInputContractScript.display_key("reset")
+	if reset_key != "0":
+		failures.append("Reset View helper key should resolve from the reset action contract, got %s" % reset_key)
+	if not live_2d_hint.contains("%s Reset View" % reset_key):
+		failures.append("live 2D hint text should advertise Reset View by its real key binding")
+	if not live_2d_hint.contains("F Fit View (framing only)"):
+		failures.append("live 2D hint text should advertise the F Fit View binding it actually routes")
+	if not live_3d_hint.contains("%s Reset View" % reset_key):
+		failures.append("live 3D hint text should advertise Reset View by its real key binding")
+	if not live_3d_hint.contains("Double-click Fit View (framing only)"):
+		failures.append("live 3D hint text should advertise the double-click Fit View affordance it actually routes")
+	if live_3d_hint.contains("F Fit View"):
+		failures.append("live 3D hint text must not advertise F as Fit View; F is Rotate XZ in Live 3D")
+	if not live_3d_hint.contains("F/G Rotate XZ"):
+		failures.append("live 3D hint text should keep F/G documented as Rotate XZ")
+	if not live_4d_hint.contains("%s Reset View" % reset_key):
+		failures.append("live 4D hint text should keep advertising Reset View by its real key binding")
+	if not live_4d_hint.contains("Double-click Fit View (framing only)"):
+		failures.append("live 4D hint text should keep advertising the double-click Fit View affordance")
+	for hint in [live_2d_hint, live_3d_hint, live_4d_hint]:
+		if hint.contains("Reset View button"):
+			failures.append("live control hints must not point at a Reset View button that live modes do not present")
+
+
 func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 	var live_snapshot := {
 		"current_piece": "O3",
@@ -848,8 +1016,11 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 		"initial_speed_level": 1,
 	}
 	var summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D")
-	if summary != "Live Plain 3D | Board 6 × 10 × 6 | True 3D | Speed 1 | Seed 1337 | SCORE 45 | CLEARS 1 | O3 > L3 | LOCKED":
-		failures.append("live gameplay summary should prioritize score, clears, and piece queue, got %s" % summary)
+	if summary != "Live Plain 3D | SCORE 45 | CLEARS 1 | Active O3 | Speed 1 | LOCKED":
+		failures.append("ordinary live summary should prioritize actionable gameplay state and leave NEXT to its panel, got %s" % summary)
+	var detailed_summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D", {}, true)
+	if detailed_summary.find("Board 6 × 10 × 6") == -1 or detailed_summary.find("Seed 1337") == -1 or detailed_summary.find("O3 > L3") != -1:
+		failures.append("detailed live summary should add setup detail without duplicating the NEXT queue")
 	var feedback := ReplayHudScript.live_command_feedback_text(live_snapshot)
 	if feedback != "Piece locked":
 		failures.append("accepted hard drop should produce decisive lock feedback, got %s" % feedback)

@@ -1,7 +1,7 @@
 # Tet4D Godot Front End
 
-This Godot 4.7.1 project is the partial migration of Tet4D into a demo front
-end and future product shell.
+This Godot 4.7.2 project is Tet4D's current bounded 2D/3D/4D
+professional-core product shell.
 
 It currently supports:
 
@@ -10,10 +10,12 @@ It currently supports:
 - `Live Plain 2D`
 - `Live Plain 3D`
 - `Live Plain 4D`
+- `Design Laboratory` for deterministic scenario/style evaluation, capture,
+  scored records, and proposal export
 
-Python remains the fuller current playable/reference implementation. The
-Topology Playground stays in the Python launcher, and this shell is not yet
-feature-complete against the Python game.
+Python remains reference authority for inherited, untransferred semantics and
+retains the Topology Playground and later simulation/tooling surfaces. The
+professional core does not require feature parity with those separate tools.
 
 ## Quick Start
 
@@ -27,7 +29,7 @@ GODOT_BIN=/path/to/Godot
 ```
 
 The executable must report
-`4.7.1.stable.official.a13da4feb`. Official Linux and macOS archive URLs,
+`4.7.2.stable.official.ed1daf0bf`. Official Linux and macOS archive URLs,
 SHA-256 checksums, and executable paths are pinned in
 `config/project/policy_pack.json`.
 
@@ -43,6 +45,73 @@ Godot suite, GDExtension load, and bounded startup. Upgrade proposals must pin
 an official stable patch and checksums, audit the official migration guide,
 advance godot-cpp to a matching immutable API commit, perform a clean native
 rebuild, and update the migration record and CI together.
+
+## Design Laboratory
+
+Open `Design Laboratory` from the main menu (or press `L` while the main menu
+owns input). Choose one of the fixed-seed live, replay, or sphere-like 4D
+scenarios and two shipped or user presets. `Start comparison` freezes both
+preset snapshots and the non-style scenario identity; A/B switching then
+fails closed if gameplay, basis, camera, trace/frame, or canonical setup drifts.
+Blind labels, paired PNG capture, ordinal evaluation, free-form notes, and
+proposal nomination all preserve exact preset provenance. Shipped presets are
+read-only; `Duplicate / Edit` creates a user candidate and opens it directly
+in the existing live Presentation Designer.
+
+Evaluations, captures, and proposal bundles are written below
+`user://design_lab`. A proposal contains `preset.json`,
+`comparison_summary.json`, and `DESIGN_PROPOSAL.md`; exporting a proposal does
+not mutate production defaults. See
+`docs/plans/design_evaluation_laboratory_acceptance.md` for the comparative
+acceptance workflow.
+
+## Release Export
+
+The current supported product artifact is a macOS 13+ Universal 2 app and ZIP.
+Install the exact matching Godot 4.7.2 export templates, then run from the
+repository root:
+
+```bash
+GODOT_BIN=/path/to/Godot packaging/godot/build_macos.sh
+```
+
+The checked-in export preset selects the universal release GDExtension,
+excludes the test tree, uses bundle identifier `io.github.mousomer.tet4d`, and
+uses the repository's `0.7.5` candidate version. See
+`docs/RELEASE_INSTALLERS.md` for artifact inspection, outside-tree launch,
+platform limits, and the retained legacy Python installer path.
+
+The standalone Windows x86-64 laboratory candidate is a three-file portable
+ZIP. With the exact editor and matching official templates installed:
+
+```bash
+GODOT_BIN=/path/to/Godot \
+GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
+packaging/godot/build_windows.sh
+```
+
+The script emits
+`artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` and performs
+structural validation. Direct clean-machine Windows runtime acceptance remains
+separate and pending until recorded.
+
+The same Design Laboratory also targets Android tablets and iPadOS, both for
+landscape use with a physical keyboard. Neither is a separate touch-first
+implementation: the catalogue, scenarios, A/B model, evaluation schema, and
+nomination bundle are the Windows ones, and platform appears in an exported
+bundle only as provenance.
+
+```bash
+packaging/godot/build_android.sh --configuration-only
+packaging/godot/build_ipados.sh --configuration-only
+```
+
+Both `--configuration-only` modes need nothing beyond the pinned editor and its
+export templates, so they run on any host. The iPad output is explicitly
+configuration evidence with a reduced native descriptor, not a release
+payload. Dropping the flag builds the real artifact and needs the full platform
+toolchain: a Java SDK, the Android SDK, and the NDK for Android; full Xcode for
+iPadOS. See `docs/RELEASE_INSTALLERS.md`.
 
 ## What The Shell Does
 
@@ -128,8 +197,8 @@ accessibility, arbitrary colour settings, and topology remain deferred.
 
 ## Boundaries
 
-- Python remains the rules reference implementation.
-- Godot is the partial migration/demo front end and future product shell.
+- Python remains reference authority for inherited, untransferred semantics.
+- Godot is the current bounded professional-core product shell.
 - Native C++ powers accepted plain live sessions plus geometry/query helpers.
 - This shell does not own gameplay-rule authority, topology-rule authority, or replay-schema authority.
 

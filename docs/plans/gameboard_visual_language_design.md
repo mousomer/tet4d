@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for gameboard visual-language decisions
 Supersedes: ad hoc Live 3D readability notes in Stage 22b/22c
 Stage: 22d design authority
-Last updated: 2026-06-16
+Last updated: 2026-08-30
 
 ## 1. Decision Summary
 
@@ -142,7 +142,10 @@ Active cells:
 
 Locked cells:
 
-1. Are opaque or near-opaque.
+1. Are opaque or near-opaque. A style-requested near-opaque value is retained;
+   structural faces use a depth-writing render path so they remain readable
+   across supported camera angles instead of depending on transparent-object
+   sort order.
 2. Are darker and secondary to active cells.
 3. Remain readable as cells.
 4. Must not merge into a confusing wall.
@@ -170,6 +173,10 @@ Recommended encoding:
 4. Choose roughness/specular settings that strengthen silhouette.
 5. Use ambient fill so visible faces do not collapse to black.
 6. Do not use high transparency as the default.
+7. Treat active and locked exterior faces as depth-stable structural geometry,
+   even when a presentation style requests alpha below `1.0`. Do not apply this
+   structural depth rule globally to Ghost cells or decorative/environmental
+   transparency.
 
 ## 9. Outline/Silhouette Rules
 

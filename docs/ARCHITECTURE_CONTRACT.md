@@ -95,8 +95,16 @@ indicator, presentation-only transition, and focused basis instruction defined
 in `docs/architecture/game_safe_4d_slice_basis.md` and
 `docs/architecture/4d_presentation_interaction_architecture.md`.
 
+Across Live 2D, Live 3D, and each displayed Live-4D slice, Godot uses the one
+`LocalBoardPresentationGeometry` defined by
+`docs/architecture/canonical_local_board_presentation_geometry.md`. Semantic
+2D `[X,Y]` adapts only in presentation to `[X,Y,1]`; 3D consumes `[X,Y,Z]`;
+and 4D derives three visible signed axes from exact `B`. This owner supplies
+unit cells, centred local extent, grid segments, and boundary segments. Camera
+framing, presentation styling, `L`, and 4D slice-set layout remain separate.
+
 Live-4D renderer composition is owned by `ProjectionLayout`: canonical cells
-are mapped through exact `B`, affine centred `G_D`, one shared continuous `L`,
+are mapped through exact `B`, canonical local geometry `G_D`, one shared continuous `L`,
 and only then an anchor translation. Grid/frame scene nodes encode the same
 order as separate anchor translation and local orientation transforms. Oriented
 corner-derived collection bounds are the renderer's camera-fit input; slice
@@ -113,6 +121,16 @@ outside its ownership. Screen-right acceptance uses actual
 `Camera3D.unproject_position()` output rather than Node3D scale or basis-only
 inspection. Normal gameplay does not expose roll, while generic camera roll
 remains reusable outside that mode.
+
+The same Godot input-adaptation authority owns dimension-specific relative
+translation adapters without changing native movement legality. Live 2D
+selects signed canonical X from the currently rendered outer yaw; Live 3D
+selects signed canonical X/Z so Left/Right remain screen-horizontal and
+Forward/Back remain viewer-away/viewer-toward. Live 4D retains exact
+`B + Q(L.local_yaw)` semantics. These adapters share one effective mapping
+snapshot with input dispatch, held-input repetition, HUD guidance, and gizmo
+labels/directions. Absolute translation bypasses presentation remapping, and
+pitch never promotes gravity axis Y into ordinary movement.
 
 The Live-4D app owns presentation lifecycle orchestration. Entry, new/random
 launch, Restart Game, and Reset View restore ephemeral `B/L/V/P` defaults and
@@ -137,6 +155,35 @@ defined by `docs/architecture/ghost_piece.md`. Godot may cache, project, hide,
 and style those canonical cells, but it must not calculate drop distance,
 collision, or landing legality. Basis and camera changes remap cached
 presentation data and do not invoke native gameplay semantics.
+
+The Stage 54D-3 Hold boundary is defined by
+`docs/architecture/authoritative_hold.md` and established as `AE-0055`.
+Native live sessions exclusively own held identity, lifecycle availability,
+queue/RNG and canonical-spawn consequences, snapshots, and hashes. Godot owns
+the edge-triggered `C` input and HOLD presentation over read-only GDExtension
+queries, reusing the NEXT thumbnail model/renderer. Godot must not keep a
+parallel Hold state machine or derive legality from presentation state.
+
+Tweakable Godot presentation configuration follows
+`docs/architecture/presentation_parameter_contract.md`. The checked-in shell
+settings registry owns parameter IDs, types, defaults, ranges/options, exactly
+one semantic owner, persistence eligibility, accessibility classification, and
+runtime applicability. The semantic palette remains the colour-role owner. A
+detached versioned `PresentationProfile` composes validated registry values and
+enters the product through one bounded application seam; renderers consume it
+without reading user storage or maintaining duplicate registered defaults.
+Presentation profiles never contain current view/basis state and cannot reach
+canonical setup, native state, gameplay snapshots, traces, replays, or hashes.
+
+The live developer/designer workflow follows
+`docs/architecture/live_presentation_designer.md`. Its UI is generated from
+the same registry, edits detached B and captured A profiles, and previews only
+through the bounded app apply seam. It has no settings writer and no direct
+renderer, camera, HUD, geometry, or gameplay mutation path. Full mode owns
+interactive input; compact/hidden modes release gameplay keys while the
+remaining GUI hit area blocks pointer pass-through. Board, NEXT, established
+HOLD (`AE-0055`), basis, helper, and status viewability are shell-layout
+acceptance properties, not new semantic owners or visibility parameters.
 
 ### AI (`src/tet4d/ai/playbot`)
 

@@ -43,6 +43,13 @@ fi
 
 target="${SCONS_TARGET:-template_debug}"
 jobs="${SCONS_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 2)}"
+scons_args=(api_version=4.7 platform="$platform" target="$target" arch="$arch")
+if [[ "$platform" == "macos" && -n "${SCONS_MACOS_DEPLOYMENT_TARGET:-}" ]]; then
+  scons_args+=(macos_deployment_target="$SCONS_MACOS_DEPLOYMENT_TARGET")
+fi
+if [[ "$platform" == "windows" && -n "${SCONS_MINGW_PREFIX:-}" ]]; then
+  scons_args+=(mingw_prefix="$SCONS_MINGW_PREFIX" use_mingw=yes)
+fi
 
 cd "$CORE_DIR"
-"${SCONS_CMD[@]}" api_version=4.7 platform="$platform" target="$target" arch="$arch" -j "$jobs"
+"${SCONS_CMD[@]}" "${scons_args[@]}" -j "$jobs"

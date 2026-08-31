@@ -1,4 +1,4 @@
-name: Release Packaging
+name: Godot Release Packaging
 
 on:
   workflow_dispatch:
@@ -10,94 +10,360 @@ permissions:
   contents: write
 
 jobs:
-  package:
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            target: linux-amd64
-          - runner: windows-latest
-            target: windows-x64
-          - runner: macos-15-intel
-            target: macos-x64
-          - runner: macos-latest
-            target: macos-arm64
+  package-macos:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
-      - name: Build installer and packaged runtime smoke check (Linux)
-        if: runner.os == 'Linux'
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Resolve pinned Godot editor and export templates
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          toolchain = json.loads(
+              Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+          )["governance"]["godot_toolchain"]
+          editor = toolchain["assets"]["macos_universal"]
+          templates = toolchain["export_templates"]
+          values = {
+              "GODOT_ASSET_NAME": editor["name"],
+              "GODOT_ASSET_URL": editor["url"],
+              "GODOT_ASSET_SHA256": editor["sha256"],
+              "GODOT_ASSET_EXECUTABLE": editor["executable"],
+              "GODOT_TEMPLATE_NAME": templates["name"],
+              "GODOT_TEMPLATE_URL": templates["url"],
+              "GODOT_TEMPLATE_SHA512": templates["sha512"],
+              "GODOT_TEMPLATE_VERSION": templates["version_directory"],
+          }
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  env_file.write(f"{key}={value}\n")
+          PY
+
+      - name: Install exact Godot editor and macOS export template
+        run: |
+          mkdir -p "$RUNNER_TEMP/tet4d-godot"
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
+            "$GODOT_ASSET_URL"
+          echo "$GODOT_ASSET_SHA256  $RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
+            | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
+            -d "$RUNNER_TEMP/tet4d-godot"
+          echo "GODOT_BIN=$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE" \
+            >> "$GITHUB_ENV"
+
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            "$GODOT_TEMPLATE_URL"
+          echo "$GODOT_TEMPLATE_SHA512  $RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            | shasum -a 512 --check
+          template_dir="$HOME/Library/Application Support/Godot/export_templates/$GODOT_TEMPLATE_VERSION"
+          mkdir -p "$template_dir"
+          unzip -j -o "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            templates/macos.zip templates/version.txt -d "$template_dir"
+
+      - name: Build and validate Godot macOS release
+        run: GODOT_BIN="$GODOT_BIN" packaging/godot/build_macos.sh
+
+      - name: Upload Godot macOS release artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tet4d-macos-universal-godot
+          path: artifacts/godot/macos/Tet4D-*-macos-universal.zip
+          if-no-files-found: error
+
+  package-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Resolve pinned Windows Godot and templates
         shell: bash
         run: |
-          bash packaging/scripts/build_linux.sh
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
 
-      - name: Build installer and packaged runtime smoke check (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          bash packaging/scripts/build_macos.sh
+          toolchain = json.loads(
+              Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+          )["governance"]["godot_toolchain"]
+          editor = toolchain["assets"]["windows_x86_64"]
+          templates = toolchain["export_templates"]
+          values = {
+              "GODOT_ASSET_NAME": editor["name"],
+              "GODOT_ASSET_URL": editor["url"],
+              "GODOT_ASSET_SHA512": editor["sha512"],
+              "GODOT_ASSET_EXECUTABLE": editor["executable"],
+              "GODOT_TEMPLATE_NAME": templates["name"],
+              "GODOT_TEMPLATE_URL": templates["url"],
+              "GODOT_TEMPLATE_SHA512": templates["sha512"],
+          }
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  env_file.write(f"{key}={value}\n")
+          PY
 
-      - name: Build installer and packaged runtime smoke check (Windows)
-        if: runner.os == 'Windows'
+      - name: Install exact Windows Godot editor and templates
         shell: pwsh
         run: |
-          ./packaging/scripts/build_windows.ps1
+          New-Item -ItemType Directory -Force .godot-bin, .godot-templates | Out-Null
+          Invoke-WebRequest -Uri $env:GODOT_ASSET_URL -OutFile ".godot-bin/$env:GODOT_ASSET_NAME"
+          $editorHash = (Get-FileHash ".godot-bin/$env:GODOT_ASSET_NAME" -Algorithm SHA512).Hash.ToLower()
+          if ($editorHash -ne $env:GODOT_ASSET_SHA512) { throw "Godot editor hash mismatch" }
+          Expand-Archive ".godot-bin/$env:GODOT_ASSET_NAME" -DestinationPath .godot-bin
+          Invoke-WebRequest -Uri $env:GODOT_TEMPLATE_URL -OutFile ".godot-bin/$env:GODOT_TEMPLATE_NAME"
+          $templateHash = (Get-FileHash ".godot-bin/$env:GODOT_TEMPLATE_NAME" -Algorithm SHA512).Hash.ToLower()
+          if ($templateHash -ne $env:GODOT_TEMPLATE_SHA512) { throw "Godot template hash mismatch" }
+          Copy-Item ".godot-bin/$env:GODOT_TEMPLATE_NAME" .godot-bin/templates.zip
+          7z e .godot-bin/templates.zip "templates/windows_release_x86_64.exe" "templates/windows_debug_x86_64.exe" -o.godot-templates -y
+          "GODOT_BIN=$env:GITHUB_WORKSPACE/.godot-bin/$env:GODOT_ASSET_EXECUTABLE" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "GODOT_TEMPLATE_ROOT=$env:GITHUB_WORKSPACE/.godot-templates" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Upload Linux installer artifacts
-        if: runner.os == 'Linux'
+      - name: Build and validate Godot Windows release
+        shell: bash
+        run: |
+          SCONS_PLATFORM=windows SCONS_ARCH=x86_64 SCONS_TARGET=template_debug \
+            ./scripts/build_godot_tet4d_core.sh
+          "$GODOT_BIN" --headless --path godot/Tet4D.Godot \
+            --script tests/run_design_laboratory_tests.gd
+          GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
+            packaging/godot/build_windows.sh
+
+      - name: Smoke packaged Windows runtime
+        shell: bash
+        run: |
+          designer_exe="$(find 'artifacts/godot/windows/Tet4D Designer' -name 'Tet4DDesigner.exe' -print -quit)"
+          test -n "$designer_exe"
+          "$designer_exe" --headless --quit-after 5
+
+      - name: Upload Godot Windows release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-${{ matrix.target }}-installer
-          path: artifacts/installers/*.deb
+          name: tet4d-designer-windows-x86_64-godot
+          path: artifacts/godot/windows/Tet4D-Designer-*-windows-x86_64.zip
           if-no-files-found: error
 
-      - name: Upload macOS installer artifacts
-        if: runner.os == 'macOS'
+  package-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Resolve pinned Linux Godot and templates
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          toolchain = json.loads(
+              Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+          )["governance"]["godot_toolchain"]
+          editor = toolchain["assets"]["linux_x86_64"]
+          templates = toolchain["export_templates"]
+          values = {
+              "GODOT_ASSET_NAME": editor["name"],
+              "GODOT_ASSET_URL": editor["url"],
+              "GODOT_ASSET_SHA256": editor["sha256"],
+              "GODOT_ASSET_EXECUTABLE": editor["executable"],
+              "GODOT_TEMPLATE_NAME": templates["name"],
+              "GODOT_TEMPLATE_URL": templates["url"],
+              "GODOT_TEMPLATE_SHA512": templates["sha512"],
+              "GODOT_ANDROID_RELEASE_MEMBER": templates["android_release_member"],
+              "GODOT_ANDROID_DEBUG_MEMBER": templates["android_debug_member"],
+              "GODOT_ANDROID_SOURCE_MEMBER": templates["android_source_member"],
+          }
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  env_file.write(f"{key}={value}\n")
+          PY
+
+      - name: Install exact Godot editor and Android export templates
+        run: |
+          mkdir -p "$RUNNER_TEMP/tet4d-godot" .godot-templates
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" "$GODOT_ASSET_URL"
+          echo "$GODOT_ASSET_SHA256  $RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" -d "$RUNNER_TEMP/tet4d-godot"
+          chmod +x "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE"
+          echo "GODOT_BIN=$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE" >> "$GITHUB_ENV"
+
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" "$GODOT_TEMPLATE_URL"
+          echo "$GODOT_TEMPLATE_SHA512  $RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" | sha512sum --check
+          unzip -j -o "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            "$GODOT_ANDROID_RELEASE_MEMBER" "$GODOT_ANDROID_DEBUG_MEMBER" \
+            "$GODOT_ANDROID_SOURCE_MEMBER" -d .godot-templates
+          echo "GODOT_TEMPLATE_ROOT=$GITHUB_WORKSPACE/.godot-templates" >> "$GITHUB_ENV"
+
+      - name: Resolve Android NDK
+        run: |
+          ndk_root="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -n 1)"
+          echo "ANDROID_NDK_ROOT=$ndk_root" >> "$GITHUB_ENV"
+
+      - name: Verify shared Design Laboratory semantics
+        run: |
+          "$GODOT_BIN" --headless --path godot/Tet4D.Godot \
+            --script tests/run_cross_platform_design_tests.gd
+
+      - name: Build and validate the Android tablet Designer
+        run: GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
+          packaging/godot/build_android.sh
+
+      - name: Upload Android Designer artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-${{ matrix.target }}-installer
-          path: artifacts/installers/*.dmg
+          name: tet4d-designer-android-arm64-godot
+          path: artifacts/godot/android/Tet4D-Designer-*-android-arm64.apk
           if-no-files-found: error
 
-      - name: Upload Windows installer artifacts
-        if: runner.os == 'Windows'
+  package-ipados:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Resolve pinned Godot editor and iOS export template
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          toolchain = json.loads(
+              Path("config/project/policy_pack.json").read_text(encoding="utf-8")
+          )["governance"]["godot_toolchain"]
+          editor = toolchain["assets"]["macos_universal"]
+          templates = toolchain["export_templates"]
+          values = {
+              "GODOT_ASSET_NAME": editor["name"],
+              "GODOT_ASSET_URL": editor["url"],
+              "GODOT_ASSET_SHA256": editor["sha256"],
+              "GODOT_ASSET_EXECUTABLE": editor["executable"],
+              "GODOT_TEMPLATE_NAME": templates["name"],
+              "GODOT_TEMPLATE_URL": templates["url"],
+              "GODOT_TEMPLATE_SHA512": templates["sha512"],
+              "GODOT_IOS_MEMBER": templates["ios_member"],
+          }
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
+              for key, value in values.items():
+                  env_file.write(f"{key}={value}\n")
+          PY
+
+      - name: Install exact Godot editor and iOS export template
+        run: |
+          mkdir -p "$RUNNER_TEMP/tet4d-godot" .godot-templates
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" "$GODOT_ASSET_URL"
+          echo "$GODOT_ASSET_SHA256  $RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" -d "$RUNNER_TEMP/tet4d-godot"
+          echo "GODOT_BIN=$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE" >> "$GITHUB_ENV"
+
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" "$GODOT_TEMPLATE_URL"
+          echo "$GODOT_TEMPLATE_SHA512  $RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" | shasum -a 512 --check
+          unzip -j -o "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
+            "$GODOT_IOS_MEMBER" -d .godot-templates
+          echo "GODOT_TEMPLATE_ROOT=$GITHUB_WORKSPACE/.godot-templates" >> "$GITHUB_ENV"
+
+      - name: Verify shared Design Laboratory semantics
+        run: |
+          "$GODOT_BIN" --headless --path godot/Tet4D.Godot \
+            --script tests/run_cross_platform_design_tests.gd
+
+      # macOS runners ship full Xcode, so this exercises the real build path:
+      # the iOS GDExtension is cross-compiled and the exported project is
+      # compiled unsigned for the simulator.
+      - name: Build and validate the iPadOS Designer
+        run: GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
+          packaging/godot/build_ipados.sh
+
+      - name: Upload iPadOS Xcode project artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-${{ matrix.target }}-installer
-          path: artifacts/installers/*.msi
+          name: tet4d-designer-ipados-xcodeproject
+          path: artifacts/godot/ipad/Tet4D-Designer-*-ipados-xcodeproject.zip
           if-no-files-found: error
 
   publish-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: package
+    needs: [package-macos, package-windows, package-android, package-ipados]
     runs-on: ubuntu-latest
     steps:
-      - name: Download packaged installers
+      - name: Download packaged release
         uses: actions/download-artifact@v8
         with:
-          pattern: tet4d-*-installer
+          name: tet4d-macos-universal-godot
           path: artifacts/release
-          merge-multiple: true
 
-      - name: Publish GitHub release assets
+      - name: Download Windows Designer release
+        uses: actions/download-artifact@v8
+        with:
+          name: tet4d-designer-windows-x86_64-godot
+          path: artifacts/release
+
+      - name: Publish GitHub release asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
-          title="tet4d ${tag#v}"
-          assets=(
-            artifacts/release/*.deb
-            artifacts/release/*.dmg
-            artifacts/release/*.msi
-          )
-          gh release view "${tag}" --repo "${GH_REPO}" >/dev/null 2>&1 || \
-            gh release create "${tag}" --repo "${GH_REPO}" --title "${title}" --generate-notes
-          gh release upload "${tag}" --repo "${GH_REPO}" "${assets[@]}" --clobber
+          title="Tet4D ${tag#v}"
+          gh release view "$tag" --repo "$GH_REPO" >/dev/null 2>&1 || \
+            gh release create "$tag" --repo "$GH_REPO" --title "$title" --generate-notes
+          gh release upload "$tag" --repo "$GH_REPO" \
+            artifacts/release/Tet4D-*-macos-universal.zip --clobber
+          gh release upload "$tag" --repo "$GH_REPO" \
+            artifacts/release/Tet4D-Designer-*-windows-x86_64.zip --clobber

@@ -10,15 +10,14 @@ const SIDE := "side"
 const BACK := "back"
 const TOP := "top"
 const OPPOSITE_ISO := "opposite_iso"
-const CUSTOM := "custom"
 
 const PRESETS := {
-	ISO: {"id": ISO, "label": "Iso", "yaw": 0.5585053606381855, "pitch": 0.4537856055185257, "zoom": 1.0, "pan": Vector3.ZERO},
-	FRONT: {"id": FRONT, "label": "Front", "yaw": 0.0, "pitch": 0.0, "zoom": 1.0, "pan": Vector3.ZERO},
-	SIDE: {"id": SIDE, "label": "Side", "yaw": PI * 0.5, "pitch": 0.0, "zoom": 1.0, "pan": Vector3.ZERO},
-	BACK: {"id": BACK, "label": "Back", "yaw": PI, "pitch": 0.0, "zoom": 1.0, "pan": Vector3.ZERO},
-	TOP: {"id": TOP, "label": "Top", "yaw": 0.0, "pitch": 1.0471975511965976, "zoom": 1.0, "pan": Vector3.ZERO},
-	OPPOSITE_ISO: {"id": OPPOSITE_ISO, "label": "Opposite Iso", "yaw": -2.5830872929516078, "pitch": 0.4537856055185257, "zoom": 1.0, "pan": Vector3.ZERO},
+	ISO: {"id": ISO, "label": "Iso", "yaw": 0.5585053606381855, "pitch": 0.4537856055185257},
+	FRONT: {"id": FRONT, "label": "Front", "yaw": 0.0, "pitch": 0.0},
+	SIDE: {"id": SIDE, "label": "Side", "yaw": PI * 0.5, "pitch": 0.0},
+	BACK: {"id": BACK, "label": "Back", "yaw": PI, "pitch": 0.0},
+	TOP: {"id": TOP, "label": "Top", "yaw": 0.0, "pitch": 1.0471975511965976},
+	OPPOSITE_ISO: {"id": OPPOSITE_ISO, "label": "Opposite Iso", "yaw": -2.5830872929516078, "pitch": 0.4537856055185257},
 }
 
 
@@ -27,13 +26,11 @@ static func ids() -> Array:
 
 
 static func definition(id: String) -> Dictionary:
-	return PRESETS.get(id, PRESETS[ISO]).duplicate(true)
+	return PRESETS.get(id, {}).duplicate(true)
 
 
 static func label(id: String) -> String:
-	if id == CUSTOM:
-		return "Custom"
-	return str(definition(id).get("label", "Iso"))
+	return str(definition(id).get("label", id))
 
 
 static func is_known(id: String) -> bool:

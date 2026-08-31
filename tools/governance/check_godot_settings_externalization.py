@@ -201,6 +201,7 @@ def _validate_runtime_sources(
         return
 
     category_ids = {setting_id.split(".", 1)[0] for setting_id in settings_by_id}
+    non_setting_tokens = set(contract.get("runtime_non_setting_dotted_tokens", []))
     forbid_defaults = bool(contract.get("forbid_runtime_default_duplicates", False))
     for path in sorted(source_root.rglob("*.gd")):
         source = path.read_text(encoding="utf-8")
@@ -210,6 +211,7 @@ def _validate_runtime_sources(
             if (
                 setting_id.split(".", 1)[0] in category_ids
                 and setting_id not in settings_by_id
+                and setting_id not in non_setting_tokens
             ):
                 issues.append(
                     f"{relative_path} references unknown setting id {setting_id}"

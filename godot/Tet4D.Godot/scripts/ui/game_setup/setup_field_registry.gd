@@ -122,9 +122,9 @@ const SESSION_ENVELOPE_KEYS := [
 ]
 
 
-static func field_data_for_mode(mode: String) -> Array:
+static func field_data_for_mode(mode: String, declarations: Array = INVARIANT_FIELDS) -> Array:
 	var fields: Array = []
-	for declared in INVARIANT_FIELDS:
+	for declared in declarations:
 		var data: Dictionary = declared as Dictionary
 		if not (data.get("modes", []) as Array).has(mode):
 			continue
@@ -191,17 +191,14 @@ static func session_identity_keys() -> Array:
 	return keys
 
 
-static func validate() -> Array: # tet4d-semantic-boundary: allow diagnostic-presentation
+static func validate(declarations: Array = INVARIANT_FIELDS) -> Array: # tet4d-semantic-boundary: allow diagnostic-presentation
 	var failures: Array = []
 	var known_modes: Array = GameSetupSpecScript.modes()
-	for declared in INVARIANT_FIELDS:
-		var declared_modes: Array = (declared as Dictionary).get("modes", []) as Array
-		for mode in declared_modes:
-			if not known_modes.has(str(mode)):
-				failures.append("%s: unknown declared mode %s" % [str((declared as Dictionary).get("id", "")), str(mode)])
+	for declared in declarations:
+		failures.append_array(SetupFieldSpecScript.validate_declaration(declared as Dictionary, known_modes))
 	for mode in known_modes:
 		var seen_ids: Array = []
-		for spec_data in field_data_for_mode(mode):
+		for spec_data in field_data_for_mode(mode, declarations):
 			var field_id := str((spec_data as Dictionary).get("id", ""))
 			if seen_ids.has(field_id):
 				failures.append("%s: duplicate setup field id in mode %s" % [field_id, mode])

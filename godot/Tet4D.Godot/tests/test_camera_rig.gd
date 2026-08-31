@@ -19,10 +19,10 @@ const EXPECTED_SAFE_PITCH_MAX_DEG := 86.240113
 
 func run() -> Array:
 	var failures: Array = []
-	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_4D_FIT_MARGIN < 1.3:
+	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3:
 		failures.append("live entry fit margins should preserve visible breathing room around the board")
-	if CameraRigScript.LIVE_4D_FIT_MARGIN >= 1.4:
-		failures.append("live 4D entry fit should keep the W-slice matrix close enough to inspect")
+	if CameraRigScript.LIVE_4D_FIT_MARGIN < 1.04 or CameraRigScript.LIVE_4D_FIT_MARGIN > 1.10:
+		failures.append("live 4D entry fit must add only modest clearance beyond required padded bounds")
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return ["camera rig test requires SceneTree"]
@@ -44,7 +44,7 @@ func run() -> Array:
 	rig.set_world_presentation_root(presentation_root)
 	await tree.process_frame
 
-	rig.fit_bounds({"ok": true, "min": Vector3(-2.0, -2.5, -1.5), "max": Vector3(8.0, 2.5, 1.5)}, 1.14)
+	rig.fit_current_bounds({"ok": true, "min": Vector3(-2.0, -2.5, -1.5), "max": Vector3(8.0, 2.5, 1.5)}, 1.14)
 	_assert_vector(failures, rig._current_focus, Vector3(3.0, 0.0, 0.0), "fit snaps current focus")
 	_assert_float(failures, rig._current_yaw, CameraRigScript.PYTHON_DISPLAY_YAW_RAD, "fit uses Python display yaw")
 	_assert_float(failures, rig._current_pitch, CameraRigScript.PYTHON_DISPLAY_PITCH_RAD, "fit uses Python display pitch")
@@ -55,13 +55,10 @@ func run() -> Array:
 	if bool(rig.presentation_snapshot().get("horizontal_reflection_active", false)) or presentation_root.transform != Transform3D.IDENTITY:
 		failures.append("generic replay fit must leave the world presentation unreflected")
 
-	rig.fit_bounds(
+	rig.establish_outer_view(CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD, 0.0, false)
+	rig.fit_current_bounds(
 		{"ok": true, "min": Vector3(-2.0, -2.5, -1.5), "max": Vector3(8.0, 2.5, 1.5)},
-		1.2,
-		CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD,
-		CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD,
-		CameraPresetScript.ISO,
-		"above exterior"
+		1.2
 	)
 	_assert_float(failures, rig._current_yaw, CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD, "live 3D fit uses canonical yaw")
 	_assert_float(failures, rig._current_pitch, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD, "live 3D fit uses above-board pitch")
@@ -70,19 +67,16 @@ func run() -> Array:
 	if camera.global_position.y <= rig._current_focus.y:
 		failures.append("live 3D camera should sit above the fit focus")
 	var status := rig.view_status_text()
-	if status.find("Iso") == -1:
-		failures.append("live 3D camera status should name the canonical preset")
-	if status.find("above") == -1 or status.find("fit OK") == -1 or status.find("ortho") == -1:
+	if status.find("Iso") != -1 or status.find("Custom") != -1:
+		failures.append("live 3D view status must not claim persistent action identity")
+	if status.find("above") == -1 or status.find("fit OK") == -1 or status.find("ortho") == -1 or not status.begins_with("View:"):
 		failures.append("live 3D camera status should show orthographic above-board fit state: %s" % status)
+	_assert_live_2d_3d_relative_projection(failures, rig)
 
-	rig.fit_bounds(
+	rig.establish_outer_view(CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD, 0.0, true)
+	rig.fit_current_bounds(
 		{"ok": true, "min": Vector3(-2.5, -5.0, -2.0), "max": Vector3(23.5, 6.72, 2.0)},
-		1.34,
-		CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
-		CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
-		CameraPresetScript.ISO,
-		"fitted W slices",
-		true
+		1.34
 	)
 	_assert_float(failures, rig._current_yaw, CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD, "live 4D fit uses W-slice yaw")
 	_assert_float(failures, rig._current_pitch, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD, "live 4D fit uses W-slice pitch")
@@ -99,8 +93,8 @@ func run() -> Array:
 	_assert_live_4d_fitted_view_contract(failures, rig, presentation_root)
 	_assert_live_4d_signed_correspondence(failures, rig, presentation_root)
 	status = rig.view_status_text()
-	if status.find("Iso") == -1 or status.find("fitted W slices") == -1 or status.find("size") == -1 or status.find("zoom") == -1:
-		failures.append("live 4D camera status should name the fitted W-slice preset and zoom diagnostics: %s" % status)
+	if status.find("Iso") != -1 or status.find("Custom") != -1 or status.find("size") == -1 or status.find("zoom") == -1:
+		failures.append("live 4D view status should expose framing diagnostics without action identity: %s" % status)
 	var fitted_size := camera.size
 	rig.zoom(-1.0)
 	if camera.size >= fitted_size:
@@ -123,20 +117,17 @@ func run() -> Array:
 		failures.append("generic camera roll nudge should remain available for free inspection")
 	if rig.view_status_text().find("roll") == -1:
 		failures.append("live 4D camera status should expose roll diagnostics")
-	_assert_pan_and_preset_reflection_contract(failures, rig, presentation_root)
-	rig.fit_bounds(
+	_assert_pan_and_framing_reflection_contract(failures, rig, presentation_root)
+	var orientation_before_fit := rig.presentation_snapshot()
+	rig.fit_current_bounds(
 		{"ok": true, "min": Vector3(-2.5, -5.0, -2.0), "max": Vector3(23.5, 6.72, 2.0)},
-		1.34,
-		CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
-		CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
-		CameraPresetScript.ISO,
-		"fitted W slices",
-		true
+		1.34
 	)
-	if absf(camera.size - fitted_size) > 0.001:
-		failures.append("live 4D Fit View should restore fitted orthographic size, got %.3f expected %.3f" % [camera.size, fitted_size])
-	if absf(rig._current_roll) > 0.001:
-		failures.append("live 4D Fit View should reset camera roll")
+	if not is_equal_approx(float(rig.presentation_snapshot().get("zoom_multiplier", 0.0)), 1.0):
+		failures.append("live 4D Fit View should restore neutral fitted zoom")
+	for key in ["current_yaw", "current_pitch", "current_roll", "projection", "horizontal_reflection_active"]:
+		if rig.presentation_snapshot().get(key) != orientation_before_fit.get(key):
+			failures.append("live 4D Fit View must preserve %s" % key)
 	if rig.view_status_text().find("fit OK") == -1:
 		failures.append("live 4D Fit View should restore fitted state")
 	var focus_before: Vector3 = rig._target_focus
@@ -144,25 +135,21 @@ func run() -> Array:
 	if rig._target_focus == focus_before or rig.view_status_text().find("matrix scroll") == -1:
 		failures.append("4D matrix scrolling should pan presentation focus and report its view state")
 	var yaw_before_preset := rig._current_yaw
-	if not rig.apply_preset(CameraPresetScript.BACK):
-		failures.append("generic Back camera preset should be accepted")
-	elif rig.current_preset_id() != CameraPresetScript.BACK or absf(rig._current_yaw - PI) > 0.001:
-		failures.append("generic Back preset should retain reusable non-Live outer yaw")
+	if not rig.apply_outer_view_action(CameraPresetScript.BACK):
+		failures.append("generic Back view action should be accepted")
+	elif absf(rig._current_yaw - PI) > 0.001:
+		failures.append("generic Back view action should establish reusable non-Live outer yaw")
 	if bool(rig.presentation_snapshot().get("horizontal_reflection_active", false)) or presentation_root.transform != Transform3D.IDENTITY:
 		failures.append("generic camera presets must not retain Live-4D presentation reflection")
-	if rig.apply_preset("unknown"):
-		failures.append("unknown camera preset should be rejected")
+	if rig.apply_outer_view_action("unknown"):
+		failures.append("unknown view action should be rejected")
 	if absf(yaw_before_preset - rig._current_yaw) < 0.001:
 		failures.append("Back camera preset should be meaningfully distinct from the fitted view")
 	rig.set_presentation_preferences(1.5, true, 0.0)
-	rig.fit_bounds(
+	rig.establish_outer_view(CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD, 0.0, true)
+	rig.fit_current_bounds(
 		{"ok": true, "min": Vector3(-2.5, -5.0, -2.0), "max": Vector3(23.5, 6.72, 2.0)},
-		1.34,
-		CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD,
-		CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD,
-		CameraPresetScript.ISO,
-		"fitted W slices",
-		true
+		1.34
 	)
 	rig.pan_focus(Vector3(2.0, -1.0, 0.0))
 	rig.zoom(-1.0)
@@ -177,6 +164,8 @@ func run() -> Array:
 		failures.append("presentation teardown must restore the canonical orthographic projection")
 	if not is_equal_approx(float(cleared.get("sensitivity_factor", 0.0)), 1.5) or not bool(cleared.get("invert_y", false)) or not is_equal_approx(float(cleared.get("interpolation_scale", 1.0)), 0.0):
 		failures.append("presentation teardown must preserve camera and reduced-motion preferences")
+	_assert_state_ownership_seams(failures, rig, camera)
+	_assert_retired_identity_machinery(failures)
 	_assert_orientation_gizmo_visible_axes_only(failures, rig)
 
 	viewport.queue_free()
@@ -334,6 +323,56 @@ func _assert_live_4d_signed_correspondence(failures: Array, rig, presentation_ro
 					failures.append("%s production away depth %.9f must match residual-yaw helper %.9f" % [label, away_depth, analytical_depth])
 
 
+func _assert_live_2d_3d_relative_projection(failures: Array, rig) -> void:
+	var focus: Vector3 = rig._current_focus
+	for yaw in [0.0, deg_to_rad(100.0), PI, deg_to_rad(-100.0)]:
+		rig.establish_outer_view(yaw, 0.0, 0.0, false)
+		var mapping_2d = ControlFrameMappingScript.for_2d(rig.control_frame_yaw())
+		var right_command_2d: String = mapping_2d.translation_command("move_right", "relative")
+		var right_delta_2d := Vector3.RIGHT if right_command_2d == "move_right" else Vector3.LEFT
+		var origin_screen_2d: Vector2 = rig.project_world_point(focus)
+		var destination_screen_2d: Vector2 = rig.project_world_point(focus + right_delta_2d)
+		if destination_screen_2d.x - origin_screen_2d.x <= SCREEN_RIGHT_TOLERANCE_PX:
+			failures.append("2D Relative Right must increase actual screen X at yaw %.0f" % rad_to_deg(yaw))
+		if mapping_2d.translation_command("move_right", "absolute") != "move_right":
+			failures.append("2D Absolute Right must remain canonical at yaw %.0f" % rad_to_deg(yaw))
+	for yaw in [0.0, PI * 0.5, PI, -PI * 0.5]:
+		for pitch in [0.0, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD, deg_to_rad(60.0)]:
+			rig.establish_outer_view(yaw, pitch, 0.0, false)
+			var mapping_3d = ControlFrameMappingScript.for_3d(rig.control_frame_yaw())
+			var effective: Dictionary = mapping_3d.effective_translation_snapshot("relative")
+			var commands: Dictionary = effective.get("translation_commands", {})
+			var right_command := str(commands.get("right", ""))
+			var forward_command := str(commands.get("forward", ""))
+			var right_delta := _canonical_world_delta(right_command)
+			var forward_delta := _canonical_world_delta(forward_command)
+			var origin_screen: Vector2 = rig.project_world_point(focus)
+			var right_screen: Vector2 = rig.project_world_point(focus + right_delta)
+			if right_screen.x - origin_screen.x <= SCREEN_RIGHT_TOLERANCE_PX:
+				failures.append("3D Relative Right must increase actual screen X at yaw %.0f pitch %.0f" % [rad_to_deg(yaw), rad_to_deg(pitch)])
+			var forward_origin_view: Vector3 = rig.camera_space_point(focus)
+			var forward_destination_view: Vector3 = rig.camera_space_point(focus + forward_delta)
+			if forward_origin_view.z - forward_destination_view.z <= AWAY_DEPTH_TOLERANCE:
+				failures.append("3D Relative Forward must recede at yaw %.0f pitch %.0f" % [rad_to_deg(yaw), rad_to_deg(pitch)])
+			rig.set_control_frame_mapping(effective)
+			var gizmo := rig.get_node_or_null("OrientationGizmo") as Node3D
+			var horizontal_arrow: MeshInstance3D = gizmo.get_node_or_null("HorizontalArrow") as MeshInstance3D if gizmo != null else null
+			var depth_arrow: MeshInstance3D = gizmo.get_node_or_null("DepthArrow") as MeshInstance3D if gizmo != null else null
+			if horizontal_arrow == null or horizontal_arrow.position.normalized().distance_to(right_delta) > 0.001 or str(horizontal_arrow.get_meta("signed_axis", "")) != str(effective.get("horizontal_axis", "")):
+				failures.append("3D horizontal gizmo must share the effective Right mapping at yaw %.0f" % rad_to_deg(yaw))
+			if depth_arrow == null or depth_arrow.position.normalized().distance_to(forward_delta) > 0.001 or str(depth_arrow.get_meta("signed_axis", "")) != str(effective.get("depth_axis", "")):
+				failures.append("3D depth gizmo must share the effective Forward mapping at yaw %.0f" % rad_to_deg(yaw))
+	var current_yaw_before: float = rig._current_yaw
+	var target_yaw_before: float = rig._target_yaw
+	rig._current_yaw = 0.0
+	rig._target_yaw = PI
+	if not is_equal_approx(rig.control_frame_yaw(), 0.0):
+		failures.append("control-frame resolution must consume rendered current yaw during interpolation")
+	rig._current_yaw = current_yaw_before
+	rig._target_yaw = target_yaw_before
+	rig._update_camera()
+
+
 func _mapped_displayed_points(mapper, orientation, command: String) -> Array:
 	var delta := _canonical_delta(command)
 	var destination := LIVE_4D_INTERIOR_POINT.duplicate()
@@ -366,18 +405,42 @@ func _assert_reflected_fit_enclosure(failures: Array, rig, presentation_root: No
 					return
 
 
-func _assert_pan_and_preset_reflection_contract(failures: Array, rig, presentation_root: Node3D) -> void:
+func _assert_pan_and_framing_reflection_contract(failures: Array, rig, presentation_root: Node3D) -> void:
 	var probe_world := presentation_root.to_global(Vector3(3.0, 0.0, 0.0))
 	var before_pan: Vector2 = rig.project_world_point(probe_world)
 	rig.pan_screen(Vector2(12.0, 0.0))
 	var after_pan: Vector2 = rig.project_world_point(probe_world)
 	if after_pan.x - before_pan.x <= SCREEN_RIGHT_TOLERANCE_PX:
 		failures.append("right-drag-right pan must continue translating the collection screen-right")
-	for preset_id in [CameraPresetScript.ISO, CameraPresetScript.SIDE, CameraPresetScript.TOP]:
-		if not rig.apply_framing_preset(preset_id):
-			failures.append("Live-4D framing preset %s should remain accepted" % preset_id)
-		elif not bool(rig.presentation_snapshot().get("horizontal_reflection_active", false)) or presentation_root.transform.basis.determinant() >= 0.0:
-			failures.append("Live-4D framing preset %s must retain the fixed presentation reflection" % preset_id)
+	rig.restore_fitted_framing()
+	if not bool(rig.presentation_snapshot().get("horizontal_reflection_active", false)) or presentation_root.transform.basis.determinant() >= 0.0:
+		failures.append("ID-independent framing restoration must retain the fixed presentation reflection")
+
+
+func _assert_state_ownership_seams(failures: Array, rig, camera: Camera3D) -> void:
+	rig.pan_focus(Vector3(3.0, -2.0, 1.0))
+	rig.zoom(-1.0)
+	var framing_before: Dictionary = rig.presentation_snapshot()
+	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
+	rig.establish_outer_view(1.1, 0.2, -0.3, true)
+	for key in ["target_focus", "current_focus", "fit_focus", "target_distance", "current_distance", "zoom_multiplier", "orthographic_size"]:
+		if rig.presentation_snapshot().get(key) != framing_before.get(key):
+			failures.append("establish_outer_view must not change framing field %s" % key)
+	if camera.projection != Camera3D.PROJECTION_PERSPECTIVE:
+		failures.append("establish_outer_view must not change projection")
+	var orientation_before: Dictionary = rig.presentation_snapshot()
+	rig.fit_current_bounds({"ok": true, "min": Vector3(-4.0, -3.0, -2.0), "max": Vector3(6.0, 7.0, 2.0)}, 1.2)
+	for key in ["current_yaw", "current_pitch", "current_roll", "projection", "horizontal_reflection_active"]:
+		if rig.presentation_snapshot().get(key) != orientation_before.get(key):
+			failures.append("fit_current_bounds must not change orientation field %s" % key)
+
+
+func _assert_retired_identity_machinery(failures: Array) -> void:
+	var rig_source := FileAccess.get_file_as_string("res://scripts/rendering/camera_rig.gd")
+	var test_source := FileAccess.get_file_as_string("res://tests/test_camera_rig.gd")
+	for forbidden in ["frame_" + "board(", "_current_view_" + "preset", "_mark_custom_" + "view", "current_" + "preset_id", "apply_framing_" + "preset"]:
+		if rig_source.find(forbidden) != -1 or test_source.find(forbidden) != -1:
+			failures.append("retired camera identity/framing machinery remains: %s" % forbidden)
 
 
 func _canonical_delta(command: String) -> Array:
@@ -387,6 +450,15 @@ func _canonical_delta(command: String) -> Array:
 		"move_z_neg": return [0, 0, -1, 0]
 		"move_z_pos": return [0, 0, 1, 0]
 		_: return [0, 0, 0, 0]
+
+
+func _canonical_world_delta(command: String) -> Vector3:
+	match command:
+		"move_x_neg": return Vector3.LEFT
+		"move_x_pos": return Vector3.RIGHT
+		"move_z_neg": return Vector3.FORWARD
+		"move_z_pos": return Vector3.BACK
+		_: return Vector3.ZERO
 
 
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:

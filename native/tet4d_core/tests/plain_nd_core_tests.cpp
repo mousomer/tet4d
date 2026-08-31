@@ -49,6 +49,38 @@ void require_production_shape(
 	require(match != catalogue.end(), "ND preview must be an exact production-catalogue shape");
 }
 
+void test_production_piece_catalog_registry_is_complete() {
+	const auto &catalogs = tet4d::core::production_piece_catalogs_nd();
+	require(!catalogs.empty(), "production ND piece-set registry must not be empty");
+	std::vector<std::string> seen_catalogs;
+	bool saw_3d = false;
+	bool saw_4d = false;
+	for (const tet4d::core::ProductionPieceSetND &catalog : catalogs) {
+		require(catalog.dimension == 3 || catalog.dimension == 4, "production ND catalogue rank must be 3 or 4");
+		require(!catalog.piece_set_id.empty() && !catalog.pieces.empty(), "production ND catalogue identity and pieces are required");
+		const std::string key = std::to_string(catalog.dimension) + ":" + catalog.piece_set_id;
+		require(std::find(seen_catalogs.begin(), seen_catalogs.end(), key) == seen_catalogs.end(), "production ND catalogue keys must be unique");
+		seen_catalogs.push_back(key);
+		saw_3d = saw_3d || catalog.dimension == 3;
+		saw_4d = saw_4d || catalog.dimension == 4;
+		const std::vector<tet4d::core::PieceShapeND> selected =
+				tet4d::core::plain_piece_catalog_nd(catalog.dimension, catalog.piece_set_id);
+		require(selected.size() == catalog.pieces.size(), "session catalogue lookup must consume the enumerated production registry");
+		std::vector<std::string> seen_pieces;
+		for (std::size_t index = 0; index < catalog.pieces.size(); ++index) {
+			const tet4d::core::PieceShapeND &piece = catalog.pieces[index];
+			require(same_shape(piece, selected[index]), "enumerated and session production geometry must match exactly");
+			require(!piece.name.empty() && !piece.blocks.empty(), "production piece identity and cells are required");
+			require(std::find(seen_pieces.begin(), seen_pieces.end(), piece.name) == seen_pieces.end(), "piece identities must be unique within a production set");
+			seen_pieces.push_back(piece.name);
+			for (const tet4d::core::CoordND &cell : piece.blocks) {
+				require(cell.dimension() == catalog.dimension, "production piece cells must retain the catalogue rank");
+			}
+		}
+	}
+	require(saw_3d && saw_4d, "production ND registry must enumerate both Live 3D and Live 4D");
+}
+
 tet4d::core::PlainGameSetup setup_nd(
 		int dimension,
 		const std::vector<int> &shape,
@@ -760,6 +792,67 @@ void test_live_plain_4d_session() {
 	require(session.snapshot_json().find("\"game_over\":false") != std::string::npos, "live 4D reset should clear game_over");
 }
 
+void test_authoritative_hold_across_production_nd_registry() {
+	const std::vector<tet4d::core::PlainGameSetup> setups = {
+		setup_nd(3, {8, 16, 8}, "embedded_2d", 1337, 1),
+		setup_nd(3, {10, 24, 10}, "native_3d", 1337, 1),
+		setup_nd(4, {8, 16, 5, 4}, "embedded_2d", 1337, 1),
+		setup_nd(4, {8, 16, 5, 8}, "embedded_3d", 1337, 1),
+		setup_nd(4, {8, 16, 8, 8}, "standard_4d_5", 1337, 1),
+	};
+	for (const auto &setup : setups) {
+		const int dimension = setup.mode == "live_4d" ? 4 : 3;
+		tet4d::core::PlainNDSession session(dimension);
+		require(session.configure(setup), "production ND Hold setup must configure");
+		require(!session.held_piece_shape().has_value() && session.hold_available(), "new ND session Hold must be empty and available");
+		const std::string initial_snapshot = session.snapshot_json();
+		const auto expected_active_name_begin = initial_snapshot.find("\"current_piece\":\"") + 17;
+		const auto expected_active_name_end = initial_snapshot.find('"', expected_active_name_begin);
+		const std::string expected_held = initial_snapshot.substr(expected_active_name_begin, expected_active_name_end - expected_active_name_begin);
+		const auto first_next = session.peek_next_piece_shape();
+		const std::string initial_hash = session.state_hash();
+		require(session.apply_command("hold").find("last_command_status=accepted") != std::string::npos, "first ND Hold must accept");
+		require(session.held_piece_shape().has_value() && session.held_piece_shape()->name == expected_held, "first ND Hold must store exact active production identity");
+		require(session.snapshot_json().find("\"current_piece\":\"" + first_next.name + "\"") != std::string::npos, "first ND Hold must activate exact former NEXT");
+		require(!session.hold_available() && session.state_hash() != initial_hash, "first ND Hold must change hashed held state and availability");
+		const auto following = session.peek_next_piece_shape();
+		const std::string rejected_hash = session.state_hash();
+		const auto held = session.held_piece_shape();
+		(void) session.hold_available();
+		(void) session.held_piece_shape();
+		require(session.state_hash() == rejected_hash, "ND Hold queries must preserve hash and RNG");
+		require(session.apply_command("hold").find("last_command_status=rejected") != std::string::npos, "repeated ND Hold must reject");
+		require(session.state_hash() == rejected_hash && same_shape(session.peek_next_piece_shape(), following), "rejected ND Hold must preserve hash and future queue");
+		require(session.held_piece_shape().has_value() && same_shape(*session.held_piece_shape(), *held), "rejected ND Hold must preserve held geometry");
+
+		session.apply_command("hard_drop");
+		require(session.hold_available(), "successful ND lock/spawn must reset Hold eligibility");
+		const auto occupied_next = session.peek_next_piece_shape();
+		session.apply_command("move_x_pos");
+		session.apply_command(dimension == 4 ? "rotate_xw_pos" : "rotate_xz_pos");
+		require(session.apply_command("hold").find("last_command_status=accepted") != std::string::npos, "occupied ND Hold must accept");
+		require(session.snapshot_json().find("\"current_piece\":\"" + expected_held + "\"") != std::string::npos, "occupied ND Hold must retrieve original identity");
+		require(session.snapshot_json().find("\"last_rotation_plane\":\"none\"") != std::string::npos, "retrieved ND piece must use canonical orientation, not outgoing transform");
+		require(same_shape(session.peek_next_piece_shape(), occupied_next), "occupied ND Hold must not consume queue or RNG");
+
+		const tet4d::core::PlainNDSession value_snapshot = session;
+		session.apply_command("hard_drop");
+		session = value_snapshot;
+		require(session.state_hash() == value_snapshot.state_hash() && !session.hold_available(), "ND value snapshot/restore must preserve complete Hold state");
+		session.reset();
+		require(!session.held_piece_shape().has_value() && session.hold_available(), "ND restart must restore empty, available Hold");
+	}
+
+	const std::vector<std::string> replay = {"hold", "hold", "hard_drop", "move_x_pos", "rotate_xw_pos", "hold"};
+	tet4d::core::PlainNDSession replay_a(4);
+	tet4d::core::PlainNDSession replay_b(4);
+	for (const std::string &command : replay) {
+		replay_a.apply_command(command);
+		replay_b.apply_command(command);
+	}
+	require(replay_a.state_hash() == replay_b.state_hash() && replay_a.snapshot_json() == replay_b.snapshot_json(), "4D semantic Hold replay must reproduce exact final state");
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -774,6 +867,7 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	test_coord_and_board_model();
+	test_production_piece_catalog_registry_is_complete();
 	test_3d_state_stepper();
 	test_4d_state_stepper();
 	test_authoritative_hard_drop_destination_nd();
@@ -791,6 +885,7 @@ int main(int argc, char **argv) {
 	test_trace_exports();
 	test_live_plain_3d_session();
 	test_live_plain_4d_session();
+	test_authoritative_hold_across_production_nd_registry();
 	std::cout << "tet4d_core native plain ND tests passed\n";
 	return 0;
 }

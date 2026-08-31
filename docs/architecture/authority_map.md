@@ -32,9 +32,17 @@ Do not implement a new capability in Python solely to manufacture an oracle.
 | Native topology profile and resolver-query transport | Native C++ | Strict transport implementation ownership only. |
 | Professional live-board setup admissibility and extent validation (`AE-0054`) | Versioned board-extent contract and native C++ | Established only for the live product envelope, bounded-profile admission, production-piece compatibility, canonical spawn viability, volume safety, and structured safe failure. It does not transfer topology seams or gameplay transitions. |
 | Godot product shell, menus, setup interaction, input routing, rendering, camera, animation, HUD, guidance, accessibility, and diagnostics | Godot/GDScript | Godot must not duplicate inherited gameplay or topology rules. |
-| New Godot 3D camera and 4D presentation state | Godot/GDScript | Includes camera orientation; the Stage 54C exact signed-axis basis; shared `SliceLocalOrientation`; centred point mapper; anchor-only layout; Stage 54E-2b renderer composition and corner-derived fit bounds; Stage 54E-2c shared-L interaction, `B + Q(L.local_yaw)` resolution, fitted reflection, actual Camera3D projection evidence, pitch policy, and preset compatibility adapter; and Stage 54E-2d entry/reset/teardown/re-entry lifecycle, deterministic/persistence exclusion, public roll removal, and internal basis-only reset. It excludes gameplay coordinates, legality, and deterministic identity. Stages 54E-2a/b/c/d and aggregate Stage 54E-2 are complete and reviewed green. No authority transfer or establishment occurs. |
+| Godot presentation parameters and detached presentation profiles | Versioned shell-settings registry metadata and Godot/GDScript | The registry owns IDs, types, defaults, bounds/options, exactly-one semantic owner, persistence eligibility, accessibility classification, and applicability; the semantic palette owns base colours; `PresentationProfile` owns validated detached composition and bounded switching. Profiles are non-gameplay state and cannot contribute to setup, native state, snapshots, replay/trace/hash identity, or current camera/basis state. This formalizes existing Godot presentation authority and performs no transfer or establishment. |
+| Named presentation-profile artifact lifecycle | Godot/GDScript `PresentationProfileLibrary` under `presentation_profile_library.md` | Establishes only stable local artifact identity, validated display naming, one-file-per-profile storage/listing, and explicit save/load/duplicate/rename/delete/import/export lifecycle. The existing registry and `PresentationProfile` retain all parameter/schema semantics; `SettingsStore` retains ordinary preference persistence. Loading produces detached B through the existing apply seam and cannot affect gameplay, deterministic identity, current camera/basis state, or startup settings. |
+| Shipped read-only built-in presentation styles and the bounded animated background surface | Versioned repository catalog data plus Godot/GDScript `BuiltInStyleCatalog` and `AnimatedBackground` under `built_in_style_catalog.md` | Establishes only shipped style identity/ordering, built-in display metadata, read-only resolution into a detached `PresentationProfile`, and one environment-layer animated backdrop driven by three registry-declared `ENVIRONMENT_PRESENTATION` parameters. The registry retains parameter semantics, `PresentationProfile` retains validated composition, `PresentationProfileLibrary` retains mutable user artifacts, and `SettingsStore` retains ordinary preferences. The catalog exposes no write API and never touches `user://`; the backdrop writes no depth, derives colour from existing palette roles, owns a component-local phase excluded from every deterministic snapshot, and cannot change gameplay, board geometry, basis/slice, camera pose, or cockpit allocation. No authority transfer occurs. |
+| Design-evaluation scenario, comparison, evidence, and nomination orchestration | Godot/GDScript plus versioned scenario/evaluation/export data under `design_evaluation_laboratory.md` | Establishes only stable scenario selection over existing replay/native truth, frozen detached A/B session identity, deterministic blind labels, local evaluation/capture schemas, and a portable review-proposal format. It owns no gameplay fixture contents, property semantics, profile persistence, production default, catalog mutation, geometry, basis, slice-local orientation, layout, or camera semantics. The repository validator is read-only and human review remains the authority-promotion boundary. |
+| Design Laboratory platform adapters (identity, export transport, handheld window insets, system Back) | Godot/GDScript under `design_evaluation_laboratory.md` section 9 | Owns only which externalisation mechanism a platform uses, how handheld safe-area insets become outer margin, and how a system Back gesture maps onto the existing Escape ladder. It owns no design semantics: catalogue, scenarios, comparison model, evaluation records, nomination schema, property meaning, and the repository validator are platform independent, and platform reaches an exported bundle only as provenance. |
+| Live presentation design instrumentation | Godot/GDScript consuming the registry and detached `PresentationProfile` | The Stage 54F-2 Designer generates applicable controls and owner groups from registry metadata, edits detached B, captures immutable A, and previews only through the existing app apply seam. It has no persistence/gameplay/renderer-direct authority. Board, NEXT, established HOLD, basis, helper, and status viewability plus input isolation are product-shell acceptance properties. No authority transfer or establishment occurs. |
+| Canonical local board presentation geometry | Godot/GDScript `LocalBoardPresentationGeometry` | One unit-cell, zero-centred local volume supplies strict lattice-cell transforms/bounds, finite continuous affine presentation-point mapping, local extent, six face-grid segment sets, and twelve boundary segments to 2D, 3D, and every local Live-4D slice. Both coordinate domains share one pitch/centring/orientation formula; continuous points do not become semantic cells. 2D adapts `[X,Y]` to presentation-only `[X,Y,1]`; 4D receives signed visible slots/extents from exact `SliceBasis4D`. Adaptive slice layout consumes canonical extent but remains separate, as do materials, camera/framing, and `L`. This formalizes existing Godot presentation authority; no gameplay transfer or establishment occurs. |
+| New Godot 2D/3D/4D/replay view and Live-4D presentation state | Godot/GDScript | Includes mode-owned camera orientation; the Stage 54C exact signed-axis basis; shared `SliceLocalOrientation`; centred point mapper; anchor-only layout; Stage 54E-2b renderer composition and corner-derived fit bounds; Stage 54E-2c shared-L interaction, `B + Q(L.local_yaw)` resolution, fitted reflection, actual Camera3D projection evidence, pitch policy, and view-action compatibility; and Stage 54E-2d's historical lifecycle evidence. Stage 54E-4a is reviewed green and Stage 54E-4b implements the forward contract: same-context Restart/new game preserves transient current view; one composite Reset View restores complete mode-specific canonical view; Fit View is framing-only; named IDs are stateless actions; flat orthographic 2D and replay-owned reset/fit are explicit; Live-4D `B`, `L`, layout, outer mount/reflection, and framing remain separate; and context exit/re-entry clears/rebuilds transient state. Current view remains excluded from gameplay coordinates, legality, deterministic identity, setup, and persistence. Stage 54E-4b is ready for focused visible review. No authority transfer or establishment occurs. |
 | Live one-piece next preview | Inherited deterministic queue owner for piece selection; Godot/GDScript for presentation | Native sessions expose the observational shape query defined by `next_piece_preview.md`. Godot owns the shared 2D/3D/4D thumbnail and HUD placement and must not infer queue order or mutate RNG. No authority transfer occurs. |
 | Live authoritative ghost piece | Existing deterministic drop/collision owner for landing; Godot/GDScript for presentation | Native hard drop and the read-only query share `hard_drop_destination` as defined by `ghost_piece.md`. Godot owns visibility, settings, basis-aware projection, and styling only. No authority transfer or establishment occurs. |
+| Authoritative one-slot Hold (`AE-0055`) | Native C++ live sessions under `authoritative_hold.md` | Native owns held identity, lifecycle legality, transitions, queue/RNG and canonical-spawn consequences, snapshots, and hashes. Godot owns the `C` affordance, semantic dispatch, and HOLD presentation over pure native queries. Python has no competing Hold authority. |
 | New deterministic core behaviour without a Python predecessor | Owning native C++ subsystem named by its contract | Examples may include Hold transitions, challenge predicates, and later shared geometric evaluation. |
 | Challenge and campaign content | Versioned declarative data | Runtime implementations validate and execute the content but do not silently redefine it. |
 | Challenge flow, hints, progress, and Explorer interaction | Godot/GDScript | Deterministic success predicates may be native. |
@@ -66,16 +74,56 @@ Godot is the product-shell direction and owns:
 - 3D camera orientation;
 - 4D presentation/view basis;
 - shared 4D slice-local orientation;
-- centred slice-local point mapping plus anchor-only slice layout;
+- canonical local board geometry with distinct strict-cell and continuous-point
+  mapping across 2D/3D/4D, plus separate canonical-extent-consuming,
+  anchor-only 4D slice layout;
 - slice labels and basis-transition presentation;
 - HUD, guidance, hints, and campaign navigation;
 - accessibility and product usability;
 - Explorer shell and interaction;
 - visual diagnostics.
 
+Within that authority, presentation parameters and profile composition follow
+`docs/architecture/presentation_parameter_contract.md`. Parameter ownership is
+declarative and exactly one owner per ID; consumers may compose accessibility
+minimums but may not claim a second semantic owner. The existing settings store
+is the only preference writer, and applying a detached profile is not a native
+or gameplay operation.
+
+Named profile artifact lifecycle follows
+`docs/architecture/presentation_profile_library.md`. The library is the only
+named-artifact writer and owns storage identity/lifecycle, while delegating all
+payload validation and value completion to `PresentationProfile`. It neither
+persists ordinary settings nor becomes a parameter-semantic owner.
+
+Live presentation design instrumentation follows
+`docs/architecture/live_presentation_designer.md`. The Designer consumes this
+authority; it does not add a second inventory, make experimental values
+persistent, or acquire presentation semantics. Its A/B/reset orchestration and
+cockpit/input behavior remain inside Godot product-shell authority.
+
+Systematic evaluation, durable comparison evidence, and nomination export follow
+`docs/architecture/design_evaluation_laboratory.md`. The laboratory may freeze
+and compare detached profiles only through the existing application seam. It may
+select/reconstruct existing deterministic states, but it cannot reinterpret
+gameplay, camera, basis, slice-layout, property, catalog, or profile-library
+authority, and an exported proposal is never self-promoting.
+
+Local cell, finite continuous point, extent, grid, and boundary structure follows
+`docs/architecture/canonical_local_board_presentation_geometry.md`. Renderers
+may vary projection, materials, visibility, labels, and camera framing, but
+must not recompute dimensional board geometry or merge a 4D slice anchor into
+the local volume.
+
 Godot may consume inherited or native deterministic core state. It must not
 reimplement inherited gameplay, topology, scoring, or replay semantics in
 presentation glue.
+
+Stage 54D-3 Hold follows `docs/architecture/authoritative_hold.md` and
+`AE-0055`. Godot dispatches only the semantic `hold` command and renders the
+native held-piece/availability queries through the shared thumbnail pipeline.
+It must not infer legality, retain a parallel held piece, consume queue state,
+or choose a spawn pose. Hold never mutates the Godot view/control frame.
 
 ## Native C++ / GDExtension status
 

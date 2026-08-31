@@ -32,6 +32,7 @@ func run() -> Array:
 		hints_checkbox.button_pressed = false
 		await tree.process_frame
 	panel._on_control_value_changed("display.projection_strength", 0.75)
+	panel._on_control_value_changed("display.ui_scale", "large")
 	panel._on_control_value_changed("ghost.enabled", false)
 	panel._on_control_value_changed("settled_cells.opacity", 0.60)
 	if applied.get("theme.name") != "tron" or applied.get("accessibility.show_help_hints") != false:
@@ -66,6 +67,8 @@ func run() -> Array:
 	var reset_store = StoreScript.new(registry, TEST_PATH)
 	if reset_store.value("theme.name") != "plain" or reset_store.value("interface.show_onboarding") != false:
 		failures.append("display reset should restore theme while preserving onboarding")
+	if reset_store.value("display.ui_scale") != "large":
+		failures.append("display reset must preserve accessibility-owned UI scale")
 	panel.queue_free()
 	await tree.process_frame
 	_cleanup()

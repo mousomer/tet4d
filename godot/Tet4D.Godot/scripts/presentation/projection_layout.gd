@@ -14,13 +14,13 @@ var bounds: Dictionary = {"ok": false}
 var applies_local_orientation := false
 
 
-func configure(snapshot: Dictionary, basis = null, orientation = null) -> void:
+func configure(snapshot: Dictionary, basis = null, orientation = null, spacing_scale: float = 1.0) -> void:
 	board_shape = snapshot.get("board_shape", []).duplicate()
 	dimension = int(snapshot.get("dimension", 0))
 	if orientation != null:
 		local_orientation = orientation
 	applies_local_orientation = dimension == 4 and orientation != null
-	mapper.configure(board_shape, basis)
+	mapper.configure(board_shape, basis, spacing_scale)
 	bounds = _collection_bounds()
 
 
@@ -28,8 +28,13 @@ func oriented_world_position(coordinates: Array) -> Vector3:
 	return oriented_world_position_with_local_offset(coordinates, Vector3.ZERO)
 
 
+func oriented_cell_world_position(coordinates: Array) -> Vector3:
+	var decomposition := mapper.decompose_cell_position(coordinates, dimension)
+	return _oriented_world_position_from_decomposition(decomposition, Vector3.ZERO)
+
+
 func oriented_active_world_position(coordinates: Array) -> Vector3:
-	var decomposition := mapper.decompose_position(coordinates, dimension, true)
+	var decomposition := mapper.decompose_cell_position(coordinates, dimension, true)
 	return _oriented_world_position_from_decomposition(decomposition, Vector3.ZERO)
 
 
@@ -138,5 +143,10 @@ func _collection_bounds() -> Dictionary:
 			maxf(max_world.z, layer_max.z)
 		)
 	if dimension >= 4:
-		max_world.y += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_world.x -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_world.y -= ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD
+		min_world.z -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_world.x += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_world.y += ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD
+		max_world.z += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
 	return {"ok": true, "min": min_world, "max": max_world}

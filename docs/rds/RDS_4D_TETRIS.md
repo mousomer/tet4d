@@ -3,7 +3,7 @@
 Status: Active v0.9 (Godot Stage 54E-2d reconciled 2026-08-10; reviewed green)
 Author: Omer + Codex  
 Date: 2026-02-18  
-Target Runtime: Python 3.11-3.14 + `pygame-ce`; Godot 4.7.1 product shell
+Target Runtime: Python 3.11-3.14 + `pygame-ce`; Godot 4.7.2 product shell
 
 ## 1. Scope
 

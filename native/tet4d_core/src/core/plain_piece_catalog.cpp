@@ -88,18 +88,22 @@ const std::vector<PieceShape2D> &plain_piece_catalog_2d(std::string_view piece_s
 	return piece_set_id == "classic" ? classic : empty;
 }
 
+const std::vector<ProductionPieceSetND> &production_piece_catalogs_nd() {
+	static const std::vector<ProductionPieceSetND> catalogs = {
+		{3, "embedded_2d", embedded_2d_catalog(3)},
+		{3, "native_3d", native_3d_catalog(3)},
+		{4, "embedded_2d", embedded_2d_catalog(4)},
+		{4, "embedded_3d", native_3d_catalog(4)},
+		{4, "standard_4d_5", standard_4d_5_catalog()},
+	};
+	return catalogs;
+}
+
 std::vector<PieceShapeND> plain_piece_catalog_nd(int dimension, std::string_view piece_set_id) {
-	if (piece_set_id == "embedded_2d" && (dimension == 3 || dimension == 4)) {
-		return embedded_2d_catalog(dimension);
-	}
-	if (piece_set_id == "native_3d" && dimension == 3) {
-		return native_3d_catalog(3);
-	}
-	if (piece_set_id == "embedded_3d" && dimension == 4) {
-		return native_3d_catalog(4);
-	}
-	if (piece_set_id == "standard_4d_5" && dimension == 4) {
-		return standard_4d_5_catalog();
+	for (const ProductionPieceSetND &catalog : production_piece_catalogs_nd()) {
+		if (catalog.dimension == dimension && catalog.piece_set_id == piece_set_id) {
+			return catalog.pieces;
+		}
 	}
 	return {};
 }
@@ -119,9 +123,15 @@ bool is_supported_live_piece_set(int dimension, std::string_view piece_set_id) {
 }
 
 bool is_known_live_piece_set(std::string_view piece_set_id) {
-	return piece_set_id == "classic" || piece_set_id == "native_3d" ||
-			piece_set_id == "embedded_2d" || piece_set_id == "standard_4d_5" ||
-			piece_set_id == "embedded_3d";
+	if (piece_set_id == "classic") {
+		return true;
+	}
+	for (const ProductionPieceSetND &catalog : production_piece_catalogs_nd()) {
+		if (catalog.piece_set_id == piece_set_id) {
+			return true;
+		}
+	}
+	return false;
 }
 
 } // namespace tet4d::core

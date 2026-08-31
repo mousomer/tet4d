@@ -1,5 +1,135 @@
 # Changelog
 
+## 2026-08-31
+
+### Fixed
+
+1. Design Laboratory catalogue actions now distinguish `Apply Live`,
+   `Set as A`, and `Set as B`. Frozen A/B assignment is independent of the
+   shown arm, so assigning A while B is visible preserves B and keeps B shown.
+   Toggle, reset, blind labels, candidate edit/save, evaluation, capture, and
+   session restoration preserve exact assignment and true provenance.
+2. Comparison creation now accepts the catalogue's canonical fixed-seed live
+   scenarios as well as replay fixtures, so the default scenario can start a
+   comparison instead of being rejected by a replay-only guard.
+3. The animated-style deterministic-isolation test now pauses Live 4D before
+   awaiting presentation frames. Slow CI can no longer mistake an ordinary
+   gravity tick for animation-driven gameplay mutation.
+
+### Integration
+
+1. Draft PR #75 was opened against the published pre-fix integration head to
+   obtain a diagnostic full matrix. Every selected lane passed except the
+   Godot lane's timing race above; the dependent integration and aggregate
+   gates failed as designed. Fresh final-SHA CI remains required before merge.
+2. The unmerged integration history was rewritten to retain the Windows
+   candidate documentation, metadata, and validator tests without the 39 MB
+   ZIP. Generated candidates now remain outside Git in Actions, release, or
+   canonical candidate asset storage.
+
+## 2026-08-30
+
+### Added
+
+1. The Design Laboratory now targets three distribution platforms from one
+   implementation: Windows, Android tablet, and iPadOS, both tablets intended
+   for landscape use with a physical keyboard. The catalogue, scenarios, A/B
+   model, evaluation schema, nomination bundle, and repository-side validator
+   are unchanged and platform independent; platform reaches an exported bundle
+   only as provenance, which a new cross-platform test asserts.
+2. A platform adapter boundary resolves platform identity, export transport,
+   handheld safe-area insets, and system Back behaviour from one authority.
+   Android offers a nominated bundle to the system document picker and iPadOS
+   exposes it in the Files app, so an installed application never needs the
+   development repository to surrender a design.
+3. Android and iPadOS export presets, build scripts, configuration and artifact
+   validators, and CI jobs. Android runs on `ubuntu-latest` and iPadOS on
+   `macos-latest`, which carry the Android and Xcode toolchains a development
+   host may lack.
+
+### Fixed
+
+1. Android release packaging previously supplied only debug-keystore editor
+   settings while invoking `--export-release`. The disposable build now injects
+   its ephemeral test key into the release fields of a structured staged preset;
+   the tracked preset remains credential-free.
+2. iPadOS silently inherited Godot's App Store release-method default. The
+   source preset now sets integer enum `1`, generated Xcode export options are
+   validated as Development, and the team-ID override remains external.
+3. The local iPad configuration-only PCK checksum was presented without naming
+   its reduced descriptor. Configuration and release exports are now distinct
+   validated artifact classes; only release mode may claim the complete iOS
+   descriptor and native framework.
+4. The canonical live action contract was registered by logical keycode only,
+   so an external keyboard reporting a logical keycode different from the
+   physical key position the binding was designed around resolved nothing. A
+   narrow positional fallback now runs only for characters the contract does not
+   claim, so it cannot make one key press dispatch two actions and is inert on a
+   US-layout desktop keyboard.
+5. Android's system Back gesture would have quit the process by engine default,
+   discarding an in-flight comparison session. It now follows the same
+   deterministic ladder as Escape and is inert at the main menu.
+6. `display/window/handheld/orientation` is an integer enum; a string value is
+   silently ignored and falls back to a single pinned landscape orientation. It
+   is now set numerically to Sensor Landscape and asserted by both tablet
+   validators.
+
+### Known limits
+
+1. The Android APK does not build on the implementation host: Godot 4.7.2
+   requires a Java SDK and an Android SDK with `platform-tools` and
+   `build-tools` unconditionally, plus the NDK for the arm64 GDExtension.
+2. The iPadOS application does not compile on the implementation host, which
+   has Command Line Tools but no Xcode and therefore no iPhoneOS SDK. The Xcode
+   configuration project itself exports and validates; that reduced artifact
+   is not release-payload evidence.
+3. No emulator, simulator, device, or physical-keyboard acceptance has been
+   performed on any platform.
+
+## 2026-08-29
+
+### Added
+
+1. The main-menu Design Laboratory now provides ten deterministic live,
+   replay, and sphere-like 4D scenarios; a merged shipped/user preset catalog;
+   frozen blind A/B comparison; immutable evaluation provenance; paired PNG
+   capture; and non-mutating proposal export.
+2. Shipped styles remain read-only while `Duplicate / Edit` creates a mutable
+   candidate and opens it in the established live Presentation Designer.
+3. The separately named `Tet4D Designer` Windows x86-64 portable ZIP now has
+   an exact Godot export preset, MinGW-aware native build, structural validator,
+   focused Windows CI tests, and bounded packaged startup. Direct clean-machine
+   Windows acceptance remains pending and is not implied by local cross-builds.
+
+## 2026-08-25
+
+### Release
+
+1. Independent final blocker re-acceptance passed for the Tet4D 0.7.5 macOS
+   13+ Universal 2 candidate, closing Stage 54G and setting
+   `PROFESSIONAL_CORE_GAME_READY` to `YES`. The accepted ZIP remains ad-hoc
+   signed and non-notarized; Developer ID signing and notarization are separate
+   public-distribution prerequisites.
+
+## 2026-08-24
+
+### Changed
+
+1. Stage 54G defines the current professional-core release path as a Godot
+   4.7.1 macOS 13+ Universal app/ZIP with consistent `Tet4D` 0.7.5 metadata,
+   an explicit release GDExtension deployment target, artifact inspection, and
+   current release-workflow coverage.
+2. The prior Python/PyInstaller `.dmg`, `.deb`, and `.msi` builders are retained
+   as a legacy Python-product path and are no longer presented or published as
+   the current Godot professional-core release.
+
+### Fixed
+
+1. Returning from Main Menu through Advanced / Diagnostics and Replay Demos to
+   Viewer now restores the canonical 2D, 3D, or 4D live presentation through
+   the app lifecycle owner while preserving the authoritative native session,
+   pause state, Hold, NEXT, Ghost, and gameplay hash.
+
 ## 2026-04-15
 
 ### Release

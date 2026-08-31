@@ -155,6 +155,14 @@ func is_visible_for(mode: String, entry: Dictionary) -> bool:
 
 
 static func validate(spec_data: Dictionary, known_modes: Array) -> Array:
+	return _validate(spec_data, known_modes, true)
+
+
+static func validate_declaration(spec_data: Dictionary, known_modes: Array) -> Array:
+	return _validate(spec_data, known_modes, false)
+
+
+static func _validate(spec_data: Dictionary, known_modes: Array, require_resolved_options: bool) -> Array:
 	var failures: Array = []
 	var field_id := str(spec_data.get("id", ""))
 	var category_id := str(spec_data.get("category", ""))
@@ -167,7 +175,7 @@ static func validate(spec_data: Dictionary, known_modes: Array) -> Array:
 		failures.append("%s: unknown category %s" % [field_id, category_id])
 		return failures
 	_validate_taxonomy(failures, spec_data, field_id, category_id)
-	_validate_control(failures, spec_data, field_id)
+	_validate_control(failures, spec_data, field_id, require_resolved_options)
 	_validate_modes(failures, spec_data, field_id, known_modes)
 	for field in spec_data.keys():
 		if not ALLOWED_SPEC_FIELDS.has(str(field)):
@@ -207,7 +215,12 @@ static func _validate_taxonomy(failures: Array, spec_data: Dictionary, field_id:
 		failures.append("%s: only contextual game definition may declare visible_when" % field_id)
 
 
-static func _validate_control(failures: Array, spec_data: Dictionary, field_id: String) -> void:
+static func _validate_control(
+	failures: Array,
+	spec_data: Dictionary,
+	field_id: String,
+	require_resolved_options: bool
+) -> void:
 	var value_type := str(spec_data.get("value_type", ""))
 	var control_type := str(spec_data.get("control_type", ""))
 	if not ALLOWED_VALUE_TYPES.has(value_type):
@@ -218,7 +231,7 @@ static func _validate_control(failures: Array, spec_data: Dictionary, field_id: 
 		return
 	if not (CONTROL_TYPES_BY_VALUE_TYPE.get(value_type, []) as Array).has(control_type):
 		failures.append("%s: invalid value/control pair %s/%s" % [field_id, value_type, control_type])
-	if value_type == "enum" and (spec_data.get("options", []) as Array).is_empty():
+	if value_type == "enum" and require_resolved_options and (spec_data.get("options", []) as Array).is_empty():
 		failures.append("%s: enum setup field requires options" % field_id)
 	if value_type == "shape_axis" and typeof(spec_data.get("axis_index")) != TYPE_INT:
 		failures.append("%s: shape_axis setup field requires axis_index" % field_id)

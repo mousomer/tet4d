@@ -132,4 +132,4 @@ PYTHONPATH="$ROOT_DIR/src" "$PYTHON_BIN" \
 env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --quit-after 5
 
-echo "Godot 4.7.1 verification passed."
+echo "Godot 4.7.2 verification passed."

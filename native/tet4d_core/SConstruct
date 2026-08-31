@@ -4,6 +4,18 @@ bootstrap_env = Environment(tools=["default"], PLATFORM="")
 if ARGUMENTS.get("platform") == "linux":
     bootstrap_env["ARCOM_POSIX"] = bootstrap_env["ARCOM"]
     bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX)}"
+elif ARGUMENTS.get("platform") == "windows":
+    repository_root = Dir("../..").abspath
+    if ARGUMENTS.get("use_mingw") == "yes":
+        bootstrap_env.AppendUnique(
+            CCFLAGS=[
+                "-ffile-prefix-map={}=.".format(repository_root),
+                "-fdebug-prefix-map={}=.".format(repository_root),
+                "-fmacro-prefix-map={}=.".format(repository_root),
+            ]
+        )
+    else:
+        bootstrap_env.AppendUnique(CCFLAGS=["/pathmap:{}=.".format(repository_root)])
 
 env = bootstrap_env
 Export("env")

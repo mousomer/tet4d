@@ -2,6 +2,17 @@
 
 Status: Stage 51 display-only architecture contract.
 
+Current reconciliation: the post-Stage-54 presentation parameter contract
+retains this display authority and routes complete validated values through a
+detached schema-1 `PresentationProfile`. The checked-in settings registry is
+now also authoritative for each parameter's unique semantic owner,
+accessibility classification, and runtime applicability. Representative board,
+piece, Ghost, slice-set, palette, and environment values apply through the
+single `TraceReplayApp.apply_presentation_profile()` entry point. Applying a
+profile rebuilds presentation from the current exported snapshot; it does not
+restart a native session or reset current camera pose, basis, or slice-local
+orientation. See `presentation_parameter_contract.md`.
+
 ## 1. Purpose and boundaries
 
 Stage 51 establishes one Godot-owned display-settings path for the product
@@ -94,11 +105,13 @@ shell_settings_registry.json
             |
        SettingsPanel
             |
-  ReplayHud presentation owner
+  ReplayHud + detached PresentationProfile
       /      |       |       \
  window   theme/UI   HUD   app signals
                               |
-                     renderer and camera
+              TraceReplayApp bounded apply
+                     /       |       \
+              renderer    camera   environment
 ```
 
 Generated controls submit bounded values to the store. The panel emits the
@@ -254,3 +267,35 @@ presentation, editor/sandbox presentation, physics-simulator views, and future
 control/input configuration may consume this infrastructure. They must extend
 the canonical registry/store/runtime flow rather than introduce another
 settings file, local enum family, or presentation cache.
+
+## 20. Stage 54F applicability and truthful naming refinement
+
+The schema-3 registry may declare optional `ui_contexts` presentation metadata
+for a setting. The admitted values are `global_settings`, `replay`,
+`live_2d`, `live_3d`, and `live_4d`. Omission retains the historical all-context
+behavior. This metadata controls only whether a generated row is relevant in
+the current Settings-panel context; it does not alter validation, defaults,
+persistence, reset ownership, runtime propagation, or authority.
+
+The full global Settings screen remains a place to configure every supported
+preference. Generated Quick Settings filters context-specific controls:
+replay speed/loop and replay object scale are replay-only there, while 4D slice
+labels appear only in Live 4D or 4D-capable replay/global settings. Existing
+IDs remain stable for persistence compatibility.
+
+Player-facing copy names actual effects. `display.projection_strength` is
+presented as replay object scale because the renderer scales replay cells,
+particles, and event markers rather than camera projection. The persisted
+`display.board_detail` ID is presented as cell-outline strength because its
+minimal/standard/full policy changes active, locked, and Ghost outline weight,
+not board geometry or grid density.
+
+Runtime UI scale must change rendered geometry, not merely a stored factor or
+Theme resource hint. `ReplayHud` owns the scale transform: it applies the
+canonical factor to the HUD root and inversely adjusts the root's logical
+bounds so the transformed shell continues to cover the physical viewport.
+ThemeDB receives the same fallback factor for controls that consume Godot's
+theme scale. This reflows menus, text, HUD controls, Settings scrolling, and
+focus geometry without changing the OS window, game viewport authority,
+gameplay state, camera state, or persistence schema. Returning to Standard
+restores an identity transform and the full logical viewport bounds.

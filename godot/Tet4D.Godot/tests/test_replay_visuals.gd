@@ -56,7 +56,7 @@ func run() -> Array:
 	_assert_color_close(failures, "diagnostic active role ignores trace color id", yellow_active.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC))
 	_assert_color_close(failures, "gameplay active role hue", gameplay_active.albedo_color, ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACTIVE_CELL, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC))
 	_assert_material_alpha(failures, "live active cell", live_active, 0.95)
-	_assert_material_alpha(failures, "live locked cell", live_locked, ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY)
+	_assert_material_alpha(failures, "live locked cell", live_locked, ReplayVisuals.presentation_parameter_default("settled_cells.opacity"))
 	_assert_material_alpha(failures, "ghost fill", ghost, 0.46)
 	_assert_material_alpha(failures, "ghost outline", ghost_border, 0.88)
 	_assert_material_alpha(failures, "live active border", live_active_border, 0.95)
@@ -65,7 +65,7 @@ func run() -> Array:
 	_assert_material_alpha(failures, "live 3D locked border", live_3d_locked_border, 0.95)
 	_assert_material_alpha(failures, "live 3D origin marker", live_3d_origin_marker, 0.95)
 	_assert_material_alpha(failures, "live board fill", live_board_fill, 0.80)
-	_assert_material_alpha(failures, "live board grid", live_board_grid, ReplayVisuals.GRID_STANDARD_ALPHA)
+	_assert_material_alpha(failures, "live board grid", live_board_grid, ReplayVisuals.presentation_parameter_default("board.grid_opacity"))
 	if live_active.albedo_color == gameplay_active.albedo_color:
 		failures.append("live active cells should preserve piece color instead of using the replay role color")
 	if live_active.albedo_color == Color.WHITE:
@@ -98,7 +98,8 @@ func run() -> Array:
 		failures.append("High Contrast active frame must remain stronger than its ordinary wireframe")
 	if floor_fill.albedo_color.a >= normal_grid.albedo_color.a or floor_fill.albedo_color.a >= normal_wireframe.albedo_color.a or floor_lattice.albedo_color.a <= floor_fill.albedo_color.a:
 		failures.append("floor plane must remain weaker than wireframe, grid, and the separate useful floor lattice")
-	if ReplayVisuals.GRID_STANDARD_ALPHA > 0.33 or ReplayVisuals.GRID_STANDARD_ALPHA < 0.29:
+	var grid_default := ReplayVisuals.presentation_parameter_default("board.grid_opacity")
+	if grid_default > 0.33 or grid_default < 0.29:
 		failures.append("ordinary internal grid strength should be approximately 60–65 percent of the rejected calibration")
 	if ReplayVisuals.axis_color("+W") != ReplayVisuals.axis_color("-W"):
 		failures.append("axis sign must not change W's semantic colour")
@@ -148,10 +149,10 @@ func run() -> Array:
 		failures.append("locking should preserve the live exterior cell body scale")
 	if ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA != ReplayVisuals.LIVE_3D_LOCKED_CELL_BORDER_DELTA:
 		failures.append("locking should preserve the live exterior wireframe envelope")
-	_assert_material_alpha(failures, "diagnostic locked cell", ReplayVisuals.locked_cell_material(), ReplayVisuals.DEFAULT_LOCKED_CELL_OPACITY)
+	_assert_material_alpha(failures, "diagnostic locked cell", ReplayVisuals.locked_cell_material(), ReplayVisuals.presentation_parameter_default("settled_cells.opacity"))
 	var low_opacity_locked := ReplayVisuals.live_locked_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 4, 0.60)
 	_assert_material_alpha(failures, "configured locked cell opacity", low_opacity_locked, 0.60)
-	if ReplayVisuals.normalize_locked_cell_opacity(0.0) != ReplayVisuals.MIN_LOCKED_CELL_OPACITY or ReplayVisuals.normalize_locked_cell_opacity(2.0) != ReplayVisuals.MAX_LOCKED_CELL_OPACITY:
+	if ReplayVisuals.normalize_locked_cell_opacity(0.0) != ReplayVisuals.presentation_parameter_minimum("settled_cells.opacity") or ReplayVisuals.normalize_locked_cell_opacity(2.0) != ReplayVisuals.presentation_parameter_maximum("settled_cells.opacity"):
 		failures.append("locked-cell opacity should remain bounded by its presentation preference range")
 	_assert_material_alpha(failures, "diagnostic particle", ReplayVisuals.particle_material(), 0.95)
 	_assert_material_alpha(failures, "diagnostic board outline", ReplayVisuals.board_outline_material(), 0.90)

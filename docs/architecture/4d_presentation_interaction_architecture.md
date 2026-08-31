@@ -7,7 +7,43 @@ Authority status: accepted contract governing Stage 54E-2 implementation;
 runtime authority records remain contingent on concrete implementation evidence
 Implementation evidence: Stage 54E-2a complete — reviewed green; Stage 54E-2b
 complete — reviewed green; Stage 54E-2c complete — reviewed green; Stage
-54E-2d complete — reviewed green; aggregate Stage 54E-2 complete — reviewed green
+54E-2d complete — reviewed green; aggregate Stage 54E-2 complete — reviewed green;
+2026-08-30 live-presentation regression refinement implemented and locally
+verified
+
+## 0. 2026-08-30 presentation-correctness refinement
+
+The accepted `B -> G_D -> L -> anchor -> V/P` separation remains unchanged.
+The following refinements make its visible consequences explicit:
+
+1. Live active and locked exterior faces are structural geometry. When a style
+   requests an alpha below `1.0`, those faces retain that alpha but use a
+   depth-writing structural render path so camera-angle changes cannot make
+   authoritative faces disappear through transparent-object sorting. Ghost and
+   environmental transparency remain separate, subordinate roles.
+2. Live-4D left-drag follows the same apparent screen convention as Live 3D:
+   physical right/left and up/down input move the rendered volume in the
+   corresponding apparent direction. `camera.invert_y` reverses vertical input
+   only. The adapter accounts for the passive `L` render transform; it does not
+   move this interaction into outer `V/P`.
+3. Normal-gameplay `L` is bounded to `-40..+80` degrees pitch. The positive
+   extension remains strictly short of the semantic-Forward inversion boundary;
+   yaw remains unrestricted and the exact basis `B` remains unchanged.
+4. `AdaptiveLayerLayout` sizes each tile from a stable, geometry-derived
+   envelope for the complete supported `L` range, not from the instantaneous
+   mouse angle and not from an axis-aligned unrotated slice. Anchors therefore
+   do not breathe during manipulation, while representative extreme
+   orientations retain a readable deterministic gutter.
+5. `slice_set.spacing` multiplies the governed envelope stride. It never shrinks
+   cells, changes 2D/3D geometry, or reinterprets the slice sequence as a local
+   axis.
+6. Renderer bounds consumed by Fit include renderer-root stabilization scale
+   and translation. Fit then adds one modest framing margin to already complete
+   required bounds; it does not compound an unscaled collection envelope with
+   an excessive second safety factor.
+7. Fit remains framing-only and idempotent. It may change focus and zoom in
+   `V/P`; it changes no `B`, `L`, anchors, gameplay state, deterministic hash,
+   replay/trace identity, or persisted preference.
 
 ## 1. Purpose and current audit result
 
@@ -579,11 +615,11 @@ type, and viewport geometry may not influence command resolution.
 
 ## 13. Camera-preset audit
 
-`camera_preset.gd` contains no direct resolver call. However,
-`TraceReplayApp` currently calls `CameraRig.apply_preset()`, which writes
-combined target yaw/pitch; `_control_frame_mapping()` then reads its yaw.
-Thus Front, Side, Back, Top, Iso, and Opposite Iso currently can change
-relative command interpretation through the defective combined rig.
+`camera_preset.gd` contains no direct resolver call. Before Stage 54E-4b,
+`TraceReplayApp` called `CameraRig.apply_preset()`, which wrote combined target
+yaw/pitch; `_control_frame_mapping()` then read its yaw. Front, Side, Back,
+Top, Iso, and Opposite Iso could therefore change relative command
+interpretation through the defective combined rig.
 
 Under the corrected model their names are **ambiguous**, not intrinsically
 local-orientation, outer-framing, or combined presets. In 54E-2 a bounded
@@ -593,11 +629,25 @@ targets layout anchors and no outer rotation remains. This prevents the invalid
 intermediate Side/Back mismatch in which a visible orientation changes while
 relative controls retain a different frame.
 
-Stage 54E-4 therefore requires **semantic redesign**, including separate
+Stage 54E-4 therefore required **semantic redesign**, including separate
 local-orientation versus outer-framing preset categories and an explicit
 decision whether named combined presets are allowed. It decides persistence,
 reset, labels, and any future layout preset scope; 54E-2 only provides the
 coherent compatibility decomposition and does not modify current definitions.
+
+Stage 54E-4a completed that redesign. `docs/architecture/camera_gui_preset_semantics.md`
+is the canonical owner of preset taxonomy, per-family mutation permissions,
+view-action semantics, Reset View/Fit View orchestration, presentation-context
+lifetime, persistence ownership, and the compatibility disposition for the
+existing IDs. It consumes the state-owner separation defined here. Its
+human-approved lifecycle deliberately refines the earlier Stage 54E-2d rule:
+Restart Game now preserves the current view, while Reset View establishes the
+complete canonical view.
+
+Stage 54E-4b implements that contract: Live-4D actions now mutate `L` through
+its owner, preserve the outer mount and reflection state, and request
+ID-independent fitted framing. No continuous preset identity feeds the HUD or
+the relative-control resolver.
 
 ## 14. Ownership contract
 
@@ -620,33 +670,30 @@ materially false; it does not claim that the missing state already exists.
 
 ## 15. Persistence and lifecycle contract
 
-`B`, `L`, anchors, and outer `V` are live-session presentation state. `B` is
-specifically a non-persistent exact basis state; `L` and outer `V` are
-ephemeral interaction state in 54E-2 unless 54E-4 later establishes a
-persistent preference contract. Anchors are setup-derived state recomputed from
-dimensions, `B`, layout policy, and viewport/layout inputs. Projection mode is
-a live presentation state; translation/rotation frame preferences are the
-existing persistent presentation preferences. Camera sensitivity, invert-Y,
-and interpolation scale retain their existing presentation-preference status.
+`B`, `L`, anchors, and outer `V/P` are transient presentation-context state.
+They are not gameplay-run state or application preferences. Anchors are
+derived from dimensions, `B`, layout policy, and viewport/layout inputs.
+Projection mode is transient canonical-view state because the product exposes
+no player-selectable camera-projection preference. Translation/rotation frame
+preferences, camera sensitivity, invert-Y, and accessibility policy retain
+their existing preference owners.
 
 | Lifecycle event | B | L | anchors | V/P | frame preferences |
 | --- | --- | --- | --- | --- | --- |
 | application launch / Live 4D entry | identity | default yaw/pitch; no roll | recompute | fitted default | load existing preferences |
-| start new game / Restart Game | identity | default yaw/pitch; no roll | recompute | fitted default | retain |
+| start new game / Restart Game in the same presentation context | preserve current | preserve current | preserve current | preserve current | retain |
 | Change Setup / main-menu return | clear with session | clear with session | discard | clear with session | retain |
 | Reset View | identity | default yaw/pitch; no roll | recompute, not manually transformed | fitted outer default/projection default | retain |
 | basis reset | identity only | unchanged | recompute from identity | unchanged unless invoked through Reset View | retain |
 | changing mode | clear Live 4D state | clear | discard | mode owner chooses its default | retain |
-| persisted setup load | identity on subsequent session | local default | recompute | fitted default | load |
-| applying a preset | unchanged | receives yaw/pitch component | unchanged | receives zoom/pan/fit component | unchanged |
+| re-entry / application restart | identity | local default | recompute | canonical fitted view | load/retain |
+| applying a Live-4D view action | unchanged | receives the action yaw/pitch target | unchanged | outer mount/reflection preserved; fitted framing restored | unchanged |
 
-Stage 54E-2 must decompose the existing preset API across `L` and `V/P` as
-specified above; it must not retain a combined-rig path or create a
-viewer-relative mismatch. This does not decide that current names or values
-are final product design. If later accepted presets persist `L`, anchors, or
-`V`, Stage 54E-4 must add a versioned presentation schema and recovery rules.
-Stage 54E-2 must not create such a schema merely to retain current
-combined-rig values.
+The active forward-looking lifecycle, including mode-specific 2D/3D/4D/replay
+semantics, one composite Reset View, framing-only Fit View, and action-based
+presets, is canonical in `camera_gui_preset_semantics.md`. No current view
+state is persisted. A future saved-view/bookmark feature would require an
+explicit versioned contract and recovery rules.
 
 ## 16. Scene-graph and implementation-structure implications
 
@@ -660,7 +707,7 @@ The minimum conceptual structure is:
 
 ```text
 canonical-to-basis mapper (B)
-  -> per-slice local content coordinate (G_D)
+  -> canonical LocalBoardPresentationGeometry cell coordinate (G_D)
   -> shared slice-local orientation (L)
   -> per-layer anchor/layout point (anchor_i)
   -> outer CameraRig / Camera3D (V, P)
@@ -674,6 +721,13 @@ a locally oriented content root—but it is not a prerequisite. The data API
 must expose/test local coordinate, local orientation, anchor, and outer view
 before composition. Any such nodes must retain one shared `L` value and must
 not move an anchor into local-content coordinates.
+
+Stage 54F-1 makes `G_D` the shared canonical local-board geometry described by
+`canonical_local_board_presentation_geometry.md`. Live 2D, Live 3D, and every
+Live-4D slice now share its cell, extent, grid, boundary, and centring rules.
+This does not change the composition above: exact `B` still supplies 4D's
+signed visible coordinate, `L` remains downstream, and adaptive slice-set
+anchors/layout remain outside the local geometry.
 
 ## 17. Testing policy and executable verification design for Stage 54E-2
 
@@ -1003,9 +1057,10 @@ domain must satisfy Pitch-depth preservation, including
 
 ## 20. Stage boundary
 
-The accepted sequential Stage 54E-2 implementation through 54E-2d is complete
-and reviewed green. Stage 54E-3 — setup/menu information architecture — is now
-the next eligible Stage 54E implementation slice. Stage 54E-4/5 remain later
-programme work, and Stage 54D-3 Hold remains independently eligible.
+The accepted sequential Stage 54E-2 implementation through 54E-2d and Stage
+54E-3 are complete and reviewed green. Stage 54E-4a is reviewed green and
+Stage 54E-4b implements the forward view contract, pending focused visible
+review. Stage 54E-5 remains later programme work, and Stage 54D-3 Hold remains
+independently eligible.
 
 **STAGE 54E-1 COMPLETE — HUMAN ACCEPTED**

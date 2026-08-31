@@ -73,6 +73,14 @@ func settings_for_category(category_id: String) -> Array:
 	return result
 
 
+func settings_for_semantic_owner(semantic_owner: String) -> Array:
+	var result: Array = []
+	for spec in settings:
+		if spec.semantic_owner() == semantic_owner:
+			result.append(spec)
+	return result
+
+
 func category_label(category_id: String) -> String:
 	for category_data in categories:
 		if category_data is Dictionary and str(category_data.get("id", "")) == category_id:
