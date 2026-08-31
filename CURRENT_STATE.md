@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/pin-android-release-ndk`; do not treat the worktree as a clean
+`codex/resolve-android-sdkmanager`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -99,6 +99,13 @@ history ledger. Detailed history is preserved in
   disposable-project import. The active correction keeps pre-import cache
   removal and strict scanning while excluding `.godot/*` from every canonical
   Designer preset; full gates and fresh integrated proof remain required.
+
+- PR #81 had a green complete exact-head matrix and squash-merged as
+  `f8e70ca27c111410861ec7572f4ef9771fafb634`. Integrated dispatch 33421053972
+  derived the correct Android NDK pin but found `sdkmanager` absent from PATH.
+  The active correction resolves the exact command-line-tools executable under
+  `$ANDROID_HOME`, removes the unbounded `yes` pipeline, and retains exact NDK
+  Clang validation; full gates and fresh integrated proof remain required.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

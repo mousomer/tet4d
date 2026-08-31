@@ -89,6 +89,11 @@
     validation found a runner path in `.godot` cache regenerated during import.
     All four Designer presets now exclude `.godot/*` as well as `tests/*`;
     copied-cache removal and strict host-path rejection remain enforced.
+11. PR #81 integrated those three release corrections with a green exact-head
+    matrix. Its integrated follow-up resolved the binding-owned NDK pin but
+    found Android command-line tools absent from PATH. Android release setup now
+    resolves the exact `sdkmanager` under `$ANDROID_HOME` and invokes it without
+    an unbounded `yes` pipeline before asserting the pinned Clang toolchain.
 
 ## 2026-08-30
 

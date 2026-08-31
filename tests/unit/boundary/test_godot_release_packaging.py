@@ -132,8 +132,17 @@ def test_android_release_installs_the_binding_owned_ndk_pin() -> None:
 
     assert 'Path("native/third_party/godot-cpp/tools/android.py")' in workflow
     assert 'values["GODOT_CPP_ANDROID_NDK_VERSION"]' in workflow
+    assert (
+        'sdkmanager_bin="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"'
+        in workflow
+    )
+    assert 'test -x "$sdkmanager_bin"' in workflow
     assert 'ndk_root="$ANDROID_HOME/ndk/$GODOT_CPP_ANDROID_NDK_VERSION"' in workflow
-    assert 'sdkmanager "ndk;$GODOT_CPP_ANDROID_NDK_VERSION"' in workflow
+    assert (
+        '"$sdkmanager_bin" "ndk;$GODOT_CPP_ANDROID_NDK_VERSION" >/dev/null'
+        in workflow
+    )
+    assert "yes |" not in workflow
     assert 'test -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"' in workflow
     assert 'ls -d "$ANDROID_HOME"/ndk/*' not in workflow
 

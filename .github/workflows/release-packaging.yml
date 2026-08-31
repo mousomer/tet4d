@@ -472,9 +472,11 @@ jobs:
 
       - name: Resolve Android NDK
         run: |
+          sdkmanager_bin="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$sdkmanager_bin"
           ndk_root="$ANDROID_HOME/ndk/$GODOT_CPP_ANDROID_NDK_VERSION"
           if [[ ! -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang" ]]; then
-            yes | sdkmanager "ndk;$GODOT_CPP_ANDROID_NDK_VERSION" >/dev/null
+            "$sdkmanager_bin" "ndk;$GODOT_CPP_ANDROID_NDK_VERSION" >/dev/null
           fi
           test -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
           echo "ANDROID_NDK_ROOT=$ndk_root" >> "$GITHUB_ENV"
