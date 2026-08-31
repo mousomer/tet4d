@@ -100,6 +100,11 @@
     Windows native links now require `/PDBALTPATH:%_PDB%`, preserving compiler
     source maps while embedding only the PDB basename; strict validation also
     reports the specific archive member that contains any forbidden marker.
+13. Unified dispatch 33426937123 proved Android now resolves and installs its
+    exact binding-owned NDK, then exposed the next native-build boundary: the
+    inline POSIX `ar` command for pinned `godot-cpp` exceeded the hosted process
+    argument limit. Android now shares Linux's existing SCons response-file
+    archive command without changing archive contents, ABI, or semantics.
 
 ## 2026-08-30
 

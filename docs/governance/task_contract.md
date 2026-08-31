@@ -119,6 +119,13 @@ preservation of the existing MSVC `/pathmap` and MinGW prefix maps, member-level
 strict-validator diagnostics, focused packaging coverage, the complete
 repository/PR gates, and a fresh integrated Windows/unified release proof.
 
+Android follow-up from dispatch 33426937123: exact command-line tools and NDK
+selection passed, then the binding archive failed with `Argument list too long`
+because Android's POSIX `ar` command expanded every object inline. Acceptance
+requires Android to share Linux's existing SCons `TEMPFILE` archive-command
+transport, a regression contract that leaves Windows outside that branch, the
+complete repository/PR gates, and a fresh integrated APK/unified release proof.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,

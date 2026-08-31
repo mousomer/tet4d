@@ -290,6 +290,16 @@ prefix-map flags. Strict archive validation must identify the member containing
 a forbidden path so future failures remain attributable without weakening the
 marker contract.
 
+After PR #83 integrated the first Windows diagnostic correction as `9058e93e`,
+dispatch 33426937123 proved the exact Android NDK was installed and the native
+build started. The pinned `godot-cpp` archive then exceeded the hosted Linux
+process argument limit when SCons expanded every object directly into the
+Android `ar` command. The native bootstrap already routes Linux `ARCOM` through
+SCons `TEMPFILE`; Android uses the same POSIX archive-command shape and must
+share that response-file boundary. This is command transport only: archive
+contents, compiler flags, ABI, native semantics, and release validation remain
+unchanged.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.
