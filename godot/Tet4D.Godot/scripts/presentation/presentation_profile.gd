@@ -3,6 +3,7 @@ extends RefCounted
 class_name PresentationProfile
 
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
+const SCRIPT_PATH := "res://scripts/presentation/presentation_profile.gd"
 const SCHEMA_VERSION := 1
 
 var _registry
@@ -13,19 +14,19 @@ var _failures: Array = []
 static func canonical_defaults():
 	var registry = SettingsRegistryScript.new()
 	registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
-	var profile = PresentationProfile.new()
+	var profile = _new_profile()
 	profile.configure(registry, registry.default_values())
 	return profile
 
 
 static func from_store(registry, store):
-	var profile = PresentationProfile.new()
+	var profile = _new_profile()
 	profile.configure(registry, store.all_values() if store != null else {})
 	return profile
 
 
 static func from_snapshot(registry, snapshot: Dictionary):
-	var profile = PresentationProfile.new()
+	var profile = _new_profile()
 	if int(snapshot.get("schema_version", 0)) != SCHEMA_VERSION:
 		profile._registry = registry
 		profile._failures.append("presentation profile schema_version must be %d" % SCHEMA_VERSION)
@@ -117,15 +118,21 @@ func with_overrides(overrides: Dictionary):
 	var next_values := values()
 	for setting_id in overrides.keys():
 		next_values[str(setting_id)] = _safe_copy(overrides.get(setting_id))
-	var profile = PresentationProfile.new()
+	var profile = _new_profile()
 	profile.configure(_registry, next_values)
 	return profile
 
 
 func detached_copy():
-	var profile = PresentationProfile.new()
+	var profile = _new_profile()
 	profile.configure(_registry, _values)
 	return profile
+
+
+static func _new_profile():
+	# The project-global class cache is generated, ignored editor state. Direct
+	# exact-checkout scripts must be able to construct this type before import.
+	return load(SCRIPT_PATH).new()
 
 
 static func _safe_copy(value):

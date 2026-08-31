@@ -1,7 +1,7 @@
 # Task Contract — Integration, Explicit A/B Assignment, and Unified Release Proof
 
 Status: ACTIVE — INTEGRATION MERGED; REMOTE BRANCH REVIEW COMPLETE; ALL THREE
-PYTHON PACKAGES PROVEN; UNIFIED RELEASE IMPLEMENTED, VERIFICATION PENDING
+PYTHON PACKAGES PROVEN; UNIFIED RELEASE DIAGNOSTIC FAILURES UNDER CORRECTION
 
 Starting branch: `codex/built-in-style-catalog`
 
@@ -49,6 +49,17 @@ those installation/runtime assertions, check out one exact SHA in every job,
 reject tag/project-version disagreement before builds or publication, give all
 seven artifacts explicit product-family names, and generate checksum-bearing
 metadata with truthful iPadOS evidence classification.
+
+Unified diagnostic result: PR #78 passed its full fresh matrix and was
+squash-merged as `4fdb8bfa4e5730426789453df71ea198e70d475f`. Manual release
+run 33397993043 proved the release identity gate and all three Python jobs, but
+is not final unified evidence. Android and iPadOS failed their direct semantic
+test because `PresentationProfile` self-instantiation still relied on absent
+generated class-cache metadata; Windows Designer failed because its 7-Zip
+output option was split to invalid `-o`. The correction must preserve the
+cache-independent runtime architecture, pass the output directory as one
+absolute 7-Zip argument, and obtain a fresh full PR matrix plus a completely
+green integrated unified workflow.
 
 ## Objective and classification
 

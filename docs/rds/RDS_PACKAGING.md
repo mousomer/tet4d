@@ -216,6 +216,15 @@ after all package jobs pass. Its iPadOS manifest entry must remain explicit
 that the output is unsigned, simulator-compiled Xcode-project evidence without
 physical-device acceptance.
 
+The first integrated unified dispatch, Actions run 33397993043 at exact master
+`4fdb8bfa4e5730426789453df71ea198e70d475f`, is diagnostic rather than release
+proof. It exposed two clean-run orchestration dependencies: direct headless
+Design Laboratory tests resolved `PresentationProfile` through absent generated
+global-class metadata on Android and iPadOS, and Windows passed 7-Zip an output
+switch that PowerShell split into an invalid short `-o` argument. Both must be
+corrected and the full seven-artifact workflow rerun from a new integrated
+master SHA before the unified gate is accepted.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.
