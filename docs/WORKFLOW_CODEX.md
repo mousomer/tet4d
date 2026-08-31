@@ -185,10 +185,10 @@ historical evidence, but they do not define universal workflow.
 
 ## Task and PR contract
 
-Repository-changing work starts from
-`docs/governance/task_contract.md`. The contract records the objective,
-authority, allowed and forbidden paths, required changes, acceptance criteria,
-automated/manual verification, documentation updates, and explicit deferrals.
+Repository-changing work starts from explicit current task instructions and a
+concise plan. Record the objective, authority, allowed and forbidden scope,
+required changes, acceptance criteria, automated/manual verification,
+documentation updates, and explicit deferrals in the task or pull request.
 
 - Keep one semantic objective per PR.
 - Separate unrelated formatting from behavioral work.
@@ -196,13 +196,14 @@ automated/manual verification, documentation updates, and explicit deferrals.
 - Deliberately cross-layer integration requires a scope matrix explaining why
   each layer must change and how it is verified.
 - Do not weaken, delete, or silently redefine tests to fit implementation.
-- Do not continue into the next task, stage, or deferral without a new
-  contract and branch.
+- Do not continue into the next task, stage, or deferral without separately
+  approved scope and a dedicated branch.
 - A branch or draft PR is not completion.
 
-Use `docs/governance/completion_report.md` for final handoff. Distinguish
+Use the completion and handoff contract below for the final report. Distinguish
 implemented, automatically verified, manually inspected, human accepted, and
-merged states.
+merged states. Do not accumulate current and previous reports in a global
+active ledger.
 
 ## Boundary model
 

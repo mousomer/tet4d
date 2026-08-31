@@ -90,8 +90,9 @@ These files define contributor process, policy, and verification workflow.
 
 - `AGENTS.md`
 - `docs/WORKFLOW_CODEX.md`
-- `docs/governance/task_contract.md`
-- `docs/governance/completion_report.md`
+- `docs/governance/README.md`
+- `docs/governance/review_checklist.md`
+- `.github/pull_request_template.md`
 - `docs/KEYBINDINGS_EDITING.md`
 - `docs/SHORT_KEYBINDINGS_GUIDE.md`
 - `docs/MENU_STRUCTURE_EDITING.md`
@@ -119,6 +120,8 @@ place to define behavior policy.
 These files preserve useful background, completed pass notes, and retired plans.
 
 - `docs/history/*`
+- archived task-contract and completion-report ledgers under
+  `docs/history/tasks/` and `docs/history/completion_reports/`
 - `docs/history/current_state_archive_2026-07-30.md`
 - `docs/history/backlog_archive_2026-07-30.md`
 - completed parity and migration evidence:
@@ -134,6 +137,10 @@ These files preserve useful background, completed pass notes, and retired plans.
   `docs/architecture/parity_tooling_package_review.md`,
   `docs/architecture/structural_parity_slice_selection.md`, and
   `docs/architecture/trace_envelope_validation_parity.md`
+
+The broader disposition and consolidation of this documentation map remains
+pending re-governance PR 2. This lifecycle cut changes only the stale ledger
+routing above.
 
 ## Ownership map
 
@@ -294,10 +301,9 @@ It is not the product contract or complete roadmap.
   `docs/architecture/presentation_parameter_contract.md`.
 - If you need durable menu or gameplay product rules: use `docs/rds/*`.
 - If you need repo workflow or verification order: use `docs/WORKFLOW_CODEX.md`.
-- If you need to constrain a repository-changing task: use
-  `docs/governance/task_contract.md`.
-- If you need the required handoff fields: use
-  `docs/governance/completion_report.md`.
+- If you need to constrain a repository-changing task or report its completion:
+  use `docs/WORKFLOW_CODEX.md`, current task instructions, and the pull-request
+  template.
 - If you need task-specific context loading: use the context-switch profiles in
   `docs/WORKFLOW_CODEX.md`.
 - If you need to edit keybinding structure or shipped defaults: use

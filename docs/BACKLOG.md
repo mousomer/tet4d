@@ -799,6 +799,13 @@ Accepted follow-up:
 Measure Slice C only against the CI baseline after duplicate push/PR execution
 has been removed. Do not combine either follow-up with Stage 54B-1 runtime work.
 
+Re-governance PR 1 retires the accumulated task and completion ledgers from
+active governance and compacts the restart handoff without changing routing or
+verification semantics. PR 2 remains separately scoped to canonical governance
+consolidation, compositional route semantics, `docs/WORKFLOW_CODEX.md`
+retirement, workspace-bundle and `docs/policies/` consolidation,
+`docs/DOCUMENTATION_MAP.md` disposition, and a single-owner governance model.
+
 ## Governance Watchlist
 
 - Keep one semantic objective per PR.

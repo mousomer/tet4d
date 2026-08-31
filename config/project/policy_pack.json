@@ -2132,48 +2132,14 @@
         ]
       },
       {
-        "file": "docs/governance/task_contract.md",
-        "must_contain": [
-          "## Objective",
-          "## Current Authority",
-          "## Allowed Systems and Paths",
-          "## Required Changes",
-          "## Forbidden Changes",
-          "## Acceptance Criteria",
-          "## Automated Verification",
-          "## Manual Verification",
-          "## Documentation Updates",
-          "## Explicit Deferrals"
-        ]
-      },
-      {
-        "file": "docs/governance/completion_report.md",
-        "must_contain": [
-          "## Summary",
-          "## Files Changed",
-          "## Semantic Impact",
-          "## Authority Changes",
-          "## Tests and Verification",
-          "## Manual Checks",
-          "## Known Warnings",
-          "## Unresolved Limitations",
-          "## Diffstat",
-          "## Commit SHA",
-          "## PR URL",
-          "## Worktree State"
-        ]
-      },
-      {
         "file": "CURRENT_STATE.md",
         "must_contain": [
           "tools/governance/generate_maintenance_docs.py",
           "## Active Focus",
           "## Current Authority",
-          "## Known Watchouts",
+          "## Next Acceptance Boundary",
           "## Restart Checklist",
           "docs/PROJECT_STRUCTURE.md",
-          "docs/history/DONE_SUMMARIES.md",
-          "docs/history/current_state_archive_2026-07-30.md",
           "<!-- BEGIN GENERATED:current_state_metric_snapshot -->",
           "<!-- BEGIN GENERATED:current_state_drift_watch -->"
         ],
@@ -2591,7 +2557,9 @@
       "config/project/policy/governance.json",
       "config/project/policy/code_rules.json",
       "config/project/policy/manifests/canonical_maintenance.json",
-      "docs/RDS_AND_CODEX.md"
+      "docs/RDS_AND_CODEX.md",
+      "docs/governance/task_contract.md",
+      "docs/governance/completion_report.md"
     ],
     "reference_checks": [
       {
@@ -2600,7 +2568,9 @@
           "docs/RDS_AND_CODEX.md",
           "config/project/policy/governance.json",
           "config/project/policy/code_rules.json",
-          "config/project/policy/manifests/canonical_maintenance.json"
+          "config/project/policy/manifests/canonical_maintenance.json",
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
         ]
       },
       {
@@ -2609,7 +2579,9 @@
           "docs/RDS_AND_CODEX.md",
           "config/project/policy/governance.json",
           "config/project/policy/code_rules.json",
-          "config/project/policy/manifests/canonical_maintenance.json"
+          "config/project/policy/manifests/canonical_maintenance.json",
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
         ]
       },
       {
@@ -2617,7 +2589,9 @@
         "must_not_contain": [
           "docs/RDS_AND_CODEX.md",
           "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json"
+          "config/project/policy/code_rules.json",
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
         ]
       },
       {
@@ -2625,14 +2599,18 @@
         "must_not_contain": [
           "docs/RDS_AND_CODEX.md",
           "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json"
+          "config/project/policy/code_rules.json",
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
         ]
       },
       {
         "file": "docs/BACKLOG.md",
         "must_not_contain": [
           "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json"
+          "config/project/policy/code_rules.json",
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
         ]
       },
       {
@@ -2656,7 +2634,65 @@
         "must_not_contain": [
           "docs/RDS_AND_CODEX.md",
           "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json"
+          "config/project/policy/code_rules.json",
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": "docs/WORKFLOW_CODEX.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": "docs/governance/README.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": "docs/governance/drift_protection_map.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": "docs/governance/review_checklist.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": ".github/pull_request_template.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": "docs/governance/workspace_bundle/review_checklist_template.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": "godot/AGENTS.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
+        ]
+      },
+      {
+        "file": "native/AGENTS.md",
+        "must_not_contain": [
+          "docs/governance/task_contract.md",
+          "docs/governance/completion_report.md"
         ]
       },
       {

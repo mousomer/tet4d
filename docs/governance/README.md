@@ -7,23 +7,22 @@ subsystem-specific.
 The machine-readable authority is `config/project/policy_pack.json`; this file
 routes readers to human policy and evidence.
 
-## Three-layer active model
+## Active governance and execution model
 
 1. **Stable project constitution:** `AGENTS.md` states durable authorities,
    semantic boundaries, safety, verification, sanitation, and
    transfer/establishment rules.
-2. **Task contract:** `docs/governance/task_contract.md` constrains one
+2. **Explicit task and execution scope:** current task instructions, the
+   policy-backed routing model, and the pull-request contract constrain one
    objective, authority, allowed/forbidden scope, acceptance, verification,
    documentation, and deferrals. `docs/WORKFLOW_CODEX.md` routes stable change
-   classes.
-3. **Completion report:** `docs/governance/completion_report.md` records files,
-   semantic/authority impact, automated and manual evidence, warnings,
-   limitations, diffstat, commit, PR, and worktree state.
+   classes; `CURRENT_STATE.md` is loaded only for restart or staged handoff.
 
 The review overlay is `docs/governance/review_checklist.md`; new PRs start from
-`.github/pull_request_template.md`. Completed stage evidence is historical
-input for the relevant parity or migration task, not active instruction for
-unrelated work.
+`.github/pull_request_template.md`. Final reporting follows the completion and
+handoff contract in `docs/WORKFLOW_CODEX.md`. Completed execution evidence is
+historical input only when a current authority explicitly makes it relevant,
+not active instruction for unrelated work.
 
 ## Core policy routes
 
@@ -43,8 +42,8 @@ unrelated work.
 | GitHub publication identity | `config/project/policy_pack.json`, `AGENTS.md`, `docs/WORKFLOW_CODEX.md` |
 | Dependency/utility reuse | `docs/policies/POLICY_NO_REINVENTING_WHEEL.md`, `docs/architecture/utility_index.md`, `tools/governance/validate_utility_reuse.py` |
 | Technical debt | `docs/governance/workspace_bundle/technical_debt_policy.md`, `docs/governance/technical_debt_register.md`, `tools/governance/validate_technical_debt.py` |
-| Task/PR scope | `docs/governance/task_contract.md`, `.github/pull_request_template.md` |
-| Review/completion | `docs/governance/review_checklist.md`, `docs/governance/completion_report.md`, `docs/governance/workspace_bundle/review_checklist_template.md` |
+| Task/PR scope | `docs/WORKFLOW_CODEX.md`, `.github/pull_request_template.md` |
+| Review/completion | `docs/WORKFLOW_CODEX.md`, `docs/governance/review_checklist.md`, `docs/governance/workspace_bundle/review_checklist_template.md` |
 | Drift protection | `docs/governance/drift_protection_map.md`, `tools/governance/validate_drift_protection.py` |
 
 The reusable workspace bundle lives in `docs/governance/workspace_bundle/` and
@@ -102,8 +101,9 @@ documents applicable to the selected subsystem or review:
   `docs/architecture/structural_parity_slice_selection.md`,
   `docs/architecture/trace_envelope_validation_parity.md`.
 
-The detailed historical map is `docs/DOCUMENTATION_MAP.md`; completed work may
-also be recovered through `docs/history/` and Git history.
+The detailed historical map is `docs/DOCUMENTATION_MAP.md`. Completed work may
+also be recovered through `docs/history/` and Git history when relevant; it is
+discoverable evidence, not active governance or default task context.
 
 ## Enforcement and conflict rules
 
