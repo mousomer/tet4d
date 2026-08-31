@@ -146,9 +146,23 @@ else
     echo "or re-run with --configuration-only to export and validate the Xcode project." >&2
     exit 1
   fi
-  SCONS_PLATFORM=ios SCONS_ARCH=arm64 SCONS_TARGET=template_release \
-    "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
+  native_device_archive="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.ios.template_release.a"
+  native_simulator_archive="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.ios.template_release.simulator.a"
   native_xcframework="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.ios.template_release.xcframework"
+  rm -f "$native_device_archive" "$native_simulator_archive"
+  rm -rf "$native_xcframework"
+  SCONS_PLATFORM=ios SCONS_ARCH=arm64 SCONS_TARGET=template_release \
+    SCONS_IOS_SIMULATOR=no "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
+  SCONS_PLATFORM=ios SCONS_ARCH=universal SCONS_TARGET=template_release \
+    SCONS_IOS_SIMULATOR=yes "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
+  if [[ ! -f "$native_device_archive" || ! -f "$native_simulator_archive" ]]; then
+    echo "iPadOS device and simulator GDExtension archives were not produced" >&2
+    exit 1
+  fi
+  xcodebuild -create-xcframework \
+    -library "$native_device_archive" \
+    -library "$native_simulator_archive" \
+    -output "$native_xcframework"
   if [[ ! -d "$native_xcframework" ]]; then
     echo "iPadOS release GDExtension was not produced" >&2
     exit 1

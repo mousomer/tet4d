@@ -82,6 +82,28 @@ generated editor state before export, a regression contract that preserves the
 existing strict host-path validator, and the same full gates and integrated
 seven-artifact proof.
 
+Android follow-up after PR #80: integrated dispatch 33416903976 cleared the
+workflow invocation, cache isolation, configuration, and staged signing
+boundaries, then native compilation failed because pinned `godot-cpp` requires
+NDK `28.1.13356709` and the workflow selected the runner's newest installed
+NDK. Acceptance requires installing that exact binding-owned NDK version,
+asserting its toolchain exists, covering the pin in packaging contracts, and
+repeating the full PR and integrated seven-artifact gates.
+
+The same dispatch proved the iPadOS arm64 device archive compiles, then exposed
+that the builder expected the declared XCFramework without creating it.
+Acceptance requires separate arm64 device and universal simulator builds,
+explicit XCFramework assembly from those two archives, regression coverage for
+that topology, and the same full PR and integrated seven-artifact gates. The
+device archive alone is not accepted as the release GDExtension.
+
+Windows in the same dispatch completed native compilation and export, then the
+strict package validator found its runner path in `.godot` state regenerated
+inside the disposable project during import. Acceptance keeps pre-import cache
+removal and strict path scanning, adds `.godot/*` beside `tests/*` to every
+canonical Designer preset's exclusion contract, and proves all four presets
+retain the invariant before another integrated dispatch.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,

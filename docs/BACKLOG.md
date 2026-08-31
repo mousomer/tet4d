@@ -215,6 +215,28 @@ all remove copied editor cache state before their isolated import/export; keep
 the host-path rejection intact, cover the builder boundary with a regression
 contract, and include the result in the same fresh integrated proof.
 
+PR #80 had a green complete exact-head matrix and merged as `979b91c2`.
+Follow-up integrated dispatch 33416903976 reached Android native compilation:
+configuration and staged signing passed, but pinned `godot-cpp` requested NDK
+`28.1.13356709` while the workflow had selected the runner's newest installed
+NDK. Install and assert the binding-owned exact NDK version, add a packaging
+contract for the pin, and rerun the complete gates before closing the unified
+release item.
+
+The iPadOS lane in that dispatch compiled its arm64 device archive, then stopped
+because the build script asserted the declared release XCFramework without
+assembling it. Compile the universal simulator archive as a distinct second
+target, create the XCFramework from exactly the device and simulator archives,
+cover the topology in the packaging contracts, and include it in the same
+complete-gate and integrated-proof cycle.
+
+Windows in the dispatch completed native compilation and export before the
+strict validator found the runner checkout marker in `.godot` cache regenerated
+during disposable-project import. Retain copied-cache removal and strict path
+rejection, add `.godot/*` to the canonical exclusion filter for all four
+Designer presets, cover the four-preset boundary, and include it in the same
+proof cycle.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

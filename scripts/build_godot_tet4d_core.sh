@@ -47,6 +47,9 @@ scons_args=(api_version=4.7 platform="$platform" target="$target" arch="$arch")
 if [[ "$platform" == "macos" && -n "${SCONS_MACOS_DEPLOYMENT_TARGET:-}" ]]; then
   scons_args+=(macos_deployment_target="$SCONS_MACOS_DEPLOYMENT_TARGET")
 fi
+if [[ "$platform" == "ios" && -n "${SCONS_IOS_SIMULATOR:-}" ]]; then
+  scons_args+=(ios_simulator="$SCONS_IOS_SIMULATOR")
+fi
 if [[ "$platform" == "windows" && -n "${SCONS_MINGW_PREFIX:-}" ]]; then
   scons_args+=(mingw_prefix="$SCONS_MINGW_PREFIX" use_mingw=yes)
 fi
