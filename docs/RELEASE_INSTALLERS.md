@@ -66,8 +66,9 @@ project copy, and validates the exact portable payload, PE binaries, version,
 required laboratory resources, exclusions, and path sanitation. The production
 MSVC invocation explicitly disables godot-cpp native debug records for
 `template_release`; no PDB is part of the portable product. Existing
-compiler/linker path maps and strict package validation remain active. Its
-generated output remains ignored:
+compiler/linker path maps remain active, and MSVC trims the repository root
+from godot-cpp runtime `__FILE__` diagnostics before strict package validation.
+Its generated output remains ignored:
 
 ```text
 artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip

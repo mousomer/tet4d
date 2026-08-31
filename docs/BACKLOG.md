@@ -304,6 +304,14 @@ the sole cause. Keep strict rejection and report a bounded byte offset/context
 around the first marker occurrence in the offending member; use that evidence
 to identify the actual MSVC record before claiming a sanitation fix.
 
+Exact-head hosted run 33444795805 attributed that record to godot-cpp's runtime
+error strings: the absolute checkout path is the `__FILE__` value for
+`local_vector.hpp`, adjacent to its out-of-memory diagnostic. Add MSVC
+`/d1trimfile` for the repository root so runtime source diagnostics retain only
+the repository-relative suffix; keep `/pathmap`, `/PDBALTPATH`,
+`debug_symbols=no`, and strict package rejection, then require a fresh hosted
+Windows package to close this item.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

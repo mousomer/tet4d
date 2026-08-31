@@ -305,6 +305,16 @@ records or a PDB, so `build_windows.sh` must explicitly request
 `debug_symbols=no`. The compiler and linker path maps remain defense in depth;
 strict validation is unchanged.
 
+Exact-head hosted run 33444795805 then located the remaining marker at byte
+645282 immediately before
+`native\\third_party\\godot-cpp\\include\\godot_cpp/templates/local_vector.hpp`
+and after godot-cpp's out-of-memory diagnostic text. This is the runtime
+`__FILE__` payload used by godot-cpp error reporting, not PDB or compiler debug
+metadata. MSVC production compilation must therefore trim the repository root
+from `__FILE__` with `/d1trimfile`, in addition to retaining `/pathmap`,
+`/PDBALTPATH`, and `debug_symbols=no`. The trimmed suffix remains useful in
+runtime diagnostics while the hosted checkout prefix cannot enter the DLL.
+
 After PR #83 integrated the first Windows diagnostic correction as `9058e93e`,
 dispatch 33426937123 proved the exact Android NDK was installed and the native
 build started. The pinned `godot-cpp` archive then exceeded the hosted Linux
