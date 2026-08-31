@@ -110,6 +110,10 @@
     `TEMPFILE` argument it prints the full expanded command. The archive wrapper
     now supplies `ARCOMSTR`, retaining compact library-link logs while executing
     the unchanged response-file command.
+15. Android native packaging now creates the disposable add-on `bin` directory
+    before staging the successfully linked arm64 GDExtension. Clean checkouts do
+    not carry ignored generated directories, so package assembly no longer
+    depends on prior host builds creating them incidentally.
 
 ## 2026-08-30
 

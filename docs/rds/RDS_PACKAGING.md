@@ -310,6 +310,14 @@ must pass `ARCOMSTR` as `TEMPFILE`'s second argument so execution remains
 response-file based while logs retain the existing bounded static-library
 message.
 
+PR #85 integrated that bounded response-file logging as `ea9be00d`. Dispatch
+33433033740 then completed the pinned binding archive, ranlib, project-native
+compilation, and final Android arm64 shared-library link. Packaging stopped only
+when copying the proven `.so` into a disposable project whose ignored native
+`bin` directory did not exist on a clean checkout. The Android builder must
+create that staging directory explicitly before copying; generated source-tree
+inventory is not a clean-checkout directory contract.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.

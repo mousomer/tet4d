@@ -133,6 +133,12 @@ Acceptance additionally requires `ARCOMSTR` as `TEMPFILE`'s second argument,
 preserving bounded archive logs, focused/full/PR gates, and a fresh integrated
 APK proof.
 
+Follow-up after PR #85: dispatch 33433033740 proved the complete Android native
+archive and shared-library build, then failed because the disposable project's
+ignored `addons/tet4d_core/bin` directory did not exist for staging. Acceptance
+requires explicit directory creation before the `.so` copy, an ordering
+contract, full focused/repository/PR gates, and a fresh validated APK proof.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,

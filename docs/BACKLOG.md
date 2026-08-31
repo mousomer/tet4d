@@ -265,6 +265,12 @@ compact display-string argument and SCons expanded the full archive command
 into the CI log. Pass `ARCOMSTR` as the second argument and repeat the full PR
 and integrated APK gates.
 
+PR #85 merged bounded response-file logging as `ea9be00d`. Integrated dispatch
+33433033740 completed Android archive, ranlib, native compilation, and arm64
+shared linking, then found the clean disposable project lacks the ignored
+native `bin` directory. Create that staging directory before copying the `.so`,
+cover the order, and repeat full PR and integrated APK gates.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

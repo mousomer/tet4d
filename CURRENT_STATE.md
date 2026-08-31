@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/android-ar-response-log`; do not treat the worktree as a clean
+`codex/android-stage-native-bin`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -135,6 +135,14 @@ history ledger. Detailed history is preserved in
   active follow-up passes `ARCOMSTR` as that second argument; focused, full,
   PR, and fresh integrated APK evidence remain required. Windows and iPadOS
   retained their prior isolated failures and remain outside this correction.
+
+- PR #85 had a green selected exact-head matrix and squash-merged as
+  `ea9be00d709d14fd55e70dab81f814ba07ecfe7c`. Integrated dispatch
+  33433033740 completed Android's binding archive, ranlib, project-native
+  compilation, and arm64 shared-library link. It stopped only because the
+  disposable project's ignored native `bin` directory was absent before the
+  `.so` copy. The active correction creates that staging directory explicitly;
+  focused, full, PR, and fresh integrated APK evidence remain required.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from
