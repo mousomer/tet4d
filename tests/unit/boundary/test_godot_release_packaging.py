@@ -21,6 +21,7 @@ DISPOSABLE_PLATFORM_BUILD_SCRIPTS = (
     ROOT / "packaging/godot/build_ipados.sh",
 )
 NATIVE_SCONSTRUCT = ROOT / "native/tet4d_core/SConstruct"
+NATIVE_BUILD_WRAPPER = ROOT / "scripts/build_godot_tet4d_core.sh"
 
 
 def _project_version() -> str:
@@ -125,6 +126,20 @@ def test_windows_native_build_sanitizes_compiler_and_linker_debug_paths() -> Non
         assert flag in build
     assert 'CCFLAGS=["/pathmap:{}=.".format(repository_root)]' in build
     assert 'LINKFLAGS=["/PDBALTPATH:%_PDB%"]' in build
+
+
+def test_windows_release_disables_native_debug_records() -> None:
+    wrapper = NATIVE_BUILD_WRAPPER.read_text(encoding="utf-8")
+    builder = (ROOT / "packaging/godot/build_windows.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'scons_args+=(debug_symbols="$SCONS_DEBUG_SYMBOLS")' in wrapper
+    assert "SCONS_TARGET=template_release \\" in builder
+    assert "SCONS_DEBUG_SYMBOLS=no \\" in builder
+    assert builder.index("SCONS_TARGET=template_release") < builder.index(
+        "SCONS_DEBUG_SYMBOLS=no"
+    )
 
 
 def test_android_and_linux_native_archives_use_response_files() -> None:

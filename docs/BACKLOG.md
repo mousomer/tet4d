@@ -289,6 +289,15 @@ library and `_export_additional_assets` returns file-not-found. Create the
 staging directory before copying, assert command order, and validate the exact
 nested framework path Godot emits in the Xcode project.
 
+Windows dispatch 33439410913 again completed native compilation and Godot
+export before strict validation attributed `\\a\\tet4d\\tet4d` solely to the
+release GDExtension DLL. `/pathmap` and `/PDBALTPATH:%_PDB%` remain present, but
+pinned godot-cpp defaults `debug_symbols=true` and therefore adds `/Zi` plus
+`/DEBUG:FULL` even for `template_release`. A published portable DLL has no PDB
+payload; explicitly pass `debug_symbols=no` only for the Windows release package,
+preserve other build defaults and strict path checks, and prove the DLL on the
+hosted MSVC runner.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

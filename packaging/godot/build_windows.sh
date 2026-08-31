@@ -93,6 +93,7 @@ if [[ -n "${GODOT_TEMPLATE_ROOT:-}" ]]; then
 fi
 
 SCONS_PLATFORM=windows SCONS_ARCH=x86_64 SCONS_TARGET=template_release \
+  SCONS_DEBUG_SYMBOLS=no \
   "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
 
 native_dll="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.windows.template_release.x86_64.dll"

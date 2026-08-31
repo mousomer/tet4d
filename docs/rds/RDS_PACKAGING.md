@@ -297,6 +297,14 @@ prefix-map flags. Strict archive validation must identify the member containing
 a forbidden path so future failures remain attributable without weakening the
 marker contract.
 
+Subsequent hosted MSVC packages proved `/PDBALTPATH` did not eliminate every
+checkout record while pinned godot-cpp still used its default
+`debug_symbols=true`, which adds `/Zi` and `/DEBUG:FULL` even for
+`template_release`. Published Windows release DLLs do not ship native debug
+records or a PDB, so `build_windows.sh` must explicitly request
+`debug_symbols=no`. The compiler and linker path maps remain defense in depth;
+strict validation is unchanged.
+
 After PR #83 integrated the first Windows diagnostic correction as `9058e93e`,
 dispatch 33426937123 proved the exact Android NDK was installed and the native
 build started. The pinned `godot-cpp` archive then exceeded the hosted Linux

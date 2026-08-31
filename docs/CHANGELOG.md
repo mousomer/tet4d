@@ -123,6 +123,10 @@
     before copying the generated XCFramework. This preserves the framework's
     directory name for descriptor resolution; release validation now asserts
     Godot's canonical nested Xcode-project framework location.
+18. Windows release packaging now explicitly disables pinned godot-cpp's
+    default MSVC debug records. `template_release` previously still added
+    `/Zi` and `/DEBUG:FULL`; the production portable DLL ships no PDB, while
+    existing compiler/linker path maps and strict host-path rejection remain.
 
 ## 2026-08-30
 
