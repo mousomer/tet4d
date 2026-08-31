@@ -280,6 +280,15 @@ with `assets/assets.sparsepck` metadata. Align the validator and normative
 packaging documentation with that exact upstream layout, retain required-asset
 and path-hygiene checks, and repeat focused, full, PR, and integrated APK gates.
 
+The iPadOS failure in integrated dispatch 33436190052 is the analogous clean
+staging-directory boundary. The disposable project is copied before native
+output creates the source project's ignored add-on `bin` directory. Without an
+explicit destination directory, `cp -R` creates `bin` from the XCFramework's
+contents and loses the `.xcframework` directory name, so Godot resolves no
+library and `_export_additional_assets` returns file-not-found. Create the
+staging directory before copying, assert command order, and validate the exact
+nested framework path Godot emits in the Xcode project.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

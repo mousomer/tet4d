@@ -45,6 +45,9 @@ IOS_RELEASE_DECLARATION = (
     'libtet4d_core.ios.template_release.xcframework"'
 )
 RELEASE_NATIVE_FRAMEWORK = "libtet4d_core.ios.template_release.xcframework"
+RELEASE_NATIVE_FRAMEWORK_PATH = (
+    "Tet4DDesigner/dylibs/addons/tet4d_core/bin/" + RELEASE_NATIVE_FRAMEWORK
+)
 
 
 class IpadOsProjectError(ValueError):
@@ -183,7 +186,7 @@ def _check_artifact_mode(
         raise IpadOsProjectError(f"unknown iPadOS artifact mode {artifact_mode!r}")
     has_debug_declaration = IOS_DEBUG_DECLARATION in descriptor
     has_release_declaration = IOS_RELEASE_DECLARATION in descriptor
-    release_native = project_root / RELEASE_NATIVE_FRAMEWORK
+    release_native = project_root / RELEASE_NATIVE_FRAMEWORK_PATH
     any_native = sorted(project_root.glob("**/libtet4d_core.ios.*.xcframework"))
 
     if artifact_mode == "configuration":
@@ -203,7 +206,7 @@ def _check_artifact_mode(
         )
     if not release_native.is_dir():
         raise IpadOsProjectError(
-            f"release artifact is missing {RELEASE_NATIVE_FRAMEWORK}"
+            f"release artifact is missing {RELEASE_NATIVE_FRAMEWORK_PATH}"
         )
     return True
 

@@ -119,6 +119,10 @@
     `assets/assets.sparsepck` metadata. The prior conventional-`.pck` assumption
     rejected an APK that Godot had already exported, aligned, signed, and
     verified; required laboratory assets and machine-path hygiene remain strict.
+17. iPadOS release staging now creates the disposable add-on `bin` directory
+    before copying the generated XCFramework. This preserves the framework's
+    directory name for descriptor resolution; release validation now asserts
+    Godot's canonical nested Xcode-project framework location.
 
 ## 2026-08-30
 

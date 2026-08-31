@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/android-validate-sparse-apk`; do not treat the worktree as a clean
+`codex/ipados-stage-native-framework`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -154,6 +154,14 @@ history ledger. Detailed history is preserved in
   validation and packaging documentation to that upstream layout while keeping
   required-resource and path-hygiene enforcement; focused, full, PR, and fresh
   integrated evidence remain required.
+
+- PR #87 had a fully green exact-head matrix (Actions run 33437667275) and
+  squash-merged as `77a6e61b71c4d78c264edaa723502df2c47cb17d`.
+  Unified dispatch 33439410913 is the fresh integrated proof. The active
+  iPadOS correction addresses the already isolated clean-staging failure:
+  create the disposable add-on `bin` directory before the XCFramework copy and
+  validate Godot's exact nested exported framework path. Android and Windows
+  remain outside this objective and keep their own integrated evidence.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from
