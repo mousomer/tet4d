@@ -192,6 +192,12 @@ tag/project-version agreement check, and source-SHA/checksum manifest with
 truthful iPadOS status are implemented and awaiting integrated CI plus a real
 manual workflow-dispatch proof.
 
+Integrated diagnostic run 33397993043 found two release-orchestration defects
+before manifest assembly: cache-free direct Godot tests could not self-construct
+`PresentationProfile`, and Windows split the 7-Zip output switch. The three
+Python package proofs remained green. Narrow corrections and a fresh integrated
+seven-artifact dispatch are now the release-unification blocker.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

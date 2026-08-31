@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/unify-release-packaging`; do not treat the worktree as a clean handoff
+`codex/fix-unified-release-proof`; do not treat the worktree as a clean handoff
 
 ## Purpose
 
@@ -54,6 +54,13 @@ history ledger. Detailed history is preserved in
   Python-plus-Designer workflow, tag/project-version invariant, and
   source-SHA/checksum manifest with truthful iPadOS status are implemented and
   awaiting integrated CI plus real workflow-dispatch evidence.
+
+- PR #78 had a green complete fresh CI matrix and was squash-merged as
+  `4fdb8bfa4e5730426789453df71ea198e70d475f`. Integrated manual release run
+  33397993043 is diagnostic: all three Python jobs passed, while Android and
+  iPadOS exposed a cache-free `PresentationProfile` self-construction defect
+  and Windows exposed a split 7-Zip output option. A narrow correction and
+  fresh seven-artifact run are active; no unified manifest claim is made yet.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

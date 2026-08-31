@@ -57,6 +57,12 @@
    The historical `0.8.0` publication label remains documented as a release
    label/project-version mismatch; it is not silently promoted to project
    version truth.
+5. The first integrated unified dispatch retained three green Python packages
+   but exposed two clean-run blockers before manifest assembly: cache-free
+   Android/iPadOS semantic tests could not self-construct
+   `PresentationProfile`, and PowerShell split Windows 7-Zip's output switch.
+   This run is diagnostic; final unified evidence requires both narrow fixes
+   and a fresh all-platform dispatch.
 
 ## 2026-08-30
 

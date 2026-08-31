@@ -11,6 +11,10 @@ PROJECT_FILE = ROOT / "godot/Tet4D.Godot/project.godot"
 EXPORT_PRESETS = ROOT / "godot/Tet4D.Godot/export_presets.cfg"
 BUILD_SCRIPT = ROOT / "packaging/godot/build_macos.sh"
 SMOKE_SCRIPT = ROOT / "packaging/godot/smoke_macos.sh"
+RELEASE_WORKFLOW = ROOT / ".github/workflows/release-packaging.yml"
+PRESENTATION_PROFILE = (
+    ROOT / "godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd"
+)
 
 
 def _project_version() -> str:
@@ -25,9 +29,9 @@ def test_godot_release_metadata_is_consistent() -> None:
 
     assert 'config/name="Tet4D"' in project
     assert f'config/version="{version}"' in project
-    assert 'config/use_custom_user_dir=true' in project
+    assert "config/use_custom_user_dir=true" in project
     assert 'config/custom_user_dir_name="Tet4D"' in project
-    assert 'textures/vram_compression/import_etc2_astc=true' in project
+    assert "textures/vram_compression/import_etc2_astc=true" in project
     assert 'name="macOS Universal"' in preset
     assert 'platform="macOS"' in preset
     assert 'binary_format/architecture="universal"' in preset
@@ -83,3 +87,24 @@ def test_exported_app_smoke_is_outside_tree_and_isolated() -> None:
         assert token in script
     assert ("/" + "Users/") not in script
     assert not re.search(r"[A-Za-z]:\\\\", script)
+
+
+def test_presentation_profile_construction_is_independent_of_generated_class_cache() -> (
+    None
+):
+    script = PRESENTATION_PROFILE.read_text(encoding="utf-8")
+
+    assert "PresentationProfile.new()" not in script
+    assert (
+        'const SCRIPT_PATH := "res://scripts/presentation/presentation_profile.gd"'
+        in script
+    )
+    assert "return load(SCRIPT_PATH).new()" in script
+
+
+def test_windows_template_output_is_one_absolute_7zip_argument() -> None:
+    workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "$templateOutput = (Resolve-Path .godot-templates).Path" in workflow
+    assert '"-o$templateOutput"' in workflow
+    assert " -o.godot-templates " not in workflow

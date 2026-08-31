@@ -150,6 +150,13 @@ The same rule applies when resolving an already-created background node: the
 stable scene path and the preloaded implementation contract are sufficient.
 Generated editor metadata is never a runtime dependency or a shipped authority.
 
+The rule also applies to `PresentationProfile` itself. Its static constructors
+must instantiate through the current script resource, not through its optional
+project-global `class_name`. A fresh exact-SHA checkout may run a focused
+headless script before an editor import has generated
+`global_script_class_cache.cfg`; canonical defaults, built-in-style validation,
+and cross-platform Design Laboratory conformance must still compile and run.
+
 ## 6. Animated background surface
 
 A genuine Tron-like style needs motion, so this stage adds one bounded
