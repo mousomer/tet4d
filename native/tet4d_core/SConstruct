@@ -3,7 +3,7 @@
 bootstrap_env = Environment(tools=["default"], PLATFORM="")
 if ARGUMENTS.get("platform") in ("android", "linux"):
     bootstrap_env["ARCOM_POSIX"] = bootstrap_env["ARCOM"]
-    bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX)}"
+    bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX, ARCOMSTR)}"
 elif ARGUMENTS.get("platform") == "windows":
     repository_root = Dir("../..").abspath
     if ARGUMENTS.get("use_mingw") == "yes":

@@ -258,6 +258,13 @@ and Clang validation, then failed while archiving pinned `godot-cpp`: the POSIX
 Linux SCons response-file `ARCOM` boundary to Android, cover the platform split,
 and prove the APK through full PR and fresh integrated release gates.
 
+PR #84 merged the Android response-file transport as `61437bd6`. Integrated
+dispatch 33429888428 proved the response file is created and removed the old
+argument-limit error, then stopped because the wrapper omitted `TEMPFILE`'s
+compact display-string argument and SCons expanded the full archive command
+into the CI log. Pass `ARCOMSTR` as the second argument and repeat the full PR
+and integrated APK gates.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one
