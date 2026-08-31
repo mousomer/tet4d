@@ -298,6 +298,12 @@ payload; explicitly pass `debug_symbols=no` only for the Windows release package
 preserve other build defaults and strict path checks, and prove the DLL on the
 hosted MSVC runner.
 
+Exact-head hosted run 33443239671 proved `debug_symbols=no` alone does not
+remove the native DLL marker, so the PDB/debug-record hypothesis is rejected as
+the sole cause. Keep strict rejection and report a bounded byte offset/context
+around the first marker occurrence in the offending member; use that evidence
+to identify the actual MSVC record before claiming a sanitation fix.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

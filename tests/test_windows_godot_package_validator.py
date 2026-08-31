@@ -85,11 +85,15 @@ def test_development_only_inventory_is_rejected(tmp_path: Path) -> None:
 def test_host_path_failure_names_the_offending_archive_member(tmp_path: Path) -> None:
     validator = _module()
     member = "Tet4D Designer/libtet4d_core.windows.template_release.x86_64.dll"
+    marker = b"\\a\\tet4d\\tet4d"
     archive_path = _archive(
         tmp_path,
-        marker=b"\\a\\tet4d\\tet4d",
+        marker=b"before-context:" + marker + b":after-context",
         marker_member=member,
     )
 
-    with pytest.raises(ValueError, match=rf"{member}.*absolute path marker"):
+    with pytest.raises(
+        ValueError,
+        match=rf"{member}.*absolute path marker.*byte.*before-context.*after-context",
+    ):
         validator.validate(archive_path, ROOT)
