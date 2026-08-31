@@ -237,6 +237,13 @@ rejection, add `.godot/*` to the canonical exclusion filter for all four
 Designer presets, cover the four-preset boundary, and include it in the same
 proof cycle.
 
+PR #81 had a green exact-head matrix and merged as `f8e70ca2`. Integrated
+dispatch 33421053972 derived the correct binding-owned NDK version, but the
+hosted image does not place `sdkmanager` on PATH. Resolve and assert the exact
+command-line-tools executable under `$ANDROID_HOME`, install the pinned NDK
+without a `yes` pipeline, retain the Clang assertion, and rerun the complete
+gates before closing the unified release item.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

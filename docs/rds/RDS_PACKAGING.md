@@ -270,6 +270,14 @@ and every canonical Designer export preset must additionally exclude both
 payload. Host-path validation remains strict; this invariant removes the
 development-only input rather than weakening the check.
 
+After PR #81 integrated those corrections as `f8e70ca2`, dispatch 33421053972
+resolved the exact binding-owned NDK version but found `sdkmanager` is not a
+bare command on the hosted Android runner. Release orchestration must resolve
+and assert `$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager`, invoke that
+exact executable non-interactively to install the pinned NDK, and then retain
+the existing exact Clang assertion. PATH inventory is not Android toolchain
+authority, and an unbounded `yes` pipeline is not part of the install contract.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.

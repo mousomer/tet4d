@@ -104,6 +104,13 @@ removal and strict path scanning, adds `.godot/*` beside `tests/*` to every
 canonical Designer preset's exclusion contract, and proves all four presets
 retain the invariant before another integrated dispatch.
 
+Follow-up after PR #81: integrated dispatch 33421053972 derived the correct NDK
+pin, then stopped because the hosted runner does not expose `sdkmanager` as a
+bare PATH command. Acceptance requires resolving and asserting the exact
+`$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager` executable, installing the
+pinned NDK without an unbounded `yes` pipeline, retaining the Clang assertion,
+and repeating the full PR and integrated seven-artifact gates.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,
