@@ -108,3 +108,16 @@ def test_windows_template_output_is_one_absolute_7zip_argument() -> None:
     assert "$templateOutput = (Resolve-Path .godot-templates).Path" in workflow
     assert '"-o$templateOutput"' in workflow
     assert " -o.godot-templates " not in workflow
+
+
+def test_tablet_build_steps_use_unambiguous_shell_blocks() -> None:
+    workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    for script in ["build_android.sh", "build_ipados.sh"]:
+        command = (
+            'GODOT_BIN="$GODOT_BIN" '
+            'GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" '
+            f"packaging/godot/{script}"
+        )
+        assert f"run: |\n          {command}" in workflow
+        assert f'GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \\\n          packaging/godot/{script}' not in workflow

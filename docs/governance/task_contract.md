@@ -1,7 +1,7 @@
 # Task Contract — Integration, Explicit A/B Assignment, and Unified Release Proof
 
 Status: ACTIVE — INTEGRATION MERGED; REMOTE BRANCH REVIEW COMPLETE; ALL THREE
-PYTHON PACKAGES PROVEN; UNIFIED RELEASE DIAGNOSTIC FAILURES UNDER CORRECTION
+PYTHON PACKAGES PROVEN; TABLET RELEASE INVOCATIONS UNDER CORRECTION
 
 Starting branch: `codex/built-in-style-catalog`
 
@@ -60,6 +60,17 @@ output option was split to invalid `-o`. The correction must preserve the
 cache-independent runtime architecture, pass the output directory as one
 absolute 7-Zip argument, and obtain a fresh full PR matrix plus a completely
 green integrated unified workflow.
+
+Follow-up diagnostic result: PR #79 had a green complete exact-head CI matrix
+and was squash-merged as `38551bb2f87d4f2866f33f99a7143cf156c75da6`.
+Integrated dispatch 33401278911 proved the corrected cache-free tablet semantic
+test and reached both tablet builders, while the three Python packages remained
+green. Android and iPadOS then failed before executing their scripts because a
+folded YAML scalar combined an explicit shell continuation with indentation,
+producing a command token with a leading space. Acceptance requires block-form,
+unambiguous tablet script invocations, a regression contract for both steps,
+the complete repository/PR gates, and a fresh integrated workflow whose seven
+artifacts and checksum/source-SHA manifest all succeed.
 
 ## Objective and classification
 

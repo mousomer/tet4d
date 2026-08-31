@@ -63,6 +63,12 @@
    `PresentationProfile`, and PowerShell split Windows 7-Zip's output switch.
    This run is diagnostic; final unified evidence requires both narrow fixes
    and a fresh all-platform dispatch.
+6. The next integrated dispatch confirmed both fixes reached their intended
+   boundaries, including cache-free tablet semantics, but exposed a separate
+   tablet command-shape defect: YAML folding combined with explicit shell
+   continuation made the Android and iPadOS script paths leading-space command
+   names. Both workflow steps now require unambiguous block-form invocation and
+   a packaging regression contract before the final all-platform proof.
 
 ## 2026-08-30
 
