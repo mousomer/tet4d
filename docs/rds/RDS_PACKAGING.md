@@ -225,6 +225,26 @@ switch that PowerShell split into an invalid short `-o` argument. Both must be
 corrected and the full seven-artifact workflow rerun from a new integrated
 master SHA before the unified gate is accepted.
 
+PR #79 corrected both dependencies; its complete exact-head CI matrix was green
+before squash merge as `38551bb2f87d4f2866f33f99a7143cf156c75da6`.
+Integrated dispatch 33401278911 confirms that the cache-free tablet semantic
+test and Windows template extraction now pass their corrected boundaries, but
+is still diagnostic: YAML folded each tablet build command into a shell token
+with a leading space after an explicit continuation, so Android and iPadOS
+could not locate their checked-in build scripts. Tablet build invocations must
+be expressed as unambiguous shell blocks, and a fresh seven-artifact dispatch
+from the resulting integrated master SHA remains required.
+
+The same dispatch also completed the Windows native release build and export,
+then correctly rejected the ZIP for containing the runner checkout marker.
+The direct Godot test had populated the source project's ignored `.godot`
+state, and the Windows disposable export copied that generated cache. Android
+and iPadOS share the same source-copy pattern after the same test. Every
+disposable platform export must therefore remove copied `.godot` state before
+import/export; the macOS builder's existing exclusion remains the reference
+boundary. This is packaging isolation, not a relaxation of host-path
+validation.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.
@@ -236,6 +256,8 @@ master SHA before the unified gate is accepted.
 4. The app contains the required native framework and runtime resources.
 5. The exported app launches outside the repository with isolated clean user
    data and no current-working-directory dependency.
+   Disposable Windows, Android, iPadOS, and macOS project copies exclude the
+   source checkout's generated `.godot` editor state before import/export.
 6. A representative packaged 2D/3D/4D session, including Hold, NEXT, and
    Ghost, passes final manual release-candidate review.
 7. Normal startup emits no release-blocking resource, parser, persistence, or
@@ -248,6 +270,9 @@ master SHA before the unified gate is accepted.
 10. The Android and iPadOS candidates pass their configuration and artifact
     validators, and the recorded evidence names the exact level at which it was
     obtained.
+    Their workflow steps invoke the checked-in build scripts directly with the
+    resolved editor and template-root environment, without YAML folding or
+    shell-continuation ambiguity.
 11. Linux Godot, direct clean-machine Windows Godot acceptance, tablet device
     acceptance, signing/notarization, and each Python installer are reported
     with their exact verification limits.

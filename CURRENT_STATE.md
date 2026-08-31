@@ -2,7 +2,8 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/fix-unified-release-proof`; do not treat the worktree as a clean handoff
+`codex/fix-tablet-release-invocation`; do not treat the worktree as a clean
+handoff
 
 ## Purpose
 
@@ -61,6 +62,23 @@ history ledger. Detailed history is preserved in
   iPadOS exposed a cache-free `PresentationProfile` self-construction defect
   and Windows exposed a split 7-Zip output option. A narrow correction and
   fresh seven-artifact run are active; no unified manifest claim is made yet.
+
+- PR #79 corrected those dependencies, had green complete exact-head CI, and
+  was squash-merged as `38551bb2f87d4f2866f33f99a7143cf156c75da6`.
+  Integrated dispatch 33401278911 cleared the corrected cache-free tablet
+  semantic test and retained green Python packaging, but Android and iPadOS
+  then exposed a shared YAML/shell folding defect before either checked-in
+  builder executed. Block-form tablet invocations, regression coverage, full
+  gates, and a fresh integrated seven-artifact run are active; no unified
+  manifest claim is made yet.
+
+- The Windows job in dispatch 33401278911 then completed its native build and
+  export, but the strict validator found the runner checkout marker in the
+  package. The disposable project had copied ignored `.godot` state generated
+  by the preceding direct Godot test; Android and iPadOS share that source-copy
+  exposure. All three builders must remove copied editor cache state before
+  export while retaining strict host-path rejection. This isolation correction
+  is included in the active full-gate and integrated-proof cycle.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

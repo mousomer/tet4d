@@ -198,6 +198,23 @@ before manifest assembly: cache-free direct Godot tests could not self-construct
 Python package proofs remained green. Narrow corrections and a fresh integrated
 seven-artifact dispatch are now the release-unification blocker.
 
+PR #79 corrected those two defects, had a green full exact-head matrix, and
+merged as `38551bb2`. Follow-up integrated dispatch 33401278911 cleared the
+cache-free tablet semantic boundary and retained three green Python packages,
+but exposed one narrower orchestration defect shared by Android and iPadOS:
+YAML folding plus an explicit shell continuation made each indented build-script
+path a leading-space command name. Replace both steps with unambiguous block
+commands, enforce that shape in packaging contracts, and rerun the complete
+integrated workflow before closing the seven-artifact item.
+
+The Windows job in the same dispatch subsequently completed its native build
+and export, then the existing strict validator rejected the runner checkout
+marker. Its disposable project copy had inherited ignored `.godot` state
+created by the preceding direct Godot test. Windows, Android, and iPadOS must
+all remove copied editor cache state before their isolated import/export; keep
+the host-path rejection intact, cover the builder boundary with a regression
+contract, and include the result in the same fresh integrated proof.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

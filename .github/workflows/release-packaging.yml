@@ -475,8 +475,8 @@ jobs:
             --script tests/run_cross_platform_design_tests.gd
 
       - name: Build and validate the Android tablet Designer
-        run: GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
-          packaging/godot/build_android.sh
+        run: |
+          GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" packaging/godot/build_android.sh
 
       - name: Stage explicit Designer artifact name
         run: |
@@ -562,8 +562,8 @@ jobs:
       # the iOS GDExtension is cross-compiled and the exported project is
       # compiled unsigned for the simulator.
       - name: Build and validate the iPadOS Designer
-        run: GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
-          packaging/godot/build_ipados.sh
+        run: |
+          GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" packaging/godot/build_ipados.sh
 
       - name: Stage explicit Designer artifact name
         run: |

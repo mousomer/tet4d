@@ -106,6 +106,7 @@ fi
 # sidecars during import; packaging must never dirty the source checkout.
 staged_project_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-project.XXXXXX")"
 cp -R "$PROJECT_DIR/." "$staged_project_root/"
+rm -rf "$staged_project_root/.godot"
 
 mkdir -p "$ARTIFACT_DIR"
 pack_path="$ARTIFACT_DIR/Tet4D-Designer-$version-android-arm64.pck"
