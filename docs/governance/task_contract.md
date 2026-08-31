@@ -72,6 +72,16 @@ unambiguous tablet script invocations, a regression contract for both steps,
 the complete repository/PR gates, and a fresh integrated workflow whose seven
 artifacts and checksum/source-SHA manifest all succeed.
 
+Windows follow-up from the same dispatch: the release GDExtension compiled and
+the project exported, after which the validator rejected a runner checkout
+marker in the package. The workflow's direct Godot test had created ignored
+`.godot` state in the source project and the Windows builder copied it into its
+otherwise disposable project. Android and iPadOS have the same copy boundary.
+Acceptance therefore also requires all three builders to remove copied
+generated editor state before export, a regression contract that preserves the
+existing strict host-path validator, and the same full gates and integrated
+seven-artifact proof.
+
 ## Objective and classification
 
 Stabilize and merge the accumulated post-54E presentation, Design Laboratory,

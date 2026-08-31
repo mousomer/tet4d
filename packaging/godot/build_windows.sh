@@ -105,6 +105,7 @@ fi
 # sidecars during import; packaging must never dirty the source checkout.
 staged_project_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-project.XXXXXX")"
 cp -R "$PROJECT_DIR/." "$staged_project_root/"
+rm -rf "$staged_project_root/.godot"
 
 rm -rf "$ARTIFACT_DIR"
 mkdir -p "$APP_DIR"

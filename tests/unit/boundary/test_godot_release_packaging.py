@@ -15,6 +15,11 @@ RELEASE_WORKFLOW = ROOT / ".github/workflows/release-packaging.yml"
 PRESENTATION_PROFILE = (
     ROOT / "godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd"
 )
+DISPOSABLE_PLATFORM_BUILD_SCRIPTS = (
+    ROOT / "packaging/godot/build_windows.sh",
+    ROOT / "packaging/godot/build_android.sh",
+    ROOT / "packaging/godot/build_ipados.sh",
+)
 
 
 def _project_version() -> str:
@@ -108,6 +113,17 @@ def test_windows_template_output_is_one_absolute_7zip_argument() -> None:
     assert "$templateOutput = (Resolve-Path .godot-templates).Path" in workflow
     assert '"-o$templateOutput"' in workflow
     assert " -o.godot-templates " not in workflow
+
+
+def test_disposable_platform_projects_drop_copied_editor_cache() -> None:
+    copy_command = 'cp -R "$PROJECT_DIR/." "$staged_project_root/"'
+    cache_removal = 'rm -rf "$staged_project_root/.godot"'
+
+    for path in DISPOSABLE_PLATFORM_BUILD_SCRIPTS:
+        script = path.read_text(encoding="utf-8")
+        assert copy_command in script
+        assert cache_removal in script
+        assert script.index(copy_command) < script.index(cache_removal)
 
 
 def test_tablet_build_steps_use_unambiguous_shell_blocks() -> None:

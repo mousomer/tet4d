@@ -235,6 +235,16 @@ could not locate their checked-in build scripts. Tablet build invocations must
 be expressed as unambiguous shell blocks, and a fresh seven-artifact dispatch
 from the resulting integrated master SHA remains required.
 
+The same dispatch also completed the Windows native release build and export,
+then correctly rejected the ZIP for containing the runner checkout marker.
+The direct Godot test had populated the source project's ignored `.godot`
+state, and the Windows disposable export copied that generated cache. Android
+and iPadOS share the same source-copy pattern after the same test. Every
+disposable platform export must therefore remove copied `.godot` state before
+import/export; the macOS builder's existing exclusion remains the reference
+boundary. This is packaging isolation, not a relaxation of host-path
+validation.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.
@@ -246,6 +256,8 @@ from the resulting integrated master SHA remains required.
 4. The app contains the required native framework and runtime resources.
 5. The exported app launches outside the repository with isolated clean user
    data and no current-working-directory dependency.
+   Disposable Windows, Android, iPadOS, and macOS project copies exclude the
+   source checkout's generated `.godot` editor state before import/export.
 6. A representative packaged 2D/3D/4D session, including Hold, NEXT, and
    Ghost, passes final manual release-candidate review.
 7. Normal startup emits no release-blocking resource, parser, persistence, or

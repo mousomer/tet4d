@@ -102,6 +102,7 @@ fi
 # sidecars during import; packaging must never dirty the source checkout.
 staged_project_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-project.XXXXXX")"
 cp -R "$PROJECT_DIR/." "$staged_project_root/"
+rm -rf "$staged_project_root/.godot"
 
 if [[ -n "${TET4D_IOS_TEAM_ID:-}" ]]; then
   "$PYTHON_BIN" - "$staged_project_root/export_presets.cfg" "$PLACEHOLDER_TEAM_ID" "$TET4D_IOS_TEAM_ID" <<'PY'

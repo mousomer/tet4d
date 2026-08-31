@@ -72,6 +72,14 @@ history ledger. Detailed history is preserved in
   gates, and a fresh integrated seven-artifact run are active; no unified
   manifest claim is made yet.
 
+- The Windows job in dispatch 33401278911 then completed its native build and
+  export, but the strict validator found the runner checkout marker in the
+  package. The disposable project had copied ignored `.godot` state generated
+  by the preceding direct Godot test; Android and iPadOS share that source-copy
+  exposure. All three builders must remove copied editor cache state before
+  export while retaining strict host-path rejection. This isolation correction
+  is included in the active full-gate and integrated-proof cycle.
+
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from
   `47df7cef84db32a2aa7dff383a84cdb968b53223`. Translucent active/locked

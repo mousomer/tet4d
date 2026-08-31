@@ -207,6 +207,14 @@ path a leading-space command name. Replace both steps with unambiguous block
 commands, enforce that shape in packaging contracts, and rerun the complete
 integrated workflow before closing the seven-artifact item.
 
+The Windows job in the same dispatch subsequently completed its native build
+and export, then the existing strict validator rejected the runner checkout
+marker. Its disposable project copy had inherited ignored `.godot` state
+created by the preceding direct Godot test. Windows, Android, and iPadOS must
+all remove copied editor cache state before their isolated import/export; keep
+the host-path rejection intact, cover the builder boundary with a regression
+contract, and include the result in the same fresh integrated proof.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

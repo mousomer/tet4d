@@ -69,6 +69,12 @@
    continuation made the Android and iPadOS script paths leading-space command
    names. Both workflow steps now require unambiguous block-form invocation and
    a packaging regression contract before the final all-platform proof.
+7. That dispatch also compiled and exported the Windows Designer before its
+   strict package validator found the runner checkout marker. The disposable
+   Windows project had copied ignored `.godot` state produced by the preceding
+   direct test; the Android and iPadOS builders share that exposure. Disposable
+   platform copies now require cache exclusion before import/export rather than
+   weakening host-path validation.
 
 ## 2026-08-30
 
