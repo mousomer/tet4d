@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/resolve-android-sdkmanager`; do not treat the worktree as a clean
+`codex/sanitize-windows-msvc-pdb-path`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -106,6 +106,14 @@ history ledger. Detailed history is preserved in
   The active correction resolves the exact command-line-tools executable under
   `$ANDROID_HOME`, removes the unbounded `yes` pipeline, and retains exact NDK
   Clang validation; full gates and fresh integrated proof remain required.
+
+- PR #82 resolved the exact Android command-line-tools executable, passed its
+  complete exact-head matrix (Actions run 33421707698), and squash-merged as
+  `5c3cc3ead8dcb67d10f3e1a627b88210c4f1312e`. The active Windows follow-up
+  addresses the remaining hosted MSVC-only checkout marker by embedding the
+  PDB basename through `/PDBALTPATH:%_PDB%`; it retains existing compiler path
+  maps and adds member-level strict-validator diagnostics. Focused, full, PR,
+  and fresh integrated release evidence remain required.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

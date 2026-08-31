@@ -16,6 +16,7 @@ elif ARGUMENTS.get("platform") == "windows":
         )
     else:
         bootstrap_env.AppendUnique(CCFLAGS=["/pathmap:{}=.".format(repository_root)])
+        bootstrap_env.AppendUnique(LINKFLAGS=["/PDBALTPATH:%_PDB%"])
 
 env = bootstrap_env
 Export("env")

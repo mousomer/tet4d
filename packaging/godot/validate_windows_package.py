@@ -31,6 +31,16 @@ FORBIDDEN_PATH_MARKERS = (
 )
 
 
+def _reject_forbidden_path_markers(payloads: dict[str, bytes]) -> None:
+    for marker in FORBIDDEN_PATH_MARKERS:
+        for member, payload in payloads.items():
+            if marker in payload:
+                raise ValueError(
+                    "package member "
+                    f"{member!r} contains development-only absolute path marker {marker!r}"
+                )
+
+
 def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
     expected_version = tomllib.loads((repository_root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     if f"-{expected_version}-windows-x86_64.zip" not in archive_path.name:
@@ -46,17 +56,28 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
         )
         if forbidden:
             raise ValueError(f"development-only files entered package: {forbidden[:5]}")
-        executable = archive.read("Tet4D Designer/Tet4DDesigner.exe")
-        native_dll = archive.read("Tet4D Designer/libtet4d_core.windows.template_release.x86_64.dll")
-        pck = archive.read("Tet4D Designer/Tet4DDesigner.pck")
+        payloads = {
+            "Tet4D Designer/Tet4DDesigner.exe": archive.read(
+                "Tet4D Designer/Tet4DDesigner.exe"
+            ),
+            "Tet4D Designer/libtet4d_core.windows.template_release.x86_64.dll": archive.read(
+                "Tet4D Designer/libtet4d_core.windows.template_release.x86_64.dll"
+            ),
+            "Tet4D Designer/Tet4DDesigner.pck": archive.read(
+                "Tet4D Designer/Tet4DDesigner.pck"
+            ),
+        }
+    executable = payloads["Tet4D Designer/Tet4DDesigner.exe"]
+    native_dll = payloads[
+        "Tet4D Designer/libtet4d_core.windows.template_release.x86_64.dll"
+    ]
+    pck = payloads["Tet4D Designer/Tet4DDesigner.pck"]
     if executable[:2] != b"MZ" or native_dll[:2] != b"MZ":
         raise ValueError("Windows executable or GDExtension does not have a PE header")
     missing_resources = [resource.decode() for resource in PCK_RESOURCES if resource not in pck]
     if missing_resources:
         raise ValueError(f"PCK resource table is missing: {missing_resources}")
-    for marker in FORBIDDEN_PATH_MARKERS:
-        if marker in executable or marker in native_dll or marker in pck:
-            raise ValueError(f"package contains development-only absolute path marker {marker!r}")
+    _reject_forbidden_path_markers(payloads)
     project_text = (repository_root / "godot/Tet4D.Godot/project.godot").read_text(encoding="utf-8")
     export_text = (repository_root / "godot/Tet4D.Godot/export_presets.cfg").read_text(encoding="utf-8")
     if f'config/version="{expected_version}"' not in project_text:
