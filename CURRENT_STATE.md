@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/android-stage-native-bin`; do not treat the worktree as a clean
+`codex/android-validate-sparse-apk`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -143,6 +143,17 @@ history ledger. Detailed history is preserved in
   disposable project's ignored native `bin` directory was absent before the
   `.so` copy. The active correction creates that staging directory explicitly;
   focused, full, PR, and fresh integrated APK evidence remain required.
+
+- PR #86 had a green selected exact-head matrix and squash-merged as
+  `b4498c2742bcb4b4309816f2c9ff405e9cf1f5c8`. Integrated dispatch
+  33436190052 compiled and linked the Android arm64 GDExtension, exported the
+  APK, and completed Godot alignment, signing, and verification. The repository
+  validator then rejected the lack of a `.pck` ZIP member, although Godot 4.7.2
+  intentionally stores Android project resources individually under `assets/`
+  and emits `assets/assets.sparsepck` metadata. The active correction aligns
+  validation and packaging documentation to that upstream layout while keeping
+  required-resource and path-hygiene enforcement; focused, full, PR, and fresh
+  integrated evidence remain required.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from

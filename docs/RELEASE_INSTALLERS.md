@@ -125,7 +125,10 @@ that staged copy before keeping `--export-release`. No keystore, password, or
 credential is committed. Profiles, evaluations, captures, and proposal exports
 are written through Godot `user://`, which is application private on Android, so
 nomination also writes a portable archive and offers it to the system document
-picker.
+picker. Godot 4.7.2's prebuilt Android exporter stores project resources as
+individual `assets/` members plus `assets/assets.sparsepck` directory metadata;
+the artifact validator checks that exact layout, the required laboratory
+resources, and path hygiene without requiring a nonexistent embedded `.pck`.
 
 ## Build the iPadOS Design Laboratory candidate
 

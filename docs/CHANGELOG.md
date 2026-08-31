@@ -114,6 +114,11 @@
     before staging the successfully linked arm64 GDExtension. Clean checkouts do
     not carry ignored generated directories, so package assembly no longer
     depends on prior host builds creating them incidentally.
+16. Android APK validation now follows Godot 4.7.2's actual sparse-project
+    layout: individually stored `assets/` resources plus
+    `assets/assets.sparsepck` metadata. The prior conventional-`.pck` assumption
+    rejected an APK that Godot had already exported, aligned, signed, and
+    verified; required laboratory assets and machine-path hygiene remain strict.
 
 ## 2026-08-30
 

@@ -19,12 +19,13 @@ REQUIRED_MEMBERS = (
     "classes.dex",
     "lib/arm64-v8a/libgodot_android.so",
     "lib/arm64-v8a/libtet4d_core.android.template_release.arm64.so",
+    "assets/assets.sparsepck",
 )
-PCK_RESOURCES = (
-    b"config/built_in_style_catalog.json",
-    b"config/design_scenario_catalog.json",
-    b"config/shell_settings_registry.json",
-    b"assets/tet4d_bundle/manifest.json",
+PROJECT_ASSET_MEMBERS = (
+    "assets/config/built_in_style_catalog.json",
+    "assets/config/design_scenario_catalog.json",
+    "assets/config/shell_settings_registry.json",
+    "assets/assets/tet4d_bundle/manifest.json",
 )
 # Upstream Godot template binaries legitimately carry their own build paths.
 # Reject host and repository coupling introduced by Tet4D packaging only.
@@ -61,20 +62,24 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
         # is acceptable; the key itself is never committed.
         if not any(name.startswith("META-INF/") and name.endswith(SIGNING_SUFFIXES) for name in names):
             raise AndroidPackageError("APK is unsigned and cannot be installed for evaluation")
-        pack_members = sorted(name for name in names if name.endswith(".pck"))
-        if not pack_members:
-            raise AndroidPackageError("APK does not contain a Godot resource pack")
-        pack = archive.read(pack_members[0])
+        missing_assets = [name for name in PROJECT_ASSET_MEMBERS if name not in names]
+        if missing_assets:
+            raise AndroidPackageError(f"APK is missing required project assets: {missing_assets}")
         manifest = archive.read("AndroidManifest.xml")
-    missing_resources = [resource.decode() for resource in PCK_RESOURCES if resource not in pack]
-    if missing_resources:
-        raise AndroidPackageError(f"APK resource pack is missing: {missing_resources}")
+        project_payloads = {
+            name: archive.read(name)
+            for name in names
+            if name.startswith("assets/") and not name.startswith("assets/dexopt/")
+        }
     # The application ID appears in the binary manifest string pool as UTF-16.
     if APPLICATION_ID.encode("utf-16-le") not in manifest and APPLICATION_ID.encode() not in manifest:
         raise AndroidPackageError(f"APK manifest does not declare {APPLICATION_ID}")
-    for marker in FORBIDDEN_PATH_MARKERS:
-        if marker in pack:
-            raise AndroidPackageError(f"APK contains development-only path marker {marker!r}")
+    for name, payload in project_payloads.items():
+        for marker in FORBIDDEN_PATH_MARKERS:
+            if marker in payload:
+                raise AndroidPackageError(
+                    f"APK member {name!r} contains development-only path marker {marker!r}"
+                )
     return {
         "version": version,
         "application_id": APPLICATION_ID,
