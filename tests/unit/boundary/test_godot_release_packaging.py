@@ -45,7 +45,8 @@ def test_godot_release_metadata_is_consistent() -> None:
     assert f'application/version="{version}"' in preset
     assert 'application/min_macos_version_x86_64="13.0"' in preset
     assert 'application/min_macos_version_arm64="13.0"' in preset
-    assert 'exclude_filter="tests/*"' in preset
+    assert preset.count('exclude_filter=".godot/*,tests/*"') == 4
+    assert 'exclude_filter="tests/*"' not in preset
 
 
 def test_godot_macos_build_checks_release_boundary() -> None:
@@ -124,6 +125,36 @@ def test_disposable_platform_projects_drop_copied_editor_cache() -> None:
         assert copy_command in script
         assert cache_removal in script
         assert script.index(copy_command) < script.index(cache_removal)
+
+
+def test_android_release_installs_the_binding_owned_ndk_pin() -> None:
+    workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'Path("native/third_party/godot-cpp/tools/android.py")' in workflow
+    assert 'values["GODOT_CPP_ANDROID_NDK_VERSION"]' in workflow
+    assert 'ndk_root="$ANDROID_HOME/ndk/$GODOT_CPP_ANDROID_NDK_VERSION"' in workflow
+    assert 'sdkmanager "ndk;$GODOT_CPP_ANDROID_NDK_VERSION"' in workflow
+    assert 'test -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"' in workflow
+    assert 'ls -d "$ANDROID_HOME"/ndk/*' not in workflow
+
+
+def test_ipados_release_assembles_device_and_simulator_xcframework() -> None:
+    wrapper = (ROOT / "scripts/build_godot_tet4d_core.sh").read_text(
+        encoding="utf-8"
+    )
+    builder = (ROOT / "packaging/godot/build_ipados.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'scons_args+=(ios_simulator="$SCONS_IOS_SIMULATOR")' in wrapper
+    assert "SCONS_ARCH=arm64 SCONS_TARGET=template_release \\" in builder
+    assert 'SCONS_IOS_SIMULATOR=no "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"' in builder
+    assert "SCONS_ARCH=universal SCONS_TARGET=template_release \\" in builder
+    assert 'SCONS_IOS_SIMULATOR=yes "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"' in builder
+    assert 'xcodebuild -create-xcframework \\' in builder
+    assert '-library "$native_device_archive"' in builder
+    assert '-library "$native_simulator_archive"' in builder
+    assert '-output "$native_xcframework"' in builder
 
 
 def test_tablet_build_steps_use_unambiguous_shell_blocks() -> None:

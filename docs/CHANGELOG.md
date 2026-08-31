@@ -75,6 +75,20 @@
    direct test; the Android and iPadOS builders share that exposure. Disposable
    platform copies now require cache exclusion before import/export rather than
    weakening host-path validation.
+8. PR #80 corrected the tablet invocation and disposable-project isolation
+   boundaries and passed the full exact-head matrix. Its integrated follow-up
+   reached Android native compilation, where pinned `godot-cpp` required NDK
+   `28.1.13356709` instead of the runner's newest preinstalled NDK. Android
+   release orchestration now requires that exact native-binding toolchain pin.
+9. The same integrated follow-up compiled the iPadOS arm64 device archive but
+   exposed that the builder never assembled the XCFramework named by the
+   GDExtension descriptor. iPadOS release packaging now requires separate
+   device and universal-simulator archives combined explicitly with
+   `xcodebuild -create-xcframework`; a lone device archive is not accepted.
+10. Windows in that dispatch compiled and exported successfully before strict
+    validation found a runner path in `.godot` cache regenerated during import.
+    All four Designer presets now exclude `.godot/*` as well as `tests/*`;
+    copied-cache removal and strict host-path rejection remain enforced.
 
 ## 2026-08-30
 

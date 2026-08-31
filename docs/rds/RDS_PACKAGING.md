@@ -245,6 +245,31 @@ import/export; the macOS builder's existing exclusion remains the reference
 boundary. This is packaging isolation, not a relaxation of host-path
 validation.
 
+After PR #80 made the tablet commands executable and isolated all disposable
+project copies, integrated dispatch 33416903976 reached Android native
+compilation. The configuration and staged release-signing validators passed,
+then pinned `godot-cpp` required NDK `28.1.13356709` while the workflow had
+selected the runner's newest preinstalled NDK. Android release packaging must
+install and assert the exact NDK version required by the pinned native binding;
+runner image inventory is not release authority.
+
+The same dispatch compiled the iPadOS arm64 device archive successfully, then
+correctly stopped because the declared release payload is an XCFramework and
+the builder had not assembled one. The release builder must compile both the
+arm64 device archive and the universal simulator archive with the pinned native
+binding, combine exactly those archives with `xcodebuild -create-xcframework`,
+and stage the resulting `libtet4d_core.ios.template_release.xcframework` before
+Godot export. A single device archive is not the declared iPadOS GDExtension and
+must not be renamed or accepted as one.
+
+The Windows lane also completed native compilation and export. Its strict
+validator then found the runner checkout marker in regenerated `.godot` cache
+files packed into the PCK. Removing copied cache before import remains required,
+and every canonical Designer export preset must additionally exclude both
+`tests/*` and `.godot/*` so cache recreated by Godot cannot become product
+payload. Host-path validation remains strict; this invariant removes the
+development-only input rather than weakening the check.
+
 ## 6. Acceptance criteria
 
 1. The exact pinned editor and matching official export template are used.

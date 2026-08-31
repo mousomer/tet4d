@@ -441,6 +441,12 @@ jobs:
               "GODOT_ANDROID_DEBUG_MEMBER": templates["android_debug_member"],
               "GODOT_ANDROID_SOURCE_MEMBER": templates["android_source_member"],
           }
+          android_tool = Path("native/third_party/godot-cpp/tools/android.py").read_text(
+              encoding="utf-8"
+          )
+          ndk_marker = '"Fully qualified version of ndk to use for compilation.",'
+          ndk_tail = android_tool.split(ndk_marker, maxsplit=1)[1]
+          values["GODOT_CPP_ANDROID_NDK_VERSION"] = ndk_tail.split('"', maxsplit=2)[1]
           with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as env_file:
               for key, value in values.items():
                   env_file.write(f"{key}={value}\n")
@@ -466,7 +472,11 @@ jobs:
 
       - name: Resolve Android NDK
         run: |
-          ndk_root="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -n 1)"
+          ndk_root="$ANDROID_HOME/ndk/$GODOT_CPP_ANDROID_NDK_VERSION"
+          if [[ ! -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang" ]]; then
+            yes | sdkmanager "ndk;$GODOT_CPP_ANDROID_NDK_VERSION" >/dev/null
+          fi
+          test -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
           echo "ANDROID_NDK_ROOT=$ndk_root" >> "$GITHUB_ENV"
 
       - name: Verify shared Design Laboratory semantics

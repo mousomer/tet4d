@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-31
 Worktree expectation: active governed unified-release implementation on
-`codex/fix-tablet-release-invocation`; do not treat the worktree as a clean
+`codex/pin-android-release-ndk`; do not treat the worktree as a clean
 handoff
 
 ## Purpose
@@ -79,6 +79,26 @@ history ledger. Detailed history is preserved in
   exposure. All three builders must remove copied editor cache state before
   export while retaining strict host-path rejection. This isolation correction
   is included in the active full-gate and integrated-proof cycle.
+
+- PR #80 had a green fresh complete CI matrix and squash-merged as
+  `979b91c23e63ab0489265c26bd43e84db06ccf2f`. Integrated dispatch
+  33416903976 cleared the Android command, cache-isolation, configuration, and
+  staged-signing boundaries, then native compilation found the runner lacked
+  pinned `godot-cpp`'s exact NDK `28.1.13356709`. Exact NDK installation and
+  assertion, its packaging contract, full gates, and a fresh integrated proof
+  are active; no unified manifest claim is made yet.
+
+- The iPadOS lane in dispatch 33416903976 compiled its arm64 device archive,
+  then found the builder asserted the declared release XCFramework without
+  creating it. The active correction adds a separate universal simulator
+  archive and assembles the XCFramework explicitly from both native outputs;
+  regression coverage, full gates, and fresh integrated proof remain required.
+
+- Windows in dispatch 33416903976 completed native compilation and export, then
+  strict validation found the runner path in `.godot` cache regenerated during
+  disposable-project import. The active correction keeps pre-import cache
+  removal and strict scanning while excluding `.godot/*` from every canonical
+  Designer preset; full gates and fresh integrated proof remain required.
 
 - Completed bounded live-presentation regression repair on
   `codex/built-in-style-catalog`, starting from
