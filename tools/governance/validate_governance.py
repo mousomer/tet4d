@@ -42,6 +42,7 @@ def _validate_unified_manifest_shape() -> list[str]:
         "maintenance_contract",
         "maintenance_docs",
         "deprecated_authorities",
+        "governance_surface",
     )
     for key in required_pack_keys:
         if key not in policy_pack:
@@ -128,6 +129,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         validate_authority_transfer,
         validate_config_authority,
         validate_godot_semantic_boundary,
+        validate_governance_surface,
         validate_live_board_visual_roles,
         validate_native_cpp_tooling,
         validate_project_contracts,
@@ -155,6 +157,9 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         GovernanceCheck("loc_guidance", check_loc_guidance.main),
         GovernanceCheck("dedup_dead_code_rules", check_dedup_dead_code_rules.main),
         GovernanceCheck("drift_protection", check_drift_protection.main),
+        GovernanceCheck(
+            "governance_surface", lambda: validate_governance_surface.main([])
+        ),
     )
 
 

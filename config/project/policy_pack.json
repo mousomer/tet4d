@@ -18,130 +18,46 @@
     "professional_product_programme": "docs/plans/professional_godot_game_programme.md",
     "subsystem_authority_map": "docs/architecture/authority_map.md",
     "authority_transfer_and_establishment_protocol": "docs/architecture/authority_transfer_protocol.md",
-    "open_work_backlog": "docs/BACKLOG.md"
+    "open_work_backlog": "docs/BACKLOG.md",
+    "canonical_human_owners": {"engineering": "docs/governance/ENGINEERING.md", "verification": "docs/governance/VERIFICATION.md", "security_and_sanitation": "docs/governance/SECURITY_AND_SANITATION.md", "config_and_generated_data": "docs/governance/CONFIG_AND_GENERATED_DATA.md", "native_and_platform": "docs/governance/NATIVE_AND_PLATFORM.md", "change_governance": "docs/governance/CHANGE_GOVERNANCE.md"}
   },
   "codex_routing": {
     "schema_version": 2,
     "routes": {
       "product_planning": {
-        "authority_keys": [
-          "professional_product_programme",
-          "product_requirements_root",
-          "open_work_backlog",
-          "change_governance",
-          "verification_governance"
-        ],
-        "typical_verification_requirements": [
-          "documentation"
-        ]
+        "authority_keys": ["professional_product_programme", "product_requirements_root", "open_work_backlog", "change_governance", "verification_governance"],
+        "typical_verification_requirements": ["documentation"]
       },
       "python_reference_engine": {
-        "authority_keys": [
-          "architecture_contract",
-          "product_requirements_root",
-          "subsystem_authority_map",
-          "engineering_governance",
-          "verification_governance",
-          "config_and_generated_data_governance"
-        ],
-        "typical_verification_requirements": [
-          "python",
-          "deterministic"
-        ]
+        "authority_keys": ["architecture_contract", "product_requirements_root", "subsystem_authority_map", "engineering_governance", "verification_governance", "config_and_generated_data_governance"],
+        "typical_verification_requirements": ["python", "deterministic"]
       },
       "godot_product_shell": {
-        "dispatch_paths": [
-          "godot/AGENTS.md"
-        ],
-        "authority_keys": [
-          "product_requirements_root",
-          "subsystem_authority_map",
-          "native_and_platform_governance",
-          "verification_governance",
-          "config_and_generated_data_governance"
-        ],
-        "typical_verification_requirements": [
-          "godot"
-        ]
+        "dispatch_paths": ["godot/AGENTS.md"],
+        "authority_keys": ["product_requirements_root", "subsystem_authority_map", "native_and_platform_governance", "verification_governance", "config_and_generated_data_governance"],
+        "typical_verification_requirements": ["godot"]
       },
       "native_deterministic_core": {
-        "dispatch_paths": [
-          "native/AGENTS.md"
-        ],
-        "authority_keys": [
-          "subsystem_authority_map",
-          "authority_transfer_and_establishment_protocol",
-          "native_and_platform_governance",
-          "verification_governance",
-          "security_and_sanitation_governance",
-          "engineering_governance"
-        ],
-        "typical_verification_requirements": [
-          "native",
-          "deterministic"
-        ]
+        "dispatch_paths": ["native/AGENTS.md"],
+        "authority_keys": ["subsystem_authority_map", "authority_transfer_and_establishment_protocol", "native_and_platform_governance", "verification_governance", "security_and_sanitation_governance", "engineering_governance"],
+        "typical_verification_requirements": ["native", "deterministic"]
       },
       "topology_and_explorer": {
-        "authority_keys": [
-          "topology_current_authority",
-          "product_requirements_root",
-          "subsystem_authority_map",
-          "engineering_governance",
-          "native_and_platform_governance",
-          "verification_governance"
-        ],
-        "typical_verification_requirements": [
-          "deterministic"
-        ]
+        "authority_keys": ["topology_current_authority", "product_requirements_root", "subsystem_authority_map", "engineering_governance", "native_and_platform_governance", "verification_governance"],
+        "typical_verification_requirements": ["deterministic"]
       },
       "governance_and_tooling": {
-        "authority_keys": [
-          "machine_authority",
-          "change_governance",
-          "verification_governance",
-          "engineering_governance"
-        ],
-        "typical_verification_requirements": [
-          "governance_structure"
-        ]
+        "authority_keys": ["machine_authority", "change_governance", "verification_governance", "engineering_governance"],
+        "typical_verification_requirements": ["governance_structure"]
       },
       "packaging_and_release": {
-        "dispatch_paths": [
-          "docs/rds/RDS_PACKAGING.md",
-          "docs/RELEASE_CHECKLIST.md"
-        ],
-        "authority_keys": [
-          "native_and_platform_governance",
-          "security_and_sanitation_governance",
-          "verification_governance",
-          "change_governance"
-        ],
-        "typical_verification_requirements": [
-          "packaging",
-          "platform"
-        ]
+        "dispatch_paths": ["docs/rds/RDS_PACKAGING.md", "docs/RELEASE_CHECKLIST.md"],
+        "authority_keys": ["native_and_platform_governance", "security_and_sanitation_governance", "verification_governance", "change_governance"],
+        "typical_verification_requirements": ["packaging", "platform"]
       }
     },
-    "workflow_modifiers": [
-      "review_only",
-      "staged_handoff",
-      "cross_layer",
-      "verification_failure"
-    ],
-    "verification_requirements": [
-      "documentation",
-      "governance_structure",
-      "python",
-      "godot",
-      "native",
-      "deterministic",
-      "parity_or_conformance",
-      "integration",
-      "human_visual",
-      "packaging",
-      "platform",
-      "release_acceptance"
-    ],
+    "workflow_modifiers": ["review_only", "staged_handoff", "cross_layer", "verification_failure"],
+    "verification_requirements": ["documentation", "governance_structure", "python", "godot", "native", "deterministic", "parity_or_conformance", "integration", "human_visual", "packaging", "platform", "release_acceptance"],
     "resolver_path": "tools/governance/resolve_codex_verification.py"
   },
   "governance": {
@@ -150,475 +66,85 @@
     "description": "Unified governance section nested inside the single-source policy pack.",
     "verification_command": "./scripts/verify.sh",
     "ci_entrypoint": "./scripts/ci_check.sh",
-    "design_sources": [
-      "docs/governance/CHANGE_GOVERNANCE.md",
-      "docs/rds/"
-    ],
-    "contracts": {
-      "policy_pack": "config/project/policy_pack.json",
-      "secret_scan": "config/project/policy/manifests/secret_scan.json",
-      "replay_manifest": "config/project/policy/manifests/replay_manifest.json",
-      "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"
-    },
+    "design_sources": ["docs/governance/CHANGE_GOVERNANCE.md", "docs/rds/"],
+    "contracts": {"policy_pack": "config/project/policy_pack.json", "secret_scan": "config/project/policy/manifests/secret_scan.json", "replay_manifest": "config/project/policy/manifests/replay_manifest.json", "help_assets_manifest": "config/project/policy/manifests/help_assets_manifest.json"},
     "github_publication": {
       "canonical_target": "origin",
       "require_remote_owner_identity": true,
       "forbid_non_owner_accounts": true,
       "verify_identity_before_write": true,
-      "public_metadata_forbidden_details": [
-        "unrelated account identifiers",
-        "local credential or identity paths",
-        "tokens or secrets",
-        "private email addresses",
-        "machine-specific paths"
-      ],
+      "public_metadata_forbidden_details": ["unrelated account identifiers", "local credential or identity paths", "tokens or secrets", "private email addresses", "machine-specific paths"],
       "record_identity_check_result": false
     },
-    "ruff_toolchain": {
-      "policy": {
-        "target": "newest stable supported release",
-        "package_source": "Python Package Index (PyPI)",
-        "work_minimisation_is_selection_criterion": false,
-        "exact_pin_required": true,
-        "minor_version_changes_are_explicit_migrations": true
-      },
-      "migration": {
-        "selection_date": "2026-07-25",
-        "previous_version": "0.14.1",
-        "newest_stable_version": "0.16.0",
-        "selected_version": "0.16.0",
-        "stable_0_17_available": false,
-        "diagnostics_before_migration": 1023,
-        "affected_files_before_migration": 280,
-        "formatter_differences_before_migration": 171,
-        "safe_fixable_diagnostics_before_migration": 546,
-        "unsafe_fixable_diagnostics_before_migration": 299,
-        "files_changed": 332,
-        "configuration_changes": [
-          "Pinned the canonical development dependency to ruff==0.16.0.",
-          "Made GitHub Actions print the installed Ruff version.",
-          "Made the existing C901 verification gate part of the canonical Ruff selection.",
-          "Removed the obsolete cli/front.py file-wide E402 suppression.",
-          "Rebased folder-balance metrics after formatter-only line redistribution.",
-          "Did not weaken lint selection, ignores, exclusions, or preview policy."
-        ],
-        "rules_newly_enforced_or_reinterpreted": [
-          "B023",
-          "BLE001",
-          "C400",
-          "C401",
-          "C408",
-          "C409",
-          "EXE001",
-          "EXE002",
-          "FLY002",
-          "FURB192",
-          "I001",
-          "ISC004",
-          "PERF102",
-          "PIE796",
-          "PIE810",
-          "PLE0605",
-          "RUF007",
-          "RUF046",
-          "RUF059",
-          "RUF100",
-          "S110",
-          "SIM102",
-          "SIM103",
-          "SIM117",
-          "SIM118",
-          "TRY004",
-          "UP006",
-          "UP022",
-          "UP035"
-        ],
-        "narrow_rule_exceptions": [
-          {
-            "rule": "TRY004",
-            "scope": "tested validation and parity exception contracts",
-            "reason": "Changing established ValueError or RuntimeError contracts caused regression failures; rule-specific inline annotations preserve the tested API."
-          },
-          {
-            "rule": "BLE001",
-            "scope": "top-level UI, optional-import, and best-effort recording boundaries",
-            "reason": "These boundaries must report or isolate arbitrary implementation failures without terminating the active application."
-          },
-          {
-            "rule": "SIM117",
-            "scope": "two score-analyzer tests",
-            "reason": "Explicit nested context-manager lifetime keeps environment restoration and temporary-workspace teardown ordering visible."
-          },
-          {
-            "rule": "PLE0605",
-            "scope": "locked-cell explosion compatibility facade",
-            "reason": "The facade deliberately mirrors the complete implementation module, including private test seams used by the existing compatibility contract."
-          },
-          {
-            "rule": "C901",
-            "scope": "six established schema and stateful UI orchestration functions",
-            "reason": "Ruff 0.16 reclassified these existing orchestrators. Splitting them during a lint migration would risk schema validation and keyboard/mouse event-order semantics, so the dedicated complexity gate remains enabled with function-specific annotations pending a separately tested refactor."
-          }
-        ],
-        "technical_blockers": [],
-        "branch_local_result": "CODEX_MODE=1 ./scripts/verify.sh passed on the final branch tree",
-        "merge_context_result": "CODEX_MODE=1 ./scripts/verify.sh passed for origin/master c10ed4e6a190daa85976162c1feb866c743b9462 plus branch 32ce84041c559804eef48b9443d8236932016c29",
-        "github_python_3_11_to_3_14_matrix_result": "GitHub Actions pull-request run 30144781389 passed Python 3.11, 3.12, 3.13, and 3.14 for migration head c993e0a96c9de454a5ff3b696c8f8cf9a640e1e2"
-      }
-    },
+    "ruff_toolchain": {"selected_version": "0.16.0", "selection_rule": "newest stable supported release", "package_source": "PyPI", "exact_pin_required": true, "verification": "ruff check plus canonical C901 selection"},
     "godot_toolchain": {
-      "migration_date": "2026-08-28",
-      "status": "accepted",
       "selection_rule": "newest officially published stable Godot 4.7 patch release",
-      "previous_supported_version": "4.7.1-stable",
       "selected_supported_version": "4.7.2-stable",
       "release_channel": "stable",
-      "release_date": "2026-08-18",
       "build_identifier": "4.7.2.stable.official.ed1daf0bf",
       "engine_commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
       "official_release_url": "https://github.com/godotengine/godot/releases/tag/4.7.2-stable",
       "assets": {
-        "linux_x86_64": {
-          "name": "Godot_v4.7.2-stable_linux.x86_64.zip",
-          "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip",
-          "sha256": "cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4",
-          "executable": "Godot_v4.7.2-stable_linux.x86_64"
-        },
-        "macos_universal": {
-          "name": "Godot_v4.7.2-stable_macos.universal.zip",
-          "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip",
-          "sha256": "c58a24e31d720be9d62f60cb5627c4e695fb72f21b0cfe1bc9ccaa9a3b3ba63e",
-          "executable": "Godot.app/Contents/MacOS/Godot"
-        },
-        "windows_x86_64": {
-          "name": "Godot_v4.7.2-stable_win64.exe.zip",
-          "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip",
-          "sha512": "83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf868e00778a96984338c1b29dafdb453c6847747694621c6ecf5da2259993",
-          "executable": "Godot_v4.7.2-stable_win64.exe"
-        }
+        "linux_x86_64": {"name": "Godot_v4.7.2-stable_linux.x86_64.zip", "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip", "sha256": "cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4", "executable": "Godot_v4.7.2-stable_linux.x86_64"},
+        "macos_universal": {"name": "Godot_v4.7.2-stable_macos.universal.zip", "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_macos.universal.zip", "sha256": "c58a24e31d720be9d62f60cb5627c4e695fb72f21b0cfe1bc9ccaa9a3b3ba63e", "executable": "Godot.app/Contents/MacOS/Godot"},
+        "windows_x86_64": {"name": "Godot_v4.7.2-stable_win64.exe.zip", "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip", "sha512": "83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf868e00778a96984338c1b29dafdb453c6847747694621c6ecf5da2259993", "executable": "Godot_v4.7.2-stable_win64.exe"}
       },
-      "export_templates": {
-        "name": "Godot_v4.7.2-stable_export_templates.tpz",
-        "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz",
-        "sha512": "ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079",
-        "version_directory": "4.7.2.stable",
-        "macos_member": "templates/macos.zip",
-        "windows_release_member": "templates/windows_release_x86_64.exe",
-        "windows_debug_member": "templates/windows_debug_x86_64.exe",
-        "android_release_member": "templates/android_release.apk",
-        "android_debug_member": "templates/android_debug.apk",
-        "android_source_member": "templates/android_source.zip",
-        "ios_member": "templates/ios.zip"
-      },
-      "godot_cpp": {
-        "repository": "https://github.com/godotengine/godot-cpp.git",
-        "previous_commit": "5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731",
-        "selected_commit": "5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731",
-        "selection_basis": "retained unchanged; the 2026-06-18 commit synchronizing godot-cpp with Godot 4.7-stable commit 5b4e0cb0fd279832bbdd69fed5354d4e5ad26f88 remains the newest upstream extension-API sync, so the 4.7.2 patch upgrade required and performed no binding advance",
-        "api_version": "4.7",
-        "api_equivalence": "Godot 4.7.2 and the retained 4.7-stable binding baseline have identical extension API content apart from patch-version header metadata, confirmed by dumping the 4.7.2 extension API and comparing it to the pinned binding with only the header excluded"
-      },
-      "gdextension": {
-        "compatibility_minimum": "4.7",
-        "entry_symbol": "tet4d_core_library_init",
-        "reloadable": true
-      },
-      "build": {
-        "cpp_standard": "C++17",
-        "scons_version": "4.10.1",
-        "local_compiler": "Apple Clang 21.0.0"
-      },
-      "canonical_commands": {
-        "native_build": "./scripts/build_godot_tet4d_core.sh",
-        "native_tests": "./scripts/test_godot_tet4d_core.sh",
-        "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh",
-        "macos_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh",
-        "windows_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_windows.sh",
-        "android_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh --configuration-only",
-        "android_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh",
-        "ipados_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh --configuration-only",
-        "ipados_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh",
-        "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"
-      },
-      "results": {
-        "migration_guide_audit": "PASS; 62 upstream commits between 4.7.1-stable and 4.7.2-stable are bugfix and translation work with no API change, and no affected API usage was found. Two candidates were reviewed and found inapplicable: the Color hash component-order fix (no GDScript-level hashing exists and palette colors are stored as configuration strings) and the simultaneous-shift-release input fix (no keybinding contract change)",
-        "extension_api_equivalence": "PASS; the 4.7.2 dumped extension API is identical to the retained godot-cpp 4.7-stable binding baseline once the header is excluded, so no binding advance was required or performed",
-        "gdscript": "PASS under exact Godot 4.7.2; all scripts register and the headless suite reports no script error",
-        "scene_resources": "PASS under exact Godot 4.7.2 in an isolated project copy",
-        "native_build": "PASS; the extension rebuilds against the unchanged pinned godot-cpp",
-        "native_tests": "PASS; plain 2D, plain ND, geometry, query, topology contract, topology transport, and board extent contract lanes",
-        "parity": "PASS; 59 shared topology transport cases under exact Godot 4.7.2",
-        "visual_review": "PASS on macOS under exact Godot 4.7.2 with Metal 4.0 Forward+; rendered live 2D, live 3D, live 4D W slices, and the full Designer with the Profile Library expanded are byte-identical to the same captures under 4.7.1",
-        "deterministic_isolation": "PASS; live_4d_state_hash and every layout contract rect are identical under 4.7.1 and 4.7.2 on the same working tree",
-        "persistence": "PASS in the full Godot suite, including schema migration, malformed-data recovery, and checked-write replacement and restoration",
-        "branch_head": "e2e1ef9254f12c528ce7a67599b43510abfc0902",
-        "branch_result": "PASS for the pinned Godot gate, native build and tests, governance, generated-doc, settings-externalization, semantic-boundary, sanitation, and CODEX_MODE=1 ./scripts/verify.sh",
-        "ci": "NOT RUN; this upgrade is a local unpublished commit with no push or pull request. The CI lane reads this manifest for asset acquisition, so the Linux lane is exercised on publication",
-        "performance": {
-          "headless_suite_seconds_before_after": "70.88 / 70.89",
-          "bounded_startup_seconds_before_after": "2.52 / 2.31",
-          "native_tests_seconds": "39.36",
-          "assessment": "no material regression; both engine timings were measured on this same working tree, so they are not comparable to the 4.7 migration figures, which were recorded against a much smaller test suite",
-          "measurement_basis": "same project copy, isolated HOME per engine, one warm run discarded before each timed run"
-        },
-        "known_limitations": [
-          "macOS is the local development evidence platform",
-          "Linux acceptance for this upgrade is deferred to CI on publication rather than re-proved locally",
-          "Windows packaging is locally cross-built and structurally validated; direct clean-machine Windows runtime acceptance remains pending",
-          "the visual review is agent-driven; no independent human sign-off is claimed"
-        ]
-      }
-    },
-    "static_analysis_formatting_audit": {
-      "audit_date": "2026-07-25",
-      "status": "completed_with_partial_and_unavailable_lanes",
-      "report": "docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md",
-      "audited_branch": "codex/configurable-plain-boards",
-      "audited_head": "ffb57675be13c2de3dd8525db24607ce331e5620",
-      "tracked_language_counts": {
-        "python": 458,
-        "gdscript": 78,
-        "godot_scenes": 1,
-        "godot_resources": 3,
-        "cpp_sources": 18,
-        "cpp_headers": 13,
-        "csharp": 24,
-        "shell": 23
-      },
-      "python": {
-        "ruff_version": "0.16.0",
-        "pinning": "exact development dependency",
-        "lint": "PASS: 0 diagnostics",
-        "format": "PASS: 638 files already formatted",
-        "ci_coverage": "full lint and C901; format limited to scripts and tools",
-        "type_checking": "not configured; shell-level mypy is non-canonical and Pyright is absent",
-        "gaps": [
-          "CI Ruff format scope is narrower than repository formatting policy"
-        ]
-      },
-      "gdscript": {
-        "target_godot_version": "4.6.3-stable",
-        "local_godot_version": "4.7.stable.official.5b4e0cb0f",
-        "parser_static_analysis": "PASS under local 4.7 through editor import and headless tests",
-        "warnings_policy": "no warnings-as-errors, global suppression, or per-warning suppression found",
-        "gdtoolkit": "NOT INSTALLED and not configured",
-        "ci_coverage": "not configured",
-        "gaps": [
-          "target-version local runner is not reproducible",
-          "Godot headless validation is absent from CI"
-        ]
-      },
-      "godot_project": {
-        "project_import": "PASS/PARTIAL under local 4.7; sandbox blocked editor cache writes",
-        "main_scene_startup": "PASS with bounded five-frame headless startup",
-        "scene_resource_validation": "PASS for the only scene plus three theme resources",
-        "gdextension_load": "PASS",
-        "gaps": [
-          "local Godot version differs from project target",
-          "scene/resource and GDExtension checks are absent from CI"
-        ]
-      },
-      "cpp": {
-        "compiler": "Apple Clang 21.0.0",
-        "standard": "C++17",
-        "warning_policy": "-Wall -Wextra -Werror in standalone native tests",
-        "build_and_tests": "PASS",
-        "clang_format": "NOT INSTALLED; configuration present",
-        "clang_tidy": "BLOCKED; tool and compile_commands.json absent",
-        "sanitizers": "NOT CONFIGURED",
-        "ci_coverage": "advisory configuration validation only; no build or tests",
-        "gaps": [
-          "compiler and SCons versions are unpinned",
-          "clang-format is not executable",
-          "clang-tidy lacks a real compilation database",
-          "native build, tests, and sanitizers are absent from CI"
-        ]
-      },
-      "csharp_dotnet": {
-        "applicable": true,
-        "scope": "legacy Unity replay spike, not Godot C#",
-        "project_files": "24 C# files and two Unity assembly definitions; no csproj or solution",
-        "sdk": "NOT INSTALLED",
-        "unity_version": "2022.3.20f1",
-        "roslyn": "BLOCKED without an installed Unity compiler path",
-        "dotnet_format": "NOT APPLICABLE to the assembly-definition-only path",
-        "nullable": "NOT CONFIGURED",
-        "warnings_as_errors": "NOT CONFIGURED",
-        "optional_analysers": "NOT CONFIGURED",
-        "gaps": [
-          "retained Unity C# cannot be built or analysed locally or in CI"
-        ]
-      },
-      "shell": {
-        "dialect": "Bash for all tracked shell scripts",
-        "bash_syntax": "PASS: 23 files",
-        "shellcheck": "NOT INSTALLED and not configured",
-        "shfmt": "NOT INSTALLED and not configured",
-        "ci_coverage": "scripts execute but no shell static-analysis gate exists",
-        "gaps": [
-          "ShellCheck is absent"
-        ]
-      },
-      "ci": {
-        "pull_request": 37,
-        "push_run": 30144884534,
-        "pull_request_run": 30144885222,
-        "head": "ffb57675be13c2de3dd8525db24607ce331e5620",
-        "result": "PASS on Python 3.11, 3.12, 3.13, and 3.14",
-        "full_repository_verification": "PASS"
-      }
+      "export_templates": {"name": "Godot_v4.7.2-stable_export_templates.tpz", "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz", "sha512": "ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079", "version_directory": "4.7.2.stable", "macos_member": "templates/macos.zip", "windows_release_member": "templates/windows_release_x86_64.exe", "windows_debug_member": "templates/windows_debug_x86_64.exe", "android_release_member": "templates/android_release.apk", "android_debug_member": "templates/android_debug.apk", "android_source_member": "templates/android_source.zip", "ios_member": "templates/ios.zip"},
+      "godot_cpp": {"repository": "https://github.com/godotengine/godot-cpp.git", "selected_commit": "5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731", "api_version": "4.7"},
+      "gdextension": {"compatibility_minimum": "4.7", "entry_symbol": "tet4d_core_library_init", "reloadable": true},
+      "build": {"cpp_standard": "C++17", "scons_version": "4.10.1"},
+      "canonical_commands": {"native_build": "./scripts/build_godot_tet4d_core.sh", "native_tests": "./scripts/test_godot_tet4d_core.sh", "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh", "macos_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh", "windows_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_windows.sh", "android_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh --configuration-only", "android_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh", "ipados_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh --configuration-only", "ipados_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh", "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"}
     },
     "canonical_governance_contract": {
-      "required_tokens": [
-        "docs/governance/ENGINEERING.md",
-        "docs/governance/VERIFICATION.md",
-        "docs/governance/SECURITY_AND_SANITATION.md",
-        "docs/governance/CONFIG_AND_GENERATED_DATA.md",
-        "docs/governance/NATIVE_AND_PLATFORM.md",
-        "docs/governance/CHANGE_GOVERNANCE.md"
-      ]
+      "required_tokens": ["docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md"]
     },
     "menu_simplification_manifest_rule": {
       "rule_id": "menu-simplification-common-settings",
       "statement": "Menus must stay simple; any feature common to 2D/3D/4D menus must live in the shared settings menu unless a very strong mode-specific reason is documented, with custom topology editing owned by the Explorer Playground.",
       "default_action": "centralize_common_features_in_settings_hub",
       "exception_bar": "very_strong_documented_reason_required",
-      "required_shared_row_keys": [
-        "game_seed",
-        "random_mode_id",
-        "rotation_animation_mode",
-        "kick_level_id",
-        "rotation_animation_duration_ms_2d",
-        "rotation_animation_duration_ms_nd",
-        "translation_animation_duration_ms",
-        "auto_speedup_enabled",
-        "lines_per_level",
-        "topology_cache_measure",
-        "topology_cache_clear"
-      ]
+      "required_shared_row_keys": ["game_seed", "random_mode_id", "rotation_animation_mode", "kick_level_id", "rotation_animation_duration_ms_2d", "rotation_animation_duration_ms_nd", "translation_animation_duration_ms", "auto_speedup_enabled", "lines_per_level", "topology_cache_measure", "topology_cache_clear"]
     },
     "menu_structure_single_source": {
-      "required_menus": [
-        "settings_root",
-        "settings_gameplay",
-        "settings_board_setup_defaults",
-        "settings_controls",
-        "settings_display",
-        "settings_audio",
-        "settings_endgame_explosion",
-        "settings_endgame_gameplay",
-        "settings_explosion_defaults_2d",
-        "settings_explosion_defaults_3d",
-        "settings_explosion_defaults_4d",
-        "keybindings_root"
-      ],
+      "required_menus": ["settings_root", "settings_gameplay", "settings_board_setup_defaults", "settings_controls", "settings_display", "settings_audio", "settings_endgame_explosion", "settings_endgame_gameplay", "settings_explosion_defaults_2d", "settings_explosion_defaults_3d", "settings_explosion_defaults_4d", "keybindings_root"],
       "required_submenu_labels": [
         {
           "menu_id": "settings_root",
-          "labels": [
-            "Gameplay",
-            "Board / Setup Defaults",
-            "Controls",
-            "Display",
-            "Audio",
-            "Endgame / Explosion"
-          ]
+          "labels": ["Gameplay", "Board / Setup Defaults", "Controls", "Display", "Audio", "Endgame / Explosion"]
         },
         {
           "menu_id": "keybindings_root",
-          "labels": [
-            "General",
-            "2D",
-            "3D",
-            "4D",
-            "All"
-          ]
+          "labels": ["General", "2D", "3D", "4D", "All"]
         }
       ],
       "required_item_labels": [
         {
           "menu_id": "settings_controls",
-          "labels": [
-            "Keyboard Bindings"
-          ]
+          "labels": ["Keyboard Bindings"]
         },
         {
           "menu_id": "settings_board_setup_defaults",
-          "labels": [
-            "Legacy Topology Editor"
-          ]
+          "labels": ["Legacy Topology Editor"]
         },
         {
           "menu_id": "settings_endgame_explosion",
-          "labels": [
-            "Shared Gameplay Endgame",
-            "2D Explosion Defaults",
-            "3D Explosion Defaults",
-            "4D Explosion Defaults",
-            "Back"
-          ]
+          "labels": ["Shared Gameplay Endgame", "2D Explosion Defaults", "3D Explosion Defaults", "4D Explosion Defaults", "Back"]
         }
       ],
-      "required_item_types": [
-        "action",
-        "action_group",
-        "submenu",
-        "toggle",
-        "selector",
-        "slider",
-        "stepper",
-        "keybinding_group",
-        "legacy_dispatch",
-        "info",
-        "section"
-      ],
+      "required_item_types": ["action", "action_group", "submenu", "toggle", "selector", "slider", "stepper", "keybinding_group", "legacy_dispatch", "info", "section"],
       "banned_python_literals": [
-        {
-          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-          "literal": "_CATEGORY_ID_BY_HEADER_LABEL =",
-          "message": "settings_hub_model.py must not hardcode settings section header ownership; use config/menu/structure.json"
-        },
-        {
-          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-          "literal": "_CATEGORY_IDS_BY_FILTER =",
-          "message": "settings_hub_model.py must not hardcode settings section filters; use config/menu/structure.json"
-        },
-        {
-          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-          "literal": "_FOOTER_ROW_KEYS =",
-          "message": "settings_hub_model.py must not hardcode settings footer row ownership; use config/menu/structure.json"
-        },
-        {
-          "file": "src/tet4d/ui/pygame/launch/settings_hub_model.py",
-          "literal": "_TOP_LEVEL_HEADER_LABELS =",
-          "message": "settings_hub_model.py must not hardcode top-level settings headers; use config/menu/structure.json"
-        }
+        {"file": "src/tet4d/ui/pygame/launch/settings_hub_model.py", "literal": "_CATEGORY_ID_BY_HEADER_LABEL =", "message": "settings_hub_model.py must not hardcode settings section header ownership; use config/menu/structure.json"},
+        {"file": "src/tet4d/ui/pygame/launch/settings_hub_model.py", "literal": "_CATEGORY_IDS_BY_FILTER =", "message": "settings_hub_model.py must not hardcode settings section filters; use config/menu/structure.json"},
+        {"file": "src/tet4d/ui/pygame/launch/settings_hub_model.py", "literal": "_FOOTER_ROW_KEYS =", "message": "settings_hub_model.py must not hardcode settings footer row ownership; use config/menu/structure.json"},
+        {"file": "src/tet4d/ui/pygame/launch/settings_hub_model.py", "literal": "_TOP_LEVEL_HEADER_LABELS =", "message": "settings_hub_model.py must not hardcode top-level settings headers; use config/menu/structure.json"}
       ]
     },
     "menu_control_typing_contract": {
-      "setting_semantic_types": [
-        "bool",
-        "enum",
-        "int",
-        "float"
-      ],
-      "menu_control_types": [
-        "toggle",
-        "selector",
-        "slider",
-        "stepper"
-      ],
-      "setup_control_types": [
-        "toggle",
-        "selector",
-        "slider",
-        "stepper",
-        "numeric_entry"
-      ],
+      "setting_semantic_types": ["bool", "enum", "int", "float"],
+      "menu_control_types": ["toggle", "selector", "slider", "stepper"],
+      "setup_control_types": ["toggle", "selector", "slider", "stepper", "numeric_entry"],
       "selector_options_key_required": true,
-      "enum_setup_option_source_tokens": [
-        "piece_set_labels"
-      ]
+      "enum_setup_option_source_tokens": ["piece_set_labels"]
     },
     "godot_settings_externalization_contract": {
       "registry_path": "godot/Tet4D.Godot/config/shell_settings_registry.json",
@@ -626,218 +152,120 @@
       "store_path": "godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd",
       "persistent_user_path": "user://shell_settings.json",
       "runtime_source_root": "godot/Tet4D.Godot/scripts",
-      "required_setting_fields": [
-        "id",
-        "label",
-        "description",
-        "category",
-        "value_type",
-        "control_type",
-        "default",
-        "semantic_owner",
-        "accessibility_classification",
-        "runtime_applicability",
-        "authority",
-        "persistence",
-        "persist"
-      ],
+      "required_setting_fields": ["id", "label", "description", "category", "value_type", "control_type", "default", "semantic_owner", "accessibility_classification", "runtime_applicability", "authority", "persistence", "persist"],
       "persistent_policy": "local_shell",
-      "non_persistent_policies": [
-        "none",
-        "session"
-      ],
-      "runtime_non_setting_dotted_tokens": [
-        "board.frame_active",
-        "board.grid",
-        "board.slice_geometry",
-        "board.spawn_entry_cue",
-        "board.wireframe"
-      ],
+      "non_persistent_policies": ["none", "session"],
+      "runtime_non_setting_dotted_tokens": ["board.frame_active", "board.grid", "board.slice_geometry", "board.spawn_entry_cue", "board.wireframe"],
       "forbid_runtime_default_duplicates": true,
       "statement": "Every Godot presentation parameter, its default, exactly-one semantic owner, accessibility classification, and runtime applicability must be declared in the checked-in shell settings registry; runtime code may map validated preset values but must not introduce a second setting default. Persistent user choices must be written only to the separate user-data JSON store."
     },
     "contributor_directives": {
-      "required_ci_enforced_ids": [
-        "verification_required",
-        "loc_delta_preference",
-        "quiet_test_default"
-      ],
+      "required_ci_enforced_ids": ["verification_required", "loc_delta_preference", "quiet_test_default"],
       "directives": [
         {
           "id": "plan_with_acceptance",
           "category": "process",
-          "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
-          "source_docs": [
-            "docs/governance/CHANGE_GOVERNANCE.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Plan restructuring or behaviour work with acceptance criteria.",
+          "source_docs": ["docs/governance/CHANGE_GOVERNANCE.md"],
+          "enforced_by": ["code_review"]
         },
         {
           "id": "rds_backlog_state_sync",
           "category": "process",
-          "statement": "Update relevant RDS docs and BACKLOG when scope or behavior changes; update CURRENT_STATE only for staged, restart, handoff, restructuring, multi-batch, or phase-dependent work.",
-          "source_docs": [
-            "docs/governance/CHANGE_GOVERNANCE.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Update owning design and active backlog; use CURRENT_STATE only for handoff.",
+          "source_docs": ["docs/governance/CHANGE_GOVERNANCE.md"],
+          "enforced_by": ["code_review"]
         },
         {
           "id": "verification_required",
           "category": "verification",
-          "statement": "Run verify locally before completion; CI entrypoint remains authoritative.",
-          "source_docs": [
-            "docs/governance/VERIFICATION.md"
-          ],
-          "enforced_by": [
-            "scripts/verify.sh",
-            "scripts/ci_check.sh"
-          ]
+          "statement": "Run the canonical local/full verification required by the change.",
+          "source_docs": ["docs/governance/VERIFICATION.md"],
+          "enforced_by": ["scripts/verify.sh", "scripts/ci_check.sh"]
         },
         {
           "id": "loc_delta_preference",
           "category": "process",
-          "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
-          "source_docs": [
-            "docs/governance/CHANGE_GOVERNANCE.md"
-          ],
-          "enforced_by": [
-            "code_review",
-            "tools/governance/validate_governance.py"
-          ]
+          "statement": "Report LOC delta and prefer reduction for non-feature refactors.",
+          "source_docs": ["docs/governance/CHANGE_GOVERNANCE.md"],
+          "enforced_by": ["code_review", "tools/governance/validate_governance.py"]
         },
         {
           "id": "quiet_test_default",
           "category": "process",
-          "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
-          "source_docs": [
-            "docs/governance/VERIFICATION.md"
-          ],
-          "enforced_by": [
-            "code_review",
-            "scripts/verify.sh",
-            "tools/governance/validate_governance.py"
-          ]
+          "statement": "Use quiet verification output except during diagnosis.",
+          "source_docs": ["docs/governance/VERIFICATION.md"],
+          "enforced_by": ["code_review", "scripts/verify.sh", "tools/governance/validate_governance.py"]
         },
         {
           "id": "medium_patch_preference",
           "category": "process",
-          "statement": "Prefer medium-sized localized patches over ultra-narrow patch fragmentation; split only when a broader patch becomes hard to review or tool-rejected.",
-          "source_docs": [
-            "docs/governance/ENGINEERING.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Prefer coherent localized patches.",
+          "source_docs": ["docs/governance/ENGINEERING.md"],
+          "enforced_by": ["code_review"]
         },
         {
           "id": "edit_method_selection",
           "category": "process",
-          "statement": "Use apply_patch only for localized code edits with fresh exact context. For broad doc rewrites, generated maintenance files, or files already edited in the current batch, prefer one deterministic scripted rewrite immediately instead of patch-first retries. Patch-tool rejection is a method switch signal, not a blocker.",
-          "source_docs": [
-            "docs/governance/ENGINEERING.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Use patch edits for local changes and deterministic rewrites for broad changes.",
+          "source_docs": ["docs/governance/ENGINEERING.md"],
+          "enforced_by": ["code_review"]
         },
         {
           "id": "source_write_safety",
           "category": "process",
-          "statement": "Do not use ad hoc multiline PowerShell -replace or BOM-producing Set-Content flows for source-file edits. Non-patch rewrites of source files must preserve UTF-8 without BOM and avoid literal escape-text insertion.",
-          "source_docs": [
-            "docs/governance/ENGINEERING.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Preserve UTF-8 and reject literal escape artifacts.",
+          "source_docs": ["docs/governance/ENGINEERING.md"],
+          "enforced_by": ["code_review"]
         },
         {
           "id": "post_write_hygiene",
           "category": "verification",
-          "statement": "After any non-patch source rewrite, run a touched-file hygiene pass: encoding sanity, no literal escape artifacts, then focused lint before broader tests.",
-          "source_docs": [
-            "docs/governance/VERIFICATION.md"
-          ],
-          "enforced_by": [
-            "code_review",
-            "scripts/verify_focus.sh"
-          ]
+          "statement": "Check encoding, escape artifacts, and focused lint after rewrites.",
+          "source_docs": ["docs/governance/VERIFICATION.md"],
+          "enforced_by": ["code_review", "scripts/verify_focus.sh"]
         },
         {
           "id": "serialized_full_gates",
           "category": "verification",
-          "statement": "Never run verify.sh and ci_check.sh in parallel. Use focused checks first, then run the full gates sequentially.",
-          "source_docs": [
-            "docs/governance/VERIFICATION.md"
-          ],
-          "enforced_by": [
-            "code_review",
-            "scripts/verify.sh",
-            "scripts/ci_check.sh"
-          ]
+          "statement": "Run focused checks before serialized full gates.",
+          "source_docs": ["docs/governance/VERIFICATION.md"],
+          "enforced_by": ["code_review", "scripts/verify.sh", "scripts/ci_check.sh"]
         },
         {
           "id": "current_venv_for_tests_and_ci",
           "category": "verification",
-          "statement": "When running pytest, verify, or CI wrapper commands locally, use the current repository virtualenv interpreter when one is available instead of an ambient system Python.",
-          "source_docs": [
-            "docs/governance/VERIFICATION.md"
-          ],
-          "enforced_by": [
-            "scripts/verify.sh",
-            "scripts/verify_focus.sh",
-            "scripts/ci_check.sh",
-            "code_review"
-          ]
+          "statement": "Use the repository-managed interpreter when available.",
+          "source_docs": ["docs/governance/VERIFICATION.md"],
+          "enforced_by": ["scripts/verify.sh", "scripts/verify_focus.sh", "scripts/ci_check.sh", "code_review"]
         },
         {
           "id": "single_patch_retry_limit",
           "category": "process",
-          "statement": "Do not retry apply_patch repeatedly on the same file. After one rejected apply_patch attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.",
-          "source_docs": [
-            "docs/governance/ENGINEERING.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Switch method after a rejected patch attempt.",
+          "source_docs": ["docs/governance/ENGINEERING.md"],
+          "enforced_by": ["code_review"]
         },
         {
           "id": "staged_migration_honesty",
           "category": "process",
-          "statement": "For staged UI and architecture migrations, do not treat partial progress as completion. Do not mark complete until every stated acceptance criterion is explicitly satisfied.",
-          "source_docs": [
-            "docs/governance/CHANGE_GOVERNANCE.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Do not claim completion before every acceptance criterion passes.",
+          "source_docs": ["docs/governance/CHANGE_GOVERNANCE.md"],
+          "enforced_by": ["code_review"]
         },
         {
           "id": "additive_migration_first",
           "category": "process",
-          "statement": "Use additive migration first: add new modules, route one flow, verify, then remove old paths. Do not attempt broad destructive replacement in one step.",
-          "source_docs": [
-            "docs/governance/CHANGE_GOVERNANCE.md"
-          ],
-          "enforced_by": [
-            "code_review",
-            "scripts/verify_focus.sh"
-          ]
+          "statement": "Prefer additive staged migration over destructive replacement.",
+          "source_docs": ["docs/governance/CHANGE_GOVERNANCE.md"],
+          "enforced_by": ["code_review", "scripts/verify_focus.sh"]
         },
         {
           "id": "delta_report_required",
           "category": "process",
-          "statement": "At the end of staged migration work, provide a delta report listing files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.",
-          "source_docs": [
-            "docs/governance/CHANGE_GOVERNANCE.md"
-          ],
-          "enforced_by": [
-            "code_review"
-          ]
+          "statement": "Report the final staged-migration delta and remaining blockers.",
+          "source_docs": ["docs/governance/CHANGE_GOVERNANCE.md"],
+          "enforced_by": ["code_review"]
         }
       ]
     },
@@ -845,20 +273,11 @@
       "dependency_policy": {
         "pyproject_path": "pyproject.toml",
         "require_pip_check": true,
-        "blocked_dependencies": [
-          "pycrypto",
-          "python-jose"
-        ]
+        "blocked_dependencies": ["pycrypto", "python-jose"]
       },
       "security_ownership": {
         "enabled": true,
-        "sensitive_globs": [
-          "tools/governance/scan_secrets.py",
-          "config/project/policy/manifests/secret_scan.json",
-          "scripts/check_policy_compliance.sh",
-          "scripts/check_git_sanitation.sh",
-          "tools/governance/validate_project_contracts.py"
-        ],
+        "sensitive_globs": ["tools/governance/scan_secrets.py", "config/project/policy/manifests/secret_scan.json", "scripts/check_policy_compliance.sh", "scripts/check_git_sanitation.sh", "tools/governance/validate_project_contracts.py"],
         "min_sensitive_files": 5,
         "min_distinct_authors_per_file": 1,
         "max_files_below_min_authors": 0,
@@ -869,224 +288,70 @@
     "architecture": {
       "schema_version": 1,
       "arch_stage": 900,
-      "source_roots": [
-        "src/tet4d",
-        "tests",
-        "tools",
-        "scripts"
-      ],
-      "boundary_scripts": [
-        "scripts/check_architecture_boundaries.sh",
-        "scripts/check_engine_core_purity.sh"
-      ],
+      "source_roots": ["src/tet4d", "tests", "tools", "scripts"],
+      "boundary_scripts": ["scripts/check_architecture_boundaries.sh", "scripts/check_engine_core_purity.sh"],
       "forbidden_reverse_imports": [
-        {
-          "from": "tet4d.engine",
-          "to": "tet4d.ui"
-        },
-        {
-          "from": "tet4d.engine",
-          "to": "tet4d.ai"
-        },
-        {
-          "from": "tet4d.engine",
-          "to": "tet4d.replay"
-        },
-        {
-          "from": "tet4d.engine",
-          "to": "tools"
-        }
+        {"from": "tet4d.engine", "to": "tet4d.ui"},
+        {"from": "tet4d.engine", "to": "tet4d.ai"},
+        {"from": "tet4d.engine", "to": "tet4d.replay"},
+        {"from": "tet4d.engine", "to": "tools"}
       ],
-      "zero_budgets": {
-        "engine_core_purity_violations": 0,
-        "engine_core_to_non_core_imports": 0,
-        "engine_to_ui_imports": 0,
-        "engine_to_ai_imports": 0,
-        "pygame_imports_in_non_test": 0
-      },
+      "zero_budgets": {"engine_core_purity_violations": 0, "engine_core_to_non_core_imports": 0, "engine_to_ui_imports": 0, "engine_to_ai_imports": 0, "pygame_imports_in_non_test": 0},
       "classification": {
-        "non_code_segments": [
-          "docs",
-          "doc",
-          "assets",
-          "inputs",
-          "outputs",
-          "config",
-          "configs",
-          "notebooks",
-          "benchmarks",
-          "packaging",
-          "migrations",
-          "schema",
-          "scripts",
-          "tools",
-          "data"
-        ],
-        "test_segments": [
-          "test",
-          "tests"
-        ],
-        "class_overrides": {
-          "tests/unit/engine": "tests_lenient",
-          "src/tet4d/engine/core/rng": "micro_core_leaf",
-          "src/tet4d/engine/core/step": "micro_core_leaf",
-          "src/tet4d/replay": "micro_feature_leaf",
-          "src/tet4d/engine/runtime/menu_settings": "micro_feature_leaf",
-          "src/tet4d/engine/runtime/menu_structure": "micro_feature_leaf",
-          "src/tet4d/engine/runtime/score_analysis": "micro_feature_leaf"
-        },
-        "gate_overrides": {
-          "tests/unit/engine": true
-        }
+        "non_code_segments": ["docs", "doc", "assets", "inputs", "outputs", "config", "configs", "notebooks", "benchmarks", "packaging", "migrations", "schema", "scripts", "tools", "data"],
+        "test_segments": ["test", "tests"],
+        "class_overrides": {"tests/unit/engine": "tests_lenient", "src/tet4d/engine/core/rng": "micro_core_leaf", "src/tet4d/engine/core/step": "micro_core_leaf", "src/tet4d/replay": "micro_feature_leaf", "src/tet4d/engine/runtime/menu_settings": "micro_feature_leaf", "src/tet4d/engine/runtime/menu_structure": "micro_feature_leaf", "src/tet4d/engine/runtime/score_analysis": "micro_feature_leaf"},
+        "gate_overrides": {"tests/unit/engine": true}
       },
-      "class_gate_eligibility": {
-        "code_default": true,
-        "tests_lenient": true,
-        "non_code_exempt": false,
-        "micro_core_leaf": true,
-        "micro_feature_leaf": true
-      },
-      "class_to_profile": {
-        "code_default": "default_leaf",
-        "tests_lenient": "tests_leaf",
-        "non_code_exempt": "non_code_exempt",
-        "micro_core_leaf": "micro_leaf",
-        "micro_feature_leaf": "micro_leaf"
-      },
-      "backlog": {
-        "mode": "tet4d_bkl",
-        "default_priority": "P2"
-      },
+      "class_gate_eligibility": {"code_default": true, "tests_lenient": true, "non_code_exempt": false, "micro_core_leaf": true, "micro_feature_leaf": true},
+      "class_to_profile": {"code_default": "default_leaf", "tests_lenient": "tests_leaf", "non_code_exempt": "non_code_exempt", "micro_core_leaf": "micro_leaf", "micro_feature_leaf": "micro_leaf"},
+      "backlog": {"mode": "tet4d_bkl", "default_priority": "P2"},
       "long_term_goals": {
         "keybinding_retention": {
-          "required_scopes": [
-            "general",
-            "2d",
-            "3d",
-            "4d",
-            "all"
-          ],
+          "required_scopes": ["general", "2d", "3d", "4d", "all"],
           "target_pressure_max": 0.0
         },
-        "menu_simplification": {
-          "target_simplification_score_min": 0.65
-        }
+        "menu_simplification": {"target_simplification_score_min": 0.65}
       }
     },
     "tech_debt_budget": {
       "schema_version": 1,
       "gate_mode": "non_regression_baseline",
       "score_epsilon": 0.03,
-      "status_order": {
-        "low": 0,
-        "moderate": 1,
-        "high": 2,
-        "critical": 3
-      },
-      "baseline": {
-        "arch_stage": 755,
-        "score": 15.06,
-        "status": "low"
-      },
+      "status_order": {"low": 0, "moderate": 1, "high": 2, "critical": 3},
+      "baseline": {"arch_stage": 755, "score": 15.06, "status": "low"},
       "scoring": {
-        "component_weights": {
-          "backlog_priority": 0.27,
-          "backlog_bug": 0.16,
-          "ci_gate": 0.2,
-          "code_balance": 0.12,
-          "keybinding_retention": 0.2,
-          "menu_simplification": 0.05,
-          "delivery_size_pressure": 0.005
-        },
-        "priority_weights": {
-          "P1": 5,
-          "P2": 3,
-          "P3": 1
-        },
-        "normalization": {
-          "priority_points_cap": 40,
-          "bug_items_cap": 6,
-          "ci_issue_cap": 6
-        },
+        "component_weights": {"backlog_priority": 0.27, "backlog_bug": 0.16, "ci_gate": 0.2, "code_balance": 0.12, "keybinding_retention": 0.2, "menu_simplification": 0.05, "delivery_size_pressure": 0.005},
+        "priority_weights": {"P1": 5, "P2": 3, "P3": 1},
+        "normalization": {"priority_points_cap": 40, "bug_items_cap": 6, "ci_issue_cap": 6},
         "delivery_size": {
           "loc_unit": 12500,
           "file_unit": 78,
-          "source_root_weights": {
-            "src/tet4d": 1.0,
-            "tests": 0.35,
-            "tools": 0.2,
-            "scripts": 0.2,
-            "other": 0.1
-          }
+          "source_root_weights": {"src/tet4d": 1.0, "tests": 0.35, "tools": 0.2, "scripts": 0.2, "other": 0.1}
         },
-        "bug_keywords": [
-          "bug",
-          "regression",
-          "correctness",
-          "broken",
-          "failure",
-          "ci",
-          "alert"
-        ]
+        "bug_keywords": ["bug", "regression", "correctness", "broken", "failure", "ci", "alert"]
       }
     },
     "drift_protection": {
       "schema_version": 1,
       "manifest_id": "drift_protection",
       "hotspot_scan": {
-        "roots": [
-          "src",
-          "cli",
-          "tests",
-          "tools",
-          "scripts"
-        ],
+        "roots": ["src", "cli", "tests", "tools", "scripts"],
         "top_n": 8
       },
       "thin_wrapper_budgets": [
-        {
-          "path": "cli/front.py",
-          "max_real_loc": 840,
-          "role": "compatibility launcher wrapper"
-        },
-        {
-          "path": "cli/front2d.py",
-          "max_real_loc": 24,
-          "role": "thin 2D launcher shim"
-        },
-        {
-          "path": "cli/front3d.py",
-          "max_real_loc": 24,
-          "role": "thin 3D launcher shim"
-        },
-        {
-          "path": "cli/front4d.py",
-          "max_real_loc": 24,
-          "role": "thin 4D launcher shim"
-        },
-        {
-          "path": "src/tet4d/engine/api.py",
-          "max_real_loc": 160,
-          "role": "small engine compatibility facade"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front2d_game.py",
-          "max_real_loc": 180,
-          "role": "2D orchestration entrypoint"
-        }
+        {"path": "cli/front.py", "max_real_loc": 840, "role": "compatibility launcher wrapper"},
+        {"path": "cli/front2d.py", "max_real_loc": 24, "role": "thin 2D launcher shim"},
+        {"path": "cli/front3d.py", "max_real_loc": 24, "role": "thin 3D launcher shim"},
+        {"path": "cli/front4d.py", "max_real_loc": 24, "role": "thin 4D launcher shim"},
+        {"path": "src/tet4d/engine/api.py", "max_real_loc": 160, "role": "small engine compatibility facade"},
+        {"path": "src/tet4d/ui/pygame/front2d_game.py", "max_real_loc": 180, "role": "2D orchestration entrypoint"}
       ],
       "tutorial_copy_contract": {
         "lessons_path": "config/tutorial/lessons.json",
         "overlay_path": "src/tet4d/ui/pygame/runtime_ui/tutorial_overlay.py",
-        "forbidden_prefixes": [
-          "Goal:",
-          "Action:"
-        ],
-        "required_overlay_tokens": [
-          "Do this:",
-          "Tip:",
-          "USE:"
-        ]
+        "forbidden_prefixes": ["Goal:", "Action:"],
+        "required_overlay_tokens": ["Do this:", "Tip:", "USE:"]
       }
     }
   },
@@ -1097,44 +362,26 @@
       "entrypoints": [
         {
           "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
-          "required_any_tokens": [
-            "sanitize_text_runtime",
-            "_sanitize_text("
-          ],
-          "required_all_tokens": [
-            "append_numeric_text",
-            "parse_numeric_text"
-          ],
+          "required_any_tokens": ["sanitize_text_runtime", "_sanitize_text("],
+          "required_all_tokens": ["append_numeric_text", "parse_numeric_text"],
           "severity": "error"
         },
         {
           "path": "src/tet4d/ui/pygame/menu/keybindings_menu.py",
-          "required_any_tokens": [
-            "sanitize_text_runtime"
-          ],
-          "required_all_tokens": [
-            "_sanitize_profile_name"
-          ],
+          "required_any_tokens": ["sanitize_text_runtime"],
+          "required_all_tokens": ["_sanitize_profile_name"],
           "severity": "warning"
         },
         {
           "path": "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
-          "required_any_tokens": [
-            "sanitize_text_runtime"
-          ],
-          "required_all_tokens": [
-            "_NAME_MAX_LENGTH"
-          ],
+          "required_any_tokens": ["sanitize_text_runtime"],
+          "required_all_tokens": ["_NAME_MAX_LENGTH"],
           "severity": "warning"
         },
         {
           "path": "src/tet4d/ui/pygame/menu/numeric_text_input.py",
-          "required_any_tokens": [
-            "sanitize_text("
-          ],
-          "required_all_tokens": [
-            "sanitize_text: SanitizeTextFn"
-          ],
+          "required_any_tokens": ["sanitize_text("],
+          "required_all_tokens": ["sanitize_text: SanitizeTextFn"],
           "severity": "error"
         }
       ]
@@ -1143,28 +390,13 @@
       "entrypoints": [
         {
           "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
-          "required_all_tokens": [
-            "clamp_game_seed",
-            "clamp_overlay_transparency",
-            "clamp_lines_per_level",
-            "GAME_SEED_STEP"
-          ],
-          "forbidden_regex": [
-            "\\b999_?999_?999\\b",
-            "\\b0\\.85\\b"
-          ],
+          "required_all_tokens": ["clamp_game_seed", "clamp_overlay_transparency", "clamp_lines_per_level", "GAME_SEED_STEP"],
+          "forbidden_regex": ["\\b999_?999_?999\\b", "\\b0\\.85\\b"],
           "severity": "error"
         },
         {
           "path": "src/tet4d/engine/runtime/settings_schema.py",
-          "required_all_tokens": [
-            "OVERLAY_TRANSPARENCY_MIN",
-            "OVERLAY_TRANSPARENCY_MAX",
-            "GAME_SEED_MIN",
-            "GAME_SEED_MAX",
-            "LINES_PER_LEVEL_MIN",
-            "LINES_PER_LEVEL_MAX"
-          ],
+          "required_all_tokens": ["OVERLAY_TRANSPARENCY_MIN", "OVERLAY_TRANSPARENCY_MAX", "GAME_SEED_MIN", "GAME_SEED_MAX", "LINES_PER_LEVEL_MIN", "LINES_PER_LEVEL_MAX"],
           "forbidden_regex": [],
           "severity": "warning"
         }
@@ -1172,120 +404,40 @@
     },
     "config_backed_runtime_constants": {
       "authoritative_sources": [
-        {
-          "path": "config/project/constants.json",
-          "description": "repo-owned runtime constants, UI/layout defaults, animation timings, and cache limits"
-        },
-        {
-          "path": "config/gameplay/tuning.json",
-          "description": "gameplay thresholds, scoring/tuning parameters, and other mutable runtime balance values"
-        },
-        {
-          "path": "config/menu/defaults.json",
-          "description": "persisted default settings payload"
-        }
+        {"path": "config/project/constants.json", "description": "repo-owned runtime constants, UI/layout defaults, animation timings, and cache limits"},
+        {"path": "config/gameplay/tuning.json", "description": "gameplay thresholds, scoring/tuning parameters, and other mutable runtime balance values"},
+        {"path": "config/menu/defaults.json", "description": "persisted default settings payload"}
       ],
-      "source_roots": [
-        "src/tet4d",
-        "cli"
-      ],
-      "exclude_globs": [
-        "tests/**",
-        "**/test_*.py",
-        "**/*_test.py",
-        "**/conftest.py"
-      ],
-      "target_module_globs": [
-        "src/tet4d/engine/runtime/leaderboard.py",
-        "src/tet4d/engine/tutorial/runtime.py",
-        "src/tet4d/ui/pygame/front2d_loop.py",
-        "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
-        "src/tet4d/ui/pygame/projection3d.py",
-        "src/tet4d/ui/pygame/render/gfx_game.py",
-        "src/tet4d/ui/pygame/render/projected_occlusion.py",
-        "src/tet4d/ui/pygame/render/text_render_cache.py",
-        "src/tet4d/ui/pygame/runtime_ui/tutorial_loop_common.py",
-        "src/tet4d/ui/pygame/ui_utils.py"
-      ],
-      "allowed_loader_modules": [
-        "tet4d.engine.runtime.project_config",
-        "tet4d.engine.runtime.runtime_config",
-        "tet4d.engine.runtime.menu_config"
-      ],
-      "allowed_loader_symbols": [
-        "constants_payload",
-        "default_settings_payload",
-        "gameplay_tuning_payload",
-        "project_constant_color",
-        "project_constant_float",
-        "project_constant_int"
-      ],
+      "source_roots": ["src/tet4d", "cli"],
+      "exclude_globs": ["tests/**", "**/test_*.py", "**/*_test.py", "**/conftest.py"],
+      "target_module_globs": ["src/tet4d/engine/runtime/leaderboard.py", "src/tet4d/engine/tutorial/runtime.py", "src/tet4d/ui/pygame/front2d_loop.py", "src/tet4d/ui/pygame/launch/leaderboard_menu.py", "src/tet4d/ui/pygame/projection3d.py", "src/tet4d/ui/pygame/render/gfx_game.py", "src/tet4d/ui/pygame/render/projected_occlusion.py", "src/tet4d/ui/pygame/render/text_render_cache.py", "src/tet4d/ui/pygame/runtime_ui/tutorial_loop_common.py", "src/tet4d/ui/pygame/ui_utils.py"],
+      "allowed_loader_modules": ["tet4d.engine.runtime.project_config", "tet4d.engine.runtime.runtime_config", "tet4d.engine.runtime.menu_config"],
+      "allowed_loader_symbols": ["constants_payload", "default_settings_payload", "gameplay_tuning_payload", "project_constant_color", "project_constant_float", "project_constant_int"],
       "enforcement": {
         "module_level_assignments_only": true,
-        "name_patterns": {
-          "constant_like": "^_?[A-Z][A-Z0-9_]*$",
-          "runtime_owned": "(?:DEFAULT|THRESH|LIMIT|CACHE|MARGIN|PADDING|WIDTH|HEIGHT|GAP|LAYOUT|ANIMATION|DURATION|DELAY|TIMING|TIMEOUT|SPEED|SCORE|TUNING|ROWS|ENTRIES|PAGE|PANEL|CELL|LAYER|RADIUS|SIZE|ALPHA|FPS|COUNT|MAX|MIN)"
-        },
+        "name_patterns": {"constant_like": "^_?[A-Z][A-Z0-9_]*$", "runtime_owned": "(?:DEFAULT|THRESH|LIMIT|CACHE|MARGIN|PADDING|WIDTH|HEIGHT|GAP|LAYOUT|ANIMATION|DURATION|DELAY|TIMING|TIMEOUT|SPEED|SCORE|TUNING|ROWS|ENTRIES|PAGE|PANEL|CELL|LAYER|RADIUS|SIZE|ALPHA|FPS|COUNT|MAX|MIN)"},
         "selected_file_bans": [
-          {
-            "path": "src/tet4d/engine/runtime/leaderboard.py",
-            "name_regex": "^_DEFAULT_MAX_ENTRIES$",
-            "message": "leaderboard max entries must come from config/project/constants.json via project_constant_int"
-          }
+          {"path": "src/tet4d/engine/runtime/leaderboard.py", "name_regex": "^_DEFAULT_MAX_ENTRIES$", "message": "leaderboard max entries must come from config/project/constants.json via project_constant_int"}
         ]
       },
       "exception_categories": {
         "third_party_constants_enums": {
-          "allowed_import_roots": [
-            "pygame",
-            "pathlib",
-            "typing",
-            "datetime",
-            "uuid",
-            "enum",
-            "collections",
-            "math",
-            "functools"
-          ]
+          "allowed_import_roots": ["pygame", "pathlib", "typing", "datetime", "uuid", "enum", "collections", "math", "functools"]
         },
         "schema_versions": {
-          "allowed_name_regexes": [
-            "^_?SCHEMA_VERSION$",
-            "^_?FORMAT_VERSION$",
-            "^_?MANIFEST_VERSION$",
-            "^_?VERSION$"
-          ],
-          "allowed_module_globs": [
-            "src/tet4d/**/schema*.py",
-            "src/tet4d/**/manifest*.py",
-            "src/tet4d/**/validation*.py"
-          ]
+          "allowed_name_regexes": ["^_?SCHEMA_VERSION$", "^_?FORMAT_VERSION$", "^_?MANIFEST_VERSION$", "^_?VERSION$"],
+          "allowed_module_globs": ["src/tet4d/**/schema*.py", "src/tet4d/**/manifest*.py", "src/tet4d/**/validation*.py"]
         },
         "protocol_dunder": {
-          "allowed_name_regexes": [
-            "^__.*__$",
-            "^__all__$",
-            "^__slots__$"
-          ]
+          "allowed_name_regexes": ["^__.*__$", "^__all__$", "^__slots__$"]
         },
         "sentinels": {
-          "allowed_name_regexes": [
-            "^_?[A-Z0-9_]*(MISSING|UNSET|SENTINEL|UNKNOWN)[A-Z0-9_]*$"
-          ]
+          "allowed_name_regexes": ["^_?[A-Z0-9_]*(MISSING|UNSET|SENTINEL|UNKNOWN)[A-Z0-9_]*$"]
         },
         "tests": {
-          "path_globs": [
-            "tests/**",
-            "**/test_*.py",
-            "**/*_test.py",
-            "**/conftest.py"
-          ]
+          "path_globs": ["tests/**", "**/test_*.py", "**/*_test.py", "**/conftest.py"]
         },
-        "allowed_invariant_name_regex": [
-          "^_MAX_[A-Z0-9_]+_LENGTH$",
-          "^_?EPSILON$",
-          "^_?PI$"
-        ],
+        "allowed_invariant_name_regex": ["^_MAX_[A-Z0-9_]+_LENGTH$", "^_?EPSILON$", "^_?PI$"],
         "allowed_invariant_module_globs": []
       }
     },
@@ -1295,160 +447,66 @@
         {
           "id": "parsing_validation_reuse",
           "description": "Prefer stdlib or existing repo helpers for parsing and validation rather than ad-hoc local variants.",
-          "scope_globs": [
-            "src/tet4d/ui/pygame/launch/*.py",
-            "src/tet4d/ui/pygame/menu/*.py",
-            "src/tet4d/engine/tutorial/*.py",
-            "tools/**/*.py",
-            "scripts/**/*.py"
-          ],
-          "forbidden_regex": [
-            "\\.strip\\(\\)\\.lower\\(\\)\\s+in\\s+\\([^)]+\\)",
-            "if\\s+[^\\n]+\\.isdigit\\(\\)\\s*:\\s*return\\s+int\\(",
-            "if\\s+[^\\n]+\\.isnumeric\\(\\)\\s*:\\s*return\\s+int\\("
-          ],
-          "ast_detectors": [
-            "custom_bool_parser",
-            "custom_numeric_text_parser"
-          ],
-          "prefer_symbols": [
-            "tet4d.engine.runtime.settings_schema",
-            "sanitize_text_runtime",
-            "append_numeric_text",
-            "parse_numeric_text",
-            "tet4d.engine.runtime.project_config"
-          ]
+          "scope_globs": ["src/tet4d/ui/pygame/launch/*.py", "src/tet4d/ui/pygame/menu/*.py", "src/tet4d/engine/tutorial/*.py", "tools/**/*.py", "scripts/**/*.py"],
+          "forbidden_regex": ["\\.strip\\(\\)\\.lower\\(\\)\\s+in\\s+\\([^)]+\\)", "if\\s+[^\\n]+\\.isdigit\\(\\)\\s*:\\s*return\\s+int\\(", "if\\s+[^\\n]+\\.isnumeric\\(\\)\\s*:\\s*return\\s+int\\("],
+          "ast_detectors": ["custom_bool_parser", "custom_numeric_text_parser"],
+          "prefer_symbols": ["tet4d.engine.runtime.settings_schema", "sanitize_text_runtime", "append_numeric_text", "parse_numeric_text", "tet4d.engine.runtime.project_config"]
         },
         {
           "id": "normalization_reuse",
           "description": "Do not duplicate local sanitization and normalization pipelines where shared helpers exist.",
-          "scope_globs": [
-            "src/tet4d/ui/pygame/**/*.py",
-            "src/tet4d/engine/runtime/**/*.py",
-            "tools/governance/*.py"
-          ],
-          "forbidden_regex": [
-            "re\\.sub\\([^\\n]*[^\\n]*\\.strip\\(\\)",
-            "\\.replace\\([^\\n]*\\)\\.replace\\([^\\n]*\\)\\.strip\\(\\)"
-          ],
+          "scope_globs": ["src/tet4d/ui/pygame/**/*.py", "src/tet4d/engine/runtime/**/*.py", "tools/governance/*.py"],
+          "forbidden_regex": ["re\\.sub\\([^\\n]*[^\\n]*\\.strip\\(\\)", "\\.replace\\([^\\n]*\\)\\.replace\\([^\\n]*\\)\\.strip\\(\\)"],
           "ast_detectors": [],
-          "prefer_symbols": [
-            "sanitize_text",
-            "sanitize_text_runtime",
-            "sanitize_state_relative_path"
-          ]
+          "prefer_symbols": ["sanitize_text", "sanitize_text_runtime", "sanitize_state_relative_path"]
         },
         {
           "id": "path_and_config_reuse",
           "description": "Use existing project config, path, and JSON helper flows before introducing custom wrappers.",
-          "scope_globs": [
-            "src/tet4d/ui/pygame/**/*.py",
-            "src/tet4d/engine/runtime/**/*.py",
-            "tools/governance/*.py",
-            "scripts/**/*.py"
-          ],
-          "forbidden_regex": [
-            "Path\\(__file__\\)\\.parent\\.parent\\.parent",
-            "open\\([^\\n]*\\)\\.read\\(\\)\\s*\\n\\s*json\\.loads\\("
-          ],
+          "scope_globs": ["src/tet4d/ui/pygame/**/*.py", "src/tet4d/engine/runtime/**/*.py", "tools/governance/*.py", "scripts/**/*.py"],
+          "forbidden_regex": ["Path\\(__file__\\)\\.parent\\.parent\\.parent", "open\\([^\\n]*\\)\\.read\\(\\)\\s*\\n\\s*json\\.loads\\("],
           "ast_detectors": [],
-          "prefer_symbols": [
-            "project_path",
-            "state_relative_path",
-            "read_json_object_or_empty",
-            "atomic_write_json"
-          ]
+          "prefer_symbols": ["project_path", "state_relative_path", "read_json_object_or_empty", "atomic_write_json"]
         },
         {
           "id": "algorithm_utility_reuse",
           "description": "Prefer stdlib functional utilities over ad-hoc rewrites for common collection transforms.",
-          "scope_globs": [
-            "src/tet4d/engine/runtime/**/*.py",
-            "tools/governance/*.py"
-          ],
-          "forbidden_regex": [
-            "result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+not\\s+in\\s+result:[ \\t]*\\n[ \\t]*result\\.append\\(",
-            "for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*continue\\s*\\n[ \\t]*\\w+\\.append\\("
-          ],
+          "scope_globs": ["src/tet4d/engine/runtime/**/*.py", "tools/governance/*.py"],
+          "forbidden_regex": ["result\\s*=\\s*\\[\\]\\s*\\n\\s*for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+not\\s+in\\s+result:[ \\t]*\\n[ \\t]*result\\.append\\(", "for\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*if\\s+\\w+\\s+in\\s+\\w+:[ \\t]*\\n[ \\t]*continue\\s*\\n[ \\t]*\\w+\\.append\\("],
           "ast_detectors": [],
-          "prefer_symbols": [
-            "set(",
-            "dict.fromkeys",
-            "collections"
-          ]
+          "prefer_symbols": ["set(", "dict.fromkeys", "collections"]
         }
       ]
     },
     "dead_code": {
-      "forbidden_paths": [
-        "tetris_nd/"
-      ],
+      "forbidden_paths": ["tetris_nd/"],
       "todo_rule": {
-        "scope_globs": [
-          "src/**/*.py",
-          "tools/**/*.py",
-          "scripts/**/*.py"
-        ],
-        "ignore_globs": [
-          "tools/governance/check_dedup_dead_code_rules.py",
-          "tests/**/*.py"
-        ],
+        "scope_globs": ["src/**/*.py", "tools/**/*.py", "scripts/**/*.py"],
+        "ignore_globs": ["tools/governance/check_dedup_dead_code_rules.py", "tests/**/*.py"],
         "token_regex": "\\b(?:TODO|FIXME)\\b",
         "required_backlog_regex": "\\[BKL-[^\\]]+\\]"
       },
       "duplicate_functions": {
         "enabled": true,
-        "strict_scope_globs": [
-          "tools/governance/*.py"
-        ],
-        "advisory_scope_globs": [
-          "src/tet4d/engine/runtime/*.py"
-        ],
+        "strict_scope_globs": ["tools/governance/*.py"],
+        "advisory_scope_globs": ["src/tet4d/engine/runtime/*.py"],
         "min_body_lines": 12,
         "max_allowed_duplicates_per_signature": 1,
-        "exclude_function_names": [
-          "main"
-        ]
+        "exclude_function_names": ["main"]
       }
     },
     "loc_guidance": {
       "mode": "soft_warning",
       "default_batch_type": "mixed",
       "batch_type_env_var": "LOC_GUIDANCE_BATCH_TYPE",
-      "include_extensions": [
-        ".py"
-      ],
-      "buckets": {
-        "src": "src/",
-        "tests": "tests/",
-        "tools_scripts": "tools/|scripts/"
-      },
+      "include_extensions": [".py"],
+      "buckets": {"src": "src/", "tests": "tests/", "tools_scripts": "tools/|scripts/"},
       "thresholds": {
-        "feature": {
-          "src": 500,
-          "tests": 250,
-          "tools_scripts": 150
-        },
-        "bugfix": {
-          "src": 250,
-          "tests": 150,
-          "tools_scripts": 120
-        },
-        "refactor_only": {
-          "src": 0,
-          "tests": 0,
-          "tools_scripts": 0
-        },
-        "mixed": {
-          "src": 300,
-          "tests": 180,
-          "tools_scripts": 120
-        },
-        "governance": {
-          "src": 0,
-          "tests": 80,
-          "tools_scripts": 200
-        }
+        "feature": {"src": 500, "tests": 250, "tools_scripts": 150},
+        "bugfix": {"src": 250, "tests": 150, "tools_scripts": 120},
+        "refactor_only": {"src": 0, "tests": 0, "tools_scripts": 0},
+        "mixed": {"src": 300, "tests": 180, "tools_scripts": 120},
+        "governance": {"src": 0, "tests": 80, "tools_scripts": 200}
       }
     }
   },
@@ -1457,1216 +515,455 @@
     "title": "tet4d canonical maintenance contract",
     "description": "Machine-checked source-of-truth rules for docs/tests/help/backlog/RDS/feature-map consistency.",
     "required_paths": {
-      "root_docs": [
-        "README.md",
-        "docs/README.md",
-        "docs/PROJECT_STRUCTURE.md",
-        "docs/FEATURE_MAP.md",
-        "docs/CONFIGURATION_REFERENCE.md",
-        "docs/USER_SETTINGS_REFERENCE.md",
-        "docs/BACKLOG.md",
-        "docs/history/DONE_SUMMARIES.md",
-        "docs/CHANGELOG.md",
-        "docs/SECURITY_AND_CONFIG_PLAN.md"
-      ],
-      "rds_docs": [
-        "docs/rds/RDS_TETRIS_GENERAL.md",
-        "docs/rds/RDS_2D_TETRIS.md",
-        "docs/rds/RDS_3D_TETRIS.md",
-        "docs/rds/RDS_4D_TETRIS.md",
-        "docs/rds/RDS_KEYBINDINGS.md",
-        "docs/rds/RDS_MENU_STRUCTURE.md",
-        "docs/rds/RDS_PLAYBOT.md",
-        "docs/rds/RDS_SCORE_ANALYZER.md",
-        "docs/rds/RDS_PACKAGING.md"
-      ],
-      "architecture_evidence": [
-        "docs/architecture/first_subsystem_parity_pilot.md",
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md",
-        "docs/architecture/trace_metadata_identity_digest_parity.md",
-        "docs/architecture/topology_identifier_normalization_parity.md",
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
-        "docs/architecture/parity_evidence_package_review.md",
-        "docs/architecture/trace_schema_version_normalization_parity.md"
-      ],
-      "help_assets": [
-        "src/tet4d/ui/pygame/render/control_icons.py",
-        "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
-      ],
-      "canonical_schemas": [
-        "config/schema/menu_settings.schema.json",
-        "config/schema/save_state.schema.json",
-        "config/schema/help_topics.schema.json",
-        "config/schema/help_action_map.schema.json",
-        "config/schema/help_runtime_content.schema.json",
-        "config/schema/help_runtime_layout.schema.json",
-        "config/schema/tutorial_lessons.schema.json",
-        "config/schema/tutorial_plan.schema.json"
-      ],
-      "migration_ledgers": [
-        "docs/migrations/menu_settings.md",
-        "docs/migrations/save_state.md"
-      ],
-      "replay_contract": [
-        "config/project/policy/manifests/replay_manifest.json",
-        "tests/replay/golden/.gitkeep"
-      ],
-      "help_contract": [
-        "docs/help/HELP_INDEX.md",
-        "config/project/policy/manifests/help_assets_manifest.json"
-      ],
-      "release_contract": [
-        "docs/RELEASE_CHECKLIST.md",
-        "docs/RELEASE_INSTALLERS.md"
-      ],
-      "core_tests": [
-        "tests/unit/engine/test_playbot.py",
-        "tests/unit/engine/test_score_analyzer.py",
-        "tests/unit/engine/test_runtime_config.py",
-        "tests/unit/engine/test_menu_policy.py",
-        "tests/unit/engine/test_project_config.py",
-        "tests/unit/engine/test_help_topics.py",
-        "tests/unit/engine/test_help_menu.py",
-        "tests/unit/engine/test_help_text.py"
-      ],
-      "canonical_configs": [
-        "config/menu/defaults.json",
-        "config/menu/structure.json",
-        "config/topology/designer_presets.json",
-        "config/topology/lab_menu.json",
-        "config/help/topics.json",
-        "config/help/action_map.json",
-        "config/help/icon_map.json",
-        "config/help/content/runtime_help_content.json",
-        "config/help/layout/runtime_help_layout.json",
-        "config/tutorial/lessons.json",
-        "config/tutorial/plan.json",
-        "config/gameplay/tuning.json",
-        "config/gameplay/piece_sets_nd.json",
-        "config/gameplay/score_analyzer.json",
-        "config/playbot/policy.json",
-        "config/audio/sfx.json",
-        "config/project/io_paths.json",
-        "config/project/constants.json",
-        "config/project/folder_balance_budgets.json",
-        "config/project/backlog_debt.json",
-        "config/project/policy/manifests/secret_scan.json"
-      ],
-      "ci_scripts": [
-        "scripts/bootstrap_env.sh",
-        "scripts/install_git_hooks.sh",
-        "scripts/ci_check.sh",
-        "scripts/verify.sh",
-        "scripts/verify_focus.sh",
-        "scripts/check_git_sanitation.sh",
-        "scripts/check_policy_compliance.sh",
-        "tools/governance/check_pygame_ce.py",
-        "tools/governance/scan_secrets.py",
-        "tools/governance/lint_menu_graph.py",
-        "tools/governance/architecture_metric_budget.py",
-        "tools/governance/tech_debt_budget.py",
-        "tools/governance/update_tech_debt_budgets.py",
-        "tools/governance/validate_project_contracts.py",
-        "tools/governance/resolve_codex_verification.py",
-        "tools/governance/generate_configuration_reference.py",
-        "tools/governance/generate_maintenance_docs.py",
-        "tools/governance/check_drift_protection.py",
-        "tools/governance/check_risk_gates.py",
-        "tools/governance/check_policy_runtime_rules.py",
-        "tools/governance/check_wheel_reuse_rules.py",
-        "tools/governance/check_loc_guidance.py",
-        "tools/governance/check_dedup_dead_code_rules.py",
-        ".github/workflows/ci.yml",
-        ".github/workflows/stability-watch.yml",
-        ".github/workflows/release-packaging.yml",
-        "scripts/check_policy_template_drift.sh",
-        "scripts/update_policy_template_hashes.sh",
-        "scripts/check_git_sanitation_repo.sh",
-        "scripts/check_policy_compliance_repo.sh",
-        "scripts/ci_preflight.sh",
-        "scripts/check_architecture_metrics_soft_gate.sh"
-      ],
-      "governance": [
-        "AGENTS.md",
-        "CONTRIBUTING.md",
-        "docs/governance/ENGINEERING.md",
-        "docs/governance/VERIFICATION.md",
-        "docs/governance/SECURITY_AND_SANITATION.md",
-        "docs/governance/CONFIG_AND_GENERATED_DATA.md",
-        "docs/governance/NATIVE_AND_PLATFORM.md",
-        "docs/governance/CHANGE_GOVERNANCE.md",
-        "config/project/policy_pack.json",
-        ".githooks/pre-push"
-      ],
-      "packaging_scripts": [
-        "godot/Tet4D.Godot/export_presets.cfg",
-        "packaging/godot/build_macos.sh",
-        "packaging/godot/smoke_macos.sh",
-        "packaging/pyinstaller/tet4d.spec",
-        "packaging/scripts/build_macos.sh",
-        "packaging/scripts/build_linux.sh",
-        "packaging/scripts/build_windows.ps1",
-        "tools/release/release_metadata.py"
-      ]
+      "root_docs": ["README.md", "docs/README.md", "docs/PROJECT_STRUCTURE.md", "docs/FEATURE_MAP.md", "docs/CONFIGURATION_REFERENCE.md", "docs/USER_SETTINGS_REFERENCE.md", "docs/BACKLOG.md", "docs/history/DONE_SUMMARIES.md", "docs/CHANGELOG.md", "docs/SECURITY_AND_CONFIG_PLAN.md"],
+      "rds_docs": ["docs/rds/RDS_TETRIS_GENERAL.md", "docs/rds/RDS_2D_TETRIS.md", "docs/rds/RDS_3D_TETRIS.md", "docs/rds/RDS_4D_TETRIS.md", "docs/rds/RDS_KEYBINDINGS.md", "docs/rds/RDS_MENU_STRUCTURE.md", "docs/rds/RDS_PLAYBOT.md", "docs/rds/RDS_SCORE_ANALYZER.md", "docs/rds/RDS_PACKAGING.md"],
+      "architecture_evidence": ["docs/architecture/first_subsystem_parity_pilot.md", "docs/architecture/parity_pilot_audit_and_promotion_gates.md", "docs/architecture/second_parity_slice_candidate_selection.md", "docs/architecture/trace_metadata_identity_digest_parity.md", "docs/architecture/topology_identifier_normalization_parity.md", "docs/architecture/parity_evidence_review_and_third_slice_selection.md", "docs/architecture/parity_evidence_package_review.md", "docs/architecture/trace_schema_version_normalization_parity.md"],
+      "help_assets": ["src/tet4d/ui/pygame/render/control_icons.py", "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"],
+      "canonical_schemas": ["config/schema/menu_settings.schema.json", "config/schema/save_state.schema.json", "config/schema/help_topics.schema.json", "config/schema/help_action_map.schema.json", "config/schema/help_runtime_content.schema.json", "config/schema/help_runtime_layout.schema.json", "config/schema/tutorial_lessons.schema.json", "config/schema/tutorial_plan.schema.json"],
+      "migration_ledgers": ["docs/migrations/menu_settings.md", "docs/migrations/save_state.md"],
+      "replay_contract": ["config/project/policy/manifests/replay_manifest.json", "tests/replay/golden/.gitkeep"],
+      "help_contract": ["docs/help/HELP_INDEX.md", "config/project/policy/manifests/help_assets_manifest.json"],
+      "release_contract": ["docs/RELEASE_CHECKLIST.md", "docs/RELEASE_INSTALLERS.md"],
+      "core_tests": ["tests/unit/engine/test_playbot.py", "tests/unit/engine/test_score_analyzer.py", "tests/unit/engine/test_runtime_config.py", "tests/unit/engine/test_menu_policy.py", "tests/unit/engine/test_project_config.py", "tests/unit/engine/test_help_topics.py", "tests/unit/engine/test_help_menu.py", "tests/unit/engine/test_help_text.py"],
+      "canonical_configs": ["config/menu/defaults.json", "config/menu/structure.json", "config/topology/designer_presets.json", "config/topology/lab_menu.json", "config/help/topics.json", "config/help/action_map.json", "config/help/icon_map.json", "config/help/content/runtime_help_content.json", "config/help/layout/runtime_help_layout.json", "config/tutorial/lessons.json", "config/tutorial/plan.json", "config/gameplay/tuning.json", "config/gameplay/piece_sets_nd.json", "config/gameplay/score_analyzer.json", "config/playbot/policy.json", "config/audio/sfx.json", "config/project/io_paths.json", "config/project/constants.json", "config/project/folder_balance_budgets.json", "config/project/backlog_debt.json", "config/project/policy/manifests/secret_scan.json"],
+      "ci_scripts": ["scripts/bootstrap_env.sh", "scripts/install_git_hooks.sh", "scripts/ci_check.sh", "scripts/verify.sh", "scripts/verify_focus.sh", "scripts/check_git_sanitation.sh", "scripts/check_policy_compliance.sh", "tools/governance/check_pygame_ce.py", "tools/governance/scan_secrets.py", "tools/governance/lint_menu_graph.py", "tools/governance/architecture_metric_budget.py", "tools/governance/tech_debt_budget.py", "tools/governance/update_tech_debt_budgets.py", "tools/governance/validate_project_contracts.py", "tools/governance/resolve_codex_verification.py", "tools/governance/generate_configuration_reference.py", "tools/governance/generate_maintenance_docs.py", "tools/governance/check_drift_protection.py", "tools/governance/check_risk_gates.py", "tools/governance/check_policy_runtime_rules.py", "tools/governance/check_wheel_reuse_rules.py", "tools/governance/check_loc_guidance.py", "tools/governance/check_dedup_dead_code_rules.py", ".github/workflows/ci.yml", ".github/workflows/stability-watch.yml", ".github/workflows/release-packaging.yml", "scripts/check_policy_template_drift.sh", "scripts/update_policy_template_hashes.sh", "scripts/check_git_sanitation_repo.sh", "scripts/check_policy_compliance_repo.sh", "scripts/ci_preflight.sh", "scripts/check_architecture_metrics_soft_gate.sh"],
+      "governance": ["AGENTS.md", "CONTRIBUTING.md", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md", "config/project/policy_pack.json", ".githooks/pre-push"],
+      "packaging_scripts": ["godot/Tet4D.Godot/export_presets.cfg", "packaging/godot/build_macos.sh", "packaging/godot/smoke_macos.sh", "packaging/pyinstaller/tet4d.spec", "packaging/scripts/build_macos.sh", "packaging/scripts/build_linux.sh", "packaging/scripts/build_windows.ps1", "tools/release/release_metadata.py"]
     },
     "content_rules": [
       {
         "file": "docs/governance/SECURITY_AND_SANITATION.md",
-        "must_contain": [
-          "config/project/policy/manifests/secret_scan.json",
-          "tools/governance/scan_secrets.py",
-          "docs/architecture/utility_index.md"
-        ]
+        "must_contain": ["config/project/policy/manifests/secret_scan.json", "tools/governance/scan_secrets.py", "docs/architecture/utility_index.md"]
       },
       {
         "file": "README.md",
-        "must_contain": [
-          "Canonical governance",
-          "scripts/bootstrap_env.sh",
-          "config/gameplay/score_analyzer.json",
-          "scripts/ci_check.sh",
-          "tools/governance/check_pygame_ce.py",
-          "tools/governance/scan_secrets.py",
-          "config/project/io_paths.json",
-          "config/project/constants.json",
-          "config/project/policy/manifests/secret_scan.json",
-          "docs/RELEASE_INSTALLERS.md",
-          "packaging/godot/build_macos.sh",
-          "docs/CONFIGURATION_REFERENCE.md",
-          "docs/USER_SETTINGS_REFERENCE.md"
-        ]
+        "must_contain": ["Canonical governance", "scripts/bootstrap_env.sh", "config/gameplay/score_analyzer.json", "scripts/ci_check.sh", "tools/governance/check_pygame_ce.py", "tools/governance/scan_secrets.py", "config/project/io_paths.json", "config/project/constants.json", "config/project/policy/manifests/secret_scan.json", "docs/RELEASE_INSTALLERS.md", "packaging/godot/build_macos.sh", "docs/CONFIGURATION_REFERENCE.md", "docs/USER_SETTINGS_REFERENCE.md"]
       },
       {
         "file": "docs/FEATURE_MAP.md",
-        "must_contain": [
-          "## 4. Keybindings",
-          "## 6. Scoring and Assistance",
-          "## 9. Verification Coverage"
-        ]
+        "must_contain": ["## 4. Keybindings", "## 6. Scoring and Assistance", "## 9. Verification Coverage"]
       },
       {
         "file": "docs/BACKLOG.md",
-        "must_contain": [
-          "## Current Authority",
-          "## Active Work",
-          "## Explicit Deferrals",
-          "## Governance Watchlist",
-          "## Completion Boundary",
-          "docs/history/backlog_archive_2026-07-30.md"
-        ],
-        "must_not_contain": [
-          "No currently open gaps",
-          "126 passed"
-        ],
-        "must_not_match_regex": [
-          "\\b\\d+\\s+passed\\b",
-          "\\[[\\s\\d%]+\\]"
-        ]
+        "must_contain": ["## Current Authority", "## Active Work", "## Explicit Deferrals", "## Governance Watchlist", "## Completion Boundary", "docs/history/backlog_archive_2026-07-30.md"],
+        "must_not_contain": ["No currently open gaps"],
+        "must_not_match_regex": ["(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\\d[\\d,]*\\s+tests?\\s+passed\\b|\\b(?:the\\s+)?suite\\s+has\\s+\\d[\\d,]*\\s+tests?\\b)"]
       },
       {
         "file": "docs/GUIDELINES_RESEARCH.md",
-        "must_contain": [
-          "## 3. Current issues (open backlog)",
-          "docs/BACKLOG.md"
-        ],
-        "must_not_contain": [
-          "No active open gaps",
-          "126 passed"
-        ],
-        "must_not_match_regex": [
-          "\\b\\d+\\s+passed\\b",
-          "\\[[\\s\\d%]+\\]"
-        ]
+        "must_contain": ["## 3. Current issues (open backlog)", "docs/BACKLOG.md"],
+        "must_not_contain": ["No active open gaps"],
+        "must_not_match_regex": ["(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\\d[\\d,]*\\s+tests?\\s+passed\\b|\\b(?:the\\s+)?suite\\s+has\\s+\\d[\\d,]*\\s+tests?\\b)"]
       },
       {
         "file": "docs/governance/CHANGE_GOVERNANCE.md",
-        "must_contain": [
-          "Authority order",
-          "config/project/policy_pack.json",
-          "## Compositional routing",
-          "`review_only`",
-          "`python_reference_engine`",
-          "`godot_product_shell`",
-          "`native_deterministic_core`",
-          "`topology_and_explorer`",
-          "`governance_and_tooling`",
-          "`packaging_and_release`",
-          "`staged_handoff`",
-          "docs/rds/",
-          "VERIFICATION.md",
-          "CURRENT_STATE.md",
-          "docs/BACKLOG.md"
-        ],
-        "must_not_match_regex": [
-          "\\btetris_nd\\b",
-          "\\b\\d+\\s+passed\\b",
-          "\\[[\\s\\d%]+\\]"
-        ]
+        "must_contain": ["Authority order", "config/project/policy_pack.json", "## Compositional routing", "`review_only`", "`python_reference_engine`", "`godot_product_shell`", "`native_deterministic_core`", "`topology_and_explorer`", "`governance_and_tooling`", "`packaging_and_release`", "`staged_handoff`", "docs/rds/", "VERIFICATION.md", "CURRENT_STATE.md", "docs/BACKLOG.md"],
+        "must_not_match_regex": ["\\btetris_nd\\b", "(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\\d[\\d,]*\\s+tests?\\s+passed\\b|\\b(?:the\\s+)?suite\\s+has\\s+\\d[\\d,]*\\s+tests?\\b)"]
       },
       {
         "file": "scripts/ci_check.sh",
-        "must_contain": [
-          "#!/usr/bin/env bash",
-          "set -euo pipefail",
-          "QUIET=\"${QUIET:-1}\"",
-          "CODEX_MODE=\"${CODEX_MODE:-0}\"",
-          "exec ./scripts/verify.sh"
-        ],
-        "must_not_contain": [
-          "run_module_or_command",
-          "require_module ruff ruff"
-        ]
+        "must_contain": ["#!/usr/bin/env bash", "set -euo pipefail", "QUIET=\"${QUIET:-1}\"", "CODEX_MODE=\"${CODEX_MODE:-0}\"", "exec ./scripts/verify.sh"],
+        "must_not_contain": ["run_module_or_command", "require_module ruff ruff"]
       },
       {
         "file": "docs/governance/VERIFICATION.md",
-        "must_contain": [
-          "./scripts/ci_preflight.sh",
-          "CODEX_MODE=1 ./scripts/verify.sh",
-          "./scripts/check_git_sanitation_repo.sh",
-          "tools/governance/validate_project_contracts.py"
-        ]
+        "must_contain": ["./scripts/ci_preflight.sh", "CODEX_MODE=1 ./scripts/verify.sh", "./scripts/check_git_sanitation_repo.sh", "tools/governance/validate_project_contracts.py"]
       },
       {
         "file": "AGENTS.md",
-        "must_contain": [
-          "config/project/policy_pack.json",
-          "docs/governance/ENGINEERING.md",
-          "docs/governance/VERIFICATION.md",
-          "docs/governance/SECURITY_AND_SANITATION.md",
-          "docs/governance/CONFIG_AND_GENERATED_DATA.md",
-          "docs/governance/NATIVE_AND_PLATFORM.md",
-          "docs/governance/CHANGE_GOVERNANCE.md",
-          "CURRENT_STATE.md",
-          "docs/rds/",
-          "docs/ARCHITECTURE_CONTRACT.md",
-          "`codex_routing`",
-          "docs/architecture/authority_map.md",
-          "CODEX_MODE=1 ./scripts/verify.sh"
-        ]
+        "must_contain": ["config/project/policy_pack.json", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md", "CURRENT_STATE.md", "docs/rds/", "docs/ARCHITECTURE_CONTRACT.md", "`codex_routing`", "docs/architecture/authority_map.md", "CODEX_MODE=1 ./scripts/verify.sh"]
       },
       {
         "file": "CONTRIBUTING.md",
-        "must_contain": [
-          "## Policies",
-          "docs/governance/ENGINEERING.md",
-          "docs/governance/SECURITY_AND_SANITATION.md",
-          "docs/governance/CONFIG_AND_GENERATED_DATA.md"
-        ]
+        "must_contain": ["## Policies", "docs/governance/ENGINEERING.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md"]
       },
       {
         "file": "scripts/verify.sh",
-        "must_contain": [
-          "#!/usr/bin/env bash",
-          "set -euo pipefail",
-          "CODEX_MODE=\"${CODEX_MODE:-0}\"",
-          "run_step \"governance\"",
-          "run_step \"maintenance_docs\"",
-          "tools/governance/validate_governance.py",
-          "echo \"verify: OK\"",
-          "check_architecture_metrics_soft_gate.sh"
-        ]
+        "must_contain": ["#!/usr/bin/env bash", "set -euo pipefail", "CODEX_MODE=\"${CODEX_MODE:-0}\"", "run_step \"governance\"", "run_step \"maintenance_docs\"", "tools/governance/validate_governance.py", "echo \"verify: OK\"", "check_architecture_metrics_soft_gate.sh"]
       },
       {
         "file": "scripts/install_git_hooks.sh",
-        "must_contain": [
-          "git config --local core.hooksPath .githooks",
-          "chmod +x .githooks/pre-push"
-        ]
+        "must_contain": ["git config --local core.hooksPath .githooks", "chmod +x .githooks/pre-push"]
       },
       {
         "file": ".githooks/pre-push",
-        "must_contain": [
-          "./scripts/ci_check.sh",
-          "CODEX_MODE"
-        ]
+        "must_contain": ["./scripts/ci_check.sh", "CODEX_MODE"]
       },
       {
         "file": ".github/workflows/ci.yml",
-        "must_contain": [
-          "SDL_VIDEODRIVER: dummy",
-          "SDL_AUDIODRIVER: dummy",
-          "scripts/check_git_sanitation.sh",
-          "scripts/check_policy_compliance.sh",
-          "./scripts/ci_check.sh",
-          "scripts/check_policy_template_drift.sh",
-          "scripts/check_git_sanitation_repo.sh",
-          "scripts/check_policy_compliance_repo.sh"
-        ]
+        "must_contain": ["SDL_VIDEODRIVER: dummy", "SDL_AUDIODRIVER: dummy", "scripts/check_git_sanitation.sh", "scripts/check_policy_compliance.sh", "./scripts/ci_check.sh", "scripts/check_policy_template_drift.sh", "scripts/check_git_sanitation_repo.sh", "scripts/check_policy_compliance_repo.sh"]
       },
       {
         "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
-        "must_contain": [
-          "compatibility redirect only",
-          "config/project/policy_pack.json",
-          "config/project/policy/manifests/secret_scan.json",
-          "tools/governance/scan_secrets.py",
-          "config/project/io_paths.json",
-          "config/project/constants.json",
-          "docs/history/plans/security_and_config_externalization_plan.md"
-        ],
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_contain": ["compatibility redirect only", "config/project/policy_pack.json", "config/project/policy/manifests/secret_scan.json", "tools/governance/scan_secrets.py", "config/project/io_paths.json", "config/project/constants.json", "docs/history/plans/security_and_config_externalization_plan.md"],
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/rds/RDS_TETRIS_GENERAL.md",
-        "must_contain": [
-          "Target Runtime: Python 3.11-3.14 + `pygame-ce`",
-          "## 8. Testing Instructions",
-          "## 10. Backlog Status"
-        ]
+        "must_contain": ["Target Runtime: Python 3.11-3.14 + `pygame-ce`", "## 8. Testing Instructions", "## 10. Backlog Status"]
       },
       {
         "file": "docs/RELEASE_INSTALLERS.md",
-        "must_contain": [
-          "Godot 4.7.2",
-          "packaging/godot/build_macos.sh",
-          "macOS 13+",
-          "legacy",
-          ".github/workflows/release-packaging.yml"
-        ]
+        "must_contain": ["Godot 4.7.2", "packaging/godot/build_macos.sh", "macOS 13+", "legacy", ".github/workflows/release-packaging.yml"]
       },
       {
         "file": "docs/rds/RDS_PACKAGING.md",
-        "must_contain": [
-          "Desktop Packaging RDS",
-          "godot/Tet4D.Godot/export_presets.cfg",
-          "packaging/godot/build_macos.sh",
-          "packaging/pyinstaller/tet4d.spec",
-          ".github/workflows/release-packaging.yml"
-        ]
+        "must_contain": ["Desktop Packaging RDS", "godot/Tet4D.Godot/export_presets.cfg", "packaging/godot/build_macos.sh", "packaging/pyinstaller/tet4d.spec", ".github/workflows/release-packaging.yml"]
       },
       {
         "file": "config/project/io_paths.json",
-        "must_contain": [
-          "\"paths\"",
-          "\"menu_settings_file\"",
-          "\"keybindings_dir\""
-        ]
+        "must_contain": ["\"paths\"", "\"menu_settings_file\"", "\"keybindings_dir\""]
       },
       {
         "file": "config/project/constants.json",
-        "must_contain": [
-          "\"cache_limits\"",
-          "\"animation\"",
-          "\"rendering\""
-        ]
+        "must_contain": ["\"cache_limits\"", "\"animation\"", "\"rendering\""]
       },
       {
         "file": "config/project/folder_balance_budgets.json",
-        "must_contain": [
-          "\"schema_version\"",
-          "\"gate_mode\"",
-          "\"scope\"",
-          "\"profiles\"",
-          "\"tracked_leaf_folders\"",
-          "\"score_epsilon\"",
-          "\"status_order\""
-        ]
+        "must_contain": ["\"schema_version\"", "\"gate_mode\"", "\"scope\"", "\"profiles\"", "\"tracked_leaf_folders\"", "\"score_epsilon\"", "\"status_order\""]
       },
       {
         "file": "config/project/backlog_debt.json",
-        "must_contain": [
-          "\"schema_version\"",
-          "\"active_debt_items\"",
-          "\"operational_watch_items\""
-        ]
+        "must_contain": ["\"schema_version\"", "\"active_debt_items\"", "\"operational_watch_items\""]
       },
       {
         "file": "scripts/check_architecture_metric_budgets.sh",
-        "must_contain": [
-          "evaluate_architecture_metric_budget_overages",
-          "evaluate_folder_balance_gate",
-          "evaluate_tech_debt_gate",
-          "config/project/policy_pack.json"
-        ]
+        "must_contain": ["evaluate_architecture_metric_budget_overages", "evaluate_folder_balance_gate", "evaluate_tech_debt_gate", "config/project/policy_pack.json"]
       },
       {
         "file": "config/project/policy/manifests/secret_scan.json",
-        "must_contain": [
-          "\"patterns\"",
-          "\"exclude_dirs\""
-        ]
+        "must_contain": ["\"patterns\"", "\"exclude_dirs\""]
       },
       {
         "file": "config/schema/menu_settings.schema.json",
-        "must_contain": [
-          "\"$schema\"",
-          "\"title\": \"tet4d menu settings\"",
-          "\"settings\""
-        ]
+        "must_contain": ["\"$schema\"", "\"title\": \"tet4d menu settings\"", "\"settings\""]
       },
       {
         "file": "config/schema/save_state.schema.json",
-        "must_contain": [
-          "\"$schema\"",
-          "\"title\": \"tet4d saved game state\"",
-          "\"active_piece\""
-        ]
+        "must_contain": ["\"$schema\"", "\"title\": \"tet4d saved game state\"", "\"active_piece\""]
       },
       {
         "file": "config/schema/help_topics.schema.json",
-        "must_contain": [
-          "\"$schema\"",
-          "\"title\": \"tet4d help topics registry\"",
-          "\"topics\""
-        ]
+        "must_contain": ["\"$schema\"", "\"title\": \"tet4d help topics registry\"", "\"topics\""]
       },
       {
         "file": "config/schema/help_action_map.schema.json",
-        "must_contain": [
-          "\"$schema\"",
-          "\"title\": \"tet4d help action topic map\"",
-          "\"action_topics\""
-        ]
+        "must_contain": ["\"$schema\"", "\"title\": \"tet4d help action topic map\"", "\"action_topics\""]
       },
       {
         "file": "config/help/topics.json",
-        "must_contain": [
-          "\"version\"",
-          "\"topics\"",
-          "\"id\"",
-          "\"lane\"",
-          "\"sections\""
-        ]
+        "must_contain": ["\"version\"", "\"topics\"", "\"id\"", "\"lane\"", "\"sections\""]
       },
       {
         "file": "config/help/action_map.json",
-        "must_contain": [
-          "\"version\"",
-          "\"default_topic\"",
-          "\"action_topics\"",
-          "\"move_x_neg\""
-        ]
+        "must_contain": ["\"version\"", "\"default_topic\"", "\"action_topics\"", "\"move_x_neg\""]
       },
       {
         "file": "config/help/icon_map.json",
-        "must_contain": [
-          "\"version\"",
-          "\"pack_root\"",
-          "\"action_map\"",
-          "\"rotate_xy_pos\"",
-          "\"rot_xy_pos\""
-        ]
+        "must_contain": ["\"version\"", "\"pack_root\"", "\"action_map\"", "\"rotate_xy_pos\"", "\"rot_xy_pos\""]
       },
       {
         "file": "docs/migrations/menu_settings.md",
-        "must_contain": [
-          "## Version 1",
-          "## Migration policy"
-        ]
+        "must_contain": ["## Version 1", "## Migration policy"]
       },
       {
         "file": "docs/migrations/save_state.md",
-        "must_contain": [
-          "## Version 1 (planned)",
-          "## Migration policy"
-        ]
+        "must_contain": ["## Version 1 (planned)", "## Migration policy"]
       },
       {
         "file": "config/project/policy/manifests/replay_manifest.json",
-        "must_contain": [
-          "\"version\": 1",
-          "\"gameplay_replay_core\""
-        ]
+        "must_contain": ["\"version\": 1", "\"gameplay_replay_core\""]
       },
       {
         "file": "docs/help/HELP_INDEX.md",
-        "must_contain": [
-          "## Control diagrams",
-          "## Maintenance rule"
-        ]
+        "must_contain": ["## Control diagrams", "## Maintenance rule"]
       },
       {
         "file": "config/help/content/runtime_help_content.json",
-        "must_contain": [
-          "\"version\": 1",
-          "\"topic_blocks\"",
-          "\"fallback_topic\""
-        ]
+        "must_contain": ["\"version\": 1", "\"topic_blocks\"", "\"fallback_topic\""]
       },
       {
         "file": "config/help/layout/runtime_help_layout.json",
-        "must_contain": [
-          "\"version\": 1",
-          "\"topic_media_placement\"",
-          "\"controls_topic_id\""
-        ]
+        "must_contain": ["\"version\": 1", "\"topic_media_placement\"", "\"controls_topic_id\""]
       },
       {
         "file": "config/schema/help_runtime_content.schema.json",
-        "must_contain": [
-          "\"$schema\"",
-          "\"title\": \"tet4d runtime help content\"",
-          "\"topic_blocks\""
-        ]
+        "must_contain": ["\"$schema\"", "\"title\": \"tet4d runtime help content\"", "\"topic_blocks\""]
       },
       {
         "file": "config/schema/help_runtime_layout.schema.json",
-        "must_contain": [
-          "\"$schema\"",
-          "\"title\": \"tet4d runtime help layout rules\"",
-          "\"topic_media_placement\""
-        ]
+        "must_contain": ["\"$schema\"", "\"title\": \"tet4d runtime help layout rules\"", "\"topic_media_placement\""]
       },
       {
         "file": "config/project/policy/manifests/help_assets_manifest.json",
-        "must_contain": [
-          "\"translation_keys\"",
-          "\"rotation_keys\""
-        ]
+        "must_contain": ["\"translation_keys\"", "\"rotation_keys\""]
       },
       {
         "file": "docs/RELEASE_CHECKLIST.md",
-        "must_contain": [
-          "## Code and tests",
-          "## Documentation and RDS sync",
-          "## Artifacts and config"
-        ]
+        "must_contain": ["## Code and tests", "## Documentation and RDS sync", "## Artifacts and config"]
       },
       {
         "file": "scripts/check_policy_compliance_repo.sh",
-        "must_contain": [
-          "AGENTS.md",
-          "docs/governance/CHANGE_GOVERNANCE.md",
-          "docs/governance/VERIFICATION.md",
-          "config/project/policy_pack.json",
-          "python3 tools/governance/validate_project_contracts.py",
-          "python3 tools/governance/scan_secrets.py",
-          "scripts/check_engine_core_purity.sh",
-          "scripts/check_architecture_boundaries.sh",
-          "legacy 'tetris_nd' imports detected"
-        ]
+        "must_contain": ["AGENTS.md", "docs/governance/CHANGE_GOVERNANCE.md", "docs/governance/VERIFICATION.md", "config/project/policy_pack.json", "python3 tools/governance/validate_project_contracts.py", "python3 tools/governance/scan_secrets.py", "scripts/check_engine_core_purity.sh", "scripts/check_architecture_boundaries.sh", "legacy 'tetris_nd' imports detected"]
       },
       {
         "file": "scripts/check_git_sanitation_repo.sh",
-        "must_contain": [
-          "#!/usr/bin/env bash",
-          "Absolute filesystem paths detected.",
-          "Potential unsafe path traversal patterns detected in docs/ or config/.",
-          "Filenames with spaces detected:"
-        ]
+        "must_contain": ["#!/usr/bin/env bash", "Absolute filesystem paths detected.", "Potential unsafe path traversal patterns detected in docs/ or config/.", "Filenames with spaces detected:"]
       },
       {
         "file": "config/project/policy/manifests/replay_manifest.json",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "config/project/policy/manifests/help_assets_manifest.json",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/help/HELP_INDEX.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/FEATURE_MAP.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/rds/RDS_TETRIS_GENERAL.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/rds/RDS_2D_TETRIS.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/rds/RDS_3D_TETRIS.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/rds/RDS_4D_TETRIS.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/rds/RDS_KEYBINDINGS.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/rds/RDS_MENU_STRUCTURE.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/MENU_STRUCTURE_EDITING.md",
-        "must_contain": [
-          "allow_single_option",
-          "redundant single-option menus are forbidden"
-        ]
+        "must_contain": ["allow_single_option", "redundant single-option menus are forbidden"]
       },
       {
         "file": "docs/rds/RDS_MENU_STRUCTURE.md",
-        "must_contain": [
-          "allow_single_option",
-          "Redundant single-option menus are forbidden"
-        ]
+        "must_contain": ["allow_single_option", "Redundant single-option menus are forbidden"]
       },
       {
         "file": "config/menu/structure.json",
-        "must_contain": [
-          "Backspace back",
-          "Esc exit"
-        ],
-        "must_not_match_regex": [
-          "(?i)esc\\s+back"
-        ]
+        "must_contain": ["Backspace back", "Esc exit"],
+        "must_not_match_regex": ["(?i)esc\\s+back"]
       },
       {
         "file": "docs/rds/RDS_PLAYBOT.md",
-        "must_not_match_regex": [
-          "\\btetris_nd\\b"
-        ]
+        "must_not_match_regex": ["\\btetris_nd\\b"]
       },
       {
         "file": "docs/CONFIGURATION_REFERENCE.md",
-        "must_contain": [
-          "Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.",
-          "config/project/constants.json",
-          "config/keybindings/catalog.json",
-          "config/keybindings/defaults.json",
-          "config/project/format_allowlist.txt"
-        ]
+        "must_contain": ["Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.", "config/project/constants.json", "config/keybindings/catalog.json", "config/keybindings/defaults.json", "config/project/format_allowlist.txt"]
       },
       {
         "file": "docs/USER_SETTINGS_REFERENCE.md",
-        "must_contain": [
-          "Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.",
-          "tet4d.engine.runtime.menu_config.default_settings_payload()",
-          "config/schema/menu_settings.schema.json",
-          "config/keybindings/defaults.json"
-        ]
+        "must_contain": ["Generated from repo config sources by `tools/governance/generate_configuration_reference.py`.", "tet4d.engine.runtime.menu_config.default_settings_payload()", "config/schema/menu_settings.schema.json", "config/keybindings/defaults.json"]
       },
       {
         "file": "CURRENT_STATE.md",
-        "must_contain": [
-          "tools/governance/generate_maintenance_docs.py",
-          "## Active Focus",
-          "## Current Authority",
-          "## Next Acceptance Boundary",
-          "## Restart Checklist",
-          "docs/PROJECT_STRUCTURE.md",
-          "<!-- BEGIN GENERATED:current_state_metric_snapshot -->",
-          "<!-- BEGIN GENERATED:current_state_drift_watch -->"
-        ],
-        "must_not_contain": [
-          "## Active Batch Note",
-          "## What This Batch Changed",
-          "## Validation Status",
-          "## Topology Playground History",
-          "## Transform Ownership Note"
-        ],
-        "must_not_match_regex": [
-          "^Branch:",
-          "\\b\\d+\\s+passed\\b",
-          "\\[[\\s\\d%]+\\]"
-        ]
+        "must_contain": ["tools/governance/generate_maintenance_docs.py", "## Active Focus", "## Current Authority", "## Next Acceptance Boundary", "## Restart Checklist", "docs/PROJECT_STRUCTURE.md", "<!-- BEGIN GENERATED:current_state_metric_snapshot -->", "<!-- BEGIN GENERATED:current_state_drift_watch -->"],
+        "must_not_contain": ["## Active Batch Note", "## What This Batch Changed", "## Validation Status", "## Topology Playground History", "## Transform Ownership Note"],
+        "must_not_match_regex": ["^Branch:", "(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\\d[\\d,]*\\s+tests?\\s+passed\\b|\\b(?:the\\s+)?suite\\s+has\\s+\\d[\\d,]*\\s+tests?\\b)"]
       },
       {
         "file": "docs/PROJECT_STRUCTURE.md",
-        "must_contain": [
-          "tools/governance/generate_maintenance_docs.py",
-          "<!-- BEGIN GENERATED:project_structure_entry_points -->",
-          "<!-- BEGIN GENERATED:project_structure_runtime_owners -->",
-          "<!-- BEGIN GENERATED:project_structure_sources_of_truth -->",
-          "<!-- BEGIN GENERATED:project_structure_verification_contract -->",
-          "<!-- BEGIN GENERATED:project_structure_symbol_index -->",
-          "<!-- BEGIN GENERATED:project_structure_likely_test_files -->"
-        ]
+        "must_contain": ["tools/governance/generate_maintenance_docs.py", "<!-- BEGIN GENERATED:project_structure_entry_points -->", "<!-- BEGIN GENERATED:project_structure_runtime_owners -->", "<!-- BEGIN GENERATED:project_structure_sources_of_truth -->", "<!-- BEGIN GENERATED:project_structure_verification_contract -->", "<!-- BEGIN GENERATED:project_structure_symbol_index -->", "<!-- BEGIN GENERATED:project_structure_likely_test_files -->"]
       }
     ],
     "canonical_candidates": [
       {
         "name": "Settings schema and migration ledger",
-        "paths": [
-          "config/schema/menu_settings.schema.json",
-          "docs/migrations/menu_settings.md"
-        ],
+        "paths": ["config/schema/menu_settings.schema.json", "docs/migrations/menu_settings.md"],
         "status": "connected"
       },
       {
         "name": "Saved-game/state schema",
-        "paths": [
-          "config/schema/save_state.schema.json",
-          "docs/migrations/save_state.md"
-        ],
+        "paths": ["config/schema/save_state.schema.json", "docs/migrations/save_state.md"],
         "status": "connected"
       },
       {
         "name": "Replay golden fixtures manifest",
-        "paths": [
-          "config/project/policy/manifests/replay_manifest.json",
-          "tests/replay/golden/.gitkeep"
-        ],
+        "paths": ["config/project/policy/manifests/replay_manifest.json", "tests/replay/golden/.gitkeep"],
         "status": "connected"
       },
       {
         "name": "Help content index",
-        "paths": [
-          "docs/help/HELP_INDEX.md",
-          "config/help/content/runtime_help_content.json",
-          "config/help/layout/runtime_help_layout.json",
-          "config/project/policy/manifests/help_assets_manifest.json"
-        ],
+        "paths": ["docs/help/HELP_INDEX.md", "config/help/content/runtime_help_content.json", "config/help/layout/runtime_help_layout.json", "config/project/policy/manifests/help_assets_manifest.json"],
         "status": "connected"
       },
       {
         "name": "Help topic contract and schemas",
-        "paths": [
-          "config/help/topics.json",
-          "config/help/action_map.json",
-          "config/schema/help_topics.schema.json",
-          "config/schema/help_action_map.schema.json"
-        ],
+        "paths": ["config/help/topics.json", "config/help/action_map.json", "config/schema/help_topics.schema.json", "config/schema/help_action_map.schema.json"],
         "status": "connected"
       },
       {
         "name": "Runtime help content/layout contracts",
-        "paths": [
-          "config/help/content/runtime_help_content.json",
-          "config/help/layout/runtime_help_layout.json",
-          "config/schema/help_runtime_content.schema.json",
-          "config/schema/help_runtime_layout.schema.json"
-        ],
+        "paths": ["config/help/content/runtime_help_content.json", "config/help/layout/runtime_help_layout.json", "config/schema/help_runtime_content.schema.json", "config/schema/help_runtime_layout.schema.json"],
         "status": "connected"
       },
       {
         "name": "Release checklist",
-        "paths": [
-          "docs/RELEASE_CHECKLIST.md"
-        ],
+        "paths": ["docs/RELEASE_CHECKLIST.md"],
         "status": "connected"
       },
       {
         "name": "Security and config policy",
-        "paths": [
-          "docs/SECURITY_AND_CONFIG_PLAN.md",
-          "config/project/io_paths.json",
-          "config/project/constants.json",
-          "config/project/policy/manifests/secret_scan.json",
-          "tools/governance/scan_secrets.py"
-        ],
+        "paths": ["docs/SECURITY_AND_CONFIG_PLAN.md", "config/project/io_paths.json", "config/project/constants.json", "config/project/policy/manifests/secret_scan.json", "tools/governance/scan_secrets.py"],
         "status": "connected"
       },
       {
         "name": "Architecture debt budget gates",
-        "paths": [
-          "scripts/arch_metrics.py",
-          "scripts/check_architecture_metric_budgets.sh",
-          "config/project/folder_balance_budgets.json",
-          "config/project/policy_pack.json",
-          "tools/governance/folder_balance_budget.py",
-          "tools/governance/tech_debt_budget.py"
-        ],
+        "paths": ["scripts/arch_metrics.py", "scripts/check_architecture_metric_budgets.sh", "config/project/folder_balance_budgets.json", "config/project/policy_pack.json", "tools/governance/folder_balance_budget.py", "tools/governance/tech_debt_budget.py"],
         "status": "connected"
       }
     ]
   },
   "maintenance_docs": {
     "entry_points": [
-      {
-        "path": "cli/front.py",
-        "description": "unified launcher"
-      },
-      {
-        "path": "cli/front2d.py",
-        "description": "thin 2D shim"
-      },
-      {
-        "path": "cli/front3d.py",
-        "description": "thin 3D shim"
-      },
-      {
-        "path": "cli/front4d.py",
-        "description": "thin 4D shim"
-      }
+      {"path": "cli/front.py", "description": "unified launcher"},
+      {"path": "cli/front2d.py", "description": "thin 2D shim"},
+      {"path": "cli/front3d.py", "description": "thin 3D shim"},
+      {"path": "cli/front4d.py", "description": "thin 4D shim"}
     ],
     "runtime_owners": {
       "Engine": [
-        {
-          "path": "src/tet4d/engine/api.py",
-          "description": "small compatibility facade used mainly by replay and explicit compatibility tests"
-        },
-        {
-          "path": "src/tet4d/engine/gameplay/api.py",
-          "description": "gameplay convenience exports"
-        },
-        {
-          "path": "src/tet4d/engine/runtime/api.py",
-          "description": "runtime/help/menu convenience exports"
-        },
-        {
-          "path": "src/tet4d/engine/tutorial/api.py",
-          "description": "tutorial convenience exports"
-        },
-        {
-          "path": "src/tet4d/engine/core/piece_transform.py",
-          "description": "canonical piece-local transform math"
-        },
-        {
-          "path": "src/tet4d/engine/core/rotation_kicks.py",
-          "description": "canonical kick candidate generation and shared resolution"
-        },
-        {
-          "path": "src/tet4d/engine/core/rules/lifecycle.py",
-          "description": "shared lock/spawn/drop lifecycle orchestration"
-        },
-        {
-          "path": "src/tet4d/engine/topology_explorer/",
-          "description": "explorer-only general gluing kernel, validation, mapping, and movement graph helpers"
-        },
-        {
-          "path": "src/tet4d/engine/gameplay/game2d.py",
-          "description": "2D gameplay state/rules"
-        },
-        {
-          "path": "src/tet4d/engine/gameplay/game_nd.py",
-          "description": "3D/4D gameplay state/rules"
-        },
-        {
-          "path": "src/tet4d/engine/gameplay/lock_flow.py",
-          "description": "shared lock-and-analysis orchestration"
-        },
-        {
-          "path": "src/tet4d/engine/runtime/menu_config.py",
-          "description": "menu/runtime config loading"
-        },
-        {
-          "path": "src/tet4d/engine/runtime/keybinding_store.py",
-          "description": "runtime-owned keybinding profile/path/json storage"
-        },
-        {
-          "path": "src/tet4d/engine/runtime/menu_settings_state.py",
-          "description": "stable persisted-settings facade over `runtime/menu_settings/`"
-        },
-        {
-          "path": "src/tet4d/engine/runtime/menu_structure_schema.py",
-          "description": "stable menu-structure parsing facade over `runtime/menu_structure/`"
-        },
-        {
-          "path": "src/tet4d/engine/runtime/score_analyzer.py",
-          "description": "stable score-analysis facade over `runtime/score_analysis/`"
-        },
-        {
-          "path": "src/tet4d/engine/tutorial/content.py",
-          "description": "tutorial content loader"
-        },
-        {
-          "path": "src/tet4d/engine/tutorial/runtime.py",
-          "description": "tutorial runtime session logic"
-        }
+        {"path": "src/tet4d/engine/api.py", "description": "small compatibility facade used mainly by replay and explicit compatibility tests"},
+        {"path": "src/tet4d/engine/gameplay/api.py", "description": "gameplay convenience exports"},
+        {"path": "src/tet4d/engine/runtime/api.py", "description": "runtime/help/menu convenience exports"},
+        {"path": "src/tet4d/engine/tutorial/api.py", "description": "tutorial convenience exports"},
+        {"path": "src/tet4d/engine/core/piece_transform.py", "description": "canonical piece-local transform math"},
+        {"path": "src/tet4d/engine/core/rotation_kicks.py", "description": "canonical kick candidate generation and shared resolution"},
+        {"path": "src/tet4d/engine/core/rules/lifecycle.py", "description": "shared lock/spawn/drop lifecycle orchestration"},
+        {"path": "src/tet4d/engine/topology_explorer/", "description": "explorer-only general gluing kernel, validation, mapping, and movement graph helpers"},
+        {"path": "src/tet4d/engine/gameplay/game2d.py", "description": "2D gameplay state/rules"},
+        {"path": "src/tet4d/engine/gameplay/game_nd.py", "description": "3D/4D gameplay state/rules"},
+        {"path": "src/tet4d/engine/gameplay/lock_flow.py", "description": "shared lock-and-analysis orchestration"},
+        {"path": "src/tet4d/engine/runtime/menu_config.py", "description": "menu/runtime config loading"},
+        {"path": "src/tet4d/engine/runtime/keybinding_store.py", "description": "runtime-owned keybinding profile/path/json storage"},
+        {"path": "src/tet4d/engine/runtime/menu_settings_state.py", "description": "stable persisted-settings facade over `runtime/menu_settings/`"},
+        {"path": "src/tet4d/engine/runtime/menu_structure_schema.py", "description": "stable menu-structure parsing facade over `runtime/menu_structure/`"},
+        {"path": "src/tet4d/engine/runtime/score_analyzer.py", "description": "stable score-analysis facade over `runtime/score_analysis/`"},
+        {"path": "src/tet4d/engine/tutorial/content.py", "description": "tutorial content loader"},
+        {"path": "src/tet4d/engine/tutorial/runtime.py", "description": "tutorial runtime session logic"}
       ],
       "UI": [
-        {
-          "path": "src/tet4d/ui/pygame/front2d_game.py",
-          "description": "2D orchestration entry"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front2d_setup.py",
-          "description": "2D setup/menu owner"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front2d_loop.py",
-          "description": "2D runtime orchestration entrypoint"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front2d_session.py",
-          "description": "2D session/state owner"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front2d_frame.py",
-          "description": "2D per-frame/update owner"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front2d_results.py",
-          "description": "2D results/leaderboard owner"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/frontend_nd_setup.py",
-          "description": "shared ND setup/menu/config owner"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/frontend_nd_state.py",
-          "description": "shared ND state-construction owner"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/frontend_nd_input.py",
-          "description": "shared ND gameplay/input routing owner"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front3d_game.py",
-          "description": "3D frontend"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front4d_game.py",
-          "description": "4D frontend"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front3d_render.py",
-          "description": "3D render adapter"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/front4d_render.py",
-          "description": "4D render adapter"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/topology_lab",
-          "description": "explorer topology lab editor helpers"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/runtime_ui",
-          "description": "bootstrap, pause/help, tutorial overlay, shared loop helpers"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/launch",
-          "description": "launcher, settings, bot, leaderboard flows, including `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/menu",
-          "description": "shared menu/keybinding adapters, including `setup_menu_runner.py`"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/render",
-          "description": "render/layout/helper adapters"
-        }
+        {"path": "src/tet4d/ui/pygame/front2d_game.py", "description": "2D orchestration entry"},
+        {"path": "src/tet4d/ui/pygame/front2d_setup.py", "description": "2D setup/menu owner"},
+        {"path": "src/tet4d/ui/pygame/front2d_loop.py", "description": "2D runtime orchestration entrypoint"},
+        {"path": "src/tet4d/ui/pygame/front2d_session.py", "description": "2D session/state owner"},
+        {"path": "src/tet4d/ui/pygame/front2d_frame.py", "description": "2D per-frame/update owner"},
+        {"path": "src/tet4d/ui/pygame/front2d_results.py", "description": "2D results/leaderboard owner"},
+        {"path": "src/tet4d/ui/pygame/frontend_nd_setup.py", "description": "shared ND setup/menu/config owner"},
+        {"path": "src/tet4d/ui/pygame/frontend_nd_state.py", "description": "shared ND state-construction owner"},
+        {"path": "src/tet4d/ui/pygame/frontend_nd_input.py", "description": "shared ND gameplay/input routing owner"},
+        {"path": "src/tet4d/ui/pygame/front3d_game.py", "description": "3D frontend"},
+        {"path": "src/tet4d/ui/pygame/front4d_game.py", "description": "4D frontend"},
+        {"path": "src/tet4d/ui/pygame/front3d_render.py", "description": "3D render adapter"},
+        {"path": "src/tet4d/ui/pygame/front4d_render.py", "description": "4D render adapter"},
+        {"path": "src/tet4d/ui/pygame/topology_lab", "description": "explorer topology lab editor helpers"},
+        {"path": "src/tet4d/ui/pygame/runtime_ui", "description": "bootstrap, pause/help, tutorial overlay, shared loop helpers"},
+        {"path": "src/tet4d/ui/pygame/launch", "description": "launcher, settings, bot, leaderboard flows, including `settings_hub_model.py`, `settings_hub_actions.py`, and `launcher_settings.py`"},
+        {"path": "src/tet4d/ui/pygame/menu", "description": "shared menu/keybinding adapters, including `setup_menu_runner.py`"},
+        {"path": "src/tet4d/ui/pygame/render", "description": "render/layout/helper adapters"}
       ],
       "AI": [
-        {
-          "path": "src/tet4d/ai/playbot/controller.py",
-          "description": "playbot runtime controller"
-        },
-        {
-          "path": "src/tet4d/ai/playbot/planner_2d.py",
-          "description": "2D planning"
-        },
-        {
-          "path": "src/tet4d/ai/playbot/planner_nd.py",
-          "description": "ND planning entry"
-        },
-        {
-          "path": "src/tet4d/ai/playbot/planner_nd_core.py",
-          "description": "shared ND candidate logic"
-        },
-        {
-          "path": "src/tet4d/ai/playbot/planner_nd_search.py",
-          "description": "ND search/budget logic"
-        },
-        {
-          "path": "src/tet4d/ai/playbot/dry_run.py",
-          "description": "stability/dry-run harness"
-        }
+        {"path": "src/tet4d/ai/playbot/controller.py", "description": "playbot runtime controller"},
+        {"path": "src/tet4d/ai/playbot/planner_2d.py", "description": "2D planning"},
+        {"path": "src/tet4d/ai/playbot/planner_nd.py", "description": "ND planning entry"},
+        {"path": "src/tet4d/ai/playbot/planner_nd_core.py", "description": "shared ND candidate logic"},
+        {"path": "src/tet4d/ai/playbot/planner_nd_search.py", "description": "ND search/budget logic"},
+        {"path": "src/tet4d/ai/playbot/dry_run.py", "description": "stability/dry-run harness"}
       ]
     },
     "sources_of_truth": [
-      {
-        "path": "config/project/policy_pack.json",
-        "description": "single machine-readable governance authority"
-      },
-      {
-        "path": "AGENTS.md",
-        "description": "thin dispatch for contributor and agent entry"
-      },
-      {
-        "path": "docs/governance/ENGINEERING.md",
-        "description": "canonical general engineering governance"
-      },
-      {
-        "path": "docs/governance/VERIFICATION.md",
-        "description": "canonical verification and evidence governance"
-      },
-      {
-        "path": "docs/governance/SECURITY_AND_SANITATION.md",
-        "description": "canonical security, sanitation, dependency, and repository hygiene governance"
-      },
-      {
-        "path": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
-        "description": "canonical config, constants, and generated-data governance"
-      },
-      {
-        "path": "docs/governance/NATIVE_AND_PLATFORM.md",
-        "description": "canonical native safety, tooling, boundary, and platform governance"
-      },
-      {
-        "path": "docs/governance/CHANGE_GOVERNANCE.md",
-        "description": "canonical routing, change discipline, completion, and publication governance"
-      },
-      {
-        "path": "CURRENT_STATE.md",
-        "description": "restart handoff only"
-      },
-      {
-        "path": "docs/rds/",
-        "description": "durable product requirements"
-      },
-      {
-        "path": "docs/plans/gameboard_visual_language_design.md",
-        "description": "Live 3D and future Live 4D gameboard visual-language authority"
-      },
-      {
-        "path": "docs/plans/topology_godot_core_port_plan.md",
-        "description": "Stage 25 topology Godot/C++ core-port planning authority"
-      },
-      {
-        "path": "contracts/topology_contract_v1.json",
-        "description": "versioned language-neutral topology scalar contract"
-      },
-      {
-        "path": "docs/architecture/topology_contract_foundation.md",
-        "description": "shared topology scalar binding and fingerprint authority"
-      },
-      {
-        "path": "docs/ARCHITECTURE_CONTRACT.md",
-        "description": "dependency contract"
-      },
-      {
-        "path": "docs/BACKLOG.md",
-        "description": "active backlog and current change footprint"
-      },
-      {
-        "path": "config/menu/structure.json",
-        "description": "launcher/pause/settings/help/menu graph and copy"
-      },
-      {
-        "path": "config/menu/defaults.json",
-        "description": "default persisted settings payload"
-      },
-      {
-        "path": "config/tutorial/lessons.json",
-        "description": "tutorial packs and board profiles"
-      },
-      {
-        "path": "config/gameplay/tuning.json",
-        "description": "scoring/kick/tuning defaults"
-      },
-      {
-        "path": "docs/CONFIGURATION_REFERENCE.md",
-        "description": "generated full config inventory"
-      },
-      {
-        "path": "docs/USER_SETTINGS_REFERENCE.md",
-        "description": "generated user-facing settings summary"
-      }
+      {"path": "config/project/policy_pack.json", "description": "single machine-readable governance authority"},
+      {"path": "AGENTS.md", "description": "thin dispatch for contributor and agent entry"},
+      {"path": "docs/governance/ENGINEERING.md", "description": "canonical general engineering governance"},
+      {"path": "docs/governance/VERIFICATION.md", "description": "canonical verification and evidence governance"},
+      {"path": "docs/governance/SECURITY_AND_SANITATION.md", "description": "canonical security, sanitation, dependency, and repository hygiene governance"},
+      {"path": "docs/governance/CONFIG_AND_GENERATED_DATA.md", "description": "canonical config, constants, and generated-data governance"},
+      {"path": "docs/governance/NATIVE_AND_PLATFORM.md", "description": "canonical native safety, tooling, boundary, and platform governance"},
+      {"path": "docs/governance/CHANGE_GOVERNANCE.md", "description": "canonical routing, change discipline, completion, and publication governance"},
+      {"path": "CURRENT_STATE.md", "description": "restart handoff only"},
+      {"path": "docs/rds/", "description": "durable product requirements"},
+      {"path": "docs/plans/gameboard_visual_language_design.md", "description": "Live 3D and future Live 4D gameboard visual-language authority"},
+      {"path": "docs/plans/topology_godot_core_port_plan.md", "description": "Stage 25 topology Godot/C++ core-port planning authority"},
+      {"path": "contracts/topology_contract_v1.json", "description": "versioned language-neutral topology scalar contract"},
+      {"path": "docs/architecture/topology_contract_foundation.md", "description": "shared topology scalar binding and fingerprint authority"},
+      {"path": "docs/ARCHITECTURE_CONTRACT.md", "description": "dependency contract"},
+      {"path": "docs/BACKLOG.md", "description": "active backlog and current change footprint"},
+      {"path": "config/menu/structure.json", "description": "launcher/pause/settings/help/menu graph and copy"},
+      {"path": "config/menu/defaults.json", "description": "default persisted settings payload"},
+      {"path": "config/tutorial/lessons.json", "description": "tutorial packs and board profiles"},
+      {"path": "config/gameplay/tuning.json", "description": "scoring/kick/tuning defaults"},
+      {"path": "docs/CONFIGURATION_REFERENCE.md", "description": "generated full config inventory"},
+      {"path": "docs/USER_SETTINGS_REFERENCE.md", "description": "generated user-facing settings summary"}
     ],
     "symbol_index": {
-      "source_roots": [
-        "src/tet4d",
-        "cli"
-      ],
+      "source_roots": ["src/tet4d", "cli"],
       "max_symbols_per_file": 12
     },
     "likely_test_files": {
-      "source_roots": [
-        "src/tet4d",
-        "cli"
-      ],
-      "test_roots": [
-        "tests"
-      ],
+      "source_roots": ["src/tet4d", "cli"],
+      "test_roots": ["tests"],
       "max_matches_per_file": 4
     },
     "verification": {
       "local_gate": "CODEX_MODE=1 ./scripts/verify.sh",
       "ci_entrypoint": "./scripts/ci_check.sh",
-      "enforcers": [
-        "scripts/check_editable_install.sh",
-        "scripts/check_architecture_boundaries.sh",
-        "scripts/check_engine_core_purity.sh",
-        "scripts/arch_metrics.py",
-        "tools/codegen/generate_topology_contract.py",
-        "tools/governance/architecture_metric_budget.py"
-      ]
+      "enforcers": ["scripts/check_editable_install.sh", "scripts/check_architecture_boundaries.sh", "scripts/check_engine_core_purity.sh", "scripts/arch_metrics.py", "tools/codegen/generate_topology_contract.py", "tools/governance/architecture_metric_budget.py"]
     }
   },
   "deprecated_authorities": {
     "description": "Retired governance and routing surfaces that must stay absent from active governance.",
-    "blocked_paths": [
-      "config/project/policy/governance.json",
-      "config/project/policy/code_rules.json",
-      "config/project/policy/manifests/canonical_maintenance.json",
-      "docs/RDS_AND_CODEX.md",
-      "docs/governance/task_contract.md",
-      "docs/governance/completion_report.md",
-      "docs/WORKFLOW_CODEX.md",
-      "docs/DOCUMENTATION_MAP.md",
-      "docs/governance/README.md",
-      "docs/governance/codex_policy.md",
-      "docs/governance/config_policy.md",
-      "docs/governance/cpp_safety_policy.md",
-      "docs/governance/drift_protection_map.md",
-      "docs/governance/godot_cpp_policy.md",
-      "docs/governance/native_tooling_ci_policy.md",
-      "docs/governance/review_checklist.md",
-      "docs/governance/secrets_policy.md",
-      "docs/governance/technical_debt_register.md",
-      "docs/governance/testing_policy.md",
-      "docs/governance/workspace_bundle",
-      "docs/policies"
-    ],
+    "blocked_paths": ["config/project/policy/governance.json", "config/project/policy/code_rules.json", "config/project/policy/manifests/canonical_maintenance.json", "docs/RDS_AND_CODEX.md", "docs/governance/task_contract.md", "docs/governance/completion_report.md", "docs/WORKFLOW_CODEX.md", "docs/DOCUMENTATION_MAP.md", "docs/governance/README.md", "docs/governance/codex_policy.md", "docs/governance/config_policy.md", "docs/governance/cpp_safety_policy.md", "docs/governance/drift_protection_map.md", "docs/governance/godot_cpp_policy.md", "docs/governance/native_tooling_ci_policy.md", "docs/governance/review_checklist.md", "docs/governance/secrets_policy.md", "docs/governance/technical_debt_register.md", "docs/governance/testing_policy.md", "docs/governance/workspace_bundle", "docs/policies"],
     "reference_checks": {
-      "files": [
-        "AGENTS.md",
-        "CLAUDE.md",
-        "CONTRIBUTING.md",
-        "README.md",
-        "CURRENT_STATE.md",
-        ".github/pull_request_template.md",
-        "godot/AGENTS.md",
-        "native/AGENTS.md",
-        "docs/README.md",
-        "docs/BACKLOG.md",
-        "docs/SECURITY_AND_CONFIG_PLAN.md",
-        "docs/PROJECT_STRUCTURE.md",
-        "docs/governance/ENGINEERING.md",
-        "docs/governance/VERIFICATION.md",
-        "docs/governance/SECURITY_AND_SANITATION.md",
-        "docs/governance/CONFIG_AND_GENERATED_DATA.md",
-        "docs/governance/NATIVE_AND_PLATFORM.md",
-        "docs/governance/CHANGE_GOVERNANCE.md",
-        "scripts/check_policy_compliance_repo.sh"
-      ],
-      "must_not_contain": [
-        "config/project/policy/governance.json",
-        "config/project/policy/code_rules.json",
-        "config/project/policy/manifests/canonical_maintenance.json",
-        "docs/RDS_AND_CODEX.md",
-        "docs/governance/task_contract.md",
-        "docs/governance/completion_report.md",
-        "docs/WORKFLOW_CODEX.md",
-        "docs/DOCUMENTATION_MAP.md",
-        "docs/governance/README.md",
-        "docs/governance/codex_policy.md",
-        "docs/governance/config_policy.md",
-        "docs/governance/cpp_safety_policy.md",
-        "docs/governance/drift_protection_map.md",
-        "docs/governance/godot_cpp_policy.md",
-        "docs/governance/native_tooling_ci_policy.md",
-        "docs/governance/review_checklist.md",
-        "docs/governance/secrets_policy.md",
-        "docs/governance/technical_debt_register.md",
-        "docs/governance/testing_policy.md",
-        "docs/governance/workspace_bundle",
-        "docs/policies/"
-      ]
+      "files": ["AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "README.md", "CURRENT_STATE.md", ".github/pull_request_template.md", "godot/AGENTS.md", "native/AGENTS.md", "docs/README.md", "docs/BACKLOG.md", "docs/SECURITY_AND_CONFIG_PLAN.md", "docs/PROJECT_STRUCTURE.md", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md", "scripts/check_policy_compliance_repo.sh"],
+      "must_not_contain": ["config/project/policy/governance.json", "config/project/policy/code_rules.json", "config/project/policy/manifests/canonical_maintenance.json", "docs/RDS_AND_CODEX.md", "docs/governance/task_contract.md", "docs/governance/completion_report.md", "docs/WORKFLOW_CODEX.md", "docs/DOCUMENTATION_MAP.md", "docs/governance/README.md", "docs/governance/codex_policy.md", "docs/governance/config_policy.md", "docs/governance/cpp_safety_policy.md", "docs/governance/drift_protection_map.md", "docs/governance/godot_cpp_policy.md", "docs/governance/native_tooling_ci_policy.md", "docs/governance/review_checklist.md", "docs/governance/secrets_policy.md", "docs/governance/technical_debt_register.md", "docs/governance/testing_policy.md", "docs/governance/workspace_bundle", "docs/policies/"]
     }
+  },
+  "governance_surface": {
+    "schema_version": 1,
+    "document_roles": {
+      "governance": ["AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", ".github/pull_request_template.md", "godot/AGENTS.md", "native/AGENTS.md", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md"],
+      "current_state": ["CURRENT_STATE.md"],
+      "active_task": [],
+      "planning": ["docs/plans"],
+      "history": ["docs/history"],
+      "architecture": ["docs/ARCHITECTURE_CONTRACT.md", "docs/architecture"],
+      "product_contract": ["docs/rds"],
+      "template": ["tools/templates/governance"],
+      "generated_reference": ["docs/CONFIGURATION_REFERENCE.md", "docs/USER_SETTINGS_REFERENCE.md", "docs/PROJECT_STRUCTURE.md"]
+    },
+    "active_governance": {
+      "human": ["AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", ".github/pull_request_template.md", "godot/AGENTS.md", "native/AGENTS.md", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md"],
+      "machine": ["config/project/policy_pack.json"],
+      "operational": ["CURRENT_STATE.md", "docs/BACKLOG.md"],
+      "active_task": []
+    },
+    "aggregate_hard_limit": 2500,
+    "active_task_limit": 250,
+    "per_file_limits": {"AGENTS.md": 150, "godot/AGENTS.md": 70, "native/AGENTS.md": 70, "docs/governance/ENGINEERING.md": 300, "docs/governance/VERIFICATION.md": 300, "docs/governance/SECURITY_AND_SANITATION.md": 300, "docs/governance/CONFIG_AND_GENERATED_DATA.md": 300, "docs/governance/NATIVE_AND_PLATFORM.md": 300, "docs/governance/CHANGE_GOVERNANCE.md": 300, "CURRENT_STATE.md": 150, "docs/BACKLOG.md": 250, "config/project/policy_pack.json": 1000},
+    "lifecycle": {
+      "forbidden_active_heading_regex": ["^#{1,6}\\s+(?:Previous|Prior)\\s+(?:Task|Stage|Work|Completion(?:\\s+Report)?)\\s*$"],
+      "volatile_test_count_regex": "(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\\d[\\d,]*\\s+tests?\\s+passed\\b|\\b(?:the\\s+)?suite\\s+has\\s+\\d[\\d,]*\\s+tests?\\b)"
+    },
+    "validator_provenance": {"contracts": "docs/governance/CHANGE_GOVERNANCE.md", "workspace_bundle": "docs/governance/CHANGE_GOVERNANCE.md", "authority_transfer": "docs/governance/NATIVE_AND_PLATFORM.md", "config_authority": "docs/governance/CONFIG_AND_GENERATED_DATA.md", "godot_semantic_boundary": "docs/governance/NATIVE_AND_PLATFORM.md", "live_board_visual_roles": "docs/governance/NATIVE_AND_PLATFORM.md", "native_cpp_tooling": "docs/governance/NATIVE_AND_PLATFORM.md", "menu_graph": "docs/governance/CONFIG_AND_GENERATED_DATA.md", "risk_gates": "docs/governance/SECURITY_AND_SANITATION.md", "policy_runtime_rules": "docs/governance/CONFIG_AND_GENERATED_DATA.md", "wheel_reuse_rules": "docs/governance/ENGINEERING.md", "utility_reuse": "docs/governance/ENGINEERING.md", "loc_guidance": "docs/governance/ENGINEERING.md", "dedup_dead_code_rules": "docs/governance/ENGINEERING.md", "drift_protection": "docs/governance/CHANGE_GOVERNANCE.md", "governance_surface": "docs/governance/CHANGE_GOVERNANCE.md", "routing_verification_floor": "docs/governance/VERIFICATION.md", "generated_reference_integrity": "docs/governance/CONFIG_AND_GENERATED_DATA.md", "secret_and_path_sanitation": "docs/governance/SECURITY_AND_SANITATION.md"}
   }
 }

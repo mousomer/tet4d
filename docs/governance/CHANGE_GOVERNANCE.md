@@ -51,6 +51,28 @@ These six canonical files are the complete human governance owner set. If a
 durable rule cannot fit without semantic distortion, stop and reassess the
 domain model rather than adding an overlapping owner.
 
+## Document roles and active surface
+
+Machine governance assigns routed documents one structural role: governance,
+current state, active task, planning, history, architecture, product contract,
+template, or generated reference. History, plans, templates, generated
+references, architecture, and product contracts never enter the default active
+governance surface merely because they exist. Active routes must resolve to
+tracked current files and must not enter `docs/history/`.
+
+The registered active surface is the union of human governance and dispatch,
+`config/project/policy_pack.json`, `CURRENT_STATE.md`, `docs/BACKLOG.md`, and
+any explicitly registered active task record. Its binding ceiling is 2,500
+physical lines. Local guards are 150 lines for root `AGENTS.md` and
+`CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical owner,
+250 for `docs/BACKLOG.md` and any active task record, and 1,000 for the policy
+pack. Local compliance never substitutes for aggregate compliance.
+
+Current routed files must not accumulate repeated previous-task, previous-
+stage, or previous-completion sections. Durable current governance must not pin
+volatile current suite inventories; immutable PR/stage/run references and
+historical evidence remain valid.
+
 ## Before and during a change
 
 1. Inspect current code, tests, and routed authorities; do not work from guessed

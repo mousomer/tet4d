@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import tools.governance.check_risk_gates as risk_gates
-from tools.governance import validate_governance
+from tools.governance import validate_governance, validate_governance_surface
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -70,6 +70,17 @@ def test_risk_gates_accept_unified_required_ids() -> None:
     }
     issues = risk_gates._check_contributor_directives({}, directives_payload)
     assert issues == []
+
+
+def test_every_unified_governance_check_has_a_provenance_family() -> None:
+    assert {
+        check.name for check in validate_governance._checks()
+    } <= validate_governance_surface.PROVENANCE_FAMILIES
+    assert {
+        "routing_verification_floor",
+        "generated_reference_integrity",
+        "secret_and_path_sanitation",
+    } <= validate_governance_surface.PROVENANCE_FAMILIES
 
 
 def test_main_executes_policy_runtime_rules_check(monkeypatch, capsys) -> None:

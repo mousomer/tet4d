@@ -11,6 +11,12 @@ Canonical runtime and governance sources include
 domain-specific manifests under `config/project/policy/manifests/`. The owning
 RDS, schema, or architecture contract decides semantics; generated views do not.
 
+The policy pack contains current structured facts and enforcement inputs, not
+completed migrations, prior CI results, diagnostic inventories, or branch
+chronology. Durable historical rationale belongs under `docs/history/` only
+when Git and PR history are insufficient. Prefer roles, owners, paths, schema
+fields, and lexical tokens over pinning unrestricted narrative prose.
+
 Python config remains authoritative for inherited Python behaviour unless the
 subsystem authority map records a narrower transfer. Godot presentation-only
 settings may live in Godot theme/config resources. Inherited gameplay or

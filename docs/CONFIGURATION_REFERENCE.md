@@ -1930,10 +1930,16 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/project/policy_pack.json`
-Top-level keys: `authority_model`, `code_rules`, `codex_routing`, `deprecated_authorities`, `description`, `governance`, `maintenance_contract`, `maintenance_docs`, `project_name`, `schema_version`
+Top-level keys: `authority_model`, `code_rules`, `codex_routing`, `deprecated_authorities`, `description`, `governance`, `governance_surface`, `maintenance_contract`, `maintenance_docs`, `project_name`, `schema_version`
 Parameters:
 - `authority_model.architecture_contract`: `"docs/ARCHITECTURE_CONTRACT.md"` (`string`)
 - `authority_model.authority_transfer_and_establishment_protocol`: `"docs/architecture/authority_transfer_protocol.md"` (`string`)
+- `authority_model.canonical_human_owners.change_governance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `authority_model.canonical_human_owners.config_and_generated_data`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `authority_model.canonical_human_owners.engineering`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `authority_model.canonical_human_owners.native_and_platform`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `authority_model.canonical_human_owners.security_and_sanitation`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
+- `authority_model.canonical_human_owners.verification`: `"docs/governance/VERIFICATION.md"` (`string`)
 - `authority_model.change_governance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `authority_model.config_and_generated_data_governance`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `authority_model.dispatch_file`: `"AGENTS.md"` (`string`)
@@ -2098,7 +2104,7 @@ Parameters:
 - `governance.contributor_directives.directives[].enforced_by[]`: array[`string`]; examples: `"code_review"`, `"scripts/verify.sh"`, `"scripts/ci_check.sh"`
 - `governance.contributor_directives.directives[].id`: varies (`string`); examples: `"plan_with_acceptance"`, `"rds_backlog_state_sync"`, `"verification_required"`
 - `governance.contributor_directives.directives[].source_docs[]`: array[`string`]; examples: `"docs/governance/CHANGE_GOVERNANCE.md"`, `"docs/governance/VERIFICATION.md"`, `"docs/governance/ENGINEERING.md"`
-- `governance.contributor_directives.directives[].statement`: varies (`string`); examples: `"Start restructuring or behavior changes with a short plan and accept...`, `"Update relevant RDS docs and BACKLOG when scope or behavior changes;...`, `"Run verify locally before completion; CI entrypoint remains authorit...`
+- `governance.contributor_directives.directives[].statement`: varies (`string`); examples: `"Plan restructuring or behaviour work with acceptance criteria."`, `"Update owning design and active backlog; use CURRENT_STATE only for ...`, `"Run the canonical local/full verification required by the change."`
 - `governance.contributor_directives.required_ci_enforced_ids[]`: array[`string`]; examples: `"verification_required"`, `"loc_delta_preference"`, `"quiet_test_default"`
 - `governance.description`: `"Unified governance section nested inside the single-source policy pa...` (`string`)
 - `governance.design_sources[]`: array[`string`]; examples: `"docs/governance/CHANGE_GOVERNANCE.md"`, `"docs/rds/"`
@@ -2144,7 +2150,6 @@ Parameters:
 - `governance.godot_toolchain.assets.windows_x86_64.sha512`: `"83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf...` (`string`)
 - `governance.godot_toolchain.assets.windows_x86_64.url`: `"https://github.com/godotengine/godot/releases/download/4.7.2-stable/...` (`string`)
 - `governance.godot_toolchain.build.cpp_standard`: `"C++17"` (`string`)
-- `governance.godot_toolchain.build.local_compiler`: `"Apple Clang 21.0.0"` (`string`)
 - `governance.godot_toolchain.build.scons_version`: `"4.10.1"` (`string`)
 - `governance.godot_toolchain.build_identifier`: `"4.7.2.stable.official.ed1daf0bf"` (`string`)
 - `governance.godot_toolchain.canonical_commands.android_configuration_export`: `"GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh --config...` (`string`)
@@ -2172,39 +2177,13 @@ Parameters:
 - `governance.godot_toolchain.gdextension.compatibility_minimum`: `"4.7"` (`string`)
 - `governance.godot_toolchain.gdextension.entry_symbol`: `"tet4d_core_library_init"` (`string`)
 - `governance.godot_toolchain.gdextension.reloadable`: `true` (`bool`)
-- `governance.godot_toolchain.godot_cpp.api_equivalence`: `"Godot 4.7.2 and the retained 4.7-stable binding baseline have identi...` (`string`)
 - `governance.godot_toolchain.godot_cpp.api_version`: `"4.7"` (`string`)
-- `governance.godot_toolchain.godot_cpp.previous_commit`: `"5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731"` (`string`)
 - `governance.godot_toolchain.godot_cpp.repository`: `"https://github.com/godotengine/godot-cpp.git"` (`string`)
 - `governance.godot_toolchain.godot_cpp.selected_commit`: `"5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731"` (`string`)
-- `governance.godot_toolchain.godot_cpp.selection_basis`: `"retained unchanged; the 2026-06-18 commit synchronizing godot-cpp wi...` (`string`)
-- `governance.godot_toolchain.migration_date`: `"2026-08-28"` (`string`)
 - `governance.godot_toolchain.official_release_url`: `"https://github.com/godotengine/godot/releases/tag/4.7.2-stable"` (`string`)
-- `governance.godot_toolchain.previous_supported_version`: `"4.7.1-stable"` (`string`)
 - `governance.godot_toolchain.release_channel`: `"stable"` (`string`)
-- `governance.godot_toolchain.release_date`: `"2026-08-18"` (`string`)
-- `governance.godot_toolchain.results.branch_head`: `"e2e1ef9254f12c528ce7a67599b43510abfc0902"` (`string`)
-- `governance.godot_toolchain.results.branch_result`: `"PASS for the pinned Godot gate, native build and tests, governance, ...` (`string`)
-- `governance.godot_toolchain.results.ci`: `"NOT RUN; this upgrade is a local unpublished commit with no push or ...` (`string`)
-- `governance.godot_toolchain.results.deterministic_isolation`: `"PASS; live_4d_state_hash and every layout contract rect are identica...` (`string`)
-- `governance.godot_toolchain.results.extension_api_equivalence`: `"PASS; the 4.7.2 dumped extension API is identical to the retained go...` (`string`)
-- `governance.godot_toolchain.results.gdscript`: `"PASS under exact Godot 4.7.2; all scripts register and the headless ...` (`string`)
-- `governance.godot_toolchain.results.known_limitations[]`: array[`string`]; examples: `"macOS is the local development evidence platform"`, `"Linux acceptance for this upgrade is deferred to CI on publication r...`, `"Windows packaging is locally cross-built and structurally validated;...`
-- `governance.godot_toolchain.results.migration_guide_audit`: `"PASS; 62 upstream commits between 4.7.1-stable and 4.7.2-stable are ...` (`string`)
-- `governance.godot_toolchain.results.native_build`: `"PASS; the extension rebuilds against the unchanged pinned godot-cpp"` (`string`)
-- `governance.godot_toolchain.results.native_tests`: `"PASS; plain 2D, plain ND, geometry, query, topology contract, topolo...` (`string`)
-- `governance.godot_toolchain.results.parity`: `"PASS; 59 shared topology transport cases under exact Godot 4.7.2"` (`string`)
-- `governance.godot_toolchain.results.performance.assessment`: `"no material regression; both engine timings were measured on this sa...` (`string`)
-- `governance.godot_toolchain.results.performance.bounded_startup_seconds_before_after`: `"2.52 / 2.31"` (`string`)
-- `governance.godot_toolchain.results.performance.headless_suite_seconds_before_after`: `"70.88 / 70.89"` (`string`)
-- `governance.godot_toolchain.results.performance.measurement_basis`: `"same project copy, isolated HOME per engine, one warm run discarded ...` (`string`)
-- `governance.godot_toolchain.results.performance.native_tests_seconds`: `"39.36"` (`string`)
-- `governance.godot_toolchain.results.persistence`: `"PASS in the full Godot suite, including schema migration, malformed-...` (`string`)
-- `governance.godot_toolchain.results.scene_resources`: `"PASS under exact Godot 4.7.2 in an isolated project copy"` (`string`)
-- `governance.godot_toolchain.results.visual_review`: `"PASS on macOS under exact Godot 4.7.2 with Metal 4.0 Forward+; rende...` (`string`)
 - `governance.godot_toolchain.selected_supported_version`: `"4.7.2-stable"` (`string`)
 - `governance.godot_toolchain.selection_rule`: `"newest officially published stable Godot 4.7 patch release"` (`string`)
-- `governance.godot_toolchain.status`: `"accepted"` (`string`)
 - `governance.menu_control_typing_contract.enum_setup_option_source_tokens[]`: array[`string`]; examples: `"piece_set_labels"`
 - `governance.menu_control_typing_contract.menu_control_types[]`: array[`string`]; examples: `"toggle"`, `"selector"`, `"slider"`
 - `governance.menu_control_typing_contract.selector_options_key_required`: `true` (`bool`)
@@ -2238,97 +2217,12 @@ Parameters:
 - `governance.risk_gates.security_ownership.min_sensitive_files`: `5` (`int`)
 - `governance.risk_gates.security_ownership.sensitive_globs[]`: array[`string`]; examples: `"tools/governance/scan_secrets.py"`, `"config/project/policy/manifests/secret_scan.json"`, `"scripts/check_policy_compliance.sh"`
 - `governance.risk_gates.security_ownership.target_min_distinct_authors_per_file`: `2` (`int`)
-- `governance.ruff_toolchain.migration.affected_files_before_migration`: `280` (`int`)
-- `governance.ruff_toolchain.migration.branch_local_result`: `"CODEX_MODE=1 ./scripts/verify.sh passed on the final branch tree"` (`string`)
-- `governance.ruff_toolchain.migration.configuration_changes[]`: array[`string`]; examples: `"Pinned the canonical development dependency to ruff==0.16.0."`, `"Made GitHub Actions print the installed Ruff version."`, `"Made the existing C901 verification gate part of the canonical Ruff ...`
-- `governance.ruff_toolchain.migration.diagnostics_before_migration`: `1023` (`int`)
-- `governance.ruff_toolchain.migration.files_changed`: `332` (`int`)
-- `governance.ruff_toolchain.migration.formatter_differences_before_migration`: `171` (`int`)
-- `governance.ruff_toolchain.migration.github_python_3_11_to_3_14_matrix_result`: `"GitHub Actions pull-request run 30144781389 passed Python 3.11, 3.12...` (`string`)
-- `governance.ruff_toolchain.migration.merge_context_result`: `"CODEX_MODE=1 ./scripts/verify.sh passed for origin/master c10ed4e6a1...` (`string`)
-- `governance.ruff_toolchain.migration.narrow_rule_exceptions[]`: array[`object`]
-- `governance.ruff_toolchain.migration.narrow_rule_exceptions[].reason`: varies (`string`); examples: `"Changing established ValueError or RuntimeError contracts caused reg...`, `"These boundaries must report or isolate arbitrary implementation fai...`, `"Explicit nested context-manager lifetime keeps environment restorati...`
-- `governance.ruff_toolchain.migration.narrow_rule_exceptions[].rule`: varies (`string`); examples: `"TRY004"`, `"BLE001"`, `"SIM117"`
-- `governance.ruff_toolchain.migration.narrow_rule_exceptions[].scope`: varies (`string`); examples: `"tested validation and parity exception contracts"`, `"top-level UI, optional-import, and best-effort recording boundaries"`, `"two score-analyzer tests"`
-- `governance.ruff_toolchain.migration.newest_stable_version`: `"0.16.0"` (`string`)
-- `governance.ruff_toolchain.migration.previous_version`: `"0.14.1"` (`string`)
-- `governance.ruff_toolchain.migration.rules_newly_enforced_or_reinterpreted[]`: array[`string`]; examples: `"B023"`, `"BLE001"`, `"C400"`
-- `governance.ruff_toolchain.migration.safe_fixable_diagnostics_before_migration`: `546` (`int`)
-- `governance.ruff_toolchain.migration.selected_version`: `"0.16.0"` (`string`)
-- `governance.ruff_toolchain.migration.selection_date`: `"2026-07-25"` (`string`)
-- `governance.ruff_toolchain.migration.stable_0_17_available`: `false` (`bool`)
-- `governance.ruff_toolchain.migration.technical_blockers[]`: array[`empty`]
-- `governance.ruff_toolchain.migration.unsafe_fixable_diagnostics_before_migration`: `299` (`int`)
-- `governance.ruff_toolchain.policy.exact_pin_required`: `true` (`bool`)
-- `governance.ruff_toolchain.policy.minor_version_changes_are_explicit_migrations`: `true` (`bool`)
-- `governance.ruff_toolchain.policy.package_source`: `"Python Package Index (PyPI)"` (`string`)
-- `governance.ruff_toolchain.policy.target`: `"newest stable supported release"` (`string`)
-- `governance.ruff_toolchain.policy.work_minimisation_is_selection_criterion`: `false` (`bool`)
+- `governance.ruff_toolchain.exact_pin_required`: `true` (`bool`)
+- `governance.ruff_toolchain.package_source`: `"PyPI"` (`string`)
+- `governance.ruff_toolchain.selected_version`: `"0.16.0"` (`string`)
+- `governance.ruff_toolchain.selection_rule`: `"newest stable supported release"` (`string`)
+- `governance.ruff_toolchain.verification`: `"ruff check plus canonical C901 selection"` (`string`)
 - `governance.schema_version`: `1` (`int`)
-- `governance.static_analysis_formatting_audit.audit_date`: `"2026-07-25"` (`string`)
-- `governance.static_analysis_formatting_audit.audited_branch`: `"codex/configurable-plain-boards"` (`string`)
-- `governance.static_analysis_formatting_audit.audited_head`: `"ffb57675be13c2de3dd8525db24607ce331e5620"` (`string`)
-- `governance.static_analysis_formatting_audit.ci.full_repository_verification`: `"PASS"` (`string`)
-- `governance.static_analysis_formatting_audit.ci.head`: `"ffb57675be13c2de3dd8525db24607ce331e5620"` (`string`)
-- `governance.static_analysis_formatting_audit.ci.pull_request`: `37` (`int`)
-- `governance.static_analysis_formatting_audit.ci.pull_request_run`: `30144885222` (`int`)
-- `governance.static_analysis_formatting_audit.ci.push_run`: `30144884534` (`int`)
-- `governance.static_analysis_formatting_audit.ci.result`: `"PASS on Python 3.11, 3.12, 3.13, and 3.14"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.build_and_tests`: `"PASS"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.ci_coverage`: `"advisory configuration validation only; no build or tests"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.clang_format`: `"NOT INSTALLED; configuration present"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.clang_tidy`: `"BLOCKED; tool and compile_commands.json absent"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.compiler`: `"Apple Clang 21.0.0"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.gaps[]`: array[`string`]; examples: `"compiler and SCons versions are unpinned"`, `"clang-format is not executable"`, `"clang-tidy lacks a real compilation database"`
-- `governance.static_analysis_formatting_audit.cpp.sanitizers`: `"NOT CONFIGURED"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.standard`: `"C++17"` (`string`)
-- `governance.static_analysis_formatting_audit.cpp.warning_policy`: `"-Wall -Wextra -Werror in standalone native tests"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.applicable`: `true` (`bool`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.dotnet_format`: `"NOT APPLICABLE to the assembly-definition-only path"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.gaps[]`: array[`string`]; examples: `"retained Unity C# cannot be built or analysed locally or in CI"`
-- `governance.static_analysis_formatting_audit.csharp_dotnet.nullable`: `"NOT CONFIGURED"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.optional_analysers`: `"NOT CONFIGURED"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.project_files`: `"24 C# files and two Unity assembly definitions; no csproj or solution"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.roslyn`: `"BLOCKED without an installed Unity compiler path"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.scope`: `"legacy Unity replay spike, not Godot C#"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.sdk`: `"NOT INSTALLED"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.unity_version`: `"2022.3.20f1"` (`string`)
-- `governance.static_analysis_formatting_audit.csharp_dotnet.warnings_as_errors`: `"NOT CONFIGURED"` (`string`)
-- `governance.static_analysis_formatting_audit.gdscript.ci_coverage`: `"not configured"` (`string`)
-- `governance.static_analysis_formatting_audit.gdscript.gaps[]`: array[`string`]; examples: `"target-version local runner is not reproducible"`, `"Godot headless validation is absent from CI"`
-- `governance.static_analysis_formatting_audit.gdscript.gdtoolkit`: `"NOT INSTALLED and not configured"` (`string`)
-- `governance.static_analysis_formatting_audit.gdscript.local_godot_version`: `"4.7.stable.official.5b4e0cb0f"` (`string`)
-- `governance.static_analysis_formatting_audit.gdscript.parser_static_analysis`: `"PASS under local 4.7 through editor import and headless tests"` (`string`)
-- `governance.static_analysis_formatting_audit.gdscript.target_godot_version`: `"4.6.3-stable"` (`string`)
-- `governance.static_analysis_formatting_audit.gdscript.warnings_policy`: `"no warnings-as-errors, global suppression, or per-warning suppressio...` (`string`)
-- `governance.static_analysis_formatting_audit.godot_project.gaps[]`: array[`string`]; examples: `"local Godot version differs from project target"`, `"scene/resource and GDExtension checks are absent from CI"`
-- `governance.static_analysis_formatting_audit.godot_project.gdextension_load`: `"PASS"` (`string`)
-- `governance.static_analysis_formatting_audit.godot_project.main_scene_startup`: `"PASS with bounded five-frame headless startup"` (`string`)
-- `governance.static_analysis_formatting_audit.godot_project.project_import`: `"PASS/PARTIAL under local 4.7; sandbox blocked editor cache writes"` (`string`)
-- `governance.static_analysis_formatting_audit.godot_project.scene_resource_validation`: `"PASS for the only scene plus three theme resources"` (`string`)
-- `governance.static_analysis_formatting_audit.python.ci_coverage`: `"full lint and C901; format limited to scripts and tools"` (`string`)
-- `governance.static_analysis_formatting_audit.python.format`: `"PASS: 638 files already formatted"` (`string`)
-- `governance.static_analysis_formatting_audit.python.gaps[]`: array[`string`]; examples: `"CI Ruff format scope is narrower than repository formatting policy"`
-- `governance.static_analysis_formatting_audit.python.lint`: `"PASS: 0 diagnostics"` (`string`)
-- `governance.static_analysis_formatting_audit.python.pinning`: `"exact development dependency"` (`string`)
-- `governance.static_analysis_formatting_audit.python.ruff_version`: `"0.16.0"` (`string`)
-- `governance.static_analysis_formatting_audit.python.type_checking`: `"not configured; shell-level mypy is non-canonical and Pyright is abs...` (`string`)
-- `governance.static_analysis_formatting_audit.report`: `"docs/plans/audits/static_analysis_formatting_audit_2026-07-25.md"` (`string`)
-- `governance.static_analysis_formatting_audit.shell.bash_syntax`: `"PASS: 23 files"` (`string`)
-- `governance.static_analysis_formatting_audit.shell.ci_coverage`: `"scripts execute but no shell static-analysis gate exists"` (`string`)
-- `governance.static_analysis_formatting_audit.shell.dialect`: `"Bash for all tracked shell scripts"` (`string`)
-- `governance.static_analysis_formatting_audit.shell.gaps[]`: array[`string`]; examples: `"ShellCheck is absent"`
-- `governance.static_analysis_formatting_audit.shell.shellcheck`: `"NOT INSTALLED and not configured"` (`string`)
-- `governance.static_analysis_formatting_audit.shell.shfmt`: `"NOT INSTALLED and not configured"` (`string`)
-- `governance.static_analysis_formatting_audit.status`: `"completed_with_partial_and_unavailable_lanes"` (`string`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.cpp_headers`: `13` (`int`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.cpp_sources`: `18` (`int`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.csharp`: `24` (`int`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.gdscript`: `78` (`int`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.godot_resources`: `3` (`int`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.godot_scenes`: `1` (`int`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.python`: `458` (`int`)
-- `governance.static_analysis_formatting_audit.tracked_language_counts.shell`: `23` (`int`)
 - `governance.tech_debt_budget.baseline.arch_stage`: `755` (`int`)
 - `governance.tech_debt_budget.baseline.score`: `15.06` (`float`)
 - `governance.tech_debt_budget.baseline.status`: `"low"` (`string`)
@@ -2361,6 +2255,55 @@ Parameters:
 - `governance.tech_debt_budget.status_order.low`: `0` (`int`)
 - `governance.tech_debt_budget.status_order.moderate`: `1` (`int`)
 - `governance.verification_command`: `"./scripts/verify.sh"` (`string`)
+- `governance_surface.active_governance.active_task[]`: array[`empty`]
+- `governance_surface.active_governance.human[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"CONTRIBUTING.md"`
+- `governance_surface.active_governance.machine[]`: array[`string`]; examples: `"config/project/policy_pack.json"`
+- `governance_surface.active_governance.operational[]`: array[`string`]; examples: `"CURRENT_STATE.md"`, `"docs/BACKLOG.md"`
+- `governance_surface.active_task_limit`: `250` (`int`)
+- `governance_surface.aggregate_hard_limit`: `2500` (`int`)
+- `governance_surface.document_roles.active_task[]`: array[`empty`]
+- `governance_surface.document_roles.architecture[]`: array[`string`]; examples: `"docs/ARCHITECTURE_CONTRACT.md"`, `"docs/architecture"`
+- `governance_surface.document_roles.current_state[]`: array[`string`]; examples: `"CURRENT_STATE.md"`
+- `governance_surface.document_roles.generated_reference[]`: array[`string`]; examples: `"docs/CONFIGURATION_REFERENCE.md"`, `"docs/USER_SETTINGS_REFERENCE.md"`, `"docs/PROJECT_STRUCTURE.md"`
+- `governance_surface.document_roles.governance[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"CONTRIBUTING.md"`
+- `governance_surface.document_roles.history[]`: array[`string`]; examples: `"docs/history"`
+- `governance_surface.document_roles.planning[]`: array[`string`]; examples: `"docs/plans"`
+- `governance_surface.document_roles.product_contract[]`: array[`string`]; examples: `"docs/rds"`
+- `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
+- `governance_surface.lifecycle.forbidden_active_heading_regex[]`: array[`string`]; examples: `"^#{1,6}\\s+(?:Previous|Prior)\\s+(?:Task|Stage|Work|Completion(?:\\s...`
+- `governance_surface.lifecycle.volatile_test_count_regex`: `"(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\...` (`string`)
+- `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
+- `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
+- `governance_surface.per_file_limits.config/project/policy_pack.json`: `1000` (`int`)
+- `governance_surface.per_file_limits.docs/BACKLOG.md`: `250` (`int`)
+- `governance_surface.per_file_limits.docs/governance/CHANGE_GOVERNANCE.md`: `300` (`int`)
+- `governance_surface.per_file_limits.docs/governance/CONFIG_AND_GENERATED_DATA.md`: `300` (`int`)
+- `governance_surface.per_file_limits.docs/governance/ENGINEERING.md`: `300` (`int`)
+- `governance_surface.per_file_limits.docs/governance/NATIVE_AND_PLATFORM.md`: `300` (`int`)
+- `governance_surface.per_file_limits.docs/governance/SECURITY_AND_SANITATION.md`: `300` (`int`)
+- `governance_surface.per_file_limits.docs/governance/VERIFICATION.md`: `300` (`int`)
+- `governance_surface.per_file_limits.godot/AGENTS.md`: `70` (`int`)
+- `governance_surface.per_file_limits.native/AGENTS.md`: `70` (`int`)
+- `governance_surface.schema_version`: `1` (`int`)
+- `governance_surface.validator_provenance.authority_transfer`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `governance_surface.validator_provenance.config_authority`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.contracts`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.dedup_dead_code_rules`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.drift_protection`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.generated_reference_integrity`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.godot_semantic_boundary`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `governance_surface.validator_provenance.governance_surface`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.live_board_visual_roles`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `governance_surface.validator_provenance.loc_guidance`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.menu_graph`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.native_cpp_tooling`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `governance_surface.validator_provenance.policy_runtime_rules`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.risk_gates`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
+- `governance_surface.validator_provenance.routing_verification_floor`: `"docs/governance/VERIFICATION.md"` (`string`)
+- `governance_surface.validator_provenance.secret_and_path_sanitation`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
+- `governance_surface.validator_provenance.utility_reuse`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.wheel_reuse_rules`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.workspace_bundle`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `maintenance_contract.canonical_candidates[]`: array[`object`]
 - `maintenance_contract.canonical_candidates[].name`: varies (`string`); examples: `"Settings schema and migration ledger"`, `"Saved-game/state schema"`, `"Replay golden fixtures manifest"`
 - `maintenance_contract.canonical_candidates[].paths[]`: array[`string`]; examples: `"config/schema/menu_settings.schema.json"`, `"docs/migrations/menu_settings.md"`, `"config/schema/save_state.schema.json"`
@@ -2368,8 +2311,8 @@ Parameters:
 - `maintenance_contract.content_rules[]`: array[`object`]
 - `maintenance_contract.content_rules[].file`: varies (`string`); examples: `"docs/governance/SECURITY_AND_SANITATION.md"`, `"README.md"`, `"docs/FEATURE_MAP.md"`
 - `maintenance_contract.content_rules[].must_contain[]`: array[`string`]; examples: `"config/project/policy/manifests/secret_scan.json"`, `"tools/governance/scan_secrets.py"`, `"docs/architecture/utility_index.md"`
-- `maintenance_contract.content_rules[].must_not_contain[]`: array[`string`]; examples: `"No currently open gaps"`, `"126 passed"`, `"No active open gaps"`
-- `maintenance_contract.content_rules[].must_not_match_regex[]`: array[`string`]; examples: `"\\b\\d+\\s+passed\\b"`, `"\\[[\\s\\d%]+\\]"`, `"\\btetris_nd\\b"`
+- `maintenance_contract.content_rules[].must_not_contain[]`: array[`string`]; examples: `"No currently open gaps"`, `"No active open gaps"`, `"run_module_or_command"`
+- `maintenance_contract.content_rules[].must_not_match_regex[]`: array[`string`]; examples: `"(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\...`, `"\\btetris_nd\\b"`, `"(?i)esc\\s+back"`
 - `maintenance_contract.description`: `"Machine-checked source-of-truth rules for docs/tests/help/backlog/RD...` (`string`)
 - `maintenance_contract.required_paths.architecture_evidence[]`: array[`string`]; examples: `"docs/architecture/first_subsystem_parity_pilot.md"`, `"docs/architecture/parity_pilot_audit_and_promotion_gates.md"`, `"docs/architecture/second_parity_slice_candidate_selection.md"`
 - `maintenance_contract.required_paths.canonical_configs[]`: array[`string`]; examples: `"config/menu/defaults.json"`, `"config/menu/structure.json"`, `"config/topology/designer_presets.json"`
