@@ -2744,9 +2744,7 @@ def test_retired_active_ledgers_stay_out_of_machine_governance() -> None:
 
     maintenance = payload["maintenance_contract"]
     required_paths = {
-        path
-        for paths in maintenance["required_paths"].values()
-        for path in paths
+        path for paths in maintenance["required_paths"].values() for path in paths
     }
     content_rule_files = {rule["file"] for rule in maintenance["content_rules"]}
     assert retired.isdisjoint(required_paths)
