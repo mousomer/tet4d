@@ -113,21 +113,26 @@ The current rule is one-way:
 
 1. `config/project/policy_pack.json`: single machine-readable governance authority
 2. `AGENTS.md`: thin dispatch for contributor and agent entry
-3. `docs/WORKFLOW_CODEX.md`: human workflow explainer for repo process and verification
-4. `CURRENT_STATE.md`: restart handoff only
-5. `docs/rds/`: durable product requirements
-6. `docs/plans/gameboard_visual_language_design.md`: Live 3D and future Live 4D gameboard visual-language authority
-7. `docs/plans/topology_godot_core_port_plan.md`: Stage 25 topology Godot/C++ core-port planning authority
-8. `contracts/topology_contract_v1.json`: versioned language-neutral topology scalar contract
-9. `docs/architecture/topology_contract_foundation.md`: shared topology scalar binding and fingerprint authority
-10. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
-11. `docs/BACKLOG.md`: active backlog and current change footprint
-12. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
-13. `config/menu/defaults.json`: default persisted settings payload
-14. `config/tutorial/lessons.json`: tutorial packs and board profiles
-15. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
-16. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
-17. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
+3. `docs/governance/ENGINEERING.md`: canonical general engineering governance
+4. `docs/governance/VERIFICATION.md`: canonical verification and evidence governance
+5. `docs/governance/SECURITY_AND_SANITATION.md`: canonical security, sanitation, dependency, and repository hygiene governance
+6. `docs/governance/CONFIG_AND_GENERATED_DATA.md`: canonical config, constants, and generated-data governance
+7. `docs/governance/NATIVE_AND_PLATFORM.md`: canonical native safety, tooling, boundary, and platform governance
+8. `docs/governance/CHANGE_GOVERNANCE.md`: canonical routing, change discipline, completion, and publication governance
+9. `CURRENT_STATE.md`: restart handoff only
+10. `docs/rds/`: durable product requirements
+11. `docs/plans/gameboard_visual_language_design.md`: Live 3D and future Live 4D gameboard visual-language authority
+12. `docs/plans/topology_godot_core_port_plan.md`: Stage 25 topology Godot/C++ core-port planning authority
+13. `contracts/topology_contract_v1.json`: versioned language-neutral topology scalar contract
+14. `docs/architecture/topology_contract_foundation.md`: shared topology scalar binding and fingerprint authority
+15. `docs/ARCHITECTURE_CONTRACT.md`: dependency contract
+16. `docs/BACKLOG.md`: active backlog and current change footprint
+17. `config/menu/structure.json`: launcher/pause/settings/help/menu graph and copy
+18. `config/menu/defaults.json`: default persisted settings payload
+19. `config/tutorial/lessons.json`: tutorial packs and board profiles
+20. `config/gameplay/tuning.json`: scoring/kick/tuning defaults
+21. `docs/CONFIGURATION_REFERENCE.md`: generated full config inventory
+22. `docs/USER_SETTINGS_REFERENCE.md`: generated user-facing settings summary
 
 ### Stage 20 Topology Identifier Normalization Parity
 

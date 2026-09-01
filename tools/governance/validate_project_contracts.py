@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
 POLICY_PACK_REL = "config/project/policy_pack.json"
 POLICY_PACK_PATH = PROJECT_ROOT / POLICY_PACK_REL
-POLICY_INDEX_PATH = PROJECT_ROOT / "docs/policies/INDEX.md"
+GOVERNANCE_DISPATCH_PATH = PROJECT_ROOT / "AGENTS.md"
 POLICY_MANIFEST_DIR = PROJECT_ROOT / "config/project/policy/manifests"
 MENU_STRUCTURE_PATH = PROJECT_ROOT / "config/menu/structure.json"
 GODOT_SETUP_FIELD_SPEC_PATH = (
@@ -19,13 +19,12 @@ GODOT_SETUP_FIELD_SPEC_PATH = (
 )
 GOVERNANCE_ROUTING_REQUIRED_PATHS: tuple[str, ...] = (
     "AGENTS.md",
-    "docs/governance/README.md",
-    "docs/governance/codex_policy.md",
-    "docs/governance/godot_cpp_policy.md",
-    "docs/governance/config_policy.md",
-    "docs/governance/secrets_policy.md",
-    "docs/governance/testing_policy.md",
-    "docs/governance/review_checklist.md",
+    "docs/governance/ENGINEERING.md",
+    "docs/governance/VERIFICATION.md",
+    "docs/governance/SECURITY_AND_SANITATION.md",
+    "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+    "docs/governance/NATIVE_AND_PLATFORM.md",
+    "docs/governance/CHANGE_GOVERNANCE.md",
     "docs/architecture/authority_map.md",
     "docs/architecture/utility_index.md",
     "docs/architecture/trace_metadata_identity_digest_parity.md",
@@ -33,18 +32,24 @@ GOVERNANCE_ROUTING_REQUIRED_PATHS: tuple[str, ...] = (
     "godot/AGENTS.md",
 )
 AGENTS_LINE_LIMITS: tuple[tuple[str, int], ...] = (
-    ("AGENTS.md", 140),
-    ("godot/AGENTS.md", 80),
-    ("native/AGENTS.md", 80),
+    ("AGENTS.md", 150),
+    ("godot/AGENTS.md", 70),
+    ("native/AGENTS.md", 70),
 )
 
 CODEX_AUTHORITY_POINTERS: dict[str, str] = {
+    "engineering_governance": "docs/governance/ENGINEERING.md",
+    "verification_governance": "docs/governance/VERIFICATION.md",
+    "security_and_sanitation_governance": "docs/governance/SECURITY_AND_SANITATION.md",
+    "config_and_generated_data_governance": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+    "native_and_platform_governance": "docs/governance/NATIVE_AND_PLATFORM.md",
+    "change_governance": "docs/governance/CHANGE_GOVERNANCE.md",
     "professional_product_programme": "docs/plans/professional_godot_game_programme.md",
     "subsystem_authority_map": "docs/architecture/authority_map.md",
     "authority_transfer_and_establishment_protocol": "docs/architecture/authority_transfer_protocol.md",
     "open_work_backlog": "docs/BACKLOG.md",
 }
-SUPPORTED_CODEX_TASK_TYPES = frozenset(
+SUPPORTED_CODEX_ROUTES = frozenset(
     {
         "product_planning",
         "python_reference_engine",
@@ -942,42 +947,39 @@ def _validate_governance_directives() -> list[ValidationIssue]:
     return issues
 
 
-def _validate_policy_index_sync() -> list[ValidationIssue]:
+def _validate_canonical_governance_sync() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     governance = _load_governance(issues)
-    policy_index_contract = _load_governance_subsection(issues, "policy_index_contract")
-    if governance is None or policy_index_contract is None:
+    owner_contract = _load_governance_subsection(
+        issues, "canonical_governance_contract"
+    )
+    if governance is None or owner_contract is None:
         return issues
 
-    index_rel = "docs/policies/INDEX.md"
-    if not POLICY_INDEX_PATH.exists():
-        return [ValidationIssue("missing", f"missing required path: {index_rel}")]
-    index_text = POLICY_INDEX_PATH.read_text(encoding="utf-8")
+    dispatch_rel = "AGENTS.md"
+    if not GOVERNANCE_DISPATCH_PATH.exists():
+        return [ValidationIssue("missing", f"missing required path: {dispatch_rel}")]
+    dispatch_text = GOVERNANCE_DISPATCH_PATH.read_text(encoding="utf-8")
 
-    required_tokens = _as_string_list(policy_index_contract.get("required_tokens", []))
+    required_tokens = _as_string_list(owner_contract.get("required_tokens", []))
     if required_tokens is None:
         issues.append(
             ValidationIssue(
                 "schema",
                 (
-                    f"{POLICY_PACK_REL}.governance.policy_index_contract.required_tokens "
+                    f"{POLICY_PACK_REL}.governance.canonical_governance_contract.required_tokens "
                     "must be a list[str]"
                 ),
             )
         )
         return issues
-    contracts = governance.get("contracts")
-    if isinstance(contracts, dict):
-        required_tokens.extend(
-            value for value in contracts.values() if isinstance(value, str)
-        )
 
     for token in sorted(set(required_tokens)):
-        if token not in index_text:
+        if token not in dispatch_text:
             issues.append(
                 ValidationIssue(
                     "content",
-                    f"{index_rel} missing contract path token: {token}",
+                    f"{dispatch_rel} missing canonical governance path: {token}",
                 )
             )
     return issues
@@ -1071,23 +1073,25 @@ def _validate_blocked_authority_paths(
     return issues
 
 
-def _validate_reference_check(
-    *, idx: int, raw: object, issues: list[ValidationIssue]
-) -> None:
+def _validate_reference_checks(raw: object, issues: list[ValidationIssue]) -> None:
     if not isinstance(raw, dict):
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks[{idx}] must be an object",
+                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks must be an object",
             )
         )
         return
-    rel = raw.get("file")
-    if not isinstance(rel, str) or not rel.strip():
+    files = raw.get("files")
+    if (
+        not isinstance(files, list)
+        or not files
+        or any(not isinstance(rel, str) or not rel.strip() for rel in files)
+    ):
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks[{idx}].file must be a non-empty string",
+                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks.files must be a non-empty list[str]",
             )
         )
         return
@@ -1098,23 +1102,24 @@ def _validate_reference_check(
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks[{idx}].must_not_contain must be list[str]",
+                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks.must_not_contain must be list[str]",
             )
         )
         return
-    path = PROJECT_ROOT / rel
-    if not path.exists():
-        issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
-        return
-    text = path.read_text(encoding="utf-8")
-    for token in tokens:
-        if token in text:
-            issues.append(
-                ValidationIssue(
-                    "deprecated",
-                    f"{rel} still references deprecated authority token: {token}",
+    for rel in files:
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            issues.append(ValidationIssue("missing", f"missing required path: {rel}"))
+            continue
+        text = path.read_text(encoding="utf-8")
+        for token in tokens:
+            if token in text:
+                issues.append(
+                    ValidationIssue(
+                        "deprecated",
+                        f"{rel} still references deprecated authority token: {token}",
+                    )
                 )
-            )
 
 
 def _validate_deprecated_authorities() -> list[ValidationIssue]:
@@ -1127,18 +1132,7 @@ def _validate_deprecated_authorities() -> list[ValidationIssue]:
         _validate_blocked_authority_paths(deprecated.get("blocked_paths", []))
     )
 
-    reference_checks = deprecated.get("reference_checks", [])
-    if not isinstance(reference_checks, list):
-        issues.append(
-            ValidationIssue(
-                "schema",
-                f"{POLICY_PACK_REL}.deprecated_authorities.reference_checks must be a list",
-            )
-        )
-        return issues
-
-    for idx, raw in enumerate(reference_checks, start=1):
-        _validate_reference_check(idx=idx, raw=raw, issues=issues)
+    _validate_reference_checks(deprecated.get("reference_checks"), issues)
     return issues
 
 
@@ -2293,14 +2287,10 @@ def _governance_required_paths() -> tuple[str, ...]:
 
 
 def _governance_scan_paths() -> list[str]:
-    rels = {
-        "AGENTS.md",
-        "docs/WORKFLOW_CODEX.md",
-        "godot/AGENTS.md",
-    }
+    rels = {"AGENTS.md", "CLAUDE.md", "godot/AGENTS.md"}
     if (PROJECT_ROOT / "native/AGENTS.md").exists():
         rels.add("native/AGENTS.md")
-    for root in ("docs/governance", "docs/architecture", "docs/policies"):
+    for root in ("docs/governance", "docs/architecture"):
         root_path = PROJECT_ROOT / root
         if root_path.exists():
             rels.update(
@@ -2366,9 +2356,9 @@ def _validate_governance_routing_concepts() -> list[ValidationIssue]:
             text=root_text,
             concept_groups=(
                 ("Python", ("python",)),
-                ("semantic oracle", ("semantic oracle",)),
+                ("reference authority", ("reference authority",)),
                 ("Godot", ("godot",)),
-                ("C++/GDExtension", ("c++", "gdextension")),
+                ("native deterministic core", ("native",)),
                 ("authority", ("authority",)),
                 ("parity", ("parity",)),
             ),
@@ -2398,28 +2388,36 @@ def _validate_governance_routing_concepts() -> list[ValidationIssue]:
             issues=issues,
         )
 
-    router_text = _read_text("docs/governance/README.md", issues)
-    if router_text is not None:
-        for token in (
-            "codex_policy",
-            "godot_cpp_policy",
-            "config_policy",
-            "secrets_policy",
-            "testing_policy",
-            "review_checklist",
-            "authority_map",
-            "utility_index",
-            "cpp_safety_policy",
-            "parity_protocol",
-            "trace_metadata_identity_digest_parity",
-            "trace_schema_version_normalization_parity",
-            "parity_evidence_review_and_third_slice_selection",
-        ):
-            if token not in router_text:
+    owner_tokens = {
+        "docs/governance/ENGINEERING.md": ("canonical owner", "public-interface"),
+        "docs/governance/VERIFICATION.md": ("canonical owner", "evidence model"),
+        "docs/governance/SECURITY_AND_SANITATION.md": (
+            "canonical owner",
+            "secret",
+        ),
+        "docs/governance/CONFIG_AND_GENERATED_DATA.md": (
+            "canonical owner",
+            "generated outputs",
+        ),
+        "docs/governance/NATIVE_AND_PLATFORM.md": (
+            "canonical owner",
+            "semantic boundary",
+        ),
+        "docs/governance/CHANGE_GOVERNANCE.md": (
+            "canonical owner",
+            "compositional routing",
+        ),
+    }
+    for rel, tokens in owner_tokens.items():
+        text = _read_text(rel, issues)
+        if text is None:
+            continue
+        lower = text.lower()
+        for token in tokens:
+            if token not in lower:
                 issues.append(
                     ValidationIssue(
-                        "content",
-                        f"docs/governance/README.md missing routing link token: {token}",
+                        "content", f"{rel} missing canonical owner token: {token}"
                     )
                 )
     return issues
@@ -2557,1117 +2555,6 @@ def _validate_parity_fixture_readmes() -> list[ValidationIssue]:
     return issues
 
 
-def _validate_cpp_parity_protocol_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    if not _is_real_native_tree():
-        return issues
-
-    parity_rel = "docs/architecture/parity_protocol.md"
-    if not (PROJECT_ROOT / parity_rel).exists():
-        issues.append(
-            ValidationIssue("missing", f"missing parity protocol: {parity_rel}")
-        )
-
-    parity_text = _read_text(parity_rel, issues)
-    if parity_text is not None:
-        _append_missing_concepts(
-            rel=parity_rel,
-            label="parity protocol",
-            text=parity_text,
-            concept_groups=(
-                ("Python semantic oracle", ("semantic oracle",)),
-                ("C++/GDExtension", ("c++", "gdextension")),
-                ("golden evidence", ("golden evidence", "golden traces")),
-                ("comparison modes", ("comparison mode",)),
-                ("disagreement rule", ("disagreement",)),
-                ("fixture location", ("fixture location", "migration/golden_traces")),
-                ("authority map transfer", ("authority map", "authority transfer")),
-                (
-                    "first parity pilot",
-                    ("first subsystem parity pilot", "stable_hash_text"),
-                ),
-                (
-                    "parity pilot audit gates",
-                    (
-                        "parity_pilot_audit_and_promotion_gates",
-                        "second parity slice",
-                    ),
-                ),
-            ),
-            issues=issues,
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/authority_map.md",
-            ("parity_protocol", "authority transfer", "subsystem-specific"),
-        ),
-        (
-            "docs/governance/testing_policy.md",
-            ("c++ / python parity", "python oracle", "visual godot"),
-        ),
-        (
-            "docs/governance/godot_cpp_policy.md",
-            ("parity_protocol", "provisional", "authority map"),
-        ),
-        (
-            "docs/governance/review_checklist.md",
-            (
-                "parity / authority transfer",
-                "python oracle",
-                "godot visual",
-            ),
-        ),
-        (
-            "docs/governance/README.md",
-            (
-                "parity_protocol",
-                "testing/parity",
-                "first_subsystem_parity_pilot",
-                "parity_pilot_audit_and_promotion_gates",
-            ),
-        ),
-    )
-    for rel, tokens in required_docs:
-        text = _read_text(rel, issues)
-        if text is None:
-            continue
-        lower = text.lower()
-        for token in tokens:
-            if token not in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} missing parity governance token: {token}",
-                    )
-                )
-
-    issues.extend(_validate_parity_fixture_readmes())
-    issues.extend(_validate_parity_dangerous_phrases())
-    return issues
-
-
-def _validate_parity_pilot_audit_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    audit_rel = "docs/architecture/parity_pilot_audit_and_promotion_gates.md"
-    if not (PROJECT_ROOT / audit_rel).exists():
-        issues.append(
-            ValidationIssue("missing", f"missing parity audit doc: {audit_rel}")
-        )
-        return issues
-
-    audit_text = _read_text(audit_rel, issues)
-    if audit_text is not None:
-        _append_missing_concepts(
-            rel=audit_rel,
-            label="parity pilot audit",
-            text=audit_text,
-            concept_groups=(
-                ("Python semantic oracle", ("python remains the semantic oracle",)),
-                (
-                    "no authority transfer",
-                    ("does not transfer authority", "not authority transfer"),
-                ),
-                ("promotion gates", ("promotion gates", "second parity slice")),
-                (
-                    "allowed categories",
-                    (
-                        "coordinate",
-                        "topology identifier",
-                        "trace metadata",
-                        "dimension label",
-                    ),
-                ),
-                (
-                    "forbidden categories",
-                    ("full topology movement", "rotation semantics", "endgame physics"),
-                ),
-                (
-                    "harness placement decision",
-                    (
-                        "tools/parity/first_subsystem_parity_pilot.py",
-                        "accepted for the first pilot",
-                    ),
-                ),
-                (
-                    "strict/default behavior",
-                    ("default behaviour", "strict behaviour", "tet4d_strict_parity"),
-                ),
-            ),
-            issues=issues,
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/parity_protocol.md",
-            (
-                "first_subsystem_parity_pilot",
-                "parity_pilot_audit_and_promotion_gates",
-                "second parity slice",
-            ),
-        ),
-        (
-            "docs/architecture/authority_transfer_protocol.md",
-            (
-                "parity_pilot_audit_and_promotion_gates",
-                "not transfer records",
-            ),
-        ),
-        (
-            "docs/governance/README.md",
-            ("parity_pilot_audit_and_promotion_gates",),
-        ),
-        (
-            "docs/governance/drift_protection_map.md",
-            (
-                "parity_pilot_audit_and_promotion_gates.md",
-                "tools/parity/first_subsystem_parity_pilot.py",
-                "tests/unit/migration/test_first_subsystem_parity_pilot.py",
-            ),
-        ),
-        (
-            "docs/DOCUMENTATION_MAP.md",
-            ("parity_pilot_audit_and_promotion_gates.md",),
-        ),
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            required_docs,
-            "parity-pilot-audit",
-            issues,
-        )
-    )
-    return issues
-
-
-def _validate_second_parity_slice_candidate_selection() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    selection_rel = "docs/architecture/second_parity_slice_candidate_selection.md"
-    if not (PROJECT_ROOT / selection_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing", f"missing second parity slice selection doc: {selection_rel}"
-            )
-        )
-        return issues
-
-    selection_text = _read_text(selection_rel, issues)
-    if selection_text is not None:
-        _append_missing_concepts(
-            rel=selection_rel,
-            label="second parity slice selection",
-            text=selection_text,
-            concept_groups=(
-                ("Python semantic oracle", ("python remains the semantic oracle",)),
-                (
-                    "native provisional status",
-                    ("native/c++ remains provisional", "c++ remains provisional"),
-                ),
-                (
-                    "no authority transfer",
-                    (
-                        "candidate selection does not transfer authority",
-                        "will still not transfer authority",
-                    ),
-                ),
-                ("decision status", ("decision status",)),
-                ("Stage 18 decision", ("stage 18 implementation allowed",)),
-                (
-                    "chosen or blocked candidate",
-                    ("chosen candidate", "decision status: blocked"),
-                ),
-                (
-                    "explicit exclusions",
-                    ("explicit exclusions",),
-                ),
-                (
-                    "trace metadata candidate",
-                    ("trace metadata identity/digest", "comparison rule"),
-                ),
-                (
-                    "strict/default behavior",
-                    ("default mode", "strict mode", "tet4d_strict_parity"),
-                ),
-            ),
-            issues=issues,
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/parity_protocol.md",
-            (
-                "second_parity_slice_candidate_selection.md",
-                "stage 18 may",
-                "candidate selection does not transfer authority",
-            ),
-        ),
-        (
-            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
-            ("second_parity_slice_candidate_selection.md", "selected candidate"),
-        ),
-        (
-            "docs/governance/README.md",
-            ("second_parity_slice_candidate_selection.md",),
-        ),
-        (
-            "docs/governance/drift_protection_map.md",
-            ("second_parity_slice_candidate_selection.md",),
-        ),
-        (
-            "docs/DOCUMENTATION_MAP.md",
-            ("second_parity_slice_candidate_selection.md",),
-        ),
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            required_docs,
-            "second-parity-slice-selection",
-            issues,
-        )
-    )
-    return issues
-
-
-def _validate_parity_evidence_review_and_third_slice_selection() -> list[
-    ValidationIssue
-]:
-    issues: list[ValidationIssue] = []
-    doc_rel = "docs/architecture/parity_evidence_review_and_third_slice_selection.md"
-    if not (PROJECT_ROOT / doc_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing",
-                f"missing parity evidence review doc: {doc_rel}",
-            )
-        )
-        return issues
-
-    doc_text = _read_text(doc_rel, issues)
-    if doc_text is not None:
-        _append_missing_concepts(
-            rel=doc_rel,
-            label="parity evidence review",
-            text=doc_text,
-            concept_groups=(
-                ("Python semantic oracle", ("python remains the semantic oracle",)),
-                (
-                    "reviewed evidence",
-                    ("first pilot", "stage 18", "trace metadata identity/digest"),
-                ),
-                (
-                    "chosen candidate",
-                    ("topology identifier normalization",),
-                ),
-                (
-                    "no authority transfer",
-                    ("does not transfer authority",),
-                ),
-                (
-                    "Stage 20 boundary",
-                    ("stage 20 implementation may only implement", "stage 20 boundary"),
-                ),
-                (
-                    "explicit exclusions",
-                    (
-                        "seam traversal",
-                        "neighbor lookup",
-                        "movement semantics",
-                        "rendering/projection/view semantics",
-                        "endgame physics",
-                    ),
-                ),
-            ),
-            issues=issues,
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/parity_protocol.md",
-            (doc_rel, "stage 19 evidence review"),
-        ),
-        (
-            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
-            (doc_rel,),
-        ),
-        ("docs/governance/README.md", (doc_rel,)),
-        ("docs/governance/drift_protection_map.md", (doc_rel,)),
-        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            required_docs,
-            "parity-evidence-review",
-            issues,
-        )
-    )
-    return issues
-
-
-def _validate_trace_metadata_identity_digest_parity_governance() -> list[
-    ValidationIssue
-]:
-    issues: list[ValidationIssue] = []
-    doc_rel = "docs/architecture/trace_metadata_identity_digest_parity.md"
-    if not (PROJECT_ROOT / doc_rel).exists():
-        issues.append(
-            ValidationIssue("missing", f"missing trace metadata parity doc: {doc_rel}")
-        )
-        return issues
-
-    doc_text = _read_text(doc_rel, issues)
-    if doc_text is not None:
-        _append_missing_concepts(
-            rel=doc_rel,
-            label="trace metadata parity",
-            text=doc_text,
-            concept_groups=(
-                ("Python oracle", ("trace_schema.py", "python oracle")),
-                ("metadata-only fixture", ("metadata only", "fixture")),
-                ("exact identity", ("exact identity", "compact canonical json")),
-                ("exact digest", ("exact digest", "sha-256")),
-                (
-                    "provisional native path",
-                    ("provisional native", "native/provisional"),
-                ),
-                ("default advisory", ("default behavior is advisory", "advisory")),
-                ("strict blocking", ("tet4d_strict_parity=1", "blocking")),
-                ("no authority transfer", ("does not transfer authority",)),
-                ("explicit exclusions", ("explicit exclusions",)),
-            ),
-            issues=issues,
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/parity_protocol.md",
-            (doc_rel, "trace metadata identity/digest parity"),
-        ),
-        (
-            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
-            (doc_rel, "trace metadata identity/digest parity"),
-        ),
-        (
-            "docs/architecture/second_parity_slice_candidate_selection.md",
-            (doc_rel, "trace metadata identity/digest"),
-        ),
-        ("docs/governance/README.md", (doc_rel,)),
-        ("docs/governance/drift_protection_map.md", (doc_rel,)),
-        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
-        ("docs/PROJECT_STRUCTURE.md", (doc_rel, "tests/fixtures/parity/")),
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            required_docs,
-            "trace-metadata-parity",
-            issues,
-        )
-    )
-
-    drift_text = _read_text("docs/governance/drift_protection_map.md", issues)
-    if drift_text is not None:
-        for rel in (
-            doc_rel,
-            "tools/parity/trace_metadata_identity_digest_parity.py",
-            "tests/unit/migration/test_trace_metadata_identity_digest_parity.py",
-            "native/tet4d_core/tests/trace_metadata_identity_digest_tests.cpp",
-            "tests/fixtures/parity/trace_metadata_identity_digest.json",
-        ):
-            if rel not in drift_text:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"docs/governance/drift_protection_map.md must list {rel}",
-                    )
-                )
-    return issues
-
-
-def _validate_topology_identifier_normalization_parity_governance() -> list[
-    ValidationIssue
-]:
-    issues: list[ValidationIssue] = []
-    doc_rel = "docs/architecture/topology_identifier_normalization_parity.md"
-    if not (PROJECT_ROOT / doc_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing",
-                f"missing topology identifier normalization parity doc: {doc_rel}",
-            )
-        )
-        return issues
-
-    doc_text = _read_text(doc_rel, issues)
-    if doc_text is not None:
-        _append_missing_concepts(
-            rel=doc_rel,
-            label="topology identifier normalization parity",
-            text=doc_text,
-            concept_groups=(
-                ("Python oracle", ("python remains the semantic oracle",)),
-                ("identifier-only scope", ("identifier-only",)),
-                ("no authority transfer", ("does not transfer authority",)),
-                (
-                    "default advisory",
-                    (
-                        "default mode is advisory",
-                        "advisory when the native/provisional route is unavailable",
-                    ),
-                ),
-                (
-                    "strict blocking",
-                    (
-                        "strict mode",
-                        "tet4d_strict_parity",
-                        "blocks that unavailability",
-                    ),
-                ),
-                (
-                    "explicit exclusions",
-                    (
-                        "seam traversal",
-                        "neighbor lookup",
-                        "topology movement",
-                        "rendering/projection/view/camera",
-                        "endgame physics",
-                    ),
-                ),
-                (
-                    "harness and fixture",
-                    (
-                        "tools/parity/topology_identifier_normalization_parity.py",
-                        "tests/fixtures/parity/topology_identifier_normalization.json",
-                    ),
-                ),
-                (
-                    "canonical identifiers",
-                    ("plain_2d", "wrap_all_4d", "invert_all_4d", "sphere_like_4d"),
-                ),
-            ),
-            issues=issues,
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/parity_protocol.md",
-            (
-                doc_rel,
-                "topology identifier normalization",
-                "does not transfer authority",
-            ),
-        ),
-        (
-            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
-            (doc_rel,),
-        ),
-        (
-            "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
-            (doc_rel,),
-        ),
-        ("docs/governance/README.md", (doc_rel, "topology identifier normalization")),
-        ("docs/governance/drift_protection_map.md", (doc_rel,)),
-        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
-        (
-            "docs/PROJECT_STRUCTURE.md",
-            (
-                doc_rel,
-                "tools/parity/topology_identifier_normalization_parity.py",
-                "tests/fixtures/parity/topology_identifier_normalization.json",
-                "tests/unit/migration/test_topology_identifier_normalization_parity.py",
-            ),
-        ),
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            required_docs,
-            "topology-identifier-normalization-parity",
-            issues,
-        )
-    )
-
-    drift_text = _read_text("docs/governance/drift_protection_map.md", issues)
-    if drift_text is not None:
-        for rel in (
-            doc_rel,
-            "tools/parity/topology_identifier_normalization_parity.py",
-            "tests/fixtures/parity/topology_identifier_normalization.json",
-            "tests/unit/migration/test_topology_identifier_normalization_parity.py",
-        ):
-            if rel not in drift_text:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"docs/governance/drift_protection_map.md must list {rel}",
-                    )
-                )
-    return issues
-
-
-def _validate_parity_evidence_package_review_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    doc_rel = "docs/architecture/parity_evidence_package_review.md"
-    if not (PROJECT_ROOT / doc_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing",
-                f"missing parity evidence package review doc: {doc_rel}",
-            )
-        )
-        return issues
-
-    doc_text = _read_text(doc_rel, issues)
-    if doc_text is not None:
-        _append_missing_concepts(
-            rel=doc_rel,
-            label="parity evidence package review",
-            text=doc_text,
-            concept_groups=(
-                ("first pilot review", ("first subsystem parity pilot", "stage 15")),
-                (
-                    "trace metadata parity review",
-                    ("trace metadata identity/digest", "stage 18"),
-                ),
-                (
-                    "topology identifier parity review",
-                    ("topology identifier normalization", "stage 20"),
-                ),
-                ("Python semantic oracle", ("python remains the semantic oracle",)),
-                (
-                    "native provisional status",
-                    (
-                        "native/c++ remains provisional",
-                        "c++/gdextension remains provisional",
-                    ),
-                ),
-                (
-                    "no authority transfer",
-                    ("does not transfer authority", "no authority-transfer record"),
-                ),
-                (
-                    "tooling route decision",
-                    ("tooling route decision",),
-                ),
-                (
-                    "tooling route options",
-                    ("tools/migration/", "tools/parity/"),
-                ),
-                (
-                    "authority-transfer readiness",
-                    ("authority-transfer readiness",),
-                ),
-                (
-                    "next-stage recommendation",
-                    ("recommended next stage",),
-                ),
-                (
-                    "explicit forbidden areas",
-                    ("explicit forbidden areas",),
-                ),
-                (
-                    "forbidden area list",
-                    (
-                        "topology movement",
-                        "seam traversal",
-                        "neighbor lookup",
-                        "rendering/projection/view/camera",
-                        "endgame physics",
-                    ),
-                ),
-            ),
-            issues=issues,
-        )
-        lower = doc_text.lower()
-        forbidden_claims = (
-            "this review transfers authority",
-            "ready for authority transfer: yes",
-            "transferred authority: yes",
-            "candidate transfer record created: yes",
-        )
-        for claim in forbidden_claims:
-            if claim in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{doc_rel} must not claim authority transfer: {claim}",
-                    )
-                )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/parity_protocol.md",
-            (doc_rel, "stages 15, 18, and 20", "does not transfer authority"),
-        ),
-        (
-            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
-            (doc_rel, "future parity slices", "promotion gates"),
-        ),
-        (
-            "docs/architecture/authority_transfer_protocol.md",
-            (doc_rel, "not transfer records"),
-        ),
-        ("docs/governance/README.md", (doc_rel,)),
-        (
-            "docs/governance/drift_protection_map.md",
-            (doc_rel, "tools/migration/", "tools/parity/"),
-        ),
-        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
-        ("docs/PROJECT_STRUCTURE.md", (doc_rel,)),
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            required_docs,
-            "parity-evidence-package-review",
-            issues,
-        )
-    )
-    return issues
-
-
-def _validate_trace_schema_version_normalization_parity_governance() -> list[
-    ValidationIssue
-]:
-    issues: list[ValidationIssue] = []
-    doc_rel = "docs/architecture/trace_schema_version_normalization_parity.md"
-    harness_rel = "tools/parity/trace_schema_version_normalization_parity.py"
-    fixture_rel = "tests/fixtures/parity/trace_schema_version_normalization.json"
-    test_rel = "tests/unit/migration/test_trace_schema_version_normalization_parity.py"
-    required_paths = (doc_rel, harness_rel, fixture_rel, test_rel)
-    for rel in required_paths:
-        if not (PROJECT_ROOT / rel).exists():
-            issues.append(
-                ValidationIssue(
-                    "missing",
-                    f"missing trace schema/version normalization parity path: {rel}",
-                )
-            )
-    if not (PROJECT_ROOT / doc_rel).exists():
-        return issues
-
-    doc_text = _read_text(doc_rel, issues)
-    if doc_text is not None:
-        _append_missing_concepts(
-            rel=doc_rel,
-            label="trace schema/version normalization parity",
-            text=doc_text,
-            concept_groups=(
-                ("Python oracle", ("python remains the semantic oracle",)),
-                ("schema/version scope", ("trace schema/version normalization",)),
-                ("metadata-only scope", ("schema/version metadata-only",)),
-                ("no authority transfer", ("does not transfer authority",)),
-                ("native provisional", ("native/c++ remains provisional",)),
-                ("no safe native route", ("no safe native/provisional route",)),
-                ("default advisory", ("default mode is advisory",)),
-                ("strict blocking", ("tet4d_strict_parity=1", "blocks")),
-                (
-                    "explicit exclusions",
-                    (
-                        "trace events",
-                        "board snapshots",
-                        "topology movement",
-                        "gameplay",
-                        "rendering",
-                        "endgame physics",
-                    ),
-                ),
-                (
-                    "harness and fixture",
-                    (
-                        harness_rel,
-                        fixture_rel,
-                    ),
-                ),
-            ),
-            issues=issues,
-        )
-        lower = doc_text.lower()
-        for claim in (
-            "this slice transfers authority",
-            "transferred authority: yes",
-            "native/c++ is authoritative",
-            "fake native output",
-        ):
-            if claim in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{doc_rel} must not claim invalid Stage 22 status: {claim}",
-                    )
-                )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/parity_protocol.md",
-            (doc_rel, "trace schema/version normalization"),
-        ),
-        (
-            "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
-            (doc_rel, "schema/version metadata"),
-        ),
-        (
-            "docs/architecture/parity_evidence_package_review.md",
-            (doc_rel, harness_rel, fixture_rel),
-        ),
-        (
-            "docs/architecture/authority_transfer_protocol.md",
-            (doc_rel, "not a transfer record"),
-        ),
-        ("docs/governance/README.md", (doc_rel, harness_rel, fixture_rel)),
-        (
-            "docs/governance/drift_protection_map.md",
-            (doc_rel, harness_rel, fixture_rel, test_rel),
-        ),
-        ("docs/DOCUMENTATION_MAP.md", (doc_rel,)),
-        (
-            "docs/PROJECT_STRUCTURE.md",
-            (doc_rel, harness_rel, fixture_rel, test_rel),
-        ),
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            required_docs,
-            "trace-schema-version-normalization-parity",
-            issues,
-        )
-    )
-    return issues
-
-
-def _validate_godot_semantic_boundary_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    if not (PROJECT_ROOT / "godot").exists():
-        return issues
-
-    validator_rel = "tools/governance/validate_godot_semantic_boundary.py"
-    if not (PROJECT_ROOT / validator_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing", f"missing Godot semantic-boundary validator: {validator_rel}"
-            )
-        )
-
-    governance = _read_text("tools/governance/validate_governance.py", issues)
-    if governance is not None and "validate_godot_semantic_boundary" not in governance:
-        issues.append(
-            ValidationIssue(
-                "content",
-                "tools/governance/validate_governance.py must run Godot semantic-boundary validation",
-            )
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/governance/godot_cpp_policy.md",
-            ("semantic boundary", "gdscript", "independently compute"),
-        ),
-        (
-            "godot/AGENTS.md",
-            ("semantic truth", "gdscript", "adapter"),
-        ),
-        (
-            "docs/governance/review_checklist.md",
-            ("godot semantic boundary", "gdscript", "semantic-boundary validator"),
-        ),
-    )
-    for rel, tokens in required_docs:
-        text = _read_text(rel, issues)
-        if text is None:
-            continue
-        lower = text.lower()
-        for token in tokens:
-            if token not in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} missing Godot semantic-boundary token: {token}",
-                    )
-                )
-    return issues
-
-
-def _validate_native_cpp_safety_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    if not _is_real_native_tree():
-        return issues
-
-    _validate_native_cpp_required_paths(issues)
-    _validate_native_cpp_policy_contents(issues)
-    _validate_native_cpp_routing(issues)
-    _validate_native_cpp_tooling_validator(issues)
-    _validate_native_cpp_review_routing(issues)
-    return issues
-
-
-def _validate_native_cpp_required_paths(issues: list[ValidationIssue]) -> None:
-    required_rels = (
-        "docs/governance/cpp_safety_policy.md",
-        "docs/governance/native_tooling_ci_policy.md",
-    )
-    if _has_native_project_cpp_files():
-        required_rels = (
-            "docs/governance/cpp_safety_policy.md",
-            "docs/governance/native_tooling_ci_policy.md",
-            ".clang-format",
-            ".clang-tidy",
-        )
-    for rel in required_rels:
-        if not (PROJECT_ROOT / rel).exists():
-            issues.append(
-                ValidationIssue("missing", f"missing native C++ governance path: {rel}")
-            )
-
-
-def _validate_native_cpp_policy_contents(issues: list[ValidationIssue]) -> None:
-    cpp_policy = _read_text("docs/governance/cpp_safety_policy.md", issues)
-    if cpp_policy is not None:
-        _append_missing_concepts(
-            rel="docs/governance/cpp_safety_policy.md",
-            label="C++ safety policy",
-            text=cpp_policy,
-            concept_groups=(
-                ("Python semantic oracle", ("semantic oracle",)),
-                ("RAII", ("raii",)),
-                ("raw owning pointers", ("raw owning pointer",)),
-                ("new/delete", ("new", "delete")),
-                ("GDExtension boundary", ("gdextension",)),
-                ("parity", ("parity",)),
-                ("authority map", ("authority_map", "authority map")),
-            ),
-            issues=issues,
-        )
-
-    _validate_native_tooling_ci_policy(issues)
-
-    clang_tidy = _read_text(".clang-tidy", issues)
-    if clang_tidy is not None:
-        _validate_native_clang_tidy_content(clang_tidy, issues)
-
-
-def _validate_native_tooling_ci_policy(issues: list[ValidationIssue]) -> None:
-    tooling_policy = _read_text("docs/governance/native_tooling_ci_policy.md", issues)
-    if tooling_policy is not None:
-        _append_missing_concepts(
-            rel="docs/governance/native_tooling_ci_policy.md",
-            label="native tooling CI policy",
-            text=tooling_policy,
-            concept_groups=(
-                ("local advisory mode", ("local advisory",)),
-                ("local strict mode", ("local strict",)),
-                ("CI strict mode", ("ci strict",)),
-                ("strict environment", ("tet4d_strict_native_tools",)),
-                ("clang-format", ("clang-format",)),
-                ("clang-tidy", ("clang-tidy",)),
-                ("compile database", ("compile_commands.json",)),
-                ("Python semantic oracle", ("semantic oracle",)),
-                ("authority transfer", ("authority_transfer_protocol",)),
-                ("technical debt", ("technical_debt_register", "td-0004")),
-            ),
-            issues=issues,
-        )
-
-
-def _validate_native_cpp_routing(issues: list[ValidationIssue]) -> None:
-    native_agents = _read_text("native/AGENTS.md", issues)
-    if native_agents is not None and "cpp_safety_policy" not in native_agents:
-        issues.append(
-            ValidationIssue(
-                "content", "native/AGENTS.md must route to cpp_safety_policy"
-            )
-        )
-    if native_agents is not None and "native_tooling_ci_policy" not in native_agents:
-        issues.append(
-            ValidationIssue(
-                "content",
-                "native/AGENTS.md must route to native_tooling_ci_policy",
-            )
-        )
-
-
-def _validate_native_cpp_tooling_validator(issues: list[ValidationIssue]) -> None:
-    tooling_rel = "tools/governance/validate_native_cpp_tooling.py"
-    if not (PROJECT_ROOT / tooling_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing", f"missing native C++ tooling validator: {tooling_rel}"
-            )
-        )
-
-    governance = _read_text("tools/governance/validate_governance.py", issues)
-    if governance is not None and "validate_native_cpp_tooling" not in governance:
-        issues.append(
-            ValidationIssue(
-                "content",
-                "tools/governance/validate_governance.py must run native C++ tooling validation",
-            )
-        )
-
-
-def _validate_native_cpp_review_routing(issues: list[ValidationIssue]) -> None:
-    router = _read_text("docs/governance/README.md", issues)
-    if router is not None and "native_tooling_ci_policy.md" not in router:
-        issues.append(
-            ValidationIssue(
-                "content",
-                "docs/governance/README.md must route native_tooling_ci_policy.md",
-            )
-        )
-
-    checklist = _read_text("docs/governance/review_checklist.md", issues)
-    if checklist is not None:
-        lower = checklist.lower()
-        for token in ("native tooling", "tet4d_strict_native_tools", "ci strict"):
-            if token not in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"docs/governance/review_checklist.md missing native tooling token: {token}",
-                    )
-                )
-
-
-def _validate_native_clang_tidy_content(
-    clang_tidy: str, issues: list[ValidationIssue]
-) -> None:
-    if re.search(r"(?im)^\s*WarningsAsErrors\s*:\s*['\"]?\*['\"]?\s*$", clang_tidy):
-        issues.append(
-            ValidationIssue(
-                "content",
-                ".clang-tidy must not set WarningsAsErrors: '*' at this stage",
-            )
-        )
-    lower = clang_tidy.lower()
-    if "clang-analyzer" not in lower and "cppcoreguidelines" not in lower:
-        issues.append(
-            ValidationIssue(
-                "content",
-                ".clang-tidy should include clang-analyzer or cppcoreguidelines",
-            )
-        )
-
-
-def _validate_config_authority_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    validator_rel = "tools/governance/validate_config_authority.py"
-    if not (PROJECT_ROOT / validator_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing", f"missing config authority validator: {validator_rel}"
-            )
-        )
-
-    governance = _read_text("tools/governance/validate_governance.py", issues)
-    if governance is not None and "validate_config_authority" not in governance:
-        issues.append(
-            ValidationIssue(
-                "content",
-                "tools/governance/validate_governance.py must run config authority validation",
-            )
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/governance/config_policy.md",
-            (
-                "config authority",
-                "policy_no_magic_numbers",
-                "config/project/constants.json",
-            ),
-        ),
-        (
-            "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
-            ("docs/governance/config_policy.md", "validate_config_authority"),
-        ),
-        (
-            "docs/governance/review_checklist.md",
-            ("config-authority validator", "hardcoded constants"),
-        ),
-        (
-            "docs/governance/README.md",
-            ("config_policy", "validate_config_authority"),
-        ),
-    )
-    for rel, tokens in required_docs:
-        text = _read_text(rel, issues)
-        if text is None:
-            continue
-        lower = text.lower()
-        for token in tokens:
-            if token not in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} missing config authority governance token: {token}",
-                    )
-                )
-    return issues
-
-
-def _validate_utility_reuse_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    validator_rel = "tools/governance/validate_utility_reuse.py"
-    if not (PROJECT_ROOT / validator_rel).exists():
-        issues.append(
-            ValidationIssue(
-                "missing", f"missing utility reuse validator: {validator_rel}"
-            )
-        )
-
-    governance = _read_text("tools/governance/validate_governance.py", issues)
-    if governance is not None and "validate_utility_reuse" not in governance:
-        issues.append(
-            ValidationIssue(
-                "content",
-                "tools/governance/validate_governance.py must run utility reuse validation",
-            )
-        )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/architecture/utility_index.md",
-            ("required fields", "owner", "reuse rule", "migration relevance"),
-        ),
-        (
-            "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
-            (
-                "docs/architecture/utility_index.md",
-                "check_wheel_reuse_rules.py",
-                "check_dedup_dead_code_rules.py",
-                "validate_utility_reuse.py",
-            ),
-        ),
-        (
-            "docs/governance/codex_policy.md",
-            ("search", "helpers", "existing", "utility_index"),
-        ),
-        (
-            "docs/governance/review_checklist.md",
-            ("dependency / utility reuse", "no-reinvention", "validate_utility_reuse"),
-        ),
-        (
-            "docs/governance/README.md",
-            (
-                "utility_index",
-                "policy_no_reinventing_wheel",
-                "validate_utility_reuse",
-                "check_wheel_reuse_rules",
-                "check_dedup_dead_code_rules",
-            ),
-        ),
-    )
-    for rel, tokens in required_docs:
-        text = _read_text(rel, issues)
-        if text is None:
-            continue
-        lower = text.lower()
-        for token in tokens:
-            if token not in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} missing utility reuse governance token: {token}",
-                    )
-                )
-    return issues
-
-
 def _validate_workspace_bundle_governance() -> list[ValidationIssue]:
     from tools.governance import validate_workspace_bundle
 
@@ -3675,382 +2562,6 @@ def _validate_workspace_bundle_governance() -> list[ValidationIssue]:
         ValidationIssue(issue.kind, issue.message)
         for issue in validate_workspace_bundle.validate(PROJECT_ROOT)
     ]
-
-
-def _validate_technical_debt_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    required_paths = (
-        "docs/governance/workspace_bundle/technical_debt_policy.md",
-        "docs/governance/workspace_bundle/drift_protection_policy.md",
-        "docs/governance/technical_debt_register.md",
-        "tools/governance/validate_technical_debt.py",
-    )
-    for rel in required_paths:
-        if not (PROJECT_ROOT / rel).exists():
-            issues.append(
-                ValidationIssue("missing", f"missing technical debt path: {rel}")
-            )
-
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...] = (
-        (
-            "docs/governance/README.md",
-            (
-                "technical_debt_register.md",
-                "technical_debt_policy.md",
-                "drift_protection_policy.md",
-                "validate_technical_debt.py",
-            ),
-        ),
-        (
-            "docs/governance/review_checklist.md",
-            ("technical-debt delta", "advisory validator findings", "drift protection"),
-        ),
-        (
-            "docs/governance/workspace_bundle/MANIFEST.md",
-            ("technical_debt_policy.md", "drift_protection_policy.md"),
-        ),
-        (
-            "tools/governance/validate_governance.py",
-            ("validate_technical_debt",),
-        ),
-    )
-    for rel, tokens in required_docs:
-        text = _read_text(rel, issues)
-        if text is None:
-            continue
-        lower = text.lower()
-        for token in tokens:
-            if token not in lower:
-                issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} missing technical debt governance token: {token}",
-                    )
-                )
-
-    register = _read_text("docs/governance/technical_debt_register.md", issues)
-    if register is not None and "reusable workspace policy" in register.lower():
-        issues.append(
-            ValidationIssue(
-                "content",
-                "technical debt register must not present itself as reusable workspace policy",
-            )
-        )
-    return issues
-
-
-def _validate_required_governance_paths(
-    required_paths: tuple[str, ...], label: str
-) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    for rel in required_paths:
-        if not (PROJECT_ROOT / rel).exists():
-            issues.append(ValidationIssue("missing", f"missing {label} path: {rel}"))
-    return issues
-
-
-def _validate_governance_doc_tokens(
-    required_docs: tuple[tuple[str, tuple[str, ...]], ...],
-    label: str,
-    issues: list[ValidationIssue],
-) -> list[ValidationIssue]:
-    content_issues: list[ValidationIssue] = []
-    for rel, tokens in required_docs:
-        text = _read_text(rel, issues)
-        if text is None:
-            continue
-        lower = text.lower()
-        for token in tokens:
-            if token not in lower:
-                content_issues.append(
-                    ValidationIssue(
-                        "content",
-                        f"{rel} missing {label} governance token: {token}",
-                    )
-                )
-    return content_issues
-
-
-def _validate_drift_protection_map_uniqueness() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    map_text = _read_text("docs/governance/drift_protection_map.md", issues)
-    workspace_text = _read_text(
-        "docs/governance/workspace_bundle/drift_protection_policy.md", issues
-    )
-    if map_text is None or workspace_text is None:
-        return issues
-
-    map_body = map_text.lower()
-    workspace_body = workspace_text.lower()
-    duplicated_workspace_markers = (
-        "## general drift risks",
-        "## general drift-protection rules",
-        "## project-specific drift maps",
-    )
-    for marker in duplicated_workspace_markers:
-        if marker in map_body:
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    "docs/governance/drift_protection_map.md must not copy "
-                    f"workspace policy section {marker}",
-                )
-            )
-    if map_body == workspace_body:
-        issues.append(
-            ValidationIssue(
-                "content",
-                "project drift map must not duplicate workspace drift policy",
-            )
-        )
-    return issues
-
-
-def _validate_workspace_bundle_authority_transfer_separation() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    bundle_root = PROJECT_ROOT / "docs/governance/workspace_bundle"
-    if not bundle_root.exists():
-        return issues
-
-    for path in sorted(bundle_root.glob("*.md")):
-        text = path.read_text(encoding="utf-8").lower()
-        if "tet4d authority-transfer" in text or "transfer record" in text:
-            rel = path.relative_to(PROJECT_ROOT).as_posix()
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{rel} must not define tet4d authority-transfer records",
-                )
-            )
-    if (bundle_root / "authority_transfer_protocol.md").exists():
-        issues.append(
-            ValidationIssue(
-                "content",
-                "authority-transfer protocol must live outside workspace bundle",
-            )
-        )
-    return issues
-
-
-def _validate_workspace_review_template_neutrality() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    rel = "docs/governance/workspace_bundle/review_checklist_template.md"
-    text = _read_text(rel, issues)
-    if text is None:
-        return issues
-
-    forbidden_terms = (
-        "tet4d",
-        "python oracle",
-        "python semantic oracle",
-        "godot shell",
-        "w-slice",
-        "topology gameplay",
-        "config/project",
-    )
-    lower = text.lower()
-    for term in forbidden_terms:
-        if term in lower:
-            issues.append(
-                ValidationIssue(
-                    "content",
-                    f"{rel} contains project-specific forbidden term: {term}",
-                )
-            )
-    return issues
-
-
-def _validate_review_template_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    issues.extend(
-        _validate_required_governance_paths(
-            (
-                ".github/pull_request_template.md",
-                "docs/governance/review_checklist.md",
-                "docs/governance/workspace_bundle/review_checklist_template.md",
-            ),
-            "review-template",
-        )
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            (
-                (
-                    "docs/governance/README.md",
-                    (
-                        ".github/pull_request_template.md",
-                        "docs/governance/review_checklist.md",
-                        "docs/governance/workspace_bundle/review_checklist_template.md",
-                    ),
-                ),
-                (
-                    "docs/governance/review_checklist.md",
-                    (
-                        "workspace_bundle/review_checklist_template.md",
-                        "authority_map",
-                        "parity_protocol",
-                        "authority_transfer_protocol",
-                        "technical_debt_register",
-                        "drift_protection_map",
-                        "generated bundle",
-                        "staging discipline",
-                    ),
-                ),
-            ),
-            "review-template",
-            issues,
-        )
-    )
-
-    pr_template = _read_text(".github/pull_request_template.md", issues)
-    if pr_template is not None:
-        _append_missing_concepts(
-            rel=".github/pull_request_template.md",
-            label="PR template",
-            text=pr_template,
-            concept_groups=(
-                ("scope/summary", ("summary", "scope")),
-                ("unrelated dirty files", ("unrelated dirty files",)),
-                ("Python semantic authority", ("python semantic",)),
-                ("Godot/GDScript boundary", ("godot", "gdscript")),
-                ("C++/GDExtension provisional", ("provisional", "gdextension")),
-                ("authority-transfer protocol", ("authority-transfer",)),
-                ("utility reuse/no reinvention", ("utilities", "duplicate")),
-                ("config/constants authority", ("config/constants", "constants")),
-                ("generated files", ("generated",)),
-                ("technical debt", ("technical debt", "technical-debt")),
-                ("drift protection", ("drift protection",)),
-                ("validation commands", ("validation commands",)),
-                (
-                    "full verification",
-                    ("codex_mode=1 ./scripts/verify.sh",),
-                ),
-                ("staging discipline", ("git diff --cached --check", "staged diff")),
-            ),
-            issues=issues,
-        )
-
-    issues.extend(_validate_workspace_review_template_neutrality())
-    return issues
-
-
-def _validate_drift_protection_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    issues.extend(
-        _validate_required_governance_paths(
-            (
-                "docs/governance/workspace_bundle/drift_protection_policy.md",
-                "docs/governance/drift_protection_map.md",
-                "tools/governance/validate_drift_protection.py",
-            ),
-            "drift-protection",
-        )
-    )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            (
-                (
-                    "docs/governance/README.md",
-                    (
-                        "drift_protection_policy.md",
-                        "drift_protection_map.md",
-                        "validate_drift_protection.py",
-                    ),
-                ),
-                (
-                    "docs/governance/review_checklist.md",
-                    ("drift protection", "validate_governance.py", "generated outputs"),
-                ),
-                (
-                    "tools/governance/validate_governance.py",
-                    ("validate_drift_protection",),
-                ),
-                (
-                    "docs/governance/drift_protection_map.md",
-                    (
-                        "workspace_bundle/drift_protection_policy.md",
-                        "tet4d-specific",
-                        "governance routing drift",
-                        "authority drift",
-                        "config/generated drift",
-                    ),
-                ),
-            ),
-            "drift-protection",
-            issues,
-        )
-    )
-    issues.extend(_validate_drift_protection_map_uniqueness())
-    return issues
-
-
-def _validate_authority_transfer_governance() -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    issues.extend(
-        _validate_required_governance_paths(
-            (
-                "docs/architecture/authority_transfer_protocol.md",
-                "tools/governance/validate_authority_transfer.py",
-            ),
-            "authority-transfer",
-        )
-    )
-    authority_transfer_protocol = _read_text(
-        "docs/architecture/authority_transfer_protocol.md", issues
-    )
-    if authority_transfer_protocol is not None:
-        _append_missing_concepts(
-            rel="docs/architecture/authority_transfer_protocol.md",
-            label="authority transfer protocol",
-            text=authority_transfer_protocol,
-            concept_groups=(
-                ("candidate status", ("candidate",)),
-                ("blocked status", ("blocked",)),
-                ("evidence-only pilot", ("first subsystem parity pilot",)),
-                ("no transfer wording", ("evidence only", "must not be recorded")),
-            ),
-            issues=issues,
-        )
-    issues.extend(
-        _validate_governance_doc_tokens(
-            (
-                (
-                    "docs/governance/README.md",
-                    (
-                        "authority_transfer_protocol.md",
-                        "validate_authority_transfer.py",
-                    ),
-                ),
-                (
-                    "docs/architecture/authority_map.md",
-                    ("authority_transfer_protocol.md",),
-                ),
-                (
-                    "docs/architecture/parity_protocol.md",
-                    ("authority_transfer_protocol.md", "first_subsystem_parity_pilot"),
-                ),
-                (
-                    "docs/governance/drift_protection_map.md",
-                    (
-                        "authority_transfer_protocol.md",
-                        "validate_authority_transfer.py",
-                    ),
-                ),
-                (
-                    "tools/governance/validate_governance.py",
-                    ("validate_authority_transfer",),
-                ),
-                (
-                    "docs/governance/review_checklist.md",
-                    ("authority transfer", "transfer record", "fallback path"),
-                ),
-            ),
-            "authority-transfer",
-            issues,
-        )
-    )
-    issues.extend(_validate_workspace_bundle_authority_transfer_separation())
-    return issues
 
 
 def _validate_governance_routing_overlay() -> list[ValidationIssue]:
@@ -4061,23 +2572,9 @@ def _validate_governance_routing_overlay() -> list[ValidationIssue]:
     issues.extend(_validate_governance_local_paths())
     issues.extend(_validate_governance_secret_patterns())
     issues.extend(_validate_governance_authority_inversion())
-    issues.extend(_validate_native_cpp_safety_governance())
-    issues.extend(_validate_cpp_parity_protocol_governance())
-    issues.extend(_validate_parity_pilot_audit_governance())
-    issues.extend(_validate_second_parity_slice_candidate_selection())
-    issues.extend(_validate_parity_evidence_review_and_third_slice_selection())
-    issues.extend(_validate_trace_metadata_identity_digest_parity_governance())
-    issues.extend(_validate_topology_identifier_normalization_parity_governance())
-    issues.extend(_validate_parity_evidence_package_review_governance())
-    issues.extend(_validate_trace_schema_version_normalization_parity_governance())
-    issues.extend(_validate_godot_semantic_boundary_governance())
-    issues.extend(_validate_config_authority_governance())
-    issues.extend(_validate_utility_reuse_governance())
+    issues.extend(_validate_parity_dangerous_phrases())
+    issues.extend(_validate_parity_fixture_readmes())
     issues.extend(_validate_workspace_bundle_governance())
-    issues.extend(_validate_technical_debt_governance())
-    issues.extend(_validate_drift_protection_governance())
-    issues.extend(_validate_authority_transfer_governance())
-    issues.extend(_validate_review_template_governance())
     return issues
 
 
@@ -4223,10 +2720,10 @@ def _validate_codex_authority_model(
 def _validate_codex_routing_header(
     routing: dict[str, object], issues: list[ValidationIssue]
 ) -> None:
-    if routing.get("schema_version") != 1:
+    if routing.get("schema_version") != 2:
         issues.append(
             ValidationIssue(
-                "schema", f"{POLICY_PACK_REL}.codex_routing.schema_version must equal 1"
+                "schema", f"{POLICY_PACK_REL}.codex_routing.schema_version must equal 2"
             )
         )
     _append_exact_identifier_set_issues(
@@ -4243,17 +2740,17 @@ def _validate_codex_routing_header(
     )
 
 
-def _validate_codex_task_authority_keys(
+def _validate_codex_route_authority_keys(
     *,
-    task: dict[str, object],
+    route: dict[str, object],
     field: str,
     known_authority_keys: set[str],
     issues: list[ValidationIssue],
 ) -> None:
-    if "authority_keys" not in task:
+    if "authority_keys" not in route:
         return
     authority_field = f"{field}.authority_keys"
-    values = _codex_string_list(task.get("authority_keys"))
+    values = _codex_string_list(route.get("authority_keys"))
     if values is None or not values:
         issues.append(
             ValidationIssue(
@@ -4275,31 +2772,31 @@ def _validate_codex_task_authority_keys(
             )
 
 
-def _validate_codex_task_dispatch_paths(
+def _validate_codex_route_dispatch_paths(
     *,
-    task: dict[str, object],
+    route: dict[str, object],
     field: str,
     tracked_paths: set[str] | None,
     issues: list[ValidationIssue],
 ) -> None:
-    if "dispatch_paths" not in task:
+    if "dispatch_paths" not in route:
         return
     _validate_optional_codex_path_list(
         field=f"{field}.dispatch_paths",
-        raw=task.get("dispatch_paths"),
+        raw=route.get("dispatch_paths"),
         tracked_paths=tracked_paths,
         issues=issues,
     )
 
 
-def _validate_codex_task_typical_requirements(
+def _validate_codex_route_typical_requirements(
     *,
-    task: dict[str, object],
+    route: dict[str, object],
     field: str,
     issues: list[ValidationIssue],
 ) -> None:
     typical_field = f"{field}.typical_verification_requirements"
-    values = _codex_string_list(task.get("typical_verification_requirements"))
+    values = _codex_string_list(route.get("typical_verification_requirements"))
     if values is None or not values:
         issues.append(
             ValidationIssue("schema", f"{typical_field} must be a non-empty list[str]")
@@ -4319,76 +2816,76 @@ def _validate_codex_task_typical_requirements(
             )
 
 
-def _validate_codex_task_entry(
+def _validate_codex_route_entry(
     *,
-    task_id: str,
-    task: object,
+    route_id: str,
+    route: object,
     known_authority_keys: set[str],
     tracked_paths: set[str] | None,
     issues: list[ValidationIssue],
 ) -> None:
-    field = f"{POLICY_PACK_REL}.codex_routing.task_types.{task_id}"
-    if not isinstance(task, dict):
+    field = f"{POLICY_PACK_REL}.codex_routing.routes.{route_id}"
+    if not isinstance(route, dict):
         issues.append(ValidationIssue("schema", f"{field} must be an object"))
         return
-    if "authority_keys" not in task and "dispatch_paths" not in task:
+    if "authority_keys" not in route and "dispatch_paths" not in route:
         issues.append(
             ValidationIssue(
                 "schema", f"{field} must define authority_keys or dispatch_paths"
             )
         )
-    _validate_codex_task_authority_keys(
-        task=task,
+    _validate_codex_route_authority_keys(
+        route=route,
         field=field,
         known_authority_keys=known_authority_keys,
         issues=issues,
     )
-    _validate_codex_task_dispatch_paths(
-        task=task,
+    _validate_codex_route_dispatch_paths(
+        route=route,
         field=field,
         tracked_paths=tracked_paths,
         issues=issues,
     )
-    _validate_codex_task_typical_requirements(task=task, field=field, issues=issues)
+    _validate_codex_route_typical_requirements(route=route, field=field, issues=issues)
 
 
-def _validate_codex_task_types(
+def _validate_codex_routes(
     *,
     routing: dict[str, object],
     authority_model: dict[str, object],
     tracked_paths: set[str] | None,
     issues: list[ValidationIssue],
 ) -> None:
-    task_types = routing.get("task_types")
-    if not isinstance(task_types, dict):
+    routes = routing.get("routes")
+    if not isinstance(routes, dict):
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.codex_routing.task_types must be an object",
+                f"{POLICY_PACK_REL}.codex_routing.routes must be an object",
             )
         )
         return
-    actual_task_types = set(task_types)
-    missing = sorted(SUPPORTED_CODEX_TASK_TYPES - actual_task_types)
-    unknown = sorted(actual_task_types - SUPPORTED_CODEX_TASK_TYPES)
+    actual_routes = set(routes)
+    missing = sorted(SUPPORTED_CODEX_ROUTES - actual_routes)
+    unknown = sorted(actual_routes - SUPPORTED_CODEX_ROUTES)
     if missing:
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.codex_routing.task_types is missing identifiers: {', '.join(missing)}",
+                f"{POLICY_PACK_REL}.codex_routing.routes is missing identifiers: {', '.join(missing)}",
             )
         )
     if unknown:
         issues.append(
             ValidationIssue(
                 "schema",
-                f"{POLICY_PACK_REL}.codex_routing.task_types contains unknown identifiers: {', '.join(unknown)}",
+                f"{POLICY_PACK_REL}.codex_routing.routes contains unknown identifiers: {', '.join(unknown)}",
             )
         )
-    for task_id in sorted(actual_task_types & SUPPORTED_CODEX_TASK_TYPES):
-        _validate_codex_task_entry(
-            task_id=task_id,
-            task=task_types[task_id],
+    for route_id in sorted(actual_routes & SUPPORTED_CODEX_ROUTES):
+        _validate_codex_route_entry(
+            route_id=route_id,
+            route=routes[route_id],
             known_authority_keys=set(authority_model),
             tracked_paths=tracked_paths,
             issues=issues,
@@ -4412,7 +2909,7 @@ def _validate_codex_routing_model() -> list[ValidationIssue]:
         )
         return issues
     _validate_codex_routing_header(routing, issues)
-    _validate_codex_task_types(
+    _validate_codex_routes(
         routing=routing,
         authority_model=authority_model,
         tracked_paths=tracked_paths,
@@ -4432,7 +2929,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_content_rules(manifest))
     issues.extend(_validate_backlog_id_uniqueness())
     issues.extend(_validate_governance_directives())
-    issues.extend(_validate_policy_index_sync())
+    issues.extend(_validate_canonical_governance_sync())
     issues.extend(_validate_policy_manifest_string_safety())
     issues.extend(_validate_deprecated_authorities())
     issues.extend(_validate_menu_control_typing())

@@ -1,5 +1,7 @@
 # General Programming Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 ## Scope
 
 This policy applies to source code, scripts, tests, validators, build helpers,

@@ -1,5 +1,7 @@
 # Validator Design Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 Structural errors should fail.
 
 Suspicious findings should default to advisory unless strict mode is enabled.

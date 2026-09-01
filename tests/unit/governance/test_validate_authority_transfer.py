@@ -127,7 +127,8 @@ def _valid_fixture(
 ) -> None:
     _write(
         root / "AGENTS.md",
-        "Python is reference authority for inherited behaviour.\n",
+        "Python is reference authority for inherited behaviour. "
+        "docs/architecture/authority_transfer_protocol.md\n",
     )
     _write(root / "godot" / "AGENTS.md", "Godot product shell.\n")
     _write(root / "native" / "AGENTS.md", "Native provisional.\n")
@@ -152,37 +153,24 @@ def _valid_fixture(
         "docs/architecture/authority_transfer_protocol.md\n",
     )
     _write(
-        root / "docs" / "governance" / "godot_cpp_policy.md",
-        "GDScript must not duplicate inherited semantic truth. "
+        root / "docs" / "governance" / "NATIVE_AND_PLATFORM.md",
+        "Godot must not duplicate inherited semantic truth. "
+        "Inherited native authority is provisional and parity-gated. "
         "New authority may be established. "
         "See docs/architecture/authority_transfer_protocol.md.\n",
     )
     _write(
-        root / "docs" / "governance" / "cpp_safety_policy.md",
-        "Inherited C++ authority is provisional and parity-gated. "
-        "New authority may be established. "
-        "See docs/architecture/authority_transfer_protocol.md.\n",
-    )
-    _write(root / "docs" / "governance" / "testing_policy.md", "Testing.\n")
-    _write(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        "authority_transfer_protocol.md validate_authority_transfer.py\n",
+        root / "docs" / "governance" / "VERIFICATION.md",
+        "parity evidence conformance evidence fallback path known exclusions\n",
     )
     _write(
-        root / "docs" / "governance" / "README.md",
-        "docs/architecture/authority_transfer_protocol.md\n"
-        "tools/governance/validate_authority_transfer.py\n",
-    )
-    _write(
-        root / "docs" / "governance" / "review_checklist.md",
-        "authority transfer authority establishment parity evidence authority map "
-        "fallback path known exclusions normative contract conformance evidence\n",
+        root / "docs" / "governance" / "CHANGE_GOVERNANCE.md",
+        "authority transfer authority establishment authority map normative contract\n",
     )
     for rel in (
         "tools/governance/validate_authority_transfer.py",
         "tools/governance/validate_governance.py",
         "tools/governance/validate_project_contracts.py",
-        "tools/governance/validate_drift_protection.py",
     ):
         _write(root / rel, "def main():\n    return 0\n")
 
@@ -361,11 +349,12 @@ def test_parity_protocol_missing_protocol_link_fails(tmp_path: Path) -> None:
     )
 
 
-def test_godot_policy_missing_establishment_route_fails(tmp_path: Path) -> None:
+def test_native_policy_missing_establishment_route_fails(tmp_path: Path) -> None:
     _valid_fixture(tmp_path)
     _write(
-        tmp_path / "docs" / "governance" / "godot_cpp_policy.md",
-        "GDScript must not duplicate inherited semantic truth. "
+        tmp_path / "docs" / "governance" / "NATIVE_AND_PLATFORM.md",
+        "Godot must not duplicate inherited semantic truth. "
+        "Inherited native authority is provisional and parity-gated. "
         "See docs/architecture/authority_transfer_protocol.md.\n",
     )
 
@@ -375,28 +364,31 @@ def test_godot_policy_missing_establishment_route_fails(tmp_path: Path) -> None:
     )
 
 
-def test_cpp_policy_missing_establishment_route_fails(tmp_path: Path) -> None:
+def test_native_policy_missing_provisional_or_parity_gate_fails(tmp_path: Path) -> None:
     _valid_fixture(tmp_path)
     _write(
-        tmp_path / "docs" / "governance" / "cpp_safety_policy.md",
-        "C++ authority is provisional and parity-gated. "
+        tmp_path / "docs" / "governance" / "NATIVE_AND_PLATFORM.md",
+        "Godot must not duplicate inherited semantic truth. "
+        "New authority may be established. "
         "See docs/architecture/authority_transfer_protocol.md.\n",
     )
 
     assert any(
-        "define new authority establishment" in failure
-        for failure in _failures(tmp_path)
+        "provisional or parity-gated" in failure for failure in _failures(tmp_path)
     )
 
 
-def test_review_checklist_missing_establishment_concepts_fails(
+def test_change_and_verification_missing_establishment_concepts_fails(
     tmp_path: Path,
 ) -> None:
     _valid_fixture(tmp_path)
     _write(
-        tmp_path / "docs" / "governance" / "review_checklist.md",
-        "authority transfer parity evidence authority map fallback path "
-        "known exclusions\n",
+        tmp_path / "docs" / "governance" / "CHANGE_GOVERNANCE.md",
+        "authority transfer authority map\n",
+    )
+    _write(
+        tmp_path / "docs" / "governance" / "VERIFICATION.md",
+        "parity evidence fallback path known exclusions\n",
     )
 
     failures = _failures(tmp_path)

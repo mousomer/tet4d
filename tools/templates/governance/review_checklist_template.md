@@ -1,5 +1,7 @@
 # Review Checklist Template
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 ## General programming
 
 - [ ] Existing implementations were searched.

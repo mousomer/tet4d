@@ -9,8 +9,9 @@ Rationale: keeping ownership and licensing simple during beta enables future com
 
 ## Policies
 
-- [No Reinventing the Wheel](docs/policies/POLICY_NO_REINVENTING_WHEEL.md)
-- [String Sanitization](docs/policies/POLICY_STRING_SANITATION.md)
-- [No Magic Numbers](docs/policies/POLICY_NO_MAGIC_NUMBERS.md)
-- [Formatting and Line Length](docs/policies/POLICY_FORMATTING.md)
-- [CI Compliance Runbook](docs/policies/CI_COMPLIANCE_RUNBOOK.md)
+- [Engineering](docs/governance/ENGINEERING.md)
+- [Verification](docs/governance/VERIFICATION.md)
+- [Security and Sanitation](docs/governance/SECURITY_AND_SANITATION.md)
+- [Config and Generated Data](docs/governance/CONFIG_AND_GENERATED_DATA.md)
+- [Native and Platform](docs/governance/NATIVE_AND_PLATFORM.md)
+- [Change Governance](docs/governance/CHANGE_GOVERNANCE.md)

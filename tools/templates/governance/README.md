@@ -1,7 +1,10 @@
 # Workspace Governance Bundle
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 This directory contains reusable programming-governance guidance intended to be
-copied into other projects.
+copied and customized in other projects. Current tet4d governance is routed by
+the root `AGENTS.md`; no file in this directory owns or routes tet4d work.
 
 It defines general engineering rules. It does not define project-specific
 authority, domain semantics, build commands, config paths, or migration plans.

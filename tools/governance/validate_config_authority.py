@@ -51,12 +51,7 @@ VALID_SUPPRESSIONS = {
     "external-api",
     "schema-example",
 }
-REQUIRED_POLICY_DOCS = (
-    "docs/governance/config_policy.md",
-    "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
-    "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
-    "docs/policies/INDEX.md",
-)
+REQUIRED_POLICY_DOCS = ("docs/governance/CONFIG_AND_GENERATED_DATA.md",)
 STANDARD_CONFIG_REFS = (
     "config/project/policy_pack.json",
     "config/project/constants.json",
@@ -304,54 +299,43 @@ def validate_policy_links(root: Path = ROOT) -> list[Finding]:
     findings: list[Finding] = []
     docs = {rel: _read_text(root, rel, findings) for rel in REQUIRED_POLICY_DOCS}
 
-    config_policy = docs.get("docs/governance/config_policy.md", "")
+    config_policy = docs.get("docs/governance/CONFIG_AND_GENERATED_DATA.md", "")
     lower_config = config_policy.lower()
     for token in (
-        "config authority",
-        "docs/policies/policy_no_magic_numbers.md",
+        "canonical owner",
         "config/project/constants.json",
         "config/gameplay/tuning.json",
         "config/menu/defaults.json",
+        "tools/governance/generate_configuration_reference.py",
+        "tools/governance/validate_config_authority.py",
     ):
         if token not in lower_config:
             findings.append(
                 Finding(
-                    root / "docs/governance/config_policy.md",
+                    root / "docs/governance/CONFIG_AND_GENERATED_DATA.md",
                     1,
                     "error",
                     f"config policy missing standard config authority reference: {token}",
                 )
             )
-    if "python configuration remains authoritative" not in lower_config:
+    if "python config remains authoritative" not in lower_config:
         findings.append(
             Finding(
-                root / "docs/governance/config_policy.md",
+                root / "docs/governance/CONFIG_AND_GENERATED_DATA.md",
                 1,
                 "error",
                 "config policy must preserve Python configuration authority",
             )
         )
 
-    no_magic = docs.get("docs/policies/POLICY_NO_MAGIC_NUMBERS.md", "").lower()
-    if "docs/governance/config_policy.md" not in no_magic:
-        findings.append(
-            Finding(
-                root / "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
-                1,
-                "error",
-                "no-magic-number policy must refer to governance config policy",
-            )
-        )
-
-    config_docs = docs.get("docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md", "")
     for token in STANDARD_CONFIG_REFS:
-        if token not in config_docs:
+        if token not in config_policy:
             findings.append(
                 Finding(
-                    root / "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
+                    root / "docs/governance/CONFIG_AND_GENERATED_DATA.md",
                     1,
                     "error",
-                    f"configuration documentation policy missing authority reference: {token}",
+                    f"canonical config governance missing authority reference: {token}",
                 )
             )
 

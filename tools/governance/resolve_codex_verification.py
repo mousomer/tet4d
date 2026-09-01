@@ -39,7 +39,7 @@ class Claim:
 
 @dataclass(frozen=True)
 class Resolution:
-    task_type: str
+    routes: tuple[str, ...]
     workflow_modifiers: tuple[str, ...]
     repository_changed: bool
     affected_layers: tuple[str, ...]
@@ -57,8 +57,8 @@ class Resolution:
 
     def to_dict(self) -> dict[str, object]:
         return {
-            "schema_version": 1,
-            "task_type": self.task_type,
+            "schema_version": 2,
+            "routes": list(self.routes),
             "workflow_modifiers": list(self.workflow_modifiers),
             "repository_changed": self.repository_changed,
             "affected_layers": list(self.affected_layers),
@@ -155,17 +155,24 @@ def _routing_identifiers(routing: dict[str, object], key: str) -> tuple[str, ...
     )
 
 
-def _task_spec(routing: dict[str, object], task_type: str) -> dict[str, object]:
-    task_types = routing.get("task_types")
-    if not isinstance(task_types, dict):
-        raise ResolutionError("codex_routing.task_types must be an object")
-    task = task_types.get(task_type)
-    if not isinstance(task, dict):
-        known = ", ".join(sorted(task_types))
+def _route_specs(
+    routing: dict[str, object], routes: tuple[str, ...]
+) -> tuple[dict[str, object], ...]:
+    route_specs = routing.get("routes")
+    if not isinstance(route_specs, dict):
+        raise ResolutionError("codex_routing.routes must be an object")
+    unknown = sorted(set(routes) - set(route_specs))
+    if unknown:
         raise ResolutionError(
-            f"unknown task_type {task_type!r}; expected one of: {known}"
+            f"routes contains unknown identifiers: {', '.join(unknown)}"
         )
-    return task
+    specs: list[dict[str, object]] = []
+    for route in routes:
+        spec = route_specs[route]
+        if not isinstance(spec, dict):
+            raise ResolutionError(f"codex_routing.routes.{route} must be an object")
+        specs.append(spec)
+    return tuple(specs)
 
 
 def _validate_known(
@@ -229,24 +236,31 @@ def _omissions(
     return omissions
 
 
-def _authorities(policy: dict[str, object], task: dict[str, object]) -> tuple[str, ...]:
+def _authorities(
+    policy: dict[str, object], route_specs: tuple[dict[str, object], ...]
+) -> tuple[str, ...]:
     authority_model = policy.get("authority_model")
     if not isinstance(authority_model, dict):
         raise ResolutionError("policy pack missing authority_model object")
     resolved: list[str] = []
-    authority_keys = task.get("authority_keys", [])
-    if not isinstance(authority_keys, list):
-        raise ResolutionError("task authority_keys must be a list")
-    for key in authority_keys:
-        if not isinstance(key, str) or not isinstance(authority_model.get(key), str):
-            raise ResolutionError(f"task references invalid authority key: {key!r}")
-        resolved.append(str(authority_model[key]))
-    dispatch_paths = task.get("dispatch_paths", [])
-    if not isinstance(dispatch_paths, list) or not all(
-        isinstance(path, str) for path in dispatch_paths
-    ):
-        raise ResolutionError("task dispatch_paths must be a list[str]")
-    resolved.extend(dispatch_paths)
+    for spec in route_specs:
+        authority_keys = spec.get("authority_keys", [])
+        if not isinstance(authority_keys, list):
+            raise ResolutionError("route authority_keys must be a list")
+        for key in authority_keys:
+            if not isinstance(key, str) or not isinstance(
+                authority_model.get(key), str
+            ):
+                raise ResolutionError(
+                    f"route references invalid authority key: {key!r}"
+                )
+            resolved.append(str(authority_model[key]))
+        dispatch_paths = spec.get("dispatch_paths", [])
+        if not isinstance(dispatch_paths, list) or not all(
+            isinstance(path, str) for path in dispatch_paths
+        ):
+            raise ResolutionError("route dispatch_paths must be a list[str]")
+        resolved.extend(dispatch_paths)
     return tuple(dict.fromkeys(resolved))
 
 
@@ -266,7 +280,7 @@ def _scope_matrix(
 
 def _review_only_resolution(
     *,
-    task_type: str,
+    routes: tuple[str, ...],
     modifiers: tuple[str, ...],
     affected_layers: tuple[str, ...],
     claims: tuple[Claim, ...],
@@ -301,7 +315,7 @@ def _review_only_resolution(
         for requirement in typical
     )
     return Resolution(
-        task_type=task_type,
+        routes=routes,
         workflow_modifiers=modifiers,
         repository_changed=False,
         affected_layers=affected_layers,
@@ -330,7 +344,7 @@ def _review_only_resolution(
 class _ResolutionContext:
     policy: dict[str, object]
     requirement_order: tuple[str, ...]
-    task_type: str
+    routes: tuple[str, ...]
     modifiers: tuple[str, ...]
     affected_layers: tuple[str, ...]
     claims: tuple[Claim, ...]
@@ -342,10 +356,16 @@ def _build_resolution_context(
     request: dict[str, object], policy_payload: dict[str, object]
 ) -> _ResolutionContext:
     routing = _routing_payload(policy_payload)
+    route_specs_raw = routing.get("routes")
+    if not isinstance(route_specs_raw, dict):
+        raise ResolutionError("codex_routing.routes must be an object")
+    route_order = tuple(route_specs_raw)
     modifier_order = _routing_identifiers(routing, "workflow_modifiers")
     requirement_order = _routing_identifiers(routing, "verification_requirements")
-    task_type = _non_empty_string(request.get("task_type"), field="task_type")
-    task = _task_spec(routing, task_type)
+    routes = _optional_string_list(request.get("routes"), field="routes")
+    _validate_known(routes, known=route_order, field="routes")
+    routes = _ordered_subset(set(routes), route_order)
+    route_specs = _route_specs(routing, routes)
 
     modifiers = _optional_string_list(
         request.get("workflow_modifiers"), field="workflow_modifiers"
@@ -363,21 +383,27 @@ def _build_resolution_context(
         )
 
     claims = _claims(request.get("claims", []), known_requirements=requirement_order)
-    typical = _string_list(
-        task.get("typical_verification_requirements"),
-        field=f"codex_routing.task_types.{task_type}.typical_verification_requirements",
-        allow_empty=False,
-    )
-    _validate_known(typical, known=requirement_order, field="typical requirements")
+    typical_set: set[str] = set()
+    for route, spec in zip(routes, route_specs, strict=True):
+        route_typical = _string_list(
+            spec.get("typical_verification_requirements"),
+            field=f"codex_routing.routes.{route}.typical_verification_requirements",
+            allow_empty=False,
+        )
+        _validate_known(
+            route_typical, known=requirement_order, field="typical requirements"
+        )
+        typical_set.update(route_typical)
+    typical = _ordered_subset(typical_set, requirement_order)
     return _ResolutionContext(
         policy=policy_payload,
         requirement_order=requirement_order,
-        task_type=task_type,
+        routes=routes,
         modifiers=modifiers,
         affected_layers=affected_layers,
         claims=claims,
         typical=typical,
-        authorities=_authorities(policy_payload, task),
+        authorities=_authorities(policy_payload, route_specs),
     )
 
 
@@ -443,7 +469,7 @@ def _resolve_changed_request(
     )
     requirements = _changed_requirements(context, request, omissions)
     return Resolution(
-        task_type=context.task_type,
+        routes=context.routes,
         workflow_modifiers=context.modifiers,
         repository_changed=True,
         affected_layers=context.affected_layers,
@@ -496,7 +522,7 @@ def resolve_request(
     context = _build_resolution_context(request, policy_payload)
     if "review_only" in context.modifiers:
         return _review_only_resolution(
-            task_type=context.task_type,
+            routes=context.routes,
             modifiers=context.modifiers,
             affected_layers=context.affected_layers,
             claims=context.claims,
@@ -515,8 +541,9 @@ def render_markdown(resolution: Resolution) -> str:
     modifiers = ", ".join(resolution.workflow_modifiers) or "none"
     layers = ", ".join(resolution.affected_layers) or "none"
     requirements = ", ".join(resolution.verification_requirements) or "none"
+    routes = ", ".join(resolution.routes) or "none"
     lines = [
-        f"Task type: `{resolution.task_type}`",
+        f"Routes: {routes}",
         f"Workflow modifiers: {modifiers}",
         f"Repository changed: {'yes' if resolution.repository_changed else 'no'}",
         f"Affected layers: {layers}",

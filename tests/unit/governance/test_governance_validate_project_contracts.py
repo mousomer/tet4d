@@ -19,7 +19,7 @@ def _write_text(path: Path, content: str, *, append: bool = False) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def test_policy_index_sync_detects_missing_unified_contract_token(
+def test_canonical_governance_sync_detects_missing_owner_token(
     tmp_path: Path, monkeypatch
 ) -> None:
     policy_pack_path = tmp_path / "config" / "project" / "policy_pack.json"
@@ -27,30 +27,25 @@ def test_policy_index_sync_detects_missing_unified_contract_token(
         policy_pack_path,
         {
             "governance": {
-                "contracts": {
-                    "policy_pack": "config/project/policy_pack.json",
-                    "secret_scan": "config/project/policy/manifests/secret_scan.json",
+                "canonical_governance_contract": {
+                    "required_tokens": ["docs/governance/VERIFICATION.md"]
                 }
             }
         },
     )
-    index_path = tmp_path / "docs" / "policies" / "INDEX.md"
-    index_path.parent.mkdir(parents=True, exist_ok=True)
-    index_path.write_text(
-        "docs/policies/CI_COMPLIANCE_RUNBOOK.md\n",
-        encoding="utf-8",
-    )
+    dispatch_path = tmp_path / "AGENTS.md"
+    _write_text(dispatch_path, "docs/governance/ENGINEERING.md\n")
 
     monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack_path)
-    monkeypatch.setattr(contracts, "POLICY_INDEX_PATH", index_path)
+    monkeypatch.setattr(contracts, "GOVERNANCE_DISPATCH_PATH", dispatch_path)
 
-    issues = contracts._validate_policy_index_sync()
+    issues = contracts._validate_canonical_governance_sync()
 
     assert issues
-    assert any("policy_pack.json" in issue.message for issue in issues)
+    assert any("VERIFICATION.md" in issue.message for issue in issues)
 
 
-def test_policy_index_sync_reads_required_tokens_from_policy_pack(
+def test_canonical_governance_sync_reads_required_tokens_from_policy_pack(
     tmp_path: Path, monkeypatch
 ) -> None:
     policy_pack_path = tmp_path / "config" / "project" / "policy_pack.json"
@@ -58,22 +53,21 @@ def test_policy_index_sync_reads_required_tokens_from_policy_pack(
         policy_pack_path,
         {
             "governance": {
-                "policy_index_contract": {
-                    "required_tokens": ["docs/policies/LOCAL_POLICY.md"]
-                },
-                "contracts": {},
+                "canonical_governance_contract": {
+                    "required_tokens": ["docs/governance/LOCAL_OWNER.md"]
+                }
             }
         },
     )
-    index_path = tmp_path / "docs" / "policies" / "INDEX.md"
-    _write_text(index_path, "config/project/policy_pack.json\n")
+    dispatch_path = tmp_path / "AGENTS.md"
+    _write_text(dispatch_path, "docs/governance/ENGINEERING.md\n")
 
     monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack_path)
-    monkeypatch.setattr(contracts, "POLICY_INDEX_PATH", index_path)
+    monkeypatch.setattr(contracts, "GOVERNANCE_DISPATCH_PATH", dispatch_path)
 
-    issues = contracts._validate_policy_index_sync()
+    issues = contracts._validate_canonical_governance_sync()
 
-    assert any("docs/policies/LOCAL_POLICY.md" in issue.message for issue in issues)
+    assert any("docs/governance/LOCAL_OWNER.md" in issue.message for issue in issues)
 
 
 def test_policy_manifest_string_safety_detects_path_like_literals(
@@ -131,7 +125,7 @@ def test_policy_manifest_string_safety_allows_clean_manifests(
 
 
 def test_required_paths_detect_untracked_file(tmp_path: Path, monkeypatch) -> None:
-    rel = "docs/WORKFLOW_CODEX.md"
+    rel = "docs/governance/ENGINEERING.md"
     workflow_doc = tmp_path / rel
     workflow_doc.parent.mkdir(parents=True, exist_ok=True)
     workflow_doc.write_text("workflow", encoding="utf-8")
@@ -150,7 +144,7 @@ def test_required_paths_detect_untracked_file(tmp_path: Path, monkeypatch) -> No
 
 
 def test_required_paths_accept_git_tracked_file(tmp_path: Path, monkeypatch) -> None:
-    rel = "docs/WORKFLOW_CODEX.md"
+    rel = "docs/governance/ENGINEERING.md"
     workflow_doc = tmp_path / rel
     workflow_doc.parent.mkdir(parents=True, exist_ok=True)
     workflow_doc.write_text("workflow", encoding="utf-8")
@@ -165,517 +159,45 @@ def test_required_paths_accept_git_tracked_file(tmp_path: Path, monkeypatch) -> 
     assert issues == []
 
 
-def _write_minimal_cpp_safety_policy(root: Path) -> None:
-    _write_text(
-        root / "docs" / "governance" / "cpp_safety_policy.md",
-        "# C++ Safety Policy\nPython remains the semantic oracle.\nUse RAII.\nNo raw owning pointers.\nNo naked new or delete.\nDocument the GDExtension boundary.\nRequire parity evidence.\nUpdate the authority map.",
-    )
-
-
-def _write_minimal_native_tooling_ci_policy(root: Path) -> None:
-    _write_text(
-        root / "docs" / "governance" / "native_tooling_ci_policy.md",
-        "# Native Tooling CI Policy\nLocal advisory mode skips unavailable tools.\nLocal strict mode uses TET4D_STRICT_NATIVE_TOOLS.\nCI strict mode uses the same strict checks.\nclang-format and clang-tidy are native tooling gates.\ncompile_commands.json is required for clang-tidy.\nPython remains the semantic oracle.\nSee docs/architecture/authority_transfer_protocol.md.\nSee docs/governance/technical_debt_register.md and TD-0004.",
-    )
-
-
-def _write_minimal_native_tooling_governance(root: Path) -> None:
-    _write_text(
-        root / "tools" / "governance" / "validate_native_cpp_tooling.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_native_cpp_tooling\n",
-    )
-
-
-def _write_minimal_parity_governance(root: Path) -> None:
-    _write_text(
-        root / "AGENTS.md",
-        "Python semantic oracle. Godot. C++. Parity.\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
-    )
-    _write_text(root / "docs" / "WORKFLOW_CODEX.md", "Workflow.\n")
-    _write_text(root / "godot" / "AGENTS.md", "Godot UI only.\n")
-    _write_text(root / "native" / "AGENTS.md", "Native C++ only.\n")
-    _write_text(
-        root / "docs" / "architecture" / "parity_protocol.md",
-        "# Parity Protocol\nPython remains the semantic oracle.\nC++/GDExtension implementations require golden evidence.\nComparison modes define exact and tolerance comparisons.\nDisagreement rules favor Python.\nFixture location includes migration/golden_traces.\nAuthority transfer updates the authority map.\nFirst subsystem parity pilot stays evidence only.\nPilot authority routes through docs/architecture/first_subsystem_parity_pilot.md.\nSee docs/architecture/parity_pilot_audit_and_promotion_gates.md before a second parity slice.\nStage 18 may only implement docs/architecture/second_parity_slice_candidate_selection.md.\nCandidate selection does not transfer authority.\nStage 19 evidence review and third-slice selection live in docs/architecture/parity_evidence_review_and_third_slice_selection.md.",
-    )
-    _write_text(
-        root / "docs" / "architecture" / "authority_map.md",
-        "See docs/architecture/parity_protocol.md. "
-        "Authority transfer is subsystem-specific. "
-        "The parity evidence review and third-slice candidate selection is provisional parity-planning work for topology identifier normalization only; it does not change authority. "
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "testing_policy.md",
-        "## C++ / Python parity\nPython oracle required. "
-        "Visual Godot tests are not substitutes.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "godot_cpp_policy.md",
-        "See docs/architecture/parity_protocol.md. "
-        "C++ remains provisional until the authority map records transfer.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "## Parity / authority transfer\n"
-        "- Python oracle identified.\n"
-        "- Godot visual checks are not semantic parity.\n"
-        "- First parity pilot evidence was documented as process-only.\n"
-        "- The parity evidence review and third-slice selection doc was checked.\n"
-        "- docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "- Stage 19 records the reviewed evidence, chosen candidate, and Stage 20 boundary.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        "docs/architecture/parity_protocol.md\n"
-        "docs/architecture/first_subsystem_parity_pilot.md\n"
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "Testing/parity\n",
-    )
-    _write_text(
-        root / "docs" / "DOCUMENTATION_MAP.md",
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "codex_policy.md",
-        "Parity evidence review and third-slice selection tasks must also report the reviewed evidence, chosen candidate, explicit exclusions, Stage 20 boundary, authority boundary, routing, and validation.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        "docs/architecture/authority_map.md\n"
-        "docs/architecture/parity_protocol.md\n"
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/trace_metadata_identity_digest_parity.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "docs/governance/README.md\n"
-        "docs/governance/review_checklist.md\n"
-        "docs/DOCUMENTATION_MAP.md\n"
-        "AGENTS.md\n"
-        "native/AGENTS.md\n",
-    )
-    _write_text(
-        root / "docs" / "architecture" / "first_subsystem_parity_pilot.md",
-        "First subsystem parity pilot stays evidence only.\n",
-    )
-
-
-def _write_minimal_parity_pilot_audit_governance(root: Path) -> None:
-    _write_text(
-        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
-        "# Parity Pilot Audit and Promotion Gates\nPython remains the semantic oracle.\nThis evidence does not transfer authority.\nPromotion gates are required before a second parity slice.\nAllowed: coordinate, topology identifier, trace metadata, dimension label.\nForbidden: full topology movement, rotation semantics, endgame physics.\nCurrent harness path tools/parity/first_subsystem_parity_pilot.py is accepted for the first pilot.\nDefault behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.\nSelected candidate docs/architecture/second_parity_slice_candidate_selection.md satisfies promotion gates.\ndocs/architecture/parity_evidence_review_and_third_slice_selection.md routes the Stage 19 review.",
-    )
-    _write_text(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "selected candidate\n"
-        "forbidden second-slice areas\n"
-        "tools/parity/first_subsystem_parity_pilot.py\n"
-        "tests/unit/migration/test_first_subsystem_parity_pilot.py\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "first-pilot audit and promotion gates\n"
-        "strict/default parity behavior\n"
-        "second parity slice\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "selected candidate\nStage 18\nauthority transfer\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "authority_transfer_protocol.md",
-        "parity_pilot_audit_and_promotion_gates not transfer records\n",
-    )
-    _write_text(
-        root / "docs" / "DOCUMENTATION_MAP.md",
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
-    )
-    _write_text(
-        root / "AGENTS.md",
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "second parity slice requires promotion-gate compliance\n",
-    )
-    _write_text(
-        root / "native" / "AGENTS.md",
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "provisional evidence\n"
-        "strict parity behavior\n",
-    )
-
-
-def _write_minimal_second_parity_selection_governance(root: Path) -> None:
-    _write_text(
-        root / "docs" / "architecture" / "second_parity_slice_candidate_selection.md",
-        "# Second Parity Slice Candidate Selection\nChosen candidate: trace metadata identity/digest.\nDecision status: selected.\nStage 18 implementation allowed: yes.\nPython remains the semantic oracle.\nNative/C++ remains provisional.\nCandidate selection does not transfer authority.\nPassing a future second-slice parity check will still not transfer authority.\nComparison rule: exact digest equality.\nDefault mode is advisory.\nStrict mode uses TET4D_STRICT_PARITY.\nExplicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.",
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_protocol.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "Stage 18 may only implement the selected candidate.\n"
-        "Candidate selection does not transfer authority.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "selected candidate\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "selected candidate\n"
-        "forbidden second-slice areas\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "DOCUMENTATION_MAP.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n",
-        append=True,
-    )
-    _write_text(
-        root / "AGENTS.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "Stage 18 may only implement the selected candidate.\n",
-        append=True,
-    )
-    _write_text(
-        root / "native" / "AGENTS.md",
-        "docs/architecture/second_parity_slice_candidate_selection.md\n"
-        "docs/architecture/parity_evidence_review_and_third_slice_selection.md\n"
-        "selected candidate\n"
-        "native work remains provisional\n",
-        append=True,
-    )
-
-
-def _write_minimal_parity_package_review_governance(
-    root: Path,
-    *,
-    doc_text: str | None = None,
-) -> None:
-    review_rel = "docs/architecture/parity_evidence_package_review.md"
-    _write_text(
-        root / review_rel,
-        doc_text
-        or (
-            "Stage 21 parity evidence package review.\n"
-            "Reviewed evidence: Stage 15 first subsystem parity pilot, "
-            "Stage 18 trace metadata identity/digest parity, and Stage 20 "
-            "topology identifier normalization parity.\n"
-            "Python remains the semantic oracle.\n"
-            "Native/C++ remains provisional and C++/GDExtension remains provisional.\n"
-            "This evidence package review does not transfer authority.\n"
-            "No authority-transfer record is created by this review.\n"
-            "Tooling route decision: keep tools/migration/ for now; create "
-            "tools/parity/ later after the trigger is met.\n"
-            "Authority-transfer readiness: ready for authority transfer: no.\n"
-            "Recommended next stage: select a data-only slice. Candidate: "
-            "trace schema/version normalization.\n"
-            "Explicit forbidden areas: topology movement, seam traversal, "
-            "neighbor lookup, rendering/projection/view/camera, endgame physics.\n"
-        ),
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_protocol.md",
-        f"{review_rel}\nStages 15, 18, and 20\nDoes not transfer authority.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
-        f"{review_rel}\nFuture parity slices use promotion gates.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "authority_transfer_protocol.md",
-        f"{review_rel} not transfer records.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "authority_map.md",
-        f"{review_rel} provisional parity evidence.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md", f"{review_rel}\n", append=True
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        f"{review_rel}\nFurther parity expansion.\nAuthority transfer.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        f"{review_rel}\ntools/migration/\ntools/parity/\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "codex_policy.md",
-        "Evidence-package status must be reported.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "DOCUMENTATION_MAP.md",
-        f"{review_rel}\nStages 15, 18, and 20.\n",
-        append=True,
-    )
-    _write_text(root / "docs" / "PROJECT_STRUCTURE.md", f"{review_rel}\n")
-    _write_text(
-        root / "AGENTS.md",
-        f"{review_rel}\ntools/migration/\ntools/parity/\n",
-        append=True,
-    )
-    _write_text(
-        root / "native" / "AGENTS.md",
-        f"{review_rel}\nprovisional\nforbidden areas\n",
-        append=True,
-    )
-
-
-def _write_minimal_trace_schema_version_parity_governance(root: Path) -> None:
-    doc_rel = "docs/architecture/trace_schema_version_normalization_parity.md"
-    harness_rel = "tools/parity/trace_schema_version_normalization_parity.py"
-    fixture_rel = "tests/fixtures/parity/trace_schema_version_normalization.json"
-    test_rel = "tests/unit/migration/test_trace_schema_version_normalization_parity.py"
-    _write_text(
-        root / doc_rel,
-        "Stage 22 trace schema/version normalization parity.\n"
-        "Python remains the semantic oracle.\n"
-        "Native/C++ remains provisional.\n"
-        "This slice is schema/version metadata-only.\n"
-        "No safe native/provisional route exists yet.\n"
-        "Default mode is advisory.\n"
-        "Strict mode TET4D_STRICT_PARITY=1 blocks unavailability.\n"
-        "This slice does not transfer authority.\n"
-        "Explicit exclusions: trace events, board snapshots, topology movement, "
-        "gameplay, rendering, and endgame physics.\n"
-        f"Harness {harness_rel}. Fixture {fixture_rel}.\n",
-    )
-    for rel in (harness_rel, test_rel):
-        _write_text(root / rel, "def main():\n    return 0\n")
-    _write_json(
-        root / fixture_rel,
-        {
-            "slice": "trace_schema_version_normalization",
-            "authority": "python",
-            "cases": [],
-        },
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_protocol.md",
-        f"{doc_rel}\ntrace schema/version normalization\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_pilot_audit_and_promotion_gates.md",
-        f"{doc_rel}\nschema/version metadata\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_evidence_package_review.md",
-        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "authority_transfer_protocol.md",
-        f"{doc_rel} is not a transfer record.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "architecture" / "authority_map.md",
-        f"{doc_rel} schema/version metadata.\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        f"Stage 22 {doc_rel}\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n{test_rel}\n",
-        append=True,
-    )
-    _write_text(
-        root / "docs" / "governance" / "codex_policy.md",
-        "Stage 22 implementation tasks must report route status.\n",
-        append=True,
-    )
-    _write_text(root / "docs" / "DOCUMENTATION_MAP.md", f"{doc_rel}\n", append=True)
-    _write_text(
-        root / "docs" / "PROJECT_STRUCTURE.md",
-        f"{doc_rel}\n{harness_rel}\n{fixture_rel}\n{test_rel}\n",
-    )
-    _write_text(root / "AGENTS.md", f"{doc_rel}\n", append=True)
-    _write_text(
-        root / "native" / "AGENTS.md",
-        f"{doc_rel}\ndo not fake native output\n",
-        append=True,
-    )
-
-
-def _write_minimal_godot_semantic_boundary_governance(root: Path) -> None:
-    _write_text(root / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
-    _write_text(
-        root / "tools" / "governance" / "validate_godot_semantic_boundary.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_godot_semantic_boundary\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "godot_cpp_policy.md",
-        "## Godot semantic boundary\n"
-        "GDScript must not independently compute semantic state.\n",
-    )
-    _write_text(
-        root / "godot" / "AGENTS.md",
-        "Do not compute semantic truth in GDScript; use adapter APIs.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "## Godot semantic boundary\n"
-        "GDScript remains presentation. Check semantic-boundary validator suppressions.\n",
-    )
-
-
-def _write_minimal_config_authority_governance(root: Path) -> None:
-    _write_text(
-        root / "tools" / "governance" / "validate_config_authority.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_config_authority\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "config_policy.md",
-        "Config authority routes through POLICY_NO_MAGIC_NUMBERS. "
-        "Use config/project/constants.json.\n",
-    )
-    _write_text(
-        root / "docs" / "policies" / "POLICY_NO_MAGIC_NUMBERS.md",
-        "See docs/governance/config_policy.md and validate_config_authority.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "Check config-authority validator hardcoded constants.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        "Route config_policy through validate_config_authority.\n",
-    )
-
-
-def _write_minimal_utility_reuse_governance(root: Path) -> None:
-    _write_text(
-        root / "tools" / "governance" / "validate_utility_reuse.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_utility_reuse\n",
-    )
-    _write_text(
-        root / "docs" / "architecture" / "utility_index.md",
-        "## Required fields\nOwner\nReuse rule\nMigration relevance\n",
-    )
-    _write_text(
-        root / "docs" / "policies" / "POLICY_NO_REINVENTING_WHEEL.md",
-        "docs/architecture/utility_index.md\n"
-        "check_wheel_reuse_rules.py\n"
-        "check_dedup_dead_code_rules.py\n"
-        "validate_utility_reuse.py\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "codex_policy.md",
-        "Search existing helpers before adding new ones. See utility_index.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "## Dependency / utility reuse\n"
-        "No-reinvention checks include validate_utility_reuse.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        "utility_index policy_no_reinventing_wheel validate_utility_reuse "
-        "check_wheel_reuse_rules check_dedup_dead_code_rules\n",
-    )
-
-
-def test_utility_reuse_governance_requires_validator(
+def test_architecture_evidence_required_paths_detect_missing_document(
     tmp_path: Path, monkeypatch
 ) -> None:
+    payload = json.loads(contracts.POLICY_PACK_PATH.read_text(encoding="utf-8"))
+    evidence_paths = payload["maintenance_contract"]["required_paths"][
+        "architecture_evidence"
+    ]
+    missing_rel = "docs/architecture/parity_pilot_audit_and_promotion_gates.md"
+
+    assert evidence_paths == [
+        "docs/architecture/first_subsystem_parity_pilot.md",
+        missing_rel,
+        "docs/architecture/second_parity_slice_candidate_selection.md",
+        "docs/architecture/trace_metadata_identity_digest_parity.md",
+        "docs/architecture/topology_identifier_normalization_parity.md",
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
+        "docs/architecture/parity_evidence_package_review.md",
+        "docs/architecture/trace_schema_version_normalization_parity.md",
+    ]
+
+    for rel in evidence_paths:
+        if rel == missing_rel:
+            continue
+        path = tmp_path / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("evidence\n", encoding="utf-8")
+
     monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_utility_reuse_governance()
-
-    assert any("validate_utility_reuse.py" in issue.message for issue in issues)
-
-
-def test_utility_reuse_governance_requires_doc_tokens(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_utility_reuse.py",
-        "def main():\n    return 0\n",
+    monkeypatch.setattr(
+        contracts, "_git_tracked_paths", lambda issues: set(evidence_paths)
     )
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_utility_reuse\n",
+
+    issues = contracts._validate_required_paths(
+        {"required_paths": {"architecture_evidence": evidence_paths}}
     )
-    _write_text(tmp_path / "docs" / "architecture" / "utility_index.md", "Utility\n")
-    _write_text(
-        tmp_path / "docs" / "policies" / "POLICY_NO_REINVENTING_WHEEL.md",
-        "Wheel\n",
-    )
-    _write_text(tmp_path / "docs" / "governance" / "codex_policy.md", "Codex\n")
-    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
 
-    issues = contracts._validate_utility_reuse_governance()
-
-    assert any("utility reuse governance token" in issue.message for issue in issues)
-
-
-def test_utility_reuse_governance_accepts_baseline(tmp_path: Path, monkeypatch) -> None:
-    _write_minimal_utility_reuse_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_utility_reuse_governance() == []
+    assert [issue.message for issue in issues] == [
+        f"missing required path: {missing_rel}"
+    ]
 
 
 def test_workspace_bundle_governance_routes_validator(
@@ -685,1526 +207,9 @@ def test_workspace_bundle_governance_routes_validator(
 
     issues = contracts._validate_workspace_bundle_governance()
 
-    assert any("workspace_bundle/README.md" in issue.message for issue in issues)
-
-
-def _write_minimal_technical_debt_governance(root: Path) -> None:
-    _write_text(
-        root / "docs" / "governance" / "workspace_bundle" / "technical_debt_policy.md",
-        "Technical debt policy.\n",
-    )
-    _write_text(
-        root
-        / "docs"
-        / "governance"
-        / "workspace_bundle"
-        / "drift_protection_policy.md",
-        "Drift protection policy.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "workspace_bundle" / "MANIFEST.md",
-        "technical_debt_policy.md\ndrift_protection_policy.md\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "technical_debt_register.md",
-        "Project-specific debt register.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        "technical_debt_register.md technical_debt_policy.md "
-        "drift_protection_policy.md validate_technical_debt.py\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "technical-debt delta advisory validator findings drift protection\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_technical_debt.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_technical_debt\n",
-    )
-
-
-def test_technical_debt_governance_requires_register(
-    tmp_path: Path, monkeypatch
-) -> None:
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_technical_debt_governance()
-
-    assert any("technical_debt_register.md" in issue.message for issue in issues)
-
-
-def test_technical_debt_governance_requires_router_debt_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_technical_debt_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_technical_debt_governance()
-
-    assert any("technical_debt_register.md" in issue.message for issue in issues)
-
-
-def test_technical_debt_governance_requires_router_drift_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_technical_debt_governance(tmp_path)
-    _write_text(
-        tmp_path / "docs" / "governance" / "README.md",
-        "technical_debt_register.md technical_debt_policy.md validate_technical_debt.py\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_technical_debt_governance()
-
-    assert any("drift_protection_policy.md" in issue.message for issue in issues)
-
-
-def test_technical_debt_governance_requires_review_delta(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_technical_debt_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_technical_debt_governance()
-
-    assert any("technical-debt delta" in issue.message for issue in issues)
-
-
-def test_technical_debt_governance_requires_runner_reference(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_technical_debt_governance(tmp_path)
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_governance.py",
-        "def main():\n    return 0\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_technical_debt_governance()
-
-    assert any("validate_technical_debt" in issue.message for issue in issues)
-
-
-def test_technical_debt_governance_accepts_without_drift_validator(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_technical_debt_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_technical_debt_governance() == []
-
-
-def _write_minimal_drift_protection_governance(root: Path) -> None:
-    _write_text(
-        root
-        / "docs"
-        / "governance"
-        / "workspace_bundle"
-        / "drift_protection_policy.md",
-        "Reusable drift policy.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        "tet4d-specific surfaces\n"
-        "docs/governance/workspace_bundle/drift_protection_policy.md\n"
-        "governance routing drift\n"
-        "authority drift\n"
-        "config/generated drift\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_drift_protection.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_drift_protection\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        "drift_protection_policy.md drift_protection_map.md "
-        "validate_drift_protection.py\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "drift protection validate_governance.py generated outputs\n",
-    )
-
-
-def test_drift_protection_governance_requires_map(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_drift_protection_governance()
-
-    assert any("drift_protection_map.md" in issue.message for issue in issues)
-
-
-def test_drift_protection_governance_requires_validator(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_drift_protection_governance(tmp_path)
-    (tmp_path / "tools" / "governance" / "validate_drift_protection.py").unlink()
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_drift_protection_governance()
-
-    assert any("validate_drift_protection.py" in issue.message for issue in issues)
-
-
-def test_drift_protection_governance_requires_router_links(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_drift_protection_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_drift_protection_governance()
-
-    assert any("drift_protection_map.md" in issue.message for issue in issues)
-    assert any("validate_drift_protection.py" in issue.message for issue in issues)
-
-
-def test_drift_protection_governance_requires_runner_reference(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_drift_protection_governance(tmp_path)
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_governance.py",
-        "def main():\n    return 0\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_drift_protection_governance()
-
-    assert any("validate_drift_protection" in issue.message for issue in issues)
-
-
-def test_drift_protection_governance_requires_review_checklist(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_drift_protection_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_drift_protection_governance()
-
-    assert any("drift protection" in issue.message for issue in issues)
-
-
-def test_drift_protection_governance_rejects_workspace_policy_copy(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_drift_protection_governance(tmp_path)
-    _write_text(
-        tmp_path / "docs" / "governance" / "drift_protection_map.md",
-        "tet4d-specific surfaces\n"
-        "docs/governance/workspace_bundle/drift_protection_policy.md\n"
-        "governance routing drift\nauthority drift\nconfig/generated drift\n"
-        "## General drift risks\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_drift_protection_governance()
-
-    assert any("must not copy workspace policy" in issue.message for issue in issues)
-
-
-def test_drift_protection_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_drift_protection_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_drift_protection_governance() == []
-
-
-def _write_minimal_authority_transfer_governance(root: Path) -> None:
-    _write_text(
-        root / "docs" / "architecture" / "authority_transfer_protocol.md",
-        "Authority transfer protocol.\n"
-        "Candidate and blocked statuses only.\n"
-        "First subsystem parity pilot stays evidence only.\n"
-        "This record must not be transferred.\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_authority_transfer.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        root / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_authority_transfer\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        "authority_transfer_protocol.md validate_authority_transfer.py\n"
-        "docs/architecture/first_subsystem_parity_pilot.md\n",
-    )
-    _write_text(
-        root / "docs" / "architecture" / "authority_map.md",
-        "authority_transfer_protocol.md\n",
-    )
-    _write_text(
-        root / "docs" / "architecture" / "parity_protocol.md",
-        "authority_transfer_protocol.md first_subsystem_parity_pilot.md\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "drift_protection_map.md",
-        "authority_transfer_protocol.md validate_authority_transfer.py\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "authority transfer transfer record fallback path\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "workspace_bundle" / "README.md",
-        "Reusable governance.\n",
-    )
-
-
-def test_authority_transfer_governance_requires_protocol(
-    tmp_path: Path, monkeypatch
-) -> None:
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_authority_transfer_governance()
-
-    assert any("authority_transfer_protocol.md" in issue.message for issue in issues)
-
-
-def test_authority_transfer_governance_requires_validator(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_authority_transfer_governance(tmp_path)
-    (tmp_path / "tools" / "governance" / "validate_authority_transfer.py").unlink()
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_authority_transfer_governance()
-
-    assert any("validate_authority_transfer.py" in issue.message for issue in issues)
-
-
-def test_authority_transfer_governance_requires_router_links(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_authority_transfer_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_authority_transfer_governance()
-
-    assert any("authority_transfer_protocol.md" in issue.message for issue in issues)
-    assert any("validate_authority_transfer.py" in issue.message for issue in issues)
-
-
-def test_authority_transfer_governance_requires_architecture_links(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_authority_transfer_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "architecture" / "authority_map.md", "Map\n")
-    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "Parity\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_authority_transfer_governance()
-
-    assert any("authority_map.md" in issue.message for issue in issues)
-    assert any("parity_protocol.md" in issue.message for issue in issues)
-
-
-def test_authority_transfer_governance_requires_drift_surface(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_authority_transfer_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "drift_protection_map.md", "Map\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_authority_transfer_governance()
-
-    assert any("drift_protection_map.md" in issue.message for issue in issues)
-
-
-def test_authority_transfer_governance_rejects_workspace_record_text(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_authority_transfer_governance(tmp_path)
-    _write_text(
-        tmp_path / "docs" / "governance" / "workspace_bundle" / "README.md",
-        "tet4d authority-transfer transfer record\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_authority_transfer_governance()
-
-    assert any("workspace" in issue.message for issue in issues)
-
-
-def test_authority_transfer_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_authority_transfer_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_authority_transfer_governance() == []
-
-
-def _valid_pr_template() -> str:
-    return "# Pull Request Checklist\n## Summary\n- Scope is limited.\n- Unrelated dirty files were not staged.\n## Authority\n- Python semantic authority is preserved.\n- Godot/GDScript boundary remains presentation only.\n- C++/GDExtension remains provisional.\n- authority-transfer protocol checked.\n## Governance\n- Existing utilities searched; duplicate implementations avoided.\n- config/constants authority checked.\n- Generated files were not hand-edited.\n- Technical debt delta described.\n- Drift protection impact described.\n## Validation commands\n- CODEX_MODE=1 ./scripts/verify.sh\n- git diff --cached --check\n"
-
-
-def _write_minimal_review_template_governance(root: Path) -> None:
-    _write_text(root / ".github" / "pull_request_template.md", _valid_pr_template())
-    _write_text(
-        root
-        / "docs"
-        / "governance"
-        / "workspace_bundle"
-        / "review_checklist_template.md",
-        "General programming. Generated files. Technical debt. Drift risk. Validators. Staging.\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "review_checklist.md",
-        "docs/governance/workspace_bundle/review_checklist_template.md\n"
-        "docs/architecture/authority_map.md\n"
-        "docs/architecture/parity_protocol.md\n"
-        "docs/architecture/authority_transfer_protocol.md\n"
-        "docs/governance/technical_debt_register.md\n"
-        "docs/governance/drift_protection_map.md\n"
-        "generated bundle\n"
-        "staging discipline\n",
-    )
-    _write_text(
-        root / "docs" / "governance" / "README.md",
-        ".github/pull_request_template.md\n"
-        "docs/governance/review_checklist.md\n"
-        "docs/governance/workspace_bundle/review_checklist_template.md\n",
-    )
-
-
-def test_review_template_governance_requires_pr_template(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_review_template_governance(tmp_path)
-    (tmp_path / ".github" / "pull_request_template.md").unlink()
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_review_template_governance()
-
-    assert any("pull_request_template.md" in issue.message for issue in issues)
-
-
-def test_review_template_governance_requires_router_pr_template_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_review_template_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_review_template_governance()
-
-    assert any(".github/pull_request_template.md" in issue.message for issue in issues)
-
-
-def test_review_template_governance_requires_workspace_template_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_review_template_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_review_template_governance()
-
     assert any(
-        "workspace_bundle/review_checklist_template.md" in issue.message
-        for issue in issues
+        "tools/templates/governance/README.md" in issue.message for issue in issues
     )
-
-
-def test_review_template_governance_rejects_workspace_tet4d_terms(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_review_template_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "governance"
-        / "workspace_bundle"
-        / "review_checklist_template.md",
-        "tet4d Python semantic oracle\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_review_template_governance()
-
-    assert any("forbidden term" in issue.message for issue in issues)
-
-
-def test_review_template_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_review_template_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_review_template_governance() == []
-
-
-def test_pr_template_missing_required_concepts_fails(
-    tmp_path: Path, monkeypatch
-) -> None:
-    missing_terms = (
-        "Python semantic authority",
-        "Godot/GDScript boundary",
-        "C++/GDExtension remains provisional",
-        "authority-transfer protocol",
-        "utilities searched; duplicate",
-        "config/constants authority",
-        "Generated files",
-        "Technical debt",
-        "Drift protection",
-        "Validation commands",
-        "git diff --cached --check",
-    )
-    _write_minimal_review_template_governance(tmp_path)
-    template = _valid_pr_template()
-    for term in missing_terms:
-        _write_text(
-            tmp_path / ".github" / "pull_request_template.md",
-            template.replace(term, ""),
-        )
-        monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-        issues = contracts._validate_review_template_governance()
-
-        assert issues, f"expected missing concept failure for {term}"
-
-
-def test_config_authority_governance_requires_validator(
-    tmp_path: Path, monkeypatch
-) -> None:
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_config_authority_governance()
-
-    assert any("validate_config_authority.py" in issue.message for issue in issues)
-
-
-def test_config_authority_governance_requires_doc_tokens(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_config_authority.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_config_authority\n",
-    )
-    _write_text(tmp_path / "docs" / "governance" / "config_policy.md", "Config\n")
-    _write_text(
-        tmp_path / "docs" / "policies" / "POLICY_NO_MAGIC_NUMBERS.md",
-        "Numbers\n",
-    )
-    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_config_authority_governance()
-
-    assert any("config authority governance token" in issue.message for issue in issues)
-
-
-def test_config_authority_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_config_authority_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_config_authority_governance() == []
-
-
-def test_native_cpp_safety_governance_requires_style_files(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_text(
-        tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n"
-        "See docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_minimal_cpp_safety_policy(tmp_path)
-    _write_minimal_native_tooling_ci_policy(tmp_path)
-    _write_minimal_native_tooling_governance(tmp_path)
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_native_cpp_safety_governance()
-
-    assert any(".clang-format" in issue.message for issue in issues)
-    assert any(".clang-tidy" in issue.message for issue in issues)
-
-
-def test_native_cpp_safety_governance_rejects_warnings_as_errors_star(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_text(
-        tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n"
-        "See docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_minimal_cpp_safety_policy(tmp_path)
-    _write_minimal_native_tooling_ci_policy(tmp_path)
-    _write_minimal_native_tooling_governance(tmp_path)
-    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
-    _write_text(
-        tmp_path / ".clang-tidy",
-        "Checks: clang-analyzer-*\nWarningsAsErrors: '*'\n",
-    )
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_native_cpp_safety_governance()
-
-    assert any("WarningsAsErrors" in issue.message for issue in issues)
-
-
-def test_native_cpp_safety_governance_requires_tooling_validator(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_text(
-        tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n"
-        "See docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_minimal_cpp_safety_policy(tmp_path)
-    _write_minimal_native_tooling_ci_policy(tmp_path)
-    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
-    _write_text(
-        tmp_path / ".clang-tidy",
-        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
-    )
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_native_cpp_safety_governance()
-
-    assert any("validate_native_cpp_tooling.py" in issue.message for issue in issues)
-
-
-def test_native_cpp_safety_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_text(
-        tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n"
-        "See docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_minimal_cpp_safety_policy(tmp_path)
-    _write_minimal_native_tooling_ci_policy(tmp_path)
-    _write_minimal_native_tooling_governance(tmp_path)
-    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
-    _write_text(
-        tmp_path / ".clang-tidy",
-        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
-    )
-    _write_text(
-        tmp_path / "docs" / "governance" / "README.md",
-        "docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_text(
-        tmp_path / "docs" / "governance" / "review_checklist.md",
-        "Native tooling CI readiness TET4D_STRICT_NATIVE_TOOLS CI strict.\n",
-    )
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_native_cpp_safety_governance() == []
-
-
-def test_native_cpp_safety_governance_requires_native_tooling_policy(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_text(
-        tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n"
-        "See docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_minimal_cpp_safety_policy(tmp_path)
-    _write_minimal_native_tooling_governance(tmp_path)
-    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
-    _write_text(
-        tmp_path / ".clang-tidy",
-        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
-    )
-    _write_text(
-        tmp_path / "docs" / "governance" / "README.md",
-        "docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_text(
-        tmp_path / "docs" / "governance" / "review_checklist.md",
-        "Native tooling CI readiness TET4D_STRICT_NATIVE_TOOLS CI strict.\n",
-    )
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_native_cpp_safety_governance()
-
-    assert any("native_tooling_ci_policy.md" in issue.message for issue in issues)
-
-
-def test_native_cpp_safety_governance_requires_native_tooling_route(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_text(
-        tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n",
-    )
-    _write_minimal_cpp_safety_policy(tmp_path)
-    _write_minimal_native_tooling_ci_policy(tmp_path)
-    _write_minimal_native_tooling_governance(tmp_path)
-    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
-    _write_text(
-        tmp_path / ".clang-tidy",
-        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
-    )
-    _write_text(
-        tmp_path / "docs" / "governance" / "README.md",
-        "docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_text(
-        tmp_path / "docs" / "governance" / "review_checklist.md",
-        "Native tooling CI readiness TET4D_STRICT_NATIVE_TOOLS CI strict.\n",
-    )
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_native_cpp_safety_governance()
-
-    assert any("native_tooling_ci_policy" in issue.message for issue in issues)
-
-
-def test_native_cpp_safety_governance_requires_native_tooling_review(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_text(
-        tmp_path / "native" / "AGENTS.md",
-        "See docs/governance/cpp_safety_policy.md\n"
-        "See docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_minimal_cpp_safety_policy(tmp_path)
-    _write_minimal_native_tooling_ci_policy(tmp_path)
-    _write_minimal_native_tooling_governance(tmp_path)
-    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
-    _write_text(
-        tmp_path / ".clang-tidy",
-        "Checks: clang-analyzer-*, cppcoreguidelines-*\nWarningsAsErrors: ''\n",
-    )
-    _write_text(
-        tmp_path / "docs" / "governance" / "README.md",
-        "docs/governance/native_tooling_ci_policy.md\n",
-    )
-    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Review\n")
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_native_cpp_safety_governance()
-
-    assert any("native tooling token" in issue.message for issue in issues)
-
-
-def test_cpp_parity_protocol_governance_requires_protocol(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_cpp_parity_protocol_governance()
-
-    assert any("parity_protocol.md" in issue.message for issue in issues)
-
-
-def test_cpp_parity_protocol_governance_rejects_dangerous_wording(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_minimal_parity_governance(tmp_path)
-    _write_text(
-        tmp_path / "docs" / "governance" / "extra.md",
-        "Visual correctness is parity.\n",
-    )
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_cpp_parity_protocol_governance()
-
-    assert any("dangerous parity wording" in issue.message for issue in issues)
-
-
-def test_cpp_parity_protocol_governance_requires_fixture_readme(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_minimal_parity_governance(tmp_path)
-    (tmp_path / "tests" / "replay" / "golden").mkdir(parents=True)
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_cpp_parity_protocol_governance()
-
-    assert any("tests/replay/golden" in issue.message for issue in issues)
-
-
-def test_cpp_parity_protocol_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp", "")
-    _write_minimal_parity_governance(tmp_path)
-    _write_text(
-        tmp_path / "tests" / "replay" / "golden" / "README.md",
-        "See docs/architecture/parity_protocol.md.\n",
-    )
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_cpp_parity_protocol_governance() == []
-
-
-def test_parity_pilot_audit_governance_requires_doc(
-    tmp_path: Path, monkeypatch
-) -> None:
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any(
-        "parity_pilot_audit_and_promotion_gates.md" in issue.message for issue in issues
-    )
-
-
-def test_parity_pilot_audit_governance_requires_python_oracle_statement(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_pilot_audit_and_promotion_gates.md",
-        "Promotion gates only.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("Python semantic oracle" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_rejects_authority_transfer_claim(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_evidence_review_and_third_slice_selection.md",
-        "Stage 19 parity evidence review and third-slice selection.\n"
-        "Python remains the semantic oracle.\n"
-        "Reviewed the first pilot and Stage 18 evidence.\n"
-        "Topology identifier normalization only.\n"
-        "This review does not transfer authority.\n"
-        "Stage 20 implementation may only implement topology identifier normalization.\n",
-    )
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_pilot_audit_and_promotion_gates.md",
-        "Python remains the semantic oracle.\n"
-        "C++ becomes authoritative after this audit.\n"
-        "Promotion gates are required before a second parity slice.\n"
-        "Allowed: coordinate.\n"
-        "Forbidden: full topology movement.\n"
-        "Current harness path tools/parity/first_subsystem_parity_pilot.py is accepted for the first pilot.\n"
-        "Default behaviour is advisory and strict behaviour uses TET4D_STRICT_PARITY.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts.validate_manifest()
-
-    assert any("no authority transfer" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_requires_promotion_gates(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_pilot_audit_and_promotion_gates.md",
-        "Python remains the semantic oracle.\n"
-        "This evidence does not transfer authority.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("promotion gates" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_requires_allowed_and_forbidden_categories(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_pilot_audit_and_promotion_gates.md",
-        "Python remains the semantic oracle.\n"
-        "This evidence does not transfer authority.\n"
-        "Promotion gates are required before a second parity slice.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("allowed categories" in issue.message for issue in issues)
-    assert any("forbidden categories" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_requires_parity_protocol_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "Parity\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("parity_protocol.md" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_requires_router_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any("docs/governance/README.md" in issue.message for issue in issues)
-
-
-def test_parity_pilot_audit_governance_requires_drift_map_entries(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_text(
-        tmp_path / "docs" / "governance" / "drift_protection_map.md",
-        "docs/architecture/parity_pilot_audit_and_promotion_gates.md\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_pilot_audit_governance()
-
-    assert any(
-        "tools/parity/first_subsystem_parity_pilot.py" in issue.message
-        for issue in issues
-    )
-    assert any(
-        "tests/unit/migration/test_first_subsystem_parity_pilot.py" in issue.message
-        for issue in issues
-    )
-
-
-def test_parity_pilot_audit_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_parity_pilot_audit_governance() == []
-
-
-def test_second_parity_selection_governance_requires_doc(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("second parity slice selection doc" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_python_oracle_statement(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "second_parity_slice_candidate_selection.md",
-        "Chosen candidate: trace metadata identity/digest.\n"
-        "Decision status: selected.\n"
-        "Stage 18 implementation allowed: yes.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("Python semantic oracle" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_rejects_authority_transfer_claim(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "second_parity_slice_candidate_selection.md",
-        "Chosen candidate: trace metadata identity/digest.\n"
-        "Decision status: selected.\n"
-        "Stage 18 implementation allowed: yes.\n"
-        "Python remains the semantic oracle.\n"
-        "Native/C++ remains provisional.\n"
-        "This selection transfers authority.\n"
-        "Explicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("no authority transfer" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_chosen_or_blocked_status(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    selection = (
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "second_parity_slice_candidate_selection.md"
-    )
-    selection.write_text(
-        selection.read_text(encoding="utf-8")
-        .replace("Chosen candidate: trace metadata identity/digest.\n", "")
-        .replace("Decision status: selected.\n", ""),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("decision status" in issue.message for issue in issues)
-    assert any("chosen or blocked candidate" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_stage18_decision(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    selection = (
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "second_parity_slice_candidate_selection.md"
-    )
-    selection.write_text(
-        selection.read_text(encoding="utf-8").replace(
-            "Stage 18 implementation allowed: yes.\n", ""
-        ),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("Stage 18 decision" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_explicit_exclusions(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    selection = (
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "second_parity_slice_candidate_selection.md"
-    )
-    selection.write_text(
-        selection.read_text(encoding="utf-8").replace(
-            "Explicit exclusions: topology movement, rotation, drop/collision, rendering/projection/view, endgame physics.",
-            "",
-        ),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("explicit exclusions" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_parity_protocol_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "Parity\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("parity_protocol.md" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_audit_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_pilot_audit_and_promotion_gates.md",
-        "Python remains the semantic oracle.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any(
-        "parity_pilot_audit_and_promotion_gates.md" in issue.message for issue in issues
-    )
-
-
-def test_second_parity_selection_requires_governance_router_link(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "Router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("docs/governance/README.md" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_requires_drift_map_entry(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "drift_protection_map.md", "")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_second_parity_slice_candidate_selection()
-
-    assert any("drift_protection_map.md" in issue.message for issue in issues)
-
-
-def test_second_parity_selection_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_second_parity_slice_candidate_selection() == []
-
-
-def test_parity_evidence_review_governance_requires_doc(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_review_and_third_slice_selection()
-
-    assert any("parity evidence review doc" in issue.message for issue in issues)
-
-
-def test_parity_evidence_review_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_evidence_review_and_third_slice_selection.md",
-        "Stage 19 parity evidence review and third-slice selection.\n"
-        "Python remains the semantic oracle.\n"
-        "First pilot evidence reviewed.\n"
-        "Stage 18 trace metadata identity/digest parity evidence reviewed.\n"
-        "Topology identifier normalization only.\n"
-        "Explicit exclusions: seam traversal, neighbor lookup, movement semantics, rendering/projection/view semantics, endgame physics.\n"
-        "This review does not transfer authority.\n"
-        "Stage 20 implementation may only implement topology identifier normalization.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_parity_evidence_review_and_third_slice_selection() == []
-
-
-def test_parity_package_review_governance_requires_doc(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any(
-        "parity evidence package review doc" in issue.message for issue in issues
-    )
-
-
-def test_parity_package_review_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_parity_evidence_package_review_governance() == []
-
-
-def test_parity_package_review_requires_reviewed_first_pilot(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(
-        tmp_path,
-        doc_text="Stage 21 review. Stage 18 trace metadata identity/digest. Stage 20 topology identifier normalization. Python remains the semantic oracle. Native/C++ remains provisional. This evidence package review does not transfer authority. No authority-transfer record is created by this review. Tooling route decision: tools/migration/ tools/parity/. Authority-transfer readiness: ready for authority transfer: no. Recommended next stage: candidate: trace schema/version. Explicit forbidden areas: topology movement, seam traversal, neighbor lookup, rendering/projection/view/camera, endgame physics.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("first pilot review" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_reviewed_trace_metadata(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(
-        tmp_path,
-        doc_text="Stage 21 review. Stage 15 first subsystem parity pilot. Stage 20 topology identifier normalization. Python remains the semantic oracle. Native/C++ remains provisional. This evidence package review does not transfer authority. No authority-transfer record is created by this review. Tooling route decision: tools/migration/ tools/parity/. Authority-transfer readiness: ready for authority transfer: no. Recommended next stage: candidate: trace schema/version. Explicit forbidden areas: topology movement, seam traversal, neighbor lookup, rendering/projection/view/camera, endgame physics.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("trace metadata parity review" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_reviewed_topology_identifier(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(
-        tmp_path,
-        doc_text="Stage 21 review. Stage 15 first subsystem parity pilot. Stage 18 trace metadata identity/digest. Python remains the semantic oracle. Native/C++ remains provisional. This evidence package review does not transfer authority. No authority-transfer record is created by this review. Tooling route decision: tools/migration/ tools/parity/. Authority-transfer readiness: ready for authority transfer: no. Recommended next stage: candidate: trace schema/version. Explicit forbidden areas: topology movement, seam traversal, neighbor lookup, rendering/projection/view/camera, endgame physics.\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("topology identifier parity review" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_python_oracle_statement(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
-    review.write_text(
-        review.read_text(encoding="utf-8").replace(
-            "Python remains the semantic oracle.", ""
-        ),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("Python semantic oracle" in issue.message for issue in issues)
-
-
-def test_parity_package_review_rejects_authority_transfer_claim(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
-    review.write_text(
-        review.read_text(encoding="utf-8") + "\nReady for authority transfer: yes.\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("must not claim authority transfer" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_tooling_route_decision(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
-    review.write_text(
-        review.read_text(encoding="utf-8").replace("Tooling route decision:", ""),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("tooling route decision" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_authority_transfer_readiness(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
-    review.write_text(
-        review.read_text(encoding="utf-8").replace("Authority-transfer readiness:", ""),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("authority-transfer readiness" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_next_stage_recommendation(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
-    review.write_text(
-        review.read_text(encoding="utf-8").replace("Recommended next stage:", ""),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("next-stage recommendation" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_explicit_forbidden_areas(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    review = tmp_path / "docs" / "architecture" / "parity_evidence_package_review.md"
-    review.write_text(
-        review.read_text(encoding="utf-8").replace("Explicit forbidden areas:", ""),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("explicit forbidden areas" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_protocol_route(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "architecture" / "parity_protocol.md", "protocol\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("parity_protocol.md" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_audit_route(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "parity_pilot_audit_and_promotion_gates.md",
-        "audit\n",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any(
-        "parity_pilot_audit_and_promotion_gates.md" in issue.message for issue in issues
-    )
-
-
-def test_parity_package_review_requires_governance_readme_route(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "README.md", "router\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("README.md" in issue.message for issue in issues)
-
-
-def test_parity_package_review_requires_drift_map_route(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_parity_governance(tmp_path)
-    _write_minimal_parity_pilot_audit_governance(tmp_path)
-    _write_minimal_second_parity_selection_governance(tmp_path)
-    _write_minimal_parity_package_review_governance(tmp_path)
-    _write_text(tmp_path / "docs" / "governance" / "drift_protection_map.md", "drift\n")
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_parity_evidence_package_review_governance()
-
-    assert any("drift_protection_map.md" in issue.message for issue in issues)
-
-
-def test_godot_semantic_boundary_governance_requires_validator(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_godot_semantic_boundary_governance()
-
-    assert any(
-        "validate_godot_semantic_boundary.py" in issue.message for issue in issues
-    )
-
-
-def test_godot_semantic_boundary_governance_requires_doc_tokens(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_text(tmp_path / "godot" / "scripts" / "app.gd", "func _ready():\n\tpass\n")
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_godot_semantic_boundary.py",
-        "def main():\n    return 0\n",
-    )
-    _write_text(
-        tmp_path / "tools" / "governance" / "validate_governance.py",
-        "from tools.governance import validate_godot_semantic_boundary\n",
-    )
-    _write_text(tmp_path / "docs" / "governance" / "godot_cpp_policy.md", "Godot\n")
-    _write_text(tmp_path / "godot" / "AGENTS.md", "Godot\n")
-    _write_text(tmp_path / "docs" / "governance" / "review_checklist.md", "Godot\n")
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_godot_semantic_boundary_governance()
-
-    assert any("semantic-boundary token" in issue.message for issue in issues)
-
-
-def test_godot_semantic_boundary_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_godot_semantic_boundary_governance(tmp_path)
-
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert contracts._validate_godot_semantic_boundary_governance() == []
 
 
 def test_governance_directives_include_staged_migration_contract() -> None:
@@ -2218,98 +223,19 @@ def test_governance_directives_include_staged_migration_contract() -> None:
     }.issubset(directive_ids)
 
 
-def test_workflow_codex_rule_requires_control_contract_tokens() -> None:
+def test_change_governance_rule_requires_compositional_routing_tokens() -> None:
     manifest = contracts._load_manifest()
     rules = manifest["content_rules"]
-    workflow_rule = next(
-        rule for rule in rules if rule["file"] == "docs/WORKFLOW_CODEX.md"
+    change_rule = next(
+        rule for rule in rules if rule["file"] == "docs/governance/CHANGE_GOVERNANCE.md"
     )
-    must_contain = set(workflow_rule["must_contain"])
-    assert "Workflow authority" in must_contain
+    must_contain = set(change_rule["must_contain"])
+    assert "Authority order" in must_contain
     assert "config/project/policy_pack.json" in must_contain
-    assert "Authority files must be tracked in Git" in must_contain
-    assert "## Common preconditions" in must_contain
-    assert (
-        "## Machine-readable task routing and composable verification" in must_contain
-    )
-    assert "Ordinary isolated fixes" in must_contain
-    assert "Read the full policy pack only for governance" in must_contain
-    assert "## Boundary model" in must_contain
-    assert "CODEX_MODE=1 ./scripts/verify.sh" in must_contain
-
-
-def test_trace_schema_version_parity_governance_accepts_baseline(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_trace_schema_version_parity_governance(tmp_path)
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    assert (
-        contracts._validate_trace_schema_version_normalization_parity_governance() == []
-    )
-
-
-def test_trace_schema_version_parity_governance_requires_doc(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_trace_schema_version_parity_governance(tmp_path)
-    (
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "trace_schema_version_normalization_parity.md"
-    ).unlink()
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_trace_schema_version_normalization_parity_governance()
-
-    assert any(
-        "trace schema/version normalization parity" in item.message for item in issues
-    )
-
-
-def test_trace_schema_version_parity_governance_rejects_transfer_claim(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_trace_schema_version_parity_governance(tmp_path)
-    doc = (
-        tmp_path
-        / "docs"
-        / "architecture"
-        / "trace_schema_version_normalization_parity.md"
-    )
-    _write_text(
-        doc, doc.read_text(encoding="utf-8") + "This slice transfers authority.\n"
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_trace_schema_version_normalization_parity_governance()
-
-    assert any(
-        "must not claim invalid Stage 22 status" in item.message for item in issues
-    )
-
-
-def test_trace_schema_version_parity_governance_requires_drift_surfaces(
-    tmp_path: Path, monkeypatch
-) -> None:
-    _write_minimal_trace_schema_version_parity_governance(tmp_path)
-    drift_map = tmp_path / "docs" / "governance" / "drift_protection_map.md"
-    drift_map.write_text(
-        drift_map.read_text(encoding="utf-8").replace(
-            "tests/unit/migration/test_trace_schema_version_normalization_parity.py\n",
-            "",
-        ),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
-
-    issues = contracts._validate_trace_schema_version_normalization_parity_governance()
-
-    assert any(
-        "test_trace_schema_version_normalization_parity.py" in item.message
-        for item in issues
-    )
+    assert "## Compositional routing" in must_contain
+    assert "`review_only`" in must_contain
+    assert "`governance_and_tooling`" in must_contain
+    assert "VERIFICATION.md" in must_contain
 
 
 def test_current_state_rule_enforces_restart_only_scope() -> None:
@@ -2657,7 +583,10 @@ def test_deprecated_authority_checks_detect_reintroduced_path(
         {
             "deprecated_authorities": {
                 "blocked_paths": ["docs/RDS_AND_CODEX.md"],
-                "reference_checks": [],
+                "reference_checks": {
+                    "files": ["AGENTS.md"],
+                    "must_not_contain": ["docs/RDS_AND_CODEX.md"],
+                },
             }
         },
     )
@@ -2683,12 +612,10 @@ def test_deprecated_authority_checks_detect_stale_active_reference(
         {
             "deprecated_authorities": {
                 "blocked_paths": [],
-                "reference_checks": [
-                    {
-                        "file": ".github/pull_request_template.md",
-                        "must_not_contain": ["docs/governance/task_contract.md"],
-                    }
-                ],
+                "reference_checks": {
+                    "files": [".github/pull_request_template.md"],
+                    "must_not_contain": ["docs/governance/task_contract.md"],
+                },
             }
         },
     )
@@ -2719,12 +646,10 @@ def test_deprecated_authority_checks_allow_historical_reference(
         {
             "deprecated_authorities": {
                 "blocked_paths": ["docs/governance/task_contract.md"],
-                "reference_checks": [
-                    {
-                        "file": ".github/pull_request_template.md",
-                        "must_not_contain": ["docs/governance/task_contract.md"],
-                    }
-                ],
+                "reference_checks": {
+                    "files": [".github/pull_request_template.md"],
+                    "must_not_contain": ["docs/governance/task_contract.md"],
+                },
             }
         },
     )
@@ -2753,25 +678,22 @@ def test_retired_active_ledgers_stay_out_of_machine_governance() -> None:
     deprecated = payload["deprecated_authorities"]
     assert retired.issubset(set(deprecated["blocked_paths"]))
 
-    checks = {
-        check["file"]: set(check["must_not_contain"])
-        for check in deprecated["reference_checks"]
-    }
-    active_routes = {
+    checks = deprecated["reference_checks"]
+    active_files = {
         "AGENTS.md",
-        "docs/WORKFLOW_CODEX.md",
-        "docs/DOCUMENTATION_MAP.md",
-        "docs/governance/README.md",
-        "docs/governance/drift_protection_map.md",
-        "docs/governance/review_checklist.md",
+        "docs/governance/ENGINEERING.md",
+        "docs/governance/VERIFICATION.md",
+        "docs/governance/SECURITY_AND_SANITATION.md",
+        "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+        "docs/governance/NATIVE_AND_PLATFORM.md",
+        "docs/governance/CHANGE_GOVERNANCE.md",
         ".github/pull_request_template.md",
-        "docs/governance/workspace_bundle/review_checklist_template.md",
         "godot/AGENTS.md",
         "native/AGENTS.md",
         "CURRENT_STATE.md",
     }
-    for route in active_routes:
-        assert retired.issubset(checks[route])
+    assert active_files.issubset(set(checks["files"]))
+    assert retired.issubset(set(checks["must_not_contain"]))
 
 
 # Codex routing model contract
@@ -2781,7 +703,6 @@ def _codex_authority_model() -> dict[str, str]:
     return {
         "machine_authority": "config/project/policy_pack.json",
         "dispatch_file": "AGENTS.md",
-        "workflow_doc": "docs/WORKFLOW_CODEX.md",
         "handoff_doc": "CURRENT_STATE.md",
         "product_requirements_root": "docs/rds/",
         "architecture_contract": "docs/ARCHITECTURE_CONTRACT.md",
@@ -2790,7 +711,7 @@ def _codex_authority_model() -> dict[str, str]:
     }
 
 
-def _codex_task_types() -> dict[str, object]:
+def _codex_routes() -> dict[str, object]:
     return {
         "product_planning": {
             "authority_keys": ["professional_product_programme"],
@@ -2815,8 +736,7 @@ def _codex_task_types() -> dict[str, object]:
             "typical_verification_requirements": ["deterministic"],
         },
         "governance_and_tooling": {
-            "dispatch_paths": ["docs/governance/README.md"],
-            "authority_keys": ["machine_authority"],
+            "authority_keys": ["machine_authority", "change_governance"],
             "typical_verification_requirements": ["governance_structure"],
         },
         "packaging_and_release": {
@@ -2830,8 +750,8 @@ def _codex_policy_payload() -> dict[str, object]:
     return {
         "authority_model": _codex_authority_model(),
         "codex_routing": {
-            "schema_version": 1,
-            "task_types": _codex_task_types(),
+            "schema_version": 2,
+            "routes": _codex_routes(),
             "workflow_modifiers": sorted(contracts.SUPPORTED_CODEX_WORKFLOW_MODIFIERS),
             "verification_requirements": sorted(
                 contracts.SUPPORTED_CODEX_VERIFICATION_REQUIREMENTS
@@ -2849,7 +769,6 @@ def _install_codex_policy_fixture(
         *contracts.CODEX_AUTHORITY_POINTERS.values(),
         "godot/AGENTS.md",
         "native/AGENTS.md",
-        "docs/governance/README.md",
         "docs/RELEASE_CHECKLIST.md",
     }
     for rel in paths:
@@ -2926,14 +845,14 @@ def test_codex_routing_rejects_untracked_pointer_target(
     )
 
 
-def test_codex_routing_rejects_unknown_task_type(tmp_path: Path, monkeypatch) -> None:
+def test_codex_routing_rejects_unknown_route(tmp_path: Path, monkeypatch) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["unknown_task"] = payload["codex_routing"][
-        "task_types"
+    payload["codex_routing"]["routes"]["unknown_route"] = payload["codex_routing"][
+        "routes"
     ].pop("product_planning")
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     issues = contracts._validate_codex_routing_model()
-    assert any("unknown_task" in issue.message for issue in issues)
+    assert any("unknown_route" in issue.message for issue in issues)
     assert any("product_planning" in issue.message for issue in issues)
 
 
@@ -2957,7 +876,7 @@ def test_codex_routing_rejects_unknown_authority_key(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["product_planning"]["authority_keys"] = [
+    payload["codex_routing"]["routes"]["product_planning"]["authority_keys"] = [
         "missing_authority"
     ]
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
@@ -2969,9 +888,9 @@ def test_codex_routing_rejects_invalid_dispatch_path(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["packaging_and_release"][
-        "dispatch_paths"
-    ] = ["../release.md"]
+    payload["codex_routing"]["routes"]["packaging_and_release"]["dispatch_paths"] = [
+        "../release.md"
+    ]
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     issues = contracts._validate_codex_routing_model()
     assert any("repository-relative" in issue.message for issue in issues)
@@ -2981,7 +900,7 @@ def test_codex_routing_rejects_unknown_typical_requirement(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["product_planning"][
+    payload["codex_routing"]["routes"]["product_planning"][
         "typical_verification_requirements"
     ] = ["unknown_requirement"]
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
@@ -2989,41 +908,41 @@ def test_codex_routing_rejects_unknown_typical_requirement(
     assert any("unknown_requirement" in issue.message for issue in issues)
 
 
-def test_codex_routing_accepts_authority_only_task(tmp_path: Path, monkeypatch) -> None:
+def test_codex_routing_accepts_authority_only_route(
+    tmp_path: Path, monkeypatch
+) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["product_planning"].pop(
-        "dispatch_paths", None
-    )
+    payload["codex_routing"]["routes"]["product_planning"].pop("dispatch_paths", None)
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     assert contracts._validate_codex_routing_model() == []
 
 
-def test_codex_routing_accepts_dispatch_only_task(tmp_path: Path, monkeypatch) -> None:
+def test_codex_routing_accepts_dispatch_only_route(tmp_path: Path, monkeypatch) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["packaging_and_release"].pop(
+    payload["codex_routing"]["routes"]["packaging_and_release"].pop(
         "authority_keys", None
     )
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     assert contracts._validate_codex_routing_model() == []
 
 
-def test_codex_routing_accepts_task_with_both_routes(
+def test_codex_routing_accepts_route_with_authority_and_dispatch(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _codex_policy_payload()
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
-    task = payload["codex_routing"]["task_types"]["godot_product_shell"]
-    assert "authority_keys" in task and "dispatch_paths" in task
+    route = payload["codex_routing"]["routes"]["godot_product_shell"]
+    assert "authority_keys" in route and "dispatch_paths" in route
     assert contracts._validate_codex_routing_model() == []
 
 
-def test_codex_routing_rejects_task_with_neither_route(
+def test_codex_routing_rejects_route_without_context(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _codex_policy_payload()
-    task = payload["codex_routing"]["task_types"]["product_planning"]
-    task.pop("authority_keys", None)
-    task.pop("dispatch_paths", None)
+    route = payload["codex_routing"]["routes"]["product_planning"]
+    route.pop("authority_keys", None)
+    route.pop("dispatch_paths", None)
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     issues = contracts._validate_codex_routing_model()
     assert any(
@@ -3036,7 +955,7 @@ def test_codex_routing_rejects_empty_authority_keys(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["product_planning"]["authority_keys"] = []
+    payload["codex_routing"]["routes"]["product_planning"]["authority_keys"] = []
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     issues = contracts._validate_codex_routing_model()
     assert any(
@@ -3048,9 +967,7 @@ def test_codex_routing_rejects_empty_dispatch_paths(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _codex_policy_payload()
-    payload["codex_routing"]["task_types"]["packaging_and_release"][
-        "dispatch_paths"
-    ] = []
+    payload["codex_routing"]["routes"]["packaging_and_release"]["dispatch_paths"] = []
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     issues = contracts._validate_codex_routing_model()
     assert any(

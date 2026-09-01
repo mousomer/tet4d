@@ -53,7 +53,12 @@ def _validate_unified_manifest_shape() -> list[str]:
         (
             "machine_authority",
             "dispatch_file",
-            "workflow_doc",
+            "engineering_governance",
+            "verification_governance",
+            "security_and_sanitation_governance",
+            "config_and_generated_data_governance",
+            "native_and_platform_governance",
+            "change_governance",
             "handoff_doc",
             "product_requirements_root",
         ),
@@ -65,7 +70,7 @@ def _validate_unified_manifest_shape() -> list[str]:
         (
             "verification_command",
             "ci_entrypoint",
-            "policy_index_contract",
+            "canonical_governance_contract",
             "menu_simplification_manifest_rule",
             "menu_structure_single_source",
             "contributor_directives",
@@ -122,12 +127,10 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         lint_menu_graph,
         validate_authority_transfer,
         validate_config_authority,
-        validate_drift_protection,
         validate_godot_semantic_boundary,
         validate_live_board_visual_roles,
         validate_native_cpp_tooling,
         validate_project_contracts,
-        validate_technical_debt,
         validate_utility_reuse,
         validate_workspace_bundle,
     )
@@ -135,9 +138,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
     return (
         GovernanceCheck("contracts", validate_project_contracts.main),
         GovernanceCheck("workspace_bundle", validate_workspace_bundle.main),
-        GovernanceCheck("technical_debt", validate_technical_debt.main),
         GovernanceCheck("authority_transfer", validate_authority_transfer.main),
-        GovernanceCheck("project_drift_protection", validate_drift_protection.main),
         GovernanceCheck("config_authority", validate_config_authority.main),
         GovernanceCheck(
             "godot_semantic_boundary", validate_godot_semantic_boundary.main

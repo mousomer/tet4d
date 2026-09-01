@@ -30,7 +30,7 @@ oracle until native trace parity passes against the checked-in topology and
 topology-aware gameplay traces.
 
 Use `docs/architecture/authority_map.md` and
-`docs/governance/godot_cpp_policy.md` as the routing overlay for future
+`docs/governance/NATIVE_AND_PLATFORM.md` as the authority context for future
 Godot/C++ topology migration work. They do not authorize topology
 implementation ahead of this plan's staged parity gates.
 

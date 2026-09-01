@@ -2,7 +2,7 @@
 
 This map defines current semantics ownership, migration ownership, and product-
 subsystem authority. It complements `config/project/policy_pack.json`,
-`docs/WORKFLOW_CODEX.md`, `docs/ARCHITECTURE_CONTRACT.md`, relevant
+`docs/governance/CHANGE_GOVERNANCE.md`, `docs/ARCHITECTURE_CONTRACT.md`, relevant
 `docs/rds/*`, `docs/architecture/parity_protocol.md`, and
 `docs/plans/professional_godot_game_programme.md`; it does not replace them.
 

@@ -32,9 +32,10 @@ schema/version metadata-only evidence under Python authority and does not add
 Godot scenes, resources, rendering, topology movement, gameplay semantics, or
 authority transfer.
 
-The repo-wide migration routing overlay is `docs/governance/README.md`; the
-ownership boundary summary is `docs/architecture/authority_map.md`. Those files
-clarify this plan without superseding the Python-centered policy pack.
+Repository routing is compositional under `AGENTS.md`; native authority and
+platform rules live in `docs/governance/NATIVE_AND_PLATFORM.md`, and the
+ownership boundary summary is `docs/architecture/authority_map.md`. Those
+files clarify this plan without superseding the Python-centered policy pack.
 
 ## 2. Why Godot
 

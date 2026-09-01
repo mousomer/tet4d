@@ -83,7 +83,7 @@ def _payload() -> dict[str, object]:
 
 def test_documentation_only_change_stays_focused() -> None:
     result = classify_paths(
-        ["docs/WORKFLOW_CODEX.md"],
+        ["docs/governance/CHANGE_GOVERNANCE.md"],
         config=load_path_classification_config(_payload()),
     )
 

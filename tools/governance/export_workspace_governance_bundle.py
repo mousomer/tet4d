@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-BUNDLE_ROOT = ROOT / "docs" / "governance" / "workspace_bundle"
+BUNDLE_ROOT = ROOT / "tools" / "templates" / "governance"
 
 
 def _bundle_files() -> list[Path]:
@@ -44,7 +44,7 @@ def _copy_bundle(*, target: Path, force: bool, dry_run: bool) -> int:
     print("1. Add a project-specific AGENTS.md using AGENTS.template.md.")
     print("2. Add project authority/config/testing overlays.")
     print("3. Add project verification commands.")
-    print("4. Link the bundle from the project governance router.")
+    print("4. Establish the copied files as project authority only after review.")
     return 0
 
 

@@ -155,7 +155,10 @@ def test_native_cpp_tooling_ci_advisory_skips_opportunistic_clang_execution(
     )
 
 
-def test_native_cpp_tooling_preserves_python_authority_in_policy() -> None:
-    policy = Path("docs/governance/cpp_safety_policy.md").read_text(encoding="utf-8")
+def test_native_cpp_tooling_does_not_claim_semantic_authority() -> None:
+    policy = Path("docs/governance/NATIVE_AND_PLATFORM.md").read_text(encoding="utf-8")
 
-    assert "Python remains the semantic oracle" in policy
+    assert (
+        "Tooling success is a quality gate, never parity or semantic authority"
+        in policy
+    )

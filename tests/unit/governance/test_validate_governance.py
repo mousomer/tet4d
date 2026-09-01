@@ -22,7 +22,12 @@ def test_unified_manifest_shape_requires_core_sections(
             "authority_model": {
                 "machine_authority": "config/project/policy_pack.json",
                 "dispatch_file": "AGENTS.md",
-                "workflow_doc": "docs/WORKFLOW_CODEX.md",
+                "engineering_governance": "docs/governance/ENGINEERING.md",
+                "verification_governance": "docs/governance/VERIFICATION.md",
+                "security_and_sanitation_governance": "docs/governance/SECURITY_AND_SANITATION.md",
+                "config_and_generated_data_governance": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+                "native_and_platform_governance": "docs/governance/NATIVE_AND_PLATFORM.md",
+                "change_governance": "docs/governance/CHANGE_GOVERNANCE.md",
                 "handoff_doc": "CURRENT_STATE.md",
                 "product_requirements_root": "docs/rds/",
             },

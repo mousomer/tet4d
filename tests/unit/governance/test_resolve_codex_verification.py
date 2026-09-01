@@ -19,8 +19,8 @@ def _policy() -> dict[str, object]:
             "subsystem_authority_map": "docs/architecture/authority_map.md",
         },
         "codex_routing": {
-            "schema_version": 1,
-            "task_types": {
+            "schema_version": 2,
+            "routes": {
                 "product_planning": {
                     "authority_keys": ["machine_authority"],
                     "typical_verification_requirements": ["documentation"],
@@ -70,7 +70,7 @@ def _policy() -> dict[str, object]:
 
 def _request(**overrides: object) -> dict[str, object]:
     request: dict[str, object] = {
-        "task_type": "native_deterministic_core",
+        "routes": ["native_deterministic_core"],
         "workflow_modifiers": [],
         "repository_changed": True,
         "affected_layers": ["native"],
@@ -88,7 +88,7 @@ def _request(**overrides: object) -> dict[str, object]:
 def test_review_only_resolves_to_empty_requirements() -> None:
     result = resolve_request(
         {
-            "task_type": "product_planning",
+            "routes": ["product_planning"],
             "workflow_modifiers": ["review_only"],
             "repository_changed": False,
             "affected_layers": ["documentation"],
@@ -106,7 +106,7 @@ def test_review_only_rejects_repository_change() -> None:
     with pytest.raises(ResolutionError, match="repository_changed"):
         resolve_request(
             {
-                "task_type": "product_planning",
+                "routes": ["product_planning"],
                 "workflow_modifiers": ["review_only"],
                 "repository_changed": True,
                 "claims": [{"description": "Review."}],
@@ -119,7 +119,7 @@ def test_review_only_rejects_executable_requirements() -> None:
     with pytest.raises(ResolutionError, match="executable"):
         resolve_request(
             {
-                "task_type": "product_planning",
+                "routes": ["product_planning"],
                 "workflow_modifiers": ["review_only"],
                 "repository_changed": False,
                 "claims": [
@@ -146,6 +146,45 @@ def test_repository_change_requires_claim() -> None:
 def test_typical_requirements_are_included() -> None:
     result = resolve_request(_request(), policy=_policy())
     assert result.verification_requirements == ("native", "deterministic")
+
+
+def test_native_and_packaging_routes_compose_by_union() -> None:
+    result = resolve_request(
+        _request(routes=["native_deterministic_core", "packaging_and_release"]),
+        policy=_policy(),
+    )
+    assert result.routes == ("native_deterministic_core", "packaging_and_release")
+    assert result.verification_requirements == (
+        "native",
+        "deterministic",
+        "packaging",
+        "platform",
+    )
+    assert result.authorities == (
+        "docs/ARCHITECTURE_CONTRACT.md",
+        "docs/architecture/authority_map.md",
+        "native/AGENTS.md",
+        "docs/rds/RDS_PACKAGING.md",
+    )
+
+
+def test_zero_routes_still_uses_diff_claim_and_verification_floor() -> None:
+    result = resolve_request(
+        _request(
+            routes=[],
+            affected_layers=["documentation"],
+            claims=[{"description": "Clarify documentation."}],
+        ),
+        policy=_policy(),
+    )
+    assert result.routes == ()
+    assert result.typical_verification_requirements == ()
+    assert result.verification_requirements == ("documentation",)
+
+
+def test_zero_routes_cannot_bypass_repository_change_floor() -> None:
+    with pytest.raises(ResolutionError, match="affected_layers"):
+        resolve_request(_request(routes=[], affected_layers=[]), policy=_policy())
 
 
 def test_omitted_typical_requirement_requires_rationale() -> None:
@@ -229,7 +268,7 @@ def test_cross_layer_adds_integration_and_scope_matrix() -> None:
 def test_platform_and_release_requirements_are_independent() -> None:
     result = resolve_request(
         {
-            "task_type": "packaging_and_release",
+            "routes": ["packaging_and_release"],
             "workflow_modifiers": [],
             "repository_changed": True,
             "affected_layers": ["platform", "release"],
@@ -252,7 +291,7 @@ def test_platform_and_release_requirements_are_independent() -> None:
 def test_packaging_prose_can_resolve_to_documentation_only() -> None:
     result = resolve_request(
         {
-            "task_type": "packaging_and_release",
+            "routes": ["packaging_and_release"],
             "workflow_modifiers": [],
             "repository_changed": True,
             "affected_layers": ["documentation"],
@@ -274,9 +313,9 @@ def test_full_gate_override_is_preserved() -> None:
     assert result.requires_full_repository_gate is True
 
 
-def test_unknown_task_type_is_rejected() -> None:
-    with pytest.raises(ResolutionError, match="unknown task_type"):
-        resolve_request(_request(task_type="other"), policy=_policy())
+def test_unknown_route_is_rejected() -> None:
+    with pytest.raises(ResolutionError, match="routes contains unknown"):
+        resolve_request(_request(routes=["other"]), policy=_policy())
 
 
 def test_unknown_modifier_is_rejected() -> None:
@@ -320,7 +359,7 @@ def test_markdown_report_contains_completion_fields() -> None:
         policy=_policy(),
     )
     rendered = render_markdown(result)
-    assert "Task type:" in rendered
+    assert "Routes:" in rendered
     assert "Checks run:" in rendered
     assert "Typical checks not run:" in rendered
     assert "Authority reused, transferred, or established:" in rendered

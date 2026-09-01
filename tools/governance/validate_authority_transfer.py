@@ -14,16 +14,12 @@ REQUIRED_FILES = (
     "docs/architecture/authority_map.md",
     "docs/architecture/parity_protocol.md",
     "docs/plans/professional_godot_game_programme.md",
-    "docs/governance/godot_cpp_policy.md",
-    "docs/governance/cpp_safety_policy.md",
-    "docs/governance/testing_policy.md",
-    "docs/governance/drift_protection_map.md",
-    "docs/governance/README.md",
-    "docs/governance/review_checklist.md",
+    "docs/governance/NATIVE_AND_PLATFORM.md",
+    "docs/governance/VERIFICATION.md",
+    "docs/governance/CHANGE_GOVERNANCE.md",
     "tools/governance/validate_authority_transfer.py",
     "tools/governance/validate_governance.py",
     "tools/governance/validate_project_contracts.py",
-    "tools/governance/validate_drift_protection.py",
 )
 
 TRANSFER_COLUMNS = (
@@ -405,10 +401,7 @@ def check_required_files(root: Path = ROOT) -> CheckResult:
 def check_router_links(root: Path = ROOT) -> CheckResult:
     failures: list[str] = []
     required_links = {
-        "docs/governance/README.md": (
-            PROTOCOL_REL,
-            "tools/governance/validate_authority_transfer.py",
-        ),
+        "AGENTS.md": (PROTOCOL_REL,),
         "docs/architecture/authority_map.md": (PROTOCOL_REL,),
         "docs/architecture/parity_protocol.md": (PROTOCOL_REL,),
         "docs/plans/professional_godot_game_programme.md": (
@@ -422,12 +415,6 @@ def check_router_links(root: Path = ROOT) -> CheckResult:
             if link not in text:
                 failures.append(f"{rel} does not link to {link}")
 
-    drift_map = _read_rel(root, "docs/governance/drift_protection_map.md", failures)
-    for token in ("authority_transfer_protocol.md", "validate_authority_transfer.py"):
-        if token not in drift_map:
-            failures.append(
-                f"docs/governance/drift_protection_map.md does not mention {token}"
-            )
     return CheckResult("router links", failures)
 
 
@@ -478,7 +465,7 @@ def check_record_tables(
 
 def _scan_markdown_rels(root: Path) -> list[str]:
     rels = list(SCAN_RELS)
-    for directory in ("docs/governance", "docs/architecture", "docs/policies"):
+    for directory in ("docs/governance", "docs/architecture"):
         base = root / directory
         if not base.exists():
             continue
@@ -578,48 +565,38 @@ def check_parity_protocol_consistency(root: Path = ROOT) -> CheckResult:
 
 def check_policy_consistency(root: Path = ROOT) -> CheckResult:
     failures: list[str] = []
-    godot = _read_rel(root, "docs/governance/godot_cpp_policy.md", failures)
-    godot_lower = godot.lower()
+    native = _read_rel(root, "docs/governance/NATIVE_AND_PLATFORM.md", failures)
+    native_lower = native.lower()
     if not (
-        "gdscript" in godot_lower
-        and "inherited" in godot_lower
-        and ("must not" in godot_lower or "does not" in godot_lower)
+        "godot" in native_lower
+        and "inherited" in native_lower
+        and ("must not" in native_lower or "does not" in native_lower)
     ):
         failures.append(
-            "docs/governance/godot_cpp_policy.md must prevent GDScript from "
+            "docs/governance/NATIVE_AND_PLATFORM.md must prevent Godot from "
             "duplicating inherited semantic truth"
         )
-    if "authority_transfer_protocol.md" not in godot:
+    if "authority_transfer_protocol.md" not in native:
         failures.append(
-            "docs/governance/godot_cpp_policy.md must refer to authority protocol"
+            "docs/governance/NATIVE_AND_PLATFORM.md must refer to authority protocol"
         )
-    if "establish" not in godot_lower:
+    if "establish" not in native_lower:
         failures.append(
-            "docs/governance/godot_cpp_policy.md must route new authority establishment"
+            "docs/governance/NATIVE_AND_PLATFORM.md must route new authority establishment"
         )
-
-    cpp = _read_rel(root, "docs/governance/cpp_safety_policy.md", failures)
-    cpp_lower = cpp.lower()
-    if not ("provisional" in cpp_lower or "parity" in cpp_lower):
+    if not ("provisional" in native_lower or "parity" in native_lower):
         failures.append(
-            "docs/governance/cpp_safety_policy.md must keep inherited C++ "
+            "docs/governance/NATIVE_AND_PLATFORM.md must keep inherited native "
             "authority provisional or parity-gated"
         )
-    if "authority_transfer_protocol.md" not in cpp:
-        failures.append(
-            "docs/governance/cpp_safety_policy.md must refer to authority protocol"
-        )
-    if "establish" not in cpp_lower:
-        failures.append(
-            "docs/governance/cpp_safety_policy.md must define new authority "
-            "establishment"
-        )
-    return CheckResult("Godot/C++ policy consistency", failures)
+    return CheckResult("native/platform policy consistency", failures)
 
 
-def check_review_checklist(root: Path = ROOT) -> CheckResult:
+def check_change_and_verification_governance(root: Path = ROOT) -> CheckResult:
     failures: list[str] = []
-    text = _read_rel(root, "docs/governance/review_checklist.md", failures)
+    change = _read_rel(root, "docs/governance/CHANGE_GOVERNANCE.md", failures)
+    verification = _read_rel(root, "docs/governance/VERIFICATION.md", failures)
+    text = f"{change}\n{verification}"
     concepts = {
         "authority transfer": ("authority transfer",),
         "authority establishment": ("authority establishment",),
@@ -632,9 +609,9 @@ def check_review_checklist(root: Path = ROOT) -> CheckResult:
     }
     for concept in contains_concepts(text, concepts):
         failures.append(
-            f"docs/governance/review_checklist.md is missing concept `{concept}`"
+            f"canonical change/verification governance is missing concept `{concept}`"
         )
-    return CheckResult("review checklist", failures)
+    return CheckResult("change and verification governance", failures)
 
 
 def validate(
@@ -650,7 +627,7 @@ def validate(
         check_authority_map_consistency(transfers, establishments, root),
         check_parity_protocol_consistency(root),
         check_policy_consistency(root),
-        check_review_checklist(root),
+        check_change_and_verification_governance(root),
     ]
     return results, transfers, establishments
 

@@ -1,5 +1,7 @@
 # Dependency and Utility Reuse Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 Prefer existing project utilities before adding new helpers.
 
 Prefer existing stable libraries for nontrivial generic functionality such as

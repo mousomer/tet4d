@@ -22,6 +22,8 @@ Forbidden changes and explicit deferrals:
 
 ## Authority and semantic impact
 
+- Selected routes and workflow modifiers:
+- Affected layers and claims:
 - Current authority:
 - Behavior/schema/identity impact:
 - Authority change or transfer: None
@@ -36,6 +38,10 @@ Forbidden changes and explicit deferrals:
 - [ ] Native tooling changes exercised `TET4D_STRICT_NATIVE_TOOLS=1`, or the
       blocker is recorded.
 - [ ] Tests were not weakened to fit implementation.
+
+Required evidence and justified omissions:
+
+- <!-- evidence requirement, or omitted default plus rationale -->
 
 Validation commands and results:
 
@@ -71,7 +77,7 @@ Unresolved limitations:
 - [ ] Existing utilities were searched and no unnecessary duplicate helper was
       introduced.
 - [ ] Config/constants authority remains explicit.
-- [ ] Technical debt and drift protection impact reviewed.
+- [ ] Open debt/deferrals and drift risk were reviewed in `docs/BACKLOG.md`.
 - [ ] Generated outputs identify their source and were not hand-edited.
 - [ ] Unrelated formatting/toolchain work is separated where practical.
 - [ ] Staging is intentional; `git diff --cached --check` passed.

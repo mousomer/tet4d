@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-BUNDLE_REL = "docs/governance/workspace_bundle"
+BUNDLE_REL = "tools/templates/governance"
 BUNDLE_ROOT = ROOT / BUNDLE_REL
 EXPORT_HELPER_REL = "tools/governance/export_workspace_governance_bundle.py"
 REQUIRED_BUNDLE_FILES = {
@@ -24,23 +24,15 @@ REQUIRED_BUNDLE_FILES = {
     "AGENTS.template.md",
 }
 FORBIDDEN_TERMS = (
-    "tet4d",
     "4d tetris",
     "w-slice",
     "godot is the tet4d product shell",
     "python is the current tet4d semantic oracle",
+    "this bundle is for tet4d",
     "migration/exported_bundle",
     "config/project/policy_pack.json",
 )
-PROJECT_OVERLAY_RELS = (
-    "docs/governance/codex_policy.md",
-    "docs/governance/config_policy.md",
-    "docs/governance/testing_policy.md",
-    "docs/governance/secrets_policy.md",
-    "docs/governance/godot_cpp_policy.md",
-    "docs/governance/cpp_safety_policy.md",
-    "docs/governance/review_checklist.md",
-)
+NON_AUTHORITY_MARKER = "status: non-authoritative template"
 
 
 @dataclass(frozen=True)
@@ -116,6 +108,14 @@ def _validate_project_neutrality(root: Path, issues: list[BundleIssue]) -> None:
         return
     for path in sorted(bundle_root.glob("*.md")):
         text = path.read_text(encoding="utf-8").lower()
+        if NON_AUTHORITY_MARKER not in text:
+            rel = path.relative_to(root).as_posix()
+            issues.append(
+                BundleIssue(
+                    "content",
+                    f"{rel} must be labeled as a non-authoritative template",
+                )
+            )
         for term in FORBIDDEN_TERMS:
             if term in text:
                 rel = path.relative_to(root).as_posix()
@@ -125,28 +125,6 @@ def _validate_project_neutrality(root: Path, issues: list[BundleIssue]) -> None:
                         f"{rel} contains project-specific forbidden term: {term}",
                     )
                 )
-
-
-def _validate_router_links(root: Path, issues: list[BundleIssue]) -> None:
-    router = _read_text(root, "docs/governance/README.md", issues)
-    if router is not None and "docs/governance/workspace_bundle/" not in router:
-        issues.append(
-            BundleIssue(
-                "content",
-                "docs/governance/README.md must link to workspace bundle",
-            )
-        )
-
-    for rel in PROJECT_OVERLAY_RELS:
-        text = _read_text(root, rel, issues)
-        if text is None:
-            continue
-        if "docs/governance/workspace_bundle/" not in text and (
-            "workspace_bundle/programming_policy.md" not in text
-        ):
-            issues.append(
-                BundleIssue("content", f"{rel} must link to workspace bundle")
-            )
 
 
 def _validate_export_helper(root: Path, issues: list[BundleIssue]) -> None:
@@ -178,7 +156,6 @@ def validate(root: Path = ROOT) -> list[BundleIssue]:
     _validate_required_files(root, issues)
     _validate_manifest(root, issues)
     _validate_project_neutrality(root, issues)
-    _validate_router_links(root, issues)
     _validate_export_helper(root, issues)
     return issues
 

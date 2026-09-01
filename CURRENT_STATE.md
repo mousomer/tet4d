@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
 Last updated: 2026-09-01
-Working state: re-governance PR 1 on `codex/regovernance-retire-ledgers`, based
-on `master` at `245dc9ab18f0ecd5ce0e7d95d558a757076d248c`
+Working state: re-governance PR 2 on `codex/regovernance-canonical-owners`,
+based on merged PR 1 commit `bfea3bdb650fcec273ec98647eda810d6cef194f`
 
 ## Purpose
 
@@ -12,13 +12,13 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Active Focus
 
-- Current objective: retire the accumulated task and completion ledgers from
-  active governance, preserve durable evidence as explicitly non-authoritative
-  history, and keep all surviving governance semantics unchanged.
+- Current objective: consolidate contributor process into six canonical human
+  owners, make route selection compositional, retire overlapping policy and
+  routing documents, and preserve all product/architecture semantics.
 - Current blocker: none known for this governance-only cut.
-- Established baseline: the worktree was clean when this branch was created
-  from current `master`. No frozen or unrelated feature branch is part of the
-  change.
+- Established baseline: PR 1 merged green, master was clean at the SHA above,
+  and this fresh branch was created from that exact commit. No frozen or
+  unrelated feature branch is part of the change.
 - Product and release execution chronology is intentionally excluded. Resume
   such work only from its owning RDS, release documentation, open backlog, and
   a newly approved task scope.
@@ -26,9 +26,8 @@ stage archive, a task-contract ledger, or a future programme.
 ## Current Authority
 
 - Machine governance and task routing: `config/project/policy_pack.json`
-- Contributor workflow: `docs/WORKFLOW_CODEX.md`
-- Governance router: `docs/governance/README.md`
-- Documentation ownership: `docs/DOCUMENTATION_MAP.md`
+- Contributor dispatch: `AGENTS.md`
+- Canonical human governance: the six owner files under `docs/governance/`
 - Product behaviour: relevant `docs/rds/*`
 - Architecture boundaries: `docs/ARCHITECTURE_CONTRACT.md`
 - Subsystem ownership: `docs/architecture/authority_map.md`
@@ -37,12 +36,12 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Next Acceptance Boundary
 
-1. PR 1 is ready only when the retired active paths are absent and protected,
-   no active route enters historical material, this handoff remains compact,
-   and all required governance and full-repository checks are green.
-2. Stop after PR 1. Canonical governance consolidation, compositional routing,
-   workflow retirement, policy-layer consolidation, documentation-map
-   disposition, and a single-owner model remain PR 2 work.
+1. PR 2 is ready only when all six canonical owners are reachable, old
+   authorities are absent and protected, route/evidence unions have regression
+   coverage, stale active pointers are gone, size constraints hold, and focused
+   plus full-repository checks are green.
+2. Stop after PR 2. Broad policy-pack shrink, validator size/provenance budgets,
+   and backlog reduction remain PR 3 work.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
@@ -58,11 +57,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.96` (`low`)
+- `tech_debt.score = 5.93` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.94`
+1. `delivery_size_pressure = 2.91`
 2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -73,14 +72,14 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 
 Top 8 live Python hotspots by real LOC:
 
-1. `tools/governance/validate_project_contracts.py`: `4083` real LOC
-2. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
-3. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
-4. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
-5. `tests/unit/governance/test_governance_validate_project_contracts.py`: `2548` real LOC
-6. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
-7. `scripts/arch_metrics.py`: `1899` real LOC
-8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
+1. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
+2. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
+3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
+4. `tools/governance/validate_project_contracts.py`: `2676` real LOC
+5. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
+6. `scripts/arch_metrics.py`: `1899` real LOC
+7. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
+8. `src/tet4d/ui/pygame/endgame_animation.py`: `1869` real LOC
 
 Thin-wrapper budgets:
 
