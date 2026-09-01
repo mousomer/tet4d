@@ -159,6 +159,47 @@ def test_required_paths_accept_git_tracked_file(tmp_path: Path, monkeypatch) -> 
     assert issues == []
 
 
+def test_architecture_evidence_required_paths_detect_missing_document(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = json.loads(contracts.POLICY_PACK_PATH.read_text(encoding="utf-8"))
+    evidence_paths = payload["maintenance_contract"]["required_paths"][
+        "architecture_evidence"
+    ]
+    missing_rel = "docs/architecture/parity_pilot_audit_and_promotion_gates.md"
+
+    assert evidence_paths == [
+        "docs/architecture/first_subsystem_parity_pilot.md",
+        missing_rel,
+        "docs/architecture/second_parity_slice_candidate_selection.md",
+        "docs/architecture/trace_metadata_identity_digest_parity.md",
+        "docs/architecture/topology_identifier_normalization_parity.md",
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
+        "docs/architecture/parity_evidence_package_review.md",
+        "docs/architecture/trace_schema_version_normalization_parity.md",
+    ]
+
+    for rel in evidence_paths:
+        if rel == missing_rel:
+            continue
+        path = tmp_path / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("evidence\n", encoding="utf-8")
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(
+        contracts, "_git_tracked_paths", lambda issues: set(evidence_paths)
+    )
+
+    issues = contracts._validate_required_paths(
+        {"required_paths": {"architecture_evidence": evidence_paths}}
+    )
+
+    assert [issue.message for issue in issues] == [
+        f"missing required path: {missing_rel}"
+    ]
+
+
 def test_workspace_bundle_governance_routes_validator(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -65,6 +65,38 @@ The reusable templates now live at `tools/templates/governance/`, clearly state
 `NON-AUTHORITATIVE TEMPLATE`, do not route tet4d work, and are excluded from the
 active governance boundary.
 
+## Review-closeout enforcement disposition
+
+The removed drift validator's parity-document checks were classified rather
+than restored wholesale:
+
+- **Existence protection:** the eight durable parity pilot, selection, audit,
+  review, and evidence records are protected by
+  `maintenance_contract.required_paths.architecture_evidence` in the canonical
+  policy pack. `docs/architecture/utility_index.md` also appeared in the old
+  global required-file list, but its existence remains protected by the live
+  `SECURITY_AND_SANITATION.md` content rule; it is not parity evidence and is
+  therefore not duplicated into the new group.
+- **Duplicate surviving protection:** evidence-specific statements that parity
+  does not itself transfer authority are covered by the current parity protocol,
+  authority-transfer protocol, authority-map rules, and
+  `validate_authority_transfer.py` protocol/claim checks. Exact-comparison,
+  mode, and fixture obligations remain owned by the parity protocol and the
+  runnable parity implementations/tests. No second wording owner was added.
+- **Unique current enforcement:** none of the deleted evidence-document wording
+  checks owns a current hard rule outside those surviving authority mechanisms.
+- **Historical or migration-specific checks:** Stage-number, selected-slice,
+  old-governance-router, drift-map inventory, route-inventory, and
+  evidence-package readiness prose assertions remain historical evidence. They
+  are not recreated as active governance rules.
+
+The advisory numeric source-complexity budgets formerly stated in
+`docs/governance/godot_cpp_policy.md` are deliberately retired. Qualitative
+ownership and complexity discipline remains in the canonical governance owners,
+while the current machine LOC guidance and hotspot checks remain authoritative.
+The retired numbers were not validator-enforced and are not reintroduced as a
+second budget system.
+
 ## Debt-record disposition
 
 - `TD-0001`, `TD-0002`, and `TD-0004` remain explicit deferrals in

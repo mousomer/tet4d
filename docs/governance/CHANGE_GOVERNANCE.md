@@ -78,7 +78,7 @@ CI diaries, or generic workflow there.
 
 ## Review, completion, and publication
 
-Use `.github/PULL_REQUEST_TEMPLATE.md`. A completed change reports selected
+Use `.github/pull_request_template.md`. A completed change reports selected
 routes and modifiers, affected layers, claims, authorities, required evidence,
 omissions with rationale, full-gate decision, scope matrix where applicable,
 files changed and deliberately untouched, authority effects, exact checks,

@@ -809,7 +809,10 @@ has been removed. Do not combine either follow-up with Stage 54B-1 runtime work.
 Re-governance PR 1 is merged and retired the accumulated active ledgers. PR 2
 is the active governance-only cut: six canonical human owners, compositional
 route semantics, retired overlapping workflow/policy/map authorities, and
-non-authoritative bootstrap templates.
+non-authoritative bootstrap templates. Its review closeout restores required-
+path protection for the eight durable parity-evidence records, corrects the
+PR-template path case, and explicitly retires superseded advisory native size
+budgets without changing architecture or routing semantics.
 
 PR 3 remains explicitly deferred until PR 2 is merged. Its bounded objective is
 to move historical toolchain/audit result payloads out of the active policy

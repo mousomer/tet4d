@@ -2371,6 +2371,7 @@ Parameters:
 - `maintenance_contract.content_rules[].must_not_contain[]`: array[`string`]; examples: `"No currently open gaps"`, `"126 passed"`, `"No active open gaps"`
 - `maintenance_contract.content_rules[].must_not_match_regex[]`: array[`string`]; examples: `"\\b\\d+\\s+passed\\b"`, `"\\[[\\s\\d%]+\\]"`, `"\\btetris_nd\\b"`
 - `maintenance_contract.description`: `"Machine-checked source-of-truth rules for docs/tests/help/backlog/RD...` (`string`)
+- `maintenance_contract.required_paths.architecture_evidence[]`: array[`string`]; examples: `"docs/architecture/first_subsystem_parity_pilot.md"`, `"docs/architecture/parity_pilot_audit_and_promotion_gates.md"`, `"docs/architecture/second_parity_slice_candidate_selection.md"`
 - `maintenance_contract.required_paths.canonical_configs[]`: array[`string`]; examples: `"config/menu/defaults.json"`, `"config/menu/structure.json"`, `"config/topology/designer_presets.json"`
 - `maintenance_contract.required_paths.canonical_schemas[]`: array[`string`]; examples: `"config/schema/menu_settings.schema.json"`, `"config/schema/save_state.schema.json"`, `"config/schema/help_topics.schema.json"`
 - `maintenance_contract.required_paths.ci_scripts[]`: array[`string`]; examples: `"scripts/bootstrap_env.sh"`, `"scripts/install_git_hooks.sh"`, `"scripts/ci_check.sh"`

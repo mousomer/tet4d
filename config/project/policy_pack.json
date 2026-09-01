@@ -1480,6 +1480,16 @@
         "docs/rds/RDS_SCORE_ANALYZER.md",
         "docs/rds/RDS_PACKAGING.md"
       ],
+      "architecture_evidence": [
+        "docs/architecture/first_subsystem_parity_pilot.md",
+        "docs/architecture/parity_pilot_audit_and_promotion_gates.md",
+        "docs/architecture/second_parity_slice_candidate_selection.md",
+        "docs/architecture/trace_metadata_identity_digest_parity.md",
+        "docs/architecture/topology_identifier_normalization_parity.md",
+        "docs/architecture/parity_evidence_review_and_third_slice_selection.md",
+        "docs/architecture/parity_evidence_package_review.md",
+        "docs/architecture/trace_schema_version_normalization_parity.md"
+      ],
       "help_assets": [
         "src/tet4d/ui/pygame/render/control_icons.py",
         "assets/help/icons/transform/svg/16/dark/move_x_pos.svg"
