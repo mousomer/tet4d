@@ -1,5 +1,7 @@
 # Codex Workflow Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 ## Inspect before editing
 
 Inspect existing files, tests, validators, and governance before making changes.

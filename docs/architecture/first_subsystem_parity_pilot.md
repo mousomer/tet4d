@@ -23,8 +23,9 @@ Routing:
 - `docs/architecture/parity_protocol.md`
 - `docs/architecture/authority_transfer_protocol.md`
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
-- `docs/governance/README.md`
-- `docs/governance/drift_protection_map.md`
+- `docs/governance/NATIVE_AND_PLATFORM.md`
+- `docs/governance/VERIFICATION.md`
+- `docs/governance/CHANGE_GOVERNANCE.md`
 
 Status rule:
 - Evidence-only pilot results stay process documentation.

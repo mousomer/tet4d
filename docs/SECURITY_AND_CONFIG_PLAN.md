@@ -5,7 +5,8 @@ This file is retained as a compatibility redirect only.
 Current policy authority lives in:
 
 - `config/project/policy_pack.json`
-- `docs/policies/INDEX.md`
+- `docs/governance/SECURITY_AND_SANITATION.md`
+- `docs/governance/CONFIG_AND_GENERATED_DATA.md`
 
 Current domain contracts and tooling live in:
 

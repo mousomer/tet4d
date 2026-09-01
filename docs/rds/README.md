@@ -83,8 +83,8 @@ in-flight migration, do not silently invent a third rule.
 
 Instead:
 
-1. identify the owner using `docs/DOCUMENTATION_MAP.md` and
-   `docs/plans/plan_authority_map.md`,
+1. identify the owner using `docs/plans/plan_authority_map.md`, the subsystem
+   authority map, and the root governance dispatch,
 2. update the stale lower-precedence file,
 3. move historical or temporary content out of `docs/rds/` if needed.
 

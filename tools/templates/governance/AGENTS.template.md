@@ -1,5 +1,7 @@
 # AGENTS.md Template
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 Follow the reusable workspace governance bundle first.
 
 Project-specific governance must define:

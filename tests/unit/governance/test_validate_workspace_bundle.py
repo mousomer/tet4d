@@ -14,13 +14,13 @@ def _manifest(files: set[str] | None = None) -> str:
     rows = [
         "# Workspace Governance Bundle Manifest",
         "",
+        "Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.",
+        "",
         "| File | Purpose | Copy target | Project customization required? |",
         "|---|---|---|---|",
     ]
     for filename in sorted(files or validator.REQUIRED_BUNDLE_FILES):
-        rows.append(
-            f"| `{filename}` | Purpose | `docs/governance/workspace_bundle/` | No |"
-        )
+        rows.append(f"| `{filename}` | Purpose | adopting project | No |")
     return "\n".join(rows) + "\n"
 
 
@@ -32,21 +32,17 @@ def _write_valid_workspace_bundle(root: Path) -> None:
         elif filename == "README.md":
             _write(
                 bundle / filename,
-                "Workspace Governance Bundle\n"
+                "# Workspace Governance Bundle\n"
+                "Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.\n"
                 "tools/governance/export_workspace_governance_bundle.py\n",
             )
         else:
-            _write(bundle / filename, f"# {filename}\nReusable neutral guidance.\n")
-    _write(
-        root / "AGENTS.md",
-        "See docs/governance/workspace_bundle/programming_policy.md.\n",
-    )
-    _write(
-        root / "docs" / "governance" / "README.md",
-        "See docs/governance/workspace_bundle/.\n",
-    )
-    for rel in validator.PROJECT_OVERLAY_RELS:
-        _write(root / rel, "Extends docs/governance/workspace_bundle/.\n")
+            _write(
+                bundle / filename,
+                f"# {filename}\n"
+                "Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.\n"
+                "Reusable neutral guidance.\n",
+            )
     _write(root / validator.EXPORT_HELPER_REL, "def main():\n    return 0\n")
 
 
@@ -137,7 +133,7 @@ def test_forbidden_project_specific_term_fails(tmp_path: Path) -> None:
 
     issues = validator.validate(tmp_path)
 
-    assert any("forbidden term: tet4d" in issue.message for issue in issues)
+    assert any("forbidden term" in issue.message for issue in issues)
 
 
 def test_forbidden_project_specific_term_in_drift_policy_fails(
@@ -154,14 +150,18 @@ def test_forbidden_project_specific_term_in_drift_policy_fails(
     assert any("forbidden term" in issue.message for issue in issues)
 
 
-def test_governance_router_missing_workspace_bundle_link_fails(tmp_path: Path) -> None:
+def test_missing_non_authority_label_fails(tmp_path: Path) -> None:
     _write_valid_workspace_bundle(tmp_path)
-    _write(tmp_path / "docs" / "governance" / "README.md", "No bundle link.\n")
+    _write(
+        tmp_path / validator.BUNDLE_REL / "programming_policy.md",
+        "# Programming policy\nReusable neutral guidance.\n",
+    )
 
     issues = validator.validate(tmp_path)
 
     assert any(
-        "README.md must link to workspace bundle" in issue.message for issue in issues
+        "must be labeled as a non-authoritative template" in issue.message
+        for issue in issues
     )
 
 

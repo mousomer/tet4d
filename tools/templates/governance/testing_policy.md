@@ -1,5 +1,7 @@
 # General Testing Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 Behavioural changes require tests. Bug fixes require regression tests.
 
 Tests should verify meaningful behaviour, not just execute lines.

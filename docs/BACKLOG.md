@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-08-30
+Updated: 2026-09-01
 Scope: active work, explicit deferrals, and acceptance boundaries only.
 
 Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
@@ -18,8 +18,8 @@ Completed detail is preserved in `docs/history/backlog_archive_2026-07-30.md`,
 - Subsystem authority: `docs/architecture/authority_map.md`
 - Authority transfer and establishment:
   `docs/architecture/authority_transfer_protocol.md`
-- Documentation routing: `docs/DOCUMENTATION_MAP.md`
-- Workflow and change classes: `docs/WORKFLOW_CODEX.md`
+- Human governance: `AGENTS.md` and the six canonical owners under
+  `docs/governance/`
 - Machine governance: `config/project/policy_pack.json`
 
 ## Tracking Boundaries
@@ -758,6 +758,13 @@ The following are accepted later phases, not current implementation scope.
   roles, benchmark roles, or released compatibility obligations;
 - compaction or splitting of `docs/history/DONE_SUMMARIES.md`, which belongs to
   a separate documentation-hygiene batch and is not active product work.
+- `TD-0001`: existing Godot presentation/trace hardcoded-constant advisories;
+  owner Godot migration, revisit before strict config-authority mode.
+- `TD-0002`: duplicate trace-export helper-name advisories across bridge/native
+  surfaces; owner migration tooling, revisit before strict utility-reuse mode.
+- `TD-0004`: reproducible clang-format, clang-tidy, and
+  `compile_commands.json` availability; owner native tooling, resolve before
+  strict native tooling is enabled in CI.
 
 ## Python Movement-Graph Persistent-Cache Performance
 
@@ -783,8 +790,8 @@ Revisit when:
 
 ## Codex Routing Follow-Ups
 
-The machine-readable authority pointers, task taxonomy, workflow modifiers,
-and composable verification-requirement schema are implemented in Slice A.
+The machine-readable authority pointers, route vocabulary, workflow modifiers,
+and verification-requirement schema are implemented in Slice A.
 
 Slice B is now implemented: the policy-backed resolver consumes the routing model,
 enforces read-only and repository-change invariants, composes requirements by
@@ -799,12 +806,17 @@ Accepted follow-up:
 Measure Slice C only against the CI baseline after duplicate push/PR execution
 has been removed. Do not combine either follow-up with Stage 54B-1 runtime work.
 
-Re-governance PR 1 retires the accumulated task and completion ledgers from
-active governance and compacts the restart handoff without changing routing or
-verification semantics. PR 2 remains separately scoped to canonical governance
-consolidation, compositional route semantics, `docs/WORKFLOW_CODEX.md`
-retirement, workspace-bundle and `docs/policies/` consolidation,
-`docs/DOCUMENTATION_MAP.md` disposition, and a single-owner governance model.
+Re-governance PR 1 is merged and retired the accumulated active ledgers. PR 2
+is the active governance-only cut: six canonical human owners, compositional
+route semantics, retired overlapping workflow/policy/map authorities, and
+non-authoritative bootstrap templates.
+
+PR 3 remains explicitly deferred until PR 2 is merged. Its bounded objective is
+to move historical toolchain/audit result payloads out of the active policy
+pack while preserving runtime enforcement data, target the machine-readable
+governance surface below 1,400 lines, establish validator size/provenance
+budgets, and reduce backlog repetition. PR 2 must not perform that data-model
+or backlog-reduction work.
 
 ## Governance Watchlist
 

@@ -1,5 +1,7 @@
 # Drift Protection Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 ## Scope
 
 This policy defines reusable governance drift-protection principles.

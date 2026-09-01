@@ -1,15 +1,11 @@
 # Documentation Index
 
-Start with `docs/DOCUMENTATION_MAP.md`.
-It is the routing and ownership authority for this repository's documentation.
-
-Use this file only as a short landing page.
-Do not treat it as a second taxonomy or precedence map.
+Start with root `AGENTS.md` for canonical governance routing. Use this file only
+as a short documentation landing page; it owns no taxonomy or precedence.
 
 ## Common starting points
 
-- Routing and ownership: `docs/DOCUMENTATION_MAP.md`
-- Contributor workflow and verification: `docs/WORKFLOW_CODEX.md`
+- Contributor governance: `AGENTS.md`, `docs/governance/*`
 - Config-first keybinding editing: `docs/KEYBINDINGS_EDITING.md`
 - Short practical keybinding guide: `docs/SHORT_KEYBINDINGS_GUIDE.md`
 - Config-first menu editing: `docs/MENU_STRUCTURE_EDITING.md`
@@ -17,7 +13,7 @@ Do not treat it as a second taxonomy or precedence map.
 - Current execution state: `CURRENT_STATE.md`, `docs/BACKLOG.md`
 - Active planning: `docs/plans/README.md`
 - Durable product contracts: `docs/rds/README.md`
-- Policies and governance: `docs/policies/INDEX.md`, `config/project/policy_pack.json`
+- Machine governance: `config/project/policy_pack.json`
 - Generated references: `docs/CONFIGURATION_REFERENCE.md`, `docs/USER_SETTINGS_REFERENCE.md`
 - Release/help docs: `docs/RELEASE_CHECKLIST.md`, `docs/RELEASE_INSTALLERS.md`, `docs/help/HELP_INDEX.md`
 

@@ -16,21 +16,12 @@ def _write_minimal_policy_docs(root: Path) -> None:
         "## Required fields\nOwner\nReuse rule\nMigration relevance\n",
     )
     _write(
-        root / "docs" / "governance" / "README.md",
-        "utility_index POLICY_NO_REINVENTING_WHEEL validate_utility_reuse "
-        "check_wheel_reuse_rules check_dedup_dead_code_rules\n",
+        root / "docs" / "governance" / "ENGINEERING.md",
+        "Search existing helpers before adding a utility. See utility_index.\n",
     )
     _write(
-        root / "docs" / "governance" / "review_checklist.md",
-        "## Dependency / utility reuse\nreuse no-reinvention utility\n",
-    )
-    _write(
-        root / "docs" / "governance" / "codex_policy.md",
-        "Search existing helpers before adding new utility code.\n",
-    )
-    _write(
-        root / "docs" / "policies" / "POLICY_NO_REINVENTING_WHEEL.md",
-        "Search existing project utilities and utility index.\n",
+        root / "docs" / "governance" / "SECURITY_AND_SANITATION.md",
+        "Review dependencies through utility_index for correctness and license.\n",
     )
     _write(
         root / "tools" / "governance" / "validate_governance.py",
@@ -51,9 +42,11 @@ def test_utility_index_missing_fails(tmp_path: Path, monkeypatch) -> None:
     )
 
 
-def test_router_missing_utility_index_link_fails(tmp_path: Path, monkeypatch) -> None:
+def test_engineering_owner_missing_utility_index_link_fails(
+    tmp_path: Path, monkeypatch
+) -> None:
     _write_minimal_policy_docs(tmp_path)
-    _write(tmp_path / "docs" / "governance" / "README.md", "validate_utility_reuse\n")
+    _write(tmp_path / "docs" / "governance" / "ENGINEERING.md", "Search first.\n")
     monkeypatch.setattr(utility_reuse, "ROOT", tmp_path)
 
     findings = utility_reuse.validate_policy_links()

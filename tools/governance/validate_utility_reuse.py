@@ -293,12 +293,8 @@ def _read_required(rel: str, issues: list[Finding]) -> str | None:
 def validate_policy_links() -> list[Finding]:
     issues: list[Finding] = []
     utility_index = _read_required("docs/architecture/utility_index.md", issues)
-    router = _read_required("docs/governance/README.md", issues)
-    checklist = _read_required("docs/governance/review_checklist.md", issues)
-    codex_policy = _read_required("docs/governance/codex_policy.md", issues)
-    wheel_policy = _read_required(
-        "docs/policies/POLICY_NO_REINVENTING_WHEEL.md", issues
-    )
+    engineering = _read_required("docs/governance/ENGINEERING.md", issues)
+    security = _read_required("docs/governance/SECURITY_AND_SANITATION.md", issues)
     governance_validator = _read_required(
         "tools/governance/validate_governance.py", issues
     )
@@ -315,55 +311,26 @@ def validate_policy_links() -> list[Finding]:
                 "docs/architecture/utility_index.md missing required utility-index fields",
             )
         )
-    if router is not None:
-        required = (
-            "utility_index",
-            "POLICY_NO_REINVENTING_WHEEL",
-            "validate_utility_reuse",
-            "check_wheel_reuse_rules",
-            "check_dedup_dead_code_rules",
-        )
-        for token in required:
-            if token.lower() not in router.lower():
-                issues.append(
-                    Finding(
-                        ROOT / "docs/governance/README.md",
-                        0,
-                        "blocking",
-                        f"docs/governance/README.md missing dependency/reuse token: {token}",
-                    )
-                )
-    if checklist is not None and not _contains_all(
-        checklist, ("reuse", "no-reinvention", "utility")
+    if engineering is not None and not _contains_all(
+        engineering, ("search", "helpers", "existing", "utility_index")
     ):
         issues.append(
             Finding(
-                ROOT / "docs/governance/review_checklist.md",
+                ROOT / "docs/governance/ENGINEERING.md",
                 0,
                 "blocking",
-                "docs/governance/review_checklist.md lacks reuse/no-reinvention checks",
+                "docs/governance/ENGINEERING.md must route search-first reuse through utility_index",
             )
         )
-    if codex_policy is not None and not _contains_all(
-        codex_policy, ("search", "helpers", "existing")
+    if security is not None and not _contains_all(
+        security, ("dependencies", "utility_index", "correctness", "license")
     ):
         issues.append(
             Finding(
-                ROOT / "docs/governance/codex_policy.md",
+                ROOT / "docs/governance/SECURITY_AND_SANITATION.md",
                 0,
                 "blocking",
-                "docs/governance/codex_policy.md must require search before adding helpers",
-            )
-        )
-    if wheel_policy is not None and not _contains_all(
-        wheel_policy, ("utility index", "existing project utilities")
-    ):
-        issues.append(
-            Finding(
-                ROOT / "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
-                0,
-                "blocking",
-                "docs/policies/POLICY_NO_REINVENTING_WHEEL.md must link dependency and utility reuse policy",
+                "docs/governance/SECURITY_AND_SANITATION.md must own dependency review",
             )
         )
     if (

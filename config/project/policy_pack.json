@@ -5,7 +5,12 @@
   "authority_model": {
     "machine_authority": "config/project/policy_pack.json",
     "dispatch_file": "AGENTS.md",
-    "workflow_doc": "docs/WORKFLOW_CODEX.md",
+    "engineering_governance": "docs/governance/ENGINEERING.md",
+    "verification_governance": "docs/governance/VERIFICATION.md",
+    "security_and_sanitation_governance": "docs/governance/SECURITY_AND_SANITATION.md",
+    "config_and_generated_data_governance": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+    "native_and_platform_governance": "docs/governance/NATIVE_AND_PLATFORM.md",
+    "change_governance": "docs/governance/CHANGE_GOVERNANCE.md",
     "handoff_doc": "CURRENT_STATE.md",
     "product_requirements_root": "docs/rds/",
     "architecture_contract": "docs/ARCHITECTURE_CONTRACT.md",
@@ -16,13 +21,15 @@
     "open_work_backlog": "docs/BACKLOG.md"
   },
   "codex_routing": {
-    "schema_version": 1,
-    "task_types": {
+    "schema_version": 2,
+    "routes": {
       "product_planning": {
         "authority_keys": [
           "professional_product_programme",
           "product_requirements_root",
-          "open_work_backlog"
+          "open_work_backlog",
+          "change_governance",
+          "verification_governance"
         ],
         "typical_verification_requirements": [
           "documentation"
@@ -32,7 +39,10 @@
         "authority_keys": [
           "architecture_contract",
           "product_requirements_root",
-          "subsystem_authority_map"
+          "subsystem_authority_map",
+          "engineering_governance",
+          "verification_governance",
+          "config_and_generated_data_governance"
         ],
         "typical_verification_requirements": [
           "python",
@@ -45,7 +55,10 @@
         ],
         "authority_keys": [
           "product_requirements_root",
-          "subsystem_authority_map"
+          "subsystem_authority_map",
+          "native_and_platform_governance",
+          "verification_governance",
+          "config_and_generated_data_governance"
         ],
         "typical_verification_requirements": [
           "godot"
@@ -57,7 +70,11 @@
         ],
         "authority_keys": [
           "subsystem_authority_map",
-          "authority_transfer_and_establishment_protocol"
+          "authority_transfer_and_establishment_protocol",
+          "native_and_platform_governance",
+          "verification_governance",
+          "security_and_sanitation_governance",
+          "engineering_governance"
         ],
         "typical_verification_requirements": [
           "native",
@@ -68,18 +85,21 @@
         "authority_keys": [
           "topology_current_authority",
           "product_requirements_root",
-          "subsystem_authority_map"
+          "subsystem_authority_map",
+          "engineering_governance",
+          "native_and_platform_governance",
+          "verification_governance"
         ],
         "typical_verification_requirements": [
           "deterministic"
         ]
       },
       "governance_and_tooling": {
-        "dispatch_paths": [
-          "docs/governance/README.md"
-        ],
         "authority_keys": [
-          "machine_authority"
+          "machine_authority",
+          "change_governance",
+          "verification_governance",
+          "engineering_governance"
         ],
         "typical_verification_requirements": [
           "governance_structure"
@@ -89,6 +109,12 @@
         "dispatch_paths": [
           "docs/rds/RDS_PACKAGING.md",
           "docs/RELEASE_CHECKLIST.md"
+        ],
+        "authority_keys": [
+          "native_and_platform_governance",
+          "security_and_sanitation_governance",
+          "verification_governance",
+          "change_governance"
         ],
         "typical_verification_requirements": [
           "packaging",
@@ -125,7 +151,7 @@
     "verification_command": "./scripts/verify.sh",
     "ci_entrypoint": "./scripts/ci_check.sh",
     "design_sources": [
-      "docs/WORKFLOW_CODEX.md",
+      "docs/governance/CHANGE_GOVERNANCE.md",
       "docs/rds/"
     ],
     "contracts": {
@@ -442,12 +468,14 @@
         "full_repository_verification": "PASS"
       }
     },
-    "policy_index_contract": {
+    "canonical_governance_contract": {
       "required_tokens": [
-        "config/project/policy_pack.json",
-        "config/project/policy/manifests/secret_scan.json",
-        "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
-        "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md"
+        "docs/governance/ENGINEERING.md",
+        "docs/governance/VERIFICATION.md",
+        "docs/governance/SECURITY_AND_SANITATION.md",
+        "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+        "docs/governance/NATIVE_AND_PLATFORM.md",
+        "docs/governance/CHANGE_GOVERNANCE.md"
       ]
     },
     "menu_simplification_manifest_rule": {
@@ -640,7 +668,7 @@
           "category": "process",
           "statement": "Start restructuring or behavior changes with a short plan and acceptance criteria.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/CHANGE_GOVERNANCE.md"
           ],
           "enforced_by": [
             "code_review"
@@ -651,7 +679,7 @@
           "category": "process",
           "statement": "Update relevant RDS docs and BACKLOG when scope or behavior changes; update CURRENT_STATE only for staged, restart, handoff, restructuring, multi-batch, or phase-dependent work.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/CHANGE_GOVERNANCE.md"
           ],
           "enforced_by": [
             "code_review"
@@ -662,8 +690,7 @@
           "category": "verification",
           "statement": "Run verify locally before completion; CI entrypoint remains authoritative.",
           "source_docs": [
-            "AGENTS.md",
-            "config/project/policy_pack.json"
+            "docs/governance/VERIFICATION.md"
           ],
           "enforced_by": [
             "scripts/verify.sh",
@@ -675,7 +702,7 @@
           "category": "process",
           "statement": "Track LOC delta and prefer net LOC reduction for non-feature refactors.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/CHANGE_GOVERNANCE.md"
           ],
           "enforced_by": [
             "code_review",
@@ -687,7 +714,7 @@
           "category": "process",
           "statement": "Use quiet test/verify output by default; use verbose output only for diagnosis.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/VERIFICATION.md"
           ],
           "enforced_by": [
             "code_review",
@@ -700,7 +727,7 @@
           "category": "process",
           "statement": "Prefer medium-sized localized patches over ultra-narrow patch fragmentation; split only when a broader patch becomes hard to review or tool-rejected.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/ENGINEERING.md"
           ],
           "enforced_by": [
             "code_review"
@@ -711,7 +738,7 @@
           "category": "process",
           "statement": "Use apply_patch only for localized code edits with fresh exact context. For broad doc rewrites, generated maintenance files, or files already edited in the current batch, prefer one deterministic scripted rewrite immediately instead of patch-first retries. Patch-tool rejection is a method switch signal, not a blocker.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/ENGINEERING.md"
           ],
           "enforced_by": [
             "code_review"
@@ -722,7 +749,7 @@
           "category": "process",
           "statement": "Do not use ad hoc multiline PowerShell -replace or BOM-producing Set-Content flows for source-file edits. Non-patch rewrites of source files must preserve UTF-8 without BOM and avoid literal escape-text insertion.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/ENGINEERING.md"
           ],
           "enforced_by": [
             "code_review"
@@ -733,7 +760,7 @@
           "category": "verification",
           "statement": "After any non-patch source rewrite, run a touched-file hygiene pass: encoding sanity, no literal escape artifacts, then focused lint before broader tests.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/VERIFICATION.md"
           ],
           "enforced_by": [
             "code_review",
@@ -745,7 +772,7 @@
           "category": "verification",
           "statement": "Never run verify.sh and ci_check.sh in parallel. Use focused checks first, then run the full gates sequentially.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/VERIFICATION.md"
           ],
           "enforced_by": [
             "code_review",
@@ -758,8 +785,7 @@
           "category": "verification",
           "statement": "When running pytest, verify, or CI wrapper commands locally, use the current repository virtualenv interpreter when one is available instead of an ambient system Python.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md",
-            "docs/policies/CI_COMPLIANCE_RUNBOOK.md"
+            "docs/governance/VERIFICATION.md"
           ],
           "enforced_by": [
             "scripts/verify.sh",
@@ -773,7 +799,7 @@
           "category": "process",
           "statement": "Do not retry apply_patch repeatedly on the same file. After one rejected apply_patch attempt on a file, switch immediately to the deterministic rewrite path for the rest of that edit.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/ENGINEERING.md"
           ],
           "enforced_by": [
             "code_review"
@@ -784,7 +810,7 @@
           "category": "process",
           "statement": "For staged UI and architecture migrations, do not treat partial progress as completion. Do not mark complete until every stated acceptance criterion is explicitly satisfied.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/CHANGE_GOVERNANCE.md"
           ],
           "enforced_by": [
             "code_review"
@@ -795,7 +821,7 @@
           "category": "process",
           "statement": "Use additive migration first: add new modules, route one flow, verify, then remove old paths. Do not attempt broad destructive replacement in one step.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/CHANGE_GOVERNANCE.md"
           ],
           "enforced_by": [
             "code_review",
@@ -807,7 +833,7 @@
           "category": "process",
           "statement": "At the end of staged migration work, provide a delta report listing files added, files modified, files not touched, satisfied acceptance criteria, unsatisfied acceptance criteria, remaining old paths, and follow-up blockers.",
           "source_docs": [
-            "docs/WORKFLOW_CODEX.md"
+            "docs/governance/CHANGE_GOVERNANCE.md"
           ],
           "enforced_by": [
             "code_review"
@@ -1441,7 +1467,6 @@
         "docs/BACKLOG.md",
         "docs/history/DONE_SUMMARIES.md",
         "docs/CHANGELOG.md",
-        "docs/WORKFLOW_CODEX.md",
         "docs/SECURITY_AND_CONFIG_PLAN.md"
       ],
       "rds_docs": [
@@ -1555,13 +1580,12 @@
       "governance": [
         "AGENTS.md",
         "CONTRIBUTING.md",
-        "docs/policies/INDEX.md",
-        "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
-        "docs/policies/POLICY_STRING_SANITATION.md",
-        "docs/policies/POLICY_NO_MAGIC_NUMBERS.md",
-        "docs/policies/POLICY_FORMATTING.md",
-        "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md",
-        "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "docs/governance/ENGINEERING.md",
+        "docs/governance/VERIFICATION.md",
+        "docs/governance/SECURITY_AND_SANITATION.md",
+        "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+        "docs/governance/NATIVE_AND_PLATFORM.md",
+        "docs/governance/CHANGE_GOVERNANCE.md",
         "config/project/policy_pack.json",
         ".githooks/pre-push"
       ],
@@ -1578,20 +1602,17 @@
     },
     "content_rules": [
       {
-        "file": "docs/policies/INDEX.md",
+        "file": "docs/governance/SECURITY_AND_SANITATION.md",
         "must_contain": [
-          "config/project/policy_pack.json",
           "config/project/policy/manifests/secret_scan.json",
-          "config/project/policy/manifests/replay_manifest.json",
-          "config/project/policy/manifests/help_assets_manifest.json",
-          "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
-          "docs/policies/POLICY_CONFIGURATION_DOCUMENTATION.md"
+          "tools/governance/scan_secrets.py",
+          "docs/architecture/utility_index.md"
         ]
       },
       {
         "file": "README.md",
         "must_contain": [
-          "Documentation map",
+          "Canonical governance",
           "scripts/bootstrap_env.sh",
           "config/gameplay/score_analyzer.json",
           "scripts/ci_check.sh",
@@ -1649,31 +1670,21 @@
         ]
       },
       {
-        "file": "docs/WORKFLOW_CODEX.md",
+        "file": "docs/governance/CHANGE_GOVERNANCE.md",
         "must_contain": [
-          "Workflow authority",
+          "Authority order",
           "config/project/policy_pack.json",
-          "Authority files must be tracked in Git",
-          "## Common preconditions",
-          "## Machine-readable task routing and composable verification",
+          "## Compositional routing",
           "`review_only`",
           "`python_reference_engine`",
           "`godot_product_shell`",
           "`native_deterministic_core`",
           "`topology_and_explorer`",
-          "Governance",
-          "Packaging",
+          "`governance_and_tooling`",
+          "`packaging_and_release`",
           "`staged_handoff`",
-          "Ordinary isolated fixes",
-          "Read the full policy pack only for governance",
-          "## Boundary model",
-          "Machine-readable policy data belongs in `config/project/policy_pack.json`.",
-          "`tools/governance/validate_project_contracts.py` owns validation procedure only.",
-          "`tools/governance/generate_maintenance_docs.py` owns rendering procedure only.",
           "docs/rds/",
-          "CODEX_MODE=1 ./scripts/verify.sh",
-          "./scripts/ci_preflight.sh",
-          "prefer the current repo virtualenv interpreter when one is available",
+          "VERIFICATION.md",
           "CURRENT_STATE.md",
           "docs/BACKLOG.md"
         ],
@@ -1698,20 +1709,24 @@
         ]
       },
       {
-        "file": "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
+        "file": "docs/governance/VERIFICATION.md",
         "must_contain": [
           "./scripts/ci_preflight.sh",
-          "./scripts/ci_check.sh",
-          ".venv/bin/python -m pytest -q",
-          "config/project/policy_pack.json",
-          "Prefer the current repo virtualenv for local pytest, verify, and CI-style runs whenever it is available."
+          "CODEX_MODE=1 ./scripts/verify.sh",
+          "./scripts/check_git_sanitation_repo.sh",
+          "tools/governance/validate_project_contracts.py"
         ]
       },
       {
         "file": "AGENTS.md",
         "must_contain": [
           "config/project/policy_pack.json",
-          "docs/WORKFLOW_CODEX.md",
+          "docs/governance/ENGINEERING.md",
+          "docs/governance/VERIFICATION.md",
+          "docs/governance/SECURITY_AND_SANITATION.md",
+          "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+          "docs/governance/NATIVE_AND_PLATFORM.md",
+          "docs/governance/CHANGE_GOVERNANCE.md",
           "CURRENT_STATE.md",
           "docs/rds/",
           "docs/ARCHITECTURE_CONTRACT.md",
@@ -1724,9 +1739,9 @@
         "file": "CONTRIBUTING.md",
         "must_contain": [
           "## Policies",
-          "docs/policies/POLICY_NO_REINVENTING_WHEEL.md",
-          "docs/policies/POLICY_STRING_SANITATION.md",
-          "docs/policies/POLICY_NO_MAGIC_NUMBERS.md"
+          "docs/governance/ENGINEERING.md",
+          "docs/governance/SECURITY_AND_SANITATION.md",
+          "docs/governance/CONFIG_AND_GENERATED_DATA.md"
         ]
       },
       {
@@ -2004,7 +2019,8 @@
         "file": "scripts/check_policy_compliance_repo.sh",
         "must_contain": [
           "AGENTS.md",
-          "docs/WORKFLOW_CODEX.md",
+          "docs/governance/CHANGE_GOVERNANCE.md",
+          "docs/governance/VERIFICATION.md",
           "config/project/policy_pack.json",
           "python3 tools/governance/validate_project_contracts.py",
           "python3 tools/governance/scan_secrets.py",
@@ -2461,8 +2477,28 @@
         "description": "thin dispatch for contributor and agent entry"
       },
       {
-        "path": "docs/WORKFLOW_CODEX.md",
-        "description": "human workflow explainer for repo process and verification"
+        "path": "docs/governance/ENGINEERING.md",
+        "description": "canonical general engineering governance"
+      },
+      {
+        "path": "docs/governance/VERIFICATION.md",
+        "description": "canonical verification and evidence governance"
+      },
+      {
+        "path": "docs/governance/SECURITY_AND_SANITATION.md",
+        "description": "canonical security, sanitation, dependency, and repository hygiene governance"
+      },
+      {
+        "path": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+        "description": "canonical config, constants, and generated-data governance"
+      },
+      {
+        "path": "docs/governance/NATIVE_AND_PLATFORM.md",
+        "description": "canonical native safety, tooling, boundary, and platform governance"
+      },
+      {
+        "path": "docs/governance/CHANGE_GOVERNANCE.md",
+        "description": "canonical routing, change discipline, completion, and publication governance"
       },
       {
         "path": "CURRENT_STATE.md",
@@ -2552,174 +2588,75 @@
     }
   },
   "deprecated_authorities": {
-    "description": "Retired governance and routing surfaces that must stay absent from live authority docs and policy files.",
+    "description": "Retired governance and routing surfaces that must stay absent from active governance.",
     "blocked_paths": [
       "config/project/policy/governance.json",
       "config/project/policy/code_rules.json",
       "config/project/policy/manifests/canonical_maintenance.json",
       "docs/RDS_AND_CODEX.md",
       "docs/governance/task_contract.md",
-      "docs/governance/completion_report.md"
+      "docs/governance/completion_report.md",
+      "docs/WORKFLOW_CODEX.md",
+      "docs/DOCUMENTATION_MAP.md",
+      "docs/governance/README.md",
+      "docs/governance/codex_policy.md",
+      "docs/governance/config_policy.md",
+      "docs/governance/cpp_safety_policy.md",
+      "docs/governance/drift_protection_map.md",
+      "docs/governance/godot_cpp_policy.md",
+      "docs/governance/native_tooling_ci_policy.md",
+      "docs/governance/review_checklist.md",
+      "docs/governance/secrets_policy.md",
+      "docs/governance/technical_debt_register.md",
+      "docs/governance/testing_policy.md",
+      "docs/governance/workspace_bundle",
+      "docs/policies"
     ],
-    "reference_checks": [
-      {
-        "file": "AGENTS.md",
-        "must_not_contain": [
-          "docs/RDS_AND_CODEX.md",
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "config/project/policy/manifests/canonical_maintenance.json",
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "README.md",
-        "must_not_contain": [
-          "docs/RDS_AND_CODEX.md",
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "config/project/policy/manifests/canonical_maintenance.json",
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/README.md",
-        "must_not_contain": [
-          "docs/RDS_AND_CODEX.md",
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/DOCUMENTATION_MAP.md",
-        "must_not_contain": [
-          "docs/RDS_AND_CODEX.md",
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/BACKLOG.md",
-        "must_not_contain": [
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/policies/INDEX.md",
-        "must_not_contain": [
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "config/project/policy/manifests/canonical_maintenance.json"
-        ]
-      },
-      {
-        "file": "docs/policies/CI_COMPLIANCE_RUNBOOK.md",
-        "must_not_contain": [
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "config/project/policy/manifests/canonical_maintenance.json"
-        ]
-      },
-      {
-        "file": "CURRENT_STATE.md",
-        "must_not_contain": [
-          "docs/RDS_AND_CODEX.md",
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json",
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/WORKFLOW_CODEX.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/governance/README.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/governance/drift_protection_map.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/governance/review_checklist.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": ".github/pull_request_template.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/governance/workspace_bundle/review_checklist_template.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "godot/AGENTS.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "native/AGENTS.md",
-        "must_not_contain": [
-          "docs/governance/task_contract.md",
-          "docs/governance/completion_report.md"
-        ]
-      },
-      {
-        "file": "docs/FEATURE_MAP.md",
-        "must_not_contain": [
-          "config/project/policy/manifests/canonical_maintenance.json"
-        ]
-      },
-      {
-        "file": "docs/SECURITY_AND_CONFIG_PLAN.md",
-        "must_not_contain": [
-          "config/project/policy/governance.json",
-          "config/project/policy/code_rules.json"
-        ]
-      },
-      {
-        "file": "scripts/check_architecture_metric_budgets.sh",
-        "must_not_contain": [
-          "config/project/policy/governance.json"
-        ]
-      },
-      {
-        "file": "scripts/check_architecture_metrics_soft_gate.sh",
-        "must_not_contain": [
-          "config/project/policy/governance.json"
-        ]
-      }
-    ]
+    "reference_checks": {
+      "files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "CURRENT_STATE.md",
+        ".github/pull_request_template.md",
+        "godot/AGENTS.md",
+        "native/AGENTS.md",
+        "docs/README.md",
+        "docs/BACKLOG.md",
+        "docs/SECURITY_AND_CONFIG_PLAN.md",
+        "docs/PROJECT_STRUCTURE.md",
+        "docs/governance/ENGINEERING.md",
+        "docs/governance/VERIFICATION.md",
+        "docs/governance/SECURITY_AND_SANITATION.md",
+        "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+        "docs/governance/NATIVE_AND_PLATFORM.md",
+        "docs/governance/CHANGE_GOVERNANCE.md",
+        "scripts/check_policy_compliance_repo.sh"
+      ],
+      "must_not_contain": [
+        "config/project/policy/governance.json",
+        "config/project/policy/code_rules.json",
+        "config/project/policy/manifests/canonical_maintenance.json",
+        "docs/RDS_AND_CODEX.md",
+        "docs/governance/task_contract.md",
+        "docs/governance/completion_report.md",
+        "docs/WORKFLOW_CODEX.md",
+        "docs/DOCUMENTATION_MAP.md",
+        "docs/governance/README.md",
+        "docs/governance/codex_policy.md",
+        "docs/governance/config_policy.md",
+        "docs/governance/cpp_safety_policy.md",
+        "docs/governance/drift_protection_map.md",
+        "docs/governance/godot_cpp_policy.md",
+        "docs/governance/native_tooling_ci_policy.md",
+        "docs/governance/review_checklist.md",
+        "docs/governance/secrets_policy.md",
+        "docs/governance/technical_debt_register.md",
+        "docs/governance/testing_policy.md",
+        "docs/governance/workspace_bundle",
+        "docs/policies/"
+      ]
+    }
   }
 }

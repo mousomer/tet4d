@@ -190,7 +190,7 @@ CODEX_MODE=1 ./scripts/verify.sh
   - `docs/RELEASE_INSTALLERS.md`
 - Godot shell notes: `godot/Tet4D.Godot/README.md`
 - Philosophy and motivation: `docs/philosophy/PHILOSOPHY.md`
-- Workflow and contributor rules: `docs/WORKFLOW_CODEX.md`
+- Canonical governance: `AGENTS.md` and the six owners under `docs/governance/`
 - Product requirements: `docs/rds/`
 - Current open work: `docs/BACKLOG.md`
 

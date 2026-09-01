@@ -16,10 +16,10 @@ Read:
 - `docs/architecture/parity_protocol.md` for inherited parity evidence;
 - `docs/architecture/authority_transfer_protocol.md` for inherited transfer
   and new authority establishment;
-- `docs/governance/cpp_safety_policy.md` for memory and API safety;
-- `docs/governance/native_tooling_ci_policy.md` for build/tooling evidence;
-- the current product, parity, migration, or establishment authority routed by
-  `docs/DOCUMENTATION_MAP.md`.
+- `docs/governance/NATIVE_AND_PLATFORM.md` for safety, tooling, and boundary
+  rules;
+- `docs/governance/VERIFICATION.md` for evidence composition;
+- the applicable product, parity, migration, or establishment authority.
 
 Rules:
 

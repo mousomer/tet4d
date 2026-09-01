@@ -1,5 +1,7 @@
 # Config and Constants Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 Nontrivial constants belong in the adopting project's standard config/constants
 authority.
 

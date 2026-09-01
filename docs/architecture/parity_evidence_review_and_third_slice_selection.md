@@ -101,10 +101,9 @@ This document is routed from:
 - `docs/architecture/parity_protocol.md`
 - `docs/architecture/parity_pilot_audit_and_promotion_gates.md`
 - `docs/architecture/authority_map.md`
-- `docs/governance/README.md`
-- `docs/governance/review_checklist.md`
-- `docs/governance/drift_protection_map.md`
-- `docs/DOCUMENTATION_MAP.md`
+- `docs/governance/NATIVE_AND_PLATFORM.md`
+- `docs/governance/VERIFICATION.md`
+- `docs/governance/CHANGE_GOVERNANCE.md`
 - `AGENTS.md`
 - `native/AGENTS.md`
 
@@ -114,5 +113,5 @@ Required validation for this slice:
 
 - `git diff --check`
 - `.venv/bin/python tools/governance/validate_project_contracts.py`
-- `.venv/bin/python tools/governance/validate_drift_protection.py`
+- `.venv/bin/python tools/governance/validate_governance.py`
 - `CODEX_MODE=1 ./scripts/verify.sh`

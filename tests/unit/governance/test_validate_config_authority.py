@@ -14,19 +14,10 @@ def _write_required_policy_docs(
     root: Path, *, config_policy: str | None = None
 ) -> None:
     _write_text(
-        root / "docs" / "governance" / "config_policy.md",
+        root / "docs" / "governance" / "CONFIG_AND_GENERATED_DATA.md",
         config_policy
-        or "# Config Policy\nConfig authority routes through docs/policies/POLICY_NO_MAGIC_NUMBERS.md.\nPython configuration remains authoritative.\nUse config/project/constants.json.\nUse config/gameplay/tuning.json.\nUse config/menu/defaults.json.",
+        or "# Config and Generated Data\nCanonical owner.\nPython config remains authoritative.\nconfig/project/policy_pack.json\nconfig/project/constants.json\nconfig/gameplay/tuning.json\nconfig/menu/defaults.json\ndocs/CONFIGURATION_REFERENCE.md\ntools/governance/generate_configuration_reference.py\ntools/governance/validate_config_authority.py\n",
     )
-    _write_text(
-        root / "docs" / "policies" / "POLICY_NO_MAGIC_NUMBERS.md",
-        "See docs/governance/config_policy.md and validate_config_authority.\n",
-    )
-    _write_text(
-        root / "docs" / "policies" / "POLICY_CONFIGURATION_DOCUMENTATION.md",
-        "config/project/policy_pack.json\nconfig/project/constants.json\nconfig/gameplay/tuning.json\nconfig/menu/defaults.json\ndocs/CONFIGURATION_REFERENCE.md",
-    )
-    _write_text(root / "docs" / "policies" / "INDEX.md", "config policies\n")
 
 
 def test_no_source_files_found_succeeds(tmp_path: Path) -> None:
@@ -123,7 +114,7 @@ def test_excluded_vendor_and_build_paths_are_ignored(tmp_path: Path) -> None:
 def test_policy_link_validation_fails_when_config_policy_text_missing(
     tmp_path: Path,
 ) -> None:
-    _write_required_policy_docs(tmp_path, config_policy="# Config Policy\n")
+    _write_required_policy_docs(tmp_path, config_policy="# Config governance\n")
 
     findings = validator.validate_policy_links(tmp_path)
 

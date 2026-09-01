@@ -1,5 +1,7 @@
 # Technical Debt Policy
 
+Status: NON-AUTHORITATIVE TEMPLATE; project-bootstrap only; not tet4d governance.
+
 ## Scope
 
 This policy defines a reusable technical-debt accounting model.

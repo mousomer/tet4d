@@ -4,6 +4,10 @@ This directory is the Godot product shell and presentation runtime.
 
 Authority is subsystem-specific.
 
+Read root `AGENTS.md`, `docs/governance/NATIVE_AND_PLATFORM.md`,
+`docs/governance/VERIFICATION.md`, the relevant product/presentation contract,
+and `docs/architecture/authority_map.md`.
+
 Rules:
 
 - UI, menus, scenes, input routing, animation, diagnostics, camera, rendering,
@@ -20,7 +24,7 @@ Rules:
   fixtures/traces.
 - Route new deterministic game or geometry rules through the named native/data
   authority defined by the owning contract; do not hide them in UI glue.
-- UI constants must follow the repo config/theme policy.
+- UI constants follow `docs/governance/CONFIG_AND_GENERATED_DATA.md`.
 - Godot changes require Godot-facing tests or documented manual verification.
 - Do not move inherited Python/reference authority into Godot scripts without a
   completed transfer.

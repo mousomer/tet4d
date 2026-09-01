@@ -1934,15 +1934,20 @@ Top-level keys: `authority_model`, `code_rules`, `codex_routing`, `deprecated_au
 Parameters:
 - `authority_model.architecture_contract`: `"docs/ARCHITECTURE_CONTRACT.md"` (`string`)
 - `authority_model.authority_transfer_and_establishment_protocol`: `"docs/architecture/authority_transfer_protocol.md"` (`string`)
+- `authority_model.change_governance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `authority_model.config_and_generated_data_governance`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `authority_model.dispatch_file`: `"AGENTS.md"` (`string`)
+- `authority_model.engineering_governance`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `authority_model.handoff_doc`: `"CURRENT_STATE.md"` (`string`)
 - `authority_model.machine_authority`: `"config/project/policy_pack.json"` (`string`)
+- `authority_model.native_and_platform_governance`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
 - `authority_model.open_work_backlog`: `"docs/BACKLOG.md"` (`string`)
 - `authority_model.product_requirements_root`: `"docs/rds/"` (`string`)
 - `authority_model.professional_product_programme`: `"docs/plans/professional_godot_game_programme.md"` (`string`)
+- `authority_model.security_and_sanitation_governance`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
 - `authority_model.subsystem_authority_map`: `"docs/architecture/authority_map.md"` (`string`)
 - `authority_model.topology_current_authority`: `"docs/plans/topology_playground_current_authority.md"` (`string`)
-- `authority_model.workflow_doc`: `"docs/WORKFLOW_CODEX.md"` (`string`)
+- `authority_model.verification_governance`: `"docs/governance/VERIFICATION.md"` (`string`)
 - `code_rules.config_backed_runtime_constants.allowed_loader_modules[]`: array[`string`]; examples: `"tet4d.engine.runtime.project_config"`, `"tet4d.engine.runtime.runtime_config"`, `"tet4d.engine.runtime.menu_config"`
 - `code_rules.config_backed_runtime_constants.allowed_loader_symbols[]`: array[`string`]; examples: `"constants_payload"`, `"default_settings_payload"`, `"gameplay_tuning_payload"`
 - `code_rules.config_backed_runtime_constants.authoritative_sources[]`: array[`object`]
@@ -2020,31 +2025,30 @@ Parameters:
 - `code_rules.wheel_reuse.rules[].prefer_symbols[]`: array[`string`]; examples: `"tet4d.engine.runtime.settings_schema"`, `"sanitize_text_runtime"`, `"append_numeric_text"`
 - `code_rules.wheel_reuse.rules[].scope_globs[]`: array[`string`]; examples: `"src/tet4d/ui/pygame/launch/*.py"`, `"src/tet4d/ui/pygame/menu/*.py"`, `"src/tet4d/engine/tutorial/*.py"`
 - `codex_routing.resolver_path`: `"tools/governance/resolve_codex_verification.py"` (`string`)
-- `codex_routing.schema_version`: `1` (`int`)
-- `codex_routing.task_types.godot_product_shell.authority_keys[]`: array[`string`]; examples: `"product_requirements_root"`, `"subsystem_authority_map"`
-- `codex_routing.task_types.godot_product_shell.dispatch_paths[]`: array[`string`]; examples: `"godot/AGENTS.md"`
-- `codex_routing.task_types.godot_product_shell.typical_verification_requirements[]`: array[`string`]; examples: `"godot"`
-- `codex_routing.task_types.governance_and_tooling.authority_keys[]`: array[`string`]; examples: `"machine_authority"`
-- `codex_routing.task_types.governance_and_tooling.dispatch_paths[]`: array[`string`]; examples: `"docs/governance/README.md"`
-- `codex_routing.task_types.governance_and_tooling.typical_verification_requirements[]`: array[`string`]; examples: `"governance_structure"`
-- `codex_routing.task_types.native_deterministic_core.authority_keys[]`: array[`string`]; examples: `"subsystem_authority_map"`, `"authority_transfer_and_establishment_protocol"`
-- `codex_routing.task_types.native_deterministic_core.dispatch_paths[]`: array[`string`]; examples: `"native/AGENTS.md"`
-- `codex_routing.task_types.native_deterministic_core.typical_verification_requirements[]`: array[`string`]; examples: `"native"`, `"deterministic"`
-- `codex_routing.task_types.packaging_and_release.dispatch_paths[]`: array[`string`]; examples: `"docs/rds/RDS_PACKAGING.md"`, `"docs/RELEASE_CHECKLIST.md"`
-- `codex_routing.task_types.packaging_and_release.typical_verification_requirements[]`: array[`string`]; examples: `"packaging"`, `"platform"`
-- `codex_routing.task_types.product_planning.authority_keys[]`: array[`string`]; examples: `"professional_product_programme"`, `"product_requirements_root"`, `"open_work_backlog"`
-- `codex_routing.task_types.product_planning.typical_verification_requirements[]`: array[`string`]; examples: `"documentation"`
-- `codex_routing.task_types.python_reference_engine.authority_keys[]`: array[`string`]; examples: `"architecture_contract"`, `"product_requirements_root"`, `"subsystem_authority_map"`
-- `codex_routing.task_types.python_reference_engine.typical_verification_requirements[]`: array[`string`]; examples: `"python"`, `"deterministic"`
-- `codex_routing.task_types.topology_and_explorer.authority_keys[]`: array[`string`]; examples: `"topology_current_authority"`, `"product_requirements_root"`, `"subsystem_authority_map"`
-- `codex_routing.task_types.topology_and_explorer.typical_verification_requirements[]`: array[`string`]; examples: `"deterministic"`
+- `codex_routing.routes.godot_product_shell.authority_keys[]`: array[`string`]; examples: `"product_requirements_root"`, `"subsystem_authority_map"`, `"native_and_platform_governance"`
+- `codex_routing.routes.godot_product_shell.dispatch_paths[]`: array[`string`]; examples: `"godot/AGENTS.md"`
+- `codex_routing.routes.godot_product_shell.typical_verification_requirements[]`: array[`string`]; examples: `"godot"`
+- `codex_routing.routes.governance_and_tooling.authority_keys[]`: array[`string`]; examples: `"machine_authority"`, `"change_governance"`, `"verification_governance"`
+- `codex_routing.routes.governance_and_tooling.typical_verification_requirements[]`: array[`string`]; examples: `"governance_structure"`
+- `codex_routing.routes.native_deterministic_core.authority_keys[]`: array[`string`]; examples: `"subsystem_authority_map"`, `"authority_transfer_and_establishment_protocol"`, `"native_and_platform_governance"`
+- `codex_routing.routes.native_deterministic_core.dispatch_paths[]`: array[`string`]; examples: `"native/AGENTS.md"`
+- `codex_routing.routes.native_deterministic_core.typical_verification_requirements[]`: array[`string`]; examples: `"native"`, `"deterministic"`
+- `codex_routing.routes.packaging_and_release.authority_keys[]`: array[`string`]; examples: `"native_and_platform_governance"`, `"security_and_sanitation_governance"`, `"verification_governance"`
+- `codex_routing.routes.packaging_and_release.dispatch_paths[]`: array[`string`]; examples: `"docs/rds/RDS_PACKAGING.md"`, `"docs/RELEASE_CHECKLIST.md"`
+- `codex_routing.routes.packaging_and_release.typical_verification_requirements[]`: array[`string`]; examples: `"packaging"`, `"platform"`
+- `codex_routing.routes.product_planning.authority_keys[]`: array[`string`]; examples: `"professional_product_programme"`, `"product_requirements_root"`, `"open_work_backlog"`
+- `codex_routing.routes.product_planning.typical_verification_requirements[]`: array[`string`]; examples: `"documentation"`
+- `codex_routing.routes.python_reference_engine.authority_keys[]`: array[`string`]; examples: `"architecture_contract"`, `"product_requirements_root"`, `"subsystem_authority_map"`
+- `codex_routing.routes.python_reference_engine.typical_verification_requirements[]`: array[`string`]; examples: `"python"`, `"deterministic"`
+- `codex_routing.routes.topology_and_explorer.authority_keys[]`: array[`string`]; examples: `"topology_current_authority"`, `"product_requirements_root"`, `"subsystem_authority_map"`
+- `codex_routing.routes.topology_and_explorer.typical_verification_requirements[]`: array[`string`]; examples: `"deterministic"`
+- `codex_routing.schema_version`: `2` (`int`)
 - `codex_routing.verification_requirements[]`: array[`string`]; examples: `"documentation"`, `"governance_structure"`, `"python"`
 - `codex_routing.workflow_modifiers[]`: array[`string`]; examples: `"review_only"`, `"staged_handoff"`, `"cross_layer"`
 - `deprecated_authorities.blocked_paths[]`: array[`string`]; examples: `"config/project/policy/governance.json"`, `"config/project/policy/code_rules.json"`, `"config/project/policy/manifests/canonical_maintenance.json"`
-- `deprecated_authorities.description`: `"Retired governance and routing surfaces that must stay absent from l...` (`string`)
-- `deprecated_authorities.reference_checks[]`: array[`object`]
-- `deprecated_authorities.reference_checks[].file`: varies (`string`); examples: `"AGENTS.md"`, `"README.md"`, `"docs/README.md"`
-- `deprecated_authorities.reference_checks[].must_not_contain[]`: array[`string`]; examples: `"docs/RDS_AND_CODEX.md"`, `"config/project/policy/governance.json"`, `"config/project/policy/code_rules.json"`
+- `deprecated_authorities.description`: `"Retired governance and routing surfaces that must stay absent from a...` (`string`)
+- `deprecated_authorities.reference_checks.files[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"CONTRIBUTING.md"`
+- `deprecated_authorities.reference_checks.must_not_contain[]`: array[`string`]; examples: `"config/project/policy/governance.json"`, `"config/project/policy/code_rules.json"`, `"config/project/policy/manifests/canonical_maintenance.json"`
 - `description`: `"Single-source policy pack for governance, code rules, maintenance co...` (`string`)
 - `governance.architecture.arch_stage`: `900` (`int`)
 - `governance.architecture.backlog.default_priority`: `"P2"` (`string`)
@@ -2083,6 +2087,7 @@ Parameters:
 - `governance.architecture.zero_budgets.engine_to_ai_imports`: `0` (`int`)
 - `governance.architecture.zero_budgets.engine_to_ui_imports`: `0` (`int`)
 - `governance.architecture.zero_budgets.pygame_imports_in_non_test`: `0` (`int`)
+- `governance.canonical_governance_contract.required_tokens[]`: array[`string`]; examples: `"docs/governance/ENGINEERING.md"`, `"docs/governance/VERIFICATION.md"`, `"docs/governance/SECURITY_AND_SANITATION.md"`
 - `governance.ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
 - `governance.contracts.help_assets_manifest`: `"config/project/policy/manifests/help_assets_manifest.json"` (`string`)
 - `governance.contracts.policy_pack`: `"config/project/policy_pack.json"` (`string`)
@@ -2092,11 +2097,11 @@ Parameters:
 - `governance.contributor_directives.directives[].category`: varies (`string`); examples: `"process"`, `"verification"`
 - `governance.contributor_directives.directives[].enforced_by[]`: array[`string`]; examples: `"code_review"`, `"scripts/verify.sh"`, `"scripts/ci_check.sh"`
 - `governance.contributor_directives.directives[].id`: varies (`string`); examples: `"plan_with_acceptance"`, `"rds_backlog_state_sync"`, `"verification_required"`
-- `governance.contributor_directives.directives[].source_docs[]`: array[`string`]; examples: `"docs/WORKFLOW_CODEX.md"`, `"AGENTS.md"`, `"config/project/policy_pack.json"`
+- `governance.contributor_directives.directives[].source_docs[]`: array[`string`]; examples: `"docs/governance/CHANGE_GOVERNANCE.md"`, `"docs/governance/VERIFICATION.md"`, `"docs/governance/ENGINEERING.md"`
 - `governance.contributor_directives.directives[].statement`: varies (`string`); examples: `"Start restructuring or behavior changes with a short plan and accept...`, `"Update relevant RDS docs and BACKLOG when scope or behavior changes;...`, `"Run verify locally before completion; CI entrypoint remains authorit...`
 - `governance.contributor_directives.required_ci_enforced_ids[]`: array[`string`]; examples: `"verification_required"`, `"loc_delta_preference"`, `"quiet_test_default"`
 - `governance.description`: `"Unified governance section nested inside the single-source policy pa...` (`string`)
-- `governance.design_sources[]`: array[`string`]; examples: `"docs/WORKFLOW_CODEX.md"`, `"docs/rds/"`
+- `governance.design_sources[]`: array[`string`]; examples: `"docs/governance/CHANGE_GOVERNANCE.md"`, `"docs/rds/"`
 - `governance.drift_protection.hotspot_scan.roots[]`: array[`string`]; examples: `"src"`, `"cli"`, `"tests"`
 - `governance.drift_protection.hotspot_scan.top_n`: `8` (`int`)
 - `governance.drift_protection.manifest_id`: `"drift_protection"` (`string`)
@@ -2222,7 +2227,6 @@ Parameters:
 - `governance.menu_structure_single_source.required_submenu_labels[]`: array[`object`]
 - `governance.menu_structure_single_source.required_submenu_labels[].labels[]`: array[`string`]; examples: `"Gameplay"`, `"Board / Setup Defaults"`, `"Controls"`
 - `governance.menu_structure_single_source.required_submenu_labels[].menu_id`: varies (`string`); examples: `"settings_root"`, `"keybindings_root"`
-- `governance.policy_index_contract.required_tokens[]`: array[`string`]; examples: `"config/project/policy_pack.json"`, `"config/project/policy/manifests/secret_scan.json"`, `"docs/policies/CI_COMPLIANCE_RUNBOOK.md"`
 - `governance.project_name`: `"tet4d"` (`string`)
 - `governance.risk_gates.dependency_policy.blocked_dependencies[]`: array[`string`]; examples: `"pycrypto"`, `"python-jose"`
 - `governance.risk_gates.dependency_policy.pyproject_path`: `"pyproject.toml"` (`string`)
@@ -2362,8 +2366,8 @@ Parameters:
 - `maintenance_contract.canonical_candidates[].paths[]`: array[`string`]; examples: `"config/schema/menu_settings.schema.json"`, `"docs/migrations/menu_settings.md"`, `"config/schema/save_state.schema.json"`
 - `maintenance_contract.canonical_candidates[].status`: varies (`string`); examples: `"connected"`
 - `maintenance_contract.content_rules[]`: array[`object`]
-- `maintenance_contract.content_rules[].file`: varies (`string`); examples: `"docs/policies/INDEX.md"`, `"README.md"`, `"docs/FEATURE_MAP.md"`
-- `maintenance_contract.content_rules[].must_contain[]`: array[`string`]; examples: `"config/project/policy_pack.json"`, `"config/project/policy/manifests/secret_scan.json"`, `"config/project/policy/manifests/replay_manifest.json"`
+- `maintenance_contract.content_rules[].file`: varies (`string`); examples: `"docs/governance/SECURITY_AND_SANITATION.md"`, `"README.md"`, `"docs/FEATURE_MAP.md"`
+- `maintenance_contract.content_rules[].must_contain[]`: array[`string`]; examples: `"config/project/policy/manifests/secret_scan.json"`, `"tools/governance/scan_secrets.py"`, `"docs/architecture/utility_index.md"`
 - `maintenance_contract.content_rules[].must_not_contain[]`: array[`string`]; examples: `"No currently open gaps"`, `"126 passed"`, `"No active open gaps"`
 - `maintenance_contract.content_rules[].must_not_match_regex[]`: array[`string`]; examples: `"\\b\\d+\\s+passed\\b"`, `"\\[[\\s\\d%]+\\]"`, `"\\btetris_nd\\b"`
 - `maintenance_contract.description`: `"Machine-checked source-of-truth rules for docs/tests/help/backlog/RD...` (`string`)
@@ -2371,7 +2375,7 @@ Parameters:
 - `maintenance_contract.required_paths.canonical_schemas[]`: array[`string`]; examples: `"config/schema/menu_settings.schema.json"`, `"config/schema/save_state.schema.json"`, `"config/schema/help_topics.schema.json"`
 - `maintenance_contract.required_paths.ci_scripts[]`: array[`string`]; examples: `"scripts/bootstrap_env.sh"`, `"scripts/install_git_hooks.sh"`, `"scripts/ci_check.sh"`
 - `maintenance_contract.required_paths.core_tests[]`: array[`string`]; examples: `"tests/unit/engine/test_playbot.py"`, `"tests/unit/engine/test_score_analyzer.py"`, `"tests/unit/engine/test_runtime_config.py"`
-- `maintenance_contract.required_paths.governance[]`: array[`string`]; examples: `"AGENTS.md"`, `"CONTRIBUTING.md"`, `"docs/policies/INDEX.md"`
+- `maintenance_contract.required_paths.governance[]`: array[`string`]; examples: `"AGENTS.md"`, `"CONTRIBUTING.md"`, `"docs/governance/ENGINEERING.md"`
 - `maintenance_contract.required_paths.help_assets[]`: array[`string`]; examples: `"src/tet4d/ui/pygame/render/control_icons.py"`, `"assets/help/icons/transform/svg/16/dark/move_x_pos.svg"`
 - `maintenance_contract.required_paths.help_contract[]`: array[`string`]; examples: `"docs/help/HELP_INDEX.md"`, `"config/project/policy/manifests/help_assets_manifest.json"`
 - `maintenance_contract.required_paths.migration_ledgers[]`: array[`string`]; examples: `"docs/migrations/menu_settings.md"`, `"docs/migrations/save_state.md"`
@@ -2398,8 +2402,8 @@ Parameters:
 - `maintenance_docs.runtime_owners.UI[].description`: varies (`string`); examples: `"2D orchestration entry"`, `"2D setup/menu owner"`, `"2D runtime orchestration entrypoint"`
 - `maintenance_docs.runtime_owners.UI[].path`: varies (`string`); examples: `"src/tet4d/ui/pygame/front2d_game.py"`, `"src/tet4d/ui/pygame/front2d_setup.py"`, `"src/tet4d/ui/pygame/front2d_loop.py"`
 - `maintenance_docs.sources_of_truth[]`: array[`object`]
-- `maintenance_docs.sources_of_truth[].description`: varies (`string`); examples: `"single machine-readable governance authority"`, `"thin dispatch for contributor and agent entry"`, `"human workflow explainer for repo process and verification"`
-- `maintenance_docs.sources_of_truth[].path`: varies (`string`); examples: `"config/project/policy_pack.json"`, `"AGENTS.md"`, `"docs/WORKFLOW_CODEX.md"`
+- `maintenance_docs.sources_of_truth[].description`: varies (`string`); examples: `"single machine-readable governance authority"`, `"thin dispatch for contributor and agent entry"`, `"canonical general engineering governance"`
+- `maintenance_docs.sources_of_truth[].path`: varies (`string`); examples: `"config/project/policy_pack.json"`, `"AGENTS.md"`, `"docs/governance/ENGINEERING.md"`
 - `maintenance_docs.symbol_index.max_symbols_per_file`: `12` (`int`)
 - `maintenance_docs.symbol_index.source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"cli"`
 - `maintenance_docs.verification.ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)

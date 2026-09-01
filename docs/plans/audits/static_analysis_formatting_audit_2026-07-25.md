@@ -11,7 +11,8 @@ This report records the non-modifying quality-tool audit requested for the
 current Tet4D repository. It is evidence, not a new semantic or architecture
 authority. Machine-readable findings are summarized in
 `config/project/policy_pack.json`; durable quality-tool category policy remains
-in `docs/WORKFLOW_CODEX.md`.
+in `docs/governance/ENGINEERING.md` and
+`docs/governance/VERIFICATION.md`.
 
 The audit introduced no gameplay, topology, replay, native-authority,
 state-hash, or RNG change. Python remains the semantic oracle, Godot remains the

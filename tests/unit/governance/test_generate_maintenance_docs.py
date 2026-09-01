@@ -67,7 +67,10 @@ def _maintenance_contract() -> dict[str, object]:
                 "path": "config/project/policy_pack.json",
                 "description": "single machine-readable governance authority",
             },
-            {"path": "docs/WORKFLOW_CODEX.md", "description": "workflow explainer"},
+            {
+                "path": "docs/governance/CHANGE_GOVERNANCE.md",
+                "description": "change-governance owner",
+            },
         ],
         "verification": {
             "local_gate": "CODEX_MODE=1 ./scripts/verify.sh",
