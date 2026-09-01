@@ -68,7 +68,8 @@ MSVC invocation explicitly disables godot-cpp native debug records for
 `template_release`; no PDB is part of the portable product. Existing
 compiler/linker path maps remain active, and MSVC trims the repository root
 from godot-cpp runtime `__FILE__` diagnostics using a Windows-form directory
-prefix before strict package validation. Its generated output remains ignored:
+prefix forwarded through the compiler's process-wide `CL` option channel before
+strict package validation. Its generated output remains ignored:
 
 ```text
 artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip

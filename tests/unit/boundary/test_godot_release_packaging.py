@@ -126,7 +126,11 @@ def test_windows_native_build_sanitizes_compiler_and_linker_debug_paths() -> Non
         assert flag in build
     assert '"/pathmap:{}=.".format(repository_root)' in build
     assert 'repository_root.replace("/", "\\\\").rstrip("\\\\") + "\\\\"' in build
-    assert '"/d1trimfile:{}".format(msvc_repository_root)' in build
+    assert 'trim_flag = "/d1trimfile:{}".format(msvc_repository_root)' in build
+    assert 'inherited_cl = os.environ.get("CL", "").strip()' in build
+    assert 'bootstrap_env["ENV"]["CL"] = " ".join(' in build
+    assert "(inherited_cl, trim_flag)" in build
+    assert 'CCFLAGS=["/pathmap:{}=.".format(repository_root)]' in build
     assert 'LINKFLAGS=["/PDBALTPATH:%_PDB%"]' in build
 
 

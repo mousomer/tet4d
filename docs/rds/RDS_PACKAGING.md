@@ -318,6 +318,13 @@ The trim prefix must use MSVC's backslash-separated directory form and end in a
 directory separator. Exact-head run 33446434097 proved that the SCons-native
 slash form is accepted by `cl.exe` but does not match the backslash-form
 `__FILE__` value, leaving the payload unchanged.
+Exact-head run 33552366548 then proved that normalizing the `CCFLAGS` value alone
+also left the owning godot-cpp compilation unchanged. The imported godot-cpp
+environment does not preserve that bootstrap flag for this source. The build
+must additionally place the trim option in the child `CL` environment, MSVC's
+process-wide compiler-option channel, so every `cl.exe` invocation receives it
+independently of SCons environment cloning. Existing caller `CL` options must
+be preserved and the strict artifact validator remains the acceptance oracle.
 
 After PR #83 integrated the first Windows diagnostic correction as `9058e93e`,
 dispatch 33426937123 proved the exact Android NDK was installed and the native

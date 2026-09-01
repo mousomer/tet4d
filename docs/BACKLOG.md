@@ -318,6 +318,12 @@ terminal directory separator, while MSVC emitted a backslash-form `__FILE__`.
 Normalize the trim argument to a trailing-backslash Windows directory prefix
 and repeat the hosted proof; do not weaken the strict validator.
 
+Exact-head run 33552366548 retained the same marker after that normalization,
+proving the bootstrap `CCFLAGS` option still did not reach the godot-cpp source
+that owns the string. Forward the trim flag through SCons's child `CL`
+environment while preserving caller options, keep the compiler/linker defense
+in depth and strict validator, and repeat the hosted Windows package proof.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one
