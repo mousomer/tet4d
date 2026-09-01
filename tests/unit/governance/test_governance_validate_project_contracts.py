@@ -2324,7 +2324,9 @@ def test_current_state_rule_enforces_restart_only_scope() -> None:
     must_not_match_regex = set(current_state_rule["must_not_match_regex"])
 
     assert "## Active Focus" in must_contain
-    assert "## Known Watchouts" in must_contain
+    assert "## Next Acceptance Boundary" in must_contain
+    assert "## Known Watchouts" not in must_contain
+    assert "docs/history/current_state_archive_2026-07-30.md" not in must_contain
     assert "docs/PROJECT_STRUCTURE.md" in must_contain
     assert "## Active Batch Note" in must_not_contain
     assert "## What This Batch Changed" in must_not_contain
@@ -2667,6 +2669,109 @@ def test_deprecated_authority_checks_detect_reintroduced_path(
 
     assert issues
     assert any("deprecated authority path present" in issue.message for issue in issues)
+
+
+def test_deprecated_authority_checks_detect_stale_active_reference(
+    tmp_path: Path, monkeypatch
+) -> None:
+    active_path = tmp_path / ".github" / "pull_request_template.md"
+    active_path.parent.mkdir(parents=True, exist_ok=True)
+    active_path.write_text("docs/governance/task_contract.md\n", encoding="utf-8")
+    policy_pack = tmp_path / "config" / "project" / "policy_pack.json"
+    _write_json(
+        policy_pack,
+        {
+            "deprecated_authorities": {
+                "blocked_paths": [],
+                "reference_checks": [
+                    {
+                        "file": ".github/pull_request_template.md",
+                        "must_not_contain": ["docs/governance/task_contract.md"],
+                    }
+                ],
+            }
+        },
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack)
+
+    issues = contracts._validate_deprecated_authorities()
+
+    assert any(
+        "still references deprecated authority token" in issue.message
+        for issue in issues
+    )
+
+
+def test_deprecated_authority_checks_allow_historical_reference(
+    tmp_path: Path, monkeypatch
+) -> None:
+    active_path = tmp_path / ".github" / "pull_request_template.md"
+    active_path.parent.mkdir(parents=True, exist_ok=True)
+    active_path.write_text(
+        "docs/history/tasks/task_contract_ledger_through_2026-08-31.md\n",
+        encoding="utf-8",
+    )
+    policy_pack = tmp_path / "config" / "project" / "policy_pack.json"
+    _write_json(
+        policy_pack,
+        {
+            "deprecated_authorities": {
+                "blocked_paths": ["docs/governance/task_contract.md"],
+                "reference_checks": [
+                    {
+                        "file": ".github/pull_request_template.md",
+                        "must_not_contain": ["docs/governance/task_contract.md"],
+                    }
+                ],
+            }
+        },
+    )
+
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "POLICY_PACK_PATH", policy_pack)
+
+    assert contracts._validate_deprecated_authorities() == []
+
+
+def test_retired_active_ledgers_stay_out_of_machine_governance() -> None:
+    payload = json.loads(contracts.POLICY_PACK_PATH.read_text(encoding="utf-8"))
+    retired = {
+        "docs/governance/task_contract.md",
+        "docs/governance/completion_report.md",
+    }
+
+    maintenance = payload["maintenance_contract"]
+    required_paths = {
+        path for paths in maintenance["required_paths"].values() for path in paths
+    }
+    content_rule_files = {rule["file"] for rule in maintenance["content_rules"]}
+    assert retired.isdisjoint(required_paths)
+    assert retired.isdisjoint(content_rule_files)
+
+    deprecated = payload["deprecated_authorities"]
+    assert retired.issubset(set(deprecated["blocked_paths"]))
+
+    checks = {
+        check["file"]: set(check["must_not_contain"])
+        for check in deprecated["reference_checks"]
+    }
+    active_routes = {
+        "AGENTS.md",
+        "docs/WORKFLOW_CODEX.md",
+        "docs/DOCUMENTATION_MAP.md",
+        "docs/governance/README.md",
+        "docs/governance/drift_protection_map.md",
+        "docs/governance/review_checklist.md",
+        ".github/pull_request_template.md",
+        "docs/governance/workspace_bundle/review_checklist_template.md",
+        "godot/AGENTS.md",
+        "native/AGENTS.md",
+        "CURRENT_STATE.md",
+    }
+    for route in active_routes:
+        assert retired.issubset(checks[route])
 
 
 # Codex routing model contract

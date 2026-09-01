@@ -1,3 +1,15 @@
+# Historical Completion Report Ledger Through 2026-08-31
+
+Status: HISTORICAL / NON-AUTHORITATIVE
+
+This file preserves manual-review findings, limitations, and other durable
+completion evidence that was not fully represented by commit and CI history.
+It is not an active handoff template, completion authority, or required input
+for ordinary work. Current completion reporting is defined by the active
+workflow and the scope of the current change.
+
+---
+
 # Completion Report — Live Rendering and 4D Presentation Regressions
 
 Last updated: 2026-08-30

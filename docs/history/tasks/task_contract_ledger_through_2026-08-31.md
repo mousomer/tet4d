@@ -1,3 +1,16 @@
+# Historical Task Contract Ledger Through 2026-08-31
+
+Status: HISTORICAL / NON-AUTHORITATIVE
+
+This file preserves completed and superseded execution contracts that formerly
+accumulated in the active governance path. It is evidence and rationale only:
+do not load it for ordinary work, use it as current task scope, or treat it as
+architecture or product authority. Current work is governed by explicit task
+instructions, the active routing documents, owning domain authorities, and the
+repository verification contract.
+
+---
+
 # Task Contract — Integration, Explicit A/B Assignment, and Unified Release Proof
 
 Status: ACTIVE — INTEGRATION MERGED; REMOTE BRANCH REVIEW COMPLETE; ALL THREE

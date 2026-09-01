@@ -1,11 +1,11 @@
 # Tet4D Review Checklist
 
 This is the durable project review overlay. Apply only the conditional sections
-that match the task contract; completed migration stages are evidence, not
-universal review steps. It extends
+that match the explicit task and PR scope; completed migration stages are
+evidence, not universal review steps. It extends
 `docs/governance/workspace_bundle/review_checklist_template.md`; routing remains
-in `docs/governance/README.md`. Work starts from the task contract and ends
-with `docs/governance/completion_report.md`.
+in `docs/governance/README.md`. Work starts from current task instructions and
+ends with the final report required by `docs/WORKFLOW_CODEX.md`.
 
 Stable references: `docs/architecture/authority_map.md`,
 `docs/architecture/parity_protocol.md`,
@@ -16,7 +16,7 @@ Stable references: `docs/architecture/authority_map.md`,
 ## Scope and task contract
 
 - [ ] The PR has one semantic objective and explicit deferrals.
-- [ ] Allowed and forbidden systems match `docs/governance/task_contract.md`.
+- [ ] Allowed and forbidden systems match the explicit current task/PR scope.
 - [ ] Deliberate cross-layer work includes a scope matrix.
 - [ ] Unrelated formatting and toolchain changes are separated where practical.
 - [ ] Work did not silently continue into the next task or stage.
@@ -155,7 +155,7 @@ Stable references: `docs/architecture/authority_map.md`,
 - [ ] `./scripts/check_git_sanitation_repo.sh` passed.
 - [ ] `CODEX_MODE=1 ./scripts/verify.sh` passed, or the exact blocker is
       reported.
-- [ ] Manual acceptance required by the task contract is recorded separately
+- [ ] Manual acceptance required by the task scope is recorded separately
       from automated success.
-- [ ] The final report follows `docs/governance/completion_report.md` and
-      includes warnings, limitations, diffstat, commit, PR, and worktree state.
+- [ ] The final report follows `docs/WORKFLOW_CODEX.md` and includes warnings,
+      limitations, diffstat, commit/PR state, and worktree state as applicable.

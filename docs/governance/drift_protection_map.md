@@ -11,7 +11,7 @@ config/generated drift into capability-based checks.
 
 | Class | Primary surfaces | Required invariants |
 | --- | --- | --- |
-| Governance routing | `AGENTS.md`, local `AGENTS.md`, `docs/governance/README.md`, `docs/governance/review_checklist.md`, `.github/pull_request_template.md` | One machine policy source; local rules only tighten; new governance is reachable; task and completion contracts remain routed |
+| Governance routing | `AGENTS.md`, local `AGENTS.md`, `docs/governance/README.md`, `docs/governance/review_checklist.md`, `.github/pull_request_template.md` | One machine policy source; local rules only tighten; new governance is reachable; explicit task scope and final reporting remain routed |
 | Semantic authority | `docs/architecture/authority_map.md`, parity and transfer protocols, relevant RDS | Python remains oracle unless a completed named transfer exists; Godot is presentation; native authority is explicit and reversible |
 | Validation | `tools/governance/validate_governance.py` and its validators | Validators are wired, deterministic, actionable, and do not become a second policy inventory |
 | Config/generated | config policy, `config/project/policy_pack.json`, generators, generated references/bundles | Generated files identify source/generator and are not hand-authored authority |
@@ -27,8 +27,6 @@ config/generated drift into capability-based checks.
 - `native/AGENTS.md`
 - `docs/WORKFLOW_CODEX.md`
 - `docs/governance/README.md`
-- `docs/governance/task_contract.md`
-- `docs/governance/completion_report.md`
 - `docs/governance/review_checklist.md`
 - `docs/governance/workspace_bundle/review_checklist_template.md`
 - `.github/pull_request_template.md`
