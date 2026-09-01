@@ -44,6 +44,9 @@ fi
 target="${SCONS_TARGET:-template_debug}"
 jobs="${SCONS_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 2)}"
 scons_args=(api_version=4.7 platform="$platform" target="$target" arch="$arch")
+if [[ -n "${SCONS_DEBUG_SYMBOLS:-}" ]]; then
+  scons_args+=(debug_symbols="$SCONS_DEBUG_SYMBOLS")
+fi
 if [[ "$platform" == "macos" && -n "${SCONS_MACOS_DEPLOYMENT_TARGET:-}" ]]; then
   scons_args+=(macos_deployment_target="$SCONS_MACOS_DEPLOYMENT_TARGET")
 fi

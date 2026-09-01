@@ -29,15 +29,23 @@ FORBIDDEN_PATH_MARKERS = (
     b"\\Users\\",
     b"\\a\\tet4d\\tet4d",
 )
+MARKER_CONTEXT_BYTES = 96
 
 
 def _reject_forbidden_path_markers(payloads: dict[str, bytes]) -> None:
     for marker in FORBIDDEN_PATH_MARKERS:
         for member, payload in payloads.items():
             if marker in payload:
+                offset = payload.index(marker)
+                context_start = max(0, offset - MARKER_CONTEXT_BYTES)
+                context_end = min(
+                    len(payload), offset + len(marker) + MARKER_CONTEXT_BYTES
+                )
                 raise ValueError(
                     "package member "
-                    f"{member!r} contains development-only absolute path marker {marker!r}"
+                    f"{member!r} contains development-only absolute path marker "
+                    f"{marker!r} at byte {offset}; bounded context "
+                    f"{payload[context_start:context_end]!r}"
                 )
 
 

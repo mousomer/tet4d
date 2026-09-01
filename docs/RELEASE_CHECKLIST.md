@@ -36,7 +36,10 @@
    temporary evidence, and machine-local paths.
 6. `codesign --verify --deep --strict` passes for the app.
 7. The Windows Designer ZIP contains only its EXE, PCK, and release DLL, and
-   `packaging/godot/validate_windows_package.py` passes.
+   `packaging/godot/validate_windows_package.py` passes. The production MSVC
+   native build explicitly uses `debug_symbols=no` and trims the repository
+   root from runtime `__FILE__` diagnostics; no PDB, native debug record, or
+   checkout-bound runtime source path is part of the release payload.
 8. `packaging/godot/validate_android_export.py` passes, and where an APK was
    built, `packaging/godot/validate_android_package.py` passes and the APK is
    signed. The APK contains Godot 4.7.2's `assets/assets.sparsepck` metadata and

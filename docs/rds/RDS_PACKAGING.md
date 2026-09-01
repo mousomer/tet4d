@@ -297,6 +297,35 @@ prefix-map flags. Strict archive validation must identify the member containing
 a forbidden path so future failures remain attributable without weakening the
 marker contract.
 
+Subsequent hosted MSVC packages proved `/PDBALTPATH` did not eliminate every
+checkout record while pinned godot-cpp still used its default
+`debug_symbols=true`, which adds `/Zi` and `/DEBUG:FULL` even for
+`template_release`. Published Windows release DLLs do not ship native debug
+records or a PDB, so `build_windows.sh` must explicitly request
+`debug_symbols=no`. The compiler and linker path maps remain defense in depth;
+strict validation is unchanged.
+
+Exact-head hosted run 33444795805 then located the remaining marker at byte
+645282 immediately before
+`native\\third_party\\godot-cpp\\include\\godot_cpp/templates/local_vector.hpp`
+and after godot-cpp's out-of-memory diagnostic text. This is the runtime
+`__FILE__` payload used by godot-cpp error reporting, not PDB or compiler debug
+metadata. MSVC production compilation must therefore trim the repository root
+from `__FILE__` with `/d1trimfile`, in addition to retaining `/pathmap`,
+`/PDBALTPATH`, and `debug_symbols=no`. The trimmed suffix remains useful in
+runtime diagnostics while the hosted checkout prefix cannot enter the DLL.
+The trim prefix must use MSVC's backslash-separated directory form and end in a
+directory separator. Exact-head run 33446434097 proved that the SCons-native
+slash form is accepted by `cl.exe` but does not match the backslash-form
+`__FILE__` value, leaving the payload unchanged.
+Exact-head run 33552366548 then proved that normalizing the `CCFLAGS` value alone
+also left the owning godot-cpp compilation unchanged. The imported godot-cpp
+environment does not preserve that bootstrap flag for this source. The build
+must additionally place the trim option in the child `CL` environment, MSVC's
+process-wide compiler-option channel, so every `cl.exe` invocation receives it
+independently of SCons environment cloning. Existing caller `CL` options must
+be preserved and the strict artifact validator remains the acceptance oracle.
+
 After PR #83 integrated the first Windows diagnostic correction as `9058e93e`,
 dispatch 33426937123 proved the exact Android NDK was installed and the native
 build started. The pinned `godot-cpp` archive then exceeded the hosted Linux

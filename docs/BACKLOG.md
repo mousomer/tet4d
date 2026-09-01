@@ -289,6 +289,41 @@ library and `_export_additional_assets` returns file-not-found. Create the
 staging directory before copying, assert command order, and validate the exact
 nested framework path Godot emits in the Xcode project.
 
+Windows dispatch 33439410913 again completed native compilation and Godot
+export before strict validation attributed `\\a\\tet4d\\tet4d` solely to the
+release GDExtension DLL. `/pathmap` and `/PDBALTPATH:%_PDB%` remain present, but
+pinned godot-cpp defaults `debug_symbols=true` and therefore adds `/Zi` plus
+`/DEBUG:FULL` even for `template_release`. A published portable DLL has no PDB
+payload; explicitly pass `debug_symbols=no` only for the Windows release package,
+preserve other build defaults and strict path checks, and prove the DLL on the
+hosted MSVC runner.
+
+Exact-head hosted run 33443239671 proved `debug_symbols=no` alone does not
+remove the native DLL marker, so the PDB/debug-record hypothesis is rejected as
+the sole cause. Keep strict rejection and report a bounded byte offset/context
+around the first marker occurrence in the offending member; use that evidence
+to identify the actual MSVC record before claiming a sanitation fix.
+
+Exact-head hosted run 33444795805 attributed that record to godot-cpp's runtime
+error strings: the absolute checkout path is the `__FILE__` value for
+`local_vector.hpp`, adjacent to its out-of-memory diagnostic. Add MSVC
+`/d1trimfile` for the repository root so runtime source diagnostics retain only
+the repository-relative suffix; keep `/pathmap`, `/PDBALTPATH`,
+`debug_symbols=no`, and strict package rejection, then require a fresh hosted
+Windows package to close this item.
+
+Exact-head run 33446434097 accepted `/d1trimfile` but retained the identical
+absolute `local_vector.hpp` string: the SCons root used slash separators and no
+terminal directory separator, while MSVC emitted a backslash-form `__FILE__`.
+Normalize the trim argument to a trailing-backslash Windows directory prefix
+and repeat the hosted proof; do not weaken the strict validator.
+
+Exact-head run 33552366548 retained the same marker after that normalization,
+proving the bootstrap `CCFLAGS` option still did not reach the godot-cpp source
+that owns the string. Forward the trim flag through SCons's child `CL`
+environment while preserving caller options, keep the compiler/linker defense
+in depth and strict validator, and repeat the hosted Windows package proof.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

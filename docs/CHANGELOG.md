@@ -100,6 +100,12 @@
     Windows native links now require `/PDBALTPATH:%_PDB%`, preserving compiler
     source maps while embedding only the PDB basename; strict validation also
     reports the specific archive member that contains any forbidden marker.
+    A later bounded-context proof identified the residual marker as godot-cpp's
+    runtime `__FILE__` value, so MSVC builds now trim the repository root from
+    those diagnostics with a backslash-normalized directory prefix while
+    retaining their repository-relative source suffix. The trim option is also
+    forwarded through the child `CL` environment so godot-cpp compilation
+    cannot lose it when SCons clones its construction environment.
 13. Unified dispatch 33426937123 proved Android now resolves and installs its
     exact binding-owned NDK, then exposed the next native-build boundary: the
     inline POSIX `ar` command for pinned `godot-cpp` exceeded the hosted process
@@ -123,6 +129,10 @@
     before copying the generated XCFramework. This preserves the framework's
     directory name for descriptor resolution; release validation now asserts
     Godot's canonical nested Xcode-project framework location.
+18. Windows release packaging now explicitly disables pinned godot-cpp's
+    default MSVC debug records. `template_release` previously still added
+    `/Zi` and `/DEBUG:FULL`; the production portable DLL ships no PDB, while
+    existing compiler/linker path maps and strict host-path rejection remain.
 
 ## 2026-08-30
 

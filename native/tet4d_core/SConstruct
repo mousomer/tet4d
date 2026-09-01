@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import os
+
 bootstrap_env = Environment(tools=["default"], PLATFORM="")
 if ARGUMENTS.get("platform") in ("android", "linux"):
     bootstrap_env["ARCOM_POSIX"] = bootstrap_env["ARCOM"]
@@ -15,6 +17,12 @@ elif ARGUMENTS.get("platform") == "windows":
             ]
         )
     else:
+        msvc_repository_root = repository_root.replace("/", "\\").rstrip("\\") + "\\"
+        trim_flag = "/d1trimfile:{}".format(msvc_repository_root)
+        inherited_cl = os.environ.get("CL", "").strip()
+        bootstrap_env["ENV"]["CL"] = " ".join(
+            part for part in (inherited_cl, trim_flag) if part
+        )
         bootstrap_env.AppendUnique(CCFLAGS=["/pathmap:{}=.".format(repository_root)])
         bootstrap_env.AppendUnique(LINKFLAGS=["/PDBALTPATH:%_PDB%"])
 
