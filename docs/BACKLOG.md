@@ -312,6 +312,12 @@ the repository-relative suffix; keep `/pathmap`, `/PDBALTPATH`,
 `debug_symbols=no`, and strict package rejection, then require a fresh hosted
 Windows package to close this item.
 
+Exact-head run 33446434097 accepted `/d1trimfile` but retained the identical
+absolute `local_vector.hpp` string: the SCons root used slash separators and no
+terminal directory separator, while MSVC emitted a backslash-form `__FILE__`.
+Normalize the trim argument to a trailing-backslash Windows directory prefix
+and repeat the hosted proof; do not weaken the strict validator.
+
 Cross-platform enlargement (2026-08-30): the same Design Laboratory now also
 targets Android tablets and iPadOS, both for landscape use with a physical
 keyboard. One catalogue, one scenario system, one A/B implementation, one

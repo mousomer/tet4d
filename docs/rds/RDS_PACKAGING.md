@@ -314,6 +314,10 @@ metadata. MSVC production compilation must therefore trim the repository root
 from `__FILE__` with `/d1trimfile`, in addition to retaining `/pathmap`,
 `/PDBALTPATH`, and `debug_symbols=no`. The trimmed suffix remains useful in
 runtime diagnostics while the hosted checkout prefix cannot enter the DLL.
+The trim prefix must use MSVC's backslash-separated directory form and end in a
+directory separator. Exact-head run 33446434097 proved that the SCons-native
+slash form is accepted by `cl.exe` but does not match the backslash-form
+`__FILE__` value, leaving the payload unchanged.
 
 After PR #83 integrated the first Windows diagnostic correction as `9058e93e`,
 dispatch 33426937123 proved the exact Android NDK was installed and the native

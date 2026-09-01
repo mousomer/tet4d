@@ -15,10 +15,11 @@ elif ARGUMENTS.get("platform") == "windows":
             ]
         )
     else:
+        msvc_repository_root = repository_root.replace("/", "\\").rstrip("\\") + "\\"
         bootstrap_env.AppendUnique(
             CCFLAGS=[
                 "/pathmap:{}=.".format(repository_root),
-                "/d1trimfile:{}".format(repository_root),
+                "/d1trimfile:{}".format(msvc_repository_root),
             ]
         )
         bootstrap_env.AppendUnique(LINKFLAGS=["/PDBALTPATH:%_PDB%"])

@@ -125,7 +125,8 @@ def test_windows_native_build_sanitizes_compiler_and_linker_debug_paths() -> Non
     for flag in ["-ffile-prefix-map", "-fdebug-prefix-map", "-fmacro-prefix-map"]:
         assert flag in build
     assert '"/pathmap:{}=.".format(repository_root)' in build
-    assert '"/d1trimfile:{}".format(repository_root)' in build
+    assert 'repository_root.replace("/", "\\\\").rstrip("\\\\") + "\\\\"' in build
+    assert '"/d1trimfile:{}".format(msvc_repository_root)' in build
     assert 'LINKFLAGS=["/PDBALTPATH:%_PDB%"]' in build
 
 

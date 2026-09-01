@@ -102,7 +102,8 @@
     reports the specific archive member that contains any forbidden marker.
     A later bounded-context proof identified the residual marker as godot-cpp's
     runtime `__FILE__` value, so MSVC builds now trim the repository root from
-    those diagnostics while retaining their repository-relative source suffix.
+    those diagnostics with a backslash-normalized directory prefix while
+    retaining their repository-relative source suffix.
 13. Unified dispatch 33426937123 proved Android now resolves and installs its
     exact binding-owned NDK, then exposed the next native-build boundary: the
     inline POSIX `ar` command for pinned `godot-cpp` exceeded the hosted process
