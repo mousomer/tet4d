@@ -66,12 +66,15 @@ any explicitly registered active task record. Its binding ceiling is 2,500
 physical lines. Local guards are 150 lines for root `AGENTS.md` and
 `CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical owner,
 250 for `docs/BACKLOG.md` and any active task record, and 1,000 for the policy
-pack. Local compliance never substitutes for aggregate compliance.
+pack. The canonically serialized policy pack also has an 80,000-byte hard
+ceiling so line collapsing cannot hide machine-policy growth. Local compliance
+never substitutes for aggregate compliance.
 
-Current routed files must not accumulate repeated previous-task, previous-
-stage, or previous-completion sections. Durable current governance must not pin
-volatile current suite inventories; immutable PR/stage/run references and
-historical evidence remain valid.
+Current routed files must not accumulate previous, prior, earlier, or last
+task, stage, work, session, completion, or task-report sections, including
+plural, repeated-qualifier, date, and identifier variants. Durable current
+governance must not pin volatile current suite inventories; immutable
+PR/stage/run references and historical evidence remain valid.
 
 ## Before and during a change
 

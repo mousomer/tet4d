@@ -1952,7 +1952,7 @@ Parameters:
 - `authority_model.professional_product_programme`: `"docs/plans/professional_godot_game_programme.md"` (`string`)
 - `authority_model.security_and_sanitation_governance`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
 - `authority_model.subsystem_authority_map`: `"docs/architecture/authority_map.md"` (`string`)
-- `authority_model.topology_current_authority`: `"docs/plans/topology_playground_current_authority.md"` (`string`)
+- `authority_model.topology_current_authority`: `"docs/architecture/topology_playground_current_authority.md"` (`string`)
 - `authority_model.verification_governance`: `"docs/governance/VERIFICATION.md"` (`string`)
 - `code_rules.config_backed_runtime_constants.allowed_loader_modules[]`: array[`string`]; examples: `"tet4d.engine.runtime.project_config"`, `"tet4d.engine.runtime.runtime_config"`, `"tet4d.engine.runtime.menu_config"`
 - `code_rules.config_backed_runtime_constants.allowed_loader_symbols[]`: array[`string`]; examples: `"constants_payload"`, `"default_settings_payload"`, `"gameplay_tuning_payload"`
@@ -2261,6 +2261,10 @@ Parameters:
 - `governance_surface.active_governance.operational[]`: array[`string`]; examples: `"CURRENT_STATE.md"`, `"docs/BACKLOG.md"`
 - `governance_surface.active_task_limit`: `250` (`int`)
 - `governance_surface.aggregate_hard_limit`: `2500` (`int`)
+- `governance_surface.canonical_serialization.check_argument`: `"--check"` (`string`)
+- `governance_surface.canonical_serialization.format_version`: `1` (`int`)
+- `governance_surface.canonical_serialization.newline_terminated`: `true` (`bool`)
+- `governance_surface.canonical_serialization.tool`: `"tools/governance/policy_pack_io.py"` (`string`)
 - `governance_surface.document_roles.active_task[]`: array[`empty`]
 - `governance_surface.document_roles.architecture[]`: array[`string`]; examples: `"docs/ARCHITECTURE_CONTRACT.md"`, `"docs/architecture"`
 - `governance_surface.document_roles.current_state[]`: array[`string`]; examples: `"CURRENT_STATE.md"`
@@ -2270,8 +2274,9 @@ Parameters:
 - `governance_surface.document_roles.planning[]`: array[`string`]; examples: `"docs/plans"`
 - `governance_surface.document_roles.product_contract[]`: array[`string`]; examples: `"docs/rds"`
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
-- `governance_surface.lifecycle.forbidden_active_heading_regex[]`: array[`string`]; examples: `"^#{1,6}\\s+(?:Previous|Prior)\\s+(?:Task|Stage|Work|Completion(?:\\s...`
+- `governance_surface.lifecycle.forbidden_active_heading_regex[]`: array[`string`]; examples: `"^#{1,6}\\s+(?:(?:Previous|Prior|Earlier|Last)\\s+){1,2}(?:Tasks?|Sta...`
 - `governance_surface.lifecycle.volatile_test_count_regex`: `"(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\...` (`string`)
+- `governance_surface.per_file_byte_limits.config/project/policy_pack.json`: `80000` (`int`)
 - `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
 - `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
 - `governance_surface.per_file_limits.config/project/policy_pack.json`: `1000` (`int`)
@@ -2285,22 +2290,34 @@ Parameters:
 - `governance_surface.per_file_limits.godot/AGENTS.md`: `70` (`int`)
 - `governance_surface.per_file_limits.native/AGENTS.md`: `70` (`int`)
 - `governance_surface.schema_version`: `1` (`int`)
+- `governance_surface.validator_provenance.arch_metrics_budgets`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.arch_metrics_soft_gate`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.authority_transfer`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
 - `governance_surface.validator_provenance.config_authority`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.config_reference`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.contracts`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.dedup_dead_code_rules`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.drift_protection`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
-- `governance_surface.validator_provenance.generated_reference_integrity`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.git_sanitation_repo`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
 - `governance_surface.validator_provenance.godot_semantic_boundary`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `governance_surface.validator_provenance.godot_settings_externalization`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.governance_surface`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.live_board_visual_roles`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
 - `governance_surface.validator_provenance.loc_guidance`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.maintenance_docs`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.menu_graph`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.native_cpp_tooling`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `governance_surface.validator_provenance.policy_compliance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.policy_compliance_repo`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.policy_pack_canonical`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.policy_runtime_rules`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.pygame_ce`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.risk_gates`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
-- `governance_surface.validator_provenance.routing_verification_floor`: `"docs/governance/VERIFICATION.md"` (`string`)
-- `governance_surface.validator_provenance.secret_and_path_sanitation`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
+- `governance_surface.validator_provenance.ruff`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.ruff_c901`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.ruff_format`: `"docs/governance/ENGINEERING.md"` (`string`)
+- `governance_surface.validator_provenance.secret_scan`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
+- `governance_surface.validator_provenance.topology_contract_codegen`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.utility_reuse`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.wheel_reuse_rules`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.workspace_bundle`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)

@@ -12,7 +12,7 @@ Track active transitional debt for the topology-playground path without mixing
 that debt into the architecture authority or the visible-shell spec.
 
 This file does not define accepted architecture.
-That belongs in `topology_playground_current_authority.md`.
+That belongs in `docs/architecture/topology_playground_current_authority.md`.
 
 This file does not define the visible shell contract.
 That belongs in `topology_playground_shell_redesign_spec.md`.

@@ -15,7 +15,7 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - Architecture: `docs/ARCHITECTURE_CONTRACT.md` and
   `docs/architecture/authority_map.md`
 - Authority transfer: `docs/architecture/authority_transfer_protocol.md`
-- Topology/Explorer: `docs/plans/topology_playground_current_authority.md`
+- Topology/Explorer: `docs/architecture/topology_playground_current_authority.md`
 - Human governance: `AGENTS.md` and the six owners under `docs/governance/`
 - Machine governance: `config/project/policy_pack.json`
 
@@ -31,9 +31,11 @@ Acceptance boundary:
 - exactly six canonical human owners and compositional routes remain;
 - all active routes resolve and none enters history;
 - active governance is at most 2,500 lines;
-- `policy_pack.json` is at most 1,000 lines;
+- canonically serialized `policy_pack.json` is at most 1,000 lines and 80,000
+  bytes;
 - `CURRENT_STATE.md` is at most 150 lines and this file at most 250;
-- provenance, lifecycle, and precise volatile-count gates pass;
+- provenance derives exactly from the real Python/shell enforcement graph,
+  broadened lifecycle variants fail, and precise volatile-count gates pass;
 - focused, adversarial, generated-document, sanitation, and full verification
   are green.
 

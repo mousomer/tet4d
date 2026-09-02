@@ -73,14 +73,17 @@ def test_risk_gates_accept_unified_required_ids() -> None:
 
 
 def test_every_unified_governance_check_has_a_provenance_family() -> None:
+    discovered = validate_governance_surface.discover_enforcement_families()
+    assert {check.name for check in validate_governance._checks()} <= discovered
     assert {
-        check.name for check in validate_governance._checks()
-    } <= validate_governance_surface.PROVENANCE_FAMILIES
-    assert {
-        "routing_verification_floor",
-        "generated_reference_integrity",
-        "secret_and_path_sanitation",
-    } <= validate_governance_surface.PROVENANCE_FAMILIES
+        "godot_settings_externalization",
+        "arch_metrics_budgets",
+        "arch_metrics_soft_gate",
+        "topology_contract_codegen",
+        "policy_compliance",
+        "policy_compliance_repo",
+        "policy_pack_canonical",
+    } <= discovered
 
 
 def test_main_executes_policy_runtime_rules_check(monkeypatch, capsys) -> None:

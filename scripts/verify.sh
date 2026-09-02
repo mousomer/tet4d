@@ -114,30 +114,34 @@ run_step() {
   fi
 }
 
+# These invocations are the shell-owned governance/policy enforcement graph.
+# The provenance validator derives family names from these real calls.
+run_governance_step() { run_step "$@"; }
+
 # Minimal output verification steps (same intent as ci_check.sh)
 require_module ruff ruff
 require_module pytest pytest
 require_repo_package
 
 run_step "editable_install" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_editable_install.sh
-run_step "policy_compliance" ./scripts/check_policy_compliance.sh
-run_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
-run_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
-run_step "topology_contract_codegen" "$PYTHON_BIN" tools/codegen/generate_topology_contract.py --check
+run_governance_step "policy_compliance" ./scripts/check_policy_compliance.sh
+run_governance_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
+run_governance_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
+run_governance_step "topology_contract_codegen" "$PYTHON_BIN" tools/codegen/generate_topology_contract.py --check
 
 run_step "governance"     "$PYTHON_BIN" tools/governance/validate_governance.py
-run_step "config_reference" "$PYTHON_BIN" tools/governance/generate_configuration_reference.py --check
-run_step "maintenance_docs" "$PYTHON_BIN" tools/governance/generate_maintenance_docs.py --check
-run_step "secret_scan"    "$PYTHON_BIN" tools/governance/scan_secrets.py
-run_step "pygame_ce"      "$PYTHON_BIN" tools/governance/check_pygame_ce.py
-run_step "godot_settings_externalization" "$PYTHON_BIN" tools/governance/check_godot_settings_externalization.py
+run_governance_step "config_reference" "$PYTHON_BIN" tools/governance/generate_configuration_reference.py --check
+run_governance_step "maintenance_docs" "$PYTHON_BIN" tools/governance/generate_maintenance_docs.py --check
+run_governance_step "secret_scan" "$PYTHON_BIN" tools/governance/scan_secrets.py
+run_governance_step "pygame_ce" "$PYTHON_BIN" tools/governance/check_pygame_ce.py
+run_governance_step "godot_settings_externalization" "$PYTHON_BIN" tools/governance/check_godot_settings_externalization.py
 
-run_step "ruff"           run_module ruff check .
-run_step "ruff_format"    run_module ruff format --check scripts tools
-run_step "ruff_c901"      run_module ruff check --select C901 .
+run_governance_step "ruff" run_module ruff check .
+run_governance_step "ruff_format" run_module ruff format --check scripts tools
+run_governance_step "ruff_c901" run_module ruff check --select C901 .
 run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
-run_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metrics_soft_gate.sh
-run_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
+run_governance_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metrics_soft_gate.sh
+run_governance_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
 PYTEST_ARGS=(-q --maxfail=1 --disable-warnings)

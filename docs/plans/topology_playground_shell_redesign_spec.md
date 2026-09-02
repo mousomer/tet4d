@@ -18,7 +18,7 @@ This file does not reopen runtime authority, Play semantics, or a second shell
 redesign pass.
 
 Architecture authority remains in
-`docs/plans/topology_playground_current_authority.md`.
+`docs/architecture/topology_playground_current_authority.md`.
 
 ## Authority constraints
 

@@ -126,6 +126,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         check_risk_gates,
         check_wheel_reuse_rules,
         lint_menu_graph,
+        policy_pack_io,
         validate_authority_transfer,
         validate_config_authority,
         validate_godot_semantic_boundary,
@@ -157,6 +158,9 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         GovernanceCheck("loc_guidance", check_loc_guidance.main),
         GovernanceCheck("dedup_dead_code_rules", check_dedup_dead_code_rules.main),
         GovernanceCheck("drift_protection", check_drift_protection.main),
+        GovernanceCheck(
+            "policy_pack_canonical", lambda: policy_pack_io.main(["--check"])
+        ),
         GovernanceCheck(
             "governance_surface", lambda: validate_governance_surface.main([])
         ),

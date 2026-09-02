@@ -17,6 +17,13 @@ chronology. Durable historical rationale belongs under `docs/history/` only
 when Git and PR history are insufficient. Prefer roles, owners, paths, schema
 fields, and lexical tokens over pinning unrestricted narrative prose.
 
+`tools/governance/policy_pack_io.py` owns the one deterministic, compact,
+newline-terminated serialization of the policy pack. Every repository writer
+must use it, and canonical verification compares the checked-in bytes with its
+output. Arbitrary minification or generic pretty-printing is invalid even when
+the decoded policy is unchanged. `CHANGE_GOVERNANCE.md` owns the binding
+canonical line and byte growth ceilings.
+
 Python config remains authoritative for inherited Python behaviour unless the
 subsystem authority map records a narrower transfer. Godot presentation-only
 settings may live in Godot theme/config resources. Inherited gameplay or

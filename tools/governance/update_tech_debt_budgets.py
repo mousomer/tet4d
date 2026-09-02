@@ -15,6 +15,7 @@ REPO_ROOT = _repo_root()
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from tools.governance.policy_pack_io import load_policy_pack, write_policy_pack
 from tools.governance.tech_debt_budget import refresh_tech_debt_budgets
 
 
@@ -37,7 +38,7 @@ def main() -> int:
         return metrics_proc.returncode
 
     metrics = json.loads(metrics_proc.stdout)
-    policy_pack = json.loads(policy_pack_path.read_text(encoding="utf-8"))
+    policy_pack = load_policy_pack(policy_pack_path)
     governance = policy_pack.get("governance", {})
     if not isinstance(governance, dict):
         print("Missing governance section in policy_pack.json", file=sys.stderr)
@@ -53,9 +54,7 @@ def main() -> int:
     updated = refresh_tech_debt_budgets(metrics, gate_config)
     governance["tech_debt_budget"] = updated
     policy_pack["governance"] = governance
-    policy_pack_path.write_text(
-        json.dumps(policy_pack, indent=2) + "\n", encoding="utf-8"
-    )
+    write_policy_pack(policy_pack, policy_pack_path)
     baseline = updated.get("baseline", {})
     if isinstance(baseline, dict):
         print(

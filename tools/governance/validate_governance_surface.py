@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import re
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools.governance.policy_pack_io import PolicyPackError, load_policy_pack
+
 POLICY_REL = "config/project/policy_pack.json"
 REQUIRED_ROLES = {
     "governance",
@@ -47,27 +52,16 @@ FIXED_LIMITS = {
     "docs/BACKLOG.md": 250,
     POLICY_REL: 1000,
 }
-PROVENANCE_FAMILIES = {
-    "contracts",
-    "workspace_bundle",
-    "authority_transfer",
-    "config_authority",
-    "godot_semantic_boundary",
-    "live_board_visual_roles",
-    "native_cpp_tooling",
-    "menu_graph",
-    "risk_gates",
-    "policy_runtime_rules",
-    "wheel_reuse_rules",
-    "utility_reuse",
-    "loc_guidance",
-    "dedup_dead_code_rules",
-    "drift_protection",
-    "governance_surface",
-    "routing_verification_floor",
-    "generated_reference_integrity",
-    "secret_and_path_sanitation",
+POLICY_PACK_BYTE_LIMIT = 80_000
+CANONICAL_SERIALIZATION = {
+    "tool": "tools/governance/policy_pack_io.py",
+    "format_version": 1,
+    "check_argument": "--check",
+    "newline_terminated": True,
 }
+SHELL_GOVERNANCE_STEP = re.compile(
+    r'^\s*run_governance_step\s+"([a-z][a-z0-9_]*)"(?=\s|$)', re.MULTILINE
+)
 
 
 @dataclass(frozen=True)
@@ -84,14 +78,31 @@ class SurfaceMeasurement:
     active_task: int
     total: int
     hard_limit: int
+    policy_bytes: int
+    policy_byte_limit: int
     file_loc: dict[str, int]
 
 
 def _load_policy(root: Path) -> dict[str, Any]:
-    payload = json.loads((root / POLICY_REL).read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise TypeError(f"{POLICY_REL} must be an object")
-    return payload
+    return load_policy_pack(root / POLICY_REL)
+
+
+def discover_enforcement_families(root: Path = ROOT) -> set[str]:
+    """Derive provenance families from the actual Python and shell call graph."""
+    from tools.governance import validate_governance
+
+    families = {check.name for check in validate_governance._checks()}
+    verify_path = root / "scripts/verify.sh"
+    try:
+        verify_text = verify_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise PolicyPackError(f"cannot inspect governance call graph: {exc}") from exc
+    shell_families = set(SHELL_GOVERNANCE_STEP.findall(verify_text))
+    if not shell_families:
+        raise PolicyPackError(
+            "scripts/verify.sh registers no run_governance_step invocations"
+        )
+    return families | shell_families
 
 
 def _str_list(value: object) -> list[str] | None:
@@ -113,6 +124,16 @@ def _is_under(path: str, roots: list[str]) -> bool:
         path == root.rstrip("/") or path.startswith(root.rstrip("/") + "/")
         for root in roots
     )
+
+
+def _role_for_path(path: str, roles: dict[str, list[str]]) -> str | None:
+    matches = [
+        (len(root.rstrip("/")), role)
+        for role, roots in roles.items()
+        for root in roots
+        if path == root.rstrip("/") or path.startswith(root.rstrip("/") + "/")
+    ]
+    return max(matches)[1] if matches else None
 
 
 def _validate_roles(
@@ -435,6 +456,32 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
                 f"active governance total {total} LOC exceeds hard limit {hard_limit}",
             )
         )
+    byte_limits = surface.get("per_file_byte_limits")
+    expected_byte_limits = {POLICY_REL: POLICY_PACK_BYTE_LIMIT}
+    if byte_limits != expected_byte_limits:
+        issues.append(
+            SurfaceIssue(
+                "size",
+                f"per_file_byte_limits must equal {expected_byte_limits}",
+            )
+        )
+    if surface.get("canonical_serialization") != CANONICAL_SERIALIZATION:
+        issues.append(
+            SurfaceIssue(
+                "format",
+                "canonical_serialization must identify the canonical policy-pack tool",
+            )
+        )
+    policy_path = root / POLICY_REL
+    policy_bytes = len(policy_path.read_bytes()) if policy_path.is_file() else 0
+    if policy_bytes > POLICY_PACK_BYTE_LIMIT:
+        issues.append(
+            SurfaceIssue(
+                "size",
+                f"{POLICY_REL}: {policy_bytes} bytes exceeds hard limit "
+                f"{POLICY_PACK_BYTE_LIMIT}",
+            )
+        )
     return SurfaceMeasurement(
         human=totals["human"],
         machine=totals["machine"],
@@ -442,6 +489,8 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
         active_task=totals["active_task"],
         total=total,
         hard_limit=hard_limit,
+        policy_bytes=policy_bytes,
+        policy_byte_limit=POLICY_PACK_BYTE_LIMIT,
         file_loc=file_loc,
     )
 
@@ -452,7 +501,7 @@ def validate_surface(  # noqa: C901 - composes the complete surface invariant
     issues: list[SurfaceIssue] = []
     try:
         policy = _load_policy(root)
-    except (OSError, TypeError, json.JSONDecodeError) as exc:
+    except (OSError, PolicyPackError) as exc:
         return [SurfaceIssue("policy", str(exc))], None
     surface = policy.get("governance_surface")
     if not isinstance(surface, dict):
@@ -461,6 +510,22 @@ def validate_surface(  # noqa: C901 - composes the complete surface invariant
     owners = _validate_owners(root, policy, issues)
     active = _active_paths(surface, issues)
     owner_paths = set(owners.values())
+    authority = policy.get("authority_model")
+    topology_authority = (
+        authority.get("topology_current_authority")
+        if isinstance(authority, dict)
+        else None
+    )
+    if (
+        not isinstance(topology_authority, str)
+        or _role_for_path(topology_authority, roles) != "architecture"
+    ):
+        issues.append(
+            SurfaceIssue(
+                "roles",
+                "topology_current_authority must resolve to the architecture role",
+            )
+        )
     if not owner_paths.issubset(set(active.get("human", []))):
         issues.append(
             SurfaceIssue(
@@ -515,12 +580,17 @@ def validate_surface(  # noqa: C901 - composes the complete surface invariant
         issues.append(SurfaceIssue("retired", f"retired authority is active: {rel}"))
     _validate_routes(root, policy, issues)
     _validate_lifecycle(root, surface, active, issues)
-    if expected_provenance is not None:
-        issues.extend(
-            validate_provenance(
-                surface.get("validator_provenance"), expected_provenance, owner_paths
-            )
+    if expected_provenance is None:
+        try:
+            expected_provenance = discover_enforcement_families(root)
+        except PolicyPackError as exc:
+            issues.append(SurfaceIssue("provenance", str(exc)))
+            expected_provenance = set()
+    issues.extend(
+        validate_provenance(
+            surface.get("validator_provenance"), expected_provenance, owner_paths
         )
+    )
     measurement = _measure(root, surface, active, owner_paths, issues)
     return issues, measurement
 
@@ -550,6 +620,10 @@ def _print_report(measurement: SurfaceMeasurement, *, base_ref: str | None) -> N
     print(f"Active task records:        {measurement.active_task:5d} LOC")
     print(f"Active governance total:    {measurement.total:5d} LOC")
     print(f"Hard limit:                 {measurement.hard_limit:5d} LOC")
+    print(
+        f"Machine policy bytes:       {measurement.policy_bytes:5d} / "
+        f"{measurement.policy_byte_limit}"
+    )
     if base_ref:
         base = _base_total(ROOT, measurement, base_ref)
         delta = "unavailable" if base is None else f"{measurement.total - base:+d} LOC"
@@ -568,9 +642,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--base-ref", default=os.environ.get("GOVERNANCE_BASE_REF"))
     args = parser.parse_args(argv)
-    issues, measurement = validate_surface(
-        ROOT, expected_provenance=PROVENANCE_FAMILIES
-    )
+    issues, measurement = validate_surface(ROOT)
     if measurement is not None:
         _print_report(measurement, base_ref=args.base_ref)
     if issues:

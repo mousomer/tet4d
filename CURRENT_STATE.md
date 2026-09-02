@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 Working state: re-governance PR 3 on `codex/regovernance-lock-surface`, based
 on merged PR 2 commit `a5d30db61c8821a71e94cb9ed430fe491ebd8ccc`
 
@@ -12,9 +12,10 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Active Focus
 
-- Current objective: lock the six-owner/compositional-routing model with
-  structural roles, active-surface budgets, lifecycle checks, and validator
-  provenance while shrinking historical machine/operational context.
+- Current objective: close the final audit by deriving validator provenance
+  from the real enforcement graph, enforcing canonical policy bytes and size,
+  broadening lifecycle checks, and classifying topology authority as
+  architecture without changing its semantics.
 - Current blocker: none known for this governance-only cut.
 - Established baseline: PR 2 merged green, master was clean at the SHA above,
   and this fresh branch was created from that exact commit. No frozen or
@@ -36,10 +37,11 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Next Acceptance Boundary
 
-1. PR 3 is ready only when the active surface is at most 2,500 lines, the policy
-   pack is at most 1,000, the backlog is at most 250, exactly six owners and all
-   routes remain valid, lifecycle/provenance regressions fail adversarially, and
-   focused plus full-repository checks are green.
+1. PR 3 is ready only when the active surface is at most 2,500 lines, the
+   canonical policy pack is at most 1,000 lines and 80,000 bytes, the backlog is
+   at most 250, exactly six owners and all routes remain valid, lifecycle and
+   actual-enforcement provenance regressions fail adversarially, and focused
+   plus full-repository checks are green.
 2. Stop after PR 3. The frozen Windows/iPad release work remains separate.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
@@ -60,7 +62,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.91`
+1. `delivery_size_pressure = 2.92`
 2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

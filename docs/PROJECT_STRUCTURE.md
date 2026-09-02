@@ -537,6 +537,7 @@ Match labels are shown inline as `(exact)`, `(prefix)`, or `(fallback)`.
 - `src/tet4d/engine/help_text.py`: `tests/unit/engine/test_help_text.py` (exact)
 - `src/tet4d/engine/runtime/help_topics.py`: `tests/unit/engine/test_help_topics.py` (exact)
 - `src/tet4d/engine/runtime/leaderboard.py`: `tests/unit/engine/test_leaderboard.py` (exact)
+- `src/tet4d/engine/runtime/menu_structure/policy.py`: `tests/unit/governance/test_policy_pack_io.py` (prefix)
 - `src/tet4d/engine/runtime/project_config.py`: `tests/unit/engine/test_project_config.py` (exact)
 - `src/tet4d/engine/runtime/runtime_config.py`: `tests/unit/engine/test_runtime_config.py` (exact)
 - `src/tet4d/engine/runtime/score_analyzer.py`: `tests/unit/engine/test_score_analyzer.py` (exact)

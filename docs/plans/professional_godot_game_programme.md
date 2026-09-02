@@ -36,7 +36,7 @@ It does not own:
 - authority transfer and establishment procedure, which belongs in
   `docs/architecture/authority_transfer_protocol.md`;
 - topology-playground invariants, which belong in
-  `docs/plans/topology_playground_current_authority.md`;
+  `docs/architecture/topology_playground_current_authority.md`;
 - current execution state, which belongs in `CURRENT_STATE.md` and
   `docs/BACKLOG.md`;
 - completed implementation evidence, which belongs in architecture records and
