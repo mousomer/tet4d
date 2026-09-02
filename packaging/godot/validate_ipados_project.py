@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Validate the exported iPadOS Design Laboratory Xcode project.
 
-Runs without Xcode, a signing identity, a simulator, or a device, so the
-iPadOS target's structure and metadata are gated on any macOS host that can
-run the pinned Godot editor.
+Configuration validation runs without Xcode, a signing identity, a simulator,
+or a device. Release validation additionally uses Apple's binary inspection
+tools to gate the native slice and linkage contracts before the Xcode build.
 """
 
 from __future__ import annotations
@@ -14,11 +14,18 @@ import plistlib
 import re
 import sys
 import tomllib
+from collections.abc import Callable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from godot_pack import PackFormatError, read_pack_file, read_pack_paths
+from ipados_native import (
+    DEVICE_ARCHITECTURES,
+    SIMULATOR_ARCHITECTURES,
+    IpadOsNativeError,
+    validate_xcframework,
+)
 
 BUNDLE_IDENTIFIER = "io.github.mousomer.tet4d.designer"
 # Apple device family 2 is iPad. Godot's preset index 1 resolves to it.
@@ -48,6 +55,8 @@ RELEASE_NATIVE_FRAMEWORK = "libtet4d_core.ios.template_release.xcframework"
 RELEASE_NATIVE_FRAMEWORK_PATH = (
     "Tet4DDesigner/dylibs/addons/tet4d_core/bin/" + RELEASE_NATIVE_FRAMEWORK
 )
+GODOT_ENGINE_FRAMEWORK_PATH = "Tet4DDesigner.xcframework"
+MOLTENVK_FRAMEWORK_PATH = "MoltenVK.xcframework"
 
 
 class IpadOsProjectError(ValueError):
@@ -181,7 +190,7 @@ def _check_pack(project_root: Path) -> tuple[int, str]:
 
 def _check_artifact_mode(
     project_root: Path, artifact_mode: str, descriptor: str
-) -> bool:
+) -> Path | None:
     if artifact_mode not in ARTIFACT_MODES:
         raise IpadOsProjectError(f"unknown iPadOS artifact mode {artifact_mode!r}")
     has_debug_declaration = IOS_DEBUG_DECLARATION in descriptor
@@ -198,7 +207,7 @@ def _check_artifact_mode(
             raise IpadOsProjectError(
                 "configuration artifact must not carry a native framework it does not claim"
             )
-        return False
+        return None
 
     if not has_debug_declaration or not has_release_declaration:
         raise IpadOsProjectError(
@@ -208,13 +217,39 @@ def _check_artifact_mode(
         raise IpadOsProjectError(
             f"release artifact is missing {RELEASE_NATIVE_FRAMEWORK_PATH}"
         )
-    return True
+    return release_native
+
+
+def _check_release_native_frameworks(
+    project_root: Path,
+) -> dict[str, dict[str, list[str]]]:
+    exact = {
+        "exact_device": DEVICE_ARCHITECTURES,
+        "exact_simulator": SIMULATOR_ARCHITECTURES,
+    }
+    return {
+        "tet4d": validate_xcframework(
+            project_root / RELEASE_NATIVE_FRAMEWORK_PATH,
+            **exact,
+            require_godot_cpp=True,
+        ),
+        "godot_engine": validate_xcframework(
+            project_root / GODOT_ENGINE_FRAMEWORK_PATH,
+            **exact,
+        ),
+        "moltenvk": validate_xcframework(
+            project_root / MOLTENVK_FRAMEWORK_PATH,
+        ),
+    }
 
 
 def validate(
     project_root: Path,
     repository_root: Path,
     artifact_mode: str,
+    native_validator: Callable[
+        [Path], dict[str, dict[str, list[str]]]
+    ] = _check_release_native_frameworks,
 ) -> dict[str, object]:
     version = tomllib.loads(
         (repository_root / "pyproject.toml").read_text(encoding="utf-8")
@@ -224,15 +259,15 @@ def validate(
     _check_info_plist(project_root)
     _check_export_options(project_root)
     pack_resources, descriptor = _check_pack(project_root)
-    native_extension_present = _check_artifact_mode(
-        project_root, artifact_mode, descriptor
-    )
+    release_native = _check_artifact_mode(project_root, artifact_mode, descriptor)
+    native_architectures = native_validator(project_root) if release_native else {}
     return {
         "version": version,
         "bundle_identifier": BUNDLE_IDENTIFIER,
         "artifact_mode": artifact_mode,
         "pack_resources": pack_resources,
-        "native_extension_present": native_extension_present,
+        "native_extension_present": release_native is not None,
+        "native_architectures": native_architectures,
         "python_runtime_required": False,
         "development_repository_required": False,
     }
@@ -257,7 +292,12 @@ def main() -> int:
             args.repository_root.resolve(),
             args.artifact_mode,
         )
-    except (OSError, IpadOsProjectError, plistlib.InvalidFileException) as exc:
+    except (
+        OSError,
+        IpadOsNativeError,
+        IpadOsProjectError,
+        plistlib.InvalidFileException,
+    ) as exc:
         print(f"iPadOS Xcode project INVALID: {exc}")
         return 1
     native = "with" if result["native_extension_present"] else "without"

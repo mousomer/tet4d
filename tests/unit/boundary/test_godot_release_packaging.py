@@ -212,13 +212,28 @@ def test_ipados_release_assembles_device_and_simulator_xcframework() -> None:
 
     assert 'scons_args+=(ios_simulator="$SCONS_IOS_SIMULATOR")' in wrapper
     assert "SCONS_ARCH=arm64 SCONS_TARGET=template_release \\" in builder
-    assert 'SCONS_IOS_SIMULATOR=no "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"' in builder
-    assert "SCONS_ARCH=universal SCONS_TARGET=template_release \\" in builder
-    assert 'SCONS_IOS_SIMULATOR=yes "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"' in builder
-    assert 'xcodebuild -create-xcframework \\' in builder
+    assert (
+        'SCONS_IOS_SIMULATOR=no "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"'
+        in builder
+    )
+    assert "SCONS_ARCH=x86_64 SCONS_TARGET=template_release \\" in builder
+    assert (
+        'SCONS_IOS_SIMULATOR=yes "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"'
+        in builder
+    )
+    assert builder.count('ipados_native.py" combine') == 2
+    assert '--godot-cpp "$godot_cpp_device_archive"' in builder
+    assert '--godot-cpp "$godot_cpp_simulator_archive"' in builder
+    assert '--output "$native_device_archive"' in builder
+    assert '--output "$native_simulator_archive"' in builder
+    assert "xcodebuild -create-xcframework \\" in builder
     assert '-library "$native_device_archive"' in builder
     assert '-library "$native_simulator_archive"' in builder
     assert '-output "$native_xcframework"' in builder
+    assert 'inspect-xcframework "$native_xcframework" --require-godot-cpp' in builder
+    assert 'normalize-godot-engine "$ARTIFACT_DIR/Tet4DDesigner.xcframework"' in builder
+    assert '-derivedDataPath "$XCODE_DERIVED_DATA_DIR"' in builder
+    assert "ARCHS=x86_64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build" in builder
 
 
 def test_ipados_release_creates_native_staging_directory_before_copy() -> None:

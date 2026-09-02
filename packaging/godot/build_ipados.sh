@@ -68,6 +68,7 @@ if [[ ! -f "$template_root/ios.zip" ]]; then
 fi
 
 staged_editor_root=""
+staged_native_root=""
 staged_project_root=""
 export_godot_bin="$GODOT_BIN"
 cleanup() {
@@ -76,6 +77,9 @@ cleanup() {
   fi
   if [[ -n "$staged_project_root" && -d "$staged_project_root" ]]; then
     rm -rf "$staged_project_root"
+  fi
+  if [[ -n "$staged_native_root" && -d "$staged_native_root" ]]; then
+    rm -rf "$staged_native_root"
   fi
 }
 trap cleanup EXIT
@@ -103,6 +107,13 @@ fi
 staged_project_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-project.XXXXXX")"
 cp -R "$PROJECT_DIR/." "$staged_project_root/"
 rm -rf "$staged_project_root/.godot"
+# Never let a stale or pre-combination iOS archive from the ignored source bin
+# enter the disposable export project.
+staged_native_bin="$staged_project_root/addons/tet4d_core/bin"
+if [[ -d "$staged_native_bin" ]]; then
+  find "$staged_native_bin" -maxdepth 1 \
+    -name 'libtet4d_core.ios.*' -exec rm -rf {} +
+fi
 
 if [[ -n "${TET4D_IOS_TEAM_ID:-}" ]]; then
   "$PYTHON_BIN" - "$staged_project_root/export_presets.cfg" "$PLACEHOLDER_TEAM_ID" "$TET4D_IOS_TEAM_ID" <<'PY'
@@ -149,16 +160,39 @@ else
   native_device_archive="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.ios.template_release.a"
   native_simulator_archive="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.ios.template_release.simulator.a"
   native_xcframework="$PROJECT_DIR/addons/tet4d_core/bin/libtet4d_core.ios.template_release.xcframework"
+  godot_cpp_device_archive="$ROOT_DIR/native/third_party/godot-cpp/bin/libgodot-cpp.ios.template_release.arm64.a"
+  godot_cpp_simulator_archive="$ROOT_DIR/native/third_party/godot-cpp/bin/libgodot-cpp.ios.template_release.x86_64.simulator.a"
+  staged_native_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-ipados-native.XXXXXX")"
+  tet4d_device_archive="$staged_native_root/libtet4d_core.ios.template_release.tet4d-only.a"
+  tet4d_simulator_archive="$staged_native_root/libtet4d_core.ios.template_release.tet4d-only.simulator.a"
   rm -f "$native_device_archive" "$native_simulator_archive"
   rm -rf "$native_xcframework"
   SCONS_PLATFORM=ios SCONS_ARCH=arm64 SCONS_TARGET=template_release \
     SCONS_IOS_SIMULATOR=no "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
-  SCONS_PLATFORM=ios SCONS_ARCH=universal SCONS_TARGET=template_release \
-    SCONS_IOS_SIMULATOR=yes "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
-  if [[ ! -f "$native_device_archive" || ! -f "$native_simulator_archive" ]]; then
-    echo "iPadOS device and simulator GDExtension archives were not produced" >&2
+  if [[ ! -f "$native_device_archive" || ! -f "$godot_cpp_device_archive" ]]; then
+    echo "iPadOS device Tet4D and godot-cpp archives were not produced" >&2
     exit 1
   fi
+  mv "$native_device_archive" "$tet4d_device_archive"
+  "$PYTHON_BIN" "$ROOT_DIR/packaging/godot/ipados_native.py" combine \
+    --tet4d "$tet4d_device_archive" \
+    --godot-cpp "$godot_cpp_device_archive" \
+    --output "$native_device_archive" \
+    --architecture arm64
+
+  SCONS_PLATFORM=ios SCONS_ARCH=x86_64 SCONS_TARGET=template_release \
+    SCONS_IOS_SIMULATOR=yes "$ROOT_DIR/scripts/build_godot_tet4d_core.sh"
+  if [[ ! -f "$native_simulator_archive" || ! -f "$godot_cpp_simulator_archive" ]]; then
+    echo "iPadOS simulator Tet4D and godot-cpp archives were not produced" >&2
+    exit 1
+  fi
+  mv "$native_simulator_archive" "$tet4d_simulator_archive"
+  "$PYTHON_BIN" "$ROOT_DIR/packaging/godot/ipados_native.py" combine \
+    --tet4d "$tet4d_simulator_archive" \
+    --godot-cpp "$godot_cpp_simulator_archive" \
+    --output "$native_simulator_archive" \
+    --architecture x86_64
+
   xcodebuild -create-xcframework \
     -library "$native_device_archive" \
     -library "$native_simulator_archive" \
@@ -167,6 +201,8 @@ else
     echo "iPadOS release GDExtension was not produced" >&2
     exit 1
   fi
+  "$PYTHON_BIN" "$ROOT_DIR/packaging/godot/ipados_native.py" \
+    inspect-xcframework "$native_xcframework" --require-godot-cpp
   mkdir -p "$staged_project_root/addons/tet4d_core/bin"
   cp -R "$native_xcframework" "$staged_project_root/addons/tet4d_core/bin/"
 fi
@@ -175,6 +211,14 @@ rm -rf "$ARTIFACT_DIR"
 mkdir -p "$ARTIFACT_DIR"
 "$export_godot_bin" --headless --path "$staged_project_root" \
   --export-release "$PRESET_NAME" "$ARTIFACT_DIR/Tet4DDesigner.xcodeproj"
+
+if [[ "$CONFIGURATION_ONLY" != "1" ]]; then
+  # Godot 4.7.2 labels its simulator engine slice arm64+x86_64 even though the
+  # shipped libgodot.a is x86_64-only. Make the exported artifact truthful
+  # before validation and Xcode slice selection.
+  "$PYTHON_BIN" "$ROOT_DIR/packaging/godot/ipados_native.py" \
+    normalize-godot-engine "$ARTIFACT_DIR/Tet4DDesigner.xcframework"
+fi
 
 validator_args=("$ARTIFACT_DIR" "--artifact-mode" "$ARTIFACT_MODE")
 "$PYTHON_BIN" "$ROOT_DIR/packaging/godot/validate_ipados_project.py" "${validator_args[@]}"
@@ -188,9 +232,12 @@ fi
 
 # An unsigned simulator build proves the exported project compiles without
 # requiring any signing credential.
+XCODE_DERIVED_DATA_DIR="$ARTIFACT_BASE_DIR/xcode-derived-data"
+rm -rf "$XCODE_DERIVED_DATA_DIR"
 xcodebuild -project "$ARTIFACT_DIR/Tet4DDesigner.xcodeproj" \
   -scheme Tet4DDesigner -sdk iphonesimulator -configuration Release \
-  CODE_SIGNING_ALLOWED=NO build
+  -derivedDataPath "$XCODE_DERIVED_DATA_DIR" \
+  ARCHS=x86_64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build
 
 archive_path="$ARTIFACT_BASE_DIR/Tet4D-Designer-$version-ipados-xcodeproject.zip"
 rm -f "$archive_path"
