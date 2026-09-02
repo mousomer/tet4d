@@ -189,8 +189,8 @@
       {
         "purpose": "Frozen topology lab semantics and migration boundary.",
         "role": "topology_authority",
-        "sha256": "bd06973ac662349f98497127adbaa6d82d192291f064ff677aa05e08128287ab",
-        "source_path": "docs/plans/topology_playground_current_authority.md"
+        "sha256": "f7655e458ff9ccd95466a3d827c16fd88303624862130a587b30ccd3096890c6",
+        "source_path": "docs/architecture/topology_playground_current_authority.md"
       },
       {
         "purpose": "Stage 2 topology/gameplay trace oracle contract.",

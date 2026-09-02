@@ -1,8 +1,8 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-09-01
-Working state: re-governance PR 2 on `codex/regovernance-canonical-owners`,
-based on merged PR 1 commit `bfea3bdb650fcec273ec98647eda810d6cef194f`
+Last updated: 2026-09-02
+Working state: re-governance PR 3 on `codex/regovernance-lock-surface`, based
+on merged PR 2 commit `a5d30db61c8821a71e94cb9ed430fe491ebd8ccc`
 
 ## Purpose
 
@@ -12,11 +12,12 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Active Focus
 
-- Current objective: consolidate contributor process into six canonical human
-  owners, make route selection compositional, retire overlapping policy and
-  routing documents, and preserve all product/architecture semantics.
+- Current objective: close the final audit by deriving validator provenance
+  from the real enforcement graph, enforcing canonical policy bytes and size,
+  broadening lifecycle checks, and classifying topology authority as
+  architecture without changing its semantics.
 - Current blocker: none known for this governance-only cut.
-- Established baseline: PR 1 merged green, master was clean at the SHA above,
+- Established baseline: PR 2 merged green, master was clean at the SHA above,
   and this fresh branch was created from that exact commit. No frozen or
   unrelated feature branch is part of the change.
 - Product and release execution chronology is intentionally excluded. Resume
@@ -36,12 +37,12 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Next Acceptance Boundary
 
-1. PR 2 is ready only when all six canonical owners are reachable, old
-   authorities are absent and protected, route/evidence unions have regression
-   coverage, stale active pointers are gone, size constraints hold, and focused
+1. PR 3 is ready only when the active surface is at most 2,500 lines, the
+   canonical policy pack is at most 1,000 lines and 80,000 bytes, the backlog is
+   at most 250, exactly six owners and all routes remain valid, lifecycle and
+   actual-enforcement provenance regressions fail adversarially, and focused
    plus full-repository checks are green.
-2. Stop after PR 2. Broad policy-pack shrink, validator size/provenance budgets,
-   and backlog reduction remain PR 3 work.
+2. Stop after PR 3. The frozen Windows/iPad release work remains separate.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
@@ -57,11 +58,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.93` (`low`)
+- `tech_debt.score = 5.94` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.91`
+1. `delivery_size_pressure = 2.92`
 2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

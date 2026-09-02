@@ -706,7 +706,7 @@ def _codex_authority_model() -> dict[str, str]:
         "handoff_doc": "CURRENT_STATE.md",
         "product_requirements_root": "docs/rds/",
         "architecture_contract": "docs/ARCHITECTURE_CONTRACT.md",
-        "topology_current_authority": "docs/plans/topology_playground_current_authority.md",
+        "topology_current_authority": "docs/architecture/topology_playground_current_authority.md",
         **contracts.CODEX_AUTHORITY_POINTERS,
     }
 

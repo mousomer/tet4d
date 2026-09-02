@@ -71,7 +71,7 @@ AUTHORITY_DOCS: tuple[tuple[str, str, str], ...] = (
         "Menu/config authority for launcher, settings, and keybindings.",
     ),
     (
-        "docs/plans/topology_playground_current_authority.md",
+        "docs/architecture/topology_playground_current_authority.md",
         "topology_authority",
         "Frozen topology lab semantics and migration boundary.",
     ),

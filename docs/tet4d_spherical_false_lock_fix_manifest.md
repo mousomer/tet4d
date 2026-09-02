@@ -4,7 +4,7 @@ Archived file moved to
 `docs/history/topology_playground/tet4d_spherical_false_lock_fix_manifest.md`.
 
 Current topology-playground authority:
-`docs/plans/topology_playground_current_authority.md`
+`docs/architecture/topology_playground_current_authority.md`
 
 Precedence rule:
 - the current-authority file and newer user/developer instructions override

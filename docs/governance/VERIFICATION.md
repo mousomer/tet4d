@@ -59,6 +59,13 @@ python tools/governance/resolve_codex_verification.py request.json --format mark
   comparison mode, tolerance where applicable, and reason for inclusion.
 - Validators cover success, failure, advisory/default mode, strict mode where
   applicable, suppression validity, and excluded paths.
+- Every governance validator or meaningful policy-check family invoked by the
+  canonical governance/full-verification graph names exactly one of the six
+  canonical human owners in the machine provenance registry. Coverage is
+  derived from the actual Python check registry and explicitly marked shell
+  invocations, never from a parallel expected-name list. A real check without
+  an owner, a registered family without real enforcement, or a non-canonical
+  owner is invalid policy.
 - After a non-patch source rewrite, check encoding and literal escape artifacts,
   then run focused lint before broader tests.
 
@@ -71,6 +78,7 @@ wrappers in parallel.
 ```bash
 ./scripts/verify_focus.sh [--docs] [ruff-targets...] [--pytest pytest-targets...]
 python tools/governance/validate_project_contracts.py
+python tools/governance/validate_governance_surface.py
 python tools/governance/generate_maintenance_docs.py --check
 python tools/governance/generate_configuration_reference.py --check
 git diff --check

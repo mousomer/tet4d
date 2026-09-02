@@ -4,7 +4,7 @@ Archived file moved to
 `docs/history/topology_playground/tet4d_topology_playground_restructure_plan_codex.md`.
 
 Current topology-playground authority:
-`docs/plans/topology_playground_current_authority.md`
+`docs/architecture/topology_playground_current_authority.md`
 
 Precedence rule:
 - the current-authority file and newer user/developer instructions override

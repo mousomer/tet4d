@@ -1,10 +1,10 @@
 # Topology Playground Current Authority
 
-Role: authority
+Role: architecture authority
 Status: active
 Source of truth: this file
 Supersedes: older topology-playground manifests and stage plans
-Last updated: 2026-05-05
+Last updated: 2026-09-02
 
 ## Purpose
 
@@ -276,8 +276,6 @@ The current migration boundary is now explicit:
   `Settings -> Legacy Topology Editor Menu`.
 - Keep the direct playground entrypoint available via
   `python -m tet4d.ui.pygame.topology_lab` in addition to the launcher path.
-- Update manifests/docs in the same pass as code changes, prevent drift, and
-  keep local CI-equivalent checks green.
 
 ## Explicit non-goals
 
@@ -292,15 +290,12 @@ The current migration boundary is now explicit:
 - Do not silently leave this file stale after a task changes accepted
   topology-playground direction.
 
-## Mandatory execution rules
+## Repository-change requirements
 
-- Update documentation and manifests in the same pass as code changes.
-- Prevent drift between code, tests, manifests, generated docs, and status
-  files.
-- Run the repo’s governance/drift/document checks required by the project.
-- Run local CI-style verification before declaring completion.
-- If a full local CI command cannot run, state exactly why and run the nearest
-  equivalent checks.
+Repository change, verification, completion, and governance requirements are
+owned by `AGENTS.md` and the canonical governance documents, especially
+`docs/governance/CHANGE_GOVERNANCE.md` and
+`docs/governance/VERIFICATION.md`.
 
 ## Background pointer
 

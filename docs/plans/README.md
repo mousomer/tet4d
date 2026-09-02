@@ -70,17 +70,11 @@ general planning redirection or repo-wide ownership notes.
   - input focus, Space, Q/E, Esc, camera, Fit View, W-slice, and HUD checks
   - explicit gate before Stage 25 topology planning
 
-### `topology_playground_current_authority.md`
-- Role: `authority`
-- Status: `active`
-- Owns:
-  - current topology-playground architecture
-  - instruction precedence
-  - accepted workspace model
-  - ownership boundaries
-  - invariants
-  - explicit non-goals
-  - mandatory execution rules
+Current topology-playground architecture, ownership boundaries, invariants,
+and non-goals live in
+`docs/architecture/topology_playground_current_authority.md`. Planning-layer
+specifications and debt records point to that semantic authority rather than
+duplicating it here.
 
 ### `topology_playground_shell_redesign_spec.md`
 - Role: `spec`
