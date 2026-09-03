@@ -1,10 +1,10 @@
 # Godot Release Exports
 
-Tet4D has two explicitly named product families: the current Godot 4.7.2
-professional-core exports and the active Python/PyInstaller desktop product.
-The Python packages are not Stage 54G Godot artifacts. Their three-platform
-proof gate passed, so the unified workflow now builds them alongside the Godot
-Designer family while keeping names and evidence separate.
+Tet4D has three products governed by `product_platform_contract` in
+`config/project/policy_pack.json`: Python Tet4D, the playable Godot Tet4D game,
+and the desktop Tet4D Designer. Python packages are not fallback Godot
+artifacts, and workflow coverage is implementation evidence rather than the
+target-platform plan.
 Earlier release records call the Python path legacy; that term is historical,
 not its current product status.
 
@@ -101,9 +101,12 @@ The Windows workflow builds natively, runs the focused laboratory suite,
 validates the package, and performs a bounded headless start; a direct clean
 Windows-machine review remains an explicit Stage 54F-5 acceptance item.
 
-## Build the Android tablet Design Laboratory candidate
+## Audit the transitional Android Design Laboratory artifact
 
-Requirements are the pinned Godot 4.7.2 editor and Android export templates. A
+This artifact carries Designer identity even though Designer/Android is not a
+target. It remains transitional evidence until the required Godot game/Android
+package has its own identity and entry contract. Requirements are the pinned
+Godot 4.7.2 editor and Android export templates. A
 full artifact additionally requires a working Java SDK, an Android SDK with
 `platform-tools` and `build-tools`, and the NDK. Godot 4.7.2 requires all of
 these unconditionally; `package/signed=false` does not bypass the check.
@@ -135,9 +138,11 @@ individual `assets/` members plus `assets/assets.sparsepck` directory metadata;
 the artifact validator checks that exact layout, the required laboratory
 resources, and path hygiene without requiring a nonexistent embedded `.pck`.
 
-## Build the iPadOS Design Laboratory candidate
+## Audit the transitional iPadOS Design Laboratory artifact
 
-Requirements are macOS, the pinned Godot 4.7.2 editor, and the iOS export
+This artifact carries Designer identity even though Designer/iPadOS is not a
+target. Its required successor is Godot game/iPadOS and must not be inferred
+from this export. Requirements are macOS, the pinned Godot 4.7.2 editor, and the iOS export
 template. A compiled application additionally requires full Xcode; Command Line
 Tools alone do not provide the iPhoneOS SDK.
 
@@ -189,12 +194,11 @@ authorized and provisioned.
 
 ## Platform support boundary
 
-- Current supported release: macOS 13+, Universal 2, Godot app/ZIP.
+- Current Godot game implementation: macOS 13+, Universal 2, Godot app/ZIP.
 - Current packaged design candidates, all three from one Design Laboratory:
   - Windows x86-64 portable Godot ZIP; clean-machine runtime acceptance pending.
-  - Android arm64 landscape tablet APK; built in CI, device acceptance pending.
-  - iPadOS Xcode project for the iPad device family; built in CI, device
-    acceptance pending.
+  - Android arm64 and iPadOS Designer-identity artifacts are transitional
+    mismatches, not target support for either Designer or the Godot game.
 - Development-configured only: Linux Godot GDExtension artifact names.
 - Active Python product family: PyInstaller `.dmg`, `.deb`, and `.msi`
   builders under `packaging/scripts/` and `packaging/pyinstaller/`; macOS arm64,
@@ -202,13 +206,14 @@ authorized and provisioned.
   `d542d682`, including outside-checkout launch and removal/uninstall.
 
 Do not report Python installer CI or static GDExtension declarations as Godot
-runtime release evidence; keep the two product families explicit.
+runtime release evidence; keep all three products explicit.
 
 ## Current release workflow
 
-`.github/workflows/release-packaging.yml` builds seven explicitly named
-artifacts from the exact triggering SHA: three Python installers and four Godot
-Designer packages. The Android job runs on `ubuntu-latest` and the iPadOS job
+`.github/workflows/release-packaging.yml` currently builds seven artifacts from
+the exact triggering SHA: three Python installers, the Godot game macOS
+package, the Designer Windows package, and two explicitly transitional
+Designer-identity tablet artifacts. The Android job runs on `ubuntu-latest` and the iPadOS job
 on `macos-latest`, because those runners carry the Android and Xcode toolchains
 that a given development host may not. Every package job depends on a release
 identity contract. On tag runs, `v0.7.5` and `0.7.5` both normalize to the

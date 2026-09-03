@@ -58,11 +58,11 @@
     confirm the normalized tag exactly matches `pyproject.toml`; do not publish
     a historical or proposed version label that disagrees with project truth.
 12. Confirm the unified workflow checked out one exact source SHA in all seven
-    package jobs and generated `tet4d-release-<version>-manifest.json` only
-    after every package passed.
-13. Verify the manifest names all three Python installers and all four Godot
-    Designer artifacts, records their SHA-256 values, and describes iPadOS as
-    an unsigned simulator-compiled Xcode project without device acceptance.
+    current package/audit jobs and generated one checksum-bearing manifest.
+13. Verify the manifest distinguishes all three Python installers, the Godot
+    game macOS package, the Designer Windows package, and the two transitional
+    Designer-identity tablet artifacts. It must not promote Android or iPadOS
+    to Designer targets or treat either as the required Godot game package.
 
 ## Current-platform package
 
@@ -81,7 +81,8 @@
 
 ## Platform and product-family truth
 
-1. Report macOS as the accepted Godot professional-core release target.
+1. Report macOS as the implemented Godot game release target; do not rename
+   its game-identity ZIP as Designer evidence.
 2. Report Windows x86-64 as a structurally validated portable Designer
    candidate, including whether native CI and direct clean-machine launch ran.
 3. For Windows, run `packaging/godot/build_windows.sh`, inspect the three-file
@@ -92,10 +93,14 @@
     the evidence level exactly: automated InputMap tests, emulator keyboard
     testing, and real physical Android keyboard testing are three different
     claims and the weaker may not be reported as the stronger.
+    The current Designer-identity artifact is transitional and does not satisfy
+    either Designer target support or Godot game/Android implementation.
 3b. For iPadOS, run `packaging/godot/build_ipados.sh`, and report the build
     result, the signing status, and whether evidence came from the simulator or
     a physical iPad. Simulator keyboard input is not physical-iPad keyboard
     acceptance.
+    The current Designer-identity project is transitional; the planned repair
+    target is Godot game/iPadOS.
 3c. Rebuild every platform artifact after any shared Design Laboratory change,
     and record a SHA-256 for each produced artifact with its exact class.
     An iPad configuration-export checksum is not a release checksum. A Windows

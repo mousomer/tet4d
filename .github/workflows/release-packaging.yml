@@ -214,8 +214,8 @@ jobs:
           path: artifacts/release/tet4d-python-*-windows-x86_64.msi
           if-no-files-found: error
 
-  package-designer-macos:
-    name: package Godot Designer macOS Universal
+  package-godot-game-macos:
+    name: package Godot Tet4D game macOS Universal
     needs: release-contract
     runs-on: macos-latest
     steps:
@@ -286,17 +286,17 @@ jobs:
       - name: Build and validate Godot macOS release
         run: GODOT_BIN="$GODOT_BIN" packaging/godot/build_macos.sh
 
-      - name: Stage explicit Designer artifact name
+      - name: Stage explicit Godot game artifact name
         run: |
           mkdir -p artifacts/release
           cp "artifacts/godot/macos/Tet4D-${{ needs.release-contract.outputs.version }}-macos-universal.zip" \
-            "artifacts/release/tet4d-designer-${{ needs.release-contract.outputs.version }}-macos-universal.zip"
+            "artifacts/release/tet4d-godot-game-${{ needs.release-contract.outputs.version }}-macos-universal.zip"
 
       - name: Upload Godot macOS release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-designer-${{ needs.release-contract.outputs.version }}-macos-universal
-          path: artifacts/release/tet4d-designer-*-macos-universal.zip
+          name: tet4d-godot-game-${{ needs.release-contract.outputs.version }}-macos-universal
+          path: artifacts/release/tet4d-godot-game-*-macos-universal.zip
           if-no-files-found: error
 
   package-designer-windows:
@@ -393,8 +393,8 @@ jobs:
           path: artifacts/release/tet4d-designer-*-windows-x86_64.zip
           if-no-files-found: error
 
-  package-designer-android:
-    name: package Godot Designer Android arm64
+  package-transitional-designer-android:
+    name: audit transitional Designer Android artifact (not a target)
     needs: release-contract
     runs-on: ubuntu-latest
     steps:
@@ -486,7 +486,7 @@ jobs:
           "$GODOT_BIN" --headless --path godot/Tet4D.Godot \
             --script tests/run_cross_platform_design_tests.gd
 
-      - name: Build and validate the Android tablet Designer
+      - name: Build and validate the transitional Android Designer artifact
         run: |
           GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" packaging/godot/build_android.sh
 
@@ -503,8 +503,8 @@ jobs:
           path: artifacts/release/tet4d-designer-*-android-arm64.apk
           if-no-files-found: error
 
-  package-designer-ipados:
-    name: package Godot Designer iPadOS Xcode project
+  package-transitional-designer-ipados:
+    name: audit transitional Designer iPadOS artifact (not a target)
     needs: release-contract
     runs-on: macos-latest
     steps:
@@ -573,7 +573,7 @@ jobs:
       # macOS runners ship full Xcode, so this exercises the real build path:
       # the iOS GDExtension is cross-compiled and the exported project is
       # compiled unsigned for the simulator.
-      - name: Build and validate the iPadOS Designer
+      - name: Build and validate the transitional iPadOS Designer artifact
         run: |
           GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" packaging/godot/build_ipados.sh
 
@@ -597,10 +597,10 @@ jobs:
       - package-python-macos
       - package-python-linux
       - package-python-windows
-      - package-designer-macos
+      - package-godot-game-macos
       - package-designer-windows
-      - package-designer-android
-      - package-designer-ipados
+      - package-transitional-designer-android
+      - package-transitional-designer-ipados
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
