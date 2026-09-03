@@ -45,6 +45,11 @@ It does not own:
 When a programme stage changes durable product behaviour, the owning RDS and
 relevant authority records must be updated in the same implementation slice.
 
+The repository-wide product/platform plan is the controlled
+`product_platform_contract` in `config/project/policy_pack.json`, with human
+semantics in `docs/rds/RDS_PACKAGING.md`. Programme sequencing and current
+implementation gaps may not add or remove its target cells implicitly.
+
 ## 2. First Product Gate
 
 The first major gate is:

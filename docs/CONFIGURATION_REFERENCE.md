@@ -1930,7 +1930,7 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/project/policy_pack.json`
-Top-level keys: `authority_model`, `code_rules`, `codex_routing`, `deprecated_authorities`, `description`, `governance`, `governance_surface`, `maintenance_contract`, `maintenance_docs`, `project_name`, `schema_version`
+Top-level keys: `authority_model`, `code_rules`, `codex_routing`, `deprecated_authorities`, `description`, `governance`, `governance_surface`, `maintenance_contract`, `maintenance_docs`, `product_platform_contract`, `project_name`, `schema_version`
 Parameters:
 - `authority_model.architecture_contract`: `"docs/ARCHITECTURE_CONTRACT.md"` (`string`)
 - `authority_model.authority_transfer_and_establishment_protocol`: `"docs/architecture/authority_transfer_protocol.md"` (`string`)
@@ -2311,6 +2311,7 @@ Parameters:
 - `governance_surface.validator_provenance.policy_compliance_repo`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.policy_pack_canonical`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.policy_runtime_rules`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.product_platform_matrix`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.pygame_ce`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.risk_gates`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
 - `governance_surface.validator_provenance.ruff`: `"docs/governance/ENGINEERING.md"` (`string`)
@@ -2370,6 +2371,39 @@ Parameters:
 - `maintenance_docs.verification.ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
 - `maintenance_docs.verification.enforcers[]`: array[`string`]; examples: `"scripts/check_editable_install.sh"`, `"scripts/check_architecture_boundaries.sh"`, `"scripts/check_engine_core_purity.sh"`
 - `maintenance_docs.verification.local_gate`: `"CODEX_MODE=1 ./scripts/verify.sh"` (`string`)
+- `product_platform_contract.authority.change_governance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `product_platform_contract.authority.change_route`: `"product_planning"` (`string`)
+- `product_platform_contract.authority.human_owner`: `"docs/rds/RDS_PACKAGING.md"` (`string`)
+- `product_platform_contract.authority.implementation_gaps`: `"docs/BACKLOG.md"` (`string`)
+- `product_platform_contract.packaging_consumers[]`: array[`object`]
+- `product_platform_contract.packaging_consumers[].consumer_id`: varies (`string`); examples: `"python_macos"`, `"python_windows"`, `"python_linux"`
+- `product_platform_contract.packaging_consumers[].export_preset`: varies (`string`); examples: `"macOS Universal"`, `"Windows x86_64"`, `"Android Tablet"`
+- `product_platform_contract.packaging_consumers[].identity_field`: varies (`string`); examples: `"application/bundle_identifier"`, `"application/product_name"`, `"package/unique_name"`
+- `product_platform_contract.packaging_consumers[].identity_value`: `"Tet4D Designer"` (`string`)
+- `product_platform_contract.packaging_consumers[].platform_id`: varies (`string`); examples: `"macos"`, `"windows"`, `"linux"`
+- `product_platform_contract.packaging_consumers[].product_id`: varies (`string`); examples: `"python_tet4d"`, `"godot_game"`, `"godot_designer"`
+- `product_platform_contract.packaging_consumers[].status`: varies (`string`); examples: `"implemented"`, `"transitional_mismatch"`
+- `product_platform_contract.packaging_consumers[].workflow_job`: varies (`string`); examples: `"package-python-macos"`, `"package-python-windows"`, `"package-python-linux"`
+- `product_platform_contract.platform_ids[]`: array[`string`]; examples: `"macos"`, `"windows"`, `"linux"`
+- `product_platform_contract.products.godot_designer.application_identity`: `"io.github.mousomer.tet4d.designer"` (`string`)
+- `product_platform_contract.products.godot_designer.backlog_label`: `"Designer"` (`string`)
+- `product_platform_contract.products.godot_designer.display_name`: `"Tet4D Designer"` (`string`)
+- `product_platform_contract.products.godot_designer.purpose`: `"desktop Design Laboratory authoring and evaluation tool"` (`string`)
+- `product_platform_contract.products.godot_designer.runtime_family`: `"godot"` (`string`)
+- `product_platform_contract.products.godot_game.application_identity`: `"io.github.mousomer.tet4d"` (`string`)
+- `product_platform_contract.products.godot_game.backlog_label`: `"Godot game"` (`string`)
+- `product_platform_contract.products.godot_game.display_name`: `"Tet4D"` (`string`)
+- `product_platform_contract.products.godot_game.purpose`: `"playable Godot 2D / 3D / 4D game"` (`string`)
+- `product_platform_contract.products.godot_game.runtime_family`: `"godot"` (`string`)
+- `product_platform_contract.products.python_tet4d.application_identity`: `"tet4d"` (`string`)
+- `product_platform_contract.products.python_tet4d.backlog_label`: `"Python Tet4D"` (`string`)
+- `product_platform_contract.products.python_tet4d.display_name`: `"Python Tet4D"` (`string`)
+- `product_platform_contract.products.python_tet4d.purpose`: `"playable Python/Pygame Tet4D product"` (`string`)
+- `product_platform_contract.products.python_tet4d.runtime_family`: `"python"` (`string`)
+- `product_platform_contract.schema_version`: `1` (`int`)
+- `product_platform_contract.target_platforms.godot_designer[]`: array[`string`]; examples: `"macos"`, `"windows"`
+- `product_platform_contract.target_platforms.godot_game[]`: array[`string`]; examples: `"macos"`, `"windows"`, `"linux"`
+- `product_platform_contract.target_platforms.python_tet4d[]`: array[`string`]; examples: `"macos"`, `"windows"`, `"linux"`
 - `project_name`: `"tet4d"` (`string`)
 - `schema_version`: `1` (`int`)
 

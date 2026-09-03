@@ -47,6 +47,22 @@ Workflow modifiers are `review_only`, `staged_handoff`, `cross_layer`, and
 `verification_failure`; they describe execution context, not subsystem
 ownership.
 
+The product-family/platform support matrix is a controlled product-plan
+contract owned structurally by `product_platform_contract` in
+`config/project/policy_pack.json`. Packaging, CI, build, export, platform, or
+implementation work may not add, remove, rename, or reinterpret a target
+implicitly. A matrix change requires an explicit product-plan instruction,
+the `product_planning` route, intentional machine-contract and owning-RDS
+updates, consumer/backlog reconciliation, tests, and a PR statement naming the
+added or removed cells. Missing or broken implementations do not remove a
+target; experiments, workflow jobs, artifacts, and export presets do not add
+one. All consumers must be verified in the same deliberate matrix change.
+`transitional_mismatch` is not a general exception: its closed, grandfathered
+consumer set is the machine-contract's `legacy_designer_android` and
+`legacy_designer_ipados` entries only. Adding, removing, or changing one is a
+product-contract change and requires the same route, RDS, backlog, test, and
+PR evidence as any other matrix change.
+
 These six canonical files are the complete human governance owner set. If a
 durable rule cannot fit without semantic distortion, stop and reassess the
 domain model rather than adding an overlapping owner.

@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-09-01
+Updated: 2026-09-02
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -21,25 +21,25 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
-### Re-governance PR 3
+### Three-product packaging gaps
 
-Lock the PR 1/PR 2 model against ownership drift, append-only lifecycle growth,
-unowned validator policy, and active-context expansion.
+Implement the missing package identities required by the authoritative
+`product_platform_contract` without treating transitional jobs as support.
 
 Acceptance boundary:
 
-- exactly six canonical human owners and compositional routes remain;
-- all active routes resolve and none enters history;
-- active governance is at most 2,500 lines;
-- canonically serialized `policy_pack.json` is at most 1,000 lines and 80,000
-  bytes;
-- `CURRENT_STATE.md` is at most 150 lines and this file at most 250;
-- provenance derives exactly from the real Python/shell enforcement graph,
-  broadened lifecycle variants fail, and precise volatile-count gates pass;
-- focused, adversarial, generated-document, sanitation, and full verification
-  are green.
+- Godot game / Windows and Godot game / Linux need distinct distributable
+  packages and acceptance; the existing Windows package is Designer only;
+- Godot game / Android and Godot game / iPadOS must replace the transitional
+  Designer-identity tablet exports with game identity and entry semantics;
+- the iPadOS game implementation must resolve godot-cpp static-link composition
+  and simulator architecture compatibility; and
+- Designer / macOS needs a genuinely distinct application identity and entry
+  contract; renaming the current `Tet4D.app` game ZIP is insufficient.
 
-Stop after this cut. Windows/iPad release remediation is separate work.
+The existing Python macOS/Windows/Linux packages, Godot game macOS package, and
+Designer Windows package are implemented cells and remain separate evidence
+from runtime acceptance or publication.
 
 ## Accepted Next Product Boundaries
 
@@ -56,8 +56,6 @@ Stop after this cut. Windows/iPad release remediation is separate work.
 
 ### Release and platform
 
-- `codex/windows-release-without-debug-records` remains frozen through the
-  governance cut. Reconcile it separately after PR 3 merges.
 - Clean-machine Windows and iPadOS runtime acceptance remain real-platform
   evidence, not claims inferred from macOS or package structure.
 - Developer ID signing/notarization and broader distribution are separate

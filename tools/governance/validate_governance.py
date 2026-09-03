@@ -133,6 +133,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         validate_governance_surface,
         validate_live_board_visual_roles,
         validate_native_cpp_tooling,
+        validate_product_platform_matrix,
         validate_project_contracts,
         validate_utility_reuse,
         validate_workspace_bundle,
@@ -150,6 +151,9 @@ def _checks() -> tuple[GovernanceCheck, ...]:
             "live_board_visual_roles", validate_live_board_visual_roles.main
         ),
         GovernanceCheck("native_cpp_tooling", validate_native_cpp_tooling.main),
+        GovernanceCheck(
+            "product_platform_matrix", validate_product_platform_matrix.main
+        ),
         GovernanceCheck("menu_graph", lint_menu_graph.main),
         GovernanceCheck("risk_gates", check_risk_gates.main),
         GovernanceCheck("policy_runtime_rules", check_policy_runtime_rules.main),

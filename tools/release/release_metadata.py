@@ -9,13 +9,17 @@ import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 SOURCE_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+POLICY_PATH = Path(__file__).resolve().parents[2] / "config/project/policy_pack.json"
 
 
 @dataclass(frozen=True)
 class ArtifactSpec:
-    family: str
+    consumer_id: str
+    product_id: str
+    platform_id: str
     key: str
     filename_template: str
     evidence: dict[str, str]
@@ -23,7 +27,9 @@ class ArtifactSpec:
 
 ARTIFACT_SPECS = (
     ArtifactSpec(
-        "python",
+        "python_windows",
+        "python_tet4d",
+        "windows",
         "windows_x86_64",
         "tet4d-python-{version}-windows-x86_64.msi",
         {
@@ -33,7 +39,9 @@ ARTIFACT_SPECS = (
         },
     ),
     ArtifactSpec(
-        "python",
+        "python_macos",
+        "python_tet4d",
+        "macos",
         "macos_arm64",
         "tet4d-python-{version}-macos-arm64.dmg",
         {
@@ -44,7 +52,9 @@ ARTIFACT_SPECS = (
         },
     ),
     ArtifactSpec(
-        "python",
+        "python_linux",
+        "python_tet4d",
+        "linux",
         "linux_x86_64",
         "tet4d-python-{version}-linux-x86_64.deb",
         {
@@ -54,7 +64,9 @@ ARTIFACT_SPECS = (
         },
     ),
     ArtifactSpec(
+        "godot_designer_windows",
         "godot_designer",
+        "windows",
         "windows_x86_64",
         "tet4d-designer-{version}-windows-x86_64.zip",
         {
@@ -64,28 +76,35 @@ ARTIFACT_SPECS = (
         },
     ),
     ArtifactSpec(
-        "godot_designer",
+        "godot_game_macos",
+        "godot_game",
+        "macos",
         "macos_universal",
-        "tet4d-designer-{version}-macos-universal.zip",
+        "tet4d-godot-game-{version}-macos-universal.zip",
         {
-            "artifact_class": "Universal 2 Godot Designer app ZIP",
+            "artifact_class": "Universal 2 Godot Tet4D game app ZIP",
             "runtime": "two isolated outside-checkout smokes passed",
             "signing": "ad-hoc signed",
             "notarization": "not notarized",
         },
     ),
     ArtifactSpec(
+        "legacy_designer_android",
         "godot_designer",
+        "android",
         "android_arm64",
         "tet4d-designer-{version}-android-arm64.apk",
         {
             "artifact_class": "arm64 Android tablet APK",
             "signing": "ephemeral CI test release key",
             "device_acceptance": "emulator and physical-device acceptance not claimed",
+            "target_status": "transitional mismatch; not a supported Designer target",
         },
     ),
     ArtifactSpec(
+        "legacy_designer_ipados",
         "godot_designer",
+        "ipados",
         "ipados_xcodeproject",
         "tet4d-designer-{version}-ipados-xcodeproject.zip",
         {
@@ -93,9 +112,21 @@ ARTIFACT_SPECS = (
             "build_status": "exported and compiled unsigned for the simulator",
             "signing": "unsigned",
             "device_acceptance": "not installed or tested on a physical iPad",
+            "target_status": "transitional mismatch; not a supported Designer target",
         },
     ),
 )
+
+
+def product_contract() -> dict[str, dict[str, Any]]:
+    policy = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+    contract = policy.get("product_platform_contract")
+    if not isinstance(contract, dict):
+        raise TypeError("policy pack is missing product_platform_contract")
+    products = contract.get("products")
+    if not isinstance(products, dict):
+        raise TypeError("product_platform_contract.products must be an object")
+    return products
 
 
 def project_version(pyproject_path: Path) -> str:
@@ -147,14 +178,24 @@ def generate_manifest(artifact_dir: Path, version: str, source_sha: str) -> dict
             "source SHA must be exactly 40 lowercase hexadecimal characters"
         )
 
-    families: dict[str, dict] = {
-        "python": {"display_name": "Python Tet4D", "artifacts": {}},
-        "godot_designer": {"display_name": "Godot Designer", "artifacts": {}},
-    }
+    products = product_contract()
+    families: dict[str, dict] = {}
+    for product_id in {spec.product_id for spec in ARTIFACT_SPECS}:
+        product = products.get(product_id)
+        if not isinstance(product, dict) or not isinstance(
+            product.get("display_name"), str
+        ):
+            raise TypeError(
+                f"release artifact references unknown product {product_id!r}"
+            )
+        families[product_id] = {
+            "display_name": product["display_name"],
+            "artifacts": {},
+        }
     for spec in ARTIFACT_SPECS:
         filename = spec.filename_template.format(version=version)
         artifact = _find_exact_artifact(artifact_dir, filename)
-        families[spec.family]["artifacts"][spec.key] = {
+        families[spec.product_id]["artifacts"][spec.key] = {
             "filename": filename,
             "sha256": sha256(artifact),
             "bytes": artifact.stat().st_size,

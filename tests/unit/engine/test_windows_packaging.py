@@ -165,7 +165,7 @@ class TestWindowsPackagingScript(unittest.TestCase):
             "tet4d-python-$VERSION-macos-arm64.dmg",
             "tet4d-python-$VERSION-linux-x86_64.deb",
             "tet4d-designer-${{ needs.release-contract.outputs.version }}-windows-x86_64.zip",
-            "tet4d-designer-${{ needs.release-contract.outputs.version }}-macos-universal.zip",
+            "tet4d-godot-game-${{ needs.release-contract.outputs.version }}-macos-universal.zip",
             "tet4d-designer-${{ needs.release-contract.outputs.version }}-android-arm64.apk",
             "tet4d-designer-${{ needs.release-contract.outputs.version }}-ipados-xcodeproject.zip",
         ):

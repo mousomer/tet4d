@@ -1,20 +1,32 @@
 # Desktop Packaging RDS
 
-Status: Active v0.5 (Stage 54G accepted; Stage 54F-5 Windows, Android tablet,
-and iPadOS Design Laboratory candidates. Scope now covers desktop and tablet
-distribution; the document title is a governed identity token and is retained.)
+Status: Active v0.6 (three-product target contract established; current
+transitional artifacts remain evidence, not product-plan authority. The
+document title is a governed identity token and is retained.)
 Author: Omer + Codex
 Date: 2026-08-30
 Scope: current Godot product exports plus the active Python/PyInstaller product
-family.
+family and the distinct desktop Designer product.
 
 ## 1. Purpose
 
-Define the release paths that distribute the accepted Godot 2D/3D/4D product
-and the active Python product without a repository checkout or developer-only
-build tree. Product-family names and evidence remain explicit: a Python bundle
-embeds its own runtime and must never masquerade as the Godot professional-core
-artifact, while neither family may claim a platform it did not build and test.
+Define the release paths that distribute the Godot 2D/3D/4D game, the Python
+product, and the desktop Designer without a repository checkout or
+developer-only build tree. The authoritative target matrix is
+`product_platform_contract` in `config/project/policy_pack.json`;
+this RDS owns its human meaning and packaging consequences. Target support is
+not a claim that a package is implemented, verified, accepted, published, or
+present in the current workflow.
+
+| Product ID | Product | Required targets |
+| --- | --- | --- |
+| `python_tet4d` | Python Tet4D | macOS, Windows, Linux |
+| `godot_game` | Tet4D playable Godot game | macOS, Windows, Linux, Android, iPadOS |
+| `godot_designer` | Tet4D Designer desktop authoring tool | macOS, Windows |
+
+Python packages are not fallback Godot packages. Tet4D Designer is not a
+Linux, Android, or iPadOS target. A workflow, preset, or artifact outside this
+matrix is transitional implementation evidence, not target promotion.
 
 ## 2. Current supported release path
 
@@ -57,9 +69,15 @@ new candidate must update its checksum record and pass the repository validator
 before publication. Asset availability does not promote Windows runtime
 acceptance.
 
-The same Design Laboratory additionally ships to two tablet targets, both
-intended for landscape use with a physical keyboard rather than as touch-first
-games:
+The checked-in Android and iPadOS presets currently export the Design
+Laboratory under the Designer application identity. They are legacy
+transitional mismatches: neither is an authorized Designer target and neither
+satisfies the required Godot game cell. Their existing evidence is retained
+only to define the implementation gap and must not be relabelled as the game
+without changing entry semantics and application identity.
+The only grandfathered transitional consumers are
+`legacy_designer_android` and `legacy_designer_ipados` in the machine
+contract; no other forbidden pairing may use the transitional status.
 
 - **Android tablet.** An arm64 APK supporting only large and extra-large
   screens, built from the prebuilt Godot export template with no Gradle build
@@ -71,10 +89,9 @@ games:
   `LSSupportsOpeningDocumentsInPlace` expose the Documents directory in the
   Files app so a nominated bundle is retrievable from the device.
 
-Both are configuration-validated on any host through the exported resource pack
-or Xcode project. Neither artifact may be reported as device-accepted, and
-automated InputMap tests, emulator or simulator testing, and real physical
-keyboard testing must be reported as the three distinct claims they are.
+The eventual Android and iPadOS packages target the playable Godot game.
+Implementation, automated verification, hosted packaging, physical-device
+acceptance, and publication remain separate evidence states.
 
 The exported product must contain the release GDExtension framework, scenes,
 scripts, theme resources, fonts, configuration registries, help assets, and
@@ -128,7 +145,7 @@ The current canonical files are:
    from ignored build output to Actions, release, or canonical candidate asset
    storage for remote testing; generated archives never enter Git history.
 
-## 4a. Tablet design-laboratory boundary
+## 4a. Transitional tablet implementation boundary
 
 1. Android release builds use the pinned 4.7.2 Android export templates, the
    prebuilt template rather than a Gradle build, `arm64-v8a` only, and large and
@@ -160,8 +177,9 @@ The current canonical files are:
 6. Mutable profiles, evaluations, captures, and proposal exports remain under
    Godot's writable `user://design_lab` root on every platform. Only the
    transport that externalises a finished bundle differs by platform.
-7. Neither tablet target is a clean-device runtime-accepted target until the
-   recorded acceptance in
+7. Neither transitional artifact is a supported Designer target or a
+   clean-device runtime-accepted Godot game until the product identity is
+   corrected and the recorded acceptance in
    `docs/plans/design_evaluation_laboratory_acceptance.md` is complete.
 8. iPad configuration exports and release exports are distinct artifact
    classes. Configuration mode may carry the deliberately reduced descriptor

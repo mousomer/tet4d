@@ -49,12 +49,21 @@ class TestReleaseMetadata(unittest.TestCase):
                 ).hexdigest()
                 self.assertEqual(expected, entry["sha256"])
                 self.assertGreater(entry["bytes"], 0)
+            self.assertEqual(
+                "Python Tet4D",
+                manifest["product_families"]["python_tet4d"]["display_name"],
+            )
+            self.assertEqual(
+                "Tet4D",
+                manifest["product_families"]["godot_game"]["display_name"],
+            )
             ipados = manifest["product_families"]["godot_designer"]["artifacts"][
                 "ipados_xcodeproject"
             ]
             self.assertEqual("unsigned", ipados["evidence"]["signing"])
             self.assertIn("simulator", ipados["evidence"]["build_status"])
             self.assertIn("not installed", ipados["evidence"]["device_acceptance"])
+            self.assertIn("not a supported", ipados["evidence"]["target_status"])
 
     def test_manifest_rejects_missing_artifact(self) -> None:
         with (
