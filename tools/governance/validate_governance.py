@@ -131,6 +131,7 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         validate_config_authority,
         validate_godot_semantic_boundary,
         validate_governance_surface,
+        validate_handoff_lifecycle,
         validate_live_board_visual_roles,
         validate_native_cpp_tooling,
         validate_product_platform_matrix,
@@ -162,6 +163,9 @@ def _checks() -> tuple[GovernanceCheck, ...]:
         GovernanceCheck("loc_guidance", check_loc_guidance.main),
         GovernanceCheck("dedup_dead_code_rules", check_dedup_dead_code_rules.main),
         GovernanceCheck("drift_protection", check_drift_protection.main),
+        GovernanceCheck(
+            "handoff_lifecycle", lambda: validate_handoff_lifecycle.main([])
+        ),
         GovernanceCheck(
             "policy_pack_canonical", lambda: policy_pack_io.main(["--check"])
         ),

@@ -2329,6 +2329,7 @@ Parameters:
 - `governance_surface.validator_provenance.godot_semantic_boundary`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
 - `governance_surface.validator_provenance.godot_settings_externalization`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.governance_surface`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.handoff_lifecycle`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.live_board_visual_roles`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
 - `governance_surface.validator_provenance.loc_guidance`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.maintenance_docs`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)

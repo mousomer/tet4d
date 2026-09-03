@@ -5,6 +5,12 @@ on:
     branches:
       - master
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
 
 permissions:
   contents: read
@@ -101,6 +107,7 @@ jobs:
           scripts/check_policy_template_drift.sh
           scripts/check_git_sanitation_repo.sh
           scripts/check_policy_compliance_repo.sh
+          python tools/governance/validate_handoff_lifecycle.py
           python -m pytest -q \
             tests/unit/governance/test_classify_codex_ci_paths.py \
             tests/unit/governance/test_select_codex_ci_lanes.py \
