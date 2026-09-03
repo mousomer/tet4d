@@ -171,6 +171,21 @@ def test_transitional_designer_tablet_artifacts_cannot_claim_implementation() ->
         )
 
 
+def test_legacy_designer_ipados_is_a_transitional_non_target_consumer() -> None:
+    policy = _inputs()[0]
+    contract = policy["product_platform_contract"]
+    consumers = contract["packaging_consumers"]
+    legacy_ipados = next(
+        item for item in consumers if item["consumer_id"] == "legacy_designer_ipados"
+    )
+
+    assert legacy_ipados["product_id"] == "godot_designer"
+    assert legacy_ipados["platform_id"] == "ipados"
+    assert legacy_ipados["status"] == "transitional_mismatch"
+    assert "ipados" not in contract["target_platforms"]["godot_designer"]
+    assert _validate(_inputs()) == []
+
+
 def test_new_designer_linux_transitional_consumer_is_forbidden() -> None:
     inputs = list(_inputs())
     policy = copy.deepcopy(inputs[0])

@@ -44,13 +44,12 @@ remain bound to their product's canonical `artifact_name_token`; the
 transitional tablet consumers retain Designer naming only under their closed,
 named status exception.
 
-The grandfathered `legacy_designer_ipados` package path has a separate
-technical repair boundary: its device and simulator archives must include the
-matching godot-cpp implementation, preserve archive members, expose truthful
-`arm64` device and `x86_64` simulator slices, pass XCFramework/native-symbol
-validation, and complete an unsigned hosted simulator final link. This remains
-transitional technical evidence only; it does not promote Designer/iPadOS or
-close the Godot game/iPadOS target gap.
+The repaired grandfathered `legacy_designer_ipados` package path provides
+technical evidence for native archive composition, matching godot-cpp linkage,
+truthful `arm64` device and `x86_64` simulator slices, XCFramework/native-symbol
+validation, and an unsigned hosted simulator final link. It remains
+transitional evidence only; it does not promote Designer/iPadOS or close the
+Godot game/iPadOS target gap.
 
 ## Accepted Next Product Boundaries
 

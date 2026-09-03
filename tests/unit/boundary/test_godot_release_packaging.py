@@ -136,9 +136,7 @@ def test_windows_native_build_sanitizes_compiler_and_linker_debug_paths() -> Non
 
 def test_windows_release_disables_native_debug_records() -> None:
     wrapper = NATIVE_BUILD_WRAPPER.read_text(encoding="utf-8")
-    builder = (ROOT / "packaging/godot/build_windows.sh").read_text(
-        encoding="utf-8"
-    )
+    builder = (ROOT / "packaging/godot/build_windows.sh").read_text(encoding="utf-8")
 
     assert 'scons_args+=(debug_symbols="$SCONS_DEBUG_SYMBOLS")' in wrapper
     assert "SCONS_TARGET=template_release \\" in builder
@@ -153,11 +151,10 @@ def test_android_and_linux_native_archives_use_response_files() -> None:
 
     assert 'ARGUMENTS.get("platform") in ("android", "linux")' in build
     assert 'bootstrap_env["ARCOM_POSIX"] = bootstrap_env["ARCOM"]' in build
-    assert (
-        'bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX, ARCOMSTR)}"'
-        in build
-    )
-    response_file_branch = build.split('elif ARGUMENTS.get("platform") == "windows":', 1)[0]
+    assert 'bootstrap_env["ARCOM"] = "${TEMPFILE(ARCOM_POSIX, ARCOMSTR)}"' in build
+    response_file_branch = build.split(
+        'elif ARGUMENTS.get("platform") == "windows":', 1
+    )[0]
     assert '"windows"' not in response_file_branch
 
 
@@ -178,17 +175,18 @@ def test_android_release_installs_the_binding_owned_ndk_pin() -> None:
     assert 'Path("native/third_party/godot-cpp/tools/android.py")' in workflow
     assert 'values["GODOT_CPP_ANDROID_NDK_VERSION"]' in workflow
     assert (
-        'sdkmanager_bin="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"'
-        in workflow
+        'sdkmanager_bin="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"' in workflow
     )
     assert 'test -x "$sdkmanager_bin"' in workflow
     assert 'ndk_root="$ANDROID_HOME/ndk/$GODOT_CPP_ANDROID_NDK_VERSION"' in workflow
     assert (
-        '"$sdkmanager_bin" "ndk;$GODOT_CPP_ANDROID_NDK_VERSION" >/dev/null'
-        in workflow
+        '"$sdkmanager_bin" "ndk;$GODOT_CPP_ANDROID_NDK_VERSION" >/dev/null' in workflow
     )
     assert "yes |" not in workflow
-    assert 'test -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"' in workflow
+    assert (
+        'test -x "$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"'
+        in workflow
+    )
     assert 'ls -d "$ANDROID_HOME"/ndk/*' not in workflow
 
 
@@ -203,12 +201,8 @@ def test_android_release_creates_native_staging_directory_before_copy() -> None:
 
 
 def test_ipados_release_assembles_device_and_simulator_xcframework() -> None:
-    wrapper = (ROOT / "scripts/build_godot_tet4d_core.sh").read_text(
-        encoding="utf-8"
-    )
-    builder = (ROOT / "packaging/godot/build_ipados.sh").read_text(
-        encoding="utf-8"
-    )
+    wrapper = (ROOT / "scripts/build_godot_tet4d_core.sh").read_text(encoding="utf-8")
+    builder = (ROOT / "packaging/godot/build_ipados.sh").read_text(encoding="utf-8")
 
     assert 'scons_args+=(ios_simulator="$SCONS_IOS_SIMULATOR")' in wrapper
     assert "SCONS_ARCH=arm64 SCONS_TARGET=template_release \\" in builder
@@ -256,4 +250,7 @@ def test_tablet_build_steps_use_unambiguous_shell_blocks() -> None:
             f"packaging/godot/{script}"
         )
         assert f"run: |\n          {command}" in workflow
-        assert f'GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \\\n          packaging/godot/{script}' not in workflow
+        assert (
+            f'GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \\\n          packaging/godot/{script}'
+            not in workflow
+        )
