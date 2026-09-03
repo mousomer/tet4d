@@ -208,7 +208,33 @@ def _load_event_payload(env: dict[str, str]) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
+def _pull_request_context(
+    env: dict[str, str], payload: dict[str, Any], default_branch: str
+) -> Context:
+    pr = payload.get("pull_request")
+    pr = pr if isinstance(pr, dict) else {}
+    base = pr.get("base")
+    base_ref = base.get("ref") if isinstance(base, dict) else None
+    number = pr.get("number")
+    return Context(
+        source="github",
+        branch=env.get("GITHUB_HEAD_REF") or None,
+        default_branch=default_branch,
+        event="pull_request",
+        is_draft=bool(pr.get("draft")) if "draft" in pr else None,
+        pull_request=number if isinstance(number, int) else None,
+        base_branch=base_ref if isinstance(base_ref, str) else None,
+    )
+
+
 def _github_context(env: dict[str, str], default_branch: str) -> Context | None:
+    """Classify the GitHub event exhaustively.
+
+    Only ``push`` and the pull-request events carry lifecycle meaning. Every
+    other event (``workflow_dispatch``, ``schedule``, ``workflow_call``, ...)
+    resolves to ``event=None`` so that no push or pull-request rule is applied
+    to an event that never occurred.
+    """
     event = env.get("GITHUB_EVENT_NAME")
     if not event:
         return None
@@ -217,25 +243,12 @@ def _github_context(env: dict[str, str], default_branch: str) -> Context | None:
     if isinstance(repo, dict) and isinstance(repo.get("default_branch"), str):
         default_branch = repo["default_branch"]
     if event in {"pull_request", "pull_request_target"}:
-        pr = payload.get("pull_request")
-        pr = pr if isinstance(pr, dict) else {}
-        base = pr.get("base")
-        base_ref = base.get("ref") if isinstance(base, dict) else None
-        number = pr.get("number")
-        return Context(
-            source="github",
-            branch=env.get("GITHUB_HEAD_REF") or None,
-            default_branch=default_branch,
-            event="pull_request",
-            is_draft=bool(pr.get("draft")) if "draft" in pr else None,
-            pull_request=number if isinstance(number, int) else None,
-            base_branch=base_ref if isinstance(base_ref, str) else None,
-        )
+        return _pull_request_context(env, payload, default_branch)
     return Context(
         source="github",
         branch=env.get("GITHUB_REF_NAME") or None,
         default_branch=default_branch,
-        event="push",
+        event="push" if event == "push" else None,
         is_draft=None,
         pull_request=None,
         base_branch=None,
@@ -260,46 +273,53 @@ def resolve_context(
     *,
     root: Path,
     env: dict[str, str],
-    explicit_branch: str | None,
-    explicit_default_branch: str | None,
-    explicit_event: str | None,
-    explicit_draft: bool | None,
-    explicit_pull_request: int | None,
-    explicit_base_branch: str | None,
+    explicit_branch: str | None = None,
+    explicit_default_branch: str | None = None,
+    explicit_event: str | None = None,
+    explicit_draft: bool | None = None,
+    explicit_pull_request: int | None = None,
+    explicit_base_branch: str | None = None,
 ) -> Context:
+    """Resolve context from explicit arguments, then GitHub event, then git.
+
+    Every explicit argument participates in the precedence test: supplying any
+    one of them selects explicit mode, and each unset field falls back to the
+    GitHub event context when present and to the local checkout otherwise.
+    """
+    explicit_fields = (
+        explicit_branch,
+        explicit_default_branch,
+        explicit_event,
+        explicit_draft,
+        explicit_pull_request,
+        explicit_base_branch,
+    )
     default_branch = explicit_default_branch or DEFAULT_BRANCH_FALLBACK
-    github = _github_context(env, default_branch)
-    if explicit_branch is not None or explicit_event is not None:
-        base = github
-        return Context(
-            source="explicit",
-            branch=explicit_branch
-            if explicit_branch is not None
-            else (base.branch if base else _git_branch(root)),
+    base = _github_context(env, default_branch)
+    if base is None:
+        base = Context(
+            source="git",
+            branch=_git_branch(root),
             default_branch=default_branch,
-            event=explicit_event
-            if explicit_event is not None
-            else (base.event if base else None),
-            is_draft=explicit_draft
-            if explicit_draft is not None
-            else (base.is_draft if base else None),
-            pull_request=explicit_pull_request
-            if explicit_pull_request is not None
-            else (base.pull_request if base else None),
-            base_branch=explicit_base_branch
-            if explicit_base_branch is not None
-            else (base.base_branch if base else None),
+            event=None,
+            is_draft=None,
+            pull_request=None,
+            base_branch=None,
         )
-    if github is not None:
-        return github
+    if all(field is None for field in explicit_fields):
+        return base
+
+    def pick(explicit: Any, fallback: Any) -> Any:
+        return explicit if explicit is not None else fallback
+
     return Context(
-        source="git",
-        branch=_git_branch(root),
-        default_branch=default_branch,
-        event=None,
-        is_draft=None,
-        pull_request=None,
-        base_branch=None,
+        source="explicit",
+        branch=pick(explicit_branch, base.branch),
+        default_branch=explicit_default_branch or base.default_branch,
+        event=pick(explicit_event, base.event),
+        is_draft=pick(explicit_draft, base.is_draft),
+        pull_request=pick(explicit_pull_request, base.pull_request),
+        base_branch=pick(explicit_base_branch, base.base_branch),
     )
 
 

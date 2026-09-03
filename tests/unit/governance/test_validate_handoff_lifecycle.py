@@ -493,3 +493,158 @@ def test_ci_required_gate_remains_unconditional() -> None:
     text = CI_WORKFLOW_PATH.read_text(encoding="utf-8")
     gate = text.split("  required-gate:", 1)[1].split("\n    steps:", 1)[0]
     assert re.search(r"^    if: always\(\)\s*$", gate, re.MULTILINE) is not None
+
+
+# --- event classification -------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "event_name",
+    ["workflow_dispatch", "schedule", "workflow_call", "release", "merge_group"],
+)
+def test_non_push_non_pull_request_events_carry_no_lifecycle_event(
+    tmp_path: Path, event_name: str
+) -> None:
+    env = {"GITHUB_EVENT_NAME": event_name, "GITHUB_REF_NAME": "master"}
+
+    ctx = lifecycle.resolve_context(root=tmp_path, env=env)
+
+    assert ctx.source == "github"
+    assert ctx.event is None
+    assert ctx.branch == "master"
+
+
+def test_push_event_is_classified_as_push(tmp_path: Path) -> None:
+    env = {"GITHUB_EVENT_NAME": "push", "GITHUB_REF_NAME": "master"}
+
+    assert lifecycle.resolve_context(root=tmp_path, env=env).event == "push"
+
+
+def test_pull_request_target_is_classified_as_pull_request(tmp_path: Path) -> None:
+    env = {
+        "GITHUB_EVENT_NAME": "pull_request_target",
+        "GITHUB_HEAD_REF": "feature/x",
+        "GITHUB_EVENT_PATH": _event_file(
+            tmp_path,
+            {"pull_request": {"number": 7, "draft": False, "base": {"ref": "master"}}},
+        ),
+    }
+
+    ctx = lifecycle.resolve_context(root=tmp_path, env=env)
+
+    assert ctx.event == "pull_request"
+    assert ctx.is_draft is False
+
+
+def test_workflow_dispatch_does_not_apply_the_push_rule(tmp_path: Path) -> None:
+    """An `active` handoff must not be judged by push rules on a non-push event."""
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
+    env = {"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF_NAME": "feature/x"}
+
+    ctx = lifecycle.resolve_context(root=root, env=env)
+
+    assert lifecycle.validate(root, ctx) == []
+
+
+def test_workflow_dispatch_on_default_branch_still_rejects_active(
+    tmp_path: Path,
+) -> None:
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
+    env = {"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF_NAME": "master"}
+
+    ctx = lifecycle.resolve_context(root=root, env=env)
+
+    assert any("default-branch checkout" in i for i in lifecycle.validate(root, ctx))
+
+
+# --- explicit precedence --------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "field", "expected"),
+    [
+        ({"explicit_branch": "feature/x"}, "branch", "feature/x"),
+        ({"explicit_default_branch": "trunk"}, "default_branch", "trunk"),
+        ({"explicit_event": "pull_request"}, "event", "pull_request"),
+        ({"explicit_draft": False}, "is_draft", False),
+        ({"explicit_pull_request": 98}, "pull_request", 98),
+        ({"explicit_base_branch": "release"}, "base_branch", "release"),
+    ],
+)
+def test_every_explicit_argument_selects_explicit_context(
+    tmp_path: Path, kwargs: dict, field: str, expected: object
+) -> None:
+    env = {"GITHUB_EVENT_NAME": "push", "GITHUB_REF_NAME": "master"}
+
+    ctx = lifecycle.resolve_context(root=tmp_path, env=env, **kwargs)
+
+    assert ctx.source == "explicit"
+    assert getattr(ctx, field) == expected
+
+
+def test_explicit_pull_request_alone_is_honoured_against_github_context(
+    tmp_path: Path,
+) -> None:
+    env = {
+        "GITHUB_EVENT_NAME": "pull_request",
+        "GITHUB_HEAD_REF": "feature/x",
+        "GITHUB_EVENT_PATH": _event_file(
+            tmp_path,
+            {"pull_request": {"number": 12, "draft": True, "base": {"ref": "master"}}},
+        ),
+    }
+
+    ctx = lifecycle.resolve_context(root=tmp_path, env=env, explicit_pull_request=98)
+
+    assert ctx.pull_request == 98
+    assert ctx.branch == "feature/x"
+    assert ctx.is_draft is True
+
+
+def test_explicit_default_branch_overrides_event_payload(tmp_path: Path) -> None:
+    env = {
+        "GITHUB_EVENT_NAME": "push",
+        "GITHUB_REF_NAME": "trunk",
+        "GITHUB_EVENT_PATH": _event_file(
+            tmp_path, {"repository": {"default_branch": "main"}}
+        ),
+    }
+
+    ctx = lifecycle.resolve_context(
+        root=tmp_path, env=env, explicit_default_branch="trunk"
+    )
+
+    assert ctx.default_branch == "trunk"
+
+
+def test_explicit_draft_alone_changes_the_verdict(tmp_path: Path) -> None:
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
+    env = {
+        "GITHUB_EVENT_NAME": "pull_request",
+        "GITHUB_HEAD_REF": "feature/x",
+        "GITHUB_EVENT_PATH": _event_file(
+            tmp_path,
+            {"pull_request": {"number": 3, "draft": True, "base": {"ref": "master"}}},
+        ),
+    }
+
+    draft_ctx = lifecycle.resolve_context(root=root, env=env)
+    ready_ctx = lifecycle.resolve_context(root=root, env=env, explicit_draft=False)
+
+    assert lifecycle.validate(root, draft_ctx) == []
+    assert any(
+        "non-draft pull request" in i for i in lifecycle.validate(root, ready_ctx)
+    )
+
+
+def test_cli_accepts_pull_request_without_branch_or_event(
+    tmp_path: Path, capsys
+) -> None:
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x", pull_request=98))
+
+    result = lifecycle.main(
+        ["--root", str(root), "--branch", "feature/x", "--pull-request", "99"]
+    )
+
+    assert result == 1
+    assert "does not match the current pull request" in capsys.readouterr().out
