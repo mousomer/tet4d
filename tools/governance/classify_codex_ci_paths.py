@@ -28,10 +28,15 @@ class PathRule:
 class PathClassificationConfig:
     requirement_order: tuple[str, ...]
     automated_requirements: tuple[str, ...]
+    abstract_requirements: tuple[tuple[str, tuple[str, ...]], ...]
     unknown_path_policy: str
     cross_layer_requirements: tuple[str, ...]
     cross_layer_verification_requirement: str
     rules: tuple[PathRule, ...]
+
+    @property
+    def abstract_expansions(self) -> dict[str, tuple[str, ...]]:
+        return dict(self.abstract_requirements)
 
 
 @dataclass(frozen=True)
@@ -151,11 +156,50 @@ def _automated_requirements(
     return tuple(item for item in requirement_order if item not in manual)
 
 
+def _abstract_requirements(
+    payload: dict[str, object], requirement_order: tuple[str, ...]
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    raw = payload.get("abstract_requirements", {})
+    if not isinstance(raw, dict):
+        raise PathClassificationError("abstract_requirements must be an object")
+    expansions: list[tuple[str, tuple[str, ...]]] = []
+    for key, value in raw.items():
+        requirement = _non_empty_string(key, field="abstract_requirements key")
+        if requirement not in requirement_order:
+            raise PathClassificationError(
+                f"abstract_requirements references unknown requirement: {requirement}"
+            )
+        members = _string_list(value, field=f"abstract_requirements.{requirement}")
+        unknown = sorted(set(members) - set(requirement_order))
+        if unknown:
+            raise PathClassificationError(
+                f"abstract_requirements.{requirement} references unknown "
+                "requirements: " + ", ".join(unknown)
+            )
+        if requirement in members:
+            raise PathClassificationError(
+                f"abstract_requirements.{requirement} must not expand to itself"
+            )
+        expansions.append((requirement, members))
+    nested = sorted(
+        member
+        for _requirement, members in expansions
+        for member in members
+        if member in dict(expansions)
+    )
+    if nested:
+        raise PathClassificationError(
+            "abstract_requirements must not nest: " + ", ".join(nested)
+        )
+    return tuple(expansions)
+
+
 def _parse_rule(
     raw: object,
     *,
     index: int,
     known_requirements: tuple[str, ...],
+    abstract_requirements: dict[str, tuple[str, ...]],
 ) -> PathRule:
     field = f"path_classification.rules[{index}]"
     if not isinstance(raw, dict):
@@ -177,6 +221,11 @@ def _parse_rule(
         raise PathClassificationError(
             f"{field}.requirements contains unknown identifiers: " + ", ".join(unknown)
         )
+    _require_abstract_expansion(
+        set(requirements),
+        abstract_requirements=abstract_requirements,
+        context=f"{field}.requirements",
+    )
     return PathRule(
         rule_id=rule_id,
         patterns=patterns,
@@ -186,6 +235,20 @@ def _parse_rule(
             field=f"{field}.requires_full_repository_gate",
         ),
     )
+
+
+def _require_abstract_expansion(
+    requirements: set[str],
+    *,
+    abstract_requirements: dict[str, tuple[str, ...]],
+    context: str,
+) -> None:
+    for requirement, members in abstract_requirements.items():
+        if requirement in requirements and not requirements.intersection(members):
+            raise PathClassificationError(
+                f"{context} names abstract requirement {requirement!r} without any "
+                "explicit expansion: " + ", ".join(members)
+            )
 
 
 def _cross_layer_contract(
@@ -225,6 +288,7 @@ def load_path_classification_config(
     _positive_int(payload.get("schema_version"), field="schema_version")
     requirement_order = _requirement_order(payload)
     automated_requirements = _automated_requirements(payload, requirement_order)
+    abstract_requirements = _abstract_requirements(payload, requirement_order)
     block = payload.get("path_classification")
     if not isinstance(block, dict):
         raise PathClassificationError("path_classification must be an object")
@@ -254,6 +318,7 @@ def load_path_classification_config(
             raw,
             index=index,
             known_requirements=requirement_order,
+            abstract_requirements=dict(abstract_requirements),
         )
         for index, raw in enumerate(raw_rules)
     )
@@ -265,6 +330,7 @@ def load_path_classification_config(
     return PathClassificationConfig(
         requirement_order=requirement_order,
         automated_requirements=automated_requirements,
+        abstract_requirements=abstract_requirements,
         unknown_path_policy=unknown_path_policy,
         cross_layer_requirements=cross_layer_requirements,
         cross_layer_verification_requirement=integration_requirement,
@@ -354,6 +420,11 @@ def classify_paths(
     if unmatched:
         requirements.update(config.automated_requirements)
     cross_layer_detected = _apply_cross_layer_requirement(requirements, config)
+    _require_abstract_expansion(
+        requirements,
+        abstract_requirements=config.abstract_expansions,
+        context="resolved verification requirements",
+    )
     if normalised and not requirements:
         raise PathClassificationError(
             "repository-changing paths cannot resolve to an empty requirement set"

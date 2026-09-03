@@ -1604,12 +1604,13 @@ Parameters:
 - `schema_version`: `1` (`int`)
 
 ### `config/project/codex_ci_lanes.json`
-Top-level keys: `always_run_lanes`, `full_repository_gate_lanes`, `lane_order`, `manual_requirements`, `path_classification`, `requirement_to_lanes`, `resolution_schema_version`, `schema_version`
+Top-level keys: `abstract_requirements`, `always_run_lanes`, `full_repository_gate_lanes`, `lane_order`, `manual_requirements`, `path_classification`, `platform_evidence`, `requirement_to_lanes`, `resolution_schema_version`, `schema_version`
 Parameters:
+- `abstract_requirements.platform[]`: array[`string`]; examples: `"platform_macos"`, `"platform_windows"`, `"platform_linux"`
 - `always_run_lanes[]`: array[`string`]; examples: `"baseline"`
 - `full_repository_gate_lanes[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
 - `lane_order[]`: array[`string`]; examples: `"baseline"`, `"documentation_governance"`, `"python"`
-- `manual_requirements[]`: array[`string`]; examples: `"human_visual"`
+- `manual_requirements[]`: array[`string`]; examples: `"human_visual"`, `"platform_windows"`, `"platform_linux"`
 - `path_classification.cross_layer_requirements[]`: array[`string`]; examples: `"python"`, `"godot"`, `"native"`
 - `path_classification.cross_layer_verification_requirement`: `"integration"` (`string`)
 - `path_classification.rules[]`: array[`object`]
@@ -1619,6 +1620,27 @@ Parameters:
 - `path_classification.rules[].requires_full_repository_gate`: varies (`bool`); examples: `true`
 - `path_classification.schema_version`: `1` (`int`)
 - `path_classification.unknown_path_policy`: `"full_repository_gate"` (`string`)
+- `platform_evidence.abstract_requirement`: `"platform"` (`string`)
+- `platform_evidence.description`: `"Platform verification carries explicit platform identity. The abstra...` (`string`)
+- `platform_evidence.hosted_lanes.platform_ipados.build_entrypoint`: `"packaging/godot/build_ipados.sh"` (`string`)
+- `platform_evidence.hosted_lanes.platform_ipados.canonical_command`: `"ipados_release_export"` (`string`)
+- `platform_evidence.hosted_lanes.platform_ipados.lane`: `"platform_ipados"` (`string`)
+- `platform_evidence.hosted_lanes.platform_ipados.packaging_consumer`: `"legacy_designer_ipados"` (`string`)
+- `platform_evidence.hosted_lanes.platform_ipados.platform_id`: `"ipados"` (`string`)
+- `platform_evidence.hosted_lanes.platform_ipados.workflow_job`: `"platform-ipados"` (`string`)
+- `platform_evidence.hosted_lanes.platform_macos.build_entrypoint`: `"packaging/godot/build_macos.sh"` (`string`)
+- `platform_evidence.hosted_lanes.platform_macos.canonical_command`: `"macos_release_export"` (`string`)
+- `platform_evidence.hosted_lanes.platform_macos.lane`: `"platform_macos"` (`string`)
+- `platform_evidence.hosted_lanes.platform_macos.packaging_consumer`: `"godot_game_macos"` (`string`)
+- `platform_evidence.hosted_lanes.platform_macos.platform_id`: `"macos"` (`string`)
+- `platform_evidence.hosted_lanes.platform_macos.workflow_job`: `"platform-macos"` (`string`)
+- `platform_evidence.platform_requirement_ids.android`: `"platform_android"` (`string`)
+- `platform_evidence.platform_requirement_ids.ipados`: `"platform_ipados"` (`string`)
+- `platform_evidence.platform_requirement_ids.linux`: `"platform_linux"` (`string`)
+- `platform_evidence.platform_requirement_ids.macos`: `"platform_macos"` (`string`)
+- `platform_evidence.platform_requirement_ids.windows`: `"platform_windows"` (`string`)
+- `platform_evidence.schema_version`: `1` (`int`)
+- `platform_evidence.unhosted_platform_requirements[]`: array[`string`]; examples: `"platform_windows"`, `"platform_linux"`, `"platform_android"`
 - `requirement_to_lanes.deterministic[]`: array[`string`]; examples: `"deterministic_parity"`
 - `requirement_to_lanes.documentation[]`: array[`string`]; examples: `"documentation_governance"`
 - `requirement_to_lanes.godot[]`: array[`string`]; examples: `"godot"`
@@ -1628,7 +1650,12 @@ Parameters:
 - `requirement_to_lanes.native[]`: array[`string`]; examples: `"native"`
 - `requirement_to_lanes.packaging[]`: array[`string`]; examples: `"packaging"`
 - `requirement_to_lanes.parity_or_conformance[]`: array[`string`]; examples: `"deterministic_parity"`
-- `requirement_to_lanes.platform[]`: array[`string`]; examples: `"platform"`
+- `requirement_to_lanes.platform[]`: array[`empty`]
+- `requirement_to_lanes.platform_android[]`: array[`empty`]
+- `requirement_to_lanes.platform_ipados[]`: array[`string`]; examples: `"platform_ipados"`
+- `requirement_to_lanes.platform_linux[]`: array[`empty`]
+- `requirement_to_lanes.platform_macos[]`: array[`string`]; examples: `"platform_macos"`
+- `requirement_to_lanes.platform_windows[]`: array[`empty`]
 - `requirement_to_lanes.python[]`: array[`string`]; examples: `"python"`
 - `requirement_to_lanes.release_acceptance[]`: array[`string`]; examples: `"release_acceptance"`
 - `resolution_schema_version`: `1` (`int`)

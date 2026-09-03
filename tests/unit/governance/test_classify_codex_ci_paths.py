@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import copy
+import json
 
 import pytest
 
 from tools.governance.classify_codex_ci_paths import (
+    DEFAULT_LANE_CONFIG_PATH,
+    PathClassificationConfig,
     PathClassificationError,
     classify_paths,
     load_path_classification_config,
@@ -25,10 +28,20 @@ def _payload() -> dict[str, object]:
             "integration": ["integration"],
             "human_visual": [],
             "packaging": ["packaging"],
-            "platform": ["platform"],
+            "platform": [],
+            "platform_macos": ["platform_macos"],
+            "platform_windows": [],
+            "platform_ipados": ["platform_ipados"],
             "release_acceptance": ["release_acceptance"],
         },
-        "manual_requirements": ["human_visual"],
+        "manual_requirements": ["human_visual", "platform_windows"],
+        "abstract_requirements": {
+            "platform": [
+                "platform_macos",
+                "platform_windows",
+                "platform_ipados",
+            ]
+        },
         "path_classification": {
             "schema_version": 1,
             "unknown_path_policy": "full_repository_gate",
@@ -75,6 +88,24 @@ def _payload() -> dict[str, object]:
                     "patterns": [".github/workflows/**"],
                     "requirements": ["governance_structure", "python"],
                     "requires_full_repository_gate": True,
+                },
+                {
+                    "id": "packaging",
+                    "patterns": ["packaging/**"],
+                    "requirements": ["packaging"],
+                },
+                {
+                    "id": "packaging_macos_platform",
+                    "patterns": ["packaging/godot/build_macos.sh"],
+                    "requirements": ["packaging", "platform", "platform_macos"],
+                },
+                {
+                    "id": "packaging_ipados_platform",
+                    "patterns": [
+                        "packaging/godot/build_ipados.sh",
+                        "tests/test_ipados_native_packaging.py",
+                    ],
+                    "requirements": ["packaging", "platform", "platform_ipados"],
                 },
             ],
         },
@@ -261,3 +292,152 @@ def test_cross_layer_verification_requirement_must_be_known() -> None:
 
     with pytest.raises(PathClassificationError, match="is unknown"):
         load_path_classification_config(payload)
+
+
+def test_abstract_requirement_must_expand_to_known_requirements() -> None:
+    payload = copy.deepcopy(_payload())
+    payload["abstract_requirements"] = {"platform": ["platform_unknown"]}
+
+    with pytest.raises(PathClassificationError, match="unknown requirements"):
+        load_path_classification_config(payload)
+
+
+def test_abstract_requirement_must_not_expand_to_itself() -> None:
+    payload = copy.deepcopy(_payload())
+    payload["abstract_requirements"] = {"platform": ["platform"]}
+
+    with pytest.raises(PathClassificationError, match="must not expand to itself"):
+        load_path_classification_config(payload)
+
+
+def test_rule_naming_a_platform_family_needs_an_explicit_platform() -> None:
+    payload = copy.deepcopy(_payload())
+    block = payload["path_classification"]
+    assert isinstance(block, dict)
+    rules = block["rules"]
+    assert isinstance(rules, list)
+    rule = rules[-1]
+    assert isinstance(rule, dict)
+    rule["requirements"] = ["packaging", "platform"]
+
+    with pytest.raises(PathClassificationError, match="without any explicit expansion"):
+        load_path_classification_config(payload)
+
+
+def test_platform_rules_do_not_leak_across_platforms() -> None:
+    config = load_path_classification_config(_payload())
+
+    ipados = classify_paths(["packaging/godot/build_ipados.sh"], config=config)
+    macos = classify_paths(["packaging/godot/build_macos.sh"], config=config)
+
+    assert "platform_ipados" in ipados.verification_requirements
+    assert "platform_macos" not in ipados.verification_requirements
+    assert "platform_macos" in macos.verification_requirements
+    assert "platform_ipados" not in macos.verification_requirements
+
+
+# --- Regression tests against the repository's real lane configuration ----
+
+
+def _repository_config() -> PathClassificationConfig:
+    return load_path_classification_config(
+        json.loads(DEFAULT_LANE_CONFIG_PATH.read_text(encoding="utf-8"))
+    )
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "tests/test_ipados_native_packaging.py",
+        "tests/test_ipados_xcode_project_validator.py",
+        "tests/test_android_godot_export_validator.py",
+        "tests/test_windows_godot_package_validator.py",
+        "tests/test_leveling.py",
+        "tests/conftest.py",
+    ],
+)
+def test_root_level_python_tests_are_classified(path: str) -> None:
+    result = classify_paths([path], config=_repository_config())
+
+    assert result.unmatched_paths == ()
+    assert "python" in result.verification_requirements
+    assert result.requires_full_repository_gate is False
+
+
+def test_nested_python_tests_stay_classified() -> None:
+    result = classify_paths(
+        [
+            "tests/unit/engine/test_release_metadata.py",
+            "tests/unit/boundary/test_godot_release_packaging.py",
+        ],
+        config=_repository_config(),
+    )
+
+    assert result.unmatched_paths == ()
+    assert "python" in result.verification_requirements
+
+
+def test_repository_unknown_path_still_forces_the_full_gate() -> None:
+    result = classify_paths(["assets/unrouted_binary.dat"], config=_repository_config())
+
+    assert result.unmatched_paths == ("assets/unrouted_binary.dat",)
+    assert result.requires_full_repository_gate is True
+
+
+def test_ipados_packaging_diff_is_proportional_and_platform_specific() -> None:
+    result = classify_paths(
+        [
+            "packaging/godot/build_ipados.sh",
+            "packaging/godot/ipados_native.py",
+            "packaging/godot/validate_ipados_project.py",
+            "tests/test_ipados_native_packaging.py",
+            "tests/test_ipados_xcode_project_validator.py",
+            "docs/rds/RDS_PACKAGING.md",
+        ],
+        config=_repository_config(),
+    )
+
+    assert result.unmatched_paths == ()
+    assert result.requires_full_repository_gate is False
+    assert "platform_ipados" in result.verification_requirements
+    assert "platform" in result.verification_requirements
+    assert "packaging" in result.verification_requirements
+    assert "platform_macos" not in result.verification_requirements
+    assert "platform_windows" not in result.verification_requirements
+    assert "platform_android" not in result.verification_requirements
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("packaging/godot/build_macos.sh", "platform_macos"),
+        ("packaging/godot/build_windows.sh", "platform_windows"),
+        ("packaging/godot/build_android.sh", "platform_android"),
+        ("packaging/godot/build_ipados.sh", "platform_ipados"),
+    ],
+)
+def test_repository_platform_paths_select_only_their_own_platform(
+    path: str, expected: str
+) -> None:
+    result = classify_paths([path], config=_repository_config())
+    platform_requirements = {
+        requirement
+        for requirement in result.verification_requirements
+        if requirement.startswith("platform_")
+    }
+
+    assert platform_requirements == {expected}
+    assert "packaging" in result.verification_requirements
+
+
+def test_shared_godot_pack_reader_selects_every_platform_that_uses_it() -> None:
+    result = classify_paths(
+        ["packaging/godot/godot_pack.py"], config=_repository_config()
+    )
+    platform_requirements = {
+        requirement
+        for requirement in result.verification_requirements
+        if requirement.startswith("platform_")
+    }
+
+    assert platform_requirements == {"platform_android", "platform_ipados"}

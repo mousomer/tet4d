@@ -27,7 +27,8 @@ def _config_payload() -> dict[str, object]:
             "deterministic_parity",
             "integration",
             "packaging",
-            "platform",
+            "platform_macos",
+            "platform_ipados",
             "release_acceptance",
         ],
         "always_run_lanes": ["baseline"],
@@ -42,10 +43,20 @@ def _config_payload() -> dict[str, object]:
             "integration": ["integration"],
             "human_visual": [],
             "packaging": ["packaging"],
-            "platform": ["platform"],
+            "platform": [],
+            "platform_macos": ["platform_macos"],
+            "platform_windows": [],
+            "platform_ipados": ["platform_ipados"],
             "release_acceptance": ["release_acceptance"],
         },
-        "manual_requirements": ["human_visual"],
+        "manual_requirements": ["human_visual", "platform_windows"],
+        "abstract_requirements": {
+            "platform": [
+                "platform_macos",
+                "platform_windows",
+                "platform_ipados",
+            ]
+        },
         "full_repository_gate_lanes": [
             "baseline",
             "documentation_governance",
@@ -55,7 +66,8 @@ def _config_payload() -> dict[str, object]:
             "deterministic_parity",
             "integration",
             "packaging",
-            "platform",
+            "platform_macos",
+            "platform_ipados",
             "release_acceptance",
         ],
     }
@@ -235,3 +247,73 @@ def test_github_outputs_are_appended_in_stable_order(tmp_path: Path) -> None:
     assert "lane_native=true" in lines
     assert "lane_deterministic_parity=true" in lines
     assert lines[-1] == "requires_full_repository_gate=false"
+
+
+def test_abstract_requirement_must_not_map_to_a_lane_of_its_own() -> None:
+    payload = copy.deepcopy(_config_payload())
+    mapping = payload["requirement_to_lanes"]
+    assert isinstance(mapping, dict)
+    mapping["platform"] = ["platform_macos"]
+
+    with pytest.raises(LaneSelectionError, match="must not map to a lane of its own"):
+        load_lane_config(payload)
+
+
+def test_requirement_cannot_be_both_abstract_and_manual() -> None:
+    payload = copy.deepcopy(_config_payload())
+    manual = payload["manual_requirements"]
+    assert isinstance(manual, list)
+    manual.append("platform")
+
+    with pytest.raises(LaneSelectionError, match="both abstract and manual"):
+        load_lane_config(payload)
+
+
+def test_abstract_requirement_alone_cannot_select_a_platform_lane() -> None:
+    with pytest.raises(LaneSelectionError, match="explicit expansion"):
+        select_lanes(
+            _resolution(verification_requirements=["packaging", "platform"]),
+            config=load_lane_config(_config_payload()),
+        )
+
+
+def test_explicit_platform_requirement_selects_only_its_own_lane() -> None:
+    selection = select_lanes(
+        _resolution(
+            verification_requirements=["packaging", "platform", "platform_ipados"]
+        ),
+        config=load_lane_config(_config_payload()),
+    )
+
+    assert selection.selected_lanes == ("baseline", "packaging", "platform_ipados")
+    assert selection.platform_requirements == ("platform_ipados",)
+    assert "platform_macos" not in selection.selected_lanes
+
+
+def test_unhosted_platform_requirement_is_reported_not_substituted() -> None:
+    selection = select_lanes(
+        _resolution(
+            verification_requirements=["packaging", "platform", "platform_windows"]
+        ),
+        config=load_lane_config(_config_payload()),
+    )
+
+    assert selection.selected_lanes == ("baseline", "packaging")
+    assert selection.manual_requirements == ("platform_windows",)
+    assert selection.platform_requirements == ("platform_windows",)
+
+
+def test_github_outputs_name_the_selected_platform_requirements() -> None:
+    config = load_lane_config(_config_payload())
+    selection = select_lanes(
+        _resolution(
+            verification_requirements=["packaging", "platform", "platform_ipados"]
+        ),
+        config=config,
+    )
+
+    outputs = github_outputs(selection, config=config)
+
+    assert outputs["lane_platform_ipados"] == "true"
+    assert outputs["lane_platform_macos"] == "false"
+    assert outputs["platform_requirements"] == '["platform_ipados"]'

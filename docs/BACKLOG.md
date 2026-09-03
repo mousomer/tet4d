@@ -68,6 +68,11 @@ Godot game/iPadOS target gap.
 
 - Clean-machine Windows and iPadOS runtime acceptance remain real-platform
   evidence, not claims inferred from macOS or package structure.
+- Hosted CI platform lanes exist for macOS and iPadOS only. `platform_windows`,
+  `platform_linux`, and `platform_android` are declared manual in
+  `config/project/codex_ci_lanes.json`: a change to those packaging paths
+  reports outstanding platform evidence instead of borrowing another platform's
+  job. Adding those hosted lanes needs their own scope and runner contract.
 - Developer ID signing/notarization and broader distribution are separate
   release prerequisites.
 

@@ -61,4 +61,6 @@ Tooling success is a quality gate, never parity or semantic authority.
 Native changes require applicable build, unit, parity/conformance, adapter, and
 product-shell evidence under `VERIFICATION.md`. Platform and release evidence
 remain separate: a successful local build or package structure check does not
-claim runtime acceptance on another platform.
+claim runtime acceptance on another platform. Platform evidence carries explicit
+platform identity, and a hosted export, cross-compile, or final link proves only
+that boundary — never physical-device acceptance and never another platform.

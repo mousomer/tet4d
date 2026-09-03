@@ -10,7 +10,8 @@
     "deterministic_parity",
     "integration",
     "packaging",
-    "platform",
+    "platform_macos",
+    "platform_ipados",
     "release_acceptance"
   ],
   "always_run_lanes": [
@@ -45,16 +46,70 @@
     "packaging": [
       "packaging"
     ],
-    "platform": [
-      "platform"
+    "platform": [],
+    "platform_macos": [
+      "platform_macos"
+    ],
+    "platform_windows": [],
+    "platform_linux": [],
+    "platform_android": [],
+    "platform_ipados": [
+      "platform_ipados"
     ],
     "release_acceptance": [
       "release_acceptance"
     ]
   },
   "manual_requirements": [
-    "human_visual"
+    "human_visual",
+    "platform_windows",
+    "platform_linux",
+    "platform_android"
   ],
+  "abstract_requirements": {
+    "platform": [
+      "platform_macos",
+      "platform_windows",
+      "platform_linux",
+      "platform_android",
+      "platform_ipados"
+    ]
+  },
+  "platform_evidence": {
+    "schema_version": 1,
+    "description": "Platform verification carries explicit platform identity. The abstract family requirement never stands alone and never resolves to a single default platform.",
+    "abstract_requirement": "platform",
+    "platform_requirement_ids": {
+      "macos": "platform_macos",
+      "windows": "platform_windows",
+      "linux": "platform_linux",
+      "android": "platform_android",
+      "ipados": "platform_ipados"
+    },
+    "hosted_lanes": {
+      "platform_macos": {
+        "lane": "platform_macos",
+        "platform_id": "macos",
+        "workflow_job": "platform-macos",
+        "packaging_consumer": "godot_game_macos",
+        "canonical_command": "macos_release_export",
+        "build_entrypoint": "packaging/godot/build_macos.sh"
+      },
+      "platform_ipados": {
+        "lane": "platform_ipados",
+        "platform_id": "ipados",
+        "workflow_job": "platform-ipados",
+        "packaging_consumer": "legacy_designer_ipados",
+        "canonical_command": "ipados_release_export",
+        "build_entrypoint": "packaging/godot/build_ipados.sh"
+      }
+    },
+    "unhosted_platform_requirements": [
+      "platform_windows",
+      "platform_linux",
+      "platform_android"
+    ]
+  },
   "full_repository_gate_lanes": [
     "baseline",
     "documentation_governance",
@@ -64,7 +119,8 @@
     "deterministic_parity",
     "integration",
     "packaging",
-    "platform",
+    "platform_macos",
+    "platform_ipados",
     "release_acceptance"
   ],
   "path_classification": {
@@ -102,7 +158,8 @@
           "tools/governance/classify_codex_ci_paths.py",
           "tools/governance/select_codex_ci_lanes.py",
           "tests/unit/governance/test_classify_codex_ci_paths.py",
-          "tests/unit/governance/test_select_codex_ci_lanes.py"
+          "tests/unit/governance/test_select_codex_ci_lanes.py",
+          "tests/unit/governance/test_platform_ci_routing.py"
         ],
         "requirements": [
           "governance_structure",
@@ -161,6 +218,7 @@
           "front.py",
           "cli/**",
           "src/**/*.py",
+          "tests/*.py",
           "tests/**/*.py",
           "tools/**/*.py"
         ],
@@ -177,6 +235,9 @@
           "src/tet4d/engine/**/*replay*",
           "src/tet4d/engine/**/*topology*",
           "src/tet4d/engine/**/*trace*",
+          "tests/*replay*",
+          "tests/*topology*",
+          "tests/*trace*",
           "tests/**/*replay*",
           "tests/**/*topology*",
           "tests/**/*trace*"
@@ -242,8 +303,67 @@
           "packaging/**"
         ],
         "requirements": [
+          "packaging"
+        ]
+      },
+      {
+        "id": "packaging_macos_platform",
+        "patterns": [
+          "packaging/godot/*macos*"
+        ],
+        "requirements": [
           "packaging",
-          "platform"
+          "platform",
+          "platform_macos"
+        ]
+      },
+      {
+        "id": "packaging_windows_platform",
+        "patterns": [
+          "packaging/godot/*windows*",
+          "tests/test_windows_godot_package_validator.py"
+        ],
+        "requirements": [
+          "packaging",
+          "platform",
+          "platform_windows"
+        ]
+      },
+      {
+        "id": "packaging_android_platform",
+        "patterns": [
+          "packaging/godot/*android*",
+          "tests/test_android_godot_export_validator.py"
+        ],
+        "requirements": [
+          "packaging",
+          "platform",
+          "platform_android"
+        ]
+      },
+      {
+        "id": "packaging_ipados_platform",
+        "patterns": [
+          "packaging/godot/*ipados*",
+          "tests/test_ipados_native_packaging.py",
+          "tests/test_ipados_xcode_project_validator.py"
+        ],
+        "requirements": [
+          "packaging",
+          "platform",
+          "platform_ipados"
+        ]
+      },
+      {
+        "id": "packaging_godot_export_reader",
+        "patterns": [
+          "packaging/godot/godot_pack.py"
+        ],
+        "requirements": [
+          "packaging",
+          "platform",
+          "platform_android",
+          "platform_ipados"
         ]
       }
     ]

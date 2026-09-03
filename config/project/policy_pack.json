@@ -81,7 +81,7 @@
       }
     },
     "workflow_modifiers": ["review_only", "staged_handoff", "cross_layer", "verification_failure"],
-    "verification_requirements": ["documentation", "governance_structure", "python", "godot", "native", "deterministic", "parity_or_conformance", "integration", "human_visual", "packaging", "platform", "release_acceptance"],
+    "verification_requirements": ["documentation", "governance_structure", "python", "godot", "native", "deterministic", "parity_or_conformance", "integration", "human_visual", "packaging", "platform", "platform_macos", "platform_windows", "platform_linux", "platform_android", "platform_ipados", "release_acceptance"],
     "resolver_path": "tools/governance/resolve_codex_verification.py"
   },
   "governance": {
