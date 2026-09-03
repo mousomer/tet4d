@@ -22,9 +22,7 @@ def _inputs() -> tuple[dict[str, object], str, str, str, str, str]:
     )
 
 
-def _validate(
-    inputs: tuple[dict[str, object], str, str, str, str, str]
-) -> list[str]:
+def _validate(inputs: tuple[dict[str, object], str, str, str, str, str]) -> list[str]:
     return matrix.validate_contract(*inputs)
 
 
@@ -92,7 +90,9 @@ def test_game_macos_cannot_be_mislabelled_designer_with_game_identity() -> None:
     inputs = list(_inputs())
     policy = copy.deepcopy(inputs[0])
     consumers = policy["product_platform_contract"]["packaging_consumers"]
-    macos = next(item for item in consumers if item["consumer_id"] == "godot_game_macos")
+    macos = next(
+        item for item in consumers if item["consumer_id"] == "godot_game_macos"
+    )
     macos["product_id"] = "godot_designer"
     inputs[0] = policy
 
@@ -115,7 +115,12 @@ def test_designer_linux_release_configuration_is_forbidden() -> None:
     )
     inputs[0] = policy
     inputs[1] += chr(10).join(
-        ("", "  package-forbidden-designer-linux:", "    name: package Designer Linux", "")
+        (
+            "",
+            "  package-forbidden-designer-linux:",
+            "    name: package Designer Linux",
+            "",
+        )
     )
 
     issues = _validate(tuple(inputs))
@@ -180,12 +185,20 @@ def test_new_designer_linux_transitional_consumer_is_forbidden() -> None:
     )
     inputs[0] = policy
     inputs[1] += chr(10).join(
-        ("", "  package-invented-designer-linux:", "    name: transitional not a target", "")
+        (
+            "",
+            "  package-invented-designer-linux:",
+            "    name: transitional not a target",
+            "",
+        )
     )
 
     issues = _validate(tuple(inputs))
 
-    assert "transitional mismatch is not a grandfathered consumer: invented_designer_linux" in issues
+    assert (
+        "transitional mismatch is not a grandfathered consumer: invented_designer_linux"
+        in issues
+    )
 
 
 def test_new_designer_android_transitional_consumer_is_forbidden() -> None:
@@ -202,12 +215,20 @@ def test_new_designer_android_transitional_consumer_is_forbidden() -> None:
     )
     inputs[0] = policy
     inputs[1] += chr(10).join(
-        ("", "  package-invented-designer-android:", "    name: transitional not a target", "")
+        (
+            "",
+            "  package-invented-designer-android:",
+            "    name: transitional not a target",
+            "",
+        )
     )
 
     issues = _validate(tuple(inputs))
 
-    assert "transitional mismatch is not a grandfathered consumer: invented_designer_android" in issues
+    assert (
+        "transitional mismatch is not a grandfathered consumer: invented_designer_android"
+        in issues
+    )
 
 
 def test_macos_game_release_artifact_cannot_be_reclassified_as_designer() -> None:
