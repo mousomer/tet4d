@@ -76,6 +76,19 @@ def _run(root: Path, ctx: lifecycle.Context) -> list[str]:
     return lifecycle.validate(root, ctx)
 
 
+@pytest.fixture
+def no_ci_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Strip ambient GitHub context so CLI tests do not inherit the CI run's own.
+
+    `main()` resolves context from `os.environ` by design, so a test that calls
+    it inside a GitHub Actions job would otherwise be judged against that job's
+    pull request rather than the fixture under test.
+    """
+    for name in list(os.environ):
+        if name.startswith("GITHUB_"):
+            monkeypatch.delenv(name, raising=False)
+
+
 # --- parsing -----------------------------------------------------------------
 
 
@@ -423,7 +436,9 @@ def test_local_git_context_reports_detached_head_as_none(tmp_path: Path) -> None
 # --- CLI and output --------------------------------------------------------------
 
 
-def test_cli_output_never_contains_absolute_root(tmp_path: Path, capsys) -> None:
+def test_cli_output_never_contains_absolute_root(
+    tmp_path: Path, capsys, no_ci_env: None
+) -> None:
     root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
     result = lifecycle.main(["--root", str(root), "--branch", "feature/y"])
     out = capsys.readouterr().out
@@ -432,7 +447,7 @@ def test_cli_output_never_contains_absolute_root(tmp_path: Path, capsys) -> None
     assert "does not match the current branch" in out
 
 
-def test_cli_passes_on_valid_none(tmp_path: Path, capsys) -> None:
+def test_cli_passes_on_valid_none(tmp_path: Path, capsys, no_ci_env: None) -> None:
     root = _repo(tmp_path, _doc())
     assert lifecycle.main(["--root", str(root), "--branch", "master"]) == 0
     assert "passed" in capsys.readouterr().out
@@ -657,7 +672,7 @@ def test_explicit_draft_alone_changes_the_verdict(tmp_path: Path) -> None:
 
 
 def test_cli_accepts_pull_request_without_branch_or_event(
-    tmp_path: Path, capsys
+    tmp_path: Path, capsys, no_ci_env: None
 ) -> None:
     root = _repo(tmp_path, _doc(status="active", branch="feature/x", pull_request=98))
 
@@ -667,3 +682,27 @@ def test_cli_accepts_pull_request_without_branch_or_event(
 
     assert result == 1
     assert "does not match the current pull request" in capsys.readouterr().out
+
+
+def test_cli_is_not_influenced_by_ambient_github_context(
+    tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An explicit branch mismatch must win over an ambient CI pull request."""
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_HEAD_REF", "feature/x")
+    monkeypatch.setenv(
+        "GITHUB_EVENT_PATH",
+        _event_file(
+            tmp_path,
+            {"pull_request": {"number": 1, "draft": False, "base": {"ref": "master"}}},
+        ),
+    )
+
+    result = lifecycle.main(
+        ["--root", str(root), "--branch", "feature/y", "--event", "push"]
+    )
+
+    out = capsys.readouterr().out
+    assert result == 1
+    assert "does not match the current branch" in out
