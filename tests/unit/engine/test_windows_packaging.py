@@ -142,7 +142,7 @@ class TestWindowsPackagingScript(unittest.TestCase):
         workflow = self._release_workflow()
 
         self.assertIn("hdiutil attach -nobrowse -readonly", workflow)
-        self.assertIn("cd \"$RUNNER_TEMP\"", workflow)
+        self.assertIn('cd "$RUNNER_TEMP"', workflow)
         self.assertIn("sudo dpkg --install", workflow)
         self.assertIn("/usr/bin/tet4d --runtime-smoke-check", workflow)
         self.assertIn("sudo dpkg --purge tet4d", workflow)
@@ -152,24 +152,14 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("$smoke.ExitCode", workflow)
         self.assertIn("Uninstall registration remains after removal", workflow)
 
-    def test_release_workflow_enforces_identity_names_and_manifest(self) -> None:
+    def test_release_workflow_enforces_release_manifest(self) -> None:
         workflow = self._release_workflow()
 
-        self.assertIn('tags:', workflow)
+        self.assertIn("tags:", workflow)
         self.assertIn('"v*"', workflow)
         self.assertIn('"[0-9]*"', workflow)
         self.assertIn("validate-tag --tag", workflow)
         self.assertIn("ref: ${{ github.sha }}", workflow)
-        for filename in (
-            "tet4d-python-$env:VERSION-windows-x86_64.msi",
-            "tet4d-python-$VERSION-macos-arm64.dmg",
-            "tet4d-python-$VERSION-linux-x86_64.deb",
-            "tet4d-designer-${{ needs.release-contract.outputs.version }}-windows-x86_64.zip",
-            "tet4d-godot-game-${{ needs.release-contract.outputs.version }}-macos-universal.zip",
-            "tet4d-designer-${{ needs.release-contract.outputs.version }}-android-arm64.apk",
-            "tet4d-designer-${{ needs.release-contract.outputs.version }}-ipados-xcodeproject.zip",
-        ):
-            self.assertIn(filename, workflow)
         self.assertIn("release-manifest:", workflow)
         self.assertIn("tools/release/release_metadata.py manifest", workflow)
         self.assertIn("--source-sha", workflow)

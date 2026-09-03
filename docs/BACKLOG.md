@@ -39,7 +39,10 @@ Acceptance boundary:
 
 The existing Python macOS/Windows/Linux packages, Godot game macOS package, and
 Designer Windows package are implemented cells and remain separate evidence
-from runtime acceptance or publication.
+from runtime acceptance or publication. Their release filename templates must
+remain bound to their product's canonical `artifact_name_token`; the
+transitional tablet consumers retain Designer naming only under their closed,
+named status exception.
 
 ## Accepted Next Product Boundaries
 

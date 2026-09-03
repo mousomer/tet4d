@@ -62,6 +62,11 @@ consumer set is the machine-contract's `legacy_designer_android` and
 `legacy_designer_ipados` entries only. Adding, removing, or changing one is a
 product-contract change and requires the same route, RDS, backlog, test, and
 PR evidence as any other matrix change.
+Each product record also owns its canonical release-artifact naming token.
+`ARTIFACT_SPECS` must bind each registered consumer's filename template to that
+declared product identity; it may not use a different product's filename
+identity. The named transitional consumers remain consumer-specific status
+exceptions, not a general filename-identity bypass.
 
 These six canonical files are the complete human governance owner set. If a
 durable rule cannot fit without semantic distortion, stop and reassess the

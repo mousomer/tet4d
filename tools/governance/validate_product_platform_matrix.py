@@ -144,6 +144,7 @@ def _validate_product(
         "runtime_family",
         "purpose",
         "application_identity",
+        "artifact_name_token",
         "backlog_label",
     ):
         _string(product.get(attribute), f"{label}.{attribute}", issues)
@@ -427,10 +428,25 @@ def _validate_artifact_specs(
             issues.append(
                 f"release artifact references unknown product: {spec.product_id}"
             )
+            continue
         if (spec.product_id, spec.platform_id) != (product_id, platform_id):
             issues.append(
                 f"release artifact {spec.consumer_id} product/platform does not match "
                 "its registered consumer"
+            )
+        product = products[spec.product_id]
+        if not isinstance(product, dict):
+            continue
+        artifact_name_token = product.get("artifact_name_token")
+        if not isinstance(artifact_name_token, str) or not artifact_name_token:
+            continue
+        expected_prefix = f"{artifact_name_token}-{{version}}-"
+        if not spec.filename_template.startswith(expected_prefix):
+            issues.append(
+                f"release artifact consumer {spec.consumer_id!r} declares product "
+                f"{spec.product_id!r} but filename template "
+                f"{spec.filename_template!r} does not use expected product naming "
+                f"identity {artifact_name_token!r}"
             )
     if registered_specs != registered:
         issues.append(

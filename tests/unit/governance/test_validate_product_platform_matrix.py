@@ -247,6 +247,129 @@ def test_macos_game_release_artifact_cannot_be_reclassified_as_designer() -> Non
     )
 
 
+def test_current_artifact_templates_use_canonical_product_identity() -> None:
+    expected = {
+        "python_macos": "tet4d-python-{version}-macos-arm64.dmg",
+        "python_windows": "tet4d-python-{version}-windows-x86_64.msi",
+        "python_linux": "tet4d-python-{version}-linux-x86_64.deb",
+        "godot_game_macos": "tet4d-godot-game-{version}-macos-universal.zip",
+        "godot_designer_windows": "tet4d-designer-{version}-windows-x86_64.zip",
+        "legacy_designer_android": "tet4d-designer-{version}-android-arm64.apk",
+        "legacy_designer_ipados": "tet4d-designer-{version}-ipados-xcodeproject.zip",
+    }
+
+    assert {
+        spec.consumer_id: spec.filename_template for spec in ARTIFACT_SPECS
+    } == expected
+    assert _validate(_inputs()) == []
+
+
+def test_game_artifact_with_designer_filename_is_rejected() -> None:
+    altered_specs = tuple(
+        replace(
+            spec,
+            filename_template="tet4d-designer-{version}-macos-universal.zip",
+        )
+        if spec.consumer_id == "godot_game_macos"
+        else spec
+        for spec in ARTIFACT_SPECS
+    )
+
+    issues = matrix.validate_contract(*_inputs(), artifact_specs=altered_specs)
+
+    assert issues == [
+        (
+            "release artifact consumer 'godot_game_macos' declares product "
+            "'godot_game' but filename template "
+            "'tet4d-designer-{version}-macos-universal.zip' does not use expected "
+            "product naming identity 'tet4d-godot-game'"
+        )
+    ]
+
+
+def test_designer_artifact_with_game_filename_is_rejected() -> None:
+    altered_specs = tuple(
+        replace(
+            spec,
+            filename_template="tet4d-godot-game-{version}-windows-x86_64.zip",
+        )
+        if spec.consumer_id == "godot_designer_windows"
+        else spec
+        for spec in ARTIFACT_SPECS
+    )
+
+    issues = matrix.validate_contract(*_inputs(), artifact_specs=altered_specs)
+
+    assert any(
+        "consumer 'godot_designer_windows' declares product 'godot_designer'" in issue
+        and "tet4d-godot-game-{version}-windows-x86_64.zip" in issue
+        and "tet4d-designer" in issue
+        for issue in issues
+    )
+
+
+def test_python_artifact_with_godot_or_designer_filename_is_rejected() -> None:
+    for filename_template in (
+        "tet4d-godot-game-{version}-windows-x86_64.msi",
+        "tet4d-designer-{version}-windows-x86_64.msi",
+    ):
+        altered_specs = tuple(
+            replace(spec, filename_template=filename_template)
+            if spec.consumer_id == "python_windows"
+            else spec
+            for spec in ARTIFACT_SPECS
+        )
+
+        issues = matrix.validate_contract(*_inputs(), artifact_specs=altered_specs)
+
+        assert any(
+            "consumer 'python_windows' declares product 'python_tet4d'" in issue
+            and filename_template in issue
+            and "tet4d-python" in issue
+            for issue in issues
+        )
+
+
+def test_new_transitional_designer_linux_artifact_is_rejected() -> None:
+    inputs = list(_inputs())
+    policy = copy.deepcopy(inputs[0])
+    policy["product_platform_contract"]["packaging_consumers"].append(
+        {
+            "consumer_id": "invented_designer_linux_artifact",
+            "product_id": "godot_designer",
+            "platform_id": "linux",
+            "status": "transitional_mismatch",
+            "workflow_job": "package-invented-designer-linux-artifact",
+        }
+    )
+    inputs[0] = policy
+    inputs[1] += chr(10).join(
+        (
+            "",
+            "  package-invented-designer-linux-artifact:",
+            "    name: transitional not a target",
+            "",
+        )
+    )
+    altered_specs = ARTIFACT_SPECS + (
+        matrix.ArtifactSpec(
+            "invented_designer_linux_artifact",
+            "godot_designer",
+            "linux",
+            "linux_x86_64",
+            "tet4d-designer-{version}-linux-x86_64.zip",
+            {},
+        ),
+    )
+
+    issues = matrix.validate_contract(*tuple(inputs), artifact_specs=altered_specs)
+
+    assert (
+        "transitional mismatch is not a grandfathered consumer: "
+        "invented_designer_linux_artifact" in issues
+    )
+
+
 def test_rds_parser_ignores_unrelated_three_column_table() -> None:
     inputs = list(_inputs())
     inputs[4] += (

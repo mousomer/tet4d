@@ -27,6 +27,10 @@ present in the current workflow.
 Python packages are not fallback Godot packages. Tet4D Designer is not a
 Linux, Android, or iPadOS target. A workflow, preset, or artifact outside this
 matrix is transitional implementation evidence, not target promotion.
+Each release artifact template is bound to its product record's canonical
+`artifact_name_token`: `tet4d-python`, `tet4d-godot-game`, or
+`tet4d-designer`. `ARTIFACT_SPECS` may define the complete filename template,
+but the product contract is the authority for the identity token it may use.
 
 ## 2. Current supported release path
 
