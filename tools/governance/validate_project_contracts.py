@@ -5,7 +5,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -13,6 +13,7 @@ POLICY_PACK_REL = "config/project/policy_pack.json"
 POLICY_PACK_PATH = PROJECT_ROOT / POLICY_PACK_REL
 GOVERNANCE_DISPATCH_PATH = PROJECT_ROOT / "AGENTS.md"
 POLICY_MANIFEST_DIR = PROJECT_ROOT / "config/project/policy/manifests"
+LEGACY_POLICY_MANIFEST_REL = "POLICY_manifest.json"
 MENU_STRUCTURE_PATH = PROJECT_ROOT / "config/menu/structure.json"
 GODOT_SETUP_FIELD_SPEC_PATH = (
     PROJECT_ROOT / "godot/Tet4D.Godot/scripts/ui/game_setup/setup_field_spec.gd"
@@ -1045,6 +1046,62 @@ def _validate_policy_manifest_string_safety() -> list[ValidationIssue]:
                     )
                 )
                 break
+    return issues
+
+
+def _validate_legacy_policy_manifest_redirect() -> list[ValidationIssue]:
+    """The root ``POLICY_manifest.json`` is a compatibility redirect only.
+
+    While it exists it must be an explicit, repository-relative, contained
+    redirect to the canonical policy pack. Absence is not an issue: retiring
+    the file is a separate, deliberate decision.
+    """
+    rel = LEGACY_POLICY_MANIFEST_REL
+    path = PROJECT_ROOT / rel
+    if not path.exists():
+        return []
+    issues: list[ValidationIssue] = []
+    payload = _load_json_payload(path, rel, issues)
+    if payload is None:
+        return issues
+    if not isinstance(payload, dict):
+        return [ValidationIssue("redirect", f"{rel} must be a JSON object")]
+    if payload.get("deprecated") is not True:
+        issues.append(
+            ValidationIssue("redirect", f"{rel}.deprecated must be exactly true")
+        )
+    target = payload.get("replaced_by")
+    if not isinstance(target, str) or not target.strip():
+        issues.append(
+            ValidationIssue(
+                "redirect", f"{rel}.replaced_by must be a non-empty relative path"
+            )
+        )
+        return issues
+    target_path = PurePosixPath(target)
+    if target_path.is_absolute() or target.startswith(("\\", "~")):
+        issues.append(
+            ValidationIssue("redirect", f"{rel}.replaced_by must not be absolute")
+        )
+        return issues
+    if any(part in {"..", "."} for part in target_path.parts):
+        issues.append(
+            ValidationIssue(
+                "redirect", f"{rel}.replaced_by must not escape the repository"
+            )
+        )
+        return issues
+    if target != POLICY_PACK_REL:
+        issues.append(
+            ValidationIssue(
+                "redirect",
+                f"{rel}.replaced_by must be the canonical {POLICY_PACK_REL}",
+            )
+        )
+    if not (PROJECT_ROOT / target).is_file():
+        issues.append(
+            ValidationIssue("redirect", f"{rel}.replaced_by target does not exist")
+        )
     return issues
 
 
@@ -2936,6 +2993,7 @@ def validate_manifest() -> list[ValidationIssue]:
     issues.extend(_validate_governance_directives())
     issues.extend(_validate_canonical_governance_sync())
     issues.extend(_validate_policy_manifest_string_safety())
+    issues.extend(_validate_legacy_policy_manifest_redirect())
     issues.extend(_validate_deprecated_authorities())
     issues.extend(_validate_menu_control_typing())
     issues.extend(_validate_menu_simplification_rule())
