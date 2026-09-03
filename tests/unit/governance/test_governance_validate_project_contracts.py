@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 import tools.governance.validate_project_contracts as contracts
 
 
@@ -982,3 +984,79 @@ def test_codex_routing_is_structural_not_roadmap_prose(
     _install_codex_policy_fixture(tmp_path, monkeypatch, payload)
     assert "Stage 54" not in json.dumps(payload)
     assert contracts._validate_codex_routing_model() == []
+
+
+def _write_legacy_redirect(root: Path, payload: object) -> None:
+    (root / "config" / "project").mkdir(parents=True, exist_ok=True)
+    (root / "config" / "project" / "policy_pack.json").write_text(
+        "{}\n", encoding="utf-8"
+    )
+    _write_json(root / contracts.LEGACY_POLICY_MANIFEST_REL, payload)
+
+
+def _redirect_issues(root: Path, monkeypatch) -> list[str]:
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", root)
+    return [
+        issue.message for issue in contracts._validate_legacy_policy_manifest_redirect()
+    ]
+
+
+def test_legacy_policy_manifest_redirect_accepts_canonical_target(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_legacy_redirect(
+        tmp_path, {"deprecated": True, "replaced_by": contracts.POLICY_PACK_REL}
+    )
+
+    assert _redirect_issues(tmp_path, monkeypatch) == []
+
+
+def test_legacy_policy_manifest_redirect_absence_is_not_an_issue(
+    tmp_path: Path, monkeypatch
+) -> None:
+    assert _redirect_issues(tmp_path, monkeypatch) == []
+
+
+@pytest.mark.parametrize(
+    ("payload", "fragment"),
+    [
+        (
+            {"deprecated": "true", "replaced_by": "config/project/policy_pack.json"},
+            "exactly true",
+        ),
+        ({"deprecated": True}, "non-empty relative path"),
+        ({"deprecated": True, "replaced_by": ""}, "non-empty relative path"),
+        ({"deprecated": True, "replaced_by": "/etc/policy_pack.json"}, "absolute"),
+        ({"deprecated": True, "replaced_by": "~/policy_pack.json"}, "absolute"),
+        ({"deprecated": True, "replaced_by": "../policy_pack.json"}, "escape"),
+        ({"deprecated": True, "replaced_by": "config/../policy_pack.json"}, "escape"),
+        (
+            {"deprecated": True, "replaced_by": "config/project/policy/pack.json"},
+            "canonical",
+        ),
+        (
+            {"deprecated": True, "replaced_by": "config/project/policy/pack.json"},
+            "does not exist",
+        ),
+    ],
+)
+def test_legacy_policy_manifest_redirect_rejects_malformed_variants(
+    tmp_path: Path, monkeypatch, payload: object, fragment: str
+) -> None:
+    _write_legacy_redirect(tmp_path, payload)
+
+    messages = _redirect_issues(tmp_path, monkeypatch)
+
+    assert any(fragment in message for message in messages), messages
+
+
+def test_legacy_policy_manifest_redirect_rejects_non_object(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _write_legacy_redirect(tmp_path, ["deprecated"])
+
+    assert any("JSON object" in m for m in _redirect_issues(tmp_path, monkeypatch))
+
+
+def test_legacy_policy_manifest_redirect_is_part_of_manifest_validation() -> None:
+    assert not any(issue.kind == "redirect" for issue in contracts.validate_manifest())

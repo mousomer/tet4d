@@ -1,4 +1,4 @@
 {
   "deprecated": true,
-  "replaced_by": "config/project/policy/pack.json"
+  "replaced_by": "config/project/policy_pack.json"
 }
