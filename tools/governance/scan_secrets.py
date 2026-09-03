@@ -11,6 +11,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_PATH = (
     PROJECT_ROOT / "config" / "project" / "policy" / "manifests" / "secret_scan.json"
 )
+# Reporting is bounded so a wide leak cannot flood CI logs. Findings never carry
+# matched bytes: only pattern id, repo-relative path, and line are retained.
+MAX_REPORTED_FINDINGS = 50
 
 
 @dataclass(frozen=True)
@@ -31,7 +34,6 @@ class Finding:
     pattern_id: str
     rel_path: str
     line_no: int
-    preview: str
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -195,12 +197,6 @@ def _allowlisted(
     return False
 
 
-def _token_preview(token: str) -> str:
-    if len(token) <= 12:
-        return token
-    return token[:4] + "..." + token[-4:]
-
-
 def run_scan() -> list[Finding]:
     payload = _load_json(CONFIG_PATH)
     scan_roots = _string_list(payload.get("scan_roots", ["."]), field="scan_roots")
@@ -250,10 +246,23 @@ def run_scan() -> list[Finding]:
                         pattern_id=pattern.pattern_id,
                         rel_path=rel,
                         line_no=line_no,
-                        preview=_token_preview(token),
                     )
                 )
     return findings
+
+
+def format_findings(findings: list[Finding], *, limit: int | None = None) -> list[str]:
+    """Render findings without any matched content; bounded to ``limit`` rows."""
+    if limit is None:
+        limit = MAX_REPORTED_FINDINGS
+    lines = [
+        f"- [{finding.pattern_id}] {finding.rel_path}:{finding.line_no}"
+        for finding in findings[:limit]
+    ]
+    omitted = len(findings) - len(lines)
+    if omitted > 0:
+        lines.append(f"- ... {omitted} additional finding(s) omitted")
+    return lines
 
 
 def main() -> int:
@@ -263,11 +272,8 @@ def main() -> int:
         return 0
 
     print("Secret scan failed: potential secret patterns detected.")
-    for finding in findings:
-        print(
-            f"- [{finding.pattern_id}] {finding.rel_path}:{finding.line_no} "
-            f"match={finding.preview!r}"
-        )
+    for line in format_findings(findings):
+        print(line)
     return 1
 
 
