@@ -1,9 +1,5 @@
 # CURRENT_STATE (Restart Handoff)
 
-Last updated: 2026-09-02
-Working state: re-governance PR 3 on `codex/regovernance-lock-surface`, based
-on merged PR 2 commit `a5d30db61c8821a71e94cb9ed430fe491ebd8ccc`
-
 ## Purpose
 
 This file contains only the compact state needed to resume staged or
@@ -12,17 +8,25 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Active Focus
 
-- Current objective: close the final audit by deriving validator provenance
-  from the real enforcement graph, enforcing canonical policy bytes and size,
-  broadening lifecycle checks, and classifying topology authority as
-  architecture without changing its semantics.
-- Current blocker: none known for this governance-only cut.
-- Established baseline: PR 2 merged green, master was clean at the SHA above,
-  and this fresh branch was created from that exact commit. No frozen or
-  unrelated feature branch is part of the change.
-- Product and release execution chronology is intentionally excluded. Resume
-  such work only from its owning RDS, release documentation, open backlog, and
-  a newly approved task scope.
+Machine-readable handoff state. `status` is `active` only on a feature branch
+or draft PR and must name that branch; it is `none` on the default branch and
+on any non-draft PR targeting it. `tools/governance/validate_handoff_lifecycle.py`
+enforces this.
+
+<!-- BEGIN HANDOFF:state -->
+```json
+{
+  "schema_version": 1,
+  "status": "none",
+  "branch": null,
+  "pull_request": null
+}
+```
+<!-- END HANDOFF:state -->
+
+<!-- BEGIN HANDOFF:notes -->
+No active handoff.
+<!-- END HANDOFF:notes -->
 
 ## Current Authority
 
@@ -37,12 +41,8 @@ stage archive, a task-contract ledger, or a future programme.
 
 ## Next Acceptance Boundary
 
-1. PR 3 is ready only when the active surface is at most 2,500 lines, the
-   canonical policy pack is at most 1,000 lines and 80,000 bytes, the backlog is
-   at most 250, exactly six owners and all routes remain valid, lifecycle and
-   actual-enforcement provenance regressions fail adversarially, and focused
-   plus full-repository checks are green.
-2. Stop after PR 3. The frozen Windows/iPad release work remains separate.
+No staged work is in progress. Durable open work lives in `docs/BACKLOG.md`;
+a new staged batch sets `status` to `active` on its own branch.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
@@ -62,7 +62,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.93`
+1. `delivery_size_pressure = 2.94`
 2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

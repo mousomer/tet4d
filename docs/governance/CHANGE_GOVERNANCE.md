@@ -120,7 +120,12 @@ PR/stage/run references and historical evidence remain valid.
 
 Update `CURRENT_STATE.md` only for restart, staged, phase-dependent,
 restructuring, or multi-batch handoff information. Do not accumulate task logs,
-CI diaries, or generic workflow there.
+CI diaries, or generic workflow there. Its `HANDOFF:state` block is machine
+authority for handoff lifecycle: `active` state may exist only on a feature
+branch or draft PR and must name that branch; a non-draft PR to the default
+branch and the default branch itself must carry `none` with an empty notes
+region. `tools/governance/validate_handoff_lifecycle.py` enforces this on
+every verification and CI run.
 
 ## Review, completion, and publication
 
