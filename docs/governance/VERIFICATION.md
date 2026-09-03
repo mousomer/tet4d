@@ -16,7 +16,9 @@ The stable evidence vocabulary is:
 
 `documentation`, `governance_structure`, `python`, `godot`, `native`,
 `deterministic`, `parity_or_conformance`, `integration`, `human_visual`,
-`packaging`, `platform`, and `release_acceptance`.
+`packaging`, `platform`, `platform_macos`, `platform_windows`,
+`platform_linux`, `platform_android`, `platform_ipados`, and
+`release_acceptance`.
 
 `review_only` is valid only when tracked repository state is unchanged and no
 executable evidence or full gate is required. `cross_layer` requires at least
@@ -42,6 +44,30 @@ Use the policy-backed resolver for a stable decision and report skeleton:
 python tools/governance/resolve_codex_verification.py request.json --format json
 python tools/governance/resolve_codex_verification.py request.json --format markdown
 ```
+
+## Platform evidence identity
+
+`platform` is a family label, not a platform. Machine evidence must name the
+platform it proves, and `platform` never resolves to a default one. A
+resolution naming `platform` without at least one explicit `platform_<id>`
+member is rejected by `tools/governance/select_codex_ci_lanes.py`, so a macOS
+package can never stand in for iPadOS, Windows, Android, or Linux evidence.
+
+`config/project/codex_ci_lanes.json` owns the routing. `path_classification`
+maps a changed path to the platforms it actually affects;
+`platform_evidence.hosted_lanes` binds each hosted platform requirement to the
+CI job, packaging consumer, and canonical toolchain command that exercise it;
+`platform_evidence.unhosted_platform_requirements` names the platforms with no
+hosted lane. Unhosted platform evidence is declared manual and reported as
+outstanding, never satisfied by another platform's job. Platform identifiers
+come from the `product_platform_contract`: CI selects evidence and never adds,
+removes, or promotes a product/platform target, and a hosted lane claims only
+the boundary it runs. Hosted final link is not physical-device acceptance.
+
+Selection stays proportional: a changed path selects its own layers and its own
+platform, and nothing more. Only an unmatched path forces the full repository
+gate. That fail-safe is deliberate — repair a missing classification rule, never
+the fallback.
 
 ## Test obligations
 
