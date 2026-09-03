@@ -22,7 +22,7 @@ import os
 import re
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,6 +62,7 @@ class Context:
     is_draft: bool | None
     pull_request: int | None
     base_branch: str | None
+    issues: tuple[str, ...] = ()
 
 
 def parse_document(text: str) -> tuple[HandoffState | None, str | None, list[str]]:
@@ -197,33 +198,59 @@ def _validate_active(state: HandoffState, context: Context) -> list[str]:
     return issues
 
 
-def _load_event_payload(env: dict[str, str]) -> dict[str, Any]:
+def _load_event_payload(
+    env: dict[str, str],
+) -> tuple[dict[str, Any] | None, str | None]:
     path_text = env.get("GITHUB_EVENT_PATH")
     if not path_text:
-        return {}
+        return None, "requires GITHUB_EVENT_PATH"
     try:
         payload = json.loads(Path(path_text).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return payload if isinstance(payload, dict) else {}
+    except OSError:
+        return None, "could not read its event payload"
+    except json.JSONDecodeError:
+        return None, "event payload is not valid JSON"
+    if not isinstance(payload, dict):
+        return None, "event payload root must be a JSON object"
+    return payload, None
 
 
 def _pull_request_context(
     env: dict[str, str], payload: dict[str, Any], default_branch: str
 ) -> Context:
     pr = payload.get("pull_request")
-    pr = pr if isinstance(pr, dict) else {}
+    issues: list[str] = []
+    if not isinstance(pr, dict):
+        issues.append("requires pull_request to be a JSON object")
+        pr = {}
     base = pr.get("base")
     base_ref = base.get("ref") if isinstance(base, dict) else None
+    draft = pr.get("draft")
     number = pr.get("number")
+    branch = env.get("GITHUB_HEAD_REF")
+    if not isinstance(draft, bool):
+        issues.append("requires pull_request.draft to be a JSON boolean")
+    if not isinstance(base_ref, str) or not base_ref.strip():
+        issues.append("requires pull_request.base.ref to be a non-empty string")
+    if not isinstance(branch, str) or not branch.strip():
+        issues.append("requires GITHUB_HEAD_REF")
+    if number is not None and (
+        isinstance(number, bool) or not isinstance(number, int) or number <= 0
+    ):
+        issues.append("pull_request.number must be a positive integer when present")
     return Context(
         source="github",
-        branch=env.get("GITHUB_HEAD_REF") or None,
+        branch=branch.strip() if isinstance(branch, str) and branch.strip() else None,
         default_branch=default_branch,
         event="pull_request",
-        is_draft=bool(pr.get("draft")) if "draft" in pr else None,
-        pull_request=number if isinstance(number, int) else None,
-        base_branch=base_ref if isinstance(base_ref, str) else None,
+        is_draft=draft if isinstance(draft, bool) else None,
+        pull_request=number
+        if isinstance(number, int) and not isinstance(number, bool)
+        else None,
+        base_branch=base_ref.strip()
+        if isinstance(base_ref, str) and base_ref.strip()
+        else None,
+        issues=tuple(f"GitHub pull-request context {issue}" for issue in issues),
     )
 
 
@@ -238,7 +265,19 @@ def _github_context(env: dict[str, str], default_branch: str) -> Context | None:
     event = env.get("GITHUB_EVENT_NAME")
     if not event:
         return None
-    payload = _load_event_payload(env)
+    payload, payload_issue = _load_event_payload(env)
+    if event in {"pull_request", "pull_request_target"} and payload_issue is not None:
+        return Context(
+            source="github",
+            branch=None,
+            default_branch=default_branch,
+            event="pull_request",
+            is_draft=None,
+            pull_request=None,
+            base_branch=None,
+            issues=(f"GitHub pull-request context {payload_issue}",),
+        )
+    payload = payload or {}
     repo = payload.get("repository")
     if isinstance(repo, dict) and isinstance(repo.get("default_branch"), str):
         default_branch = repo["default_branch"]
@@ -331,33 +370,69 @@ def handoff_document_rel(root: Path) -> str | None:
         return None
     authority = payload.get("authority_model") if isinstance(payload, dict) else None
     rel = authority.get("handoff_doc") if isinstance(authority, dict) else None
-    if not isinstance(rel, str) or not rel.strip():
-        return None
-    if rel.startswith("/") or ".." in rel.split("/"):
-        return None
-    return rel
+    resolved, _issue = _repository_relative_handoff_path(root, rel)
+    return resolved
+
+
+def _repository_relative_handoff_path(
+    root: Path, candidate: object
+) -> tuple[str | None, str | None]:
+    """Return a safe relative document name without exposing rejected input."""
+    if not isinstance(candidate, str) or not candidate.strip():
+        return None, "must name a repository-relative handoff document"
+    rel = candidate.strip()
+    windows = PureWindowsPath(rel)
+    if (
+        Path(rel).is_absolute()
+        or windows.is_absolute()
+        or windows.drive
+        or chr(92) in rel
+        or ".." in rel.split("/")
+    ):
+        return None, "must name a repository-relative handoff document"
+    resolved_root = root.resolve()
+    resolved_candidate = (resolved_root / rel).resolve()
+    if not resolved_candidate.is_relative_to(resolved_root):
+        return None, "must name a repository-relative handoff document"
+    return resolved_candidate.relative_to(resolved_root).as_posix(), None
+
+
+def _configured_handoff_document_rel(root: Path) -> tuple[str | None, str | None]:
+    try:
+        payload = json.loads((root / POLICY_PACK_REL).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return (
+            None,
+            f"{POLICY_PACK_REL} authority_model.handoff_doc must name a repository-relative handoff document",
+        )
+    authority = payload.get("authority_model") if isinstance(payload, dict) else None
+    rel = authority.get("handoff_doc") if isinstance(authority, dict) else None
+    resolved, issue = _repository_relative_handoff_path(root, rel)
+    if issue is not None:
+        return None, f"{POLICY_PACK_REL} authority_model.handoff_doc {issue}"
+    return resolved, None
 
 
 def validate(
     root: Path, context: Context, *, handoff_rel: str | None = None
 ) -> list[str]:
-    rel = handoff_rel or handoff_document_rel(root)
-    if rel is None:
-        return [
-            (
-                f"{POLICY_PACK_REL} authority_model.handoff_doc must name a "
-                "repository-relative handoff document"
-            )
-        ]
+    issues = list(context.issues)
+    if handoff_rel is None:
+        rel, path_issue = _configured_handoff_document_rel(root)
+    else:
+        rel, path_issue = _repository_relative_handoff_path(root, handoff_rel)
+    if path_issue is not None:
+        return [*issues, path_issue]
+    assert rel is not None
     try:
         text = (root / rel).read_text(encoding="utf-8")
     except OSError:
-        return [f"handoff document {rel} is missing or unreadable"]
-    state, notes, issues = parse_document(text)
+        return [*issues, f"handoff document {rel} is missing or unreadable"]
+    state, notes, document_issues = parse_document(text)
     if state is None:
-        return [f"{rel}: {issue}" for issue in issues]
-    issues.extend(validate_state(state, notes, context))
-    return [f"{rel}: {issue}" for issue in issues]
+        return [*issues, *(f"{rel}: {issue}" for issue in document_issues)]
+    document_issues.extend(validate_state(state, notes, context))
+    return [*issues, *(f"{rel}: {issue}" for issue in document_issues)]
 
 
 def _parser() -> argparse.ArgumentParser:

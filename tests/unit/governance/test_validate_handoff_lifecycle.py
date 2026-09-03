@@ -12,6 +12,7 @@ import tools.governance.validate_handoff_lifecycle as lifecycle
 
 ROOT = Path(__file__).resolve().parents[3]
 CI_WORKFLOW_PATH = ROOT / ".github/workflows/ci.yml"
+WINDOWS_SEPARATOR = chr(92)
 
 
 def _doc(
@@ -301,13 +302,65 @@ def test_missing_handoff_document_fails(tmp_path: Path) -> None:
     assert any("missing or unreadable" in i for i in _run(root, _ctx()))
 
 
-@pytest.mark.parametrize("rel", ["/abs/HANDOFF.md", "../HANDOFF.md", ""])
+@pytest.mark.parametrize(
+    "rel",
+    [
+        "/abs/HANDOFF.md",
+        "../HANDOFF.md",
+        f"C:{WINDOWS_SEPARATOR}temp{WINDOWS_SEPARATOR}HANDOFF.md",
+        f"{WINDOWS_SEPARATOR}{WINDOWS_SEPARATOR}server{WINDOWS_SEPARATOR}share{WINDOWS_SEPARATOR}HANDOFF.md",
+        "",
+    ],
+)
 def test_unsafe_handoff_document_path_is_rejected(tmp_path: Path, rel: str) -> None:
     root = _repo(tmp_path, _doc())
     (root / "config" / "project" / "policy_pack.json").write_text(
         json.dumps({"authority_model": {"handoff_doc": rel}}), encoding="utf-8"
     )
     assert any("authority_model.handoff_doc" in i for i in _run(root, _ctx()))
+
+
+@pytest.mark.parametrize(
+    "rel",
+    [
+        "/abs/HANDOFF.md",
+        "../HANDOFF.md",
+        f"..{WINDOWS_SEPARATOR}HANDOFF.md",
+        f"{WINDOWS_SEPARATOR}{WINDOWS_SEPARATOR}server{WINDOWS_SEPARATOR}share{WINDOWS_SEPARATOR}HANDOFF.md",
+    ],
+)
+def test_unsafe_handoff_document_override_is_rejected_without_path_disclosure(
+    tmp_path: Path, capsys, no_ci_env: None, rel: str
+) -> None:
+    root = _repo(tmp_path, _doc())
+
+    result = lifecycle.main(
+        ["--root", str(root), "--handoff-doc", rel, "--branch", "master"]
+    )
+
+    out = capsys.readouterr().out
+    assert result == 1
+    assert str(root) not in out
+    assert rel not in out
+    assert "repository-relative handoff document" in out
+
+
+def test_unsafe_configured_handoff_document_hides_rejected_path(
+    tmp_path: Path, capsys, no_ci_env: None
+) -> None:
+    root = _repo(tmp_path, _doc())
+    rejected = "/abs/HANDOFF.md"
+    (root / "config" / "project" / "policy_pack.json").write_text(
+        json.dumps({"authority_model": {"handoff_doc": rejected}}), encoding="utf-8"
+    )
+
+    result = lifecycle.main(["--root", str(root), "--branch", "master"])
+
+    out = capsys.readouterr().out
+    assert result == 1
+    assert str(root) not in out
+    assert rejected not in out
+    assert "repository-relative handoff document" in out
 
 
 # --- context resolution ---------------------------------------------------------
@@ -317,6 +370,132 @@ def _event_file(tmp_path: Path, payload: dict) -> str:
     path = tmp_path / "event.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     return str(path)
+
+
+def _pull_request_env(tmp_path: Path, payload: object | None = None) -> dict[str, str]:
+    env = {"GITHUB_EVENT_NAME": "pull_request", "GITHUB_HEAD_REF": "feature/x"}
+    if payload is not None:
+        path = tmp_path / "event.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        env["GITHUB_EVENT_PATH"] = str(path)
+    return env
+
+
+@pytest.mark.parametrize(
+    ("payload", "mutate_env"),
+    [
+        (None, None),
+        (None, lambda env: env.update({"GITHUB_EVENT_PATH": "missing-event.json"})),
+        (None, lambda env: env.update({"GITHUB_EVENT_PATH": "invalid-event.json"})),
+        (["not", "an", "object"], None),
+        ({}, None),
+        ({"pull_request": []}, None),
+        ({"pull_request": {"base": {"ref": "master"}}}, None),
+        ({"pull_request": {"draft": "true", "base": {"ref": "master"}}}, None),
+        ({"pull_request": {"draft": True}}, None),
+        ({"pull_request": {"draft": True, "base": {"ref": ""}}}, None),
+        (
+            {
+                "pull_request": {
+                    "number": True,
+                    "draft": True,
+                    "base": {"ref": "master"},
+                }
+            },
+            None,
+        ),
+        (
+            {
+                "pull_request": {
+                    "number": "98",
+                    "draft": True,
+                    "base": {"ref": "master"},
+                }
+            },
+            None,
+        ),
+        (
+            {"pull_request": {"draft": True, "base": {"ref": "master"}}},
+            lambda env: env.pop("GITHUB_HEAD_REF"),
+        ),
+    ],
+    ids=[
+        "missing-event-path",
+        "unreadable-event-path",
+        "invalid-json",
+        "non-object-payload",
+        "missing-pull-request",
+        "invalid-pull-request",
+        "missing-draft",
+        "non-boolean-draft",
+        "missing-base",
+        "empty-base-ref",
+        "boolean-pr-number",
+        "string-pr-number",
+        "missing-head-ref",
+    ],
+)
+def test_malformed_pull_request_event_fails_closed_without_git_fallback(
+    tmp_path: Path, payload: object | None, mutate_env
+) -> None:
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
+    env = _pull_request_env(tmp_path, payload)
+    if mutate_env is not None:
+        mutate_env(env)
+    if env.get("GITHUB_EVENT_PATH") == "invalid-event.json":
+        (tmp_path / "invalid-event.json").write_text("{", encoding="utf-8")
+
+    ctx = lifecycle.resolve_context(root=root, env=env)
+    issues = lifecycle.validate(root, ctx)
+
+    assert ctx.source == "github"
+    assert any("GitHub pull-request context" in issue for issue in issues)
+    assert not any("does not match the current branch" in issue for issue in issues)
+
+
+def test_malformed_pull_request_event_diagnostic_hides_event_path(
+    tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
+    event_path = tmp_path / "invalid-event.json"
+    event_path.write_text("{", encoding="utf-8")
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_HEAD_REF", "feature/x")
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event_path))
+
+    result = lifecycle.main(["--root", str(root)])
+
+    out = capsys.readouterr().out
+    assert result == 1
+    assert str(root) not in out
+    assert str(event_path) not in out
+    assert "event payload is not valid JSON" in out
+
+
+def test_valid_pull_request_event_preserves_active_and_none_behavior(
+    tmp_path: Path,
+) -> None:
+    env = _pull_request_env(
+        tmp_path,
+        {"pull_request": {"number": 98, "draft": True, "base": {"ref": "master"}}},
+    )
+    active = _repo(tmp_path, _doc(status="active", branch="feature/x", pull_request=98))
+    none = _repo(tmp_path / "none", _doc())
+
+    assert (
+        lifecycle.validate(active, lifecycle.resolve_context(root=active, env=env))
+        == []
+    )
+    assert lifecycle.validate(none, lifecycle.resolve_context(root=none, env=env)) == []
+
+
+def test_malformed_pull_request_target_event_fails_closed(tmp_path: Path) -> None:
+    root = _repo(tmp_path, _doc(status="active", branch="feature/x"))
+    env = {"GITHUB_EVENT_NAME": "pull_request_target", "GITHUB_HEAD_REF": "feature/x"}
+
+    issues = lifecycle.validate(root, lifecycle.resolve_context(root=root, env=env))
+
+    assert any("GitHub pull-request context" in issue for issue in issues)
 
 
 def test_github_pull_request_context_is_read_from_event_payload(tmp_path: Path) -> None:
