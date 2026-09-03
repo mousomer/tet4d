@@ -189,6 +189,22 @@ The current canonical files are:
    classes. Configuration mode may carry the deliberately reduced descriptor
    only when explicitly validated as configuration evidence. Release mode must
    carry both iOS library declarations and the release native xcframework.
+9. The iPadOS release XCFramework has an `arm64` physical-device slice and an
+   `x86_64` simulator slice. The pinned Godot 4.7.2 device engine archive is
+   `arm64`; its simulator XCFramework metadata advertises `arm64` and
+   `x86_64`, but the contained simulator engine archive is `x86_64` only.
+   Binary inspection, rather than the upstream directory name or plist alone,
+   therefore owns the simulator architecture decision.
+10. Each Tet4D iOS slice is self-contained with respect to the godot-cpp
+    implementation used by its GDExtension objects. Release assembly combines
+    the Tet4D-only and matching godot-cpp static archives before XCFramework
+    creation, verifies that archive members were preserved, and proves that
+    the godot-cpp symbols required by Tet4D are defined by the final archive.
+11. Release validation checks the XCFramework device/simulator metadata against
+    the contained binary architectures and the declared contract. The hosted
+    release boundary is an unsigned `x86_64` simulator Xcode build through the
+    final link; it is not physical-device, signing, keyboard, or runtime
+    acceptance.
 
 ## 5. Active Python installer path
 

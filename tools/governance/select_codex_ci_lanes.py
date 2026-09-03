@@ -22,11 +22,16 @@ class LaneConfig:
     always_run_lanes: tuple[str, ...]
     requirement_to_lanes: tuple[tuple[str, tuple[str, ...]], ...]
     manual_requirements: tuple[str, ...]
+    abstract_requirements: tuple[tuple[str, tuple[str, ...]], ...]
     full_repository_gate_lanes: tuple[str, ...]
 
     @property
     def lane_mapping(self) -> dict[str, tuple[str, ...]]:
         return dict(self.requirement_to_lanes)
+
+    @property
+    def abstract_expansions(self) -> dict[str, tuple[str, ...]]:
+        return dict(self.abstract_requirements)
 
 
 @dataclass(frozen=True)
@@ -36,6 +41,7 @@ class LaneSelection:
     verification_requirements: tuple[str, ...]
     selected_lanes: tuple[str, ...]
     manual_requirements: tuple[str, ...]
+    platform_requirements: tuple[str, ...]
     requires_full_repository_gate: bool
 
     def to_dict(self) -> dict[str, object]:
@@ -46,6 +52,7 @@ class LaneSelection:
             "verification_requirements": list(self.verification_requirements),
             "selected_lanes": list(self.selected_lanes),
             "manual_requirements": list(self.manual_requirements),
+            "platform_requirements": list(self.platform_requirements),
             "requires_full_repository_gate": self.requires_full_repository_gate,
         }
 
@@ -139,6 +146,45 @@ def _requirement_mapping(
     return tuple(mapping)
 
 
+def _abstract_requirements(
+    payload: dict[str, object], known_requirements: set[str]
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    raw = payload.get("abstract_requirements", {})
+    if not isinstance(raw, dict):
+        raise LaneSelectionError("abstract_requirements must be an object")
+    expansions: list[tuple[str, tuple[str, ...]]] = []
+    for key, value in raw.items():
+        requirement = _non_empty_string(key, field="abstract_requirements key")
+        if requirement not in known_requirements:
+            raise LaneSelectionError(
+                f"abstract_requirements references unknown requirement: {requirement}"
+            )
+        members = _string_list(value, field=f"abstract_requirements.{requirement}")
+        unknown = sorted(set(members) - known_requirements)
+        if unknown:
+            raise LaneSelectionError(
+                f"abstract_requirements.{requirement} references unknown "
+                "requirements: " + ", ".join(unknown)
+            )
+        if requirement in members:
+            raise LaneSelectionError(
+                f"abstract_requirements.{requirement} must not expand to itself"
+            )
+        expansions.append((requirement, members))
+    abstract_ids = {requirement for requirement, _members in expansions}
+    nested = sorted(
+        member
+        for _requirement, members in expansions
+        for member in members
+        if member in abstract_ids
+    )
+    if nested:
+        raise LaneSelectionError(
+            "abstract_requirements must not nest: " + ", ".join(nested)
+        )
+    return tuple(expansions)
+
+
 def load_lane_config(payload: dict[str, object]) -> LaneConfig:
     _positive_int(payload.get("schema_version"), field="schema_version")
     resolution_schema_version = _positive_int(
@@ -187,13 +233,26 @@ def load_lane_config(payload: dict[str, object]) -> LaneConfig:
             "manual_requirements references unknown requirements: "
             + ", ".join(unknown_manual)
         )
+    abstract_requirements = _abstract_requirements(payload, set(mapping_dict))
+    abstract_ids = {requirement for requirement, _members in abstract_requirements}
+    both = sorted(abstract_ids.intersection(manual_requirements))
+    if both:
+        raise LaneSelectionError(
+            "requirements cannot be both abstract and manual: " + ", ".join(both)
+        )
     for requirement, lanes in mapping:
         is_manual = requirement in manual_requirements
+        is_abstract = requirement in abstract_ids
         if is_manual and lanes:
             raise LaneSelectionError(
                 f"manual requirement {requirement!r} must not map to automated lanes"
             )
-        if not is_manual and not lanes:
+        if is_abstract and lanes:
+            raise LaneSelectionError(
+                f"abstract requirement {requirement!r} must not map to a lane of its "
+                "own; it expands into explicit requirements"
+            )
+        if not is_manual and not is_abstract and not lanes:
             raise LaneSelectionError(
                 f"automated requirement {requirement!r} must map to at least one lane"
             )
@@ -204,8 +263,23 @@ def load_lane_config(payload: dict[str, object]) -> LaneConfig:
         always_run_lanes=always_run_lanes,
         requirement_to_lanes=mapping,
         manual_requirements=manual_requirements,
+        abstract_requirements=abstract_requirements,
         full_repository_gate_lanes=full_gate_lanes,
     )
+
+
+def _require_abstract_expansion(
+    requirements: tuple[str, ...],
+    *,
+    expansions: dict[str, tuple[str, ...]],
+) -> None:
+    selected = set(requirements)
+    for requirement, members in expansions.items():
+        if requirement in selected and not selected.intersection(members):
+            raise LaneSelectionError(
+                f"abstract requirement {requirement!r} requires at least one explicit "
+                "expansion: " + ", ".join(members)
+            )
 
 
 def _resolution_requirements(payload: dict[str, object]) -> tuple[str, ...]:
@@ -252,6 +326,7 @@ def select_lanes(
             verification_requirements=(),
             selected_lanes=(),
             manual_requirements=(),
+            platform_requirements=(),
             requires_full_repository_gate=False,
         )
     if not requirements:
@@ -267,6 +342,9 @@ def select_lanes(
             + ", ".join(unknown_requirements)
         )
 
+    expansions = config.abstract_expansions
+    _require_abstract_expansion(requirements, expansions=expansions)
+
     selected = set(config.always_run_lanes)
     for requirement in requirements:
         selected.update(mapping[requirement])
@@ -278,12 +356,20 @@ def select_lanes(
         for requirement in requirements
         if requirement in config.manual_requirements
     )
+    expansion_members = {
+        member for members in expansions.values() for member in members
+    }
     return LaneSelection(
         resolution_schema_version=resolution_schema_version,
         repository_changed=True,
         verification_requirements=requirements,
         selected_lanes=_ordered_subset(selected, config.lane_order),
         manual_requirements=manual,
+        platform_requirements=tuple(
+            requirement
+            for requirement in requirements
+            if requirement in expansion_members
+        ),
         requires_full_repository_gate=requires_full_gate,
     )
 
@@ -306,6 +392,9 @@ def github_outputs(
             ),
             "manual_requirements": json.dumps(
                 list(selection.manual_requirements), separators=(",", ":")
+            ),
+            "platform_requirements": json.dumps(
+                list(selection.platform_requirements), separators=(",", ":")
             ),
             "requires_full_repository_gate": (
                 "true" if selection.requires_full_repository_gate else "false"

@@ -58,11 +58,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.95` (`low`)
+- `tech_debt.score = 5.96` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.92`
+1. `delivery_size_pressure = 2.93`
 2. `code_balance = 2.03`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -76,7 +76,7 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
 2. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
-4. `tools/governance/validate_project_contracts.py`: `2676` real LOC
+4. `tools/governance/validate_project_contracts.py`: `2681` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
 6. `scripts/arch_metrics.py`: `1899` real LOC
 7. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC

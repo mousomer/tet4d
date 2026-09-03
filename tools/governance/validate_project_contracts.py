@@ -76,6 +76,11 @@ SUPPORTED_CODEX_VERIFICATION_REQUIREMENTS = frozenset(
         "human_visual",
         "packaging",
         "platform",
+        "platform_macos",
+        "platform_windows",
+        "platform_linux",
+        "platform_android",
+        "platform_ipados",
         "release_acceptance",
     }
 )

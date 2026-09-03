@@ -51,7 +51,10 @@
    reduced descriptor and no native framework; release mode must have the
    complete iOS descriptor and release xcframework at Godot's canonical
    `Tet4DDesigner/dylibs/addons/tet4d_core/bin/` path. The generated export
-   method must be `development` in both modes.
+   method must be `development` in both modes. Release validation must inspect
+   the contained binaries, require an `arm64` device slice and `x86_64`
+   simulator slice, and reject missing godot-cpp implementation symbols or
+   XCFramework metadata that disagrees with the archive architectures.
 10. No keystore, certificate, provisioning profile, or other signing secret is
     committed on any platform.
 11. Run `python tools/release/release_metadata.py validate-tag --tag <tag>` and
@@ -96,11 +99,14 @@
     The current Designer-identity artifact is transitional and does not satisfy
     either Designer target support or Godot game/Android implementation.
 3b. For iPadOS, run `packaging/godot/build_ipados.sh`, and report the build
-    result, the signing status, and whether evidence came from the simulator or
-    a physical iPad. Simulator keyboard input is not physical-iPad keyboard
-    acceptance.
-    The current Designer-identity project is transitional; the planned repair
-    target is Godot game/iPadOS.
+    result, the signing status, and whether evidence came from the `x86_64`
+    simulator or a physical iPad. Confirm the final self-contained archives
+    preserve the `arm64` device and `x86_64` simulator contract and that the
+    unsigned simulator build reaches the final link. Simulator compilation or
+    keyboard input is not physical-iPad keyboard acceptance.
+    The current Designer-identity project is the `legacy_designer_ipados`
+    transitional artifact; its successful technical repair does not implement
+    the required Godot game/iPadOS target.
 3c. Rebuild every platform artifact after any shared Design Laboratory change,
     and record a SHA-256 for each produced artifact with its exact class.
     An iPad configuration-export checksum is not a release checksum. A Windows

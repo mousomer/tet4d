@@ -34,6 +34,20 @@ entry_symbol = \"tet4d_core_library_init\"
 
 [libraries]
 """
+VALID_NATIVE_MATRIX = {
+    "tet4d": {"device": ["arm64"], "simulator": ["x86_64"]},
+    "godot_engine": {"device": ["arm64"], "simulator": ["x86_64"]},
+    "moltenvk": {"device": ["arm64"], "simulator": ["arm64", "x86_64"]},
+}
+
+
+def _validate(module, project: Path, artifact_mode: str, repository: Path = ROOT):
+    return module.validate(
+        project,
+        repository,
+        artifact_mode,
+        native_validator=lambda _root: VALID_NATIVE_MATRIX,
+    )
 
 
 def _pack(paths: list[str], descriptor: bytes) -> bytes:
@@ -126,7 +140,7 @@ def _project(
 
 def test_complete_project_is_accepted(tmp_path: Path) -> None:
     module = _module()
-    result = module.validate(_project(tmp_path, native=True), ROOT, "release")
+    result = _validate(module, _project(tmp_path, native=True), "release")
     assert result["bundle_identifier"] == "io.github.mousomer.tet4d.designer"
     assert result["artifact_mode"] == "release"
     assert result["native_extension_present"] is True
@@ -138,7 +152,7 @@ def test_configuration_artifact_is_accepted_as_configuration_only(
 ) -> None:
     module = _module()
     project = _project(tmp_path, artifact_mode="configuration")
-    result = module.validate(project, ROOT, "configuration")
+    result = _validate(module, project, "configuration")
     assert result["artifact_mode"] == "configuration"
     assert result["native_extension_present"] is False
 
@@ -149,7 +163,7 @@ def test_configuration_artifact_cannot_masquerade_as_release(tmp_path: Path) -> 
     with pytest.raises(
         module.IpadOsProjectError, match="complete iOS GDExtension descriptor"
     ):
-        module.validate(project, ROOT, "release")
+        _validate(module, project, "release")
 
 
 def test_release_artifact_requires_native_framework(tmp_path: Path) -> None:
@@ -159,7 +173,7 @@ def test_release_artifact_requires_native_framework(tmp_path: Path) -> None:
         module.IpadOsProjectError,
         match="missing Tet4DDesigner/dylibs/addons/tet4d_core/bin/libtet4d_core",
     ):
-        module.validate(project, ROOT, "release")
+        _validate(module, project, "release")
 
 
 def test_configuration_artifact_rejects_full_descriptor(tmp_path: Path) -> None:
@@ -170,7 +184,7 @@ def test_configuration_artifact_rejects_full_descriptor(tmp_path: Path) -> None:
         descriptor=FULL_DESCRIPTOR,
     )
     with pytest.raises(module.IpadOsProjectError, match="deliberately omit"):
-        module.validate(project, ROOT, "configuration")
+        _validate(module, project, "configuration")
 
 
 def test_source_release_method_is_explicit_development_enum(tmp_path: Path) -> None:
@@ -186,14 +200,14 @@ def test_source_release_method_is_explicit_development_enum(tmp_path: Path) -> N
         encoding="utf-8",
     )
     with pytest.raises(module.IpadOsProjectError, match="integer enum 1"):
-        module.validate(project, repository, "release")
+        _validate(module, project, "release", repository)
 
 
 def test_generated_export_method_must_be_development(tmp_path: Path) -> None:
     module = _module()
     project = _project(tmp_path, native=True, export_method="app-store")
     with pytest.raises(module.IpadOsProjectError, match="must be development"):
-        module.validate(project, ROOT, "release")
+        _validate(module, project, "release")
 
 
 def test_build_script_separates_configuration_and_release_outputs() -> None:
@@ -219,9 +233,7 @@ def test_ipados_build_creates_native_staging_directory_before_copy() -> None:
 def test_iphone_device_family_is_rejected(tmp_path: Path) -> None:
     module = _module()
     with pytest.raises(module.IpadOsProjectError, match="iPad device family"):
-        module.validate(
-            _project(tmp_path, device_family="1", native=True), ROOT, "release"
-        )
+        _validate(module, _project(tmp_path, device_family="1", native=True), "release")
 
 
 def test_portrait_orientation_is_rejected(tmp_path: Path) -> None:
@@ -235,7 +247,7 @@ def test_portrait_orientation_is_rejected(tmp_path: Path) -> None:
         native=True,
     )
     with pytest.raises(module.IpadOsProjectError, match="landscape only"):
-        module.validate(project, ROOT, "release")
+        _validate(module, project, "release")
 
 
 @pytest.mark.parametrize(
@@ -251,7 +263,7 @@ def test_sandboxed_documents_directory_is_rejected(
     """A nominated bundle the designer cannot retrieve is not an export."""
     module = _module()
     with pytest.raises(module.IpadOsProjectError, match=expected):
-        module.validate(_project(tmp_path, native=True, **kwargs), ROOT, "release")
+        _validate(module, _project(tmp_path, native=True, **kwargs), "release")
 
 
 def test_pack_must_carry_the_catalogue_and_scenarios(tmp_path: Path) -> None:
@@ -261,4 +273,4 @@ def test_pack_must_carry_the_catalogue_and_scenarios(tmp_path: Path) -> None:
         _pack(["config/built_in_style_catalog.json"], FULL_DESCRIPTOR)
     )
     with pytest.raises(module.IpadOsProjectError, match="missing required resources"):
-        module.validate(project, ROOT, "release")
+        _validate(module, project, "release")

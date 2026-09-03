@@ -44,6 +44,13 @@ remain bound to their product's canonical `artifact_name_token`; the
 transitional tablet consumers retain Designer naming only under their closed,
 named status exception.
 
+The repaired grandfathered `legacy_designer_ipados` package path provides
+technical evidence for native archive composition, matching godot-cpp linkage,
+truthful `arm64` device and `x86_64` simulator slices, XCFramework/native-symbol
+validation, and an unsigned hosted simulator final link. It remains
+transitional evidence only; it does not promote Designer/iPadOS or close the
+Godot game/iPadOS target gap.
+
 ## Accepted Next Product Boundaries
 
 - Stage 54F-6 default style selection/polish must consume reviewed human Design
@@ -61,6 +68,11 @@ named status exception.
 
 - Clean-machine Windows and iPadOS runtime acceptance remain real-platform
   evidence, not claims inferred from macOS or package structure.
+- Hosted CI platform lanes exist for macOS and iPadOS only. `platform_windows`,
+  `platform_linux`, and `platform_android` are declared manual in
+  `config/project/codex_ci_lanes.json`: a change to those packaging paths
+  reports outstanding platform evidence instead of borrowing another platform's
+  job. Adding those hosted lanes needs their own scope and runner contract.
 - Developer ID signing/notarization and broader distribution are separate
   release prerequisites.
 
