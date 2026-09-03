@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -440,9 +441,27 @@ def test_cli_passes_on_valid_none(tmp_path: Path, capsys) -> None:
 # --- repository wiring -----------------------------------------------------------
 
 
-def test_live_repository_handoff_document_passes_on_default_branch() -> None:
-    ctx = _ctx(branch="master", event="push")
+def test_live_repository_handoff_document_is_valid_in_the_current_context() -> None:
+    """The live document must satisfy the rules for wherever this runs.
+
+    The context is resolved, never fabricated: a feature branch may legitimately
+    carry `active` state, so asserting a default-branch verdict here would make
+    every staged handoff fail the suite. The default-branch rule is enforced by
+    the validator itself on real default-branch pushes.
+    """
+    ctx = lifecycle.resolve_context(root=ROOT, env=dict(os.environ))
     assert lifecycle.validate(ROOT, ctx) == []
+
+
+def test_live_repository_handoff_document_parses() -> None:
+    rel = lifecycle.handoff_document_rel(ROOT)
+    assert rel is not None
+    state, notes, issues = lifecycle.parse_document(
+        (ROOT / rel).read_text(encoding="utf-8")
+    )
+    assert issues == []
+    assert state is not None
+    assert notes is not None
 
 
 def test_unified_governance_registers_handoff_lifecycle() -> None:
