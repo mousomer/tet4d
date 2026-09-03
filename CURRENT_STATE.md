@@ -17,15 +17,15 @@ enforces this.
 ```json
 {
   "schema_version": 1,
-  "status": "active",
-  "branch": "codex/governance-handoff-lifecycle",
-  "pull_request": 98
+  "status": "none",
+  "branch": null,
+  "pull_request": null
 }
 ```
 <!-- END HANDOFF:state -->
 
 <!-- BEGIN HANDOFF:notes -->
-Temporary active state proving the draft lane of the lifecycle acceptance.
+No active handoff.
 <!-- END HANDOFF:notes -->
 
 ## Current Authority
