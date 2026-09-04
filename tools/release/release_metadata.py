@@ -557,7 +557,7 @@ def release_note_text(manifest: dict[str, Any]) -> str:
     ):
         transitional_notice = "\n\nThe transitional Designer Android artifact and transitional Designer iPadOS artifact are technical evidence only; neither claims a supported Designer platform or a Tet4D game package."
     return (
-        f"# Tet4D {manifest['version']} candidate\n\nSource commit: `{manifest['source_sha']}`\n\nSelected package artifacts:\n"
+        f"# Tet4D {manifest['version']} candidate\n\nSource commit `{manifest['source_sha']}`\n\nSelected package artifacts\n"
         + "\n".join(display_lines)
         + transitional_notice
         + "\n"
