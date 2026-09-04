@@ -51,8 +51,8 @@ def _set_single(text: str, key: str, value: str) -> str:
 
 def _validate_staging_target(repository_root: Path, staged_root: Path) -> tuple[Path, Path]:
     canonical_root = (repository_root / "godot/Tet4D.Godot").resolve()
-    if staged_root == canonical_root:
-        raise ProfileError("profile staging target is not an approved disposable project")
+    if _inside(staged_root, canonical_root):
+        raise ProfileError("profile staging target must be outside the canonical Godot project")
     project_path = staged_root / "project.godot"
     presets_path = staged_root / "export_presets.cfg"
     if not project_path.is_file() or not presets_path.is_file():

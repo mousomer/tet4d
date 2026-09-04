@@ -27,6 +27,26 @@ staging = _staging_module()
 
 
 class TestProductProfiles(unittest.TestCase):
+    def _isolated_repository(self, temporary: str) -> tuple[Path, Path]:
+        repository_root = Path(temporary) / "repository"
+        canonical_project = repository_root / "godot/Tet4D.Godot"
+        canonical_project.parent.mkdir(parents=True)
+        shutil.copytree(PROJECT, canonical_project, ignore=shutil.ignore_patterns(".godot"))
+        policy_path = repository_root / "config/project/policy_pack.json"
+        policy_path.parent.mkdir(parents=True)
+        shutil.copy2(ROOT / "config/project/policy_pack.json", policy_path)
+        return repository_root, canonical_project
+
+    def _assert_rejected_without_canonical_mutation(
+        self, repository_root: Path, canonical_project: Path, staged_root: Path
+    ) -> None:
+        before_project = (canonical_project / "project.godot").read_bytes()
+        before_presets = (canonical_project / "export_presets.cfg").read_bytes()
+        with self.assertRaisesRegex(staging.ProfileError, "outside the canonical Godot project"):
+            staging.apply_profile(repository_root, staged_root, "godot_game")
+        self.assertEqual(before_project, (canonical_project / "project.godot").read_bytes())
+        self.assertEqual(before_presets, (canonical_project / "export_presets.cfg").read_bytes())
+
     def test_profiles_are_distinct_and_reference_existing_resources(self) -> None:
         products = json.loads((ROOT / "config/project/policy_pack.json").read_text())["product_platform_contract"]["products"]
         game = products["godot_game"]
@@ -67,6 +87,65 @@ class TestProductProfiles(unittest.TestCase):
             project.write_text(project.read_text(encoding="utf-8") + '\nrun/main_scene="res://scenes/game_bootstrap.tscn"\n', encoding="utf-8")
             with self.assertRaisesRegex(staging.ProfileError, "ambiguous"):
                 staging.apply_profile(ROOT, staged, "godot_game")
+
+    def test_staging_rejects_canonical_root_and_every_descendant(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository_root, canonical_project = self._isolated_repository(temporary)
+            targets = (
+                canonical_project,
+                canonical_project / "staged-copy",
+                canonical_project / "tmp/release/staged-copy",
+                canonical_project / "tmp/../staged-copy",
+            )
+            for target in targets:
+                self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, target)
+            self.assertFalse((canonical_project / "staged-copy").exists())
+            self.assertFalse((canonical_project / "tmp").exists())
+
+    def test_staging_rejects_partial_copy_and_symlink_descendants(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository_root, canonical_project = self._isolated_repository(temporary)
+            partial_copy = canonical_project / "partial-copy"
+            shutil.copytree(canonical_project, partial_copy, ignore=shutil.ignore_patterns(".godot"))
+            self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, partial_copy)
+
+            symlink_target = canonical_project / "symlink-target"
+            symlink_target.mkdir()
+            descendant_link = Path(temporary) / "descendant-link"
+            root_link = Path(temporary) / "root-link"
+            try:
+                descendant_link.symlink_to(symlink_target, target_is_directory=True)
+                root_link.symlink_to(canonical_project, target_is_directory=True)
+            except OSError as exc:
+                self.skipTest(f"symlinks are unavailable: {exc}")
+            self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, descendant_link)
+            self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, root_link)
+
+    def test_staging_allows_prefixed_sibling_and_external_target(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository_root, canonical_project = self._isolated_repository(temporary)
+            before_project = (canonical_project / "project.godot").read_bytes()
+            before_presets = (canonical_project / "export_presets.cfg").read_bytes()
+            for staged_root in (
+                canonical_project.with_name("Tet4D.Godot-staged"),
+                Path(temporary) / "external-project",
+            ):
+                shutil.copytree(canonical_project, staged_root, ignore=shutil.ignore_patterns(".godot"))
+                staging.apply_profile(repository_root, staged_root, "godot_game")
+                self.assertIn('config/tet4d_product_id="godot_game"', (staged_root / "project.godot").read_text())
+            self.assertEqual(before_project, (canonical_project / "project.godot").read_bytes())
+            self.assertEqual(before_presets, (canonical_project / "export_presets.cfg").read_bytes())
+
+    def test_rejected_target_diagnostics_are_sanitized(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository_root, canonical_project = self._isolated_repository(temporary)
+            target = canonical_project / "staged-copy"
+            with self.assertRaises(staging.ProfileError) as raised:
+                staging.apply_profile(repository_root, target, "godot_game")
+            message = str(raised.exception)
+            self.assertIn("outside the canonical Godot project", message)
+            self.assertNotIn(str(repository_root), message)
+            self.assertNotIn(str(target), message)
 
     def test_profiles_reject_cross_product_identity(self) -> None:
         policy = json.loads((ROOT / "config/project/policy_pack.json").read_text())

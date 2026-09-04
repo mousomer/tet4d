@@ -45,6 +45,12 @@ authoring. The Designer bootstrap retains that authoring flow and the shared
 native/game implementation. This boundary does not add a platform package or
 promote any support claim.
 
+The staging target must resolve outside the canonical `godot/Tet4D.Godot`
+tree. The guard rejects the canonical root itself and every resolved descendant,
+including dotted-path and symlink aliases, before writing staged configuration.
+A similarly named sibling is not inside that tree and remains eligible when it
+otherwise contains a complete disposable project.
+
 ## 2. Current supported release path
 
 The Stage 54G release candidate is:
