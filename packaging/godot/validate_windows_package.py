@@ -19,7 +19,9 @@ PCK_RESOURCES = (
     b"assets/tet4d_bundle/manifest.json",
     b"assets/icons/tet4d_designer.svg",
     b"scripts/ui/design_laboratory_panel.gdc",
+    b'config/tet4d_product_id="godot_designer"',
 )
+DESIGNER_PRODUCT_NAME = "Tet4D Designer".encode("utf-16-le")
 # Official Godot templates can contain upstream compiler source paths in their
 # own diagnostic strings. Reject host/repository coupling introduced by Tet4D,
 # not reproducible metadata already present in the pinned upstream executable.
@@ -82,6 +84,8 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
     pck = payloads["Tet4D Designer/Tet4DDesigner.pck"]
     if executable[:2] != b"MZ" or native_dll[:2] != b"MZ":
         raise ValueError("Windows executable or GDExtension does not have a PE header")
+    if DESIGNER_PRODUCT_NAME not in executable:
+        raise ValueError("Windows executable does not carry the Designer product name")
     missing_resources = [resource.decode() for resource in PCK_RESOURCES if resource not in pck]
     if missing_resources:
         raise ValueError(f"PCK resource table is missing: {missing_resources}")

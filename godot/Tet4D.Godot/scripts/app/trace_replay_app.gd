@@ -115,6 +115,8 @@ var _ghost_semantic_revision := ""
 var _ghost_query_count := 0
 var _presentation_profile = PresentationProfileScript.canonical_defaults()
 
+@export_enum("godot_game", "godot_designer") var product_id := "godot_designer"
+
 var _world_root: Node3D
 var _live_4d_presentation_root: Node3D
 var _renderer: TraceSceneRenderer
@@ -139,7 +141,7 @@ func _ready() -> void:
 func _deferred_ready() -> void:
 	_wire_hud()
 	_build_world_in_game_viewport()
-	if not _hud.configure_design_laboratory({
+	if _is_designer_product() and not _hud.configure_design_laboratory({
 		"load_scenario": Callable(self, "_load_design_laboratory_scenario"),
 		"apply_profile": Callable(self, "apply_presentation_profile"),
 		"current_fingerprint": Callable(self, "_design_laboratory_fingerprint"),
@@ -152,6 +154,12 @@ func _deferred_ready() -> void:
 	_hud.set_display_mode(_state.display_mode)
 	_hud.apply_shell_settings()
 	_load_bundle()
+	if _is_game_product():
+		_enter_live_2d_mode()
+
+
+func _is_designer_product() -> bool:
+	return product_id == "godot_designer"
 
 
 func _process(delta: float) -> void:
@@ -692,10 +700,13 @@ func _wire_hud() -> void:
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
 	_hud.viewer_requested.connect(_return_to_viewer_from_navigation)
 	_hud.basis_turn_requested.connect(_apply_live_4d_basis_turn)
-	_hud.design_laboratory_requested.connect(_open_design_laboratory)
+	if _is_designer_product():
+		_hud.design_laboratory_requested.connect(_open_design_laboratory)
 
 
 func _open_design_laboratory() -> void:
+	if not _is_designer_product():
+		return
 	_state.is_playing = false
 	_hud.open_design_laboratory()
 

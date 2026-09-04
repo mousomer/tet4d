@@ -148,6 +148,9 @@ def _validate_product(
         "backlog_label",
     ):
         _string(product.get(attribute), f"{label}.{attribute}", issues)
+    if product_id in {"godot_game", "godot_designer"}:
+        for attribute in ("main_scene", "icon", "permitted_package_role"):
+            _string(product.get(attribute), f"{label}.{attribute}", issues)
     targets = _strings(
         targets_value,
         f"product_platform_contract.target_platforms.{product_id}",
@@ -219,6 +222,22 @@ def _validate_products(
         )
         target_sets[product_id] = targets
         identities[product_id] = identity
+    godot_profiles = [
+        products.get(product_id, {}) for product_id in ("godot_game", "godot_designer")
+    ]
+    for attribute in (
+        "application_identity",
+        "main_scene",
+        "icon",
+        "artifact_name_token",
+    ):
+        values = [
+            str(profile.get(attribute, ""))
+            for profile in godot_profiles
+            if isinstance(profile, dict)
+        ]
+        if len(values) == 2 and values[0] == values[1]:
+            issues.append(f"Godot product profiles must use distinct {attribute}")
     return products, target_sets, identities
 
 

@@ -99,6 +99,10 @@ mkdir -p "$export_project"
 # create UID sidecars while scanning; release builds must not dirty the source
 # checkout or consume its editor-local .godot state.
 rsync -a --exclude '/.godot/' "$PROJECT_DIR/" "$export_project/"
+"$PYTHON_BIN" "$ROOT_DIR/packaging/godot/stage_product_profile.py" \
+  --repository-root "$ROOT_DIR" --staged-root "$export_project" --product godot_game
+grep -Fqx 'run/main_scene="res://scenes/game_bootstrap.tscn"' "$export_project/project.godot"
+grep -Fqx 'config/tet4d_product_id="godot_game"' "$export_project/project.godot"
 
 env HOME="$build_home" \
   XDG_CACHE_HOME="$build_home/.cache" \
@@ -119,6 +123,10 @@ done
 
 if [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")" != "io.github.mousomer.tet4d" ]]; then
   echo "Exported bundle identifier is incorrect." >&2
+  exit 1
+fi
+if [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$info_plist")" != "Tet4D" ]]; then
+  echo "Exported application name is not the Godot game profile." >&2
   exit 1
 fi
 if [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist")" != "$project_version" ]]; then

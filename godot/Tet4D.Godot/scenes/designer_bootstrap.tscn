@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/trace_replay.tscn" id="1_trace"]
+
+[node name="DesignerBootstrap" instance=ExtResource("1_trace")]
+
+[node name="App" parent="." index="0"]
+product_id = "godot_designer"

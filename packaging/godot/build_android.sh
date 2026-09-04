@@ -107,6 +107,8 @@ fi
 staged_project_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-project.XXXXXX")"
 cp -R "$PROJECT_DIR/." "$staged_project_root/"
 rm -rf "$staged_project_root/.godot"
+"$PYTHON_BIN" "$ROOT_DIR/packaging/godot/stage_product_profile.py" \
+  --repository-root "$ROOT_DIR" --staged-root "$staged_project_root" --product godot_designer
 
 mkdir -p "$ARTIFACT_DIR"
 pack_path="$ARTIFACT_DIR/Tet4D-Designer-$version-android-arm64.pck"

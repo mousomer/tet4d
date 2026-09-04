@@ -107,6 +107,8 @@ fi
 staged_project_root="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-project.XXXXXX")"
 cp -R "$PROJECT_DIR/." "$staged_project_root/"
 rm -rf "$staged_project_root/.godot"
+"$PYTHON_BIN" "$ROOT_DIR/packaging/godot/stage_product_profile.py" \
+  --repository-root "$ROOT_DIR" --staged-root "$staged_project_root" --product godot_designer
 # Never let a stale or pre-combination iOS archive from the ignored source bin
 # enter the disposable export project.
 staged_native_bin="$staged_project_root/addons/tet4d_core/bin"
