@@ -80,6 +80,14 @@ it intentionally creates no Start Menu item, desktop shortcut, or registry
 uninstaller.
 
 The Windows export is staged with the `godot_designer` profile before export.
+That staged copy generates a profile-bound identity resource at
+`res://config/tet4d_product_identity/godot_designer.tres` and records its
+resource path in the staged project configuration. Godot records the bound
+resource in the exported PCK table as
+`config/tet4d_product_identity/godot_designer.tres.remap`; the Windows
+validator requires that exact exported Designer marker (and rejects the Game
+marker). It never treats a source `project.godot` assignment found as arbitrary
+PCK bytes as exported identity evidence.
 The Windows artifact has passed local cross-build, PE/resource/package
 validation, and the laboratory's local Godot tests on macOS. Direct launch on
 a clean Windows machine remains pending and must not be inferred from those
@@ -159,8 +167,9 @@ The current canonical files are:
    `libtet4d_core.windows.template_release.x86_64.dll` through the checked-in
    GDExtension descriptor.
 3. The validator checks the exact three-file payload, PE executables, version
-   metadata, required laboratory resources, absence of source/test/editor
-   payloads, and absence of repository/user path leakage.
+   metadata, a structured PCK resource table containing the exact staged
+   Designer marker and no Game marker, required laboratory resources, absence
+   of source/test/editor payloads, and absence of repository/user path leakage.
 4. Mutable profiles, evaluations, captures, and proposal exports remain under
    Godot's writable `user://design_lab` root, never beside the executable.
 5. Linux remains development-configured only. Windows is a packaged
