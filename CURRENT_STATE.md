@@ -17,17 +17,15 @@ enforces this.
 ```json
 {
   "schema_version": 1,
-  "status": "active",
-  "branch": "codex/godot-product-boundary",
+  "status": "none",
+  "branch": null,
   "pull_request": null
 }
 ```
 <!-- END HANDOFF:state -->
 
 <!-- BEGIN HANDOFF:notes -->
-Active product-boundary batch: explicit Godot game and Designer profiles,
-bootstrap scenes, and disposable export staging. Do not advance into release
-matrix work from this branch.
+No active handoff.
 <!-- END HANDOFF:notes -->
 
 ## Current Authority
@@ -43,8 +41,8 @@ matrix work from this branch.
 
 ## Next Acceptance Boundary
 
-Complete the focused product-boundary verification before opening its PR.
-Durable open work and release-matrix deferrals remain in `docs/BACKLOG.md`.
+Review the focused product-boundary PR. Durable open work and release-matrix
+deferrals remain in `docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
