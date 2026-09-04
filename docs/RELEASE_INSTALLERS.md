@@ -15,7 +15,7 @@ and `io.github.mousomer.tet4d`; `godot_designer` stages
 `io.github.mousomer.tet4d.designer`. Staging changes only a disposable export
 copy. The macOS builder selects the game profile, while the Windows and
 transitional Android/iPadOS builders select the Designer profile. This does not
-create additional platform packages or prepare a 0.9.0 release.
+create additional platform packages or change the target matrix.
 
 ## Build the current release candidate
 
@@ -53,7 +53,7 @@ Outputs are ignored local artifacts:
 
 ```text
 artifacts/godot/macos/Tet4D.app
-artifacts/godot/macos/Tet4D-0.7.5-macos-universal.zip
+artifacts/godot/macos/Tet4D-0.9.0-macos-universal.zip
 ```
 
 The versioned filename follows `pyproject.toml`; do not edit the export-preset
@@ -83,7 +83,7 @@ prefix forwarded through the compiler's process-wide `CL` option channel before
 strict package validation. Its generated output remains ignored:
 
 ```text
-artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip
+artifacts/godot/windows/Tet4D-Designer-0.9.0-windows-x86_64.zip
 ```
 
 The exact validator-approved candidate nominated for clean-machine testing is
@@ -133,7 +133,7 @@ export configuration using only Godot, so it runs on any host. Dropping the flag
 additionally cross-compiles the arm64 GDExtension and exports the signed APK:
 
 ```text
-artifacts/godot/android/Tet4D-Designer-0.7.5-android-arm64.apk
+artifacts/godot/android/Tet4D-Designer-0.9.0-android-arm64.apk
 ```
 
 The APK is a landscape arm64 tablet build for use with a physical keyboard.
@@ -224,22 +224,36 @@ runtime release evidence; keep all three products explicit.
 
 ## Current release workflow
 
-`.github/workflows/release-packaging.yml` currently builds seven artifacts from
-the exact triggering SHA: three Python installers, the Godot game macOS
-package, the Designer Windows package, and two explicitly transitional
-Designer-identity tablet artifacts. The Android job runs on `ubuntu-latest` and the iPadOS job
-on `macos-latest`, because those runners carry the Android and Xcode toolchains
-that a given development host may not. Every package job depends on a release
-identity contract. On tag runs, `v0.7.5` and `0.7.5` both normalize to the
-`pyproject.toml` version; a mismatch such as the historical `v0.8.0` release
-label against project version `0.7.5` fails before package construction or
-publication.
+`.github/workflows/release-packaging.yml` is manual-only. It requires an exact
+lowercase 40-character `source_sha` and `release_scope`. A scope is either
+`current_all` or a comma-separated set of registered `consumer_id` values; it
+is canonicalized by the Python-owned release contract. The workflow builds only
+the selected consumers: any registered subset is valid, and the initial 0.9.0
+candidate can select the Godot game macOS and Designer Windows consumers without
+hard-coding that pair into the workflow. The seven registered consumers remain
+three Python installers, the Godot game macOS package, the Designer Windows
+package, and two transitional Designer tablet artifacts. The Android job runs
+on `ubuntu-latest` and the iPadOS job on `macos-latest`.
 
-After all seven package jobs pass, the workflow creates
-`tet4d-release-<version>-manifest.json`. It binds every exact filename and
-SHA-256 to the full 40-character source commit and records evidence boundaries,
-including that the iPadOS output is an unsigned Xcode project compiled for the
-simulator rather than a signed or device-accepted application. A matching tag
-publishes all seven artifacts plus this manifest to one GitHub release. Manual
-workflow dispatch exercises the same build and manifest gates without creating
-a release.
+Candidate construction is one run: selected package jobs check out the exact
+source SHA, validate their current bytes, upload Actions artifacts, and generate
+the scope-exact `tet4d.release-manifest.v2` record. It binds selected consumer,
+product, platform, filename, byte count, SHA-256, evidence boundary, version,
+and source commit. Missing selected packages, extra unselected registered
+packages, duplicate identities or filenames, invalid source identity, and
+wrong-version names fail the candidate. The release notes are generated from
+that exact manifest and describe only selected families. A transitional Designer
+Android artifact or transitional Designer iPadOS artifact is technical evidence
+only; it is neither target support nor a Tet4D game package.
+
+Only after manifest validation does the candidate workflow create `v<version>`
+at the requested commit (or verify an existing tag resolves there), create a
+GitHub **draft** release, and upload the selected package bytes plus the final
+manifest without replacement. It never publishes, re-points a tag, clobbers an
+asset, or accumulates a later run's bytes into an existing draft.
+
+`.github/workflows/publish-release.yml` is a separate manual publication gate.
+It builds and uploads nothing. It rechecks the exact tag/source relationship,
+requires the matching release to still be a draft, downloads its assets,
+validates every manifest checksum and byte count, verifies the release asset
+set exactly matches the manifest, and only then changes that draft to published.

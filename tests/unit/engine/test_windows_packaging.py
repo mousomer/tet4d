@@ -46,6 +46,16 @@ class TestWindowsPackagingScript(unittest.TestCase):
         return workflow_path.read_text(encoding="utf-8")
 
     @staticmethod
+    def _publish_workflow() -> str:
+        workflow_path = (
+            Path(__file__).resolve().parents[3]
+            / ".github"
+            / "workflows"
+            / "publish-release.yml"
+        )
+        return workflow_path.read_text(encoding="utf-8")
+
+    @staticmethod
     def _pyinstaller_spec() -> str:
         spec_path = (
             Path(__file__).resolve().parents[3]
@@ -130,10 +140,12 @@ class TestWindowsPackagingScript(unittest.TestCase):
         workflow = self._release_workflow()
 
         self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("source_sha:", workflow)
+        self.assertIn("release_scope:", workflow)
         self.assertIn("runs-on: macos-latest", workflow)
         self.assertIn("runs-on: ubuntu-latest", workflow)
         self.assertIn("runs-on: windows-latest", workflow)
-        self.assertIn("ref: ${{ github.sha }}", workflow)
+        self.assertIn("ref: ${{ inputs.source_sha }}", workflow)
         self.assertIn("packaging/scripts/build_macos.sh", workflow)
         self.assertIn("packaging/scripts/build_linux.sh", workflow)
         self.assertIn("packaging/scripts/build_windows.ps1", workflow)
@@ -152,18 +164,54 @@ class TestWindowsPackagingScript(unittest.TestCase):
         self.assertIn("$smoke.ExitCode", workflow)
         self.assertIn("Uninstall registration remains after removal", workflow)
 
-    def test_release_workflow_enforces_release_manifest(self) -> None:
+    def test_candidate_workflow_enforces_manual_scope_bound_draft_manifest(
+        self,
+    ) -> None:
         workflow = self._release_workflow()
 
-        self.assertIn("tags:", workflow)
-        self.assertIn('"v*"', workflow)
-        self.assertIn('"[0-9]*"', workflow)
-        self.assertIn("validate-tag --tag", workflow)
-        self.assertIn("ref: ${{ github.sha }}", workflow)
+        self.assertNotIn("push:", workflow)
+        self.assertNotIn("--clobber", workflow)
+        self.assertIn("validate-source-sha", workflow)
+        self.assertIn("scope_json", workflow)
+        self.assertIn(
+            "fromJSON(needs.release-contract.outputs.scope_json).selected", workflow
+        )
+        self.assertIn("ref: ${{ inputs.source_sha }}", workflow)
+        self.assertNotIn("ref: ${{ github.sha }}", workflow)
+        for consumer_id in (
+            "python_macos",
+            "python_windows",
+            "python_linux",
+            "godot_game_macos",
+            "godot_designer_windows",
+            "legacy_designer_android",
+            "legacy_designer_ipados",
+        ):
+            self.assertIn(f"selected.{consumer_id}", workflow)
         self.assertIn("release-manifest:", workflow)
+        self.assertIn("draft-release:", workflow)
         self.assertIn("tools/release/release_metadata.py manifest", workflow)
         self.assertIn("--source-sha", workflow)
+        self.assertIn("--release-scope", workflow)
+        self.assertIn("validate-manifest", workflow)
+        self.assertIn("gh release create", workflow)
         self.assertIn("gh release upload", workflow)
+
+    def test_publication_workflow_only_validates_and_publishes_existing_draft(
+        self,
+    ) -> None:
+        workflow = self._publish_workflow()
+
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("source_sha:", workflow)
+        self.assertIn("validate-source-sha", workflow)
+        self.assertIn("validate-manifest", workflow)
+        self.assertIn("gh release download", workflow)
+        self.assertIn("gh release edit", workflow)
+        self.assertIn("--draft=false", workflow)
+        self.assertNotIn("gh release create", workflow)
+        self.assertNotIn("gh release upload", workflow)
+        self.assertNotIn("packaging/", workflow)
 
     def test_temporary_python_proof_workflow_is_removed(self) -> None:
         root = Path(__file__).resolve().parents[3]

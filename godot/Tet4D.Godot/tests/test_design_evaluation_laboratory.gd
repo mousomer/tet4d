@@ -175,7 +175,7 @@ func _test_candidate_and_comparison(catalog, library, scenarios, resolver) -> Ar
 
 func _test_evaluation_capture_export(session, candidate: Dictionary, reference: Dictionary) -> Array:
 	var failures: Array = []
-	var build := {"application_version": "0.7.5", "build_id": "test-build"}
+	var build := {"application_version": "0.9.0", "build_id": "test-build"}
 	var store = EvaluationStoreScript.new(EVALUATION_DIRECTORY)
 	var created := store.create_record(session.snapshot(), "prefer_b", {
 		"readability": 4,

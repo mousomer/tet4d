@@ -77,7 +77,7 @@ GODOT_BIN=/path/to/Godot packaging/godot/build_macos.sh
 
 The checked-in export preset selects the universal release GDExtension,
 excludes the test tree, uses bundle identifier `io.github.mousomer.tet4d`, and
-uses the repository's `0.7.5` candidate version. See
+uses the repository's `0.9.0` candidate version. See
 `docs/RELEASE_INSTALLERS.md` for artifact inspection, outside-tree launch,
 platform limits, and the retained legacy Python installer path.
 
@@ -91,7 +91,7 @@ packaging/godot/build_windows.sh
 ```
 
 The script emits
-`artifacts/godot/windows/Tet4D-Designer-0.7.5-windows-x86_64.zip` and performs
+`artifacts/godot/windows/Tet4D-Designer-0.9.0-windows-x86_64.zip` and performs
 structural validation. Direct clean-machine Windows runtime acceptance remains
 separate and pending until recorded.
 

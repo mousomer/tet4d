@@ -53,10 +53,10 @@ otherwise contains a complete disposable project.
 
 ## 2. Current supported release path
 
-The Stage 54G release candidate is:
+The current 0.9.0 release-control candidate is:
 
 - product: `Tet4D`;
-- version authority: `pyproject.toml` (`0.7.5` for this candidate);
+- version authority: `pyproject.toml` (`0.9.0` for this candidate);
 - engine: the exact Godot 4.7.2 stable build pinned in
   `config/project/policy_pack.json`;
 - platform: macOS 13 or newer;
@@ -274,12 +274,16 @@ admit the Python family, provided it preserves these checks and binds both
 product families to one source SHA and project version.
 
 The proven checks are folded into `.github/workflows/release-packaging.yml` and
-the temporary proof-only workflow is removed. The unified workflow retains the
-real-platform install, outside-checkout runtime, and removal checks; gives all
-seven product-family artifacts explicit names; rejects tag/project-version
-disagreement before builds; and generates a checksum/source-SHA manifest only
-after all package jobs pass. Its iPadOS manifest entry must remain explicit
-that the output is unsigned, simulator-compiled Xcode-project evidence without
+the temporary proof-only workflow is removed. The unified candidate workflow is
+manual-only, retains the real-platform install, outside-checkout runtime, and
+removal checks, and gives all seven registered product-family consumers explicit
+names. It validates a lowercase 40-character source SHA and a registered
+consumer scope before building, then generates a scope-exact v2
+checksum/source-SHA manifest only after selected package jobs pass. It creates
+only a same-run-byte draft release; `.github/workflows/publish-release.yml`
+separately validates the draft's tag, assets, manifest checksums, and byte
+counts before publication. Its iPadOS manifest entry remains explicit that the
+output is unsigned, simulator-compiled Xcode-project evidence without
 physical-device acceptance.
 
 The first integrated unified dispatch, Actions run 33397993043 at exact master
@@ -430,9 +434,10 @@ inventory is not a clean-checkout directory contract.
    Ghost, passes final manual release-candidate review.
 7. Normal startup emits no release-blocking resource, parser, persistence, or
    GDExtension warning/error.
-8. The current release workflow uploads the accepted Godot macOS ZIP, the
-   separately named Windows Designer ZIP, the Android tablet APK, and the
-   iPadOS Xcode project.
+8. A manual candidate workflow uploads only the registered consumers selected
+   in its validated scope, binds their exact bytes in a v2 manifest, and creates
+   a draft only. The separate publication workflow must revalidate that draft's
+   tag, manifest, asset set, checksums, and byte counts before publishing it.
 9. The Windows candidate passes exact three-file structural validation and its
    native CI job runs the focused laboratory suite plus bounded packaged start.
 10. The Android and iPadOS candidates pass their configuration and artifact

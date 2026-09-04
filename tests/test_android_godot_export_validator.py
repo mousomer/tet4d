@@ -213,7 +213,7 @@ def test_committed_release_preset_credentials_are_rejected(tmp_path: Path) -> No
 
 def _apk(tmp_path: Path, *, omit: str = "", unsigned: bool = False) -> Path:
     module = _module(PACKAGE_VALIDATOR, "android_package_validator")
-    archive_path = tmp_path / "Tet4D-Designer-0.7.5-android-arm64.apk"
+    archive_path = tmp_path / "Tet4D-Designer-0.9.0-android-arm64.apk"
     members = {
         "AndroidManifest.xml": module.APPLICATION_ID.encode("utf-16-le"),
         "classes.dex": b"dex\n035\x00",
@@ -243,9 +243,7 @@ def test_apk_without_the_native_extension_is_rejected(tmp_path: Path) -> None:
     archive = _apk(
         tmp_path, omit="lib/arm64-v8a/libtet4d_core.android.template_release.arm64.so"
     )
-    with pytest.raises(
-        module.AndroidPackageError, match="missing required APK members"
-    ):
+    with pytest.raises(module.AndroidPackageError, match="missing required APK members"):
         module.validate(archive, ROOT)
 
 
@@ -258,7 +256,9 @@ def test_unsigned_apk_is_rejected(tmp_path: Path) -> None:
 def test_apk_without_sparse_project_metadata_is_rejected(tmp_path: Path) -> None:
     module = _module(PACKAGE_VALIDATOR, "android_package_validator")
     archive = _apk(tmp_path, omit="assets/assets.sparsepck")
-    with pytest.raises(module.AndroidPackageError, match="missing required APK members"):
+    with pytest.raises(
+        module.AndroidPackageError, match="missing required APK members"
+    ):
         module.validate(archive, ROOT)
 
 

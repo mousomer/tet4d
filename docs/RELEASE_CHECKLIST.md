@@ -57,15 +57,28 @@
    XCFramework metadata that disagrees with the archive architectures.
 10. No keystore, certificate, provisioning profile, or other signing secret is
     committed on any platform.
-11. Run `python tools/release/release_metadata.py validate-tag --tag <tag>` and
-    confirm the normalized tag exactly matches `pyproject.toml`; do not publish
-    a historical or proposed version label that disagrees with project truth.
-12. Confirm the unified workflow checked out one exact source SHA in all seven
-    current package/audit jobs and generated one checksum-bearing manifest.
-13. Verify the manifest distinguishes all three Python installers, the Godot
-    game macOS package, the Designer Windows package, and the two transitional
-    Designer-identity tablet artifacts. It must not promote Android or iPadOS
-    to Designer targets or treat either as the required Godot game package.
+11. Reconcile `pyproject.toml`, `project.godot`, all live macOS/Windows/Android/
+    iPadOS export version fields, and the Android version code before a 0.9.0
+    candidate. The Godot engine remains the pinned 4.7.2 release.
+12. Dispatch `release-packaging.yml` manually with one exact lowercase
+    40-character `source_sha` and a registered `release_scope` (a
+    comma-separated `consumer_id` list or `current_all`). Confirm every
+    selected package job checked out that SHA and every unselected package job
+    was intentionally skipped.
+13. Validate the generated `tet4d.release-manifest.v2`: its canonical scope,
+    consumer/product/platform identity, filenames, byte counts, SHA-256 values,
+    version, and source SHA must exactly describe the selected package bytes.
+    It must reject missing selected packages and any extra unselected registered
+    package. The transitional Designer Android artifact and transitional
+    Designer iPadOS artifact remain technical evidence only; neither promotes
+    Designer support or substitutes for a Godot game package.
+14. Confirm the candidate creates or verifies `v<version>` at that exact source
+    SHA and creates a **draft** release only. It must not repoint a tag, clobber
+    an asset, publish automatically, or combine bytes from a different run.
+15. Dispatch `publish-release.yml` manually only after draft inspection. It
+    must build and upload nothing; it must download the existing draft assets,
+    validate the exact tag/source relationship, manifest checksums and byte
+    counts, and the complete asset set before changing the draft to published.
 
 ## Current-platform package
 
@@ -122,6 +135,6 @@
    to the unified release workflow until all three pass.
 6. Report ad-hoc signing and absent notarization; do not imply public
    Gatekeeper-ready distribution.
-7. Do not create or upload a tagged release unless the tag/project-version
-   invariant passes. A manual dispatch proves packaging and manifest assembly
-   without publishing a release.
+7. Do not publish unless the manual candidate and separate publication gates
+   both prove the exact tag/source/manifest asset identity. Candidate assembly
+   creates a draft only; draft inspection precedes publication.

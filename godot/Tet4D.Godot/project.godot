@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Tet4D"
 config/description="A playable 2D, 3D, and 4D spatial puzzle game."
-config/version="0.7.5"
+config/version="0.9.0"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="Tet4D"
 run/main_scene="res://scenes/trace_replay.tscn"

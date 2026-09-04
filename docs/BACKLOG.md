@@ -51,6 +51,22 @@ remain bound to their product's canonical `artifact_name_token`; the
 transitional tablet consumers retain Designer naming only under their closed,
 named status exception.
 
+### 0.9.0 release-control boundary
+
+The 0.9.0 release-control path may release an arbitrary validated subset of the
+seven registered packaging consumers without changing the ten-cell product
+target matrix. The expected first candidate is the Godot game macOS consumer
+and the Designer Windows consumer, but that pair is not hard-coded: the manual
+candidate workflow accepts registered `consumer_id` scope and records the exact
+selected bytes in a v2 manifest before it creates a draft. A separate manual
+publication workflow can publish only that inspected, byte-validated draft.
+
+This operational readiness does not close any missing target cell. Godot game
+Windows/Linux/Android/iPadOS and Designer macOS remain separate package and
+acceptance work. The transitional Designer Android artifact and transitional
+Designer iPadOS artifact remain technical evidence under their machine
+identifiers; they do not become supported Designer platforms or game packages.
+
 The repaired grandfathered `legacy_designer_ipados` package path provides
 technical evidence for native archive composition, matching godot-cpp linkage,
 truthful `arm64` device and `x86_64` simulator slices, XCFramework/native-symbol
