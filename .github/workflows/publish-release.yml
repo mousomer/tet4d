@@ -1,0 +1,73 @@
+name: Publish Tet4D Draft Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact lowercase 40-character commit SHA already bound to the draft tag
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-existing-draft:
+    name: validate existing draft bytes and publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.source_sha }}
+
+      - name: Validate requested source and version identity
+        id: identity
+        run: |
+          set -euo pipefail
+          source_sha="${{ inputs.source_sha }}"
+          python tools/release/release_metadata.py validate-source-sha --source-sha "$source_sha"
+          test "$(git rev-parse HEAD)" = "$source_sha"
+          version="$(python tools/release/release_metadata.py project-version)"
+          python tools/release/release_metadata.py validate-tag --tag "v$version"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate exact tag, draft state, manifest, and release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          source_sha="${{ steps.identity.outputs.source_sha }}"
+          version="${{ steps.identity.outputs.version }}"
+          tag="v$version"
+          remote_tag_commit="$(git ls-remote origin "refs/tags/$tag^{}" | awk 'NR == 1 { print $1 }')"
+          if [ -z "$remote_tag_commit" ]; then
+            remote_tag_commit="$(git ls-remote origin "refs/tags/$tag" | awk 'NR == 1 { print $1 }')"
+          fi
+          test -n "$remote_tag_commit"
+          test "$remote_tag_commit" = "$source_sha"
+          release_json="$(gh release view "$tag" --repo "$GH_REPO" --json isDraft,targetCommitish,assets)"
+          test "$(printf '%s' "$release_json" | jq -r '.isDraft')" = true
+          test "$(printf '%s' "$release_json" | jq -r '.targetCommitish')" = "$source_sha"
+          mkdir -p artifacts/release
+          gh release download "$tag" --repo "$GH_REPO" --dir artifacts/release
+          manifest="artifacts/release/tet4d-release-$version-manifest.json"
+          test -f "$manifest"
+          python tools/release/release_metadata.py validate-manifest \
+            --manifest "$manifest" \
+            --artifact-dir artifacts/release \
+            --source-sha "$source_sha"
+          expected_assets="$(python tools/release/release_metadata.py asset-names --manifest "$manifest" --manifest-filename "$(basename "$manifest")")"
+          actual_assets="$(printf '%s' "$release_json" | jq -c '[.assets[].name] | sort')"
+          test "$actual_assets" = "$(printf '%s' "$expected_assets" | jq -c 'sort')"
+
+      - name: Publish the validated draft without altering its assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release edit "v${{ steps.identity.outputs.version }}" \
+            --repo "$GH_REPO" --draft=false

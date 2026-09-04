@@ -2,10 +2,16 @@ name: Tet4D Release Packaging
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*"
-      - "[0-9]*"
+    inputs:
+      source_sha:
+        description: Exact lowercase 40-character commit SHA to package
+        required: true
+        type: string
+      release_scope:
+        description: current_all selects the full registered matrix; a comma-separated list of registered consumer_id values explicitly selects a submatrix
+        required: true
+        type: string
+        default: current_all
 
 permissions:
   contents: read
@@ -17,34 +23,38 @@ jobs:
     outputs:
       version: ${{ steps.identity.outputs.version }}
       source_sha: ${{ steps.identity.outputs.source_sha }}
+      scope_json: ${{ steps.identity.outputs.scope_json }}
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
-      - name: Resolve project and source identity
+      - name: Validate exact source, version, and registered release scope
         id: identity
         run: |
+          set -euo pipefail
+          source_sha="${{ inputs.source_sha }}"
+          python tools/release/release_metadata.py validate-source-sha --source-sha "$source_sha"
+          test "$(git rev-parse HEAD)" = "$source_sha"
           version="$(python tools/release/release_metadata.py project-version)"
+          scope_json="$(python tools/release/release_metadata.py scope --release-scope "${{ inputs.release_scope }}")"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "source_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
-
-      - name: Require release tag to match project version
-        if: github.ref_type == 'tag'
-        run: python tools/release/release_metadata.py validate-tag --tag "$GITHUB_REF_NAME"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "scope_json=$scope_json" >> "$GITHUB_OUTPUT"
 
   package-python-macos:
     name: package Python Tet4D macOS arm64
     needs: release-contract
+    if: ${{ fromJSON(needs.release-contract.outputs.scope_json).selected.python_macos }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
         with:
@@ -92,11 +102,12 @@ jobs:
   package-python-linux:
     name: package Python Tet4D Linux x86_64
     needs: release-contract
+    if: ${{ fromJSON(needs.release-contract.outputs.scope_json).selected.python_linux }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
         with:
@@ -144,11 +155,12 @@ jobs:
   package-python-windows:
     name: package Python Tet4D Windows x86_64
     needs: release-contract
+    if: ${{ fromJSON(needs.release-contract.outputs.scope_json).selected.python_windows }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
         with:
@@ -217,11 +229,12 @@ jobs:
   package-godot-game-macos:
     name: package Godot Tet4D game macOS Universal
     needs: release-contract
+    if: ${{ fromJSON(needs.release-contract.outputs.scope_json).selected.godot_game_macos }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -302,11 +315,12 @@ jobs:
   package-designer-windows:
     name: package Godot Designer Windows x86_64
     needs: release-contract
+    if: ${{ fromJSON(needs.release-contract.outputs.scope_json).selected.godot_designer_windows }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -396,11 +410,12 @@ jobs:
   package-transitional-designer-android:
     name: audit transitional Designer Android artifact (not a target)
     needs: release-contract
+    if: ${{ fromJSON(needs.release-contract.outputs.scope_json).selected.legacy_designer_android }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -506,11 +521,12 @@ jobs:
   package-transitional-designer-ipados:
     name: audit transitional Designer iPadOS artifact (not a target)
     needs: release-contract
+    if: ${{ fromJSON(needs.release-contract.outputs.scope_json).selected.legacy_designer_ipados }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
           submodules: recursive
 
       - uses: actions/setup-python@v6
@@ -591,7 +607,8 @@ jobs:
           if-no-files-found: error
 
   release-manifest:
-    name: bind release artifacts to source identity
+    name: bind selected release artifacts to source identity
+    if: ${{ always() && needs.release-contract.result == 'success' }}
     needs:
       - release-contract
       - package-python-macos
@@ -605,52 +622,111 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.source_sha }}
 
-      - name: Download all release artifacts
+      - name: Download selected release artifacts
         uses: actions/download-artifact@v8
         with:
           pattern: tet4d-*
           path: artifacts/release
           merge-multiple: true
 
-      - name: Generate source-SHA and checksum manifest
+      - name: Generate source-SHA, scope, and checksum manifest
         run: |
           python tools/release/release_metadata.py manifest \
             --artifact-dir artifacts/release \
             --source-sha "${{ needs.release-contract.outputs.source_sha }}" \
+            --release-scope "${{ inputs.release_scope }}" \
             --output "artifacts/release/tet4d-release-${{ needs.release-contract.outputs.version }}-manifest.json"
 
-      - name: Upload release manifest
+      - name: Generate scope-aware release notes
+        run: |
+          python tools/release/release_metadata.py release-notes \
+            --manifest "artifacts/release/tet4d-release-${{ needs.release-contract.outputs.version }}-manifest.json" \
+            --output "artifacts/release/tet4d-release-${{ needs.release-contract.outputs.version }}-notes.md"
+
+      - name: Upload release control records
         uses: actions/upload-artifact@v7
         with:
-          name: tet4d-release-${{ needs.release-contract.outputs.version }}-manifest
-          path: artifacts/release/tet4d-release-*-manifest.json
+          name: tet4d-release-control-${{ needs.release-contract.outputs.version }}
+          path: |
+            artifacts/release/tet4d-release-*-manifest.json
+            artifacts/release/tet4d-release-*-notes.md
           if-no-files-found: error
 
-  publish-release:
-    name: publish validated tag release
-    if: github.ref_type == 'tag'
+  draft-release:
+    name: create immutable draft from validated candidate bytes
     needs: [release-contract, release-manifest]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download validated release payload
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.source_sha }}
+
+      - name: Download validated candidate payload
         uses: actions/download-artifact@v8
         with:
           pattern: tet4d-*
           path: artifacts/release
           merge-multiple: true
 
-      - name: Publish all release assets
+      - name: Validate immutable candidate bytes
+        run: |
+          python tools/release/release_metadata.py validate-manifest \
+            --manifest "artifacts/release/tet4d-release-${{ needs.release-contract.outputs.version }}-manifest.json" \
+            --artifact-dir artifacts/release \
+            --source-sha "${{ needs.release-contract.outputs.source_sha }}"
+
+      - name: Create exact tag and draft release without replacing assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          tag="${GITHUB_REF#refs/tags/}"
-          title="Tet4D ${tag#v}"
-          gh release view "$tag" --repo "$GH_REPO" >/dev/null 2>&1 || \
-            gh release create "$tag" --repo "$GH_REPO" --title "$title" --generate-notes
-          gh release upload "$tag" --repo "$GH_REPO" artifacts/release/* --clobber
+          source_sha="${{ needs.release-contract.outputs.source_sha }}"
+          version="${{ needs.release-contract.outputs.version }}"
+          tag="v$version"
+          manifest="artifacts/release/tet4d-release-$version-manifest.json"
+          notes="artifacts/release/tet4d-release-$version-notes.md"
+          test "$(git rev-parse HEAD)" = "$source_sha"
+          remote_tag_commit="$(git ls-remote origin "refs/tags/$tag^{}" | awk 'NR == 1 { print $1 }')"
+          if [ -z "$remote_tag_commit" ]; then
+            remote_tag_commit="$(git ls-remote origin "refs/tags/$tag" | awk 'NR == 1 { print $1 }')"
+          fi
+          if [ -n "$remote_tag_commit" ]; then
+            test "$remote_tag_commit" = "$source_sha" || {
+              echo "existing tag $tag does not resolve to requested source SHA" >&2
+              exit 1
+            }
+          else
+            git tag "$tag" "$source_sha"
+            git push origin "refs/tags/$tag"
+          fi
+          expected_assets="$(python tools/release/release_metadata.py asset-names --manifest "$manifest" --manifest-filename "$(basename "$manifest")")"
+          if release_json="$(gh release view "$tag" --repo "$GH_REPO" --json isDraft,targetCommitish,assets 2>/dev/null)"; then
+            test "$(printf '%s' "$release_json" | jq -r '.isDraft')" = true || {
+              echo "existing release $tag is not a draft" >&2
+              exit 1
+            }
+            test "$(printf '%s' "$release_json" | jq -r '.targetCommitish')" = "$source_sha" || {
+              echo "existing draft $tag does not target requested source SHA" >&2
+              exit 1
+            }
+            test "$(printf '%s' "$release_json" | jq '.assets | length')" = 0 || {
+              echo "existing draft already has assets; candidate runs never accumulate assets" >&2
+              exit 1
+            }
+          else
+            gh release create "$tag" --repo "$GH_REPO" --draft \
+              --title "Tet4D $version candidate" --notes-file "$notes" --target "$source_sha"
+          fi
+          mapfile -t asset_names < <(printf '%s' "$expected_assets" | jq -r '.[]')
+          asset_paths=()
+          for asset_name in "${asset_names[@]}"; do
+            asset_path="artifacts/release/$asset_name"
+            test -f "$asset_path"
+            asset_paths+=("$asset_path")
+          done
+          gh release upload "$tag" --repo "$GH_REPO" "${asset_paths[@]}"

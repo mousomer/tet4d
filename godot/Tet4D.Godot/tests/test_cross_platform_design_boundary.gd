@@ -137,7 +137,7 @@ func _test_identical_nomination_semantics() -> Array:
 		var profile = PlatformProfileScript.for_os_name(str(platform_case[0]))
 		var identity := {
 			"application_name": "Tet4D",
-			"application_version": "0.7.5",
+			"application_version": "0.9.0",
 			"engine_build": "4.7.2.stable",
 			"design_lab_schema_version": 1,
 		}

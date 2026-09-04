@@ -35,6 +35,7 @@ def test_godot_release_metadata_is_consistent() -> None:
     preset = EXPORT_PRESETS.read_text(encoding="utf-8")
 
     assert 'config/name="Tet4D"' in project
+    assert version == "0.9.0"
     assert f'config/version="{version}"' in project
     assert "config/use_custom_user_dir=true" in project
     assert 'config/custom_user_dir_name="Tet4D"' in project
@@ -45,6 +46,11 @@ def test_godot_release_metadata_is_consistent() -> None:
     assert 'application/bundle_identifier="io.github.mousomer.tet4d"' in preset
     assert f'application/short_version="{version}"' in preset
     assert f'application/version="{version}"' in preset
+    assert f'application/file_version="{version}"' in preset
+    assert f'application/product_version="{version}"' in preset
+    assert f'version/name="{version}"' in preset
+    assert "version/code=900" in preset
+    assert "version/code=705" not in preset
     assert 'application/min_macos_version_x86_64="13.0"' in preset
     assert 'application/min_macos_version_arm64="13.0"' in preset
     assert preset.count('exclude_filter=".godot/*,tests/*"') == 4
