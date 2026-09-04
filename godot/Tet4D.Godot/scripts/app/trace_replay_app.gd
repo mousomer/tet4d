@@ -154,7 +154,7 @@ func _deferred_ready() -> void:
 	_hud.set_display_mode(_state.display_mode)
 	_hud.apply_shell_settings()
 	_load_bundle()
-	if _is_game_product():
+	if not _is_designer_product():
 		_enter_live_2d_mode()
 
 
