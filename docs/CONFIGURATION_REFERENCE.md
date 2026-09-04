@@ -2282,7 +2282,7 @@ Parameters:
 - `governance.tech_debt_budget.status_order.low`: `0` (`int`)
 - `governance.tech_debt_budget.status_order.moderate`: `1` (`int`)
 - `governance.verification_command`: `"./scripts/verify.sh"` (`string`)
-- `governance_surface.active_governance.active_task[]`: array[`empty`]
+- `governance_surface.active_governance.active_task[]`: array[`string`]; examples: `"docs/tasks/windows_designer_package_identity_validation.md"`
 - `governance_surface.active_governance.human[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"CONTRIBUTING.md"`
 - `governance_surface.active_governance.machine[]`: array[`string`]; examples: `"config/project/policy_pack.json"`
 - `governance_surface.active_governance.operational[]`: array[`string`]; examples: `"CURRENT_STATE.md"`, `"docs/BACKLOG.md"`
@@ -2292,7 +2292,7 @@ Parameters:
 - `governance_surface.canonical_serialization.format_version`: `1` (`int`)
 - `governance_surface.canonical_serialization.newline_terminated`: `true` (`bool`)
 - `governance_surface.canonical_serialization.tool`: `"tools/governance/policy_pack_io.py"` (`string`)
-- `governance_surface.document_roles.active_task[]`: array[`empty`]
+- `governance_surface.document_roles.active_task[]`: array[`string`]; examples: `"docs/tasks/windows_designer_package_identity_validation.md"`
 - `governance_surface.document_roles.architecture[]`: array[`string`]; examples: `"docs/ARCHITECTURE_CONTRACT.md"`, `"docs/architecture"`
 - `governance_surface.document_roles.current_state[]`: array[`string`]; examples: `"CURRENT_STATE.md"`
 - `governance_surface.document_roles.generated_reference[]`: array[`string`]; examples: `"docs/CONFIGURATION_REFERENCE.md"`, `"docs/USER_SETTINGS_REFERENCE.md"`, `"docs/PROJECT_STRUCTURE.md"`

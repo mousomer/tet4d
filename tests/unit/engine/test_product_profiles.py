@@ -73,9 +73,52 @@ class TestProductProfiles(unittest.TestCase):
                 self.assertIn(f'run/main_scene="res://scenes/{scene}"', project)
                 self.assertIn(f'config/icon="res://assets/icons/{icon}"', project)
                 self.assertIn(f'config/tet4d_product_id="{product_id}"', project)
+                marker = staging.identity_marker_resource(product_id)
+                self.assertIn(f'config/tet4d_product_identity_marker="{marker}"', project)
+                self.assertTrue((staged / marker.removeprefix("res://")).is_file())
                 self.assertIn(identity, presets)
         self.assertEqual(before_project, (PROJECT / "project.godot").read_bytes())
         self.assertEqual(before_presets, (PROJECT / "export_presets.cfg").read_bytes())
+
+    def test_staging_rejects_incorrect_product_id_or_main_scene_before_export(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = Path(temporary) / "project"
+            shutil.copytree(PROJECT, staged, ignore=shutil.ignore_patterns(".godot"))
+            staging.apply_profile(ROOT, staged, "godot_designer")
+            project = staged / "project.godot"
+            project.write_text(
+                project.read_text(encoding="utf-8").replace(
+                    'config/tet4d_product_id="godot_designer"',
+                    'config/tet4d_product_id="godot_game"',
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(staging.ProfileError, "identity does not match"):
+                staging.validate_staged_profile(ROOT, staged, "godot_designer")
+            project.write_text(
+                project.read_text(encoding="utf-8").replace(
+                    'config/tet4d_product_id="godot_game"',
+                    'config/tet4d_product_id="godot_designer"',
+                ).replace(
+                    'run/main_scene="res://scenes/designer_bootstrap.tscn"',
+                    'run/main_scene="res://scenes/game_bootstrap.tscn"',
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(staging.ProfileError, "identity does not match"):
+                staging.validate_staged_profile(ROOT, staged, "godot_designer")
+
+    def test_game_staging_does_not_acquire_designer_identity_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = Path(temporary) / "project"
+            shutil.copytree(PROJECT, staged, ignore=shutil.ignore_patterns(".godot"))
+            staging.apply_profile(ROOT, staged, "godot_game")
+            self.assertTrue(
+                (staged / staging.identity_marker_resource("godot_game").removeprefix("res://")).is_file()
+            )
+            self.assertFalse(
+                (staged / staging.identity_marker_resource("godot_designer").removeprefix("res://")).exists()
+            )
 
     def test_unknown_and_ambiguous_profiles_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

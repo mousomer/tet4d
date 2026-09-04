@@ -43,10 +43,7 @@ def _pack_directory_location(data: bytes) -> tuple[int, int, int, int]:
     return pack_format, file_base, cursor + 4, file_count
 
 
-def _read_pack_directory(
-    pack_path: Path,
-) -> tuple[bytes, int, list[tuple[str, int, int, int]]]:
-    data = pack_path.read_bytes()
+def _read_pack_directory_data(data: bytes) -> tuple[bytes, int, list[tuple[str, int, int, int]]]:
     pack_format, file_base, cursor, file_count = _pack_directory_location(data)
     entries: list[tuple[str, int, int, int]] = []
     for _ in range(file_count):
@@ -71,9 +68,21 @@ def _read_pack_directory(
     return data, pack_format, entries
 
 
+def _read_pack_directory(
+    pack_path: Path,
+) -> tuple[bytes, int, list[tuple[str, int, int, int]]]:
+    return _read_pack_directory_data(pack_path.read_bytes())
+
+
 def read_pack_paths(pack_path: Path) -> list[str]:
     """Return every ``res://``-relative path recorded in the pack directory."""
     _data, _format, entries = _read_pack_directory(pack_path)
+    return [path for path, _offset, _size, _flags in entries]
+
+
+def read_pack_paths_from_bytes(data: bytes) -> list[str]:
+    """Return resource paths from an already-extracted Godot pack."""
+    _data, _format, entries = _read_pack_directory_data(data)
     return [path for path, _offset, _size, _flags in entries]
 
 

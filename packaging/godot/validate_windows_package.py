@@ -4,23 +4,29 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import tomllib
 import zipfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from godot_pack import PackFormatError, read_pack_paths_from_bytes
 
 REQUIRED = {
     "Tet4D Designer/Tet4DDesigner.exe",
     "Tet4D Designer/Tet4DDesigner.pck",
     "Tet4D Designer/libtet4d_core.windows.template_release.x86_64.dll",
 }
-PCK_RESOURCES = (
-    b"config/built_in_style_catalog.json",
-    b"config/design_scenario_catalog.json",
-    b"assets/tet4d_bundle/manifest.json",
-    b"assets/icons/tet4d_designer.svg",
-    b"scripts/ui/design_laboratory_panel.gdc",
-    b'config/tet4d_product_id="godot_designer"',
+REQUIRED_PCK_RESOURCES = (
+    "config/built_in_style_catalog.json",
+    "config/design_scenario_catalog.json",
+    "assets/tet4d_bundle/manifest.json",
+    "assets/icons/tet4d_designer.svg",
+    "scripts/ui/design_laboratory_panel.gdc",
 )
+DESIGNER_IDENTITY_MARKER = "config/tet4d_product_identity/godot_designer.tres.remap"
+GAME_IDENTITY_MARKER = "config/tet4d_product_identity/godot_game.tres.remap"
 DESIGNER_PRODUCT_NAME = "Tet4D Designer".encode("utf-16-le")
 # Official Godot templates can contain upstream compiler source paths in their
 # own diagnostic strings. Reject host/repository coupling introduced by Tet4D,
@@ -49,6 +55,29 @@ def _reject_forbidden_path_markers(payloads: dict[str, bytes]) -> None:
                     f"{marker!r} at byte {offset}; bounded context "
                     f"{payload[context_start:context_end]!r}"
                 )
+
+
+def _validate_pck_resources(pck: bytes) -> None:
+    try:
+        resources = set(read_pack_paths_from_bytes(pck))
+    except (PackFormatError, UnicodeDecodeError) as exc:
+        raise ValueError(f"PCK resource table is invalid: {exc}") from exc
+    missing_resources = [resource for resource in REQUIRED_PCK_RESOURCES if resource not in resources]
+    if missing_resources:
+        raise ValueError(f"PCK resource table is missing: {missing_resources}")
+    if DESIGNER_IDENTITY_MARKER not in resources:
+        raise ValueError("PCK resource table is missing the Designer identity marker")
+    if GAME_IDENTITY_MARKER in resources:
+        raise ValueError("PCK resource table carries the Game identity marker")
+
+
+def _validate_source_version_contract(repository_root: Path, expected_version: str) -> None:
+    project_text = (repository_root / "godot/Tet4D.Godot/project.godot").read_text(encoding="utf-8")
+    export_text = (repository_root / "godot/Tet4D.Godot/export_presets.cfg").read_text(encoding="utf-8")
+    if f'config/version="{expected_version}"' not in project_text:
+        raise ValueError("project.godot version disagrees with pyproject.toml")
+    if export_text.count(f'="{expected_version}"') < 4:
+        raise ValueError("export preset version metadata disagrees with pyproject.toml")
 
 
 def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
@@ -86,16 +115,9 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
         raise ValueError("Windows executable or GDExtension does not have a PE header")
     if DESIGNER_PRODUCT_NAME not in executable:
         raise ValueError("Windows executable does not carry the Designer product name")
-    missing_resources = [resource.decode() for resource in PCK_RESOURCES if resource not in pck]
-    if missing_resources:
-        raise ValueError(f"PCK resource table is missing: {missing_resources}")
+    _validate_pck_resources(pck)
     _reject_forbidden_path_markers(payloads)
-    project_text = (repository_root / "godot/Tet4D.Godot/project.godot").read_text(encoding="utf-8")
-    export_text = (repository_root / "godot/Tet4D.Godot/export_presets.cfg").read_text(encoding="utf-8")
-    if f'config/version="{expected_version}"' not in project_text:
-        raise ValueError("project.godot version disagrees with pyproject.toml")
-    if export_text.count(f'="{expected_version}"') < 4:
-        raise ValueError("export preset version metadata disagrees with pyproject.toml")
+    _validate_source_version_contract(repository_root, expected_version)
     return {
         "version": expected_version,
         "file_count": len(names),

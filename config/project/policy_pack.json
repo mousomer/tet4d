@@ -967,7 +967,7 @@
     "document_roles": {
       "governance": ["AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", ".github/pull_request_template.md", "godot/AGENTS.md", "native/AGENTS.md", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md"],
       "current_state": ["CURRENT_STATE.md"],
-      "active_task": [],
+      "active_task": ["docs/tasks/windows_designer_package_identity_validation.md"],
       "planning": ["docs/plans"],
       "history": ["docs/history"],
       "architecture": ["docs/ARCHITECTURE_CONTRACT.md", "docs/architecture"],
@@ -979,7 +979,7 @@
       "human": ["AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", ".github/pull_request_template.md", "godot/AGENTS.md", "native/AGENTS.md", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md"],
       "machine": ["config/project/policy_pack.json"],
       "operational": ["CURRENT_STATE.md", "docs/BACKLOG.md"],
-      "active_task": []
+      "active_task": ["docs/tasks/windows_designer_package_identity_validation.md"]
     },
     "aggregate_hard_limit": 2500,
     "active_task_limit": 250,

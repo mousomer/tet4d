@@ -7,6 +7,8 @@ import configparser
 import json
 from pathlib import Path
 
+IDENTITY_MARKER_DIRECTORY = "config/tet4d_product_identity"
+
 
 class ProfileError(ValueError):
     """A requested product profile cannot safely be staged."""
@@ -49,6 +51,53 @@ def _set_single(text: str, key: str, value: str) -> str:
     return "".join(lines)
 
 
+def identity_marker_resource(product_id: str) -> str:
+    if not product_id or "/" in product_id or "\\" in product_id:
+        raise ProfileError("product profile has an unsafe identity marker name")
+    return f"res://{IDENTITY_MARKER_DIRECTORY}/{product_id}.tres"
+
+
+def _write_identity_marker(staged_root: Path, product_id: str, profile: dict[str, str]) -> str:
+    resource = identity_marker_resource(product_id)
+    marker_path = staged_root / resource.removeprefix("res://")
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        "[gd_resource type=\"Resource\" format=3]\n\n[resource]\n"
+        + "metadata = "
+        + json.dumps(
+            {
+                "product_id": product_id,
+                "application_identity": profile["application_identity"],
+                "display_name": profile["display_name"],
+                "main_scene": profile["main_scene"],
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return resource
+
+
+def _bind_identity_marker(staged_root: Path, main_scene: str, marker_resource: str) -> None:
+    scene_path = staged_root / main_scene.removeprefix("res://")
+    scene_text = scene_path.read_text(encoding="utf-8")
+    marker_declaration = f'[ext_resource type="Resource" path="{marker_resource}" id="2_identity"]\n'
+    if marker_declaration in scene_text:
+        raise ProfileError("staged product scene has an ambiguous identity marker")
+    first_node = "[node "
+    if first_node not in scene_text:
+        raise ProfileError("staged product scene has no root node")
+    scene_text = scene_text.replace(first_node, marker_declaration + "\n" + first_node, 1)
+    node_end = scene_text.find("\n", scene_text.index(first_node)) + 1
+    scene_text = (
+        scene_text[:node_end]
+        + 'metadata/tet4d_product_identity_marker = ExtResource("2_identity")\n'
+        + scene_text[node_end:]
+    )
+    scene_path.write_text(scene_text, encoding="utf-8")
+
+
 def _validate_staging_target(repository_root: Path, staged_root: Path) -> tuple[Path, Path]:
     canonical_root = (repository_root / "godot/Tet4D.Godot").resolve()
     if _inside(staged_root, canonical_root):
@@ -72,13 +121,24 @@ def _apply_project_profile(project_path: Path, staged_root: Path, product_id: st
         ("config/icon", profile["icon"]),
     ):
         project_text = _set_single(project_text, key, value)
-    marker = 'config/tet4d_product_id='
-    if marker in project_text:
+    product_marker = 'config/tet4d_product_id='
+    if product_marker in project_text:
         project_text = _set_single(project_text, "config/tet4d_product_id", product_id)
     else:
         project_text = project_text.replace(
             "config/quit_on_go_back=false\n",
             f'config/quit_on_go_back=false\nconfig/tet4d_product_id="{product_id}"\n',
+            1,
+        )
+    identity_marker = _write_identity_marker(staged_root, product_id, profile)
+    _bind_identity_marker(staged_root, profile["main_scene"], identity_marker)
+    marker_key = "config/tet4d_product_identity_marker"
+    if f"{marker_key}=" in project_text:
+        project_text = _set_single(project_text, marker_key, identity_marker)
+    else:
+        project_text = project_text.replace(
+            f'config/tet4d_product_id="{product_id}"\n',
+            f'config/tet4d_product_id="{product_id}"\n{marker_key}="{identity_marker}"\n',
             1,
         )
     project_path.write_text(project_text, encoding="utf-8")
@@ -111,6 +171,43 @@ def apply_profile(repository_root: Path, staged_root: Path, product_id: str) -> 
     profile = load_profile(repository_root / "config/project/policy_pack.json", product_id)
     _apply_project_profile(project_path, staged_root, product_id, profile)
     _apply_preset_profile(presets_path, profile)
+    validate_staged_profile(repository_root, staged_root, product_id)
+
+
+def validate_staged_profile(repository_root: Path, staged_root: Path, product_id: str) -> None:
+    repository_root = repository_root.resolve()
+    staged_root = staged_root.resolve()
+    project_path, _ = _validate_staging_target(repository_root, staged_root)
+    profile = load_profile(repository_root / "config/project/policy_pack.json", product_id)
+    project_text = project_path.read_text(encoding="utf-8")
+    expected = (
+        ("config/tet4d_product_id", product_id),
+        ("config/name", profile["display_name"]),
+        ("run/main_scene", profile["main_scene"]),
+        ("config/tet4d_product_identity_marker", identity_marker_resource(product_id)),
+    )
+    for key, value in expected:
+        if f'{key}="{value}"' not in project_text:
+            raise ProfileError("staged project identity does not match the selected profile")
+    marker_path = staged_root / identity_marker_resource(product_id).removeprefix("res://")
+    try:
+        marker_text = marker_path.read_text(encoding="utf-8")
+        marker = json.loads(marker_text.split("metadata = ", 1)[1])
+    except (OSError, IndexError, json.JSONDecodeError) as exc:
+        raise ProfileError("staged project identity marker is missing or invalid") from exc
+    if marker != {
+        "product_id": product_id,
+        "application_identity": profile["application_identity"],
+        "display_name": profile["display_name"],
+        "main_scene": profile["main_scene"],
+    }:
+        raise ProfileError("staged project identity marker does not match the selected profile")
+    scene_text = (staged_root / profile["main_scene"].removeprefix("res://")).read_text(encoding="utf-8")
+    if (
+        f'path="{identity_marker_resource(product_id)}"' not in scene_text
+        or 'metadata/tet4d_product_identity_marker = ExtResource("2_identity")' not in scene_text
+    ):
+        raise ProfileError("staged product scene does not bind its identity marker")
 
 
 def main() -> int:
@@ -118,9 +215,13 @@ def main() -> int:
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--staged-root", type=Path, required=True)
     parser.add_argument("--product", required=True)
+    parser.add_argument("--validate", action="store_true")
     args = parser.parse_args()
     try:
-        apply_profile(args.repository_root, args.staged_root, args.product)
+        if args.validate:
+            validate_staged_profile(args.repository_root, args.staged_root, args.product)
+        else:
+            apply_profile(args.repository_root, args.staged_root, args.product)
     except (OSError, ProfileError, json.JSONDecodeError) as exc:
         raise SystemExit(f"product profile staging failed: {exc}") from exc
     return 0

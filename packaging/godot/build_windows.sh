@@ -109,6 +109,8 @@ cp -R "$PROJECT_DIR/." "$staged_project_root/"
 rm -rf "$staged_project_root/.godot"
 python3 "$ROOT_DIR/packaging/godot/stage_product_profile.py" \
   --repository-root "$ROOT_DIR" --staged-root "$staged_project_root" --product godot_designer
+python3 "$ROOT_DIR/packaging/godot/stage_product_profile.py" \
+  --repository-root "$ROOT_DIR" --staged-root "$staged_project_root" --product godot_designer --validate
 
 rm -rf "$ARTIFACT_DIR"
 mkdir -p "$APP_DIR"
