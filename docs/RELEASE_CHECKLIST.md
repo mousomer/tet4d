@@ -61,10 +61,11 @@
     iPadOS export version fields, and the Android version code before a 0.9.0
     candidate. The Godot engine remains the pinned 4.7.2 release.
 12. Dispatch `release-packaging.yml` manually with one exact lowercase
-    40-character `source_sha` and a registered `release_scope` (a
-    comma-separated `consumer_id` list or `current_all`). Confirm every
-    selected package job checked out that SHA and every unselected package job
-    was intentionally skipped.
+    40-character `source_sha`. Its `release_scope` defaults to `current_all`,
+    which selects the full registered matrix; an operator may explicitly select
+    a validated submatrix with a comma-separated `consumer_id` list. Confirm
+    every selected package job checked out that SHA and every unselected package
+    job was intentionally skipped.
 13. Validate the generated `tet4d.release-manifest.v2`: its canonical scope,
     consumer/product/platform identity, filenames, byte counts, SHA-256 values,
     version, and source SHA must exactly describe the selected package bytes.

@@ -225,10 +225,11 @@ runtime release evidence; keep all three products explicit.
 ## Current release workflow
 
 `.github/workflows/release-packaging.yml` is manual-only. It requires an exact
-lowercase 40-character `source_sha` and `release_scope`. A scope is either
-`current_all` or a comma-separated set of registered `consumer_id` values; it
-is canonicalized by the Python-owned release contract. The workflow builds only
-the selected consumers: any registered subset is valid, and the initial 0.9.0
+lowercase 40-character `source_sha`; `release_scope` defaults to `current_all`,
+which selects the full registered matrix. An operator may replace that default
+with a comma-separated set of registered `consumer_id` values; it is
+canonicalized by the Python-owned release contract. The workflow builds only the
+selected consumers: any registered subset is valid, and the initial 0.9.0
 candidate can select the Godot game macOS and Designer Windows consumers without
 hard-coding that pair into the workflow. The seven registered consumers remain
 three Python installers, the Godot game macOS package, the Designer Windows

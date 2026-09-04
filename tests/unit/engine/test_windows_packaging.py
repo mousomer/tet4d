@@ -169,6 +169,16 @@ class TestWindowsPackagingScript(unittest.TestCase):
     ) -> None:
         workflow = self._release_workflow()
 
+        self.assertRegex(
+            workflow,
+            r"release_scope:" r"\n"
+            r"        description: current_all selects the full registered matrix; "
+            r"a comma-separated list of registered consumer_id values explicitly "
+            r"selects a submatrix\n"
+            r"        required: true\n"
+            r"        type: string\n"
+            r"        default: current_all",
+        )
         self.assertNotIn("push:", workflow)
         self.assertNotIn("--clobber", workflow)
         self.assertIn("validate-source-sha", workflow)

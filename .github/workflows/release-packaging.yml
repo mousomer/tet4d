@@ -8,9 +8,10 @@ on:
         required: true
         type: string
       release_scope:
-        description: Comma-separated registered consumer_id values, or current_all
+        description: current_all selects the full registered matrix; a comma-separated list of registered consumer_id values explicitly selects a submatrix
         required: true
         type: string
+        default: current_all
 
 permissions:
   contents: read

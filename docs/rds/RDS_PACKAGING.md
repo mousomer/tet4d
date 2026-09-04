@@ -278,7 +278,9 @@ the temporary proof-only workflow is removed. The unified candidate workflow is
 manual-only, retains the real-platform install, outside-checkout runtime, and
 removal checks, and gives all seven registered product-family consumers explicit
 names. It validates a lowercase 40-character source SHA and a registered
-consumer scope before building, then generates a scope-exact v2
+consumer scope before building; `release_scope` defaults to `current_all` for
+the full registered matrix, while an explicit registered subset remains valid.
+It then generates a scope-exact v2
 checksum/source-SHA manifest only after selected package jobs pass. It creates
 only a same-run-byte draft release; `.github/workflows/publish-release.yml`
 separately validates the draft's tag, assets, manifest checksums, and byte
