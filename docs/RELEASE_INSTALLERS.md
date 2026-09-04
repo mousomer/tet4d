@@ -8,6 +8,15 @@ target-platform plan.
 Earlier release records call the Python path legacy; that term is historical,
 not its current product status.
 
+The Godot source tree is shared, but it is exported through explicit product
+profiles. `godot_game` stages `game_bootstrap.tscn` with the Tet4D game icon
+and `io.github.mousomer.tet4d`; `godot_designer` stages
+`designer_bootstrap.tscn` with the Designer icon and
+`io.github.mousomer.tet4d.designer`. Staging changes only a disposable export
+copy. The macOS builder selects the game profile, while the Windows and
+transitional Android/iPadOS builders select the Designer profile. This does not
+create additional platform packages or prepare a 0.9.0 release.
+
 ## Build the current release candidate
 
 Requirements:
@@ -31,6 +40,7 @@ The script performs these release-boundary checks:
 - exact Godot build identifier;
 - universal release GDExtension build for macOS 13+;
 - Godot release export through the checked-in `macOS Universal` preset;
+- disposable `godot_game` profile staging before export;
 - required executable, `Info.plist`, and packaged release framework;
 - bundle identifier and version consistency;
 - packaged `x86_64` plus `arm64` native slices;
@@ -61,7 +71,8 @@ GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
 packaging/godot/build_windows.sh
 ```
 
-The script cross-builds the release GDExtension, exports from a disposable
+The script cross-builds the release GDExtension, stages `godot_designer` in a
+disposable project copy, exports from that copy, and validates the exact
 project copy, and validates the exact portable payload, PE binaries, version,
 required laboratory resources, exclusions, and path sanitation. The production
 MSVC invocation explicitly disables godot-cpp native debug records for

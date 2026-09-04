@@ -32,6 +32,25 @@ Each release artifact template is bound to its product record's canonical
 `tet4d-designer`. `ARTIFACT_SPECS` may define the complete filename template,
 but the product contract is the authority for the identity token it may use.
 
+### Godot product profiles
+
+The canonical Godot source tree has two governed product profiles in
+`product_platform_contract.products`: `godot_game` and `godot_designer`.
+They name distinct bootstrap scenes, icons, application identities, artifact
+tokens, and permitted package roles. `packaging/godot/stage_product_profile.py`
+applies one profile only to a disposable export copy; it must never mutate the
+canonical `project.godot` or `export_presets.cfg`. The game bootstrap enters
+the shared playable 2D/3D/4D runtime without configuring Design Laboratory
+authoring. The Designer bootstrap retains that authoring flow and the shared
+native/game implementation. This boundary does not add a platform package or
+promote any support claim.
+
+The staging target must resolve outside the canonical `godot/Tet4D.Godot`
+tree. The guard rejects the canonical root itself and every resolved descendant,
+including dotted-path and symlink aliases, before writing staged configuration.
+A similarly named sibling is not inside that tree and remains eligible when it
+otherwise contains a complete disposable project.
+
 ## 2. Current supported release path
 
 The Stage 54G release candidate is:
@@ -44,11 +63,12 @@ The Stage 54G release candidate is:
 - architecture: Universal 2 (`x86_64` and `arm64`);
 - package: an ad-hoc-signed `.app` bundle and a ZIP containing that bundle;
 - bundle identifier: `io.github.mousomer.tet4d`;
-- entry point: `res://scenes/trace_replay.tscn`; and
+- staged entry point: `res://scenes/game_bootstrap.tscn`; and
 - persistent data root: the platform application-data directory named `Tet4D`,
   containing `shell_settings.json` and `game_setup.json`.
 
-The accepted macOS product remains unchanged. Stage 54F-5 additionally
+The accepted macOS product remains unchanged. It is staged with the
+`godot_game` profile before export. Stage 54F-5 additionally
 defines a structurally validated Windows x86-64 portable Design Laboratory
 candidate named `Tet4D Designer`. It uses the same Godot product shell and
 entry point, adds the deterministic design-evaluation workflow, and contains
@@ -59,6 +79,7 @@ installation operation and deleting the extracted directory is uninstallation;
 it intentionally creates no Start Menu item, desktop shortcut, or registry
 uninstaller.
 
+The Windows export is staged with the `godot_designer` profile before export.
 The Windows artifact has passed local cross-build, PE/resource/package
 validation, and the laboratory's local Godot tests on macOS. Direct launch on
 a clean Windows machine remains pending and must not be inferred from those

@@ -41,8 +41,8 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-No staged work is in progress. Durable open work lives in `docs/BACKLOG.md`;
-a new staged batch sets `status` to `active` on its own branch.
+Review the focused product-boundary PR. Durable open work and release-matrix
+deferrals remain in `docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.

@@ -28,6 +28,13 @@ Implement the missing package identities required by the authoritative
 
 Acceptance boundary:
 
+- The shared Godot tree now has explicit game and Designer bootstrap/profile
+  selection; this establishes identity and startup separation only, not new
+  platform support or a 0.9.0 release profile.
+- Product-profile staging must reject the canonical Godot project and every
+  resolved descendant as an export target; disposable staging remains outside
+  the source tree and does not alter product identity or platform support.
+
 - Godot game / Windows and Godot game / Linux need distinct distributable
   packages and acceptance; the existing Windows package is Designer only;
 - Godot game / Android and Godot game / iPadOS must replace the transitional

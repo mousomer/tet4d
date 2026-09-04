@@ -72,6 +72,9 @@ def test_godot_macos_build_checks_release_boundary() -> None:
         "codesign --verify --deep --strict",
         "ditto -c -k --sequesterRsrc --keepParent",
         "packaging/godot/smoke_macos.sh",
+        "stage_product_profile.py",
+        "--product godot_game",
+        "game_bootstrap.tscn",
     ]:
         assert token in script
     assert ("/" + "Users/") not in script
@@ -167,6 +170,19 @@ def test_disposable_platform_projects_drop_copied_editor_cache() -> None:
         assert copy_command in script
         assert cache_removal in script
         assert script.index(copy_command) < script.index(cache_removal)
+
+
+def test_each_existing_godot_builder_selects_an_explicit_product_profile() -> None:
+    expected = {
+        "build_macos.sh": "godot_game",
+        "build_windows.sh": "godot_designer",
+        "build_android.sh": "godot_designer",
+        "build_ipados.sh": "godot_designer",
+    }
+    for filename, product_id in expected.items():
+        builder = (ROOT / "packaging/godot" / filename).read_text(encoding="utf-8")
+        assert "stage_product_profile.py" in builder
+        assert f"--product {product_id}" in builder
 
 
 def test_android_release_installs_the_binding_owned_ndk_pin() -> None:

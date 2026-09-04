@@ -441,3 +441,21 @@ def test_shared_godot_pack_reader_selects_every_platform_that_uses_it() -> None:
     }
 
     assert platform_requirements == {"platform_android", "platform_ipados"}
+
+
+def test_shared_product_profile_staging_selects_every_consuming_platform() -> None:
+    result = classify_paths(
+        ["packaging/godot/stage_product_profile.py"], config=_repository_config()
+    )
+    platform_requirements = {
+        requirement
+        for requirement in result.verification_requirements
+        if requirement.startswith("platform_")
+    }
+
+    assert platform_requirements == {
+        "platform_macos",
+        "platform_windows",
+        "platform_android",
+        "platform_ipados",
+    }

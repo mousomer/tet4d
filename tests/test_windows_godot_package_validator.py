@@ -30,7 +30,7 @@ def _archive(
     archive_path = tmp_path / "Tet4D-Designer-0.7.5-windows-x86_64.zip"
     pck = b"\n".join(validator.PCK_RESOURCES)
     files = {
-        "Tet4D Designer/Tet4DDesigner.exe": b"MZstandalone",
+        "Tet4D Designer/Tet4DDesigner.exe": b"MZstandalone" + validator.DESIGNER_PRODUCT_NAME,
         "Tet4D Designer/Tet4DDesigner.pck": pck,
         "Tet4D Designer/libtet4d_core.windows.template_release.x86_64.dll": b"MZnative",
     }

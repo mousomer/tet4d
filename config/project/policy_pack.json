@@ -27,8 +27,8 @@
     "platform_ids": ["macos", "windows", "linux", "android", "ipados"],
     "products": {
       "python_tet4d": {"display_name": "Python Tet4D", "runtime_family": "python", "purpose": "playable Python/Pygame Tet4D product", "application_identity": "tet4d", "artifact_name_token": "tet4d-python", "backlog_label": "Python Tet4D"},
-      "godot_game": {"display_name": "Tet4D", "runtime_family": "godot", "purpose": "playable Godot 2D / 3D / 4D game", "application_identity": "io.github.mousomer.tet4d", "artifact_name_token": "tet4d-godot-game", "backlog_label": "Godot game"},
-      "godot_designer": {"display_name": "Tet4D Designer", "runtime_family": "godot", "purpose": "desktop Design Laboratory authoring and evaluation tool", "application_identity": "io.github.mousomer.tet4d.designer", "artifact_name_token": "tet4d-designer", "backlog_label": "Designer"}
+      "godot_game": {"display_name": "Tet4D", "runtime_family": "godot", "purpose": "playable Godot 2D / 3D / 4D game", "application_identity": "io.github.mousomer.tet4d", "artifact_name_token": "tet4d-godot-game", "backlog_label": "Godot game", "main_scene": "res://scenes/game_bootstrap.tscn", "icon": "res://assets/icons/tet4d_game.svg", "permitted_package_role": "playable_game"},
+      "godot_designer": {"display_name": "Tet4D Designer", "runtime_family": "godot", "purpose": "desktop Design Laboratory authoring and evaluation tool", "application_identity": "io.github.mousomer.tet4d.designer", "artifact_name_token": "tet4d-designer", "backlog_label": "Designer", "main_scene": "res://scenes/designer_bootstrap.tscn", "icon": "res://assets/icons/tet4d_designer.svg", "permitted_package_role": "design_laboratory"}
     },
     "target_platforms": {
       "python_tet4d": ["macos", "windows", "linux"],
