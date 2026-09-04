@@ -365,6 +365,20 @@
           "platform_android",
           "platform_ipados"
         ]
+      },
+      {
+        "id": "packaging_godot_product_profile_staging",
+        "patterns": [
+          "packaging/godot/stage_product_profile.py"
+        ],
+        "requirements": [
+          "packaging",
+          "platform",
+          "platform_macos",
+          "platform_windows",
+          "platform_android",
+          "platform_ipados"
+        ]
       }
     ]
   }
