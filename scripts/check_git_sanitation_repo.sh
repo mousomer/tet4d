@@ -3,7 +3,11 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-absolute_path_pattern='(/'"Users/"'|/'"home/"'|[A-Za-z]:\\)'
+# A drive designator is a path only when it begins at a token boundary. This
+# keeps serialized escapes such as ``Total:\\nLine2`` and ``Rate:\\ttab`` out
+# of scope, while accepting every valid drive-rooted path (including one-part
+# roots such as ``C:\\projects``) and JSON-escaped backslashes.
+absolute_path_pattern='(/'"Users/"'|/'"home/"'|(^|[^A-Za-z0-9_])[A-Za-z]:[\\/]+)'
 relative_parent_pattern='\.\./'
 
 rg_usable() {
@@ -81,6 +85,21 @@ if search_docs_and_config_text "$relative_parent_pattern"; then
   exit 2
 fi
 
+ignored_tracked_paths=()
+while IFS= read -r -d '' ignored_tracked_path; do
+  ignored_tracked_paths+=("$ignored_tracked_path")
+done < <(
+  # Repository sanitation uses repository-owned .gitignore files only; user/global
+  # excludes and .git/info/exclude must not determine repository cleanliness.
+  git ls-files -ci --exclude-per-directory=.gitignore -z
+)
+
+if ((${#ignored_tracked_paths[@]} > 0)); then
+  echo "Tracked files matched by repository ignore rules:" >&2
+  printf '  %q\n' "${ignored_tracked_paths[@]}" >&2
+  exit 2
+fi
+
 space_name="$({ git ls-files; git ls-files --others --exclude-standard; } | awk '/ /' | head -n 1)"
 
 if [[ -n "$space_name" ]]; then
@@ -106,6 +125,7 @@ required_exec_paths=(
   "scripts/install_git_hooks.sh"
   "scripts/update_policy_template_hashes.sh"
   "scripts/verify.sh"
+  "scripts/verify_local.sh"
   "scripts/verify_focus.sh"
   ".githooks/pre-push"
 )

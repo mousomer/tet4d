@@ -21,6 +21,17 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+### Worktree-local verification bootstrap
+
+Provide `scripts/verify_local.sh` as a worktree-local `.venv` cache and
+launcher for the canonical `scripts/verify.sh` gate. It must fingerprint only
+packaging inputs and interpreter major/minor version, preserve the existing
+editable-install ownership check, avoid repeat network/bootstrap work, and
+never duplicate the verification graph.
+
+Follow-up: separately review destructive `--rebuild-venv` recreation for
+operator confirmation and recovery messaging.
+
 ### Three-product packaging gaps
 
 Implement the missing package identities required by the authoritative

@@ -81,6 +81,4 @@ assets/help/rotation_keys.gif
 .claude/
 .workspace_policy_version.json
 config/project/policy_manifest.json
-scripts/check_git_sanitation.sh
-scripts/check_policy_compliance.sh
 context-*.instructions.md
