@@ -50,8 +50,11 @@ a documented reason and focused tests.
 
 ## Repository and publication hygiene
 
-- Preserve unrelated user changes. Stage only intentional paths and review the
+- Preserve unrelated user changes; stage only intentional paths and review the
   staged diff before commit.
+- Repository ignore rules define local/generated material. A tracked path must
+  not match them: sanitation rejects `tracked ∩ ignored ≠ ∅` using Git's native
+  ignore query, not a duplicate parser.
 - Do not commit generated machine state, credentials, local worktree metadata,
   or unrelated formatting.
 - Avoid destructive commands and production-impacting changes unless the task
