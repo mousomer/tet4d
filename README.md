@@ -191,6 +191,7 @@ CODEX_MODE=1 ./scripts/verify.sh
 - Godot shell notes: `godot/Tet4D.Godot/README.md`
 - Philosophy and motivation: `docs/philosophy/PHILOSOPHY.md`
 - Canonical governance: `AGENTS.md` and the six owners under `docs/governance/`
+- Reusable governance pack: [docs/WORKSPACE_GOVERNANCE_PACK.md](docs/WORKSPACE_GOVERNANCE_PACK.md)
 - Product requirements: `docs/rds/`
 - Current open work: `docs/BACKLOG.md`
 
