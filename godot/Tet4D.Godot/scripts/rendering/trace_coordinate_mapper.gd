@@ -6,6 +6,7 @@ const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const AdaptiveLayerLayoutScript = preload("res://scripts/presentation/adaptive_layer_layout.gd")
 const LocalBoardPresentationGeometryScript = preload("res://scripts/presentation/local_board_presentation_geometry.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
+const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 
 var slice_stride := 6.0
 var _board_shape: Array = []
@@ -34,7 +35,8 @@ func configure(board_shape: Array, basis = null, spacing_scale: float = 1.0) -> 
 	var width: float = _local_geometry.local_extent.x if _local_geometry.is_configured() else 4.0
 	var height: float = _local_geometry.local_extent.y if _local_geometry.is_configured() else 4.0
 	var depth: float = _local_geometry.local_extent.z if _local_geometry.is_configured() else 4.0
-	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale, depth)
+	var screen_row_y_per_world_x := CameraRigScript.live_4d_screen_row_y_per_world_x() if _board_shape.size() == 4 else 0.0
+	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale, depth, screen_row_y_per_world_x)
 	slice_stride = layer_layout.tile_width + layer_layout.horizontal_gap
 
 

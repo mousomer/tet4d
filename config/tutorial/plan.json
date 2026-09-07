@@ -316,8 +316,8 @@
     },
     {
       "stage_id": "view_xw_neg",
-      "title": "View XW -",
-      "objective": "Rotate view XW negative 4 times.",
+      "title": "Exact XW CCW",
+      "objective": "Rotate the exact XW camera basis counterclockwise 4 times.",
       "applies_to": [
         "4d"
       ],
@@ -327,8 +327,8 @@
     },
     {
       "stage_id": "view_xw_pos",
-      "title": "View XW +",
-      "objective": "Rotate view XW positive 4 times.",
+      "title": "Exact XW CW",
+      "objective": "Rotate the exact XW camera basis clockwise 4 times.",
       "applies_to": [
         "4d"
       ],
@@ -338,8 +338,8 @@
     },
     {
       "stage_id": "view_zw_neg",
-      "title": "View ZW -",
-      "objective": "Rotate view ZW negative 4 times.",
+      "title": "Exact ZW CCW",
+      "objective": "Rotate the exact ZW camera basis counterclockwise 4 times.",
       "applies_to": [
         "4d"
       ],
@@ -349,14 +349,32 @@
     },
     {
       "stage_id": "view_zw_pos",
-      "title": "View ZW +",
-      "objective": "Rotate view ZW positive 4 times.",
+      "title": "Exact ZW CW",
+      "objective": "Rotate the exact ZW camera basis clockwise 4 times.",
       "applies_to": [
         "4d"
       ],
       "kind": "action",
       "action_id": "view_zw_pos",
       "order": 300
+    },
+    {
+      "stage_id": "view_zx_neg",
+      "title": "Exact XZ CCW",
+      "objective": "Rotate the exact XZ camera basis counterclockwise 4 times.",
+      "applies_to": ["4d"],
+      "kind": "action",
+      "action_id": "view_zx_neg",
+      "order": 301
+    },
+    {
+      "stage_id": "view_zx_pos",
+      "title": "Exact XZ CW",
+      "objective": "Rotate the exact XZ camera basis clockwise 4 times.",
+      "applies_to": ["4d"],
+      "kind": "action",
+      "action_id": "view_zx_pos",
+      "order": 302
     },
     {
       "stage_id": "mouse_orbit",
@@ -368,7 +386,7 @@
       ],
       "kind": "action",
       "action_id": "mouse_orbit",
-      "order": 301
+      "order": 303
     },
     {
       "stage_id": "mouse_zoom",
@@ -380,7 +398,7 @@
       ],
       "kind": "action",
       "action_id": "mouse_zoom",
-      "order": 302
+      "order": 304
     },
     {
       "stage_id": "toggle_grid",

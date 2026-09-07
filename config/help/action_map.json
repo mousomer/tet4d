@@ -35,6 +35,8 @@
     "pitch_pos": "camera_and_view",
     "view_xw_neg": "camera_and_view",
     "view_xw_pos": "camera_and_view",
+    "view_zx_neg": "camera_and_view",
+    "view_zx_pos": "camera_and_view",
     "view_zw_neg": "camera_and_view",
     "view_zw_pos": "camera_and_view",
     "zoom_in": "camera_and_view",

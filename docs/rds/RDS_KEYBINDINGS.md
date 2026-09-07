@@ -191,33 +191,26 @@ runtime must still consume that runtime's one action authority.
 11. Rotate `y-w -`/`y-w +`:`H`/`J`
 12. Rotate `z-w -`/`z-w +`:`N`/`M`
 
-#### 4D view group (profile-independent default)
+#### 4D exact camera-rotation group (profile-independent default)
 
-1. View `xw -/+`: `1`/`2`
-2. Yaw `-`/`+`: `3`/`4`
-3. Pitch `-`/`+`: `5`/`6`
-4. Zoom out / in: `7`/`8`
-5. Cycle projection: `9`
-6. Reset view: `0`
-7. Secondary View `zw -/+`: `;`/`'`
-8. Advanced camera aliases: small/macbook/tiny yaw fine `-`/`+`:`-`/`=`, full yaw fine `-`/`+`:`Numpad7`/`Numpad9`, full cycle/reset aliases:`Numpad1`/`Numpad3`, full secondary `zw -/+`:`Numpad-`/`Numpad+`
-9. Conflict policy: gameplay `rotate_xw/*` and `rotate_zw/*` always keep priority over camera actions unless explicitly rebound by user.
+1. Exact XZ view `-/+`: `1`/`2` (`view_zx_*` remains the stable internal action family).
+2. Exact XW view `-/+`: `3`/`4`.
+3. Exact ZW view `-/+`: `5`/`6`.
+4. Continuous orientation: yaw `O`/`L`, pitch `I`/`K`; it is distinct from exact basis rotation.
+5. Zoom out / in: `7`/`8`; cycle projection: `9`; reset view: `0`.
+6. The left key in every exact pair is negative/CCW and the right key is positive/CW.
+7. Conflict policy: gameplay rotations always keep priority over camera actions unless explicitly rebound by the user.
 
 #### 4.3.1 `macbook` profile (no function keys)
 1. 4D gameplay uses the same compact movement cluster as `small`, including `Q/E` for `w` translation.
-2. 4D view `xw -/+`: `1`/`2`.
-3. 4D view `zw -/+`: `;`/`'`.
-4. Yaw/Pitch/Zoom/Cycle/Reset use top-row digits `3-0`.
+2. 4D exact view XZ/XW/ZW uses the contiguous `1-6` family.
+3. Continuous yaw/pitch uses `O/L` and `I/K`; zoom/cycle/reset retain `7-0`.
 5. Help key default: `Tab`.
 
 #### 4.3.2 `macbook` no-keypad fallback (implemented, `BKL-P1-005`)
-1. Keep primary 4D camera/view mapping on top-row digits (`1-0`).
-2. Replace advanced keypad-only actions with standard keys:
-3. `yaw_fine_neg`: `-`
-4. `yaw_fine_pos`: `=`
-5. Secondary `view_zw_neg`: `;`
-6. Secondary `view_zw_pos`: `'`
-7. Conflict rule remains unchanged: gameplay keys keep priority over camera bindings.
+1. Keep exact basis rotation on top-row digits `1-6` and recovery/framing at `7-0`.
+2. Continuous orientation uses `O/L` and `I/K`; optional fine yaw remains `-`/`=`.
+3. Conflict rule remains unchanged: gameplay keys keep priority over camera bindings.
 
 ### 4.4 Godot Live-4D product-shell controls
 
@@ -229,7 +222,7 @@ These fixed bindings apply only to normal Godot Live-4D gameplay:
    Restart Game, `Esc` Main Menu. Shift is not Soft Drop.
 3. Piece rotation: `R/T` XY, `F/G` XZ, `V/B` YZ, `Y/U` XW, `H/J` YW, and
    `N/M` ZW.
-4. Exact 90-degree presentation basis: `1/2` XW, `;/'` ZW, `[/]` ZX, and
+4. Exact 90-degree presentation basis: `1/2` XZ, `3/4` XW, `5/6` ZW, and
    `0` Reset View. Reset View restores `B + L + V/P`; it is not Restart Game.
 5. Shared slice orientation `L`: `O/L` yaw and `I/K` pitch, plus left drag.
 6. Framing `V/P`: `-/=/+` and wheel zoom, right-drag pan, and double-click or

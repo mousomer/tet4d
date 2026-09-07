@@ -570,15 +570,16 @@ func _apply_live_4d_orientation_drag(delta: Vector2) -> void:
 		sensitivity_factor = float(preferences.get("sensitivity_factor", 1.0))
 		invert_y = bool(preferences.get("invert_y", false))
 		orbit_sensitivity = _camera_rig.orbit_sensitivity
-	# L is a passive object-space render transform. Its horizontal sign is the
-	# inverse of outer CameraRig orbit so an identical physical drag has the
-	# same apparent screen-space direction in Live 3D and Live 4D.
-	var yaw_delta := delta.x * orbit_sensitivity * sensitivity_factor
-	var vertical_direction := 1.0 if invert_y else -1.0
-	var pitch_delta := delta.y * orbit_sensitivity * sensitivity_factor * vertical_direction
+	var camera_delta := CameraRigScript.camera_orbit_delta(
+		delta,
+		orbit_sensitivity,
+		sensitivity_factor,
+		invert_y
+	)
+	var local_orientation_delta := CameraRigScript.passive_local_orientation_delta_for_camera_orbit(camera_delta)
 	_set_live_4d_local_orientation(
-		_live_4d_local_orientation.local_yaw + yaw_delta,
-		_live_4d_local_orientation.local_pitch + pitch_delta
+		_live_4d_local_orientation.local_yaw + local_orientation_delta.x,
+		_live_4d_local_orientation.local_pitch + local_orientation_delta.y
 	)
 
 
@@ -587,7 +588,7 @@ func _nudge_live_4d_local_yaw(delta_radians: float) -> void:
 	if _camera_rig != null:
 		sensitivity_factor = float(_camera_rig.presentation_snapshot().get("sensitivity_factor", 1.0))
 	_set_live_4d_local_orientation(
-		_live_4d_local_orientation.local_yaw + delta_radians * sensitivity_factor,
+		_live_4d_local_orientation.local_yaw + CameraRigScript.passive_local_yaw_delta_for_camera_yaw(delta_radians * sensitivity_factor),
 		_live_4d_local_orientation.local_pitch
 	)
 
@@ -630,24 +631,14 @@ func _refresh_live_4d_presentation(reset_fit_reference: bool = false) -> void:
 
 
 func _handle_live_4d_basis_input(event: InputEvent) -> bool:
-	if _event_action_pressed_once(event, ["view_xw_neg"]):
-		_apply_live_4d_basis_turn("xw", -1)
-		return true
-	if _event_action_pressed_once(event, ["view_xw_pos"]):
-		_apply_live_4d_basis_turn("xw", 1)
-		return true
-	if _event_action_pressed_once(event, ["view_zw_neg"]):
-		_apply_live_4d_basis_turn("zw", -1)
-		return true
-	if _event_action_pressed_once(event, ["view_zw_pos"]):
-		_apply_live_4d_basis_turn("zw", 1)
-		return true
-	if _event_action_pressed_once(event, ["view_zx_neg"]):
-		_apply_live_4d_basis_turn("zx", -1)
-		return true
-	if _event_action_pressed_once(event, ["view_zx_pos"]):
-		_apply_live_4d_basis_turn("zx", 1)
-		return true
+	for spec in LiveInputContractScript.exact_camera_rotation_specs():
+		var plane := str(spec.get("plane", "")).to_lower()
+		if _event_action_pressed_once(event, [str(spec["negative_action"])]):
+			_apply_live_4d_basis_turn(plane, -1)
+			return true
+		if _event_action_pressed_once(event, [str(spec["positive_action"])]):
+			_apply_live_4d_basis_turn(plane, 1)
+			return true
 	if _event_action_pressed_once(event, ["reset"]):
 		_reset_view()
 		return true

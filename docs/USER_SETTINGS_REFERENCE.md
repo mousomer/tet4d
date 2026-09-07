@@ -274,7 +274,7 @@ Explorer-only traversal controls, including upward and downward movement.
 #### Camera / View
 Board orbit, zoom, projection, and overlay controls.
 - 3D: 12 actions
-- 4D: 16 actions
+- 4D: 18 actions
 
 
 ### `macbook`
@@ -297,7 +297,7 @@ Explorer-only traversal controls, including upward and downward movement.
 #### Camera / View
 Board orbit, zoom, projection, and overlay controls.
 - 3D: 12 actions
-- 4D: 16 actions
+- 4D: 18 actions
 
 
 ### `small`
@@ -320,7 +320,7 @@ Explorer-only traversal controls, including upward and downward movement.
 #### Camera / View
 Board orbit, zoom, projection, and overlay controls.
 - 3D: 12 actions
-- 4D: 16 actions
+- 4D: 18 actions
 
 
 ### `tiny`
@@ -343,7 +343,7 @@ Explorer-only traversal controls, including upward and downward movement.
 #### Camera / View
 Board orbit, zoom, projection, and overlay controls.
 - 3D: 12 actions
-- 4D: 16 actions
+- 4D: 18 actions
 
 
 ## Godot shell settings

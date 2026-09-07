@@ -82,6 +82,13 @@ separate action groups. `view_xw_neg`, `view_xw_pos`, `view_zw_neg`,
 `view_zw_pos`, `view_zx_neg`, and `view_zx_pos` semantic actions own the exact
 view turns.
 
+The public exact-camera family is ordered `XZ`, `XW`, `ZW`, while the stable
+compatibility action IDs retain `view_zx_*` for the XZ pair. Its physical keys
+are `1/2`, `3/4`, and `5/6`; left is negative/CCW and right is positive/CW.
+`LiveInputContract` is the shared descriptor source for the camera family and
+the six piece-rotation planes, so routing, help, and interactive controls do
+not maintain parallel rotation inventories.
+
 Presentation movement intents map through the committed exact basis:
 
 - left/right use `visible_u`;
@@ -104,8 +111,8 @@ transport, or legality.
 input, help copy, and the compact orientation marker. In Live 4D it composes
 the exact signed basis with shared slice-local `L.local_yaw`, quantized to a
 nearest quarter turn using the inherited Python convention. Outer camera
-framing cannot enter the Live-4D resolver; 3D retains its existing camera-yaw
-projection. The resolver fixes local Y at canonical `+Y`,
+framing cannot enter the Live-4D resolver; 2D and 3D consume the currently
+presented camera yaw. The resolver fixes local Y at canonical `+Y`,
 maps Forward/Away to local positive depth, and maps slice movement through the
 signed current slice slot. Relative rotations multiply the local plane signs,
 then canonicalize axis order and invert direction when the order is swapped.
@@ -123,6 +130,8 @@ invert it.
 A basis turn does not change shared `L`, outer fitted framing, zoom intent, or
 pan offset. Basis-derived bounds and layout are recomputed independently.
 Slice-local orientation and outer framing controls do not modify basis state.
+`L` is a passive local transform: its yaw delta is the inverse of the shared
+outer-camera yaw delta exactly once, while pitch retains the shared sign.
 
 The exact destination basis commits when an action begins. A short reduced-
 motion-aware presentation settle animates toward that exact destination; the

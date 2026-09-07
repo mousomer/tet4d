@@ -84,7 +84,7 @@ class TestHelpTextRuntime(unittest.TestCase):
         }
         self.assertNotIn("move_y_explore", row_ids)
         self.assertIn("move_w", row_ids)
-        self.assertIn("cam_view_xw", row_ids)
+        self.assertIn("cam_exact_camera_rotation", row_ids)
 
 
 if __name__ == "__main__":

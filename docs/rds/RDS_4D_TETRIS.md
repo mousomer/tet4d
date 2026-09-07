@@ -95,17 +95,16 @@ Gameplay (default small profile):
 11. Rotate `z-w`: N/M
 
 View controls:
-1. View `xw -/+`: `1`/`2`
-2. View `zw -/+`: `3`/`4`
-3. Yaw turn (animated 90-degree): `5`/`6`
-4. Pitch turn (animated 90-degree): `7`/`8`
-5. Zoom: `9`/`0`
-6. Advanced camera (numeric keypad): yaw fine `-`/`+`=`Numpad7`/`Numpad9`, cycle projection=`Numpad1`, reset view=`Numpad3`
+1. Exact XZ `-/+`: `1`/`2` (`view_zx_*` remains the stable action ID).
+2. Exact XW `-/+`: `3`/`4`.
+3. Exact ZW `-/+`: `5`/`6`.
+4. Continuous orientation: yaw `O`/`L`, pitch `I`/`K`.
+5. Zoom: `7`/`8`; cycle projection: `9`; reset view: `0`.
 
-View-hyperplane extension (`xw` / `zw`) requirements:
-1. Camera/view-only turns in the `xw` and `zw` planes are render-space only and must not mutate gameplay coordinates/state.
+View-hyperplane extension (`xz` / `xw` / `zw`) requirements:
+1. Camera/view-only turns in the `xz`, `xw`, and `zw` planes are render-space only and must not mutate gameplay coordinates/state.
 2. Turns are animated and deterministic (same duration/interpolation profile as other view turns).
-3. Reset view also resets accumulated `xw` / `zw` view angles.
+3. Reset view also resets accumulated `xz` / `xw` / `zw` view angles.
 4. Key routing remains conflict-safe with gameplay `rotate_xw` / `rotate_zw`.
 5. Dedicated camera actions:
 6. `view_xw_neg`,
@@ -124,12 +123,13 @@ System:
 ### 5.1 Godot Live-4D controls and lifecycle
 
 1. Godot normal gameplay separates Piece movement, Piece rotation, exact
-   `90° View Rotation`, Slice orientation, Framing, Drop, Session, and
+   `90° Exact Camera Rotation`, Slice orientation, Framing, Drop, Session, and
    Navigation in the public help surface.
 2. Piece movement uses `A/D`, `W/S`, and `Q/E`; piece rotations use `R/T`,
    `F/G`, `V/B`, `Y/U`, `H/J`, and `N/M`; `Ctrl` is Soft Drop and `Space` is
    Hard Drop.
-3. Exact `B` actions are `1/2` XW, `;/'` ZW, and `[/]` ZX. `0` Reset View
+3. Exact `B` actions are `1/2` XZ, `3/4` XW, and `5/6` ZW. In every pair the
+   left key is negative/CCW and the right key is positive/CW. `0` Reset View
    restores `B + L + V/P` without changing native gameplay.
 4. Shared continuous `L` yaw/pitch uses `O/L`, `I/K`, and left drag. Only
    `Q(L.local_yaw)` joins exact `B` for relative command resolution; pitch is

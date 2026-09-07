@@ -35,6 +35,7 @@
     ],
     "project_governance": [
       "config/project/backlog_debt.json",
+      "config/project/codex_ci_lanes.json",
       "config/project/constants.json",
       "config/project/folder_balance_budgets.json",
       "config/project/format_allowlist.txt",
@@ -56,8 +57,13 @@
       "config/ui/theme.json"
     ]
   },
-  "combined_digest": "da8c07231d7397349857da874716e69e80fd9cd1143daa075d206cb5eabebd87",
+  "combined_digest": "afae1a9efa90bdfd8716da58e2c7c7661b091dfe54af90460ad70e77ea9fa0a7",
   "schema_files": [
+    {
+      "purpose": "board extent contract.schema JSON schema",
+      "sha256": "e685d207ac0519f792f67039f592b377495313b6d2a3d01a88b50938b12b5057",
+      "source_path": "config/schema/board_extent_contract.schema.json"
+    },
     {
       "purpose": "help action map.schema JSON schema",
       "sha256": "acb29a4b1b7d1aa7dd7e337e19667a057bee166008319aec88e7b97c6edc54fe",
@@ -89,6 +95,11 @@
       "source_path": "config/schema/save_state.schema.json"
     },
     {
+      "purpose": "topology contract.schema JSON schema",
+      "sha256": "7c5c4a03a8439eca35635909c05440489ce2997ac2830afed07e582dd9b6a2b2",
+      "source_path": "config/schema/topology_contract.schema.json"
+    },
+    {
       "purpose": "tutorial lessons.schema JSON schema",
       "sha256": "7caebcfc21e806fc941fadf7d92ee8eca791cbf102877b3674ff1a97c3927be8",
       "source_path": "config/schema/tutorial_lessons.schema.json"
@@ -104,29 +115,30 @@
     "config/gameplay/piece_sets_nd.json": "f92033f5b00b45f06d46c29a15cb9699e148faf6d11a1eb40e4219119af08242",
     "config/gameplay/score_analyzer.json": "eb720c5a9c7b1b2f7f0dce635a82eecbf62a88559437ee990c6828f42610fe42",
     "config/gameplay/tuning.json": "e239eee4afa6076f7eb53dacb3eaf58854f204c91a3b1265560b13625784c647",
-    "config/help/action_map.json": "c95a3cecfb31ff31af61645f4fdbcd846c1a0df6f26415d60aa5a15d05c2ab0d",
+    "config/help/action_map.json": "752c469f6ab741fe4dbc570baae008db79ac1f04abbd66e77b0055b544147ff1",
     "config/help/content/runtime_help_content.json": "0fd5cb6001813c51f232dfc7f04c03e2eabca99ce4edf0bcec2382cf8871c585",
     "config/help/icon_map.json": "8d058312c076281af70703e6182fa9c1952cf585dd6c8d8fe23e10e8ebdce362",
     "config/help/layout/runtime_help_layout.json": "490d986c7fdf4e9104b35411a3e283caa6b71c1f4415bbcbc2ceed728fd71ab1",
     "config/help/topics.json": "a5cde33fc950107e2e84a15c4cb45e9919d7d6a7ae8f4f9d8ad35d9b79703ad8",
-    "config/keybindings/catalog.json": "aefa9178c7d75586a2feaeeebc03b2b50d349a9e4907676fc700502de5ee8a9b",
-    "config/keybindings/defaults.json": "f5990e2a9c46a09570217ddc5b8aaea73fca1280a6a88f7002b9b0a8769e9100",
+    "config/keybindings/catalog.json": "92ece8f1c787c0c84e1189dbd94f3ec5e520f12c20f6e6002c51623c1ae7ad41",
+    "config/keybindings/defaults.json": "9142fe7e95ea59c99e8f00ac546ec1f970feb1a79a99fdcc24a6ea1cc5800292",
     "config/menu/defaults.json": "8efca9c309300eaa16a80b42c0a795fecce70971dabfa2b5ad815736f5341979",
     "config/menu/structure.json": "94a52df1986dcf9194c3704ba6e68c4cb43b53addc9251c3f22707b26b1a6e7a",
     "config/playbot/policy.json": "8b3aa9f093e7123ca7dcbf68d0d4d484fafe7b30c816bbbf9d8141e990ba45ea",
     "config/project/backlog_debt.json": "b5837703b4190a1f7fd149f6ae0f52653282f95663b495a0de2ba1584d329581",
+    "config/project/codex_ci_lanes.json": "1c9a0e45b131b6118572bf5ce111c687ff5e93f911d2d4125620c321d00a7466",
     "config/project/constants.json": "40b3fb2f1847a2be04eb0667a1162b44534af3c65984f34dc77b87fa8a7b3a22",
-    "config/project/folder_balance_budgets.json": "3aa7d986f51f282d67eda41a9fc049e2e7b500300af3a113e4940b190738ca29",
+    "config/project/folder_balance_budgets.json": "40be71886ddf09abed928139b9dae1377e3cd7f5d957501508322067481f3247",
     "config/project/format_allowlist.txt": "8cf5def88437d157738243eea6c4ee69cb9c18cc5c8402daa4a66977fa5631c0",
     "config/project/io_paths.json": "c1d3f5a8a5b53f0f73cb0c91bf565bbddb4eaa6691b2031ce5c03a9e61b1d40e",
     "config/project/policy/manifests/help_assets_manifest.json": "f65301e28c585cc61f6662b86b22c491f29b4adce604bf07fedb643cfbdf95e7",
     "config/project/policy/manifests/replay_manifest.json": "04bd5feb7c312f94043585b09eb62d5707075861c13660697f4599b14ae81395",
     "config/project/policy/manifests/secret_scan.json": "047a6c0cbd75fb8f8ee3874f2193b6b9f3ca618eef34af2a5b8586c6a37d127f",
-    "config/project/policy_pack.json": "d138e8b3bcf402114f18ce34fb7de7c382ebcc512de383a7247b647254142d11",
+    "config/project/policy_pack.json": "da6e2dd66e723d224a65aac5c1e70150ff4e982f744304bb76918fe6399058fd",
     "config/topology/designer_presets.json": "aa580530ae440285615e6f4d27f168a637efd481dfe688de4580fdfd16957a6a",
     "config/topology/lab_menu.json": "66dca73fdd7d141d6d2d001c1af0da6a5718b5cde6bd01d471502089b468110c",
-    "config/tutorial/lessons.json": "5623e0313d97a399f8eab713bb51884faf2b3ec4e8d1043acc74225f3ab1f024",
-    "config/tutorial/plan.json": "a51aca8ad29fad28c8fcfbd99f03ea3092a7bbcc2cea841db02c998214a8615c",
+    "config/tutorial/lessons.json": "54b4c6d166ca55d309d8eeb024a98f7c7c7bb9f6a7444f6170ab35d3cf6538dd",
+    "config/tutorial/plan.json": "571f0e443914ff5075b40232d0f23c89ffaed4061328b62dc3e42fe72393318b",
     "config/ui/theme.json": "064415967548a3fe02c85d50ac303557fdd919c393d4ff31058c00f5e442c216"
   },
   "source_files": {
@@ -1929,6 +1941,8 @@
           "view_xw_pos": "camera_and_view",
           "view_zw_neg": "camera_and_view",
           "view_zw_pos": "camera_and_view",
+          "view_zx_neg": "camera_and_view",
+          "view_zx_pos": "camera_and_view",
           "yaw_fine_neg": "camera_and_view",
           "yaw_fine_pos": "camera_and_view",
           "yaw_neg": "camera_and_view",
@@ -1940,7 +1954,7 @@
         "version": 1
       },
       "payload_included": true,
-      "sha256": "c95a3cecfb31ff31af61645f4fdbcd846c1a0df6f26415d60aa5a15d05c2ab0d"
+      "sha256": "752c469f6ab741fe4dbc570baae008db79ac1f04abbd66e77b0055b544147ff1"
     },
     "config/help/content/runtime_help_content.json": {
       "category": "help_defaults",
@@ -2985,40 +2999,58 @@
             "order": 50
           },
           "view_xw_neg": {
-            "description": "Turn view in x-w plane by -90 degrees (camera only).",
+            "description": "Exact camera-basis rotation in XW by -90 degrees (CCW; camera only).",
             "dimensions": [
               4
             ],
             "group": "camera",
-            "label": "View x-w -",
+            "label": "Exact XW CCW",
             "order": 560
           },
           "view_xw_pos": {
-            "description": "Turn view in x-w plane by +90 degrees (camera only).",
+            "description": "Exact camera-basis rotation in XW by +90 degrees (CW; camera only).",
             "dimensions": [
               4
             ],
             "group": "camera",
-            "label": "View x-w +",
+            "label": "Exact XW CW",
             "order": 570
           },
           "view_zw_neg": {
-            "description": "Turn view in z-w plane by -90 degrees (camera only).",
+            "description": "Exact camera-basis rotation in ZW by -90 degrees (CCW; camera only).",
             "dimensions": [
               4
             ],
             "group": "camera",
-            "label": "View z-w -",
+            "label": "Exact ZW CCW",
             "order": 580
           },
           "view_zw_pos": {
-            "description": "Turn view in z-w plane by +90 degrees (camera only).",
+            "description": "Exact camera-basis rotation in ZW by +90 degrees (CW; camera only).",
             "dimensions": [
               4
             ],
             "group": "camera",
-            "label": "View z-w +",
+            "label": "Exact ZW CW",
             "order": 590
+          },
+          "view_zx_neg": {
+            "description": "Exact camera-basis rotation in XZ by -90 degrees (CCW; camera only).",
+            "dimensions": [
+              4
+            ],
+            "group": "camera",
+            "label": "Exact XZ CCW",
+            "order": 540
+          },
+          "view_zx_pos": {
+            "description": "Exact camera-basis rotation in XZ by +90 degrees (CW; camera only).",
+            "dimensions": [
+              4
+            ],
+            "group": "camera",
+            "label": "Exact XZ CW",
+            "order": 550
           },
           "yaw_fine_neg": {
             "description": "Yaw camera by -15 degrees.",
@@ -3473,30 +3505,21 @@
                   "template": "pitch +/-90"
                 },
                 {
-                  "id": "cam_view_xw",
+                  "id": "cam_exact_camera_rotation",
                   "key_actions": [
+                    "view_zx_neg",
+                    "view_zx_pos",
                     "view_xw_neg",
-                    "view_xw_pos"
-                  ],
-                  "modes": [
-                    "4d"
-                  ],
-                  "order": 40,
-                  "requires": [],
-                  "template": "view x-w +/-90"
-                },
-                {
-                  "id": "cam_view_zw",
-                  "key_actions": [
+                    "view_xw_pos",
                     "view_zw_neg",
                     "view_zw_pos"
                   ],
                   "modes": [
                     "4d"
                   ],
-                  "order": 50,
+                  "order": 40,
                   "requires": [],
-                  "template": "view z-w +/-90"
+                  "template": "exact camera rotation: XZ CCW/CW, XW CCW/CW, ZW CCW/CW"
                 },
                 {
                   "id": "cam_zoom",
@@ -3634,7 +3657,7 @@
         "version": 1
       },
       "payload_included": true,
-      "sha256": "aefa9178c7d75586a2feaeeebc03b2b50d349a9e4907676fc700502de5ee8a9b"
+      "sha256": "92ece8f1c787c0c84e1189dbd94f3ec5e520f12c20f6e6002c51623c1ae7ad41"
     },
     "config/keybindings/defaults.json": {
       "category": "keybinding_defaults",
@@ -3724,28 +3747,32 @@
                   93
                 ],
                 "pitch_neg": [
-                  53
+                  105
                 ],
                 "pitch_pos": [
-                  54
+                  107
                 ],
                 "reset": [
                   48,
                   1073741915
                 ],
                 "view_xw_neg": [
-                  49
+                  51
                 ],
                 "view_xw_pos": [
-                  50
+                  52
                 ],
                 "view_zw_neg": [
-                  59,
-                  1073741910
+                  53
                 ],
                 "view_zw_pos": [
-                  39,
-                  1073741911
+                  54
+                ],
+                "view_zx_neg": [
+                  49
+                ],
+                "view_zx_pos": [
+                  50
                 ],
                 "yaw_fine_neg": [
                   1073741919
@@ -3754,10 +3781,10 @@
                   1073741921
                 ],
                 "yaw_neg": [
-                  51
+                  111
                 ],
                 "yaw_pos": [
-                  52
+                  108
                 ],
                 "zoom_in": [
                   56
@@ -4024,25 +4051,31 @@
                   93
                 ],
                 "pitch_neg": [
-                  53
+                  105
                 ],
                 "pitch_pos": [
-                  54
+                  107
                 ],
                 "reset": [
                   48
                 ],
                 "view_xw_neg": [
-                  49
+                  51
                 ],
                 "view_xw_pos": [
-                  50
+                  52
                 ],
                 "view_zw_neg": [
-                  59
+                  53
                 ],
                 "view_zw_pos": [
-                  39
+                  54
+                ],
+                "view_zx_neg": [
+                  49
+                ],
+                "view_zx_pos": [
+                  50
                 ],
                 "yaw_fine_neg": [
                   45
@@ -4051,10 +4084,10 @@
                   61
                 ],
                 "yaw_neg": [
-                  51
+                  111
                 ],
                 "yaw_pos": [
-                  52
+                  108
                 ],
                 "zoom_in": [
                   56
@@ -4297,25 +4330,31 @@
                   93
                 ],
                 "pitch_neg": [
-                  53
+                  105
                 ],
                 "pitch_pos": [
-                  54
+                  107
                 ],
                 "reset": [
                   48
                 ],
                 "view_xw_neg": [
-                  49
+                  51
                 ],
                 "view_xw_pos": [
-                  50
+                  52
                 ],
                 "view_zw_neg": [
-                  59
+                  53
                 ],
                 "view_zw_pos": [
-                  39
+                  54
+                ],
+                "view_zx_neg": [
+                  49
+                ],
+                "view_zx_pos": [
+                  50
                 ],
                 "yaw_fine_neg": [
                   45
@@ -4324,10 +4363,10 @@
                   61
                 ],
                 "yaw_neg": [
-                  51
+                  111
                 ],
                 "yaw_pos": [
-                  52
+                  108
                 ],
                 "zoom_in": [
                   56
@@ -4570,25 +4609,31 @@
                   93
                 ],
                 "pitch_neg": [
-                  53
+                  105
                 ],
                 "pitch_pos": [
-                  54
+                  107
                 ],
                 "reset": [
                   48
                 ],
                 "view_xw_neg": [
-                  49
+                  51
                 ],
                 "view_xw_pos": [
-                  50
+                  52
                 ],
                 "view_zw_neg": [
-                  59
+                  53
                 ],
                 "view_zw_pos": [
-                  39
+                  54
+                ],
+                "view_zx_neg": [
+                  49
+                ],
+                "view_zx_pos": [
+                  50
                 ],
                 "yaw_fine_neg": [
                   45
@@ -4597,10 +4642,10 @@
                   61
                 ],
                 "yaw_neg": [
-                  51
+                  111
                 ],
                 "yaw_pos": [
-                  52
+                  108
                 ],
                 "zoom_in": [
                   56
@@ -4783,7 +4828,7 @@
         "version": 1
       },
       "payload_included": true,
-      "sha256": "f5990e2a9c46a09570217ddc5b8aaea73fca1280a6a88f7002b9b0a8769e9100"
+      "sha256": "9142fe7e95ea59c99e8f00ac546ec1f970feb1a79a99fdcc24a6ea1cc5800292"
     },
     "config/menu/defaults.json": {
       "category": "menu_defaults",
@@ -7491,6 +7536,397 @@
       "payload_included": true,
       "sha256": "b5837703b4190a1f7fd149f6ae0f52653282f95663b495a0de2ba1584d329581"
     },
+    "config/project/codex_ci_lanes.json": {
+      "category": "project_governance",
+      "format": "json",
+      "payload": {
+        "abstract_requirements": {
+          "platform": [
+            "platform_macos",
+            "platform_windows",
+            "platform_linux",
+            "platform_android",
+            "platform_ipados"
+          ]
+        },
+        "always_run_lanes": [
+          "baseline"
+        ],
+        "full_repository_gate_lanes": [
+          "baseline",
+          "documentation_governance",
+          "python",
+          "godot",
+          "native",
+          "deterministic_parity",
+          "integration",
+          "packaging",
+          "platform_macos",
+          "platform_ipados",
+          "release_acceptance"
+        ],
+        "lane_order": [
+          "baseline",
+          "documentation_governance",
+          "python",
+          "godot",
+          "native",
+          "deterministic_parity",
+          "integration",
+          "packaging",
+          "platform_macos",
+          "platform_ipados",
+          "release_acceptance"
+        ],
+        "manual_requirements": [
+          "human_visual",
+          "platform_windows",
+          "platform_linux",
+          "platform_android"
+        ],
+        "path_classification": {
+          "cross_layer_requirements": [
+            "python",
+            "godot",
+            "native",
+            "packaging"
+          ],
+          "cross_layer_verification_requirement": "integration",
+          "rules": [
+            {
+              "id": "ci_and_shared_infrastructure",
+              "patterns": [
+                ".github/workflows/**",
+                "scripts/**",
+                "pyproject.toml",
+                "setup.cfg",
+                "requirements*.txt",
+                ".gitignore",
+                ".gitattributes"
+              ],
+              "requirements": [
+                "governance_structure",
+                "python"
+              ],
+              "requires_full_repository_gate": true
+            },
+            {
+              "id": "codex_ci_selection_infrastructure",
+              "patterns": [
+                "config/project/codex_ci_lanes.json",
+                "tools/governance/classify_codex_ci_paths.py",
+                "tools/governance/select_codex_ci_lanes.py",
+                "tests/unit/governance/test_classify_codex_ci_paths.py",
+                "tests/unit/governance/test_select_codex_ci_lanes.py",
+                "tests/unit/governance/test_platform_ci_routing.py"
+              ],
+              "requirements": [
+                "governance_structure",
+                "python"
+              ],
+              "requires_full_repository_gate": true
+            },
+            {
+              "id": "governance_documents",
+              "patterns": [
+                "AGENTS.md",
+                "**/AGENTS.md",
+                "docs/governance/**",
+                "docs/architecture/authority_map.md",
+                "docs/architecture/authority_transfer_protocol.md"
+              ],
+              "requirements": [
+                "documentation",
+                "governance_structure"
+              ]
+            },
+            {
+              "id": "governance_configuration",
+              "patterns": [
+                "config/project/**"
+              ],
+              "requirements": [
+                "governance_structure"
+              ]
+            },
+            {
+              "id": "governance_python",
+              "patterns": [
+                "tools/governance/**",
+                "tests/unit/governance/**"
+              ],
+              "requirements": [
+                "governance_structure",
+                "python"
+              ]
+            },
+            {
+              "id": "documentation",
+              "patterns": [
+                "*.md",
+                "**/*.md",
+                "LICENSE*"
+              ],
+              "requirements": [
+                "documentation"
+              ]
+            },
+            {
+              "id": "python",
+              "patterns": [
+                "front.py",
+                "cli/**",
+                "src/**/*.py",
+                "tests/*.py",
+                "tests/**/*.py",
+                "tools/**/*.py"
+              ],
+              "requirements": [
+                "python"
+              ]
+            },
+            {
+              "id": "deterministic_semantics",
+              "patterns": [
+                "config/gameplay/**",
+                "config/topology/**",
+                "src/tet4d/engine/gameplay/**",
+                "src/tet4d/engine/**/*replay*",
+                "src/tet4d/engine/**/*topology*",
+                "src/tet4d/engine/**/*trace*",
+                "tests/*replay*",
+                "tests/*topology*",
+                "tests/*trace*",
+                "tests/**/*replay*",
+                "tests/**/*topology*",
+                "tests/**/*trace*"
+              ],
+              "requirements": [
+                "python",
+                "deterministic"
+              ]
+            },
+            {
+              "id": "runtime_configuration",
+              "patterns": [
+                "config/**"
+              ],
+              "requirements": [
+                "python"
+              ]
+            },
+            {
+              "id": "parity_and_migration",
+              "patterns": [
+                "tools/migration/**",
+                "tools/parity/**",
+                "tests/unit/migration/**",
+                "tests/fixtures/parity/**"
+              ],
+              "requirements": [
+                "python",
+                "parity_or_conformance"
+              ]
+            },
+            {
+              "id": "godot",
+              "patterns": [
+                "godot/**"
+              ],
+              "requirements": [
+                "godot"
+              ]
+            },
+            {
+              "id": "native",
+              "patterns": [
+                "native/**"
+              ],
+              "requirements": [
+                "native"
+              ]
+            },
+            {
+              "id": "integration_tests",
+              "patterns": [
+                "tests/integration/**",
+                "tests/e2e/**"
+              ],
+              "requirements": [
+                "integration"
+              ]
+            },
+            {
+              "id": "packaging",
+              "patterns": [
+                "packaging/**"
+              ],
+              "requirements": [
+                "packaging"
+              ]
+            },
+            {
+              "id": "packaging_macos_platform",
+              "patterns": [
+                "packaging/godot/*macos*"
+              ],
+              "requirements": [
+                "packaging",
+                "platform",
+                "platform_macos"
+              ]
+            },
+            {
+              "id": "packaging_windows_platform",
+              "patterns": [
+                "packaging/godot/*windows*",
+                "tests/test_windows_godot_package_validator.py"
+              ],
+              "requirements": [
+                "packaging",
+                "platform",
+                "platform_windows"
+              ]
+            },
+            {
+              "id": "packaging_android_platform",
+              "patterns": [
+                "packaging/godot/*android*",
+                "tests/test_android_godot_export_validator.py"
+              ],
+              "requirements": [
+                "packaging",
+                "platform",
+                "platform_android"
+              ]
+            },
+            {
+              "id": "packaging_ipados_platform",
+              "patterns": [
+                "packaging/godot/*ipados*",
+                "tests/test_ipados_native_packaging.py",
+                "tests/test_ipados_xcode_project_validator.py"
+              ],
+              "requirements": [
+                "packaging",
+                "platform",
+                "platform_ipados"
+              ]
+            },
+            {
+              "id": "packaging_godot_export_reader",
+              "patterns": [
+                "packaging/godot/godot_pack.py"
+              ],
+              "requirements": [
+                "packaging",
+                "platform",
+                "platform_android",
+                "platform_ipados"
+              ]
+            },
+            {
+              "id": "packaging_godot_product_profile_staging",
+              "patterns": [
+                "packaging/godot/stage_product_profile.py"
+              ],
+              "requirements": [
+                "packaging",
+                "platform",
+                "platform_macos",
+                "platform_windows",
+                "platform_android",
+                "platform_ipados"
+              ]
+            }
+          ],
+          "schema_version": 1,
+          "unknown_path_policy": "full_repository_gate"
+        },
+        "platform_evidence": {
+          "abstract_requirement": "platform",
+          "description": "Platform verification carries explicit platform identity. The abstract family requirement never stands alone and never resolves to a single default platform.",
+          "hosted_lanes": {
+            "platform_ipados": {
+              "build_entrypoint": "packaging/godot/build_ipados.sh",
+              "canonical_command": "ipados_release_export",
+              "lane": "platform_ipados",
+              "packaging_consumer": "legacy_designer_ipados",
+              "platform_id": "ipados",
+              "workflow_job": "platform-ipados"
+            },
+            "platform_macos": {
+              "build_entrypoint": "packaging/godot/build_macos.sh",
+              "canonical_command": "macos_release_export",
+              "lane": "platform_macos",
+              "packaging_consumer": "godot_game_macos",
+              "platform_id": "macos",
+              "workflow_job": "platform-macos"
+            }
+          },
+          "platform_requirement_ids": {
+            "android": "platform_android",
+            "ipados": "platform_ipados",
+            "linux": "platform_linux",
+            "macos": "platform_macos",
+            "windows": "platform_windows"
+          },
+          "schema_version": 1,
+          "unhosted_platform_requirements": [
+            "platform_windows",
+            "platform_linux",
+            "platform_android"
+          ]
+        },
+        "requirement_to_lanes": {
+          "deterministic": [
+            "deterministic_parity"
+          ],
+          "documentation": [
+            "documentation_governance"
+          ],
+          "godot": [
+            "godot"
+          ],
+          "governance_structure": [
+            "documentation_governance"
+          ],
+          "human_visual": [],
+          "integration": [
+            "integration"
+          ],
+          "native": [
+            "native"
+          ],
+          "packaging": [
+            "packaging"
+          ],
+          "parity_or_conformance": [
+            "deterministic_parity"
+          ],
+          "platform": [],
+          "platform_android": [],
+          "platform_ipados": [
+            "platform_ipados"
+          ],
+          "platform_linux": [],
+          "platform_macos": [
+            "platform_macos"
+          ],
+          "platform_windows": [],
+          "python": [
+            "python"
+          ],
+          "release_acceptance": [
+            "release_acceptance"
+          ]
+        },
+        "resolution_schema_version": 1,
+        "schema_version": 1
+      },
+      "payload_included": true,
+      "sha256": "1c9a0e45b131b6118572bf5ce111c687ff5e93f911d2d4125620c321d00a7466"
+    },
     "config/project/constants.json": {
       "category": "project_governance",
       "format": "json",
@@ -7869,7 +8305,7 @@
             "profile": "micro_leaf"
           },
           {
-            "baseline_score": 0.95,
+            "baseline_score": 0.93,
             "baseline_status": "balanced",
             "path": "src/tet4d/engine/runtime/menu_structure",
             "profile": "micro_leaf"
@@ -7881,7 +8317,7 @@
             "profile": "micro_leaf"
           },
           {
-            "baseline_score": 0.94,
+            "baseline_score": 0.88,
             "baseline_status": "balanced",
             "path": "tests/unit/engine",
             "profile": "tests_leaf"
@@ -7889,7 +8325,7 @@
         ]
       },
       "payload_included": true,
-      "sha256": "3aa7d986f51f282d67eda41a9fc049e2e7b500300af3a113e4940b190738ca29"
+      "sha256": "40be71886ddf09abed928139b9dae1377e3cd7f5d957501508322067481f3247"
     },
     "config/project/format_allowlist.txt": {
       "category": "project_governance",
@@ -8059,7 +8495,7 @@
       "format": "json",
       "payload_included": false,
       "payload_omitted_reason": "Governance policy pack is indexed by digest; source file remains the machine-readable authority.",
-      "sha256": "d138e8b3bcf402114f18ce34fb7de7c382ebcc512de383a7247b647254142d11"
+      "sha256": "da6e2dd66e723d224a65aac5c1e70150ff4e982f744304bb76918fe6399058fd"
     },
     "config/topology/designer_presets.json": {
       "category": "topology_defaults",
@@ -11079,11 +11515,11 @@
                   "highlights": [
                     "camera_axes"
                   ],
-                  "hint": "Press View XW - 4 times.",
+                  "hint": "Press Exact XW CCW 4 times.",
                   "key_prompts": [
                     "view_xw_neg"
                   ],
-                  "text": "Change to another 4D viewing angle four times with XW-."
+                  "text": "Rotate the exact XW camera basis counterclockwise four times."
                 }
               },
               {
@@ -11111,11 +11547,11 @@
                   "highlights": [
                     "camera_axes"
                   ],
-                  "hint": "Press View XW + 4 times.",
+                  "hint": "Press Exact XW CW 4 times.",
                   "key_prompts": [
                     "view_xw_pos"
                   ],
-                  "text": "Change to another 4D viewing angle four times with XW+."
+                  "text": "Rotate the exact XW camera basis clockwise four times."
                 }
               },
               {
@@ -11143,11 +11579,11 @@
                   "highlights": [
                     "camera_axes"
                   ],
-                  "hint": "Press View ZW - 4 times.",
+                  "hint": "Press Exact ZW CCW 4 times.",
                   "key_prompts": [
                     "view_zw_neg"
                   ],
-                  "text": "Change to another 4D viewing angle four times with ZW-."
+                  "text": "Rotate the exact ZW camera basis counterclockwise four times."
                 }
               },
               {
@@ -11175,11 +11611,75 @@
                   "highlights": [
                     "camera_axes"
                   ],
-                  "hint": "Press View ZW + 4 times.",
+                  "hint": "Press Exact ZW CW 4 times.",
                   "key_prompts": [
                     "view_zw_pos"
                   ],
-                  "text": "Change to another 4D viewing angle four times with ZW+."
+                  "text": "Rotate the exact ZW camera basis clockwise four times."
+                }
+              },
+              {
+                "complete_when": {
+                  "event_count_required": 4,
+                  "events": [
+                    "view_zx_neg"
+                  ],
+                  "logic": "all",
+                  "predicates": []
+                },
+                "gating": {
+                  "allow": [
+                    "view_zx_neg",
+                    "menu",
+                    "help",
+                    "restart",
+                    "soft_drop"
+                  ],
+                  "deny": []
+                },
+                "id": "view_zx_neg",
+                "setup": {},
+                "ui": {
+                  "highlights": [
+                    "camera_axes"
+                  ],
+                  "hint": "Press Exact XZ CCW 4 times.",
+                  "key_prompts": [
+                    "view_zx_neg"
+                  ],
+                  "text": "Rotate the exact XZ camera basis counterclockwise four times."
+                }
+              },
+              {
+                "complete_when": {
+                  "event_count_required": 4,
+                  "events": [
+                    "view_zx_pos"
+                  ],
+                  "logic": "all",
+                  "predicates": []
+                },
+                "gating": {
+                  "allow": [
+                    "view_zx_pos",
+                    "menu",
+                    "help",
+                    "restart",
+                    "soft_drop"
+                  ],
+                  "deny": []
+                },
+                "id": "view_zx_pos",
+                "setup": {},
+                "ui": {
+                  "highlights": [
+                    "camera_axes"
+                  ],
+                  "hint": "Press Exact XZ CW 4 times.",
+                  "key_prompts": [
+                    "view_zx_pos"
+                  ],
+                  "text": "Rotate the exact XZ camera basis clockwise four times."
                 }
               },
               {
@@ -11628,7 +12128,7 @@
         "schema_version": 1
       },
       "payload_included": true,
-      "sha256": "5623e0313d97a399f8eab713bb51884faf2b3ec4e8d1043acc74225f3ab1f024"
+      "sha256": "54b4c6d166ca55d309d8eeb024a98f7c7c7bb9f6a7444f6170ab35d3cf6538dd"
     },
     "config/tutorial/plan.json": {
       "category": "tutorial_defaults",
@@ -11954,10 +12454,10 @@
               "4d"
             ],
             "kind": "action",
-            "objective": "Rotate view XW negative 4 times.",
+            "objective": "Rotate the exact XW camera basis counterclockwise 4 times.",
             "order": 270,
             "stage_id": "view_xw_neg",
-            "title": "View XW -"
+            "title": "Exact XW CCW"
           },
           {
             "action_id": "view_xw_pos",
@@ -11965,10 +12465,10 @@
               "4d"
             ],
             "kind": "action",
-            "objective": "Rotate view XW positive 4 times.",
+            "objective": "Rotate the exact XW camera basis clockwise 4 times.",
             "order": 280,
             "stage_id": "view_xw_pos",
-            "title": "View XW +"
+            "title": "Exact XW CW"
           },
           {
             "action_id": "view_zw_neg",
@@ -11976,10 +12476,10 @@
               "4d"
             ],
             "kind": "action",
-            "objective": "Rotate view ZW negative 4 times.",
+            "objective": "Rotate the exact ZW camera basis counterclockwise 4 times.",
             "order": 290,
             "stage_id": "view_zw_neg",
-            "title": "View ZW -"
+            "title": "Exact ZW CCW"
           },
           {
             "action_id": "view_zw_pos",
@@ -11987,10 +12487,32 @@
               "4d"
             ],
             "kind": "action",
-            "objective": "Rotate view ZW positive 4 times.",
+            "objective": "Rotate the exact ZW camera basis clockwise 4 times.",
             "order": 300,
             "stage_id": "view_zw_pos",
-            "title": "View ZW +"
+            "title": "Exact ZW CW"
+          },
+          {
+            "action_id": "view_zx_neg",
+            "applies_to": [
+              "4d"
+            ],
+            "kind": "action",
+            "objective": "Rotate the exact XZ camera basis counterclockwise 4 times.",
+            "order": 301,
+            "stage_id": "view_zx_neg",
+            "title": "Exact XZ CCW"
+          },
+          {
+            "action_id": "view_zx_pos",
+            "applies_to": [
+              "4d"
+            ],
+            "kind": "action",
+            "objective": "Rotate the exact XZ camera basis clockwise 4 times.",
+            "order": 302,
+            "stage_id": "view_zx_pos",
+            "title": "Exact XZ CW"
           },
           {
             "action_id": "mouse_orbit",
@@ -12000,7 +12522,7 @@
             ],
             "kind": "action",
             "objective": "Orbit camera with sustained mouse drag for at least 2 seconds.",
-            "order": 301,
+            "order": 303,
             "stage_id": "mouse_orbit",
             "title": "Mouse Orbit"
           },
@@ -12012,7 +12534,7 @@
             ],
             "kind": "action",
             "objective": "Zoom camera with mouse wheel scrolling for at least 2 seconds.",
-            "order": 302,
+            "order": 304,
             "stage_id": "mouse_zoom",
             "title": "Mouse Zoom"
           },
@@ -12175,7 +12697,7 @@
         "title": "Interactive Tutorial Stage Plan"
       },
       "payload_included": true,
-      "sha256": "a51aca8ad29fad28c8fcfbd99f03ea3092a7bbcc2cea841db02c998214a8615c"
+      "sha256": "571f0e443914ff5075b40232d0f23c89ffaed4061328b62dc3e42fe72393318b"
     },
     "config/ui/theme.json": {
       "category": "ui_defaults",

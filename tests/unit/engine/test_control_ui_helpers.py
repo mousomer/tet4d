@@ -47,7 +47,7 @@ class TestControlGroups(unittest.TestCase):
         groups = control_groups_for_dimension(4)
         names = [name for name, _ in groups]
         self.assertEqual(names, ["Main", "Translation", "Rotation", "Camera"])
-        self.assertEqual([len(rows) for _, rows in groups], [4, 6, 6, 9])
+        self.assertEqual([len(rows) for _, rows in groups], [4, 6, 6, 8])
         main_rows = groups[0][1]
         translation_rows = groups[1][1]
         camera_rows = groups[3][1]
@@ -56,8 +56,7 @@ class TestControlGroups(unittest.TestCase):
         self.assertTrue(any("\tpause menu\t" in row for row in main_rows))
         self.assertTrue(any("\trestart\t" in row for row in main_rows))
         self.assertFalse(any("\tprojection\t" in row for row in camera_rows))
-        self.assertTrue(any("\tview x-w +/-90\t" in row for row in camera_rows))
-        self.assertTrue(any("\tview z-w +/-90\t" in row for row in camera_rows))
+        self.assertTrue(any("\texact camera rotation: XZ CCW/CW, XW CCW/CW, ZW CCW/CW\t" in row for row in camera_rows))
         self.assertTrue(any("\tlocked cells alpha [,]\t" in row for row in camera_rows))
 
     def test_dim4_hides_exploration_rows_when_disabled(self) -> None:

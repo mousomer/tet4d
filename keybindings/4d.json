@@ -19,17 +19,23 @@
       "reset": [
         "0"
       ],
-      "view_xw_neg": [
+      "view_zx_neg": [
         "1"
       ],
-      "view_xw_pos": [
+      "view_zx_pos": [
         "2"
       ],
+      "view_xw_neg": [
+        "3"
+      ],
+      "view_xw_pos": [
+        "4"
+      ],
       "view_zw_neg": [
-        ";"
+        "5"
       ],
       "view_zw_pos": [
-        "'"
+        "6"
       ],
       "yaw_fine_neg": [
         "-"

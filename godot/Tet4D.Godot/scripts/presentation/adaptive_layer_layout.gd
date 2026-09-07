@@ -18,6 +18,7 @@ var tile_width := 1.0
 var tile_height := 1.0
 var horizontal_gap := 2.0
 var vertical_gap := 2.0
+var screen_row_y_per_world_x := 0.0
 
 
 func configure(
@@ -26,7 +27,8 @@ func configure(
 	local_height: float,
 	viewport_aspect: float = 1.7777778,
 	spacing_scale: float = 1.0,
-	local_depth: float = 1.0
+	local_depth: float = 1.0,
+	screen_row_slope: float = 0.0
 ) -> void:
 	layer_count = maxi(count, 1)
 	var supported_envelope := SliceLocalOrientationScript.normal_gameplay_extent_envelope(
@@ -36,6 +38,7 @@ func configure(
 	tile_height = supported_envelope.y
 	horizontal_gap = clampf(tile_width * HORIZONTAL_GUTTER_RATIO, MIN_SLICE_GUTTER, MAX_SLICE_GUTTER) * spacing_scale
 	vertical_gap = clampf(tile_height * VERTICAL_GUTTER_RATIO, MIN_VERTICAL_SLICE_GUTTER, MAX_VERTICAL_SLICE_GUTTER) * spacing_scale
+	screen_row_y_per_world_x = screen_row_slope
 	if layer_count <= 3:
 		columns = layer_count
 	elif layer_count == 4:
@@ -52,7 +55,7 @@ func anchor_for_layer(index: int) -> Vector3:
 	var row := safe_index / columns
 	return Vector3(
 		float(column) * (tile_width + horizontal_gap),
-		-float(row) * (tile_height + vertical_gap),
+		-float(row) * (tile_height + vertical_gap) + float(column) * (tile_width + horizontal_gap) * screen_row_y_per_world_x,
 		0.0
 	)
 

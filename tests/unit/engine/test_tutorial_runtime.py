@@ -593,6 +593,8 @@ class TutorialRuntimeTests(unittest.TestCase):
                     "view_xw_pos",
                     "view_zw_neg",
                     "view_zw_pos",
+                    "view_zx_neg",
+                    "view_zx_pos",
                     "mouse_orbit",
                     "mouse_zoom",
                     "toggle_grid",
