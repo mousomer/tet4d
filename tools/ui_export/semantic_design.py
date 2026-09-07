@@ -1,4 +1,4 @@
-"""Derived, non-authoritative semantic design projection for runtime UI probes.
+"""Derived, non-authoritative semantic projection for runtime UI probes.
 
 The rules in this module classify evidence already present in a runtime probe.
 They intentionally contain neither screen coordinates nor per-screen trees.
@@ -10,8 +10,15 @@ import re
 from collections import Counter
 from typing import Any
 
-GENERIC_ROLES = {"", "frame", "text", "screen"}
-_GENERATED = re.compile(r"(?:^|__)generated_[a-z]+generated_?\\d*(?:__|$)")
+GENERIC_ROLES = {"", "frame", "container", "text", "screen"}
+_GENERATED_RUNTIME_IDENTIFIER = re.compile(
+    r"(?:^|__)generated(?:_[a-z0-9]+)*_generated_\d+(?:__|$)"
+)
+
+
+def is_generated_runtime_identifier(identifier: str) -> bool:
+    """Recognize the normalized identifiers emitted for generated runtime nodes."""
+    return bool(_GENERATED_RUNTIME_IDENTIFIER.search(identifier))
 
 
 def _walk(node: dict[str, Any]):
@@ -26,11 +33,15 @@ def _meaningful(node: dict[str, Any]) -> bool:
         return False
     role = str(node.get("semantic_role", ""))
     identifier = str(node["semantic_id"])
+    if bool(node.get("generated", False)) or is_generated_runtime_identifier(
+        identifier
+    ):
+        return False
     if node.get("kind") == "viewport" or role not in GENERIC_ROLES:
         return True
     # A named runtime control remains independently editable.  Generated labels
     # and containers are represented by their nearest meaningful ancestor.
-    return bool(node.get("text")) and not _GENERATED.search(identifier)
+    return bool(node.get("text"))
 
 
 def _name(node: dict[str, Any]) -> str:
@@ -38,13 +49,22 @@ def _name(node: dict[str, Any]) -> str:
     if text and len(text) <= 48:
         return text
     source = str(node["semantic_id"]).split("__")[-1]
-    source = re.sub(r"generated_?[a-z]+_?\\d*", "", source).strip("_")
     source = source or str(node.get("semantic_role", "region"))
     return source.replace("_", " ").title()
 
 
 def _style(node: dict[str, Any]) -> dict[str, Any]:
     return dict(node.get("style", {}))
+
+
+def _semantic_kind(node: dict[str, Any]) -> str:
+    kind = str(node.get("kind", "container"))
+    return kind if kind in {"screen", "viewport", "text"} else "container"
+
+
+def _semantic_role(node: dict[str, Any]) -> str:
+    role = str(node.get("semantic_role", node.get("kind", "container")))
+    return "container" if role == "frame" else role
 
 
 def _semantic_id(node: dict[str, Any]) -> str:
@@ -100,8 +120,8 @@ def extract_screen(screen: dict[str, Any]) -> dict[str, Any]:
             "name": _name(node)
             if source != root["semantic_id"]
             else f"{screen['provenance']['mode'].upper()} Game",
-            "role": node.get("semantic_role", node.get("kind", "region")),
-            "kind": "text" if node.get("kind") == "text" else node.get("kind", "frame"),
+            "role": _semantic_role(node),
+            "kind": _semantic_kind(node),
             "bounds": node["bounds"],
             "visible": node.get("visible", True),
             "style": _style(node),
@@ -117,7 +137,7 @@ def extract_screen(screen: dict[str, Any]) -> dict[str, Any]:
         if source != root["semantic_id"]:
             models[parent[source]]["children"].append(model)
     return {
-        "schema_version": "tet4d.semantic-design.v1",
+        "schema_version": "tet4d.semantic-projection.v1",
         "provenance": screen["provenance"],
         "root": models[root["semantic_id"]],
     }

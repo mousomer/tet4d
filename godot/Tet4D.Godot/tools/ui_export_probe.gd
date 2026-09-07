@@ -7,6 +7,15 @@ func _initialize() -> void:
 
 func _capture() -> void:
 	var target := OS.get_cmdline_user_args()[0]
+	if not target.is_absolute_path():
+		push_error("UI export target must be an absolute path")
+		quit(1)
+		return
+	var directory_result := DirAccess.make_dir_recursive_absolute(target)
+	if directory_result != OK:
+		push_error("Unable to create UI export target: %s" % target)
+		quit(1)
+		return
 	var root := SCENE.instantiate() as Control
 	get_root().add_child(root)
 	await process_frame
@@ -28,7 +37,7 @@ func _capture() -> void:
 
 func _export_control(control: Control) -> Dictionary:
 	var rect := control.get_global_rect()
-	var node := {"semantic_id": _semantic_id(control), "kind": _kind(control), "semantic_role": str(control.get_meta("semantic_role", _kind(control))), "bounds": [roundi(rect.position.x), roundi(rect.position.y), roundi(rect.size.x), roundi(rect.size.y)], "visible": control.is_visible_in_tree(), "style": _style(control)}
+	var node := {"semantic_id": _semantic_id(control), "kind": _kind(control), "semantic_role": str(control.get_meta("semantic_role", _kind(control))), "generated": str(control.name).begins_with("@"), "bounds": [roundi(rect.position.x), roundi(rect.position.y), roundi(rect.size.x), roundi(rect.size.y)], "visible": control.is_visible_in_tree(), "style": _style(control)}
 	if control is Label or control is Button:
 		node["text"] = control.text
 	var children: Array = []
@@ -49,7 +58,7 @@ func _kind(control: Control) -> String:
 		return "text"
 	if control is SubViewportContainer:
 		return "viewport"
-	return "frame"
+	return "container"
 
 func _style(control: Control) -> Dictionary:
 	var style := {}

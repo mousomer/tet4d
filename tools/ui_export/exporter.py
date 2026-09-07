@@ -50,12 +50,12 @@ def _json(value: Any) -> str:
 def _normalize_node(node: dict[str, Any]) -> dict[str, Any]:
     result = {
         "semantic_id": str(node["semantic_id"]),
-        "kind": str(node.get("kind", "frame")),
+        "kind": str(node.get("kind", "container")),
         "bounds": _bounds(node["bounds"]),
         "visible": bool(node.get("visible", True)),
-        "semantic_role": str(node.get("semantic_role", node.get("kind", "frame"))),
+        "semantic_role": str(node.get("semantic_role", node.get("kind", "container"))),
     }
-    for key in ("text", "style", "provenance"):
+    for key in ("text", "style", "provenance", "generated"):
         if key in node:
             result[key] = node[key]
     children = [_normalize_node(child) for child in node.get("children", [])]
@@ -110,8 +110,12 @@ def semantic_payload(
         raise ValueError(f"unknown projection: {projection}")
     return {
         "format": "tet4d.semantic-export.v1",
+        "source_schema": SCHEMA_VERSION,
+        "projection_schema": "tet4d.semantic-projection.v1",
         "projection": projection,
-        "name": "Tet4D semantic UI export" if projection == "semantic" else "Tet4D runtime UI export",
+        "name": "Tet4D semantic UI export"
+        if projection == "semantic"
+        else "Tet4D runtime UI export",
         "design_inventory": inventory(screens) if projection == "semantic" else {},
         "screens": screens,
     }
@@ -138,29 +142,8 @@ def main() -> None:
     parser.add_argument(
         "--projection", choices=("semantic", "runtime"), default="semantic"
     )
-    parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    if args.check:
-        import tempfile
-
-        with tempfile.TemporaryDirectory() as tmp:
-            generated = Path(tmp)
-            expected = args.output
-            name = "semantic_ui.json" if args.projection == "semantic" else "runtime_ui.json"
-            expected_artifact = expected / args.projection / name
-            payload = json.loads(expected_artifact.read_text())
-            captured_commit = payload["screens"][0]["provenance"]["source_commit"]
-            export(
-                generated,
-                commit=captured_commit,
-                probes=args.probes,
-                projection=args.projection,
-            )
-            relative = Path(args.projection) / name
-            if (generated / relative).read_bytes() != expected_artifact.read_bytes():
-                raise SystemExit(f"UI export drift: {relative}")
-        return
-    export(args.output, projection=args.projection)
+    export(args.output, probes=args.probes, projection=args.projection)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from tools.ui_export.exporter import export, load_runtime_screens, semantic_payload
-from tools.ui_export.semantic_design import extract, node_count
+from tools.ui_export.semantic_design import (
+    extract,
+    is_generated_runtime_identifier,
+    node_count,
+)
 
 
 def _write_probes(root: Path) -> Path:
@@ -23,8 +29,30 @@ def _write_probes(root: Path) -> Path:
                     "bounds": [0, 0, 100, 80],
                     "visible": True,
                     "children": [
-                        {"semantic_id": "board", "kind": "viewport", "semantic_role": "gameplay_viewport", "bounds": [0, 0, 60, 80], "visible": True},
-                        {"semantic_id": "piece_controls", "kind": "frame", "semantic_role": "piece_controls", "bounds": [60, 0, 40, 80], "visible": True, "children": [{"semantic_id": "action", "kind": "text", "semantic_role": "action_button", "bounds": [60, 0, 40, 20], "visible": True, "text": "Line one\nLine two"}]},
+                        {
+                            "semantic_id": "board",
+                            "kind": "viewport",
+                            "semantic_role": "gameplay_viewport",
+                            "bounds": [0, 0, 60, 80],
+                            "visible": True,
+                        },
+                        {
+                            "semantic_id": "piece_controls",
+                            "kind": "frame",
+                            "semantic_role": "piece_controls",
+                            "bounds": [60, 0, 40, 80],
+                            "visible": True,
+                            "children": [
+                                {
+                                    "semantic_id": "action",
+                                    "kind": "text",
+                                    "semantic_role": "action_button",
+                                    "bounds": [60, 0, 40, 20],
+                                    "visible": True,
+                                    "text": "Line one\nLine two",
+                                }
+                            ],
+                        },
                     ],
                 },
             }
@@ -48,7 +76,9 @@ def test_exports_all_canonical_screens_deterministically(tmp_path):
     first = export(tmp_path / "one", commit="test-commit", probes=probes)
     second = export(tmp_path / "two", commit="test-commit", probes=probes)
     assert first == second
-    assert {(s["provenance"]["implementation"], s["provenance"]["mode"]) for s in first} == {
+    assert {
+        (s["provenance"]["implementation"], s["provenance"]["mode"]) for s in first
+    } == {
         (implementation, mode)
         for implementation in ("python", "godot")
         for mode in ("2d", "3d", "4d")
@@ -57,52 +87,171 @@ def test_exports_all_canonical_screens_deterministically(tmp_path):
 
 
 def test_semantic_payload_keeps_semantic_layers_and_provenance(tmp_path):
-    screens = export(tmp_path, commit="test-commit", probes=_write_probes(tmp_path / "probes"))
+    screens = export(
+        tmp_path, commit="test-commit", probes=_write_probes(tmp_path / "probes")
+    )
     payload = semantic_payload(screens)
     assert payload["format"] == "tet4d.semantic-export.v1"
+    assert payload["source_schema"] == "tet4d.ui-bootstrap.v2"
+    assert payload["projection_schema"] == "tet4d.semantic-projection.v1"
     assert len(payload["screens"]) == 6
+
     def descendants(node):
         for child in node.get("children", []):
             yield child
             yield from descendants(child)
 
-    assert any(child["kind"] == "text" for child in descendants(payload["screens"][0]["root"]))
-    assert all(child["provenance"]["runtime_ids"] for child in descendants(payload["screens"][1]["root"]))
+    assert any(
+        child["kind"] == "text" for child in descendants(payload["screens"][0]["root"])
+    )
+    assert all(
+        child["provenance"]["runtime_ids"]
+        for child in descendants(payload["screens"][1]["root"])
+    )
+    assert all(
+        child["kind"] != "frame" for child in descendants(payload["screens"][0]["root"])
+    )
 
 
 def test_runtime_probes_are_the_layout_authority(tmp_path):
     probes = _write_probes(tmp_path / "probes")
     screens = load_runtime_screens(probes=probes, commit="test-commit")
     assert len(screens) == 6
-    assert all(screen["root"]["bounds"] == {"x": 0, "y": 0, **screen["provenance"]["resolution"]} for screen in screens)
+    assert all(
+        screen["root"]["bounds"]
+        == {"x": 0, "y": 0, **screen["provenance"]["resolution"]}
+        for screen in screens
+    )
     assert all(screen["provenance"]["probe"].endswith("_v2") for screen in screens)
-    assert all((probes / screen["provenance"]["implementation"] / f"game_{screen['provenance']['mode']}.probe.json").is_file() for screen in screens)
-    payload = semantic_payload(export(tmp_path / "output", commit="test-commit", probes=probes))
+    assert all(
+        (
+            probes
+            / screen["provenance"]["implementation"]
+            / f"game_{screen['provenance']['mode']}.probe.json"
+        ).is_file()
+        for screen in screens
+    )
+    payload = semantic_payload(
+        export(tmp_path / "output", commit="test-commit", probes=probes)
+    )
     assert len(payload["screens"]) == 6
 
 
+def test_cli_uses_the_supplied_probe_root(tmp_path):
+    probes = _write_probes(tmp_path / "probes")
+    output = tmp_path / "output"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/ui_export/exporter.py",
+            "--probes",
+            str(probes),
+            "--output",
+            str(output),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.stderr == ""
+    assert (output / "semantic" / "semantic_ui.json").is_file()
+
+
 def test_semantic_projection_is_deterministic_and_materially_compact(tmp_path):
-    raw = export(tmp_path, commit="test-commit", probes=_write_probes(tmp_path / "probes"))
+    raw = export(
+        tmp_path, commit="test-commit", probes=_write_probes(tmp_path / "probes")
+    )
     first = extract(raw)
     second = extract(raw)
     assert first == second
     assert node_count(first) < node_count(raw) // 10
     assert node_count(first) < 1_000
-    godot = [screen for screen in first if screen["provenance"]["implementation"] == "godot"]
+    godot = [
+        screen for screen in first if screen["provenance"]["implementation"] == "godot"
+    ]
     assert all(3 <= node_count([screen]) <= 200 for screen in godot)
 
 
 def test_semantic_projection_preserves_regions_controls_and_provenance(tmp_path):
-    semantic = extract(export(tmp_path, commit="test-commit", probes=_write_probes(tmp_path / "probes")))
+    semantic = extract(
+        export(
+            tmp_path, commit="test-commit", probes=_write_probes(tmp_path / "probes")
+        )
+    )
+
     def walk(node):
         yield node
         for child in node.get("children", []):
             yield from walk(child)
+
     nodes = [node for screen in semantic for node in walk(screen["root"])]
     roles = {node["role"] for node in nodes}
     assert {"gameplay_viewport", "piece_controls", "action_button"} <= roles
     assert all(node["provenance"]["runtime_ids"] for node in nodes)
     assert not any("generated_margin" in node["semantic_id"] for node in nodes)
+
+
+def _screen_with_generated_wrappers() -> dict:
+    return {
+        "provenance": {"implementation": "godot", "mode": "4d", "probe": "fixture_v2"},
+        "root": {
+            "semantic_id": "game_screen",
+            "kind": "screen",
+            "bounds": {"x": 0, "y": 0, "width": 100, "height": 80},
+            "visible": True,
+            "children": [
+                {
+                    "semantic_id": "generated_margin_container_generated_1",
+                    "kind": "container",
+                    "generated": True,
+                    "bounds": {},
+                    "visible": True,
+                    "children": [
+                        {
+                            "semantic_id": "generated_v_box_container_generated_12",
+                            "kind": "container",
+                            "bounds": {},
+                            "visible": True,
+                            "text": "Generated V Box Container Generated 12",
+                            "children": [
+                                {
+                                    "semantic_id": "rotate_button",
+                                    "kind": "text",
+                                    "semantic_role": "action_button",
+                                    "bounds": {},
+                                    "visible": True,
+                                    "text": "Rotate",
+                                }
+                            ],
+                        }
+                    ],
+                },
+                {
+                    "semantic_id": "generated_container_help",
+                    "kind": "text",
+                    "bounds": {},
+                    "visible": True,
+                    "text": "Manual generated container help",
+                },
+            ],
+        },
+    }
+
+
+def test_generated_wrapper_with_text_is_removed_but_control_survives():
+    semantic = extract([_screen_with_generated_wrappers()])[0]["root"]
+    names = [child["name"] for child in semantic["children"]]
+    assert names == ["Rotate", "Manual generated container help"]
+    assert semantic["children"][0]["role"] == "action_button"
+    assert semantic["children"][0]["provenance"]["runtime_ids"] == ["rotate_button"]
+    assert all("Generated V Box" not in name for name in names)
+
+
+def test_generated_identifier_contract_is_precise():
+    assert is_generated_runtime_identifier("generated_v_box_container_generated_12")
+    assert is_generated_runtime_identifier("generated_margin_container_generated_3")
+    assert is_generated_runtime_identifier("generated_h_box_container_generated_9")
+    assert not is_generated_runtime_identifier("generated_container_help")
 
 
 def test_multiline_text_round_trips_as_real_newlines(tmp_path):
@@ -132,6 +281,10 @@ def test_multiline_text_round_trips_as_real_newlines(tmp_path):
         elif isinstance(node, str):
             yield node
 
-    values = [text for path in sources for text in strings(json.loads(path.read_text()))]
+    values = [
+        text for path in sources for text in strings(json.loads(path.read_text()))
+    ]
     assert any(chr(10) in text for text in values), "expected multi-line label text"
-    assert not any(chr(92) + "n" in text for text in values), "literal backslash-n in text"
+    assert not any(chr(92) + "n" in text for text in values), (
+        "literal backslash-n in text"
+    )

@@ -86,7 +86,7 @@ def capture(mode: str, output: Path) -> dict:
                 },
                 {
                     "semantic_id": "status_panel",
-                    "kind": "frame",
+                    "kind": "container",
                     "semantic_role": "status_and_controls",
                     "bounds": panel_box,
                     "visible": True,
@@ -112,7 +112,7 @@ def capture(mode: str, output: Path) -> dict:
                         },
                         {
                             "semantic_id": "piece_controls",
-                            "kind": "frame",
+                            "kind": "container",
                             "semantic_role": "piece_controls",
                             "bounds": [px + 6, py + 118, pw - 12, ph - 126],
                             "visible": True,
