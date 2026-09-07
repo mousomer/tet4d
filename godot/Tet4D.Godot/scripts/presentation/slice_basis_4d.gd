@@ -10,6 +10,11 @@ const AXIS_W := 3
 const PLANE_XW := "xw"
 const PLANE_ZW := "zw"
 const PLANE_ZX := "zx"
+# Public semantic authority names this plane XZ. `zx` is the established
+# internal token and keeps its exact turn semantics; `xz` is an alias for it,
+# not a reversed axis ordering. Normalization happens here, at the boundary,
+# so no caller carries its own translation.
+const PLANE_XZ := "xz"
 
 # Signed axes use +/- (axis + 1), avoiding a negative-zero representation.
 const IDENTITY_SLOTS := [AXIS_X + 1, AXIS_Y + 1, AXIS_Z + 1, AXIS_W + 1]
@@ -204,8 +209,18 @@ static func axis_name(axis: int) -> String:
 			return "?"
 
 
+# Accepts either the public descriptor or the internal token and returns the
+# established internal token. Unknown planes are returned unchanged so the
+# caller still reports them verbatim.
+static func normalize_plane(plane: String) -> String:
+	var normalized := plane.to_lower()
+	if normalized == PLANE_XZ:
+		return PLANE_ZX
+	return normalized
+
+
 static func _plane_axes(plane: String) -> Array:
-	match plane.to_lower():
+	match normalize_plane(plane):
 		PLANE_XW:
 			return [AXIS_X, AXIS_W]
 		PLANE_ZW:

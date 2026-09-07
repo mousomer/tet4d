@@ -10,6 +10,7 @@ func run() -> Array:
 	_test_mapping_bijection(failures)
 	_test_above_board_active_mapping(failures)
 	_test_signed_order_and_movement(failures)
+	_test_public_xz_alias(failures)
 	return failures
 
 
@@ -155,6 +156,30 @@ func _reachable_bases() -> Array:
 			for direction in [-1, 1]:
 				queue.append(basis.turned(plane, direction))
 	return result
+
+
+# Public semantic authority says XZ; `zx` is the established internal token.
+# `xz` must be an alias for exactly that behaviour, never a reversed ordering.
+func _test_public_xz_alias(failures: Array) -> void:
+	var identity = SliceBasis4DScript.identity()
+	for direction in [-1, 1]:
+		var public_turn = identity.turned("xz", direction)
+		var internal_turn = identity.turned("zx", direction)
+		if public_turn.slots() != internal_turn.slots():
+			failures.append(
+				"xz must alias zx for direction %d: got %s vs %s"
+				% [direction, public_turn.slots(), internal_turn.slots()]
+			)
+	# Guard against the alias silently becoming a reversed axis ordering.
+	_assert_slots(failures, identity.turned("xz", 1), [-3, 2, 1, 4], "public XZ+")
+	_assert_slots(failures, identity.turned("xz", -1), [3, 2, -1, 4], "public XZ-")
+	if SliceBasis4DScript.normalize_plane("XZ") != "zx":
+		failures.append("normalize_plane must fold the public XZ descriptor onto zx")
+	if SliceBasis4DScript.normalize_plane("ZX") != "zx":
+		failures.append("normalize_plane must preserve the internal zx token")
+	# A genuinely unsupported plane must still be rejected, not normalised away.
+	if identity.turned("xy", 1).slots() != identity.slots():
+		failures.append("unsupported planes must leave the basis unchanged")
 
 
 func _assert_slots(failures: Array, basis, expected: Array, label: String) -> void:

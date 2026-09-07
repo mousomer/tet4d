@@ -635,11 +635,9 @@ func _refresh_live_4d_presentation(reset_fit_reference: bool = false) -> void:
 
 func _handle_live_4d_basis_input(event: InputEvent) -> bool:
 	for spec in LiveInputContractScript.exact_camera_rotation_specs():
+		# Public descriptors are passed through verbatim. SliceBasis4D owns the
+		# XZ/zx compatibility normalization at its own boundary.
 		var plane := str(spec.get("plane", "")).to_lower()
-		# Public descriptors use canonical XZ ordering. SliceBasis4D preserves
-		# its established `zx` compatibility token internally.
-		if plane == "xz":
-			plane = "zx"
 		if _event_action_pressed_once(event, [str(spec["negative_action"])]):
 			_apply_live_4d_basis_turn(plane, -1)
 			return true

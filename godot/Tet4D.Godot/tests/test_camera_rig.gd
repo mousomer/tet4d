@@ -189,7 +189,12 @@ func _assert_shared_orbit_input_contract(failures: Array) -> void:
 
 func _assert_live_4d_screen_level_slice_rows(failures: Array, rig, presentation_root: Node3D) -> void:
 	var mapper := TraceCoordinateMapperScript.new()
-	mapper.configure([5, 7, 3, 4], SliceBasis4DScript.identity())
+	mapper.configure(
+		[5, 7, 3, 4],
+		SliceBasis4DScript.identity(),
+		1.0,
+		CameraRigScript.live_4d_screen_row_y_per_world_x()
+	)
 	if mapper.layer_layout.columns != 2 or mapper.layer_layout.rows != 2:
 		failures.append("four Live-4D slices must exercise the two-column row-alignment fixture")
 		return

@@ -1,6 +1,8 @@
 extends RefCounted
 
 const TraceCoordinateMapperScript = preload("res://scripts/rendering/trace_coordinate_mapper.gd")
+const BoardPresentationModelScript = preload("res://scripts/presentation/board_presentation_model.gd")
+const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 
 
 func run() -> Array:
@@ -39,6 +41,7 @@ func run() -> Array:
 	_assert_vector(failures, mapper.slice_label_position(1), second_anchor + Vector3(-3.15, -3.7, -2.65), "W label position")
 	_test_decomposed_asymmetric_mapping(failures)
 	_test_layout_anchor_oracle(failures)
+	_test_live_4d_row_correction_is_mode_scoped(failures)
 	return failures
 
 
@@ -67,7 +70,9 @@ func _test_decomposed_asymmetric_mapping(failures: Array) -> void:
 # cannot certify its own camera-compensated anchor result.
 func _test_layout_anchor_oracle(failures: Array) -> void:
 	var mapper := TraceCoordinateMapperScript.new()
-	mapper.configure([5, 7, 3, 4])
+	# The Live-4D row correction is supplied by the presentation owner, so this
+	# oracle opts in explicitly rather than relying on board dimensionality.
+	mapper.configure([5, 7, 3, 4], null, 1.0, _live_4d_screen_row_slope())
 	var layout = mapper.layer_layout
 	var expected_x: float = float(layout.tile_width) + float(layout.horizontal_gap)
 	var expected_y: float = expected_x * _live_4d_screen_row_slope()
@@ -90,3 +95,54 @@ func _live_4d_screen_row_slope() -> float:
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:
 	if actual.distance_to(expected) > 0.001:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+# The fixed-mount row correction belongs to Live 4D alone. A 4D replay shares
+# the dimensionality but not the camera contract, so it must stay uncorrected.
+func _test_live_4d_row_correction_is_mode_scoped(failures: Array) -> void:
+	var board_shape := [5, 7, 3, 4]
+	var expected_slope := CameraRigScript.live_4d_screen_row_y_per_world_x()
+	if absf(expected_slope) < 0.001:
+		failures.append("Live-4D row slope fixture must be non-zero to be discriminating")
+		return
+
+	var live := BoardPresentationModelScript.new()
+	live.configure({"trace_type": "live_4d", "dimension": 4, "board_shape": board_shape})
+	if not live.is_live_4d:
+		failures.append("live_4d fixture must be recognised as Live 4D")
+		return
+	var live_anchor: Vector3 = live.projection.mapper.slice_anchor(1)
+	var live_expected_y: float = live_anchor.x * expected_slope
+	if absf(live_anchor.y - live_expected_y) > 0.001:
+		failures.append(
+			"Live 4D must receive the fitted-mount row correction: expected y %s, got %s"
+			% [live_expected_y, live_anchor.y]
+		)
+
+	var replay := BoardPresentationModelScript.new()
+	replay.configure({"trace_type": "replay", "dimension": 4, "board_shape": board_shape})
+	if replay.is_live_4d:
+		failures.append("replay fixture must not be recognised as Live 4D")
+		return
+	var replay_anchor: Vector3 = replay.projection.mapper.slice_anchor(1)
+	if absf(replay_anchor.y) > 0.001:
+		failures.append(
+			"4D replay must not inherit the Live-4D fixed-mount correction: got y %s"
+			% replay_anchor.y
+		)
+	if absf(replay_anchor.x - live_anchor.x) > 0.001:
+		failures.append("only the row correction may differ between Live 4D and replay")
+
+	# 2D/3D never had a slice grid to correct; they must stay untouched.
+	for lower_case in [
+		{"trace_type": "live_3d", "dimension": 3, "board_shape": [5, 7, 3]},
+		{"trace_type": "replay", "dimension": 2, "board_shape": [10, 20]},
+	]:
+		var model := BoardPresentationModelScript.new()
+		model.configure(lower_case)
+		var anchor: Vector3 = model.projection.mapper.slice_anchor(0)
+		if absf(anchor.y) > 0.001:
+			failures.append(
+				"%s anchors must remain uncorrected: got y %s"
+				% [str(lower_case["trace_type"]), anchor.y]
+			)

@@ -1,0 +1,428 @@
+{
+  "case_id": "gameplay_plain_2d_configurable",
+  "commands": [
+    {
+      "action": "move",
+      "delta": [
+        1,
+        0
+      ],
+      "id": "move_right"
+    },
+    {
+      "action": "rotate",
+      "delta": 1,
+      "id": "rotate_cw"
+    },
+    {
+      "action": "hard_drop",
+      "id": "hard_drop"
+    }
+  ],
+  "dimension": 2,
+  "final": {
+    "locked_cell_count": 4,
+    "locked_cell_digest": "4032bcd7f4da9f762d4dea34bf7c896c78af46c9dfee40997dfa5721c9725141",
+    "score": 5,
+    "state_hash": "1dc3917b422d80166fc3b8d6be56333fe818199afdcd1574a9f4112ea69892fb"
+  },
+  "frames": [
+    {
+      "active_piece": {
+        "blocks": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "cells": [
+          [
+            4,
+            8
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            6,
+            8
+          ],
+          [
+            7,
+            8
+          ]
+        ],
+        "color_id": 8,
+        "pos": [
+          5,
+          8
+        ],
+        "rotation": 0,
+        "shape": "TRACE_2D"
+      },
+      "command": {
+        "action": "move",
+        "delta": [
+          1,
+          0
+        ],
+        "id": "move_right"
+      },
+      "command_id": "move_right",
+      "command_result": {
+        "active_cells_before": [
+          [
+            3,
+            8
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            6,
+            8
+          ]
+        ],
+        "locked_cell_delta": 0,
+        "return_value": true
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 0,
+        "locked_cell_delta": 0,
+        "soft_drop_legal_after": true
+      },
+      "frame_index": 0,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "soft_drop": true,
+          "x+": true,
+          "x-": true
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "locked_cells": [],
+      "score": 0,
+      "state_hash": "adadf6eba08a6cee593d6a5a0a5c0511da7fea981d04ee395cfc75c13ee984d8",
+      "topology_event": null
+    },
+    {
+      "active_piece": {
+        "blocks": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "cells": [
+          [
+            5,
+            6
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            5,
+            9
+          ]
+        ],
+        "color_id": 8,
+        "pos": [
+          5,
+          8
+        ],
+        "rotation": 1,
+        "shape": "TRACE_2D"
+      },
+      "command": {
+        "action": "rotate",
+        "delta": 1,
+        "id": "rotate_cw"
+      },
+      "command_id": "rotate_cw",
+      "command_result": {
+        "active_cells_before": [
+          [
+            4,
+            8
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            6,
+            8
+          ],
+          [
+            7,
+            8
+          ]
+        ],
+        "locked_cell_delta": 0,
+        "return_value": null
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 0,
+        "locked_cell_delta": 0,
+        "soft_drop_legal_after": true
+      },
+      "frame_index": 1,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "soft_drop": true,
+          "x+": true,
+          "x-": true
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "locked_cells": [],
+      "score": 0,
+      "state_hash": "ddb6312e99ada5cf2dae8def9b0e9552614ee724392b27a1c0c341826dd8d8b5",
+      "topology_event": null
+    },
+    {
+      "active_piece": {
+        "blocks": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "cells": [
+          [
+            3,
+            -2
+          ],
+          [
+            4,
+            -2
+          ],
+          [
+            4,
+            -1
+          ],
+          [
+            5,
+            -2
+          ]
+        ],
+        "color_id": 3,
+        "pos": [
+          4,
+          -2
+        ],
+        "rotation": 0,
+        "shape": "T"
+      },
+      "command": {
+        "action": "hard_drop",
+        "id": "hard_drop"
+      },
+      "command_id": "hard_drop",
+      "command_result": {
+        "active_cells_before": [
+          [
+            5,
+            6
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            5,
+            9
+          ]
+        ],
+        "locked_cell_delta": 4,
+        "return_value": null
+      },
+      "drop_lock_status": {
+        "game_over": false,
+        "locked_cell_count": 4,
+        "locked_cell_delta": 4,
+        "soft_drop_legal_after": true
+      },
+      "frame_index": 2,
+      "legal_moves": {
+        "has_active_piece": true,
+        "moves": {
+          "soft_drop": true,
+          "x+": true,
+          "x-": true
+        }
+      },
+      "lines": 0,
+      "locked_cell_digest": "4032bcd7f4da9f762d4dea34bf7c896c78af46c9dfee40997dfa5721c9725141",
+      "locked_cells": [
+        {
+          "coord": [
+            5,
+            16
+          ],
+          "value": 8
+        },
+        {
+          "coord": [
+            5,
+            17
+          ],
+          "value": 8
+        },
+        {
+          "coord": [
+            5,
+            18
+          ],
+          "value": 8
+        },
+        {
+          "coord": [
+            5,
+            19
+          ],
+          "value": 8
+        }
+      ],
+      "score": 5,
+      "state_hash": "fcdf99bd38dcec19832f481c8609f3f44168ca2235eb2ebbeadadc4604ba99d2",
+      "topology_event": null
+    }
+  ],
+  "generator": {
+    "name": "export_gameplay_trace",
+    "schema_version": 1
+  },
+  "initial": {
+    "active_piece": {
+      "blocks": [
+        [
+          -1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "cells": [
+        [
+          3,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          6,
+          8
+        ]
+      ],
+      "color_id": 8,
+      "pos": [
+        4,
+        8
+      ],
+      "rotation": 0,
+      "shape": "TRACE_2D"
+    },
+    "board_shape": [
+      10,
+      20
+    ],
+    "launch_parity": null,
+    "locked_cells": [],
+    "notes": [
+      "Stage 49 alternate-size 2D board-shape parity."
+    ],
+    "settings": {
+      "axis_sizes": [
+        10,
+        20
+      ],
+      "exploration_mode": false,
+      "explorer_profile_digest": null,
+      "explorer_rigid_play_enabled": null,
+      "gravity_axis": 1,
+      "piece_set": "classic",
+      "topology_mode": "bounded",
+      "wrap_gravity_axis": false
+    },
+    "settings_digest": "77b80a6ff912f19ff9c0274338806c577ab94255570caebfba4cd61eb31418eb"
+  },
+  "seed": 2049,
+  "topology_id": "plain",
+  "trace_type": "gameplay",
+  "trace_version": 1
+}

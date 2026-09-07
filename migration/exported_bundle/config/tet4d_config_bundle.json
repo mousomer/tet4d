@@ -57,7 +57,7 @@
       "config/ui/theme.json"
     ]
   },
-  "combined_digest": "afae1a9efa90bdfd8716da58e2c7c7661b091dfe54af90460ad70e77ea9fa0a7",
+  "combined_digest": "0d8173aafd4d3a8855bfa7cbef93cb0683e3906e767810ff5857a4af50b93d09",
   "schema_files": [
     {
       "purpose": "board extent contract.schema JSON schema",
@@ -121,7 +121,7 @@
     "config/help/layout/runtime_help_layout.json": "490d986c7fdf4e9104b35411a3e283caa6b71c1f4415bbcbc2ceed728fd71ab1",
     "config/help/topics.json": "a5cde33fc950107e2e84a15c4cb45e9919d7d6a7ae8f4f9d8ad35d9b79703ad8",
     "config/keybindings/catalog.json": "92ece8f1c787c0c84e1189dbd94f3ec5e520f12c20f6e6002c51623c1ae7ad41",
-    "config/keybindings/defaults.json": "9142fe7e95ea59c99e8f00ac546ec1f970feb1a79a99fdcc24a6ea1cc5800292",
+    "config/keybindings/defaults.json": "828e0520fa2fb9e92cacc6a1cb5037f0c498c1bad1ab54b765fd80b3bf3cc917",
     "config/menu/defaults.json": "8efca9c309300eaa16a80b42c0a795fecce70971dabfa2b5ad815736f5341979",
     "config/menu/structure.json": "94a52df1986dcf9194c3704ba6e68c4cb43b53addc9251c3f22707b26b1a6e7a",
     "config/playbot/policy.json": "8b3aa9f093e7123ca7dcbf68d0d4d484fafe7b30c816bbbf9d8141e990ba45ea",
@@ -3747,10 +3747,10 @@
                   93
                 ],
                 "pitch_neg": [
-                  105
+                  107
                 ],
                 "pitch_pos": [
-                  107
+                  105
                 ],
                 "reset": [
                   48,
@@ -4051,10 +4051,10 @@
                   93
                 ],
                 "pitch_neg": [
-                  105
+                  107
                 ],
                 "pitch_pos": [
-                  107
+                  105
                 ],
                 "reset": [
                   48
@@ -4330,10 +4330,10 @@
                   93
                 ],
                 "pitch_neg": [
-                  105
+                  107
                 ],
                 "pitch_pos": [
-                  107
+                  105
                 ],
                 "reset": [
                   48
@@ -4609,10 +4609,10 @@
                   93
                 ],
                 "pitch_neg": [
-                  105
+                  107
                 ],
                 "pitch_pos": [
-                  107
+                  105
                 ],
                 "reset": [
                   48
@@ -4828,7 +4828,7 @@
         "version": 1
       },
       "payload_included": true,
-      "sha256": "9142fe7e95ea59c99e8f00ac546ec1f970feb1a79a99fdcc24a6ea1cc5800292"
+      "sha256": "828e0520fa2fb9e92cacc6a1cb5037f0c498c1bad1ab54b765fd80b3bf3cc917"
     },
     "config/menu/defaults.json": {
       "category": "menu_defaults",

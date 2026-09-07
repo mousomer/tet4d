@@ -3,6 +3,7 @@ extends RefCounted
 class_name BoardPresentationModel
 
 const ProjectionLayoutScript = preload("res://scripts/presentation/projection_layout.gd")
+const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 
 var snapshot: Dictionary = {}
 var projection := ProjectionLayoutScript.new()
@@ -22,7 +23,19 @@ func configure(source_snapshot: Dictionary, basis = null, orientation = null, sp
 	is_live_3d = trace_type == "live_3d" and dimension == 3
 	is_live_4d = trace_type == "live_4d" and dimension == 4
 	uses_live_exterior_cells = is_live and dimension >= 3
-	projection.configure(snapshot, basis, orientation if is_live_4d else null, spacing_scale)
+	# Only Live 4D is mounted on the fixed fitted camera the row correction was
+	# derived for. A 4D replay shares the dimensionality but not that camera
+	# contract, so it receives no correction.
+	var screen_row_slope := (
+		CameraRigScript.live_4d_screen_row_y_per_world_x() if is_live_4d else 0.0
+	)
+	projection.configure(
+		snapshot,
+		basis,
+		orientation if is_live_4d else null,
+		spacing_scale,
+		screen_row_slope
+	)
 
 
 func current_bounds() -> Dictionary:

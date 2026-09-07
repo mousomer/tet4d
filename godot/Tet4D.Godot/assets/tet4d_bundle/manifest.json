@@ -10,7 +10,7 @@
   "bundle_version": 1,
   "config": {
     "bundle_path": "config/tet4d_config_bundle.json",
-    "combined_digest": "afae1a9efa90bdfd8716da58e2c7c7661b091dfe54af90460ad70e77ea9fa0a7",
+    "combined_digest": "0d8173aafd4d3a8855bfa7cbef93cb0683e3906e767810ff5857a4af50b93d09",
     "files": [
       {
         "category": "audio_defaults",
@@ -65,7 +65,7 @@
       {
         "category": "keybinding_defaults",
         "path": "config/keybindings/defaults.json",
-        "sha256": "9142fe7e95ea59c99e8f00ac546ec1f970feb1a79a99fdcc24a6ea1cc5800292"
+        "sha256": "828e0520fa2fb9e92cacc6a1cb5037f0c498c1bad1ab54b765fd80b3bf3cc917"
       },
       {
         "category": "menu_defaults",
@@ -170,7 +170,7 @@
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "e9332ba2228c3c5ec0fed5a593fde38e52fd4b03bfda147de5655c64238cb0a3",
+        "sha256": "2b0b290998b315228fa27a6be1b95d87c9ecf605df0a5fb3a52a29875f8e4cff",
         "source_path": "docs/BACKLOG.md"
       },
       {

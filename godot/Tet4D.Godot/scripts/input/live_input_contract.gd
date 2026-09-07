@@ -292,12 +292,16 @@ static func _rotation_hint_items(owner: String) -> Array:
 	return items
 
 
+# One pass over one descriptor collection: labels and key pairs cannot drift
+# apart by index because both are read from the same spec.
 static func _exact_camera_rotation_hint_items() -> Array:
-	var items := _rotation_hint_items("camera")
-	for index in range(items.size()):
-		var spec: Dictionary = exact_camera_rotation_specs()[index]
+	var items: Array = []
+	for spec in exact_camera_rotation_specs():
 		var suffix := " (re-slice)" if bool(spec.get("re_slices", false)) else ""
-		items[index][1] = "%s - / +%s" % [str(spec["plane"]), suffix]
+		items.append([
+			_pair(str(spec["negative_action"]), str(spec["positive_action"]), " / "),
+			"%s - / +%s" % [str(spec["plane"]), suffix],
+		])
 	items.append([_display_key("reset"), "Reset View (basis, slice orientation, framing)"])
 	return items
 

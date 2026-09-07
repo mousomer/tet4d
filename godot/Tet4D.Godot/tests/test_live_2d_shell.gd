@@ -452,6 +452,59 @@ func run() -> Array:
 		if str(app._live_bridge.live_4d_state_hash()) != exact_hash_before:
 			failures.append("Live 4D exact basis keys must not mutate gameplay state")
 		app._reset_view()
+		# The HUD buttons must reach the same boundary as the keyboard. This
+		# caught an "xz"/"zx" mismatch that keyboard-only coverage could not.
+		for basis_case in [
+			{"action": "view_zx_neg", "key": KEY_1, "label": "XZ-"},
+			{"action": "view_zx_pos", "key": KEY_2, "label": "XZ+"},
+			{"action": "view_xw_neg", "key": KEY_3, "label": "XW-"},
+			{"action": "view_xw_pos", "key": KEY_4, "label": "XW+"},
+			{"action": "view_zw_neg", "key": KEY_5, "label": "ZW-"},
+			{"action": "view_zw_pos", "key": KEY_6, "label": "ZW+"},
+		]:
+			var button_name: String = "BasisButton__%s" % str(basis_case["action"])
+			var basis_button := app._hud.find_child(button_name, true, false) as Button
+			if basis_button == null:
+				failures.append("Live 4D basis panel must expose %s" % button_name)
+				continue
+			app._reset_view()
+			var keyboard_event := InputEventKey.new()
+			keyboard_event.keycode = int(basis_case["key"])
+			keyboard_event.pressed = true
+			app._unhandled_input(keyboard_event)
+			var keyboard_slots: Array = app._live_4d_basis.slots()
+			var keyboard_slice: String = app._live_4d_basis.slice_axis_label()
+			if keyboard_slots == [1, 2, 3, 4]:
+				failures.append(
+					"%s keyboard turn must change the basis to be discriminating"
+					% str(basis_case["label"])
+				)
+			app._reset_view()
+			var gameplay_hash_before: String = str(app._live_bridge.live_4d_state_hash())
+			var local_before: Dictionary = app._live_4d_local_orientation.snapshot()
+			basis_button.pressed.emit()
+			if app._live_4d_basis.slots() != keyboard_slots:
+				failures.append(
+					"%s HUD button must apply the same turn as its key: expected %s, got %s"
+					% [
+						str(basis_case["label"]),
+						keyboard_slots,
+						app._live_4d_basis.slots(),
+					]
+				)
+			if app._live_4d_basis.slice_axis_label() != keyboard_slice:
+				failures.append(
+					"%s HUD button must re-slice exactly like its key" % str(basis_case["label"])
+				)
+			if str(app._live_bridge.live_4d_state_hash()) != gameplay_hash_before:
+				failures.append(
+					"%s HUD button must not mutate gameplay state" % str(basis_case["label"])
+				)
+			if app._live_4d_local_orientation.snapshot() != local_before:
+				failures.append(
+					"%s HUD button must preserve shared L" % str(basis_case["label"])
+				)
+		app._reset_view()
 		var outer_pitch_before: float = app._camera_rig._current_pitch
 		var local_pitch_before: float = app._live_4d_local_orientation.local_pitch
 		var pitch_event := InputEventKey.new()

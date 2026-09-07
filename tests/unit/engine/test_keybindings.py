@@ -6,6 +6,7 @@ import shutil
 import unittest
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -19,7 +20,12 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for keybinding runtime tests")
 
-from tet4d.engine.runtime import keybinding_store, menu_config, menu_settings_state
+from tet4d.engine.runtime import (
+    keybinding_store,
+    menu_config,
+    menu_settings_state,
+    project_config,
+)
 from tet4d.engine.runtime.keybinding_runtime_state import KEYBINDING_STATE
 from tet4d.engine.runtime.project_config import state_dir_path
 from tet4d.engine.ui_logic import keybindings_catalog
@@ -233,8 +239,8 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("view_zw_pos"), (pygame.K_6,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_neg"), (pygame.K_o,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("yaw_pos"), (pygame.K_l,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_neg"), (pygame.K_i,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_pos"), (pygame.K_k,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_neg"), (pygame.K_k,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D.get("pitch_pos"), (pygame.K_i,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_out"), (pygame.K_7,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D.get("zoom_in"), (pygame.K_8,))
         self.assertEqual(
@@ -710,8 +716,10 @@ class TestKeybindingProfiles(unittest.TestCase):
         self.assertEqual(keybindings.CAMERA_KEYS_4D["view_zw_pos"], (pygame.K_6,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_neg"], (pygame.K_o,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["yaw_pos"], (pygame.K_l,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["pitch_neg"], (pygame.K_i,))
-        self.assertEqual(keybindings.CAMERA_KEYS_4D["pitch_pos"], (pygame.K_k,))
+        # I raises pitch and K lowers it, matching the Godot Live-4D shell.
+        # See TestCrossShellOrientationParity for the shared-convention proof.
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["pitch_neg"], (pygame.K_k,))
+        self.assertEqual(keybindings.CAMERA_KEYS_4D["pitch_pos"], (pygame.K_i,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D["zoom_out"], (pygame.K_7,))
         self.assertEqual(keybindings.CAMERA_KEYS_4D["zoom_out"], (pygame.K_7,))
         self.assertEqual(keybindings.CAMERA_KEYS_3D["zoom_in"], (pygame.K_8,))
@@ -997,3 +1005,188 @@ class TestMenuSettingsPersistence(unittest.TestCase):
             sanitize_text("ok\x00bad\nsafe", max_length=32),
             "okbadsafe",
         )
+
+
+# A shipped profile must never bind one physical key to two actions inside the
+# same dispatch context: `dispatch_bound_action` resolves the first match, so a
+# collision silently disables one action instead of failing loudly.
+#
+# Every entry here is an explicit, documented exception and must record why the
+# duplicate is intentional. An empty mapping means "no exceptions are allowed".
+# Key: (source label, context path, key token) -> reason.
+DOCUMENTED_KEY_COLLISION_EXCEPTIONS: dict[tuple[str, str, str], str] = {}
+
+
+def _leaf_binding_contexts(node: object, path: str = "") -> list[tuple[str, dict]]:
+    """Yield (context path, {action: [keys]}) for every leaf binding table."""
+    if not isinstance(node, dict):
+        return []
+    values = list(node.values())
+    if values and all(isinstance(value, list) for value in values):
+        return [(path, node)]
+    contexts: list[tuple[str, dict]] = []
+    for name, child in node.items():
+        contexts.extend(_leaf_binding_contexts(child, f"{path}/{name}"))
+    return contexts
+
+
+class TestShippedProfileKeyCollisions(unittest.TestCase):
+    """Intra-context key-collision invariant for every shipped profile."""
+
+    def _shipped_sources(self) -> list[tuple[str, object]]:
+        root = project_config.project_root_path()
+        sources: list[tuple[str, object]] = []
+        for dimension in (2, 3, 4):
+            path = root / "keybindings" / f"{dimension}d.json"
+            sources.append((str(path.relative_to(root)), json.loads(path.read_text())))
+        defaults_path = project_config.keybindings_defaults_path()
+        sources.append(
+            (
+                str(defaults_path.relative_to(root)),
+                json.loads(defaults_path.read_text()),
+            )
+        )
+        return sources
+
+    def test_shipped_profiles_have_no_intra_context_key_collisions(self) -> None:
+        collisions: list[str] = []
+        checked_contexts = 0
+        for label, payload in self._shipped_sources():
+            for context, bindings in _leaf_binding_contexts(payload):
+                checked_contexts += 1
+                bound: dict[object, list[str]] = {}
+                for action, keys in bindings.items():
+                    for key in keys:
+                        bound.setdefault(key, []).append(action)
+                for key, actions in sorted(bound.items(), key=lambda item: str(item[0])):
+                    if len(actions) < 2:
+                        continue
+                    if (label, context, str(key)) in DOCUMENTED_KEY_COLLISION_EXCEPTIONS:
+                        continue
+                    collisions.append(
+                        f"{label}{context}: key {key!r} bound to {sorted(actions)}"
+                    )
+        self.assertGreater(checked_contexts, 0, "no shipped binding contexts found")
+        self.assertEqual(collisions, [], "shipped profiles contain key collisions")
+
+    def test_exact_basis_and_continuous_orientation_do_not_share_number_row(
+        self,
+    ) -> None:
+        """Keys 3-6 belong to the exact basis turns, never to yaw/pitch."""
+        exact_basis_actions = {
+            "view_zx_neg",
+            "view_zx_pos",
+            "view_xw_neg",
+            "view_xw_pos",
+            "view_zw_neg",
+            "view_zw_pos",
+        }
+        continuous_actions = {"yaw_neg", "yaw_pos", "pitch_neg", "pitch_pos"}
+        overlaps: list[str] = []
+        for label, payload in self._shipped_sources():
+            for context, bindings in _leaf_binding_contexts(payload):
+                exact_keys: set[object] = set()
+                continuous_keys: set[object] = set()
+                for action, keys in bindings.items():
+                    if action in exact_basis_actions:
+                        exact_keys.update(keys)
+                    elif action in continuous_actions:
+                        continuous_keys.update(keys)
+                shared = exact_keys & continuous_keys
+                if shared:
+                    overlaps.append(f"{label}{context}: shared {sorted(map(str, shared))}")
+        self.assertEqual(overlaps, [], "exact basis turns share keys with yaw/pitch")
+
+    def test_shipped_keybinding_files_are_canonically_formatted(self) -> None:
+        """Shipped stores must match what `atomic_write_json` would produce."""
+        root = project_config.project_root_path()
+        for dimension in (2, 3, 4):
+            path = root / "keybindings" / f"{dimension}d.json"
+            raw = path.read_text()
+            canonical = (
+                json.dumps(
+                    json.loads(raw), ensure_ascii=False, indent=2, sort_keys=True
+                )
+                + "\n"
+            )
+            self.assertEqual(
+                raw,
+                canonical,
+                f"{path.relative_to(root)} is not canonically formatted",
+            )
+
+
+class TestCrossShellOrientationParity(unittest.TestCase):
+    """Same physical key must rotate content the same way in both shells.
+
+    Both shells render 4D content through the same world frame (the Godot
+    mapper reproduces `projection3d.raw_to_world` exactly) and compose
+    orientation identically: an active `+yaw` rotation about +Y followed by an
+    active `+pitch` rotation about +X.
+
+      pygame: `projection3d.transform_point(world, yaw_deg, pitch_deg)`
+      Godot:  `SliceLocalOrientation.passive_render_basis()`
+              = Basis(RIGHT, local_pitch) * Basis(UP, local_yaw)
+
+    So a key that raises the rotation angle in one shell must raise it in the
+    other. These are the Godot Live-4D bindings this parity is asserted
+    against, from `scripts/input/live_input_contract.gd` and the
+    `_handle_live_4d_camera_input` adapter in `scripts/app/trace_replay_app.gd`:
+
+      O -> lowers local_yaw     L -> raises local_yaw
+      I -> raises local_pitch   K -> lowers local_pitch
+    """
+
+    GODOT_LIVE_4D_ORIENTATION_KEYS: ClassVar[dict[str, int]] = {
+        "yaw_neg": pygame.K_o,
+        "yaw_pos": pygame.K_l,
+        "pitch_neg": pygame.K_k,
+        "pitch_pos": pygame.K_i,
+    }
+
+    def test_pygame_4d_orientation_keys_match_godot_rotation_directions(self) -> None:
+        for action, expected_key in self.GODOT_LIVE_4D_ORIENTATION_KEYS.items():
+            with self.subTest(action=action):
+                self.assertEqual(
+                    keybindings.CAMERA_KEYS_4D.get(action),
+                    (expected_key,),
+                    f"{action} must sit on the key Godot uses for the same "
+                    f"rotation direction",
+                )
+
+    def test_both_shells_share_the_same_rotation_convention(self) -> None:
+        """Guards the premise the key parity rests on.
+
+        `projection3d.transform_point` must apply the same active rotations
+        that Godot's `Basis(UP, yaw)` / `Basis(RIGHT, pitch)` apply, so that
+        equal-signed angles produce equal content motion in both shells.
+        """
+        import math
+
+        from tet4d.ui.pygame.projection3d import transform_point
+
+        def godot_basis_up(point, angle):
+            x, y, z = point
+            cos_a, sin_a = math.cos(angle), math.sin(angle)
+            return (cos_a * x + sin_a * z, y, -sin_a * x + cos_a * z)
+
+        def godot_basis_right(point, angle):
+            x, y, z = point
+            cos_a, sin_a = math.cos(angle), math.sin(angle)
+            return (x, cos_a * y - sin_a * z, sin_a * y + cos_a * z)
+
+        point = (1.0, 2.0, 3.0)
+        for degrees in (-90.0, -30.0, 30.0, 90.0):
+            radians = math.radians(degrees)
+            with self.subTest(degrees=degrees, axis="yaw"):
+                for actual, expected in zip(
+                    transform_point(point, degrees, 0.0),
+                    godot_basis_up(point, radians),
+                ):
+                    self.assertAlmostEqual(actual, expected, places=9)
+            with self.subTest(degrees=degrees, axis="pitch"):
+                for actual, expected in zip(
+                    transform_point(point, 0.0, degrees),
+                    godot_basis_right(point, radians),
+                ):
+                    self.assertAlmostEqual(actual, expected, places=9)
