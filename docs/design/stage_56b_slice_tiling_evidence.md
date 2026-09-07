@@ -54,3 +54,5 @@ the stable game-area size and emits geometry changes; `TraceReplayApp` routes
 that size to `TraceSceneRenderer`, which invalidates only Live-4D presentation
 fit and layout. Focused runtime evidence verifies that the renderer consumes
 the HUD viewport and resolves the required count-derived grids after startup.
+Routing is idempotent for repeated equal sizes, and a genuine later geometry
+change preserves a player's manual framing instead of silently reapplying Fit.

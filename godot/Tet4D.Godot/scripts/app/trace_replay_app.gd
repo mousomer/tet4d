@@ -122,6 +122,7 @@ var _live_4d_presentation_root: Node3D
 var _renderer: TraceSceneRenderer
 var _camera_rig: CameraRig
 var _world_environment: WorldEnvironment
+var _last_layout_viewport_size := Vector2.ZERO
 # Keep this dynamically typed and construct it through AnimatedBackgroundScript.
 # `global_script_class_cache.cfg` is ignored generated state, so a checkout may
 # legitimately have a stale cache that predates this component. A global-class
@@ -973,7 +974,7 @@ func _refresh_snapshot() -> void:
 
 func _refresh_render() -> void:
 	if _renderer != null and _hud != null and _renderer.has_method("set_layout_viewport_size"):
-		_renderer.set_layout_viewport_size(_hud.board_viewport_size())
+		_route_layout_viewport_size(_hud.board_viewport_size())
 	if _is_live_mode():
 		if not _current_snapshot.is_empty():
 			_renderer.render_snapshot(_presentation_snapshot_for_render())
@@ -985,12 +986,23 @@ func _refresh_render() -> void:
 
 
 func _on_game_viewport_geometry_changed(viewport_size: Vector2) -> void:
-	if viewport_size.x < 240.0 or viewport_size.y < 120.0 or _renderer == null:
+	if not _route_layout_viewport_size(viewport_size):
 		return
-	_renderer.set_layout_viewport_size(viewport_size)
 	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
+		var framing_status := str(_camera_rig.presentation_snapshot().get("framing_status", "")) if _camera_rig != null else ""
 		_refresh_live_4d_presentation(true)
-		_fit_view()
+		if not framing_status.begins_with("manual"):
+			_fit_view()
+
+
+func _route_layout_viewport_size(viewport_size: Vector2) -> bool:
+	if viewport_size.x < 240.0 or viewport_size.y < 120.0 or _renderer == null:
+		return false
+	if viewport_size.is_equal_approx(_last_layout_viewport_size):
+		return false
+	_last_layout_viewport_size = viewport_size
+	_renderer.set_layout_viewport_size(viewport_size)
+	return true
 
 
 func _presentation_snapshot_for_render() -> Dictionary:
