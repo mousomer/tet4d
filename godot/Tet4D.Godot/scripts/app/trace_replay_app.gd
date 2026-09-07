@@ -1331,8 +1331,15 @@ func _refresh_control_frame_presentation() -> bool:
 	var presentation_key := "%s|%s" % [_mode, str(snapshot)]
 	var changed := presentation_key != _control_frame_presentation_key
 	_control_frame_presentation_key = presentation_key
-	if _camera_rig != null and _camera_rig.has_method("set_control_frame_mapping"):
-		_camera_rig.set_control_frame_mapping(snapshot)
+	if _camera_rig != null:
+		if dimension == 4 and _camera_rig.has_method("set_live_4d_orientation_state"):
+			_camera_rig.set_live_4d_orientation_state(
+				_live_4d_basis,
+				_live_4d_local_orientation,
+				snapshot
+			)
+		elif _camera_rig.has_method("set_control_frame_mapping"):
+			_camera_rig.set_control_frame_mapping(snapshot)
 	if _hud != null and _hud.has_method("set_control_frame_snapshot"):
 		_hud.set_control_frame_snapshot(snapshot)
 	return changed
@@ -1663,8 +1670,6 @@ func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 		return
 	_live_4d_basis = _live_4d_basis.turned(plane, direction)
 	_renderer.set_live_4d_basis(_live_4d_basis, true)
-	if _camera_rig != null:
-		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_refresh_live_4d_presentation()
 	_refresh_hud()
 
@@ -1677,8 +1682,6 @@ func _reset_live_4d_basis_only() -> void:
 	_live_4d_basis = SliceBasis4DScript.identity()
 	if _renderer != null:
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
-	if _camera_rig != null:
-		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_refresh_live_4d_presentation()
 	_refresh_hud()
 
@@ -1692,8 +1695,6 @@ func _restore_live_4d_presentation_defaults() -> void:
 		_renderer.clear_presentation()
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
 		_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
-	if _camera_rig != null:
-		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_pending_fit_view = false
 
 

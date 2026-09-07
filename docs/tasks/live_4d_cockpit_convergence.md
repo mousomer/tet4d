@@ -1,4 +1,4 @@
-# Task Contract — Live 4D Cockpit Convergence
+# Task Contract — Stage 56 Cockpit Completion
 
 Status: in progress on `codex/live-4d-cockpit-convergence-rebuilt`; not accepted.
 
@@ -48,8 +48,37 @@ None of these criteria is accepted by this reconstruction. The current branch
 only preserves the work on the repaired camera/control contract and establishes
 focused structural evidence for later review.
 
-## Explicit non-goals
+## Stage 56 execution contract
 
-No 2D/3D redesign, action/key/pointer changes, clickable gameplay controls,
-camera translation or fit-policy bypass, native change, authority transfer,
-profile/persistence change, publication, merge, or release is authorized.
+The completion programme is deliberately serial: `56A` rosette correctness,
+`56B` deterministic slice tiling, `56C` semantic helper rows, `56D` shared
+cockpit grammar, `56E` Live 3D migration, `56F` Live 2D migration, `56G`
+responsive acceptance, `56H` human playability acceptance, and `56I` bounded
+polish. Each stage requires its own focused green evidence and reviewable
+commit. A failed stage gate blocks the next stage.
+
+### Stage 56A — state-driven Live-4D orientation rosette
+
+The rosette is a passive projection of the same app-owned exact basis `B`,
+shared slice-local orientation `L`, and `ControlFrameMapping` snapshot already
+consumed by rendering and relative controls. `CameraRig` may cache only a
+render snapshot supplied through that path; it must not mutate or reconstruct
+an independent orientation model, dispatch input, or touch native gameplay.
+
+Acceptance requires the initial state, XZ/XW/ZW exact turns, continuous yaw,
+continuous pitch, and Reset View to leave the rosette semantic snapshot equal
+to the current authoritative presentation snapshot. Drawing and refreshing the
+rosette must be observational, native snapshot/hash must remain unchanged, and
+Live-3D orientation behavior must remain on its existing camera-driven path.
+
+Stage 56A is implemented and focused-green. Its evidence covers the three
+state owners, all required operations, passive redraw, native snapshot/hash
+isolation, and the retained Live-3D path. Stage 56B is now eligible; Stages
+56C–56I remain gated.
+
+## Explicit non-goals for Stage 56A
+
+No 2D/3D redesign, slice-layout choice, helper/deck refactor,
+action/key/pointer changes, clickable gameplay controls, camera translation or
+fit-policy bypass, native change, authority transfer, profile/persistence
+change, publication, merge, or release is authorized.

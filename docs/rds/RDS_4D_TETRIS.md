@@ -353,9 +353,12 @@ Relevant tests:
 13. Starting a live 4D session must render the configured live snapshot directly;
     a retained replay document or replay camera state must not become its first view.
 14. Godot pointer controls provide left-drag shared-L orientation, right-drag
-    framing pan, wheel zoom, double-click Fit, and a live basis-driven
-    orientation marker without dispatching gameplay commands. Ctrl owns soft
-    drop; Shift has no normal Live-4D camera or soft-drop binding.
+    framing pan, wheel zoom, double-click Fit, and a live orientation marker
+    driven by the authoritative exact basis, continuous shared-L render basis,
+    and resolved control-frame labels. Initial state, XZ/XW/ZW exact turns,
+    yaw, pitch, and Reset View update that passive marker without dispatching
+    gameplay commands. Ctrl owns soft drop; Shift has no normal Live-4D camera
+    or soft-drop binding.
 
 ## 11. Implementation Status (2026-02-19)
 

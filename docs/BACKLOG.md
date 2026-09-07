@@ -55,6 +55,15 @@ Cockpit allocation, NEXT/HOLD redesign, grid/spacing polish, and issues
 only as reproducible, non-authoritative investigation tooling; it is not a
 canonical design workflow and its generated captures remain untracked.
 
+### Stage 56 cockpit completion
+
+Complete the accepted cockpit direction through serial green stages. Stage
+56A first repairs the Live-4D orientation rosette as a passive consumer of the
+existing `B + L + ControlFrameMapping` presentation snapshot. Deterministic
+slice tiling, semantic keycaps, shared cockpit extraction, Live 3D/2D
+migration, responsive acceptance, human playability acceptance, and final
+polish remain gated as Stages 56B–56I and may not be folded into 56A.
+
 ### Three-product packaging gaps
 
 Implement the missing package identities required by the authoritative

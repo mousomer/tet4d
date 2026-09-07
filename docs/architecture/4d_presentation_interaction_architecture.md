@@ -323,6 +323,15 @@ structurally impossible for an anchor vector to be treated as a local X/Z
 axis: `ControlFrameMapping` receives `B` and the control projection of `L`,
 never an anchor, `V`, or `P` value.
 
+The compact Live-4D orientation rosette is a read-only consumer of that same
+composition. The app publishes one presentation snapshot containing exact
+`B`, continuous render `L`, and the resolved control-frame labels. `CameraRig`
+projects the labelled local axes through the supplied render basis and its
+existing outer reflection; it owns no second yaw, pitch, basis, or binding
+state. Consequently exact turns, continuous yaw/pitch, and Reset View update
+the board, resolver, helper labels, and rosette from one mutation path, while
+redrawing the rosette cannot initiate any presentation or gameplay operation.
+
 ## 10. Normative invariants
 
 **Invariant A — slice-local orientation independence.** Changing only
