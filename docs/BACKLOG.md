@@ -45,7 +45,8 @@ Acceptance boundary:
 - exact camera pairs are XZ `1/2`, XW `3/4`, and ZW `5/6`; the public and
   tutorial progression remains XW, ZW, XZ;
 - `LiveInputContract` owns shared piece/camera rotation descriptors and 4D
-  keeps the existing `B + Q(L.local_yaw)` resolver semantics; and
+  keeps the existing `B + Q(L.local_yaw)` resolver semantics; `O/L` preserve
+  local-yaw decrement/increment without rotating the outer camera rig; and
 - coordinate/framing changes are limited to the Stage 55B exact-basis fit
   contract and need independent mapper-oracle coverage.
 

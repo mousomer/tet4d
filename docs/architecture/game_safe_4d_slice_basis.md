@@ -132,6 +132,9 @@ pan offset. Basis-derived bounds and layout are recomputed independently.
 Slice-local orientation and outer framing controls do not modify basis state.
 `L` is a passive local transform: its yaw delta is the inverse of the shared
 outer-camera yaw delta exactly once, while pitch retains the shared sign.
+Its public keyboard contract remains local rather than outer-camera based:
+`O` decreases `L.local_yaw`, `L` increases it, and neither action mutates the
+outer camera rig.
 
 The exact destination basis commits when an action begins. A short reduced-
 motion-aware presentation settle animates toward that exact destination; the

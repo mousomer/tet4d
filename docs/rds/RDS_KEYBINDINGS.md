@@ -225,6 +225,8 @@ These fixed bindings apply only to normal Godot Live-4D gameplay:
 4. Exact 90-degree presentation basis: `1/2` XZ, `3/4` XW, `5/6` ZW, and
    `0` Reset View. Reset View restores `B + L + V/P`; it is not Restart Game.
 5. Shared slice orientation `L`: `O/L` yaw and `I/K` pitch, plus left drag.
+   `O` decreases `L.local_yaw` and `L` increases it; neither key turns the
+   outer camera rig.
 6. Framing `V/P`: `-/=/+` and wheel zoom, right-drag pan, and double-click or
    the visible Fit View button. Fit View is framing-only; `F/G` remain the
    Live-4D XZ piece-rotation pair.

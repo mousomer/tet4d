@@ -537,10 +537,13 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 
 func _handle_live_4d_camera_input(event: InputEvent) -> bool:
 	if _event_action_pressed_once(event, ["live_4d_camera_yaw_left"]):
-		_nudge_live_4d_local_yaw(-CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
+		# `L` is passive relative to the outer camera, so its adapter inverts
+		# a camera-space delta. Pass the inverse here to retain the public
+		# local-orientation contract: O lowers L.local_yaw and L raises it.
+		_nudge_live_4d_local_yaw(CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_yaw_right"]):
-		_nudge_live_4d_local_yaw(CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
+		_nudge_live_4d_local_yaw(-CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD)
 		return true
 	if _event_action_pressed_once(event, ["live_4d_camera_pitch_up"]):
 		_nudge_live_4d_local_pitch(CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD)
@@ -633,6 +636,10 @@ func _refresh_live_4d_presentation(reset_fit_reference: bool = false) -> void:
 func _handle_live_4d_basis_input(event: InputEvent) -> bool:
 	for spec in LiveInputContractScript.exact_camera_rotation_specs():
 		var plane := str(spec.get("plane", "")).to_lower()
+		# Public descriptors use canonical XZ ordering. SliceBasis4D preserves
+		# its established `zx` compatibility token internally.
+		if plane == "xz":
+			plane = "zx"
 		if _event_action_pressed_once(event, [str(spec["negative_action"])]):
 			_apply_live_4d_basis_turn(plane, -1)
 			return true

@@ -505,7 +505,7 @@ func _check_live_control_maps() -> Array:
 		failures,
 		group_items,
 		"Exact camera rotation",
-		[["1 / 2", "XW - / + (re-slice)"], ["; / '", "ZW - / + (re-slice)"], ["[ / ]", "ZX - / +"], ["0", "Reset View (basis, slice orientation, framing)"]]
+		[["1 / 2", "XZ - / +"], ["3 / 4", "XW - / + (re-slice)"], ["5 / 6", "ZW - / + (re-slice)"], ["0", "Reset View (basis, slice orientation, framing)"]]
 	)
 	_assert_group_items(
 		failures,
