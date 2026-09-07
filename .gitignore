@@ -82,3 +82,9 @@ assets/help/rotation_keys.gif
 .workspace_policy_version.json
 config/project/policy_manifest.json
 context-*.instructions.md
+
+# Stage 55 on-demand semantic-export artifacts. Runtime probes, normalized node
+# exports, and rendered captures are reproducible inspection aids, never source
+# authority or test fixtures.
+design/bootstrap/
+design/canvas/

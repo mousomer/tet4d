@@ -50,8 +50,10 @@ Acceptance boundary:
 - coordinate/framing changes are limited to the Stage 55B exact-basis fit
   contract and need independent mapper-oracle coverage.
 
-Cockpit allocation, NEXT/HOLD redesign, grid/spacing polish, Figma/export,
-and issues #69/#70 remain separate PR3–PR5 work.
+Cockpit allocation, NEXT/HOLD redesign, grid/spacing polish, and issues
+#69/#70 remain separate PR3–PR5 work. Stage 55 semantic export is available
+only as reproducible, non-authoritative investigation tooling; it is not a
+canonical design workflow and its generated captures remain untracked.
 
 ### Three-product packaging gaps
 
