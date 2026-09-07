@@ -16,6 +16,7 @@ const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onbo
 const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.gd")
 const HoldPiecePanelScript = preload("res://scripts/ui/pieces/hold_piece_panel.gd")
 const LivePieceControlStripScript = preload("res://scripts/ui/live_piece_control_strip.gd")
+const LiveViewControlStripScript = preload("res://scripts/ui/live_view_control_strip.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
@@ -210,6 +211,11 @@ var _next_piece_panel: PanelContainer
 var _hold_piece_panel: PanelContainer
 var _piece_preview_row: HBoxContainer
 var _piece_control_strip: PanelContainer
+var _live_view_control_strip: PanelContainer
+var _live_4d_deck: HBoxContainer
+var _live_4d_piece_module: VBoxContainer
+var _live_4d_view_module: VBoxContainer
+var _live_4d_state_module: VBoxContainer
 var _basis_panel: PanelContainer
 var _basis_indicator_label: Label
 var _live_4d_basis_snapshot: Dictionary = {
@@ -601,6 +607,7 @@ func set_live_4d_mode(
 
 
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
+	_set_live_4d_deck_active(false)
 	if _summary_title != null:
 		_summary_title.text = "Replay"
 	_set_live_declutter_mode(false)
@@ -661,10 +668,13 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 	if _basis_panel != null:
 		_basis_panel.visible = mode == GameSetupSpecScript.MODE_4D
 	_refresh_piece_control_strip()
+	if _live_view_control_strip != null:
+		_live_view_control_strip.configure(_live_4d_basis_snapshot, _control_frame_snapshot)
 	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
 		_update_control_hint_panel(_inspector_hint_panel, mode)
+	_set_live_4d_deck_active(mode == GameSetupSpecScript.MODE_4D)
 	_set_live_inspector_density(true)
 
 
@@ -678,6 +688,27 @@ func _refresh_piece_control_strip() -> void:
 	)
 	if is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
+
+
+func _set_live_4d_deck_active(active: bool) -> void:
+	if _live_4d_deck == null:
+		return
+	if active:
+		_piece_control_strip.reparent(_live_4d_piece_module, false)
+		_live_view_control_strip.reparent(_live_4d_view_module, false)
+		_piece_preview_row.reparent(_live_4d_state_module, false)
+		_right_scroll.visible = false
+		_live_4d_deck.visible = true
+		_live_4d_deck.custom_minimum_size.y = 150.0 if _hud_density == "compact" else (220.0 if _hud_density == "detailed" else 190.0)
+		return
+	if _piece_control_strip.get_parent() != _right_column:
+		_piece_control_strip.reparent(_right_column, false)
+	if _piece_preview_row.get_parent() != _right_column:
+		_piece_preview_row.reparent(_right_column, false)
+	if _live_view_control_strip.get_parent() != _right_column:
+		_live_view_control_strip.reparent(_right_column, false)
+	_live_4d_deck.visible = false
+	_right_scroll.visible = true
 
 
 func _update_camera_guidance(mode: String) -> void:
@@ -957,6 +988,7 @@ func layout_contract_snapshot() -> Dictionary:
 	var inspector_rect := _control_rect(_right_scroll)
 	var settings_rect := _control_rect(_settings_panel)
 	var bottom_rect := _control_rect(_bottom_panel)
+	var cockpit_deck_rect := _control_rect(_live_4d_deck)
 	return {
 		"root": root_rect,
 		"left_panel": left_rect,
@@ -968,6 +1000,12 @@ func layout_contract_snapshot() -> Dictionary:
 		"right_inspector": inspector_rect,
 		"settings_panel": settings_rect,
 		"bottom_bar": bottom_rect,
+		"live_4d_deck": cockpit_deck_rect,
+		"live_4d_deck_visible": _live_4d_deck.visible if _live_4d_deck != null else false,
+		"piece_module_rect": _control_rect(_live_4d_piece_module),
+		"view_module_rect": _control_rect(_live_4d_view_module),
+		"piece_state_module_rect": _control_rect(_live_4d_state_module),
+		"view_control_strip": _live_view_control_strip.deterministic_snapshot() if _live_view_control_strip != null else {},
 		"current_screen": _current_screen,
 		"bottom_bar_visible": _bottom_panel.visible if _bottom_panel != null else false,
 		"viewport_hints_visible": _mode_hint_strip.visible if _mode_hint_strip != null else false,
@@ -1523,7 +1561,10 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 
 func _move_right_column_child(node: Node, index: int) -> void:
 	if node != null and node.get_parent() == _right_column:
-		_right_column.move_child(node, index)
+		# Live-4D temporarily reparents deck modules out of this column. Clamp the
+		# historical ordering slot against the current child count so returning to
+		# the inspector cannot request an index that no longer exists.
+		_right_column.move_child(node, mini(index, _right_column.get_child_count() - 1))
 
 
 func _status_badge_text(state_label: String, reason: String) -> String:
@@ -2209,6 +2250,8 @@ func _build_layout() -> void:
 	_piece_control_strip = LivePieceControlStripScript.new()
 	_piece_control_strip.visible = false
 	_right_column.add_child(_piece_control_strip)
+	_live_view_control_strip = LiveViewControlStripScript.new()
+	_right_column.add_child(_live_view_control_strip)
 	_basis_panel = _build_basis_panel()
 	_basis_panel.visible = false
 	_right_column.add_child(_basis_panel)
@@ -2230,6 +2273,23 @@ func _build_layout() -> void:
 	_quick_settings_header = _inspector_section_header("QUICK SETTINGS")
 	_right_column.add_child(_quick_settings_header)
 	_right_column.add_child(_settings_panel)
+
+	_live_4d_deck = HBoxContainer.new()
+	_live_4d_deck.name = "Live4DCockpitDeck"
+	_live_4d_deck.visible = false
+	_live_4d_deck.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_live_4d_deck.add_theme_constant_override("separation", 10)
+	outer.add_child(_live_4d_deck)
+	for specification in [["PieceModule", 42], ["ViewModule", 33], ["PieceStateModule", 25]]:
+		var module := VBoxContainer.new()
+		module.name = specification[0]
+		module.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		module.size_flags_stretch_ratio = float(specification[1])
+		_live_4d_deck.add_child(module)
+		match str(specification[0]):
+			"PieceModule": _live_4d_piece_module = module
+			"ViewModule": _live_4d_view_module = module
+			"PieceStateModule": _live_4d_state_module = module
 
 	var bottom_panel := PanelContainer.new()
 	_bottom_panel = bottom_panel

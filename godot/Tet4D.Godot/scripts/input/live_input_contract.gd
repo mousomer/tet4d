@@ -178,6 +178,17 @@ static func piece_control_groups(mode: String, basis_snapshot: Dictionary = {}, 
 	return result
 
 
+# Passive cockpit consumers select role metadata, never prose labels or a
+# second action/binding inventory. Only Live 4D currently exposes this deck.
+static func view_control_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
+	var result: Array = []
+	for source_group in control_hint_groups(mode, basis_snapshot, control_frame):
+		var role := str(source_group.get("cockpit_role", ""))
+		if role.begins_with("view_"):
+			result.append(source_group.duplicate(true))
+	return result
+
+
 # The live cockpit is a progressive-disclosure view of the same public action
 # contract, not a second binding table. Visible action buttons own Fit, Reset,
 # Restart, navigation, and exact 4D re-slicing, so passive cockpit help omits
@@ -269,12 +280,11 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 		[_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W− / W+", {"cockpit_direction": "slice", "signed_axis": "+W"}],
 	])
 	return [
-		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X/Z/W axes.", "items": move_rows},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": _rotation_hint_items("piece")},
-		{"group": "Exact camera rotation", "note": "Exact presentation basis; Y stays down", "items": _exact_camera_rotation_hint_items()},
-		{"group": "Slice orientation", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"]]},
-		{"group": "Framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"], ["Double-click", "Fit View (framing only)"]]},
-		{"group": "Pointer", "items": live_4d_pointer_helper_items()},
+		{"group": "Exact camera rotation", "cockpit_role": "view_exact", "note": "Exact presentation basis; Y stays down", "items": _exact_camera_rotation_hint_items()},
+		{"group": "Slice orientation", "cockpit_role": "view_orient", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"]]},
+		{"group": "Framing", "cockpit_role": "view_framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"], ["Double-click", "Fit View (framing only)"]]},
+		{"group": "Pointer", "cockpit_role": "view_pointer", "items": live_4d_pointer_helper_items()},
 		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
 		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
 		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},

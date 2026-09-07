@@ -39,10 +39,8 @@ func configure(
 	horizontal_gap = clampf(tile_width * HORIZONTAL_GUTTER_RATIO, MIN_SLICE_GUTTER, MAX_SLICE_GUTTER) * spacing_scale
 	vertical_gap = clampf(tile_height * VERTICAL_GUTTER_RATIO, MIN_VERTICAL_SLICE_GUTTER, MAX_VERTICAL_SLICE_GUTTER) * spacing_scale
 	screen_row_y_per_world_x = screen_row_slope
-	if layer_count <= 3:
+	if layer_count <= 4:
 		columns = layer_count
-	elif layer_count == 4:
-		columns = 2
 	else:
 		var target := sqrt(float(layer_count) * maxf(viewport_aspect, 0.5) * tile_height / tile_width)
 		columns = clampi(int(round(target)), 2, layer_count)
